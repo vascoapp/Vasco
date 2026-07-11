@@ -861,11 +861,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   customer_name: newLead.customerName,
                   customer_phone: newLead.customerPhone,
                   customer_email: newLead.customerEmail,
-                  customer_id: newLead.customerId,
+                  customer_id: isUuid(newLead.customerId) ? newLead.customerId : null,
                   job_description: newLead.jobDescription,
                   estimated_value: newLead.estimatedValue,
                   notes: newLead.notes,
-                  source_quote_id: newLead.sourceQuoteId,
+                  source_quote_id: isUuid(newLead.sourceQuoteId) ? newLead.sourceQuoteId : null,
                 })
                 .select('id')
                 .single();
@@ -895,11 +895,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 customer_name: newLead.customerName,
                 customer_phone: newLead.customerPhone,
                 customer_email: newLead.customerEmail,
-                customer_id: newLead.customerId,
+                customer_id: isUuid(newLead.customerId) ? newLead.customerId : null,
                 job_description: newLead.jobDescription,
                 estimated_value: newLead.estimatedValue,
                 notes: newLead.notes,
-                source_quote_id: newLead.sourceQuoteId,
+                source_quote_id: isUuid(newLead.sourceQuoteId) ? newLead.sourceQuoteId : null,
               },
             }),
           ).catch((err) => logWarn('AppState', `addLead persist failed: ${err}`));
@@ -2506,8 +2506,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             doc_type: 'invoice' as const,
             status: 'draft' as const,
             document_number: docNumber,
-            customer_id: job.customerId ?? undefined,
-            job_id: jobId,
+            // R83+: documents.customer_id / job_id are uuid FKs. job.customerId
+            // (and a not-yet-flushed jobId) can be a non-uuid seed/temp id →
+            // 22P02 → createDocument throws → the catch queues the SAME payload
+            // → flush also fails → the invoice-from-job silently never persists.
+            // Guard like every sibling documents write (isUuid → null).
+            customer_id: isUuid(job.customerId) ? job.customerId : null,
+            job_id: isUuid(jobId) ? jobId : null,
             total_amount: amount,
             due_date: dueDate.toISOString(),
             delivery_date: deliveryDateIso,
@@ -2985,11 +2990,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                       customer_name: newLead.customerName,
                       customer_phone: newLead.customerPhone,
                       customer_email: newLead.customerEmail,
-                      customer_id: newLead.customerId,
+                      customer_id: isUuid(newLead.customerId) ? newLead.customerId : null,
                       job_description: newLead.jobDescription,
                       estimated_value: newLead.estimatedValue,
                       notes: newLead.notes,
-                      source_quote_id: newLead.sourceQuoteId,
+                      source_quote_id: isUuid(newLead.sourceQuoteId) ? newLead.sourceQuoteId : null,
                     })
                     .select('id')
                     .single();
@@ -3014,11 +3019,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     customer_name: newLead.customerName,
                     customer_phone: newLead.customerPhone,
                     customer_email: newLead.customerEmail,
-                    customer_id: newLead.customerId,
+                    customer_id: isUuid(newLead.customerId) ? newLead.customerId : null,
                     job_description: newLead.jobDescription,
                     estimated_value: newLead.estimatedValue,
                     notes: newLead.notes,
-                    source_quote_id: newLead.sourceQuoteId,
+                    source_quote_id: isUuid(newLead.sourceQuoteId) ? newLead.sourceQuoteId : null,
                   },
                 }),
               ).catch((err) => logWarn('AppState', `auto-lead-on-reject persist failed: ${err}`));
@@ -3054,7 +3059,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               const row = await withTimeout(dbCreateProject({
                 name: project.title,
                 description: project.description,
-                customer_id: project.customerId || null,
+                customer_id: isUuid(project.customerId) ? project.customerId : null,
                 status: project.status,
                 start_date: project.startDate ?? null,
                 target_end_date: project.targetEndDate ?? null,
@@ -3075,7 +3080,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     user_id: getCurrentUserId(),
                     name: project.title,
                     description: project.description,
-                    customer_id: project.customerId || null,
+                    customer_id: isUuid(project.customerId) ? project.customerId : null,
                     status: project.status,
                     start_date: project.startDate ?? null,
                     target_end_date: project.targetEndDate ?? null,

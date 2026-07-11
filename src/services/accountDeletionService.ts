@@ -26,7 +26,12 @@ interface DeletionRequest {
   userId: string;
   requestedAt: string;
   platform: string;
-  status: 'pending' | 'completed' | 'failed';
+  // Must match the DB CHECK on account_deletion_requests.status
+  // (drain-account-deletions writes these). The prior union
+  // ('completed'|'failed') never existed server-side — harmless today
+  // because we only ever write 'pending' and read by filtering ='pending',
+  // but the type was lying about backend-set values.
+  status: 'pending' | 'processing' | 'done' | 'cancelled';
 }
 
 // ---------------------------------------------------------------------------
