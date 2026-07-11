@@ -191,15 +191,27 @@ export default function CustomerPortal({ params }: PageProps) {
     const sb = getSupabase();
     const urls: string[] = [];
     if (sb) {
+      const uploadedPaths: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const ext = file.type === 'image/png' ? 'png' : 'jpg';
         const filename = `${data.accessToken}/${Date.now()}-${i}.${ext}`;
         try {
           const { error } = await sb.storage.from(BUCKET).upload(filename, file, { contentType: file.type || 'image/jpeg', upsert: false });
-          if (error) continue;
-          const { data: signedUrl } = await sb.storage.from(BUCKET).createSignedUrl(filename, 60 * 60 * 24 * 30);
-          if (signedUrl?.signedUrl) urls.push(signedUrl.signedUrl);
+          if (!error) uploadedPaths.push(filename);
+        } catch { /* skip */ }
+      }
+      // Signed URLs are generated server-side (sign-customer-upload edge fn,
+      // service role) so the portal needs NO anon SELECT on customer-uploads —
+      // the broad anon SELECT that let anyone enumerate/read every customer's
+      // photos was dropped (migration 20260711000003). The edge fn only signs
+      // paths under our own access_code prefix.
+      if (uploadedPaths.length) {
+        try {
+          const { data: res } = await sb.functions.invoke('sign-customer-upload', {
+            body: { accessToken: data.accessToken, paths: uploadedPaths },
+          });
+          if (res?.ok && Array.isArray(res.urls)) urls.push(...(res.urls as string[]));
         } catch { /* skip */ }
       }
     }
@@ -233,37 +245,37 @@ export default function CustomerPortal({ params }: PageProps) {
     setQSending(false);
   }, [qDraft, data, lang, t]);
 
-  // Realtime: when a question is awaiting the contractor's reply, subscribe to
-  // customer_questions UPDATEs (R308 added it to the realtime publication with
-  // REPLICA IDENTITY FULL) and drop the approved reply into the thread live.
-  // A 20s poll is kept as a fallback in case realtime isn't enabled yet.
+  // Reply delivery: poll for the contractor's approved reply via the
+  // get_customer_question_status RPC (SECURITY DEFINER, scoped by our own access
+  // token). The portal no longer reads customer_questions directly and no longer
+  // subscribes to it via realtime — the broad anon SELECT policy that enabled
+  // both (and leaked tracker_access_token == the portal access_code) was dropped
+  // in migration 20260711000003. An 8s poll replaces the realtime path.
   const pendingReplyIds = qa.filter(e => e.pending && e.dbId).map(e => e.dbId as string);
   const pendingReplyKey = pendingReplyIds.join(',');
   useEffect(() => {
-    if (!pendingReplyKey) return;
+    if (!pendingReplyKey || !data) return;
     const sb = getSupabase();
     if (!sb) return;
+    const token = data.accessToken;
     const ids = pendingReplyKey.split(',');
     const apply = (dbId: string, row: Record<string, unknown> | null | undefined) => {
       if (!row) return;
       const reply = (row.approved_reply as string | null) ?? (row.auto_sent ? (row.ai_reply_draft as string | null) : null);
       if (reply) setQa(prev => prev.map(e => e.dbId === dbId ? { ...e, a: reply, pending: false } : e));
     };
-    const channels = ids.map(dbId =>
-      sb.channel(`cq:${dbId}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'customer_questions', filter: `id=eq.${dbId}` }, payload => apply(dbId, payload.new as Record<string, unknown>))
-        .subscribe()
-    );
-    const iv = window.setInterval(() => {
+    const poll = () => {
       ids.forEach(async dbId => {
         try {
-          const { data: row } = await sb.from('customer_questions').select('status, approved_reply, auto_sent, ai_reply_draft').eq('id', dbId).maybeSingle();
-          apply(dbId, row as Record<string, unknown> | null);
+          const { data: rows } = await sb.rpc('get_customer_question_status', { p_access_token: token, p_question_id: dbId });
+          apply(dbId, Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined) : (rows as Record<string, unknown> | null));
         } catch { /* ignore */ }
       });
-    }, 20000);
-    return () => { channels.forEach(c => { try { void sb.removeChannel(c); } catch { /* ignore */ } }); window.clearInterval(iv); };
-  }, [pendingReplyKey]);
+    };
+    poll();
+    const iv = window.setInterval(poll, 8000);
+    return () => { window.clearInterval(iv); };
+  }, [pendingReplyKey, data]);
 
   if (phase === 'loading') return <Centered><Spinner /><p style={{ color: DK.muted, marginTop: 16 }}>{t.loading}</p></Centered>;
   if (phase === 'not_found') return <Message icon="✕" title={t.notFoundTitle} body={t.notFoundBody} action={{ label: t.retry, onClick: () => void load() }} code={code} codeLabel={t.code} />;
