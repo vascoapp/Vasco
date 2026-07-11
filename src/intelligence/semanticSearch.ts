@@ -290,9 +290,16 @@ export async function indexMaterialForSearch(material: {
 // On remap, rewrite both layers under the new prefixed real id. We
 // preserve the original `text` + `metadata` so we don't need to re-fetch.
 
+// Keys MUST match the `table` string the offline queue emits on flush
+// (offlineWriteQueue emits `idRemap.table = entry.table` verbatim). addMaterial
+// queues its insert as 'material_catalog' (the real DB table), NOT 'materials' —
+// so the old 'materials' key never fired and every OFFLINE-created material's
+// cohort search embedding stayed keyed by its temp id (orphaned; the material
+// row rekeyed fine, but `match_similar_materials` could never find it by real id).
+// addJob queues as 'jobs', which already matched.
 const REMAP_PREFIX_BY_TABLE: Record<string, 'job' | 'material'> = {
   jobs: 'job',
-  materials: 'material',
+  material_catalog: 'material',
 };
 
 async function remapIndexedItem(prefix: 'job' | 'material', tempId: string, realId: string): Promise<void> {

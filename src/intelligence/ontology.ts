@@ -174,7 +174,12 @@ export async function addRelation(relation: Omit<OntologyRelation, 'id' | 'creat
 const TABLE_TO_ENTITY_TYPE: Record<string, EntityType> = {
   customers: 'customer',
   jobs: 'job',
-  materials: 'material',
+  // Real DB table is `material_catalog` — that's the `table` the offline queue
+  // emits on flush. 'materials' never matched an emitted event (latent/dead;
+  // material ontology entities are currently name-keyed via dataCollector, not
+  // row-id-keyed, so no active harm — but the key was wrong). Same mismatch that
+  // actively broke offline material search indexing in semanticSearch.ts.
+  material_catalog: 'material',
   suppliers: 'supplier',
   projects: 'project',
   documents: 'invoice', // ambiguous (quote|invoice); the entity stays under
