@@ -1869,7 +1869,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               job_id: safeJobId,
               total_amount: sourceQuote.amount,
               due_date: dueDate.toISOString(),
-              source_quote_id: sourceQuoteId,
+              // documents has `source_document_id` (uuid FK), NOT `source_quote_id`
+              // — the wrong name made createDocument throw "column does not exist",
+              // so EVERY quote→invoice conversion failed to persist. sourceQuoteId
+              // is usually the document_number (not a uuid), so guard the FK.
+              source_document_id: isUuid(sourceQuoteId) ? sourceQuoteId : null,
             });
             if (sourceItems.length > 0) {
               // R66 round 47: persist per-line VAT on invoice line items
@@ -1907,7 +1911,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   job_id: safeJobId,
                   total_amount: sourceQuote.amount,
                   due_date: dueDate.toISOString(),
-                  source_quote_id: sourceQuoteId,
+                  source_document_id: isUuid(sourceQuoteId) ? sourceQuoteId : null,
                 },
               });
             } catch {}
