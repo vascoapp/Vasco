@@ -1,0 +1,25 @@
+-- ============================================================
+-- SECURITY DEFINER hardening — pin search_path on next_document_number.
+-- ============================================================
+-- Found by the 2026-07 SECURITY DEFINER audit: next_document_number (004_base_
+-- schema.sql) is SECURITY DEFINER but did not SET search_path. A SECURITY
+-- DEFINER function with a mutable search_path runs the caller's search_path
+-- while executing with the DEFINER's (elevated) privileges — an attacker who
+-- can set search_path and create objects in an earlier schema could shadow the
+-- unqualified `document_counters` reference and run code as the owner. (This is
+-- the class Supabase's linter reports as `function_search_path_mutable`.)
+--
+-- The function references `document_counters` (public, unqualified) and
+-- `auth.uid()` (already schema-qualified, so unaffected). Pinning to
+-- `public, pg_temp` resolves document_counters from public and shuts the
+-- injection vector. Non-breaking — no behavioral change.
+alter function public.next_document_number(text) set search_path = public, pg_temp;
+
+-- NOTE (documented, NOT changed here): get_cron_health() is granted EXECUTE to
+-- anon because the admin dashboard reads it via the public anon key (admin has
+-- no DB-layer auth — it gates on an app PIN). That lets any anon-key holder read
+-- internal cron job names/schedules/status (LOW info disclosure). Proper fix is
+-- to give the admin an authenticated/service-role read path and restrict this
+-- RPC to authenticated — the same "admin uses the anon key" architecture gap
+-- already tracked for analytics_events / revenue.ts. Not revoked here because it
+-- would break the admin cron widget until that read model is resolved.
