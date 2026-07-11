@@ -1,0 +1,35 @@
+-- ============================================================
+-- PARTIAL mitigation — HIGH-severity capability leak (2026-07 RLS audit).
+-- ============================================================
+-- customer_questions.tracker_access_token == the portal access_code (the
+-- capability that get_portal_by_access_code accepts). The table's anon SELECT
+-- policy is `for select using (tracker_access_token is not null)` — far too
+-- broad: any holder of the PUBLIC anon key can run
+--   GET /rest/v1/customer_questions?select=tracker_access_token
+-- and harvest the access_code for every tracker that has a Q&A entry, then
+-- open each customer's FULL decision portal (project data, photos, decisions,
+-- running costs, payment links, signatures) via get_portal_by_access_code.
+-- This is the only portal table that granted a broad anon SELECT instead of
+-- reading through the SECURITY DEFINER RPC pattern the others use (R308 regress).
+--
+-- This REVOKE removes anon's ability to read the token column at all, closing
+-- the REST-based mass-harvest vector. VERIFIED non-breaking: the only anon
+-- reads of customer_questions are the portal's poll (selects
+-- status/approved_reply/auto_sent/ai_reply_draft — never the token,
+-- admin/src/app/customer/[code]/page.tsx:260) and an id-filtered realtime
+-- subscription to the customer's OWN row (:254). The token is WRITTEN by the
+-- classify-customer-question edge fn (service role) and READ by the contractor
+-- (authenticated role, customerQuestionQueueBridge) — neither is `anon`, so an
+-- anon-only column revoke leaves both working.
+--
+-- *** INCOMPLETE — full fix still required (needs testing against the live
+-- portal, so NOT done here): the broad anon SELECT policy still exposes
+-- question/reply CONTENT cross-tenant (MEDIUM), and a broad realtime
+-- subscription can still observe token values on UPDATE events. Proper fix:
+--   1. drop policy "anon reads by tracker token" on customer_questions;
+--   2. route anon reads via a SECURITY DEFINER RPC scoped by access_code
+--      (the pattern get_portal_by_access_code already establishes);
+--   3. move the reply realtime to a broadcast channel keyed by the
+--      unguessable access_code (or Realtime Authorization) so no table-level
+--      anon SELECT is needed. ***
+revoke select (tracker_access_token) on public.customer_questions from anon;
