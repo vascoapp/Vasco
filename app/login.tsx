@@ -50,14 +50,15 @@ export default function LoginScreen() {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  // R? — welcome-first entry. The default view leads with a prominent
+  // R? — welcome-first entry. The default view ALWAYS leads with a prominent
   // "Create account" CTA (acquisition focus); tapping "Log in" reveals the
-  // email/password form. In DEMO_MODE we open straight into the sign-in view
-  // since that's where the demo-account picker lives and signup is disabled.
-  // Also snap to sign-in when an `?email=` prefill arrives (the "sign in
-  // instead" path from /signup).
+  // email/password form (+ the demo-account picker in DEMO_MODE). We open on
+  // the welcome view in every mode — including dev/demo — so the redesign is
+  // verifiable in Expo Go, not only in production TestFlight builds. Only an
+  // `?email=` prefill (the "sign in instead" path from /signup) snaps straight
+  // to the sign-in form.
   const [mode, setMode] = useState<'welcome' | 'signin'>(
-    DEMO_MODE || initialEmail ? 'signin' : 'welcome',
+    initialEmail ? 'signin' : 'welcome',
   );
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState(0);
@@ -240,20 +241,18 @@ export default function LoginScreen() {
             /* SIGN-IN view: the email/password form. */
             <FadeIn delay={0} duration={300}>
               <View style={styles.form}>
-                {/* Back to the welcome/sign-up view. Hidden in DEMO_MODE where the
-                    sign-in view is the default entry (nothing to go back to). */}
-                {!DEMO_MODE && (
-                  <Pressable
-                    style={styles.backToWelcome}
-                    onPress={() => { setError(''); setMode('welcome'); }}
-                    accessibilityRole="button"
-                    hitSlop={8}
-                    accessibilityLabel={t('common.back', 'Back')}
-                  >
-                    <Ionicons name="chevron-back" size={18} color={SemanticColors.textSecondary} />
-                    <Text style={styles.backToWelcomeText}>{t('common.back', 'Back')}</Text>
-                  </Pressable>
-                )}
+                {/* Back to the welcome/sign-up view — shown in every mode now
+                    that welcome is the default entry. */}
+                <Pressable
+                  style={styles.backToWelcome}
+                  onPress={() => { setError(''); setMode('welcome'); }}
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  accessibilityLabel={t('common.back', 'Back')}
+                >
+                  <Ionicons name="chevron-back" size={18} color={SemanticColors.textSecondary} />
+                  <Text style={styles.backToWelcomeText}>{t('common.back', 'Back')}</Text>
+                </Pressable>
 
                 <TextInput
                   style={styles.input}
