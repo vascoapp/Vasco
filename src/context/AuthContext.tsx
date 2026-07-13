@@ -386,7 +386,7 @@ interface AuthContextType {
    * Legacy boolean `!success.ok` remains equivalent to `false`.
    */
   login: (email: string, password: string) => Promise<LoginResult>;
-  signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string; session?: boolean }>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
   roleConfig: RoleConfig | null;
@@ -789,14 +789,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     //
     // The /auth/callback* path is also added to apple-app-site-association
     // and assetlinks.json so iOS/Android auto-open the app.
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: 'https://admin.vascobuild.com/auth/callback' },
     });
     setIsLoading(false);
     if (error) return { success: false, error: error.message };
-    return { success: true };
+    // `session` is non-null only when email confirmation is DISABLED in the
+    // Supabase project (Auth → Providers → Email → "Confirm email" = OFF).
+    // In that case the user is already logged in and signup.tsx routes straight
+    // to onboarding instead of the "check your email" dead-end. When confirmation
+    // is required, session is null and we fall back to the pending screen.
+    return { success: true, session: !!data.session };
   }, []);
 
   const logout = useCallback(async () => {

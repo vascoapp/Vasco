@@ -111,9 +111,16 @@ export default function SignupScreen() {
       if (userId) {
         applyPendingReferral(userId).catch(() => {});
       }
-      // Supabase typically requires email confirmation. Show a "check your
-      // email" state — onAuthStateChange will fire SIGNED_IN → auto-redirect
-      // handled by app/_layout.tsx once the user confirms.
+      // When email confirmation is DISABLED in Supabase, signUp returns a live
+      // session — the user is already authenticated, so skip the "check your
+      // email" dead-end and go straight into onboarding. (onAuthStateChange
+      // also fires SIGNED_IN; router.replace avoids a pending-screen flash.)
+      if ((result as { session?: boolean }).session) {
+        router.replace('/onboarding' as any);
+        return;
+      }
+      // Otherwise email confirmation is required: show the "check your email"
+      // state — _layout.tsx auto-redirects on SIGNED_IN once the user confirms.
       setPending(true);
       return;
     }

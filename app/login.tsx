@@ -50,6 +50,15 @@ export default function LoginScreen() {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  // R? — welcome-first entry. The default view leads with a prominent
+  // "Create account" CTA (acquisition focus); tapping "Log in" reveals the
+  // email/password form. In DEMO_MODE we open straight into the sign-in view
+  // since that's where the demo-account picker lives and signup is disabled.
+  // Also snap to sign-in when an `?email=` prefill arrives (the "sign in
+  // instead" path from /signup).
+  const [mode, setMode] = useState<'welcome' | 'signin'>(
+    DEMO_MODE || initialEmail ? 'signin' : 'welcome',
+  );
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState(0);
   // R104: hidden diagnostic — tap the logo 5 times to read the last 20
@@ -191,87 +200,122 @@ export default function LoginScreen() {
             </View>
           </FadeIn>
 
-          {/* Login Form */}
-          <FadeIn delay={200} duration={500}>
-            <View style={styles.form}>
-              <TextInput
-                style={styles.input}
-                placeholder={t('auth.emailPlaceholder', 'Email address')}
-                placeholderTextColor={SemanticColors.textTertiary}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder={t('auth.passwordPlaceholder', 'Password')}
-                placeholderTextColor={SemanticColors.textTertiary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="password"
-              />
-
-              {error !== '' && (
-                <View style={styles.errorCard}>
-                  <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              )}
-
-              <GradientButton
-                label={t('auth.login', 'Inloggen')}
-                onPress={handleLogin}
-                loading={isLoading}
-                disabled={isLoading || Date.now() < lockoutUntil}
-                icon="arrow-forward"
-              />
-
-              <View style={styles.authLinksRow}>
+          {/* R? — WELCOME view: sign-up-first landing. Leads with the primary
+              "Create account" gradient CTA so acquisition is the loudest action;
+              "Log in" is a quiet secondary that reveals the form below. */}
+          {mode === 'welcome' ? (
+            <FadeIn delay={200} duration={500}>
+              <View style={styles.welcomeActions}>
+                <GradientButton
+                  label={t('auth.createAccount', 'Create account')}
+                  onPress={() => router.push('/signup' as any)}
+                  icon="arrow-forward"
+                />
                 <Pressable
-                  style={styles.forgotBtn}
-                  onPress={() => router.push('/forgot-password' as any)}
-                  accessibilityRole="link"
-                  accessibilityLabel={t('auth.forgotPassword', 'Forgot password?')}
+                  style={styles.secondaryBtn}
+                  onPress={() => setMode('signin')}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('auth.login', 'Log in')}
                 >
-                  <Text style={styles.forgotBtnText}>{t('auth.forgotPassword', 'Forgot password?')}</Text>
+                  <Text style={styles.secondaryBtnText}>{t('auth.login', 'Log in')}</Text>
                 </Pressable>
+
+                {/* Customer portal entry — demoted from a full button to one quiet
+                    link. Customers are a tiny slice of traffic and shouldn't
+                    compete with the sign-up CTA. */}
+                <Pressable
+                  style={styles.accessCodeLink}
+                  onPress={() => router.push('/customer' as any)}
+                  accessibilityRole="link"
+                  accessibilityLabel={t('auth.haveAccessCode', 'I have an access code')}
+                >
+                  <Ionicons name="key-outline" size={15} color={DK.colors.textMuted} />
+                  <Text style={styles.accessCodeLinkText}>
+                    {t('auth.haveAccessCode', 'I have an access code')}
+                  </Text>
+                </Pressable>
+              </View>
+            </FadeIn>
+          ) : (
+            /* SIGN-IN view: the email/password form. */
+            <FadeIn delay={0} duration={300}>
+              <View style={styles.form}>
+                {/* Back to the welcome/sign-up view. Hidden in DEMO_MODE where the
+                    sign-in view is the default entry (nothing to go back to). */}
                 {!DEMO_MODE && (
                   <Pressable
-                    style={styles.forgotBtn}
-                    onPress={() => router.push('/signup' as any)}
-                    accessibilityRole="link"
-                    accessibilityLabel={t('auth.createAccount', 'Create account')}
+                    style={styles.backToWelcome}
+                    onPress={() => { setError(''); setMode('welcome'); }}
+                    accessibilityRole="button"
+                    hitSlop={8}
+                    accessibilityLabel={t('common.back', 'Back')}
                   >
-                    <Text style={styles.forgotBtnText}>{t('auth.createAccount', 'Create account')}</Text>
+                    <Ionicons name="chevron-back" size={18} color={SemanticColors.textSecondary} />
+                    <Text style={styles.backToWelcomeText}>{t('common.back', 'Back')}</Text>
                   </Pressable>
                 )}
+
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('auth.emailPlaceholder', 'Email address')}
+                  placeholderTextColor={SemanticColors.textTertiary}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('auth.passwordPlaceholder', 'Password')}
+                  placeholderTextColor={SemanticColors.textTertiary}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoComplete="password"
+                />
+
+                {error !== '' && (
+                  <View style={styles.errorCard}>
+                    <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                )}
+
+                <GradientButton
+                  label={t('auth.login', 'Inloggen')}
+                  onPress={handleLogin}
+                  loading={isLoading}
+                  disabled={isLoading || Date.now() < lockoutUntil}
+                  icon="arrow-forward"
+                />
+
+                <View style={styles.authLinksRow}>
+                  <Pressable
+                    style={styles.forgotBtn}
+                    onPress={() => router.push('/forgot-password' as any)}
+                    accessibilityRole="link"
+                    accessibilityLabel={t('auth.forgotPassword', 'Forgot password?')}
+                  >
+                    <Text style={styles.forgotBtnText}>{t('auth.forgotPassword', 'Forgot password?')}</Text>
+                  </Pressable>
+                  {!DEMO_MODE && (
+                    <Pressable
+                      style={styles.forgotBtn}
+                      onPress={() => router.push('/signup' as any)}
+                      accessibilityRole="link"
+                      accessibilityLabel={t('auth.createAccount', 'Create account')}
+                    >
+                      <Text style={styles.forgotBtnText}>{t('auth.createAccount', 'Create account')}</Text>
+                    </Pressable>
+                  )}
+                </View>
               </View>
+            </FadeIn>
+          )}
 
-              {/* R190: customer entry. Real customers who downloaded Vasco because
-                  their contractor told them to "review your quote" had nowhere
-                  to start — the login screen is contractor-only. This secondary
-                  outline button routes to /customer where they type their
-                  access code. Kept visually distinct from the primary auth flow
-                  so contractors don't tap it by accident. */}
-              <Pressable
-                style={styles.customerEntryBtn}
-                onPress={() => router.push('/customer' as any)}
-                accessibilityRole="button"
-                accessibilityLabel={t('auth.haveAccessCode', 'I have an access code')}
-              >
-                <Ionicons name="key-outline" size={16} color={DK.colors.accent} />
-                <Text style={styles.customerEntryBtnText}>
-                  {t('auth.haveAccessCode', 'I have an access code')}
-                </Text>
-              </Pressable>
-            </View>
-          </FadeIn>
-
-          {/* Demo Accounts */}
-          {DEMO_MODE && (
+          {/* Demo Accounts — only in the sign-in view */}
+          {DEMO_MODE && mode === 'signin' && (
             <FadeIn delay={400} duration={500}>
               <View style={styles.demoSection}>
                 <View style={styles.dividerRow}>
@@ -606,18 +650,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   authLinksRow: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
-  // R190 — customer-portal entry. Outlined to read as "different lane" vs
-  // the contractor login primary CTA above.
-  customerEntryBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    marginTop: Spacing.md,
-    borderWidth: 1, borderColor: DK.colors.accent + '55',
-    borderRadius: 14, paddingVertical: 12, paddingHorizontal: 18,
-    backgroundColor: DK.colors.accent + '0E',
+  // R? — WELCOME view actions. Create-account is the primary GradientButton;
+  // these style the secondary "Log in" button + the quiet access-code link.
+  welcomeActions: { gap: 12, marginBottom: 28 },
+  secondaryBtn: {
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: SemanticColors.borderDefault,
+    borderRadius: 14, paddingVertical: 16,
+    backgroundColor: SemanticColors.surfacePrimary,
   },
-  customerEntryBtnText: {
-    fontSize: 13, fontFamily: 'Archivo_700Bold', color: DK.colors.accent,
-    letterSpacing: 0.6, textTransform: 'uppercase',
+  secondaryBtnText: {
+    fontSize: 15, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary,
+    letterSpacing: 0.4,
+  },
+  accessCodeLink: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 12, marginTop: 4,
+  },
+  accessCodeLinkText: {
+    fontSize: 13, fontFamily: 'Inter_500Medium', color: DK.colors.textMuted,
+  },
+  // Back affordance in the sign-in view → returns to the welcome/sign-up view.
+  backToWelcome: {
+    flexDirection: 'row', alignItems: 'center', gap: 2,
+    alignSelf: 'flex-start', paddingVertical: 4, marginBottom: 4,
+  },
+  backToWelcomeText: {
+    fontSize: 14, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textSecondary,
   },
   forgotBtn: { alignSelf: 'center', paddingVertical: 8 },
   forgotBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: Palette.hermesOrange },
