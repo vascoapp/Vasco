@@ -796,6 +796,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setIsLoading(false);
     if (error) return { success: false, error: error.message };
+    // Activation funnel — top of funnel. `confirmed` = signed in immediately
+    // (email-confirmation OFF) vs pending email verification.
+    trackEvent('signup', { confirmed: !!data.session }).catch(() => {});
     // `session` is non-null only when email confirmation is DISABLED in the
     // Supabase project (Auth → Providers → Email → "Confirm email" = OFF).
     // In that case the user is already logged in and signup.tsx routes straight

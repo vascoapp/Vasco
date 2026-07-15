@@ -1630,6 +1630,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       markInvoicePaid: (id) => {
         const paidInv = invoices.find((i) => i.id === id);
         addBreadcrumb({ category: 'user', message: 'invoice_paid', data: { invoiceId: id, amount: paidInv?.amount } });
+        // Activation funnel — the value moment. Fires for BOTH manual mark-paid
+        // and Mollie/Stripe webhook-driven payments (both route through here).
+        trackEvent('payment_received', {
+          invoiceId: id,
+          amount: paidInv?.amount ?? 0,
+          wasOverdue: (paidInv?.dueInDays ?? 0) < 0,
+        }).catch(() => {});
         setInvoices((prev) =>
           prev.map((invoice) =>
             invoice.id === id ? { ...invoice, status: 'paid', dueInDays: 0 } : invoice

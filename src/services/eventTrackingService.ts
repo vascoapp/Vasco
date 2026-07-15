@@ -24,6 +24,7 @@ const AUTO_FLUSH_THRESHOLD = 50; // Flush after N events accumulated
 
 export type EventName =
   | 'login'
+  | 'signup'
   | 'logout'
   | 'job_created'
   | 'job_completed'
