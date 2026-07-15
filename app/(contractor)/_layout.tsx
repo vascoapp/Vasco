@@ -94,6 +94,9 @@ export default function ContractorLayout() {
           name={tab.name}
           options={{
             title: t(tab.i18nKey, tab.fallbackTitle),
+            // Locale-independent selector for the screenshot capture flow
+            // (.maestro/screenshots.yaml) — tab labels are translated, IDs aren't.
+            tabBarButtonTestID: `tab-${tab.name}`,
             tabBarIcon: ({ color, focused }) => (
               <View style={styles.iconContainer}>
                 <Ionicons

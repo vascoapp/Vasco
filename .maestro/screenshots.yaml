@@ -49,9 +49,14 @@ env:
     // Maestro doesn't expose i18n state directly so we just always tap
     // through; if the locale is already the target the picker is a no-op.
 
+# Tab navigation uses tabBarButtonTestID (tab-index / tab-werk / tab-geld /
+# tab-ai) set in app/(contractor)/_layout.tsx — these are locale-independent,
+# unlike the translated tab labels. In-screen buttons below stay as optional
+# text taps (their labels are translated; optional means the flow won't crash
+# if the label differs).
 - tapOn:
-    text: "Vasco"
-    optional: true  # 5th tab (settings hub)
+    id: "tab-ai"
+    optional: true  # 5th tab (Vasco / settings hub)
 - tapOn:
     text: "Profile"
     optional: true
@@ -66,7 +71,7 @@ env:
 
 # 4. Screenshot 1 — Vandaag
 - tapOn:
-    text: "Vandaag"
+    id: "tab-index"
     optional: true
 - assertVisible:
     id: "vasco-card"
@@ -75,7 +80,7 @@ env:
 
 # 5. Screenshot 2 — Tiered Quote Builder preview
 - tapOn:
-    text: "Werk"
+    id: "tab-werk"
     optional: true
 - tapOn:
     text: "Nieuwe offerte"
@@ -87,7 +92,7 @@ env:
 
 # 6. Screenshot 3 — Geld (outstanding invoices)
 - tapOn:
-    text: "Geld"
+    id: "tab-geld"
     optional: true
 - waitForAnimationToEnd:
     timeout: 2000
@@ -107,7 +112,7 @@ env:
 
 # 8. Screenshot 5 — Compliance / VAT prep
 - tapOn:
-    text: "Geld"
+    id: "tab-geld"
     optional: true
 - tapOn:
     text: "BTW-aangifte"

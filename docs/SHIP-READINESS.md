@@ -39,25 +39,36 @@ also done — what's left below is the short list of remaining items.
 
 ---
 
-## 1. Apple credentials — gates TestFlight Internal — ✅ DONE
+## 1. Apple credentials — ⚠️ ASC key REVOKED — use Transporter to submit
 
 Authentication uses **App Store Connect API key**, not Apple-ID/2FA.
 All four submit values are wired into `eas.json`; the `.p8` key file
 sits in `secrets/` (gitignored).
 
+> ⚠️ **The ASC API key `LAU7D8HU29` is REVOKED (returns 401)** — confirmed
+> against build 33 (2026-06-17). Non-interactive `eas submit` and `altool`
+> uploads FAIL. Until a new key is generated in App Store Connect
+> (Users and Access → Integrations → App Store Connect API → generate a new
+> key, download the `.p8`, update the three `eas.json` values + drop the file
+> in `secrets/`), **upload builds via Transporter.app** (drag the `.ipa`,
+> sign in with the operator Apple ID + 2FA). Builds 33/36/37 all shipped
+> this way (see memory note `free-testflight-build-path.md`).
+
 | Item | Where it lives | Status |
 |---|---|---|
 | Apple Developer Program enrollment ($99/yr) | operator's account | ✅ |
-| **ASC API Key (.p8)** | `secrets/AuthKey_LAU7D8HU29.p8` | ✅ |
-| **ASC API Key ID** | `eas.json:submit.{preview,production}.ios.ascApiKeyId` = `LAU7D8HU29` | ✅ |
-| **ASC API Key Issuer ID** | `eas.json:...ascApiKeyIssuerId` = `215c3feb-76f3-4399-a0bb-d2385003e1b1` | ✅ |
+| **ASC API Key (.p8)** | `secrets/AuthKey_LAU7D8HU29.p8` | ⚠️ present but **REVOKED (401)** |
+| **ASC API Key ID** | `eas.json:submit.{preview,production}.ios.ascApiKeyId` = `LAU7D8HU29` | ⚠️ points at revoked key |
+| **ASC API Key Issuer ID** | `eas.json:...ascApiKeyIssuerId` = `215c3feb-76f3-4399-a0bb-d2385003e1b1` | ✅ (issuer unchanged) |
 | **Apple Team ID** | `eas.json:...appleTeamId` = `3DX8FBF7S6` | ✅ |
 
-Ready to run: `eas build --profile preview --platform ios` →
-`eas submit --profile preview --platform ios`.
+Submit path today: build the `.ipa` (`eas build --local` = $0 native build,
+no EAS credits), then **upload via Transporter.app**. The `eas submit` lane
+resumes working only after the ASC key is regenerated.
 Full walk-through: [`testflight-checklist.md`](./testflight-checklist.md).
 
-`app.json` already at `buildNumber: 3` — prior iterations have run.
+`app.json` is at `buildNumber: 40` (as of 2026-07-15) — many prior
+iterations have run; bump on every new binary.
 
 ---
 
@@ -304,6 +315,9 @@ Everything else is done.
 
 ## Quick-reference: which doc owns what
 
+- [`go-live-deploy-runbook.md`](./go-live-deploy-runbook.md) — **master
+  ordered sequence** (git push → Supabase → SMTP → Sentry → payments → iOS)
+  to take `main` from code-done to live. Start here for the deploy.
 - **This file** — what's STILL missing, per milestone
 - [`testflight-checklist.md`](./testflight-checklist.md) — exact commands
   to go from creds-in-hand to a build on your iPhone

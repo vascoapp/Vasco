@@ -62,19 +62,20 @@ Vasco **does not use** any third-party ad networks. No tracking frameworks
 
 ## Support contacts
 
-> ⚠️ **Verify each URL returns 200 before pasting into App Store Connect.**
-> All entries below are aspirational — none have been confirmed live as of
-> R66r65. The `admin/src/app/legal/[slug]/page.tsx` route renders the
-> legal markdown, but it needs to be deployed to Vercel + DNS pointed at
-> `admin.vascobuild.com` first. Same for `vascobuild.com/support` (no support
-> page exists in the repo yet — needs a marketing-site landing page).
+> ✅ **All URLs verified live (HTTP 200) 2026-07-15.** The marketing site,
+> `/support` page, and the `admin/src/app/legal/[slug]/page.tsx` legal route
+> are deployed on Vercel with DNS pointed at `vascobuild.com` /
+> `admin.vascobuild.com`. Re-curl before each production submission — a lapsed
+> deploy or DNS change silently breaks these fields.
 
-- Marketing URL: https://vascobuild.com **— ❓ unverified, no marketing site in repo**
-- Support URL: https://vascobuild.com/support **— ❓ unverified, no /support page yet**
-- Privacy policy: https://admin.vascobuild.com/legal/privacy-policy **— ❓ needs Vercel deploy of admin/**
-- EULA: https://admin.vascobuild.com/legal/eula **— ❓ needs Vercel deploy of admin/**
-- Terms of service: https://admin.vascobuild.com/legal/terms-of-service **— ❓ needs Vercel deploy of admin/**
-- Support email: support@vascobuild.com **— ❓ unverified, set up MX records before submission**
-- Review question contact: support@vascobuild.com **— ❓ unverified, same as above**
+- Marketing URL: https://vascobuild.com **— ✅ 200 (2026-07-15)**
+- Support URL: https://vascobuild.com/support **— ✅ 200 (2026-07-15)**
+- Privacy policy: https://admin.vascobuild.com/legal/privacy-policy **— ✅ 200 (2026-07-15)**
+- EULA: https://admin.vascobuild.com/legal/eula **— ✅ 200 (2026-07-15)**
+- Terms of service: https://admin.vascobuild.com/legal/terms-of-service **— ✅ 200 (2026-07-15)**
+- Support email: support@vascobuild.com **— ⚠️ verify MX/inbox actually receives before submission**
+- Review question contact: support@vascobuild.com **— ⚠️ same inbox as above**
 
-Tracked in [`SHIP-READINESS.md`](./SHIP-READINESS.md) §5.
+The fastlane metadata uses the canonical `admin.vascobuild.com/support` and
+`admin.vascobuild.com/legal/*` URLs (also live 200). Tracked in
+[`SHIP-READINESS.md`](./SHIP-READINESS.md) §5.

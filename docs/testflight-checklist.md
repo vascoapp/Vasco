@@ -40,8 +40,8 @@ These were finalized in earlier rounds and verified for R66r65:
 
 - ✅ EAS project linked: `@collectai/VascoApp` ID `eebc2577-cbf8-4252-9b6c-f91119c17b7d` (`app.json:280`).
 - ✅ Bundle ID `com.vascobuild.app` (`app.json:24`).
-- ✅ iOS version `1.0.0`, buildNumber `1` (`app.json:6,26`). EAS `production` profile auto-increments buildNumber on each build (`eas.json:32`).
-- ✅ iOS privacy manifest declared (`app.json:47`, R66r49). 4 accessed-API reasons + 9 collected-data-types match what Vasco actually reads.
+- ✅ iOS version `1.0.0`, buildNumber `40` (as of 2026-07-15). EAS `production` profile auto-increments buildNumber on each build (`eas.json`); `--local`/preview builds need a manual bump in `app.json:expo.ios.buildNumber`.
+- ✅ iOS privacy manifest declared (R66r49). 4 accessed-API reasons + 11 collected-data-types match what Vasco actually reads.
 - ✅ `ITSAppUsesNonExemptEncryption: false` (`app.json:33`) — skips Apple export-compliance prompt because we only use HTTPS/standard crypto.
 - ✅ Camera + photo-library + Face ID usage strings declared (Apple rejects builds that prompt without strings).
 - ✅ Associated domains for deep links (`vascobuild.com`, `pay.vascobuild.com`, `admin.vascobuild.com`).
@@ -97,8 +97,21 @@ found", run `eas credentials` and follow the prompts to refresh.
 
 ## 4. Push to TestFlight
 
+> ⚠️ **The ASC API key `LAU7D8HU29` is REVOKED (401)** — `eas submit` and
+> `altool` uploads currently FAIL. Until a new key is generated (see
+> `SHIP-READINESS.md` §1), upload via **Transporter.app** instead:
+> ```bash
+> # $0 native build, no EAS credits:
+> eas build --profile preview --platform ios --local
+> ```
+> Then open **Transporter.app** → sign in with the operator Apple ID (2FA) →
+> drag the resulting `.ipa` → Deliver. Build appears in App Store Connect →
+> TestFlight after processing.
+
+Once the ASC key is regenerated, the automated lane works again:
+
 ```bash
-# After build #3 completes, submit it
+# After the build completes, submit it
 eas submit --profile preview --platform ios
 ```
 
@@ -110,6 +123,8 @@ EAS will:
 
 If `eas submit` errors with "ASC App ID not found" — go back to step 0
 and create the App Store Connect app record. The ID has to match exactly.
+If it errors **401 / authentication** — the ASC key is still revoked; use
+the Transporter path above.
 
 ---
 
