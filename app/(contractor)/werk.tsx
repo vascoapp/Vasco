@@ -447,6 +447,7 @@ export default function WerkScreen() {
 
       {/* ─── FAB ─── */}
       <Pressable
+        testID="new-quote-fab"
         style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
         onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
       >

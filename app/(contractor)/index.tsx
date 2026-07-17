@@ -225,7 +225,7 @@ export default function VandaagDK() {
             Renders on first-login too — its empty-state copy ("Start with
             your first quote" + photo CTA) is exactly the analyst-guidance
             we want; no need for a parallel custom hero. */}
-        <View style={styles.vascoCardWrap}>
+        <View testID="vasco-card" style={styles.vascoCardWrap}>
           <LinearGradient
             colors={[DK.colors.primaryDark, DK.colors.primary, '#7C2D12']}
             start={{ x: 0, y: 0 }}

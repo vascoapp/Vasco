@@ -72,48 +72,46 @@ env:
     optional: true
 - takeScreenshot: "${VARIANT}_${LOCALE}_1_vandaag"
 
-# 5. Screenshot 2 — Tiered Quote Builder preview
+# 5. Screenshot 2 — Tiered Quote Builder (opened via the werk FAB testID).
+# The old flow tapped text "Nieuwe offerte", which only exists as an EMPTY-STATE
+# CTA — in a seed-data build werk has content so it never renders. new-quote-fab
+# is the persistent FAB → /contractor/tiered-quote.
 - tapOn:
     id: "tab-werk"
-    optional: true
 - tapOn:
-    text: "Nieuwe offerte"
-    optional: true
+    id: "new-quote-fab"
 - waitForAnimationToEnd:
-    timeout: 2000
+    timeout: 2500
 - takeScreenshot: "${VARIANT}_${LOCALE}_2_quote_builder"
-- pressKey: Back
 
-# 6. Screenshot 3 — Geld (outstanding invoices)
+# 6. Screenshot 4 — Photo → Quote (AI). Reached via the AI-scan row INSIDE the
+# quote builder (photo-to-quote is a sub-view, not a standalone screen). The old
+# flow tapped text "AIQuoteFromPhoto" (a raw component name, never on screen)
+# from the wrong tab. NOTE: photo-to-quote is paid-tier gated — if the demo
+# account is free-tier an upgrade Alert shows instead of the photo-to-quote
+# empty state (testID photo-to-quote). Validate empirically on the first run.
 - tapOn:
-    id: "tab-geld"
-    optional: true
-- waitForAnimationToEnd:
-    timeout: 2000
-- takeScreenshot: "${VARIANT}_${LOCALE}_3_geld_outstanding"
-
-# 7. Screenshot 4 — Photo → Quote (AI photo analysis flow)
-- tapOn:
-    text: "AIQuoteFromPhoto"
-    optional: true
-- tapOn:
-    text: "Photo"
-    optional: true  # fallback label
+    id: "ai-scan-row"
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: "${VARIANT}_${LOCALE}_4_photo_to_quote"
 - pressKey: Back
+- pressKey: Back
 
-# 8. Screenshot 5 — Compliance / VAT prep
+# 7. Screenshot 3 — Geld (outstanding invoices)
 - tapOn:
     id: "tab-geld"
-    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "${VARIANT}_${LOCALE}_3_geld_outstanding"
+
+# 8. Screenshot 5 — Compliance / VAT prep. The BTW-aangifte card (testID
+# vat-prep-card) renders when the business country is NL or DE (independent of
+# UI locale, so it shows in every language run for the NL demo contractor) and
+# routes to /contractor/vat-prep. Old flow tapped localized text that never
+# matched the real label ("Prepare VAT return").
 - tapOn:
-    text: "BTW-aangifte"
-    optional: true
-- tapOn:
-    text: "VAT prep"
-    optional: true  # English fallback
+    id: "vat-prep-card"
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: "${VARIANT}_${LOCALE}_5_compliance"

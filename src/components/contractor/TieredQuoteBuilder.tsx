@@ -893,7 +893,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 </Pressable>
               ) : null}
             </View>
-            <Pressable style={s.aiScanRow} onPress={async () => {
+            <Pressable testID="ai-scan-row" style={s.aiScanRow} onPress={async () => {
               // R307: tier gate — photo-to-quote AI is paid-tier (same class
               // as ReceiptScanner R307 gate on inkoop). Was completely ungated.
               try {

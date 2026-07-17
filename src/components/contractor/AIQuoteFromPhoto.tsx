@@ -299,7 +299,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   // Empty state — no photos yet
   if (photos.length === 0) {
     return (
-      <View style={styles.container}>
+      <View testID="photo-to-quote" style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t('aiQuote.title', 'AI quote')}</Text>
           {onClose && (
