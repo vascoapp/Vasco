@@ -29,44 +29,38 @@ env:
 # locale picker fires (Vasco defaults to device locale on first run).
 - launchApp:
     clearState: true
-    arguments:
-      EXPO_PUBLIC_DEMO_MODE: "true"
 
-# 2. Demo login — preview profile gates this behind DEMO_MODE.
-- tapOn: "contractor@vasco.dev"
-- inputText: "review"
+# 2. Welcome-first login → one-tap demo login.
+# The login screen defaults to the welcome view (Create Account CTA); the demo
+# cards live in the sign-in view and render ONLY in DEMO_MODE builds. DEMO_MODE
+# is build-time (EXPO_PUBLIC_DEMO_MODE=true when bundling) — a launchApp arg does
+# NOT work because EXPO_PUBLIC_* is inlined at build. Both anchors are
+# locale-independent testIDs (added in app/login.tsx). handleDemoLogin logs in
+# with no password, so no text entry is needed.
 - tapOn:
-    text: "Sign in"
-    optional: true
+    id: "login-toggle-signin"
 - tapOn:
-    text: "Log in"
-    optional: true
+    id: "demo-account-contractor@vasco.dev"
+- waitForAnimationToEnd:
+    timeout: 3000
 
-# 3. Switch language to ${LOCALE} via Profile → Language.
-# Skip the switch if LOCALE is the device default.
-- runScript: |
-    // Only switch if not already in the requested locale.
-    // Maestro doesn't expose i18n state directly so we just always tap
-    // through; if the locale is already the target the picker is a no-op.
-
-# Tab navigation uses tabBarButtonTestID (tab-index / tab-werk / tab-geld /
-# tab-ai) set in app/(contractor)/_layout.tsx — these are locale-independent,
-# unlike the translated tab labels. In-screen buttons below stay as optional
-# text taps (their labels are translated; optional means the flow won't crash
-# if the label differs).
+# 3. Switch language to ${LOCALE} via Vasco hub (tab-ai) → Profile gear
+# (open-profile) → Language row (profile-language-row) → pick locale.
+# All testID-anchored so the path is locale-independent. The language picker is
+# a native Alert whose buttons read "🇳🇱 Nederlands", so ${LOCALE_DISPLAY}
+# (e.g. "Nederlands") matches as a substring. For LOCALE=en (device default)
+# this re-selects English — a harmless no-op. Profile is a pushed stack screen
+# (no tab bar), so one Back returns to the hub before the screenshot sweep.
 - tapOn:
     id: "tab-ai"
-    optional: true  # 5th tab (Vasco / settings hub)
 - tapOn:
-    text: "Profile"
-    optional: true
+    id: "open-profile"
+- waitForAnimationToEnd:
+    timeout: 1500
 - tapOn:
-    text: "Language"
-    optional: true
+    id: "profile-language-row"
 - tapOn:
     text: "${LOCALE_DISPLAY}"
-    optional: true
-- pressKey: Back
 - pressKey: Back
 
 # 4. Screenshot 1 — Vandaag

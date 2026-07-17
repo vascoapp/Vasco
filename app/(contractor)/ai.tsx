@@ -302,7 +302,7 @@ export default function VascoScreen() {
             >
               <Ionicons name="people-circle-outline" size={20} color={DK.colors.text} />
             </Pressable>
-            <Pressable style={s.iconBtn} onPress={() => router.push('/contractor/profile' as any)} hitSlop={8}>
+            <Pressable testID="open-profile" style={s.iconBtn} onPress={() => router.push('/contractor/profile' as any)} hitSlop={8}>
               <Ionicons name="settings-outline" size={20} color={DK.colors.text} />
             </Pressable>
           </View>

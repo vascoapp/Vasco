@@ -646,7 +646,7 @@ export default function ProfileScreen() {
         <View style={styles.sectionWrap}>
           <DKLabel style={styles.sectionLabel}>{t('profile.settings', 'SETTINGS')}</DKLabel>
           <View style={styles.card}>
-            <Pressable style={styles.row} onPress={handleLanguageSwitch}>
+            <Pressable testID="profile-language-row" style={styles.row} onPress={handleLanguageSwitch}>
               <View style={styles.rowIcon}>
                 <Ionicons name="language" size={18} color={Palette.hermesOrange} />
               </View>

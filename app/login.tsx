@@ -213,6 +213,7 @@ export default function LoginScreen() {
                   icon="arrow-forward"
                 />
                 <Pressable
+                  testID="login-toggle-signin"
                   style={styles.secondaryBtn}
                   onPress={() => setMode('signin')}
                   accessibilityRole="button"
@@ -329,6 +330,7 @@ export default function LoginScreen() {
                     return (
                       <FadeIn key={account.email} delay={500 + i * 80} duration={400}>
                         <Pressable
+                          testID={`demo-account-${account.email}`}
                           style={({ pressed }) => [styles.demoCard, pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 }]}
                           onPress={() => handleDemoLogin(account.email)}
                           accessibilityRole="button"
