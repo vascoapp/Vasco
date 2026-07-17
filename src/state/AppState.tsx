@@ -2617,6 +2617,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           acceptedAmount: quote.amount,
           daysToAccept: ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : 0,
         }).catch(() => {});
+        // Activation-funnel analytics counterpart (signup→quote_sent→quote_accepted
+        // →invoice_sent→payment_received). Was declared-but-unfired; wire it here
+        // alongside the intelligence emit so the funnel's middle rung populates.
+        trackEvent('quote_accepted', { quoteId, amount: quote.amount }).catch(() => {});
         recordPricingOutcome(getCurrentUserId(), quoteId, {
           wasAccepted: true,
           acceptedPrice: quote.amount,
@@ -2805,6 +2809,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             acceptedAmount: quote.amount,
             daysToAccept: ttdHoursUp !== undefined ? Math.round(ttdHoursUp / 24) : 0,
           }).catch(() => {});
+          // Activation-funnel analytics counterpart (mirrors convertQuoteToJob).
+          trackEvent('quote_accepted', { quoteId: id, amount: quote.amount }).catch(() => {});
           recordPricingOutcome(getCurrentUserId(), id, {
             wasAccepted: true,
             acceptedPrice: quote.amount,
