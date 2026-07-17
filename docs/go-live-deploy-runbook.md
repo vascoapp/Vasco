@@ -167,10 +167,14 @@ Not needed to *launch the app*, but needed before charging anyone. Follow
 See [`SHIP-READINESS.md`](./SHIP-READINESS.md) + [`testflight-checklist.md`](./testflight-checklist.md).
 Config/manifest/metadata/URLs are **ready**. Remaining:
 
-1. **Screenshots** (only hard code-adjacent gate) — pipeline fixed 2026-07-15:
+1. **Screenshots** (only hard code-adjacent gate) — pipeline fully fixed & committed 2026-07-17
+   (device-name resolution 07-15; bash-3.2 `case` + `JAVA_HOME` fix 07-17):
    ```bash
-   curl -sL https://get.maestro.mobile.dev | bash     # install maestro
-   # install the preview build on the simulators, then:
+   curl -sL https://get.maestro.mobile.dev | bash     # install maestro (already installed)
+   # Install a sim build with the PRODUCTION bundle id com.vascobuild.app on the 3 sims.
+   # GOTCHA: the app must be com.vascobuild.app — a com.vasco.app build installs but the
+   # capture script's install-guard silently skips it. Build fresh, don't reuse old DerivedData.
+   xcrun simctl install <udid> /path/to/Vasco.app
    npm run capture:screenshots                          # 6.9"/6.5"/iPad × 6 locales
    ```
 2. **Submit — ASC key `LAU7D8HU29` is REVOKED (401)**, so `eas submit` fails.
