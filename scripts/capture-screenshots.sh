@@ -35,34 +35,59 @@
 set -euo pipefail
 
 LOCALES="${LOCALES:-en nl de fr es it}"
-VARIANTS="${VARIANTS:-iPhone-16-Pro-Max iPhone-15-Pro-Max iPad-Pro-13-inch-M4}"
 OUTPUT_DIR="${OUTPUT_DIR:-./screenshots}"
 
 # Locale → display name in the in-app language picker.
 # Must match the labels in app/contractor/profile.tsx → Language section.
-declare -A LOCALE_DISPLAY=(
-  [en]="English"
-  [nl]="Nederlands"
-  [de]="Deutsch"
-  [fr]="Français"
-  [es]="Español"
-  [it]="Italiano"
-)
+# NOTE: plain `case` (not `declare -A`) — macOS ships bash 3.2, which has no
+# associative arrays; `declare -A` there fails with "unbound variable".
+locale_display() {
+  case "$1" in
+    en) echo "English" ;;
+    nl) echo "Nederlands" ;;
+    de) echo "Deutsch" ;;
+    fr) echo "Français" ;;
+    es) echo "Español" ;;
+    it) echo "Italiano" ;;
+    *)  echo "$1" ;;
+  esac
+}
 
 # ASC slot → simulator device-NAME pattern (matched against the real names
 # `xcrun simctl` reports, e.g. "iPhone 16 Pro Max", "iPad Pro 13-inch (M5)").
 # NOTE: the pattern must be the *actual* device name — hyphenated forms like
 # "iPhone-16-Pro-Max" NEVER match simctl and silently boot the wrong device.
 # The iPad pattern is M-generation-agnostic so it resolves on M4/M5/etc.
-declare -A SLOT_DEVICE_PATTERN=(
-  [6_9inch]="iPhone 16 Pro Max"
-  [6_5inch]="iPhone 15 Pro Max"
-  [ipad_13inch]="iPad Pro 13-inch"
-)
+slot_device_pattern() {
+  case "$1" in
+    6_9inch)     echo "iPhone 16 Pro Max" ;;
+    6_5inch)     echo "iPhone 15 Pro Max" ;;
+    ipad_13inch) echo "iPad Pro 13-inch" ;;
+    *)           echo "" ;;
+  esac
+}
 
 # Which ASC slots to capture. Override: SLOTS="6_9inch" bash scripts/capture-screenshots.sh
 # (6.9" iPhone × your locales is the minimum App Store hard requirement.)
 SLOTS="${SLOTS:-6_9inch 6_5inch ipad_13inch}"
+
+# Maestro is a JVM tool; resolve a JAVA_HOME if the caller hasn't set one.
+# openjdk installed via Homebrew is keg-only (not symlinked into /usr/bin), so
+# the bare `java` wrapper errors "Unable to locate a Java Runtime". Point
+# JAVA_HOME at the brew keg (Apple-silicon and Intel prefixes) or /usr/libexec.
+if [[ -z "${JAVA_HOME:-}" ]]; then
+  for cand in \
+    "$(/usr/libexec/java_home 2>/dev/null)" \
+    "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home" \
+    "/usr/local/opt/openjdk/libexec/openjdk.jdk/Contents/Home"; do
+    if [[ -n "$cand" && -x "$cand/bin/java" ]]; then
+      export JAVA_HOME="$cand"
+      break
+    fi
+  done
+fi
+[[ -n "${JAVA_HOME:-}" ]] && export PATH="$JAVA_HOME/bin:$PATH"
+export PATH="$PATH:$HOME/.maestro/bin"
 
 if ! command -v maestro >/dev/null 2>&1; then
   echo "✗ maestro CLI not installed."
@@ -84,9 +109,9 @@ resolve_udid() {
 mkdir -p "$OUTPUT_DIR"
 
 for slot in $SLOTS; do
-  pattern="${SLOT_DEVICE_PATTERN[$slot]:-}"
+  pattern="$(slot_device_pattern "$slot")"
   if [[ -z "$pattern" ]]; then
-    echo "✗ Unknown slot '$slot' — valid: ${!SLOT_DEVICE_PATTERN[*]}"
+    echo "✗ Unknown slot '$slot' — valid: 6_9inch 6_5inch ipad_13inch"
     exit 1
   fi
 
@@ -122,7 +147,7 @@ for slot in $SLOTS; do
   fi
 
   for locale in $LOCALES; do
-    display="${LOCALE_DISPLAY[$locale]:-$locale}"
+    display="$(locale_display "$locale")"
     echo
     echo "── $locale ($display) ──"
 
