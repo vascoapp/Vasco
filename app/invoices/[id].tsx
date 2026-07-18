@@ -695,7 +695,15 @@ export default function InvoiceDetailScreen() {
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('invoices.invoice', 'Invoice')} {invoice.id}</Text>
+          {/* Label by document reference or customer — NEVER invoice.id. The
+              row id ("inv-seed-1") is internal and meaningless to a contractor;
+              it was rendering as the screen title. */}
+          <Text style={styles.headerTitle}>
+            {t('invoices.invoice', 'Invoice')}
+            {(invoice.reference || invoice.customerName || invoice.customer)
+              ? ` ${invoice.reference || invoice.customerName || invoice.customer}`
+              : ''}
+          </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusBg(invoice.status) }]}>
           <Text style={[styles.statusText, { color: getStatusColor(invoice.status) }]}>

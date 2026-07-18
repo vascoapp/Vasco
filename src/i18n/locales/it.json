@@ -1734,7 +1734,16 @@
     "viewJob": "Vedi lavoro",
     "createInvoice": "Crea fattura",
     "conversionFailed": "Impossibile convertire il preventivo in lavoro.",
-    "acceptAndCreateJob": "Accetta e crea lavoro"
+    "acceptAndCreateJob": "Accetta e crea lavoro",
+    "addCustomService": "Aggiungi un servizio personalizzato",
+    "customServiceName": "Nome del servizio",
+    "customServicePrice": "Prezzo (€)",
+    "customServiceUnit": "Unità",
+    "orFromPricebook": "Oppure scegli dal tuo listino",
+    "editPrice": "Modifica prezzo",
+    "addService": "Aggiungi servizio",
+    "customServiceInvalidTitle": "Aggiungi nome e prezzo",
+    "customServiceInvalidBody": "Inserisci un nome del servizio e un prezzo maggiore di zero."
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -1790,11 +1799,11 @@
     "jobCompleted": "Lavoro completato",
     "createInvoice": "Crea fattura",
     "revenueAmount": "{{amount}} di fatturato",
-    "reminderFor": "Promemoria per {{id}}",
+    "reminderFor": "Promemoria per {{ref}}",
     "amountOverdue": "{{amount}} scaduto",
     "sendReminder": "Invia promemoria",
     "speedsUpPayment": "Accelera il pagamento di ~5 giorni",
-    "quoteFollowUp": "Follow-up preventivo {{id}}",
+    "quoteFollowUp": "Follow-up preventivo {{ref}}",
     "sendFollowUp": "Invia follow-up",
     "increasesAcceptance": "Aumenta il tasso di accettazione del 20%"
   },
@@ -4030,7 +4039,36 @@
     "aiInsightLimitReached": "Limite insight AI raggiunto ({{count}}/mese).",
     "clientLimitReached": "Limite clienti raggiunto ({{count}}).",
     "seatsInUse": "Tutti i {{count}} posti del team in uso.",
-    "featureRequiresTier": "{{feature}} richiede il piano {{tier}}."
+    "featureRequiresTier": "{{feature}} richiede il piano {{tier}}.",
+    "features": {
+      "hasPaymentProcessing": "Elaborazione pagamenti",
+      "hasAccountingIntegrations": "Integrazioni contabili",
+      "hasEInvoicing": "Fatturazione elettronica",
+      "hasFullEInvoicing": "Tutti i formati di fattura elettronica",
+      "hasEveAI": "Assistente IA EVE",
+      "hasEveAuditor": "Monitoraggio conformità EVE",
+      "hasEveAnalyst": "Business intelligence EVE",
+      "hasAutomationPacks": "Pacchetti di automazione",
+      "hasMlPredictions": "Previsioni ML",
+      "hasBenchmarking": "Benchmarking artigiani",
+      "hasPriceIndex": "Indice prezzi UE",
+      "hasInvoiceScanning": "Scansione fatture",
+      "hasPurchasingAgent": "Agente acquisti",
+      "hasBulkPurchaseOptimizer": "Ottimizzatore acquisti all'ingrosso",
+      "hasPriceDropAlerts": "Avvisi calo prezzo",
+      "hasSupplierScoring": "Valutazione affidabilità fornitori",
+      "hasPdfExport": "Esportazione PDF/CSV",
+      "hasClientPortal": "Portale cliente",
+      "hasQuoteTemplates": "Modelli di preventivo",
+      "hasCustomerDecisions": "Tracker decisioni cliente",
+      "hasApiAccess": "Accesso API",
+      "hasWhiteLabel": "Documenti white-label",
+      "hasSubcontractorPortal": "Portale subappaltatori",
+      "hasWorkerPortal": "Portale lavoratori",
+      "hasCalendarSync": "Sincronizzazione calendario",
+      "hasDedicatedSupport": "Supporto dedicato",
+      "hasOnboardingAssistance": "Assistenza all'onboarding"
+    }
   },
   "shareQuote": {
     "failTitle": "Impossibile creare il link",
@@ -4560,7 +4598,81 @@
     "pendingFor": "IN ATTESA — {{name}}",
     "empty": "{{name}} è aggiornato — nessuna azione in attesa.",
     "aboutHeading": "INFORMAZIONI SU EVE",
-    "aboutBody": "EVE prepara il lavoro in modo proattivo tramite tre agenti specializzati. Tocca un agente qui sopra per esaminare i suoi suggerimenti in attesa — ogni approvazione è un solo tocco."
+    "aboutBody": "EVE prepara il lavoro in modo proattivo tramite tre agenti specializzati. Tocca un agente qui sopra per esaminare i suoi suggerimenti in attesa — ogni approvazione è un solo tocco.",
+    "live": {
+      "genericCustomer": "il cliente",
+      "draftInvoice": {
+        "title": "Prepara la fattura per {{job}}",
+        "description": "{{job}} è segnato come completato — fattura ora e metti al sicuro la liquidità.",
+        "impact": "{{amount}} € di fatturato",
+        "action": "Prepara fattura"
+      },
+      "overdue": {
+        "title": "Fattura {{invoice}} scaduta da {{days}}g",
+        "description": "{{amount}} € da incassare — consigliato {{tone}}.",
+        "impact": "{{amount}} € a rischio incasso",
+        "action": "Controlla",
+        "toneFinal": "sollecito finale",
+        "toneFirm": "sollecito deciso",
+        "toneFriendly": "promemoria cordiale"
+      },
+      "winRate": {
+        "title": "Tasso di successo al {{pct}}%",
+        "description": "Sotto il riferimento di settore del 45%. Rivedi gli ultimi 5 preventivi persi — prezzo, mix di livelli o tempistica del follow-up sono le cause tipiche.",
+        "impact": "Recuperabile 10-15% di fatturato",
+        "action": "Vedi preventivi persi"
+      },
+      "appointment": {
+        "title": "Appuntamento domani: {{job}}",
+        "description": "Invia un promemoria a {{customer}}.",
+        "impact": "Meno mancate presenze",
+        "template": "Ciao {{customer}}, ti ricordo il nostro appuntamento domani alle {{time}} per {{job}}. Fammi sapere se vuoi spostarlo.",
+        "action": "Invia promemoria"
+      },
+      "followUp": {
+        "title": "Ricontatta per il preventivo {{quote}}",
+        "description": "Preventivo inviato {{days}} giorni fa — i clienti silenziosi accettano dopo un sollecito.",
+        "impact": "{{amount}} € potenziali",
+        "impactFallback": "Più conversioni",
+        "template": "Ciao {{customer}}, ti ricontatto per il preventivo di {{quote}} ({{amount}} €). Hai domande?",
+        "action": "Ricontatta"
+      },
+      "jobStarted": {
+        "title": "Avvisa il cliente: {{job}} iniziato",
+        "description": "Messaggio al cliente: «abbiamo iniziato».",
+        "impact": "Crea fiducia",
+        "template": "Ciao {{customer}}, abbiamo iniziato {{job}}. Ti terremo aggiornato sull'avanzamento.",
+        "action": "Invia aggiornamento"
+      },
+      "handover": {
+        "title": "Nota di consegna: {{job}}",
+        "description": "Invia al cliente un riepilogo + preavviso della fattura.",
+        "impact": "Consegna senza attriti",
+        "template": "Ciao {{customer}}, {{job}} è completato. Grazie della fiducia — la fattura sta arrivando.",
+        "action": "Invia consegna"
+      },
+      "paymentThanks": {
+        "title": "Ringrazia {{customer}} per il pagamento",
+        "description": "Fattura {{invoice}} pagata — due righe di ringraziamento contano.",
+        "impact": "Più clienti abituali",
+        "template": "Grazie {{customer}} — pagamento ricevuto per la fattura {{invoice}}. La ricevuta sta arrivando.",
+        "action": "Invia ringraziamento"
+      },
+      "quoteSent": {
+        "title": "Conferma l'arrivo del preventivo {{quote}}",
+        "description": "Un rapido «ho appena inviato il preventivo — dimmi se ti serve altro» — migliora le risposte.",
+        "impact": "Meno preventivi senza risposta",
+        "template": "Ciao {{customer}}, ho appena inviato il preventivo per {{quote}}. Controlla la mail — fammi sapere se hai domande.",
+        "action": "Invia conferma"
+      },
+      "invoiceSent": {
+        "title": "Conferma l'arrivo della fattura {{invoice}}",
+        "description": "Messaggio al cliente: «la tua fattura è pronta» con link di pagamento.",
+        "impact": "Pagamento più rapido",
+        "template": "Ciao {{customer}}, la fattura {{invoice}} è pronta. Paga online o contattami per domande.",
+        "action": "Invia conferma"
+      }
+    }
   },
   "licenses": {
     "warnTitle": "Licenza in scadenza",

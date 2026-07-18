@@ -1734,7 +1734,16 @@
     "viewJob": "View job",
     "createInvoice": "Create invoice",
     "conversionFailed": "Could not convert quote to job.",
-    "acceptAndCreateJob": "Accept and create job"
+    "acceptAndCreateJob": "Accept and create job",
+    "addCustomService": "Add a custom service",
+    "customServiceName": "Service name",
+    "customServicePrice": "Price (€)",
+    "customServiceUnit": "Unit",
+    "orFromPricebook": "Or pick from your pricebook",
+    "editPrice": "Edit price",
+    "addService": "Add service",
+    "customServiceInvalidTitle": "Add a name and price",
+    "customServiceInvalidBody": "Enter a service name and a price greater than zero."
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -1790,11 +1799,11 @@
     "jobCompleted": "Job completed",
     "createInvoice": "Create invoice",
     "revenueAmount": "{{amount}} revenue",
-    "reminderFor": "Reminder for {{id}}",
+    "reminderFor": "Reminder for {{ref}}",
     "amountOverdue": "{{amount}} overdue",
     "sendReminder": "Send reminder",
     "speedsUpPayment": "Speeds up payment by ~5 days",
-    "quoteFollowUp": "Follow-up quote {{id}}",
+    "quoteFollowUp": "Follow-up quote {{ref}}",
     "sendFollowUp": "Send follow-up",
     "increasesAcceptance": "Increases acceptance rate by 20%"
   },
@@ -4030,7 +4039,36 @@
     "aiInsightLimitReached": "AI insight limit reached ({{count}}/month).",
     "clientLimitReached": "Client limit reached ({{count}}).",
     "seatsInUse": "All {{count}} team seats in use.",
-    "featureRequiresTier": "{{feature}} requires the {{tier}} plan."
+    "featureRequiresTier": "{{feature}} requires the {{tier}} plan.",
+    "features": {
+      "hasPaymentProcessing": "Payment processing",
+      "hasAccountingIntegrations": "Accounting integrations",
+      "hasEInvoicing": "E-invoicing",
+      "hasFullEInvoicing": "All e-invoice formats",
+      "hasEveAI": "EVE AI assistant",
+      "hasEveAuditor": "EVE compliance monitoring",
+      "hasEveAnalyst": "EVE business intelligence",
+      "hasAutomationPacks": "Automation packs",
+      "hasMlPredictions": "ML predictions",
+      "hasBenchmarking": "Contractor benchmarking",
+      "hasPriceIndex": "EU price index",
+      "hasInvoiceScanning": "Invoice scanning",
+      "hasPurchasingAgent": "Purchasing agent",
+      "hasBulkPurchaseOptimizer": "Bulk purchase optimizer",
+      "hasPriceDropAlerts": "Price drop alerts",
+      "hasSupplierScoring": "Supplier reliability scoring",
+      "hasPdfExport": "PDF/CSV export",
+      "hasClientPortal": "Client portal",
+      "hasQuoteTemplates": "Quote templates",
+      "hasCustomerDecisions": "Customer decision tracker",
+      "hasApiAccess": "API access",
+      "hasWhiteLabel": "White-label documents",
+      "hasSubcontractorPortal": "Subcontractor portal",
+      "hasWorkerPortal": "Worker portal",
+      "hasCalendarSync": "Calendar sync",
+      "hasDedicatedSupport": "Dedicated support",
+      "hasOnboardingAssistance": "Onboarding assistance"
+    }
   },
   "shareQuote": {
     "failTitle": "Could not create link",
@@ -4560,7 +4598,81 @@
     "pendingFor": "PENDING — {{name}}",
     "empty": "{{name}} is up to date — no pending actions.",
     "aboutHeading": "ABOUT EVE",
-    "aboutBody": "EVE prepares work proactively across three specialised agents. Tap an agent above to review their pending suggestions — every approval is one tap."
+    "aboutBody": "EVE prepares work proactively across three specialised agents. Tap an agent above to review their pending suggestions — every approval is one tap.",
+    "live": {
+      "genericCustomer": "the customer",
+      "draftInvoice": {
+        "title": "Draft invoice for {{job}}",
+        "description": "{{job}} is marked completed — lock in cash flow by invoicing now.",
+        "impact": "€{{amount}} revenue",
+        "action": "Draft invoice"
+      },
+      "overdue": {
+        "title": "Invoice {{invoice}} overdue {{days}}d",
+        "description": "€{{amount}} outstanding — {{tone}} recommended.",
+        "impact": "€{{amount}} collection risk",
+        "action": "Review",
+        "toneFinal": "final notice",
+        "toneFirm": "firm reminder",
+        "toneFriendly": "friendly nudge"
+      },
+      "winRate": {
+        "title": "Win rate at {{pct}}%",
+        "description": "Below the 45% trade baseline. Review the last 5 lost quotes — pricing, tier mix, or follow-up timing are the usual culprits.",
+        "impact": "Could recover 10-15% revenue",
+        "action": "Review lost quotes"
+      },
+      "appointment": {
+        "title": "Appointment tomorrow: {{job}}",
+        "description": "Send {{customer}} a courtesy reminder.",
+        "impact": "Reduces no-shows",
+        "template": "Hi {{customer}}, just a reminder of our appointment tomorrow at {{time}} for {{job}}. Reply if you need to reschedule.",
+        "action": "Send reminder"
+      },
+      "followUp": {
+        "title": "Follow up on quote {{quote}}",
+        "description": "Quote was sent {{days}}d ago — silent customers convert when nudged.",
+        "impact": "€{{amount}} potential",
+        "impactFallback": "Conversion uplift",
+        "template": "Hi {{customer}}, just following up on the quote for {{quote}} (€{{amount}}). Any questions?",
+        "action": "Follow up"
+      },
+      "jobStarted": {
+        "title": "Notify customer: {{job}} started",
+        "description": "Customer-facing \"we have arrived\" message.",
+        "impact": "Builds trust",
+        "template": "Hi {{customer}}, we've started work on {{job}}. We'll keep you posted on progress.",
+        "action": "Send update"
+      },
+      "handover": {
+        "title": "Handover note: {{job}}",
+        "description": "Send the customer a wrap-up + invoice heads-up.",
+        "impact": "Smooth handover",
+        "template": "Hi {{customer}}, {{job}} is complete. Thanks for the trust — invoice on its way.",
+        "action": "Send handover"
+      },
+      "paymentThanks": {
+        "title": "Thank {{customer}} for payment",
+        "description": "Invoice {{invoice}} paid — quick thanks goes a long way.",
+        "impact": "Builds repeat business",
+        "template": "Thanks {{customer}} — payment received for invoice {{invoice}}. Receipt on its way.",
+        "action": "Send thanks"
+      },
+      "quoteSent": {
+        "title": "Confirm quote {{quote}} arrived",
+        "description": "Quick \"I just sent the quote — let me know if you need anything\" — improves response rates.",
+        "impact": "Reduces silent quotes",
+        "template": "Hi {{customer}}, I just sent the quote for {{quote}}. Check your email — let me know if you have any questions.",
+        "action": "Send confirmation"
+      },
+      "invoiceSent": {
+        "title": "Confirm invoice {{invoice}} arrived",
+        "description": "Customer-facing \"your invoice is ready\" with payment link.",
+        "impact": "Faster payment",
+        "template": "Hi {{customer}}, invoice {{invoice}} is ready. Pay online or contact me if questions.",
+        "action": "Send confirmation"
+      }
+    }
   },
   "licenses": {
     "warnTitle": "License expiring",

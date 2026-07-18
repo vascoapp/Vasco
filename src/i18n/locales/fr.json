@@ -1734,7 +1734,16 @@
     "viewJob": "Voir le chantier",
     "createInvoice": "Créer une facture",
     "conversionFailed": "Impossible de convertir le devis en chantier.",
-    "acceptAndCreateJob": "Accepter et créer un chantier"
+    "acceptAndCreateJob": "Accepter et créer un chantier",
+    "addCustomService": "Ajouter un service personnalisé",
+    "customServiceName": "Nom du service",
+    "customServicePrice": "Prix (€)",
+    "customServiceUnit": "Unité",
+    "orFromPricebook": "Ou choisir dans votre catalogue de prix",
+    "editPrice": "Modifier le prix",
+    "addService": "Ajouter le service",
+    "customServiceInvalidTitle": "Ajoutez un nom et un prix",
+    "customServiceInvalidBody": "Saisissez un nom de service et un prix supérieur à zéro."
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",
@@ -1790,11 +1799,11 @@
     "jobCompleted": "Travail terminé",
     "createInvoice": "Créer la facture",
     "revenueAmount": "{{amount}} de chiffre d'affaires",
-    "reminderFor": "Rappel pour {{id}}",
+    "reminderFor": "Rappel pour {{ref}}",
     "amountOverdue": "{{amount}} en retard",
     "sendReminder": "Envoyer le rappel",
     "speedsUpPayment": "Accélère le paiement de ~5 jours",
-    "quoteFollowUp": "Suivi devis {{id}}",
+    "quoteFollowUp": "Suivi devis {{ref}}",
     "sendFollowUp": "Envoyer le suivi",
     "increasesAcceptance": "Augmente le taux d'acceptation de 20%"
   },
@@ -4030,7 +4039,36 @@
     "aiInsightLimitReached": "Limite d'insights IA atteinte ({{count}}/mois).",
     "clientLimitReached": "Limite de clients atteinte ({{count}}).",
     "seatsInUse": "Les {{count}} sièges d'équipe sont utilisés.",
-    "featureRequiresTier": "{{feature}} nécessite le plan {{tier}}."
+    "featureRequiresTier": "{{feature}} nécessite le plan {{tier}}.",
+    "features": {
+      "hasPaymentProcessing": "Traitement des paiements",
+      "hasAccountingIntegrations": "Intégrations comptables",
+      "hasEInvoicing": "Facturation électronique",
+      "hasFullEInvoicing": "Tous les formats de facture électronique",
+      "hasEveAI": "Assistant IA EVE",
+      "hasEveAuditor": "Surveillance de conformité EVE",
+      "hasEveAnalyst": "Business intelligence EVE",
+      "hasAutomationPacks": "Packs d'automatisation",
+      "hasMlPredictions": "Prédictions ML",
+      "hasBenchmarking": "Analyse comparative artisans",
+      "hasPriceIndex": "Indice de prix UE",
+      "hasInvoiceScanning": "Numérisation de factures",
+      "hasPurchasingAgent": "Agent d'achat",
+      "hasBulkPurchaseOptimizer": "Optimiseur d'achats groupés",
+      "hasPriceDropAlerts": "Alertes de baisse de prix",
+      "hasSupplierScoring": "Évaluation de fiabilité fournisseur",
+      "hasPdfExport": "Export PDF/CSV",
+      "hasClientPortal": "Portail client",
+      "hasQuoteTemplates": "Modèles de devis",
+      "hasCustomerDecisions": "Suivi des décisions client",
+      "hasApiAccess": "Accès API",
+      "hasWhiteLabel": "Documents en marque blanche",
+      "hasSubcontractorPortal": "Portail sous-traitant",
+      "hasWorkerPortal": "Portail collaborateur",
+      "hasCalendarSync": "Synchronisation du calendrier",
+      "hasDedicatedSupport": "Support dédié",
+      "hasOnboardingAssistance": "Assistance à l'intégration"
+    }
   },
   "shareQuote": {
     "failTitle": "Impossible de créer le lien",
@@ -4560,7 +4598,81 @@
     "pendingFor": "EN ATTENTE — {{name}}",
     "empty": "{{name}} est à jour — aucune action en attente.",
     "aboutHeading": "À PROPOS D'EVE",
-    "aboutBody": "EVE prépare le travail de manière proactive via trois agents spécialisés. Appuyez sur un agent ci-dessus pour examiner ses suggestions en attente — chaque approbation se fait en un seul geste."
+    "aboutBody": "EVE prépare le travail de manière proactive via trois agents spécialisés. Appuyez sur un agent ci-dessus pour examiner ses suggestions en attente — chaque approbation se fait en un seul geste.",
+    "live": {
+      "genericCustomer": "le client",
+      "draftInvoice": {
+        "title": "Préparer la facture pour {{job}}",
+        "description": "{{job}} est marqué terminé — facturez maintenant pour sécuriser la trésorerie.",
+        "impact": "{{amount}} € de CA",
+        "action": "Préparer la facture"
+      },
+      "overdue": {
+        "title": "Facture {{invoice}} en retard de {{days}}j",
+        "description": "{{amount}} € en attente — {{tone}} recommandé.",
+        "impact": "{{amount}} € de risque d'impayé",
+        "action": "Examiner",
+        "toneFinal": "mise en demeure",
+        "toneFirm": "relance ferme",
+        "toneFriendly": "rappel amical"
+      },
+      "winRate": {
+        "title": "Taux de conversion à {{pct}}%",
+        "description": "Sous la référence métier de 45%. Revoyez les 5 derniers devis perdus — prix, choix de formule ou moment de relance sont les causes habituelles.",
+        "impact": "10-15% de CA récupérable",
+        "action": "Voir les devis perdus"
+      },
+      "appointment": {
+        "title": "Rendez-vous demain : {{job}}",
+        "description": "Envoyez un rappel à {{customer}}.",
+        "impact": "Moins d'absences",
+        "template": "Bonjour {{customer}}, petit rappel de notre rendez-vous demain à {{time}} pour {{job}}. Dites-moi si vous souhaitez le déplacer.",
+        "action": "Envoyer un rappel"
+      },
+      "followUp": {
+        "title": "Relancer le devis {{quote}}",
+        "description": "Devis envoyé il y a {{days}} jours — les clients silencieux signent souvent après une relance.",
+        "impact": "{{amount}} € potentiels",
+        "impactFallback": "Plus de conversions",
+        "template": "Bonjour {{customer}}, je reviens vers vous au sujet du devis pour {{quote}} ({{amount}} €). Des questions ?",
+        "action": "Relancer"
+      },
+      "jobStarted": {
+        "title": "Informer le client : {{job}} démarré",
+        "description": "Message client : « nous avons commencé ».",
+        "impact": "Renforce la confiance",
+        "template": "Bonjour {{customer}}, nous avons commencé {{job}}. Nous vous tiendrons informé de l'avancement.",
+        "action": "Envoyer une mise à jour"
+      },
+      "handover": {
+        "title": "Note de livraison : {{job}}",
+        "description": "Envoyez au client un récapitulatif + annonce de la facture.",
+        "impact": "Livraison sans accroc",
+        "template": "Bonjour {{customer}}, {{job}} est terminé. Merci de votre confiance — la facture suit.",
+        "action": "Envoyer la livraison"
+      },
+      "paymentThanks": {
+        "title": "Remercier {{customer}} pour le paiement",
+        "description": "Facture {{invoice}} payée — un petit merci fait la différence.",
+        "impact": "Plus de fidélité",
+        "template": "Merci {{customer}} — paiement reçu pour la facture {{invoice}}. Le reçu arrive.",
+        "action": "Envoyer un merci"
+      },
+      "quoteSent": {
+        "title": "Confirmer la réception du devis {{quote}}",
+        "description": "Un rapide « je viens d'envoyer le devis — dites-moi si besoin » — améliore le taux de réponse.",
+        "impact": "Moins de devis sans réponse",
+        "template": "Bonjour {{customer}}, je viens d'envoyer le devis pour {{quote}}. Vérifiez vos e-mails — dites-moi si vous avez des questions.",
+        "action": "Envoyer la confirmation"
+      },
+      "invoiceSent": {
+        "title": "Confirmer la réception de la facture {{invoice}}",
+        "description": "Message client : « votre facture est prête » avec lien de paiement.",
+        "impact": "Paiement plus rapide",
+        "template": "Bonjour {{customer}}, la facture {{invoice}} est prête. Payez en ligne ou contactez-moi en cas de question.",
+        "action": "Envoyer la confirmation"
+      }
+    }
   },
   "licenses": {
     "warnTitle": "Licence bientôt expirée",

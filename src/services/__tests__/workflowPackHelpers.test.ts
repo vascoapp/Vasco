@@ -339,3 +339,61 @@ describe('hasSuggestedPack / markPackSuggested', () => {
     expect(await hasSuggestedPack('klant_keuze_herinnering')).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Customer-facing template rendering
+// ---------------------------------------------------------------------------
+// Regression: the incasso pack sent "Herinnering: factuur inv-seed-1 €350,00 is
+// 14 dagen achterstallig" over WhatsApp — a raw database row id in a message to
+// a paying customer. Caught by driving the share path on the simulator.
+describe('resolveTemplate — customer-facing copy', () => {
+  const { resolveTemplate } = require('../workflowPackService');
+  const ID_SHAPED = /\b(?:j|q|inv|cust|c)-[a-z]*-?\d+\b/;
+
+  test('renders the invoice reference, and never an id-shaped token', () => {
+    const out = resolveTemplate(
+      'Herinnering: factuur {{invoice}} ({{currency}}{{amount}}) is 14 dagen achterstallig.',
+      { invoice: 'F-2026-014', currency: '€', amount: 350 },
+    );
+    expect(out).toContain('F-2026-014');
+    expect(out).not.toMatch(ID_SHAPED);
+  });
+
+  test('an unresolved placeholder does not leave doubled spaces or a space before punctuation', () => {
+    // An invoice with no reference resolves {{invoice}} to '' — the message
+    // still has to read like something a human wrote.
+    const out = resolveTemplate(
+      'Hi {{customer}}, factuur {{invoice}} ({{currency}}{{amount}}) vervalt over 3 dagen.',
+      { customer: 'Hotel NH', invoice: '', currency: '€', amount: 350 },
+    );
+    expect(out).not.toMatch(/ {2,}/);
+    expect(out).not.toMatch(/\s[,.!?;:)]/);
+    expect(out).not.toContain('( ');
+    expect(out).toContain('Hotel NH');
+  });
+
+  test('amounts keep locale formatting with 2 decimals', () => {
+    const out = resolveTemplate('{{currency}}{{amount}}', { currency: '€', amount: 350 });
+    expect(out).toMatch(/350[.,]00/);
+  });
+
+  test('no template in the shipped packs interpolates a raw id', () => {
+    // Every {{invoice}}/{{quote}} slot must be fed a human reference. Render the
+    // real pack templates with id-shaped input and assert we never emit it.
+    const { DEFAULT_PACKS } = require('../workflowPackService');
+    const packs = DEFAULT_PACKS ?? [];
+    const bad: string[] = [];
+    for (const pack of packs) {
+      for (const step of pack.steps ?? []) {
+        const tpl = step.template ?? step.templates?.nl ?? '';
+        if (!tpl) continue;
+        const out = resolveTemplate(tpl, {
+          customer: 'Hotel NH', invoice: 'F-2026-014', quote: 'Keuken',
+          currency: '€', amount: 350, job: 'Lekkage', phone: '+31 6 1',
+        });
+        if (ID_SHAPED.test(out)) bad.push(`${pack.id}: ${out}`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+});

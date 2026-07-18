@@ -1734,7 +1734,16 @@
     "viewJob": "Auftrag ansehen",
     "createInvoice": "Rechnung erstellen",
     "conversionFailed": "Angebot konnte nicht in einen Auftrag umgewandelt werden.",
-    "acceptAndCreateJob": "Annehmen und Auftrag erstellen"
+    "acceptAndCreateJob": "Annehmen und Auftrag erstellen",
+    "addCustomService": "Eigene Leistung hinzufügen",
+    "customServiceName": "Leistungsname",
+    "customServicePrice": "Preis (€)",
+    "customServiceUnit": "Einheit",
+    "orFromPricebook": "Oder aus deiner Preisliste wählen",
+    "editPrice": "Preis bearbeiten",
+    "addService": "Leistung hinzufügen",
+    "customServiceInvalidTitle": "Name und Preis angeben",
+    "customServiceInvalidBody": "Gib einen Leistungsnamen und einen Preis über null ein."
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -1790,11 +1799,11 @@
     "jobCompleted": "Auftrag abgeschlossen",
     "createInvoice": "Rechnung erstellen",
     "revenueAmount": "{{amount}} Umsatz",
-    "reminderFor": "Erinnerung für {{id}}",
+    "reminderFor": "Erinnerung für {{ref}}",
     "amountOverdue": "{{amount}} überfällig",
     "sendReminder": "Erinnerung senden",
     "speedsUpPayment": "Beschleunigt Zahlung um ~5 Tage",
-    "quoteFollowUp": "Nachverfolgung Angebot {{id}}",
+    "quoteFollowUp": "Nachverfolgung Angebot {{ref}}",
     "sendFollowUp": "Nachverfolgung senden",
     "increasesAcceptance": "Erhöht Annahmequote um 20%"
   },
@@ -4030,7 +4039,36 @@
     "aiInsightLimitReached": "KI-Insight-Limit erreicht ({{count}}/Monat).",
     "clientLimitReached": "Kunden-Limit erreicht ({{count}}).",
     "seatsInUse": "Alle {{count}} Team-Plätze belegt.",
-    "featureRequiresTier": "{{feature}} erfordert den {{tier}}-Plan."
+    "featureRequiresTier": "{{feature}} erfordert den {{tier}}-Plan.",
+    "features": {
+      "hasPaymentProcessing": "Zahlungsabwicklung",
+      "hasAccountingIntegrations": "Buchhaltungsintegrationen",
+      "hasEInvoicing": "E-Rechnung",
+      "hasFullEInvoicing": "Alle E-Rechnungsformate",
+      "hasEveAI": "EVE KI-Assistent",
+      "hasEveAuditor": "EVE Compliance-Überwachung",
+      "hasEveAnalyst": "EVE Business Intelligence",
+      "hasAutomationPacks": "Automatisierungspakete",
+      "hasMlPredictions": "ML-Vorhersagen",
+      "hasBenchmarking": "Handwerker-Benchmarking",
+      "hasPriceIndex": "EU-Preisindex",
+      "hasInvoiceScanning": "Rechnungsscan",
+      "hasPurchasingAgent": "Einkaufsassistent",
+      "hasBulkPurchaseOptimizer": "Mengenkauf-Optimierung",
+      "hasPriceDropAlerts": "Preissenkungs-Benachrichtigungen",
+      "hasSupplierScoring": "Lieferanten-Zuverlässigkeitsbewertung",
+      "hasPdfExport": "PDF/CSV-Export",
+      "hasClientPortal": "Kundenportal",
+      "hasQuoteTemplates": "Angebotsvorlagen",
+      "hasCustomerDecisions": "Kundenentscheidungs-Tracker",
+      "hasApiAccess": "API-Zugang",
+      "hasWhiteLabel": "White-Label-Dokumente",
+      "hasSubcontractorPortal": "Subunternehmer-Portal",
+      "hasWorkerPortal": "Mitarbeiterportal",
+      "hasCalendarSync": "Kalendersynchronisierung",
+      "hasDedicatedSupport": "Dedizierter Support",
+      "hasOnboardingAssistance": "Onboarding-Unterstützung"
+    }
   },
   "shareQuote": {
     "failTitle": "Link konnte nicht erstellt werden",
@@ -4560,7 +4598,81 @@
     "pendingFor": "AUSSTEHEND — {{name}}",
     "empty": "{{name}} ist auf dem neuesten Stand — keine ausstehenden Aktionen.",
     "aboutHeading": "ÜBER EVE",
-    "aboutBody": "EVE bereitet Arbeit proaktiv mit drei spezialisierten Agenten vor. Tippen Sie oben auf einen Agenten, um dessen ausstehende Vorschläge zu prüfen — jede Genehmigung ist nur ein Tipp."
+    "aboutBody": "EVE bereitet Arbeit proaktiv mit drei spezialisierten Agenten vor. Tippen Sie oben auf einen Agenten, um dessen ausstehende Vorschläge zu prüfen — jede Genehmigung ist nur ein Tipp.",
+    "live": {
+      "genericCustomer": "den Kunden",
+      "draftInvoice": {
+        "title": "Rechnung entwerfen für {{job}}",
+        "description": "{{job}} ist als abgeschlossen markiert — jetzt abrechnen und den Cashflow sichern.",
+        "impact": "{{amount}} € Umsatz",
+        "action": "Rechnung entwerfen"
+      },
+      "overdue": {
+        "title": "Rechnung {{invoice}} {{days}}T überfällig",
+        "description": "{{amount}} € offen — {{tone}} empfohlen.",
+        "impact": "{{amount}} € Ausfallrisiko",
+        "action": "Prüfen",
+        "toneFinal": "letzte Mahnung",
+        "toneFirm": "deutliche Erinnerung",
+        "toneFriendly": "freundlicher Hinweis"
+      },
+      "winRate": {
+        "title": "Erfolgsquote bei {{pct}}%",
+        "description": "Unter dem Branchenwert von 45%. Prüfe die letzten 5 verlorenen Angebote — Preis, Paketwahl oder Nachfasszeitpunkt sind die üblichen Ursachen.",
+        "impact": "10-15% Umsatz rückgewinnbar",
+        "action": "Verlorene Angebote prüfen"
+      },
+      "appointment": {
+        "title": "Termin morgen: {{job}}",
+        "description": "Sende {{customer}} eine Erinnerung.",
+        "impact": "Weniger Nichterscheinen",
+        "template": "Hallo {{customer}}, kurze Erinnerung an unseren Termin morgen um {{time}} für {{job}}. Melde dich, falls du verschieben möchtest.",
+        "action": "Erinnerung senden"
+      },
+      "followUp": {
+        "title": "Angebot {{quote}} nachfassen",
+        "description": "Angebot wurde vor {{days}} Tagen gesendet — stille Kunden schließen oft nach einem Anstoß ab.",
+        "impact": "{{amount}} € Potenzial",
+        "impactFallback": "Mehr Abschlüsse",
+        "template": "Hallo {{customer}}, ich komme kurz auf das Angebot für {{quote}} zurück ({{amount}} €). Noch Fragen?",
+        "action": "Nachfassen"
+      },
+      "jobStarted": {
+        "title": "Kunde informieren: {{job}} gestartet",
+        "description": "Kundennachricht: \"wir haben begonnen\".",
+        "impact": "Schafft Vertrauen",
+        "template": "Hallo {{customer}}, wir haben mit {{job}} begonnen. Wir halten dich über den Fortschritt auf dem Laufenden.",
+        "action": "Update senden"
+      },
+      "handover": {
+        "title": "Übergabenachricht: {{job}}",
+        "description": "Sende dem Kunden einen Abschluss + Rechnungsankündigung.",
+        "impact": "Reibungslose Übergabe",
+        "template": "Hallo {{customer}}, {{job}} ist fertig. Danke für das Vertrauen — die Rechnung folgt.",
+        "action": "Übergabe senden"
+      },
+      "paymentThanks": {
+        "title": "{{customer}} für Zahlung danken",
+        "description": "Rechnung {{invoice}} bezahlt — ein kurzes Danke wirkt.",
+        "impact": "Mehr Folgeaufträge",
+        "template": "Danke {{customer}} — Zahlung für Rechnung {{invoice}} erhalten. Die Bestätigung folgt.",
+        "action": "Danke senden"
+      },
+      "quoteSent": {
+        "title": "Eingang von Angebot {{quote}} bestätigen",
+        "description": "Kurzes \"ich habe das Angebot gerade gesendet — melde dich bei Fragen\" — erhöht die Rücklaufquote.",
+        "impact": "Weniger stille Angebote",
+        "template": "Hallo {{customer}}, ich habe soeben das Angebot für {{quote}} gesendet. Schau in dein Postfach — melde dich bei Fragen.",
+        "action": "Bestätigung senden"
+      },
+      "invoiceSent": {
+        "title": "Eingang von Rechnung {{invoice}} bestätigen",
+        "description": "Kundennachricht: \"deine Rechnung ist bereit\" mit Zahlungslink.",
+        "impact": "Schnellere Zahlung",
+        "template": "Hallo {{customer}}, Rechnung {{invoice}} ist bereit. Online bezahlen oder bei Fragen melden.",
+        "action": "Bestätigung senden"
+      }
+    }
   },
   "licenses": {
     "warnTitle": "Lizenz läuft ab",

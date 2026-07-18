@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback } from 'react';
 import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
-import { addToQueue, getQueueHistory } from './aiActionQueueService';
+import { addToQueue, getQueueHistory, getRequiredPermits } from './aiActionQueueService';
 import { getCurrentCountry, getCurrentUserId } from '../lib/currentUser';
 import { loadSubscription, getTierLimits } from './subscriptionService';
 import { getAppStateSnapshot } from '../state/appStateSnapshot';
@@ -790,9 +790,12 @@ export async function getActiveAutomations(): Promise<{
 // ---------------------------------------------------------------------------
 
 interface TriggerContext {
-  invoices: Array<{ id: string; status?: string; amount?: number; total?: number; customer?: string; customerId?: string; sentAt?: string; createdAt?: string; lastUpdated?: string; dueDate?: string }>;
+  // `reference` / `invoiceNumber` are the human document numbers. They were
+  // missing from this shape, which is why the templates fell back to `inv.id`
+  // and sent a raw row id to customers — the type hid the mistake.
+  invoices: Array<{ id: string; status?: string; amount?: number; total?: number; customer?: string; customerId?: string; sentAt?: string; createdAt?: string; lastUpdated?: string; dueDate?: string; reference?: string; invoiceNumber?: string }>;
   quotes: Array<{ id: string; status?: string; amount?: number; customer?: string; customerId?: string; sentAt?: string; createdAt?: string; lastUpdated?: string; description?: string; job?: string }>;
-  jobs: Array<{ id: string; status?: string; title?: string; customerId?: string | null; completedAt?: string; lastUpdated?: string }>;
+  jobs: Array<{ id: string; status?: string; title?: string; customerId?: string | null; completedAt?: string; lastUpdated?: string; trade?: string }>;
   // R66r49 #6: phone added so evaluateTriggers can resolve customer.phone →
   // E.164 → wa.me URL, queueing into preparedData.affiliateUrl. The shareable
   // executor branch then prefers Linking.openURL over Share.share when the
@@ -1032,11 +1035,11 @@ function matchTrigger(
   step: WorkflowStep,
   ctx: TriggerContext,
   now: number,
-): { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string }[] {
+): { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string; permitCount?: number; country?: string }[] {
   const dayMs = MS_PER_DAY;
   // 2-day window so triggers aren't missed if the app isn't opened for a day
   const windowMs = 2 * dayMs;
-  const results: { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string }[] = [];
+  const results: { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string; permitCount?: number; country?: string }[] = [];
 
   switch (step.trigger) {
     case 'invoice_sent': {
@@ -1050,12 +1053,15 @@ function matchTrigger(
         if (age >= targetAge && age < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === inv.customerId);
           results.push({
-            label: cust?.name || inv.customer || inv.id || '',
+            label: cust?.name || inv.customer || inv.reference || '',
             customerId: inv.customerId,
             entityId: inv.id,
             customer: cust?.name || inv.customer || '',
             amount: inv.amount || inv.total || 0,
-            invoice: inv.id || '',
+            // CUSTOMER-FACING: this fills {{invoice}} in a WhatsApp/email body.
+            // Must be the document number a customer can recognise — never the
+            // row id (was sending "factuur inv-seed-1 is 14 dagen achterstallig").
+            invoice: inv.reference || inv.invoiceNumber || '',
           });
         }
       }
@@ -1071,12 +1077,15 @@ function matchTrigger(
         if (overdueDays >= targetAge && overdueDays < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === inv.customerId);
           results.push({
-            label: cust?.name || inv.customer || inv.id || '',
+            label: cust?.name || inv.customer || inv.reference || '',
             customerId: inv.customerId,
             entityId: inv.id,
             customer: cust?.name || inv.customer || '',
             amount: inv.amount || inv.total || 0,
-            invoice: inv.id || '',
+            // CUSTOMER-FACING: this fills {{invoice}} in a WhatsApp/email body.
+            // Must be the document number a customer can recognise — never the
+            // row id (was sending "factuur inv-seed-1 is 14 dagen achterstallig").
+            invoice: inv.reference || inv.invoiceNumber || '',
           });
         }
       }
@@ -1092,7 +1101,7 @@ function matchTrigger(
         if (age >= targetAge && age < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === q.customerId);
           results.push({
-            label: cust?.name || q.customer || q.id || '',
+            label: cust?.name || q.customer || q.job || '',
             customerId: q.customerId,
             entityId: q.id,
             customer: cust?.name || q.customer || '',
@@ -1136,7 +1145,7 @@ function matchTrigger(
         if (age >= targetAge && age < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === q.customerId);
           results.push({
-            label: cust?.name || q.customer || q.id || '',
+            label: cust?.name || q.customer || q.job || '',
             customerId: q.customerId,
             entityId: q.id,
             customer: cust?.name || q.customer || '',
@@ -1170,12 +1179,21 @@ function matchTrigger(
     case 'job_created': {
       // Permit-check pack — fires on newly-created jobs (created within 2d window).
       const targetAge = step.delayDays * dayMs;
+      const permitCountry = getCurrentCountry() ?? 'NL';
       for (const job of ctx.jobs) {
         if (!job) continue;
         const createdAt = new Date((job as any).createdAt || job.lastUpdated || '').getTime();
         if (!createdAt || isNaN(createdAt)) continue;
         const age = now - createdAt;
         if (age >= targetAge && age < targetAge + windowMs) {
+          // The template reads "{{permitCount}} vereisten gevonden voor
+          // {{country}}" — neither was supplied, so it rendered as the
+          // half-sentence "…: vereisten gevonden voor." Supply both, and skip
+          // the card entirely when no permits apply rather than announcing a
+          // permit check that found nothing (mirrors the automation_permit_check
+          // producer in aiActionQueueService).
+          const permits = getRequiredPermits(job.trade || 'general', permitCountry);
+          if (permits.length === 0) continue;
           const cust = (ctx.customers ?? []).find((c: any) => c.id === job.customerId);
           results.push({
             label: cust?.name || job.title || '',
@@ -1183,6 +1201,8 @@ function matchTrigger(
             entityId: job.id,
             customer: cust?.name || '',
             job: job.title || '',
+            permitCount: permits.length,
+            country: permitCountry,
           });
         }
       }
@@ -1243,8 +1263,9 @@ function matchTrigger(
   return results;
 }
 
-function resolveTemplate(template: string, data: Record<string, any>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+/** Exported for tests — this renders the text customers actually receive. */
+export function resolveTemplate(template: string, data: Record<string, any>): string {
+  const filled = template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
     const val = data[key];
     if (val === undefined || val === null) return '';
     if (typeof val === 'number') {
@@ -1258,6 +1279,14 @@ function resolveTemplate(template: string, data: Record<string, any>): string {
     }
     return String(val);
   });
+  // A placeholder that resolves to '' (e.g. an invoice with no reference) would
+  // otherwise leave "factuur  (€350,00)" or a space before punctuation in a
+  // message sent to a customer. Tidy the seams rather than ship sloppy copy.
+  return filled
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+([,.!?;:)])/g, '$1')
+    .trim();
 }
 
 function mapActionToQueueType(action: string): import('./aiActionQueueService').QueueItemType {

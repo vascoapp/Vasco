@@ -4,8 +4,19 @@
 // Builds concrete EveAction entries from the live AppState snapshot so the
 // three agents (agent / auditor / analyst) surface real work rather than demo
 // fixtures. Called from backgroundJobScheduler's daily block.
+//
+// Every user-facing string here goes through i18n (`eve.live.*`). Two reasons:
+//   1. The queue renders in the contractor's locale — hardcoded English read as
+//      "Invoice inv-seed-1 overdue 15d" inside an otherwise-Dutch VascoCard.
+//   2. `preparedData.template` strings are CUSTOMER-facing (R286 executor opens
+//      the Share sheet with them), so they must be in the customer's language.
+//
+// Entity references are resolved to human labels (customer name, job title,
+// invoice reference) — never raw ids. A raw `cust-003` / `inv-seed-1` leaking
+// into a WhatsApp message to a paying customer is the failure this guards.
 // =============================================================================
 
+import i18n from '../i18n/i18n';
 import type { EveAction } from './eveAgentService';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -23,6 +34,10 @@ function mkId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/** i18n helper — keeps the English copy as the inline defaultValue. */
+const t = (key: string, defaultValue: string, params?: Record<string, unknown>) =>
+  i18n.t(`eve.live.${key}`, { defaultValue, ...(params ?? {}) });
+
 // R300: per-action expiry windows so stale insights don't accumulate.
 // Without this, the AI queue retains "Win rate at 25%" items from 6 weeks
 // ago. Bounded by the queue's 50-item cap + entityKey dedup, but still
@@ -39,6 +54,26 @@ export function buildLiveActions(input: Input): EveAction[] {
   const expireFor = (agent: 'agent' | 'auditor' | 'analyst') =>
     new Date(now.getTime() + EXPIRY_DAYS_BY_TYPE[agent] * MS_PER_DAY).toISOString();
 
+  // ── Entity label resolution ──────────────────────────────────────
+  // Raw ids must never reach user- or customer-facing copy. Each resolver
+  // degrades gracefully: name → id-free generic, never the bare id.
+  const customerById = new Map<string, any>(
+    (input.customers ?? []).filter((c) => c?.id).map((c) => [c.id, c]),
+  );
+  const genericCustomer = () => t('genericCustomer', 'the customer');
+  /** Customer display name from an id, or a neutral noun — never the id. */
+  const customerName = (id?: string, fallbackName?: string): string =>
+    fallbackName?.trim() || customerById.get(id ?? '')?.name?.trim() || genericCustomer();
+  /** Salutation name — blank rather than a placeholder inside "Hi {name}," copy. */
+  const salutation = (id?: string, fallbackName?: string): string =>
+    fallbackName?.trim() || customerById.get(id ?? '')?.name?.trim() || '';
+  /** Invoice label: human reference ("F-2026-014") if set, else the customer. */
+  const invoiceLabel = (inv: any): string =>
+    inv?.reference?.trim() || customerName(inv?.customerId, inv?.customerName ?? inv?.customer);
+  /** Quote label: the job title reads far better than a quote id. */
+  const quoteLabel = (q: any): string =>
+    q?.job?.trim() || customerName(q?.customerId, q?.customer) ;
+
   // ── Agent: work to draft (draft_invoice / draft_reminder) ────────
   for (const j of (input.jobs ?? []).filter((x) => x.status === 'completed').slice(0, 3)) {
     const amount = j.quotedAmount ?? j.agreedAmount ?? 0;
@@ -46,13 +81,17 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-inv'),
       agentType: 'agent',
       type: 'draft_invoice',
-      title: `Draft invoice for ${j.title}`,
-      description: `${j.title} is marked completed — lock in cash flow by invoicing now.`,
-      impact: `€${Math.round(amount)} revenue`,
+      title: t('draftInvoice.title', 'Draft invoice for {{job}}', { job: j.title }),
+      description: t(
+        'draftInvoice.description',
+        '{{job}} is marked completed — lock in cash flow by invoicing now.',
+        { job: j.title },
+      ),
+      impact: t('draftInvoice.impact', '€{{amount}} revenue', { amount: Math.round(amount) }),
       priority: amount > 2000 ? 'high' : 'medium',
       status: 'pending',
       preparedData: { jobId: j.id, amount },
-      actionLabel: 'Draft invoice',
+      actionLabel: t('draftInvoice.action', 'Draft invoice'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: expireFor('agent'),
@@ -66,17 +105,30 @@ export function buildLiveActions(input: Input): EveAction[] {
       Math.round((now.getTime() - new Date((inv as any).dueDate ?? now).getTime()) / MS_PER_DAY),
     );
     const amount = inv.amount ?? 0;
+    // Escalation tone by age — each is its own key so translators can pick the
+    // register their market expects for a payment chase.
+    const tone = days >= 14
+      ? t('overdue.toneFinal', 'final notice')
+      : days >= 7
+        ? t('overdue.toneFirm', 'firm reminder')
+        : t('overdue.toneFriendly', 'friendly nudge');
     out.push({
       id: mkId('eve-aud'),
       agentType: 'auditor',
       type: 'compliance_gap',
-      title: `Invoice ${inv.id} overdue ${days}d`,
-      description: `€${amount.toFixed(0)} outstanding — ${days >= 14 ? 'final notice' : days >= 7 ? 'firm reminder' : 'friendly nudge'} recommended.`,
-      impact: `€${amount.toFixed(0)} collection risk`,
+      title: t('overdue.title', 'Invoice {{invoice}} overdue {{days}}d', {
+        invoice: invoiceLabel(inv),
+        days,
+      }),
+      description: t('overdue.description', '€{{amount}} outstanding — {{tone}} recommended.', {
+        amount: amount.toFixed(0),
+        tone,
+      }),
+      impact: t('overdue.impact', '€{{amount}} collection risk', { amount: amount.toFixed(0) }),
       priority: days >= 14 ? 'critical' : days >= 7 ? 'high' : 'medium',
       status: 'pending',
       preparedData: { invoiceId: inv.id, daysOverdue: days },
-      actionLabel: 'Review',
+      actionLabel: t('overdue.action', 'Review'),
       requiresApproval: false,
       createdAt: now.toISOString(),
       expiresAt: expireFor('auditor'),
@@ -94,13 +146,16 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-ana'),
       agentType: 'analyst',
       type: 'pricing_insight',
-      title: `Win rate at ${Math.round(winRate * 100)}%`,
-      description: `Below the 45% trade baseline. Review the last 5 lost quotes — pricing, tier mix, or follow-up timing are the usual culprits.`,
-      impact: 'Could recover 10-15% revenue',
+      title: t('winRate.title', 'Win rate at {{pct}}%', { pct: Math.round(winRate * 100) }),
+      description: t(
+        'winRate.description',
+        'Below the 45% trade baseline. Review the last 5 lost quotes — pricing, tier mix, or follow-up timing are the usual culprits.',
+      ),
+      impact: t('winRate.impact', 'Could recover 10-15% revenue'),
       priority: 'medium',
       status: 'pending',
       preparedData: { winRate },
-      actionLabel: 'Review lost quotes',
+      actionLabel: t('winRate.action', 'Review lost quotes'),
       requiresApproval: false,
       createdAt: now.toISOString(),
       expiresAt: expireFor('analyst'),
@@ -127,19 +182,29 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-appt'),
       agentType: 'agent',
       type: 'progress_update',
-      title: `Appointment tomorrow: ${j.title}`,
-      description: `Send ${j.customerId ?? 'the customer'} a courtesy reminder.`,
-      impact: 'Reduces no-shows',
+      title: t('appointment.title', 'Appointment tomorrow: {{job}}', { job: j.title }),
+      description: t('appointment.description', 'Send {{customer}} a courtesy reminder.', {
+        customer: customerName(j.customerId, j.customerName),
+      }),
+      impact: t('appointment.impact', 'Reduces no-shows'),
       priority: 'medium',
       status: 'pending',
       preparedData: {
         jobId: j.id,
         // Pre-render the appointment_reminder template so R286 executor's
         // Share path uses tone-correct text.
-        template: `Hi ${j.customerId ?? ''}, just a reminder of our appointment tomorrow at ${j.scheduledStartTime ?? ''} for ${j.title}. Reply if you need to reschedule.`,
+        template: t(
+          'appointment.template',
+          'Hi {{customer}}, just a reminder of our appointment tomorrow at {{time}} for {{job}}. Reply if you need to reschedule.',
+          {
+            customer: salutation(j.customerId, j.customerName),
+            time: j.scheduledStartTime ?? '',
+            job: j.title,
+          },
+        ),
         customerPhone: j.sitePhone,
       },
-      actionLabel: 'Send reminder',
+      actionLabel: t('appointment.action', 'Send reminder'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 36 * 60 * 60 * 1000).toISOString(),
@@ -157,17 +222,35 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-fu'),
       agentType: 'agent',
       type: 'draft_followup',
-      title: `Follow up on quote ${q.id}`,
-      description: `Quote was sent ${Math.round((now.getTime() - new Date(q.sentAt || q.lastUpdated).getTime()) / MS_PER_DAY)}d ago — silent customers convert when nudged.`,
-      impact: q.amount ? `€${Math.round(q.amount)} potential` : 'Conversion uplift',
+      title: t('followUp.title', 'Follow up on quote {{quote}}', { quote: quoteLabel(q) }),
+      description: t(
+        'followUp.description',
+        'Quote was sent {{days}}d ago — silent customers convert when nudged.',
+        {
+          days: Math.round(
+            (now.getTime() - new Date(q.sentAt || q.lastUpdated).getTime()) / MS_PER_DAY,
+          ),
+        },
+      ),
+      impact: q.amount
+        ? t('followUp.impact', '€{{amount}} potential', { amount: Math.round(q.amount) })
+        : t('followUp.impactFallback', 'Conversion uplift'),
       priority: 'medium',
       status: 'pending',
       preparedData: {
         quoteId: q.id,
         customerId: q.customer,
-        template: `Hi ${q.customer ?? ''}, just following up on quote ${q.id} (€${q.amount ?? 0}). Any questions?`,
+        template: t(
+          'followUp.template',
+          'Hi {{customer}}, just following up on the quote for {{quote}} (€{{amount}}). Any questions?',
+          {
+            customer: salutation(q.customerId, q.customer),
+            quote: quoteLabel(q),
+            amount: q.amount ?? 0,
+          },
+        ),
       },
-      actionLabel: 'Follow up',
+      actionLabel: t('followUp.action', 'Follow up'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 7 * MS_PER_DAY).toISOString(),
@@ -189,16 +272,20 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-started'),
       agentType: 'agent',
       type: 'progress_update',
-      title: `Notify customer: ${j.title} started`,
-      description: 'Customer-facing "we have arrived" message.',
-      impact: 'Builds trust',
+      title: t('jobStarted.title', 'Notify customer: {{job}} started', { job: j.title }),
+      description: t('jobStarted.description', 'Customer-facing "we have arrived" message.'),
+      impact: t('jobStarted.impact', 'Builds trust'),
       priority: 'medium',
       status: 'pending',
       preparedData: {
         jobId: j.id,
-        template: `Hi ${j.customerId ?? ''}, we've started work on ${j.title}. We'll keep you posted on progress.`,
+        template: t(
+          'jobStarted.template',
+          "Hi {{customer}}, we've started work on {{job}}. We'll keep you posted on progress.",
+          { customer: salutation(j.customerId, j.customerName), job: j.title },
+        ),
       },
-      actionLabel: 'Send update',
+      actionLabel: t('jobStarted.action', 'Send update'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(),
@@ -216,16 +303,20 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-complete'),
       agentType: 'agent',
       type: 'job_handover',
-      title: `Handover note: ${j.title}`,
-      description: 'Send the customer a wrap-up + invoice heads-up.',
-      impact: 'Smooth handover',
+      title: t('handover.title', 'Handover note: {{job}}', { job: j.title }),
+      description: t('handover.description', 'Send the customer a wrap-up + invoice heads-up.'),
+      impact: t('handover.impact', 'Smooth handover'),
       priority: 'medium',
       status: 'pending',
       preparedData: {
         jobId: j.id,
-        template: `Hi ${j.customerId ?? ''}, ${j.title} is complete. Thanks for the trust — invoice on its way.`,
+        template: t(
+          'handover.template',
+          'Hi {{customer}}, {{job}} is complete. Thanks for the trust — invoice on its way.',
+          { customer: salutation(j.customerId, j.customerName), job: j.title },
+        ),
       },
-      actionLabel: 'Send handover',
+      actionLabel: t('handover.action', 'Send handover'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 3 * MS_PER_DAY).toISOString(),
@@ -242,16 +333,27 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-paid'),
       agentType: 'agent',
       type: 'satisfaction_survey',  // closest queue type — shareable thanks
-      title: `Thank ${inv.customer ?? 'customer'} for payment`,
-      description: `Invoice ${inv.id} paid — quick thanks goes a long way.`,
-      impact: 'Builds repeat business',
+      title: t('paymentThanks.title', 'Thank {{customer}} for payment', {
+        customer: customerName(inv.customerId, inv.customerName ?? inv.customer),
+      }),
+      description: t('paymentThanks.description', 'Invoice {{invoice}} paid — quick thanks goes a long way.', {
+        invoice: invoiceLabel(inv),
+      }),
+      impact: t('paymentThanks.impact', 'Builds repeat business'),
       priority: 'low',
       status: 'pending',
       preparedData: {
         invoiceId: inv.id,
-        template: `Thanks ${inv.customer ?? ''} — payment received for invoice ${inv.id}. Receipt on its way.`,
+        template: t(
+          'paymentThanks.template',
+          'Thanks {{customer}} — payment received for invoice {{invoice}}. Receipt on its way.',
+          {
+            customer: salutation(inv.customerId, inv.customerName ?? inv.customer),
+            invoice: invoiceLabel(inv),
+          },
+        ),
       },
-      actionLabel: 'Send thanks',
+      actionLabel: t('paymentThanks.action', 'Send thanks'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 7 * MS_PER_DAY).toISOString(),
@@ -270,16 +372,23 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-quote-sent'),
       agentType: 'agent',
       type: 'progress_update',
-      title: `Confirm quote ${q.id} arrived`,
-      description: 'Quick "I just sent quote X — let me know if you need anything" — improves response rates.',
-      impact: 'Reduces silent quotes',
+      title: t('quoteSent.title', 'Confirm quote {{quote}} arrived', { quote: quoteLabel(q) }),
+      description: t(
+        'quoteSent.description',
+        'Quick "I just sent the quote — let me know if you need anything" — improves response rates.',
+      ),
+      impact: t('quoteSent.impact', 'Reduces silent quotes'),
       priority: 'low',
       status: 'pending',
       preparedData: {
         quoteId: q.id,
-        template: `Hi ${q.customer ?? ''}, I just sent quote ${q.id}. Check your email — let me know if you have any questions.`,
+        template: t(
+          'quoteSent.template',
+          'Hi {{customer}}, I just sent the quote for {{quote}}. Check your email — let me know if you have any questions.',
+          { customer: salutation(q.customerId, q.customer), quote: quoteLabel(q) },
+        ),
       },
-      actionLabel: 'Send confirmation',
+      actionLabel: t('quoteSent.action', 'Send confirmation'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
@@ -296,16 +405,25 @@ export function buildLiveActions(input: Input): EveAction[] {
       id: mkId('eve-inv-sent'),
       agentType: 'agent',
       type: 'progress_update',
-      title: `Confirm invoice ${inv.id} arrived`,
-      description: 'Customer-facing "your invoice is ready" with payment link.',
-      impact: 'Faster payment',
+      title: t('invoiceSent.title', 'Confirm invoice {{invoice}} arrived', {
+        invoice: invoiceLabel(inv),
+      }),
+      description: t('invoiceSent.description', 'Customer-facing "your invoice is ready" with payment link.'),
+      impact: t('invoiceSent.impact', 'Faster payment'),
       priority: 'medium',
       status: 'pending',
       preparedData: {
         invoiceId: inv.id,
-        template: `Hi ${inv.customer ?? ''}, invoice ${inv.id} is ready. Pay online or contact me if questions.`,
+        template: t(
+          'invoiceSent.template',
+          'Hi {{customer}}, invoice {{invoice}} is ready. Pay online or contact me if questions.',
+          {
+            customer: salutation(inv.customerId, inv.customerName ?? inv.customer),
+            invoice: invoiceLabel(inv),
+          },
+        ),
       },
-      actionLabel: 'Send confirmation',
+      actionLabel: t('invoiceSent.action', 'Send confirmation'),
       requiresApproval: true,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),

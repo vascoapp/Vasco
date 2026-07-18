@@ -112,7 +112,16 @@
     "reducedVatTitle": "9% reduced Sales tax rate",
     "reducedVatToggle": "Use 9% reduced Sales tax for renovation labor on homes >2 years old",
     "sendQuote": "Send estimate",
-    "shareFailedTitle": "Could not share estimate"
+    "shareFailedTitle": "Could not share estimate",
+    "addCustomService": "Add a custom service",
+    "customServiceName": "Service name",
+    "customServicePrice": "Price (€)",
+    "customServiceUnit": "Unit",
+    "orFromPricebook": "Or pick from your pricebook",
+    "editPrice": "Edit price",
+    "addService": "Add service",
+    "customServiceInvalidTitle": "Add a name and price",
+    "customServiceInvalidBody": "Enter a service name and a price greater than zero."
   },
   "queue": {
     "lowWinImpact": "~${{value}} at stake",
@@ -122,7 +131,7 @@
     "firstQuote": "Send your first estimate"
   },
   "aiQueue": {
-    "quoteFollowUp": "Follow-up estimate {{id}}"
+    "quoteFollowUp": "Follow-up estimate {{ref}}"
   },
   "tieredQuote": {
     "noItems": "No items in the estimate.",
@@ -800,7 +809,36 @@
     "implication": "Estimated impact: ${{amount}}"
   },
   "tierGate": {
-    "quoteLimitReached": "Estimate limit reached ({{count}}/month)."
+    "quoteLimitReached": "Estimate limit reached ({{count}}/month).",
+    "features": {
+      "hasPaymentProcessing": "Payment processing",
+      "hasAccountingIntegrations": "Accounting integrations",
+      "hasEInvoicing": "E-invoicing",
+      "hasFullEInvoicing": "All e-invoice formats",
+      "hasEveAI": "EVE AI assistant",
+      "hasEveAuditor": "EVE compliance monitoring",
+      "hasEveAnalyst": "EVE business intelligence",
+      "hasAutomationPacks": "Automation packs",
+      "hasMlPredictions": "ML predictions",
+      "hasBenchmarking": "Contractor benchmarking",
+      "hasPriceIndex": "EU price index",
+      "hasInvoiceScanning": "Invoice scanning",
+      "hasPurchasingAgent": "Purchasing agent",
+      "hasBulkPurchaseOptimizer": "Bulk purchase optimizer",
+      "hasPriceDropAlerts": "Price drop alerts",
+      "hasSupplierScoring": "Supplier reliability scoring",
+      "hasPdfExport": "PDF/CSV export",
+      "hasClientPortal": "Client portal",
+      "hasQuoteTemplates": "Quote templates",
+      "hasCustomerDecisions": "Customer decision tracker",
+      "hasApiAccess": "API access",
+      "hasWhiteLabel": "White-label documents",
+      "hasSubcontractorPortal": "Subcontractor portal",
+      "hasWorkerPortal": "Worker portal",
+      "hasCalendarSync": "Calendar sync",
+      "hasDedicatedSupport": "Dedicated support",
+      "hasOnboardingAssistance": "Onboarding assistance"
+    }
   },
   "shareQuote": {
     "message": "{{greeting}}here is your estimate: {{url}}",
@@ -862,6 +900,21 @@
     "regional": {
       "title": "What others in your area chose",
       "basedOn": "Based on {{count}} similar decisions"
+    }
+  },
+  "eve": {
+    "live": {
+      "draftInvoice": {
+        "impact": "${{amount}} revenue"
+      },
+      "overdue": {
+        "description": "${{amount}} outstanding — {{tone}} recommended.",
+        "impact": "${{amount}} collection risk"
+      },
+      "followUp": {
+        "impact": "${{amount}} potential",
+        "template": "Hi {{customer}}, just following up on the quote for {{quote}} (${{amount}}). Any questions?"
+      }
     }
   }
 }

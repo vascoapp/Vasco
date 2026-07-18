@@ -1718,7 +1718,16 @@
     "viewJob": "Klus bekijken",
     "createInvoice": "Factuur aanmaken",
     "conversionFailed": "Kon de offerte niet omzetten naar een klus.",
-    "acceptAndCreateJob": "Accepteren en klus aanmaken"
+    "acceptAndCreateJob": "Accepteren en klus aanmaken",
+    "addCustomService": "Eigen dienst toevoegen",
+    "customServiceName": "Naam dienst",
+    "customServicePrice": "Prijs (€)",
+    "customServiceUnit": "Eenheid",
+    "orFromPricebook": "Of kies uit je prijslijst",
+    "editPrice": "Prijs aanpassen",
+    "addService": "Dienst toevoegen",
+    "customServiceInvalidTitle": "Voeg een naam en prijs toe",
+    "customServiceInvalidBody": "Vul een naam in en een prijs groter dan nul."
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -1774,11 +1783,11 @@
     "jobCompleted": "Klus afgerond",
     "createInvoice": "Factuur aanmaken",
     "revenueAmount": "{{amount}} omzet",
-    "reminderFor": "Herinnering voor {{id}}",
+    "reminderFor": "Herinnering voor {{ref}}",
     "amountOverdue": "{{amount}} achterstallig",
     "sendReminder": "Herinnering versturen",
     "speedsUpPayment": "Versnelt betaling met ~5 dagen",
-    "quoteFollowUp": "Opvolging offerte {{id}}",
+    "quoteFollowUp": "Opvolging offerte {{ref}}",
     "sendFollowUp": "Opvolging sturen",
     "increasesAcceptance": "Verhoogt acceptatiekans met 20%"
   },
@@ -4031,7 +4040,36 @@
     "aiInsightLimitReached": "AI-inzicht-limiet bereikt ({{count}}/maand).",
     "clientLimitReached": "Klant-limiet bereikt ({{count}}).",
     "seatsInUse": "Alle {{count}} teamplekken in gebruik.",
-    "featureRequiresTier": "{{feature}} vereist het {{tier}}-abonnement."
+    "featureRequiresTier": "{{feature}} vereist het {{tier}}-abonnement.",
+    "features": {
+      "hasPaymentProcessing": "Betalingsverwerking",
+      "hasAccountingIntegrations": "Boekhoudkoppelingen",
+      "hasEInvoicing": "E-facturatie",
+      "hasFullEInvoicing": "Alle e-factuurformaten",
+      "hasEveAI": "EVE AI-assistent",
+      "hasEveAuditor": "EVE compliance-monitoring",
+      "hasEveAnalyst": "EVE business intelligence",
+      "hasAutomationPacks": "Automatiseringspakketten",
+      "hasMlPredictions": "ML-voorspellingen",
+      "hasBenchmarking": "Vakman-benchmarking",
+      "hasPriceIndex": "EU-prijsindex",
+      "hasInvoiceScanning": "Factuur scannen",
+      "hasPurchasingAgent": "Inkoopassistent",
+      "hasBulkPurchaseOptimizer": "Bulkinkoop-optimalisatie",
+      "hasPriceDropAlerts": "Prijsdaling-meldingen",
+      "hasSupplierScoring": "Leverancier-betrouwbaarheidsscore",
+      "hasPdfExport": "PDF/CSV-export",
+      "hasClientPortal": "Klantportaal",
+      "hasQuoteTemplates": "Offertesjablonen",
+      "hasCustomerDecisions": "Klantbeslissing-tracker",
+      "hasApiAccess": "API-toegang",
+      "hasWhiteLabel": "White-label documenten",
+      "hasSubcontractorPortal": "Onderaannemer-portaal",
+      "hasWorkerPortal": "Medewerkersportaal",
+      "hasCalendarSync": "Agenda-synchronisatie",
+      "hasDedicatedSupport": "Toegewijde ondersteuning",
+      "hasOnboardingAssistance": "Onboarding-ondersteuning"
+    }
   },
   "shareQuote": {
     "failTitle": "Kan link niet aanmaken",
@@ -4544,7 +4582,81 @@
     "pendingFor": "IN AFWACHTING — {{name}}",
     "empty": "{{name}} is bij — geen openstaande acties.",
     "aboutHeading": "OVER EVE",
-    "aboutBody": "EVE bereidt werk proactief voor met drie gespecialiseerde agents. Tik hierboven op een agent om de openstaande voorstellen te bekijken — elke goedkeuring is één tik."
+    "aboutBody": "EVE bereidt werk proactief voor met drie gespecialiseerde agents. Tik hierboven op een agent om de openstaande voorstellen te bekijken — elke goedkeuring is één tik.",
+    "live": {
+      "genericCustomer": "de klant",
+      "draftInvoice": {
+        "title": "Factuur opstellen voor {{job}}",
+        "description": "{{job}} staat op afgerond — factureer nu en houd je cashflow op peil.",
+        "impact": "€{{amount}} omzet",
+        "action": "Factuur opstellen"
+      },
+      "overdue": {
+        "title": "Factuur {{invoice}} {{days}}d te laat",
+        "description": "€{{amount}} openstaand — {{tone}} aanbevolen.",
+        "impact": "€{{amount}} incassorisico",
+        "action": "Bekijken",
+        "toneFinal": "laatste aanmaning",
+        "toneFirm": "stevige herinnering",
+        "toneFriendly": "vriendelijk duwtje"
+      },
+      "winRate": {
+        "title": "Slagingspercentage op {{pct}}%",
+        "description": "Onder de branchenorm van 45%. Bekijk je laatste 5 verloren offertes — prijs, pakketkeuze of opvolgtiming zijn meestal de oorzaak.",
+        "impact": "Kan 10-15% omzet terugwinnen",
+        "action": "Verloren offertes bekijken"
+      },
+      "appointment": {
+        "title": "Afspraak morgen: {{job}}",
+        "description": "Stuur {{customer}} een herinnering.",
+        "impact": "Minder no-shows",
+        "template": "Hallo {{customer}}, een herinnering aan onze afspraak morgen om {{time}} voor {{job}}. Laat het weten als je wilt verzetten.",
+        "action": "Herinnering sturen"
+      },
+      "followUp": {
+        "title": "Offerte {{quote}} opvolgen",
+        "description": "Offerte is {{days}} dagen geleden verstuurd — stille klanten tekenen vaak na een zetje.",
+        "impact": "€{{amount}} potentieel",
+        "impactFallback": "Meer conversie",
+        "template": "Hallo {{customer}}, ik kom even terug op de offerte voor {{quote}} (€{{amount}}). Nog vragen?",
+        "action": "Opvolgen"
+      },
+      "jobStarted": {
+        "title": "Klant informeren: {{job}} gestart",
+        "description": "Bericht voor de klant: \"we zijn begonnen\".",
+        "impact": "Bouwt vertrouwen",
+        "template": "Hallo {{customer}}, we zijn begonnen aan {{job}}. We houden je op de hoogte van de voortgang.",
+        "action": "Update sturen"
+      },
+      "handover": {
+        "title": "Opleverbericht: {{job}}",
+        "description": "Stuur de klant een afronding + aankondiging van de factuur.",
+        "impact": "Soepele oplevering",
+        "template": "Hallo {{customer}}, {{job}} is klaar. Bedankt voor het vertrouwen — de factuur volgt.",
+        "action": "Oplevering sturen"
+      },
+      "paymentThanks": {
+        "title": "{{customer}} bedanken voor betaling",
+        "description": "Factuur {{invoice}} is betaald — een kort bedankje doet veel.",
+        "impact": "Meer herhaalopdrachten",
+        "template": "Bedankt {{customer}} — betaling voor factuur {{invoice}} ontvangen. De bevestiging volgt.",
+        "action": "Bedankje sturen"
+      },
+      "quoteSent": {
+        "title": "Bevestigen dat offerte {{quote}} aankwam",
+        "description": "Kort \"ik heb de offerte net gestuurd — laat het weten als je iets nodig hebt\" — verhoogt de respons.",
+        "impact": "Minder stille offertes",
+        "template": "Hallo {{customer}}, ik heb zojuist de offerte voor {{quote}} gestuurd. Kijk even in je mail — laat het weten als je vragen hebt.",
+        "action": "Bevestiging sturen"
+      },
+      "invoiceSent": {
+        "title": "Bevestigen dat factuur {{invoice}} aankwam",
+        "description": "Bericht voor de klant: \"je factuur staat klaar\" met betaallink.",
+        "impact": "Sneller betaald",
+        "template": "Hallo {{customer}}, factuur {{invoice}} staat klaar. Betaal online of neem contact op bij vragen.",
+        "action": "Bevestiging sturen"
+      }
+    }
   },
   "licenses": {
     "warnTitle": "Vergunning verloopt",
