@@ -63,6 +63,18 @@ interface IntegrationItem {
   route?: string;
 }
 
+
+// The TIERS table in subscriptionService carries English name/tagline strings.
+// Full translations already existed under onboarding.plan*Desc — they were just
+// never wired up, so a Dutch contractor saw "Full AI power — Vasco pays for
+// itself" on their subscription card. Map tier -> existing locale key.
+const TIER_NAME_KEY: Record<string, string> = {
+  free: 'onboarding.planFree', pro: 'onboarding.planPro', contractor: 'onboarding.planContractor',
+};
+const TIER_DESC_KEY: Record<string, string> = {
+  free: 'onboarding.planFreeDesc', pro: 'onboarding.planProDesc', contractor: 'onboarding.planContractorDesc',
+};
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -399,8 +411,8 @@ export default function ProfileScreen() {
                   <Ionicons name="star" size={18} color={Palette.hermesOrange} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>{TIERS[subscription.tier].name}</Text>
-                  <Text style={styles.planTagline}>{TIERS[subscription.tier].tagline}</Text>
+                  <Text style={styles.rowLabel}>{t(TIER_NAME_KEY[subscription.tier] ?? '', TIERS[subscription.tier].name)}</Text>
+                  <Text style={styles.planTagline}>{t(TIER_DESC_KEY[subscription.tier] ?? '', TIERS[subscription.tier].tagline)}</Text>
                 </View>
                 {subscription.tier === 'free' ? (
                   <View style={styles.freeBadge}>
@@ -511,13 +523,13 @@ export default function ProfileScreen() {
                             </View>
                           )}
                           <View style={styles.tierCardHeader}>
-                            <Text style={styles.tierName}>{cfg.name}</Text>
+                            <Text style={styles.tierName}>{t(TIER_NAME_KEY[t2] ?? '', cfg.name)}</Text>
                             <Text style={styles.tierPrice}>
                               €{price}
                               <Text style={styles.tierPriceUnit}>/{t('profile.perMonth', 'mo')}</Text>
                             </Text>
                           </View>
-                          <Text style={styles.tierTagline}>{cfg.tagline}</Text>
+                          <Text style={styles.tierTagline}>{t(TIER_DESC_KEY[t2] ?? '', cfg.tagline)}</Text>
                           <View style={styles.tierCta}>
                             <Text style={styles.tierCtaText}>
                               {checkoutLoading === t2
