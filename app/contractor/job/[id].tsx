@@ -28,7 +28,7 @@ import { SafeArea } from '../../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { useClockIn } from '../../../src/services/clockInService';
-import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, useJobLifecyclePipeline } from '../../../src/services/smartSchedulerService';
+import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, useJobLifecyclePipeline, toLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
 import { getCohortCostVariance, type CohortCostVariance } from '../../../src/services/costVarianceMoatService';
@@ -203,12 +203,18 @@ export default function JobDetailPage() {
       type: appJob.trade || 'general',
       startTime: appJob.scheduledDate ? `${appJob.scheduledDate}T${appJob.scheduledStartTime || '09:00'}` : new Date().toISOString(),
       endTime: appJob.scheduledDate ? `${appJob.scheduledDate}T${appJob.scheduledEndTime || '17:00'}` : new Date().toISOString(),
-      duration: appJob.estimatedDuration || 2,
+      // ScheduledJob.duration is MINUTES (see smartSchedulerService), but
+      // Job.estimatedDuration is HOURS. Assigning hours straight in made a
+      // 24-hour job render as "24 min" here while Werk showed "24u".
+      duration: (appJob.estimatedDuration || 2) * 60,
       travelTime: 15,
       status: appJob.status === 'in-progress' ? 'in_progress' as const : appJob.status === 'completed' ? 'completed' as const : 'confirmed' as const,
       priority: appJob.priority || 'normal',
       notes: '',
-      lifecycleStatus: appJob.status as any,
+      // Map the English domain status to the Dutch lifecycle enum. The old
+      // `as any` let 'in-progress' through, which is absent from
+      // LIFECYCLE_ORDER -> indexOf === -1 -> "Voortgang -14%".
+      lifecycleStatus: toLifecycleStatus(appJob.status) ?? 'ingepland',
       quotedAmount: appJob.quotedAmount || 0,
     } as any;
   }, [id, jobs, customers]);
@@ -393,15 +399,25 @@ export default function JobDetailPage() {
               </View>
               <Text style={styles.heroDetailText}>{startTime} – {endTime}</Text>
               <View style={styles.durationChip}>
-                <Text style={styles.durationText}>{job.duration} min</Text>
+                {/* Format hours+minutes like the Werk list does, so the same
+                    job reads identically on both screens. */}
+                <Text style={styles.durationText}>
+                  {job.duration >= 60
+                    ? `${Math.floor(job.duration / 60)}u${job.duration % 60 > 0 ? job.duration % 60 : ''}`
+                    : `${job.duration} min`}
+                </Text>
               </View>
             </View>
-            <View style={styles.heroDetailItem}>
-              <View style={styles.heroDetailIcon}>
-                <Ionicons name="location" size={14} color={Palette.hermesOrange} />
+            {/* Only render when there IS an address — jobs without one showed a
+                bare pin icon with empty text next to it. */}
+            {job.address ? (
+              <View style={styles.heroDetailItem}>
+                <View style={styles.heroDetailIcon}>
+                  <Ionicons name="location" size={14} color={Palette.hermesOrange} />
+                </View>
+                <Text style={styles.heroDetailText} numberOfLines={2}>{job.address}</Text>
               </View>
-              <Text style={styles.heroDetailText} numberOfLines={2}>{job.address}</Text>
-            </View>
+            ) : null}
             {job.travelTime && (
               <View style={styles.heroDetailItem}>
                 <View style={styles.heroDetailIcon}>
@@ -492,7 +508,11 @@ export default function JobDetailPage() {
           {(() => {
             const currentIdx = LIFECYCLE_ORDER.indexOf(job.lifecycleStatus);
             const totalSteps = LIFECYCLE_ORDER.length;
-            const progressPct = totalSteps > 1 ? Math.round((currentIdx / (totalSteps - 1)) * 100) : 0;
+            // Clamp: indexOf returns -1 for an unrecognised status, which used
+            // to render as "-14%" and a negative bar width. The mapper above is
+            // the real fix; this keeps a future enum drift from being ugly.
+            const rawPct = totalSteps > 1 ? Math.round((currentIdx / (totalSteps - 1)) * 100) : 0;
+            const progressPct = Math.max(0, Math.min(100, rawPct));
             return (
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>

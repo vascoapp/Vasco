@@ -29,6 +29,38 @@ export const LIFECYCLE_ORDER: JobLifecycleStatus[] = [
   'lead', 'offerte', 'geaccepteerd', 'ingepland', 'bezig', 'gereed', 'gefactureerd', 'betaald',
 ];
 
+/**
+ * Domain JobStatus (English) -> JobLifecycleStatus (Dutch). The two enums are
+ * parallel but spelled differently, and screens were assigning one to the other
+ * behind an `as any`. That made LIFECYCLE_ORDER.indexOf('in-progress') return
+ * -1, which the job screen turned into a "Voortgang -14%" bar.
+ */
+const DOMAIN_STATUS_TO_LIFECYCLE: Record<string, JobLifecycleStatus> = {
+  lead: 'lead',
+  quoted: 'offerte',
+  accepted: 'geaccepteerd',
+  scheduled: 'ingepland',
+  'in-progress': 'bezig',
+  completed: 'gereed',
+  invoiced: 'gefactureerd',
+  paid: 'betaald',
+  cancelled: 'geannuleerd',
+};
+
+/**
+ * Normalise any job status to a JobLifecycleStatus. Accepts either spelling —
+ * parts of the codebase already persist the Dutch values — and returns
+ * undefined for anything unrecognised so callers can decide, rather than
+ * silently producing a -1 index.
+ */
+export function toLifecycleStatus(status: string | null | undefined): JobLifecycleStatus | undefined {
+  if (!status) return undefined;
+  if (LIFECYCLE_ORDER.includes(status as JobLifecycleStatus) || status === 'geannuleerd') {
+    return status as JobLifecycleStatus;
+  }
+  return DOMAIN_STATUS_TO_LIFECYCLE[status];
+}
+
 export const LIFECYCLE_LABELS: Record<JobLifecycleStatus, string> = {
   lead: 'Lead',
   offerte: 'Offerte',

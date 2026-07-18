@@ -472,6 +472,11 @@ function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 
   const startStr = job.startTime
     ? new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
     : (parseTime(job.scheduledStartTime)?.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) ?? '09:00');
+  // Matches how permits.tsx / handover render a JobAddress. Tolerates a plain
+  // string too, since some call sites still pass one.
+  const jobAddressLabel = typeof job.address === 'string'
+    ? job.address
+    : [job.address?.street, job.address?.city].filter(Boolean).join(', ');
   return (
     <Pressable style={({ pressed }) => [heroStyles.wrap, pressed && { opacity: 0.95 }]} onPress={onPress}>
       <LinearGradient
@@ -491,10 +496,17 @@ function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 
             <DKLabel style={heroStyles.metaLabel}>{t('dk.pill.time', 'Time')}</DKLabel>
             <Text style={heroStyles.metaValue}>{startStr}</Text>
           </View>
-          {(job.address || job.customerName) ? (
+          {/* job.address is a JobAddress OBJECT, not a string. Rendering it
+              directly would throw "Objects are not valid as a React child" for
+              any job that actually has an address — seed jobs have none, which
+              is the only reason this never crashed. Format it like the other
+              screens do, and show the chip ONLY for a real address: the old
+              `|| job.customerName` fallback labelled the customer name as a
+              "Location" and repeated the line directly above it. */}
+          {jobAddressLabel ? (
             <View style={heroStyles.metaChip}>
               <DKLabel style={heroStyles.metaLabel}>{t('dk.pill.location', 'Location')}</DKLabel>
-              <Text style={heroStyles.metaValue} numberOfLines={1}>{job.address || job.customerName}</Text>
+              <Text style={heroStyles.metaValue} numberOfLines={1}>{jobAddressLabel}</Text>
             </View>
           ) : null}
         </View>
