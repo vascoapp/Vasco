@@ -4184,7 +4184,32 @@
     "saved": "saved",
     "immediately": "Immediately",
     "beforeDue": "{{days}}d before due",
-    "afterDays": "After {{days}} days"
+    "afterDays": "After {{days}} days",
+    "actionLabels": {
+      "auto_log_hours": "Log hours automatically",
+      "check_permits": "Check permits",
+      "flag_incomplete_jobs": "Flag incomplete jobs",
+      "prep_tomorrow": "Prepare tomorrow",
+      "prepare_handover": "Prepare handover",
+      "send_bulk_alert": "Send bulk-buy alert",
+      "send_decision_reminder": "Send decision reminder",
+      "send_decision_urgent": "Send urgent decision request",
+      "send_final_notice": "Send final notice",
+      "send_friendly_reminder": "Send friendly reminder",
+      "send_maintenance_followup": "Send maintenance follow-up",
+      "send_maintenance_reminder": "Send maintenance reminder",
+      "send_pre_reminder": "Send pre-due reminder",
+      "send_price_alert": "Send price alert",
+      "send_progress_note": "Send progress update",
+      "send_quote_followup": "Follow up on quote",
+      "send_quote_reminder": "Send quote reminder",
+      "send_reminder": "Send reminder",
+      "send_reorder_alert": "Send reorder alert",
+      "send_satisfaction_survey": "Send satisfaction survey",
+      "send_start_notification": "Send start notification",
+      "send_urgent_reminder": "Send urgent reminder",
+      "send_welcome": "Send welcome message"
+    }
   },
   "market": {
     "noBenchmarksDesc": "More data needed for benchmarks",

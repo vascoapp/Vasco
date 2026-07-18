@@ -4184,7 +4184,32 @@
     "saved": "risparmiati",
     "immediately": "Subito",
     "beforeDue": "{{days}}g prima della scadenza",
-    "afterDays": "Dopo {{days}} giorni"
+    "afterDays": "Dopo {{days}} giorni",
+    "actionLabels": {
+      "auto_log_hours": "Registra ore automaticamente",
+      "check_permits": "Verifica autorizzazioni",
+      "flag_incomplete_jobs": "Segnala lavori incompleti",
+      "prep_tomorrow": "Prepara domani",
+      "prepare_handover": "Prepara la consegna",
+      "send_bulk_alert": "Invia avviso acquisto in blocco",
+      "send_decision_reminder": "Invia promemoria decisione",
+      "send_decision_urgent": "Invia richiesta decisione urgente",
+      "send_final_notice": "Invia sollecito finale",
+      "send_friendly_reminder": "Invia promemoria cordiale",
+      "send_maintenance_followup": "Follow-up manutenzione",
+      "send_maintenance_reminder": "Invia promemoria manutenzione",
+      "send_pre_reminder": "Invia promemoria pre-scadenza",
+      "send_price_alert": "Invia avviso prezzo",
+      "send_progress_note": "Invia aggiornamento avanzamento",
+      "send_quote_followup": "Ricontatta per il preventivo",
+      "send_quote_reminder": "Invia promemoria preventivo",
+      "send_reminder": "Invia promemoria",
+      "send_reorder_alert": "Invia avviso riordino",
+      "send_satisfaction_survey": "Invia sondaggio soddisfazione",
+      "send_start_notification": "Invia notifica di inizio",
+      "send_urgent_reminder": "Invia promemoria urgente",
+      "send_welcome": "Invia messaggio di benvenuto"
+    }
   },
   "market": {
     "noBenchmarksDesc": "Servono più dati per i benchmark",

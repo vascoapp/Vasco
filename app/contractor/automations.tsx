@@ -46,7 +46,11 @@ export default function AutomationsScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={s.headerTitle}>{t('automations.title', 'Automatiseringen')}</Text>
+          {/* Long uppercase titles wrapped mid-word ("AUTOMATISERINGE / N").
+              Shrink to fit one line, as on the Klanten KPI tiles. */}
+          <Text style={s.headerTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            {t('automations.title', 'Automatiseringen')}
+          </Text>
           <Text style={s.headerSub}>{t('automations.subtitle', { defaultValue: '{{count}} active · Vasco works for you', count: enabledCount })}</Text>
         </View>
       </View>
@@ -128,6 +132,10 @@ export default function AutomationsScreen() {
               {/* Steps preview */}
               {pack.enabled && (
                 <View style={s.stepsPreview}>
+                  {/* Step actions render via automations.actionLabels.*; the raw
+                      identifier was previously printed with underscores stripped,
+                      i.e. "Na 3 dagen: send friendly reminder" — an English enum
+                      inside a Dutch sentence. */}
                   {pack.steps.map((step, j) => (
                     <View key={j} style={s.stepRow}>
                       <View style={s.stepDot} />
@@ -137,7 +145,7 @@ export default function AutomationsScreen() {
                           : step.delayDays < 0
                             ? t('automations.beforeDue', { defaultValue: '{{days}}d before due', days: Math.abs(step.delayDays) })
                             : t('automations.afterDays', { defaultValue: 'After {{days}} days', days: step.delayDays })
-                        }: {step.action.replace(/_/g, ' ')}
+                        }: {t(`automations.actionLabels.${step.action}`, step.action.replace(/_/g, ' '))}
                       </Text>
                       <Text style={s.stepChannel}>{step.channel}</Text>
                     </View>

@@ -3879,7 +3879,7 @@
   "automations": {
     "healthNew": "NIEUW",
     "healthHealthy": "WERKT",
-    "healthLow": "NEEDS WORK",
+    "healthLow": "AANDACHT NODIG",
     "mutedCount": "{{count}} gedempt",
     "heroTitle": "Bespaar tijd met automatiseringen",
     "heroDesc": "Activeer workflows en Vasco doet het werk. Je behoudt altijd controle.",
@@ -3891,7 +3891,32 @@
     "saved": "bespaard",
     "immediately": "Direct",
     "beforeDue": "{{days}}d voor vervaldatum",
-    "afterDays": "Na {{days}} dagen"
+    "afterDays": "Na {{days}} dagen",
+    "actionLabels": {
+      "auto_log_hours": "Uren automatisch loggen",
+      "check_permits": "Vergunningen controleren",
+      "flag_incomplete_jobs": "Onafgeronde klussen markeren",
+      "prep_tomorrow": "Morgen voorbereiden",
+      "prepare_handover": "Oplevering voorbereiden",
+      "send_bulk_alert": "Bulkinkoop-tip sturen",
+      "send_decision_reminder": "Keuzeherinnering sturen",
+      "send_decision_urgent": "Dringende keuzevraag sturen",
+      "send_final_notice": "Laatste aanmaning sturen",
+      "send_friendly_reminder": "Vriendelijke herinnering sturen",
+      "send_maintenance_followup": "Onderhoud opvolgen",
+      "send_maintenance_reminder": "Onderhoudsherinnering sturen",
+      "send_pre_reminder": "Herinnering vóór vervaldatum sturen",
+      "send_price_alert": "Prijsalert sturen",
+      "send_progress_note": "Voortgangsupdate sturen",
+      "send_quote_followup": "Offerte opvolgen",
+      "send_quote_reminder": "Offerteherinnering sturen",
+      "send_reminder": "Herinnering sturen",
+      "send_reorder_alert": "Bestelalert sturen",
+      "send_satisfaction_survey": "Tevredenheidsvraag sturen",
+      "send_start_notification": "Startbericht sturen",
+      "send_urgent_reminder": "Dringende herinnering sturen",
+      "send_welcome": "Welkomstbericht sturen"
+    }
   },
   "packDiscovery": {
     "incasso": {

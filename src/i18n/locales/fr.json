@@ -4184,7 +4184,32 @@
     "saved": "économisés",
     "immediately": "Immédiatement",
     "beforeDue": "{{days}}j avant échéance",
-    "afterDays": "Après {{days}} jours"
+    "afterDays": "Après {{days}} jours",
+    "actionLabels": {
+      "auto_log_hours": "Enregistrer les heures automatiquement",
+      "check_permits": "Vérifier les autorisations",
+      "flag_incomplete_jobs": "Signaler les missions inachevées",
+      "prep_tomorrow": "Préparer demain",
+      "prepare_handover": "Préparer la livraison",
+      "send_bulk_alert": "Envoyer une alerte achat groupé",
+      "send_decision_reminder": "Envoyer un rappel de décision",
+      "send_decision_urgent": "Envoyer une demande de décision urgente",
+      "send_final_notice": "Envoyer une mise en demeure",
+      "send_friendly_reminder": "Envoyer un rappel amical",
+      "send_maintenance_followup": "Relancer pour l’entretien",
+      "send_maintenance_reminder": "Envoyer un rappel d’entretien",
+      "send_pre_reminder": "Envoyer un rappel avant échéance",
+      "send_price_alert": "Envoyer une alerte prix",
+      "send_progress_note": "Envoyer une mise à jour",
+      "send_quote_followup": "Relancer le devis",
+      "send_quote_reminder": "Envoyer un rappel de devis",
+      "send_reminder": "Envoyer un rappel",
+      "send_reorder_alert": "Envoyer une alerte de réappro",
+      "send_satisfaction_survey": "Envoyer une enquête de satisfaction",
+      "send_start_notification": "Envoyer une notification de début",
+      "send_urgent_reminder": "Envoyer un rappel urgent",
+      "send_welcome": "Envoyer un message de bienvenue"
+    }
   },
   "market": {
     "noBenchmarksDesc": "Plus de données nécessaires pour les benchmarks",

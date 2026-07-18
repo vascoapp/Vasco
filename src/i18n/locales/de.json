@@ -4184,7 +4184,32 @@
     "saved": "gespart",
     "immediately": "Sofort",
     "beforeDue": "{{days}} T vor Fälligkeit",
-    "afterDays": "Nach {{days}} Tagen"
+    "afterDays": "Nach {{days}} Tagen",
+    "actionLabels": {
+      "auto_log_hours": "Stunden automatisch erfassen",
+      "check_permits": "Genehmigungen prüfen",
+      "flag_incomplete_jobs": "Unfertige Aufträge markieren",
+      "prep_tomorrow": "Morgen vorbereiten",
+      "prepare_handover": "Übergabe vorbereiten",
+      "send_bulk_alert": "Sammelbestellungs-Hinweis senden",
+      "send_decision_reminder": "Entscheidungserinnerung senden",
+      "send_decision_urgent": "Dringende Entscheidungsanfrage senden",
+      "send_final_notice": "Letzte Mahnung senden",
+      "send_friendly_reminder": "Freundliche Erinnerung senden",
+      "send_maintenance_followup": "Wartung nachfassen",
+      "send_maintenance_reminder": "Wartungserinnerung senden",
+      "send_pre_reminder": "Erinnerung vor Fälligkeit senden",
+      "send_price_alert": "Preisalarm senden",
+      "send_progress_note": "Fortschritts-Update senden",
+      "send_quote_followup": "Angebot nachfassen",
+      "send_quote_reminder": "Angebotserinnerung senden",
+      "send_reminder": "Erinnerung senden",
+      "send_reorder_alert": "Nachbestell-Hinweis senden",
+      "send_satisfaction_survey": "Zufriedenheitsumfrage senden",
+      "send_start_notification": "Startbenachrichtigung senden",
+      "send_urgent_reminder": "Dringende Erinnerung senden",
+      "send_welcome": "Willkommensnachricht senden"
+    }
   },
   "market": {
     "noBenchmarksDesc": "Mehr Daten für Benchmarks nötig",
