@@ -8,7 +8,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { populateQueue, addToQueue } from '../services/aiActionQueueService';
+import { populateQueue, addToQueue, queueEntityLabel } from '../services/aiActionQueueService';
 import { evaluateTriggers } from '../services/workflowPackService';
 import { calibrateModels } from './mlModels';
 import { validateWorkflowState } from '../services/workflowValidatorService';
@@ -74,7 +74,9 @@ function auditInvoices(invoices: any[]): AuditFinding[] {
           id: `audit-inv-${inv.id}`,
           type: 'payment_overdue',
           severity: daysOverdue > 30 ? 'critical' : daysOverdue > 14 ? 'warning' : 'info',
-          title: `Factuur ${inv.id} is ${daysOverdue} dagen achterstallig`,
+          // Human label, never the row id — this title surfaces in the audit
+          // findings list the contractor reads ("Factuur inv-seed-1 …").
+          title: `Factuur ${queueEntityLabel(inv) || 'zonder referentie'} is ${daysOverdue} dagen achterstallig`,
           description: `€${(inv.amount ?? 0).toLocaleString('nl-NL')} uitstaand`,
           entityId: inv.id,
           entityType: 'invoice',
@@ -130,7 +132,7 @@ function auditQuotes(quotes: any[]): AuditFinding[] {
           id: `audit-quote-${q.id}`,
           type: 'quote_anomaly',
           severity: 'warning',
-          title: `Offerte ${q.id} al ${daysSinceSent} dagen zonder reactie`,
+          title: `Offerte ${queueEntityLabel(q) || 'zonder referentie'} al ${daysSinceSent} dagen zonder reactie`,
           description: `€${(q.amount ?? 0).toLocaleString('nl-NL')} · ${q.customer || 'Onbekende klant'}`,
           entityId: q.id,
           entityType: 'quote',

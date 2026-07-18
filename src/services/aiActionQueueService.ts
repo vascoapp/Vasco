@@ -811,7 +811,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const currencySymbol = feeBreakdown.currency === 'GBP' ? '£' : '€';
     const id = await addToQueue({
       type: 'invoice_regenerate',
-      title: t('automation.regenerateInvoice', { defaultValue: 'Regenerate invoice {{id}}', id: inv.id }),
+      title: t('automation.regenerateInvoice', { defaultValue: 'Regenerate invoice {{id}}', id: queueEntityLabel(inv, context.customers) }),
       description: t('automation.daysOverdueWithFee', {
         defaultValue: '{{days}} days overdue · +{{currency}}{{fee}} late fee',
         days: daysOverdue,

@@ -102,7 +102,9 @@ export default function SearchScreen() {
         r.push({
           id: quote.id,
           type: 'quote',
-          title: `${quote.id} — ${quote.job || t('search.quote')}`,
+          // Was prefixed with the raw quote id; the job title (plus the
+          // customer in the subtitle) is what a contractor searches by.
+          title: `${quote.job || t('search.quote')}`,
           subtitle: `${quote.status} · ${amt}${custName ? ` · ${custName}` : ''}`,
           icon: 'document-text',
           color: Palette.hermesOrange,
