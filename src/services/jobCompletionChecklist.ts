@@ -105,7 +105,9 @@ function certHint(
     return {
       hint: `${cert.name} expires in ${days} day${days === 1 ? '' : 's'} — renew soon to keep this ${kind} valid.`,
       hintKey: 'checklist.certExpiringSoon',
-      hintParams: { name: cert.name, days, kind },
+      // `count` drives the i18next plural; `days` stays for any caller that
+      // still interpolates it.
+      hintParams: { name: cert.name, days, count: days, kind },
     };
   }
   return { hint: fallback, hintKey: fallbackKey };

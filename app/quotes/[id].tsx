@@ -297,7 +297,7 @@ export default function QuoteDetailScreen() {
                 <Text style={[styles.engagementSignal, { color: SemanticColors.feedbackError }]}>✗ {t('quotes.hoveredDecline', 'Hovered decline')} {engagement.declineHoveredCount}×</Text>
               )}
               {engagement.questionStartedCount > 0 && (
-                <Text style={styles.engagementSignal}>💬 {t('quotes.startedQuestions', 'Started {{count}} question(s)', { count: engagement.questionStartedCount })}</Text>
+                <Text style={styles.engagementSignal}>💬 {t('quotes.startedQuestions', { count: engagement.questionStartedCount, defaultValue: 'Started {{count}} questions' })}</Text>
               )}
               {!engagement.decided && engagement.totalEvents > 5 && (
                 <Text style={[styles.engagementSignal, { color: Palette.hermesOrange }]}>{t('quotes.followupHint', 'High engagement, no decision yet — consider a follow-up')}</Text>

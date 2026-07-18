@@ -466,7 +466,7 @@ export function CustomerDecisionPortal({
           <View style={styles.urgentContent}>
             <Text style={styles.urgentTitle}>{t('decisionPortal.urgentTitle', 'Action required')}</Text>
             <Text style={styles.urgentText}>
-              {t('decisionPortal.urgentBody', '{{count}} choice(s) need to be made to avoid delays', { count: portalData.overdueDecisions })}
+              {t('decisionPortal.urgentBody', '{{count}} choices need to be made to avoid delays', { count: portalData.overdueDecisions })}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={SemanticColors.feedbackError} />
@@ -1081,7 +1081,7 @@ function CategoryDetailView({
       const remaining = pendingItems.length - 1;
       showToast('success',
         remaining > 0
-          ? t('decisionPortal.choiceSavedRemaining', '{{count}} choice(s) left.', { count: remaining })
+          ? t('decisionPortal.choiceSavedRemaining', '{{count}} choices left.', { count: remaining })
           : t('decisionPortal.allChoicesMade', 'All choices made! Your contractor will be notified.'),
       );
     }

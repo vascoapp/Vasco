@@ -90,7 +90,6 @@
       "accountDetails": "Dettagli account",
       "company": "Azienda",
       "projects": "Progetti",
-      "active": "{{count}} attivo/i",
       "userId": "ID utente",
       "businessSettings": "Impostazioni aziendali",
       "businessDetails": "Dati aziendali",
@@ -108,7 +107,9 @@
       "helpSupport": "Aiuto e supporto",
       "signOut": "Esci",
       "accountingInvoices": "Contabilità / Fatture",
-      "paymentProcessing": "Elaborazione pagamenti"
+      "paymentProcessing": "Elaborazione pagamenti",
+      "active_one": "{{count}} attivo",
+      "active_other": "{{count}} attivi"
     },
     "quotes": {
       "quotes": "Preventivi",
@@ -509,7 +510,7 @@
     "required": "richiesto",
     "complete": "completo",
     "documentProgress": "Avanzamento documenti",
-    "requiredDocsMissing": "documento/i obbligatorio/i mancante/i",
+    "requiredDocsMissing": "documenti obbligatori mancanti",
     "allDocsPresent": "Tutti i documenti obbligatori sono presenti",
     "requiredLabel": "Obbligatorio",
     "overview": "Panoramica",
@@ -551,7 +552,6 @@
     "expires": "Scade",
     "renew": "Rinnova",
     "upcomingExpiries": "Prossime scadenze",
-    "workBlocked": "lavoro di tipo{{s}} bloccato",
     "missingCertificates": "Per certificati mancanti",
     "view": "Vedi lavoro bloccato",
     "title": "Certificati e conformità",
@@ -584,7 +584,9 @@
     "renewalCost": "Costo di rinnovo",
     "viewDocument": "Visualizza documento",
     "share": "Condividi",
-    "renewAction": "Rinnova"
+    "renewAction": "Rinnova",
+    "workBlocked_one": "{{count}} tipo di lavoro bloccato",
+    "workBlocked_other": "{{count}} tipi di lavoro bloccati"
   },
   "billing": {
     "upgradeRequired": "Aggiornamento richiesto",
@@ -1091,7 +1093,6 @@
     "followUpAppointmentDesc": "Manutenzione o ispezione programmata",
     "unknownCustomer": "Cliente sconosciuto",
     "requiredSteps": "Passaggi obbligatori",
-    "requiredStepsRemaining": "{{count}} passaggio/i obbligatorio/i non completato/i.",
     "closeJob": "Chiudi cantiere",
     "closeJobConfirm": "Chiudere «{{title}}» definitivamente? Il cantiere verrà segnato come completato.",
     "cancel": "Annulla",
@@ -1102,7 +1103,9 @@
     "noJobsWaiting": "Nessun cantiere in attesa di chiusura",
     "stepsCompleted": "{{done}}/{{total}} passaggi completati",
     "required": "Obbligatorio",
-    "finalizeJob": "Chiudi cantiere definitivamente"
+    "finalizeJob": "Chiudi cantiere definitivamente",
+    "requiredStepsRemaining_one": "{{count}} passaggio obbligatorio non completato.",
+    "requiredStepsRemaining_other": "{{count}} passaggi obbligatori non completati."
   },
   "pipeline": {
     "title": "Pipeline",
@@ -1572,10 +1575,11 @@
     "revenue": "Fatturato",
     "costs": "Costi",
     "profit": "Profitto",
-    "reminderTemplate": "Gentile cliente,\n\nLe ricordiamo gentilmente {{count}} fattura/e in sospeso.\n\nCordiali saluti",
     "reminderCopied": "Promemoria copiato negli appunti",
     "paymentReminder": "Promemoria di pagamento",
-    "reminderMessage": "Ciao, ti ricordiamo gentilmente che la fattura per {{customer}} ({{amount}}) è in ritardo di {{days}} giorni. Potresti procedere al pagamento?"
+    "reminderMessage": "Ciao, ti ricordiamo gentilmente che la fattura per {{customer}} ({{amount}}) è in ritardo di {{days}} giorni. Potresti procedere al pagamento?",
+    "reminderTemplate_one": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fattura in sospeso.\n\nCordiali saluti",
+    "reminderTemplate_other": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fatture in sospeso.\n\nCordiali saluti"
   },
   "vasco": {
     "actionsReady": "{{count}} azioni pronte",
@@ -1584,7 +1588,6 @@
     "checkedOvernight": "Controllato durante la notte",
     "readyForApproval": "Pronto per approvazione",
     "recommendation": "Raccomandazione",
-    "reminderTemplate": "Gentile cliente,\n\nLe ricordiamo gentilmente {{count}} fattura/e in sospeso.\n\nCordiali saluti",
     "reminderCopied": "Promemoria copiato negli appunti",
     "paymentReminder": "Promemoria di pagamento",
     "invoicesOverdue": "{{count}} fatture scadute",
@@ -1614,7 +1617,9 @@
     "done": "Fatto",
     "edit": "Modifica",
     "cqSendReply": "Invia risposta",
-    "outcomePromptBody": "Hai inviato un {{type}} 4 giorni fa. Il cliente ha risposto?"
+    "outcomePromptBody": "Hai inviato un {{type}} 4 giorni fa. Il cliente ha risposto?",
+    "reminderTemplate_one": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fattura in sospeso.\n\nCordiali saluti",
+    "reminderTemplate_other": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fatture in sospeso.\n\nCordiali saluti"
   },
   "quotes": {
     "newQuote": "New quote",
@@ -1670,7 +1675,6 @@
     "expandedPricing": "Prezzi espansi",
     "hoveredAccept": "Hover su accetta",
     "hoveredDecline": "Hover su rifiuta",
-    "startedQuestions": "{{count}} domanda/e iniziata/e",
     "followupHint": "Alto interesse, nessuna decisione — considera un follow-up",
     "status": {
       "draft": "Bozza",
@@ -1762,7 +1766,9 @@
     "editPrice": "Modifica prezzo",
     "addService": "Aggiungi servizio",
     "customServiceInvalidTitle": "Aggiungi nome e prezzo",
-    "customServiceInvalidBody": "Inserisci un nome del servizio e un prezzo maggiore di zero."
+    "customServiceInvalidBody": "Inserisci un nome del servizio e un prezzo maggiore di zero.",
+    "startedQuestions_one": "{{count}} domanda avviata",
+    "startedQuestions_other": "{{count}} domande avviate"
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -1793,11 +1799,12 @@
     "statActive": "Attivi",
     "statCredited": "Accreditati",
     "footnote": "Il credito viene applicato automaticamente quando un artigiano invitato invia la sua prima fattura. Senza scadenza.",
-    "creditsAvailable": "{{months}} mese/i di credito abbonamento pronti — applicati al prossimo rinnovo.",
     "shareErrorTitle": "Condivisione fallita",
     "entryLabel": "Invita artigiani",
     "entrySub": "Un mese gratis per entrambi alla prima fattura",
-    "shareMessage": "Uso Vasco per gestire la mia attività — prezzi, fatture e pagamenti in un'unica app. Iscriviti con il mio codice {{code}} e otteniamo entrambi un mese gratis.\n\n{{url}}"
+    "shareMessage": "Uso Vasco per gestire la mia attività — prezzi, fatture e pagamenti in un'unica app. Iscriviti con il mio codice {{code}} e otteniamo entrambi un mese gratis.\n\n{{url}}",
+    "creditsAvailable_one": "{{count}} mese di credito abbonamento pronto — applicato al prossimo rinnovo.",
+    "creditsAvailable_other": "{{count}} mesi di credito abbonamento pronti — applicati al prossimo rinnovo."
   },
   "insights": {
     "thanksFeedback": "Grazie per il feedback",
@@ -2069,7 +2076,6 @@
     "quoteToneDesc": "Come deve suonare il testo dell'oggetto generato dall'IA.",
     "exportSummary": "Esportazione dati Vasco\n\nUtente: {{name}} ({{email}})\nAzienda: {{company}}\nFatture: {{invoices}}\nLavori: {{jobs}}\nClienti: {{customers}}",
     "dataExport": "Esportazione dati Vasco",
-    "creditsAvailable": "{{count}} mese/i di abbonamento gratuito pronto — applicato automaticamente al checkout.",
     "name": "Nome",
     "trade": "Mestiere",
     "country": "Paese",
@@ -2081,7 +2087,9 @@
     "comingSoon": "Prossimamente",
     "connected": "Connesso",
     "notConnected": "Non connesso",
-    "dataPrivacy": "DATI E PRIVACY"
+    "dataPrivacy": "DATI E PRIVACY",
+    "creditsAvailable_one": "{{count}} mese di abbonamento gratuito disponibile — applicato automaticamente al pagamento.",
+    "creditsAvailable_other": "{{count}} mesi di abbonamento gratuito disponibili — applicati automaticamente al pagamento."
   },
   "search": {
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",
@@ -2337,7 +2345,6 @@
     "createPO": "Crea ordine di acquisto",
     "cartSummary": "{{count}} articoli",
     "poCreatedTitle": "Ordini di acquisto creati",
-    "poTotal": "{{count}} ordine/i di acquisto creato/i",
     "poCreateError": "Impossibile creare l'ordine di acquisto. Riprova.",
     "aiScannedInsight": "{{count}} risultati basati sullo storico delle tue fatture. Prezzo medio: {{price}}",
     "aiMarketInsight": "Mostro i prezzi di mercato di {{country}} da {{suppliers}}. Scansiona le fatture dei fornitori per ottenere i tuoi prezzi reali.",
@@ -2345,7 +2352,9 @@
     "topSuppliers": "Migliori fornitori nella tua zona",
     "orderReview": "Riepilogo ordine",
     "sendOrder": "Invia ordine al fornitore",
-    "reviewOrder": "Controlla ordine"
+    "reviewOrder": "Controlla ordine",
+    "poTotal_one": "{{count}} ordine d’acquisto creato",
+    "poTotal_other": "{{count}} ordini d’acquisto creati"
   },
   "dt": {
     "active": "Attivo",
@@ -2468,14 +2477,16 @@
       "nextAction": "Prossima azione",
       "guideToday": "Oggi: {{job}}",
       "guideTodayDesc": "Apri il lavoro per timbrare, registrare materiali e finire in tempo.",
-      "guideFollowup": "Segui {{count}} preventivo/i aperto/i",
       "guideFollowupDesc": "I clienti che rispondono in 48h convertono ~3x in più.",
       "guideStart": "Inizia con il tuo primo preventivo",
       "guideStartDesc": "Scatta una foto — Vasco redige il preventivo.",
-      "guideAannemerProjects": "{{count}} progetto/i attivo/i oggi",
       "guideAannemerProjectsDesc": "Apri un progetto per coordinare i mestieri, seguire i sub-preventivi e mantenere la pianificazione.",
       "guideAannemerStart": "Avvia il tuo primo progetto multi-mestiere",
-      "guideAannemerStartDesc": "Aggiungi i mestieri che coordini — Vasco crea il preventivo multi-mestiere."
+      "guideAannemerStartDesc": "Aggiungi i mestieri che coordini — Vasco crea il preventivo multi-mestiere.",
+      "guideFollowup_one": "Ricontatta per {{count}} preventivo aperto",
+      "guideFollowup_other": "Ricontatta per {{count}} preventivi aperti",
+      "guideAannemerProjects_one": "{{count}} progetto in corso oggi",
+      "guideAannemerProjects_other": "{{count}} progetti in corso oggi"
     },
     "pill": {
       "decided": "Deciso",
@@ -2635,8 +2646,8 @@
     "statOverdue": "{{count}} in ritardo",
     "statRemaining": "{{count}} da fare",
     "urgentTitle": "Azione richiesta",
-    "urgentBody_one": "{{count}} scelta da fare per evitare ritardi",
-    "urgentBody_other": "{{count}} scelte da fare per evitare ritardi",
+    "urgentBody_one": "Va presa {{count}} decisione per evitare ritardi",
+    "urgentBody_other": "Vanno prese {{count}} decisioni per evitare ritardi",
     "categories": "Categorie",
     "overdue": "In ritardo",
     "deadline": "Scadenza",
@@ -2644,8 +2655,8 @@
     "toChoose": "Ancora da scegliere",
     "alreadyChosen": "Già scelte",
     "choiceSavedTitle": "Scelta salvata",
-    "choiceSavedRemaining_one": "Ancora {{count}} scelta da fare.",
-    "choiceSavedRemaining_other": "Ancora {{count}} scelte da fare.",
+    "choiceSavedRemaining_one": "Resta {{count}} decisione.",
+    "choiceSavedRemaining_other": "Restano {{count}} decisioni.",
     "allChoicesMade": "Tutte le scelte fatte! L'artigiano verrà informato.",
     "askTitle": "Fai una domanda",
     "askSubtitle": "Chiedi della pianificazione, del luogo o dei lavori — risposta istantanea o conferma rapida dall'artigiano.",
@@ -2755,8 +2766,6 @@
     "dueToday": "Per oggi",
     "dueTomorrow": "Per domani",
     "dueInDays": "Tra {{count}} giorni",
-    "urgentBody": "{{count}} scelta/e da fare per evitare ritardi",
-    "choiceSavedRemaining": "{{count}} scelta/e rimanente/i.",
     "tryAgainIn": "Riprova tra {{seconds}}s",
     "askForNew": "Chiedi al tuo artigiano di inviarti un nuovo link via WhatsApp o SMS.",
     "retry": "Riprova"
@@ -2809,8 +2818,9 @@
     "expandedPricing": "Prezzi espansi {{count}}×",
     "hoveredAccept": "Sopra Accetta {{count}}×",
     "hoveredDecline": "Sopra Rifiuta {{count}}×",
-    "startedQuestion": "{{count}} domanda/e iniziata/e",
-    "highEngagementHint": "Alta attività, nessuna decisione — considera un follow-up"
+    "highEngagementHint": "Alta attività, nessuna decisione — considera un follow-up",
+    "startedQuestion_one": "{{count}} domanda avviata",
+    "startedQuestion_other": "{{count}} domande avviate"
   },
   "moatInsights": {
     "title": "MERCATO & PRESTAZIONI",
@@ -2826,7 +2836,6 @@
   },
   "reconciliation": {
     "title": "RICONCILIAZIONE BANCARIA",
-    "subtitle": "Vasco ha trovato {{count}} pagamento/i che corrispondono a fatture aperte.",
     "invoiceLabel": "Fattura {{id}}",
     "confidence": "Certezza: {{percent}}%",
     "confirmPaid": "PAGATA",
@@ -2834,7 +2843,9 @@
     "reasonAmountWithin": "importo entro 2%",
     "reasonIban": "IBAN coincide",
     "reasonName": "nome coincide",
-    "reasonDaysAfter": "{{days}}g dopo l'invio"
+    "reasonDaysAfter": "{{days}}g dopo l'invio",
+    "subtitle_one": "Vasco ha trovato {{count}} pagamento corrispondente a una fattura aperta.",
+    "subtitle_other": "Vasco ha trovato {{count}} pagamenti corrispondenti a fatture aperte."
   },
   "projectSwitcher": {
     "activeProjects": "PROGETTI ATTIVI",
@@ -3882,12 +3893,13 @@
     "reminderUnavailableTitle": "In arrivo",
     "reminderUnavailableBody": "I promemoria automatici per le decisioni sono in sviluppo. Per ora, scrivi al tuo cliente direttamente via WhatsApp o chiamalo.",
     "reminderSentTitle": "Promemoria inviato",
-    "reminderSentBody": "{{count}} elemento/i inviato/i tramite {{channel}}.",
     "channelEmail": "e-mail",
     "activityTitle": "Attività cliente",
     "activitySub": "{{events}} eventi · {{opens}} aperture portale",
     "hesitationLabel": "Esitato su",
-    "viewedTimes": "{{count}}×"
+    "viewedTimes": "{{count}}×",
+    "reminderSentBody_one": "{{count}} elemento inviato tramite {{channel}}.",
+    "reminderSentBody_other": "{{count}} elementi inviati tramite {{channel}}."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -4017,7 +4029,8 @@
     "customerSignoff": "Firma cliente",
     "customerSignoffHint": "Cattura una firma digitale per chiudere il lavoro",
     "certExpired": "{{name}} scaduto il {{date}}. Rinnova prima di chiudere.",
-    "certExpiringSoon": "{{name}} scade tra {{days}} giorno/i — rinnova presto per mantenere valido questo {{kind}}."
+    "certExpiringSoon_one": "{{name}} scade tra {{count}} giorno — rinnova presto per mantenere valido questo {{kind}}.",
+    "certExpiringSoon_other": "{{name}} scade tra {{count}} giorni — rinnova presto per mantenere valido questo {{kind}}."
   },
   "weather": {
     "unsuitable": "Meteo sfavorevole previsto ({{condition}}, {{precipitation}}% precipitazioni)",

@@ -90,7 +90,6 @@
       "accountDetails": "Account details",
       "company": "Company",
       "projects": "Projects",
-      "active": "{{count}} active",
       "userId": "User ID",
       "businessSettings": "Business settings",
       "businessDetails": "Business details",
@@ -108,7 +107,9 @@
       "helpSupport": "Help & Support",
       "signOut": "Sign Out",
       "accountingInvoices": "Accounting / Invoices",
-      "paymentProcessing": "Payment processing"
+      "paymentProcessing": "Payment processing",
+      "active_one": "{{count}} active",
+      "active_other": "{{count}} active"
     },
     "quotes": {
       "quotes": "Quotes",
@@ -509,7 +510,7 @@
     "required": "required",
     "complete": "complete",
     "documentProgress": "Documentation progress",
-    "requiredDocsMissing": "required document(s) missing",
+    "requiredDocsMissing": "required documents missing",
     "allDocsPresent": "All required documents present",
     "requiredLabel": "Required",
     "overview": "Overview",
@@ -550,15 +551,14 @@
     "days": "days",
     "expires": "Expires",
     "renew": "Renew",
-    "upcomingExpiries": "Komende vervaldatums",
-    "workBlocked": "type{{s}} werk geblokkeerd",
+    "upcomingExpiries": "Upcoming expiries",
     "missingCertificates": "Due to missing certificates",
     "view": "View blocked work",
     "title": "Certificates & Compliance",
     "tabOverview": "Overview",
     "tabCertificates": "Certificates",
     "tabInsurance": "Insurance",
-    "tabLicenses": "Vergunningen",
+    "tabLicenses": "Licences",
     "complianceStatus": "Compliance Status",
     "expiring": "Expiring",
     "expired": "Expired",
@@ -574,17 +574,19 @@
     "addCertificate": "Add certificate",
     "items": "items",
     "noItemsFound": "No items found",
-    "add": "Voeg toe",
+    "add": "Add",
     "addInsurance": "Add insurance",
-    "governmentPortals": "Overheidsloketten",
+    "governmentPortals": "Government portals",
     "issuer": "Uitgever",
     "status": "Status",
-    "expiryDate": "Vervaldatum",
+    "expiryDate": "Expiry date",
     "daysExpiredAgo": "days expired",
-    "renewalCost": "Vernieuwingskosten",
+    "renewalCost": "Renewal cost",
     "viewDocument": "View document",
     "share": "Share",
-    "renewAction": "Vernieuwen"
+    "renewAction": "Renew",
+    "workBlocked_one": "{{count}} type of work blocked",
+    "workBlocked_other": "{{count}} types of work blocked"
   },
   "billing": {
     "upgradeRequired": "Upgrade required",
@@ -731,21 +733,21 @@
     "sendNow": "Send now",
     "startCollection": "Start collection",
     "noInvoicesFound": "No invoices found",
-    "expectedPayment": "Verwachte betaling",
+    "expectedPayment": "Expected payment",
     "days": "days",
     "lateInterest": "Interest",
     "commercialInterestRate": "8% commercial interest",
-    "reminderSent": "Herinnering verstuurd",
-    "reminderSentDesc": "Betaalherinnering verstuurd.",
-    "reminder": "Herinnering",
-    "sharePdf": "PDF delen",
+    "reminderSent": "Reminder sent",
+    "reminderSentDesc": "Payment reminder sent.",
+    "reminder": "Reminder",
+    "sharePdf": "Share PDF",
     "paymentLinkCreated": "Payment link created",
     "paymentLinkReady": "Payment link is ready to share",
     "error": "Fout",
-    "quoteRejected": "Afgewezen",
+    "quoteRejected": "Rejected",
     "auditDiscrepancy": "Invoice discrepancy detected",
     "invoiceDiscrepancy": "Invoice discrepancy",
-    "recommendation": "Aanbeveling",
+    "recommendation": "Recommendation",
     "close": "Close",
     "view": "Bekijk",
     "invoicesOverdue": "invoices overdue",
@@ -946,7 +948,7 @@
     "selectJob": "Link to job",
     "emptyTitle": "No permits yet",
     "emptyDesc": "Tap \"+ New request\" to draft a permit for one of your jobs.",
-    "manualEntry": "Handmatig"
+    "manualEntry": "Manual"
   },
   "settings": {
     "title": "Settings",
@@ -1091,7 +1093,6 @@
     "followUpAppointmentDesc": "Maintenance or inspection scheduled",
     "unknownCustomer": "Unknown customer",
     "requiredSteps": "Required steps",
-    "requiredStepsRemaining": "{{count}} required step(s) not yet completed.",
     "closeJob": "Close job",
     "closeJobConfirm": "Close \"{{title}}\" permanently? This marks the job as fully completed.",
     "cancel": "Cancel",
@@ -1102,7 +1103,9 @@
     "noJobsWaiting": "No jobs waiting for closeout",
     "stepsCompleted": "{{done}}/{{total}} steps completed",
     "required": "Required",
-    "finalizeJob": "Close job permanently"
+    "finalizeJob": "Close job permanently",
+    "requiredStepsRemaining_one": "{{count}} required step not yet completed.",
+    "requiredStepsRemaining_other": "{{count}} required steps not yet completed."
   },
   "pipeline": {
     "title": "Pipeline",
@@ -1259,7 +1262,7 @@
     "claimPending": "In behandeling",
     "policyLabel": "Polis",
     "descriptionLabel": "Omschrijving",
-    "descriptionPlaceholder": "Beschrijf de schade of het incident...",
+    "descriptionPlaceholder": "Describe the damage or incident…",
     "incidentDate": "Incident date",
     "estimatedAmount": "Estimated amount",
     "addPhotos": "Add photos",
@@ -1538,7 +1541,7 @@
     "total": "Totaal",
     "spent": "Besteed",
     "subtotal": "Subtotaal",
-    "expectedDelivery": "Verwachte levering",
+    "expectedDelivery": "Expected delivery",
     "markReceived": "Mark received",
     "newPO": "New Purchase Order",
     "noJobsWithMaterials": "No jobs with materials found. Add materials to a job first.",
@@ -1572,10 +1575,11 @@
     "revenue": "Revenue",
     "costs": "Costs",
     "profit": "Profit",
-    "reminderTemplate": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoice(s).\n\nKind regards",
     "reminderCopied": "Reminder copied to clipboard",
     "paymentReminder": "Payment reminder",
-    "reminderMessage": "Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?"
+    "reminderMessage": "Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?",
+    "reminderTemplate_one": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoice.\n\nKind regards",
+    "reminderTemplate_other": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoices.\n\nKind regards"
   },
   "vasco": {
     "actionsReady": "{{count}} actions ready",
@@ -1584,7 +1588,6 @@
     "checkedOvernight": "Checked overnight",
     "readyForApproval": "Ready for approval",
     "recommendation": "Recommendation",
-    "reminderTemplate": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoice(s).\n\nKind regards",
     "reminderCopied": "Reminder copied to clipboard",
     "paymentReminder": "Payment reminder",
     "invoicesOverdue": "{{count}} invoices overdue",
@@ -1614,7 +1617,9 @@
     "done": "Done",
     "edit": "Edit",
     "cqSendReply": "Send reply",
-    "outcomePromptBody": "You sent a {{type}} 4 days ago. Did the customer reply?"
+    "outcomePromptBody": "You sent a {{type}} 4 days ago. Did the customer reply?",
+    "reminderTemplate_one": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoice.\n\nKind regards",
+    "reminderTemplate_other": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoices.\n\nKind regards"
   },
   "quotes": {
     "newQuote": "New quote",
@@ -1670,7 +1675,6 @@
     "expandedPricing": "Expanded pricing",
     "hoveredAccept": "Hovered accept",
     "hoveredDecline": "Hovered decline",
-    "startedQuestions": "Started {{count}} question(s)",
     "followupHint": "High engagement, no decision yet — consider a follow-up",
     "status": {
       "draft": "Draft",
@@ -1762,7 +1766,9 @@
     "editPrice": "Edit price",
     "addService": "Add service",
     "customServiceInvalidTitle": "Add a name and price",
-    "customServiceInvalidBody": "Enter a service name and a price greater than zero."
+    "customServiceInvalidBody": "Enter a service name and a price greater than zero.",
+    "startedQuestions_one": "Started {{count}} question",
+    "startedQuestions_other": "Started {{count}} questions"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -1793,11 +1799,12 @@
     "statActive": "Active",
     "statCredited": "Credited",
     "footnote": "Credit is applied automatically when a referred contractor sends their first invoice. No expiry.",
-    "creditsAvailable": "{{months}} month(s) of subscription credit ready — applied at your next renewal.",
     "shareErrorTitle": "Share failed",
     "entryLabel": "Invite contractors",
     "entrySub": "Both get a free month when they invoice",
-    "shareMessage": "I use Vasco to run my trade — pricing, invoices, and payments in one app. Sign up with my code {{code}} and we both get a month free.\n\n{{url}}"
+    "shareMessage": "I use Vasco to run my trade — pricing, invoices, and payments in one app. Sign up with my code {{code}} and we both get a month free.\n\n{{url}}",
+    "creditsAvailable_one": "{{count}} month of subscription credit ready — applied at your next renewal.",
+    "creditsAvailable_other": "{{count}} months of subscription credit ready — applied at your next renewal."
   },
   "insights": {
     "thanksFeedback": "Thanks for your feedback",
@@ -2069,7 +2076,6 @@
     "quoteToneDesc": "How AI-generated scope text should sound.",
     "exportSummary": "Vasco Data Export\n\nUser: {{name}} ({{email}})\nCompany: {{company}}\nInvoices: {{invoices}}\nJobs: {{jobs}}\nCustomers: {{customers}}",
     "dataExport": "Vasco Data Export",
-    "creditsAvailable": "{{count}} month(s) of free subscription ready — applied automatically at checkout.",
     "name": "Name",
     "trade": "Trade",
     "country": "Country",
@@ -2081,7 +2087,9 @@
     "comingSoon": "Coming soon",
     "connected": "Connected",
     "notConnected": "Not connected",
-    "dataPrivacy": "DATA & PRIVACY"
+    "dataPrivacy": "DATA & PRIVACY",
+    "creditsAvailable_one": "{{count}} month of free subscription available — applied automatically at checkout.",
+    "creditsAvailable_other": "{{count}} months of free subscription available — applied automatically at checkout."
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -2337,7 +2345,6 @@
     "createPO": "Create PO",
     "cartSummary": "{{count}} items",
     "poCreatedTitle": "Purchase Orders Created",
-    "poTotal": "{{count}} purchase order(s) created",
     "poCreateError": "Could not create purchase order. Please try again.",
     "aiScannedInsight": "{{count}} results based on your invoice history. Average price: {{price}}",
     "aiMarketInsight": "Showing {{country}} market prices from {{suppliers}}. Scan supplier invoices to get your real prices.",
@@ -2345,7 +2352,9 @@
     "topSuppliers": "Top suppliers in your area",
     "orderReview": "Order review",
     "sendOrder": "Send order to supplier",
-    "reviewOrder": "Review order"
+    "reviewOrder": "Review order",
+    "poTotal_one": "{{count}} purchase order created",
+    "poTotal_other": "{{count}} purchase orders created"
   },
   "dt": {
     "active": "Active",
@@ -2468,14 +2477,16 @@
       "nextAction": "Next action",
       "guideToday": "Today's focus: {{job}}",
       "guideTodayDesc": "Open the job to clock in, log materials, and finish on time.",
-      "guideFollowup": "Follow up on {{count}} open quote(s)",
       "guideFollowupDesc": "Customers who reply within 48h convert ~3x more often.",
       "guideStart": "Start with your first quote",
       "guideStartDesc": "Take a photo of the work and Vasco will draft the quote.",
-      "guideAannemerProjects": "{{count}} project(s) running today",
       "guideAannemerProjectsDesc": "Open a project to coordinate trades, track sub-quotes, and keep the schedule aligned.",
       "guideAannemerStart": "Start your first multi-trade project",
-      "guideAannemerStartDesc": "Add the trades you coordinate and Vasco builds the cross-trade quote."
+      "guideAannemerStartDesc": "Add the trades you coordinate and Vasco builds the cross-trade quote.",
+      "guideFollowup_one": "Follow up on {{count}} open quote",
+      "guideFollowup_other": "Follow up on {{count}} open quotes",
+      "guideAannemerProjects_one": "{{count}} project running today",
+      "guideAannemerProjects_other": "{{count}} projects running today"
     },
     "pill": {
       "decided": "Decided",
@@ -2755,8 +2766,6 @@
     "dueToday": "Due today",
     "dueTomorrow": "Due tomorrow",
     "dueInDays": "Due in {{count}} days",
-    "urgentBody": "{{count}} choice(s) need to be made to avoid delays",
-    "choiceSavedRemaining": "{{count}} choice(s) left.",
     "tryAgainIn": "Try again in {{seconds}}s",
     "askForNew": "Ask your contractor to send you a new link via WhatsApp or SMS.",
     "retry": "Try again"
@@ -2809,8 +2818,9 @@
     "expandedPricing": "Expanded pricing {{count}}×",
     "hoveredAccept": "Hovered accept {{count}}×",
     "hoveredDecline": "Hovered decline {{count}}×",
-    "startedQuestion": "Started {{count}} question(s)",
-    "highEngagementHint": "High engagement, no decision yet — consider a follow-up"
+    "highEngagementHint": "High engagement, no decision yet — consider a follow-up",
+    "startedQuestion_one": "Started {{count}} question",
+    "startedQuestion_other": "Started {{count}} questions"
   },
   "moatInsights": {
     "title": "MARKT & PRESTATIE",
@@ -2826,7 +2836,6 @@
   },
   "reconciliation": {
     "title": "BANK MATCHES",
-    "subtitle": "Vasco found {{count}} payment(s) matching your open invoices.",
     "invoiceLabel": "Invoice {{id}}",
     "confidence": "Confidence: {{percent}}%",
     "confirmPaid": "PAID",
@@ -2834,7 +2843,9 @@
     "reasonAmountWithin": "amount within 2%",
     "reasonIban": "IBAN match",
     "reasonName": "name match",
-    "reasonDaysAfter": "{{days}}d after sent"
+    "reasonDaysAfter": "{{days}}d after sent",
+    "subtitle_one": "Vasco found {{count}} payment matching an open invoice.",
+    "subtitle_other": "Vasco found {{count}} payments matching open invoices."
   },
   "projectSwitcher": {
     "activeProjects": "ACTIVE PROJECTS",
@@ -3006,7 +3017,7 @@
     "activate": "Activeer",
     "orderNow": "Bestel nu",
     "activateSaving": "Besparing activeren",
-    "activateConfirm": "Wil je \"{{title}}\" activeren? Verwachte besparing: €{{amount}}.",
+    "activateConfirm": "Activate \"{{title}}\"? Expected saving: €{{amount}}.",
     "foundByVasco": "Savings found by Vasco",
     "totalPotential": "Totaal potentieel",
     "savingsOpportunities": "Bespaarkansen",
@@ -3015,7 +3026,7 @@
     "upToPotential": "Tot €{{amount}} potentieel",
     "savedThisMonth": "€{{amount}} already saved this month",
     "actionsScheduled": "{{count}} acties ingepland",
-    "allGood": "Alles op orde",
+    "allGood": "All good",
     "priceIntelligence": "Prijsintelligentie",
     "invoicesScanned": "invoices scanned",
     "materialsTracked": "materials tracked",
@@ -3267,8 +3278,8 @@
     "processed": "Processed",
     "analyzing": "Analyzing receipt with AI...",
     "analyzingHint": "This takes a few seconds",
-    "takePhoto": "Foto maken",
-    "takePhotoHint": "Maak een foto van de bon",
+    "takePhoto": "Take photo",
+    "takePhotoHint": "Take a photo of the receipt",
     "uploadDocument": "PDF uploaden",
     "uploadDocumentHint": "Select a PDF invoice"
   },
@@ -3882,12 +3893,13 @@
     "reminderUnavailableTitle": "Coming soon",
     "reminderUnavailableBody": "Automated decision reminders are in development. For now, message your customer directly via WhatsApp or call them.",
     "reminderSentTitle": "Reminder sent",
-    "reminderSentBody": "{{count}} item(s) sent via {{channel}}.",
     "channelEmail": "email",
     "activityTitle": "Customer activity",
     "activitySub": "{{events}} events · {{opens}} portal opens",
     "hesitationLabel": "Hesitated on",
-    "viewedTimes": "{{count}}×"
+    "viewedTimes": "{{count}}×",
+    "reminderSentBody_one": "{{count}} item sent via {{channel}}.",
+    "reminderSentBody_other": "{{count}} items sent via {{channel}}."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -4017,7 +4029,8 @@
     "customerSignoff": "Customer sign-off",
     "customerSignoffHint": "Capture a digital signature to close the job",
     "certExpired": "{{name}} expired on {{date}}. Renew before closing.",
-    "certExpiringSoon": "{{name}} expires in {{days}} day(s) — renew soon to keep this {{kind}} valid."
+    "certExpiringSoon_one": "{{name}} expires in {{count}} day — renew soon to keep this {{kind}} valid.",
+    "certExpiringSoon_other": "{{name}} expires in {{count}} days — renew soon to keep this {{kind}} valid."
   },
   "weather": {
     "unsuitable": "Unsuitable weather expected ({{condition}}, {{precipitation}}% precipitation)",

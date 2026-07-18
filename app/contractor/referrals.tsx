@@ -97,8 +97,10 @@ export default function ReferralsScreen() {
             <Ionicons name="gift" size={18} color={DK.colors.accent} />
             <Text style={s.creditBannerText}>
               {t('referrals.creditsAvailable', {
-                defaultValue: '{{months}} month(s) of subscription credit ready — applied at your next renewal.',
-                months: credits.availableMonths,
+                // i18next selects the plural form from `count`; the copy reads
+                // {{count}} so months is no longer interpolated separately.
+                defaultValue: '{{count}} months of subscription credit ready — applied at your next renewal.',
+                count: credits.availableMonths,
               })}
             </Text>
           </View>

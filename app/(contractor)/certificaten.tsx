@@ -315,7 +315,7 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
         <Ionicons name="lock-closed" size={18} color="#fff" />
       </View>
       <View style={styles.blockedContent}>
-        <Text style={styles.blockedTitle} numberOfLines={1}>{blockedCount} {t('compliance.workBlocked', 'type{{s}} werk geblokkeerd', { s: blockedCount > 1 ? 's' : '' })}</Text>
+        <Text style={styles.blockedTitle} numberOfLines={1}>{t('compliance.workBlocked', { count: blockedCount, defaultValue: '{{count}} types of work blocked' })}</Text>
         <Text style={styles.blockedSubtitle} numberOfLines={1}>{t('compliance.missingCertificates', 'Door ontbrekende certificaten')}</Text>
       </View>
       <Pressable style={styles.blockedAction} accessibilityRole="button" accessibilityLabel={t('compliance.view', 'View blocked work')}>

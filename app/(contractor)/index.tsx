@@ -273,11 +273,11 @@ export default function VandaagDK() {
               <>
                 <Text style={styles.heroTitle}>
                   {isAannemer && activeProjectCount > 0
-                    ? t('dk.hero.guideAannemerProjects', '{{count}} project(s) running today', { count: activeProjectCount })
+                    ? t('dk.hero.guideAannemerProjects', '{{count}} projects running today', { count: activeProjectCount })
                     : todayJobs.length > 0
                       ? t('dk.hero.guideToday', "Today's focus: {{job}}", { job: (todayJobs[0] as any).title || (todayJobs[0] as any).projectName || t('dk.empty.firstJob', 'first job') })
                       : activeQuotes > 0
-                        ? t('dk.hero.guideFollowup', 'Follow up on {{count}} open quote(s)', { count: activeQuotes })
+                        ? t('dk.hero.guideFollowup', 'Follow up on {{count}} open quotes', { count: activeQuotes })
                         : isAannemer
                           ? t('dk.hero.guideAannemerStart', 'Start your first multi-trade project')
                           : t('dk.hero.guideStart', 'Start with your first quote')}

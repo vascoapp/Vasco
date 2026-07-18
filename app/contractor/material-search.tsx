@@ -318,7 +318,7 @@ export default function MaterialSearchScreen() {
         '',
         ...lines,
         '',
-        t('materialSearch.poTotal', { count: createdPOs.length, defaultValue: '{{count}} purchase order(s) created' }),
+        t('materialSearch.poTotal', { count: createdPOs.length, defaultValue: '{{count}} purchase orders created' }),
       ].join('\n');
 
       await Share.share({ message, title: t('materialSearch.poCreatedTitle', 'Purchase Orders Created') });

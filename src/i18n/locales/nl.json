@@ -90,7 +90,6 @@
       "accountDetails": "Accountgegevens",
       "company": "Bedrijf",
       "projects": "Projecten",
-      "active": "{{count}} actief",
       "userId": "Gebruikers-ID",
       "businessSettings": "Bedrijfsinstellingen",
       "businessDetails": "Bedrijfsgegevens",
@@ -108,7 +107,9 @@
       "helpSupport": "Help & Support",
       "signOut": "Uitloggen",
       "accountingInvoices": "Boekhouding / Facturen",
-      "paymentProcessing": "Betalingsverwerking"
+      "paymentProcessing": "Betalingsverwerking",
+      "active_one": "{{count}} actief",
+      "active_other": "{{count}} actief"
     },
     "quotes": {
       "quotes": "Offertes",
@@ -493,7 +494,7 @@
     "required": "verplicht",
     "complete": "compleet",
     "documentProgress": "Documentvoortgang",
-    "requiredDocsMissing": "verplichte document(en) ontbreken",
+    "requiredDocsMissing": "verplichte documenten ontbreken",
     "allDocsPresent": "Alle verplichte documenten aanwezig",
     "requiredLabel": "Verplicht",
     "overview": "Overzicht",
@@ -535,7 +536,6 @@
     "expires": "Verloopt",
     "renew": "Vernieuw",
     "upcomingExpiries": "Komende vervaldatums",
-    "workBlocked": "type{{s}} werk geblokkeerd",
     "missingCertificates": "Door ontbrekende certificaten",
     "view": "Bekijk geblokkeerd werk",
     "title": "Certificaten & Compliance",
@@ -568,7 +568,9 @@
     "renewalCost": "Vernieuwingskosten",
     "viewDocument": "Document bekijken",
     "share": "Delen",
-    "renewAction": "Vernieuwen"
+    "renewAction": "Vernieuwen",
+    "workBlocked_one": "{{count}} type werk geblokkeerd",
+    "workBlocked_other": "{{count}} types werk geblokkeerd"
   },
   "billing": {
     "upgradeRequired": "Upgrade nodig",
@@ -1353,7 +1355,6 @@
     "followUpAppointmentDesc": "Onderhoud of inspectie ingepland",
     "unknownCustomer": "Onbekende klant",
     "requiredSteps": "Verplichte stappen",
-    "requiredStepsRemaining": "{{count}} verplichte stap(pen) nog niet afgerond.",
     "closeJob": "Klus afsluiten",
     "closeJobConfirm": "\"{{title}}\" definitief afsluiten? Dit markeert de klus als volledig afgerond.",
     "cancel": "Annuleren",
@@ -1364,7 +1365,9 @@
     "noJobsWaiting": "Geen klussen wachten op afsluiting",
     "stepsCompleted": "{{done}}/{{total}} stappen afgerond",
     "required": "Verplicht",
-    "finalizeJob": "Klus definitief afsluiten"
+    "finalizeJob": "Klus definitief afsluiten",
+    "requiredStepsRemaining_one": "{{count}} verplichte stap nog niet afgerond.",
+    "requiredStepsRemaining_other": "{{count}} verplichte stappen nog niet afgerond."
   },
   "pipeline": {
     "title": "Pipeline",
@@ -1556,10 +1559,11 @@
     "revenue": "Omzet",
     "costs": "Kosten",
     "profit": "Winst",
-    "reminderTemplate": "Beste klant,\n\nHierbij een vriendelijke herinnering voor {{count}} openstaande factuur.\n\nMet vriendelijke groet",
     "reminderCopied": "Herinnering gekopieerd naar klembord",
     "paymentReminder": "Betaalherinnering",
-    "reminderMessage": "Hoi, een vriendelijke herinnering dat de factuur voor {{customer}} ({{amount}}) {{days}} dagen achterstallig is. Zou je de betaling kunnen regelen?"
+    "reminderMessage": "Hoi, een vriendelijke herinnering dat de factuur voor {{customer}} ({{amount}}) {{days}} dagen achterstallig is. Zou je de betaling kunnen regelen?",
+    "reminderTemplate_one": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande factuur.\n\nMet vriendelijke groet",
+    "reminderTemplate_other": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande facturen.\n\nMet vriendelijke groet"
   },
   "vasco": {
     "actionsReady": "{{count}} acties klaar",
@@ -1568,7 +1572,6 @@
     "checkedOvernight": "Vannacht gecontroleerd",
     "readyForApproval": "Klaar voor goedkeuring",
     "recommendation": "Aanbeveling",
-    "reminderTemplate": "Beste klant,\n\nHierbij een vriendelijke herinnering voor {{count}} openstaande factuur.\n\nMet vriendelijke groet",
     "reminderCopied": "Herinnering gekopieerd naar klembord",
     "paymentReminder": "Betaalherinnering",
     "invoicesOverdue": "{{count}} facturen achterstallig",
@@ -1598,7 +1601,9 @@
     "done": "Klaar",
     "edit": "Bewerken",
     "cqSendReply": "Antwoord versturen",
-    "outcomePromptBody": "Je hebt 4 dagen geleden een {{type}} verstuurd. Heeft de klant gereageerd?"
+    "outcomePromptBody": "Je hebt 4 dagen geleden een {{type}} verstuurd. Heeft de klant gereageerd?",
+    "reminderTemplate_one": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande factuur.\n\nMet vriendelijke groet",
+    "reminderTemplate_other": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande facturen.\n\nMet vriendelijke groet"
   },
   "quotes": {
     "newQuote": "Nieuwe offerte",
@@ -1654,7 +1659,6 @@
     "expandedPricing": "Prijzen uitgeklapt",
     "hoveredAccept": "Op accepteer gehoverd",
     "hoveredDecline": "Op afwijzen gehoverd",
-    "startedQuestions": "{{count}} vraag/vragen begonnen",
     "followupHint": "Veel interesse, nog geen beslissing — overweeg een follow-up",
     "status": {
       "draft": "Concept",
@@ -1746,7 +1750,9 @@
     "editPrice": "Prijs aanpassen",
     "addService": "Dienst toevoegen",
     "customServiceInvalidTitle": "Voeg een naam en prijs toe",
-    "customServiceInvalidBody": "Vul een naam in en een prijs groter dan nul."
+    "customServiceInvalidBody": "Vul een naam in en een prijs groter dan nul.",
+    "startedQuestions_one": "{{count}} vraag gestart",
+    "startedQuestions_other": "{{count}} vragen gestart"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -1777,11 +1783,12 @@
     "statActive": "Actief",
     "statCredited": "Beloning ontvangen",
     "footnote": "Beloning wordt automatisch toegekend zodra een uitgenodigde vakman de eerste factuur stuurt. Geen vervaldatum.",
-    "creditsAvailable": "{{months}} maand(en) abonnementstegoed klaar — wordt toegepast bij je volgende verlenging.",
     "shareErrorTitle": "Delen mislukt",
     "entryLabel": "Nodig vakmannen uit",
     "entrySub": "Beiden een maand gratis bij eerste factuur",
-    "shareMessage": "Ik gebruik Vasco voor mijn bedrijf — prijzen, facturen en betalingen in één app. Meld je aan met mijn code {{code}} en we krijgen allebei een maand gratis.\n\n{{url}}"
+    "shareMessage": "Ik gebruik Vasco voor mijn bedrijf — prijzen, facturen en betalingen in één app. Meld je aan met mijn code {{code}} en we krijgen allebei een maand gratis.\n\n{{url}}",
+    "creditsAvailable_one": "{{count}} maand abonnementstegoed klaar — wordt toegepast bij je volgende verlenging.",
+    "creditsAvailable_other": "{{count}} maanden abonnementstegoed klaar — wordt toegepast bij je volgende verlenging."
   },
   "insights": {
     "thanksFeedback": "Bedankt voor je feedback",
@@ -2053,7 +2060,6 @@
     "quoteToneDesc": "Hoe de door AI gegenereerde omschrijving moet klinken.",
     "exportSummary": "Vasco Data-export\n\nGebruiker: {{name}} ({{email}})\nBedrijf: {{company}}\nFacturen: {{invoices}}\nKlussen: {{jobs}}\nKlanten: {{customers}}",
     "dataExport": "Vasco Data-export",
-    "creditsAvailable": "{{count}} maand(en) gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
     "name": "Naam",
     "trade": "Vakgebied",
     "country": "Land",
@@ -2065,7 +2071,9 @@
     "comingSoon": "Binnenkort beschikbaar",
     "connected": "Gekoppeld",
     "notConnected": "Niet gekoppeld",
-    "dataPrivacy": "GEGEVENS & PRIVACY"
+    "dataPrivacy": "GEGEVENS & PRIVACY",
+    "creditsAvailable_one": "{{count}} maand gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
+    "creditsAvailable_other": "{{count}} maanden gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen."
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -2321,7 +2329,6 @@
     "createPO": "Inkooporder maken",
     "cartSummary": "{{count}} artikelen",
     "poCreatedTitle": "Inkooporders aangemaakt",
-    "poTotal": "{{count}} inkooporder(s) aangemaakt",
     "poCreateError": "Kon inkooporder niet aanmaken. Probeer het opnieuw.",
     "aiScannedInsight": "{{count}} resultaten op basis van je factuurgeschiedenis. Gemiddelde prijs: {{price}}",
     "aiMarketInsight": "Toont marktprijzen voor {{country}} van {{suppliers}}. Scan leveranciersfacturen om je echte prijzen te zien.",
@@ -2329,7 +2336,9 @@
     "topSuppliers": "Beste leveranciers in jouw omgeving",
     "orderReview": "Bestelling controleren",
     "sendOrder": "Bestelling naar leverancier sturen",
-    "reviewOrder": "Bestelling bekijken"
+    "reviewOrder": "Bestelling bekijken",
+    "poTotal_one": "{{count}} inkooporder aangemaakt",
+    "poTotal_other": "{{count}} inkooporders aangemaakt"
   },
   "dt": {
     "active": "Actief",
@@ -2452,14 +2461,16 @@
       "nextAction": "Volgende actie",
       "guideToday": "Vandaag: {{job}}",
       "guideTodayDesc": "Open de klus om in te klokken, materialen te loggen en op tijd af te ronden.",
-      "guideFollowup": "Volg {{count}} open offerte(s) op",
       "guideFollowupDesc": "Klanten die binnen 48u reageren, accepteren ~3x vaker.",
       "guideStart": "Begin met je eerste offerte",
       "guideStartDesc": "Maak een foto van het werk — Vasco maakt de offerte.",
-      "guideAannemerProjects": "{{count}} project(en) lopen vandaag",
       "guideAannemerProjectsDesc": "Open een project om vakmensen te coördineren, sub-offertes te volgen en de planning op koers te houden.",
       "guideAannemerStart": "Start je eerste multi-vak project",
-      "guideAannemerStartDesc": "Voeg de vakken toe die je coördineert — Vasco bouwt de cross-trade offerte."
+      "guideAannemerStartDesc": "Voeg de vakken toe die je coördineert — Vasco bouwt de cross-trade offerte.",
+      "guideFollowup_one": "Volg {{count}} open offerte op",
+      "guideFollowup_other": "Volg {{count}} open offertes op",
+      "guideAannemerProjects_one": "{{count}} project loopt vandaag",
+      "guideAannemerProjects_other": "{{count}} projecten lopen vandaag"
     },
     "pill": {
       "decided": "Beslist",
@@ -2619,8 +2630,8 @@
     "statOverdue": "{{count}} te laat",
     "statRemaining": "{{count}} nog te doen",
     "urgentTitle": "Actie vereist",
-    "urgentBody_one": "{{count}} keuze moet nog gemaakt worden om vertraging te voorkomen",
-    "urgentBody_other": "{{count}} keuzes moeten nog gemaakt worden om vertraging te voorkomen",
+    "urgentBody_one": "Er moet {{count}} keuze gemaakt worden om vertraging te voorkomen",
+    "urgentBody_other": "Er moeten {{count}} keuzes gemaakt worden om vertraging te voorkomen",
     "categories": "Categorieën",
     "overdue": "Te laat",
     "deadline": "Deadline",
@@ -2628,8 +2639,8 @@
     "toChoose": "Nog te kiezen",
     "alreadyChosen": "Al gekozen",
     "choiceSavedTitle": "Keuze opgeslagen",
-    "choiceSavedRemaining_one": "Nog {{count}} keuze te maken.",
-    "choiceSavedRemaining_other": "Nog {{count}} keuzes te maken.",
+    "choiceSavedRemaining_one": "Nog {{count}} keuze over.",
+    "choiceSavedRemaining_other": "Nog {{count}} keuzes over.",
     "allChoicesMade": "Alle keuzes zijn gemaakt! Uw aannemer wordt op de hoogte gesteld.",
     "askTitle": "Een vraag stellen",
     "askSubtitle": "Vraag iets over de planning, locatie of werkzaamheden — je krijgt direct antwoord of de aannemer bevestigt snel.",
@@ -2739,8 +2750,6 @@
     "dueToday": "Vandaag gewenst",
     "dueTomorrow": "Morgen gewenst",
     "dueInDays": "Over {{count}} dagen",
-    "urgentBody": "Er moeten {{count}} keuze(s) gemaakt worden om vertraging te voorkomen",
-    "choiceSavedRemaining": "Nog {{count}} keuze(s) over.",
     "tryAgainIn": "Probeer het opnieuw over {{seconds}}s",
     "askForNew": "Vraag je vakman om je een nieuwe link te sturen via WhatsApp of sms.",
     "retry": "Opnieuw proberen"
@@ -2793,8 +2802,9 @@
     "expandedPricing": "Prijzen uitgevouwen {{count}}×",
     "hoveredAccept": "Acceptknop {{count}}× gehoverd",
     "hoveredDecline": "Afwijsknop {{count}}× gehoverd",
-    "startedQuestion": "{{count}} vraag/vragen begonnen",
-    "highEngagementHint": "Veel activiteit, nog geen besluit — overweeg follow-up"
+    "highEngagementHint": "Veel activiteit, nog geen besluit — overweeg follow-up",
+    "startedQuestion_one": "{{count}} vraag gestart",
+    "startedQuestion_other": "{{count}} vragen gestart"
   },
   "moatInsights": {
     "title": "MARKT & PRESTATIE",
@@ -2810,7 +2820,6 @@
   },
   "reconciliation": {
     "title": "BANK-MATCHES",
-    "subtitle": "Vasco vond {{count}} betaling(en) die overeenkomen met openstaande facturen.",
     "invoiceLabel": "Factuur {{id}}",
     "confidence": "Zekerheid: {{percent}}%",
     "confirmPaid": "BETAALD",
@@ -2818,7 +2827,9 @@
     "reasonAmountWithin": "bedrag binnen 2%",
     "reasonIban": "IBAN match",
     "reasonName": "naam match",
-    "reasonDaysAfter": "{{days}}d na versturen"
+    "reasonDaysAfter": "{{days}}d na versturen",
+    "subtitle_one": "Vasco vond {{count}} betaling die overeenkomt met een openstaande factuur.",
+    "subtitle_other": "Vasco vond {{count}} betalingen die overeenkomen met openstaande facturen."
   },
   "projectSwitcher": {
     "activeProjects": "ACTIEVE PROJECTEN",
@@ -3866,12 +3877,13 @@
     "reminderUnavailableTitle": "Binnenkort beschikbaar",
     "reminderUnavailableBody": "Geautomatiseerde keuze-herinneringen zijn nog in ontwikkeling. Stuur je klant voorlopig zelf een bericht via WhatsApp of bel ze.",
     "reminderSentTitle": "Herinnering verstuurd",
-    "reminderSentBody": "{{count}} item(s) verstuurd via {{channel}}.",
     "channelEmail": "e-mail",
     "activityTitle": "Klant activiteit",
     "activitySub": "{{events}} gebeurtenissen · {{opens}} portaal-openingen",
     "hesitationLabel": "Getwijfeld over",
-    "viewedTimes": "{{count}}×"
+    "viewedTimes": "{{count}}×",
+    "reminderSentBody_one": "{{count}} item verstuurd via {{channel}}.",
+    "reminderSentBody_other": "{{count}} items verstuurd via {{channel}}."
   },
   "besparen": {
     "materialFallback": "Materiaal {{id}}"
@@ -4043,7 +4055,8 @@
     "customerSignoff": "Aftekening klant",
     "customerSignoffHint": "Vraag om een digitale handtekening om de klus af te sluiten",
     "certExpired": "{{name}} verlopen op {{date}}. Vernieuw vóór afsluiten.",
-    "certExpiringSoon": "{{name}} verloopt over {{days}} dag(en) — vernieuw snel om dit {{kind}} geldig te houden."
+    "certExpiringSoon_one": "{{name}} verloopt over {{count}} dag — vernieuw snel om dit {{kind}} geldig te houden.",
+    "certExpiringSoon_other": "{{name}} verloopt over {{count}} dagen — vernieuw snel om dit {{kind}} geldig te houden."
   },
   "weather": {
     "unsuitable": "Ongeschikt weer verwacht ({{condition}}, {{precipitation}}% neerslag)",
