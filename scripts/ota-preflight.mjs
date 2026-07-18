@@ -155,7 +155,15 @@ async function checkMissingI18nKeys() {
       T_CALL_RE.lastIndex = 0;
       for (const m of text.matchAll(T_CALL_RE)) {
         const key = m[1];
-        if (!hasNested(primaryLocale, key)) {
+        // i18next plurals: t('x', { count }) resolves to x_one / x_other and the
+        // base key need not exist (see customers.trackersCompleted). Treat a key
+        // as present if any of its plural forms is. Without this the checker
+        // blocks correct code — it flagged invoices.pendingApproval after that
+        // key was converted from the "offerte(s)" hack to proper plurals.
+        const PLURAL_SUFFIXES = ['_one', '_other', '_zero', '_two', '_few', '_many'];
+        const present = hasNested(primaryLocale, key)
+          || PLURAL_SUFFIXES.some((sfx) => hasNested(primaryLocale, key + sfx));
+        if (!present) {
           if (!missing.has(key)) missing.set(key, []);
           missing.get(key).push(relative(ROOT, file));
         }
