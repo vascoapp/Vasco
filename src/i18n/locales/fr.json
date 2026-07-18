@@ -832,12 +832,11 @@
     "noExpenses": "Aucune dépense enregistrée",
     "noExpensesDesc": "Suivez vos dépenses professionnelles ici",
     "category": "Catégorie",
-    "amount": "Montant",
+    "amount": "Montant (HT)",
     "date": "Date",
     "receipt": "Justificatif",
     "purchaseOrders": "Bons de commande",
     "reconciliation": "Rapprochement",
-    "expensesThisYear": "dépenses cette année",
     "newExpense": "Nouvelle dépense",
     "description": "Description",
     "add": "Ajouter",
@@ -850,7 +849,9 @@
     "addFirstExpense": "Ajoutez votre première dépense via le bouton +",
     "deleteExpense": "Supprimer la dépense",
     "deleteConfirm": "supprimer",
-    "deduction": "déduction"
+    "deduction": "déduction",
+    "expensesThisYear_one": "{{count}} dépense cette année",
+    "expensesThisYear_other": "{{count}} dépenses cette année"
   },
   "customers": {
     "activeTrackers": "Trackers actifs",

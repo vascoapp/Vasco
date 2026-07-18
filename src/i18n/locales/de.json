@@ -832,12 +832,11 @@
     "noExpenses": "Keine Ausgaben erfasst",
     "noExpensesDesc": "Erfassen Sie hier Ihre Geschäftsausgaben",
     "category": "Kategorie",
-    "amount": "Betrag",
+    "amount": "Betrag (netto)",
     "date": "Datum",
     "receipt": "Beleg",
     "purchaseOrders": "Bestellungen",
     "reconciliation": "Abstimmung",
-    "expensesThisYear": "Ausgaben dieses Jahr",
     "newExpense": "Neue Ausgabe",
     "description": "Beschreibung",
     "add": "Hinzufügen",
@@ -850,7 +849,9 @@
     "addFirstExpense": "Erste Ausgabe über die + Taste hinzufügen",
     "deleteExpense": "Ausgabe löschen",
     "deleteConfirm": "löschen",
-    "deduction": "Abzug"
+    "deduction": "Abzug",
+    "expensesThisYear_one": "{{count}} Ausgabe dieses Jahr",
+    "expensesThisYear_other": "{{count}} Ausgaben dieses Jahr"
   },
   "customers": {
     "activeTrackers": "Aktive Tracker",

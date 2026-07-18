@@ -832,12 +832,11 @@
     "noExpenses": "No expenses recorded",
     "noExpensesDesc": "Track your business expenses here",
     "category": "Category",
-    "amount": "Amount",
+    "amount": "Amount (excl. VAT)",
     "date": "Date",
     "receipt": "Receipt",
     "purchaseOrders": "Purchase orders",
     "reconciliation": "Reconciliation",
-    "expensesThisYear": "expenses this year",
     "newExpense": "New expense",
     "description": "Description",
     "add": "Add",
@@ -850,7 +849,9 @@
     "addFirstExpense": "Add your first expense via the + button",
     "deleteExpense": "Delete expense",
     "deleteConfirm": "delete",
-    "deduction": "deduction"
+    "deduction": "deduction",
+    "expensesThisYear_one": "{{count}} expense this year",
+    "expensesThisYear_other": "{{count}} expenses this year"
   },
   "customers": {
     "activeTrackers": "Active trackers",

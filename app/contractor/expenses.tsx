@@ -72,7 +72,7 @@ export default function ExpensesScreen() {
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('expenses.title', 'Uitgaven')}</Text>
-          <Text style={styles.headerSubtitle}>{expenses.length} {t('expenses.expensesThisYear', 'uitgaven dit jaar')}</Text>
+          <Text style={styles.headerSubtitle}>{t('expenses.expensesThisYear', { count: expenses.length })}</Text>
         </View>
         <Pressable
           style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.85 }]}
@@ -99,7 +99,10 @@ export default function ExpensesScreen() {
             />
             <TextInput
               style={styles.modalInput}
-              placeholder={t('expenses.amount', 'Bedrag (€)')}
+              /* Labelled excl. btw on purpose: this value drives the BTW-
+                 terugvorderbaar figure (amount x vatRate). A contractor typing
+                 the receipt TOTAL would overstate the reclaim by 21%. */
+              placeholder={t('expenses.amount', 'Bedrag (excl. btw)')}
               placeholderTextColor={SemanticColors.textTertiary}
               value={newAmount}
               onChangeText={setNewAmount}

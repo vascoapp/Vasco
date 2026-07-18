@@ -816,12 +816,11 @@
     "noExpenses": "Geen uitgaven geregistreerd",
     "noExpensesDesc": "Houd hier je bedrijfsuitgaven bij",
     "category": "Categorie",
-    "amount": "Bedrag",
+    "amount": "Bedrag (excl. btw)",
     "date": "Datum",
     "receipt": "Bon",
     "purchaseOrders": "Inkooporders",
     "reconciliation": "Afstemming",
-    "expensesThisYear": "uitgaven dit jaar",
     "newExpense": "Nieuwe uitgave",
     "description": "Omschrijving",
     "add": "Toevoegen",
@@ -834,7 +833,9 @@
     "addFirstExpense": "Voeg je eerste uitgave toe via de + knop",
     "deleteExpense": "Uitgave verwijderen",
     "deleteConfirm": "verwijderen",
-    "deduction": "aftrek"
+    "deduction": "aftrek",
+    "expensesThisYear_one": "{{count}} uitgave dit jaar",
+    "expensesThisYear_other": "{{count}} uitgaven dit jaar"
   },
   "customers": {
     "activeTrackers": "Actieve trackers",

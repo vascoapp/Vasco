@@ -832,12 +832,11 @@
     "noExpenses": "Nessuna spesa registrata",
     "noExpensesDesc": "Registra qui le spese aziendali",
     "category": "Categoria",
-    "amount": "Importo",
+    "amount": "Importo (IVA esclusa)",
     "date": "Data",
     "receipt": "Ricevuta",
     "purchaseOrders": "Ordini di acquisto",
     "reconciliation": "Riconciliazione",
-    "expensesThisYear": "spese quest'anno",
     "newExpense": "Nuova spesa",
     "description": "Descrizione",
     "add": "Aggiungi",
@@ -850,7 +849,9 @@
     "addFirstExpense": "Aggiungi la tua prima spesa con il pulsante +",
     "deleteExpense": "Elimina spesa",
     "deleteConfirm": "elimina",
-    "deduction": "detrazione"
+    "deduction": "detrazione",
+    "expensesThisYear_one": "{{count}} spesa quest’anno",
+    "expensesThisYear_other": "{{count}} spese quest’anno"
   },
   "customers": {
     "activeTrackers": "Tracker attivi",
