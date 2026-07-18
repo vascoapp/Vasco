@@ -96,9 +96,14 @@ export default function GeldScreen() {
   const outstandingTotal = fin.totalOutstanding;
   const paidTotal = fin.totalRevenue;
 
-  const revenueTrend = useMemo((): { icon: 'trending-up' | 'trending-down' | 'remove'; color: string } => {
+  // `icon: null` = nothing to compare against yet. Rendering the 'remove'
+  // dash in that case put a bare "–" next to the amount ("€760 –"), which
+  // reads as a stray hyphen rather than "flat". A dash is only meaningful
+  // when there IS a previous month and it genuinely did not move.
+  const revenueTrend = useMemo((): { icon: 'trending-up' | 'trending-down' | 'remove' | null; color: string } => {
     const prev = fin.monthlyInflows.length >= 2 ? fin.monthlyInflows[fin.monthlyInflows.length - 2] : 0;
-    if (prev === 0 || paidTotal === prev) return { icon: 'remove', color: DK.colors.textMuted };
+    if (prev === 0) return { icon: null, color: DK.colors.textMuted };
+    if (paidTotal === prev) return { icon: 'remove', color: DK.colors.textMuted };
     return paidTotal > prev
       ? { icon: 'trending-up', color: DK.colors.success }
       : { icon: 'trending-down', color: DK.colors.danger };
@@ -215,7 +220,9 @@ export default function GeldScreen() {
             <DKLabel style={s.kpiLabel}>{t('dk.pill.revenue', 'Revenue')}</DKLabel>
             <View style={s.kpiValueRow}>
               <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal)}</Text>
-              <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
+              {revenueTrend.icon ? (
+                <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
+              ) : null}
             </View>
           </Pressable>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
@@ -763,7 +770,10 @@ function statusColor(status?: string): string {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 20, gap: 14 },
+  // 180 = FAB bottom offset (110) + FAB height (56) + breathing room, so the
+  // last row can scroll clear of the floating button instead of sitting under
+  // it (the FAB was clipping the last action's label).
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 180, gap: 14 },
 
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
   title: { fontFamily: DK.type.display900, fontSize: 28, color: DK.colors.text, letterSpacing: -0.8 },

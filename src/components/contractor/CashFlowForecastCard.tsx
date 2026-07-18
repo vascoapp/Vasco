@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -47,6 +48,7 @@ function formatMoney0(amount: number, country: Country): string {
 }
 
 export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, country = 'NL', onPress }: Props) {
+  const { t } = useTranslation();
   const [forecast, setForecast] = useState<ForecastSummary | null>(null);
 
   useEffect(() => {
@@ -72,11 +74,11 @@ export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, 
       onPress={onPress}
       style={s.card}
       accessibilityRole="button"
-      accessibilityLabel="Cash flow forecast — 30 days"
+      accessibilityLabel={t('cashflow.forecastTitle', 'Cash flow — next 30 days')}
     >
       <View style={s.header}>
         <Ionicons name="trending-up" size={18} color={Palette.hermesOrange} />
-        <Text style={s.title}>Cash flow — next 30 days</Text>
+        <Text style={s.title}>{t('cashflow.forecastTitle', 'Cash flow — next 30 days')}</Text>
       </View>
 
       <Text style={[s.amount, { color: forecast.netChange >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
@@ -84,15 +86,18 @@ export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, 
       </Text>
 
       <View style={s.row}>
-        <Meta label="Inflow" value={formatMoney0(Math.round(forecast.totalInflow), country)} color={SemanticColors.feedbackSuccess} />
-        <Meta label="Outflow" value={formatMoney0(Math.round(forecast.totalOutflow), country)} color={SemanticColors.feedbackError} />
+        <Meta label={t('cashflow.inflow', 'Inflow')} value={formatMoney0(Math.round(forecast.totalInflow), country)} color={SemanticColors.feedbackSuccess} />
+        <Meta label={t('cashflow.outflow', 'Outflow')} value={formatMoney0(Math.round(forecast.totalOutflow), country)} color={SemanticColors.feedbackError} />
       </View>
 
       {isNegative ? (
         <View style={s.warning}>
           <Ionicons name="warning" size={14} color={SemanticColors.feedbackWarning} />
           <Text style={s.warningText}>
-            Low cash on {forecast.minCashDay.date} ({formatMoney0(Math.round(forecast.minCashDay.cumulative), country)}) — chase open invoices.
+            {t('cashflow.lowCashWarning', 'Low cash on {{date}} ({{amount}}) — chase open invoices.', {
+              date: forecast.minCashDay.date,
+              amount: formatMoney0(Math.round(forecast.minCashDay.cumulative), country),
+            })}
           </Text>
         </View>
       ) : null}

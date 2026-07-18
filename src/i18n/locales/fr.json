@@ -4786,5 +4786,11 @@
     "thisWeek": "Cette semaine",
     "weeklyTotal": "Total hebdomadaire",
     "submitForApproval": "Soumettre pour validation"
+  },
+  "cashflow": {
+    "forecastTitle": "Trésorerie — 30 prochains jours",
+    "inflow": "Entrées",
+    "outflow": "Sorties",
+    "lowCashWarning": "Trésorerie basse le {{date}} ({{amount}}) — relancez les factures impayées."
   }
 }

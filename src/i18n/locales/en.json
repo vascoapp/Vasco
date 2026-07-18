@@ -4786,5 +4786,11 @@
     "thisWeek": "This week",
     "weeklyTotal": "Weekly Total",
     "submitForApproval": "Submit for approval"
+  },
+  "cashflow": {
+    "forecastTitle": "Cash flow — next 30 days",
+    "inflow": "Inflow",
+    "outflow": "Outflow",
+    "lowCashWarning": "Low cash on {{date}} ({{amount}}) — chase open invoices."
   }
 }

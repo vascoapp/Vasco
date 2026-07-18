@@ -52,16 +52,24 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       category: 'financial',
       priority: fin.overdueAmount > 2000 ? 'critical' : 'high',
       title: gt('fin_overdue_title', lang, { count: fin.overdueCount, amount }),
-      message: `${fin.overdueCount} invoice(s) overdue totaling \u20AC${amount.toLocaleString()}. DSO: ${fin.avgDaysToPayment} days.`,
+      message: gt('fin_overdue_message', lang, {
+        count: fin.overdueCount,
+        amount: amount.toLocaleString(),
+        days: fin.avgDaysToPayment,
+      }),
       detail: fin.overdueDetails
         .slice(0, 3)
-        .map(d => `${d.customer}: \u20AC${d.amount} (${d.daysOverdue}d overdue)`)
+        .map(d => gt('fin_overdue_detail_item', lang, {
+          customer: d.customer,
+          amount: d.amount,
+          days: d.daysOverdue,
+        }))
         .join('. '),
       icon: 'alert-circle',
       actionLabel: gt('fin_action_send_invoices', lang),
       actionRoute: '/(contractor)/facturen',
       source: gt('source_financial_analysis', lang),
-      metric: { label: 'Overdue', value: `\u20AC${amount.toLocaleString()}`, trend: 'down' },
+      metric: { label: gt('fin_overdue_metric', lang), value: `\u20AC${amount.toLocaleString()}`, trend: 'down' },
       rootCauseTags: ['cashflow', 'overdue'],
       rawScore: 0.95,
       reasoning: {

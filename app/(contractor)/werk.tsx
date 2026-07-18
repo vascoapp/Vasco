@@ -611,7 +611,10 @@ function EmptyBlock({ icon, title, desc, ctaLabel, ctaIcon, onCta }: { icon: Ico
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 20, gap: 14 },
+  // 180 = FAB bottom offset (110) + FAB height (56) + breathing room, so the
+  // last row can scroll clear of the floating button instead of sitting under
+  // it (the FAB was clipping the last action's label).
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 180, gap: 14 },
 
   topBar: {
     flexDirection: 'row',

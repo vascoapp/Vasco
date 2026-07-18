@@ -2495,11 +2495,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // `invoice.customerName`) showed the bare id e.g. "cust-003" instead
         // of "Bakkerij Smit". Mirror the quote-source path's intent.
         const invCustomer = customers.find((c) => c.id === job.customerId);
+        // `customer` holds a NAME on every other invoice ("Hotel NH",
+        // "Bouwgroep Atlas") — writing job.customerId here put a raw id in a
+        // name field and surfaced as "cust-003" in the Facturen list. The
+        // dedicated id lives in `customerId`. Fall back to '' rather than the
+        // id, so a missing customer renders blank instead of leaking one.
+        const invCustomerName = invCustomer?.name ?? '';
         const newInvoice: Invoice = {
           id: docNumber,
-          customer: job.customerId ?? '',
+          customer: invCustomerName,
           customerId: job.customerId ?? undefined,
-          customerName: invCustomer?.name ?? job.customerId ?? '',
+          customerName: invCustomerName,
           job: job.title,
           amount,
           status: 'draft',

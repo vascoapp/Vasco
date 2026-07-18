@@ -2472,7 +2472,7 @@
       "pipeline": "Pipeline",
       "draft": "Entwurf",
       "paidWeek": "Bezahlt Wo",
-      "collectionRate": "Inkasso-Quote",
+      "collectionRate": "Inkassoquote",
       "high": "Hoch"
     },
     "actions": {
@@ -4786,5 +4786,11 @@
     "thisWeek": "Diese Woche",
     "weeklyTotal": "Wochensumme",
     "submitForApproval": "Zur Genehmigung einreichen"
+  },
+  "cashflow": {
+    "forecastTitle": "Cashflow — nächste 30 Tage",
+    "inflow": "Eingang",
+    "outflow": "Ausgang",
+    "lowCashWarning": "Wenig Liquidität am {{date}} ({{amount}}) — offene Rechnungen anmahnen."
   }
 }

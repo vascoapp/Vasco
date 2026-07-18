@@ -4786,5 +4786,11 @@
     "thisWeek": "Questa settimana",
     "weeklyTotal": "Totale settimanale",
     "submitForApproval": "Invia per approvazione"
+  },
+  "cashflow": {
+    "forecastTitle": "Flusso di cassa — prossimi 30 giorni",
+    "inflow": "Entrate",
+    "outflow": "Uscite",
+    "lowCashWarning": "Liquidità bassa il {{date}} ({{amount}}) — sollecita le fatture aperte."
   }
 }
