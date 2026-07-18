@@ -6,6 +6,7 @@
 // Vasco tips behind the scenes (not shown in UI).
 // =============================================================================
 
+import { formatMoney } from '../../src/i18n/formatting';
 import { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -233,7 +234,7 @@ export default function InkoopScreen() {
             <View style={[styles.heroIconWrap, { backgroundColor: Palette.hermesOrange + '12' }]}>
               <Ionicons name="wallet" size={18} color={Palette.hermesOrange} />
             </View>
-            <Text style={styles.heroValue}>€{statistics.totalSavings}</Text>
+            <Text style={styles.heroValue}>{formatMoney(statistics.totalSavings)}</Text>
             <Text style={styles.heroLabel}>{t('inkoop.totalSaved', 'Total\nsaved')}</Text>
           </View>
           <View style={styles.heroCard}>

@@ -5,6 +5,7 @@
 // Learns from usage patterns to improve suggestions
 // =============================================================================
 
+import { DEMO_MODE } from '../config/demo';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 
 // ============================================
@@ -629,12 +630,38 @@ class ReorderService {
    * Get reorder statistics
    */
   getStatistics(): ReorderStatistics {
+    // These were five hardcoded constants (156 / 89 / €1245 / 12 / 87%)
+    // returned to every contractor. On the Inkoop screen they sat directly
+    // above "Nog geen voorraad bijgehouden" and contradicted the real €2
+    // savings figure shown lower down — fabricated numbers presented as
+    // the contractor's own performance.
+    //
+    // Derive what the service actually knows; demo keeps the showcase values
+    // so the flow still demonstrates well.
+    if (DEMO_MODE) {
+      return {
+        suggestionsGenerated: 156,
+        ordersPlaced: 89,
+        totalSavings: 1245,
+        stockoutsAvoided: 12,
+        accuracyRate: 87,
+      };
+    }
+    const all = Array.from(this.suggestions.values());
+    const ordered = all.filter((s) => s.status === 'ordered');
+    const savingsOf = (s: ReorderSuggestion) =>
+      (s.bulkDiscount?.savings ?? 0) + (s.priceOptimization?.savings ?? 0);
     return {
-      suggestionsGenerated: 156,
-      ordersPlaced: 89,
-      totalSavings: 1245,
-      stockoutsAvoided: 12,
-      accuracyRate: 87,
+      suggestionsGenerated: all.length,
+      ordersPlaced: ordered.length,
+      totalSavings: Math.round(ordered.reduce((sum, s) => sum + savingsOf(s), 0)),
+      // A stockout avoided means acting on a CRITICAL suggestion before the
+      // material ran out — the only one of these the service can honestly
+      // attest to.
+      stockoutsAvoided: ordered.filter((s) => s.priority === 'critical').length,
+      // Forecast accuracy needs prediction-vs-actual history the service does
+      // not keep. 0 until that exists, rather than inventing a rate.
+      accuracyRate: 0,
     };
   }
 
