@@ -51,8 +51,15 @@ type TabType = 'vandaag' | 'week' | 'maand';
 // CONSTANTS
 // =============================================================================
 
-const now = new Date();
-const todayStr = now.toISOString().split('T')[0];
+// These were `const now = new Date()` at MODULE scope — frozen when the JS
+// bundle loaded (app launch). handleClockOut then stamped every entry with the
+// launch time instead of the real clock-out time: launch 09:00, clock out
+// 18:00 recorded "clockOut: 09:00", producing rows like "10:00 – 09:00 · 4.0u"
+// where the hours (from the timer service) were right but the range was not.
+// Month/week boundaries drifted for the same reason if the app stayed open.
+const hhmm = (d: Date) =>
+  `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+const todayKey = (d: Date) => d.toISOString().split('T')[0];
 
 // =============================================================================
 // SCREEN
@@ -94,21 +101,25 @@ export default function TimesheetScreen() {
 
   const activeJobs = jobs.filter(j => ['scheduled', 'in-progress'].includes(j.status));
 
+  // Evaluated per render rather than once at bundle load, so week/month
+  // framing and "today" stay correct in a long-running session.
+  const renderNow = new Date();
+  const todayStr = todayKey(renderNow);
+
   // Computed
   const todayEntries = entries.filter(e => e.date === todayStr);
   const todayHours = todayEntries.reduce((sum, e) => sum + e.totalHours, 0);
 
-  const weekStart = new Date(now);
+  const weekStart = new Date(renderNow);
   weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
   const weekEntries = entries.filter(e => new Date(e.date) >= weekStart);
   const weekHours = weekEntries.reduce((sum, e) => sum + e.totalHours, 0);
 
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthStart = new Date(renderNow.getFullYear(), renderNow.getMonth(), 1);
   const monthEntries = entries.filter(e => new Date(e.date) >= monthStart);
   const monthHours = monthEntries.reduce((sum, e) => sum + e.totalHours, 0);
 
   const handleClockIn = () => {
-    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
     if (activeJobs.length === 0) {
       timer.clockIn();
@@ -141,7 +152,7 @@ export default function TimesheetScreen() {
   };
 
   const handleClockOut = async () => {
-    const outTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const outTime = hhmm(new Date()); // stamped NOW, not at bundle load
     const { hours, state: prevState } = await timer.clockOut();
 
     if (prevState.startTimeFormatted) {
