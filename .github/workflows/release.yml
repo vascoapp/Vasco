@@ -46,6 +46,12 @@ jobs:
   preflight:
     name: Preflight gate
     runs-on: ubuntu-latest
+    # Exposed so sentry-sourcemaps can gate on it. A job-level `if:` can read
+    # `needs`, `github`, `vars` and `inputs` — but NOT `env` or `secrets`,
+    # which is why `if: env.SENTRY_AUTH_TOKEN != ''` was rejected at parse
+    # time with "Unrecognized named-value: 'env'".
+    outputs:
+      has_sentry: ${{ steps.sentry_configured.outputs.result }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -58,6 +64,20 @@ jobs:
         run: npm run preflight
       - name: Validate ASC + Play listings
         run: npm run check:listings
+
+      # Secrets are readable inside a step, so resolve the flag here and hand
+      # it to the sourcemap job as an output.
+      - name: Detect Sentry configuration
+        id: sentry_configured
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=false" >> "$GITHUB_OUTPUT"
+            echo "SENTRY_AUTH_TOKEN not set — sourcemap upload will be skipped."
+          fi
 
   eas-build:
     name: EAS build (${{ github.event.inputs.profile || 'production' }})
@@ -97,7 +117,7 @@ jobs:
     name: Sentry sourcemaps
     needs: preflight
     runs-on: ubuntu-latest
-    if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+    if: ${{ needs.preflight.outputs.has_sentry == 'true' }}
     env:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
