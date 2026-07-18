@@ -817,7 +817,14 @@
     "addNotes": "Aggiungi note interne...",
     "noNotes": "Ancora nessuna nota. Tocca la matita per aggiungere.",
     "pendingApproval_one": "{{count}} preventivo in attesa di approvazione",
-    "pendingApproval_other": "{{count}} preventivi in attesa di approvazione"
+    "pendingApproval_other": "{{count}} preventivi in attesa di approvazione",
+    "status": {
+      "draft": "Bozza",
+      "sent": "Inviata",
+      "viewed": "Vista",
+      "paid": "Pagata",
+      "overdue": "Scaduta"
+    }
   },
   "expenses": {
     "title": "Spese",
@@ -1905,7 +1912,6 @@
     "compareSuppliers": "Confronta",
     "perUnit": "per unità",
     "emptyTomorrow": "Nessun lavoro domani — programmare {{title}}?",
-    "leadsAvailable": "lead disponibili",
     "planSchedule": "Pianifica",
     "fillsGap": "Colma il vuoto in agenda",
     "taxPrep": "Preparazione fiscale {{quarter}}",
@@ -1963,7 +1969,9 @@
     "energyLabelUpgrade": "Campagna upgrade HR++",
     "energyLabelUpgradeDesc": "I clienti con vetri singoli potrebbero avere diritto agli incentivi energetici — invia offerte di upgrade",
     "createCampaign": "Crea campagna",
-    "leadGeneration": "Generazione lead"
+    "leadGeneration": "Generazione lead",
+    "leadsAvailable_one": "{{count}} lead disponibile",
+    "leadsAvailable_other": "{{count}} lead disponibili"
   },
   "profile": {
     "title": "Profilo",
@@ -2065,17 +2073,21 @@
     "dataPrivacy": "DATI E PRIVACY"
   },
   "search": {
-    "job": "Lavoro",
-    "quote": "Preventivo",
-    "invoice": "Fattura",
-    "customer": "Cliente",
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",
     "noResultsFor": "Nessun risultato per \"{{query}}\"",
     "typeJob": "Lavoro",
     "typeQuote": "Preventivo",
     "typeInvoice": "Fattura",
     "typeCustomer": "Cliente",
-    "hint": "Cerca lavori, preventivi, fatture e clienti"
+    "hint": "Cerca lavori, preventivi, fatture e clienti",
+    "job_one": "Lavoro",
+    "job_other": "Lavori",
+    "quote_one": "Preventivo",
+    "quote_other": "Preventivi",
+    "invoice_one": "Fattura",
+    "invoice_other": "Fatture",
+    "customer_one": "Cliente",
+    "customer_other": "Clienti"
   },
   "aiTab": {
     "customer": "cliente",
@@ -2211,7 +2223,6 @@
     "customers": {
       "title": "Clienti",
       "searchPlaceholder": "Cerca per nome, telefono o e-mail...",
-      "jobs": "lavori",
       "emptyTitle": "Nessun cliente ancora",
       "emptyDesc": "Aggiungi il tuo primo cliente per iniziare",
       "addCustomer": "Aggiungi cliente",
@@ -2225,7 +2236,9 @@
       "addAnyway": "Aggiungi comunque",
       "totalAmount": "€{{amount}} totale",
       "outstandingAmount": "€{{amount}} in sospeso",
-      "limitReached": "Hai raggiunto il limite di clienti di questo piano."
+      "limitReached": "Hai raggiunto il limite di clienti di questo piano.",
+      "jobs_one": "{{count}} lavoro",
+      "jobs_other": "{{count}} lavori"
     },
     "projects": {
       "title": "Progetti",

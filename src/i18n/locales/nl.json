@@ -801,7 +801,14 @@
     "addNotes": "Interne notities toevoegen...",
     "noNotes": "Nog geen notities. Tik op het potlood om er een toe te voegen.",
     "pendingApproval_one": "{{count}} offerte wacht op goedkeuring",
-    "pendingApproval_other": "{{count}} offertes wachten op goedkeuring"
+    "pendingApproval_other": "{{count}} offertes wachten op goedkeuring",
+    "status": {
+      "draft": "Concept",
+      "sent": "Verzonden",
+      "viewed": "Bekeken",
+      "paid": "Betaald",
+      "overdue": "Achterstallig"
+    }
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1889,7 +1896,6 @@
     "compareSuppliers": "Vergelijken",
     "perUnit": "per stuk",
     "emptyTomorrow": "Morgen geen klussen — {{title}} inplannen?",
-    "leadsAvailable": "leads beschikbaar",
     "planSchedule": "Inplannen",
     "fillsGap": "Vult gat in planning",
     "taxPrep": "Btw-voorbereiding {{quarter}}",
@@ -1947,7 +1953,9 @@
     "energyLabelUpgrade": "HR++-upgradecampagne",
     "energyLabelUpgradeDesc": "Klanten met enkel glas komen mogelijk in aanmerking voor energiesubsidies — stuur upgradevoorstellen",
     "createCampaign": "Campagne maken",
-    "leadGeneration": "Leadgeneratie"
+    "leadGeneration": "Leadgeneratie",
+    "leadsAvailable_one": "{{count}} lead beschikbaar",
+    "leadsAvailable_other": "{{count}} leads beschikbaar"
   },
   "profile": {
     "title": "Profiel",
@@ -2049,17 +2057,21 @@
     "dataPrivacy": "GEGEVENS & PRIVACY"
   },
   "search": {
-    "job": "Klus",
-    "quote": "Offerte",
-    "invoice": "Factuur",
-    "customer": "Klant",
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
     "noResultsFor": "Geen resultaten voor \"{{query}}\"",
     "typeJob": "Klus",
     "typeQuote": "Offerte",
     "typeInvoice": "Factuur",
     "typeCustomer": "Klant",
-    "hint": "Zoek in klussen, offertes, facturen en klanten"
+    "hint": "Zoek in klussen, offertes, facturen en klanten",
+    "job_one": "Klus",
+    "job_other": "Klussen",
+    "quote_one": "Offerte",
+    "quote_other": "Offertes",
+    "invoice_one": "Factuur",
+    "invoice_other": "Facturen",
+    "customer_one": "Klant",
+    "customer_other": "Klanten"
   },
   "aiTab": {
     "customer": "klant",
@@ -2195,7 +2207,6 @@
     "customers": {
       "title": "Klanten",
       "searchPlaceholder": "Zoek op naam, telefoon of e-mail...",
-      "jobs": "klussen",
       "emptyTitle": "Nog geen klanten",
       "emptyDesc": "Voeg je eerste klant toe om te beginnen",
       "addCustomer": "Klant toevoegen",
@@ -2209,7 +2220,9 @@
       "addAnyway": "Toch toevoegen",
       "totalAmount": "€{{amount}} totaal",
       "outstandingAmount": "€{{amount}} openstaand",
-      "limitReached": "Je hebt de klantlimiet van dit abonnement bereikt."
+      "limitReached": "Je hebt de klantlimiet van dit abonnement bereikt.",
+      "jobs_one": "{{count}} klus",
+      "jobs_other": "{{count}} klussen"
     },
     "projects": {
       "title": "Projecten",

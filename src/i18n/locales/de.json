@@ -817,7 +817,14 @@
     "addNotes": "Interne Notizen hinzufügen...",
     "noNotes": "Noch keine Notizen. Zum Hinzufügen auf den Stift tippen.",
     "pendingApproval_one": "{{count}} Angebot wartet auf Freigabe",
-    "pendingApproval_other": "{{count}} Angebote warten auf Freigabe"
+    "pendingApproval_other": "{{count}} Angebote warten auf Freigabe",
+    "status": {
+      "draft": "Entwurf",
+      "sent": "Gesendet",
+      "viewed": "Angesehen",
+      "paid": "Bezahlt",
+      "overdue": "Überfällig"
+    }
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1905,7 +1912,6 @@
     "compareSuppliers": "Vergleichen",
     "perUnit": "pro Stück",
     "emptyTomorrow": "Morgen keine Aufträge — {{title}} einplanen?",
-    "leadsAvailable": "Leads verfügbar",
     "planSchedule": "Planen",
     "fillsGap": "Füllt Terminlücke",
     "taxPrep": "Steuervorbereitung {{quarter}}",
@@ -1963,7 +1969,9 @@
     "energyLabelUpgrade": "HR++-Upgrade-Kampagne",
     "energyLabelUpgradeDesc": "Kunden mit Einfachverglasung könnten für Energieförderungen infrage kommen — senden Sie Upgrade-Angebote",
     "createCampaign": "Kampagne erstellen",
-    "leadGeneration": "Lead-Generierung"
+    "leadGeneration": "Lead-Generierung",
+    "leadsAvailable_one": "{{count}} Lead verfügbar",
+    "leadsAvailable_other": "{{count}} Leads verfügbar"
   },
   "profile": {
     "title": "Profil",
@@ -2065,17 +2073,21 @@
     "dataPrivacy": "DATEN & DATENSCHUTZ"
   },
   "search": {
-    "job": "Auftrag",
-    "quote": "Angebot",
-    "invoice": "Rechnung",
-    "customer": "Kunde",
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
     "noResultsFor": "Keine Ergebnisse für \"{{query}}\"",
     "typeJob": "Auftrag",
     "typeQuote": "Angebot",
     "typeInvoice": "Rechnung",
     "typeCustomer": "Kunde",
-    "hint": "Suche in Aufträgen, Angeboten, Rechnungen und Kunden"
+    "hint": "Suche in Aufträgen, Angeboten, Rechnungen und Kunden",
+    "job_one": "Auftrag",
+    "job_other": "Aufträge",
+    "quote_one": "Angebot",
+    "quote_other": "Angebote",
+    "invoice_one": "Rechnung",
+    "invoice_other": "Rechnungen",
+    "customer_one": "Kunde",
+    "customer_other": "Kunden"
   },
   "aiTab": {
     "customer": "Kunde",
@@ -2211,7 +2223,6 @@
     "customers": {
       "title": "Kunden",
       "searchPlaceholder": "Suche nach Name, Telefon oder E-Mail...",
-      "jobs": "Aufträge",
       "emptyTitle": "Noch keine Kunden",
       "emptyDesc": "Fügen Sie Ihren ersten Kunden hinzu",
       "addCustomer": "Kunde hinzufügen",
@@ -2225,7 +2236,9 @@
       "addAnyway": "Trotzdem hinzufügen",
       "totalAmount": "€{{amount}} gesamt",
       "outstandingAmount": "€{{amount}} offen",
-      "limitReached": "Du hast das Kundenlimit dieses Tarifs erreicht."
+      "limitReached": "Du hast das Kundenlimit dieses Tarifs erreicht.",
+      "jobs_one": "{{count}} Auftrag",
+      "jobs_other": "{{count}} Aufträge"
     },
     "projects": {
       "title": "Projekte",

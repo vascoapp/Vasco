@@ -817,7 +817,14 @@
     "addNotes": "Add internal notes...",
     "noNotes": "No notes yet. Tap the pencil to add.",
     "pendingApproval_one": "{{count}} quote awaiting approval",
-    "pendingApproval_other": "{{count}} quotes awaiting approval"
+    "pendingApproval_other": "{{count}} quotes awaiting approval",
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "viewed": "Viewed",
+      "paid": "Paid",
+      "overdue": "Overdue"
+    }
   },
   "expenses": {
     "title": "Expenses",
@@ -1905,7 +1912,6 @@
     "compareSuppliers": "Compare",
     "perUnit": "per unit",
     "emptyTomorrow": "No jobs tomorrow — schedule {{title}}?",
-    "leadsAvailable": "leads available",
     "planSchedule": "Plan",
     "fillsGap": "Fills schedule gap",
     "taxPrep": "{{quarter}} tax prep",
@@ -1963,7 +1969,9 @@
     "energyLabelUpgrade": "HR++ upgrade campaign",
     "energyLabelUpgradeDesc": "Customers with single glazing may qualify for energy subsidies — send upgrade offers",
     "createCampaign": "Create campaign",
-    "leadGeneration": "Lead generation"
+    "leadGeneration": "Lead generation",
+    "leadsAvailable_one": "{{count}} lead available",
+    "leadsAvailable_other": "{{count}} leads available"
   },
   "profile": {
     "title": "Profile",
@@ -2065,17 +2073,21 @@
     "dataPrivacy": "DATA & PRIVACY"
   },
   "search": {
-    "job": "Job",
-    "quote": "Quote",
-    "invoice": "Invoice",
-    "customer": "Customer",
     "placeholder": "Search jobs, quotes, invoices and customers",
     "noResultsFor": "No results for \"{{query}}\"",
     "typeJob": "Job",
     "typeQuote": "Quote",
     "typeInvoice": "Invoice",
     "typeCustomer": "Customer",
-    "hint": "Search jobs, quotes, invoices and customers"
+    "hint": "Search jobs, quotes, invoices and customers",
+    "job_one": "Job",
+    "job_other": "Jobs",
+    "quote_one": "Quote",
+    "quote_other": "Quotes",
+    "invoice_one": "Invoice",
+    "invoice_other": "Invoices",
+    "customer_one": "Customer",
+    "customer_other": "Customers"
   },
   "aiTab": {
     "customer": "customer",
@@ -2211,7 +2223,6 @@
     "customers": {
       "title": "Customers",
       "searchPlaceholder": "Search by name, phone or email...",
-      "jobs": "jobs",
       "emptyTitle": "No customers yet",
       "emptyDesc": "Add your first customer to get started",
       "addCustomer": "Add customer",
@@ -2225,7 +2236,9 @@
       "addAnyway": "Add anyway",
       "totalAmount": "€{{amount}} total",
       "outstandingAmount": "€{{amount}} outstanding",
-      "limitReached": "You have reached your client limit on this plan."
+      "limitReached": "You have reached your client limit on this plan.",
+      "jobs_one": "{{count}} job",
+      "jobs_other": "{{count}} jobs"
     },
     "projects": {
       "title": "Projects",

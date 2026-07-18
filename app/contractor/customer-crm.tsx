@@ -217,7 +217,7 @@ export default function CustomerPhonebookScreen() {
                   </View>
                   <Text style={s.contactMeta} numberOfLines={1}>
                     {[
-                      contact.jobCount > 0 ? `${contact.jobCount} ${t('contractor.customers.jobs', 'jobs')}` : null,
+                      contact.jobCount > 0 ? t('contractor.customers.jobs', { count: contact.jobCount }) : null,
                       contact.phone,
                     ].filter(Boolean).join(' · ')}
                   </Text>

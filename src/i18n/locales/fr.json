@@ -817,7 +817,14 @@
     "addNotes": "Ajouter des notes internes...",
     "noNotes": "Aucune note. Appuyez sur le crayon pour ajouter.",
     "pendingApproval_one": "{{count}} devis en attente d'approbation",
-    "pendingApproval_other": "{{count}} devis en attente d'approbation"
+    "pendingApproval_other": "{{count}} devis en attente d'approbation",
+    "status": {
+      "draft": "Brouillon",
+      "sent": "Envoyée",
+      "viewed": "Consultée",
+      "paid": "Payée",
+      "overdue": "En retard"
+    }
   },
   "expenses": {
     "title": "Dépenses",
@@ -1905,7 +1912,6 @@
     "compareSuppliers": "Comparer",
     "perUnit": "par unité",
     "emptyTomorrow": "Aucun chantier demain — planifier {{title}} ?",
-    "leadsAvailable": "prospects disponibles",
     "planSchedule": "Planifier",
     "fillsGap": "Comble un créneau libre",
     "taxPrep": "Préparation fiscale {{quarter}}",
@@ -1963,7 +1969,9 @@
     "energyLabelUpgrade": "Campagne de modernisation HR++",
     "energyLabelUpgradeDesc": "Les clients avec simple vitrage peuvent être éligibles à des subventions énergétiques — envoyez des offres de modernisation",
     "createCampaign": "Créer une campagne",
-    "leadGeneration": "Génération de prospects"
+    "leadGeneration": "Génération de prospects",
+    "leadsAvailable_one": "{{count}} prospect disponible",
+    "leadsAvailable_other": "{{count}} prospects disponibles"
   },
   "profile": {
     "title": "Profil",
@@ -2065,17 +2073,21 @@
     "dataPrivacy": "DONNÉES ET CONFIDENTIALITÉ"
   },
   "search": {
-    "job": "Chantier",
-    "quote": "Devis",
-    "invoice": "Facture",
-    "customer": "Client",
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",
     "noResultsFor": "Aucun résultat pour \"{{query}}\"",
     "typeJob": "Travail",
     "typeQuote": "Devis",
     "typeInvoice": "Facture",
     "typeCustomer": "Client",
-    "hint": "Rechercher travaux, devis, factures et clients"
+    "hint": "Rechercher travaux, devis, factures et clients",
+    "job_one": "Mission",
+    "job_other": "Missions",
+    "quote_one": "Devis",
+    "quote_other": "Devis",
+    "invoice_one": "Facture",
+    "invoice_other": "Factures",
+    "customer_one": "Client",
+    "customer_other": "Clients"
   },
   "aiTab": {
     "customer": "client",
@@ -2211,7 +2223,6 @@
     "customers": {
       "title": "Clients",
       "searchPlaceholder": "Rechercher par nom, téléphone ou e-mail...",
-      "jobs": "missions",
       "emptyTitle": "Pas encore de clients",
       "emptyDesc": "Ajoutez votre premier client pour commencer",
       "addCustomer": "Ajouter un client",
@@ -2225,7 +2236,9 @@
       "addAnyway": "Ajouter quand même",
       "totalAmount": "€{{amount}} au total",
       "outstandingAmount": "€{{amount}} en attente",
-      "limitReached": "Vous avez atteint la limite de clients de ce forfait."
+      "limitReached": "Vous avez atteint la limite de clients de ce forfait.",
+      "jobs_one": "{{count}} mission",
+      "jobs_other": "{{count}} missions"
     },
     "projects": {
       "title": "Projets",

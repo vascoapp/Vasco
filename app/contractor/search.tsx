@@ -38,6 +38,16 @@ const TYPE_CONFIG: Record<ResultType, { icon: IconName; color: string; labelKey:
   customer: { icon: 'person', color: Palette.hermesOrange, labelKey: 'search.customer' },
 };
 
+
+// Search results used to render RAW enum values ("completed · plumbing",
+// "draft · €280") to every locale. These map the domain values onto the
+// localised labels that already exist in the locale files.
+const JOB_STATUS_KEY: Record<string, string> = {
+  lead: 'lead', quoted: 'quote', accepted: 'accepted', scheduled: 'scheduled',
+  'in-progress': 'inProgress', bezig: 'inProgress', ingepland: 'scheduled',
+  completed: 'completed', gereed: 'completed', invoiced: 'invoiced', paid: 'paid',
+};
+
 export default function SearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -82,7 +92,10 @@ export default function SearchScreen() {
           id: job.id,
           type: 'job',
           title: job.title,
-          subtitle: `${job.status} · ${job.trade ?? ''}`,
+          subtitle: [
+            job.status ? t(`jobs.status.${JOB_STATUS_KEY[job.status] ?? job.status}`, job.status) : '',
+            job.trade ? t(`onboarding.trades.${job.trade}`, job.trade) : '',
+          ].filter(Boolean).join(' · '),
           icon: 'hammer',
           color: Palette.hermesOrange,
           route: `/contractor/job/${job.id}`,
@@ -105,7 +118,7 @@ export default function SearchScreen() {
           // Was prefixed with the raw quote id; the job title (plus the
           // customer in the subtitle) is what a contractor searches by.
           title: `${quote.job || t('search.quote')}`,
-          subtitle: `${quote.status} · ${amt}${custName ? ` · ${custName}` : ''}`,
+          subtitle: `${t(`quotes.status.${quote.status}`, quote.status)} · ${amt}${custName ? ` · ${custName}` : ''}`,
           icon: 'document-text',
           color: Palette.hermesOrange,
           route: `/quotes/${quote.id}`,
@@ -126,7 +139,7 @@ export default function SearchScreen() {
           id: invAny.id,
           type: 'invoice',
           title: `${invAny.id}`,
-          subtitle: `${invAny.status} · ${amt}${custName ? ` · ${custName}` : ''}`,
+          subtitle: `${t(`invoices.status.${invAny.status}`, invAny.status)} · ${amt}${custName ? ` · ${custName}` : ''}`,
           icon: 'receipt',
           color: SemanticColors.feedbackSuccess,
           route: `/invoices/${invAny.id}`,
@@ -213,7 +226,9 @@ export default function SearchScreen() {
             const cfg = TYPE_CONFIG[type];
             return (
               <FadeIn key={type} delay={0}>
-                <Text style={styles.groupTitle}>{t(cfg.labelKey)} ({items.length})</Text>
+                {/* Plural section headers — read "FACTUREN (2)", not
+                    "FACTUUR (2)". */}
+                <Text style={styles.groupTitle}>{t(cfg.labelKey, { count: items.length })} ({items.length})</Text>
                 {items.map(item => (
                   <Pressable
                     key={item.id}

@@ -1149,7 +1149,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       const id = await addToQueue({
         type: 'schedule_suggestion',
         title: t('automation.emptyTomorrow', { defaultValue: 'No jobs tomorrow — schedule {{title}}?', title: bestLead.title || '' }),
-        description: `${leadJobs.length} ${t('automation.leadsAvailable', 'leads available')}`,
+        description: t('automation.leadsAvailable', { count: leadJobs.length }),
         preparedData: { jobId: bestLead.id, date: tomorrowStr, leadCount: leadJobs.length },
         actionLabel: t('automation.planSchedule', 'Plan'),
         estimatedImpact: t('automation.fillsGap', 'Fills schedule gap'),

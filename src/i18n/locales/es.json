@@ -817,7 +817,14 @@
     "addNotes": "Añadir notas internas...",
     "noNotes": "Aún no hay notas. Toca el lápiz para añadir.",
     "pendingApproval_one": "{{count}} presupuesto pendiente de aprobación",
-    "pendingApproval_other": "{{count}} presupuestos pendientes de aprobación"
+    "pendingApproval_other": "{{count}} presupuestos pendientes de aprobación",
+    "status": {
+      "draft": "Borrador",
+      "sent": "Enviada",
+      "viewed": "Vista",
+      "paid": "Pagada",
+      "overdue": "Vencida"
+    }
   },
   "expenses": {
     "title": "Gastos",
@@ -1905,7 +1912,6 @@
     "compareSuppliers": "Comparar",
     "perUnit": "por unidad",
     "emptyTomorrow": "Mañana no hay trabajos — ¿programar {{title}}?",
-    "leadsAvailable": "leads disponibles",
     "planSchedule": "Planificar",
     "fillsGap": "Cubre un hueco en la agenda",
     "taxPrep": "Preparación de impuestos {{quarter}}",
@@ -1963,7 +1969,9 @@
     "energyLabelUpgrade": "Campaña de mejora HR++",
     "energyLabelUpgradeDesc": "Los clientes con vidrio simple pueden optar a subvenciones energéticas — envía ofertas de mejora",
     "createCampaign": "Crear campaña",
-    "leadGeneration": "Generación de leads"
+    "leadGeneration": "Generación de leads",
+    "leadsAvailable_one": "{{count}} lead disponible",
+    "leadsAvailable_other": "{{count}} leads disponibles"
   },
   "profile": {
     "title": "Perfil",
@@ -2065,17 +2073,21 @@
     "dataPrivacy": "DATOS Y PRIVACIDAD"
   },
   "search": {
-    "job": "Trabajo",
-    "quote": "Presupuesto",
-    "invoice": "Factura",
-    "customer": "Cliente",
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",
     "noResultsFor": "Sin resultados para \"{{query}}\"",
     "typeJob": "Trabajo",
     "typeQuote": "Presupuesto",
     "typeInvoice": "Factura",
     "typeCustomer": "Cliente",
-    "hint": "Buscar trabajos, presupuestos, facturas y clientes"
+    "hint": "Buscar trabajos, presupuestos, facturas y clientes",
+    "job_one": "Trabajo",
+    "job_other": "Trabajos",
+    "quote_one": "Presupuesto",
+    "quote_other": "Presupuestos",
+    "invoice_one": "Factura",
+    "invoice_other": "Facturas",
+    "customer_one": "Cliente",
+    "customer_other": "Clientes"
   },
   "aiTab": {
     "customer": "cliente",
@@ -2211,7 +2223,6 @@
     "customers": {
       "title": "Clientes",
       "searchPlaceholder": "Buscar por nombre, teléfono o email...",
-      "jobs": "trabajos",
       "emptyTitle": "Aún no hay clientes",
       "emptyDesc": "Añade tu primer cliente para empezar",
       "addCustomer": "Añadir cliente",
@@ -2225,7 +2236,9 @@
       "addAnyway": "Añadir igualmente",
       "totalAmount": "€{{amount}} en total",
       "outstandingAmount": "€{{amount}} pendiente",
-      "limitReached": "Has alcanzado el límite de clientes de este plan."
+      "limitReached": "Has alcanzado el límite de clientes de este plan.",
+      "jobs_one": "{{count}} trabajo",
+      "jobs_other": "{{count}} trabajos"
     },
     "projects": {
       "title": "Proyectos",
