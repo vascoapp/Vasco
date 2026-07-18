@@ -21,6 +21,8 @@ import {
   type VatReturnDraft,
   type VatLine,
 } from '../../src/services/vatPrepService';
+import { formatVatClassification } from '../../src/services/vatPrepService';
+import { formatCurrency } from '../../src/i18n/formatting';
 import { useExpenses } from '../../src/services/expenseService';
 import {
   shareSummary as shareVatSummary,
@@ -158,18 +160,18 @@ export default function VatPrepScreen() {
           <Text style={styles.totalsTitle}>{t('vatPrep.totals', 'Totalen')}</Text>
           <View style={styles.totalsRow}>
             <Text style={styles.totalsLabel}>{t('vatPrep.outputVat', 'Af te dragen BTW')}</Text>
-            <Text style={styles.totalsValue}>€{draft.totalOutputVat.toFixed(2)}</Text>
+            <Text style={styles.totalsValue}>{formatCurrency(draft.totalOutputVat, country)}</Text>
           </View>
           <View style={styles.totalsRow}>
             <Text style={styles.totalsLabel}>{t('vatPrep.inputVat', 'Voorbelasting')}</Text>
-            <Text style={styles.totalsValue}>€{draft.totalInputVat.toFixed(2)}</Text>
+            <Text style={styles.totalsValue}>{formatCurrency(draft.totalInputVat, country)}</Text>
           </View>
           <View style={[styles.totalsRow, styles.totalsRowBig]}>
             <Text style={styles.totalsLabelBig}>
               {draft.netPayable >= 0 ? t('vatPrep.toPay', 'Te betalen') : t('vatPrep.refund', 'Terug te krijgen')}
             </Text>
             <Text style={[styles.totalsValueBig, { color: draft.netPayable >= 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess }]}>
-              €{Math.abs(draft.netPayable).toFixed(2)}
+              {formatCurrency(Math.abs(draft.netPayable), country)}
             </Text>
           </View>
           {draft.yoyVariancePct != null && (
@@ -185,7 +187,7 @@ export default function VatPrepScreen() {
             <Text style={styles.sectionTitle}>
               {t('vatPrep.reviewNeeded', 'Te controleren')} ({lowConfLines.length})
             </Text>
-            {lowConfLines.map((l) => <LineCard key={l.id} line={l} highlight />)}
+            {lowConfLines.map((l) => <LineCard key={l.id} line={l} highlight country={country} />)}
           </View>
         )}
 
@@ -194,7 +196,7 @@ export default function VatPrepScreen() {
           <Text style={styles.sectionTitle}>
             {t('vatPrep.allLines', 'Alle regels')} ({draft.lines.length})
           </Text>
-          {draft.lines.filter((l) => l.confidence >= 0.75).map((l) => <LineCard key={l.id} line={l} />)}
+          {draft.lines.filter((l) => l.confidence >= 0.75).map((l) => <LineCard key={l.id} line={l} country={country} />)}
         </View>
 
         <Pressable style={styles.exportBtn} onPress={handleExport}>
@@ -208,7 +210,7 @@ export default function VatPrepScreen() {
   );
 }
 
-function LineCard({ line, highlight }: { line: VatLine; highlight?: boolean }) {
+function LineCard({ line, highlight, country }: { line: VatLine; highlight?: boolean; country: 'NL' | 'DE' }) {
   // R66 round 17: was 3 hardcoded Dutch strings (Factuur / Uitgave / Controleer)
   // baked into a render path that the screen otherwise localizes via t().
   // Non-NL contractors (DE/FR/ES/IT/EN) saw Dutch words on a localized screen.
@@ -217,11 +219,11 @@ function LineCard({ line, highlight }: { line: VatLine; highlight?: boolean }) {
     <View style={[styles.lineCard, highlight && styles.lineCardHighlight]}>
       <View style={styles.lineHeader}>
         <Text style={styles.lineDescription} numberOfLines={1}>{line.description}</Text>
-        <Text style={styles.lineVatAmount}>€{line.vatAmount.toFixed(2)}</Text>
+        <Text style={styles.lineVatAmount}>{formatCurrency(line.vatAmount, country)}</Text>
       </View>
       <View style={styles.lineMeta}>
         <Text style={styles.lineMetaText}>
-          {line.sourceType === 'invoice_sent' ? t('vatPrep.lineInvoice', 'Invoice') : t('vatPrep.lineExpense', 'Expense')} · {line.vatRate}% · {line.classification}
+          {line.sourceType === 'invoice_sent' ? t('vatPrep.lineInvoice', 'Invoice') : t('vatPrep.lineExpense', 'Expense')} · {line.vatRate}% · {formatVatClassification(line.classification)}
         </Text>
         {line.confidence < 0.75 && (
           <View style={styles.confBadge}>

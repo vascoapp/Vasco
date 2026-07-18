@@ -36,6 +36,20 @@ export type VatClassNL =
 // R221 — DE (Umsatzsteuer-Voranmeldung / UStVA). Kennziffern are the German
 // tax form's line codes — these map 1:1 to the ELSTER XML fields.
 export type VatRateDE = 19 | 7 | 0;
+/**
+ * Human label for a VAT classification code. These were rendered raw on the
+ * VAT-prep screen ("rubriek_1a"), which is an internal key, not something a
+ * contractor transcribes into the Belastingdienst / ELSTER portal.
+ *   rubriek_1a -> "Rubriek 1a"   (NL Belastingdienst rubriek)
+ *   kz_81      -> "Kz. 81"       (DE UStVA Kennziffer)
+ */
+export function formatVatClassification(code: string): string {
+  if (!code) return '';
+  if (code.startsWith('rubriek_')) return `Rubriek ${code.slice('rubriek_'.length)}`;
+  if (code.startsWith('kz_')) return `Kz. ${code.slice('kz_'.length)}`;
+  return code.replace(/_/g, ' ');
+}
+
 export type VatClassDE =
   | 'kz_81'   // Standard 19% — construction services, materials
   | 'kz_86'   // Reduced 7% — rarely applicable to trades (e.g. prints)
