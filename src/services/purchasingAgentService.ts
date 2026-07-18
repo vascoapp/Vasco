@@ -12,6 +12,7 @@
 // Integrates with supplierBacklinkService for affiliate revenue.
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { haversineDistance } from '../utils/geo';
 import { useState, useEffect, useCallback } from 'react';
@@ -532,7 +533,7 @@ export async function searchDeals(
   const topDeal = deals[0];
   const savings = topDeal ? Math.round((avgMarketPrice - topDeal.estimatedPrice) * (search.quantity ?? 1) * 100) / 100 : 0;
   const suggestedAction = topDeal
-    ? `Order from ${topDeal.supplier.name}${savings > 0 ? ` — saves €${savings.toFixed(2)}` : ''}`
+    ? `Order from ${topDeal.supplier.name}${savings > 0 ? ` — saves ${formatMoney(savings)}` : ''}`
     : 'No suppliers found for this material';
 
   // Cache the search result

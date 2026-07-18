@@ -5,6 +5,7 @@
 // NOW: Computes insights from actual service data rather than hardcoded mocks.
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import { useMemo } from 'react';
 import { useLaborCosts } from './laborCostService';
 import { useSupplierNegotiation } from './supplierNegotiationService';
@@ -101,7 +102,7 @@ export function useCrossServiceIntelligence(): CrossIntelligenceSummary {
         type: 'causation',
         priority: dsoOverTarget > 7 ? 'high' : 'medium',
         title: `Langzame betaling kost €${workingCapitalCost}/maand werkkapitaal`,
-        description: `DSO ${collections.dso.currentDSO}d (doel ${collections.dso.targetDSO}d) bij €${collections.summary.totalOutstanding.toLocaleString(undefined)} uitstaand. Snellere incasso bespaart werkkapitaal.`,
+        description: `DSO ${collections.dso.currentDSO}d (doel ${collections.dso.targetDSO}d) bij ${formatMoney(collections.summary.totalOutstanding)} uitstaand. Snellere incasso bespaart werkkapitaal.`,
         sources: ['collectionsAgentService', 'cashFlowService'],
         impact: { value: workingCapitalCost * 12, unit: '€/jaar', direction: 'negative' },
         actionLabel: 'Incasso versnellen',
@@ -115,7 +116,7 @@ export function useCrossServiceIntelligence(): CrossIntelligenceSummary {
         id: 'cross_estimation_margin',
         type: 'causation',
         priority: 'high',
-        title: `Inschattingsfouten kosten €${costSummary.totalMarginLeakage.toLocaleString(undefined)}/maand`,
+        title: `Inschattingsfouten kosten ${formatMoney(costSummary.totalMarginLeakage)}/maand`,
         description: `Schattingsscore ${estimation.overallScore}/100 — uren ${estimation.averageHoursDeviation}% te laag, materiaal hoeveelheid ${estimation.averageMaterialQuantityDeviation}% afwijking, materiaal prijs ${estimation.averageMaterialPriceDeviation}% afwijking. Gebruik de kalibratie-tips om offertes te verbeteren.`,
         sources: ['estimationFeedbackService', 'jobCostTrackingService'],
         impact: { value: costSummary.totalMarginLeakage, unit: '€/maand', direction: 'negative' },

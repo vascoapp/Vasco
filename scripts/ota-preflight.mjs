@@ -442,6 +442,75 @@ async function checkRawIdFallbacks() {
   }
 }
 
+
+// ---------------------------------------------------------------------------
+// 7. No hand-rolled currency formatting on contractor-facing surfaces
+// ---------------------------------------------------------------------------
+// `€${x.toFixed(2)}` forces a PERIOD decimal separator, which is wrong in
+// nl/de/fr/es/it — the VAT-prep screen showed "€270.74" next to "€150,00"
+// elsewhere, on the screen a contractor copies into the Belastingdienst
+// portal. A hardcoded symbol is also wrong for UK (£) and US ($).
+// Use formatCurrency / formatCurrency0 / compactCurrency from src/i18n/formatting.
+//
+// The enterprise surfaces (hub screens, CFO/director dashboards and the
+// generators scoped to those roles) are deliberately excluded: they are a
+// UK-oriented product where a fixed £ is intentional, not a locale bug.
+const CURRENCY_FMT_RE = /[€£$]\s*\$\{[^}]*\.(toFixed|toLocaleString)\s*\(/;
+const CURRENCY_EXEMPT_PATHS = [
+  // Enterprise surfaces: a UK-oriented product where a fixed £ is intentional.
+  'app/hub/',
+  'src/components/dashboards/',
+  // Generators scoped to cfo/director/coo roles (see generators/index.ts).
+  'src/intelligence/generators/valueDeliveryGenerator',
+  'src/intelligence/generators/approvalBottleneckGenerator',
+  'src/intelligence/generators/projectRiskScoreGenerator',
+  'src/intelligence/generators/crossProjectRiskGenerator',
+  'src/intelligence/generators/handoverBottleneckGenerator',
+  'src/intelligence/generators/portfolioIRRGenerator',
+  // Defines the per-country formats themselves.
+  'src/modules/countryModules',
+  // FILING FORMATS — deliberately stable and machine-readable. Locale-
+  // formatting these would change a document the contractor submits; the
+  // icpAangifte test asserts the exact "€1000.00" shape.
+  'src/services/vatPrepExportService',
+  'src/services/icpAangifteService',
+  // US-market surfaces (R74/R87/R90): formatUsd and the USD office bot are
+  // explicitly dollar-denominated, not a missed locale.
+  'app/contractor/pipeline',
+  'src/services/aiCommandService',
+  // Already locale-aware via its own `cur` symbol resolved per locale.
+  'src/services/lateFeeService',
+  // Demo/aannemer-gated approval notes (see quote-approval gating).
+  'src/services/quoteApprovalService',
+];
+
+async function checkManualCurrency() {
+  process.stdout.write('7. no hand-rolled currency on contractor surfaces ... ');
+  const hits = [];
+  for (const dir of SCAN_DIRS) {
+    for await (const file of walkFiles(dir)) {
+      const rel = relative(ROOT, file);
+      if (CURRENCY_EXEMPT_PATHS.some((x) => rel.includes(x))) continue;
+      const text = await readFile(file, 'utf8');
+      const lines = text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
+        if (CURRENCY_FMT_RE.test(line)) {
+          hits.push(`${rel}:${i + 1}  ${line.trim().slice(0, 90)}`);
+        }
+      }
+    }
+  }
+  if (hits.length === 0) {
+    console.log('\u2713');
+  } else {
+    console.log(`\u2717 (${hits.length})`);
+    for (const h of hits.slice(0, 15)) err(`Hand-rolled currency: ${h}`);
+    if (hits.length > 15) err(`...and ${hits.length - 15} more`);
+  }
+}
+
 async function main() {
   console.log('OTA-update preflight\n');
   const t0 = Date.now();
@@ -451,6 +520,7 @@ async function main() {
   await checkSeedArrays();
   await checkInterpolationMismatch();
   await checkRawIdFallbacks();
+  await checkManualCurrency();
   const dt = ((Date.now() - t0) / 1000).toFixed(1);
 
   console.log('');

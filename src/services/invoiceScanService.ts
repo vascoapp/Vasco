@@ -5,6 +5,7 @@
 // line items into the pricing intelligence database for the AI moat.
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { emitBusinessEvent, emitMaterialPurchased } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
@@ -300,7 +301,7 @@ export async function getPriceRecommendations(): Promise<PriceRecommendation[]> 
 
     if (savingsPotential > current.price * 0.1) {
       action = 'switch_supplier';
-      reason = `${lowest.supplier} biedt €${savingsPotential.toFixed(2)} goedkoper`;
+      reason = `${lowest.supplier} biedt ${formatMoney(savingsPotential)} goedkoper`;
     } else if (trend === 'falling') {
       action = 'wait';
       reason = 'Prijstrend is dalend — even wachten kan voordeliger zijn';

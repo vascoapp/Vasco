@@ -5,6 +5,7 @@
 // Analyzes seasonal patterns and offers financing suggestions
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
@@ -384,7 +385,7 @@ class CashFlowService {
         id: 'alert_overdue',
         type: 'warning',
         title: `${overdue.length} openstaande facturen`,
-        description: `€${overdueTotal.toLocaleString(undefined)} aan betalingen zijn verlopen`,
+        description: `${formatMoney(overdueTotal)} aan betalingen zijn verlopen`,
         actionable: true,
         action: 'Stuur herinneringen',
       });
@@ -628,7 +629,7 @@ export function useCashFlow() {
         id: 'alert_overdue',
         type: 'warning',
         title: `${overdue.length} openstaande facturen`,
-        description: `€${overdueTotal.toLocaleString(undefined)} aan betalingen zijn verlopen`,
+        description: `${formatMoney(overdueTotal)} aan betalingen zijn verlopen`,
         actionable: true,
         action: 'Stuur herinneringen',
       });

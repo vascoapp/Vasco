@@ -1,6 +1,7 @@
 // =============================================================================
 // AUTOMATION SERVICE — time-saving automations for contractors + site leads
 // =============================================================================
+import { formatMoney } from '../i18n/formatting';
 import { MS_PER_DAY } from '../utils/timeConstants';
 // PDF research: contractors spend 40-50% on admin. Key automations:
 // 1. Auto-invoice from completed jobs (no "office time" needed)
@@ -114,7 +115,7 @@ export function checkAutoReminder(ctx: AutomationContext, config: AutomationConf
       id: `auto_reminder_${inv.id}`,
       type: 'auto_reminder' as AutomationType,
       title: `Herinnering: ${customer?.name ?? inv.customer}`,
-      description: `Factuur €${inv.amount.toLocaleString(undefined)} is ${daysOverdue} dagen verlopen — automatische herinnering versturen`,
+      description: `Factuur ${formatMoney(inv.amount)} is ${daysOverdue} dagen verlopen — automatische herinnering versturen`,
       actionTaken: false,
       timestamp: new Date().toISOString(),
     };
@@ -136,7 +137,7 @@ export function checkAutoFollowup(ctx: AutomationContext, config: AutomationConf
       id: `auto_followup_${q.id}`,
       type: 'auto_followup' as AutomationType,
       title: `Opvolgen: ${customer?.name ?? q.customer}`,
-      description: `Offerte €${q.amount.toLocaleString(undefined)} is ${days} dagen geleden verstuurd — opvolgen verhoogt acceptatiekans`,
+      description: `Offerte ${formatMoney(q.amount)} is ${days} dagen geleden verstuurd — opvolgen verhoogt acceptatiekans`,
       actionTaken: false,
       timestamp: new Date().toISOString(),
     };

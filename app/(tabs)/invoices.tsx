@@ -1,3 +1,4 @@
+import { formatMoney } from '../../src/i18n/formatting';
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -13,7 +14,7 @@ import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 
 const formatCurrency = (amount: number) =>
-  `€${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  `${formatMoney(amount)}`;
 
 export default function InvoicesScreen() {
   const { t } = useTranslation();

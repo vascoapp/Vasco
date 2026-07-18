@@ -8,6 +8,7 @@
 // Also localized 4 hardcoded NL reasoning strings + the `nl-NL` number
 // formatting hardcode that ignored contractor's locale.
 
+import { formatMoney } from '../../i18n/formatting';
 import type { ScoredInsight, GeneratorContext } from './types';
 import type { VascoInsight } from '../../components/shared/VascoInsightCard';
 import { useCrossServiceIntelligence } from '../../services/crossServiceIntelligenceService';
@@ -66,7 +67,7 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
     metric: hasMoneyImpact
       ? {
           label: t('crossService.impact', { defaultValue: 'Impact' }),
-          value: `€${relevantInsight.impact.value.toLocaleString(locale)}`,
+          value: `${formatMoney(relevantInsight.impact.value)}`,
           trend: relevantInsight.impact.direction === 'positive' ? 'up' : 'down',
         }
       : undefined,

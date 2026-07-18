@@ -7,6 +7,7 @@
 // the ask more gently than one to a risky payer).
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import type { Customer, Job } from '../types/contractor';
 import type { Invoice } from '../domain/documents';
 
@@ -123,7 +124,7 @@ export function contextLineFromProfile(profile: CustomerProfile): string {
   const parts: string[] = [];
   if (profile.jobsCompleted >= 2) parts.push('Repeat customer');
   if (profile.lifetimeValue > 0) {
-    parts.push(`€${profile.lifetimeValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+    parts.push(`${formatMoney(profile.lifetimeValue)}`);
   }
   if (profile.jobsCompleted > 0) {
     parts.push(`${profile.jobsCompleted} job${profile.jobsCompleted !== 1 ? 's' : ''}`);

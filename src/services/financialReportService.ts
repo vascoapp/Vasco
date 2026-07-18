@@ -5,6 +5,7 @@
 // Leverages financialAnalysisService for all calculations.
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import { Share, Platform } from 'react-native';
 import { analyzeFinancials, type FinancialSummary, type MonthlyBucket } from './financialAnalysisService';
 import type { Invoice, Quote } from '../domain/documents';
@@ -271,7 +272,7 @@ export function exportToCSV(report: FinancialReport): string {
 export function exportToPDFHtml(
   report: FinancialReport,
   businessName: string = 'My Business',
-  formatAmount: (n: number) => string = (n) => `€${n.toFixed(2)}`,
+  formatAmount: (n: number) => string = (n) => `${formatMoney(n)}`,
 ): string {
   const lineItemsHtml = report.lineItems.map(item => {
     const cls = item.isTotal ? 'total' : item.isSubtotal ? 'subtotal' : '';

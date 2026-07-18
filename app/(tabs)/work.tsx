@@ -1,3 +1,4 @@
+import { formatMoney } from '../../src/i18n/formatting';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -30,7 +31,7 @@ export default function WorkScreen() {
   const totalOverdue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
 
   const formatCurrency = (amount: number) =>
-    `€${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    `${formatMoney(amount)}`;
 
   const getQuoteRisk = (quoteId: string) =>
     priceRisks.find((r) => r.quoteId === quoteId);

@@ -63,21 +63,24 @@ export function useCrossSellInsight(ctx: GeneratorContext): ScoredInsight | null
     generatorId: 'cross-sell',
     category: 'opportunity',
     priority: 'medium',
-    title: `Follow-up: ${pick.trade} for ${(candidate as any).customerId ? (candidate as any).customerId : 'this customer'}`,
+    // Was `Follow-up: ${pick.trade} for ${customerId}` — hardcoded English on
+    // a contractor-scoped generator, and it interpolated a RAW customerId
+    // ("cust-003") straight into the card title.
+    title: gt('cross_sell_title', ctx.language, { trade: pick.trade }),
     message: pick.pitch,
     icon: 'git-branch',
-    actionLabel: 'Draft follow-up quote',
+    actionLabel: gt('cross_sell_action', ctx.language),
     actionRoute: `/contractor/tiered-quote?from=${candidate.id}`,
     source: gt('source_ai', ctx.language),
     rootCauseTags: ['growth', 'cross-sell'],
     rawScore: 0,
     reasoning: {
-      observation: `${candidate.trade} job completed recently for this customer`,
+      observation: gt('cross_sell_observation', ctx.language),
       evidence: adjacentAccept !== null && adjacentAccept > 0
         ? `${recent.length} jobs completed in the last 30 days. Cohort median acceptance for ${pick.trade}: ${Math.round(adjacentAccept * 100)}%.`
         : `${recent.length} jobs completed in the last 30 days`,
-      implication: 'Warm customer + existing site access = high win probability',
-      suggestion: `Send a short ${pick.trade} quote within a week of handover`,
+      implication: gt('cross_sell_implication', ctx.language),
+      suggestion: gt('cross_sell_suggestion', ctx.language),
     },
     dataPoints: recent.length,
     confidence: 0.6,

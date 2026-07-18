@@ -1,4 +1,5 @@
 // React
+import { formatMoney } from '../i18n/formatting';
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 // Libraries
@@ -1420,10 +1421,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             addToQueue({
               type: 'draft_invoice',
               title: `Factuur voor ${job.title}`,
-              description: `Klus afgerond · €${(estimatedCost).toLocaleString()}`,
+              description: `Klus afgerond · ${formatMoney((estimatedCost))}`,
               preparedData: { jobId: id, amount: estimatedCost, customer: job.customerId },
               actionLabel: 'Factuur aanmaken',
-              estimatedImpact: `€${(estimatedCost).toLocaleString()} omzet`,
+              estimatedImpact: `${formatMoney((estimatedCost))} omzet`,
               expiresAt: new Date(Date.now() + 7 * MS_PER_DAY).toISOString(),
             });
           }).catch(() => {});

@@ -149,7 +149,7 @@ export default function CrewScreen() {
                   <Text style={styles.cardName}>{w.name}</Text>
                   <Text style={styles.cardMeta}>
                     {ROLE_LABELS[w.role]}
-                    {w.trade ? ` · ${w.trade}` : ''}
+                    {w.trade ? ` · ${t(`onboarding.trades.${w.trade}`, w.trade)}` : ''}
                   </Text>
                   {openCount > 0 ? (
                     <Text style={styles.cardJobs}>{openCount} open job{openCount === 1 ? '' : 's'}</Text>

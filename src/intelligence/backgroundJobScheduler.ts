@@ -7,6 +7,7 @@
 // - Daily: cohort benchmarks, template suggestions, morning briefing
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { populateQueue, addToQueue, queueEntityLabel } from '../services/aiActionQueueService';
 import { evaluateTriggers } from '../services/workflowPackService';
@@ -77,7 +78,7 @@ function auditInvoices(invoices: any[]): AuditFinding[] {
           // Human label, never the row id — this title surfaces in the audit
           // findings list the contractor reads ("Factuur inv-seed-1 …").
           title: `Factuur ${queueEntityLabel(inv) || 'zonder referentie'} is ${daysOverdue} dagen achterstallig`,
-          description: `€${(inv.amount ?? 0).toLocaleString('nl-NL')} uitstaand`,
+          description: `${formatMoney((inv.amount ?? 0))} uitstaand`,
           entityId: inv.id,
           entityType: 'invoice',
           suggestedAction: daysOverdue > 14 ? 'Telefonisch opvolgen' : 'Herinnering sturen',
@@ -105,7 +106,7 @@ function auditInvoices(invoices: any[]): AuditFinding[] {
         id: `audit-dup-${group[0].id}`,
         type: 'invoice_error',
         severity: 'warning',
-        title: `Mogelijke dubbele factuur: €${amount.toLocaleString('nl-NL')}`,
+        title: `Mogelijke dubbele factuur: ${formatMoney(amount)}`,
         description: `${group.length} facturen met hetzelfde bedrag binnen 7 dagen`,
         entityId: group[0].id,
         entityType: 'invoice',
@@ -133,7 +134,7 @@ function auditQuotes(quotes: any[]): AuditFinding[] {
           type: 'quote_anomaly',
           severity: 'warning',
           title: `Offerte ${queueEntityLabel(q) || 'zonder referentie'} al ${daysSinceSent} dagen zonder reactie`,
-          description: `€${(q.amount ?? 0).toLocaleString('nl-NL')} · ${q.customer || 'Onbekende klant'}`,
+          description: `${formatMoney((q.amount ?? 0))} · ${q.customer || 'Onbekende klant'}`,
           entityId: q.id,
           entityType: 'quote',
           suggestedAction: 'Opvolging sturen of archiveren',
@@ -158,7 +159,7 @@ function auditJobs(jobs: any[]): AuditFinding[] {
         type: 'margin_issue',
         severity: 'info',
         title: `Klus "${job.title}" afgerond maar niet gefactureerd`,
-        description: `€${(job.quotedAmount ?? 0).toLocaleString('nl-NL')} omzet wacht op facturatie`,
+        description: `${formatMoney((job.quotedAmount ?? 0))} omzet wacht op facturatie`,
         entityId: job.id,
         entityType: 'job',
         suggestedAction: 'Factuur aanmaken',
@@ -574,7 +575,7 @@ export async function generateMorningBriefing(context: {
     if (!dueDate) continue;
     const daysUntilDue = Math.ceil((dueDate.getTime() - now2.getTime()) / MS_PER_DAY);
     if (daysUntilDue > 0 && daysUntilDue <= 3) {
-      proactiveAlerts.push(`Invoice ${inv.id} (€${(inv.amount ?? 0).toLocaleString(undefined)}) due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}`);
+      proactiveAlerts.push(`Invoice ${inv.id} (${formatMoney((inv.amount ?? 0))}) due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}`);
     }
   }
 
@@ -611,7 +612,7 @@ export async function generateMorningBriefing(context: {
     if (!validUntil) continue;
     const daysLeft = Math.ceil((validUntil - now2.getTime()) / MS_PER_DAY);
     if (daysLeft > 0 && daysLeft <= 7) {
-      proactiveAlerts.push(`Quote for ${q.customer || q.id} (€${(q.amount ?? 0).toLocaleString(undefined)}) expires in ${daysLeft} days`);
+      proactiveAlerts.push(`Quote for ${q.customer || q.id} (${formatMoney((q.amount ?? 0))}) expires in ${daysLeft} days`);
     }
   }
 
@@ -848,7 +849,7 @@ async function runScheduledTick(
                 description: t('purchasing.cohortGapDesc', { defaultValue: 'Your last buy €{{user}} · cohort median €{{median}} ({{cohort}})', user: drop.previousPrice.toFixed(2), median: drop.currentPrice.toFixed(2), cohort: drop.supplier.name }),
                 preparedData: { type: 'cohort_gap', ...drop, affiliateUrl: drop.affiliateUrl },
                 actionLabel: t('purchasing.findCheaper', 'Find a cheaper supplier'),
-                estimatedImpact: `€${(drop.previousPrice - drop.currentPrice).toFixed(2)} ${t('purchasing.savingPotential', 'saving potential per unit')}`,
+                estimatedImpact: `${formatMoney((drop.previousPrice - drop.currentPrice))} ${t('purchasing.savingPotential', 'saving potential per unit')}`,
                 expiresAt: drop.expiresAt,
                 sourceGeneratorId: `purchasing_drop_${drop.materialName}`,
               }).catch(() => {});
@@ -863,7 +864,7 @@ async function runScheduledTick(
                 description: t('purchasing.bulkDesc', { defaultValue: '{{count}} materials across {{jobs}} jobs — order together at {{supplier}}', count: bulk.materials.length, jobs: bulk.materials.reduce((s: number, m: any) => s + m.jobIds.length, 0), supplier: bulk.bestSupplier.name }),
                 preparedData: { type: 'bulk_opportunity', ...bulk },
                 actionLabel: t('purchasing.createBulkOrder', 'Create bulk order'),
-                estimatedImpact: `€${bulk.savingsAmount.toFixed(0)} (${bulk.savingsPercent}%)`,
+                estimatedImpact: `${formatMoney(bulk.savingsAmount)} (${bulk.savingsPercent}%)`,
                 expiresAt: new Date(Date.now() + 7 * MS_PER_DAY).toISOString(),
                 sourceGeneratorId: 'purchasing_bulk',
               }).catch(() => {});

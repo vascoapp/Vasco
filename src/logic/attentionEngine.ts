@@ -1,3 +1,4 @@
+import { formatMoney } from '../i18n/formatting';
 import { AttentionItem } from '../domain/attention';
 import { BusinessProfile } from '../domain/business';
 import { Invoice, Quote } from '../domain/documents';
@@ -12,7 +13,7 @@ type AttentionInput = {
 };
 
 const formatCurrency = (amount: number) =>
-  `€${amount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
+  `${formatMoney(amount)}`;
 
 export function buildAttentionQueue({
   businessProfile,

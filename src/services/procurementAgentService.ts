@@ -13,6 +13,7 @@
 // - Bulk purchase recommendations across jobs
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import { searchCatalog, comparePrices, getSuppliersForTrade, DUTCH_SUPPLIERS, type CatalogItem, type PriceCheck } from '../integrations/suppliers';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
@@ -180,9 +181,9 @@ export async function sourceMaterial(
   if (!best) {
     recommendation = 'Geen leveranciers gevonden voor dit materiaal';
   } else if (savingsPercent > 10) {
-    recommendation = `Bestel bij ${best.supplierName}${preferredTag} — bespaar ${savingsPercent}% (€${best.savings.toFixed(2)})`;
+    recommendation = `Bestel bij ${best.supplierName}${preferredTag} — bespaar ${savingsPercent}% (${formatMoney(best.savings)})`;
   } else {
-    recommendation = `Beste prijs bij ${best.supplierName}${preferredTag}: €${best.price.toFixed(2)}/${need.unit}`;
+    recommendation = `Beste prijs bij ${best.supplierName}${preferredTag}: ${formatMoney(best.price)}/${need.unit}`;
   }
 
   return {
@@ -217,7 +218,7 @@ export async function sourceJobMaterials(
     results,
     totalSavings,
     recommendation: totalSavings > 0
-      ? `Vasco bespaart €${totalSavings.toFixed(2)} op materialen door slim in te kopen`
+      ? `Vasco bespaart ${formatMoney(totalSavings)} op materialen door slim in te kopen`
       : 'Materialen worden al tegen de beste prijs ingekocht',
   };
 }
@@ -268,7 +269,7 @@ export function detectBulkOpportunities(
         currentCostPerUnit: Math.round(currentCost * 100) / 100,
         bulkCostPerUnit: Math.round(bulkCost * 100) / 100,
         totalSavings: Math.round(totalSavings * 100) / 100,
-        recommendation: `Bestel ${data.totalQty} ${name} in bulk voor ${data.jobCount} klussen — bespaar €${totalSavings.toFixed(2)} (${Math.round(bulkDiscount * 100)}% korting)`,
+        recommendation: `Bestel ${data.totalQty} ${name} in bulk voor ${data.jobCount} klussen — bespaar ${formatMoney(totalSavings)} (${Math.round(bulkDiscount * 100)}% korting)`,
       });
     }
   }

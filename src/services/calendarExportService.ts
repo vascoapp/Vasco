@@ -4,6 +4,7 @@
 // Generate iCal (.ics) events from scheduled jobs, share via native share sheet
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import { Share } from 'react-native';
 import i18n from '../i18n/i18n';
 import type { Job } from '../domain/jobs';
@@ -53,8 +54,8 @@ export function generateIcsEvent(job: Job): string {
   const description = [
     job.description ?? '',
     job.trade ? `Vakgebied: ${job.trade}` : '',
-    job.quotedAmount ? `Offerte: €${job.quotedAmount.toLocaleString(undefined)}` : '',
-    job.agreedAmount ? `Afgesproken: €${job.agreedAmount.toLocaleString(undefined)}` : '',
+    job.quotedAmount ? `Offerte: ${formatMoney(job.quotedAmount)}` : '',
+    job.agreedAmount ? `Afgesproken: ${formatMoney(job.agreedAmount)}` : '',
   ].filter(Boolean).join('\\n');
 
   return [

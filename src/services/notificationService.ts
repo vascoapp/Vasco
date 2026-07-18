@@ -6,6 +6,7 @@
 // Ready to wire to expo-notifications when installed.
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
@@ -279,7 +280,7 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
         type: 'overdue_invoice',
         priority: days > 14 ? 'urgent' : 'high',
         title: 'Invoice overdue',
-        body: `${inv.customer ? `${inv.customer} — ` : ''}invoice ${inv.id} is ${days} days overdue${inv.amount ? ` (€${Math.round(inv.amount).toLocaleString()})` : ''}.`,
+        body: `${inv.customer ? `${inv.customer} — ` : ''}invoice ${inv.id} is ${days} days overdue${inv.amount ? ` (${formatMoney(Math.round(inv.amount))})` : ''}.`,
         read: false,
         actionRoute: `/invoices/${inv.id}`,
         createdAt: new Date(Date.now() - MS_PER_HOUR * Math.min(days, 24)),

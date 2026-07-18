@@ -1,3 +1,4 @@
+import { getCurrentCountry } from '../lib/currentUser';
 export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'US';
 
 const COUNTRY_CONFIG: Record<Country, { currency: string; locale: string }> = {
@@ -91,6 +92,22 @@ export function compactCurrency(amount: number, country: Country = 'NL'): string
   } catch {
     return `${number}${suffix}`;
   }
+}
+
+
+/**
+ * Currency for strings built OUTSIDE a component, where no `country` prop is
+ * in scope — generators, services, scheduler alerts. Resolves the signed-in
+ * contractor's country itself.
+ *
+ * Replaces a hand-rolled pattern that was scattered across contractor-facing
+ * call sites: those hardcoded the euro symbol (wrong for UK/US) and, where
+ * they used a fixed-decimal helper, forced a period separator (wrong in
+ * nl/de/fr/es/it).
+ */
+export function formatMoney(amount: number): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatCurrency0(amount, COUNTRY_CONFIG[c] ? c : 'NL');
 }
 
 export function getCountryConfig(country: Country) {

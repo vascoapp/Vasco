@@ -5,6 +5,7 @@
 // Pattern: AI does the thinking → queues result → human approves → action executes
 // =============================================================================
 
+import { formatMoney } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCurrentUserId } from '../lib/currentUser';
@@ -682,7 +683,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // ─── EXISTING: Draft invoices for completed jobs ───
   for (const job of (context.completedJobs ?? []).slice(0, 3)) {
     if (!job || !job.id) continue;
-    const amountStr = `€${(job.quotedAmount ?? 0).toLocaleString(undefined)}`;
+    const amountStr = `${formatMoney((job.quotedAmount ?? 0))}`;
     const id = await addToQueue({
       type: 'draft_invoice',
       title: t('aiQueue.invoiceFor', { title: job.title || '' }),
@@ -702,7 +703,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // ─── EXISTING: Draft reminders for overdue invoices ───
   for (const inv of (context.overdueInvoices ?? []).slice(0, 3)) {
     if (!inv || !inv.id) continue;
-    const amountStr = `€${(inv.amount ?? 0).toLocaleString(undefined)}`;
+    const amountStr = `${formatMoney((inv.amount ?? 0))}`;
     const custId = (inv as any).customerId || inv.customer || '';
     const custIntel = custId ? getCustomerIntelligence(custId, context.allJobs ?? [], context.allInvoices ?? context.overdueInvoices) : null;
     const id = await addToQueue({
@@ -734,7 +735,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'draft_followup',
       title: t('aiQueue.quoteFollowUp', { ref: queueEntityLabel(quote, context.customers) }).trim(),
-      description: `${quote.customer || ''} · €${(quote.amount ?? 0).toLocaleString(undefined)}`,
+      description: `${quote.customer || ''} · ${formatMoney((quote.amount ?? 0))}`,
       preparedData: {
         quoteId: quote.id, customer: quote.customer, amount: quote.amount,
         ...(followupIntel?.contextLine ? { customerContext: followupIntel.contextLine } : {}),
@@ -858,7 +859,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'quote_expiry',
       title: t('automation.quoteExpiring', { defaultValue: 'Quote expiring: {{customer}}', customer: cust?.name || q.customer || '' }),
-      description: `€${(q.amount ?? 0).toLocaleString(undefined)} · ${expiryDate}`,
+      description: `${formatMoney((q.amount ?? 0))} · ${expiryDate}`,
       preparedData: {
         quoteId: q.id, customerId: q.customerId, template: message,
         reasoning: `Quote expires on ${expiryDate}. A gentle reminder before expiry converts 30% more quotes.`,
@@ -886,7 +887,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'reorder_materials',
       title: t('automation.materialsFor', { defaultValue: 'Materials for {{title}}', title: job.title || '' }),
-      description: `${materials.length} items · €${totalCost.toLocaleString(undefined)}`,
+      description: `${materials.length} items · ${formatMoney(totalCost)}`,
       preparedData: {
         jobId: job.id, materials, totalCost, materialList,
         reasoning: `Job starts within 3 days. Order now to ensure delivery in time — typical supplier lead time is 1-2 days.`,
@@ -910,14 +911,14 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       const id = await addToQueue({
         type: 'batch_invoices',
         title: t('automation.weeklyBatch', { defaultValue: 'Weekly invoice batch: {{count}} jobs', count: unbilledCompleted.length }),
-        description: `€${totalRevenue.toLocaleString(undefined)} ${t('automation.totalRevenue', 'total revenue')}`,
+        description: `${formatMoney(totalRevenue)} ${t('automation.totalRevenue', 'total revenue')}`,
         preparedData: {
           jobIds: unbilledCompleted.map((j: any) => j.id),
           jobs: unbilledCompleted.map((j: any) => ({ id: j.id, title: j.title || '', amount: j.quotedAmount ?? j.agreedAmount ?? 0 })),
           totalRevenue,
         },
         actionLabel: t('automation.createAll', 'Create all'),
-        estimatedImpact: `€${totalRevenue.toLocaleString(undefined)}`,
+        estimatedImpact: `${formatMoney(totalRevenue)}`,
         expiresAt: new Date(now + 3 * dayMs).toISOString(),
         sourceGeneratorId: 'automation_batch_invoices',
       });
@@ -1122,10 +1123,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       const id = await addToQueue({
         type: 'supplier_comparison',
         title: t('automation.supplierComparison', { defaultValue: 'Better price: {{name}}', name }),
-        description: `€${mostExpensive.unitPrice} → €${cheapest.unitPrice} (${t('automation.save', 'save')} €${savings.toFixed(0)})`,
+        description: `€${mostExpensive.unitPrice} → €${cheapest.unitPrice} (${t('automation.save', 'save')} ${formatMoney(savings)})`,
         preparedData: { materialName: name, currentPrice: mostExpensive.unitPrice, bestPrice: cheapest.unitPrice, savings },
         actionLabel: t('automation.compareSuppliers', 'Compare'),
-        estimatedImpact: `€${savings.toFixed(0)} ${t('automation.perUnit', 'per unit')}`,
+        estimatedImpact: `${formatMoney(savings)} ${t('automation.perUnit', 'per unit')}`,
         expiresAt: new Date(now + 7 * dayMs).toISOString(),
         sourceGeneratorId: 'automation_supplier_compare',
       });
@@ -1305,7 +1306,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'accounting_export',
       title: t('automation.accountingExport', { defaultValue: 'Export {{count}} invoices to accounting', count: unexportedPaid.length }),
-      description: `€${totalAmount.toLocaleString(undefined)} ${t('automation.revenue', 'revenue')}`,
+      description: `${formatMoney(totalAmount)} ${t('automation.revenue', 'revenue')}`,
       preparedData: {
         invoiceIds: unexportedPaid.map((i: any) => i.id), count: unexportedPaid.length, totalAmount,
         reasoning: `${unexportedPaid.length} paid invoices not yet in your accounting system. Export now to keep books current.`,
@@ -1328,7 +1329,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       const id = await addToQueue({
         type: 'einvoice_submit',
         title: `${einvoiceFormat}: ${queueEntityLabel(inv, context.customers)}`,
-        description: `€${(inv.amount ?? 0).toLocaleString(undefined)} · ${einvoiceFormat} format`,
+        description: `${formatMoney((inv.amount ?? 0))} · ${einvoiceFormat} format`,
         preparedData: { invoiceId: inv.id, format: einvoiceFormat, country: einvoiceCountry },
         actionLabel: t('automation.submit', 'Submit'),
         estimatedImpact: t('automation.legalCompliance', 'Legal compliance'),
@@ -1360,7 +1361,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
             defaultValue: 'Overpaying for {{name}}',
             name: item.name,
           }),
-          description: `€${item.scannedPrice.toFixed(2)} → €${item.marketAvg.toFixed(2)} (${pctAbove}% ${t('automation.aboveMarket', 'above market')})`,
+          description: `${formatMoney(item.scannedPrice)} → ${formatMoney(item.marketAvg)} (${pctAbove}% ${t('automation.aboveMarket', 'above market')})`,
           preparedData: {
             materialName: item.name,
             scannedPrice: item.scannedPrice,
@@ -1368,10 +1369,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
             savings: item.savings,
             cheaperSupplier: item.cheaperSupplier,
             priceVsMarket: item.priceVsMarket,
-            reasoning: `${item.name} costs €${item.scannedPrice.toFixed(2)} — ${pctAbove}% above the market average of €${item.marketAvg.toFixed(2)}. ${item.cheaperSupplier ? `${item.cheaperSupplier} offers better rates.` : 'Switching suppliers could save significantly.'}`,
+            reasoning: `${item.name} costs ${formatMoney(item.scannedPrice)} — ${pctAbove}% above the market average of ${formatMoney(item.marketAvg)}. ${item.cheaperSupplier ? `${item.cheaperSupplier} offers better rates.` : 'Switching suppliers could save significantly.'}`,
           },
           actionLabel: t('automation.compareSuppliers', 'Compare'),
-          estimatedImpact: `€${item.savings.toFixed(0)} ${t('automation.savings', 'savings')}`,
+          estimatedImpact: `${formatMoney(item.savings)} ${t('automation.savings', 'savings')}`,
           expiresAt: new Date(now + 7 * dayMs).toISOString(),
           sourceGeneratorId: `automation_price_alert_${item.name.slice(0, 20)}`,
         });
