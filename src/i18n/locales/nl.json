@@ -708,7 +708,6 @@
     "invoices": "facturen",
     "quotes": "offertes",
     "newQuote": "Nieuwe offerte",
-    "pendingApproval": "offerte(s) wacht op goedkeuring",
     "emptyQuotes": "Geen actieve offertes",
     "createInvoiceFor": "Factuur maken voor",
     "invoiceCreated": "Factuur aangemaakt",
@@ -800,7 +799,9 @@
     "lateFeeBreakdown": "{{rate}}% rente ({{interest}}) + {{recovery}} kosten",
     "notes": "Interne notities",
     "addNotes": "Interne notities toevoegen...",
-    "noNotes": "Nog geen notities. Tik op het potlood om er een toe te voegen."
+    "noNotes": "Nog geen notities. Tik op het potlood om er een toe te voegen.",
+    "pendingApproval_one": "{{count}} offerte wacht op goedkeuring",
+    "pendingApproval_other": "{{count}} offertes wachten op goedkeuring"
   },
   "expenses": {
     "title": "Uitgaven",

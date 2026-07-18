@@ -91,7 +91,9 @@ export default function DragScheduleScreen() {
       return {
         jobId: j.id,
         title: j.title,
-        customerName: cust?.name || j.customerId || '',
+        // Never fall back to the raw customerId — it renders on the planner
+        // card as "cust-003". Blank is better than an internal id.
+        customerName: cust?.name || '',
         startHour: isNaN(startHour) ? 9 : startHour,
         duration: j.estimatedDuration || 2,
         color: COLORS[idx % COLORS.length],
@@ -110,7 +112,9 @@ export default function DragScheduleScreen() {
       return {
         jobId: j.id,
         title: j.title,
-        customerName: cust?.name || j.customerId || '',
+        // Never fall back to the raw customerId — it renders on the planner
+        // card as "cust-003". Blank is better than an internal id.
+        customerName: cust?.name || '',
         estimatedHours: j.estimatedDuration || 2,
       };
     });

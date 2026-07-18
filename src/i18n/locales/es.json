@@ -724,7 +724,6 @@
     "invoices": "facturas",
     "quotes": "presupuestos",
     "newQuote": "Nuevo presupuesto",
-    "pendingApproval": "presupuesto(s) en espera de aprobación",
     "emptyQuotes": "Sin presupuestos activos",
     "createInvoiceFor": "Crear factura para",
     "invoiceCreated": "Factura creada",
@@ -816,7 +815,9 @@
     "lateFeeBreakdown": "{{rate}}% de interés ({{interest}}) + {{recovery}} de recargo",
     "notes": "Notas internas",
     "addNotes": "Añadir notas internas...",
-    "noNotes": "Aún no hay notas. Toca el lápiz para añadir."
+    "noNotes": "Aún no hay notas. Toca el lápiz para añadir.",
+    "pendingApproval_one": "{{count}} presupuesto pendiente de aprobación",
+    "pendingApproval_other": "{{count}} presupuestos pendientes de aprobación"
   },
   "expenses": {
     "title": "Gastos",

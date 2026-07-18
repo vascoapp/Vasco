@@ -724,7 +724,6 @@
     "invoices": "invoices",
     "quotes": "quotes",
     "newQuote": "New quote",
-    "pendingApproval": "quote(s) awaiting approval",
     "emptyQuotes": "No active quotes",
     "createInvoiceFor": "Create invoice for",
     "invoiceCreated": "Invoice created",
@@ -816,7 +815,9 @@
     "lateFeeBreakdown": "{{rate}}% interest ({{interest}}) + {{recovery}} fee",
     "notes": "Internal notes",
     "addNotes": "Add internal notes...",
-    "noNotes": "No notes yet. Tap the pencil to add."
+    "noNotes": "No notes yet. Tap the pencil to add.",
+    "pendingApproval_one": "{{count}} quote awaiting approval",
+    "pendingApproval_other": "{{count}} quotes awaiting approval"
   },
   "expenses": {
     "title": "Expenses",

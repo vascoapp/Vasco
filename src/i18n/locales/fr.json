@@ -724,7 +724,6 @@
     "invoices": "factures",
     "quotes": "devis",
     "newQuote": "Nouveau devis",
-    "pendingApproval": "devis en attente d'approbation",
     "emptyQuotes": "Aucun devis actif",
     "createInvoiceFor": "Créer une facture pour",
     "invoiceCreated": "Facture créée",
@@ -816,7 +815,9 @@
     "lateFeeBreakdown": "{{rate}} % d'intérêts ({{interest}}) + {{recovery}} de frais",
     "notes": "Notes internes",
     "addNotes": "Ajouter des notes internes...",
-    "noNotes": "Aucune note. Appuyez sur le crayon pour ajouter."
+    "noNotes": "Aucune note. Appuyez sur le crayon pour ajouter.",
+    "pendingApproval_one": "{{count}} devis en attente d'approbation",
+    "pendingApproval_other": "{{count}} devis en attente d'approbation"
   },
   "expenses": {
     "title": "Dépenses",

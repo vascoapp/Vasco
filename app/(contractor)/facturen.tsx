@@ -519,7 +519,10 @@ export default function FacturenScreen() {
   const approvalStats = useApprovalStats();
 
   // Compute KPI values
-  const pendingInvoices = invoices.filter(i => ['sent', 'viewed'].includes(i.status));
+  // 'overdue' IS outstanding — it is unpaid money, just late. Excluding it
+  // made the "Openstaand" KPI read €0,00 while the banner directly beneath it
+  // said "2 facturen verlopen · €800" (and the Geld tab said €800 too).
+  const pendingInvoices = invoices.filter(i => ['sent', 'viewed', 'overdue'].includes(i.status));
   const overdueInvoices = invoices.filter(i => i.status === 'overdue');
   const pendingValue = pendingInvoices.reduce((sum, i) => sum + i.amount, 0);
   const overdueValue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
@@ -697,7 +700,10 @@ export default function FacturenScreen() {
                 <View style={styles.approvalHeader}>
                   <Ionicons name="shield-checkmark-outline" size={18} color={SemanticColors.feedbackWarning} />
                   <Text style={styles.approvalTitle}>
-                    {pendingApprovals.length} {t('invoices.pendingApproval', 'offerte(s) wacht op goedkeuring')}
+                    {/* i18next plural (_one/_other) rather than the "offerte(s)"
+                        hack, which is an English convention that reads wrong in
+                        Dutch and does not inflect the verb (wacht/wachten). */}
+                    {t('invoices.pendingApproval', { count: pendingApprovals.length })}
                   </Text>
                 </View>
                 {pendingApprovals.slice(0, 3).map(approval => (

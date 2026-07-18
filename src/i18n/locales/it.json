@@ -724,7 +724,6 @@
     "invoices": "fatture",
     "quotes": "preventivi",
     "newQuote": "Nuovo preventivo",
-    "pendingApproval": "preventivo/i in attesa di approvazione",
     "emptyQuotes": "Nessun preventivo attivo",
     "createInvoiceFor": "Crea fattura per",
     "invoiceCreated": "Fattura creata",
@@ -816,7 +815,9 @@
     "lateFeeBreakdown": "{{rate}}% interessi ({{interest}}) + {{recovery}} spese",
     "notes": "Note interne",
     "addNotes": "Aggiungi note interne...",
-    "noNotes": "Ancora nessuna nota. Tocca la matita per aggiungere."
+    "noNotes": "Ancora nessuna nota. Tocca la matita per aggiungere.",
+    "pendingApproval_one": "{{count}} preventivo in attesa di approvazione",
+    "pendingApproval_other": "{{count}} preventivi in attesa di approvazione"
   },
   "expenses": {
     "title": "Spese",

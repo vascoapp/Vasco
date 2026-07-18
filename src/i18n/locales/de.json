@@ -724,7 +724,6 @@
     "invoices": "Rechnungen",
     "quotes": "Angebote",
     "newQuote": "Neues Angebot",
-    "pendingApproval": "Angebot(e) warten auf Genehmigung",
     "emptyQuotes": "Keine aktiven Angebote",
     "createInvoiceFor": "Rechnung erstellen für",
     "invoiceCreated": "Rechnung erstellt",
@@ -816,7 +815,9 @@
     "lateFeeBreakdown": "{{rate}} % Zinsen ({{interest}}) + {{recovery}} Gebühr",
     "notes": "Interne Notizen",
     "addNotes": "Interne Notizen hinzufügen...",
-    "noNotes": "Noch keine Notizen. Zum Hinzufügen auf den Stift tippen."
+    "noNotes": "Noch keine Notizen. Zum Hinzufügen auf den Stift tippen.",
+    "pendingApproval_one": "{{count}} Angebot wartet auf Freigabe",
+    "pendingApproval_other": "{{count}} Angebote warten auf Freigabe"
   },
   "expenses": {
     "title": "Ausgaben",
