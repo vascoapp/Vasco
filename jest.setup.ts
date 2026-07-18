@@ -71,12 +71,31 @@ jest.mock('react-i18next', () => ({
 // ---------------------------------------------------------------------------
 // i18next direct mock — for services that import i18n directly
 // ---------------------------------------------------------------------------
+// Mirrors i18next's {{placeholder}} interpolation. Without this the mock
+// returned defaultValue verbatim, so a test could never tell a correctly
+// interpolated string from one whose params never bound — real i18next DOES
+// interpolate defaultValue. Unknown placeholders are left intact on purpose so
+// a param-name mismatch stays visible as a literal {{foo}} in assertions.
+// Name must start with `mock` — babel-plugin-jest-hoist hoists jest.mock()
+// factories above this declaration and only allows out-of-scope references
+// through for `mock`-prefixed bindings.
+const mockInterpolate = (template: string, params?: Record<string, any>): string => {
+  if (!params) return template;
+  return template.replace(/\{\{(\w+)\}\}/g, (whole, name) =>
+    params[name] !== undefined && params[name] !== null ? String(params[name]) : whole,
+  );
+};
+
 jest.mock('./src/i18n/i18n', () => ({
   __esModule: true,
   default: {
-    t: (key: string, defaultValueOrOpts?: any) => {
-      if (typeof defaultValueOrOpts === 'string') return defaultValueOrOpts;
-      if (defaultValueOrOpts?.defaultValue) return defaultValueOrOpts.defaultValue;
+    t: (key: string, defaultValueOrOpts?: any, maybeOpts?: any) => {
+      if (typeof defaultValueOrOpts === 'string') {
+        return mockInterpolate(defaultValueOrOpts, maybeOpts);
+      }
+      if (defaultValueOrOpts?.defaultValue) {
+        return mockInterpolate(defaultValueOrOpts.defaultValue, defaultValueOrOpts);
+      }
       return key;
     },
     language: 'en',
