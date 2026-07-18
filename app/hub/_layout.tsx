@@ -23,6 +23,11 @@ export default function HubLayout() {
       <Stack.Screen name="intelligence" options={{ headerShown: false }} />
       <Stack.Screen name="materials" options={{ headerShown: false }} />
       <Stack.Screen name="suppliers" options={{ headerShown: false }} />
+      {/* savings had no entry, so the header fell back to the route name and
+          rendered the literal word "savings". It draws its own "AI
+          BESPARINGEN" header, so hide the stack one like the other
+          self-headed screens above. */}
+      <Stack.Screen name="savings" options={{ headerShown: false }} />
       <Stack.Screen name="kosten-tools" options={{ title: 'Kosten Tools' }} />
       <Stack.Screen name="budget-optimizer" options={{ title: 'Budget Optimalisatie' }} />
     </Stack>

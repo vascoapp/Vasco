@@ -57,6 +57,19 @@ function parseEveAgent(sourceGeneratorId?: string): ProactiveAction['eveAgent'] 
   return undefined;
 }
 
+/**
+ * Tidies the seam left when an optional placeholder (e.g. an invoice with no
+ * reference) resolves to an empty string: collapses doubled spaces and drops
+ * a space before punctuation. Matters most for shareText, which is sent to a
+ * customer verbatim.
+ */
+function tidyCopy(text: string): string {
+  return text
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+([,.!?;:])/g, '$1')
+    .trim();
+}
+
 export default function VascoScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -136,13 +149,17 @@ export default function VascoScreen() {
     invoices.filter((i: any) => i.status === 'overdue').forEach((inv: any) => {
       const customerName = inv.customer || inv.customerName || t('ai.customer');
       const invAmount = (inv.total || inv.amount || 0).toLocaleString(undefined);
-      const invRef = inv.reference || inv.id;
+      // NEVER fall back to inv.id: `reference` feeds both this card's text and
+      // `shareText`, which is the message actually sent to the CUSTOMER — a
+      // raw "inv-seed-1" was reaching them. Omit the reference instead, and
+      // tidy the seam the empty placeholder leaves behind.
+      const invRef = inv.reference || inv.invoiceNumber || '';
       actions.push({
         id: `overdue-${inv.id}`, icon: 'cash-outline', iconColor: DK.colors.danger,
         title: t('ai.paymentReminder', { customer: customerName }),
-        reason: t('ai.invoiceOverdue', { reference: invRef, days: Math.abs(inv.dueInDays || 7), amount: invAmount }),
+        reason: tidyCopy(t('ai.invoiceOverdue', { reference: invRef, days: Math.abs(inv.dueInDays || 7), amount: invAmount })),
         actionLabel: t('ai.sendReminder'), actionType: 'share',
-        shareText: t('ai.reminderMessage', { customer: customerName, reference: invRef, amount: invAmount }),
+        shareText: tidyCopy(t('ai.reminderMessage', { customer: customerName, reference: invRef, amount: invAmount })),
         priority: 'high',
       });
     });
@@ -215,8 +232,17 @@ export default function VascoScreen() {
       const text = editingId === action.id && editText ? editText : action.shareText;
       try {
         if (Platform.OS === 'web') { await navigator.clipboard.writeText(text); alert(t('ai.copiedToClipboard')); }
-        else { await Share.share({ message: text }); }
-      } catch {}
+        else {
+          // Respect the sheet's outcome. This result used to be discarded and
+          // the action marked done regardless, so backing out of the share
+          // still cleared the reminder from the queue — the contractor thought
+          // a payment chase had gone out when nothing was sent.
+          const result = await Share.share({ message: text });
+          if (result.action === Share.dismissedAction) return;
+        }
+      } catch {
+        return; // share failed — keep the action so it can be retried
+      }
     } else if (action.actionType === 'navigate' && action.route) {
       router.push(action.route as any);
     } else if (action.actionType === 'approve') {

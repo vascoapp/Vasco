@@ -63,6 +63,36 @@ export function formatCurrency0(amount: number, country: Country = 'NL'): string
   }
 }
 
+/**
+ * Compact currency for KPI tiles: €760 / €4,5K / €1,2M.
+ *
+ * Was duplicated as a local helper in geld.tsx while app/hub/savings.tsx did
+ * its own `€${(x/1000).toFixed(1)}K`, which rendered "€0.0K" for anything
+ * under a thousand and hardcoded a period separator into locales that use a
+ * comma. Values below 1000 stay whole, and the decimal separator follows the
+ * country.
+ */
+export function compactCurrency(amount: number, country: Country = 'NL'): string {
+  const abs = Math.abs(amount);
+  if (abs < 1_000) return formatCurrency0(amount, country);
+  const { currency, locale } = COUNTRY_CONFIG[country];
+  const divisor = abs >= 1_000_000 ? 1_000_000 : 1_000;
+  const suffix = abs >= 1_000_000 ? 'M' : 'K';
+  const scaled = amount / divisor;
+  const number = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 1, maximumFractionDigits: 1,
+  }).format(scaled);
+  try {
+    const symbol = new Intl.NumberFormat(locale, {
+      style: 'currency', currency, currencyDisplay: 'narrowSymbol',
+      minimumFractionDigits: 0, maximumFractionDigits: 0,
+    }).formatToParts(0).find((p) => p.type === 'currency')?.value ?? '';
+    return `${symbol}${number}${suffix}`;
+  } catch {
+    return `${number}${suffix}`;
+  }
+}
+
 export function getCountryConfig(country: Country) {
   return COUNTRY_CONFIG[country];
 }

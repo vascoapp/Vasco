@@ -15,6 +15,7 @@ import { DKLabel } from '../../src/components/shared/DKLabel';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useSavingsAggregation, useSavingsTimeline } from '../../src/services/savingsAggregatorService';
 import { formatAmount } from '../../src/utils/formatAmount';
+import { compactCurrency } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -68,7 +69,10 @@ export default function SavingsHubScreen() {
             <View style={styles.heroDivider} />
             <View style={styles.heroKPI}>
               <Text style={styles.heroValue}>
-                {`€${(savings.projectedAnnual / 1000).toFixed(1)}K`}
+                {/* Was `€${(x/1000).toFixed(1)}K` — rendered "€0.0K" for any
+                    amount under a thousand and forced a period separator into
+                    comma locales, next to formatAmount's "€2,00". */}
+                {compactCurrency(savings.projectedAnnual)}
               </Text>
               <DKLabel style={styles.heroLabel}>{t('savings.projected', 'Projected')}</DKLabel>
             </View>
@@ -154,7 +158,7 @@ export default function SavingsHubScreen() {
               const height = (point.amount / maxAmount) * 80;
               return (
                 <View key={idx} style={styles.timelineBarCol}>
-                  <Text style={styles.timelineBarValue}>{`€${(point.amount / 1000).toFixed(1)}K`}</Text>
+                  <Text style={styles.timelineBarValue}>{compactCurrency(point.amount)}</Text>
                   <View style={[styles.timelineBar, { height }]} />
                   <Text style={styles.timelineBarLabel}>{point.month}</Text>
                 </View>

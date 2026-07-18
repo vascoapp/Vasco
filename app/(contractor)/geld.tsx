@@ -24,7 +24,7 @@ import { useAppState } from '../../src/state/AppState';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
 import { MoatInsightsCard } from '../../src/components/contractor/MoatInsightsCard';
 import { ReconciliationCard } from '../../src/components/contractor/ReconciliationCard';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, compactCurrency } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { Sparkline } from '../../src/components/shared/Sparkline';
@@ -47,12 +47,6 @@ function getLastNMonthLabels(n: number): string[] {
     labels.push(MONTH_LABELS[d.getMonth()]);
   }
   return labels;
-}
-
-function compactCurrency(amount: number): string {
-  if (Math.abs(amount) >= 1_000_000) return `\u20AC${(amount / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(amount) >= 1_000) return `\u20AC${(amount / 1_000).toFixed(1)}K`;
-  return `\u20AC${Math.round(amount)}`;
 }
 
 type SortMode = 'value-desc' | 'date-desc' | 'status';
