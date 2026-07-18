@@ -1227,7 +1227,15 @@
     "noNewDesc": "Aucune nouvelle notification. Nous vous préviendrons dès qu'une action sera requise.",
     "preferencesDesc": "Choisissez les notifications que vous souhaitez recevoir",
     "quietHours": "Heures calmes",
-    "quietHoursDesc": "Les notifications push sont silencieuses pendant les heures calmes."
+    "quietHoursDesc": "Les notifications push sont silencieuses pendant les heures calmes.",
+    "invoiceOverdueTitle": "Facture en retard",
+    "invoiceOverdueBody": "{{customer}}facture {{ref}} a {{days}} jours de retard{{amount}}.",
+    "jobsTodayTitle_one": "{{count}} mission aujourd’hui",
+    "jobsTodayTitle_other": "{{count}} missions aujourd’hui",
+    "certExpiringTitle": "Certificat expirant",
+    "certExpiringBody_one": "{{name}} expire dans {{count}} jour.",
+    "certExpiringBody_other": "{{name}} expire dans {{count}} jours.",
+    "certFallback": "Certificat"
   },
   "insurance": {
     "title": "Assurance",

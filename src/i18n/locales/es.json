@@ -1227,7 +1227,15 @@
     "noNewDesc": "No hay notificaciones nuevas. Te avisaremos cuando algo necesite tu atención.",
     "preferencesDesc": "Elige qué notificaciones quieres recibir",
     "quietHours": "Horas de silencio",
-    "quietHoursDesc": "Las notificaciones push se silencian durante las horas de silencio."
+    "quietHoursDesc": "Las notificaciones push se silencian durante las horas de silencio.",
+    "invoiceOverdueTitle": "Factura vencida",
+    "invoiceOverdueBody": "{{customer}}factura {{ref}} tiene {{days}} días de retraso{{amount}}.",
+    "jobsTodayTitle_one": "{{count}} trabajo hoy",
+    "jobsTodayTitle_other": "{{count}} trabajos hoy",
+    "certExpiringTitle": "Certificado por vencer",
+    "certExpiringBody_one": "{{name}} vence en {{count}} día.",
+    "certExpiringBody_other": "{{name}} vence en {{count}} días.",
+    "certFallback": "Certificado"
   },
   "insurance": {
     "title": "Seguros",

@@ -1227,7 +1227,15 @@
     "noNewDesc": "Keine neuen Benachrichtigungen. Wir melden uns, wenn etwas Ihre Aufmerksamkeit erfordert.",
     "preferencesDesc": "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten",
     "quietHours": "Ruhezeiten",
-    "quietHoursDesc": "Während der Ruhezeiten werden Push-Benachrichtigungen stummgeschaltet."
+    "quietHoursDesc": "Während der Ruhezeiten werden Push-Benachrichtigungen stummgeschaltet.",
+    "invoiceOverdueTitle": "Rechnung überfällig",
+    "invoiceOverdueBody": "{{customer}}Rechnung {{ref}} ist {{days}} Tage überfällig{{amount}}.",
+    "jobsTodayTitle_one": "{{count}} Auftrag heute",
+    "jobsTodayTitle_other": "{{count}} Aufträge heute",
+    "certExpiringTitle": "Zertifikat läuft ab",
+    "certExpiringBody_one": "{{name}} läuft in {{count}} Tag ab.",
+    "certExpiringBody_other": "{{name}} läuft in {{count}} Tagen ab.",
+    "certFallback": "Zertifikat"
   },
   "insurance": {
     "title": "Versicherungen",

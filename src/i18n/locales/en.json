@@ -1227,7 +1227,15 @@
     "noNewDesc": "No new notifications. We'll let you know when something needs your attention.",
     "preferencesDesc": "Choose which notifications you want to receive",
     "quietHours": "Quiet hours",
-    "quietHoursDesc": "Push notifications are silenced during quiet hours."
+    "quietHoursDesc": "Push notifications are silenced during quiet hours.",
+    "invoiceOverdueTitle": "Invoice overdue",
+    "invoiceOverdueBody": "{{customer}}invoice {{ref}} is {{days}} days overdue{{amount}}.",
+    "jobsTodayTitle_one": "{{count}} job today",
+    "jobsTodayTitle_other": "{{count}} jobs today",
+    "certExpiringTitle": "Certificate expiring",
+    "certExpiringBody_one": "{{name}} expires in {{count}} day.",
+    "certExpiringBody_other": "{{name}} expires in {{count}} days.",
+    "certFallback": "Certificate"
   },
   "insurance": {
     "title": "Insurance",

@@ -1489,7 +1489,15 @@
     "noNewDesc": "Geen nieuwe meldingen. We laten het je weten zodra er iets je aandacht nodig heeft.",
     "preferencesDesc": "Kies welke meldingen je wilt ontvangen",
     "quietHours": "Stille uren",
-    "quietHoursDesc": "Pushmeldingen worden tijdens de stille uren onderdrukt."
+    "quietHoursDesc": "Pushmeldingen worden tijdens de stille uren onderdrukt.",
+    "invoiceOverdueTitle": "Factuur achterstallig",
+    "invoiceOverdueBody": "{{customer}}factuur {{ref}} is {{days}} dagen achterstallig{{amount}}.",
+    "jobsTodayTitle_one": "{{count}} klus vandaag",
+    "jobsTodayTitle_other": "{{count}} klussen vandaag",
+    "certExpiringTitle": "Certificaat verloopt",
+    "certExpiringBody_one": "{{name}} verloopt over {{count}} dag.",
+    "certExpiringBody_other": "{{name}} verloopt over {{count}} dagen.",
+    "certFallback": "Certificaat"
   },
   "insurance": {
     "title": "Verzekeringen",

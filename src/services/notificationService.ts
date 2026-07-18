@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { formatMoney } from '../i18n/formatting';
+import i18n from '../i18n/i18n';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
@@ -279,8 +280,17 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
         id: `live-invoice-${inv.id}`,
         type: 'overdue_invoice',
         priority: days > 14 ? 'urgent' : 'high',
-        title: 'Invoice overdue',
-        body: `${inv.customer ? `${inv.customer} — ` : ''}invoice ${inv.id} is ${days} days overdue${inv.amount ? ` (${formatMoney(Math.round(inv.amount))})` : ''}.`,
+        // Was hardcoded English AND interpolated the raw row id
+        // ("invoice i-1043 is 10 days overdue") into a notification a Dutch
+        // contractor reads. `reference` is the human document number.
+        title: i18n.t('notifications.invoiceOverdueTitle', { defaultValue: 'Invoice overdue' }),
+        body: i18n.t('notifications.invoiceOverdueBody', {
+          defaultValue: '{{customer}}invoice {{ref}} is {{days}} days overdue{{amount}}.',
+          customer: inv.customer ? `${inv.customer} — ` : '',
+          ref: (inv as any).reference ?? (inv as any).invoiceNumber ?? '',
+          days,
+          amount: inv.amount ? ` (${formatMoney(Math.round(inv.amount))})` : '',
+        }).replace(/\s{2,}/g, ' ').replace(/\s+([.,])/g, '$1'),
         read: false,
         actionRoute: `/invoices/${inv.id}`,
         createdAt: new Date(Date.now() - MS_PER_HOUR * Math.min(days, 24)),
@@ -298,7 +308,7 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
       id: 'live-today-schedule',
       type: 'schedule_change',
       priority: 'medium',
-      title: `${todayJobs.length} job${todayJobs.length > 1 ? 's' : ''} today`,
+      title: i18n.t('notifications.jobsTodayTitle', { count: todayJobs.length, defaultValue: '{{count}} jobs today' }),
       body: todayJobs.slice(0, 3).map((j) => j.title).filter(Boolean).join(', ') + (todayJobs.length > 3 ? '…' : ''),
       read: false,
       actionRoute: '/contractor/drag-schedule',
@@ -315,8 +325,12 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
         id: `live-cert-${cert.id}`,
         type: 'credential_expiry',
         priority: daysUntil <= 7 ? 'urgent' : 'high',
-        title: 'Certificate expiring',
-        body: `${cert.name ?? 'Certificate'} expires in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`,
+        title: i18n.t('notifications.certExpiringTitle', { defaultValue: 'Certificate expiring' }),
+        body: i18n.t('notifications.certExpiringBody', {
+          count: daysUntil,
+          name: cert.name ?? i18n.t('notifications.certFallback', { defaultValue: 'Certificate' }),
+          defaultValue: '{{name}} expires in {{count}} days.',
+        }),
         read: false,
         actionRoute: '/(contractor)/certificaten',
         createdAt: new Date(Date.now() - MS_PER_HOUR * 2),
