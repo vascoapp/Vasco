@@ -22,6 +22,7 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -60,7 +61,8 @@ const todayStr = now.toISOString().split('T')[0];
 export default function TimesheetScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { jobs, updateJob, customers } = useAppState();
+  const { jobs, updateJob, customers, businessProfile } = useAppState();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('vandaag');
   const [entries, setEntries] = useState<SoloTimeEntry[]>([]);
 
@@ -300,7 +302,10 @@ export default function TimesheetScreen() {
             </View>
           ))
         )}
-        {/* Payroll export link */}
+        {/* Payroll export link — aannemer / has-a-team only. A solo contractor
+            has no payroll, and the screen behind this is backed by demo-only
+            fixtures. Same R109 gate used elsewhere. */}
+        {(user?.isAannemer || (businessProfile?.teamSize && businessProfile.teamSize !== 'solo')) ? (
         <Pressable
           style={styles.payrollLink}
           onPress={() => router.push('/contractor/payroll' as any)}
@@ -308,6 +313,7 @@ export default function TimesheetScreen() {
           <Text style={styles.payrollLinkText}>{t('timesheet.exportPayroll', 'Exporteer voor verloning')}</Text>
           <Ionicons name="arrow-forward" size={16} color={Palette.hermesOrange} />
         </Pressable>
+        ) : null}
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>

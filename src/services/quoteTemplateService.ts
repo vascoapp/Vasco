@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { TFunction } from 'i18next';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { registerSingletonReset } from './singletonReset';
@@ -92,7 +93,7 @@ export const TEMPLATE_CATEGORIES: { id: TemplateCategory; label: string; icon: s
 // MOCK DATA
 // =============================================================================
 
-const mockTemplates: QuoteTemplate[] = [
+const BUILTIN_TEMPLATES: QuoteTemplate[] = [
   {
     id: 'qt-1',
     i18nId: 'qt-1',
@@ -667,21 +668,89 @@ const mockTemplates: QuoteTemplate[] = [
 
 type TemplateListener = () => void;
 
+// Templates were an in-memory singleton: a template the contractor saved
+// survived until the next app restart and then silently vanished, and a
+// deleted built-in came back. BUILTIN_TEMPLATES stay as shipped content;
+// user-authored templates, deletions and usage counts now persist.
+const TEMPLATES_STORAGE_KEY = '@vasco_quote_templates';
+
+interface PersistedTemplates {
+  /** User-authored templates only — built-ins are not duplicated into storage. */
+  userTemplates: QuoteTemplate[];
+  /** Built-ins the contractor deleted, so they do not reappear on next launch. */
+  deletedBuiltinIds: string[];
+  /** usageCount / lastUsed per template id, including built-ins. */
+  usage: Record<string, { usageCount: number; lastUsed?: string }>;
+}
+
+/** JSON.parse gives strings back for Date fields — revive them. */
+function reviveTemplate(t: any): QuoteTemplate {
+  return {
+    ...t,
+    createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
+    lastUsed: t.lastUsed ? new Date(t.lastUsed) : undefined,
+  };
+}
+
 class QuoteTemplateService {
   private static instance: QuoteTemplateService;
   private listeners: Set<TemplateListener> = new Set();
-  private templates: QuoteTemplate[] = [...mockTemplates];
+  private templates: QuoteTemplate[] = [...BUILTIN_TEMPLATES];
+  private deletedBuiltinIds: Set<string> = new Set();
+  private hydrated = false;
 
   static getInstance(): QuoteTemplateService {
     if (!QuoteTemplateService.instance) {
       QuoteTemplateService.instance = new QuoteTemplateService();
       registerSingletonReset(() => {
         const inst = QuoteTemplateService.instance;
-        inst.templates = [...mockTemplates];
+        inst.templates = [...BUILTIN_TEMPLATES];
+        inst.deletedBuiltinIds = new Set();
+        inst.hydrated = false;
         inst.listeners.forEach((l) => l());
       });
     }
     return QuoteTemplateService.instance;
+  }
+
+  /**
+   * Rebuilds the list from storage. Built-ins are re-merged from code rather
+   * than read from the cache, so shipping a new starter template in a future
+   * release is not blocked by a stale persisted copy.
+   */
+  async hydrate(): Promise<void> {
+    if (this.hydrated) return;
+    this.hydrated = true;
+    try {
+      const raw = await AsyncStorage.getItem(TEMPLATES_STORAGE_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw) as PersistedTemplates;
+      this.deletedBuiltinIds = new Set(p.deletedBuiltinIds ?? []);
+      const userTemplates = (p.userTemplates ?? []).map(reviveTemplate);
+      const builtins = BUILTIN_TEMPLATES.filter((b) => !this.deletedBuiltinIds.has(b.id));
+      this.templates = [...userTemplates, ...builtins].map((t) => {
+        const u = p.usage?.[t.id];
+        return u
+          ? { ...t, usageCount: u.usageCount, lastUsed: u.lastUsed ? new Date(u.lastUsed) : t.lastUsed }
+          : t;
+      });
+    } catch {
+      // Corrupt cache must not wipe the built-ins the screen depends on.
+    } finally {
+      this.notify();
+    }
+  }
+
+  private persist(): void {
+    const builtinIds = new Set(BUILTIN_TEMPLATES.map((b) => b.id));
+    const payload: PersistedTemplates = {
+      userTemplates: this.templates.filter((t) => !builtinIds.has(t.id)),
+      deletedBuiltinIds: [...this.deletedBuiltinIds],
+      usage: Object.fromEntries(
+        this.templates.map((t) => [t.id, { usageCount: t.usageCount, lastUsed: t.lastUsed?.toISOString() }]),
+      ),
+    };
+    AsyncStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(payload)).catch(() => {});
   }
 
   subscribe(listener: TemplateListener): () => void {
@@ -721,6 +790,7 @@ class QuoteTemplateService {
       createdAt: new Date(),
     };
     this.templates.unshift(template);
+    this.persist();
     this.notify();
     return template;
   }
@@ -730,13 +800,16 @@ class QuoteTemplateService {
     if (t) {
       t.usageCount++;
       t.lastUsed = new Date();
+      this.persist();
       this.notify();
     }
     return t;
   }
 
   deleteTemplate(id: string): void {
+    if (BUILTIN_TEMPLATES.some((b) => b.id === id)) this.deletedBuiltinIds.add(id);
     this.templates = this.templates.filter(t => t.id !== id);
+    this.persist();
     this.notify();
   }
 }
@@ -807,9 +880,13 @@ export function useQuoteTemplates(category?: TemplateCategory) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTemplates(quoteTemplateService.getTemplates(category));
-    setLoading(false);
-    return quoteTemplateService.subscribe(() => setTemplates(quoteTemplateService.getTemplates(category)));
+    let cancelled = false;
+    const sync = () => { if (!cancelled) setTemplates(quoteTemplateService.getTemplates(category)); };
+    const unsub = quoteTemplateService.subscribe(sync);
+    // Hydrate before the first paint so saved templates are not missing for a
+    // frame; notify() inside hydrate re-runs sync.
+    quoteTemplateService.hydrate().finally(() => { sync(); if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; unsub(); };
   }, [category]);
 
   const save = useCallback(

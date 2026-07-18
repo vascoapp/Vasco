@@ -1537,7 +1537,9 @@
     "poCreated": "Bon de commande créé",
     "poCreatedDesc": "Bon de commande créé pour « {{title}} » avec {{count}} matériaux",
     "emptyTitle": "Aucune commande pour le moment",
-    "emptyDesc": "Créez votre première commande, ou laissez Vasco suggérer des matériaux à partir de vos chantiers planifiés."
+    "emptyDesc": "Créez votre première commande, ou laissez Vasco suggérer des matériaux à partir de vos chantiers planifiés.",
+    "teamOnlyTitle": "Pour les équipes et les entrepreneurs",
+    "teamOnlyDesc": "Les bons de commande sont destinés aux équipes qui commandent le matériel à l'avance. Vous travaillez seul ? Utilisez Matériaux pour comparer les prix."
   },
   "workerCerts": {
     "title": "Certificats des ouvriers",

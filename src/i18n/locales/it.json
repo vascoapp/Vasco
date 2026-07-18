@@ -1537,7 +1537,9 @@
     "poCreated": "Ordine creato",
     "poCreatedDesc": "Ordine creato per \"{{title}}\" con {{count}} materiali",
     "emptyTitle": "Nessun ordine ancora",
-    "emptyDesc": "Crea il tuo primo ordine, o lascia che Vasco suggerisca materiali dai lavori pianificati."
+    "emptyDesc": "Crea il tuo primo ordine, o lascia che Vasco suggerisca materiali dai lavori pianificati.",
+    "teamOnlyTitle": "Per team e imprese",
+    "teamOnlyDesc": "Gli ordini di acquisto sono pensati per team che ordinano materiale in anticipo. Lavori da solo? Usa Materiali per confrontare i prezzi."
   },
   "workerCerts": {
     "title": "Certificati dei lavoratori",

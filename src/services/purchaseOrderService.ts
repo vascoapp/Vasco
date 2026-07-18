@@ -4,6 +4,7 @@
 // PO creation, numbering, status tracking, and supplier integration
 // =============================================================================
 
+import { DEMO_MODE } from '../config/demo';
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
@@ -62,7 +63,9 @@ export interface POStats {
 
 const now = new Date();
 
-const mockOrders: PurchaseOrder[] = [
+// Demo-only fixtures. A real install must not show purchase orders to
+// suppliers the contractor never ordered from.
+const DEMO_ORDERS: PurchaseOrder[] = [
   {
     id: 'po-1',
     poNumber: 'PO-2026-0042',
@@ -122,6 +125,8 @@ const mockOrders: PurchaseOrder[] = [
     updatedAt: new Date(),
   },
 ];
+
+const mockOrders: PurchaseOrder[] = DEMO_MODE ? DEMO_ORDERS : [];
 
 // =============================================================================
 // SERVICE

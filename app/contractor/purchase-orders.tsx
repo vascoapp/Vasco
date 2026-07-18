@@ -13,6 +13,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { usePurchaseOrders, usePOStats, type PurchaseOrder, type POStatus } from '../../src/services/purchaseOrderService';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
@@ -36,10 +37,42 @@ export default function PurchaseOrdersScreen() {
   const router = useRouter();
   const { orders, submit, updateStatus } = usePurchaseOrders();
   const stats = usePOStats();
-  const { suppliers, jobs } = useAppState();
+  const { suppliers, jobs, businessProfile } = useAppState();
+  const { user } = useAuth();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600); }, []);
+
+  // Purchase orders are a team / aannemer workflow: a solo contractor buys
+  // materials at the counter, they do not raise a PO document. The screen is
+  // also not persisted yet (createOrder is in-memory only), so letting a solo
+  // contractor raise an order that silently disappears is worse than not
+  // offering it. Enterprise personas (teamSize !== 'solo') pass this gate, so
+  // the CFO / budget-optimizer entry points keep working.
+  const canUsePurchaseOrders = !!user?.isAannemer
+    || (!!businessProfile?.teamSize && businessProfile.teamSize !== 'solo');
+  if (!canUsePurchaseOrders) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>{t('purchaseOrders.title', 'Inkooporders')}</Text>
+          </View>
+        </View>
+        <EmptyState
+          icon="cart-outline"
+          title={t('purchaseOrders.teamOnlyTitle', 'Voor teams en aannemers')}
+          description={t(
+            'purchaseOrders.teamOnlyDesc',
+            'Inkooporders zijn bedoeld voor teams die materiaal vooraf bestellen. Werk je solo? Gebruik Materialen om prijzen te vergelijken.',
+          )}
+        />
+      </View>
+    );
+  }
 
   // AI Procurement Agent — analyze pending orders for savings
   const pendingMaterials: MaterialNeed[] = orders

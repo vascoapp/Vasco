@@ -4,6 +4,7 @@
 // Comprehensive team and employee management with productivity analytics
 // =============================================================================
 
+import { DEMO_MODE } from '../config/demo';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { registerSingletonReset } from './singletonReset';
 
@@ -190,7 +191,11 @@ export interface LeaveRequest {
 // MOCK DATA
 // =============================================================================
 
-const mockTeamMembers: TeamMember[] = [
+// Demo-only fixtures. These are FABRICATED PEOPLE with hourly rates
+// ("Maria de Vries", "Anna Bakker", "Henk Jansen") rendered on the payroll
+// screen — a solo contractor saw three employees they do not employ. Real
+// installs start empty; the demo keeps them so the flow stays showable.
+const DEMO_TEAMMEMBERS: TeamMember[] = [
   {
     id: 'tm-1',
     firstName: 'Jan',
@@ -317,7 +322,9 @@ const mockTeamMembers: TeamMember[] = [
   },
 ];
 
-const mockTimeEntries: TimeEntry[] = [
+const mockTeamMembers: TeamMember[] = DEMO_MODE ? DEMO_TEAMMEMBERS : [];
+
+const DEMO_TIMEENTRIES: TimeEntry[] = [
   {
     id: 'te-1',
     memberId: 'tm-1',
@@ -357,7 +364,9 @@ const mockTimeEntries: TimeEntry[] = [
   },
 ];
 
-const mockPerformanceMetrics: PerformanceMetrics[] = [
+const mockTimeEntries: TimeEntry[] = DEMO_MODE ? DEMO_TIMEENTRIES : [];
+
+const DEMO_PERFORMANCEMETRICS: PerformanceMetrics[] = [
   {
     memberId: 'tm-1',
     period: { start: new Date('2024-01-01'), end: new Date('2024-01-31') },
@@ -399,7 +408,9 @@ const mockPerformanceMetrics: PerformanceMetrics[] = [
   },
 ];
 
-const mockLeaveRequests: LeaveRequest[] = [
+const mockPerformanceMetrics: PerformanceMetrics[] = DEMO_MODE ? DEMO_PERFORMANCEMETRICS : [];
+
+const DEMO_LEAVEREQUESTS: LeaveRequest[] = [
   {
     id: 'lr-1',
     memberId: 'tm-1',
@@ -425,6 +436,8 @@ const mockLeaveRequests: LeaveRequest[] = [
     status: 'pending',
   },
 ];
+
+const mockLeaveRequests: LeaveRequest[] = DEMO_MODE ? DEMO_LEAVEREQUESTS : [];
 
 const mockTrainingRecords: TrainingRecord[] = [
   {

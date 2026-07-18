@@ -1537,7 +1537,9 @@
     "poCreated": "PO Created",
     "poCreatedDesc": "PO created for \"{{title}}\" with {{count}} materials",
     "emptyTitle": "No purchase orders yet",
-    "emptyDesc": "Create your first order, or let Vasco suggest materials from your planned jobs."
+    "emptyDesc": "Create your first order, or let Vasco suggest materials from your planned jobs.",
+    "teamOnlyTitle": "For teams and contractors",
+    "teamOnlyDesc": "Purchase orders are for teams that order materials in advance. Working solo? Use Materials to compare prices."
   },
   "workerCerts": {
     "title": "Worker Certificates",

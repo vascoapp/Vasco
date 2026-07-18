@@ -1537,7 +1537,9 @@
     "poCreated": "Pedido creado",
     "poCreatedDesc": "Pedido creado para \"{{title}}\" con {{count}} materiales",
     "emptyTitle": "Aún no hay pedidos",
-    "emptyDesc": "Crea tu primer pedido, o deja que Vasco sugiera materiales a partir de tus trabajos planificados."
+    "emptyDesc": "Crea tu primer pedido, o deja que Vasco sugiera materiales a partir de tus trabajos planificados.",
+    "teamOnlyTitle": "Para equipos y contratistas",
+    "teamOnlyDesc": "Los pedidos de compra son para equipos que piden material por adelantado. ¿Trabajas solo? Usa Materiales para comparar precios."
   },
   "workerCerts": {
     "title": "Certificados de trabajadores",

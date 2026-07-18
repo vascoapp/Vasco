@@ -1537,7 +1537,9 @@
     "poCreated": "Bestellung erstellt",
     "poCreatedDesc": "Bestellung für \"{{title}}\" mit {{count}} Materialien erstellt",
     "emptyTitle": "Noch keine Bestellungen",
-    "emptyDesc": "Erstelle deine erste Bestellung oder lass Vasco Materialien aus deinen geplanten Aufträgen vorschlagen."
+    "emptyDesc": "Erstelle deine erste Bestellung oder lass Vasco Materialien aus deinen geplanten Aufträgen vorschlagen.",
+    "teamOnlyTitle": "Für Teams und Generalunternehmer",
+    "teamOnlyDesc": "Bestellungen sind für Teams gedacht, die Material im Voraus ordern. Arbeitest du allein? Nutze Materialien zum Preisvergleich."
   },
   "workerCerts": {
     "title": "Mitarbeiterzertifikate",

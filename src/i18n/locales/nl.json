@@ -1315,7 +1315,9 @@
     "poCreated": "Inkooporder aangemaakt",
     "poCreatedDesc": "Inkooporder aangemaakt voor \"{{title}}\" met {{count}} materialen",
     "emptyTitle": "Nog geen inkooporders",
-    "emptyDesc": "Maak je eerste inkooporder, of laat Vasco materialen voorstellen op basis van je geplande klussen."
+    "emptyDesc": "Maak je eerste inkooporder, of laat Vasco materialen voorstellen op basis van je geplande klussen.",
+    "teamOnlyTitle": "Voor teams en aannemers",
+    "teamOnlyDesc": "Inkooporders zijn bedoeld voor teams die materiaal vooraf bestellen. Werk je solo? Gebruik Materialen om prijzen te vergelijken."
   },
   "workerCerts": {
     "title": "Certificaten Medewerkers",
