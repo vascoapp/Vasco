@@ -125,8 +125,18 @@ export default function ProjectsScreen() {
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
-              <Text style={[styles.metricValue, { color: pnl.grossMargin >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                {pnl.grossMargin}%
+              {/* Margin is only meaningful once something has been invoiced.
+                  With revenue 0 the calculation returns 0, which rendered as a
+                  green "0%" next to a "€12.500 Budget" that falls back to
+                  totalBudget — reading as "no profit on a 12.5k project"
+                  rather than "nothing invoiced yet". Show a dash instead, and
+                  reserve green for an actual positive margin. */}
+              <Text style={[styles.metricValue, {
+                color: pnl.revenue <= 0
+                  ? SemanticColors.textSecondary
+                  : pnl.grossMargin > 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError,
+              }]}>
+                {pnl.revenue > 0 ? `${pnl.grossMargin}%` : '—'}
               </Text>
               <Text style={styles.metricLabel}>{t('contractor.projects.margin', 'Margin')}</Text>
             </View>
