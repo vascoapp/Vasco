@@ -2489,9 +2489,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           logWarn('Validator', 'Invoice warnings: ' + invValidation.warnings.map(w => w.message).join(', '));
         }
 
+        // Resolve the customer so the invoice carries a human-readable name
+        // rather than the raw id. Without this, job-sourced invoices never
+        // set `customerName`, and the Facturen list (which renders
+        // `invoice.customerName`) showed the bare id e.g. "cust-003" instead
+        // of "Bakkerij Smit". Mirror the quote-source path's intent.
+        const invCustomer = customers.find((c) => c.id === job.customerId);
         const newInvoice: Invoice = {
           id: docNumber,
           customer: job.customerId ?? '',
+          customerId: job.customerId ?? undefined,
+          customerName: invCustomer?.name ?? job.customerId ?? '',
           job: job.title,
           amount,
           status: 'draft',

@@ -5,13 +5,14 @@
 // 5 tabs: Vandaag | Werk | Geld | Klanten | Compliance
 // =============================================================================
 
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { TYPE } from '../../src/theme/tabStyles';
 import { OfflineBanner } from '../../src/components/shared/OfflineBanner';
+import { useAuth } from '../../src/context/AuthContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -74,6 +75,29 @@ const HIDDEN_TABS = [
 
 export default function ContractorLayout() {
   const { t } = useTranslation();
+  const { isAuthenticated, isAuthHydrating } = useAuth();
+
+  // Auth gate (fixes the Vandaag⇄login bounce loop).
+  //
+  // `/` resolves to this group's index (Vandaag). Before this gate the tabs
+  // rendered unconditionally, so an UNAUTHENTICATED session (e.g. a dev/demo
+  // cold-start with no Supabase session, or a token that failed to restore)
+  // saw the seed-data Vandaag "logged in" — then any auth-guarded tab bounced
+  // to /login and the root guard's imperative router.replace raced the
+  // group re-rendering as the default route, producing the observed
+  // Vandaag→login→Vandaag loop (see R103/R104 history in app/_layout.tsx).
+  //
+  // Gating declaratively here unmounts the whole (contractor) subtree in a
+  // single render: unauthenticated users go straight to /login and STAY
+  // (login-first, matches the welcome-first redesign), authenticated users
+  // pass through unchanged. While auth is still resolving we render a themed
+  // blank rather than flashing the preview then redirecting.
+  if (isAuthHydrating) {
+    return <View style={styles.hydrating} />;
+  }
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -120,6 +144,10 @@ export default function ContractorLayout() {
 }
 
 const styles = StyleSheet.create({
+  hydrating: {
+    flex: 1,
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
   tabBar: {
     position: 'absolute',
     bottom: 0,

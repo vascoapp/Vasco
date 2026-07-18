@@ -245,8 +245,12 @@ export default function BedrijfScreen() {
               <KpiTile label={t('dk.pill.overdue', 'Overdue').toUpperCase()} value={totalOverdue} tone={totalOverdue > 0 ? DK.colors.danger : DK.colors.textMuted} />
             </View>
 
-            {/* Top 3 customers by revenue */}
-            {customers.length > 0 && (
+            {/* Top 3 customers by revenue.
+                Gate on revenue data, NOT customers.length — customerRevenue only
+                holds customers with PAID invoices, so with contacts but no paid
+                revenue (e.g. €0,00) the old gate rendered the header over an empty
+                void. No revenue → hide the whole section. */}
+            {Object.keys(customerRevenue).length > 0 && (
               <>
                 <DKLabel style={s.subsectionLabel}>{t('dk.money.topCustomers', 'Top customers')}</DKLabel>
                 <View style={s.listGroup}>

@@ -141,6 +141,12 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const [step, setStep] = useState<'select' | 'preview'>('select');
   const [selectedServices, setSelectedServices] = useState<{ item: PricebookItem; quantity: number; unit: string }[]>([]);
   const [showPricebook, setShowPricebook] = useState(false);
+  // Custom (non-pricebook) service entry — lets a contractor add a one-off
+  // service with their own name/price/unit (e.g. location-specific pricing)
+  // instead of being limited to the standard pricebook list.
+  const [customName, setCustomName] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
+  const [customUnit, setCustomUnit] = useState('stuk');
   const [showAIQuote, setShowAIQuote] = useState(false);
   const [calibrationApplied, setCalibrationApplied] = useState(false);
   const [scopeText, setScopeText] = useState('');
@@ -418,6 +424,41 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   };
 
   const removeService = (itemId: string) => setSelectedServices(selectedServices.filter(s => s.item.id !== itemId));
+
+  // Editable unit price — a standard pricebook service's price can vary per
+  // location/city, so let the contractor override it on the line. Mutates a
+  // copy of the item so the pricebook default is untouched.
+  const updatePrice = (itemId: string, price: number) => {
+    setSelectedServices(prev => prev.map(s =>
+      s.item.id === itemId ? { ...s, item: { ...s.item, basePrice: Math.max(0, price) } } : s));
+  };
+
+  // Add a fully custom service (name + price + unit) that isn't in the
+  // pricebook. Reuses addService so quantity/edit/remove all work the same.
+  const addCustomService = () => {
+    const name = customName.trim();
+    const price = parseFloat(customPrice.replace(',', '.'));
+    if (!name || !price || price <= 0) {
+      Alert.alert(
+        t('quotes.customServiceInvalidTitle', 'Add a name and price'),
+        t('quotes.customServiceInvalidBody', 'Enter a service name and a price greater than zero.'),
+      );
+      return;
+    }
+    const item = {
+      id: `custom-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+      contractorId: user?.id ?? 'demo',
+      name,
+      description: name,
+      category: (trade === 'painting' ? 'painting' : 'repairs') as PricebookItem['category'],
+      pricingType: 'per-unit' as const,
+      basePrice: price,
+      unit: customUnit.trim() || 'stuk',
+    } as PricebookItem;
+    addService(item);
+    setCustomName(''); setCustomPrice(''); setCustomUnit('stuk');
+  };
+
   const updateQuantity = (itemId: string, qty: number) => {
     if (qty <= 0) { removeService(itemId); return; }
     setSelectedServices(selectedServices.map(s => s.item.id === itemId ? { ...s, quantity: qty } : s));
@@ -779,6 +820,39 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           </View>
         </View>
         <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
+          {/* Custom service — add a one-off service not in the pricebook */}
+          <View style={s.customCard}>
+            <Text style={s.customTitle}>{t('quotes.addCustomService', 'Add a custom service')}</Text>
+            <TextInput
+              style={s.customInput}
+              value={customName}
+              onChangeText={setCustomName}
+              placeholder={t('quotes.customServiceName', 'Service name')}
+              placeholderTextColor={SemanticColors.textTertiary}
+            />
+            <View style={s.customRow}>
+              <TextInput
+                style={[s.customInput, { flex: 1 }]}
+                value={customPrice}
+                onChangeText={setCustomPrice}
+                placeholder={t('quotes.customServicePrice', 'Price (€)')}
+                placeholderTextColor={SemanticColors.textTertiary}
+                keyboardType="decimal-pad"
+              />
+              <TextInput
+                style={[s.customInput, { width: 96 }]}
+                value={customUnit}
+                onChangeText={setCustomUnit}
+                placeholder={t('quotes.customServiceUnit', 'Unit')}
+                placeholderTextColor={SemanticColors.textTertiary}
+              />
+            </View>
+            <Pressable style={s.customAddBtn} onPress={addCustomService} accessibilityRole="button">
+              <Ionicons name="add-circle" size={18} color={Palette.white} />
+              <Text style={s.customAddBtnText}>{t('quotes.addService', 'Add service')}</Text>
+            </Pressable>
+          </View>
+          <Text style={s.pbSectionLabel}>{t('quotes.orFromPricebook', 'Or pick from your pricebook')}</Text>
           {tradePricebook.map(item => {
             const isSelected = selectedServices.some(sv => sv.item.id === item.id);
             return (
@@ -933,7 +1007,19 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                   <View key={sv.item.id} style={s.serviceRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={s.serviceName}>{sv.item.name}</Text>
-                      <Text style={s.servicePrice}>{fmt(sv.item.basePrice)}/{sv.unit}</Text>
+                      {/* Editable unit price — tap to adjust for this quote */}
+                      <View style={s.priceEditRow}>
+                        <Text style={s.servicePrice}>€</Text>
+                        <TextInput
+                          style={s.priceInput}
+                          value={String(sv.item.basePrice)}
+                          onChangeText={(txt) => updatePrice(sv.item.id, parseFloat(txt.replace(',', '.')) || 0)}
+                          keyboardType="decimal-pad"
+                          selectTextOnFocus
+                          accessibilityLabel={t('quotes.editPrice', 'Edit price')}
+                        />
+                        <Text style={s.servicePrice}>/{sv.unit}</Text>
+                      </View>
                       {aiExplanations[sv.item.id] && (
                         <View style={s.aiExplanation}>
                           <Ionicons name="flash" size={10} color={Palette.hermesOrange} />
@@ -1541,6 +1627,15 @@ const s = StyleSheet.create({
   },
   serviceName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, flex: 1 },
   servicePrice: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  priceEditRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 },
+  priceInput: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange, minWidth: 44, paddingVertical: 2, paddingHorizontal: 6, backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm },
+  customCard: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, padding: GRID.md, gap: GRID.sm, marginBottom: GRID.md },
+  customTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  customInput: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.sm, paddingHorizontal: 12, paddingVertical: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: SemanticColors.borderDefault },
+  customRow: { flexDirection: 'row', gap: GRID.sm },
+  customAddBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 12 },
+  customAddBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
+  pbSectionLabel: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary, marginBottom: GRID.xs, textTransform: 'uppercase', letterSpacing: 0.6 },
   lineHintRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   lineHintText: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
 

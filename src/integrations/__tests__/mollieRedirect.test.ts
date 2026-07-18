@@ -32,39 +32,39 @@ describe('defaultPaymentSuccessUrl', () => {
     expect(defaultPaymentSuccessUrl()).toBe('https://custom.example/done');
   });
 
-  it('routes NL to .nl when env unset', () => {
+  it('routes NL to admin.vascobuild.com when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'NL' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://admin.vascobuild.com/payment/success');
   });
 
-  it('routes DE to .de when env unset', () => {
+  it('routes DE to admin.vascobuild.com when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'DE' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://admin.vascobuild.com/payment/success');
   });
 
-  it('routes FR to .fr when env unset', () => {
+  it('routes FR to admin.vascobuild.com when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'FR' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://admin.vascobuild.com/payment/success');
   });
 
-  it('routes IT to .it when env unset', () => {
+  it('routes IT to admin.vascobuild.com when env unset', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'IT' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://admin.vascobuild.com/payment/success');
   });
 
-  it('falls back to .app for UK', () => {
+  it('falls back to admin.vascobuild.com for UK', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1', country: 'UK' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://admin.vascobuild.com/payment/success');
   });
 
-  it('falls back to .app when country unknown', () => {
+  it('falls back to admin.vascobuild.com when country unknown', () => {
     delete process.env.EXPO_PUBLIC_PAYMENT_SUCCESS_URL;
     setCurrentUser({ id: 'u1' });
-    expect(defaultPaymentSuccessUrl()).toBe('https://app.vascobuild.com/payment/success');
+    expect(defaultPaymentSuccessUrl()).toBe('https://admin.vascobuild.com/payment/success');
   });
 });

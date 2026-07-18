@@ -10,6 +10,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Country } from '../context/AuthContext';
 import i18n from '../i18n/i18n';
+import { DEMO_MODE } from '../config/demo';
 
 // ─── Tier Definitions ──────────────────────────────────────────────────────
 
@@ -255,7 +256,11 @@ const USAGE_KEY = '@vasco_usage_month';
 
 function defaultState(): SubscriptionState {
   return {
-    tier: 'free',
+    // Demo/dev builds default to the Pro tier so the demo showcases — and QA
+    // can exercise — the full paid feature set (photo→AI→quote, EVE AI,
+    // e-invoicing, benchmarking…). Real installs default to Free. Was 'free'
+    // for everyone, which locked the demo account out of every Pro feature.
+    tier: DEMO_MODE ? 'pro' : 'free',
     billingCycle: 'monthly',
     startedAt: new Date().toISOString(),
     expiresAt: null,
@@ -437,10 +442,16 @@ export function canUseFeature(state: SubscriptionState, feature: keyof TierLimit
       hasOnboardingAssistance: { name: 'Onboarding assistance', tier: 'contractor' },
     };
     const info = featureInfo[feature];
+    // Localize the feature name shown in the upgrade prompt. Pre-fix the
+    // hardcoded English `info.name` (e.g. "Invoice scanning") was interpolated
+    // verbatim into the localized message, so a Dutch user saw
+    // "Invoice scanning vereist het pro-abonnement". tierGate.features.<key>
+    // carries the name in all 6 locales; fall back to the English name.
+    const localizedName = i18n.t(`tierGate.features.${String(feature)}`, { defaultValue: info?.name ?? String(feature) });
     return {
       allowed: false,
-      reason: i18n.t('tierGate.featureRequiresTier', { feature: info?.name ?? feature, tier: info?.tier ?? 'pro' }),
-      upgradeFeature: info?.name ?? String(feature),
+      reason: i18n.t('tierGate.featureRequiresTier', { feature: localizedName, tier: info?.tier ?? 'pro' }),
+      upgradeFeature: localizedName,
       requiredTier: info?.tier ?? 'pro',
     };
   }
