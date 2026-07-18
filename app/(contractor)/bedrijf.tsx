@@ -250,6 +250,19 @@ export default function BedrijfScreen() {
                 holds customers with PAID invoices, so with contacts but no paid
                 revenue (e.g. €0,00) the old gate rendered the header over an empty
                 void. No revenue → hide the whole section. */}
+            {/* With contacts but no paid revenue yet, hiding the section left
+                the whole Overzicht tab blank below the KPI tiles. Show why
+                it's empty and where to go next instead of a void. */}
+            {Object.keys(customerRevenue).length === 0 && customers.length > 0 && (
+              <Pressable style={s.emptyPanel} onPress={() => setTab('contacts')}>
+                <View style={s.emptyIcon}><Ionicons name="trending-up-outline" size={28} color={DK.colors.accent} /></View>
+                <DKLabel style={s.emptyTitle}>{t('dk.empty.noRevenueYet', 'No revenue yet')}</DKLabel>
+                <Text style={s.emptyDesc}>
+                  {t('dk.empty.noRevenueYetDesc', 'Top customers appear here once an invoice is paid. Open a contact to send a quote.')}
+                </Text>
+              </Pressable>
+            )}
+
             {Object.keys(customerRevenue).length > 0 && (
               <>
                 <DKLabel style={s.subsectionLabel}>{t('dk.money.topCustomers', 'Top customers')}</DKLabel>
@@ -525,7 +538,11 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
 function KpiTile({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
     <View style={s.kpiTile}>
-      <Text style={s.kpiLabel}>{label}</Text>
+      {/* Long labels ("BESLISSINGEN") were wrapping mid-word to "BESLISSING /
+          EN" in these narrow tiles. Shrink to fit on one line instead. */}
+      <Text style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+        {label}
+      </Text>
       <Text style={[s.kpiValue, { color: tone }]}>{value}</Text>
     </View>
   );

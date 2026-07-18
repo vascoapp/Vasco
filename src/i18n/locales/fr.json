@@ -2528,7 +2528,9 @@
       "firstJob": "premier chantier",
       "scheduleAJob": "Planifier un chantier",
       "noFinancials": "Aucun devis ni facture pour l'instant",
-      "noFinancialsDesc": "Créez votre premier devis pour commencer à suivre vos entrées d'argent."
+      "noFinancialsDesc": "Créez votre premier devis pour commencer à suivre vos entrées d'argent.",
+      "noRevenueYet": "Pas encore de chiffre d'affaires",
+      "noRevenueYetDesc": "Les meilleurs clients apparaîtront ici dès qu'une facture est payée. Ouvrez un contact pour envoyer un devis."
     },
     "fab": {
       "planSchedule": "Planifiez votre semaine",

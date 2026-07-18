@@ -2528,7 +2528,9 @@
       "firstJob": "primer trabajo",
       "scheduleAJob": "Programar un trabajo",
       "noFinancials": "Aún no hay presupuestos ni facturas",
-      "noFinancialsDesc": "Crea tu primer presupuesto para empezar a controlar los ingresos."
+      "noFinancialsDesc": "Crea tu primer presupuesto para empezar a controlar los ingresos.",
+      "noRevenueYet": "Aún no hay ingresos",
+      "noRevenueYetDesc": "Los mejores clientes aparecerán aquí cuando se pague una factura. Abre un contacto para enviar un presupuesto."
     },
     "fab": {
       "planSchedule": "Planifica tu semana",

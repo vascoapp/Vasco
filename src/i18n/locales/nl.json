@@ -2389,7 +2389,7 @@
       "projects": "Projecten",
       "overview": "Overzicht",
       "decisions": "Beslissingen",
-      "contacts": "Contacts",
+      "contacts": "Contacten",
       "queue": "Queue",
       "insights": "Insights",
       "automations": "Automations",
@@ -2512,7 +2512,9 @@
       "firstJob": "eerste klus",
       "scheduleAJob": "Plan een klus",
       "noFinancials": "Nog geen offertes of facturen",
-      "noFinancialsDesc": "Maak je eerste offerte om inkomsten te volgen."
+      "noFinancialsDesc": "Maak je eerste offerte om inkomsten te volgen.",
+      "noRevenueYet": "Nog geen omzet",
+      "noRevenueYetDesc": "Topklanten verschijnen hier zodra een factuur betaald is. Open een contact om een offerte te sturen."
     },
     "fab": {
       "planSchedule": "Plan je week",

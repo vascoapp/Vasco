@@ -2528,7 +2528,9 @@
       "firstJob": "primo lavoro",
       "scheduleAJob": "Pianifica un lavoro",
       "noFinancials": "Ancora nessun preventivo o fattura",
-      "noFinancialsDesc": "Crea il tuo primo preventivo per iniziare a monitorare le entrate."
+      "noFinancialsDesc": "Crea il tuo primo preventivo per iniziare a monitorare le entrate.",
+      "noRevenueYet": "Nessun fatturato ancora",
+      "noRevenueYetDesc": "I migliori clienti compaiono qui una volta pagata una fattura. Apri un contatto per inviare un preventivo."
     },
     "fab": {
       "planSchedule": "Pianifica la settimana",

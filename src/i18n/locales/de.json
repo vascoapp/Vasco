@@ -2528,7 +2528,9 @@
       "firstJob": "erster Auftrag",
       "scheduleAJob": "Auftrag planen",
       "noFinancials": "Noch keine Angebote oder Rechnungen",
-      "noFinancialsDesc": "Erstellen Sie Ihr erstes Angebot, um Einnahmen zu verfolgen."
+      "noFinancialsDesc": "Erstellen Sie Ihr erstes Angebot, um Einnahmen zu verfolgen.",
+      "noRevenueYet": "Noch kein Umsatz",
+      "noRevenueYetDesc": "Top-Kunden erscheinen hier, sobald eine Rechnung bezahlt ist. Öffne einen Kontakt, um ein Angebot zu senden."
     },
     "fab": {
       "planSchedule": "Plane deine Woche",
