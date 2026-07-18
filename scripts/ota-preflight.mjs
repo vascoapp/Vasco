@@ -389,6 +389,59 @@ async function checkInterpolationMismatch() {
 // ---------------------------------------------------------------------------
 // RUN
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// 6. No raw entity-id fallbacks in user- or customer-facing strings
+// ---------------------------------------------------------------------------
+// This bug class appeared in NINE separate producers during the 2026-07-18 e2e
+// sweep, twice in text sent to CUSTOMERS over WhatsApp ("Herinnering: factuur
+// inv-seed-1 …", "Hi cust-003, we've started work on …"). The shape is always
+// a resolution chain that bottoms out at the row id:
+//     customerName: cust?.name || j.customerId || ''
+//     const invRef = inv.reference || inv.id
+// The id belongs in its own field; display copy should degrade to a human
+// label or to blank — never to an id.
+
+// Fields whose value is rendered or sent. A `|| x.id` tail on one of these is
+// the bug; the same tail on a lookup key or a React `key=` prop is fine.
+const DISPLAY_FIELD_RE =
+  /\b(title|subtitle|description|label|customerName|name|message|body|template|shareText|reason|heading|caption|placeholder)\s*:/;
+const ID_FALLBACK_RE = /(?:\|\||\?\?)\s*[A-Za-z_$][\w$]*(?:\?)?\.(id|customerId|jobId|quoteId|invoiceId)\b/;
+
+// Deliberate, reviewed exceptions — an id IS the useful handle here.
+const ID_FALLBACK_ALLOWLIST = [
+  'quoteToInvoice.notFound',   // error state; the id helps support
+  'besparen.materialFallback', // only handle when a material name is missing
+  'action.defectClosed',       // the defect id is the user-facing reference
+];
+
+async function checkRawIdFallbacks() {
+  process.stdout.write('6. no raw entity-id fallbacks in display strings ... ');
+  const hits = [];
+  for (const dir of SCAN_DIRS) {
+    for await (const file of walkFiles(dir)) {
+      const text = await readFile(file, 'utf8');
+      const lines = text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (!ID_FALLBACK_RE.test(line)) continue;
+        if (!DISPLAY_FIELD_RE.test(line) && !line.includes('t(')) continue;
+        if (ID_FALLBACK_ALLOWLIST.some((a) => line.includes(a))) continue;
+        hits.push(`${relative(ROOT, file)}:${i + 1}  ${line.trim().slice(0, 100)}`);
+      }
+    }
+  }
+  if (hits.length === 0) {
+    console.log('\u2713');
+  } else {
+    console.log(`\u2717 (${hits.length})`);
+    for (const h of hits.slice(0, 12)) {
+      err(`Raw id can reach display copy: ${h}`);
+    }
+    if (hits.length > 12) err(`...and ${hits.length - 12} more`);
+  }
+}
+
 async function main() {
   console.log('OTA-update preflight\n');
   const t0 = Date.now();
@@ -397,6 +450,7 @@ async function main() {
   await checkMissingI18nKeys();
   await checkSeedArrays();
   await checkInterpolationMismatch();
+  await checkRawIdFallbacks();
   const dt = ((Date.now() - t0) / 1000).toFixed(1);
 
   console.log('');

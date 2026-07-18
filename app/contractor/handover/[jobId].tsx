@@ -42,7 +42,7 @@ export default function HandoverScreen() {
           id: realJob.id,
           title: realJob.title || realJob.description || t('common.project', 'Project'),
           customerId: realJob.customerId || customer?.id || '',
-          customerName: customer?.name || realJob.customerId || t('common.customer', 'Customer'),
+          customerName: customer?.name || t('common.customer', 'Customer'),
           customerEmail: customer?.email || '',
           address: (realJob as any).address?.street ? `${(realJob as any).address.street}, ${(realJob as any).address.city || ''}` : '',
           agreedAmount: realJob.agreedAmount || realJob.quotedAmount || 0,

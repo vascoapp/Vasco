@@ -95,7 +95,7 @@ export function checkAutoInvoice(ctx: AutomationContext, config: AutomationConfi
       id: `auto_invoice_${job.id}`,
       type: 'auto_invoice' as AutomationType,
       title: `Factuur aanmaken: ${job.title}`,
-      description: `Klus voor ${customer?.name ?? job.customerId} is afgerond — factuur kan automatisch worden aangemaakt`,
+      description: `Klus voor ${customer?.name ?? 'de klant'} is afgerond — factuur kan automatisch worden aangemaakt`,
       actionTaken: false,
       timestamp: new Date().toISOString(),
     };

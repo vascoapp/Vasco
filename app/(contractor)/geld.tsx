@@ -113,7 +113,7 @@ export default function GeldScreen() {
       .filter((inv: any) => invoiceStatusFilter === 'all' || inv.status === invoiceStatusFilter)
       .map((inv: any) => ({
         id: inv.id,
-        name: inv.customer || inv.customerName || inv.reference || inv.id,
+        name: inv.customer || inv.customerName || inv.reference || '',
         description: inv.job || t('invoices.invoice', 'Factuur'),
         amount: inv.total || inv.amount || 0,
         status: inv.status,
@@ -126,7 +126,7 @@ export default function GeldScreen() {
       .filter((q: any) => quoteStatusFilter === 'all' || q.status === quoteStatusFilter)
       .map((q: any) => ({
         id: q.id,
-        name: q.customer || q.id,
+        name: q.customer || q.job || '',
         description: q.job || q.description || t('quotes.quote', 'Offerte'),
         amount: q.amount || 0,
         status: q.status,

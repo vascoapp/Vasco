@@ -218,7 +218,7 @@ export default function PermitsScreen() {
               <Pressable style={styles.scopeChip} onPress={() => setScopeJobId(null)} accessibilityRole="button" accessibilityLabel={t('permits.clearScope', 'Show all permits')}>
                 <Ionicons name="filter" size={14} color={Palette.hermesOrange} />
                 <Text style={styles.scopeChipText} numberOfLines={1}>
-                  {t('permits.scopedTo', { defaultValue: 'Scoped to: {{job}}', job: focusJob.title ?? focusJob.id })}
+                  {t('permits.scopedTo', { defaultValue: 'Scoped to: {{job}}', job: focusJob.title ?? '' })}
                 </Text>
                 <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
               </Pressable>

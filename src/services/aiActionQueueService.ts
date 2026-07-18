@@ -1327,7 +1327,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     for (const inv of sentInvoices.slice(0, 3)) {
       const id = await addToQueue({
         type: 'einvoice_submit',
-        title: `${einvoiceFormat}: ${inv.customer || inv.id}`,
+        title: `${einvoiceFormat}: ${queueEntityLabel(inv, context.customers)}`,
         description: `€${(inv.amount ?? 0).toLocaleString(undefined)} · ${einvoiceFormat} format`,
         preparedData: { invoiceId: inv.id, format: einvoiceFormat, country: einvoiceCountry },
         actionLabel: t('automation.submit', 'Submit'),

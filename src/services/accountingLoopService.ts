@@ -187,7 +187,10 @@ export async function executeStageAction(
       const link = await createPaymentLink({
         invoiceId: state.invoiceId ?? state.jobId,
         amount: state.amounts.invoiced || state.amounts.agreed || state.amounts.quoted,
-        description: `Factuur ${state.invoiceId ?? state.jobId}`,
+        // CUSTOMER-FACING: this is the Mollie payment-page description.
+        // Invoice.id IS the document number in this app, so it is fine to
+        // show — but jobId is an internal id, so omit rather than fall back.
+        description: state.invoiceId ? `Factuur ${state.invoiceId}` : 'Factuur',
       });
       if (link) {
         const newState = advanceLoop(state, { paymentUrl: link.url, paymentLinkId: link.id });
