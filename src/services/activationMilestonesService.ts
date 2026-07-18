@@ -20,6 +20,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // dismissed there now see the checklist again as intended.
 const ACTIVATION_VERSION = 'v2';
 const DISMISSED_KEY = `@vasco_activation_dismissed_${ACTIVATION_VERSION}`;
+const LOGIN_COUNT_KEY = `@vasco_activation_logins_${ACTIVATION_VERSION}`;
+
+/**
+ * The checklist is an onboarding aid, not a permanent fixture — it retires
+ * itself after this many logins even if steps are still open. Beyond the
+ * first couple of sessions it stops being guidance and just crowds the top
+ * of Vandaag, pushing the VascoCard (the actual daily surface) below the
+ * fold. Open steps remain reachable from their own screens.
+ */
+export const MAX_LOGINS_VISIBLE = 2;
 
 export type MilestoneId =
   | 'profile_complete'
@@ -105,8 +115,40 @@ export async function markDismissed(): Promise<void> {
 export async function resetDismissed(): Promise<void> {
   try {
     await AsyncStorage.removeItem(DISMISSED_KEY);
+    await AsyncStorage.removeItem(LOGIN_COUNT_KEY);
   } catch {
     // silent
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Login counting — drives the auto-retire window
+// ---------------------------------------------------------------------------
+
+export async function getLoginCount(): Promise<number> {
+  try {
+    const raw = await AsyncStorage.getItem(LOGIN_COUNT_KEY);
+    const n = parseInt(raw ?? '0', 10);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Called once per successful login (both demo and real-Supabase paths in
+ * AuthContext). Stops incrementing past the threshold so the stored value
+ * can't drift unbounded across a long-lived install.
+ */
+export async function recordLogin(): Promise<number> {
+  try {
+    const current = await getLoginCount();
+    if (current > MAX_LOGINS_VISIBLE) return current;
+    const next = current + 1;
+    await AsyncStorage.setItem(LOGIN_COUNT_KEY, String(next));
+    return next;
+  } catch {
+    return 0;
   }
 }
 
@@ -121,15 +163,21 @@ export function useActivationMilestones(input: ActivationInput) {
   const all = allComplete(milestones);
 
   const [dismissed, setDismissed] = useState<boolean>(false);
+  // Start at 0 (not "retired") so the card doesn't flash-then-vanish on the
+  // very first render while AsyncStorage resolves.
+  const [loginCount, setLoginCount] = useState<number>(0);
   useEffect(() => {
     let cancelled = false;
     isDismissed().then((v) => { if (!cancelled) setDismissed(v); });
+    getLoginCount().then((n) => { if (!cancelled) setLoginCount(n); });
     return () => { cancelled = true; };
   }, []);
 
-  // Visible when: at least one step still open AND not explicitly dismissed.
+  // Visible when: at least one step still open, not explicitly dismissed, AND
+  // still inside the onboarding window (first MAX_LOGINS_VISIBLE logins).
   // Auto-hides on completion without needing an explicit dismiss.
-  const visible = !dismissed && !all;
+  const retired = loginCount > MAX_LOGINS_VISIBLE;
+  const visible = !dismissed && !all && !retired;
 
   return {
     milestones,

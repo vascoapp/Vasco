@@ -16,6 +16,9 @@ import {
   isDismissed,
   markDismissed,
   resetDismissed,
+  getLoginCount,
+  recordLogin,
+  MAX_LOGINS_VISIBLE,
   __internal,
 } from '../activationMilestonesService';
 
@@ -119,5 +122,45 @@ describe('dismissal persistence', () => {
   test('stores under the expected key', async () => {
     await markDismissed();
     expect(mockStorage.get(__internal.DISMISSED_KEY)).toBe('1');
+  });
+});
+
+describe('login-count retire window', () => {
+  test('starts at 0 for a fresh install', async () => {
+    expect(await getLoginCount()).toBe(0);
+  });
+
+  test('each login increments the count', async () => {
+    expect(await recordLogin()).toBe(1);
+    expect(await recordLogin()).toBe(2);
+    expect(await getLoginCount()).toBe(2);
+  });
+
+  test('the checklist is still inside the window for the first MAX_LOGINS_VISIBLE logins', async () => {
+    for (let i = 0; i < MAX_LOGINS_VISIBLE; i++) await recordLogin();
+    // `retired` in the hook is `loginCount > MAX_LOGINS_VISIBLE`
+    expect(await getLoginCount()).toBeLessThanOrEqual(MAX_LOGINS_VISIBLE);
+  });
+
+  test('the login after the window retires the checklist', async () => {
+    for (let i = 0; i < MAX_LOGINS_VISIBLE + 1; i++) await recordLogin();
+    expect(await getLoginCount()).toBeGreaterThan(MAX_LOGINS_VISIBLE);
+  });
+
+  test('stops incrementing once past the threshold so it cannot drift unbounded', async () => {
+    for (let i = 0; i < 20; i++) await recordLogin();
+    expect(await getLoginCount()).toBe(MAX_LOGINS_VISIBLE + 1);
+  });
+
+  test('resetDismissed also clears the login count', async () => {
+    await recordLogin();
+    await recordLogin();
+    await resetDismissed();
+    expect(await getLoginCount()).toBe(0);
+  });
+
+  test('a corrupt stored value degrades to 0 rather than retiring the card', async () => {
+    mockStorage.set(`@vasco_activation_logins_v2`, 'not-a-number');
+    expect(await getLoginCount()).toBe(0);
   });
 });

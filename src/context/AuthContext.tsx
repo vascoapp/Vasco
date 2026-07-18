@@ -8,6 +8,7 @@ import { DEMO_MODE } from '../config/demo';
 import { logWarn } from '../utils/errorHandler';
 import { withTimeout } from '../utils/withTimeout';
 import { setCurrentUser } from '../lib/currentUser';
+import { recordLogin as recordActivationLogin } from '../services/activationMilestonesService';
 import { addBreadcrumb } from '../lib/errorReporting';
 import type { Session } from '@supabase/supabase-js';
 
@@ -677,6 +678,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         if (!error) {
           await clearLockout(normalizedEmail);
+          // Earliest point after a confirmed success — here setUser is driven by
+          // onAuthStateChange rather than by us, so record the login before the
+          // analytics block to give the count the best chance of landing before
+          // Vandaag mounts and reads it.
+          await recordActivationLogin().catch(() => {});
           setIsLoading(false);
           if (authData?.user) {
             const supaRole = (authData.user.user_metadata?.role === 'site-lead' ? 'sitelead' : 'contractor') as 'contractor' | 'aannemer' | 'sitelead';
@@ -702,6 +708,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       await clearLockout(normalizedEmail);
+      // Must land BEFORE setUser: setUser flips isAuthenticated, which mounts
+      // the (contractor) group and the Vandaag checklist reads the login count
+      // on mount. Incrementing after that point loses the race and the card
+      // stays visible one login too long.
+      await recordActivationLogin().catch(() => {});
       setUser(mockUser);
       setIsLoading(false);
       // R280: startAutoSync / startEventFlushing are now triggered uniformly
@@ -738,6 +749,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       if (!error && realAuthData?.user) {
         await clearLockout(normalizedEmail);
+        // See the demo path — record before the analytics block so the
+        // activation checklist's mount-time read sees the updated count.
+        await recordActivationLogin().catch(() => {});
         const realRole = (realAuthData.user.user_metadata?.role === 'site-lead' ? 'sitelead' : 'contractor') as 'contractor' | 'aannemer' | 'sitelead';
         initSession({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' }).catch(() => {});
         setUserContext({ userId: realAuthData.user.id, role: realRole, country: (realAuthData.user.user_metadata?.country as string) ?? 'NL' });

@@ -1,9 +1,11 @@
 // =============================================================================
 // ActivationChecklist (R225)
 // =============================================================================
-// Compact progress-bar + 5-step list on the Vandaag tab. Each incomplete
-// step is tappable and deep-links to the relevant screen. Auto-hides
-// once all 5 are done (or the contractor dismisses via the close button).
+// Compact progress-bar + 5-step NUMBERED list on the Vandaag tab. Each
+// incomplete step is tappable and deep-links to the relevant screen.
+// Auto-hides once all 5 are done, once the contractor dismisses it via the
+// close button, or once it has been shown for MAX_LOGINS_VISIBLE logins —
+// it's onboarding scaffolding, not a permanent fixture on the daily screen.
 // =============================================================================
 
 import { View, Text, Pressable, StyleSheet } from 'react-native';
@@ -36,7 +38,7 @@ export function ActivationChecklist() {
     <View style={s.card}>
       <View style={s.header}>
         <View style={s.iconWrap}>
-          <Ionicons name="checkmark-circle-outline" size={18} color={DK.colors.accent} />
+          <Ionicons name="list-outline" size={18} color={DK.colors.accent} />
         </View>
         <View style={{ flex: 1 }}>
           <DKLabel style={s.title}>
@@ -56,18 +58,19 @@ export function ActivationChecklist() {
       </View>
 
       <View style={s.list}>
-        {milestones.map((m) => (
+        {milestones.map((m, i) => (
           <Pressable
             key={m.id}
             disabled={m.done}
             onPress={() => router.push(m.route as any)}
             style={({ pressed }) => [s.row, pressed && { opacity: 0.85 }]}
           >
-            <Ionicons
-              name={m.done ? 'checkmark-circle' : 'ellipse-outline'}
-              size={18}
-              color={m.done ? DK.colors.success : DK.colors.textMuted}
-            />
+            {/* Numbered step badge — reads as an ordered "do these in order"
+                list rather than a checkbox grid. Completed steps keep the
+                numeral (so positions never shift) and go muted + struck. */}
+            <View style={[s.stepBadge, m.done && s.stepBadgeDone]}>
+              <Text style={[s.stepNumber, m.done && s.stepNumberDone]}>{i + 1}</Text>
+            </View>
             <Text
               style={[
                 s.rowLabel,
@@ -115,6 +118,27 @@ const s = StyleSheet.create({
   },
   progressFill: { height: '100%', backgroundColor: DK.colors.accent },
   list: { gap: GRID.xs, marginTop: GRID.xs },
+  stepBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: DK.colors.accent + '22',
+    borderWidth: 1,
+    borderColor: DK.colors.accent,
+  },
+  stepBadgeDone: {
+    backgroundColor: 'transparent',
+    borderColor: DK.colors.border,
+  },
+  stepNumber: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.labelFamily,
+    color: DK.colors.accent,
+    lineHeight: TYPE.tinySize + 2,
+  },
+  stepNumberDone: { color: DK.colors.textMuted },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
