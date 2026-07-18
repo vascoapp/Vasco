@@ -781,6 +781,17 @@ async function runScheduledTick(
             return 'low_win_alert'; // safe informational fallback
           };
           for (const a of actions) {
+            const pd = a.preparedData as any;
+            // Stable entityKey — MUST NOT fall back to `a.id`. buildLiveActions
+            // mints ids via `${prefix}-${Date.now()}-${random}`, so an id-based
+            // key made every daily run look like a brand-new entity: the queue's
+            // sibling-merge then bumped the count badge instead of deduping, and
+            // the same three invoices read as "11× Incasso" after a few logins.
+            // Quote-derived actions (draft_followup, quote_sent) and the
+            // win-rate insight carry no jobId/invoiceId, which is exactly the
+            // set that inflated. quoteId covers the former; the latter is a
+            // singleton per type, so the type alone is its stable identity.
+            const entityId = pd?.jobId ?? pd?.invoiceId ?? pd?.quoteId ?? 'singleton';
             await addToQueue({
               type: mapType(a.type),
               title: a.title,
@@ -789,7 +800,7 @@ async function runScheduledTick(
               actionLabel: a.actionLabel,
               estimatedImpact: a.impact,
               expiresAt: a.expiresAt,
-              entityKey: `eve-${a.type}-${(a.preparedData as any)?.jobId ?? (a.preparedData as any)?.invoiceId ?? a.id}`,
+              entityKey: `eve-${a.type}-${entityId}`,
               sourceGeneratorId: `eve-${a.agentType}`,
             });
           }

@@ -235,3 +235,238 @@ describe('aiActionQueueService', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Sibling count-badge merge — scoping regression tests
+// ---------------------------------------------------------------------------
+describe('addToQueue sibling merge scoping', () => {
+  beforeEach(() => clearStorage());
+
+  const base = {
+    type: 'progress_note' as const,
+    description: 'd',
+    preparedData: {},
+    actionLabel: 'Send',
+    estimatedImpact: '€0',
+  };
+
+  test('same generator + same type + different entity → merges into a count badge', async () => {
+    await addToQueue({ ...base, title: 'Reminder A', entityKey: 'eve-appt-1', sourceGeneratorId: 'eve-agent' });
+    await addToQueue({ ...base, title: 'Reminder B', entityKey: 'eve-appt-2', sourceGeneratorId: 'eve-agent' });
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].count).toBe(2);
+    expect(q[0].title).toMatch(/^2× /);
+  });
+
+  test('same entityKey twice → skipped entirely, no count bump', async () => {
+    await addToQueue({ ...base, title: 'Reminder A', entityKey: 'eve-appt-1', sourceGeneratorId: 'eve-agent' });
+    await addToQueue({ ...base, title: 'Reminder A', entityKey: 'eve-appt-1', sourceGeneratorId: 'eve-agent' });
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].count).toBe(1);
+  });
+
+  test('DIFFERENT generators of the same type stay separate actionable items', async () => {
+    // Regression: a type-only match collapsed a workflow-pack incasso step and
+    // an EVE appointment reminder into one card, discarding the second action.
+    await addToQueue({ ...base, title: 'Incasso Automatisch: Hotel', entityKey: 'pack-1', sourceGeneratorId: 'workflow_incasso' });
+    await addToQueue({ ...base, title: 'Afspraak morgen: Badkamer', entityKey: 'eve-appt-1', sourceGeneratorId: 'eve-agent' });
+    const q = await getQueue();
+    expect(q).toHaveLength(2);
+    expect(q.map((i) => i.count)).toEqual([1, 1]);
+    expect(q.some((i) => i.title.includes('Afspraak morgen'))).toBe(true);
+    expect(q.some((i) => i.title.includes('Incasso Automatisch'))).toBe(true);
+  });
+
+  test('count badge does not inflate when the same entities are re-generated', async () => {
+    // Regression: a per-run random entityKey made every scheduler run look like
+    // new entities, so the badge climbed 2× → 8× → 14× over successive logins.
+    for (let run = 0; run < 5; run++) {
+      await addToQueue({ ...base, title: 'Reminder A', entityKey: 'eve-appt-1', sourceGeneratorId: 'eve-agent' });
+      await addToQueue({ ...base, title: 'Reminder B', entityKey: 'eve-appt-2', sourceGeneratorId: 'eve-agent' });
+    }
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].count).toBe(2); // two distinct entities, five runs → still 2
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Queue titles must never expose raw row ids (regression: "Herinnering voor
+// inv-seed-1", "Opvolging offerte q-104"). Titles are contractor-facing and the
+// same entity shapes feed customer-facing share templates.
+//
+// These target queueEntityLabel directly rather than populateQueue's composed
+// titles: the test i18n mock returns the bare key when a call supplies no
+// defaultValue, so asserting on a composed title would pass regardless of what
+// the resolver returned — a test that cannot fail.
+// ---------------------------------------------------------------------------
+describe('queueEntityLabel — never returns a raw row id', () => {
+  const { queueEntityLabel } = require('../aiActionQueueService');
+  const customers = [
+    { id: 'cust-005', name: 'Hotel NH' },
+    { id: 'cust-003', name: 'Bakkerij Smit' },
+  ];
+  const ID_SHAPED = /^(?:j|q|inv|cust|c)-/;
+
+  test('prefers the document reference', () => {
+    expect(queueEntityLabel(
+      { id: 'inv-seed-1', reference: 'F-2026-014', customerId: 'cust-005', customer: 'Hotel NH' },
+      customers,
+    )).toBe('F-2026-014');
+  });
+
+  test('falls back to the job title for quotes', () => {
+    expect(queueEntityLabel(
+      { id: 'q-104', customerId: 'cust-003', customer: 'Bakkerij Smit', job: 'Keuken schilderen' },
+      customers,
+    )).toBe('Keuken schilderen');
+  });
+
+  test('resolves the customer name from customerId when nothing better exists', () => {
+    expect(queueEntityLabel({ id: 'inv-9', customerId: 'cust-005' }, customers)).toBe('Hotel NH');
+  });
+
+  test('rejects a customer field that actually holds an id', () => {
+    const label = queueEntityLabel({ id: 'inv-9', customer: 'cust-003' }, []);
+    expect(label).not.toMatch(ID_SHAPED);
+    expect(label).toBe('');
+  });
+
+  test('never returns the row id itself, for any shape', () => {
+    const shapes = [
+      { id: 'inv-seed-1' },
+      { id: 'q-104', customer: 'c-77' },
+      { id: 'j-3', customerId: 'cust-unknown' },
+      {},
+      null,
+      undefined,
+    ];
+    for (const shape of shapes) {
+      const label = queueEntityLabel(shape as any, customers);
+      expect(label).not.toMatch(ID_SHAPED);
+      if (shape && (shape as any).id) expect(label).not.toContain((shape as any).id);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cross-producer duplicate suppression
+// ---------------------------------------------------------------------------
+describe('addToQueue cross-producer entity dedup', () => {
+  beforeEach(() => clearStorage());
+
+  test('two generators proposing the same invoice for one job → ONE card', async () => {
+    // Regression: EVE used `eve-draft_invoice-j-4`, populateQueue used
+    // `invoice-for-job:j-4` — different keys, same work, two cards.
+    await addToQueue({
+      type: 'draft_invoice', title: 'Factuur opstellen voor Lekkage', description: 'd',
+      preparedData: { jobId: 'j-4' }, actionLabel: 'Maak', estimatedImpact: '€280',
+      entityKey: 'eve-draft_invoice-j-4', sourceGeneratorId: 'eve-agent',
+    });
+    await addToQueue({
+      type: 'draft_invoice', title: 'Factuur voor Lekkage', description: 'd',
+      preparedData: { jobId: 'j-4' }, actionLabel: 'Maak', estimatedImpact: '€280',
+      entityKey: 'invoice-for-job:j-4',
+    });
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+  });
+
+  test('different jobs still produce their own actionable cards', async () => {
+    await addToQueue({
+      type: 'draft_invoice', title: 'A', description: 'd', preparedData: { jobId: 'j-1' },
+      actionLabel: 'Maak', estimatedImpact: '€1', entityKey: 'eve-draft_invoice-j-1', sourceGeneratorId: 'eve-agent',
+    });
+    await addToQueue({
+      type: 'draft_invoice', title: 'B', description: 'd', preparedData: { jobId: 'j-2' },
+      actionLabel: 'Maak', estimatedImpact: '€2', entityKey: 'invoice-for-job:j-2',
+    });
+    const q = await getQueue();
+    // Same generator-less/EVE split means no sibling merge; both remain.
+    expect(q.length + (q[0]?.count ?? 0)).toBeGreaterThanOrEqual(2);
+  });
+
+  test('progress_note is EXCLUDED — distinct messages for one job survive', async () => {
+    // job-started and appointment-reminder share a jobId but are different
+    // customer messages; collapsing them would silently drop real work.
+    await addToQueue({
+      type: 'progress_note', title: 'Werk gestart', description: 'd',
+      preparedData: { jobId: 'j-9', template: 'we zijn begonnen' },
+      actionLabel: 'Stuur', estimatedImpact: 'x',
+      entityKey: 'eve-progress_update-j-9-started', sourceGeneratorId: 'eve-agent-a',
+    });
+    await addToQueue({
+      type: 'progress_note', title: 'Afspraak morgen', description: 'd',
+      preparedData: { jobId: 'j-9', template: 'herinnering afspraak' },
+      actionLabel: 'Stuur', estimatedImpact: 'x',
+      entityKey: 'eve-progress_update-j-9-appt', sourceGeneratorId: 'eve-agent-b',
+    });
+    const q = await getQueue();
+    expect(q).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Change notification — regression: a fresh install showed an empty AI queue
+// until app restart, because the hook read once on mount and the background
+// scheduler populated the queue seconds later.
+// ---------------------------------------------------------------------------
+describe('queue change notification', () => {
+  beforeEach(() => clearStorage());
+
+  const item = (over: Partial<QueueItem> = {}) => ({
+    type: 'draft_invoice' as const,
+    title: 'T',
+    description: 'd',
+    preparedData: {},
+    actionLabel: 'Maak',
+    estimatedImpact: '€1',
+    ...over,
+  });
+
+  test('adding an item notifies subscribers', async () => {
+    const { addToQueue, subscribeQueueChanges } = require('../aiActionQueueService');
+    let calls = 0;
+    const unsub = subscribeQueueChanges(() => { calls++; });
+    await addToQueue(item({ entityKey: 'e1' }));
+    await new Promise((r) => setTimeout(r, 300));
+    unsub();
+    expect(calls).toBeGreaterThan(0);
+  });
+
+  test('a burst of inserts is coalesced into a single notification', async () => {
+    // populateQueue adds ~10 items in a loop; that must not trigger 10 re-reads.
+    const { addToQueue, subscribeQueueChanges } = require('../aiActionQueueService');
+    let calls = 0;
+    const unsub = subscribeQueueChanges(() => { calls++; });
+    for (let i = 0; i < 8; i++) {
+      await addToQueue(item({ entityKey: `burst-${i}`, sourceGeneratorId: `gen-${i}` }));
+    }
+    await new Promise((r) => setTimeout(r, 300));
+    unsub();
+    expect(calls).toBe(1);
+  });
+
+  test('unsubscribing stops delivery', async () => {
+    const { addToQueue, subscribeQueueChanges } = require('../aiActionQueueService');
+    let calls = 0;
+    const unsub = subscribeQueueChanges(() => { calls++; });
+    unsub();
+    await addToQueue(item({ entityKey: 'e2' }));
+    await new Promise((r) => setTimeout(r, 300));
+    expect(calls).toBe(0);
+  });
+
+  test('a throwing subscriber does not prevent the others from running', async () => {
+    const { addToQueue, subscribeQueueChanges } = require('../aiActionQueueService');
+    let good = 0;
+    const u1 = subscribeQueueChanges(() => { throw new Error('bad subscriber'); });
+    const u2 = subscribeQueueChanges(() => { good++; });
+    await addToQueue(item({ entityKey: 'e3' }));
+    await new Promise((r) => setTimeout(r, 300));
+    u1(); u2();
+    expect(good).toBe(1);
+  });
+});

@@ -13,6 +13,7 @@ import { getScanHistory, getFirstScanInsights } from './invoiceScanService';
 import { getTradeBaselines } from './cohortBenchmarkService';
 import { getCustomerIntelligence } from '../intelligence/tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { logWarn } from '../utils/errorHandler';
 import { loadOnboardingPreferences, type OnboardingPreferences, wantsPaymentFocus, wantsQuotingHelp, wantsComplianceFocus, wantsAutomationFocus, wantsGrowthFocus } from './onboardingPreferencesService';
 import {
   fetchPendingCustomerQuestions,
@@ -77,6 +78,13 @@ export interface QueueItem {
   snoozeCount?: number;    // How many times snoozed
   /** Stable dedup key. Same key = same underlying entity (invoice id, etc.) */
   entityKey?: string;
+  /**
+   * entityKeys of the sibling events rolled into this item's count badge.
+   * Without this the merged entities lose their identity, so the next
+   * scheduler run no longer recognises them and merges them AGAIN — the count
+   * then climbs on every run for a fixed set of entities.
+   */
+  mergedKeys?: string[];
   /** How many similar events rolled into this item (e.g. "3 overdue invoices"). */
   count?: number;
 }
@@ -84,6 +92,38 @@ export interface QueueItem {
 // ---------------------------------------------------------------------------
 // Queue management
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Change notification
+// ---------------------------------------------------------------------------
+// `useAIQueue` used to read the queue exactly once on mount. The background
+// scheduler populates the queue a few seconds AFTER mount, and Expo Router
+// keeps tab screens mounted, so the mount effect never re-ran: on a fresh
+// install the contractor logged in, saw no AI actions at all, and the work the
+// engine had generated stayed invisible until the app was restarted.
+// Mutations now notify subscribers so any mounted view re-reads.
+
+type QueueListener = () => void;
+const queueListeners = new Set<QueueListener>();
+let notifyScheduled = false;
+
+/** Coalesced so populateQueue adding N items triggers ONE re-read, not N. */
+function notifyQueueChanged(): void {
+  if (notifyScheduled) return;
+  notifyScheduled = true;
+  setTimeout(() => {
+    notifyScheduled = false;
+    for (const listener of [...queueListeners]) {
+      try { listener(); } catch { /* a bad subscriber must not break the rest */ }
+    }
+  }, 150);
+}
+
+/** Subscribe to queue mutations. Returns an unsubscribe fn. */
+export function subscribeQueueChanges(listener: QueueListener): () => void {
+  queueListeners.add(listener);
+  return () => { queueListeners.delete(listener); };
+}
 
 export async function getQueue(): Promise<QueueItem[]> {
   try {
@@ -115,7 +155,11 @@ export async function getQueue(): Promise<QueueItem[]> {
     // boost but the core type/€/age signals work without them.
     const prefs = await loadOnboardingPreferences().catch(() => null);
     return [...merged].sort((a, b) => scoreQueueItem(b, prefs) - scoreQueueItem(a, prefs));
-  } catch {
+  } catch (e) {
+    // Never swallow this silently: returning [] here means the contractor sees
+    // NO AI actions at all while the queue on disk is full, which looks like
+    // "the feature is off" rather than an error. Log loudly so it's diagnosable.
+    logWarn('aiQueue', `getQueue failed — returning empty queue: ${String((e as Error)?.message ?? e)}`);
     return [];
   }
 }
@@ -251,6 +295,17 @@ function prioritizeQueue(items: QueueItem[], prefs: OnboardingPreferences): Queu
   return [...items].sort((a, b) => scoreQueueItem(b, prefs) - scoreQueueItem(a, prefs));
 }
 
+/**
+ * Types where a given entity warrants at most ONE pending action, so a second
+ * proposal for the same entity is duplicate work regardless of which generator
+ * produced it. Deliberately excludes multi-message types like `progress_note`.
+ */
+const SINGLE_ACTION_PER_ENTITY_TYPES: readonly QueueItemType[] = [
+  'draft_invoice', 'draft_reminder', 'draft_followup', 'draft_quote',
+  'late_payment_risk_alert', 'low_win_alert', 'job_handover',
+  'satisfaction_survey', 'invoice_regenerate', 'quote_expiry',
+];
+
 export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'createdAt'>): Promise<string> {
   const id = `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const full: QueueItem = {
@@ -262,18 +317,69 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
     const existing: QueueItem[] = raw ? JSON.parse(raw) : [];
-    // If there's an identical entity (type + entityKey), merge into a count badge
+    // If there's an identical entity (type + entityKey), skip it. `mergedKeys`
+    // is checked too: an entity that was previously rolled into a count badge
+    // is still "already queued", and forgetting that made it re-merge (and
+    // re-bump the count) on every subsequent run.
     if (item.entityKey) {
-      const match = existing.find(q => q.status === 'pending' && q.type === item.type && q.entityKey === item.entityKey);
+      const match = existing.find(q =>
+        q.status === 'pending'
+        && q.type === item.type
+        && (q.entityKey === item.entityKey || q.mergedKeys?.includes(item.entityKey!)),
+      );
       if (match) return ''; // same event, skip
     }
-    // Same type but different entities → roll into a single badge with count
-    const siblingIdx = existing.findIndex(q => q.status === 'pending' && q.type === item.type && !!item.entityKey);
+
+    // Cross-producer dedup on the TARGET ENTITY. Two generators can propose the
+    // same work through different entityKey conventions — e.g. the EVE agent's
+    // `eve-draft_invoice-j-seed-4` and populateQueue's `invoice-for-job:j-seed-4`
+    // both mean "invoice job j-seed-4", so the contractor saw two cards for one
+    // job. entityKey equality can't catch that because the prefixes differ.
+    //
+    // Restricted to types where one action per entity is definitionally true.
+    // `progress_note` is deliberately EXCLUDED: job-started, appointment
+    // reminder and invoice-sent are distinct messages that legitimately share a
+    // jobId, and collapsing them would drop real work.
+    const targetOf = (d: any): string | undefined =>
+      d?.jobId ?? d?.invoiceId ?? d?.quoteId;
+    const target = targetOf(item.preparedData);
+    if (target && SINGLE_ACTION_PER_ENTITY_TYPES.includes(item.type)) {
+      const dupe = existing.find(q =>
+        q.status === 'pending'
+        && q.type === item.type
+        && targetOf(q.preparedData) === target,
+      );
+      if (dupe) return ''; // same work, different producer
+    }
+    // Same KIND of alert, different entities → roll into a single count badge.
+    //
+    // Scoped to the same sourceGeneratorId on purpose. A QueueItemType is much
+    // coarser than the action it represents — `progress_note` alone covers EVE's
+    // appointment reminder, job-started, quote-sent and invoice-sent triggers —
+    // and a merged item is DISCARDED, not stored, so a type-only match silently
+    // swallowed unrelated actions into whichever card happened to be first and
+    // relabelled it with their combined count ("14× Incasso Automatisch" for a
+    // contractor with three incasso actions). Same generator + same type is a
+    // genuine batch ("3× overdue invoice"); across generators it is data loss.
+    //
+    // The `!!q.entityKey` clause also fixes a wrong-variable slip: it read
+    // `!!item.entityKey` — a term constant w.r.t. `q`, so the predicate matched
+    // the first pending item of that type whether or not IT was entity-keyed.
+    const siblingIdx = existing.findIndex(q =>
+      q.status === 'pending'
+      && q.type === item.type
+      && !!q.entityKey
+      && q.sourceGeneratorId === item.sourceGeneratorId,
+    );
     if (item.entityKey && siblingIdx >= 0) {
       const sibling = existing[siblingIdx];
       sibling.count = (sibling.count ?? 1) + 1;
+      // Remember what got folded in, so this entity is recognised as already
+      // queued on the next run instead of merging (and counting) a second time.
+      sibling.mergedKeys = [...(sibling.mergedKeys ?? []), item.entityKey!];
       sibling.title = sibling.count > 1 ? `${sibling.count}× ${stripCount(sibling.title)}` : sibling.title;
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(existing));
+      notifyQueueChanged();
       return sibling.id;
     }
     // Legacy dedup fallback for items without entityKey
@@ -285,6 +391,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     )) return '';
     existing.unshift({ ...full, count: 1 });
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(existing.slice(0, 50)));
+    notifyQueueChanged();
   } catch {}
   return id;
 }
@@ -335,6 +442,7 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
     if (item) {
       item.status = 'approved';
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      notifyQueueChanged();
       // Feedback loop: emit to learning layer so insightScorer approval-rate
       // cache picks up the signal on next refresh + force-refresh now so the
       // next generator tick within this session sees it (not stuck on TTL).
@@ -402,6 +510,7 @@ export async function rejectItem(itemId: string): Promise<void> {
         }
       }
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      notifyQueueChanged();
       try {
         const { emitBusinessEvent, emitPackDismissed } = await import('../intelligence/dataCollector');
         await emitBusinessEvent(getCurrentUserId(), {
@@ -435,6 +544,7 @@ export async function snoozeQueueItem(itemId: string, hours: number): Promise<vo
       item.snoozedUntil = new Date(Date.now() + hours * 3600000).toISOString();
       item.snoozeCount = (item.snoozeCount ?? 0) + 1;
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      notifyQueueChanged();
     }
   } catch {}
 }
@@ -527,6 +637,41 @@ interface PopulateQueueContext {
   trade?: string;
 }
 
+/**
+ * Human label for an invoice/quote in a queue TITLE. Never returns a row id.
+ *
+ * Queue titles are read by the contractor, and the same shapes feed the
+ * customer-facing share templates, so a leaked `inv-seed-1` / `q-104` is
+ * user-visible. Preference order is most-recognisable first: the document's
+ * own reference, then the job it belongs to, then the customer name.
+ */
+export function queueEntityLabel(
+  entity: Record<string, any> | null | undefined,
+  customers?: Array<{ id: string; name?: string }>,
+): string {
+  if (!entity) return '';
+  const byId = entity.customerId
+    ? customers?.find((c) => c.id === entity.customerId)?.name
+    : undefined;
+  const candidates = [
+    entity.reference,
+    entity.invoiceNumber,
+    entity.job,
+    entity.title,
+    byId,
+    // `customer` holds a NAME on these shapes, but older rows sometimes carry
+    // an id — only accept it when it doesn't look like one.
+    typeof entity.customer === 'string' && !/^(?:cust|c)-/.test(entity.customer)
+      ? entity.customer
+      : undefined,
+    entity.customerName,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c.trim();
+  }
+  return '';
+}
+
 export async function populateQueue(context: PopulateQueueContext): Promise<number> {
   let added = 0;
 
@@ -562,7 +707,9 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const custIntel = custId ? getCustomerIntelligence(custId, context.allJobs ?? [], context.allInvoices ?? context.overdueInvoices) : null;
     const id = await addToQueue({
       type: 'draft_reminder',
-      title: t('aiQueue.reminderFor', { id: inv.id || '' }),
+      // Human label, never the row id — this title is what the contractor reads
+      // in the queue ("Herinnering voor inv-seed-1" was leaking the id).
+      title: t('aiQueue.reminderFor', { ref: queueEntityLabel(inv, context.customers) }).trim(),
       description: t('aiQueue.amountOverdue', { amount: amountStr }),
       preparedData: {
         invoiceId: inv.id, amount: inv.amount, customer: inv.customer,
@@ -586,7 +733,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const followupIntel = followupCustId ? getCustomerIntelligence(followupCustId, context.allJobs ?? [], context.allInvoices ?? []) : null;
     const id = await addToQueue({
       type: 'draft_followup',
-      title: t('aiQueue.quoteFollowUp', { id: quote.id || '' }),
+      title: t('aiQueue.quoteFollowUp', { ref: queueEntityLabel(quote, context.customers) }).trim(),
       description: `${quote.customer || ''} · €${(quote.amount ?? 0).toLocaleString(undefined)}`,
       preparedData: {
         quoteId: quote.id, customer: quote.customer, amount: quote.amount,
@@ -1408,7 +1555,9 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
 // Permit requirements by trade + country
 // ---------------------------------------------------------------------------
 
-function getRequiredPermits(trade: string, country: string): { name: string; authority: string; url: string }[] {
+/** Exported so workflowPackService can populate its permit-check copy with a
+ * REAL requirement count instead of leaving {{permitCount}} empty. */
+export function getRequiredPermits(trade: string, country: string): { name: string; authority: string; url: string }[] {
   // Common permits required for ALL trades in each country
   const commonPermits: Record<string, { name: string; authority: string; url: string }[]> = {
     NL: [
@@ -1588,6 +1737,12 @@ export function useAIQueue() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Re-read when anything mutates the queue. The background scheduler populates
+  // the queue seconds AFTER this hook mounts, and Expo Router keeps tab screens
+  // mounted so the effect above never re-runs — without this subscription a
+  // fresh install shows an empty AI queue until the app is restarted.
+  useEffect(() => subscribeQueueChanges(refresh), [refresh]);
 
   const approve = useCallback(async (id: string, editedText?: string) => {
     if (processingRef.current.has(id)) return null; // Prevent double-tap
