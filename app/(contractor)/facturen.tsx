@@ -694,8 +694,13 @@ export default function FacturenScreen() {
               </Pressable>
             </View>
 
-            {/* Pending Approvals */}
-            {pendingApprovals.length > 0 && (
+            {/* Pending Approvals — aannemer / has-a-team only.
+                A multi-approver quote workflow is an aannemer concept: a solo
+                contractor approves their own quotes by sending them, so the
+                panel is pure feature-overreach noise on a solo account. Same
+                gate as the Team chips on the AI tab (R109). */}
+            {(user?.isAannemer || (businessProfile?.teamSize && businessProfile.teamSize !== 'solo')) &&
+              pendingApprovals.length > 0 && (
               <View style={styles.approvalBanner}>
                 <View style={styles.approvalHeader}>
                   <Ionicons name="shield-checkmark-outline" size={18} color={SemanticColors.feedbackWarning} />

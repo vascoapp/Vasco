@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -53,7 +54,13 @@ const mockRules: ApprovalRule[] = [
   { id: 'rule-2', name: 'Grote opdrachten', threshold: 10000, approvers: ['owner'], enabled: true },
 ];
 
-const mockApprovals: QuoteApproval[] = [
+// Demo-only fixtures. These reference customers and quoteIds that do NOT
+// exist in AppState ("Bakkerij Jansen", "Hotel Krasnapolsky", q-100/q-101),
+// so on a real install they invited the contractor to approve €12.500 of
+// work that does not exist — and approve() only mutates memory, so nothing
+// happened and the state reset on relaunch. Gated to DEMO_MODE; real
+// installs start empty and fill only via requestApproval().
+const DEMO_APPROVALS: QuoteApproval[] = [
   {
     id: 'qa-1', quoteId: 'q-100', quoteReference: 'Q-2026-0055', customerName: 'Bakkerij Jansen',
     amount: 3800, status: 'pending', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_HOUR * 4),
@@ -73,6 +80,8 @@ const mockApprovals: QuoteApproval[] = [
     reviewedBy: 'Eigenaar', reviewedAt: new Date(Date.now() - MS_PER_DAY),
   },
 ];
+
+const mockApprovals: QuoteApproval[] = DEMO_MODE ? DEMO_APPROVALS : [];
 
 // =============================================================================
 // SERVICE
