@@ -1,5 +1,6 @@
 {
   "common": {
+    "durationMin": "{{m}} Min.",
     "durationH": "{{h}} Std.",
     "durationHm": "{{h}} Std. {{m}}",
     "save": "Speichern",

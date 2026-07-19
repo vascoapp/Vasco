@@ -1,5 +1,6 @@
 {
   "common": {
+    "durationMin": "{{m}} min",
     "durationH": "{{h}}u",
     "durationHm": "{{h}}u{{m}}",
     "save": "Opslaan",

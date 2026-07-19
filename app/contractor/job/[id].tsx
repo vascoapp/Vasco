@@ -129,7 +129,7 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob, workers } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob, updateJobStatus, workers } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
@@ -270,6 +270,17 @@ export default function JobDetailPage() {
   const startTime = new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   const endTime = new Date(job.endTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
+  // Duration of THIS SLOT, mirroring the Werk list. `job.duration` is the
+  // whole job's estimate ((estimatedDuration || 2) * 60), so a 24h bathroom
+  // renovation chipped "24u" next to the slot "13:30 – 17:00".
+  const slotMins = (() => {
+    const s = new Date(job.startTime).getTime();
+    const e = new Date(job.endTime).getTime();
+    if (Number.isNaN(s) || Number.isNaN(e)) return 0;
+    return Math.round((e - s) / 60000);
+  })();
+  const durationMins = slotMins > 0 ? slotMins : (job.duration ?? 0);
+
   const getStatusLabel = () => {
     switch (job.status) {
       case 'in_progress': return t('jobs.statusInProgress', 'In progress');
@@ -400,11 +411,19 @@ export default function JobDetailPage() {
               <Text style={styles.heroDetailText}>{startTime} – {endTime}</Text>
               <View style={styles.durationChip}>
                 {/* Format hours+minutes like the Werk list does, so the same
-                    job reads identically on both screens. */}
+                    job reads identically on both screens. The Dutch "u" was
+                    hardcoded for all 6 locales and the minutes were not
+                    zero-padded (65 min -> "1u5", reading as 1u50). */}
                 <Text style={styles.durationText}>
-                  {job.duration >= 60
-                    ? `${Math.floor(job.duration / 60)}u${job.duration % 60 > 0 ? job.duration % 60 : ''}`
-                    : `${job.duration} min`}
+                  {durationMins >= 60
+                    ? (durationMins % 60 > 0
+                        ? t('common.durationHm', {
+                            defaultValue: '{{h}}h{{m}}',
+                            h: Math.floor(durationMins / 60),
+                            m: String(durationMins % 60).padStart(2, '0'),
+                          })
+                        : t('common.durationH', { defaultValue: '{{h}}h', h: Math.floor(durationMins / 60) }))
+                    : t('common.durationMin', { defaultValue: '{{m}} min', m: durationMins })}
                 </Text>
               </View>
             </View>
@@ -1028,6 +1047,26 @@ export default function JobDetailPage() {
                     if (hours > 0) {
                       recordHours(job.id, Math.round(hours * 10) / 10);
                     }
+                  }
+                  // Actually mark the job completed. Previously this only set
+                  // the local `jobCompleted` flag: the button flipped to
+                  // "Completed" and the clocked hours were recorded, but the
+                  // job's STATUS was never changed — so navigating away and
+                  // back (or a cold start) showed "Done" again and Werk still
+                  // listed the job as active. `updateJob` was destructured
+                  // here and used for worker assignment and signatures, just
+                  // never for completion.
+                  //
+                  // updateJobStatus (not updateJob) is the right call: it runs
+                  // the transition validator, stamps completedAt, records the
+                  // job outcome, and queues the draft-invoice action — the
+                  // whole post-completion chain that was being skipped.
+                  const { warnings } = updateJobStatus(job.id, 'completed');
+                  if (warnings.length > 0) {
+                    Alert.alert(
+                      t('jobs.completedWithWarnings', 'Completed with warnings'),
+                      warnings.join('\n'),
+                    );
                   }
                   setJobCompleted(true);
                 };
