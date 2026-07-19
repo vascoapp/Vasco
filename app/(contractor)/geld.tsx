@@ -113,7 +113,13 @@ export default function GeldScreen() {
       .filter((inv: any) => invoiceStatusFilter === 'all' || inv.status === invoiceStatusFilter)
       .map((inv: any) => ({
         id: inv.id,
-        name: inv.customer || inv.customerName || inv.reference || '',
+        // Was `|| inv.reference` as a last resort — but reference is a
+        // document number ("Q-2024-0042"), not a person, so an invoice with
+        // no customer rendered its reference where the customer name goes.
+        // Blank beats leaking an internal identifier; this matches the same
+        // conclusion drawn for addInvoiceFromJob in AppState (see the
+        // "cust-003" comment there).
+        name: inv.customer || inv.customerName || '',
         description: inv.job || t('invoices.invoice', 'Factuur'),
         amount: inv.total || inv.amount || 0,
         status: inv.status,
