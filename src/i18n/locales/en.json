@@ -506,6 +506,8 @@
     "photoLibrary": "Photo Library"
   },
   "compliance": {
+    "manageInsurance": "Manage insurance & claims",
+    "fileClaim": "File a claim",
     "docRequirements": "Document requirements",
     "required": "required",
     "complete": "complete",

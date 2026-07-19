@@ -506,6 +506,8 @@
     "photoLibrary": "Galleria foto"
   },
   "compliance": {
+    "manageInsurance": "Gestisci assicurazioni e sinistri",
+    "fileClaim": "Denuncia un sinistro",
     "docRequirements": "Documenti richiesti",
     "required": "richiesto",
     "complete": "completo",

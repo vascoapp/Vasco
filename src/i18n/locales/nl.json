@@ -490,6 +490,8 @@
     "photoLibrary": "Fotobibliotheek"
   },
   "compliance": {
+    "manageInsurance": "Beheer verzekeringen & claims",
+    "fileClaim": "Claim indienen",
     "docRequirements": "Documentvereisten",
     "required": "verplicht",
     "complete": "compleet",

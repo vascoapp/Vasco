@@ -610,6 +610,25 @@ export default function CertificatenScreen() {
               <Text style={styles.listCount}>{filteredItems.length} {t('compliance.items', 'items')}</Text>
             </View>
 
+            {/* Entry point to the full insurance screen (claims, photos,
+                report-to-insurer). This compliance tab only lists policies
+                read-only — before this the dedicated /contractor/insurance
+                screen had NO contractor entry point at all (only the site
+                lead's compliance hub linked to it), so the whole claim flow
+                was dead code for solo contractors. */}
+            {activeTab === 'insurance' && (
+              <Pressable
+                style={styles.manageInsuranceButton}
+                onPress={() => router.push('/contractor/insurance' as any)}
+                accessibilityRole="button"
+                accessibilityLabel={t('compliance.manageInsurance', 'Beheer verzekeringen & claims')}
+              >
+                <Ionicons name="shield-half" size={18} color="#fff" />
+                <Text style={styles.manageInsuranceText} numberOfLines={1}>{t('compliance.manageInsurance', 'Beheer verzekeringen & claims')}</Text>
+                <Ionicons name="chevron-forward" size={16} color="#fff" />
+              </Pressable>
+            )}
+
             {/* Items sorted by urgency */}
             {filteredItems
               .sort((a, b) => {
@@ -733,6 +752,15 @@ export default function CertificatenScreen() {
               )}
 
               <View style={styles.modalActions}>
+                {selectedItem.type === 'insurance' && (
+                  <Pressable
+                    style={styles.modalButton}
+                    onPress={() => { setSelectedItem(null); router.push('/contractor/insurance' as any); }}
+                  >
+                    <Ionicons name="shield-half" size={20} color={Palette.hermesOrange} />
+                    <Text style={styles.modalButtonText}>{t('compliance.fileClaim', 'Claim indienen')}</Text>
+                  </Pressable>
+                )}
                 {selectedItem.documentUrl && (
                   <Pressable style={styles.modalButton} onPress={() => { if (selectedItem.documentUrl) Linking.openURL(selectedItem.documentUrl); }}>
                     <Ionicons name="document-text" size={20} color={Palette.hermesOrange} />
@@ -1153,6 +1181,23 @@ const styles = StyleSheet.create({
     fontSize: TYPE.captionSize + 1,
     fontFamily: TYPE.labelFamily,
     color: Palette.hermesOrange,
+  },
+
+  // Manage insurance & claims (routes to the full /contractor/insurance screen)
+  manageInsuranceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+  },
+  manageInsuranceText: {
+    flex: 1,
+    fontSize: TYPE.captionSize + 1,
+    fontFamily: TYPE.labelFamily,
+    color: '#fff',
   },
 
   // Modal

@@ -506,6 +506,8 @@
     "photoLibrary": "Fotomediathek"
   },
   "compliance": {
+    "manageInsurance": "Versicherungen & Schäden verwalten",
+    "fileClaim": "Schaden melden",
     "docRequirements": "Dokumentanforderungen",
     "required": "erforderlich",
     "complete": "vollständig",
