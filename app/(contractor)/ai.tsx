@@ -650,7 +650,11 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
             <DKLabel style={heroStyles.dismissText}>{t('ai.later')}</DKLabel>
           </Pressable>
           <Pressable style={({ pressed }) => [heroStyles.approveBtn, pressed && { opacity: 0.92 }]} onPress={onApprove}>
-            <DKLabel style={heroStyles.approveText} numberOfLines={1}>{action.actionLabel}</DKLabel>
+            {/* 2 lines, not 1: this is the hero card's PRIMARY action and it
+                shares a row with Later + Edit, so a longer label ellipsized
+                to "HERINNERING STUR…" — the one button that must stay
+                readable. Wrapping grows the button instead of cutting it. */}
+            <DKLabel style={heroStyles.approveText} numberOfLines={2}>{action.actionLabel}</DKLabel>
             <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={12} color={DK.colors.bg} />
           </Pressable>
           {action.actionType === 'share' && action.shareText && (
