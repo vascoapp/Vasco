@@ -18,7 +18,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { isSupabaseConfigured, supabase } from '../../src/lib/supabase';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatDate } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { DEMO_MODE } from '../../src/config/demo';
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -181,7 +181,16 @@ export default function CustomerViewScreen() {
   const [viewRecorded, setViewRecorded] = useState(false);
 
   const { user } = useAuth();
-  const fmt = (n: number) => formatCurrency(n, (user?.country ?? 'NL') as Country);
+  const country = (user?.country ?? 'NL') as Country;
+  const fmt = (n: number) => formatCurrency(n, country);
+  // Returns a localised date, or null for an empty/unparseable value — the
+  // caller then omits the row rather than showing the customer "Valid until
+  // Invalid Date" (quote.validUntil defaults to '' → new Date('') was NaN).
+  const fmtDate = (value?: string): string | null => {
+    if (!value) return null;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : formatDate(d, country);
+  };
 
   // Record page view for data moat
   useEffect(() => {
@@ -368,20 +377,30 @@ export default function CustomerViewScreen() {
           </View>
         )}
 
-        {/* Details */}
+        {/* Details — each row omitted when its value is missing, so the
+            customer never sees an empty row or "Invalid Date". */}
         <View style={s.detailsCard}>
-          <View style={s.detailRow}>
-            <Ionicons name="time-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>{t('customerView.estimatedDuration', 'Estimated duration')}: {quote.estimatedDuration}</Text>
-          </View>
-          <View style={s.detailRow}>
-            <Ionicons name="card-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>{quote.paymentTerms}</Text>
-          </View>
-          <View style={s.detailRow}>
-            <Ionicons name="calendar-outline" size={16} color={SemanticColors.textSecondary} />
-            <Text style={s.detailText}>{t('customerView.validUntil', 'Valid until {{date}}', { date: new Date(quote.validUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) })}</Text>
-          </View>
+          {!!quote.estimatedDuration && (
+            <View style={s.detailRow}>
+              <Ionicons name="time-outline" size={16} color={SemanticColors.textSecondary} />
+              <Text style={s.detailText}>{t('customerView.estimatedDuration', 'Estimated duration')}: {quote.estimatedDuration}</Text>
+            </View>
+          )}
+          {!!quote.paymentTerms && (
+            <View style={s.detailRow}>
+              <Ionicons name="card-outline" size={16} color={SemanticColors.textSecondary} />
+              <Text style={s.detailText}>{quote.paymentTerms}</Text>
+            </View>
+          )}
+          {(() => {
+            const validUntil = fmtDate(quote.validUntil);
+            return validUntil ? (
+              <View style={s.detailRow}>
+                <Ionicons name="calendar-outline" size={16} color={SemanticColors.textSecondary} />
+                <Text style={s.detailText}>{t('customerView.validUntil', 'Valid until {{date}}', { date: validUntil })}</Text>
+              </View>
+            ) : null;
+          })()}
         </View>
 
         {/* Actions */}
