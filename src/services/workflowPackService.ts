@@ -361,13 +361,19 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       {
         trigger: 'daily_17:00', delayDays: 0, action: 'flag_incomplete_jobs', channel: 'push',
         i18nKey: 'workflowPacks.endOfDay.incompleteJobs',
-        template: '{{count}} klussen nog niet afgerond vandaag.',
+        // Count AFTER a colon, deliberately. These strings are rendered by
+        // resolveTemplate (plain {{}} substitution), NOT by i18next, so there
+        // is no plural machinery available here — "{{count}} klussen" printed
+        // "1 klussen" in the AI queue. Putting the number last sidesteps
+        // noun agreement in every locale.
+        template: 'Klussen niet afgerond vandaag: {{count}}',
         defaults: {
-          en: '{{count}} jobs not yet finished today.',
-          de: '{{count}} Aufträge heute noch nicht abgeschlossen.',
-          fr: '{{count}} chantiers non terminés aujourd\'hui.',
-          es: '{{count}} trabajos sin terminar hoy.',
-          it: '{{count}} lavori non completati oggi.',
+          en: 'Jobs not finished today: {{count}}',
+          nl: 'Klussen niet afgerond vandaag: {{count}}',
+          de: 'Heute nicht abgeschlossene Aufträge: {{count}}',
+          fr: "Chantiers non terminés aujourd'hui : {{count}}",
+          es: 'Trabajos sin terminar hoy: {{count}}',
+          it: 'Lavori non completati oggi: {{count}}',
         },
       },
       {
