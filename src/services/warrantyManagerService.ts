@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -70,7 +71,7 @@ export interface WarrantyStats {
 // MOCK DATA
 // =============================================================================
 
-const mockWarranties: Warranty[] = [
+const DEMO_mockWarranties: Warranty[] = [
   {
     id: 'war-1', customerId: 'cust-1', customerName: 'Familie de Groot', equipmentName: 'CV-ketel', brand: 'Nefit', model: 'Trendline HRC 30',
     serialNumber: 'NF-2021-12345', installDate: new Date('2021-03-10'), warrantyStart: new Date('2021-03-10'), warrantyEnd: new Date('2026-03-10'),
@@ -88,7 +89,10 @@ const mockWarranties: Warranty[] = [
   },
 ];
 
-const mockClaims: WarrantyClaim[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockWarranties: Warranty[] = DEMO_MODE ? DEMO_mockWarranties : [];
+
+const DEMO_mockClaims: WarrantyClaim[] = [
   {
     id: 'claim-1', warrantyId: 'war-1', customerName: 'Familie de Groot', equipmentName: 'CV-ketel', brand: 'Nefit',
     issueDescription: 'Ketel geeft storing E9 - druksensor defect', issueDate: new Date('2024-01-20'), claimDate: new Date('2024-01-22'),
@@ -100,6 +104,9 @@ const mockClaims: WarrantyClaim[] = [
     ],
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockClaims: WarrantyClaim[] = DEMO_MODE ? DEMO_mockClaims : [];
 
 // =============================================================================
 // SERVICE CLASS

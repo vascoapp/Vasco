@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useMemo } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   View,
   Text,
@@ -58,7 +59,7 @@ interface MockChain {
   blockers: string[];
 }
 
-const MOCK_CHAINS: MockChain[] = [
+const DEMO_MOCK_CHAINS: MockChain[] = [
   {
     jobId: 'job-001',
     jobTitle: 'Badkamer renovatie - Van der Berg',
@@ -130,6 +131,9 @@ const MOCK_CHAINS: MockChain[] = [
     blockers: [],
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_CHAINS: MockChain[] = DEMO_MODE ? DEMO_MOCK_CHAINS : [];
 
 // ============================================
 // COMPONENTS

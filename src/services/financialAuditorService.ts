@@ -53,7 +53,7 @@ const MOCK_MARKET_RATES: Record<string, number> = {
   'skip-hire': 280,         // per week
 };
 
-const MOCK_INVOICES: Record<string, any> = {
+const DEMO_MOCK_INVOICES: Record<string, any> = {
   'INV-2024-0892': {
     id: 'INV-2024-0892',
     number: 'INV-2024-0892',
@@ -84,7 +84,10 @@ const MOCK_INVOICES: Record<string, any> = {
   },
 };
 
-const MOCK_BUDGETS: Record<string, BudgetData> = {
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_INVOICES: Record<string, any> = DEMO_MODE ? DEMO_MOCK_INVOICES : {};
+
+const DEMO_MOCK_BUDGETS: Record<string, BudgetData> = {
   'project-001': {
     id: 'budget-001',
     projectId: 'project-001',
@@ -106,6 +109,9 @@ const MOCK_BUDGETS: Record<string, BudgetData> = {
     excelFilePath: '/budgets/project-001-budget-v3.xlsx',
   },
 };
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_BUDGETS: Record<string, BudgetData> = DEMO_MODE ? DEMO_MOCK_BUDGETS : {};
 
 const MOCK_HISTORICAL_RATES: Record<string, { vendor: string; item: string; rates: { date: string; rate: number }[] }[]> = {
   'vendor-002': [
@@ -1119,6 +1125,7 @@ export const financialAuditor = new FinancialAuditorService();
 
 // React hooks
 import { useState, useEffect, useCallback } from 'react';
+import { DEMO_MODE } from '../config/demo';
 
 export function useFinancialAuditFindings(filters?: FinancialAuditFilters) {
   const [findings, setFindings] = useState<FinancialAuditFinding[]>([]);

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { SemanticColors } from '../../theme/colors';
@@ -57,7 +58,7 @@ interface IngestedDocument {
   notes?: string;
 }
 
-const MOCK_DOCUMENTS: IngestedDocument[] = [
+const DEMO_MOCK_DOCUMENTS: IngestedDocument[] = [
   {
     id: 'doc-001',
     fileName: 'Payment_Certificate_05_Jan2024.pdf',
@@ -252,6 +253,9 @@ const MOCK_DOCUMENTS: IngestedDocument[] = [
     },
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_DOCUMENTS: IngestedDocument[] = DEMO_MODE ? DEMO_MOCK_DOCUMENTS : [];
 
 export function DocumentInbox() {
   const [activeTab, setActiveTab] = useState<TabId>('inbox');

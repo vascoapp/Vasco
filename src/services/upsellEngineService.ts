@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -100,13 +101,16 @@ const upsellTemplates: Omit<UpsellOpportunity, 'id' | 'status'>[] = [
   },
 ];
 
-const mockActiveRecommendations: ActiveRecommendation[] = [
+const DEMO_mockActiveRecommendations: ActiveRecommendation[] = [
   {
     id: 'ar-1', jobId: 'job-123', jobType: 'cv_maintenance', customerId: 'cust-1', customerName: 'Familie de Groot',
     opportunities: upsellTemplates.filter(t => t.targetService === 'cv_maintenance').map((t, i) => ({ ...t, id: `opp-${i}`, status: 'pending' as const })),
     totalPotentialValue: 4938,
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockActiveRecommendations: ActiveRecommendation[] = DEMO_MODE ? DEMO_mockActiveRecommendations : [];
 
 // =============================================================================
 // SERVICE CLASS

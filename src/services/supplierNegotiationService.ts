@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
+import { DEMO_MODE } from '../config/demo';
 
 // =============================================================================
 // TYPES
@@ -46,7 +47,7 @@ export interface NegotiationSummary {
 // MOCK DATA
 // =============================================================================
 
-const MOCK_LEVERAGE: SupplierLeverage[] = [
+const DEMO_MOCK_LEVERAGE: SupplierLeverage[] = [
   {
     supplierId: 'sup_technische_unie',
     supplierName: 'Technische Unie',
@@ -104,6 +105,9 @@ const MOCK_LEVERAGE: SupplierLeverage[] = [
     negotiationTip: 'Overweeg Hornbach-orders te verplaatsen naar Bouwmaat voor hogere tier-korting.',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_LEVERAGE: SupplierLeverage[] = DEMO_MODE ? DEMO_MOCK_LEVERAGE : [];
 
 // =============================================================================
 // SERVICE

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { DEMO_MODE } from '../config/demo';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,13 +60,26 @@ export interface CollectionsAgentSummary {
 // Mock Data
 // ---------------------------------------------------------------------------
 
-const MOCK_DSO_METRICS: DSOMetrics = {
+const DEMO_DSO_METRICS: DSOMetrics = {
   currentDSO: 24,
   targetDSO: 21,
   trend: 'improving',
   previousDSO: 28,
   industryAverage: 32,
 };
+
+/** Demo fixture — zeroed in production builds (see src/config/demo.ts). A real
+ *  contractor's DSO is derived from their own invoices; showing a fabricated
+ *  24-day DSO on the facturen tab is worse than showing nothing. */
+const ZERO_DSO_METRICS: DSOMetrics = {
+  currentDSO: 0,
+  targetDSO: 30,
+  trend: 'stable',
+  previousDSO: 0,
+  industryAverage: 0,
+};
+
+const MOCK_DSO_METRICS: DSOMetrics = DEMO_MODE ? DEMO_DSO_METRICS : ZERO_DSO_METRICS;
 
 // R210: industryAverage is overridden from the cohort (R195 `get_cohort_dso`)
 // when available, so the DSO generator and related insights compare the
@@ -78,7 +92,7 @@ let cohortIndustryAverage: number | null = null;
 import { registerSingletonReset } from './singletonReset';
 registerSingletonReset(() => { cohortIndustryAverage = null; });
 
-const MOCK_DUNNING_SEQUENCES: DunningSequence[] = [
+const DEMO_MOCK_DUNNING_SEQUENCES: DunningSequence[] = [
   {
     id: 'dun-001',
     invoiceId: 'INV-2026-0041',
@@ -194,7 +208,10 @@ const MOCK_DUNNING_SEQUENCES: DunningSequence[] = [
   },
 ];
 
-const MOCK_CASH_GAP_ALERTS: CashGapAlert[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_DUNNING_SEQUENCES: DunningSequence[] = DEMO_MODE ? DEMO_MOCK_DUNNING_SEQUENCES : [];
+
+const DEMO_MOCK_CASH_GAP_ALERTS: CashGapAlert[] = [
   {
     id: 'cga-001',
     title: 'Kasgat volgende week',
@@ -216,6 +233,9 @@ const MOCK_CASH_GAP_ALERTS: CashGapAlert[] = [
     relatedInvoiceIds: ['INV-2026-0029'],
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_CASH_GAP_ALERTS: CashGapAlert[] = DEMO_MODE ? DEMO_MOCK_CASH_GAP_ALERTS : [];
 
 // ---------------------------------------------------------------------------
 // Service (singleton)

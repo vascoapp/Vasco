@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
+import { DEMO_MODE } from '../config/demo';
 
 // =============================================================================
 // TYPES
@@ -62,7 +63,7 @@ export interface ProfitabilitySummary {
 // MOCK DATA
 // =============================================================================
 
-const MOCK_JOB_TYPES: JobTypeProfitability[] = [
+const DEMO_MOCK_JOB_TYPES: JobTypeProfitability[] = [
   {
     jobType: 'Loodgieterswerk',
     totalRevenue: 4080,
@@ -125,7 +126,10 @@ const MOCK_JOB_TYPES: JobTypeProfitability[] = [
   },
 ];
 
-const MOCK_CUSTOMERS: CustomerLifetimeValue[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_JOB_TYPES: JobTypeProfitability[] = DEMO_MODE ? DEMO_MOCK_JOB_TYPES : [];
+
+const DEMO_MOCK_CUSTOMERS: CustomerLifetimeValue[] = [
   {
     customerId: 'cust_1',
     customerName: 'Familie De Jong',
@@ -188,7 +192,10 @@ const MOCK_CUSTOMERS: CustomerLifetimeValue[] = [
   },
 ];
 
-const MOCK_INSIGHTS: ProfitabilityInsight[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_CUSTOMERS: CustomerLifetimeValue[] = DEMO_MODE ? DEMO_MOCK_CUSTOMERS : [];
+
+const DEMO_MOCK_INSIGHTS: ProfitabilityInsight[] = [
   {
     id: 'pi_1',
     type: 'opportunity',
@@ -214,6 +221,9 @@ const MOCK_INSIGHTS: ProfitabilityInsight[] = [
     icon: 'arrow-up-circle',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_INSIGHTS: ProfitabilityInsight[] = DEMO_MODE ? DEMO_MOCK_INSIGHTS : [];
 
 // =============================================================================
 // SERVICE

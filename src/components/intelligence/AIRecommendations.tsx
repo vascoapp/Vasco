@@ -2,6 +2,7 @@
 // This is where the data moat becomes visible value to users
 
 import { useState, useEffect } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   View,
   Text,
@@ -23,7 +24,7 @@ type IconName = keyof typeof Ionicons.glyphMap;
 // MOCK RECOMMENDATIONS (Demo)
 // ============================================
 
-const DEMO_RECOMMENDATIONS: Recommendation[] = [
+const DEMO_DEMO_RECOMMENDATIONS: Recommendation[] = [
   {
     id: 'rec_price_1',
     type: 'buy_now',
@@ -93,6 +94,9 @@ const DEMO_RECOMMENDATIONS: Recommendation[] = [
     urgency: 'when-convenient',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const DEMO_RECOMMENDATIONS: Recommendation[] = DEMO_MODE ? DEMO_DEMO_RECOMMENDATIONS : [];
 
 // ============================================
 // CONFIGURATION

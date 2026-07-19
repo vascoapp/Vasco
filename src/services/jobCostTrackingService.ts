@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
+import { DEMO_MODE } from '../config/demo';
 
 // =============================================================================
 // CONSTANTS
@@ -227,7 +228,7 @@ function buildEstimate(
 // =============================================================================
 
 // Estimates: est prices = act prices (these are the plan, no variance within estimates)
-const MOCK_ESTIMATES: JobEstimate[] = [
+const DEMO_MOCK_ESTIMATES: JobEstimate[] = [
   buildEstimate('job_301', 24, 120, [
     mat('Tegels 60x60 antraciet', 45, 45, 38, 38, 'Bouwmaat'),
     mat('Tegellijm flexibel', 6, 6, 28, 28, 'Bouwmaat'),
@@ -258,7 +259,10 @@ const MOCK_ESTIMATES: JobEstimate[] = [
   ]),
 ];
 
-const MOCK_ACTUALS: JobActual[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_ESTIMATES: JobEstimate[] = DEMO_MODE ? DEMO_MOCK_ESTIMATES : [];
+
+const DEMO_MOCK_ACTUALS: JobActual[] = [
   // Job 301: Tegelvloer — qty overrun + Bouwmaat tile price +5%
   buildJob('job_301', 34, 120, [
     mat('Tegels 60x60 antraciet', 45, 52, 38, 40, 'Bouwmaat'),
@@ -296,6 +300,9 @@ const MOCK_ACTUALS: JobActual[] = [
     mat('Vulslang + koppelingen', 1, 1, 32, 32, 'Hornbach'),
   ]),
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_ACTUALS: JobActual[] = DEMO_MODE ? DEMO_MOCK_ACTUALS : [];
 
 const MOCK_JOB_NAMES: Record<string, string> = {
   job_301: 'Tegelvloer badkamer — Van Dijk',

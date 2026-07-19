@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { DEMO_MODE } from '../config/demo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
 
@@ -92,13 +93,16 @@ const KEYS = {
 // SEED DATA
 // ============================================
 
-const SEED_DEFECTS: Defect[] = [
+const DEMO_SEED_DEFECTS: Defect[] = [
   { id: 'd1', type: 'gebrek', title: 'Lekkage CV-leiding', location: 'Blok B - Verdieping 1', description: 'Druppellekkage bij koppeling CV-leiding badkamer unit 12', severity: 'hoog', trade: 'Loodgieter', date: '2026-03-18', status: 'open', photos: [] },
   { id: 'd2', type: 'gebrek', title: 'Scheef kozijn woonkamer', location: 'Blok A - Begane grond', description: 'Kozijn 2mm uit lood, sluit niet goed', severity: 'middel', trade: 'Timmerman', date: '2026-03-17', status: 'open', photos: [] },
   { id: 'd3', type: 'gebrek', title: 'Verfblaren plafond', location: 'Blok C - Verdieping 3', description: 'Blaarvorming latex plafond na vochtproblemen', severity: 'laag', trade: 'Schilder', date: '2026-03-16', status: 'open', photos: [] },
   { id: 'd4', type: 'garantie', title: 'Defecte thermostaat', location: 'Blok A - Verdieping 2', description: 'Honeywell thermostaat reageert niet meer', severity: 'middel', trade: 'Elektricien', date: '2026-03-15', status: 'open', photos: [], guaranteeRef: 'GAR-2025-0041', guaranteeExpiry: '2027-03-15' },
   { id: 'd5', type: 'gebrek', title: 'Tegels loszittend', location: 'Blok B - Verdieping 1', description: 'Twee vloertegels badkamer zitten los', severity: 'hoog', trade: 'Metselaar', date: '2026-03-14', status: 'open', photos: [] },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const SEED_DEFECTS: Defect[] = DEMO_MODE ? DEMO_SEED_DEFECTS : [];
 
 // ============================================
 // SERVICE CLASS

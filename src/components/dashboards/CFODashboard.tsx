@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   Pressable,
   RefreshControl,
@@ -84,7 +85,7 @@ interface PendingApproval {
   requestedAt: string;
 }
 
-const MOCK_PENDING_APPROVALS: PendingApproval[] = [
+const DEMO_MOCK_PENDING_APPROVALS: PendingApproval[] = [
   {
     id: 'app-1',
     type: 'payment',
@@ -167,6 +168,9 @@ const MOCK_PENDING_APPROVALS: PendingApproval[] = [
   },
 ];
 
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_PENDING_APPROVALS: PendingApproval[] = DEMO_MODE ? DEMO_MOCK_PENDING_APPROVALS : [];
+
 // =============================================================================
 // MOCK HANDOVER DATA
 // =============================================================================
@@ -184,7 +188,7 @@ interface PendingHandover {
   missingItems: string[];
 }
 
-const MOCK_PENDING_HANDOVERS: PendingHandover[] = [
+const DEMO_MOCK_PENDING_HANDOVERS: PendingHandover[] = [
   {
     id: 'ho-1',
     projectName: 'Meridian Tower',
@@ -223,6 +227,9 @@ const MOCK_PENDING_HANDOVERS: PendingHandover[] = [
   },
 ];
 
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_PENDING_HANDOVERS: PendingHandover[] = DEMO_MODE ? DEMO_MOCK_PENDING_HANDOVERS : [];
+
 export type CFOTabView = 'overview' | 'savings' | 'cashflow' | 'returns';
 type TabView = CFOTabView;
 
@@ -233,7 +240,7 @@ const CFO_COLOR = SemanticColors.roleCFO;
 // NEW MOCK DATA FOR FINANCIAL COMPONENTS
 // =============================================================================
 
-const MOCK_MONTHLY_SPEND = [
+const DEMO_MOCK_MONTHLY_SPEND = [
   { label: 'Sep', value: 3200000 },
   { label: 'Okt', value: 4100000 },
   { label: 'Nov', value: 3800000 },
@@ -242,14 +249,20 @@ const MOCK_MONTHLY_SPEND = [
   { label: 'Feb', value: 5800000 },
 ];
 
-const MOCK_AGING_BUCKETS = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_MONTHLY_SPEND = DEMO_MODE ? DEMO_MOCK_MONTHLY_SPEND : [];
+
+const DEMO_MOCK_AGING_BUCKETS = [
   { label: 'Huidig', amount: 2400000, color: SemanticColors.roleCFO },
   { label: '30d', amount: 850000, color: '#EAB308' },
   { label: '60d', amount: 320000, color: '#F97316' },
   { label: '90d+', amount: 180000, color: '#EF4444' },
 ];
 
-const MOCK_CASHFLOW_MONTHLY = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_AGING_BUCKETS = DEMO_MODE ? DEMO_MOCK_AGING_BUCKETS : [];
+
+const DEMO_MOCK_CASHFLOW_MONTHLY = [
   { label: 'Sep', value: 1200000 },
   { label: 'Okt', value: -800000 },
   { label: 'Nov', value: 1500000 },
@@ -258,11 +271,17 @@ const MOCK_CASHFLOW_MONTHLY = [
   { label: 'Feb', value: -400000 },
 ];
 
-const MOCK_SCENARIOS = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_CASHFLOW_MONTHLY = DEMO_MODE ? DEMO_MOCK_CASHFLOW_MONTHLY : [];
+
+const DEMO_MOCK_SCENARIOS = [
   { name: 'Neerwaarts', irr: '14.2%', profit: '\u00A312.1M', equityMultiple: '1.48x' },
   { name: 'Basis', irr: '22.4%', profit: '\u00A318.4M', equityMultiple: '1.82x', isBase: true },
   { name: 'Opwaarts', irr: '29.8%', profit: '\u00A324.6M', equityMultiple: '2.14x' },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_SCENARIOS = DEMO_MODE ? DEMO_MOCK_SCENARIOS : [];
 
 // =============================================================================
 // HELPERS

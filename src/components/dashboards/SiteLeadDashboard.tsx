@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   Alert,
   Pressable,
@@ -85,7 +86,7 @@ const SITE_ZONES: SiteZone[] = [
   { id: 'z-cv3', name: 'Blok C - Verd. 3', phase: 'afbouw', color: Palette.hermesOrange },
 ];
 
-const MOCK_ASSIGNMENTS: TeamDayAssignment[] = [
+const DEMO_MOCK_ASSIGNMENTS: TeamDayAssignment[] = [
   { id: 'a-1', teamId: 'wt-1', zoneId: 'z-av2', task: 'Bekabeling', startTime: '08:00', endTime: '12:00', progress: 72, status: 'actief' },
   { id: 'a-2', teamId: 'wt-1', zoneId: 'z-bv1', task: 'Groepen aansluiten', startTime: '13:00', endTime: '16:00', progress: 0, status: 'gepland' },
   { id: 'a-3', teamId: 'wt-2', zoneId: 'z-bv1', task: 'Sanitair installatie', startTime: '08:00', endTime: '15:00', progress: 45, status: 'actief', blockerNote: 'Achter op schema' },
@@ -93,6 +94,9 @@ const MOCK_ASSIGNMENTS: TeamDayAssignment[] = [
   { id: 'a-5', teamId: 'wt-4', zoneId: 'z-abg', task: 'Binnenschilderwerk', startTime: '', endTime: '', progress: 0, status: 'geblokkeerd', blockedBy: 'a-4', blockerNote: 'Wacht op Timmerwerk — kozijnen moeten eerst klaar' },
   { id: 'a-6', teamId: 'wt-5', zoneId: 'z-bbuit', task: 'Gevelstenen', startTime: '07:00', endTime: '12:00', progress: 100, status: 'gereed' },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_ASSIGNMENTS: TeamDayAssignment[] = DEMO_MODE ? DEMO_MOCK_ASSIGNMENTS : [];
 
 // Date helpers for planning tab
 const DAY_LABELS = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
@@ -145,13 +149,16 @@ interface WorkTeam {
   blockers?: string;
 }
 
-const MOCK_WORK_TEAMS: WorkTeam[] = [
+const DEMO_MOCK_WORK_TEAMS: WorkTeam[] = [
   { id: 'wt-1', name: 'Elektra Team A', trade: 'Elektricien', tradeIcon: 'flash', lead: 'Mohammed Al-Rashid', members: 3, task: 'Bekabeling 2e verdieping', location: 'Blok A - Verdieping 2', progress: 72, plannedProgress: 65, status: 'on-track', startTime: '07:30', estimatedEnd: '16:00' },
   { id: 'wt-2', name: 'Loodgieter Team', trade: 'Loodgieter', tradeIcon: 'water', lead: 'Pieter de Groot', members: 2, task: 'Sanitair installatie badkamers', location: 'Blok B - Verdieping 1', progress: 45, plannedProgress: 60, status: 'behind', startTime: '08:00', estimatedEnd: '17:00', blockers: 'Wacht op materiaallevering' },
   { id: 'wt-3', name: 'Timmerwerk', trade: 'Timmerman', tradeIcon: 'hammer', lead: 'Erik Jansen', members: 4, task: 'Kozijnen plaatsen begane grond', location: 'Blok A - Begane grond', progress: 88, plannedProgress: 85, status: 'on-track', startTime: '07:00', estimatedEnd: '14:30' },
   { id: 'wt-4', name: 'Schilders', trade: 'Schilder', tradeIcon: 'color-palette', lead: 'Lisa Bakker', members: 2, task: 'Binnenschilderwerk kantoren', location: 'Blok C - Verdieping 3', progress: 30, plannedProgress: 35, status: 'at-risk', startTime: '08:30', estimatedEnd: '17:30', blockers: 'Ventilatie nog niet afgerond' },
   { id: 'wt-5', name: 'Metselwerk', trade: 'Metselaar', tradeIcon: 'cube', lead: 'Jan van Bergen', members: 3, task: 'Gevelstenen buitenmuur', location: 'Blok B - Buitenzijde', progress: 100, plannedProgress: 100, status: 'completed', startTime: '06:30', estimatedEnd: '15:00' },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_WORK_TEAMS: WorkTeam[] = DEMO_MODE ? DEMO_MOCK_WORK_TEAMS : [];
 
 
 // =============================================================================

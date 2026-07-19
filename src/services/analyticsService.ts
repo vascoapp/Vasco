@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 
 // ============================================
 // TYPES
@@ -88,7 +89,7 @@ export interface DateRange {
 // MOCK DATA
 // ============================================
 
-const MOCK_REVENUE: RevenueMetrics = {
+const DEMO_MOCK_REVENUE: RevenueMetrics = {
   totalRevenue: 245680,
   revenueThisMonth: 32450,
   revenueLastMonth: 28900,
@@ -104,7 +105,19 @@ const MOCK_REVENUE: RevenueMetrics = {
   ],
 };
 
-const MOCK_PROFITABILITY: ProfitabilityMetrics = {
+/** Demo fixture — zeroed in production builds (see src/config/demo.ts). */
+const ZERO_MOCK_REVENUE: RevenueMetrics = {
+  totalRevenue: 0,
+  revenueThisMonth: 0,
+  revenueLastMonth: 0,
+  revenueGrowth: 0,
+  avgProjectValue: 0,
+  monthlyTrend: [],
+};
+
+const MOCK_REVENUE: RevenueMetrics = DEMO_MODE ? DEMO_MOCK_REVENUE : ZERO_MOCK_REVENUE;
+
+const DEMO_MOCK_PROFITABILITY: ProfitabilityMetrics = {
   grossProfit: 89250,
   grossMargin: 36.3,
   netProfit: 62475,
@@ -114,7 +127,20 @@ const MOCK_PROFITABILITY: ProfitabilityMetrics = {
   laborCostRatio: 25.5,
 };
 
-const MOCK_CUSTOMERS: CustomerMetrics = {
+/** Demo fixture — zeroed in production builds (see src/config/demo.ts). */
+const ZERO_MOCK_PROFITABILITY: ProfitabilityMetrics = {
+  grossProfit: 0,
+  grossMargin: 0,
+  netProfit: 0,
+  netMargin: 0,
+  avgProjectMargin: 0,
+  materialCostRatio: 0,
+  laborCostRatio: 0,
+};
+
+const MOCK_PROFITABILITY: ProfitabilityMetrics = DEMO_MODE ? DEMO_MOCK_PROFITABILITY : ZERO_MOCK_PROFITABILITY;
+
+const DEMO_MOCK_CUSTOMERS: CustomerMetrics = {
   totalCustomers: 127,
   newCustomersThisMonth: 8,
   repeatCustomerRate: 42,
@@ -127,7 +153,20 @@ const MOCK_CUSTOMERS: CustomerMetrics = {
   ],
 };
 
-const MOCK_PROJECTS: ProjectMetrics = {
+/** Demo fixture — zeroed in production builds (see src/config/demo.ts). */
+const ZERO_MOCK_CUSTOMERS: CustomerMetrics = {
+  totalCustomers: 0,
+  newCustomersThisMonth: 0,
+  repeatCustomerRate: 0,
+  avgCustomerLifetimeValue: 0,
+  customerSatisfactionScore: 0,
+  npsScore: 0,
+  customersByType: [],
+};
+
+const MOCK_CUSTOMERS: CustomerMetrics = DEMO_MODE ? DEMO_MOCK_CUSTOMERS : ZERO_MOCK_CUSTOMERS;
+
+const DEMO_MOCK_PROJECTS: ProjectMetrics = {
   totalProjects: 156,
   completedProjects: 142,
   activeProjects: 14,
@@ -149,7 +188,20 @@ const MOCK_PROJECTS: ProjectMetrics = {
   ],
 };
 
-const MOCK_BENCHMARKS: BenchmarkData[] = [
+/** Demo fixture — zeroed in production builds (see src/config/demo.ts). */
+const ZERO_MOCK_PROJECTS: ProjectMetrics = {
+  totalProjects: 0,
+  completedProjects: 0,
+  activeProjects: 0,
+  avgProjectDuration: 0,
+  onTimeDeliveryRate: 0,
+  projectsByCategory: [],
+  monthlyProjects: [],
+};
+
+const MOCK_PROJECTS: ProjectMetrics = DEMO_MODE ? DEMO_MOCK_PROJECTS : ZERO_MOCK_PROJECTS;
+
+const DEMO_MOCK_BENCHMARKS: BenchmarkData[] = [
   { metric: 'Omzet groei', yourValue: 12.3, industryAvg: 8.5, topPerformers: 18.2, percentile: 72, trend: 'up' },
   { metric: 'Brutomarge', yourValue: 36.3, industryAvg: 32.0, topPerformers: 42.0, percentile: 68, trend: 'stable' },
   { metric: 'Klanttevredenheid', yourValue: 4.7, industryAvg: 4.2, topPerformers: 4.9, percentile: 85, trend: 'up' },
@@ -157,7 +209,10 @@ const MOCK_BENCHMARKS: BenchmarkData[] = [
   { metric: 'Herhalingsklanten', yourValue: 42, industryAvg: 35, topPerformers: 55, percentile: 65, trend: 'up' },
 ];
 
-const MOCK_INSIGHTS: PerformanceInsight[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_BENCHMARKS: BenchmarkData[] = DEMO_MODE ? DEMO_MOCK_BENCHMARKS : [];
+
+const DEMO_MOCK_INSIGHTS: PerformanceInsight[] = [
   {
     id: 'ins_1',
     type: 'opportunity',
@@ -198,6 +253,9 @@ const MOCK_INSIGHTS: PerformanceInsight[] = [
     suggestedAction: 'Start Q4 met winteraanbiedingen campagne',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_INSIGHTS: PerformanceInsight[] = DEMO_MODE ? DEMO_MOCK_INSIGHTS : [];
 
 // ============================================
 // SERVICE CLASS

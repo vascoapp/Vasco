@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   View,
   Text,
@@ -55,11 +56,14 @@ const DIRECTOR_COLOR = SemanticColors.roleDirector;
 
 // ── Mock projects for dropdown ────────────────────────────────────────────────
 
-const MOCK_PROJECTS = [
+const DEMO_MOCK_PROJECTS = [
   'Renovatie Kantoorgebouw',
   'Nieuwbouw Appartementen',
   'Utiliteitsbouw Logistiek',
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_PROJECTS = DEMO_MODE ? DEMO_MOCK_PROJECTS : [];
 
 // ── Number formatting ───────────────────────────────────────────────────────
 

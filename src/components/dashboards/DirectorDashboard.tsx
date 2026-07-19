@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   Pressable,
   RefreshControl,
@@ -125,7 +126,7 @@ const MOCK_PORTFOLIO_HANDOVERS: PortfolioHandoverStatus[] = [
   },
 ];
 
-const MOCK_PENDING_APPROVALS = [
+const DEMO_MOCK_PENDING_APPROVALS = [
   {
     id: 'apr-001',
     type: 'payment',
@@ -160,6 +161,9 @@ const MOCK_PENDING_APPROVALS = [
     daysWaiting: 1,
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_PENDING_APPROVALS = DEMO_MODE ? DEMO_MOCK_PENDING_APPROVALS : [];
 
 // =============================================================================
 // COMPONENTS

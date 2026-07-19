@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -70,7 +71,7 @@ const MOCK_STATS: IntelligenceStats = {
   recommendationsTotal: 52,
 };
 
-const MOCK_MARKET_INSIGHTS: MarketInsight[] = [
+const DEMO_MOCK_MARKET_INSIGHTS: MarketInsight[] = [
   {
     id: 'insight_1',
     title: 'Verf prijzen dalen',
@@ -109,12 +110,18 @@ const MOCK_MARKET_INSIGHTS: MarketInsight[] = [
   },
 ];
 
-const MOCK_PEER_COMPARISONS: PeerComparison[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_MARKET_INSIGHTS: MarketInsight[] = DEMO_MODE ? DEMO_MOCK_MARKET_INSIGHTS : [];
+
+const DEMO_MOCK_PEER_COMPARISONS: PeerComparison[] = [
   { metric: 'Gemiddelde marge', yourValue: 32, peerAverage: 28, unit: '%', isHigherBetter: true },
   { metric: 'Offerte conversie', yourValue: 45, peerAverage: 38, unit: '%', isHigherBetter: true },
   { metric: 'Inkoop per project', yourValue: 1250, peerAverage: 1480, unit: '€', isHigherBetter: false },
   { metric: 'Klant tevredenheid', yourValue: 4.7, peerAverage: 4.2, unit: '★', isHigherBetter: true },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_PEER_COMPARISONS: PeerComparison[] = DEMO_MODE ? DEMO_MOCK_PEER_COMPARISONS : [];
 
 // ============================================
 // COMPONENTS

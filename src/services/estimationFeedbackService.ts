@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { DEMO_MODE } from '../config/demo';
 import { jobCostTrackingService, type JobCostVariance } from './jobCostTrackingService';
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
@@ -68,7 +69,7 @@ const MOCK_ACCURACY: EstimationAccuracy = {
   averageMaterialPriceDeviation: 3.8,
 };
 
-const MOCK_CALIBRATIONS: JobTypeCalibration[] = [
+const DEMO_MOCK_CALIBRATIONS: JobTypeCalibration[] = [
   {
     jobType: 'Badkamerrenovatie',
     jobCount: 34,
@@ -126,7 +127,10 @@ const MOCK_CALIBRATIONS: JobTypeCalibration[] = [
   },
 ];
 
-const MOCK_LESSONS: LessonLearned[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_CALIBRATIONS: JobTypeCalibration[] = DEMO_MODE ? DEMO_MOCK_CALIBRATIONS : [];
+
+const DEMO_MOCK_LESSONS: LessonLearned[] = [
   {
     id: 'll-001',
     jobType: 'Badkamerrenovatie',
@@ -158,6 +162,9 @@ const MOCK_LESSONS: LessonLearned[] = [
     date: '2026-01-18',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_LESSONS: LessonLearned[] = DEMO_MODE ? DEMO_MOCK_LESSONS : [];
 
 // ── Service Class ───────────────────────────────────────────────────────────
 

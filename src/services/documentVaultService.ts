@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 
 // ============================================
 // TYPES
@@ -257,7 +258,7 @@ const MOCK_FOLDERS: DocumentFolder[] = [
   { id: 'folder_4', name: 'Templates', color: '#8B5CF6', documentCount: 8, createdAt: '2024-01-01' },
 ];
 
-const MOCK_TEMPLATES: DocumentTemplate[] = [
+const DEMO_MOCK_TEMPLATES: DocumentTemplate[] = [
   {
     id: 'tpl_1',
     name: 'Standaard Offerte',
@@ -298,6 +299,9 @@ const MOCK_TEMPLATES: DocumentTemplate[] = [
     previewUrl: 'https://example.com/templates/warranty.png',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_TEMPLATES: DocumentTemplate[] = DEMO_MODE ? DEMO_MOCK_TEMPLATES : [];
 
 // ============================================
 // SERVICE CLASS

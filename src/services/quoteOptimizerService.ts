@@ -35,6 +35,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 
 // ============================================
 // TYPES
@@ -161,7 +162,7 @@ const MOCK_MARKET_DATA: Record<string, MarketPriceData> = {
   },
 };
 
-const MOCK_UPSELL_SUGGESTIONS: UpsellSuggestion[] = [
+const DEMO_MOCK_UPSELL_SUGGESTIONS: UpsellSuggestion[] = [
   {
     id: 'upsell_1',
     originalItemId: 'item_1',
@@ -199,6 +200,9 @@ const MOCK_UPSELL_SUGGESTIONS: UpsellSuggestion[] = [
     reason: 'Bundelkorting maakt dit aantrekkelijk voor de klant',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_UPSELL_SUGGESTIONS: UpsellSuggestion[] = DEMO_MODE ? DEMO_MOCK_UPSELL_SUGGESTIONS : [];
 
 // ============================================
 // SERVICE CLASS

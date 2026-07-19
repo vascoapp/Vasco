@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 
 // ============================================
 // TYPES
@@ -144,7 +145,7 @@ const MOCK_INSIGHTS: ProactiveInsight[] = [
   },
 ];
 
-const MOCK_QUICK_ACTIONS: QuickAction[] = [
+const DEMO_MOCK_QUICK_ACTIONS: QuickAction[] = [
   { id: 'qa_1', label: 'Maak een offerte', icon: 'document-text-outline', prompt: 'Help me een offerte maken', category: 'quotes' },
   { id: 'qa_2', label: 'Plan een afspraak', icon: 'calendar-outline', prompt: 'Plan een nieuwe afspraak in mijn agenda', category: 'scheduling' },
   { id: 'qa_3', label: 'Bekijk mijn omzet', icon: 'trending-up-outline', prompt: 'Wat is mijn omzet deze maand?', category: 'finance' },
@@ -153,7 +154,10 @@ const MOCK_QUICK_ACTIONS: QuickAction[] = [
   { id: 'qa_6', label: 'Zoek klantinfo', icon: 'person-outline', prompt: 'Zoek informatie over een klant', category: 'customers' },
 ];
 
-const MOCK_CAPABILITIES: AssistantCapability[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_QUICK_ACTIONS: QuickAction[] = DEMO_MODE ? DEMO_MOCK_QUICK_ACTIONS : [];
+
+const DEMO_MOCK_CAPABILITIES: AssistantCapability[] = [
   {
     id: 'cap_1',
     name: 'Offertes',
@@ -190,6 +194,9 @@ const MOCK_CAPABILITIES: AssistantCapability[] = [
     category: 'analytics',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_CAPABILITIES: AssistantCapability[] = DEMO_MODE ? DEMO_MOCK_CAPABILITIES : [];
 
 const MOCK_SUGGESTIONS: BusinessSuggestion[] = [
   {

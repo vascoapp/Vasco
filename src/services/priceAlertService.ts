@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 
 // ============================================
 // TYPES
@@ -89,7 +90,7 @@ export interface AlertPreferences {
 // MOCK DATA
 // ============================================
 
-const MOCK_ALERTS: PriceAlert[] = [
+const DEMO_MOCK_ALERTS: PriceAlert[] = [
   {
     id: 'alert_1',
     materialId: 'mat_dulux_white_5l',
@@ -169,6 +170,9 @@ const MOCK_ALERTS: PriceAlert[] = [
     viewCount: 0,
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_ALERTS: PriceAlert[] = DEMO_MODE ? DEMO_MOCK_ALERTS : [];
 
 const DEFAULT_PREFERENCES: AlertPreferences = {
   enabled: true,

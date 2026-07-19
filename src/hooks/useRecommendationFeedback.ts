@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect } from 'react';
+import { DEMO_MODE } from '../config/demo';
 import { pricingAgent } from '../intelligence/pricingAgent';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { logWarn } from '../utils/errorHandler';
@@ -33,7 +34,7 @@ interface UseRecommendationFeedbackOptions {
 // MOCK RECOMMENDATIONS (until backend integration)
 // ============================================
 
-const MOCK_RECOMMENDATIONS: Recommendation[] = [
+const DEMO_MOCK_RECOMMENDATIONS: Recommendation[] = [
   {
     id: 'rec_001',
     type: 'pricing',
@@ -78,6 +79,9 @@ const MOCK_RECOMMENDATIONS: Recommendation[] = [
     urgency: 'this_week',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_RECOMMENDATIONS: Recommendation[] = DEMO_MODE ? DEMO_MOCK_RECOMMENDATIONS : [];
 
 // ============================================
 // HOOK IMPLEMENTATION

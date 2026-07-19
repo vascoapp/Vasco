@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
+import { DEMO_MODE } from '../config/demo';
 
 // =============================================================================
 // TYPES
@@ -54,7 +55,7 @@ export interface LaborCostSummary {
 // MOCK DATA
 // =============================================================================
 
-const MOCK_JOB_TYPES: JobTypeCost[] = [
+const DEMO_MOCK_JOB_TYPES: JobTypeCost[] = [
   {
     jobType: 'Badkamerrenovatie',
     jobsCompleted: 4,
@@ -113,6 +114,9 @@ const MOCK_JOB_TYPES: JobTypeCost[] = [
     recommendation: 'Materiaalkosten zijn hoog — vergelijk leveranciers via Besparen',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_JOB_TYPES: JobTypeCost[] = DEMO_MODE ? DEMO_MOCK_JOB_TYPES : [];
 
 const MOCK_TRAVEL: TravelCostAnalysis = {
   totalTravelHours: 18.5,

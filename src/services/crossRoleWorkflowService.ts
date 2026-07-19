@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { DEMO_MODE } from '../config/demo';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { registerSingletonReset } from './singletonReset';
 
@@ -135,7 +136,7 @@ export interface WorkflowHistoryEntry {
 // MOCK DATA
 // ============================================
 
-const MOCK_WORKFLOWS: Workflow[] = [
+const DEMO_MOCK_WORKFLOWS: Workflow[] = [
   {
     id: 'wf-001',
     type: 'job-to-payment',
@@ -500,6 +501,9 @@ const MOCK_WORKFLOWS: Workflow[] = [
     ],
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_WORKFLOWS: Workflow[] = DEMO_MODE ? DEMO_MOCK_WORKFLOWS : [];
 
 // ============================================
 // SERVICE CLASS

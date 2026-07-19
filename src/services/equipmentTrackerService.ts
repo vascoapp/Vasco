@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -151,7 +152,7 @@ export interface EquipmentStats {
 // MOCK DATA
 // =============================================================================
 
-const mockEquipment: Equipment[] = [
+const DEMO_mockEquipment: Equipment[] = [
   {
     id: 'eq-1',
     name: 'Boormachine Hilti TE 30',
@@ -273,7 +274,10 @@ const mockEquipment: Equipment[] = [
   },
 ];
 
-const mockMaintenanceRecords: MaintenanceRecord[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockEquipment: Equipment[] = DEMO_MODE ? DEMO_mockEquipment : [];
+
+const DEMO_mockMaintenanceRecords: MaintenanceRecord[] = [
   {
     id: 'mr-1',
     equipmentId: 'eq-1',
@@ -315,7 +319,10 @@ const mockMaintenanceRecords: MaintenanceRecord[] = [
   },
 ];
 
-const mockCheckouts: EquipmentCheckout[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockMaintenanceRecords: MaintenanceRecord[] = DEMO_MODE ? DEMO_mockMaintenanceRecords : [];
+
+const DEMO_mockCheckouts: EquipmentCheckout[] = [
   {
     id: 'co-1',
     equipmentId: 'eq-2',
@@ -340,7 +347,10 @@ const mockCheckouts: EquipmentCheckout[] = [
   },
 ];
 
-const mockAlerts: EquipmentAlert[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockCheckouts: EquipmentCheckout[] = DEMO_MODE ? DEMO_mockCheckouts : [];
+
+const DEMO_mockAlerts: EquipmentAlert[] = [
   {
     id: 'alert-1',
     equipmentId: 'eq-3',
@@ -375,6 +385,9 @@ const mockAlerts: EquipmentAlert[] = [
     acknowledged: false,
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockAlerts: EquipmentAlert[] = DEMO_MODE ? DEMO_mockAlerts : [];
 
 // =============================================================================
 // SERVICE CLASS

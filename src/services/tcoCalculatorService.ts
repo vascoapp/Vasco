@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
+import { DEMO_MODE } from '../config/demo';
 
 // =============================================================================
 // TYPES
@@ -51,7 +52,7 @@ export interface TCOSummary {
 // MOCK DATA
 // =============================================================================
 
-const MOCK_COMPARISONS: TCOComparison[] = [
+const DEMO_MOCK_COMPARISONS: TCOComparison[] = [
   {
     category: 'Keukenkranen',
     materials: [
@@ -219,6 +220,9 @@ const MOCK_COMPARISONS: TCOComparison[] = [
     customerPitch: 'Sigma S2U gaat 2x zo lang mee als budget verf. U bespaart €46/jaar doordat u minder vaak hoeft te laten schilderen.',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_COMPARISONS: TCOComparison[] = DEMO_MODE ? DEMO_MOCK_COMPARISONS : [];
 
 // =============================================================================
 // SERVICE

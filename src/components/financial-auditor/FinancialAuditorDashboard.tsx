@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   View,
   Text,
@@ -136,7 +137,7 @@ interface ComplianceItem {
   lastChecked: string;
 }
 
-const MOCK_COMPLIANCE: ComplianceItem[] = [
+const DEMO_MOCK_COMPLIANCE: ComplianceItem[] = [
   {
     id: 'c1',
     label: 'Factuurgoedkeuring',
@@ -178,6 +179,9 @@ const MOCK_COMPLIANCE: ComplianceItem[] = [
     lastChecked: 'Today',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_COMPLIANCE: ComplianceItem[] = DEMO_MODE ? DEMO_MOCK_COMPLIANCE : [];
 
 // =============================================================================
 // SUBCOMPONENTS

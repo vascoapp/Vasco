@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 
 // ============================================
 // TYPES
@@ -100,7 +101,7 @@ export interface FollowUpPreferences {
 // MOCK DATA
 // ============================================
 
-const MOCK_CUSTOMERS: Customer[] = [
+const DEMO_MOCK_CUSTOMERS: Customer[] = [
   {
     id: 'cust_1',
     name: 'Familie de Vries',
@@ -142,7 +143,10 @@ const MOCK_CUSTOMERS: Customer[] = [
   },
 ];
 
-const MOCK_FOLLOW_UPS: FollowUp[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_CUSTOMERS: Customer[] = DEMO_MODE ? DEMO_MOCK_CUSTOMERS : [];
+
+const DEMO_MOCK_FOLLOW_UPS: FollowUp[] = [
   {
     id: 'fu_1',
     customerId: 'cust_1',
@@ -215,7 +219,10 @@ const MOCK_FOLLOW_UPS: FollowUp[] = [
   },
 ];
 
-const MOCK_TEMPLATES: FollowUpTemplate[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_FOLLOW_UPS: FollowUp[] = DEMO_MODE ? DEMO_MOCK_FOLLOW_UPS : [];
+
+const DEMO_MOCK_TEMPLATES: FollowUpTemplate[] = [
   {
     id: 'tpl_1',
     type: 'quote_reminder',
@@ -247,6 +254,9 @@ const MOCK_TEMPLATES: FollowUpTemplate[] = [
     conversionRate: 0.35,
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_TEMPLATES: FollowUpTemplate[] = DEMO_MODE ? DEMO_MOCK_TEMPLATES : [];
 
 const DEFAULT_PREFERENCES: FollowUpPreferences = {
   enabled: true,

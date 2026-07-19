@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -92,7 +93,7 @@ export interface LeadStats {
 // MOCK DATA
 // =============================================================================
 
-const mockLeads: Lead[] = [
+const DEMO_mockLeads: Lead[] = [
   {
     id: 'lead-1',
     source: 'website',
@@ -186,6 +187,9 @@ const mockLeads: Lead[] = [
     convertedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockLeads: Lead[] = DEMO_MODE ? DEMO_mockLeads : [];
 
 // =============================================================================
 // SERVICE CLASS

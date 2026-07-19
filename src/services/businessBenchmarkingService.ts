@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -83,7 +84,7 @@ export interface BenchmarkStats {
 // MOCK DATA
 // =============================================================================
 
-const mockBenchmarks: BenchmarkCategory[] = [
+const DEMO_mockBenchmarks: BenchmarkCategory[] = [
   {
     id: 'cat-1', name: 'Financiële Prestaties', description: 'Omzet en winstgevendheid',
     metrics: [
@@ -108,15 +109,24 @@ const mockBenchmarks: BenchmarkCategory[] = [
   },
 ];
 
-const mockGoals: PerformanceGoal[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockBenchmarks: BenchmarkCategory[] = DEMO_MODE ? DEMO_mockBenchmarks : [];
+
+const DEMO_mockGoals: PerformanceGoal[] = [
   { id: 'goal-1', metricId: 'm-3', metricName: 'Gem. factuurwaarde', currentValue: 285, targetValue: 350, deadline: new Date('2024-12-31'), progress: 45, status: 'on_track', milestones: [] },
   { id: 'goal-2', metricId: 'm-5', metricName: 'Eerste-keer-goed', currentValue: 92, targetValue: 95, deadline: new Date('2024-06-30'), progress: 70, status: 'on_track', milestones: [] },
 ];
 
-const mockOpportunities: ImprovementOpportunity[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockGoals: PerformanceGoal[] = DEMO_MODE ? DEMO_mockGoals : [];
+
+const DEMO_mockOpportunities: ImprovementOpportunity[] = [
   { id: 'opp-1', title: 'Verhoog gemiddelde factuurwaarde', description: 'Focus op upselling en cross-selling tijdens servicebezoeken', potentialImpact: 'high', effort: 'medium', category: 'Financieel', currentMetric: 'Gem. factuurwaarde', currentValue: 285, targetValue: 350, estimatedRevenue: 18000, priority: 1, actions: ['Train monteurs in upselling', 'Implementeer checklist voor extra services', 'Creëer bundel-aanbiedingen'] },
   { id: 'opp-2', title: 'Uitbreiden onderhoudscontracten', description: 'Meer klanten converteren naar onderhoudsabonnementen', potentialImpact: 'high', effort: 'low', category: 'Klantrelaties', currentMetric: 'Contract penetratie', currentValue: 35, targetValue: 50, estimatedRevenue: 25000, priority: 2, actions: ['Bied korting bij nieuwe installatie', 'Follow-up na elke reparatie'] },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockOpportunities: ImprovementOpportunity[] = DEMO_MODE ? DEMO_mockOpportunities : [];
 
 // =============================================================================
 // SERVICE CLASS

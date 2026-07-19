@@ -2,6 +2,7 @@
 // Quick payment links, reminders, and payment tracking
 
 import React, { useState } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   View,
   Text,
@@ -54,7 +55,7 @@ const Colors = {
 // MOCK PAYMENT LINKS
 // ============================================
 
-const MOCK_PAYMENT_LINKS: PaymentLink[] = [
+const DEMO_MOCK_PAYMENT_LINKS: PaymentLink[] = [
   {
     id: 'pl-001',
     invoiceId: 'inv-003',
@@ -85,6 +86,9 @@ const MOCK_PAYMENT_LINKS: PaymentLink[] = [
     createdAt: '2024-01-15T09:00:00Z',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_PAYMENT_LINKS: PaymentLink[] = DEMO_MODE ? DEMO_MOCK_PAYMENT_LINKS : [];
 
 // ============================================
 // PAYMENT METHOD ICONS

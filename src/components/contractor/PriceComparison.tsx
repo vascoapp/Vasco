@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback } from 'react';
+import { DEMO_MODE } from '../../config/demo';
 import {
   View,
   Text,
@@ -67,7 +68,7 @@ interface MaterialPrice {
 // MOCK DATA
 // ============================================
 
-const MOCK_MATERIALS: MaterialPrice[] = [
+const DEMO_MOCK_MATERIALS: MaterialPrice[] = [
   {
     material: {
       id: 'mat_dulux_white_5l',
@@ -172,6 +173,9 @@ const MOCK_MATERIALS: MaterialPrice[] = [
     trendPercent: 0,
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const MOCK_MATERIALS: MaterialPrice[] = DEMO_MODE ? DEMO_MOCK_MATERIALS : [];
 
 const CATEGORY_KEYS = ['all', 'paint', 'sanitary', 'tiles', 'tools', 'electrical'] as const;
 

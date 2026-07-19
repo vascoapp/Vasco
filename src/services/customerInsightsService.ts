@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -134,9 +135,12 @@ const mockSegments: CustomerSegment[] = [
   { id: 'seg-3', name: 'Nieuwe Klanten', description: 'Klant < 1 jaar', criteria: ['Klant < 1 jaar'], customerCount: 32, avgLifetimeValue: 850, churnRate: 25, recommendations: ['Welkomstkorting', 'Follow-up na eerste job'] },
 ];
 
-const mockChurnPredictions: ChurnPrediction[] = [
+const DEMO_mockChurnPredictions: ChurnPrediction[] = [
   { customerId: 'cust-3', customerName: 'Familie Visser', riskLevel: 'medium', probability: 35, factors: ['Geen contact > 90 dagen', 'Geen onderhoudscontract'], suggestedActions: ['Bel voor check-up', 'Bied onderhoudscontract aan'], lastContact: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), lifetimeValue: 6500 },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockChurnPredictions: ChurnPrediction[] = DEMO_MODE ? DEMO_mockChurnPredictions : [];
 
 // =============================================================================
 // SERVICE CLASS

@@ -29,6 +29,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -198,7 +199,7 @@ export interface PredictiveStats {
 // MOCK DATA
 // =============================================================================
 
-const mockEquipmentHealth: EquipmentHealth[] = [
+const DEMO_mockEquipmentHealth: EquipmentHealth[] = [
   {
     equipmentId: 'eq-1',
     equipmentName: 'Boormachine Hilti TE 30',
@@ -271,7 +272,10 @@ const mockEquipmentHealth: EquipmentHealth[] = [
   },
 ];
 
-const mockPredictions: FailurePrediction[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockEquipmentHealth: EquipmentHealth[] = DEMO_MODE ? DEMO_mockEquipmentHealth : [];
+
+const DEMO_mockPredictions: FailurePrediction[] = [
   {
     id: 'pred-1',
     equipmentId: 'eq-6',
@@ -349,7 +353,10 @@ const mockPredictions: FailurePrediction[] = [
   },
 ];
 
-const mockRecommendations: MaintenanceRecommendation[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockPredictions: FailurePrediction[] = DEMO_MODE ? DEMO_mockPredictions : [];
+
+const DEMO_mockRecommendations: MaintenanceRecommendation[] = [
   {
     id: 'rec-1',
     equipmentId: 'eq-6',
@@ -409,7 +416,10 @@ const mockRecommendations: MaintenanceRecommendation[] = [
   },
 ];
 
-const mockPartOrders: PartOrderSuggestion[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockRecommendations: MaintenanceRecommendation[] = DEMO_MODE ? DEMO_mockRecommendations : [];
+
+const DEMO_mockPartOrders: PartOrderSuggestion[] = [
   {
     id: 'po-1',
     equipmentId: 'eq-6',
@@ -445,6 +455,9 @@ const mockPartOrders: PartOrderSuggestion[] = [
     supplierPrice: 32,
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockPartOrders: PartOrderSuggestion[] = DEMO_MODE ? DEMO_mockPartOrders : [];
 
 // =============================================================================
 // SERVICE CLASS

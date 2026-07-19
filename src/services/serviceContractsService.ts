@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -126,7 +127,7 @@ export interface ContractStats {
 // MOCK DATA
 // =============================================================================
 
-const mockContracts: ServiceContract[] = [
+const DEMO_mockContracts: ServiceContract[] = [
   {
     id: 'sc-1',
     contractNumber: 'SC-2024-001',
@@ -217,7 +218,10 @@ const mockContracts: ServiceContract[] = [
   },
 ];
 
-const mockTemplates: ContractTemplate[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockContracts: ServiceContract[] = DEMO_MODE ? DEMO_mockContracts : [];
+
+const DEMO_mockTemplates: ContractTemplate[] = [
   {
     id: 'tpl-1',
     name: 'CV Basis',
@@ -283,7 +287,10 @@ const mockTemplates: ContractTemplate[] = [
   },
 ];
 
-const mockRenewals: ContractRenewal[] = [
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockTemplates: ContractTemplate[] = DEMO_MODE ? DEMO_mockTemplates : [];
+
+const DEMO_mockRenewals: ContractRenewal[] = [
   {
     id: 'rn-1',
     contractId: 'sc-2',
@@ -311,6 +318,9 @@ const mockRenewals: ContractRenewal[] = [
     status: 'pending',
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockRenewals: ContractRenewal[] = DEMO_MODE ? DEMO_mockRenewals : [];
 
 // =============================================================================
 // SERVICE CLASS

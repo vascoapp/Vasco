@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
+import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 
 // =============================================================================
@@ -60,7 +61,7 @@ export interface RouteStats {
 // MOCK DATA
 // =============================================================================
 
-const mockRoutes: OptimizedRoute[] = [
+const DEMO_mockRoutes: OptimizedRoute[] = [
   {
     id: 'route-1', date: new Date(), assignedTo: 'tm-1', assignedToName: 'Jan de Vries',
     jobs: [
@@ -73,6 +74,9 @@ const mockRoutes: OptimizedRoute[] = [
     savings: { distanceSaved: 12.3, timeSaved: 35, fuelSaved: 5.60, originalDistance: 30.8, optimizedDistance: 18.5 },
   },
 ];
+
+/** Demo fixture — empty in production builds (see src/config/demo.ts). */
+const mockRoutes: OptimizedRoute[] = DEMO_MODE ? DEMO_mockRoutes : [];
 
 // =============================================================================
 // SERVICE CLASS
