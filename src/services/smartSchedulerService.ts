@@ -9,6 +9,7 @@ import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { jobCostTrackingService } from './jobCostTrackingService';
 import { getLastFetchedForecast, type DayForecast } from './weatherService';
 import i18n from '../i18n/i18n';
+import { localDateKey } from '../utils/dateKey';
 
 // ============================================
 // TYPES
@@ -958,7 +959,10 @@ export function useDaySchedule(date: string) {
     const dayJobs = appJobs.filter((j) => {
       if (j.scheduledDate === date) return true;
       // Also include in-progress jobs for today
-      if (date === new Date().toISOString().split('T')[0] && j.status === 'in-progress') return true;
+      // localDateKey, not toISOString(): the UTC day differs from the local
+      // day between midnight and the UTC offset, which made this in-progress
+      // passthrough compare against yesterday. See werk.tsx todayKey().
+      if (date === localDateKey(new Date()) && j.status === 'in-progress') return true;
       return false;
     });
 

@@ -26,6 +26,7 @@ import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { formatCurrency } from '../../src/i18n/formatting';
+import { todayKey } from '../../src/utils/dateKey';
 import type { Country } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -55,7 +56,12 @@ export default function WerkScreen() {
   const [newJobTitle, setNewJobTitle] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
   const [tab, setTab] = useState<TabKey>('today');
-  const today = new Date().toISOString().split('T')[0];
+  // LOCAL date, not UTC. `new Date().toISOString().split('T')[0]` returns the
+  // UTC day, so between midnight and ~02:00 local (CEST) this screen asked for
+  // YESTERDAY while drag-schedule (which uses todayKey()) asked for today —
+  // the same jobs showed as scheduled here and as "Niet ingepland" there, with
+  // an empty planner timeline. Same UTC-shift class as the R317 week bug.
+  const today = todayKey();
   const todaySchedule = useDaySchedule(today);
   // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
   const routeOptimizationEnabled = useFeatureFlag('route_optimization', { country: user?.country as any });
