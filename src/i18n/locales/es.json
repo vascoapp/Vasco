@@ -3015,6 +3015,9 @@
     "footnote": "GoBD requiere 10 años de retención. La cadena de hash demuestra que ninguna entrada fue modificada a posteriori. Para certificación de archivo completa (DATEV-zertifiziert), combina esta exportación con el archivo de tu contable."
   },
   "savings": {
+    "trendSegment": "+{{trend}}% de tendencia",
+    "perJobSegment": "{{perJob}}/trabajo",
+    "benchmarkSegment": "{{benchmark}}% por encima del sector",
     "title": "AHORROS IA",
     "thisMonth": "Este mes",
     "thisMonthA11y": "Ver ahorros del mes",

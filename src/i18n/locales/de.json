@@ -3015,6 +3015,9 @@
     "body": "Ein Bildschirm konnte nicht geladen werden. Versuche es erneut."
   },
   "savings": {
+    "trendSegment": "+{{trend}}% Trend",
+    "perJobSegment": "{{perJob}}/Auftrag",
+    "benchmarkSegment": "{{benchmark}}% über Branche",
     "title": "KI-EINSPARUNGEN",
     "thisMonth": "Diesen Monat",
     "thisMonthA11y": "Einsparungen diesen Monat ansehen",

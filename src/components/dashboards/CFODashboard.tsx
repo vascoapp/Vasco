@@ -1235,7 +1235,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                 <View style={styles.aiSavingsKPIDivider} />
                 <View style={styles.aiSavingsKPI}>
                   <Text style={[styles.aiSavingsKPIValue, { color: SemanticColors.feedbackSuccess }]}>
-                    {'\u2191'}{aiSavings.trendPercent}%
+                    {/* "\u2014" when unknown; was "\u2191{null}%" \u2192 rendered "\u2191%". */}
+                    {aiSavings.trendPercent === null ? '\u2014' : `\u2191${aiSavings.trendPercent}%`}
                   </Text>
                   <Text style={styles.aiSavingsKPILabel}>trend</Text>
                 </View>

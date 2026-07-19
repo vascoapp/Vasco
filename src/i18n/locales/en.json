@@ -3015,6 +3015,9 @@
     "body": "A screen failed to render. Try again."
   },
   "savings": {
+    "trendSegment": "+{{trend}}% trend",
+    "perJobSegment": "{{perJob}}/job",
+    "benchmarkSegment": "{{benchmark}}% above industry",
     "title": "AI BESPARINGEN",
     "thisMonth": "This month",
     "thisMonthA11y": "View this month savings",

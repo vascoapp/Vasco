@@ -77,16 +77,28 @@ export default function SavingsHubScreen() {
               <DKLabel style={styles.heroLabel}>{t('savings.projected', 'Projected')}</DKLabel>
             </View>
           </View>
-          <View style={styles.heroTrendRow}>
-            <Ionicons name="trending-up" size={16} color={DK.colors.success} />
-            <Text style={styles.heroTrendText}>
-              {t('savings.trendLine', '+{{trend}}% trend · {{perJob}}/job · {{benchmark}}% above industry', {
-                trend: savings.trendPercent,
-                perJob: formatAmount(savings.savingsPerJob),
-                benchmark: savings.savingsVsBenchmark,
-              })}
-            </Text>
-          </View>
+          {/* Composed from only the parts we can actually derive. The old
+              single trendLine string always rendered all three, so a fresh
+              contractor saw "+12% trend · €2,00/job · 35% above industry"
+              where the trend and the benchmark were hardcoded constants. */}
+          {(() => {
+            const segments: string[] = [];
+            if (savings.trendPercent !== null) {
+              segments.push(t('savings.trendSegment', '+{{trend}}% trend', { trend: savings.trendPercent }));
+            }
+            segments.push(t('savings.perJobSegment', '{{perJob}}/job', { perJob: formatAmount(savings.savingsPerJob) }));
+            if (savings.savingsVsBenchmark !== null) {
+              segments.push(t('savings.benchmarkSegment', '{{benchmark}}% above industry', { benchmark: savings.savingsVsBenchmark }));
+            }
+            return (
+              <View style={styles.heroTrendRow}>
+                {savings.trendPercent !== null && (
+                  <Ionicons name="trending-up" size={16} color={DK.colors.success} />
+                )}
+                <Text style={styles.heroTrendText}>{segments.join(' · ')}</Text>
+              </View>
+            );
+          })()}
         </View>
 
         {/* Breakdown — full detail, each card tappable */}
@@ -115,24 +127,29 @@ export default function SavingsHubScreen() {
                   </View>
                   <View style={styles.breakdownAmountCol}>
                     <Text style={styles.breakdownAmount}>{formatAmount(cat.amount)}</Text>
-                    <View style={[styles.breakdownTrendBadge, {
-                      backgroundColor: cat.trend === 'up'
-                        ? DK.colors.success + '22'
-                        : cat.trend === 'down'
-                          ? (DK.colors.danger ?? '#EF4444') + '22'
-                          : DK.colors.panel2,
-                    }]}>
-                      <Ionicons
-                        name={cat.trend === 'up' ? 'trending-up' : cat.trend === 'down' ? 'trending-down' : 'remove'}
-                        size={12}
-                        color={cat.trend === 'up' ? DK.colors.success : cat.trend === 'down' ? (DK.colors.danger ?? '#EF4444') : DK.colors.textMuted}
-                      />
-                      <Text style={[styles.breakdownTrendText, {
-                        color: cat.trend === 'up' ? DK.colors.success : cat.trend === 'down' ? (DK.colors.danger ?? '#EF4444') : DK.colors.textMuted,
+                    {/* Badge only when the trend is actually known. It used to
+                        render a hardcoded "+15%"/"+8%"/"+20%" next to a €0,00
+                        amount — a growth rate for savings that did not exist. */}
+                    {cat.trendPercent !== null && (
+                      <View style={[styles.breakdownTrendBadge, {
+                        backgroundColor: cat.trend === 'up'
+                          ? DK.colors.success + '22'
+                          : cat.trend === 'down'
+                            ? (DK.colors.danger ?? '#EF4444') + '22'
+                            : DK.colors.panel2,
                       }]}>
-                        {cat.trendPercent > 0 ? '+' : ''}{cat.trendPercent}%
-                      </Text>
-                    </View>
+                        <Ionicons
+                          name={cat.trend === 'up' ? 'trending-up' : cat.trend === 'down' ? 'trending-down' : 'remove'}
+                          size={12}
+                          color={cat.trend === 'up' ? DK.colors.success : cat.trend === 'down' ? (DK.colors.danger ?? '#EF4444') : DK.colors.textMuted}
+                        />
+                        <Text style={[styles.breakdownTrendText, {
+                          color: cat.trend === 'up' ? DK.colors.success : cat.trend === 'down' ? (DK.colors.danger ?? '#EF4444') : DK.colors.textMuted,
+                        }]}>
+                          {cat.trendPercent > 0 ? '+' : ''}{cat.trendPercent}%
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   {tappable && (
                     <Ionicons name="chevron-forward" size={16} color={DK.colors.textMuted} style={{ marginLeft: 4 }} />

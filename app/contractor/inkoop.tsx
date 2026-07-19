@@ -409,10 +409,15 @@ export default function InkoopScreen() {
                     <Text style={styles.timelineLabel}>{t('inkoop.savedThisMonth', 'Saved this month')}</Text>
                     <Text style={styles.timelineAmount}>€{savings.totalSavedThisMonth.toLocaleString(undefined)}</Text>
                   </View>
-                  <View style={styles.trendPill}>
-                    <Ionicons name="arrow-up" size={12} color={SemanticColors.feedbackSuccess} />
-                    <Text style={styles.trendText}>+{savings.trendPercent}%</Text>
-                  </View>
+                  {/* Hidden when the trend is unknown — it used to render a
+                      bare "+%" (hardcoded 12 before, null now) beside the
+                      real monthly total. */}
+                  {savings.trendPercent !== null && (
+                    <View style={styles.trendPill}>
+                      <Ionicons name="arrow-up" size={12} color={SemanticColors.feedbackSuccess} />
+                      <Text style={styles.trendText}>+{savings.trendPercent}%</Text>
+                    </View>
+                  )}
                 </View>
             <View style={styles.chartRow}>
               {timeline.map((m, idx) => {

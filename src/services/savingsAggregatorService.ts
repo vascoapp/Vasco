@@ -27,7 +27,13 @@ export interface SavingsCategory {
   amount: number;
   description: string;
   trend: 'up' | 'down' | 'stable';
-  trendPercent: number;
+  /**
+   * Month-over-month change, or null when we have no history to derive it
+   * from. NULL MEANS "UNKNOWN" — the UI must hide the badge, never render
+   * a 0 or a placeholder. Most categories are null: computing a trend needs
+   * a monthly snapshot rollup that does not exist yet (see totalSavedThisYear).
+   */
+  trendPercent: number | null;
 }
 
 export interface SavingsAggregation {
@@ -37,9 +43,14 @@ export interface SavingsAggregation {
   breakdown: SavingsCategory[];
   topOpportunity: { label: string; potentialAmount: number; action: string };
   trend: 'up' | 'down' | 'stable';
-  trendPercent: number;
+  /** Overall MoM change, or null when there is no history. See above. */
+  trendPercent: number | null;
   savingsPerJob: number;
-  savingsVsBenchmark: number; // percentage above/below industry avg
+  /**
+   * Percentage above/below industry average, or null when no cohort
+   * benchmark is available. Was a hardcoded 35.
+   */
+  savingsVsBenchmark: number | null;
 }
 
 export interface SavingsTimeline {
@@ -112,7 +123,7 @@ export function useSavingsAggregation(): SavingsAggregation {
         amount: timeSavings,
         description: t('savings.cat.timeDesc', 'Route optimization (€{{route}}) + less idle time', { route: laborCosts.travelAnalysis.clusteringPotential }),
         trend: 'up',
-        trendPercent: 15,
+        trendPercent: null, // no MoM history — see SavingsCategory.trendPercent
       },
       {
         id: 'purchasing',
@@ -121,7 +132,7 @@ export function useSavingsAggregation(): SavingsAggregation {
         amount: purchasingSavings,
         description: t('savings.cat.purchasingDesc', 'Supplier discount potential: €{{total}} (40% realized)', { total: supplierNeg.totalDiscountPotential }),
         trend: 'up',
-        trendPercent: 8,
+        trendPercent: null, // no MoM history
       },
       {
         id: 'faster-payments',
@@ -146,7 +157,7 @@ export function useSavingsAggregation(): SavingsAggregation {
         amount: conversionSavings,
         description: t('savings.cat.conversionDesc', 'Extra jobs from faster quote follow-up'),
         trend: 'up',
-        trendPercent: 12,
+        trendPercent: null, // no MoM history
       },
       {
         id: 'audit',
@@ -155,7 +166,7 @@ export function useSavingsAggregation(): SavingsAggregation {
         amount: auditSavings,
         description: t('savings.cat.auditDesc', 'Estimation score {{score}}/100 — fewer overruns', { score: costSummary.estimationScore }),
         trend: 'up',
-        trendPercent: 20,
+        trendPercent: null, // no MoM history
       },
       {
         id: 'materials',
@@ -166,7 +177,7 @@ export function useSavingsAggregation(): SavingsAggregation {
           ? t('savings.cat.materialsDesc', 'Quick wins: {{suppliers}}', { suppliers: supplierNeg.quickWins.map(qw => qw.supplier).join(', ') })
           : t('savings.cat.materialsEmpty', 'No supplier quick-wins yet'),
         trend: 'up',
-        trendPercent: 5,
+        trendPercent: null, // no MoM history
       },
     ];
 
@@ -192,9 +203,16 @@ export function useSavingsAggregation(): SavingsAggregation {
         ? { label: topQuickWin.action, potentialAmount: topQuickWin.saving, action: topQuickWin.action }
         : { label: '', potentialAmount: 0, action: '' },
       trend: 'up',
-      trendPercent: 12,
+      // Was a hardcoded 12. There is no monthly snapshot rollup to diff
+      // against (totalSavedThisYear === totalMonth for the same reason),
+      // so the trend is genuinely unknown and the UI hides it.
+      trendPercent: null,
       savingsPerJob: Math.round(totalMonth / totalJobs),
-      savingsVsBenchmark: 35,
+      // Was a hardcoded 35 — the screen told every contractor they were
+      // "35% above industry" regardless of their actual figures (it read
+      // '35% boven branche' on a EUR 2,00 total). No cohort benchmark is
+      // wired here, so this is unknown and the UI omits the clause.
+      savingsVsBenchmark: null,
     };
   }, [laborCosts, supplierNeg, collections, costSummary]);
 }

@@ -3015,6 +3015,9 @@
     "footnote": "Il GoBD richiede 10 anni di conservazione. La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Per la certificazione completa di archivio (DATEV-zertifiziert), abbina questa esportazione all'archivio del tuo commercialista."
   },
   "savings": {
+    "trendSegment": "+{{trend}}% di tendenza",
+    "perJobSegment": "{{perJob}}/lavoro",
+    "benchmarkSegment": "{{benchmark}}% sopra il settore",
     "title": "RISPARMI AI",
     "thisMonth": "Questo mese",
     "thisMonthA11y": "Visualizza risparmi del mese",

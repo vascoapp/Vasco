@@ -120,7 +120,7 @@ export function VascoSavedBanner({ onViewDetails }: VascoSavedBannerProps) {
         </View>
 
         {/* Trend line */}
-        {savings.trendPercent > 0 && (
+        {savings.trendPercent !== null && savings.trendPercent > 0 && (
           <View style={styles.trendRow}>
             <Ionicons name="arrow-up" size={11} color={Palette.white + 'CC'} />
             <Text style={styles.trendText}>

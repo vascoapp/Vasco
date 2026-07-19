@@ -2999,6 +2999,9 @@
     "body": "Een scherm kon niet laden. Probeer opnieuw."
   },
   "savings": {
+    "trendSegment": "+{{trend}}% trend",
+    "perJobSegment": "{{perJob}}/klus",
+    "benchmarkSegment": "{{benchmark}}% boven branche",
     "title": "AI BESPARINGEN",
     "thisMonth": "Deze maand",
     "thisMonthA11y": "Bekijk besparingen deze maand",

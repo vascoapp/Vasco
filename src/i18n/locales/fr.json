@@ -3015,6 +3015,9 @@
     "footnote": "Le GoBD exige 10 ans de conservation. La chaîne de hash prouve qu'aucune entrée n'a été modifiée a posteriori. Pour une certification d'archive complète (DATEV-zertifiziert), couplez cet export à l'archive de votre comptable."
   },
   "savings": {
+    "trendSegment": "+{{trend}} % de tendance",
+    "perJobSegment": "{{perJob}}/chantier",
+    "benchmarkSegment": "{{benchmark}} % au-dessus du secteur",
     "title": "ÉCONOMIES IA",
     "thisMonth": "Ce mois-ci",
     "thisMonthA11y": "Voir les économies du mois",
