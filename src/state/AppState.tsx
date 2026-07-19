@@ -244,6 +244,14 @@ const SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567' },
   { id: 'cust-004', name: 'Fam. Bakker', email: 'bakker@gmail.com', phone: '+31 6 55512345' },
   { id: 'cust-005', name: 'Hotel NH', email: 'facilitair@nh-hotels.nl', phone: '+31 20 5551234' },
+  // The seeded invoices/quotes in mockDocuments bill these three, but they
+  // were never seeded as contacts — so the demo invoiced customers who did
+  // not exist. Visible effect: Klanten reported "No revenue yet · €0,00"
+  // while Geld showed €760 paid, because the paid invoice (i-1044, Van Dijk)
+  // could not be attributed to any contact. Demo-gated data (useSeedData).
+  { id: 'cust-006', name: 'Van Dijk', email: 'info@vandijkbv.nl', phone: '+31 6 44556677' },
+  { id: 'cust-007', name: 'De Jong', email: 'dejong@ziggo.nl', phone: '+31 6 33221100' },
+  { id: 'cust-008', name: 'Bouwgroep Atlas', email: 'projecten@bouwgroepatlas.nl', phone: '+31 30 7654321' },
 ];
 
 const SEED_JOB_MATERIALS: Record<string, JobMaterial[]> = {

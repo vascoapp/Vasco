@@ -150,12 +150,29 @@ export default function BedrijfScreen() {
   }, [t]);
 
   const customerRevenue = useMemo(() => {
+    // Resolve by customerId when present, else fall back to matching the
+    // `customer` NAME against the contact list.
+    //
+    // Requiring customerId meant every invoice that only carries a name was
+    // skipped, so this whole tab reported "No revenue yet · €0,00" while the
+    // Geld tab showed €760 of paid revenue from the same invoice. Invoices
+    // reaching here from several paths (seeded/imported/quote-sourced) set
+    // `customer` but not `customerId`, so the id alone is not a reliable key.
+    const byName: Record<string, string> = {};
+    customers.forEach((c: any) => {
+      if (c.name) byName[String(c.name).trim().toLowerCase()] = c.id;
+    });
+
     const map: Record<string, number> = {};
     invoices.forEach((inv: any) => {
-      if (inv.status === 'paid' && inv.customerId) map[inv.customerId] = (map[inv.customerId] || 0) + (inv.amount || 0);
+      if (inv.status !== 'paid') return;
+      const key = inv.customerId
+        ?? byName[String(inv.customer ?? inv.customerName ?? '').trim().toLowerCase()];
+      if (!key) return; // unattributable — better than inventing a bucket
+      map[key] = (map[key] || 0) + (inv.amount || 0);
     });
     return map;
-  }, [invoices]);
+  }, [invoices, customers]);
 
   const customerJobs = useMemo(() => {
     const map: Record<string, number> = {};
