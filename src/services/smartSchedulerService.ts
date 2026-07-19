@@ -852,15 +852,72 @@ export const smartSchedulerService = new SmartSchedulerService();
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppState } from '../state/AppState';
 
-export function useScheduler() {
-  const [jobs, setJobs] = useState<ScheduledJob[]>(() => smartSchedulerService.getJobs());
+/**
+ * Map an AppState domain Job -> the ScheduledJob shape the scheduler hooks
+ * expose. AppState is the single source of truth for jobs; the service's own
+ * Map is empty in the real app.
+ *
+ * Extracted because this mapping existed in three places (useDaySchedule,
+ * useJobLifecyclePipeline, and now useScheduler) with slightly different
+ * status tables — exactly the kind of drift that produced the lifecycle bugs.
+ */
+export function toScheduledJob(job: any, customers?: Array<{ id: string; name: string }>): ScheduledJob {
+  const durationMin = (job.estimatedDuration ?? 2) * 60;
+  const startTime = job.scheduledDate
+    ? `${job.scheduledDate}T${job.scheduledStartTime ?? '08:00:00'}`
+    : '';
+  const endTime = job.scheduledDate
+    ? (job.scheduledEndTime
+        ? `${job.scheduledDate}T${job.scheduledEndTime}`
+        : new Date(new Date(startTime).getTime() + durationMin * 60000).toISOString())
+    : '';
+  return {
+    id: job.id,
+    projectId: job.id,
+    projectName: job.title,
+    customerId: job.customerId ?? '',
+    customerName: customers?.find((c) => c.id === job.customerId)?.name ?? '',
+    address: job.address ? [job.address.street, job.address.city].filter(Boolean).join(', ') : '',
+    startTime,
+    endTime,
+    duration: durationMin,
+    status: job.status === 'in-progress' ? 'in_progress'
+      : job.status === 'completed' ? 'completed'
+      : job.status === 'cancelled' ? 'cancelled'
+      : 'scheduled',
+    lifecycleStatus: toLifecycleStatus(job.status) ?? 'ingepland',
+    type: 'job',
+    priority: job.priority === 'emergency' ? 'urgent'
+      : job.priority === 'high' ? 'high'
+      : job.priority === 'low' ? 'low'
+      : 'medium',
+    isOutdoor: false,
+    weatherSensitive: false,
+    actualHoursLogged: job.actualHours,
+    estimatedHours: job.estimatedDuration ?? 2,
+    quotedAmount: job.quotedAmount ?? job.agreedAmount ?? 0,
+  };
+}
 
-  useEffect(() => {
-    const unsubscribe = smartSchedulerService.subscribe(() => {
-      setJobs(smartSchedulerService.getJobs());
-    });
-    return unsubscribe;
-  }, []);
+export function useScheduler() {
+  // `jobs` comes from AppState, not smartSchedulerService.getJobs().
+  //
+  // The service's own Map is empty in the real app (R30 removed the MOCK_JOBS
+  // seed; nothing repopulates it), so this hook used to hand every consumer an
+  // empty array forever. That silently killed the registered
+  // `cascading-delay` insight generator, which filters these jobs for
+  // in-progress/scheduled work and could therefore never produce an insight.
+  //
+  // NOTE: the mutators below (scheduleJob/rescheduleJob/cancelJob/updateStatus)
+  // and the conflicts/optimizations derivations still operate on the service's
+  // empty Map. Their only consumer is src/components/contractor/SmartScheduler.tsx,
+  // which is an ORPHAN (never mounted anywhere). Left as-is deliberately rather
+  // than half-migrating a dead surface — see the memory notes.
+  const { jobs: appJobs, customers } = useAppState();
+  const jobs = useMemo<ScheduledJob[]>(
+    () => appJobs.map((job) => toScheduledJob(job, customers)),
+    [appJobs, customers],
+  );
 
   const scheduleJob = useCallback((job: Omit<ScheduledJob, 'id' | 'status'>) => {
     return smartSchedulerService.scheduleJob(job);
@@ -1008,7 +1065,7 @@ export function useWeatherAlerts() {
 }
 
 export function useJobLifecyclePipeline() {
-  const { jobs: appJobs } = useAppState();
+  const { jobs: appJobs, updateJob, updateJobStatus } = useAppState();
 
   // Build lifecycle counts from real AppState jobs
   const counts = useMemo(() => {
@@ -1064,13 +1121,38 @@ export function useJobLifecyclePipeline() {
     [appJobs],
   );
 
+  // Both of these used to delegate to smartSchedulerService, which keeps its
+  // OWN `jobs` Map. That Map is empty in the real app (R30 removed the
+  // MOCK_JOBS seed and nothing repopulates it), so `this.jobs.get(jobId)`
+  // always missed:
+  //   - advanceLifecycle() returned null  -> the job-detail lifecycle CTA was
+  //     a silent no-op (see afc3752)
+  //   - recordActualHours() fell through the `if (job)` guard -> every hour a
+  //     contractor clocked on job completion was SILENTLY DISCARDED
+  // AppState is the real store, and this hook already reads it, so both now
+  // write through it.
+
   const advance = useCallback((jobId: string) => {
-    return smartSchedulerService.advanceLifecycle(jobId);
-  }, []);
+    const job = appJobs.find((j) => j.id === jobId);
+    if (!job) return null;
+    const current = toLifecycleStatus(job.status);
+    if (!current) return null;
+    const idx = LIFECYCLE_ORDER.indexOf(current);
+    if (idx === -1 || idx >= LIFECYCLE_ORDER.length - 1) return null;
+    const next = LIFECYCLE_ORDER[idx + 1];
+    const nextDomain = LIFECYCLE_TO_DOMAIN_STATUS[next];
+    if (!nextDomain) return null;
+    updateJobStatus(jobId, nextDomain as any);
+    return next;
+  }, [appJobs, updateJobStatus]);
 
   const recordHours = useCallback((jobId: string, hours: number) => {
-    smartSchedulerService.recordActualHours(jobId, hours);
-  }, []);
+    const job = appJobs.find((j) => j.id === jobId);
+    if (!job) return;
+    // Accumulate, matching the old service semantics (`actualHoursLogged + hours`).
+    const total = Math.round(((job.actualHours ?? 0) + hours) * 100) / 100;
+    updateJob(jobId, { actualHours: total });
+  }, [appJobs, updateJob]);
 
   return { jobs, counts, advance, recordHours };
 }
