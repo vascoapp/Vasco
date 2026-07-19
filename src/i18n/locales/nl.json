@@ -878,6 +878,13 @@
     "noTeamDesc": "Voeg onderaannemers en teamleden toe"
   },
   "permits": {
+    "addDocuments": "Documenten toevoegen",
+    "attachFailed": "Toevoegen mislukt",
+    "attachFailedDesc": "Kon het document niet toevoegen. Probeer het opnieuw.",
+    "markSubmitted": "Markeer als ingediend",
+    "submitHandoffDesc": "Vasco kan dit niet voor je indienen — dien het zelf in bij {{authority}} en markeer het hier als ingediend, dan bewaken wij de beslistermijn.",
+    "defaultAuthority": "Gemeente",
+    "cancel": "Annuleren",
     "title": "Vergunningen",
     "active": "Actief",
     "expiring": "Bijna verlopen",
@@ -1503,6 +1510,18 @@
     "certFallback": "Certificaat"
   },
   "insurance": {
+    "claimRecorded": "Claim vastgelegd",
+    "claimNotReported": "Nog niet gemeld",
+    "claimReported": "Gemeld bij verzekeraar",
+    "reportToInsurer": "Melden bij verzekeraar",
+    "reportTitle": "Melden bij verzekeraar",
+    "reportBody": "Vasco kan deze claim niet voor je indienen — je verzekeraar neemt claims alleen telefonisch of via het eigen portaal aan. Vermeld polisnummer {{number}} ({{policy}}).",
+    "callInsurer": "Bel verzekeraar",
+    "markReported": "Markeer als gemeld",
+    "recordClaim": "Claim vastleggen",
+    "recordDisclaimer": "Vasco stuurt dit niet naar je verzekeraar. Meld het zelf — wij bewaren het dossier en herinneren je eraan.",
+    "photoCount_one": "{{count}} foto",
+    "photoCount_other": "{{count}} foto's",
     "title": "Verzekeringen",
     "statusActive": "Actief",
     "statusExpiringSoon": "Bijna verlopen",
@@ -4240,7 +4259,18 @@
     "marketAverages": "Marktgemiddelden",
     "hourlyRate": "Uurtarief",
     "margin": "Marge",
-    "acceptance": "Acceptatie"
+    "acceptance": "Acceptatie",
+    "categories": {
+      "concrete_cement": "Beton & cement",
+      "steel_metals": "Staal & metaal",
+      "wood_timber": "Hout",
+      "plastics_pvc": "Kunststof & pvc",
+      "copper_pipes": "Koperen leidingen",
+      "glass": "Glas",
+      "insulation": "Isolatie",
+      "general": "Algemeen"
+    },
+    "indexBasis": "Index ({{country}}) · basis 2015=100"
   },
   "pdfModal": {
     "labelInvoice": "Factuur",
@@ -4868,5 +4898,21 @@
       "specialty": "Specialisme",
       "consultation": "Advies"
     }
+  },
+  "jobQuality": {
+    "title": "Kluskwaliteit",
+    "paidOnTime": "Op tijd betaald?",
+    "customerReview": "Klantbeoordeling",
+    "reviewPlaceholder": "Optionele toelichting",
+    "referral": "Doorverwijzing opgeleverd?",
+    "rebook": "Verwacht je binnen 6 maanden een vervolgklus?",
+    "yes": "Ja",
+    "no": "Nee",
+    "save": "Feedback opslaan",
+    "saving": "Opslaan…",
+    "savedTitle": "Opgeslagen",
+    "savedBody": "Feedback over kluskwaliteit vastgelegd.",
+    "errorTitle": "Fout",
+    "errorBody": "Opslaan mislukt. Probeer het opnieuw."
   }
 }

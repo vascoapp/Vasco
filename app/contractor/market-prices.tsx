@@ -20,6 +20,7 @@ import { useCohortBenchmarks, compareToMarket } from '../../src/services/cohortB
 import { usePriceIndex } from '../../src/services/priceIndexService';
 import { getPriceRecommendations, type PriceRecommendation } from '../../src/services/invoiceScanService';
 import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -42,6 +43,20 @@ export default function MarketPricesScreen() {
   const { user } = useAuth();
   const trade = user?.trade ?? 'general';
   const country = user?.country ?? 'NL';
+
+  // priceIndexService/cohortBenchmarkService emit snake_case DB enums
+  // ('concrete_cement', 'copper_pipes', 'general'). They were rendered raw as
+  // category chips. Falls back to a de-underscored form so a NEW enum value
+  // degrades to "Some Category" rather than leaking the key.
+  // Supplier IDs are internal slugs ('gamma', 'bouwmaat'); show a readable
+  // name rather than the raw key.
+  const supplierLabel = (id: string) =>
+    id ? id.replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '';
+
+  const categoryLabel = (key: string) =>
+    t(`market.categories.${key}`, {
+      defaultValue: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    });
 
   // Resolve action labels with i18n
   const ACTION_ICONS = useMemo(() => {
@@ -105,12 +120,12 @@ export default function MarketPricesScreen() {
                 </View>
               </View>
               <Text style={styles.indexValue}>{index.overallIndex.currentIndex.toFixed(1)}</Text>
-              <Text style={styles.indexLabel}>Index ({country}) · basis 2015=100</Text>
+              <Text style={styles.indexLabel}>{t('market.indexBasis', { country })}</Text>
               {index.materials && index.materials.length > 0 && (
                 <View style={styles.trendsGrid}>
                   {index.materials.slice(0, 4).map((mt: any) => (
                     <View key={mt.category} style={styles.trendItem}>
-                      <Text style={styles.trendCategory}>{mt.category}</Text>
+                      <Text style={styles.trendCategory}>{categoryLabel(mt.category)}</Text>
                       <Ionicons
                         name={TREND_ICONS[mt.trend].icon}
                         size={14}
@@ -142,9 +157,9 @@ export default function MarketPricesScreen() {
                       <Text style={styles.recReason} numberOfLines={2}>{rec.reason}</Text>
                     </View>
                     <View style={styles.recPrices}>
-                      <Text style={styles.recCurrentPrice}>€{rec.currentPrice.toFixed(2)}</Text>
+                      <Text style={styles.recCurrentPrice}>{formatCurrency(rec.currentPrice, country)}</Text>
                       {rec.savingsPotential > 0 && (
-                        <Text style={styles.recSavings}>-€{rec.savingsPotential.toFixed(2)}</Text>
+                        <Text style={styles.recSavings}>-{formatCurrency(rec.savingsPotential, country)}</Text>
                       )}
                     </View>
                   </View>
@@ -153,8 +168,8 @@ export default function MarketPricesScreen() {
                       <Text style={[styles.actionBadgeText, { color: action.color }]}>{action.label}</Text>
                     </View>
                     <Ionicons name={trend.icon} size={14} color={trend.color} />
-                    <Text style={styles.recAvg}>{t('market.avg', 'Gem')}: €{rec.avgPrice.toFixed(2)}</Text>
-                    <Text style={styles.recLowest}>{t('market.lowest', 'Laagst')}: €{rec.lowestPrice.toFixed(2)} ({rec.lowestSupplier})</Text>
+                    <Text style={styles.recAvg}>{t('market.avg', 'Gem')}: {formatCurrency(rec.avgPrice, country)}</Text>
+                    <Text style={styles.recLowest}>{t('market.lowest', 'Laagst')}: {formatCurrency(rec.lowestPrice, country)} ({supplierLabel(rec.lowestSupplier)})</Text>
                   </View>
                 </View>
               );
@@ -190,19 +205,19 @@ export default function MarketPricesScreen() {
                 </View>
                 <View style={styles.bmPrices}>
                   <View style={styles.bmPrice}>
-                    <Text style={styles.bmPriceValue}>€{bm.p25.toFixed(2)}</Text>
+                    <Text style={styles.bmPriceValue}>{formatCurrency(bm.p25, country)}</Text>
                     <Text style={styles.bmPriceLabel}>P25</Text>
                   </View>
                   <View style={[styles.bmPrice, styles.bmPriceHighlight]}>
-                    <Text style={[styles.bmPriceValue, { color: Palette.hermesOrange }]}>€{bm.medianPrice.toFixed(2)}</Text>
+                    <Text style={[styles.bmPriceValue, { color: Palette.hermesOrange }]}>{formatCurrency(bm.medianPrice, country)}</Text>
                     <Text style={styles.bmPriceLabel}>{t('market.median', 'Mediaan')}</Text>
                   </View>
                   <View style={styles.bmPrice}>
-                    <Text style={styles.bmPriceValue}>€{bm.p75.toFixed(2)}</Text>
+                    <Text style={styles.bmPriceValue}>{formatCurrency(bm.p75, country)}</Text>
                     <Text style={styles.bmPriceLabel}>P75</Text>
                   </View>
                 </View>
-                <Text style={styles.bmMeta}>{bm.sampleSize} {t('market.dataPoints', 'datapunten')} · {bm.category}</Text>
+                <Text style={styles.bmMeta}>{bm.sampleSize} {t('market.dataPoints', 'datapunten')} · {categoryLabel(bm.category)}</Text>
               </View>
               );
             })
@@ -223,7 +238,7 @@ export default function MarketPricesScreen() {
               <View key={i} style={styles.card}>
                 <View style={styles.tradeRow}>
                   <View style={styles.tradeStat}>
-                    <Text style={styles.tradeValue}>€{tb.avgHourlyRate}</Text>
+                    <Text style={styles.tradeValue}>{formatCurrency(tb.avgHourlyRate, country)}</Text>
                     <Text style={styles.tradeLabel}>{t('market.hourlyRate', 'Uurtarief')}</Text>
                   </View>
                   <View style={styles.tradeDivider} />

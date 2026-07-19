@@ -16,6 +16,7 @@
 import { useState } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useLocalSearchParams, router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../../src/theme/draftkings';
@@ -26,6 +27,7 @@ import { upsertJobQualitySignal } from '../../../src/services/intelligenceCaptur
 import { hapticSuccess } from '../../../src/utils/haptics';
 
 export default function JobQualityScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [paidOnTime, setPaidOnTime] = useState<boolean | null>(null);
   const [reviewScore, setReviewScore] = useState<number | null>(null);
@@ -33,6 +35,10 @@ export default function JobQualityScreen() {
   const [referral, setReferral] = useState(false);
   const [rebook, setRebook] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Used by all three Yes/No pill pairs.
+  const yesLabel = t('jobQuality.yes', 'Yes');
+  const noLabel = t('jobQuality.no', 'No');
 
   const handleSubmit = async () => {
     if (!id) return;
@@ -47,10 +53,10 @@ export default function JobQualityScreen() {
         rebookWithin180d: rebook,
       });
       hapticSuccess();
-      Alert.alert('Saved', 'Job quality feedback recorded.');
+      Alert.alert(t('jobQuality.savedTitle', 'Saved'), t('jobQuality.savedBody', 'Job quality feedback recorded.'));
       router.back();
     } catch {
-      Alert.alert('Error', 'Could not save. Try again.');
+      Alert.alert(t('jobQuality.errorTitle', 'Error'), t('jobQuality.errorBody', 'Could not save. Try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -58,15 +64,17 @@ export default function JobQualityScreen() {
 
   return (
     <SafeAreaView style={styles.root}>
-      <DKScreenHeader title="JOB QUALITY" />
+      {/* DKScreenHeader/DKLabel uppercase their own text, so these strings
+          stay natural-case — that also gives VoiceOver a readable label. */}
+      <DKScreenHeader title={t('jobQuality.title', 'Job quality')} />
       <ScrollView contentContainerStyle={styles.content}>
-        <DKLabel style={styles.section}>PAID ON TIME?</DKLabel>
+        <DKLabel style={styles.section}>{t('jobQuality.paidOnTime', 'Paid on time?')}</DKLabel>
         <View style={styles.row}>
-          <Pill label="Yes" active={paidOnTime === true} onPress={() => setPaidOnTime(true)} />
-          <Pill label="No" active={paidOnTime === false} onPress={() => setPaidOnTime(false)} />
+          <Pill label={yesLabel} active={paidOnTime === true} onPress={() => setPaidOnTime(true)} />
+          <Pill label={noLabel} active={paidOnTime === false} onPress={() => setPaidOnTime(false)} />
         </View>
 
-        <DKLabel style={styles.section}>CUSTOMER REVIEW</DKLabel>
+        <DKLabel style={styles.section}>{t('jobQuality.customerReview', 'Customer review')}</DKLabel>
         <View style={styles.row}>
           {[1, 2, 3, 4, 5].map((n) => (
             <TouchableOpacity key={n} onPress={() => setReviewScore(n)} style={styles.star}>
@@ -81,22 +89,22 @@ export default function JobQualityScreen() {
         <TextInput
           value={reviewText}
           onChangeText={setReviewText}
-          placeholder="Optional review text"
+          placeholder={t('jobQuality.reviewPlaceholder', 'Optional review text')}
           placeholderTextColor={DK.colors.textMuted}
           multiline
           style={styles.textarea}
         />
 
-        <DKLabel style={styles.section}>REFERRAL GENERATED?</DKLabel>
+        <DKLabel style={styles.section}>{t('jobQuality.referral', 'Referral generated?')}</DKLabel>
         <View style={styles.row}>
-          <Pill label="Yes" active={referral} onPress={() => setReferral(true)} />
-          <Pill label="No" active={!referral} onPress={() => setReferral(false)} />
+          <Pill label={yesLabel} active={referral} onPress={() => setReferral(true)} />
+          <Pill label={noLabel} active={!referral} onPress={() => setReferral(false)} />
         </View>
 
-        <DKLabel style={styles.section}>EXPECT TO REBOOK WITHIN 6 MONTHS?</DKLabel>
+        <DKLabel style={styles.section}>{t('jobQuality.rebook', 'Expect to rebook within 6 months?')}</DKLabel>
         <View style={styles.row}>
-          <Pill label="Yes" active={rebook} onPress={() => setRebook(true)} />
-          <Pill label="No" active={!rebook} onPress={() => setRebook(false)} />
+          <Pill label={yesLabel} active={rebook} onPress={() => setRebook(true)} />
+          <Pill label={noLabel} active={!rebook} onPress={() => setRebook(false)} />
         </View>
 
         <TouchableOpacity
@@ -104,7 +112,12 @@ export default function JobQualityScreen() {
           onPress={handleSubmit}
           disabled={submitting}
         >
-          <Text style={styles.submitText}>{submitting ? 'SAVING…' : 'SAVE FEEDBACK'}</Text>
+          <Text style={styles.submitText}>
+            {(submitting
+              ? t('jobQuality.saving', 'Saving…')
+              : t('jobQuality.save', 'Save feedback')
+            ).toUpperCase()}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

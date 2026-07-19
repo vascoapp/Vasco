@@ -894,6 +894,13 @@
     "noTeamDesc": "Aggiungi subappaltatori e membri del team"
   },
   "permits": {
+    "addDocuments": "Aggiungi documenti",
+    "attachFailed": "Allegato non riuscito",
+    "attachFailedDesc": "Non è stato possibile allegare il documento. Riprova.",
+    "markSubmitted": "Segna come presentata",
+    "submitHandoffDesc": "Vasco non può presentarla per te — presentala tu presso {{authority}}, poi segnala qui come presentata così monitoriamo il termine di decisione.",
+    "defaultAuthority": "Comune",
+    "cancel": "Annulla",
     "title": "Permessi",
     "active": "Attivi",
     "expiring": "In scadenza",
@@ -1241,6 +1248,18 @@
     "certFallback": "Certificato"
   },
   "insurance": {
+    "claimRecorded": "Sinistro registrato",
+    "claimNotReported": "Non ancora denunciato",
+    "claimReported": "Denunciato all'assicuratore",
+    "reportToInsurer": "Denuncia all'assicuratore",
+    "reportTitle": "Denuncia all'assicuratore",
+    "reportBody": "Vasco non può denunciare il sinistro al posto tuo: l'assicuratore accetta le denunce solo per telefono o tramite il proprio portale. Indica il numero di polizza {{number}} ({{policy}}).",
+    "callInsurer": "Chiama l'assicuratore",
+    "markReported": "Segna come denunciato",
+    "recordClaim": "Registra sinistro",
+    "recordDisclaimer": "Vasco non invia nulla al tuo assicuratore. Denuncialo tu — noi conserviamo la pratica e te lo ricordiamo.",
+    "photoCount_one": "{{count}} foto",
+    "photoCount_other": "{{count}} foto",
     "title": "Assicurazione",
     "statusActive": "Attiva",
     "statusExpiringSoon": "In scadenza",
@@ -4256,7 +4275,18 @@
     "marketAverages": "Medie di mercato",
     "hourlyRate": "Tariffa oraria",
     "margin": "Margine",
-    "acceptance": "Accettazione"
+    "acceptance": "Accettazione",
+    "categories": {
+      "concrete_cement": "Calcestruzzo e cemento",
+      "steel_metals": "Acciaio e metalli",
+      "wood_timber": "Legno",
+      "plastics_pvc": "Plastica e PVC",
+      "copper_pipes": "Tubi in rame",
+      "glass": "Vetro",
+      "insulation": "Isolamento",
+      "general": "Generale"
+    },
+    "indexBasis": "Indice ({{country}}) · base 2015=100"
   },
   "pdfModal": {
     "labelInvoice": "Fattura",
@@ -4884,5 +4914,21 @@
       "specialty": "Specialità",
       "consultation": "Consulenza"
     }
+  },
+  "jobQuality": {
+    "title": "Qualità del lavoro",
+    "paidOnTime": "Pagato in tempo?",
+    "customerReview": "Recensione del cliente",
+    "reviewPlaceholder": "Commento facoltativo",
+    "referral": "Ha generato una segnalazione?",
+    "rebook": "Prevede un nuovo intervento entro 6 mesi?",
+    "yes": "Sì",
+    "no": "No",
+    "save": "Salva feedback",
+    "saving": "Salvataggio…",
+    "savedTitle": "Salvato",
+    "savedBody": "Feedback sulla qualità del lavoro registrato.",
+    "errorTitle": "Errore",
+    "errorBody": "Salvataggio non riuscito. Riprova."
   }
 }

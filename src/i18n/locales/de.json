@@ -894,6 +894,13 @@
     "noTeamDesc": "Subunternehmer und Teammitglieder hinzufügen"
   },
   "permits": {
+    "addDocuments": "Dokumente hinzufügen",
+    "attachFailed": "Anhängen fehlgeschlagen",
+    "attachFailedDesc": "Das Dokument konnte nicht angehängt werden. Bitte erneut versuchen.",
+    "markSubmitted": "Als eingereicht markieren",
+    "submitHandoffDesc": "Vasco kann den Antrag nicht für Sie einreichen — reichen Sie ihn selbst bei {{authority}} ein und markieren Sie ihn hier als eingereicht, damit wir die Entscheidungsfrist überwachen.",
+    "defaultAuthority": "Bauamt",
+    "cancel": "Abbrechen",
     "title": "Genehmigungen",
     "active": "Aktiv",
     "expiring": "Bald ablaufend",
@@ -1241,6 +1248,18 @@
     "certFallback": "Zertifikat"
   },
   "insurance": {
+    "claimRecorded": "Schaden erfasst",
+    "claimNotReported": "Noch nicht gemeldet",
+    "claimReported": "Beim Versicherer gemeldet",
+    "reportToInsurer": "Beim Versicherer melden",
+    "reportTitle": "Beim Versicherer melden",
+    "reportBody": "Vasco kann diesen Schaden nicht für Sie melden — Ihr Versicherer nimmt Meldungen nur telefonisch oder über sein eigenes Portal entgegen. Nennen Sie die Versicherungsscheinnummer {{number}} ({{policy}}).",
+    "callInsurer": "Versicherer anrufen",
+    "markReported": "Als gemeldet markieren",
+    "recordClaim": "Schaden erfassen",
+    "recordDisclaimer": "Vasco sendet dies nicht an Ihren Versicherer. Melden Sie es selbst — wir bewahren den Vorgang auf und erinnern Sie daran.",
+    "photoCount_one": "{{count}} Foto",
+    "photoCount_other": "{{count}} Fotos",
     "title": "Versicherungen",
     "statusActive": "Aktiv",
     "statusExpiringSoon": "Läuft bald ab",
@@ -4256,7 +4275,18 @@
     "marketAverages": "Marktdurchschnitte",
     "hourlyRate": "Stundensatz",
     "margin": "Marge",
-    "acceptance": "Annahme"
+    "acceptance": "Annahme",
+    "categories": {
+      "concrete_cement": "Beton & Zement",
+      "steel_metals": "Stahl & Metall",
+      "wood_timber": "Holz",
+      "plastics_pvc": "Kunststoff & PVC",
+      "copper_pipes": "Kupferrohre",
+      "glass": "Glas",
+      "insulation": "Dämmung",
+      "general": "Allgemein"
+    },
+    "indexBasis": "Index ({{country}}) · Basis 2015=100"
   },
   "pdfModal": {
     "labelInvoice": "Rechnung",
@@ -4884,5 +4914,21 @@
       "specialty": "Spezialgebiet",
       "consultation": "Beratung"
     }
+  },
+  "jobQuality": {
+    "title": "Auftragsqualität",
+    "paidOnTime": "Pünktlich bezahlt?",
+    "customerReview": "Kundenbewertung",
+    "reviewPlaceholder": "Optionaler Kommentar",
+    "referral": "Empfehlung erhalten?",
+    "rebook": "Erwarten Sie einen Folgeauftrag innerhalb von 6 Monaten?",
+    "yes": "Ja",
+    "no": "Nein",
+    "save": "Feedback speichern",
+    "saving": "Speichern…",
+    "savedTitle": "Gespeichert",
+    "savedBody": "Feedback zur Auftragsqualität erfasst.",
+    "errorTitle": "Fehler",
+    "errorBody": "Speichern fehlgeschlagen. Bitte erneut versuchen."
   }
 }

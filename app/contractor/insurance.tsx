@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -17,10 +17,24 @@ import { formatCurrency } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { Toast } from '../../src/components/shared/Toast';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { showPhotoPicker } from '../../src/utils/photoPicker';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
+// A claim recorded here is a LOCAL DOSSIER, not a filed claim.
+//
+// Vasco has no insurer integration — EU trade insurers accept claims by
+// phone or through their own portal, there is no API to post to. This screen
+// previously wrote the claim to AsyncStorage, toasted "Claim ingediend"
+// (claim submitted) and badged it "In behandeling" (under review), so a
+// contractor could believe their insurer was processing a claim that had
+// never left the phone — with a reporting deadline quietly running out.
+//
+// The record is still worth keeping (description, date, amount and photos
+// captured while the damage is fresh is exactly what the insurer asks for),
+// so the fix is honesty, not deletion: the claim stays a draft until the
+// contractor reports it themselves, and `reportedAt` records when they did.
 interface Claim {
   id: string;
   policyId: string;
@@ -28,7 +42,12 @@ interface Claim {
   description: string;
   incidentDate: string;
   estimatedAmount: string;
+  /** When the contractor saved this record in Vasco. */
   submittedAt: string;
+  /** Set only once the contractor confirms they reported it to the insurer. */
+  reportedAt?: string;
+  /** Local photo URIs captured as evidence. */
+  photos?: string[];
 }
 
 function getInsuranceStatusConfig(status: string, t: (key: string, defaultValue: string) => string) {
@@ -73,6 +92,7 @@ export default function InsuranceScreen() {
   const [claimDescription, setClaimDescription] = useState('');
   const [claimDate, setClaimDate] = useState('');
   const [claimAmount, setClaimAmount] = useState('');
+  const [claimPhotos, setClaimPhotos] = useState<string[]>([]);
   const [showToast, setShowToast] = useState(false);
 
   const openClaimForm = (policyId?: string) => {
@@ -80,10 +100,11 @@ export default function InsuranceScreen() {
     setClaimDescription('');
     setClaimDate('');
     setClaimAmount('');
+    setClaimPhotos([]);
     setShowClaimModal(true);
   };
 
-  const submitClaim = () => {
+  const saveClaim = () => {
     const selectedPolicy = policies.find(p => p.id === claimPolicyId);
     const newClaim: Claim = {
       id: `claim_${Date.now()}`,
@@ -93,11 +114,47 @@ export default function InsuranceScreen() {
       incidentDate: claimDate,
       estimatedAmount: claimAmount,
       submittedAt: new Date().toISOString(),
+      photos: claimPhotos,
     };
     setClaims(prev => [newClaim, ...prev]);
     setShowClaimModal(false);
     hapticSuccess();
     setShowToast(true);
+  };
+
+  // Hands the contractor off to the insurer, since Vasco cannot file for
+  // them, then lets them record that they did it.
+  const reportClaim = (claim: Claim) => {
+    const policy = policies.find(p => p.id === claim.policyId);
+    const phone = policy?.contactPhone;
+
+    Alert.alert(
+      t('insurance.reportTitle', 'Melden bij verzekeraar'),
+      t('insurance.reportBody', {
+        defaultValue:
+          'Vasco cannot file this claim for you — your insurer only accepts claims by phone or through their own portal. Quote policy number {{number}} ({{policy}}).',
+        number: policy?.policyNumber || t('insurance.notApplicable', 'n.v.t.'),
+        policy: claim.policyName,
+      }),
+      [
+        { text: t('insurance.cancel', 'Annuleren'), style: 'cancel' },
+        ...(phone
+          ? [{
+              text: t('insurance.callInsurer', 'Bel verzekeraar'),
+              onPress: () => { Linking.openURL(`tel:${phone.replace(/[^+\d]/g, '')}`).catch(() => {}); },
+            }]
+          : []),
+        {
+          text: t('insurance.markReported', 'Markeer als gemeld'),
+          onPress: () => {
+            setClaims(prev => prev.map(c =>
+              c.id === claim.id ? { ...c, reportedAt: new Date().toISOString() } : c,
+            ));
+            hapticSuccess();
+          },
+        },
+      ],
+    );
   };
 
   const activeCount = policies.filter(p => p.status === 'active').length;
@@ -176,9 +233,9 @@ export default function InsuranceScreen() {
                     {daysLeft > 0 ? t('insurance.daysRemaining', { defaultValue: '{{days}} days remaining', days: daysLeft }) : t('insurance.daysExpired', { defaultValue: '{{days}} days expired', days: Math.abs(daysLeft) })}
                   </Text>
                 </View>
-                {policy.coverage && (
-                  <Text style={styles.policyAmount}>€{policy.coverage.toLocaleString(undefined)}</Text>
-                )}
+                {policy.coverage ? (
+                  <Text style={styles.policyAmount}>{formatCurrency(policy.coverage, country)}</Text>
+                ) : null}
               </View>
             </Pressable>
           );
@@ -197,26 +254,54 @@ export default function InsuranceScreen() {
             <View style={{ marginTop: 12 }}>
               <Text style={styles.claimsSectionTitle}>{t('insurance.claims', 'Ingediende claims')}</Text>
             </View>
-            {claims.map((claim) => (
-              <View key={claim.id} style={styles.claimCard}>
+            {claims.map((claim) => {
+              const reported = !!claim.reportedAt;
+              return (
+              <View
+                key={claim.id}
+                style={[
+                  styles.claimCard,
+                  { borderLeftColor: reported ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning },
+                ]}
+              >
                 <View style={styles.claimHeader}>
                   <Ionicons name="document-text" size={18} color={Palette.hermesOrange} />
                   <Text style={styles.claimPolicyName}>{claim.policyName}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: SemanticColors.feedbackWarningBg }]}>
-                    <Text style={[styles.statusText, { color: SemanticColors.feedbackWarning }]}>
-                      {t('insurance.claimPending', 'In behandeling')}
+                  {/* Was hardcoded "In behandeling" (under review) on every
+                      claim — an insurer status Vasco has no way to know. */}
+                  <View style={[styles.statusBadge, {
+                    backgroundColor: reported ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackWarningBg,
+                  }]}>
+                    <Text style={[styles.statusText, {
+                      color: reported ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning,
+                    }]}>
+                      {reported
+                        ? t('insurance.claimReported', 'Gemeld bij verzekeraar')
+                        : t('insurance.claimNotReported', 'Nog niet gemeld')}
                     </Text>
                   </View>
                 </View>
                 <Text style={styles.claimDescription} numberOfLines={2}>{claim.description}</Text>
                 <View style={styles.claimFooter}>
-                  <Text style={styles.claimDetailText}>{claim.incidentDate}</Text>
-                  {claim.estimatedAmount ? (
-                    <Text style={styles.policyAmount}>€{Number(claim.estimatedAmount).toLocaleString(undefined)}</Text>
+                  <Text style={styles.claimDetailText}>
+                    {claim.incidentDate}
+                    {claim.photos && claim.photos.length > 0
+                      ? ` · ${t('insurance.photoCount', { defaultValue: '{{count}} photo', count: claim.photos.length })}`
+                      : ''}
+                  </Text>
+                  {claim.estimatedAmount && !Number.isNaN(Number(claim.estimatedAmount)) ? (
+                    <Text style={styles.policyAmount}>{formatCurrency(Number(claim.estimatedAmount), country)}</Text>
                   ) : null}
                 </View>
+                {!reported && (
+                  <Pressable style={styles.reportBtn} onPress={() => reportClaim(claim)}>
+                    <Ionicons name="call-outline" size={15} color={Palette.hermesOrange} />
+                    <Text style={styles.reportBtnText}>{t('insurance.reportToInsurer', 'Melden bij verzekeraar')}</Text>
+                  </Pressable>
+                )}
               </View>
-            ))}
+              );
+            })}
           </>
         )}
 
@@ -284,26 +369,38 @@ export default function InsuranceScreen() {
               keyboardType="numeric"
             />
 
-            {/* Photos placeholder */}
-            <Pressable style={styles.photoPlaceholder}>
+            {/* Photos — this Pressable had no onPress at all, so the dashed
+                "add photos" box did nothing when tapped. */}
+            <Pressable
+              style={styles.photoPlaceholder}
+              onPress={() => showPhotoPicker(photo => setClaimPhotos(prev => [...prev, photo.uri]))}
+            >
               <Ionicons name="camera-outline" size={20} color={Palette.hermesOrange} />
-              <Text style={styles.photoPlaceholderText}>{t('insurance.addPhotos', "Foto's toevoegen")}</Text>
+              <Text style={styles.photoPlaceholderText}>
+                {claimPhotos.length > 0
+                  ? t('insurance.photoCount', { defaultValue: '{{count}} photo', count: claimPhotos.length })
+                  : t('insurance.addPhotos', "Foto's toevoegen")}
+              </Text>
             </Pressable>
 
-            {/* Submit */}
+            {/* Save. Labelled "record" rather than "submit": this writes a
+                local dossier, it does not reach the insurer. */}
             <Pressable
               style={[styles.submitBtn, (!claimDescription || !claimPolicyId) && { opacity: 0.5 }]}
-              onPress={submitClaim}
+              onPress={saveClaim}
               disabled={!claimDescription || !claimPolicyId}
             >
-              <Text style={styles.submitBtnText}>{t('insurance.submitClaim', 'Claim indienen')}</Text>
+              <Text style={styles.submitBtnText}>{t('insurance.recordClaim', 'Claim vastleggen')}</Text>
             </Pressable>
+            <Text style={styles.claimDisclaimer}>
+              {t('insurance.recordDisclaimer', 'Vasco does not send this to your insurer. Report it to them yourself — we keep the record and remind you.')}
+            </Text>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
       <Toast
-        message={t('insurance.claimSubmitted', 'Claim ingediend')}
+        message={t('insurance.claimRecorded', 'Claim vastgelegd')}
         visible={showToast}
         onHide={() => setShowToast(false)}
         type="success"
@@ -352,6 +449,16 @@ const styles = StyleSheet.create({
   claimDescription: { fontSize: 13, color: DK.colors.textMuted, lineHeight: 18 },
   claimFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTopWidth: 1, borderTopColor: DK.colors.border },
   claimDetailText: { fontSize: 12, color: DK.colors.textMuted },
+  reportBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 10, borderRadius: 10,
+    borderWidth: 1, borderColor: Palette.hermesOrange,
+  },
+  reportBtnText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  claimDisclaimer: {
+    fontSize: 11, color: DK.colors.textMuted, textAlign: 'center',
+    marginTop: 10, lineHeight: 15,
+  },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: DK.colors.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 20, paddingBottom: SafeArea.bottom + 16, maxHeight: '85%' },

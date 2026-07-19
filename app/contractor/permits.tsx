@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as DocumentPicker from 'expo-document-picker';
 import { useTranslation } from 'react-i18next';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -152,6 +153,69 @@ export default function PermitsScreen() {
   const pending = permits.filter(p => ['submitted', 'under-review', 'information-requested'].includes(p.status)).length;
   const notSubmitted = permits.filter(p => p.status === 'not-submitted').length;
 
+  // Attach a document to a permit. Without this there was no upload UI
+  // anywhere in the file — `documents` was initialised to [] and never
+  // mutated, so the "Aanvraag indienen" CTA below could only ever hit its
+  // "upload documents first" Alert. The permit could never leave
+  // 'not-submitted', which made every later status in STATUS_CONFIG dead.
+  const attachDocument = async (permitId: string) => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+        multiple: true,
+      });
+      if (result.canceled || !result.assets?.length) return;
+
+      const names = result.assets.map(a => a.name).filter(Boolean);
+      setPermits(prev => prev.map(p =>
+        p.id === permitId ? { ...p, documents: [...p.documents, ...names] } : p,
+      ));
+    } catch {
+      Alert.alert(
+        t('permits.attachFailed', 'Toevoegen mislukt'),
+        t('permits.attachFailedDesc', 'Kon het document niet toevoegen. Probeer het opnieuw.'),
+      );
+    }
+  };
+
+  // Vasco has no connection to a municipality or Omgevingsloket — permits are
+  // filed through each authority's own counter or portal. So "submit" hands
+  // off and then records what the contractor did, rather than pretending to
+  // transmit anything.
+  const markPermitSubmitted = (permit: ContractorPermit) => {
+    Alert.alert(
+      t('permits.submitRequest', 'Aanvraag indienen'),
+      t('permits.submitHandoffDesc', {
+        defaultValue:
+          'Vasco cannot file this for you — submit it at {{authority}} yourself, then mark it as submitted here so we can track the decision deadline.',
+        authority: permit.authority,
+      }),
+      [
+        { text: t('permits.cancel', 'Annuleren'), style: 'cancel' },
+        {
+          text: t('permits.markSubmitted', 'Markeer als ingediend'),
+          onPress: () => {
+            const now = new Date();
+            // Standard EU short-track decision window is 8 weeks; this is a
+            // reminder date the contractor can correct, not a promise.
+            const target = new Date(now.getTime() + 56 * 24 * 60 * 60 * 1000);
+            setPermits(prev => prev.map(p =>
+              p.id === permit.id
+                ? {
+                    ...p,
+                    status: 'submitted' as PermitStatus,
+                    submissionDate: now.toISOString(),
+                    targetDecisionDate: target.toISOString(),
+                  }
+                : p,
+            ));
+          },
+        },
+      ],
+    );
+  };
+
   const handleCreatePermit = () => {
     if (!wizard.permitType || !wizard.jobTitle.trim()) {
       Alert.alert(t('permits.fillRequired', 'Vul vereiste velden in'), t('permits.fillRequiredDesc', 'Kies een vergunningstype en vul de klusnaam in.'));
@@ -162,7 +226,9 @@ export default function PermitsScreen() {
       id: `p-${Date.now()}`,
       type: wizard.permitType,
       reference: '',
-      authority: wizard.authority || 'Gemeente',
+      // Was a hardcoded Dutch 'Gemeente' written into stored data — wrong for
+      // DE/FR/ES/IT contractors, and it now shows in the submit hand-off.
+      authority: wizard.authority || t('permits.defaultAuthority', 'Gemeente'),
       status: 'not-submitted',
       jobTitle: wizard.jobTitle,
       address: wizard.address,
@@ -301,14 +367,24 @@ export default function PermitsScreen() {
                         </View>
                       )}
                       {permit.status === 'not-submitted' && (
-                        <Pressable
-                          style={styles.submitButton}
-                          onPress={() => {
-                            Alert.alert(t('permits.documentsNeeded', 'Documenten nodig'), t('permits.documentsNeededDesc', 'Upload eerst de vereiste documenten voordat u de aanvraag kunt indienen.'));
-                          }}
-                        >
-                          <Text style={styles.submitButtonText}>{t('permits.submitRequest', 'Aanvraag indienen')}</Text>
-                        </Pressable>
+                        <>
+                          <Pressable style={styles.attachButton} onPress={() => attachDocument(permit.id)}>
+                            <Ionicons name="cloud-upload-outline" size={15} color={Palette.hermesOrange} />
+                            <Text style={styles.attachButtonText}>{t('permits.addDocuments', 'Documenten toevoegen')}</Text>
+                          </Pressable>
+                          <Pressable
+                            style={[styles.submitButton, permit.documents.length === 0 && styles.submitButtonDisabled]}
+                            disabled={permit.documents.length === 0}
+                            onPress={() => markPermitSubmitted(permit)}
+                          >
+                            <Text style={styles.submitButtonText}>{t('permits.submitRequest', 'Aanvraag indienen')}</Text>
+                          </Pressable>
+                          {permit.documents.length === 0 && (
+                            <Text style={styles.submitHint}>
+                              {t('permits.documentsNeededDesc', 'Upload eerst de vereiste documenten voordat u de aanvraag kunt indienen.')}
+                            </Text>
+                          )}
+                        </>
                       )}
                     </View>
                   )}
@@ -538,6 +614,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8, borderRadius: 8, marginTop: 4,
   },
   submitButtonText: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: Palette.hermesOrange },
+  submitButtonDisabled: { opacity: 0.4 },
+  submitHint: { fontSize: 11, color: SemanticColors.textTertiary, marginTop: 4, lineHeight: 15 },
+  attachButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 8, borderRadius: 8, marginTop: 4,
+    borderWidth: 1, borderColor: Palette.hermesOrange, borderStyle: 'dashed',
+  },
+  attachButtonText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
 
   // Wizard
   wizardTitle: { fontSize: 20, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },

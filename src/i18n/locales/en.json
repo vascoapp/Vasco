@@ -894,6 +894,13 @@
     "noTeamDesc": "Add subcontractors and team members"
   },
   "permits": {
+    "addDocuments": "Add documents",
+    "attachFailed": "Could not attach",
+    "attachFailedDesc": "The document could not be attached. Please try again.",
+    "markSubmitted": "Mark as submitted",
+    "submitHandoffDesc": "Vasco cannot file this for you — submit it at {{authority}} yourself, then mark it as submitted here so we can track the decision deadline.",
+    "defaultAuthority": "Local authority",
+    "cancel": "Cancel",
     "title": "Permits",
     "active": "Active",
     "expiring": "Expiring soon",
@@ -1241,6 +1248,18 @@
     "certFallback": "Certificate"
   },
   "insurance": {
+    "claimRecorded": "Claim recorded",
+    "claimNotReported": "Not yet reported",
+    "claimReported": "Reported to insurer",
+    "reportToInsurer": "Report to insurer",
+    "reportTitle": "Report to insurer",
+    "reportBody": "Vasco cannot file this claim for you — your insurer only accepts claims by phone or through their own portal. Quote policy number {{number}} ({{policy}}).",
+    "callInsurer": "Call insurer",
+    "markReported": "Mark as reported",
+    "recordClaim": "Record claim",
+    "recordDisclaimer": "Vasco does not send this to your insurer. Report it to them yourself — we keep the record and remind you.",
+    "photoCount_one": "{{count}} photo",
+    "photoCount_other": "{{count}} photos",
     "title": "Insurance",
     "statusActive": "Active",
     "statusExpiringSoon": "Expiring soon",
@@ -4256,7 +4275,18 @@
     "marketAverages": "Marktgemiddelden",
     "hourlyRate": "Uurtarief",
     "margin": "Marge",
-    "acceptance": "Acceptatie"
+    "acceptance": "Acceptatie",
+    "categories": {
+      "concrete_cement": "Concrete & cement",
+      "steel_metals": "Steel & metals",
+      "wood_timber": "Wood & timber",
+      "plastics_pvc": "Plastics & PVC",
+      "copper_pipes": "Copper piping",
+      "glass": "Glass",
+      "insulation": "Insulation",
+      "general": "General"
+    },
+    "indexBasis": "Index ({{country}}) · base 2015=100"
   },
   "pdfModal": {
     "labelInvoice": "Invoice",
@@ -4884,5 +4914,21 @@
       "specialty": "Specialty",
       "consultation": "Consultation"
     }
+  },
+  "jobQuality": {
+    "title": "Job quality",
+    "paidOnTime": "Paid on time?",
+    "customerReview": "Customer review",
+    "reviewPlaceholder": "Optional review text",
+    "referral": "Referral generated?",
+    "rebook": "Expect to rebook within 6 months?",
+    "yes": "Yes",
+    "no": "No",
+    "save": "Save feedback",
+    "saving": "Saving…",
+    "savedTitle": "Saved",
+    "savedBody": "Job quality feedback recorded.",
+    "errorTitle": "Error",
+    "errorBody": "Could not save. Try again."
   }
 }

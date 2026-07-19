@@ -4,7 +4,7 @@
 // Post-payment completion checklist: satisfaction, warranty, feedback
 // =============================================================================
 
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,21 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { Toast } from '../../src/components/shared/Toast';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Ticked checklist items and finished closeouts are persisted here.
+// Previously all of this lived in React state only: ticking eight items and
+// backgrounding the app lost them, and "Klus afsluiten" showed a success
+// toast while changing nothing — so the job reappeared in this list on the
+// next visit, still at 0%.
+const CLOSEOUT_STORAGE_KEY = '@vasco_closeout_state';
+
+interface PersistedCloseout {
+  /** itemId -> completed. Only ticked ids are stored. */
+  checked: Record<string, string[]>;
+  /** jobId -> ISO timestamp of when the contractor closed it out. */
+  closedAt: Record<string, string>;
+}
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -49,11 +64,37 @@ const createCloseoutItems = (t: (key: string, defaultValue: string) => string): 
 export default function CloseoutScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { jobs, customers, updateJobStatus } = useAppState();
+  // NOTE: updateJobStatus is deliberately NOT used here — see handleFinalize.
+  const { jobs, customers } = useAppState();
+
+  const [persisted, setPersisted] = useState<PersistedCloseout>({ checked: {}, closedAt: {} });
+
+  useEffect(() => {
+    AsyncStorage.getItem(CLOSEOUT_STORAGE_KEY)
+      .then(raw => {
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setPersisted({ checked: parsed?.checked ?? {}, closedAt: parsed?.closedAt ?? {} });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const save = useCallback((next: PersistedCloseout) => {
+    setPersisted(next);
+    AsyncStorage.setItem(CLOSEOUT_STORAGE_KEY, JSON.stringify(next)).catch(() => {});
+  }, []);
+
+  const closedAtMap = persisted.closedAt;
 
   // Find jobs ready for closeout (paid or completed)
-  const closeoutJobs = jobs
+  // Wrapped in useMemo so the derived checklist map below has a stable
+  // dependency; recomputed whenever jobs hydrate or a closeout is recorded.
+  const closeoutJobs = useMemo(() => jobs
     .filter(j => ['paid', 'completed', 'invoiced'].includes(j.status))
+    // Already closed out — keep it off the list instead of showing a
+    // finished job back at 0% every time the screen is opened.
+    .filter(j => !closedAtMap[j.id])
     .map(j => {
       const customer = customers.find(c => c.id === j.customerId);
       return {
@@ -62,11 +103,19 @@ export default function CloseoutScreen() {
         customerName: customer?.name ?? t('closeout.unknownCustomer', 'Onbekende klant'),
         completedAt: j.completedAt ?? j.updatedAt,
       };
-    });
+    }), [jobs, customers, closedAtMap, t]);
 
-  const [closeoutData, setCloseoutData] = useState<Map<string, CloseoutItem[]>>(
-    new Map(closeoutJobs.map(j => [j.jobId, createCloseoutItems(t)])),
-  );
+  // Derived from the persisted ticks rather than seeded once — the old
+  // useState initialiser ran on the FIRST render only, so any job that
+  // hydrated later (AppState loads async) never got a checklist entry at all.
+  const closeoutData = useMemo(() => {
+    const map = new Map<string, CloseoutItem[]>();
+    for (const j of closeoutJobs) {
+      const ticked = new Set(persisted.checked[j.jobId] ?? []);
+      map.set(j.jobId, createCloseoutItems(t).map(i => ({ ...i, completed: ticked.has(i.id) })));
+    }
+    return map;
+  }, [closeoutJobs, persisted.checked, t]);
   const [expandedJob, setExpandedJob] = useState<string | null>(
     closeoutJobs.length === 1 ? closeoutJobs[0].jobId : null,
   );
@@ -74,15 +123,11 @@ export default function CloseoutScreen() {
   const [showToast, setShowToast] = useState(false);
 
   const toggleItem = (jobId: string, itemId: string) => {
-    setCloseoutData(prev => {
-      const next = new Map(prev);
-      const items = next.get(jobId) ?? createCloseoutItems(t);
-      const updated = items.map(i =>
-        i.id === itemId ? { ...i, completed: !i.completed } : i,
-      );
-      next.set(jobId, updated);
-      return next;
-    });
+    const current = persisted.checked[jobId] ?? [];
+    const next = current.includes(itemId)
+      ? current.filter(id => id !== itemId)
+      : [...current, itemId];
+    save({ ...persisted, checked: { ...persisted.checked, [jobId]: next } });
     hapticSuccess();
   };
 
@@ -109,6 +154,16 @@ export default function CloseoutScreen() {
         {
           text: t('closeout.close', 'Afsluiten'),
           onPress: () => {
+            // Record the closeout so it survives a restart and the job stops
+            // reappearing in this list. NOTE: this deliberately does NOT touch
+            // the job's business status. There is no 'closed' JobStatus, and
+            // the terminal one is 'paid' — advancing a merely-'completed' job
+            // to 'paid' here would assert the customer had paid when they may
+            // not have. Closeout is a handover checklist, not a payment event.
+            save({
+              ...persisted,
+              closedAt: { ...persisted.closedAt, [job.jobId]: new Date().toISOString() },
+            });
             hapticSuccess();
             setToastMessage(t('closeout.closed', 'Afgesloten') + ' — ' + t('closeout.closedSuccess', { defaultValue: '"{{title}}" has been successfully closed. Well done!', title: job.title }));
             setShowToast(true);

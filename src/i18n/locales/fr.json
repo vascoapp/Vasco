@@ -894,6 +894,13 @@
     "noTeamDesc": "Ajoutez des sous-traitants et des membres d'équipe"
   },
   "permits": {
+    "addDocuments": "Ajouter des documents",
+    "attachFailed": "Échec de l'ajout",
+    "attachFailedDesc": "Le document n'a pas pu être ajouté. Veuillez réessayer.",
+    "markSubmitted": "Marquer comme déposé",
+    "submitHandoffDesc": "Vasco ne peut pas déposer la demande à votre place — déposez-la vous-même auprès de {{authority}}, puis marquez-la comme déposée ici afin que nous suivions le délai de décision.",
+    "defaultAuthority": "Mairie",
+    "cancel": "Annuler",
     "title": "Autorisations",
     "active": "Actives",
     "expiring": "Expirent bientôt",
@@ -1241,6 +1248,18 @@
     "certFallback": "Certificat"
   },
   "insurance": {
+    "claimRecorded": "Sinistre enregistré",
+    "claimNotReported": "Pas encore déclaré",
+    "claimReported": "Déclaré à l'assureur",
+    "reportToInsurer": "Déclarer à l'assureur",
+    "reportTitle": "Déclarer à l'assureur",
+    "reportBody": "Vasco ne peut pas déclarer ce sinistre à votre place — votre assureur n'accepte les déclarations que par téléphone ou via son propre portail. Indiquez le numéro de contrat {{number}} ({{policy}}).",
+    "callInsurer": "Appeler l'assureur",
+    "markReported": "Marquer comme déclaré",
+    "recordClaim": "Enregistrer le sinistre",
+    "recordDisclaimer": "Vasco n'envoie rien à votre assureur. Déclarez-le vous-même — nous conservons le dossier et vous le rappelons.",
+    "photoCount_one": "{{count}} photo",
+    "photoCount_other": "{{count}} photos",
     "title": "Assurance",
     "statusActive": "Active",
     "statusExpiringSoon": "Expire bientôt",
@@ -4256,7 +4275,18 @@
     "marketAverages": "Moyennes du marché",
     "hourlyRate": "Taux horaire",
     "margin": "Marge",
-    "acceptance": "Acceptation"
+    "acceptance": "Acceptation",
+    "categories": {
+      "concrete_cement": "Béton & ciment",
+      "steel_metals": "Acier & métaux",
+      "wood_timber": "Bois",
+      "plastics_pvc": "Plastique & PVC",
+      "copper_pipes": "Tuyaux en cuivre",
+      "glass": "Verre",
+      "insulation": "Isolation",
+      "general": "Général"
+    },
+    "indexBasis": "Indice ({{country}}) · base 2015=100"
   },
   "pdfModal": {
     "labelInvoice": "Facture",
@@ -4884,5 +4914,21 @@
       "specialty": "Spécialité",
       "consultation": "Conseil"
     }
+  },
+  "jobQuality": {
+    "title": "Qualité du chantier",
+    "paidOnTime": "Payé à temps ?",
+    "customerReview": "Avis du client",
+    "reviewPlaceholder": "Commentaire facultatif",
+    "referral": "Recommandation obtenue ?",
+    "rebook": "Prévoyez-vous une nouvelle intervention sous 6 mois ?",
+    "yes": "Oui",
+    "no": "Non",
+    "save": "Enregistrer l'avis",
+    "saving": "Enregistrement…",
+    "savedTitle": "Enregistré",
+    "savedBody": "Retour sur la qualité du chantier enregistré.",
+    "errorTitle": "Erreur",
+    "errorBody": "Échec de l'enregistrement. Réessayez."
   }
 }

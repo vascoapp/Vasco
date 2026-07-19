@@ -28,7 +28,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useProcurementAgent, type MaterialNeed } from '../../src/services/procurementAgentService';
 import { useAppState } from '../../src/state/AppState';
-import { searchCatalog, type CatalogItem, getSupplierConfigs } from '../../src/integrations/suppliers';
+import { getSupplierConfigs } from '../../src/integrations/suppliers';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -56,21 +56,17 @@ export default function BesparenScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
 
   // Data sources stats
   const [moatStats, setMoatStats] = useState({ scans: 0, materials: 0, suppliers: 0 });
 
   useEffect(() => { recordScreenVisit('savings'); }, []);
 
-  // Load catalog for price alerts + moat stats
+  // Load moat stats. (The catalog fetch that used to live here fed the
+  // fabricated price-alert block removed above — it searched suppliers on
+  // every screen open to produce a made-up number, so it went with it.)
   useEffect(() => {
     (async () => {
-      let items = await searchCatalog('verf');
-      if (items.length < 2) items = await searchCatalog('');
-      setCatalogItems(items.slice(0, 3));
-
-      // Load moat stats
       const [scanHistory, supplierConfigs] = await Promise.all([
         getScanHistory(),
         getSupplierConfigs(),
@@ -141,22 +137,21 @@ export default function BesparenScreen() {
     });
   });
 
-  // Price alerts from catalog
-  catalogItems.forEach((item, idx) => {
-    const previousPrice = Math.round(item.priceExclVat * 1.15 * 100) / 100;
-    const savingAmount = Math.round((previousPrice - item.priceExclVat) * 100) / 100;
-    if (savingAmount > 0) {
-      actions.push({
-        id: `alert_${idx}`,
-        icon: 'pricetag-outline',
-        title: item.name,
-        reason: `${Math.round((savingAmount / previousPrice) * 100)}% goedkoper bij ${item.supplierId}`,
-        saving: savingAmount,
-        actionLabel: t('savings.orderNow', 'Bestel nu'),
-        type: 'price-alert',
-      });
-    }
-  });
+  // Price alerts from catalog — REMOVED (2026-07-19).
+  //
+  // This block invented its own baseline: `previousPrice = priceExclVat *
+  // 1.15`, then presented the difference as a real price drop ("15% goedkoper
+  // bij ..."), summed it into `totalPotential`, rendered it as "Tot EUR X
+  // potentieel" and exported it verbatim in the Share sheet. Because the
+  // markup was a constant, EVERY catalog item always yielded exactly 13%
+  // "savings" — a number with no connection to what the contractor actually
+  // paid before.
+  //
+  // CatalogItem carries no previous price and no price history (see
+  // src/integrations/suppliers.ts), so there is nothing here to compute a
+  // genuine saving from. Restoring this requires a real baseline — e.g.
+  // the contractor's own past purchase price from invoiceScanService, or a
+  // cross-supplier comparison of the same article — not a multiplier.
 
   // Sort by biggest saving first, filter out actioned/dismissed
   const visibleActions = actions

@@ -894,6 +894,13 @@
     "noTeamDesc": "Añade subcontratistas y miembros de equipo"
   },
   "permits": {
+    "addDocuments": "Añadir documentos",
+    "attachFailed": "No se pudo adjuntar",
+    "attachFailedDesc": "No se pudo adjuntar el documento. Inténtelo de nuevo.",
+    "markSubmitted": "Marcar como presentada",
+    "submitHandoffDesc": "Vasco no puede presentarla por usted: preséntela usted mismo en {{authority}} y márquela aquí como presentada para que controlemos el plazo de resolución.",
+    "defaultAuthority": "Ayuntamiento",
+    "cancel": "Cancelar",
     "title": "Permisos",
     "active": "Activos",
     "expiring": "Próximos a vencer",
@@ -1241,6 +1248,18 @@
     "certFallback": "Certificado"
   },
   "insurance": {
+    "claimRecorded": "Siniestro registrado",
+    "claimNotReported": "Aún no comunicado",
+    "claimReported": "Comunicado a la aseguradora",
+    "reportToInsurer": "Comunicar a la aseguradora",
+    "reportTitle": "Comunicar a la aseguradora",
+    "reportBody": "Vasco no puede tramitar este siniestro por usted: su aseguradora solo admite partes por teléfono o a través de su propio portal. Indique el número de póliza {{number}} ({{policy}}).",
+    "callInsurer": "Llamar a la aseguradora",
+    "markReported": "Marcar como comunicado",
+    "recordClaim": "Registrar siniestro",
+    "recordDisclaimer": "Vasco no envía esto a su aseguradora. Comuníquelo usted mismo: nosotros guardamos el expediente y se lo recordamos.",
+    "photoCount_one": "{{count}} foto",
+    "photoCount_other": "{{count}} fotos",
     "title": "Seguros",
     "statusActive": "Activo",
     "statusExpiringSoon": "Próximo a vencer",
@@ -4256,7 +4275,18 @@
     "marketAverages": "Medias del mercado",
     "hourlyRate": "Tarifa por hora",
     "margin": "Margen",
-    "acceptance": "Aceptación"
+    "acceptance": "Aceptación",
+    "categories": {
+      "concrete_cement": "Hormigón y cemento",
+      "steel_metals": "Acero y metales",
+      "wood_timber": "Madera",
+      "plastics_pvc": "Plásticos y PVC",
+      "copper_pipes": "Tuberías de cobre",
+      "glass": "Vidrio",
+      "insulation": "Aislamiento",
+      "general": "General"
+    },
+    "indexBasis": "Índice ({{country}}) · base 2015=100"
   },
   "pdfModal": {
     "labelInvoice": "Factura",
@@ -4884,5 +4914,21 @@
       "specialty": "Especialidad",
       "consultation": "Asesoramiento"
     }
+  },
+  "jobQuality": {
+    "title": "Calidad del trabajo",
+    "paidOnTime": "¿Pagado a tiempo?",
+    "customerReview": "Valoración del cliente",
+    "reviewPlaceholder": "Comentario opcional",
+    "referral": "¿Generó una recomendación?",
+    "rebook": "¿Espera repetir en los próximos 6 meses?",
+    "yes": "Sí",
+    "no": "No",
+    "save": "Guardar valoración",
+    "saving": "Guardando…",
+    "savedTitle": "Guardado",
+    "savedBody": "Valoración de calidad del trabajo registrada.",
+    "errorTitle": "Error",
+    "errorBody": "No se pudo guardar. Inténtelo de nuevo."
   }
 }

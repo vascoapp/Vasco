@@ -326,11 +326,44 @@ export default function DragScheduleScreen() {
                 duration: stop.job.estimatedHours,
                 color: COLORS[idx % COLORS.length],
               }));
-              // R255: capture before/after for the savings widget
-              const driveKmBefore = (jobs as any[])
-                .filter((j) => schedule.some((s) => s.jobId === j.id))
-                .reduce((sum, _, idx) => sum + (idx > 0 ? 5 : 0), 0); // crude prior estimate
-              const driveMinBefore = Math.round((driveKmBefore / 50) * 60);
+              // R255: capture before/after for the savings widget.
+              //
+              // This used to invent the baseline — `reduce((sum, _, idx) =>
+              // sum + (idx > 0 ? 5 : 0))`, i.e. a flat 5km per job — and that
+              // number is persisted by recordOptimization and surfaces as the
+              // contractor's weekly "km saved". The saving was arithmetic on a
+              // made-up constant.
+              //
+              // Measure the CURRENT order instead, with the same distance
+              // function and defaults the optimizer itself uses (avgSpeed 50,
+              // postcode fallback 25km), so before/after are directly
+              // comparable and both reflect real postcodes.
+              const { __internal } = await import('../../src/services/optimalSchedulerService');
+              const AVG_SPEED_KMH = 50;
+              const FALLBACK_KM = 25;
+              const legFrom = (jobId: string) => {
+                const j = (jobs as any[]).find((x) => x.id === jobId);
+                return {
+                  lat: j?.address?.lat,
+                  lng: j?.address?.lng,
+                  postcode: j?.address?.postcode,
+                  country: (j?.address?.country ?? startCountry) as any,
+                };
+              };
+              let driveKmBefore = 0;
+              let prevStop = {
+                lat: undefined as number | undefined,
+                lng: undefined as number | undefined,
+                postcode: startPostcode || ((jobs as any[])[0]?.address?.postcode ?? ''),
+                country: startCountry as any,
+              };
+              for (const s of schedule) {
+                const stop = legFrom(s.jobId);
+                driveKmBefore += __internal.distanceKm(prevStop, stop, FALLBACK_KM);
+                prevStop = stop;
+              }
+              driveKmBefore = Math.round(driveKmBefore * 10) / 10;
+              const driveMinBefore = Math.round((driveKmBefore / AVG_SPEED_KMH) * 60);
 
               setSchedule(newSchedule);
               hapticSuccess();
