@@ -539,8 +539,16 @@ function TodayContent({ todayJobs, onOpenJob, onPlanCta, t }: { todayJobs: any[]
         const endDate = parseTime(entry.endTime);
         const timeStr = startDate ? startDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '09:00';
         const endStr = endDate ? endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '';
-        const durationMins = entry.duration
-          || (endDate && startDate ? Math.round((endDate.getTime() - startDate.getTime()) / 60000) : 0);
+        // Prefer THIS SLOT (endTime - startTime) over entry.duration, which
+        // carries the WHOLE JOB's estimate — a 24h bathroom renovation badged
+        // "24u" next to the slot "13:30 – 17:00", mixing two different time
+        // semantics in one row. The badge now describes the same window as
+        // the range beside it. entry.duration stays as the fallback for
+        // entries that have no end time.
+        const slotMins = startDate && endDate
+          ? Math.round((endDate.getTime() - startDate.getTime()) / 60000)
+          : 0;
+        const durationMins = slotMins > 0 ? slotMins : (entry.duration ?? 0);
         // Was `${h}u${m}` — the Dutch "u" (uren) was shown to all 6 locales,
         // and the minutes were not zero-padded, so 65 min rendered as "1u5"
         // (reads as 1u50) instead of "1u05".
