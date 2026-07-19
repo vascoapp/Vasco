@@ -13,6 +13,25 @@ import { SafeArea } from '../../src/theme/spacing';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { requestAccountDeletion } from '../../src/services/accountDeletionService';
+import { exportAllData } from '../../src/services/dataExportService';
+
+/**
+ * The Supabase auth id, which is what `account_deletion_requests.user_id`
+ * is keyed by — NOT the AuthContext user id (which may be a demo/mock user).
+ * Returns null when there is no real session, so callers can refuse to claim
+ * a deletion was scheduled.
+ */
+async function resolveAuthUserId(): Promise<string | null> {
+  try {
+    const { supabase, isSupabaseConfigured } = await import('../../src/lib/supabase');
+    if (!isSupabaseConfigured) return null;
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    return authUser?.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 const APP_VERSION = '1.0.0';
 const LAST_UPDATED = 'March 2026';
@@ -342,19 +361,29 @@ export default function LegalScreen() {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleExportData = () => {
-    Share.share({
-      message: t('legal.exportMessage', {
-        defaultValue: 'Vasco Data Export\n\nUser: {{name}} ({{email}})\nCompany: {{company}}\nInvoices: {{invoices}}\nJobs: {{jobs}}\nCustomers: {{customers}}\n\nFull data export available upon request at privacy@vascobuild.com',
-        name: user?.name ?? '',
-        email: user?.email ?? '',
-        company: user?.company ?? '',
-        invoices: invoices.length,
-        jobs: jobs.length,
-        customers: customers.length,
-      }),
-      title: t('legal.dataExport', 'Vasco Data Export'),
-    });
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportData = async () => {
+    // GDPR Art. 20. This used to Share a summary with three COUNTS
+    // ("Invoices: 12") plus "full export available upon request" — which does
+    // not satisfy portability. exportAllData ships the actual records (local
+    // cache + Supabase rows).
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const result = await exportAllData('json', {
+        userId: user?.id,
+        email: user?.email,
+      });
+      if (!result.success) {
+        Alert.alert(
+          t('legal.exportFailed', 'Export failed'),
+          t('legal.exportFailedDesc', 'Could not build your data export. Please try again, or contact privacy@vascobuild.com.'),
+        );
+      }
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -366,10 +395,27 @@ export default function LegalScreen() {
         {
           text: t('legal.deleteConfirm', 'Delete permanently'),
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            // GDPR Art. 17. This used to only show a confirmation Alert and log
+            // out — the contractor believed he had exercised erasure while his
+            // data sat untouched. Route through the real service so a
+            // deletion request is actually persisted for the backend worker.
+            const authId = await resolveAuthUserId();
+            const result = authId
+              ? await requestAccountDeletion(authId)
+              : { success: false, localCleared: false, serverRequested: false };
+
+            // Never claim deletion was scheduled if nothing reached the server.
+            if (!result.success || !result.serverRequested) {
+              Alert.alert(
+                t('legal.deletionFailed', 'Could not submit request'),
+                t('legal.deletionFailedDesc', 'Your request did not reach our servers. Check your internet connection and try again, or contact privacy@vascobuild.com.'),
+              );
+              return;
+            }
             Alert.alert(
               t('legal.deleteConfirmTitle', 'Account deletion requested'),
-              t('legal.deleteConfirmDesc', 'Your account deletion has been scheduled. You will receive a confirmation email within 24 hours. All data will be removed within 30 days.'),
+              t('legal.deleteConfirmDesc', 'Your data will be removed within 30 days. You will receive a confirmation email.'),
               [{ text: t('common.ok', 'OK'), onPress: () => { logout(); router.replace('/login'); } }],
             );
           },

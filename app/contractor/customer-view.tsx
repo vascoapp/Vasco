@@ -152,7 +152,10 @@ export default function CustomerViewScreen() {
         const cust = customers.find(c => c.id === real.customerId);
         return {
           id: real.id,
-          reference: (real as any).reference ?? real.id,
+          // Never fall back to the row id — this renders to the CUSTOMER as
+          // their official quote reference ("q-1738-a7f3"). Blank is handled
+          // by the header, an internal id is not.
+          reference: (real as any).reference ?? '',
           businessName: (real as any).businessName ?? '',
           businessPhone: (real as any).businessPhone ?? '',
           businessEmail: (real as any).businessEmail ?? '',

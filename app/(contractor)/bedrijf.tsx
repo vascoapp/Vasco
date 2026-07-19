@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,11 +24,16 @@ import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 
-// R113: versioned to v2 so users who had the previous build (which
-// auto-seeded fake "Fam. de Vries"/"Bakkerij Jansen"/"Van Dam Advocaten"
-// trackers into AsyncStorage) start fresh. The v1 key persists orphaned
-// until next logout (sessionCleanup wipes all @vasco_* keys).
-const TRACKER_STORAGE_KEY = '@vasco_decision_trackers_v2';
+// R113 versioned this to `_v2` to escape a poisoned v1 cache that held
+// auto-seeded fake trackers. But NOTHING EVER WROTE `_v2` — every writer
+// (decisions.tsx, DecisionTracker.tsx, workflowPackService,
+// aiActionQueueService) uses the unsuffixed key — so this tab read an
+// always-empty key and the BESLISSINGEN list, hero card and overdue counter
+// were permanently 0 no matter how many trackers the contractor created.
+//
+// Reading the real key is safe now: the seeding R113 was escaping is gone
+// (SEED_TRACKERS is []), so v1 no longer contains fabricated customers.
+const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
 
 type TabKey = 'overview' | 'decisions' | 'contacts';
 
@@ -40,6 +45,26 @@ interface TrackerData {
   decided: number;
   overdue: number;
   lastActivity: string;
+}
+
+/**
+ * Adapt a stored `CustomerDecisionTracker` to the summary shape this tab
+ * renders. The stored rows carry `templateName`/`decidedCount`/`overdueCount`;
+ * reading `project`/`decided`/`overdue` off them straight (as this screen used
+ * to) yields `undefined` and a NaN% progress bar.
+ */
+function toTrackerData(raw: any): TrackerData {
+  const total = Number(raw?.totalDecisions) || 0;
+  const decided = Number(raw?.decidedCount ?? raw?.decided) || 0;
+  return {
+    id: String(raw?.id ?? ''),
+    customerName: raw?.customerName ?? '',
+    project: raw?.templateName ?? raw?.project ?? '',
+    totalDecisions: total,
+    decided,
+    overdue: Number(raw?.overdueCount ?? raw?.overdue) || 0,
+    lastActivity: raw?.lastReminderSent ?? raw?.lastActivity ?? '',
+  };
 }
 
 // R113: seed trackers (Fam. de Vries / Bakkerij Jansen / Van Dam Advocaten)
@@ -82,21 +107,26 @@ export default function BedrijfScreen() {
 
   useEffect(() => { recordScreenVisit('klanten'); }, []);
 
-  useEffect(() => {
-    AsyncStorage.getItem(TRACKER_STORAGE_KEY).then(raw => {
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setTrackers(Array.isArray(parsed) && parsed.length > 0 ? parsed : SEED_TRACKERS);
-      } else {
-        setTrackers(SEED_TRACKERS);
-        AsyncStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(SEED_TRACKERS)).catch(() => {});
-      }
-    }).catch(() => setTrackers(SEED_TRACKERS));
-  }, []);
+  // Re-read on focus: trackers are created on the Keuzes screen, so a plain
+  // mount-only effect leaves this tab stale after the user navigates back.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      AsyncStorage.getItem(TRACKER_STORAGE_KEY)
+        .then(raw => {
+          if (cancelled) return;
+          const parsed = raw ? JSON.parse(raw) : null;
+          setTrackers(Array.isArray(parsed) ? parsed.map(toTrackerData) : SEED_TRACKERS);
+        })
+        .catch(() => { if (!cancelled) setTrackers(SEED_TRACKERS); });
+      return () => { cancelled = true; };
+    }, []),
+  );
 
-  useEffect(() => {
-    if (trackers.length > 0) AsyncStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackers)).catch(() => {});
-  }, [trackers]);
+  // NOTE: deliberately NO write-back. This tab renders a read-only summary
+  // derived from the canonical CustomerDecisionTracker rows. Persisting its
+  // reduced TrackerData shape over the shared key would destroy the phases,
+  // categories, accessCode and payment fields the portal depends on.
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -311,7 +341,11 @@ export default function BedrijfScreen() {
           ) : (
             <View style={s.trackerList}>
               {activeTrackers.map(tracker => {
-                const pct = Math.round((tracker.decided / tracker.totalDecisions) * 100);
+                // Guard the zero case — a tracker created before any decisions
+                // are added would render a NaN% progress bar.
+                const pct = tracker.totalDecisions > 0
+                  ? Math.round((tracker.decided / tracker.totalDecisions) * 100)
+                  : 0;
                 return (
                   <Pressable
                     key={tracker.id}

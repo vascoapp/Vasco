@@ -148,20 +148,28 @@ export default function MessageTemplatesScreen() {
     );
   }, [loadTemplates, t]);
 
-  // Use template — resolve with sample context and share
+  // Share the template body with its {{placeholders}} INTACT.
+  //
+  // This used to resolve against a hardcoded sample context (customer:
+  // 'Customer', amount: EUR 1,500.00, invoiceId: 'INV-001', daysOverdue: 7)
+  // and hand the result straight to the OS share sheet. Since this is the
+  // primary CTA on each card, a contractor tapping it on a payment-reminder
+  // template sent their real customer "Beste Customer, factuur INV-001 van
+  // 1,500.00 staat 7 dagen open" — wrong name, wrong amount, wrong invoice
+  // number, in US number format.
+  //
+  // There is no real TemplateContext on this screen (it manages templates; no
+  // invoice or customer is selected), so the honest thing to share is the
+  // unresolved template. An unfilled {{amount}} is self-evidently a
+  // placeholder; a plausible-but-false amount is not.
   const handleUse = useCallback(async (template: MessageTemplate) => {
-    const sampleContext: TemplateContext = {
-      customer: 'Customer',
-      amount: '\u20AC1,500.00',
-      date: new Date().toLocaleDateString(),
-      jobTitle: 'Job Title',
-      invoiceId: 'INV-001',
-      daysOverdue: 7,
-      contractorName: user?.name || 'Contractor',
-    };
-    const resolved = resolveTemplate(template, sampleContext);
+    const contractorName = user?.name ?? '';
+    // The contractor's own name is the only field genuinely known here.
+    const body = contractorName
+      ? resolveTemplate(template, { contractorName } as TemplateContext)
+      : template.body;
     try {
-      await Share.share({ message: resolved, title: template.title });
+      await Share.share({ message: body, title: template.title });
     } catch {}
   }, [user?.name]);
 

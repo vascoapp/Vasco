@@ -19,14 +19,28 @@ export interface CheckoutResult {
 // requires the StoreKit External Purchase Link API (a system disclosure sheet
 // shown before leaving the app), gated behind the
 // `com.apple.developer.storekit.external-purchase-link` entitlement +
-// `SKExternalPurchaseLink` Info.plist keys (both declared in app.json).
+// `SKExternalPurchaseLink` Info.plist keys.
 //
-// That API needs a native module that ships only in a custom dev/production
-// build (it is absent in Expo Go and in builds made before the entitlement is
-// granted). The future native module registers itself on this global; until
-// then — and always on Android — we fall back to opening the URL directly,
-// which is fully compliant on Android and acceptable for internal/TestFlight
-// iOS builds prior to the entitlement landing.
+// ⚠️ CURRENT STATE (R316): the entitlement was DELIBERATELY REMOVED from
+// app.json in `76c5aae` to unblock App Store submission, so `expo.ios.
+// entitlements` is empty and there are no SKExternalPurchaseLink* keys. This is
+// intentional, not drift — do not "fix" it by re-adding them.
+//
+// Because no iOS build can take the native path below, the iOS purchase surface
+// is instead closed at the UI: `app/contractor/profile.tsx` gates BOTH the
+// upgrade block and the Stripe-portal row behind `Platform.OS !== 'ios'` and
+// shows a non-tappable note pointing at vascobuild.com. That is what keeps us
+// clear of guideline 3.1.1 — NOT this module.
+//
+// So on iOS the fallback below is currently unreachable from the UI. Keep it
+// compliant-by-construction anyway: if you ever surface a purchase CTA on iOS,
+// the `Linking.openURL` fallback is a 3.1.1 REJECTION on its own.
+//
+// To re-enable in-app iOS upgrade later: get Apple's External Purchase Link
+// program approved, re-add the entitlement + SKExternalPurchaseLink keys, write
+// the native Swift disclosure-sheet module (it registers on the global below),
+// then drop the `Platform.OS !== 'ios'` guards in profile.tsx. Runbook:
+// docs/go-live-checklist.md §3–§4.
 type ExternalPurchaseLinkModule = { open(url: string): Promise<void> };
 
 async function openCheckoutUrl(url: string): Promise<void> {

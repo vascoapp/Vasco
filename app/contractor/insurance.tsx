@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Palette, SemanticColors } from '../../src/theme/colors';
+import { DK } from '../../src/theme/draftkings';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useInsurancePolicies } from '../../src/services/complianceService';
 import { useAuth } from '../../src/context/AuthContext';
@@ -170,7 +171,7 @@ export default function InsuranceScreen() {
 
               <View style={styles.policyFooter}>
                 <View style={styles.policyDetail}>
-                  <Ionicons name="calendar-outline" size={13} color="#999" />
+                  <Ionicons name="calendar-outline" size={13} color={DK.colors.textMuted} />
                   <Text style={styles.policyDetailText}>
                     {daysLeft > 0 ? t('insurance.daysRemaining', { defaultValue: '{{days}} days remaining', days: daysLeft }) : t('insurance.daysExpired', { defaultValue: '{{days}} days expired', days: Math.abs(daysLeft) })}
                   </Text>
@@ -258,7 +259,7 @@ export default function InsuranceScreen() {
               value={claimDescription}
               onChangeText={setClaimDescription}
               placeholder={t('insurance.descriptionPlaceholder', 'Beschrijf de schade of het incident...')}
-              placeholderTextColor="#999"
+              placeholderTextColor={DK.colors.textMuted}
               multiline
             />
 
@@ -269,7 +270,7 @@ export default function InsuranceScreen() {
               value={claimDate}
               onChangeText={setClaimDate}
               placeholder="DD-MM-JJJJ"
-              placeholderTextColor="#999"
+              placeholderTextColor={DK.colors.textMuted}
             />
 
             {/* Amount */}
@@ -279,7 +280,7 @@ export default function InsuranceScreen() {
               value={claimAmount}
               onChangeText={setClaimAmount}
               placeholder="€ 0,00"
-              placeholderTextColor="#999"
+              placeholderTextColor={DK.colors.textMuted}
               keyboardType="numeric"
             />
 
@@ -312,55 +313,55 @@ export default function InsuranceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAF8' },
+  container: { flex: 1, backgroundColor: DK.colors.bg },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 16, paddingTop: SafeArea.top, paddingBottom: 12,
   },
   backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: 'Archivo_800ExtraBold', color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 1.2 },
+  headerTitle: { fontSize: 18, fontFamily: 'Archivo_800ExtraBold', color: DK.colors.text, textTransform: 'uppercase', letterSpacing: 1.2 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 8, gap: 12 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 4 },
   statCard: {
-    flex: 1, alignItems: 'center', backgroundColor: "#14181F", borderRadius: 16, paddingVertical: 14, gap: 4,
+    flex: 1, alignItems: 'center', backgroundColor: DK.colors.panel, borderRadius: 16, paddingVertical: 14, gap: 4,
   },
   statValue: { fontSize: 20, fontFamily: 'Archivo_800ExtraBold' },
-  statLabel: { fontSize: 10, color: '#999' },
+  statLabel: { fontSize: 10, color: DK.colors.textMuted },
   policyCard: {
-    backgroundColor: "#14181F", borderRadius: 16, padding: 14, gap: 10,
+    backgroundColor: DK.colors.panel, borderRadius: 16, padding: 14, gap: 10,
   },
   policyHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   policyIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   policyInfo: { flex: 1 },
-  policyName: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: "#FFFFFF" },
-  policyProvider: { fontSize: 12, color: '#999', marginTop: 2 },
+  policyName: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: DK.colors.text },
+  policyProvider: { fontSize: 12, color: DK.colors.textMuted, marginTop: 2 },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-  policyFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F5F5F5' },
+  policyFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: DK.colors.border },
   policyDetail: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  policyDetailText: { fontSize: 12, color: '#999' },
-  policyAmount: { fontSize: 14, fontFamily: 'Archivo_800ExtraBold', color: "#FFFFFF" },
+  policyDetailText: { fontSize: 12, color: DK.colors.textMuted },
+  policyAmount: { fontSize: 14, fontFamily: 'Archivo_800ExtraBold', color: DK.colors.text },
   emptyState: { alignItems: 'center', paddingVertical: 40, gap: 8 },
-  emptyText: { fontSize: 14, color: '#999' },
+  emptyText: { fontSize: 14, color: DK.colors.textMuted },
   // Claims section
-  claimsSectionTitle: { fontSize: 16, fontFamily: 'Archivo_800ExtraBold', color: "#FFFFFF", marginBottom: 4 },
-  claimCard: { backgroundColor: "#14181F", borderRadius: 16, padding: 14, gap: 8, borderLeftWidth: 3, borderLeftColor: SemanticColors.feedbackWarning },
+  claimsSectionTitle: { fontSize: 16, fontFamily: 'Archivo_800ExtraBold', color: DK.colors.text, marginBottom: 4 },
+  claimCard: { backgroundColor: DK.colors.panel, borderRadius: 16, padding: 14, gap: 8, borderLeftWidth: 3, borderLeftColor: SemanticColors.feedbackWarning },
   claimHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  claimPolicyName: { flex: 1, fontSize: 14, fontFamily: 'Inter_600SemiBold', color: "#FFFFFF" },
-  claimDescription: { fontSize: 13, color: '#666', lineHeight: 18 },
-  claimFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTopWidth: 1, borderTopColor: '#F5F5F5' },
-  claimDetailText: { fontSize: 12, color: '#999' },
+  claimPolicyName: { flex: 1, fontSize: 14, fontFamily: 'Inter_600SemiBold', color: DK.colors.text },
+  claimDescription: { fontSize: 13, color: DK.colors.textMuted, lineHeight: 18 },
+  claimFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTopWidth: 1, borderTopColor: DK.colors.border },
+  claimDetailText: { fontSize: 12, color: DK.colors.textMuted },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: "#14181F", borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 20, paddingBottom: SafeArea.bottom + 16, maxHeight: '85%' },
+  modalContent: { backgroundColor: DK.colors.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 20, paddingBottom: SafeArea.bottom + 16, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 18, fontFamily: 'Archivo_800ExtraBold', color: "#FFFFFF" },
-  fieldLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: '#666', marginBottom: 6, marginTop: 8 },
-  fieldInput: { backgroundColor: '#F8F8F6', borderRadius: 12, borderWidth: 1, borderColor: '#EEEEEE', paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: "#FFFFFF" },
-  policyChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: "#1C2128", borderWidth: 1, borderColor: '#EEE' },
+  modalTitle: { fontSize: 18, fontFamily: 'Archivo_800ExtraBold', color: DK.colors.text },
+  fieldLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: DK.colors.textMuted, marginBottom: 6, marginTop: 8 },
+  fieldInput: { backgroundColor: DK.colors.panel2, borderRadius: 12, borderWidth: 1, borderColor: DK.colors.border, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: DK.colors.text },
+  policyChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: DK.colors.panel2, borderWidth: 1, borderColor: DK.colors.border },
   policyChipActive: { backgroundColor: Palette.hermesOrange + '15', borderColor: Palette.hermesOrange },
-  policyChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#666' },
+  policyChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: DK.colors.textMuted },
   policyChipTextActive: { color: Palette.hermesOrange, fontFamily: 'Inter_600SemiBold' },
   photoPlaceholder: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Palette.hermesOrange, borderStyle: 'dashed', marginTop: 12 },
   photoPlaceholderText: { fontSize: 14, color: Palette.hermesOrange, fontFamily: 'Inter_500Medium' },

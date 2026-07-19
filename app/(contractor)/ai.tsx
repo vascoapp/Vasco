@@ -74,6 +74,8 @@ export default function VascoScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
+  // US-only surfaces (Leads CRM pipeline) — see the gate at the Sales chip.
+  const isUSContractor = user?.country === 'US';
   const { jobs, invoices, quotes, customers, isLoading, businessProfile } = useAppState();
   const aiQueue = useAIQueue();
   const [refreshing, setRefreshing] = useState(false);
@@ -523,13 +525,22 @@ export default function VascoScreen() {
                 my license/cert about to expire?" (Compliance), "what
                 can the AI help me with?" (Tools). */}
 
-            <DKLabel style={s.subsectionLabel}>{t('dk.ai.sales', 'Sales')}</DKLabel>
-            <View style={s.chipRow}>
-              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/pipeline' as any)}>
-                <Ionicons name="git-network-outline" size={14} color={DK.colors.accent} />
-                <DKLabel style={s.chipText}>{t('ai.pipeline', 'Pipeline')}</DKLabel>
-              </Pressable>
-            </View>
+            {/* Pipeline is the US Leads CRM (R74-R89): it formats every value
+                with formatUsd and labels the field "Estimated value ($)".
+                Ungated, an NL contractor saw their pipeline as "$12,500".
+                Gated at the ENTRY POINT rather than in-screen — per R89, a
+                "US only" empty state is worse UX than not showing the chip. */}
+            {isUSContractor && (
+              <>
+                <DKLabel style={s.subsectionLabel}>{t('dk.ai.sales', 'Sales')}</DKLabel>
+                <View style={s.chipRow}>
+                  <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/pipeline' as any)}>
+                    <Ionicons name="git-network-outline" size={14} color={DK.colors.accent} />
+                    <DKLabel style={s.chipText}>{t('ai.pipeline', 'Pipeline')}</DKLabel>
+                  </Pressable>
+                </View>
+              </>
+            )}
 
             {/* R109: only show the Team subsection to contractors who
                 actually have a team (teamSize !== 'solo') OR coordinate

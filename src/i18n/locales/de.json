@@ -2089,7 +2089,8 @@
     "notConnected": "Nicht verbunden",
     "dataPrivacy": "DATEN & DATENSCHUTZ",
     "creditsAvailable_one": "{{count}} Monat Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
-    "creditsAvailable_other": "{{count}} Monate Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet."
+    "creditsAvailable_other": "{{count}} Monate Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
+    "exportFailedDesc": "Dein Datenexport konnte nicht erstellt werden. Bitte versuche es erneut oder wende dich an privacy@vascobuild.com."
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
@@ -2297,7 +2298,11 @@
     "deleteMyAccount": "Mein Konto löschen",
     "deleteMyAccountDesc": "Löschen Sie Ihr Konto und alle Daten dauerhaft",
     "termsOfService": "AGB",
-    "privacyPolicy": "Datenschutzerklärung"
+    "privacyPolicy": "Datenschutzerklärung",
+    "exportFailed": "Export fehlgeschlagen",
+    "exportFailedDesc": "Dein Datenexport konnte nicht erstellt werden. Bitte versuche es erneut oder wende dich an privacy@vascobuild.com.",
+    "deletionFailed": "Anfrage nicht gesendet",
+    "deletionFailedDesc": "Deine Anfrage hat unsere Server nicht erreicht. Prüfe deine Internetverbindung und versuche es erneut, oder wende dich an privacy@vascobuild.com."
   },
   "xero": {
     "title": "Xero verbinden",
@@ -2427,7 +2432,12 @@
     "edit": "Vorlage bearbeiten",
     "new": "Neue Vorlage",
     "titlePlaceholder": "Vorlagenname",
-    "bodyPlaceholder": "Nachrichtentext. Verwenden Sie {{customer}}, {{amount}}, {{date}}, {{jobTitle}} für Variablen."
+    "bodyPlaceholder": "Nachrichtentext. Verwenden Sie {{customer}}, {{amount}}, {{date}}, {{jobTitle}} für Variablen.",
+    "cat_reminder": "Erinnerung",
+    "cat_follow-up": "Nachfassen",
+    "cat_confirmation": "Bestätigung",
+    "cat_thank-you": "Dankeschön",
+    "cat_custom": "Eigene"
   },
   "dk": {
     "tabs": {
@@ -2946,7 +2956,9 @@
     "chooseSlot": "Zeitfenster wählen",
     "whenSchedule": "Wann möchten Sie {{job}} einplanen?",
     "schedule": "Einplanen",
-    "optimizedApplied": "Auf den heutigen Plan angewendet."
+    "optimizedApplied": "Auf den heutigen Plan angewendet.",
+    "driveSummary": "{{km}}km · {{min}}min Fahrt",
+    "endsAt": "Endet um {{time}}"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",
@@ -4857,5 +4869,20 @@
     "inflow": "Eingang",
     "outflow": "Ausgang",
     "lowCashWarning": "Wenig Liquidität am {{date}} ({{amount}}) — offene Rechnungen anmahnen."
+  },
+  "pricebook": {
+    "title": "Preisliste",
+    "searchPlaceholder": "Leistungen suchen…",
+    "all": "Alle",
+    "count_one": "{{count}} Leistung",
+    "count_other": "{{count}} Leistungen",
+    "cat": {
+      "preparation": "Vorbereitung",
+      "painting": "Malerarbeiten",
+      "repairs": "Reparaturen",
+      "finishing": "Endbearbeitung",
+      "specialty": "Spezialgebiet",
+      "consultation": "Beratung"
+    }
   }
 }

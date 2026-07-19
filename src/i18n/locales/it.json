@@ -2089,7 +2089,8 @@
     "notConnected": "Non connesso",
     "dataPrivacy": "DATI E PRIVACY",
     "creditsAvailable_one": "{{count}} mese di abbonamento gratuito disponibile — applicato automaticamente al pagamento.",
-    "creditsAvailable_other": "{{count}} mesi di abbonamento gratuito disponibili — applicati automaticamente al pagamento."
+    "creditsAvailable_other": "{{count}} mesi di abbonamento gratuito disponibili — applicati automaticamente al pagamento.",
+    "exportFailedDesc": "Non è stato possibile generare l'esportazione dei tuoi dati. Riprova o scrivi a privacy@vascobuild.com."
   },
   "search": {
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",
@@ -2297,7 +2298,11 @@
     "deleteMyAccount": "Elimina il mio account",
     "deleteMyAccountDesc": "Elimina definitivamente il tuo account e tutti i dati",
     "termsOfService": "Termini",
-    "privacyPolicy": "Informativa sulla privacy"
+    "privacyPolicy": "Informativa sulla privacy",
+    "exportFailed": "Esportazione non riuscita",
+    "exportFailedDesc": "Non è stato possibile generare l'esportazione dei tuoi dati. Riprova o scrivi a privacy@vascobuild.com.",
+    "deletionFailed": "Richiesta non inviata",
+    "deletionFailedDesc": "La tua richiesta non ha raggiunto i nostri server. Controlla la connessione a internet e riprova, oppure scrivi a privacy@vascobuild.com."
   },
   "xero": {
     "title": "Connetti Xero",
@@ -2427,7 +2432,12 @@
     "edit": "Modifica modello",
     "new": "Nuovo modello",
     "titlePlaceholder": "Nome del modello",
-    "bodyPlaceholder": "Contenuto del messaggio. Usa {{customer}}, {{amount}}, {{date}}, {{jobTitle}} per le variabili."
+    "bodyPlaceholder": "Contenuto del messaggio. Usa {{customer}}, {{amount}}, {{date}}, {{jobTitle}} per le variabili.",
+    "cat_reminder": "Promemoria",
+    "cat_follow-up": "Follow-up",
+    "cat_confirmation": "Conferma",
+    "cat_thank-you": "Ringraziamento",
+    "cat_custom": "Personalizzato"
   },
   "dk": {
     "tabs": {
@@ -2935,7 +2945,9 @@
     "chooseSlot": "Scegli fascia oraria",
     "whenSchedule": "Quando vuoi pianificare {{job}}?",
     "schedule": "Pianifica",
-    "optimizedApplied": "Applicato al programma di oggi."
+    "optimizedApplied": "Applicato al programma di oggi.",
+    "driveSummary": "{{km}}km · {{min}}min di viaggio",
+    "endsAt": "Finisce alle {{time}}"
   },
   "marketInsights": {
     "title": "INSIGHT DI MERCATO",
@@ -4857,5 +4869,20 @@
     "inflow": "Entrate",
     "outflow": "Uscite",
     "lowCashWarning": "Liquidità bassa il {{date}} ({{amount}}) — sollecita le fatture aperte."
+  },
+  "pricebook": {
+    "title": "Listino prezzi",
+    "searchPlaceholder": "Cerca servizi…",
+    "all": "Tutti",
+    "count_one": "{{count}} servizio",
+    "count_other": "{{count}} servizi",
+    "cat": {
+      "preparation": "Preparazione",
+      "painting": "Verniciatura",
+      "repairs": "Riparazioni",
+      "finishing": "Finitura",
+      "specialty": "Specialità",
+      "consultation": "Consulenza"
+    }
   }
 }

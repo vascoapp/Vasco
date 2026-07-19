@@ -27,6 +27,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: IconName; color: st
 };
 
 export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
@@ -63,8 +64,8 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
           </Pressable>
         )}
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Pricebook</Text>
-          <Text style={styles.headerSubtitle}>{MOCK_PRICEBOOK.length} services</Text>
+          <Text style={styles.headerTitle}>{t('pricebook.title', 'Pricebook')}</Text>
+          <Text style={styles.headerSubtitle}>{t('pricebook.count', { count: MOCK_PRICEBOOK.length, defaultValue: '{{count}} services' })}</Text>
         </View>
         <Pressable style={styles.addButton}>
           <Ionicons name="add" size={22} color="#fff" />
@@ -78,7 +79,7 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder="Search services..."
+          placeholder={t('pricebook.searchPlaceholder', 'Search services…')}
           placeholderTextColor={SemanticColors.textTertiary}
         />
       </View>
@@ -94,7 +95,7 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
           onPress={() => setSelectedCategory(null)}
         >
           <Text style={[styles.categoryPillText, !selectedCategory && styles.categoryPillTextActive]}>
-            All
+            {t('pricebook.all', 'All')}
           </Text>
         </Pressable>
         {categories.map((cat) => {
@@ -112,7 +113,7 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
                 color={isActive ? config.color : SemanticColors.textSecondary}
               />
               <Text style={[styles.categoryPillText, isActive && { color: config.color }]}>
-                {config.label}
+                {t(`pricebook.cat.${cat}`, config.label)}
               </Text>
             </Pressable>
           );
@@ -326,6 +327,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.sm,
     gap: Spacing.xs,
+    // A horizontal ScrollView's content container defaults to
+    // alignItems:'stretch', so each pill grew to the full height of the
+    // scroll area — the filter row was rendering as six tall boxes taking
+    // roughly half the screen. Size pills to their content instead.
+    alignItems: 'center',
   },
   categoryPill: {
     flexDirection: 'row',

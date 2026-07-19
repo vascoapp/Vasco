@@ -23,6 +23,7 @@ import {
   type BillingCycle,
 } from '../../src/services/subscriptionService';
 import { startBillingPortal, startSubscriptionCheckout } from '../../src/services/billingService';
+import { exportAllData } from '../../src/services/dataExportService';
 import { useCreditsSummary } from '../../src/services/subscriptionCreditsService';
 import {
   loadQuoteTonePreset,
@@ -284,19 +285,27 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const handleExportData = () => {
-    Share.share({
-      message: t('profile.exportSummary', {
-        defaultValue: 'Vasco Data Export\n\nUser: {{name}} ({{email}})\nCompany: {{company}}\nInvoices: {{invoices}}\nJobs: {{jobs}}\nCustomers: {{customers}}',
-        name: user?.name ?? '',
-        email: user?.email ?? '',
-        company: user?.company ?? '',
-        invoices: invoices.length,
-        jobs: jobs.length,
-        customers: customers.length,
-      }),
-      title: t('profile.dataExport', 'Vasco Data Export'),
-    });
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportData = async () => {
+    // GDPR Art. 20: ship the actual records, not a summary with counts.
+    // exportAllData merges the local cache with the user's Supabase rows.
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const result = await exportAllData('json', {
+        userId: user?.id,
+        email: user?.email,
+      });
+      if (!result.success) {
+        Alert.alert(
+          t('profile.exportFailed', 'Export failed'),
+          t('profile.exportFailedDesc', 'Could not build your data export. Please try again, or contact privacy@vascobuild.com.'),
+        );
+      }
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleDeleteAccount = () => {

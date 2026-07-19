@@ -20,6 +20,7 @@ import { TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useAppState } from '../../src/state/AppState';
+import { localDateKey } from '../../src/utils/dateKey';
 
 interface DayBucket {
   date: string;                  // YYYY-MM-DD
@@ -52,7 +53,11 @@ export default function WeeklyOverviewScreen() {
     for (let i = 0; i < 7; i += 1) {
       const d = new Date(base);
       d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().slice(0, 10);
+      // localDateKey, not toISOString(): `d` is a LOCAL midnight, and
+      // toISOString() would convert it to the previous day in UTC+x — every
+      // bucket was labelled with the right weekday but filtered against the
+      // day before, so Tuesday's jobs showed under Monday.
+      const dateStr = localDateKey(d);
       const dayJobs = (jobs as any[]).filter((j) => j.scheduledDate === dateStr);
       const totalHours = dayJobs.reduce((s, j) => s + (Number(j.estimatedDuration) || 2), 0);
       all.push({
@@ -101,8 +106,11 @@ export default function WeeklyOverviewScreen() {
         },
       );
       const lines = [
-        `${optimized.totalDriveKm}km · ${Math.round(optimized.totalDriveMin)}min driving`,
-        `Ends ${optimized.endsAt}`,
+        t('schedule.driveSummary', '{{km}}km · {{min}}min driving', {
+          km: optimized.totalDriveKm,
+          min: Math.round(optimized.totalDriveMin),
+        }),
+        t('schedule.endsAt', 'Ends {{time}}', { time: optimized.endsAt }),
         '',
         ...optimized.stops.map((s, idx) => `${idx + 1}. ${s.arrivalAt} ${s.job.title}`),
       ];

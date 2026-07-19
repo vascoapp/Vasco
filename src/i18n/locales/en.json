@@ -2089,7 +2089,8 @@
     "notConnected": "Not connected",
     "dataPrivacy": "DATA & PRIVACY",
     "creditsAvailable_one": "{{count}} month of free subscription available — applied automatically at checkout.",
-    "creditsAvailable_other": "{{count}} months of free subscription available — applied automatically at checkout."
+    "creditsAvailable_other": "{{count}} months of free subscription available — applied automatically at checkout.",
+    "exportFailedDesc": "Could not build your data export. Please try again, or contact privacy@vascobuild.com."
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -2297,7 +2298,11 @@
     "deleteMyAccount": "Delete my account",
     "deleteMyAccountDesc": "Permanently delete your account and all data",
     "termsOfService": "Terms",
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
+    "exportFailed": "Export failed",
+    "exportFailedDesc": "Could not build your data export. Please try again, or contact privacy@vascobuild.com.",
+    "deletionFailed": "Could not submit request",
+    "deletionFailedDesc": "Your request did not reach our servers. Check your internet connection and try again, or contact privacy@vascobuild.com."
   },
   "xero": {
     "title": "Connect Xero",
@@ -2427,7 +2432,12 @@
     "edit": "Edit Template",
     "new": "New Template",
     "titlePlaceholder": "Template name",
-    "bodyPlaceholder": "Message body. Use {{customer}}, {{amount}}, {{date}}, {{jobTitle}} for variables."
+    "bodyPlaceholder": "Message body. Use {{customer}}, {{amount}}, {{date}}, {{jobTitle}} for variables.",
+    "cat_reminder": "Reminder",
+    "cat_follow-up": "Follow-up",
+    "cat_confirmation": "Confirmation",
+    "cat_thank-you": "Thank you",
+    "cat_custom": "Custom"
   },
   "dk": {
     "tabs": {
@@ -2946,7 +2956,9 @@
     "chooseSlot": "Choose a time slot",
     "whenSchedule": "When do you want to schedule {{job}}?",
     "schedule": "Schedule",
-    "optimizedApplied": "Applied to today's schedule."
+    "optimizedApplied": "Applied to today's schedule.",
+    "driveSummary": "{{km}}km · {{min}}min driving",
+    "endsAt": "Ends {{time}}"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",
@@ -4857,5 +4869,20 @@
     "inflow": "Inflow",
     "outflow": "Outflow",
     "lowCashWarning": "Low cash on {{date}} ({{amount}}) — chase open invoices."
+  },
+  "pricebook": {
+    "title": "Pricebook",
+    "searchPlaceholder": "Search services…",
+    "all": "All",
+    "count_one": "{{count}} service",
+    "count_other": "{{count}} services",
+    "cat": {
+      "preparation": "Preparation",
+      "painting": "Painting",
+      "repairs": "Repairs",
+      "finishing": "Finishing",
+      "specialty": "Specialty",
+      "consultation": "Consultation"
+    }
   }
 }

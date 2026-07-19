@@ -2089,7 +2089,8 @@
     "notConnected": "No conectado",
     "dataPrivacy": "DATOS Y PRIVACIDAD",
     "creditsAvailable_one": "{{count}} mes de suscripción gratis disponible — se aplica automáticamente al pagar.",
-    "creditsAvailable_other": "{{count}} meses de suscripción gratis disponibles — se aplican automáticamente al pagar."
+    "creditsAvailable_other": "{{count}} meses de suscripción gratis disponibles — se aplican automáticamente al pagar.",
+    "exportFailedDesc": "No se pudo generar la exportación de tus datos. Inténtalo de nuevo o escribe a privacy@vascobuild.com."
   },
   "search": {
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",
@@ -2297,7 +2298,11 @@
     "deleteMyAccount": "Eliminar mi cuenta",
     "deleteMyAccountDesc": "Elimina permanentemente tu cuenta y todos tus datos",
     "termsOfService": "Términos",
-    "privacyPolicy": "Política de privacidad"
+    "privacyPolicy": "Política de privacidad",
+    "exportFailed": "Error al exportar",
+    "exportFailedDesc": "No se pudo generar la exportación de tus datos. Inténtalo de nuevo o escribe a privacy@vascobuild.com.",
+    "deletionFailed": "Solicitud no enviada",
+    "deletionFailedDesc": "Tu solicitud no llegó a nuestros servidores. Comprueba tu conexión a internet e inténtalo de nuevo, o escribe a privacy@vascobuild.com."
   },
   "xero": {
     "title": "Conectar Xero",
@@ -2427,7 +2432,12 @@
     "edit": "Editar plantilla",
     "new": "Nueva plantilla",
     "titlePlaceholder": "Nombre de la plantilla",
-    "bodyPlaceholder": "Cuerpo del mensaje. Usa {{customer}}, {{amount}}, {{date}}, {{jobTitle}} como variables."
+    "bodyPlaceholder": "Cuerpo del mensaje. Usa {{customer}}, {{amount}}, {{date}}, {{jobTitle}} como variables.",
+    "cat_reminder": "Recordatorio",
+    "cat_follow-up": "Seguimiento",
+    "cat_confirmation": "Confirmación",
+    "cat_thank-you": "Agradecimiento",
+    "cat_custom": "Personalizada"
   },
   "dk": {
     "tabs": {
@@ -2935,7 +2945,9 @@
     "chooseSlot": "Elegir franja horaria",
     "whenSchedule": "¿Cuándo quieres programar {{job}}?",
     "schedule": "Programar",
-    "optimizedApplied": "Aplicado a la agenda de hoy."
+    "optimizedApplied": "Aplicado a la agenda de hoy.",
+    "driveSummary": "{{km}}km · {{min}}min de trayecto",
+    "endsAt": "Termina a las {{time}}"
   },
   "marketInsights": {
     "title": "INSIGHTS DEL MERCADO",
@@ -4857,5 +4869,20 @@
     "inflow": "Entradas",
     "outflow": "Salidas",
     "lowCashWarning": "Poca liquidez el {{date}} ({{amount}}) — reclama las facturas pendientes."
+  },
+  "pricebook": {
+    "title": "Lista de precios",
+    "searchPlaceholder": "Buscar servicios…",
+    "all": "Todos",
+    "count_one": "{{count}} servicio",
+    "count_other": "{{count}} servicios",
+    "cat": {
+      "preparation": "Preparación",
+      "painting": "Pintura",
+      "repairs": "Reparaciones",
+      "finishing": "Acabado",
+      "specialty": "Especialidad",
+      "consultation": "Asesoramiento"
+    }
   }
 }

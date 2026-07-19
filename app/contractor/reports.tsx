@@ -11,6 +11,7 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency } from '../../src/i18n/formatting';
 import {
   generateMonthlyReport,
@@ -24,15 +25,20 @@ import { hapticSuccess } from '../../src/utils/haptics';
 
 type PeriodMode = 'monthly' | 'quarterly';
 
-const MONTH_LABELS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
+// Locale-derived: hardcoded English abbreviations rendered "Mar"/"May"/"Oct"
+// on a Dutch screen where the correct forms are "mrt"/"mei"/"okt".
+function monthLabels(locale: string): string[] {
+  return Array.from({ length: 12 }, (_, i) =>
+    new Date(2000, i, 1).toLocaleDateString(locale, { month: 'short' }),
+  );
+}
 
 export default function ReportsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { invoices, quotes } = useAppState();
+  const { user } = useAuth();
+  const MONTH_LABELS = useMemo(() => monthLabels(i18n.language), [i18n.language]);
 
   const now = new Date();
   const [mode, setMode] = useState<PeriodMode>('monthly');
@@ -47,7 +53,10 @@ export default function ReportsScreen() {
     return generateQuarterlyReport(selectedQuarter, selectedYear, invoices, quotes);
   }, [mode, selectedMonth, selectedQuarter, selectedYear, invoices, quotes]);
 
-  const fmt = useCallback((amount: number) => formatCurrency(amount), []);
+  // Thread the user's country — formatCurrency defaults to 'NL', which
+  // silently mis-formats every DE/FR/ES/IT contractor's report.
+  const country = (user?.country ?? 'NL') as any;
+  const fmt = useCallback((amount: number) => formatCurrency(amount, country), [country]);
 
   const handleShareCSV = useCallback(async () => {
     const csv = exportToCSV(report);
@@ -56,10 +65,13 @@ export default function ReportsScreen() {
   }, [report]);
 
   const handleSharePDF = useCallback(async () => {
-    const html = exportToPDFHtml(report, 'My Business', fmt);
+    // Was the literal 'My Business' — this is a financial document the
+    // contractor forwards to their accountant.
+    const businessName = user?.company || user?.name || '';
+    const html = exportToPDFHtml(report, businessName, fmt);
     hapticSuccess();
     await Share.share({ message: html, title: `${report.title}.pdf` });
-  }, [report, fmt]);
+  }, [report, fmt, user]);
 
   const changeIndicator = (value: number) => {
     if (value === 0) return null;

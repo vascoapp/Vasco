@@ -4,9 +4,10 @@
 // Long-press to pick up a job, drag to a time slot, drop to assign
 // =============================================================================
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Dimensions, PanResponder } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { todayKey } from '../../src/utils/dateKey';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -80,7 +81,10 @@ export default function DragScheduleScreen() {
   // it instantly. Was R1 deferral (schedule_suggestion didn't pre-position).
   const { jobId: focusJobId } = useLocalSearchParams<{ jobId?: string }>();
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  // localDateKey, not toISOString(): in UTC+x the UTC date is still
+  // yesterday between local midnight and 02:00, so the planner showed the
+  // wrong day's jobs in the early morning.
+  const todayStr = todayKey();
 
   // Build schedule from REAL AppState jobs (already scheduled for today)
   const initialSchedule: ScheduledJob[] = jobs
@@ -121,6 +125,22 @@ export default function DragScheduleScreen() {
 
   const [schedule, setSchedule] = useState<ScheduledJob[]>(initialSchedule);
   const [unassigned, setUnassigned] = useState(initialUnassigned);
+
+  // AppState hydrates asynchronously, so on a cold open `jobs` is [] at mount
+  // and these useState initialisers captured empty arrays — the planner then
+  // stayed permanently blank until the screen was unmounted and re-entered.
+  // Re-sync whenever the underlying set of jobs actually changes. Local drag
+  // positions are intentionally reset by that: they are not persisted, so the
+  // job list is the only source of truth worth preserving.
+  const sourceSignature = `${initialSchedule.map((j) => `${j.jobId}@${j.startHour}`).join(',')}|${initialUnassigned.map((j: any) => j.jobId ?? j.id).join(',')}`;
+  const lastSyncedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastSyncedRef.current === sourceSignature) return;
+    lastSyncedRef.current = sourceSignature;
+    setSchedule(initialSchedule);
+    setUnassigned(initialUnassigned);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceSignature]);
   const [draggedJob, setDraggedJob] = useState<string | null>(null);
   const [dropTargetHour, setDropTargetHour] = useState<number | null>(null);
 
@@ -314,7 +334,10 @@ export default function DragScheduleScreen() {
 
               setSchedule(newSchedule);
               hapticSuccess();
-              const summary = `${optimized.totalDriveKm}km · ${Math.round(optimized.totalDriveMin)}min driving`
+              const summary = t('schedule.driveSummary', '{{km}}km · {{min}}min driving', {
+                km: optimized.totalDriveKm,
+                min: Math.round(optimized.totalDriveMin),
+              })
                 + (optimized.warnings.length ? `\n⚠ ${optimized.warnings.join('; ')}` : '');
 
               // R255: write optimized order back to AppState — persist scheduledStartTime per job

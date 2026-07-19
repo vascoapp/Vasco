@@ -2089,7 +2089,8 @@
     "notConnected": "Non connecté",
     "dataPrivacy": "DONNÉES ET CONFIDENTIALITÉ",
     "creditsAvailable_one": "{{count}} mois d’abonnement offert — appliqué automatiquement au paiement.",
-    "creditsAvailable_other": "{{count}} mois d’abonnement offerts — appliqués automatiquement au paiement."
+    "creditsAvailable_other": "{{count}} mois d’abonnement offerts — appliqués automatiquement au paiement.",
+    "exportFailedDesc": "Impossible de générer l'export de tes données. Réessaie ou contacte privacy@vascobuild.com."
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",
@@ -2297,7 +2298,11 @@
     "deleteMyAccount": "Supprimer mon compte",
     "deleteMyAccountDesc": "Supprimez définitivement votre compte et toutes vos données",
     "termsOfService": "Conditions",
-    "privacyPolicy": "Politique de confidentialité"
+    "privacyPolicy": "Politique de confidentialité",
+    "exportFailed": "Échec de l'export",
+    "exportFailedDesc": "Impossible de générer l'export de tes données. Réessaie ou contacte privacy@vascobuild.com.",
+    "deletionFailed": "Demande non envoyée",
+    "deletionFailedDesc": "Ta demande n'a pas atteint nos serveurs. Vérifie ta connexion internet et réessaie, ou contacte privacy@vascobuild.com."
   },
   "xero": {
     "title": "Connecter Xero",
@@ -2427,7 +2432,12 @@
     "edit": "Modifier le modèle",
     "new": "Nouveau modèle",
     "titlePlaceholder": "Nom du modèle",
-    "bodyPlaceholder": "Contenu du message. Utilisez {{customer}}, {{amount}}, {{date}}, {{jobTitle}} comme variables."
+    "bodyPlaceholder": "Contenu du message. Utilisez {{customer}}, {{amount}}, {{date}}, {{jobTitle}} comme variables.",
+    "cat_reminder": "Relance",
+    "cat_follow-up": "Suivi",
+    "cat_confirmation": "Confirmation",
+    "cat_thank-you": "Remerciement",
+    "cat_custom": "Personnalisé"
   },
   "dk": {
     "tabs": {
@@ -2935,7 +2945,9 @@
     "chooseSlot": "Choisir un créneau",
     "whenSchedule": "Quand voulez-vous planifier {{job}} ?",
     "schedule": "Planifier",
-    "optimizedApplied": "Appliqué au planning du jour."
+    "optimizedApplied": "Appliqué au planning du jour.",
+    "driveSummary": "{{km}}km · {{min}}min de trajet",
+    "endsAt": "Fin à {{time}}"
   },
   "marketInsights": {
     "title": "INSIGHTS DU MARCHÉ",
@@ -4857,5 +4869,20 @@
     "inflow": "Entrées",
     "outflow": "Sorties",
     "lowCashWarning": "Trésorerie basse le {{date}} ({{amount}}) — relancez les factures impayées."
+  },
+  "pricebook": {
+    "title": "Grille tarifaire",
+    "searchPlaceholder": "Rechercher des prestations…",
+    "all": "Toutes",
+    "count_one": "{{count}} prestation",
+    "count_other": "{{count}} prestations",
+    "cat": {
+      "preparation": "Préparation",
+      "painting": "Peinture",
+      "repairs": "Réparations",
+      "finishing": "Finition",
+      "specialty": "Spécialité",
+      "consultation": "Conseil"
+    }
   }
 }
