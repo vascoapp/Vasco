@@ -1,5 +1,7 @@
 {
   "common": {
+    "durationH": "{{h}}h",
+    "durationHm": "{{h}}h{{m}}",
     "save": "Save",
     "cancel": "Cancel",
     "loading": "Loading...",

@@ -1,5 +1,7 @@
 {
   "common": {
+    "durationH": "{{h}} Std.",
+    "durationHm": "{{h}} Std. {{m}}",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "loading": "Laden...",

@@ -427,7 +427,12 @@ export default function DragScheduleScreen() {
       <View style={styles.utilBar}>
         <View style={styles.utilInfo}>
           <Text style={styles.utilLabel}>{t('schedule.utilization', 'Bezetting')}</Text>
-          <Text style={styles.utilValue}>{totalScheduledHours}u / 10u ({utilizationPct}%)</Text>
+          <Text style={styles.utilValue}>
+            {t('common.durationH', { defaultValue: '{{h}}h', h: totalScheduledHours })}
+            {' / '}
+            {t('common.durationH', { defaultValue: '{{h}}h', h: 10 })}
+            {` (${utilizationPct}%)`}
+          </Text>
         </View>
         <View style={styles.utilTrack}>
           <View style={[styles.utilFill, { width: `${Math.min(utilizationPct, 100)}%` }]} />
@@ -443,7 +448,7 @@ export default function DragScheduleScreen() {
               <View key={job.jobId} style={[styles.poolCard, focusJobId && job.jobId === focusJobId && styles.poolCardFocus]}>
                 <Text style={styles.poolJobTitle} numberOfLines={1}>{job.title}</Text>
                 <Text style={styles.poolJobCustomer} numberOfLines={1}>{job.customerName}</Text>
-                <Text style={styles.poolJobHours}>{job.estimatedHours}u</Text>
+                <Text style={styles.poolJobHours}>{t('common.durationH', { defaultValue: '{{h}}h', h: job.estimatedHours })}</Text>
                 {/* Tap to pick time slot */}
                 <Pressable
                   style={styles.poolAssignBtn}
@@ -490,7 +495,7 @@ export default function DragScheduleScreen() {
                   >
                     <View style={styles.blockHeader}>
                       <Text style={[styles.blockTitle, { color: job.color }]} numberOfLines={1}>{job.title}</Text>
-                      <Text style={styles.blockDuration}>{job.duration}u</Text>
+                      <Text style={styles.blockDuration}>{t('common.durationH', { defaultValue: '{{h}}h', h: job.duration })}</Text>
                     </View>
                     <Text style={styles.blockCustomer} numberOfLines={1}>{job.customerName}</Text>
                     <View style={styles.blockTime}>

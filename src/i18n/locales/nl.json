@@ -1,5 +1,7 @@
 {
   "common": {
+    "durationH": "{{h}}u",
+    "durationHm": "{{h}}u{{m}}",
     "save": "Opslaan",
     "cancel": "Annuleren",
     "loading": "Laden...",

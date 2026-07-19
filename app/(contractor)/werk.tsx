@@ -541,8 +541,17 @@ function TodayContent({ todayJobs, onOpenJob, onPlanCta, t }: { todayJobs: any[]
         const endStr = endDate ? endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '';
         const durationMins = entry.duration
           || (endDate && startDate ? Math.round((endDate.getTime() - startDate.getTime()) / 60000) : 0);
+        // Was `${h}u${m}` — the Dutch "u" (uren) was shown to all 6 locales,
+        // and the minutes were not zero-padded, so 65 min rendered as "1u5"
+        // (reads as 1u50) instead of "1u05".
         const durationStr = durationMins > 0
-          ? `${Math.floor(durationMins / 60)}u${durationMins % 60 > 0 ? durationMins % 60 : ''}`
+          ? (durationMins % 60 > 0
+              ? t('common.durationHm', {
+                  defaultValue: '{{h}}h{{m}}',
+                  h: Math.floor(durationMins / 60),
+                  m: String(durationMins % 60).padStart(2, '0'),
+                })
+              : t('common.durationH', { defaultValue: '{{h}}h', h: Math.floor(durationMins / 60) }))
           : '';
         return (
           <Pressable
