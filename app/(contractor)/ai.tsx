@@ -326,7 +326,7 @@ export default function VascoScreen() {
               onPress={() => router.push('/contractor/eve' as any)}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={t('eve.workforceLabel', 'EVE workforce')}
+              accessibilityLabel={t('eve.workforceLabel', 'Vasco workforce')}
             >
               <Ionicons name="people-circle-outline" size={20} color={DK.colors.text} />
             </Pressable>
@@ -625,7 +625,9 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
           {action.eveAgent && (
             <View style={[heroStyles.chip, { backgroundColor: '#FFFFFF22', borderColor: '#FFFFFF55' }]}>
               <Text style={[heroStyles.chipText, { color: '#FFFFFF' }]}>
-                {action.eveAgent === 'agent' ? 'EVE · AGENT' : action.eveAgent === 'auditor' ? 'EVE · AUDITOR' : 'EVE · ANALYST'}
+                {/* "EVE" is the internal codename; users see Vasco. The
+                    `eveAgent` field name stays as-is (internal). */}
+                {action.eveAgent === 'agent' ? 'VASCO · AGENT' : action.eveAgent === 'auditor' ? 'VASCO · AUDITOR' : 'VASCO · ANALYST'}
               </Text>
             </View>
           )}

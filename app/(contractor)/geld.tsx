@@ -271,7 +271,7 @@ export default function GeldScreen() {
             <View style={s.vascoHeader}>
               <View style={s.vascoChip}>
                 <View style={s.vascoChipDot} />
-                <DKLabel style={s.vascoChipText}>{t('dk.hero.eveFinance', 'EVE Finance')}</DKLabel>
+                <DKLabel style={s.vascoChipText}>{t('dk.hero.eveFinance', 'Vasco Finance')}</DKLabel>
               </View>
               <Text style={s.vascoCountText}>{financialQueue.length}</Text>
             </View>
@@ -282,11 +282,14 @@ export default function GeldScreen() {
               </Pressable>
             ) : null}
             {financialQueue.slice(0, 3).map((item) => (
+              // Stacked — the action label sized the button and starved the
+              // flex:1 title ("2× Herinneri…"). Same fix as InlineQueueRow.
               <View key={item.id} style={s.vascoQueueRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.vascoQueueTitle} numberOfLines={1}>{item.title}</Text>
+                <View style={{ minWidth: 0 }}>
+                  <Text style={s.vascoQueueTitle} numberOfLines={2}>{item.title}</Text>
                   <Text style={s.vascoQueueImpact}>{item.estimatedImpact}</Text>
                 </View>
+                <View style={s.vascoQueueActions}>
                 <Pressable hitSlop={6} onPress={() => aiQueue.reject(item.id)} style={s.vascoQueueReject}>
                   <Ionicons name="close" size={12} color={DK.colors.textMuted} />
                 </Pressable>
@@ -301,8 +304,9 @@ export default function GeldScreen() {
                   }}
                   style={s.vascoQueueApprove}
                 >
-                  <DKLabel style={s.vascoQueueApproveText}>{item.actionLabel}</DKLabel>
+                  <DKLabel style={s.vascoQueueApproveText} numberOfLines={1}>{item.actionLabel}</DKLabel>
                 </Pressable>
+                </View>
               </View>
             ))}
           </View>
@@ -827,7 +831,8 @@ const s = StyleSheet.create({
   },
   vascoInsightTitle: { fontFamily: DK.type.display800, fontSize: 13, color: DK.colors.text },
   vascoInsightDesc: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, marginTop: 3, lineHeight: 16 },
-  vascoQueueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border },
+  vascoQueueRow: { flexDirection: 'column', gap: 8, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border },
+  vascoQueueActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   vascoQueueTitle: { fontFamily: DK.type.display700, fontSize: 13, color: DK.colors.text },
   vascoQueueImpact: { fontFamily: DK.type.body500, fontSize: 11, color: DK.colors.highlight, marginTop: 2 },
   vascoQueueReject: { width: 26, height: 26, borderRadius: 13, backgroundColor: DK.colors.panel2, borderWidth: 1, borderColor: DK.colors.border, alignItems: 'center', justifyContent: 'center' },

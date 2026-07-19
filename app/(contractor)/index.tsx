@@ -450,22 +450,31 @@ function eveAgentBadge(item: QueueItem): { letter: string; color: string } | nul
 function InlineQueueRow({ item, onApprove, onReject }: { item: QueueItem; onApprove: () => void; onReject: () => void }) {
   const eve = eveAgentBadge(item);
   return (
+    // Stacked, not side-by-side: the action label ("HERINNERING VERSTUREN")
+    // sizes the button to its own content, which starved the flex:1 title
+    // column and truncated every row to uselessness — "2× Herinneri…",
+    // "Factuur voor Lekk…". Title now gets the full width (2 lines) and the
+    // buttons sit on their own right-aligned line, so neither is cut off.
     <View style={inlineStyles.row}>
-      {eve && (
-        <View style={[inlineStyles.eveBadge, { backgroundColor: eve.color + '22', borderColor: eve.color + '88' }]}>
-          <Text style={[inlineStyles.eveBadgeText, { color: eve.color }]}>{eve.letter}</Text>
+      <View style={inlineStyles.textRow}>
+        {eve && (
+          <View style={[inlineStyles.eveBadge, { backgroundColor: eve.color + '22', borderColor: eve.color + '88' }]}>
+            <Text style={[inlineStyles.eveBadgeText, { color: eve.color }]}>{eve.letter}</Text>
+          </View>
+        )}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={inlineStyles.title} numberOfLines={2}>{item.title}</Text>
+          <Text style={inlineStyles.impact} numberOfLines={1}>{item.estimatedImpact}</Text>
         </View>
-      )}
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={inlineStyles.title} numberOfLines={1}>{item.title}</Text>
-        <Text style={inlineStyles.impact} numberOfLines={1}>{item.estimatedImpact}</Text>
       </View>
-      <Pressable onPress={onReject} hitSlop={6} style={inlineStyles.rejectBtn}>
-        <Ionicons name="close" size={14} color={DK.colors.textMuted} />
-      </Pressable>
-      <Pressable onPress={onApprove} style={({ pressed }) => [inlineStyles.approveBtn, pressed && { opacity: 0.85 }]}>
-        <DKLabel style={inlineStyles.approveText} numberOfLines={1}>{item.actionLabel}</DKLabel>
-      </Pressable>
+      <View style={inlineStyles.actionsRow}>
+        <Pressable onPress={onReject} hitSlop={6} style={inlineStyles.rejectBtn}>
+          <Ionicons name="close" size={14} color={DK.colors.textMuted} />
+        </Pressable>
+        <Pressable onPress={onApprove} style={({ pressed }) => [inlineStyles.approveBtn, pressed && { opacity: 0.85 }]}>
+          <DKLabel style={inlineStyles.approveText} numberOfLines={1}>{item.actionLabel}</DKLabel>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -904,13 +913,25 @@ const kpiStyles = StyleSheet.create({
 });
 
 const inlineStyles = StyleSheet.create({
+  // Column: text block above, actions below. See InlineQueueRow — a row
+  // layout let the action button's own label starve the title column.
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    flexDirection: 'column',
+    gap: 8,
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: DK.colors.border,
+  },
+  textRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 10,
   },
   // R22: EVE agent attribution badge — A/U/L for Agent/Auditor/Analyst.
   eveBadge: {

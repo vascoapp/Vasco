@@ -61,7 +61,7 @@ export default function EveDashboardScreen() {
         </Pressable>
         <View>
           <DKLabel style={styles.overline}>{t('eve.overline', 'YOUR AI WORKFORCE')}</DKLabel>
-          <Text style={styles.title}>EVE</Text>
+          <Text style={styles.title}>VASCO</Text>
         </View>
       </View>
 
@@ -142,9 +142,9 @@ export default function EveDashboardScreen() {
         {/* Description card when no agent selected */}
         {!selectedAgent && (
           <View style={styles.aboutCard}>
-            <DKLabel style={styles.aboutHeading}>{t('eve.aboutHeading', 'ABOUT EVE')}</DKLabel>
+            <DKLabel style={styles.aboutHeading}>{t('eve.aboutHeading', 'ABOUT VASCO')}</DKLabel>
             <Text style={styles.aboutBody}>
-              {t('eve.aboutBody', 'EVE prepares work proactively across three specialised agents. Tap an agent above to review their pending suggestions — every approval is one tap.')}
+              {t('eve.aboutBody', 'Vasco prepares work proactively across three specialised agents. Tap an agent above to review their pending suggestions — every approval is one tap.')}
             </Text>
             {(['agent', 'auditor', 'analyst'] as EveAgentType[]).map((type) => (
               <View key={type} style={styles.aboutRow}>

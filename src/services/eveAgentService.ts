@@ -99,7 +99,7 @@ export interface EveAgentConfig {
 export const EVE_AGENTS: Record<EveAgentType, EveAgentConfig> = {
   agent: {
     type: 'agent',
-    name: 'EVE Agent',
+    name: 'Vasco Agent',
     tagline: 'Your tireless business assistant',
     description: 'Handles day-to-day execution: drafts invoices from completed jobs, sends payment reminders, follows up on stale quotes, suggests schedule optimizations, and prepares end-of-day updates. Works 24/7 so you can focus on the tools.',
     icon: 'flash',
@@ -114,7 +114,7 @@ export const EVE_AGENTS: Record<EveAgentType, EveAgentConfig> = {
   },
   auditor: {
     type: 'auditor',
-    name: 'EVE Auditor',
+    name: 'Vasco Auditor',
     tagline: 'Your compliance safety net',
     description: 'Continuously monitors every certification, insurance policy, permit, and tax deadline across your business. Flags risks 30/60/90 days before they become problems. Ensures you never start a job without proper documentation.',
     icon: 'shield-checkmark',
@@ -129,7 +129,7 @@ export const EVE_AGENTS: Record<EveAgentType, EveAgentConfig> = {
   },
   analyst: {
     type: 'analyst',
-    name: 'EVE Analyst',
+    name: 'Vasco Analyst',
     tagline: 'Your business intelligence advisor',
     description: 'Connects patterns across your entire business to surface insights: benchmark your rates against 14,000+ EU contractors, predict which quotes will win, forecast cashflow 90 days out, and identify which job types deliver the best margins.',
     icon: 'analytics',
