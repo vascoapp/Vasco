@@ -17,6 +17,7 @@ import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { scheduleJobReminder } from '../../src/services/pushNotificationService';
 import { useTranslation } from 'react-i18next';
+import { useFeatureFlag } from '../../src/services/featureFlagService';
 import { shareAllScheduledJobs } from '../../src/services/calendarExportService';
 import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/calendarSyncService';
 import { detectConflicts } from '../../src/services/scheduleConflictService';
@@ -74,6 +75,8 @@ const COLORS = [Palette.hermesOrange, '#3B82F6', '#10B981', '#EC4899', '#14B8A6'
 
 export default function DragScheduleScreen() {
   const { t } = useTranslation();
+  // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
+  const routeOptimizationEnabled = useFeatureFlag('route_optimization');
   const router = useRouter();
   const { jobs, customers, updateJobStatus, updateJob } = useAppState();
   // R21: when entered from queue executor with ?jobId=, highlight the
@@ -288,6 +291,10 @@ export default function DragScheduleScreen() {
           <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>{t('schedule.daySchedule', 'Day schedule')}</Text>
           <Text style={styles.headerSubtitle} numberOfLines={1}>{today}</Text>
         </View>
+        {/* Route optimisation hidden for launch (2026-07-20). The drag-to-
+            reschedule planner itself stays — only the optimise action is
+            gated, via the remotely-flippable `route_optimization` flag. */}
+        {routeOptimizationEnabled && (
         <Pressable
           onPress={async () => {
             // R254: optimize today's job order via the new scheduler. Uses
@@ -417,6 +424,7 @@ export default function DragScheduleScreen() {
           <Ionicons name="flash-outline" size={18} color={Palette.hermesOrange} />
           <Text style={styles.exportButtonText}>{t('schedule.optimize', 'Optimize')}</Text>
         </Pressable>
+        )}
         <Pressable onPress={handleExportCalendar} style={styles.exportButton} accessibilityRole="button" accessibilityLabel={t('schedule.export', 'Export to calendar')}>
           <Ionicons name="calendar-outline" size={18} color={Palette.hermesOrange} />
           <Text style={styles.exportButtonText}>{t('schedule.export', 'Exporteer')}</Text>

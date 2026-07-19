@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { useFeatureFlag } from '../../src/services/featureFlagService';
 import { DK } from '../../src/theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { DKLabel } from '../../src/components/shared/DKLabel';
@@ -41,6 +42,8 @@ function startOfWeek(d: Date): Date {
 
 export default function WeeklyOverviewScreen() {
   const { t, i18n } = useTranslation();
+  // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
+  const routeOptimizationEnabled = useFeatureFlag('route_optimization');
   const router = useRouter();
   const { jobs } = useAppState();
 
@@ -154,7 +157,8 @@ export default function WeeklyOverviewScreen() {
                 <Text style={styles.dayCount}>{b.jobs.length} {b.jobs.length === 1 ? t('weekly.job', 'job') : t('weekly.jobs', 'jobs')}</Text>
                 <Text style={styles.dayHours}>{b.totalHours}h</Text>
               </View>
-              {b.jobs.length >= 2 && (
+              {/* Route optimisation hidden for launch (2026-07-20). */}
+              {routeOptimizationEnabled && b.jobs.length >= 2 && (
                 <Pressable style={styles.optimizeBtn} onPress={() => handleOptimize(b)}>
                   <Ionicons name="flash" size={12} color={DK.colors.accent} />
                   <Text style={styles.optimizeText}>{t('weekly.optimize', 'OPTIMIZE')}</Text>

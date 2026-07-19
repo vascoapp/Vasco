@@ -21,7 +21,8 @@ export type FeatureKey =
   | 'whatsapp_business'
   | 'live_tracking'
   | 'sms_us'
-  | 'tax_real_lookup';
+  | 'tax_real_lookup'
+  | 'route_optimization';
 
 interface FlagRow {
   key: string;
@@ -52,6 +53,11 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   // provisions a TaxJar account + sets TAXJAR_API_KEY. Pricing $50/mo at
   // 1k invoices, so we hold off until contractors are billing actively.
   tax_real_lookup: false,
+  // Hidden for launch (user decision, 2026-07-20): route optimisation is not
+  // needed for v1. The engine (optimalSchedulerService) and the drag-schedule
+  // planning screen stay — only the optimise affordances are gated, so this
+  // can be flipped back on remotely without a code change.
+  route_optimization: false,
 };
 
 let memo: Record<string, FlagRow> = {};

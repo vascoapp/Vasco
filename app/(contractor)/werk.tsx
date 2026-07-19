@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
 import { useDaySchedule } from '../../src/services/smartSchedulerService';
+import { useFeatureFlag } from '../../src/services/featureFlagService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
@@ -56,6 +57,8 @@ export default function WerkScreen() {
   const [tab, setTab] = useState<TabKey>('today');
   const today = new Date().toISOString().split('T')[0];
   const todaySchedule = useDaySchedule(today);
+  // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
+  const routeOptimizationEnabled = useFeatureFlag('route_optimization', { country: user?.country as any });
 
   useEffect(() => { recordScreenVisit('werk'); }, []);
 
@@ -258,7 +261,10 @@ export default function WerkScreen() {
               <Text style={styles.weekLinkText}>{t('schedule.viewWeek', 'Week overview').toUpperCase()}</Text>
               <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
             </Pressable>
-            {todayJobs.length >= 2 && (
+            {/* Route optimisation hidden for launch (2026-07-20) — gated on
+                the `route_optimization` flag so it can be re-enabled remotely
+                without a code change. */}
+            {routeOptimizationEnabled && todayJobs.length >= 2 && (
               <Pressable
                 style={styles.optimizeBtn}
                 onPress={async () => {
