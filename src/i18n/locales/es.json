@@ -2522,6 +2522,10 @@
       "guideAannemerProjects_other": "{{count}} proyectos en curso hoy"
     },
     "pill": {
+      "jobsCount_one": "{{count}} trabajo",
+      "jobsCount_other": "{{count}} trabajos",
+      "overdueCount_one": "{{count}} vencido",
+      "overdueCount_other": "{{count}} vencidos",
       "decided": "Decidido",
       "overdue": "Vencido",
       "revenue": "Ingresos",

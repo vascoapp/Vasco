@@ -2522,6 +2522,10 @@
       "guideAannemerProjects_other": "{{count}} projets en cours aujourd’hui"
     },
     "pill": {
+      "jobsCount_one": "{{count}} mission",
+      "jobsCount_other": "{{count}} missions",
+      "overdueCount_one": "{{count}} en retard",
+      "overdueCount_other": "{{count}} en retard",
       "decided": "Décidé",
       "overdue": "En retard",
       "revenue": "Revenus",

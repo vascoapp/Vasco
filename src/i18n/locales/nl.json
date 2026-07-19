@@ -2506,6 +2506,10 @@
       "guideAannemerProjects_other": "{{count}} projecten lopen vandaag"
     },
     "pill": {
+      "jobsCount_one": "{{count}} klus",
+      "jobsCount_other": "{{count}} klussen",
+      "overdueCount_one": "{{count}} te laat",
+      "overdueCount_other": "{{count}} te laat",
       "decided": "Beslist",
       "overdue": "Te laat",
       "revenue": "Omzet",
@@ -2514,7 +2518,7 @@
       "status": "Status",
       "date": "Datum",
       "impact": "Impact",
-      "jobs": "Jobs",
+      "jobs": "Klussen",
       "earned": "Verdiend",
       "appointments": "Afspraken",
       "saved": "Bespaard",

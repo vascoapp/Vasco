@@ -324,7 +324,7 @@ export default function BedrijfScreen() {
                         <CustomerRow
                           key={c.id}
                           name={c.name}
-                          meta={`${customerJobs[c.id] || 0} ${t('dk.pill.jobs', 'Jobs').toUpperCase()} · ${formatAmount(rev)}`}
+                          meta={`${t('dk.pill.jobsCount', { defaultValue: '{{count}} jobs', count: customerJobs[c.id] || 0 }).toUpperCase()} · ${formatAmount(rev)}`}
                           onPress={() => router.push('/contractor/customer-crm' as any)}
                         />
                       );
@@ -394,7 +394,7 @@ export default function BedrijfScreen() {
                       {tracker.overdue > 0 ? (
                         <View style={s.overduePill}>
                           <Ionicons name="alert-circle" size={11} color={DK.colors.danger} />
-                          <Text style={s.overdueText}>{tracker.overdue} {t('dk.pill.overdue', 'Overdue').toUpperCase()}</Text>
+                          <Text style={s.overdueText}>{t('dk.pill.overdueCount', { defaultValue: '{{count}} overdue', count: tracker.overdue }).toUpperCase()}</Text>
                         </View>
                       ) : (
                         <DKLabel style={s.trackerTime}>{tracker.lastActivity}</DKLabel>
@@ -459,7 +459,7 @@ export default function BedrijfScreen() {
                     <CustomerRow
                       key={customer.id}
                       name={customer.name}
-                      meta={`${customerJobs[customer.id] || 0} ${t('dk.pill.jobs', 'Jobs').toUpperCase()}${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
+                      meta={`${t('dk.pill.jobsCount', { defaultValue: '{{count}} jobs', count: customerJobs[customer.id] || 0 }).toUpperCase()}${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
                       onPress={() => router.push('/contractor/customer-crm' as any)}
                       borderBottom={idx < Math.min(customers.length, 10) - 1}
                       inCard

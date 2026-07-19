@@ -2522,6 +2522,10 @@
       "guideAannemerProjects_other": "{{count}} Projekte laufen heute"
     },
     "pill": {
+      "jobsCount_one": "{{count}} Auftrag",
+      "jobsCount_other": "{{count}} Aufträge",
+      "overdueCount_one": "{{count}} überfällig",
+      "overdueCount_other": "{{count}} überfällig",
       "decided": "Entschieden",
       "overdue": "Überfällig",
       "revenue": "Umsatz",
