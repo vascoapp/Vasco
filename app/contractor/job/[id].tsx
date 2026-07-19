@@ -28,7 +28,7 @@ import { SafeArea } from '../../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { useClockIn } from '../../../src/services/clockInService';
-import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, useJobLifecyclePipeline, toLifecycleStatus } from '../../../src/services/smartSchedulerService';
+import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, LIFECYCLE_TO_DOMAIN_STATUS, useJobLifecyclePipeline, toLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
 import { getCohortCostVariance, type CohortCostVariance } from '../../../src/services/costVarianceMoatService';
@@ -568,7 +568,30 @@ export default function JobDetailPage() {
                     const { gateJobStatusChange } = await import('../../../src/services/jobStatusGate');
                     const ok = await gateJobStatusChange(job.lifecycleStatus, nextStatus, job);
                     if (!ok) return;
-                    advance(job.id);
+                    // Write through AppState, NOT smartScheduler's advance().
+                    //
+                    // advance() -> smartSchedulerService.advanceLifecycle()
+                    // looks the job up in the service's OWN Map, which is
+                    // seeded from MOCK_JOBS. Real jobs come from AppState and
+                    // are absent from that Map, so the lookup returned
+                    // undefined and the call was a silent no-op: confirming
+                    // "Status wijzigen naar Gereed" changed nothing — the
+                    // badge stayed BEZIG, the stepper never moved. Verified on
+                    // the simulator before this fix.
+                    //
+                    // This screen renders lifecycleStatus from
+                    // toLifecycleStatus(appJob.status), i.e. AppState, so
+                    // AppState is the store that has to change.
+                    const nextDomainStatus = LIFECYCLE_TO_DOMAIN_STATUS[nextStatus];
+                    if (nextDomainStatus) {
+                      const { warnings } = updateJobStatus(job.id, nextDomainStatus as any);
+                      if (warnings.length > 0) {
+                        Alert.alert(
+                          t('jobs.statusChangedWithWarnings', 'Status updated with warnings'),
+                          warnings.join('\n'),
+                        );
+                      }
+                    }
                     if (job.lifecycleStatus === 'gereed') {
                       router.push('/(contractor)/facturen' as any);
                     }

@@ -48,6 +48,19 @@ const DOMAIN_STATUS_TO_LIFECYCLE: Record<string, JobLifecycleStatus> = {
 };
 
 /**
+ * Inverse of DOMAIN_STATUS_TO_LIFECYCLE: Dutch lifecycle value -> the domain
+ * JobStatus that AppState persists.
+ *
+ * Needed because the job-detail lifecycle CTA has to write through AppState
+ * (`updateJobStatus`), which speaks the English domain enum, while the
+ * stepper it drives speaks the Dutch lifecycle enum. Derived from the map
+ * above rather than hand-written so the two cannot drift apart.
+ */
+export const LIFECYCLE_TO_DOMAIN_STATUS = Object.fromEntries(
+  Object.entries(DOMAIN_STATUS_TO_LIFECYCLE).map(([domain, life]) => [life, domain]),
+) as Record<JobLifecycleStatus, string>;
+
+/**
  * Normalise any job status to a JobLifecycleStatus. Accepts either spelling —
  * parts of the codebase already persist the Dutch values — and returns
  * undefined for anything unrecognised so callers can decide, rather than
