@@ -208,7 +208,7 @@ export default function InsuranceScreen() {
                 `${t('insurance.insurer', 'Verzekeraar')}: ${policy.provider}\n${t('insurance.coverage', 'Dekking')}: ${policy.coverage ? formatCurrency(policy.coverage, country) : t('insurance.notApplicable', 'n.v.t.')}\n${t('insurance.endDate', 'Einddatum')}: ${endDate.toLocaleDateString(undefined)}`,
                 [
                   { text: t('insurance.cancel', 'Annuleren'), style: 'cancel' },
-                  { text: t('insurance.fileClaim', 'Claim indienen'), onPress: () => openClaimForm(policy.id) },
+                  { text: t('insurance.recordClaim', 'Claim vastleggen'), onPress: () => openClaimForm(policy.id) },
                 ]
               )}
             >
@@ -313,7 +313,10 @@ export default function InsuranceScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('insurance.fileClaim', 'Claim indienen')}</Text>
+              {/* "Record", not "file" — the modal writes a local dossier and
+                  the disclaimer + button below say Vasco does not send it to
+                  the insurer. A "Claim indienen" title contradicted that. */}
+              <Text style={styles.modalTitle}>{t('insurance.recordClaim', 'Claim vastleggen')}</Text>
               <Pressable onPress={() => setShowClaimModal(false)}>
                 <Ionicons name="close" size={24} color="#1A1A1A" />
               </Pressable>
