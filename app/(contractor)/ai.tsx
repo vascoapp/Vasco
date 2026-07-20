@@ -22,6 +22,7 @@ import { useAppState } from '../../src/state/AppState';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
+import { useFeatureFlag } from '../../src/services/featureFlagService';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useAutomations, type AutomationContext } from '../../src/services/automationService';
 import { exportAllData } from '../../src/services/dataExportService';
@@ -76,6 +77,8 @@ export default function VascoScreen() {
   const { user, logout } = useAuth();
   // US-only surfaces (Leads CRM pipeline) — see the gate at the Sales chip.
   const isUSContractor = user?.country === 'US';
+  // Kantoorbot hidden for launch (2026-07-20). Remote kill switch.
+  const officeBotEnabled = useFeatureFlag('office_bot', { country: user?.country as any });
   const { jobs, invoices, quotes, customers, isLoading, businessProfile } = useAppState();
   const aiQueue = useAIQueue();
   const [refreshing, setRefreshing] = useState(false);
@@ -566,22 +569,30 @@ export default function VascoScreen() {
                 <Ionicons name="shield-checkmark-outline" size={14} color={DK.colors.accent} />
                 <DKLabel style={s.chipText}>{t('ai.certificates', 'Certificates')}</DKLabel>
               </Pressable>
-              {/* R91: licenses now visible to all countries. US uses it
-                  for state contractor licenses; EU contractors use it for
-                  trade licenses (Gas Safe, Meisterbrief, RGE Qualibat,
-                  etc.) — complements Certificates rather than duplicates. */}
-              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/licenses' as any)}>
-                <Ionicons name="ribbon-outline" size={14} color={DK.colors.accent} />
-                <DKLabel style={s.chipText}>{t('ai.licenses', 'Licenses')}</DKLabel>
-              </Pressable>
+              {/* Licenses is a US state-licensing tracker (Master Plumber,
+                  EPA 608, state contractor licenses). R91 opened it to the
+                  EU, but the content is entirely US and EU compliance already
+                  lives in Certificaten — so a Dutch contractor saw a Texas
+                  license form. Re-gated to US-only for launch (user decision,
+                  2026-07-20), restoring the screen's original design intent. */}
+              {isUSContractor && (
+                <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/licenses' as any)}>
+                  <Ionicons name="ribbon-outline" size={14} color={DK.colors.accent} />
+                  <DKLabel style={s.chipText}>{t('ai.licenses', 'Licenses')}</DKLabel>
+                </Pressable>
+              )}
             </View>
 
             <DKLabel style={s.subsectionLabel}>{t('dk.ai.tools', 'Tools')}</DKLabel>
             <View style={s.chipRow}>
-              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/ai-chat' as any)}>
-                <Ionicons name="sparkles-outline" size={14} color={DK.colors.accent} />
-                <DKLabel style={s.chipText}>{t('ai.officeManager', 'Office bot')}</DKLabel>
-              </Pressable>
+              {/* Kantoorbot hidden for launch (2026-07-20) — gated on the
+                  office_bot flag (remote kill switch). */}
+              {officeBotEnabled && (
+                <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/ai-chat' as any)}>
+                  <Ionicons name="sparkles-outline" size={14} color={DK.colors.accent} />
+                  <DKLabel style={s.chipText}>{t('ai.officeManager', 'Office bot')}</DKLabel>
+                </Pressable>
+              )}
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/besparen' as any)}>
                 <Ionicons name="wallet-outline" size={14} color={DK.colors.accent} />
                 <DKLabel style={s.chipText}>{t('ai.savings', 'Savings')}</DKLabel>

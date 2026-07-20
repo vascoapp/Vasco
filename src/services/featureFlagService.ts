@@ -22,7 +22,8 @@ export type FeatureKey =
   | 'live_tracking'
   | 'sms_us'
   | 'tax_real_lookup'
-  | 'route_optimization';
+  | 'route_optimization'
+  | 'office_bot';
 
 interface FlagRow {
   key: string;
@@ -58,6 +59,10 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   // planning screen stay — only the optimise affordances are gated, so this
   // can be flipped back on remotely without a code change.
   route_optimization: false,
+  // Kantoorbot / AI office-bot chat (ai-chat.tsx). Hidden for launch (user
+  // decision, 2026-07-20 — "not important anymore"). Remote kill switch;
+  // the screen stays in the tree, just no entry point.
+  office_bot: false,
 };
 
 let memo: Record<string, FlagRow> = {};
