@@ -205,12 +205,30 @@ describe('currentBtwPeriod / previousBtwPeriod', () => {
   });
 
   it('previous quarter starts strictly before current quarter starts', () => {
-    // Note: we compare *starts* not end↔start — the service formats dates via
-    // toISOString().slice(0,10) which can collapse adjacent quarter boundaries
-    // into the same UTC date string depending on local TZ. The real invariant
-    // is that the previous quarter begins at least a few months earlier.
     const cur = currentBtwPeriod();
     const prev = previousBtwPeriod();
     expect(new Date(prev.periodStart).getTime()).toBeLessThan(new Date(cur.periodStart).getTime());
+  });
+
+  // Regression guard for the UTC-shift bug (fixed 1ea109b): the period was
+  // built with `new Date(y,0,1)` (LOCAL) then formatted via toISOString(),
+  // which in any UTC+ market rolled Q1 start back to "2025-12-31" — the VAT
+  // quarter started in the PREVIOUS YEAR. The fix formats via localDateKey, so
+  // construction and formatting are both local and the boundary is now exact
+  // and TZ-independent. These assertions passed in a UTC CI even with the bug;
+  // they FAIL in Amsterdam TZ without the fix.
+  it('anchors the quarter to the FIRST day of the quarter, never the prior day', () => {
+    const q1 = currentBtwPeriod(new Date(2026, 1, 15)); // Feb → Q1
+    expect(q1.periodStart).toBe('2026-01-01');
+    expect(q1.periodEnd).toBe('2026-03-31');
+
+    // Exact Jan-1 boundary — the input that produced "2025-12-31" pre-fix.
+    const jan1 = currentBtwPeriod(new Date(2026, 0, 1));
+    expect(jan1.periodStart).toBe('2026-01-01');
+
+    // Previous quarter of Q1 is the prior year's Q4.
+    const prev = previousBtwPeriod(new Date(2026, 1, 15));
+    expect(prev.periodStart).toBe('2025-10-01');
+    expect(prev.periodEnd).toBe('2025-12-31');
   });
 });
