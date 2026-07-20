@@ -60,6 +60,15 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 7); // 07:00 - 18:00
 const SLOT_HEIGHT = 60;
+
+// Format a decimal-hours value (e.g. 16.5) as HH:MM ("16:30"). Block durations
+// can be fractional now that they derive from the real slot, so
+// `${startHour + duration}:00` would print "16.5:00" — an invalid time (and,
+// in the ICS export below, an unparseable one).
+const hoursToHM = (h: number): string => {
+  const total = Math.round(h * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+};
 const TIME_COL_WIDTH = 50;
 
 interface ScheduledJob {
@@ -95,6 +104,21 @@ export default function DragScheduleScreen() {
     .map((j: any, idx: number) => {
       const startHour = j.scheduledStartTime ? parseInt(j.scheduledStartTime.split(':')[0], 10) : 9;
       const cust = customers.find((c: any) => c.id === j.customerId);
+      // Block length is TODAY'S SLOT (scheduledEndTime - scheduledStartTime),
+      // not j.estimatedDuration. estimatedDuration is the WHOLE job's estimate
+      // — a 24h Badkamer renovatie rendered as a block from 13:00 to 37:00
+      // (an invalid time, no rollover) and pushed Bezetting to 270%. Fall back
+      // to estimatedDuration only when the slot can't be derived.
+      const toMinutes = (hhmm?: string) => {
+        if (!hhmm) return null;
+        const [h, m] = hhmm.split(':').map((x: string) => parseInt(x, 10));
+        return Number.isNaN(h) ? null : h * 60 + (Number.isNaN(m) ? 0 : m);
+      };
+      const startMin = toMinutes(j.scheduledStartTime);
+      const endMin = toMinutes(j.scheduledEndTime);
+      const slotHours = startMin !== null && endMin !== null && endMin > startMin
+        ? Math.round(((endMin - startMin) / 60) * 100) / 100
+        : null;
       return {
         jobId: j.id,
         title: j.title,
@@ -102,7 +126,7 @@ export default function DragScheduleScreen() {
         // card as "cust-003". Blank is better than an internal id.
         customerName: cust?.name || '',
         startHour: isNaN(startHour) ? 9 : startHour,
-        duration: j.estimatedDuration || 2,
+        duration: slotHours ?? j.estimatedDuration ?? 2,
         color: COLORS[idx % COLORS.length],
       };
     });
@@ -247,7 +271,7 @@ export default function DragScheduleScreen() {
       createdAt: new Date().toISOString(),
       scheduledDate: new Date().toISOString().split('T')[0],
       scheduledStartTime: `${s.startHour.toString().padStart(2, '0')}:00`,
-      scheduledEndTime: `${(s.startHour + s.duration).toString().padStart(2, '0')}:00`,
+      scheduledEndTime: hoursToHM(s.startHour + s.duration),
     } as any));
     try {
       await shareAllScheduledJobs(scheduledJobs);
@@ -496,9 +520,9 @@ export default function DragScheduleScreen() {
                       height: job.duration * SLOT_HEIGHT - 4,
                     }]}
                     onLongPress={() => handleRemoveFromSchedule(job.jobId)}
-                    onPress={() => Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${job.startHour + job.duration}:00\n${t('schedule.longPressToRemove', 'Houd ingedrukt om te verwijderen')}`)}
+                    onPress={() => Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}\n${t('schedule.longPressToRemove', 'Houd ingedrukt om te verwijderen')}`)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${job.title}, ${job.customerName}, ${job.startHour}:00 to ${job.startHour + job.duration}:00`}
+                    accessibilityLabel={`${job.title}, ${job.customerName}, ${job.startHour}:00 to ${hoursToHM(job.startHour + job.duration)}`}
                     accessibilityHint="Tap for details, long press to remove"
                   >
                     <View style={styles.blockHeader}>
@@ -508,7 +532,7 @@ export default function DragScheduleScreen() {
                     <Text style={styles.blockCustomer} numberOfLines={1}>{job.customerName}</Text>
                     <View style={styles.blockTime}>
                       <Ionicons name="time-outline" size={12} color={SemanticColors.textTertiary} />
-                      <Text style={styles.blockTimeText}>{job.startHour}:00 – {job.startHour + job.duration}:00</Text>
+                      <Text style={styles.blockTimeText}>{job.startHour}:00 – {hoursToHM(job.startHour + job.duration)}</Text>
                     </View>
                   </Pressable>
                 ))}
