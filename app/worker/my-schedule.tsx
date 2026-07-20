@@ -22,6 +22,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { useAppState } from '../../src/state/AppState';
+import { todayKey } from '../../src/utils/dateKey';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -50,7 +51,7 @@ export default function MyScheduleScreen() {
   const timer = useClockIn();
   const { jobs, customers } = useAppState();
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayKey();
 
   // Build today's assigned jobs from AppState
   const todayJobs: WorkerJob[] = useMemo(() => {

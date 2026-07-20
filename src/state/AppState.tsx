@@ -108,6 +108,7 @@ import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/d
 import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 export type ContractorMetrics = {
   revenueThisMonth: number;
@@ -232,8 +233,8 @@ const useSeedData = USE_SEED_DATA;
 // Seed jobs — defined outside component to avoid Babel parse issues with inline ternaries
 const SEED_JOBS: Job[] = [
   { id: 'j-seed-1', customerId: 'cust-004', title: 'Lekkage inspectie — Fam. Bakker', description: null, status: 'lead', trade: 'plumbing', priority: 'normal', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
-  { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '09:00', scheduledEndTime: '12:00', estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
-  { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '13:30', scheduledEndTime: '17:00', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-seed-2', customerId: 'cust-001', title: 'CV-ketel onderhoud — Fam. de Vries', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '09:00', scheduledEndTime: '12:00', estimatedDuration: 3, quotedAmount: 450, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-seed-3', customerId: 'cust-002', title: 'Badkamer renovatie — Fam. Jansen', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '13:30', scheduledEndTime: '17:00', estimatedDuration: 24, quotedAmount: 4200, agreedAmount: 4200, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
   { id: 'j-seed-4', customerId: 'cust-003', title: 'Lekkage reparatie — Bakkerij Smit', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 280, agreedAmount: 280, actualHours: 2.5, actualCost: 85, completedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 12).toISOString() },
   { id: 'j-seed-5', customerId: 'cust-005', title: 'Vloerverwarming check — Hotel NH', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 2, quotedAmount: 350, agreedAmount: 350, invoiceId: 'inv-seed-1', completedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 25).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString() },
 ];
@@ -272,8 +273,8 @@ const SEED_JOB_MATERIALS: Record<string, JobMaterial[]> = {
 // states so every screen demoes real data.
 const US_SEED_JOBS: Job[] = [
   { id: 'j-us-1', customerId: 'cust-us-001', title: 'AC not cooling — Williams residence', description: null, status: 'lead', trade: 'gas-hvac', priority: 'high', quotedAmount: 385, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
-  { id: 'j-us-2', customerId: 'cust-us-002', title: 'Annual HVAC service — Chen', description: null, status: 'scheduled', trade: 'gas-hvac', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '09:00', scheduledEndTime: '11:00', estimatedDuration: 2, quotedAmount: 295, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
-  { id: 'j-us-3', customerId: 'cust-us-003', title: 'Full system replacement — Garcia kitchen remodel', description: null, status: 'in-progress', trade: 'gas-hvac', priority: 'normal', scheduledDate: new Date().toISOString().split('T')[0], scheduledStartTime: '13:00', scheduledEndTime: '17:30', estimatedDuration: 32, quotedAmount: 8750, agreedAmount: 8750, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-us-2', customerId: 'cust-us-002', title: 'Annual HVAC service — Chen', description: null, status: 'scheduled', trade: 'gas-hvac', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '09:00', scheduledEndTime: '11:00', estimatedDuration: 2, quotedAmount: 295, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-us-3', customerId: 'cust-us-003', title: 'Full system replacement — Garcia kitchen remodel', description: null, status: 'in-progress', trade: 'gas-hvac', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '13:00', scheduledEndTime: '17:30', estimatedDuration: 32, quotedAmount: 8750, agreedAmount: 8750, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 7).toISOString(), updatedAt: new Date().toISOString() },
   { id: 'j-us-4', customerId: 'cust-us-004', title: 'Capacitor replacement — Patel HOA clubhouse', description: null, status: 'completed', trade: 'gas-hvac', priority: 'normal', estimatedDuration: 1.5, quotedAmount: 240, agreedAmount: 240, actualHours: 1.25, actualCost: 65, completedAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 11).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString() },
   { id: 'j-us-5', customerId: 'cust-us-005', title: 'Commercial RTU swap — Lone Star Diner', description: null, status: 'invoiced', trade: 'gas-hvac', priority: 'normal', estimatedDuration: 12, quotedAmount: 4200, agreedAmount: 4200, invoiceId: 'inv-us-1', completedAt: new Date(Date.now() - MS_PER_DAY * 18).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 22).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 18).toISOString() },
 ];
@@ -333,15 +334,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       id: 'proj-seed-1', title: 'Badkamer renovatie — Fam. Jansen', customerId: 'cust-002', customerName: 'Fam. Jansen',
       status: 'active', totalBudget: 12500, totalQuoted: 12500, totalInvoiced: 0, totalPaid: 0,
       jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
-      startDate: new Date(Date.now() - MS_PER_DAY * 7).toISOString().split('T')[0],
-      targetEndDate: new Date(Date.now() + MS_PER_DAY * 21).toISOString().split('T')[0],
+      startDate: localDateKey(new Date(Date.now() - MS_PER_DAY * 7)),
+      targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 21)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date().toISOString(),
     },
     {
       id: 'proj-seed-2', title: 'Keuken verbouwing — Bakkerij Smit', customerId: 'cust-003', customerName: 'Bakkerij Smit',
       status: 'planning', totalBudget: 18000, totalQuoted: 16500, totalInvoiced: 0, totalPaid: 0,
       jobIds: ['j-seed-4'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
-      targetEndDate: new Date(Date.now() + MS_PER_DAY * 45).toISOString().split('T')[0],
+      targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 45)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString(),
     },
   ];

@@ -7,6 +7,7 @@
 // =============================================================================
 
 import type { Job } from '../types/contractor';
+import { localDateKey } from '../utils/dateKey';
 
 export interface PerJobSummary {
   jobId: string;
@@ -23,7 +24,7 @@ export interface DailySummary {
 }
 
 function dateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return localDateKey(d);
 }
 
 /** Produce the per-day view of time entries within the last `days` days. */

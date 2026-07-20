@@ -21,6 +21,7 @@ import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { localDateKey, todayKey } from '../../src/utils/dateKey';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,7 +66,7 @@ function getWeekDates(weekOffset: number = 0): { start: Date; end: Date } {
 }
 
 function formatDate(d: Date): string {
-  return d.toISOString().split('T')[0];
+  return localDateKey(d);
 }
 
 function getDayName(d: Date): string {
@@ -244,7 +245,7 @@ export default function MyTimesheetsScreen() {
 
         {/* Daily breakdown */}
         {week.days.map((day, idx) => {
-          const isToday = day.date === new Date().toISOString().split('T')[0];
+          const isToday = day.date === todayKey();
           const hasEntries = day.entries.length > 0;
           return (
             <FadeIn key={day.date} delay={idx * 50}>

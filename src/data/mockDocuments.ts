@@ -1,4 +1,5 @@
 import { Invoice, Quote } from '../domain/documents';
+import { localDateKey } from '../utils/dateKey';
 
 export const quotes: Quote[] = [
   {
@@ -67,7 +68,7 @@ export const invoices: Invoice[] = [
     amount: 350,
     status: 'overdue',
     dueInDays: -14,
-    dueDate: new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0],
+    dueDate: localDateKey(new Date(Date.now() - 14 * 86400000)),
     sentAt: new Date(Date.now() - 44 * 86400000).toISOString(),
     createdAt: new Date(Date.now() - 44 * 86400000).toISOString(),
   },
@@ -78,7 +79,7 @@ export const invoices: Invoice[] = [
     amount: 450,
     status: 'overdue',
     dueInDays: -10,
-    dueDate: new Date(Date.now() - 10 * 86400000).toISOString().split('T')[0],
+    dueDate: localDateKey(new Date(Date.now() - 10 * 86400000)),
     sentAt: new Date(Date.now() - 40 * 86400000).toISOString(),
     createdAt: new Date(Date.now() - 40 * 86400000).toISOString(),
   },

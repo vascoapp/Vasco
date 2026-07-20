@@ -7,6 +7,7 @@ import { useDaySchedule } from '../../services/smartSchedulerService';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
 import { MS_PER_HOUR } from '../../utils/timeConstants';
+import { localDateKey } from '../../utils/dateKey';
 
 export const dailyPlanningGenerator: InsightGenerator = {
   id: 'daily-planning',
@@ -18,7 +19,7 @@ export const dailyPlanningGenerator: InsightGenerator = {
 };
 
 export function useDailyPlanningInsight(ctx: GeneratorContext): ScoredInsight | null {
-  const today = ctx.now.toISOString().split('T')[0];
+  const today = localDateKey(ctx.now);
   const daySchedule = useDaySchedule(today);
 
   if (daySchedule.jobs.length === 0) return null;

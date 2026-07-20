@@ -30,6 +30,7 @@ import { useDailyReports } from '../../src/services/siteLeadDataService';
 import { useDaySchedule } from '../../src/services/smartSchedulerService';
 import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
 import { useInlineInsight } from '../../src/services/vascoGuidanceService';
+import { localDateKey, todayKey } from '../../src/utils/dateKey';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type Weather = 'sunny' | 'cloudy' | 'rainy' | 'storm' | 'cold';
@@ -61,7 +62,7 @@ export default function DailyReportScreen() {
   const router = useRouter();
 
   // Auto-populate from schedule
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayKey();
   const schedule = useDaySchedule(todayStr);
 
   const scheduleProgress: ProgressEntry[] = schedule.jobs.length > 0
@@ -117,7 +118,7 @@ export default function DailyReportScreen() {
 
   const handleSubmit = () => {
     addReport({
-      date: today.toISOString().split('T')[0],
+      date: localDateKey(today),
       weather,
       temperature,
       workersPresent: Number(workersOnSite),

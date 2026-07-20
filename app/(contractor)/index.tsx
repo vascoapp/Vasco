@@ -38,6 +38,7 @@ import { ProjectSwitcher } from '../../src/components/contractor/ProjectSwitcher
 import { UpcomingRecurringWidget } from '../../src/components/contractor/UpcomingRecurringWidget';
 import { OptimizationStatsWidget } from '../../src/components/contractor/OptimizationStatsWidget';
 import { CapacityOverrunCard } from '../../src/components/contractor/CapacityOverrunCard';
+import { todayKey } from '../../src/utils/dateKey';
 
 // R108: time-of-day-aware greeting. Pre-R108 "dk.common.goodMorning" was
 // hardcoded, so contractors opening the app in the evening saw "Good
@@ -59,7 +60,7 @@ export default function VandaagDK() {
   const { user } = useAuth();
   const isAannemer = !!user?.isAannemer;
   const activeProjectCount = projects?.filter((p) => p.status === 'active').length ?? 0;
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayKey();
 
   const daySchedule = useDaySchedule(today);
   const clockIn = useClockIn();

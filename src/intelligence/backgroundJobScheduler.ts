@@ -18,6 +18,7 @@ import { MS_PER_DAY } from '../utils/timeConstants';
 import { loadOnboardingPreferences } from '../services/onboardingPreferencesService';
 import { loadSubscription, getTierLimits } from '../services/subscriptionService';
 import i18n from '../i18n/i18n';
+import { todayKey } from '../utils/dateKey';
 
 const SCHEDULER_KEY = '@vasco_scheduler_state';
 const BRIEFING_KEY = '@vasco_morning_briefing';
@@ -622,7 +623,7 @@ export async function generateMorningBriefing(context: {
   const tradeContext = seasonalTip || legacyTip;
 
   const briefing: MorningBriefing = {
-    date: new Date().toISOString().split('T')[0],
+    date: todayKey(),
     auditsRun: 4, // invoices, quotes, jobs, certs
     itemsChecked: {
       invoices: context.invoices.length,
@@ -648,7 +649,7 @@ export async function getMorningBriefing(): Promise<MorningBriefing | null> {
     if (!raw) return null;
     const briefing: MorningBriefing = JSON.parse(raw);
     // Only return if from today
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayKey();
     if (briefing.date === today) return briefing;
     return null;
   } catch {

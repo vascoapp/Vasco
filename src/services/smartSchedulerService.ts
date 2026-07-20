@@ -223,7 +223,7 @@ export interface ScheduleSuggestion {
 
 // Helper to get today's date string for dynamic mock data
 function getTodayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  return localDateKey(new Date());
 }
 
 const MOCK_JOBS: ScheduledJob[] = [
@@ -492,7 +492,7 @@ class SmartSchedulerService {
     for (let i = 0; i < 7; i++) {
       const date = new Date(start);
       date.setDate(start.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = localDateKey(date);
       schedules.push(this.getDaySchedule(dateStr));
     }
 
@@ -677,7 +677,7 @@ class SmartSchedulerService {
     for (let day = 0; day < 14; day++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + day);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = localDateKey(date);
 
       // Skip weekends
       if (date.getDay() === 0 || date.getDay() === 6) continue;

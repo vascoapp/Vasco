@@ -29,6 +29,7 @@ import { FadeIn } from '../../src/components/shared/FadeIn';
 import { emitBusinessEvent } from '../../src/intelligence/dataCollector';
 import { recordMetricSnapshot } from '../../src/intelligence/learningStorage';
 import { getCurrentUserId } from '../../src/lib/currentUser';
+import { localDateKey } from '../../src/utils/dateKey';
 
 // =============================================================================
 // TYPES
@@ -59,7 +60,7 @@ type TabType = 'vandaag' | 'week' | 'maand';
 // Month/week boundaries drifted for the same reason if the app stayed open.
 const hhmm = (d: Date) =>
   `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-const todayKey = (d: Date) => d.toISOString().split('T')[0];
+const todayKey = (d: Date) => localDateKey(d);
 
 // =============================================================================
 // SCREEN
