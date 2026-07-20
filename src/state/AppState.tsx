@@ -2531,7 +2531,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // Now: snapshot at invoice-create so it survives the linked-job
           // lifecycle.
           const deliveryDateIso = job.completedAt
-            ? new Date(job.completedAt).toISOString().slice(0, 10)
+            ? localDateKey(new Date(job.completedAt))
             : null;
           const invPayload = {
             doc_type: 'invoice' as const,

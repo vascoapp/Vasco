@@ -5,6 +5,7 @@
 // Aggregates supplier data to create competitive intelligence advantage
 // =============================================================================
 
+import { localDateKey } from '../utils/dateKey';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { getCurrentCountry } from '../lib/currentUser';
 import { getStandardVatRate, type BusinessProfile } from '../domain/business';
@@ -741,7 +742,7 @@ class SupplierIntegrationService {
     const maxDeliveryDays = Math.max(...cart.items.map((i) => i.product.deliveryDays));
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + maxDeliveryDays);
-    return deliveryDate.toISOString().split('T')[0];
+    return localDateKey(deliveryDate);
   }
 
   // -----------------------------------------

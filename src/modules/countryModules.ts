@@ -1,6 +1,7 @@
 // BuildOS Europe - Country Modules
 // Tax calculators, permit clocks, and compliance rules for UK, NL, DE
 
+import { localDateKey, todayKey } from '../utils/dateKey';
 import { Country, Currency } from '../types/buildos';
 
 // ============================================
@@ -236,7 +237,7 @@ export function calculateTargetDecisionDate(
   target.setDate(target.getDate() + days);
 
   return {
-    targetDate: target.toISOString().split('T')[0],
+    targetDate: localDateKey(target),
     daysAllowed: days,
   };
 }
@@ -244,7 +245,7 @@ export function calculateTargetDecisionDate(
 export function calculatePermitStatus(
   submissionDate: string,
   targetDate: string,
-  currentDate: string = new Date().toISOString().split('T')[0]
+  currentDate: string = todayKey()
 ): {
   daysElapsed: number;
   daysRemaining: number;

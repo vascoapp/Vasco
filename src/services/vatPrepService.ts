@@ -20,6 +20,7 @@
 //   4. Audit trail: every approval logs contractor userId + timestamp.
 // =============================================================================
 
+import { localDateKey } from '../utils/dateKey';
 import type { Invoice, Quote } from '../domain/documents';
 
 export type VatRateNL = 21 | 9 | 0;
@@ -405,8 +406,8 @@ export function currentBtwPeriod(now: Date = new Date()): { periodStart: string;
   const start = new Date(year, startMonth, 1);
   const end = new Date(year, startMonth + 3, 0, 23, 59, 59);
   return {
-    periodStart: start.toISOString().slice(0, 10),
-    periodEnd: end.toISOString().slice(0, 10),
+    periodStart: localDateKey(start),
+    periodEnd: localDateKey(end),
   };
 }
 
@@ -419,8 +420,8 @@ export function previousBtwPeriod(now: Date = new Date()): { periodStart: string
   const start = new Date(prevYear, startMonth, 1);
   const end = new Date(prevYear, startMonth + 3, 0, 23, 59, 59);
   return {
-    periodStart: start.toISOString().slice(0, 10),
-    periodEnd: end.toISOString().slice(0, 10),
+    periodStart: localDateKey(start),
+    periodEnd: localDateKey(end),
   };
 }
 

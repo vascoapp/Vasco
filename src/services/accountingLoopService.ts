@@ -7,6 +7,7 @@
 // Each step triggers the next action + AI learning + accounting sync
 // =============================================================================
 
+import { localDateKey, todayKey } from '../utils/dateKey';
 import { exportInvoice, syncPaymentStatus } from '../integrations/accounting';
 import { createPaymentLink } from '../integrations/mollie';
 import type { UnifiedInvoice, UnifiedLineItem } from '../integrations/accounting';
@@ -162,8 +163,8 @@ export async function executeStageAction(
         const invoice: UnifiedInvoice = {
           contactExternalId: state.customerId,
           reference: `INV-${state.jobId}`,
-          invoiceDate: new Date().toISOString().split('T')[0],
-          dueDate: new Date(Date.now() + 14 * MS_PER_DAY).toISOString().split('T')[0],
+          invoiceDate: todayKey(),
+          dueDate: localDateKey(new Date(Date.now() + 14 * MS_PER_DAY)),
           lineItems,
           currency: 'EUR',
           status: 'draft',

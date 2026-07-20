@@ -17,6 +17,7 @@
 // degrade to a confidence flag rather than crashing.
 // =============================================================================
 
+import { todayKey } from '../utils/dateKey';
 import type { ScannedInvoice, ScannedLineItem } from '../services/invoiceScanService';
 
 export interface ParsedEInvoice {
@@ -76,7 +77,7 @@ function parseUbl(xml: string): { invoice: ScannedInvoice; warnings: string[] } 
   const warnings: string[] = [];
 
   const documentNumber = firstMatch(xml, 'ID') ?? '';
-  const documentDate = firstMatch(xml, 'IssueDate') ?? new Date().toISOString().slice(0, 10);
+  const documentDate = firstMatch(xml, 'IssueDate') ?? todayKey();
   const supplierName = firstMatch(xml, 'RegistrationName')
     ?? firstMatch(xml, 'PartyName')
     ?? '(unknown)';
@@ -136,7 +137,7 @@ function parseCii(xml: string): { invoice: ScannedInvoice; warnings: string[] } 
     ?? firstMatch(xml, 'ID')
     ?? '';
   const documentDate = firstMatch(xml, 'IssueDateTime')?.replace(/<[^>]+>|[^\d-]/g, '').slice(0, 10)
-    ?? new Date().toISOString().slice(0, 10);
+    ?? todayKey();
 
   const supplierName = firstMatch(xml, 'Name') ?? '(unknown)';
   const grandTotal = num(firstMatch(xml, 'GrandTotalAmount'));
@@ -191,7 +192,7 @@ function emptyInvoice(): ScannedInvoice {
   return {
     id: `eparsed-empty-${Date.now()}`,
     documentType: 'invoice', supplierName: '', documentNumber: '',
-    documentDate: new Date().toISOString().slice(0, 10),
+    documentDate: todayKey(),
     lineItems: [], subtotal: 0, vatAmount: 0, total: 0,
     confidence: 0, scannedAt: new Date().toISOString(),
   };

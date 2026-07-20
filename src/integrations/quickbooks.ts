@@ -6,6 +6,7 @@
 // Primary accounting provider for UK sole traders and US contractors
 // =============================================================================
 
+import { todayKey } from '../utils/dateKey';
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 import { fetchWithRetry } from '../utils/retry';
 
@@ -364,7 +365,7 @@ export async function createInvoice(invoice: {
     CustomerRef: { value: invoice.customerId },
     DocNumber: invoice.reference,
     DueDate: invoice.dueDate,
-    TxnDate: new Date().toISOString().split('T')[0],
+    TxnDate: todayKey(),
     Line: lines,
     CurrencyRef: { value: invoice.currency ?? defaultCurrencyForCountry(country) },
   };

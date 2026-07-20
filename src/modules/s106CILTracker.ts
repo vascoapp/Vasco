@@ -250,7 +250,7 @@ export function generateCILPaymentSchedule(
       instalments.push({
         id: '1',
         instalmentNumber: 1,
-        dueDate: dueDate.toISOString().split('T')[0],
+        dueDate: localDateKey(dueDate),
         amount: netLiability,
         status: 'pending',
       });
@@ -265,14 +265,14 @@ export function generateCILPaymentSchedule(
       instalments.push({
         id: '1',
         instalmentNumber: 1,
-        dueDate: due1.toISOString().split('T')[0],
+        dueDate: localDateKey(due1),
         amount: netLiability * 0.5,
         status: 'pending',
       });
       instalments.push({
         id: '2',
         instalmentNumber: 2,
-        dueDate: due2.toISOString().split('T')[0],
+        dueDate: localDateKey(due2),
         amount: netLiability * 0.5,
         status: 'pending',
       });
@@ -288,7 +288,7 @@ export function generateCILPaymentSchedule(
         instalments.push({
           id: String(i + 1),
           instalmentNumber: i + 1,
-          dueDate: dueDate.toISOString().split('T')[0],
+          dueDate: localDateKey(dueDate),
           amount: netLiability * pct,
           status: 'pending',
         });
@@ -643,3 +643,4 @@ export const MOCK_CIL_LIABILITY: CILLiability = {
   commencementNoticeDate: '2024-01-15',
   status: 'in-payment',
 };
+import { localDateKey } from '../utils/dateKey';

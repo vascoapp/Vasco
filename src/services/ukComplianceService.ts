@@ -12,6 +12,7 @@
  * a16z Sphere pattern: "Compliance as executable workflow logic"
  */
 
+import { localDateKey, todayKey } from '../utils/dateKey';
 import { useState, useEffect, useCallback } from 'react';
 import {
   CompaniesHouseRegistration,
@@ -286,10 +287,10 @@ class UKComplianceService {
 
     return {
       periodType: 'quarter',
-      periodStart: periodStart.toISOString().split('T')[0],
-      periodEnd: periodEnd.toISOString().split('T')[0],
-      filingDeadline: filingDeadline.toISOString().split('T')[0],
-      paymentDeadline: filingDeadline.toISOString().split('T')[0],
+      periodStart: localDateKey(periodStart),
+      periodEnd: localDateKey(periodEnd),
+      filingDeadline: localDateKey(filingDeadline),
+      paymentDeadline: localDateKey(filingDeadline),
       status: now < filingDeadline ? 'upcoming' : 'overdue',
     };
   }
@@ -324,7 +325,7 @@ class UKComplianceService {
       contractorUtr: '',
       subcontractorUtr: '',
       subcontractorName: '',
-      paymentDate: new Date().toISOString().split('T')[0],
+      paymentDate: todayKey(),
       grossAmount,
       materialsDeduction: materialsAmount,
       cisDeduction,
@@ -775,7 +776,7 @@ class UKComplianceService {
         id: `cis-deadline-${Date.now()}`,
         type: 'cis-return',
         title: 'CIS Monthly Return',
-        deadline: cisDeadline.toISOString().split('T')[0],
+        deadline: localDateKey(cisDeadline),
         daysUntil: Math.ceil((cisDeadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
         status: 'upcoming',
       });

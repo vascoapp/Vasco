@@ -5,6 +5,7 @@
 // Implements the "Evidence Pack & Handover Orchestration" feature (a16z E8)
 // =============================================================================
 
+import { localDateKey, todayKey } from '../utils/dateKey';
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { registerSingletonReset } from './singletonReset';
@@ -343,8 +344,8 @@ class EvidencePackService {
           type: w.warrantyType,
           description: `${w.equipmentName} warranty`,
           duration: this.calculateDuration(w.warrantyStart, w.warrantyEnd),
-          startDate: w.warrantyStart.toISOString().split('T')[0],
-          endDate: w.warrantyEnd.toISOString().split('T')[0],
+          startDate: localDateKey(w.warrantyStart),
+          endDate: localDateKey(w.warrantyEnd),
           documentUri: w.documentUrl,
           coverage: w.coverage,
         }))
@@ -364,7 +365,7 @@ class EvidencePackService {
       customerId,
       jobTitle: 'Job', // Would come from job data
       jobAddress: '', // Would come from job data
-      completionDate: new Date().toISOString().split('T')[0],
+      completionDate: todayKey(),
       photos,
       documents,
       checklists,

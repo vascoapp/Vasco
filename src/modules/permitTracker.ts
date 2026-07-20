@@ -1,6 +1,7 @@
 // BuildOS Permit Tracker
 // Comprehensive permit tracking with alerts, deadlines, and country-specific handling
 
+import { todayKey } from '../utils/dateKey';
 import type { Permit, PermitCondition, Country } from '../types/buildos';
 import {
   PERMIT_CLOCKS,
@@ -90,7 +91,7 @@ function generateAlertId(permitId: string, type: PermitAlertType): string {
 
 export function generatePermitAlerts(permit: Permit): PermitAlert[] {
   const alerts: PermitAlert[] = [];
-  const now = new Date().toISOString().split('T')[0];
+  const now = todayKey();
 
   // Check decision deadline
   if (permit.submissionDate && permit.targetDecisionDate && !permit.actualDecisionDate) {
@@ -215,7 +216,7 @@ export function getConditionsByStatus(permits: Permit[]): {
 // ============================================
 
 export function generatePermitSummary(permit: Permit): PermitSummary {
-  const now = new Date().toISOString().split('T')[0];
+  const now = todayKey();
   const clockConfig = PERMIT_CLOCKS.find(
     (c) => c.country === getCountryFromPermit(permit) && c.permitType.includes(permit.type)
   );

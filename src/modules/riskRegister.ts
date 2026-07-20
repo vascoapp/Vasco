@@ -1,6 +1,7 @@
 // BuildOS Risk Register
 // Comprehensive risk tracking with escalation workflows
 
+import { todayKey } from '../utils/dateKey';
 import type { Currency } from '../types/buildos';
 
 // ============================================
@@ -383,7 +384,7 @@ export function generateRiskDashboard(risks: Risk[]): RiskDashboardData {
 
 export function generateRiskReport(risks: Risk[], projectName: string): string {
   const dashboard = generateRiskDashboard(risks);
-  const now = new Date().toISOString().split('T')[0];
+  const now = todayKey();
 
   return `
 RISK REGISTER REPORT

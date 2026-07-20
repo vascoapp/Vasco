@@ -6,6 +6,7 @@
 // Popular with French artisans / auto-entrepreneurs / TPE-PME
 // =============================================================================
 
+import { localDateKey, todayKey } from '../utils/dateKey';
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
@@ -277,8 +278,8 @@ export async function createInvoice(invoice: {
     body: JSON.stringify({
       invoice: {
         customer_id: invoice.customerId,
-        date: new Date().toISOString().split('T')[0],
-        deadline: invoice.dueDate ?? new Date(Date.now() + 30 * MS_PER_DAY).toISOString().split('T')[0],
+        date: todayKey(),
+        deadline: invoice.dueDate ?? localDateKey(new Date(Date.now() + 30 * MS_PER_DAY)),
         currency: 'EUR',
         line_items,
       },

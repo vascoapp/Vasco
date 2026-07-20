@@ -4,6 +4,7 @@
 // Compliance and regulatory management for Dutch contractors
 // =============================================================================
 
+import { localDateKey } from '../utils/dateKey';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { complianceKnowledgeBase } from '../data/complianceKnowledgeBase';
 import { registerSingletonReset } from './singletonReset';
@@ -805,7 +806,7 @@ class ComplianceService {
     // Add licenses
     this.licenses.forEach(l => {
       if (l.expiryDate >= now && l.expiryDate <= endDate) {
-        const dateKey = l.expiryDate.toISOString().split('T')[0];
+        const dateKey = localDateKey(l.expiryDate);
         const items = calendar.get(dateKey) || [];
         items.push({ type: 'license', name: l.name, id: l.id });
         calendar.set(dateKey, items);
@@ -815,7 +816,7 @@ class ComplianceService {
     // Add certifications
     this.certifications.forEach(c => {
       if (c.expiryDate >= now && c.expiryDate <= endDate) {
-        const dateKey = c.expiryDate.toISOString().split('T')[0];
+        const dateKey = localDateKey(c.expiryDate);
         const items = calendar.get(dateKey) || [];
         items.push({ type: 'certification', name: `${c.name} (${c.holderName})`, id: c.id });
         calendar.set(dateKey, items);
@@ -825,7 +826,7 @@ class ComplianceService {
     // Add insurance
     this.insurancePolicies.forEach(p => {
       if (p.endDate >= now && p.endDate <= endDate) {
-        const dateKey = p.endDate.toISOString().split('T')[0];
+        const dateKey = localDateKey(p.endDate);
         const items = calendar.get(dateKey) || [];
         items.push({ type: 'insurance', name: p.name, id: p.id });
         calendar.set(dateKey, items);

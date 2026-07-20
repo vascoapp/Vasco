@@ -6,6 +6,7 @@
 // #1 e-invoicing platform in Italy, mandatory SDI integration
 // =============================================================================
 
+import { todayKey } from '../utils/dateKey';
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 
 const STORAGE_KEY = 'vasco_fattureincloud';
@@ -346,7 +347,7 @@ export async function createIssuedDocument(invoice: {
       data: {
         type: 'invoice',
         entity: { id: invoice.clientId },
-        date: new Date().toISOString().split('T')[0],
+        date: todayKey(),
         currency: { id: 'EUR' },
         items_list,
         stamp_duty: needsBollo ? MARCA_DA_BOLLO_AMOUNT : undefined,
