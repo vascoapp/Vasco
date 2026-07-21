@@ -1,16 +1,22 @@
 import { Link } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Screen } from '../../src/components/Screen';
 import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { useInlineInsight, useVascoGuidance } from '../../src/services/vascoGuidanceService';
+import { formatCurrency, type Country } from '../../src/i18n/formatting';
 import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 
 export default function InvoiceFromQuoteSelect() {
+  const { t } = useTranslation();
   const { quotes } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
 
   // AI guidance
   const inlineInsight = useInlineInsight('contractor', 'invoice-new', 'select');
@@ -25,8 +31,8 @@ export default function InvoiceFromQuoteSelect() {
     <Screen>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <Text style={Typography.title}>Create invoice</Text>
-          <Text style={Typography.muted}>Pick a quote to invoice</Text>
+          <Text style={Typography.title}>{t('invoiceNew.title', 'Create invoice')}</Text>
+          <Text style={Typography.muted}>{t('invoiceNew.subtitle', 'Pick a quote to invoice')}</Text>
         </View>
 
         {inlineInsight && (
@@ -43,7 +49,7 @@ export default function InvoiceFromQuoteSelect() {
 
         {sentQuotes.length > 0 && (
           <View style={styles.card}>
-            <Text style={Typography.subtitle}>Sent quotes</Text>
+            <Text style={Typography.subtitle}>{t('invoiceNew.sentQuotes', 'Sent quotes')}</Text>
             {sentQuotes.map((quote) => (
               <Link key={quote.id} href={`/quotes/${quote.id}/invoice`} asChild>
                 <Pressable style={styles.row}>
@@ -51,7 +57,7 @@ export default function InvoiceFromQuoteSelect() {
                     <Text style={Typography.body}>{quote.customer}</Text>
                     <Text style={Typography.muted}>{quote.job}</Text>
                   </View>
-                  <Text style={Typography.body}>€{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
+                  <Text style={Typography.body}>{formatCurrency(quote.amount, country)}</Text>
                 </Pressable>
               </Link>
             ))}
@@ -60,9 +66,9 @@ export default function InvoiceFromQuoteSelect() {
 
         {draftQuotes.length > 0 && (
           <View style={styles.card}>
-            <Text style={Typography.subtitle}>Draft quotes</Text>
+            <Text style={Typography.subtitle}>{t('invoiceNew.draftQuotes', 'Draft quotes')}</Text>
             <Text style={[Typography.muted, { marginBottom: Spacing.xs }]}>
-              Send these first, then invoice
+              {t('invoiceNew.sendFirst', 'Send these first, then invoice')}
             </Text>
             {draftQuotes.map((quote) => (
               <Link key={quote.id} href={`/quotes/${quote.id}`} asChild>
@@ -71,7 +77,7 @@ export default function InvoiceFromQuoteSelect() {
                     <Text style={Typography.body}>{quote.customer}</Text>
                     <Text style={Typography.muted}>{quote.job}</Text>
                   </View>
-                  <Text style={[Typography.muted, { fontSize: 12 }]}>Draft</Text>
+                  <Text style={[Typography.muted, { fontSize: 12 }]}>{t('quotes.status.draft', 'Draft')}</Text>
                 </Pressable>
               </Link>
             ))}
@@ -80,7 +86,7 @@ export default function InvoiceFromQuoteSelect() {
 
         {quotes.length === 0 && (
           <View style={styles.card}>
-            <Text style={Typography.muted}>No quotes yet. Create a quote first.</Text>
+            <Text style={Typography.muted}>{t('invoiceNew.noQuotes', 'No quotes yet. Create a quote first.')}</Text>
           </View>
         )}
       </ScrollView>

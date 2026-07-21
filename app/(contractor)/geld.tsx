@@ -54,6 +54,11 @@ type SortMode = 'value-desc' | 'date-desc' | 'status';
 export default function GeldScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  // Invoice/quote status was concatenated raw ('overdue'/'paid'/'draft') into
+  // the list subtitle — localise it (the facturen drill-down already did).
+  const humanizeStatus = (raw: string) => raw.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const invoiceStatusLabel = (raw?: string) => raw ? t(`invoices.status.${raw}`, humanizeStatus(raw)) : '';
+  const quoteStatusLabel = (raw?: string) => raw ? t(`quotes.status.${raw}`, humanizeStatus(raw)) : '';
   const [refreshing, setRefreshing] = useState(false);
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('all');
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>('all');
@@ -334,7 +339,7 @@ export default function GeldScreen() {
                 <View style={[s.docDot, { backgroundColor: statusColor(doc.status) }]} />
                 <View style={{ flex: 1 }}>
                   <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
-                  <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
+                  <Text style={s.docDesc} numberOfLines={1}>{[doc.description, invoiceStatusLabel(doc.status)].filter(Boolean).join(' · ')}</Text>
                 </View>
                 <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
                 {doc.status === 'draft' && (
@@ -388,7 +393,7 @@ export default function GeldScreen() {
                 <View style={[s.docDot, { backgroundColor: statusColor(doc.status) }]} />
                 <View style={{ flex: 1 }}>
                   <Text style={s.docName} numberOfLines={1}>{doc.name}</Text>
-                  <Text style={s.docDesc} numberOfLines={1}>{doc.description} · {doc.status}</Text>
+                  <Text style={s.docDesc} numberOfLines={1}>{[doc.description, quoteStatusLabel(doc.status)].filter(Boolean).join(' · ')}</Text>
                 </View>
                 <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
               </Pressable>
@@ -616,7 +621,7 @@ export default function GeldScreen() {
                     hitSlop={6}
                     onPress={(e) => {
                       e.stopPropagation?.();
-                      Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
+                      Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi {{customer}}, a friendly reminder that your invoice of {{amount}} is now {{days}} days overdue. Could you arrange payment? Thanks!', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
                     }}
                   >
                     <DKLabel style={s.remindBtnText}>{t('dk.actions.remind', 'Remind')}</DKLabel>

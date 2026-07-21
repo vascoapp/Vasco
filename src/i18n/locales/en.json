@@ -506,7 +506,8 @@
     "camera": "Camera",
     "photoAdded": "Photo added",
     "photoAddedDesc": "Photo {{count}} captured and saved.",
-    "photoLibrary": "Photo Library"
+    "photoLibrary": "Photo Library",
+    "orderedDescNoSupplier": "{{name}} has been ordered."
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",
@@ -1601,7 +1602,7 @@
     "profit": "Profit",
     "reminderCopied": "Reminder copied to clipboard",
     "paymentReminder": "Payment reminder",
-    "reminderMessage": "Hi, this is a friendly reminder that invoice for {{customer}} ({{amount}}) is {{days}} days overdue. Could you arrange payment?",
+    "reminderMessage": "Hi {{customer}}, a friendly reminder that your invoice of {{amount}} is now {{days}} days overdue. Could you arrange payment? Thanks!",
     "reminderTemplate_one": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoice.\n\nKind regards",
     "reminderTemplate_other": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoices.\n\nKind regards"
   },
@@ -2065,7 +2066,7 @@
     "vatScheme": "VAT scheme",
     "vatStandard": "Standard",
     "auditTrail": "Audit trail",
-    "auditTrailValue": "GoBD-compliant",
+    "auditTrailValue": "Tamper-proof",
     "maintenanceContracts": "Maintenance contracts",
     "recurringValue": "Manage",
     "plan": "PLAN",
@@ -2114,7 +2115,8 @@
     "dataPrivacy": "DATA & PRIVACY",
     "creditsAvailable_one": "{{count}} month of free subscription available — applied automatically at checkout.",
     "creditsAvailable_other": "{{count}} months of free subscription available — applied automatically at checkout.",
-    "exportFailedDesc": "Could not build your data export. Please try again, or contact privacy@vascobuild.com."
+    "exportFailedDesc": "Could not build your data export. Please try again, or contact privacy@vascobuild.com.",
+    "auditTrailValueGobd": "GoBD-compliant"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -2572,7 +2574,8 @@
       "viewQuotes": "View quotes",
       "serviceAgreement": "Service agreement",
       "openProject": "Open project",
-      "newProject": "New project"
+      "newProject": "New project",
+      "edit": "Edit"
     },
     "empty": {
       "noJobs": "No jobs yet",
@@ -2664,7 +2667,7 @@
       "quickAccess": "Quick access",
       "accountPrivacy": "Account & privacy",
       "manageAllAutomations": "Manage all automations",
-      "hoursSavedPerWeek": "+{{hours}}h saved / week",
+      "hoursSavedPerWeek": "~{{hours}}h/week saving potential",
       "actionsCompletedUpper": "{{count}} actions completed",
       "actionsExecutedWeek": "{{count}} actions executed this week",
       "sales": "Sales",
@@ -2913,7 +2916,12 @@
     "valid": "✓ unbroken",
     "verify": "Run verification",
     "export": "Export trail (.txt)",
-    "footnote": "GoBD requires 10-year retention. The hash chain proves no entry was retroactively changed. For full archive certification (DATEV-zertifiziert), pair this export with your accountant's archive."
+    "footnote": "The hash chain proves no entry was retroactively changed. Keep this export with your records for your country's statutory retention period.",
+    "footnoteGobd": "GoBD requires 10-year retention. The hash chain proves no entry was retroactively changed. For full archive certification (DATEV-zertifiziert), pair this export with your accountant's archive.",
+    "sectionTitle": "Audit trail",
+    "sectionTitleGobd": "GoBD Audit-Trail",
+    "exportTitle": "Vasco audit trail",
+    "exportTitleGobd": "Vasco GoBD audit trail"
   },
   "recurring": {
     "title": "MAINTENANCE",
@@ -3942,7 +3950,10 @@
     "hesitationLabel": "Hesitated on",
     "viewedTimes": "{{count}}×",
     "reminderSentBody_one": "{{count}} item sent via {{channel}}.",
-    "reminderSentBody_other": "{{count}} items sent via {{channel}}."
+    "reminderSentBody_other": "{{count}} items sent via {{channel}}.",
+    "pickCustomer": "Which customer?",
+    "pickCustomerDesc": "Attach this checklist to a customer so reminders go to the right person.",
+    "newCustomerOption": "New customer — assign later"
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -4057,7 +4068,21 @@
     "noItemsDesc": "Add at least one line item with a description.",
     "invalidAmountTitle": "Invalid amount",
     "invalidAmountDesc": "Quote total must be greater than zero. Check your line item prices.",
-    "saveFailed": "Could not save quote. Please try again."
+    "saveFailed": "Could not save quote. Please try again.",
+    "title": "New quote",
+    "subtitle": "Draft-first · Save time",
+    "jobDescription": "Job description",
+    "jobPlaceholder": "e.g. Interior repaint",
+    "lineItems": "Line items",
+    "item": "Item {{n}}",
+    "remove": "Remove",
+    "descriptionPlaceholder": "Description",
+    "qty": "Qty",
+    "unitPrice": "Unit price",
+    "addLineItem": "+ Add line item",
+    "total": "Total",
+    "saving": "Saving...",
+    "saveDraft": "Save draft"
   },
   "checklist": {
     "beforePhoto": "Before photo",
@@ -4791,6 +4816,20 @@
         "template": "Hi {{customer}}, invoice {{invoice}} is ready. Pay online or contact me if questions.",
         "action": "Send confirmation"
       }
+    },
+    "agents": {
+      "agent": {
+        "tagline": "Your tireless business assistant",
+        "description": "Handles day-to-day execution: drafts invoices from completed jobs, sends payment reminders, follows up on stale quotes, suggests schedule optimizations, and prepares end-of-day updates. Works 24/7 so you can focus on the tools."
+      },
+      "auditor": {
+        "tagline": "Your compliance safety net",
+        "description": "Continuously monitors every certification, insurance policy, permit, and tax deadline across your business. Flags risks 30/60/90 days before they become problems. Ensures you never start a job without proper documentation."
+      },
+      "analyst": {
+        "tagline": "Your business intelligence advisor",
+        "description": "Connects patterns across your entire business to surface insights: benchmark your rates against 14,000+ EU contractors, predict which quotes will win, forecast cashflow 90 days out, and identify which job types deliver the best margins."
+      }
     }
   },
   "licenses": {
@@ -4849,7 +4888,16 @@
     "prevNetIncome": "Previous net income",
     "export": "Export",
     "sharePDF": "Share PDF",
-    "shareCSV": "Share CSV"
+    "shareCSV": "Share CSV",
+    "pl": {
+      "revenue": "Revenue",
+      "paidInvoices": "Paid invoices",
+      "costOfMaterials": "Cost of Materials",
+      "grossProfit": "Gross Profit",
+      "operatingExpenses": "Operating Expenses",
+      "netIncome": "Net Income"
+    },
+    "plShort": "P&L"
   },
   "agreements": {
     "selectJob": "Select a job",
@@ -4875,7 +4923,19 @@
     "noAgreements": "No service agreements",
     "noAgreementsDesc": "Create recurring job agreements for maintenance contracts, regular inspections, and more.",
     "next": "Next",
-    "generated": "generated"
+    "generated": "generated",
+    "freq": {
+      "weekly": "Weekly",
+      "biweekly": "Biweekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "cancelled": "Cancelled"
+    }
   },
   "inspection": {
     "addItem": "Add item"
@@ -4942,5 +5002,20 @@
     "savedBody": "Job quality feedback recorded.",
     "errorTitle": "Error",
     "errorBody": "Could not save. Try again."
+  },
+  "customerTag": {
+    "vip": "VIP",
+    "loyal": "Loyal",
+    "new": "New",
+    "risky": "Risky",
+    "inactive": "Inactive"
+  },
+  "invoiceNew": {
+    "title": "Create invoice",
+    "subtitle": "Pick a quote to invoice",
+    "sentQuotes": "Sent quotes",
+    "draftQuotes": "Draft quotes",
+    "sendFirst": "Send these first, then invoice",
+    "noQuotes": "No quotes yet. Create a quote first."
   }
 }

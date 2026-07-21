@@ -19,6 +19,7 @@ import {
   exportToCSV,
   exportToPDFHtml,
   type FinancialReport,
+  type ReportLabels,
 } from '../../src/services/financialReportService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -40,6 +41,20 @@ export default function ReportsScreen() {
   const { user } = useAuth();
   const MONTH_LABELS = useMemo(() => monthLabels(i18n.language), [i18n.language]);
 
+  // Localised P&L row labels + full month names → the report (screen AND the
+  // CSV/PDF export) render in the app locale instead of hardcoded English.
+  const reportLabels: ReportLabels = useMemo(() => ({
+    plTitle: t('reports.plShort', 'P&L'),
+    revenue: t('reports.pl.revenue', 'Revenue'),
+    paidInvoices: t('reports.pl.paidInvoices', 'Paid invoices'),
+    costOfMaterials: t('reports.pl.costOfMaterials', 'Cost of Materials'),
+    grossProfit: t('reports.pl.grossProfit', 'Gross Profit'),
+    operatingExpenses: t('reports.pl.operatingExpenses', 'Operating Expenses'),
+    netIncome: t('reports.pl.netIncome', 'Net Income'),
+    monthNames: Array.from({ length: 12 }, (_, i) =>
+      new Date(2000, i, 1).toLocaleDateString(i18n.language, { month: 'long' })),
+  }), [t, i18n.language]);
+
   const now = new Date();
   const [mode, setMode] = useState<PeriodMode>('monthly');
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
@@ -48,10 +63,10 @@ export default function ReportsScreen() {
 
   const report: FinancialReport = useMemo(() => {
     if (mode === 'monthly') {
-      return generateMonthlyReport(selectedMonth, selectedYear, invoices, quotes);
+      return generateMonthlyReport(selectedMonth, selectedYear, invoices, quotes, reportLabels);
     }
-    return generateQuarterlyReport(selectedQuarter, selectedYear, invoices, quotes);
-  }, [mode, selectedMonth, selectedQuarter, selectedYear, invoices, quotes]);
+    return generateQuarterlyReport(selectedQuarter, selectedYear, invoices, quotes, reportLabels);
+  }, [mode, selectedMonth, selectedQuarter, selectedYear, invoices, quotes, reportLabels]);
 
   // Thread the user's country — formatCurrency defaults to 'NL', which
   // silently mis-formats every DE/FR/ES/IT contractor's report.

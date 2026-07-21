@@ -506,7 +506,8 @@
     "camera": "Appareil photo",
     "photoAdded": "Photo ajoutée",
     "photoAddedDesc": "Photo {{count}} prise et enregistrée.",
-    "photoLibrary": "Photothèque"
+    "photoLibrary": "Photothèque",
+    "orderedDescNoSupplier": "{{name}} a été commandé."
   },
   "compliance": {
     "manageInsurance": "Gérer assurances & sinistres",
@@ -1601,7 +1602,7 @@
     "profit": "Bénéfice",
     "reminderCopied": "Rappel copié dans le presse-papiers",
     "paymentReminder": "Rappel de paiement",
-    "reminderMessage": "Bonjour, ceci est un rappel amical : la facture pour {{customer}} ({{amount}}) est en retard de {{days}} jours. Pourriez-vous procéder au paiement ?",
+    "reminderMessage": "Bonjour {{customer}}, un rappel amical : votre facture de {{amount}} est en retard de {{days}} jours. Pourriez-vous procéder au paiement ? Merci !",
     "reminderTemplate_one": "Cher client,\n\nCeci est un rappel amical pour {{count}} facture en attente.\n\nCordialement",
     "reminderTemplate_other": "Cher client,\n\nCeci est un rappel amical pour {{count}} factures en attente.\n\nCordialement"
   },
@@ -2065,7 +2066,7 @@
     "vatScheme": "Régime TVA",
     "vatStandard": "Standard",
     "auditTrail": "Piste d'audit",
-    "auditTrailValue": "Conforme",
+    "auditTrailValue": "Inviolable",
     "maintenanceContracts": "Contrats de maintenance",
     "recurringValue": "Gérer",
     "plan": "FORMULE",
@@ -2114,7 +2115,8 @@
     "dataPrivacy": "DONNÉES ET CONFIDENTIALITÉ",
     "creditsAvailable_one": "{{count}} mois d’abonnement offert — appliqué automatiquement au paiement.",
     "creditsAvailable_other": "{{count}} mois d’abonnement offerts — appliqués automatiquement au paiement.",
-    "exportFailedDesc": "Impossible de générer l'export de tes données. Réessaie ou contacte privacy@vascobuild.com."
+    "exportFailedDesc": "Impossible de générer l'export de tes données. Réessaie ou contacte privacy@vascobuild.com.",
+    "auditTrailValueGobd": "Conforme GoBD"
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",
@@ -2475,7 +2477,7 @@
       "decisions": "Décisions",
       "contacts": "Contacts",
       "queue": "File",
-      "insights": "Insights",
+      "insights": "Aperçus",
       "automations": "Automatisations",
       "more": "Plus"
     },
@@ -2572,7 +2574,8 @@
       "viewQuotes": "Voir les devis",
       "serviceAgreement": "Contrat de service",
       "openProject": "Ouvrir le projet",
-      "newProject": "Nouveau projet"
+      "newProject": "Nouveau projet",
+      "edit": "Modifier"
     },
     "empty": {
       "noJobs": "Aucune mission",
@@ -2664,7 +2667,7 @@
       "quickAccess": "Accès rapide",
       "accountPrivacy": "Compte & confidentialité",
       "manageAllAutomations": "Gérer toutes les automatisations",
-      "hoursSavedPerWeek": "+{{hours}}h économisées / sem",
+      "hoursSavedPerWeek": "~{{hours}}h/sem d'économies possibles",
       "actionsCompletedUpper": "{{count}} actions terminées",
       "actionsExecutedWeek": "{{count}} actions exécutées cette semaine",
       "sales": "Ventes",
@@ -3019,7 +3022,12 @@
     "valid": "✓ intacte",
     "verify": "Lancer la vérification",
     "export": "Exporter le journal (.txt)",
-    "footnote": "Le GoBD exige 10 ans de conservation. La chaîne de hash prouve qu'aucune entrée n'a été modifiée a posteriori. Pour une certification d'archive complète (DATEV-zertifiziert), couplez cet export à l'archive de votre comptable."
+    "footnote": "La chaîne de hash prouve qu’aucune entrée n’a été modifiée a posteriori. Conservez cet export avec vos documents pendant la durée légale de conservation de votre pays.",
+    "footnoteGobd": "Le GoBD exige 10 ans de conservation. La chaîne de hash prouve qu'aucune entrée n'a été modifiée a posteriori. Pour une certification d'archive complète (DATEV-zertifiziert), couplez cet export à l'archive de votre comptable.",
+    "sectionTitle": "Journal d’audit",
+    "sectionTitleGobd": "GoBD Audit-Trail",
+    "exportTitle": "Journal d’audit Vasco",
+    "exportTitleGobd": "Vasco GoBD audit trail"
   },
   "savings": {
     "trendSegment": "+{{trend}} % de tendance",
@@ -3942,7 +3950,10 @@
     "hesitationLabel": "Hésité sur",
     "viewedTimes": "{{count}}×",
     "reminderSentBody_one": "{{count}} élément envoyé via {{channel}}.",
-    "reminderSentBody_other": "{{count}} éléments envoyés via {{channel}}."
+    "reminderSentBody_other": "{{count}} éléments envoyés via {{channel}}.",
+    "pickCustomer": "Quel client ?",
+    "pickCustomerDesc": "Associez cette liste à un client pour que les rappels arrivent à la bonne personne.",
+    "newCustomerOption": "Nouveau client — à attribuer plus tard"
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -4057,7 +4068,21 @@
     "noItemsDesc": "Ajoutez au moins une ligne avec description.",
     "invalidAmountTitle": "Montant invalide",
     "invalidAmountDesc": "Le total du devis doit être supérieur à zéro. Vérifiez vos prix.",
-    "saveFailed": "Impossible d'enregistrer le devis. Veuillez réessayer."
+    "saveFailed": "Impossible d'enregistrer le devis. Veuillez réessayer.",
+    "title": "Nouveau devis",
+    "subtitle": "Brouillon d’abord · Gagnez du temps",
+    "jobDescription": "Description des travaux",
+    "jobPlaceholder": "ex. Peinture intérieure",
+    "lineItems": "Lignes",
+    "item": "Ligne {{n}}",
+    "remove": "Supprimer",
+    "descriptionPlaceholder": "Description",
+    "qty": "Qté",
+    "unitPrice": "Prix unitaire",
+    "addLineItem": "+ Ajouter une ligne",
+    "total": "Total",
+    "saving": "Enregistrement...",
+    "saveDraft": "Enregistrer le brouillon"
   },
   "checklist": {
     "beforePhoto": "Photo avant",
@@ -4791,6 +4816,20 @@
         "template": "Bonjour {{customer}}, la facture {{invoice}} est prête. Payez en ligne ou contactez-moi en cas de question.",
         "action": "Envoyer la confirmation"
       }
+    },
+    "agents": {
+      "agent": {
+        "tagline": "Votre assistant d’entreprise infatigable",
+        "description": "Gère l’exécution quotidienne : crée les factures des chantiers terminés, envoie les rappels de paiement, relance les devis en attente, suggère des optimisations de planning et prépare les récapitulatifs de fin de journée. Travaille 24h/24 pour que vous puissiez vous concentrer sur le terrain."
+      },
+      "auditor": {
+        "tagline": "Votre filet de sécurité conformité",
+        "description": "Surveille en continu chaque certification, police d’assurance, autorisation et échéance fiscale de votre entreprise. Signale les risques 30/60/90 jours avant qu’ils ne deviennent des problèmes. Garantit que vous ne démarrez jamais un chantier sans les bons documents."
+      },
+      "analyst": {
+        "tagline": "Votre conseiller en intelligence d’affaires",
+        "description": "Relie les tendances de toute votre entreprise pour révéler des analyses : comparez vos tarifs à plus de 14 000 artisans de l’UE, prédisez quels devis seront acceptés, anticipez la trésorerie à 90 jours et identifiez les types de chantiers offrant les meilleures marges."
+      }
     }
   },
   "licenses": {
@@ -4849,7 +4888,16 @@
     "prevNetIncome": "Résultat net précédent",
     "export": "Exporter",
     "sharePDF": "Partager le PDF",
-    "shareCSV": "Partager le CSV"
+    "shareCSV": "Partager le CSV",
+    "pl": {
+      "revenue": "Chiffre d’affaires",
+      "paidInvoices": "Factures payées",
+      "costOfMaterials": "Coût des matériaux",
+      "grossProfit": "Marge brute",
+      "operatingExpenses": "Charges d’exploitation",
+      "netIncome": "Résultat net"
+    },
+    "plShort": "Résultat"
   },
   "agreements": {
     "selectJob": "Sélectionner un chantier",
@@ -4875,7 +4923,19 @@
     "noAgreements": "Aucun contrat de service",
     "noAgreementsDesc": "Créez des contrats de chantiers récurrents pour les contrats d'entretien, les inspections régulières, et plus encore.",
     "next": "Suivant",
-    "generated": "généré"
+    "generated": "généré",
+    "freq": {
+      "weekly": "Hebdomadaire",
+      "biweekly": "Bimensuel",
+      "monthly": "Mensuel",
+      "quarterly": "Trimestriel",
+      "yearly": "Annuel"
+    },
+    "status": {
+      "active": "Actif",
+      "paused": "En pause",
+      "cancelled": "Annulé"
+    }
   },
   "inspection": {
     "addItem": "Ajouter un élément"
@@ -4942,5 +5002,20 @@
     "savedBody": "Retour sur la qualité du chantier enregistré.",
     "errorTitle": "Erreur",
     "errorBody": "Échec de l'enregistrement. Réessayez."
+  },
+  "customerTag": {
+    "vip": "VIP",
+    "loyal": "Fidèle",
+    "new": "Nouveau",
+    "risky": "À risque",
+    "inactive": "Inactif"
+  },
+  "invoiceNew": {
+    "title": "Créer une facture",
+    "subtitle": "Choisissez un devis à facturer",
+    "sentQuotes": "Devis envoyés",
+    "draftQuotes": "Devis brouillons",
+    "sendFirst": "Envoyez-les d’abord, puis facturez",
+    "noQuotes": "Aucun devis. Créez d’abord un devis."
   }
 }

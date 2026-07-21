@@ -63,7 +63,7 @@ export default function VatAndAuditScreen() {
       const text = await exportAuditTrail();
       await Share.share({
         message: text,
-        title: 'Vasco GoBD audit trail',
+        title: t(country === 'DE' ? 'audit.exportTitleGobd' : 'audit.exportTitle', 'Vasco audit trail'),
       });
     } catch (e) {
       Alert.alert('Export failed', String((e as Error).message ?? e));
@@ -177,8 +177,12 @@ export default function VatAndAuditScreen() {
           </View>
         )}
 
-        {/* GoBD audit trail */}
-        <DKLabel style={[styles.section, { marginTop: GRID.lg }]}>GoBD AUDIT TRAIL</DKLabel>
+        {/* Audit trail. GoBD is a German standard — only name it for DE users;
+            everyone else sees a localized, country-neutral title/footnote. The
+            mechanism (hash-chained immutable log) is the same for all. */}
+        <DKLabel style={[styles.section, { marginTop: GRID.lg }]}>
+          {t(country === 'DE' ? 'audit.sectionTitleGobd' : 'audit.sectionTitle', 'Audit trail')}
+        </DKLabel>
         <View style={styles.card}>
           <View style={styles.rowStatic}>
             <View style={{ flex: 1 }}>
@@ -221,9 +225,13 @@ export default function VatAndAuditScreen() {
         </View>
 
         <Text style={styles.footnote}>
-          {t('audit.footnote',
-            'GoBD requires 10-year retention. The hash chain proves no entry was retroactively changed. ' +
-            'For full archive certification (DATEV-zertifiziert), pair this export with your accountant\'s archive.')}
+          {country === 'DE'
+            ? t('audit.footnoteGobd',
+                'GoBD requires 10-year retention. The hash chain proves no entry was retroactively changed. ' +
+                'For full archive certification (DATEV-zertifiziert), pair this export with your accountant\'s archive.')
+            : t('audit.footnote',
+                'The hash chain proves no entry was retroactively changed. Keep this export with your records ' +
+                'for your country\'s statutory retention period.')}
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -16,6 +16,8 @@ import { PrimaryButton } from '../../src/components/PrimaryButton';
 import { Screen } from '../../src/components/Screen';
 import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency, type Country } from '../../src/i18n/formatting';
 import { useInlineInsight, useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { QuoteLineItem } from '../../src/domain/lineItems';
 import { logError } from '../../src/utils/errorHandler';
@@ -28,6 +30,8 @@ export default function NewQuoteScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { addQuote, customers, quotes } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
 
   // R17.2: track customer NAME for display + customer ID for addQuote.
   // Was previously single-string state — picking a customer set the NAME and
@@ -157,8 +161,8 @@ export default function NewQuoteScreen() {
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Text style={Typography.title}>New quote</Text>
-            <Text style={Typography.muted}>Draft-first · Save time</Text>
+            <Text style={Typography.title}>{t('quoteNew.title', 'New quote')}</Text>
+            <Text style={Typography.muted}>{t('quoteNew.subtitle', 'Draft-first · Save time')}</Text>
           </View>
 
           {inlineInsight && (
@@ -208,12 +212,12 @@ export default function NewQuoteScreen() {
               )}
             </View>
             <View style={styles.fieldColumn}>
-              <Text style={Typography.muted}>Job description</Text>
+              <Text style={Typography.muted}>{t('quoteNew.jobDescription', 'Job description')}</Text>
               <TextInput
                 style={styles.input}
                 value={job}
                 onChangeText={setJob}
-                placeholder="e.g. Interior repaint"
+                placeholder={t('quoteNew.jobPlaceholder', 'e.g. Interior repaint')}
                 placeholderTextColor={SemanticColors.textSecondary}
               />
             </View>
@@ -221,14 +225,14 @@ export default function NewQuoteScreen() {
 
           {/* Line Items */}
           <View style={styles.card}>
-            <Text style={Typography.subtitle}>Line items</Text>
+            <Text style={Typography.subtitle}>{t('quoteNew.lineItems', 'Line items')}</Text>
             {items.map((item, index) => (
               <View key={item.id} style={styles.lineItem}>
                 <View style={styles.lineItemHeader}>
-                  <Text style={[Typography.muted, { fontSize: 12 }]}>Item {index + 1}</Text>
+                  <Text style={[Typography.muted, { fontSize: 12 }]}>{t('quoteNew.item', 'Item {{n}}', { n: index + 1 })}</Text>
                   {items.length > 1 && (
                     <Pressable onPress={() => removeLineItem(index)} hitSlop={8}>
-                      <Text style={{ color: SemanticColors.feedbackError, fontSize: 13 }}>Remove</Text>
+                      <Text style={{ color: SemanticColors.feedbackError, fontSize: 13 }}>{t('quoteNew.remove', 'Remove')}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -236,12 +240,12 @@ export default function NewQuoteScreen() {
                   style={styles.input}
                   value={item.description}
                   onChangeText={(v) => updateItem(index, 'description', v)}
-                  placeholder="Description"
+                  placeholder={t('quoteNew.descriptionPlaceholder', 'Description')}
                   placeholderTextColor={SemanticColors.textSecondary}
                 />
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[Typography.muted, { fontSize: 12 }]}>Qty</Text>
+                    <Text style={[Typography.muted, { fontSize: 12 }]}>{t('quoteNew.qty', 'Qty')}</Text>
                     <TextInput
                       style={styles.input}
                       value={String(item.quantity)}
@@ -251,7 +255,7 @@ export default function NewQuoteScreen() {
                     />
                   </View>
                   <View style={{ flex: 1, marginLeft: Spacing.sm }}>
-                    <Text style={[Typography.muted, { fontSize: 12 }]}>Unit price (€)</Text>
+                    <Text style={[Typography.muted, { fontSize: 12 }]}>{t('quoteNew.unitPrice', 'Unit price')}</Text>
                     <TextInput
                       style={styles.input}
                       value={item.unitPrice ? String(item.unitPrice) : ''}
@@ -265,16 +269,16 @@ export default function NewQuoteScreen() {
               </View>
             ))}
             <Pressable onPress={addLineItem} style={styles.addItemBtn}>
-              <Text style={{ color: SemanticColors.actionPrimary, fontWeight: '600' }}>+ Add line item</Text>
+              <Text style={{ color: SemanticColors.actionPrimary, fontWeight: '600' }}>{t('quoteNew.addLineItem', '+ Add line item')}</Text>
             </Pressable>
           </View>
 
           {/* Total */}
           <View style={styles.card}>
             <View style={styles.totalRow}>
-              <Text style={Typography.subtitle}>Total</Text>
+              <Text style={Typography.subtitle}>{t('quoteNew.total', 'Total')}</Text>
               <Text style={[Typography.subtitle, { color: SemanticColors.actionPrimary }]}>
-                €{total.toFixed(2)}
+                {formatCurrency(total, country)}
               </Text>
             </View>
           </View>
@@ -282,7 +286,7 @@ export default function NewQuoteScreen() {
           {/* Actions */}
           <View style={styles.actions}>
             <PrimaryButton
-              label={saving ? 'Saving...' : 'Save draft'}
+              label={saving ? t('quoteNew.saving', 'Saving...') : t('quoteNew.saveDraft', 'Save draft')}
               onPress={handleSave}
             />
           </View>

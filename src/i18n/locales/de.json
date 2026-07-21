@@ -506,7 +506,8 @@
     "camera": "Kamera",
     "photoAdded": "Foto hinzugefügt",
     "photoAddedDesc": "Foto {{count}} aufgenommen und gespeichert.",
-    "photoLibrary": "Fotomediathek"
+    "photoLibrary": "Fotomediathek",
+    "orderedDescNoSupplier": "{{name}} wurde bestellt."
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
@@ -1601,7 +1602,7 @@
     "profit": "Gewinn",
     "reminderCopied": "Erinnerung in Zwischenablage kopiert",
     "paymentReminder": "Zahlungserinnerung",
-    "reminderMessage": "Hallo, dies ist eine freundliche Erinnerung, dass die Rechnung für {{customer}} ({{amount}}) seit {{days}} Tagen überfällig ist. Könnten Sie die Zahlung veranlassen?",
+    "reminderMessage": "Hallo {{customer}}, eine freundliche Erinnerung: Ihre Rechnung über {{amount}} ist seit {{days}} Tagen überfällig. Könnten Sie die Zahlung veranlassen? Vielen Dank!",
     "reminderTemplate_one": "Sehr geehrter Kunde,\n\nHiermit erinnern wir freundlich an {{count}} ausstehende Rechnung.\n\nMit freundlichen Grüßen",
     "reminderTemplate_other": "Sehr geehrter Kunde,\n\nHiermit erinnern wir freundlich an {{count}} ausstehende Rechnungen.\n\nMit freundlichen Grüßen"
   },
@@ -2065,7 +2066,7 @@
     "vatScheme": "USt-Schema",
     "vatStandard": "Standard",
     "auditTrail": "Audit-Trail",
-    "auditTrailValue": "GoBD-konform",
+    "auditTrailValue": "Manipulationssicher",
     "maintenanceContracts": "Wartungsverträge",
     "recurringValue": "Verwalten",
     "plan": "ABO",
@@ -2114,7 +2115,8 @@
     "dataPrivacy": "DATEN & DATENSCHUTZ",
     "creditsAvailable_one": "{{count}} Monat Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
     "creditsAvailable_other": "{{count}} Monate Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
-    "exportFailedDesc": "Dein Datenexport konnte nicht erstellt werden. Bitte versuche es erneut oder wende dich an privacy@vascobuild.com."
+    "exportFailedDesc": "Dein Datenexport konnte nicht erstellt werden. Bitte versuche es erneut oder wende dich an privacy@vascobuild.com.",
+    "auditTrailValueGobd": "GoBD-konform"
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
@@ -2475,7 +2477,7 @@
       "decisions": "Entscheidungen",
       "contacts": "Kontakte",
       "queue": "Warteschlange",
-      "insights": "Insights",
+      "insights": "Einblicke",
       "automations": "Automatisierungen",
       "more": "Mehr"
     },
@@ -2572,7 +2574,8 @@
       "viewQuotes": "Angebote ansehen",
       "serviceAgreement": "Servicevertrag",
       "openProject": "Projekt öffnen",
-      "newProject": "Neues Projekt"
+      "newProject": "Neues Projekt",
+      "edit": "Bearbeiten"
     },
     "empty": {
       "noJobs": "Noch keine Aufträge",
@@ -2664,7 +2667,7 @@
       "quickAccess": "Schnellzugriff",
       "accountPrivacy": "Konto & Datenschutz",
       "manageAllAutomations": "Alle Automatisierungen verwalten",
-      "hoursSavedPerWeek": "+{{hours}}h gespart / Woche",
+      "hoursSavedPerWeek": "~{{hours}}h/Woche Sparpotenzial",
       "actionsCompletedUpper": "{{count}} Aktionen abgeschlossen",
       "actionsExecutedWeek": "{{count}} Aktionen diese Woche ausgeführt",
       "sales": "Vertrieb",
@@ -2913,7 +2916,12 @@
     "valid": "✓ ungebrochen",
     "verify": "Überprüfung starten",
     "export": "Trail exportieren (.txt)",
-    "footnote": "GoBD verlangt 10 Jahre Aufbewahrung. Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Für vollständige Archiv-Zertifizierung (DATEV-zertifiziert) kombinieren Sie den Export mit dem Archiv Ihres Steuerberaters."
+    "footnote": "Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Bewahren Sie diesen Export für die gesetzliche Aufbewahrungsfrist Ihres Landes auf.",
+    "footnoteGobd": "GoBD verlangt 10 Jahre Aufbewahrung. Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Für vollständige Archiv-Zertifizierung (DATEV-zertifiziert) kombinieren Sie den Export mit dem Archiv Ihres Steuerberaters.",
+    "sectionTitle": "Audit-Trail",
+    "sectionTitleGobd": "GoBD Audit-Trail",
+    "exportTitle": "Vasco Audit-Trail",
+    "exportTitleGobd": "Vasco GoBD audit trail"
   },
   "recurring": {
     "title": "WARTUNG",
@@ -3942,7 +3950,10 @@
     "hesitationLabel": "Gezögert bei",
     "viewedTimes": "{{count}}×",
     "reminderSentBody_one": "{{count}} Element über {{channel}} gesendet.",
-    "reminderSentBody_other": "{{count}} Elemente über {{channel}} gesendet."
+    "reminderSentBody_other": "{{count}} Elemente über {{channel}} gesendet.",
+    "pickCustomer": "Welcher Kunde?",
+    "pickCustomerDesc": "Verknüpfe diese Checkliste mit einem Kunden, damit Erinnerungen an die richtige Person gehen.",
+    "newCustomerOption": "Neuer Kunde — später zuweisen"
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -4057,7 +4068,21 @@
     "noItemsDesc": "Mindestens eine Position mit Beschreibung hinzufügen.",
     "invalidAmountTitle": "Ungültiger Betrag",
     "invalidAmountDesc": "Die Angebotssumme muss größer als null sein. Preise prüfen.",
-    "saveFailed": "Angebot konnte nicht gespeichert werden. Bitte erneut versuchen."
+    "saveFailed": "Angebot konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    "title": "Neues Angebot",
+    "subtitle": "Entwurf zuerst · Zeit sparen",
+    "jobDescription": "Auftragsbeschreibung",
+    "jobPlaceholder": "z. B. Innenanstrich",
+    "lineItems": "Positionen",
+    "item": "Position {{n}}",
+    "remove": "Entfernen",
+    "descriptionPlaceholder": "Beschreibung",
+    "qty": "Menge",
+    "unitPrice": "Stückpreis",
+    "addLineItem": "+ Position hinzufügen",
+    "total": "Gesamt",
+    "saving": "Speichern...",
+    "saveDraft": "Entwurf speichern"
   },
   "checklist": {
     "beforePhoto": "Foto vorher",
@@ -4791,6 +4816,20 @@
         "template": "Hallo {{customer}}, Rechnung {{invoice}} ist bereit. Online bezahlen oder bei Fragen melden.",
         "action": "Bestätigung senden"
       }
+    },
+    "agents": {
+      "agent": {
+        "tagline": "Dein unermüdlicher Geschäftsassistent",
+        "description": "Übernimmt die tägliche Ausführung: erstellt Rechnungen aus abgeschlossenen Aufträgen, versendet Zahlungserinnerungen, verfolgt offene Angebote nach, schlägt Planungsoptimierungen vor und bereitet Tagesabschluss-Updates vor. Arbeitet rund um die Uhr, damit du dich auf die Arbeit konzentrieren kannst."
+      },
+      "auditor": {
+        "tagline": "Dein Compliance-Sicherheitsnetz",
+        "description": "Überwacht kontinuierlich jede Zertifizierung, Versicherung, Genehmigung und Steuerfrist in deinem Betrieb. Meldet Risiken 30/60/90 Tage bevor sie zu Problemen werden. Sorgt dafür, dass du nie einen Auftrag ohne die richtigen Unterlagen beginnst."
+      },
+      "analyst": {
+        "tagline": "Dein Business-Intelligence-Berater",
+        "description": "Verknüpft Muster aus deinem gesamten Betrieb zu Erkenntnissen: vergleiche deine Preise mit 14.000+ EU-Handwerkern, prognostiziere, welche Angebote gewonnen werden, sage den Cashflow 90 Tage voraus und erkenne, welche Auftragsarten die besten Margen liefern."
+      }
     }
   },
   "licenses": {
@@ -4849,7 +4888,16 @@
     "prevNetIncome": "Vorheriges Nettoeinkommen",
     "export": "Exportieren",
     "sharePDF": "PDF teilen",
-    "shareCSV": "CSV teilen"
+    "shareCSV": "CSV teilen",
+    "pl": {
+      "revenue": "Umsatz",
+      "paidInvoices": "Bezahlte Rechnungen",
+      "costOfMaterials": "Materialkosten",
+      "grossProfit": "Bruttogewinn",
+      "operatingExpenses": "Betriebskosten",
+      "netIncome": "Nettogewinn"
+    },
+    "plShort": "GuV"
   },
   "agreements": {
     "selectJob": "Auftrag auswählen",
@@ -4875,7 +4923,19 @@
     "noAgreements": "Keine Serviceverträge",
     "noAgreementsDesc": "Erstellen Sie wiederkehrende Auftragsvereinbarungen für Wartungsverträge, regelmäßige Inspektionen und mehr.",
     "next": "Nächste",
-    "generated": "erstellt"
+    "generated": "erstellt",
+    "freq": {
+      "weekly": "Wöchentlich",
+      "biweekly": "Zweiwöchentlich",
+      "monthly": "Monatlich",
+      "quarterly": "Vierteljährlich",
+      "yearly": "Jährlich"
+    },
+    "status": {
+      "active": "Aktiv",
+      "paused": "Pausiert",
+      "cancelled": "Storniert"
+    }
   },
   "inspection": {
     "addItem": "Position hinzufügen"
@@ -4942,5 +5002,20 @@
     "savedBody": "Feedback zur Auftragsqualität erfasst.",
     "errorTitle": "Fehler",
     "errorBody": "Speichern fehlgeschlagen. Bitte erneut versuchen."
+  },
+  "customerTag": {
+    "vip": "VIP",
+    "loyal": "Treu",
+    "new": "Neu",
+    "risky": "Risiko",
+    "inactive": "Inaktiv"
+  },
+  "invoiceNew": {
+    "title": "Rechnung erstellen",
+    "subtitle": "Angebot zum Abrechnen wählen",
+    "sentQuotes": "Gesendete Angebote",
+    "draftQuotes": "Angebotsentwürfe",
+    "sendFirst": "Zuerst senden, dann abrechnen",
+    "noQuotes": "Noch keine Angebote. Erstellen Sie zuerst ein Angebot."
   }
 }

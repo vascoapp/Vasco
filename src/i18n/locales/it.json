@@ -506,7 +506,8 @@
     "camera": "Fotocamera",
     "photoAdded": "Foto aggiunta",
     "photoAddedDesc": "Foto {{count}} acquisita e salvata.",
-    "photoLibrary": "Galleria foto"
+    "photoLibrary": "Galleria foto",
+    "orderedDescNoSupplier": "{{name}} è stato ordinato."
   },
   "compliance": {
     "manageInsurance": "Gestisci assicurazioni e sinistri",
@@ -1601,7 +1602,7 @@
     "profit": "Profitto",
     "reminderCopied": "Promemoria copiato negli appunti",
     "paymentReminder": "Promemoria di pagamento",
-    "reminderMessage": "Ciao, ti ricordiamo gentilmente che la fattura per {{customer}} ({{amount}}) è in ritardo di {{days}} giorni. Potresti procedere al pagamento?",
+    "reminderMessage": "Ciao {{customer}}, un promemoria gentile: la tua fattura di {{amount}} è in ritardo di {{days}} giorni. Potresti procedere al pagamento? Grazie!",
     "reminderTemplate_one": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fattura in sospeso.\n\nCordiali saluti",
     "reminderTemplate_other": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fatture in sospeso.\n\nCordiali saluti"
   },
@@ -2065,7 +2066,7 @@
     "vatScheme": "Regime IVA",
     "vatStandard": "Standard",
     "auditTrail": "Audit trail",
-    "auditTrailValue": "Conforme",
+    "auditTrailValue": "Inalterabile",
     "maintenanceContracts": "Contratti di manutenzione",
     "recurringValue": "Gestisci",
     "plan": "PIANO",
@@ -2114,7 +2115,8 @@
     "dataPrivacy": "DATI E PRIVACY",
     "creditsAvailable_one": "{{count}} mese di abbonamento gratuito disponibile — applicato automaticamente al pagamento.",
     "creditsAvailable_other": "{{count}} mesi di abbonamento gratuito disponibili — applicati automaticamente al pagamento.",
-    "exportFailedDesc": "Non è stato possibile generare l'esportazione dei tuoi dati. Riprova o scrivi a privacy@vascobuild.com."
+    "exportFailedDesc": "Non è stato possibile generare l'esportazione dei tuoi dati. Riprova o scrivi a privacy@vascobuild.com.",
+    "auditTrailValueGobd": "Conforme a GoBD"
   },
   "search": {
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",
@@ -2475,7 +2477,7 @@
       "decisions": "Decisioni",
       "contacts": "Contatti",
       "queue": "Coda",
-      "insights": "Insights",
+      "insights": "Approfondimenti",
       "automations": "Automazioni",
       "more": "Altro"
     },
@@ -2572,7 +2574,8 @@
       "viewQuotes": "Vedi preventivi",
       "serviceAgreement": "Contratto di servizio",
       "openProject": "Apri progetto",
-      "newProject": "Nuovo progetto"
+      "newProject": "Nuovo progetto",
+      "edit": "Modifica"
     },
     "empty": {
       "noJobs": "Nessun lavoro",
@@ -2664,7 +2667,7 @@
       "quickAccess": "Accesso rapido",
       "accountPrivacy": "Account e privacy",
       "manageAllAutomations": "Gestisci tutte le automazioni",
-      "hoursSavedPerWeek": "+{{hours}}h risparmiate / sett",
+      "hoursSavedPerWeek": "~{{hours}}h/sett di risparmio potenziale",
       "actionsCompletedUpper": "{{count}} azioni completate",
       "actionsExecutedWeek": "{{count}} azioni eseguite questa settimana",
       "sales": "Vendite",
@@ -3019,7 +3022,12 @@
     "valid": "✓ integra",
     "verify": "Esegui verifica",
     "export": "Esporta registro (.txt)",
-    "footnote": "Il GoBD richiede 10 anni di conservazione. La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Per la certificazione completa di archivio (DATEV-zertifiziert), abbina questa esportazione all'archivio del tuo commercialista."
+    "footnote": "La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Conserva questa esportazione con la tua documentazione per il periodo di conservazione previsto dalla legge nel tuo paese.",
+    "footnoteGobd": "Il GoBD richiede 10 anni di conservazione. La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Per la certificazione completa di archivio (DATEV-zertifiziert), abbina questa esportazione all'archivio del tuo commercialista.",
+    "sectionTitle": "Registro di controllo",
+    "sectionTitleGobd": "GoBD Audit-Trail",
+    "exportTitle": "Registro di controllo Vasco",
+    "exportTitleGobd": "Vasco GoBD audit trail"
   },
   "savings": {
     "trendSegment": "+{{trend}}% di tendenza",
@@ -3942,7 +3950,10 @@
     "hesitationLabel": "Esitato su",
     "viewedTimes": "{{count}}×",
     "reminderSentBody_one": "{{count}} elemento inviato tramite {{channel}}.",
-    "reminderSentBody_other": "{{count}} elementi inviati tramite {{channel}}."
+    "reminderSentBody_other": "{{count}} elementi inviati tramite {{channel}}.",
+    "pickCustomer": "Quale cliente?",
+    "pickCustomerDesc": "Collega questa checklist a un cliente così i promemoria vanno alla persona giusta.",
+    "newCustomerOption": "Nuovo cliente — assegna dopo"
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -4057,7 +4068,21 @@
     "noItemsDesc": "Aggiungi almeno una voce con descrizione.",
     "invalidAmountTitle": "Importo non valido",
     "invalidAmountDesc": "Il totale del preventivo deve essere maggiore di zero. Controlla i prezzi.",
-    "saveFailed": "Impossibile salvare il preventivo. Riprova."
+    "saveFailed": "Impossibile salvare il preventivo. Riprova.",
+    "title": "Nuovo preventivo",
+    "subtitle": "Prima bozza · Risparmia tempo",
+    "jobDescription": "Descrizione lavoro",
+    "jobPlaceholder": "es. Ritinteggiatura interni",
+    "lineItems": "Voci",
+    "item": "Voce {{n}}",
+    "remove": "Rimuovi",
+    "descriptionPlaceholder": "Descrizione",
+    "qty": "Qtà",
+    "unitPrice": "Prezzo unitario",
+    "addLineItem": "+ Aggiungi voce",
+    "total": "Totale",
+    "saving": "Salvataggio...",
+    "saveDraft": "Salva bozza"
   },
   "checklist": {
     "beforePhoto": "Foto prima",
@@ -4791,6 +4816,20 @@
         "template": "Ciao {{customer}}, la fattura {{invoice}} è pronta. Paga online o contattami per domande.",
         "action": "Invia conferma"
       }
+    },
+    "agents": {
+      "agent": {
+        "tagline": "Il tuo instancabile assistente aziendale",
+        "description": "Gestisce l’esecuzione quotidiana: crea fatture dai lavori completati, invia solleciti di pagamento, segue i preventivi in sospeso, suggerisce ottimizzazioni della pianificazione e prepara i riepiloghi di fine giornata. Lavora 24/7 così puoi concentrarti sul lavoro."
+      },
+      "auditor": {
+        "tagline": "La tua rete di sicurezza per la conformità",
+        "description": "Monitora continuamente ogni certificazione, polizza assicurativa, autorizzazione e scadenza fiscale della tua attività. Segnala i rischi 30/60/90 giorni prima che diventino problemi. Garantisce che tu non inizi mai un lavoro senza la documentazione corretta."
+      },
+      "analyst": {
+        "tagline": "Il tuo consulente di business intelligence",
+        "description": "Collega gli schemi dell’intera attività per far emergere approfondimenti: confronta le tue tariffe con oltre 14.000 professionisti UE, prevedi quali preventivi verranno vinti, stima il flusso di cassa a 90 giorni e individua quali tipi di lavoro offrono i margini migliori."
+      }
     }
   },
   "licenses": {
@@ -4849,7 +4888,16 @@
     "prevNetIncome": "Utile netto precedente",
     "export": "Esporta",
     "sharePDF": "Condividi PDF",
-    "shareCSV": "Condividi CSV"
+    "shareCSV": "Condividi CSV",
+    "pl": {
+      "revenue": "Ricavi",
+      "paidInvoices": "Fatture pagate",
+      "costOfMaterials": "Costo dei materiali",
+      "grossProfit": "Utile lordo",
+      "operatingExpenses": "Spese operative",
+      "netIncome": "Utile netto"
+    },
+    "plShort": "CE"
   },
   "agreements": {
     "selectJob": "Seleziona un lavoro",
@@ -4875,7 +4923,19 @@
     "noAgreements": "Nessun contratto di servizio",
     "noAgreementsDesc": "Crea contratti di lavoro ricorrenti per manutenzioni, ispezioni periodiche e altro.",
     "next": "Prossimo",
-    "generated": "generati"
+    "generated": "generati",
+    "freq": {
+      "weekly": "Settimanale",
+      "biweekly": "Bisettimanale",
+      "monthly": "Mensile",
+      "quarterly": "Trimestrale",
+      "yearly": "Annuale"
+    },
+    "status": {
+      "active": "Attivo",
+      "paused": "In pausa",
+      "cancelled": "Annullato"
+    }
   },
   "inspection": {
     "addItem": "Aggiungi voce"
@@ -4942,5 +5002,20 @@
     "savedBody": "Feedback sulla qualità del lavoro registrato.",
     "errorTitle": "Errore",
     "errorBody": "Salvataggio non riuscito. Riprova."
+  },
+  "customerTag": {
+    "vip": "VIP",
+    "loyal": "Fedele",
+    "new": "Nuovo",
+    "risky": "A rischio",
+    "inactive": "Inattivo"
+  },
+  "invoiceNew": {
+    "title": "Crea fattura",
+    "subtitle": "Scegli un preventivo da fatturare",
+    "sentQuotes": "Preventivi inviati",
+    "draftQuotes": "Preventivi in bozza",
+    "sendFirst": "Inviali prima, poi fattura",
+    "noQuotes": "Nessun preventivo. Creane uno prima."
   }
 }

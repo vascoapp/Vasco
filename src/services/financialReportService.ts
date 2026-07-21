@@ -123,11 +123,52 @@ function calculatePeriodFinancials(
 // REPORT GENERATORS
 // =============================================================================
 
+// P&L row labels + month names are display strings — the screen and the
+// CSV/PDF export both read them straight off the report. Callers pass a
+// localised set so the whole report renders in the app locale; the English
+// defaults keep existing callers (and tests) working unchanged.
+export interface ReportLabels {
+  plTitle: string;         // "P&L" / "W&V" / "GuV" …
+  revenue: string;
+  paidInvoices: string;
+  costOfMaterials: string;
+  grossProfit: string;
+  operatingExpenses: string;
+  netIncome: string;
+  monthNames: string[];    // 12 localised month names
+}
+
+const DEFAULT_LABELS: ReportLabels = {
+  plTitle: 'P&L',
+  revenue: 'Revenue',
+  paidInvoices: 'Paid invoices',
+  costOfMaterials: 'Cost of Materials',
+  grossProfit: 'Gross Profit',
+  operatingExpenses: 'Operating Expenses',
+  netIncome: 'Net Income',
+  monthNames: MONTH_NAMES,
+};
+
+function buildLineItems(
+  L: ReportLabels,
+  current: { revenue: number; costOfMaterials: number; grossProfit: number; operatingExpenses: number; netIncome: number },
+): PLLineItem[] {
+  return [
+    { label: L.revenue, amount: current.revenue, isSubtotal: true },
+    { label: L.paidInvoices, amount: current.revenue, indent: 1 },
+    { label: L.costOfMaterials, amount: -current.costOfMaterials },
+    { label: L.grossProfit, amount: current.grossProfit, isSubtotal: true },
+    { label: L.operatingExpenses, amount: -current.operatingExpenses },
+    { label: L.netIncome, amount: current.netIncome, isTotal: true },
+  ];
+}
+
 export function generateMonthlyReport(
   month: number,
   year: number,
   invoices: Invoice[],
   quotes: Quote[],
+  labels: ReportLabels = DEFAULT_LABELS,
 ): FinancialReport {
   const currentInvoices = filterInvoicesByMonth(invoices, month, year);
   const current = calculatePeriodFinancials(currentInvoices, quotes);
@@ -145,18 +186,12 @@ export function generateMonthlyReport(
     ? Math.round(((current.netIncome - prev.netIncome) / prev.netIncome) * 100)
     : 0;
 
-  const lineItems: PLLineItem[] = [
-    { label: 'Revenue', amount: current.revenue, isSubtotal: true },
-    { label: 'Paid invoices', amount: current.revenue, indent: 1 },
-    { label: 'Cost of Materials', amount: -current.costOfMaterials },
-    { label: 'Gross Profit', amount: current.grossProfit, isSubtotal: true },
-    { label: 'Operating Expenses', amount: -current.operatingExpenses },
-    { label: 'Net Income', amount: current.netIncome, isTotal: true },
-  ];
+  const lineItems = buildLineItems(labels, current);
+  const monthName = labels.monthNames[month - 1] ?? MONTH_NAMES[month - 1];
 
   return {
-    title: `P&L — ${MONTH_NAMES[month - 1]} ${year}`,
-    period: `${MONTH_NAMES[month - 1]} ${year}`,
+    title: `${labels.plTitle} — ${monthName} ${year}`,
+    period: `${monthName} ${year}`,
     generatedAt: new Date().toISOString(),
     type: 'monthly',
     revenue: current.revenue,
@@ -182,6 +217,7 @@ export function generateQuarterlyReport(
   year: number,
   invoices: Invoice[],
   quotes: Quote[],
+  labels: ReportLabels = DEFAULT_LABELS,
 ): FinancialReport {
   const currentInvoices = filterInvoicesByQuarter(invoices, quarter, year);
   const current = calculatePeriodFinancials(currentInvoices, quotes);
@@ -200,19 +236,13 @@ export function generateQuarterlyReport(
     : 0;
 
   const startMonth = (quarter - 1) * 3;
-  const monthRange = `${MONTH_NAMES[startMonth]} - ${MONTH_NAMES[startMonth + 2]}`;
+  const mn = (i: number) => labels.monthNames[i] ?? MONTH_NAMES[i];
+  const monthRange = `${mn(startMonth)} - ${mn(startMonth + 2)}`;
 
-  const lineItems: PLLineItem[] = [
-    { label: 'Revenue', amount: current.revenue, isSubtotal: true },
-    { label: 'Paid invoices', amount: current.revenue, indent: 1 },
-    { label: 'Cost of Materials', amount: -current.costOfMaterials },
-    { label: 'Gross Profit', amount: current.grossProfit, isSubtotal: true },
-    { label: 'Operating Expenses', amount: -current.operatingExpenses },
-    { label: 'Net Income', amount: current.netIncome, isTotal: true },
-  ];
+  const lineItems = buildLineItems(labels, current);
 
   return {
-    title: `P&L — Q${quarter} ${year}`,
+    title: `${labels.plTitle} — Q${quarter} ${year}`,
     period: `Q${quarter} ${year} (${monthRange})`,
     generatedAt: new Date().toISOString(),
     type: 'quarterly',

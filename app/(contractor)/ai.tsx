@@ -429,7 +429,7 @@ export default function VascoScreen() {
                         }}
                       >
                         <Ionicons name={editingId === action.id ? 'checkmark' : 'create-outline'} size={16} color={DK.colors.accent} />
-                        <Text style={s.editBtnText}>{editingId === action.id ? t('dk.actions.done', 'Done').toUpperCase() : 'EDIT'}</Text>
+                        <Text style={s.editBtnText}>{editingId === action.id ? t('dk.actions.done', 'Done').toUpperCase() : t('dk.actions.edit', 'Edit').toUpperCase()}</Text>
                       </Pressable>
                     )}
                   </View>
@@ -479,7 +479,7 @@ export default function VascoScreen() {
             {timeSaved.weeklyHoursSaved > 0 && (
               <View style={s.savedBanner}>
                 <Ionicons name="time-outline" size={14} color={DK.colors.success} />
-                <Text style={s.savedBannerText}>{t('dk.ai.hoursSavedPerWeek', { hours: timeSaved.weeklyHoursSaved.toFixed(1), defaultValue: '+{{hours}}h saved / week' }).toUpperCase()}</Text>
+                <Text style={s.savedBannerText}>{t('dk.ai.hoursSavedPerWeek', { hours: timeSaved.weeklyHoursSaved.toFixed(1), defaultValue: '~{{hours}}h/week saving potential' }).toUpperCase()}</Text>
               </View>
             )}
             <View style={s.autoList}>
@@ -677,7 +677,7 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
               }}
             >
               <Ionicons name={editing ? 'checkmark' : 'create-outline'} size={20} color="#FFFFFF" />
-              <Text style={heroStyles.editBtnText}>{editing ? t('dk.actions.done', 'Done').toUpperCase() : 'EDIT'}</Text>
+              <Text style={heroStyles.editBtnText}>{editing ? t('dk.actions.done', 'Done').toUpperCase() : t('dk.actions.edit', 'Edit').toUpperCase()}</Text>
             </Pressable>
           )}
         </View>

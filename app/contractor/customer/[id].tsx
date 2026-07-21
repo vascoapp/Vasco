@@ -12,6 +12,8 @@ import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
+import { useAuth } from '../../../src/context/AuthContext';
+import { formatCurrency, type Country } from '../../../src/i18n/formatting';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import { generateSmartReplies, type SmartReply } from '../../../src/services/customerSmartReplyService';
 import { useCustomerInbox, type InboundChannel } from '../../../src/services/customerInboxService';
@@ -25,6 +27,19 @@ export default function CustomerDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { customers, jobs, quotes, invoices } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
+
+  // Status enums must render in the app locale, not as raw English
+  // ('completed', 'accepted', 'overdue' leaked straight onto the cards).
+  // Missing keys (e.g. job 'cancelled') fall back to a humanised label.
+  const humanize = (v: string) => v.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const jobStatusLabel = (raw: string) => {
+    const key = ({ 'in-progress': 'inProgress', in_progress: 'inProgress', quoted: 'quote' } as Record<string, string>)[raw] ?? raw;
+    return t(`jobs.status.${key}`, humanize(raw));
+  };
+  const quoteStatusLabel = (raw: string) => t(`quotes.status.${raw}`, humanize(raw));
+  const invoiceStatusLabel = (raw: string) => t(`invoices.status.${raw}`, humanize(raw));
 
   const customer = useMemo(() => customers.find(c => c.id === id), [customers, id]);
   const customerJobs = useMemo(() => jobs.filter((j: any) => j.customerId === id), [jobs, id]);
@@ -141,7 +156,7 @@ export default function CustomerDetailScreen() {
         <FadeIn delay={0}>
           <View style={s.kpiRow}>
             <View style={s.kpi}>
-              <Text style={s.kpiValue}>€{totalSpent.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+              <Text style={s.kpiValue}>{formatCurrency(totalSpent, country)}</Text>
               <Text style={s.kpiLabel}>{t('customer.spent', 'Spent')}</Text>
             </View>
             <View style={s.kpiDivider} />
@@ -276,7 +291,7 @@ export default function CustomerDetailScreen() {
                 <View style={[s.accent, { backgroundColor: job.status === 'completed' ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
                 <View style={s.cardContent}>
                   <Text style={s.cardTitle} numberOfLines={1}>{job.title}</Text>
-                  <Text style={s.cardMeta}>{job.status} · €{(job.quotedAmount ?? 0).toLocaleString(undefined)}</Text>
+                  <Text style={s.cardMeta}>{jobStatusLabel(String(job.status))} · {formatCurrency(job.quotedAmount ?? 0, country)}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
@@ -292,8 +307,8 @@ export default function CustomerDetailScreen() {
               <Pressable key={q.id} style={s.card} onPress={() => router.push(`/quotes/${q.id}` as any)}>
                 <View style={[s.accent, { backgroundColor: q.status === 'accepted' ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary }]} />
                 <View style={s.cardContent}>
-                  <Text style={s.cardTitle} numberOfLines={1}>{q.id} — {q.job || 'Offerte'}</Text>
-                  <Text style={s.cardMeta}>{q.status} · €{(q.amount ?? 0).toLocaleString(undefined)}</Text>
+                  <Text style={s.cardTitle} numberOfLines={1}>{q.id} — {q.job || t('customer.quote', 'Quote')}</Text>
+                  <Text style={s.cardMeta}>{quoteStatusLabel(String(q.status))} · {formatCurrency(q.amount ?? 0, country)}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
@@ -310,7 +325,7 @@ export default function CustomerDetailScreen() {
                 <View style={[s.accent, { backgroundColor: inv.status === 'paid' ? SemanticColors.feedbackSuccess : inv.status === 'overdue' ? SemanticColors.feedbackError : Palette.hermesOrange }]} />
                 <View style={s.cardContent}>
                   <Text style={s.cardTitle} numberOfLines={1}>{inv.id}</Text>
-                  <Text style={s.cardMeta}>{inv.status} · €{(inv.amount ?? 0).toLocaleString(undefined)}</Text>
+                  <Text style={s.cardMeta}>{invoiceStatusLabel(String(inv.status))} · {formatCurrency(inv.amount ?? 0, country)}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>

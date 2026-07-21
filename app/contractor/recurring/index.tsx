@@ -29,6 +29,8 @@ import {
   type RecurringJobInstance,
 } from '../../../src/services/recurringJobsService';
 import { formatAmount } from '../../../src/utils/formatAmount';
+import { formatCurrency, type Country } from '../../../src/i18n/formatting';
+import { useAuth } from '../../../src/context/AuthContext';
 import { hapticSuccess, hapticWarning } from '../../../src/utils/haptics';
 
 export default function RecurringJobsListScreen() {
@@ -167,10 +169,14 @@ export default function RecurringJobsListScreen() {
           {paused.map((i) => <Card key={i.template.id} inst={i} onTogglePause={togglePause} onRemove={remove} onEdit={(id) => router.push(`/contractor/recurring/${id}` as any)} />)}
         </Section>}
 
-        <Pressable style={styles.addBtn} onPress={() => router.push('/contractor/recurring/new' as any)}>
-          <Ionicons name="add" size={20} color="#000" />
-          <Text style={styles.addBtnText}>{t('recurring.addNew', 'NEW MAINTENANCE CONTRACT')}</Text>
-        </Pressable>
+        {/* Only the empty state's own CTA shows when there are no contracts —
+            the persistent button here would duplicate it otherwise. */}
+        {items.length > 0 && (
+          <Pressable style={styles.addBtn} onPress={() => router.push('/contractor/recurring/new' as any)}>
+            <Ionicons name="add" size={20} color="#000" />
+            <Text style={styles.addBtnText}>{t('recurring.addNew', 'NEW MAINTENANCE CONTRACT')}</Text>
+          </Pressable>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -198,16 +204,16 @@ interface CardProps {
 
 function Card({ inst, onTogglePause, onRemove, onEdit }: CardProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const dueLabel = inst.overdue
     ? t('recurring.daysOverdue', '{{count}} days overdue', { count: -inst.daysUntilDue })
     : inst.daysUntilDue === 0
       ? t('recurring.dueToday', 'due today')
       : t('recurring.dueInDays', 'due in {{count}} days', { count: inst.daysUntilDue });
 
-  const cadenceLabel = ({
-    monthly: 'monthly', quarterly: 'quarterly', semiannual: 'semi-annual',
-    annual: 'annual', custom: 'custom',
-  } as Record<string, string>)[inst.template.cadence];
+  // Cadence was a hardcoded English map; recurring.<cadence> is localised ×6.
+  const cadenceLabel = t(`recurring.${inst.template.cadence}`, inst.template.cadence);
 
   return (
     <Pressable style={styles.card} onPress={() => onEdit(inst.template.id)}>
@@ -217,7 +223,7 @@ function Card({ inst, onTogglePause, onRemove, onEdit }: CardProps) {
           {inst.template.customerName ?? '—'} · {cadenceLabel} · {dueLabel}
         </Text>
         {inst.template.estimatedAmount ? (
-          <Text style={styles.cardAmount}>€{inst.template.estimatedAmount.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}</Text>
+          <Text style={styles.cardAmount}>{formatCurrency(inst.template.estimatedAmount, country)}</Text>
         ) : null}
       </View>
       <View style={styles.cardActions}>

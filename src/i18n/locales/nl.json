@@ -490,7 +490,8 @@
     "camera": "Camera",
     "photoAdded": "Foto toegevoegd",
     "photoAddedDesc": "Foto {{count}} gemaakt en opgeslagen.",
-    "photoLibrary": "Fotobibliotheek"
+    "photoLibrary": "Fotobibliotheek",
+    "orderedDescNoSupplier": "{{name}} is besteld."
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",
@@ -1585,7 +1586,7 @@
     "profit": "Winst",
     "reminderCopied": "Herinnering gekopieerd naar klembord",
     "paymentReminder": "Betaalherinnering",
-    "reminderMessage": "Hoi, een vriendelijke herinnering dat de factuur voor {{customer}} ({{amount}}) {{days}} dagen achterstallig is. Zou je de betaling kunnen regelen?",
+    "reminderMessage": "Hoi {{customer}}, een vriendelijke herinnering dat je factuur van {{amount}} inmiddels {{days}} dagen openstaat. Zou je de betaling kunnen regelen? Alvast bedankt!",
     "reminderTemplate_one": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande factuur.\n\nMet vriendelijke groet",
     "reminderTemplate_other": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande facturen.\n\nMet vriendelijke groet"
   },
@@ -2049,7 +2050,7 @@
     "vatScheme": "BTW-regeling",
     "vatStandard": "Standaard",
     "auditTrail": "Audit-spoor",
-    "auditTrailValue": "GoBD-conform",
+    "auditTrailValue": "Onwijzigbaar",
     "maintenanceContracts": "Onderhoudscontracten",
     "recurringValue": "Beheer",
     "plan": "ABONNEMENT",
@@ -2098,7 +2099,8 @@
     "dataPrivacy": "GEGEVENS & PRIVACY",
     "creditsAvailable_one": "{{count}} maand gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
     "creditsAvailable_other": "{{count}} maanden gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
-    "exportFailedDesc": "We konden je gegevensexport niet maken. Probeer het opnieuw of neem contact op via privacy@vascobuild.com."
+    "exportFailedDesc": "We konden je gegevensexport niet maken. Probeer het opnieuw of neem contact op via privacy@vascobuild.com.",
+    "auditTrailValueGobd": "GoBD-conform"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -2458,9 +2460,9 @@
       "overview": "Overzicht",
       "decisions": "Beslissingen",
       "contacts": "Contacten",
-      "queue": "Queue",
-      "insights": "Insights",
-      "automations": "Automations",
+      "queue": "Wachtrij",
+      "insights": "Inzichten",
+      "automations": "Automatiseringen",
       "more": "Meer"
     },
     "section": {
@@ -2556,7 +2558,8 @@
       "viewQuotes": "Bekijk offertes",
       "serviceAgreement": "Serviceovereenkomst",
       "openProject": "Project openen",
-      "newProject": "Nieuw project"
+      "newProject": "Nieuw project",
+      "edit": "Bewerken"
     },
     "empty": {
       "noJobs": "Nog geen klussen",
@@ -2648,7 +2651,7 @@
       "quickAccess": "Snel toegankelijk",
       "accountPrivacy": "Account & privacy",
       "manageAllAutomations": "Beheer alle automations",
-      "hoursSavedPerWeek": "+{{hours}}u bespaard / week",
+      "hoursSavedPerWeek": "~{{hours}}u/week besparingspotentieel",
       "actionsCompletedUpper": "{{count}} acties afgerond",
       "actionsExecutedWeek": "{{count}} acties uitgevoerd deze week",
       "sales": "Verkoop",
@@ -2897,7 +2900,12 @@
     "valid": "✓ ongebroken",
     "verify": "Verificatie uitvoeren",
     "export": "Exporteer audit-spoor (.txt)",
-    "footnote": "GoBD vereist 10 jaar bewaartermijn. De hash-keten bewijst dat geen entry achteraf is gewijzigd. Voor volledige archiefcertificering (DATEV-zertifiziert) combineer deze export met het archief van je boekhouder."
+    "footnote": "De hash-keten bewijst dat geen enkele boeking achteraf is gewijzigd. Bewaar deze export bij je administratie gedurende de wettelijke bewaartermijn in jouw land.",
+    "footnoteGobd": "GoBD vereist 10 jaar bewaartermijn. De hash-keten bewijst dat geen entry achteraf is gewijzigd. Voor volledige archiefcertificering (DATEV-zertifiziert) combineer deze export met het archief van je boekhouder.",
+    "sectionTitle": "Audit-spoor",
+    "sectionTitleGobd": "GoBD Audit-Trail",
+    "exportTitle": "Vasco audit-spoor",
+    "exportTitleGobd": "Vasco GoBD audit trail"
   },
   "recurring": {
     "title": "ONDERHOUD",
@@ -3926,7 +3934,10 @@
     "hesitationLabel": "Getwijfeld over",
     "viewedTimes": "{{count}}×",
     "reminderSentBody_one": "{{count}} item verstuurd via {{channel}}.",
-    "reminderSentBody_other": "{{count}} items verstuurd via {{channel}}."
+    "reminderSentBody_other": "{{count}} items verstuurd via {{channel}}.",
+    "pickCustomer": "Welke klant?",
+    "pickCustomerDesc": "Koppel deze checklist aan een klant zodat herinneringen naar de juiste persoon gaan.",
+    "newCustomerOption": "Nieuwe klant — later toewijzen"
   },
   "besparen": {
     "materialFallback": "Materiaal {{id}}"
@@ -4083,7 +4094,21 @@
     "noItemsDesc": "Voeg minstens één regel met omschrijving toe.",
     "invalidAmountTitle": "Ongeldig bedrag",
     "invalidAmountDesc": "Het totaalbedrag moet groter zijn dan nul. Controleer de prijzen.",
-    "saveFailed": "Offerte kon niet worden opgeslagen. Probeer het opnieuw."
+    "saveFailed": "Offerte kon niet worden opgeslagen. Probeer het opnieuw.",
+    "title": "Nieuwe offerte",
+    "subtitle": "Eerst concept · Bespaar tijd",
+    "jobDescription": "Omschrijving klus",
+    "jobPlaceholder": "bijv. Interieur schilderen",
+    "lineItems": "Regels",
+    "item": "Regel {{n}}",
+    "remove": "Verwijderen",
+    "descriptionPlaceholder": "Omschrijving",
+    "qty": "Aantal",
+    "unitPrice": "Stukprijs",
+    "addLineItem": "+ Regel toevoegen",
+    "total": "Totaal",
+    "saving": "Opslaan...",
+    "saveDraft": "Concept opslaan"
   },
   "checklist": {
     "beforePhoto": "Foto vooraf",
@@ -4775,6 +4800,20 @@
         "template": "Hallo {{customer}}, factuur {{invoice}} staat klaar. Betaal online of neem contact op bij vragen.",
         "action": "Bevestiging sturen"
       }
+    },
+    "agents": {
+      "agent": {
+        "tagline": "Je onvermoeibare bedrijfsassistent",
+        "description": "Regelt de dagelijkse uitvoering: maakt facturen van afgeronde klussen, stuurt betaalherinneringen, volgt openstaande offertes op, stelt planningsoptimalisaties voor en bereidt einde-dag-updates voor. Werkt 24/7 zodat jij je op het gereedschap kunt richten."
+      },
+      "auditor": {
+        "tagline": "Je vangnet voor compliance",
+        "description": "Bewaakt continu elk certificaat, elke verzekering, vergunning en fiscale deadline in je bedrijf. Signaleert risico’s 30/60/90 dagen voordat ze problemen worden. Zorgt dat je nooit aan een klus begint zonder de juiste documentatie."
+      },
+      "analyst": {
+        "tagline": "Je business intelligence-adviseur",
+        "description": "Verbindt patronen uit je hele bedrijf tot inzichten: vergelijk je tarieven met 14.000+ EU-vakmensen, voorspel welke offertes worden gewonnen, prognosticeer de cashflow 90 dagen vooruit en ontdek welke soorten klussen de beste marges opleveren."
+      }
     }
   },
   "licenses": {
@@ -4833,7 +4872,16 @@
     "prevNetIncome": "Vorige nettowinst",
     "export": "Exporteren",
     "sharePDF": "PDF delen",
-    "shareCSV": "CSV delen"
+    "shareCSV": "CSV delen",
+    "pl": {
+      "revenue": "Omzet",
+      "paidInvoices": "Betaalde facturen",
+      "costOfMaterials": "Materiaalkosten",
+      "grossProfit": "Brutowinst",
+      "operatingExpenses": "Bedrijfskosten",
+      "netIncome": "Nettowinst"
+    },
+    "plShort": "W&V"
   },
   "agreements": {
     "selectJob": "Kies een klus",
@@ -4859,7 +4907,19 @@
     "noAgreements": "Geen onderhoudscontracten",
     "noAgreementsDesc": "Maak terugkerende klusovereenkomsten aan voor onderhoudscontracten, periodieke inspecties en meer.",
     "next": "Volgende",
-    "generated": "gegenereerd"
+    "generated": "gegenereerd",
+    "freq": {
+      "weekly": "Wekelijks",
+      "biweekly": "Tweewekelijks",
+      "monthly": "Maandelijks",
+      "quarterly": "Per kwartaal",
+      "yearly": "Jaarlijks"
+    },
+    "status": {
+      "active": "Actief",
+      "paused": "Gepauzeerd",
+      "cancelled": "Geannuleerd"
+    }
   },
   "inspection": {
     "addItem": "Item toevoegen"
@@ -4926,5 +4986,20 @@
     "savedBody": "Feedback over kluskwaliteit vastgelegd.",
     "errorTitle": "Fout",
     "errorBody": "Opslaan mislukt. Probeer het opnieuw."
+  },
+  "customerTag": {
+    "vip": "VIP",
+    "loyal": "Trouw",
+    "new": "Nieuw",
+    "risky": "Risico",
+    "inactive": "Inactief"
+  },
+  "invoiceNew": {
+    "title": "Factuur aanmaken",
+    "subtitle": "Kies een offerte om te factureren",
+    "sentQuotes": "Verstuurde offertes",
+    "draftQuotes": "Concept-offertes",
+    "sendFirst": "Verstuur deze eerst, factureer daarna",
+    "noQuotes": "Nog geen offertes. Maak eerst een offerte."
   }
 }

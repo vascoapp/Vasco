@@ -68,7 +68,7 @@ export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps
         <View style={styles.sectionTitleRow}>
           <Ionicons name="camera-outline" size={16} color={SemanticColors.textTertiary} />
           <Text style={styles.sectionLabel}>
-            {t('jobs.photos', 'Photos')} ({photos.length})
+            {t('jobs.photos.title', 'Photos')} ({photos.length})
           </Text>
         </View>
         {photos.length > 0 && (

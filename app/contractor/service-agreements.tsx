@@ -26,6 +26,8 @@ import {
   type ServiceAgreement,
 } from '../../src/services/recurringJobService';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency, type Country } from '../../src/i18n/formatting';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
 
@@ -35,6 +37,12 @@ const FREQUENCY_OPTIONS: RecurringFrequency[] = ['weekly', 'biweekly', 'monthly'
 
 export default function ServiceAgreementsScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
+  // Localise the frequency + status enums (getFrequencyLabel returns English;
+  // the status badge used a raw capitalised enum).
+  const freqLabel = (f: RecurringFrequency) => t(`agreements.freq.${f}`, getFrequencyLabel(f));
+  const statusLabel = (st: string) => t(`agreements.status.${st}`, st.charAt(0).toUpperCase() + st.slice(1));
   const router = useRouter();
   const { jobs, customers } = useAppState();
   const {
@@ -116,7 +124,7 @@ export default function ServiceAgreementsScreen() {
     }
     actions.push({ text: t('common.cancel', 'Cancel'), style: 'cancel' });
 
-    Alert.alert(agreement.jobTitle, `${agreement.customerName} · ${getFrequencyLabel(agreement.frequency)}`, actions);
+    Alert.alert(agreement.jobTitle, `${agreement.customerName} · ${freqLabel(agreement.frequency)}`, actions);
   };
 
   const getStatusColor = (status: string) => {
@@ -157,11 +165,11 @@ export default function ServiceAgreementsScreen() {
           <View style={s.kpiRow}>
             <View style={s.kpiCard}>
               <Text style={s.kpiLabel}>{t('agreements.monthlyRevenue', 'Monthly')}</Text>
-              <Text style={s.kpiValue}>{'\u20AC'}{monthlyRevenue.toLocaleString()}</Text>
+              <Text style={s.kpiValue}>{formatCurrency(monthlyRevenue, country)}</Text>
             </View>
             <View style={s.kpiCard}>
               <Text style={s.kpiLabel}>{t('agreements.annualRevenue', 'Annual')}</Text>
-              <Text style={s.kpiValue}>{'\u20AC'}{annualRevenue.toLocaleString()}</Text>
+              <Text style={s.kpiValue}>{formatCurrency(annualRevenue, country)}</Text>
             </View>
             <View style={s.kpiCard}>
               <Text style={s.kpiLabel}>{t('agreements.active', 'Active')}</Text>
@@ -207,7 +215,7 @@ export default function ServiceAgreementsScreen() {
                       onPress={() => setFormFrequency(freq)}
                     >
                       <Text style={[s.freqChipText, selected && s.freqChipTextSelected]}>
-                        {getFrequencyLabel(freq)}
+                        {freqLabel(freq)}
                       </Text>
                     </Pressable>
                   );
@@ -272,8 +280,8 @@ export default function ServiceAgreementsScreen() {
                     <Text style={s.agreementCustomer}>{agreement.customerName}</Text>
                   </View>
                   <View style={s.agreementAmountWrap}>
-                    <Text style={s.agreementAmount}>{'\u20AC'}{agreement.amount.toLocaleString()}</Text>
-                    <Text style={s.agreementFreq}>/{getFrequencyLabel(agreement.frequency).toLowerCase()}</Text>
+                    <Text style={s.agreementAmount}>{formatCurrency(agreement.amount, country)}</Text>
+                    <Text style={s.agreementFreq}>/{freqLabel(agreement.frequency).toLowerCase()}</Text>
                   </View>
                 </View>
 
@@ -299,7 +307,7 @@ export default function ServiceAgreementsScreen() {
                 {/* Status badge */}
                 <View style={[s.statusBadge, { backgroundColor: getStatusColor(agreement.status) + '15' }]}>
                   <Text style={[s.statusBadgeText, { color: getStatusColor(agreement.status) }]}>
-                    {agreement.status.charAt(0).toUpperCase() + agreement.status.slice(1)}
+                    {statusLabel(agreement.status)}
                   </Text>
                 </View>
               </Pressable>

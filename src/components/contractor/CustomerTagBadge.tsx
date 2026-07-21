@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { CustomerTag } from '../../services/customerTaggingService';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -14,20 +15,28 @@ interface Props {
   compact?: boolean;
 }
 
-const COLORS: Record<CustomerTag, { bg: string; fg: string; label: string }> = {
-  vip:      { bg: '#FDEEDD', fg: '#B54708', label: 'VIP' },
-  loyal:    { bg: '#E0E7FF', fg: '#3730A3', label: 'Loyal' },
-  new:      { bg: '#ECFEFF', fg: '#155E75', label: 'New' },
-  risky:    { bg: '#FEE2E2', fg: '#991B1B', label: 'Risky' },
-  inactive: { bg: '#F3F4F6', fg: '#6B7280', label: 'Inactive' },
+// Colours only — the visible label is resolved through i18n so the badge
+// renders in the app locale (was hardcoded English on the Klanten list).
+const COLORS: Record<CustomerTag, { bg: string; fg: string }> = {
+  vip:      { bg: '#FDEEDD', fg: '#B54708' },
+  loyal:    { bg: '#E0E7FF', fg: '#3730A3' },
+  new:      { bg: '#ECFEFF', fg: '#155E75' },
+  risky:    { bg: '#FEE2E2', fg: '#991B1B' },
+  inactive: { bg: '#F3F4F6', fg: '#6B7280' },
+};
+
+const DEFAULT_LABEL: Record<CustomerTag, string> = {
+  vip: 'VIP', loyal: 'Loyal', new: 'New', risky: 'Risky', inactive: 'Inactive',
 };
 
 export function CustomerTagBadge({ tag, compact }: Props) {
+  const { t } = useTranslation();
   const theme = COLORS[tag];
+  const label = t(`customerTag.${tag}`, DEFAULT_LABEL[tag]);
   return (
     <View style={[styles.pill, { backgroundColor: theme.bg }, compact && styles.compact]}>
       <Text style={[styles.text, { color: theme.fg }, compact && styles.textCompact]}>
-        {theme.label}
+        {label}
       </Text>
     </View>
   );

@@ -63,6 +63,17 @@ export default function WerkScreen() {
   // an empty planner timeline. Same UTC-shift class as the R317 week bug.
   const today = todayKey();
   const todaySchedule = useDaySchedule(today);
+
+  // Job status must render in the app locale — the list rows concatenated the
+  // raw enum ('completed', 'in-progress', 'scheduled') straight into the meta.
+  const jobStatusLabel = useCallback((raw: string) => {
+    const key = ({ 'in-progress': 'inProgress', in_progress: 'inProgress', quoted: 'quote' } as Record<string, string>)[raw]
+      ?? raw;
+    return t(`jobs.status.${key}`, raw.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+  }, [t]);
+  // Trade renders as a raw slug ('plumbing') on some jobs; localise it. Jobs that
+  // already store a display name miss the key and fall through unchanged.
+  const tradeLabel = useCallback((raw: string) => t(`onboarding.trades.${raw}`, raw), [t]);
   // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
   const routeOptimizationEnabled = useFeatureFlag('route_optimization', { country: user?.country as any });
 
@@ -326,7 +337,7 @@ export default function WerkScreen() {
                 <JobRow
                   key={job.id}
                   title={job.title || job.description || ''}
-                  meta={[job.trade, job.status].filter(Boolean).join(' · ')}
+                  meta={[job.trade ? tradeLabel(String(job.trade)) : null, job.status ? jobStatusLabel(String(job.status)) : null].filter(Boolean).join(' · ')}
                   accent={DK.colors.accent}
                   onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                   onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
@@ -345,7 +356,7 @@ export default function WerkScreen() {
                 <JobRow
                   key={job.id}
                   title={job.title || job.description || ''}
-                  meta={[job.quotedAmount ? formatCurrency(job.quotedAmount, (user?.country ?? 'NL') as Country) : null, job.status].filter(Boolean).join(' · ')}
+                  meta={[job.quotedAmount ? formatCurrency(job.quotedAmount, (user?.country ?? 'NL') as Country) : null, job.status ? jobStatusLabel(String(job.status)) : null].filter(Boolean).join(' · ')}
                   accent={DK.colors.highlight}
                   onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                   onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}

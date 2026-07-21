@@ -129,7 +129,7 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, businessProfile, updateJob, updateJobStatus, workers } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers, businessProfile, updateJob, updateJobStatus, workers } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
@@ -256,15 +256,23 @@ export default function JobDetailPage() {
     : { name: job.customerName || '', phone: '', email: '' };
   const upsells = EMPTY_UPSELLS;
   const rawJobMaterials = jobMaterialsMap[id || ''] || [];
-  const materials: MaterialPrediction[] = rawJobMaterials.map((jm: any) => ({
-    id: jm.id,
-    name: jm.materialId,
-    quantity: `${jm.quantity} ${jm.unit}`,
-    inStock: jm.status !== 'planned',
-    reorderNeeded: jm.status === 'planned',
-    estimatedCost: jm.totalPrice || (jm.unitPrice ? jm.unitPrice * jm.quantity : 0),
-    supplier: jm.supplierId || 'Supplier',
-  }));
+  const materials: MaterialPrediction[] = rawJobMaterials.map((jm: any) => {
+    // Resolve id → human name via the catalog; the raw materialId ('mat-cvfilter')
+    // used to render straight as the title. Fallback humanises the id rather than
+    // leaking it. Supplier resolves from the suppliers list; when unknown we omit
+    // it instead of showing a fake 'Supplier'.
+    const catMat = materialCatalog.find((m: any) => m.id === jm.materialId);
+    const catSup = jm.supplierId ? suppliers.find((s: any) => s.id === jm.supplierId) : undefined;
+    return {
+      id: jm.id,
+      name: catMat?.name || String(jm.materialId).replace(/^mat[-_]/i, '').replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+      quantity: `${jm.quantity} ${jm.unit}`,
+      inStock: jm.status !== 'planned',
+      reorderNeeded: jm.status === 'planned',
+      estimatedCost: jm.totalPrice || (jm.unitPrice ? jm.unitPrice * jm.quantity : 0),
+      supplier: catSup?.name || '',
+    };
+  });
   const reorderItems = materials.filter(m => m.reorderNeeded);
 
   const startTime = new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -702,16 +710,21 @@ export default function JobDetailPage() {
                   }]} />
                   <View style={styles.materialInfo}>
                     <Text style={styles.materialName}>{mat.name}</Text>
-                    <Text style={styles.materialDetail}>{mat.quantity} · {mat.supplier}</Text>
+                    <Text style={styles.materialDetail}>{[mat.quantity, mat.supplier].filter(Boolean).join(' · ')}</Text>
                   </View>
                   {mat.reorderNeeded && !orderedMaterials.has(mat.id) ? (
                     <Pressable
                       style={styles.reorderBtn}
                       accessibilityRole="button"
-                      accessibilityLabel={`Order ${mat.name}`}
+                      accessibilityLabel={`${t('jobs.order', 'Order')} ${mat.name}`}
                       onPress={() => {
                         setOrderedMaterials(prev => new Set(prev).add(mat.id));
-                        Alert.alert(t('jobs.ordered', 'Ordered'), t('jobs.orderedDesc', { defaultValue: '{{name}} has been ordered from {{supplier}}.', name: mat.name, supplier: mat.supplier }));
+                        Alert.alert(
+                          t('jobs.ordered', 'Ordered'),
+                          mat.supplier
+                            ? t('jobs.orderedDesc', { defaultValue: '{{name}} has been ordered from {{supplier}}.', name: mat.name, supplier: mat.supplier })
+                            : t('jobs.orderedDescNoSupplier', { defaultValue: '{{name}} has been ordered.', name: mat.name }),
+                        );
                       }}
                     >
                       <Ionicons name="cart" size={13} color="#fff" />
@@ -723,7 +736,7 @@ export default function JobDetailPage() {
                       <Text style={styles.reorderBtnText}>{t('jobs.ordered', 'Ordered')}</Text>
                     </View>
                   ) : (
-                    <Text style={styles.materialCost}>€{mat.estimatedCost.toFixed(2)}</Text>
+                    <Text style={styles.materialCost}>{formatCurrency(mat.estimatedCost, country)}</Text>
                   )}
                 </View>
               ))}

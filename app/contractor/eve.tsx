@@ -85,7 +85,7 @@ export default function EveDashboardScreen() {
               </View>
               <View style={styles.agentInfo}>
                 <Text style={styles.agentName}>{config.name}</Text>
-                <Text style={styles.agentTagline}>{config.tagline}</Text>
+                <Text style={styles.agentTagline}>{t(`eve.agents.${type}.tagline`, config.tagline)}</Text>
               </View>
               <View style={[styles.agentCount, { backgroundColor: config.color + '14', borderColor: config.color + '55' }]}>
                 <Text style={[styles.agentCountText, { color: config.color }]}>{count}</Text>
@@ -109,7 +109,7 @@ export default function EveDashboardScreen() {
             ) : (
               filteredItems.map((item) => (
                 <View key={item.id} style={styles.itemCard}>
-                  <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={{ minWidth: 0 }}>
                     <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
                     {item.estimatedImpact ? (
                       <Text style={styles.itemImpact} numberOfLines={1}>{item.estimatedImpact}</Text>
@@ -118,21 +118,25 @@ export default function EveDashboardScreen() {
                       <Text style={styles.itemDesc} numberOfLines={2}>{item.description}</Text>
                     ) : null}
                   </View>
-                  <Pressable
-                    onPress={() => aiQueue.reject(item.id)}
-                    hitSlop={6}
-                    style={styles.rejectBtn}
-                    accessibilityLabel={t('common.reject', 'Reject')}
-                  >
-                    <Ionicons name="close" size={14} color={DK.colors.textMuted} />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handleApprove(item)}
-                    style={({ pressed }) => [styles.approveBtn, pressed && { opacity: 0.85 }]}
-                    accessibilityLabel={item.actionLabel || t('common.approve', 'Approve')}
-                  >
-                    <DKLabel style={styles.approveText} numberOfLines={1}>{item.actionLabel || 'OK'}</DKLabel>
-                  </Pressable>
+                  {/* Actions on their own right-aligned row so long labels
+                      ("HERINNERING STUREN") aren't clipped by a maxWidth. */}
+                  <View style={styles.itemActions}>
+                    <Pressable
+                      onPress={() => aiQueue.reject(item.id)}
+                      hitSlop={6}
+                      style={styles.rejectBtn}
+                      accessibilityLabel={t('common.reject', 'Reject')}
+                    >
+                      <Ionicons name="close" size={14} color={DK.colors.textMuted} />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleApprove(item)}
+                      style={({ pressed }) => [styles.approveBtn, pressed && { opacity: 0.85 }]}
+                      accessibilityLabel={item.actionLabel || t('common.approve', 'Approve')}
+                    >
+                      <DKLabel style={styles.approveText} numberOfLines={1}>{item.actionLabel || 'OK'}</DKLabel>
+                    </Pressable>
+                  </View>
                 </View>
               ))
             )}
@@ -149,7 +153,7 @@ export default function EveDashboardScreen() {
             {(['agent', 'auditor', 'analyst'] as EveAgentType[]).map((type) => (
               <View key={type} style={styles.aboutRow}>
                 <Ionicons name={EVE_AGENTS[type].icon as IconName} size={14} color={EVE_AGENTS[type].color} />
-                <Text style={styles.aboutRowText} numberOfLines={3}>{EVE_AGENTS[type].description}</Text>
+                <Text style={styles.aboutRowText} numberOfLines={3}>{t(`eve.agents.${type}.description`, EVE_AGENTS[type].description)}</Text>
               </View>
             ))}
           </View>
@@ -197,10 +201,11 @@ const styles = StyleSheet.create({
   itemsSection: { marginTop: 8, gap: 8 },
   itemsHeading: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.textMuted, letterSpacing: 1.6, marginTop: 8, marginBottom: 4 },
   itemCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
+    flexDirection: 'column', alignItems: 'stretch', gap: 10,
     backgroundColor: DK.colors.panel2, borderRadius: 12, padding: 12,
     borderWidth: 1, borderColor: DK.colors.border,
   },
+  itemActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 10 },
   itemTitle: { fontFamily: DK.type.display700, fontSize: 13, color: DK.colors.text },
   itemImpact: { fontFamily: DK.type.body500, fontSize: 11, color: DK.colors.highlight, marginTop: 2 },
   itemDesc: { fontFamily: DK.type.body400, fontSize: 11, color: DK.colors.textMuted, marginTop: 2 },
@@ -210,10 +215,9 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   approveBtn: {
-    paddingHorizontal: 14, height: 32, borderRadius: 16,
+    paddingHorizontal: 16, height: 32, borderRadius: 16,
     backgroundColor: DK.colors.accent,
     alignItems: 'center', justifyContent: 'center',
-    maxWidth: 130,
   },
   approveText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.bg, letterSpacing: 1.0 },
   emptyCard: {
