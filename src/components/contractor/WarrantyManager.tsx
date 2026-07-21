@@ -249,7 +249,10 @@ export const WarrantyManager: React.FC = () => {
   const stats = useWarrantyStats();
 
   const activeWarranties = warranties.filter(w => w.status === 'active');
-  const expiringWarranties = warranties.filter(w => w.status === 'expiring_soon');
+  // The "Verlopend" tab surfaces warranties needing attention — both expiring
+  // soon and already expired (there is no separate expired tab, so otherwise an
+  // expired warranty would vanish from the UI entirely).
+  const expiringWarranties = warranties.filter(w => w.status === 'expiring_soon' || w.status === 'expired');
 
   const handleViewDetails = (warranty: Warranty) => {
     const daysLeft = Math.ceil(

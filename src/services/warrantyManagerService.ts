@@ -71,20 +71,24 @@ export interface WarrantyStats {
 // MOCK DATA
 // =============================================================================
 
+// Dates are relative to now so the demo stays evergreen — absolute dates rot
+// (a warranty seeded with warrantyEnd 2026-03-10 silently became "expired" once
+// that day passed, contradicting its 'active' status).
+const D = 24 * 60 * 60 * 1000;
 const DEMO_mockWarranties: Warranty[] = [
   {
     id: 'war-1', customerId: 'cust-1', customerName: 'Familie de Groot', equipmentName: 'CV-ketel', brand: 'Nefit', model: 'Trendline HRC 30',
-    serialNumber: 'NF-2021-12345', installDate: new Date('2021-03-10'), warrantyStart: new Date('2021-03-10'), warrantyEnd: new Date('2026-03-10'),
+    serialNumber: 'NF-2021-12345', installDate: new Date(Date.now() - 1600 * D), warrantyStart: new Date(Date.now() - 1600 * D), warrantyEnd: new Date(Date.now() + 550 * D),
     warrantyType: 'manufacturer', status: 'active', coverage: ['Onderdelen', 'Arbeidsloon', 'Voorrijkosten'], location: 'Hoofdstraat 45, Amsterdam',
   },
   {
     id: 'war-2', customerId: 'cust-3', customerName: 'Familie Visser', equipmentName: 'Warmtepomp', brand: 'Vaillant', model: 'aroTHERM plus',
-    serialNumber: 'VL-2022-98765', installDate: new Date('2022-10-15'), warrantyStart: new Date('2022-10-15'), warrantyEnd: new Date('2027-10-15'),
+    serialNumber: 'VL-2022-98765', installDate: new Date(Date.now() - 1050 * D), warrantyStart: new Date(Date.now() - 1050 * D), warrantyEnd: new Date(Date.now() + 500 * D),
     warrantyType: 'manufacturer', status: 'active', coverage: ['Compressor 5 jaar', 'Overige onderdelen 2 jaar'], location: 'Parkweg 78, Rotterdam',
   },
   {
     id: 'war-3', customerId: 'cust-2', customerName: 'Bakkerij Jansen', equipmentName: 'Airconditioning', brand: 'Daikin', model: 'FTXM35',
-    serialNumber: 'DK-2023-55555', installDate: new Date('2023-06-01'), warrantyStart: new Date('2023-06-01'), warrantyEnd: new Date('2024-06-01'),
+    serialNumber: 'DK-2023-55555', installDate: new Date(Date.now() - 1300 * D), warrantyStart: new Date(Date.now() - 1300 * D), warrantyEnd: new Date(Date.now() + 45 * D),
     warrantyType: 'manufacturer', status: 'expiring_soon', coverage: ['Onderdelen'], exclusions: ['Arbeidsloon na 6 maanden'], location: 'Winkelstraat 12, Utrecht',
   },
 ];
@@ -141,8 +145,13 @@ class WarrantyManagerService {
   private notify(): void { this.listeners.forEach(l => l()); }
 
   getWarranties(status?: Warranty['status']): Warranty[] {
-    if (status) return this.warranties.filter(w => w.status === status);
-    return this.warranties;
+    // Recompute status from the end date on every read — the stored `status`
+    // goes stale as time passes (a warranty seeded 'active' with a fixed end
+    // date is now expired), which showed an "Actief" badge next to "133 dagen
+    // verlopen". calculateStatus is the single source of truth.
+    const fresh = this.warranties.map(w => ({ ...w, status: this.calculateStatus(w.warrantyEnd) }));
+    if (status) return fresh.filter(w => w.status === status);
+    return fresh;
   }
 
   getWarranty(id: string): Warranty | undefined { return this.warranties.find(w => w.id === id); }
@@ -211,9 +220,11 @@ class WarrantyManagerService {
 
     return {
       totalWarranties: this.warranties.length,
-      activeWarranties: this.warranties.filter(w => w.status === 'active').length,
+      // Derive from end date (stored status can be stale) so the KPI matches
+      // the list — see getWarranties.
+      activeWarranties: this.warranties.filter(w => this.calculateStatus(w.warrantyEnd) === 'active').length,
       expiringThisMonth: this.warranties.filter(w => w.warrantyEnd <= monthEnd && w.warrantyEnd > now).length,
-      expiredWarranties: this.warranties.filter(w => w.status === 'expired').length,
+      expiredWarranties: this.warranties.filter(w => this.calculateStatus(w.warrantyEnd) === 'expired').length,
       openClaims: this.claims.filter(c => !['completed', 'denied'].includes(c.status)).length,
       claimsThisYear: this.claims.filter(c => c.claimDate >= yearStart).length,
       totalClaimValue: this.claims.filter(c => c.status === 'approved' || c.status === 'completed').reduce((sum, c) => sum + (c.approvedAmount || 0), 0),
