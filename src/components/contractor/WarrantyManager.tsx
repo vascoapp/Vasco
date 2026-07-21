@@ -37,24 +37,25 @@ type TabType = 'active' | 'expiring' | 'claims';
 // =============================================================================
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+  const { t } = useTranslation();
   const getConfig = () => {
     switch (status) {
       case 'active':
-        return { label: 'Actief', color: Palette.green500, bg: 'rgba(34, 197, 94, 0.15)' };
+        return { label: t('warranty.badgeActive', 'Active'), color: Palette.green500, bg: 'rgba(34, 197, 94, 0.15)' };
       case 'expiring_soon':
-        return { label: 'Verloopt', color: Palette.orange500, bg: Palette.orange100 };
+        return { label: t('warranty.badgeExpiring', 'Expiring'), color: Palette.orange500, bg: Palette.orange100 };
       case 'expired':
-        return { label: 'Verlopen', color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
+        return { label: t('warranty.badgeExpired', 'Expired'), color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
       case 'draft':
       case 'submitted':
       case 'under_review':
-        return { label: 'In behandeling', color: Palette.yellow600, bg: 'rgba(234, 179, 8, 0.15)' };
+        return { label: t('warranty.statusPending', 'In review'), color: Palette.yellow600, bg: 'rgba(234, 179, 8, 0.15)' };
       case 'approved':
-        return { label: 'Goedgekeurd', color: Palette.green500, bg: 'rgba(34, 197, 94, 0.15)' };
+        return { label: t('warranty.statusApproved', 'Approved'), color: Palette.green500, bg: 'rgba(34, 197, 94, 0.15)' };
       case 'denied':
-        return { label: 'Afgewezen', color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
+        return { label: t('warranty.statusRejected', 'Denied'), color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
       case 'completed':
-        return { label: 'Afgehandeld', color: Palette.blue500, bg: 'rgba(59, 130, 246, 0.15)' };
+        return { label: t('warranty.statusCompleted', 'Completed'), color: Palette.blue500, bg: 'rgba(59, 130, 246, 0.15)' };
       default:
         return { label: status, color: Palette.gray500, bg: Palette.gray100 };
     }
@@ -73,6 +74,7 @@ const WarrantyCard: React.FC<{
   onViewDetails: () => void;
   onFileClaim: () => void;
 }> = ({ warranty, onViewDetails, onFileClaim }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const daysUntilExpiry = Math.ceil(
@@ -108,8 +110,8 @@ const WarrantyCard: React.FC<{
           <Ionicons name="calendar-outline" size={16} color={getExpiryColor()} />
           <Text style={[styles.warrantyDetailText, { color: getExpiryColor() }]}>
             {daysUntilExpiry > 0
-              ? `Verloopt over ${daysUntilExpiry} dagen`
-              : `${Math.abs(daysUntilExpiry)} dagen verlopen`}
+              ? t('warranty.expiresInDays', 'Expires in {{days}} days', { days: daysUntilExpiry })
+              : t('warranty.expiredDaysAgo', '{{days}} days expired', { days: Math.abs(daysUntilExpiry) })}
           </Text>
         </View>
       </View>
@@ -118,21 +120,21 @@ const WarrantyCard: React.FC<{
         <View style={styles.expandedContent}>
           <View style={styles.warrantyDates}>
             <View style={styles.dateItem}>
-              <Text style={styles.dateLabel}>Installatie</Text>
+              <Text style={styles.dateLabel}>{t('warranty.installation', 'Installation')}</Text>
               <Text style={styles.dateValue}>
                 {warranty.installDate.toLocaleDateString(undefined)}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
-              <Text style={styles.dateLabel}>Start garantie</Text>
+              <Text style={styles.dateLabel}>{t('warranty.warrantyStartLabel', 'Warranty start')}</Text>
               <Text style={styles.dateValue}>
                 {warranty.warrantyStart.toLocaleDateString(undefined)}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
-              <Text style={styles.dateLabel}>Einde garantie</Text>
+              <Text style={styles.dateLabel}>{t('warranty.warrantyEndLabel', 'Warranty end')}</Text>
               <Text style={styles.dateValue}>
                 {warranty.warrantyEnd.toLocaleDateString(undefined)}
               </Text>
@@ -141,14 +143,14 @@ const WarrantyCard: React.FC<{
 
           {warranty.serialNumber && (
             <View style={styles.serialSection}>
-              <Text style={styles.serialLabel}>Serienummer</Text>
+              <Text style={styles.serialLabel}>{t('warranty.serialNumber', 'Serial number')}</Text>
               <Text style={styles.serialValue}>{warranty.serialNumber}</Text>
             </View>
           )}
 
           {warranty.coverage.length > 0 && (
             <View style={styles.coverageSection}>
-              <Text style={styles.coverageTitle}>Dekking</Text>
+              <Text style={styles.coverageTitle}>{t('warranty.coverage', 'Coverage')}</Text>
               {warranty.coverage.map((item, index) => (
                 <View key={index} style={styles.coverageItem}>
                   <Ionicons name="checkmark-circle" size={16} color={Palette.green500} />
@@ -161,7 +163,7 @@ const WarrantyCard: React.FC<{
           <View style={styles.warrantyActions}>
             <Pressable style={styles.actionButton} onPress={onViewDetails}>
               <Ionicons name="document-text-outline" size={18} color={SemanticColors.actionPrimary} />
-              <Text style={styles.actionButtonText}>Details</Text>
+              <Text style={styles.actionButtonText}>{t('warranty.detailsBtn', 'Details')}</Text>
             </Pressable>
             {warranty.status !== 'expired' && (
               <Pressable
@@ -170,7 +172,7 @@ const WarrantyCard: React.FC<{
               >
                 <Ionicons name="shield-outline" size={18} color={Palette.white} />
                 <Text style={[styles.actionButtonText, styles.primaryButtonText]}>
-                  Claim Indienen
+                  {t('warranty.fileClaim', 'File claim')}
                 </Text>
               </Pressable>
             )}
@@ -185,6 +187,7 @@ const ClaimCard: React.FC<{
   claim: WarrantyClaim;
   onViewDetails: () => void;
 }> = ({ claim, onViewDetails }) => {
+  const { t } = useTranslation();
   const daysSinceFiled = Math.floor(
     (Date.now() - claim.claimDate.getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -208,13 +211,13 @@ const ClaimCard: React.FC<{
         </View>
         <View style={styles.claimDetailRow}>
           <Ionicons name="time-outline" size={16} color={SemanticColors.textSecondary} />
-          <Text style={styles.claimDetailText}>{daysSinceFiled} dagen geleden ingediend</Text>
+          <Text style={styles.claimDetailText}>{t('warranty.daysAgoFiled', 'Filed {{count}} days ago', { count: daysSinceFiled })}</Text>
         </View>
       </View>
 
       {claim.estimatedCost > 0 && (
         <View style={styles.claimValue}>
-          <Text style={styles.claimValueLabel}>Geschatte waarde</Text>
+          <Text style={styles.claimValueLabel}>{t('warranty.estimatedValue', 'Estimated value')}</Text>
           <Text style={styles.claimValueAmount}>{formatCurrency(claim.estimatedCost)}</Text>
         </View>
       )}
@@ -325,19 +328,19 @@ export const WarrantyManager: React.FC = () => {
             <View style={styles.statsRow}>
               <StatCard
                 icon="shield-checkmark-outline"
-                label="Actief"
+                label={t('warranty.statActive', 'Active')}
                 value={stats.activeWarranties}
                 color={Palette.green500}
               />
               <StatCard
                 icon="warning-outline"
-                label="Verloopt Binnenkort"
+                label={t('warranty.statExpiringSoon', 'Expiring soon')}
                 value={stats.expiringThisMonth}
                 color={Palette.orange500}
               />
               <StatCard
                 icon="document-text-outline"
-                label="Claims"
+                label={t('warranty.statClaims', 'Claims')}
                 value={stats.openClaims}
                 color={Palette.blue500}
               />
@@ -345,12 +348,12 @@ export const WarrantyManager: React.FC = () => {
 
             {loading ? (
               <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Laden...</Text>
+                <Text style={styles.loadingText}>{t('common.loading', 'Loading...')}</Text>
               </View>
             ) : activeWarranties.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="shield-outline" size={48} color={SemanticColors.textSecondary} />
-                <Text style={styles.emptyText}>Geen actieve garanties</Text>
+                <Text style={styles.emptyText}>{t('warranty.noActive', 'No active warranties')}</Text>
               </View>
             ) : (
               activeWarranties.map(warranty => (
@@ -371,9 +374,9 @@ export const WarrantyManager: React.FC = () => {
             <View style={styles.alertBanner}>
               <Ionicons name="alert-circle" size={24} color={Palette.orange500} />
               <View style={styles.alertContent}>
-                <Text style={styles.alertTitle}>Garanties Verlopen Binnenkort</Text>
+                <Text style={styles.alertTitle}>{t('warranty.expiringTitle', 'Warranties Expiring Soon')}</Text>
                 <Text style={styles.alertText}>
-                  {expiringWarranties.length} garantie(s) verlopen binnen 90 dagen
+                  {t('warranty.expiringCount', '{{count}} warranty(ies) expiring within 90 days', { count: expiringWarranties.length })}
                 </Text>
               </View>
             </View>
@@ -381,7 +384,7 @@ export const WarrantyManager: React.FC = () => {
             {expiringWarranties.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="checkmark-circle-outline" size={48} color={Palette.green500} />
-                <Text style={styles.emptyText}>Geen garanties verlopen binnenkort</Text>
+                <Text style={styles.emptyText}>{t('warranty.noExpiring', 'No warranties expiring soon')}</Text>
               </View>
             ) : (
               expiringWarranties.map(warranty => (
@@ -400,34 +403,34 @@ export const WarrantyManager: React.FC = () => {
         return (
           <View style={styles.tabContent}>
             <View style={styles.claimsHeader}>
-              <Text style={styles.claimsTitle}>Garantieclaims</Text>
+              <Text style={styles.claimsTitle}>{t('warranty.claimsTitle', 'Warranty claims')}</Text>
               <Pressable style={styles.newClaimButton}>
                 <Ionicons name="add" size={18} color={Palette.white} />
-                <Text style={styles.newClaimButtonText}>Nieuwe Claim</Text>
+                <Text style={styles.newClaimButtonText}>{t('warranty.newClaim', 'New claim')}</Text>
               </Pressable>
             </View>
 
             <View style={styles.claimsStats}>
               <View style={styles.claimStatItem}>
                 <Text style={styles.claimStatValue}>{stats.openClaims}</Text>
-                <Text style={styles.claimStatLabel}>In behandeling</Text>
+                <Text style={styles.claimStatLabel}>{t('warranty.statInReview', 'In review')}</Text>
               </View>
               <View style={styles.claimStatDivider} />
               <View style={styles.claimStatItem}>
                 <Text style={styles.claimStatValue}>{stats.claimsThisYear}</Text>
-                <Text style={styles.claimStatLabel}>Deze maand</Text>
+                <Text style={styles.claimStatLabel}>{t('warranty.statThisMonth', 'This month')}</Text>
               </View>
               <View style={styles.claimStatDivider} />
               <View style={styles.claimStatItem}>
                 <Text style={styles.claimStatValue}>{stats.approvalRate}%</Text>
-                <Text style={styles.claimStatLabel}>Succesrate</Text>
+                <Text style={styles.claimStatLabel}>{t('warranty.statSuccessRate', 'Success rate')}</Text>
               </View>
             </View>
 
             {claims.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="document-outline" size={48} color={SemanticColors.textSecondary} />
-                <Text style={styles.emptyText}>Geen claims gevonden</Text>
+                <Text style={styles.emptyText}>{t('warranty.noClaims', 'No claims found')}</Text>
               </View>
             ) : (
               claims.map(claim => (
@@ -446,7 +449,7 @@ export const WarrantyManager: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Garantiebeheer</Text>
+        <Text style={styles.title}>{t('warranty.title', 'Warranty management')}</Text>
         <Pressable style={styles.searchButton}>
           <Ionicons name="search-outline" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
@@ -454,9 +457,9 @@ export const WarrantyManager: React.FC = () => {
 
       <View style={styles.tabs}>
         {[
-          { key: 'active', label: 'Actief', icon: 'shield-checkmark-outline' },
-          { key: 'expiring', label: 'Verlopend', icon: 'warning-outline' },
-          { key: 'claims', label: 'Claims', icon: 'document-text-outline' },
+          { key: 'active', label: t('warranty.statActive', 'Active'), icon: 'shield-checkmark-outline' },
+          { key: 'expiring', label: t('warranty.tabExpiring', 'Expiring'), icon: 'warning-outline' },
+          { key: 'claims', label: t('warranty.statClaims', 'Claims'), icon: 'document-text-outline' },
         ].map(tab => (
           <Pressable
             key={tab.key}
