@@ -7,12 +7,12 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Palette, SemanticColors } from '../../src/theme/colors';
-import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE, RADIUS } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { Spacing } from '../../src/theme/spacing';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
@@ -25,6 +25,7 @@ import { ShareDecisionTracker } from '../../src/components/contractor/ShareDecis
 import type { CustomerDecisionTracker, DecisionTemplate } from '../../src/types/decisions';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useDecisionUpdates } from '../../src/services/decisionSyncService';
+import { useAppState } from '../../src/state/AppState';
 import { PhotoSubmissionsPanel } from '../../src/components/contractor/PhotoSubmissionsPanel';
 import { DecisionActivityPanel } from '../../src/components/contractor/DecisionActivityPanel';
 
@@ -60,12 +61,17 @@ async function persistTrackerLocal(tracker: CustomerDecisionTracker): Promise<vo
   }
 }
 
-type ViewMode = 'list' | 'detail' | 'template-picker';
+type ViewMode = 'list' | 'detail' | 'template-picker' | 'customer-picker';
 
 export default function KeuzeScreen() {
   const { t } = useTranslation();
+  const { customers } = useAppState();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTracker, setSelectedTracker] = useState<CustomerDecisionTracker | null>(null);
+  // Template chosen, waiting for the contractor to attach a customer before we
+  // create the tracker. Was: every tracker was created as "Nieuwe klant" with
+  // no way to link a real customer.
+  const [pendingTemplate, setPendingTemplate] = useState<DecisionTemplate | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -96,6 +102,18 @@ export default function KeuzeScreen() {
   };
 
   const handleSelectTemplate = (template: DecisionTemplate) => {
+    // Attach a customer before creating — the tracker used to be created
+    // straight away as a placeholder "Nieuwe klant".
+    setPendingTemplate(template);
+    setViewMode('customer-picker');
+  };
+
+  const createTrackerForCustomer = (
+    customer: { id: string; name: string; phone?: string; email?: string } | null
+  ) => {
+    const template = pendingTemplate;
+    if (!template) return;
+    setPendingTemplate(null);
     // R66 round 32: route create through decisionTrackerService so BE
     // gets the tracker + items rows with proper UUIDs. Optimistic flow:
     //   1. Build a local tempId-keyed tracker, render immediately.
@@ -103,11 +121,11 @@ export default function KeuzeScreen() {
     //   3. Fire-and-await createTrackerWithBE — on success, swap to the
     //      BE-uuid version and re-persist; on failure, keep the local
     //      copy (tempId stays; flagged for r33 retry path).
-    const customerName = t('decisions.newCustomer', 'New customer');
+    const customerName = customer?.name ?? t('decisions.newCustomer', 'New customer');
     const optimistic: CustomerDecisionTracker = {
       id: `tracker_${Date.now()}`,
       jobId: 'new',
-      customerId: 'new',
+      customerId: customer?.id ?? 'new',
       customerName,
       templateId: template.id,
       templateName: template.name,
@@ -174,6 +192,9 @@ export default function KeuzeScreen() {
           userId,
           template,
           customerName,
+          customerId: customer?.id,
+          customerPhone: customer?.phone,
+          customerEmail: customer?.email,
         });
         if (!result.persistedRemotely) return;
         setSelectedTracker((prev) => {
@@ -197,6 +218,7 @@ export default function KeuzeScreen() {
 
   const handleClose = () => {
     setSelectedTracker(null);
+    setPendingTemplate(null);
     setViewMode('list');
   };
 
@@ -355,6 +377,40 @@ export default function KeuzeScreen() {
             onClose={handleClose}
           />
         )}
+
+        {viewMode === 'customer-picker' && (
+          <View style={styles.pickerWrap}>
+            <Text style={styles.pickerTitle}>{t('decisions.pickCustomer', 'Which customer?')}</Text>
+            <Text style={styles.pickerDesc}>{t('decisions.pickCustomerDesc', 'Attach this checklist to a customer so reminders go to the right person.')}</Text>
+            {customers.map((c) => (
+              <Pressable
+                key={c.id}
+                style={({ pressed }) => [styles.customerRow, pressed && { opacity: 0.7 }]}
+                onPress={() => createTrackerForCustomer({ id: c.id, name: c.name, phone: c.phone, email: c.email })}
+              >
+                <View style={styles.customerAvatar}>
+                  <Text style={styles.customerAvatarText}>{(c.name || '?').charAt(0).toUpperCase()}</Text>
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.customerName} numberOfLines={1}>{c.name}</Text>
+                  {c.email || c.phone ? (
+                    <Text style={styles.customerMeta} numberOfLines={1}>{c.email || c.phone}</Text>
+                  ) : null}
+                </View>
+              </Pressable>
+            ))}
+            {/* Fall back to the old placeholder behaviour when no customer fits yet. */}
+            <Pressable
+              style={({ pressed }) => [styles.customerRow, styles.customerRowSkip, pressed && { opacity: 0.7 }]}
+              onPress={() => createTrackerForCustomer(null)}
+            >
+              <View style={[styles.customerAvatar, styles.customerAvatarSkip]}>
+                <Text style={styles.customerAvatarText}>+</Text>
+              </View>
+              <Text style={styles.customerName}>{t('decisions.newCustomerOption', 'New customer — assign later')}</Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       {/* Share Modal */}
@@ -380,6 +436,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PAGE_BG,
   },
+  // Customer picker (attach a real customer before creating a tracker)
+  pickerWrap: { paddingHorizontal: Spacing.md, paddingTop: Spacing.md, gap: Spacing.sm },
+  pickerTitle: { fontSize: 20, fontFamily: TYPE.sectionFamily, color: '#FFFFFF' },
+  pickerDesc: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginBottom: Spacing.sm },
+  customerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    padding: Spacing.md, borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  customerRowSkip: { marginTop: Spacing.sm, backgroundColor: 'transparent' },
+  customerAvatar: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: Palette.hermesOrange + '22',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  customerAvatarSkip: { backgroundColor: SemanticColors.surfaceSecondary },
+  customerAvatarText: { fontSize: 15, fontFamily: TYPE.sectionFamily, color: Palette.hermesOrange },
+  customerName: { fontSize: 15, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  customerMeta: { fontSize: 12, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary, marginTop: 2 },
   titleRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,

@@ -25,6 +25,7 @@ import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { useDaySchedule, type ScheduledJob } from '../../src/services/smartSchedulerService';
 import { useAIQueue, type QueueItem } from '../../src/services/aiActionQueueService';
+import { useCombinedNotifications } from '../../src/services/notificationService';
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { evaluateTriggers } from '../../src/services/workflowPackService';
 import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
@@ -105,6 +106,9 @@ export default function VandaagDK() {
   const activeQuotes = quotes.filter((q) => q.status === 'sent').length;
 
   const pendingQueue = aiQueue.items.filter((i) => i.status === 'pending' && !i.snoozedUntil);
+  // Bell opens the notifications inbox, so badge it with THAT count — it used to
+  // show the AI-queue length (e.g. bell "12" but the inbox held 2 items).
+  const { notifications: inboxNotifications } = useCombinedNotifications({ invoices: invoices as any, jobs: jobs as any });
   const heroAction = pendingQueue[0];
   const inlineQueue = pendingQueue.slice(1, 4);
 
@@ -167,9 +171,9 @@ export default function VandaagDK() {
           </View>
           <Pressable style={styles.bellBtn} onPress={() => router.push('/contractor/notifications' as any)} hitSlop={8}>
             <Ionicons name="notifications-outline" size={20} color={DK.colors.text} />
-            {pendingQueue.length > 0 ? (
+            {inboxNotifications.length > 0 ? (
               <View style={styles.bellBadge}>
-                <Text style={styles.bellBadgeText}>{pendingQueue.length}</Text>
+                <Text style={styles.bellBadgeText}>{inboxNotifications.length}</Text>
               </View>
             ) : null}
           </Pressable>

@@ -255,14 +255,30 @@ const SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-008', name: 'Bouwgroep Atlas', email: 'projecten@bouwgroepatlas.nl', phone: '+31 30 7654321' },
 ];
 
+// Demo material catalog + suppliers. The catalog resolves jobMaterial.materialId
+// → a human name (job detail previously leaked the raw 'mat-cvfilter' id) and
+// gives the reorder / purchasing flows real rows to work against. Demo-gated
+// (useSeedData); production populates these from the backend.
+const SEED_SUPPLIERS: Supplier[] = [
+  { id: 'sup-warmteservice', name: 'Warmteservice', accountStatus: 'active', avgLeadTimeDays: 2, totalSpend: 0, totalOrders: 0, apiEnabled: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'sup-gamma', name: 'Gamma', accountStatus: 'active', avgLeadTimeDays: 1, totalSpend: 0, totalOrders: 0, apiEnabled: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+];
+
+const SEED_MATERIALS: Material[] = [
+  { id: 'mat-cvfilter', name: 'CV-filter', category: 'verwarming', baseUnit: 'stuk', aliases: ['cv filter', 'ketelfilter'], demandPattern: 'steady', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'mat-expansievat', name: 'Expansievat 8L', category: 'verwarming', baseUnit: 'stuk', aliases: ['expansievat'], demandPattern: 'steady', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'mat-koperbuis', name: 'Koperbuis 15mm', category: 'leidingwerk', baseUnit: 'meter', aliases: ['koperen buis', 'cu buis'], demandPattern: 'steady', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'mat-thermostaat', name: 'Thermostaatknop', category: 'verwarming', baseUnit: 'stuk', aliases: ['thermostaatkop'], demandPattern: 'steady', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+];
+
 const SEED_JOB_MATERIALS: Record<string, JobMaterial[]> = {
   'j-seed-2': [
-    { id: 'jm-s2-1', jobId: 'j-seed-2', materialId: 'mat-cvfilter', quantity: 2, unit: 'stuk', unitPrice: 8.50, totalPrice: 17, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'jm-s2-2', jobId: 'j-seed-2', materialId: 'mat-expansievat', quantity: 1, unit: 'stuk', unitPrice: 65, totalPrice: 65, status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'jm-s2-1', jobId: 'j-seed-2', materialId: 'mat-cvfilter', quantity: 2, unit: 'stuk', unitPrice: 8.50, totalPrice: 17, supplierId: 'sup-warmteservice', status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'jm-s2-2', jobId: 'j-seed-2', materialId: 'mat-expansievat', quantity: 1, unit: 'stuk', unitPrice: 65, totalPrice: 65, supplierId: 'sup-warmteservice', status: 'planned', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
   ],
   'j-seed-3': [
-    { id: 'jm-s3-1', jobId: 'j-seed-3', materialId: 'mat-koperbuis', quantity: 6, unit: 'meter', unitPrice: 12.50, totalPrice: 75, status: 'delivered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'jm-s3-2', jobId: 'j-seed-3', materialId: 'mat-thermostaat', quantity: 3, unit: 'stuk', unitPrice: 42, totalPrice: 126, status: 'ordered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'jm-s3-1', jobId: 'j-seed-3', materialId: 'mat-koperbuis', quantity: 6, unit: 'meter', unitPrice: 12.50, totalPrice: 75, supplierId: 'sup-gamma', status: 'delivered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'jm-s3-2', jobId: 'j-seed-3', materialId: 'mat-thermostaat', quantity: 3, unit: 'stuk', unitPrice: 42, totalPrice: 126, supplierId: 'sup-warmteservice', status: 'ordered', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
   ],
 };
 
@@ -317,8 +333,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // R86 crew dispatch lite: contractor's roster. Empty for solo
   // contractors. Persisted to AsyncStorage and (in prod) to `workers`.
   const [workers, setWorkers] = useState<Worker[]>([]);
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [materials, setMaterials] = useState<Material[]>(useSeedData ? SEED_MATERIALS : []);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(useSeedData ? SEED_SUPPLIERS : []);
   const [jobMaterialsMap, setJobMaterialsMap] = useState(useSeedData ? SEED_JOB_MATERIALS : {} as Record<string, JobMaterial[]>);
   const [priceObsMap, setPriceObsMap] = useState<Record<string, PriceObservation[]>>({});
   const [moneybirdConnected, setMoneybirdConnected] = useState(false);

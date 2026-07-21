@@ -127,10 +127,12 @@ export default function SavingsHubScreen() {
                   </View>
                   <View style={styles.breakdownAmountCol}>
                     <Text style={styles.breakdownAmount}>{formatAmount(cat.amount)}</Text>
-                    {/* Badge only when the trend is actually known. It used to
-                        render a hardcoded "+15%"/"+8%"/"+20%" next to a €0,00
-                        amount — a growth rate for savings that did not exist. */}
-                    {cat.trendPercent !== null && (
+                    {/* Badge only when the trend is actually known AND non-zero.
+                        It used to render a hardcoded "+15%"/"+8%"/"+20%" next to a
+                        €0,00 amount — a growth rate for savings that did not exist.
+                        A flat 0% renders a dash-icon "— 0%" chip that reads like a
+                        glitch and carries no signal, so suppress it too. */}
+                    {cat.trendPercent !== null && cat.trendPercent !== 0 && (
                       <View style={[styles.breakdownTrendBadge, {
                         backgroundColor: cat.trend === 'up'
                           ? DK.colors.success + '22'
