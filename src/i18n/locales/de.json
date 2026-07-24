@@ -366,6 +366,8 @@
     "noJobsTodayDesc": "Ihr Tag ist frei — planen Sie die nächste Woche."
   },
   "jobs": {
+    "statusChangedWithWarnings": "Status mit Warnungen aktualisiert",
+    "completedWithWarnings": "Mit Warnungen abgeschlossen",
     "title": "Aufträge",
     "pipeline": "Pipeline",
     "calendar": "Kalender",
@@ -623,6 +625,12 @@
     "count": "{{count}} Fotos"
   },
   "aiQuote": {
+    "unavailable": "Die KI-Analyse ist derzeit nicht verfügbar. Fügen Sie Positionen manuell hinzu oder versuchen Sie es später erneut.",
+    "demoResults": "KI-Analyse nicht verfügbar — Demo-Ergebnisse werden angezeigt",
+    "analyzeFailed": "Die Fotos konnten nicht analysiert werden. Versuchen Sie es erneut oder fügen Sie Positionen manuell hinzu.",
+    "verifyBadge": "Prüfen",
+    "ownPriceBadge": "Eigener Preis",
+    "cohortBadge": "Kohorten-abgestimmt",
     "addPhotosTitle": "3–5 Fotos des Auftrags hinzufügen",
     "addPhotosDesc": "Mehrere Blickwinkel helfen Vasco, Materialien, Maße und Arbeitsumfang zu erkennen. Eine Münze oder ein Maßband als Referenzgröße hilft zusätzlich.",
     "takePhoto": "Foto aufnehmen",

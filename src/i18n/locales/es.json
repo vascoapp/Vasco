@@ -366,6 +366,8 @@
     "noJobsTodayDesc": "Tienes el día libre — planifica la próxima semana."
   },
   "jobs": {
+    "statusChangedWithWarnings": "Estado actualizado con advertencias",
+    "completedWithWarnings": "Completado con advertencias",
     "title": "Obras",
     "pipeline": "Pipeline",
     "calendar": "Calendario",
@@ -623,6 +625,12 @@
     "count": "{{count}} fotos"
   },
   "aiQuote": {
+    "unavailable": "El análisis con IA no está disponible ahora. Añade líneas manualmente o inténtalo más tarde.",
+    "demoResults": "Análisis con IA no disponible — mostrando resultados de demostración",
+    "analyzeFailed": "No se pudieron analizar las fotos. Inténtalo de nuevo o añade líneas manualmente.",
+    "verifyBadge": "Verificar",
+    "ownPriceBadge": "Tu precio",
+    "cohortBadge": "Ajustado por cohorte",
     "addPhotosTitle": "Añade 3–5 fotos del trabajo",
     "addPhotosDesc": "Múltiples ángulos ayudan a Vasco a detectar materiales, medidas y trabajo necesario. Incluye una moneda o cinta métrica para la escala si puedes.",
     "takePhoto": "Hacer foto",

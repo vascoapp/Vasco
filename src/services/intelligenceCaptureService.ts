@@ -14,6 +14,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getAuthedUserId } from '../lib/currentUser';
 import { logIntelligenceWriteFailure } from '../intelligence/dataCollector';
 import { isTempIdFast } from '../lib/idShape';
+import { normalizeComplexity } from '../utils/complexity';
 
 // R59: nullify temp ids before writing FK columns. The cohort tables
 // (photo_analyses.job_id, photo_analyses.quote_id, job_quality_signals.job_id,
@@ -143,8 +144,8 @@ export async function persistPhotoAnalysis(input: PhotoAnalysisRow): Promise<voi
       detected_materials: input.detectedMaterials ?? null,
       // Normalize the FE 'medium' → DB 'moderate' (CHECK is simple/moderate/
       // complex). Without this, an AI 'medium' would 23514 and drop the ENTIRE
-      // moat row. Centralized here so no caller has to remember (R66r35 class).
-      estimated_complexity: (input.estimatedComplexity as string) === 'medium' ? 'moderate' : (input.estimatedComplexity ?? null),
+      // moat row. Shared helper (#7) so this can't drift from the other site.
+      estimated_complexity: normalizeComplexity(input.estimatedComplexity) ?? null,
       estimated_duration_hours: input.estimatedDurationHours ?? null,
       estimated_cost_eur: input.estimatedCostEur ?? null,
       raw_response: input.rawResponse ?? null,

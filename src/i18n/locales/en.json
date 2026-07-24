@@ -366,6 +366,8 @@
     "noJobsTodayDesc": "Your day is free — plan next week."
   },
   "jobs": {
+    "statusChangedWithWarnings": "Status updated with warnings",
+    "completedWithWarnings": "Completed with warnings",
     "title": "Jobs",
     "pipeline": "Pipeline",
     "calendar": "Calendar",
@@ -623,6 +625,12 @@
     "count": "{{count}} photos"
   },
   "aiQuote": {
+    "unavailable": "AI analysis is unavailable right now. Add items manually or try again later.",
+    "demoResults": "AI analysis unavailable — showing demo results",
+    "analyzeFailed": "Couldn't analyze the photos. Try again or add items manually.",
+    "verifyBadge": "Verify",
+    "ownPriceBadge": "Your price",
+    "cohortBadge": "Cohort-tuned",
     "addPhotosTitle": "Add 3–5 photos of the job",
     "addPhotosDesc": "Multiple angles help Vasco detect materials, dimensions and work needed. Include a coin or tape measure for scale if you can.",
     "takePhoto": "Take photo",

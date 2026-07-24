@@ -350,6 +350,8 @@
     "noJobsTodayDesc": "Je dag is vrij — plan alvast volgende week."
   },
   "jobs": {
+    "statusChangedWithWarnings": "Status bijgewerkt met waarschuwingen",
+    "completedWithWarnings": "Afgerond met waarschuwingen",
     "title": "Klussen",
     "pipeline": "Pipeline",
     "calendar": "Kalender",
@@ -607,6 +609,12 @@
     "count": "{{count}} foto's"
   },
   "aiQuote": {
+    "unavailable": "AI-analyse is momenteel niet beschikbaar. Voeg items handmatig toe of probeer het later opnieuw.",
+    "demoResults": "AI-analyse niet beschikbaar — demo resultaten getoond",
+    "analyzeFailed": "Kon de foto's niet analyseren. Probeer opnieuw of voeg items handmatig toe.",
+    "verifyBadge": "Controleer",
+    "ownPriceBadge": "Eigen prijs",
+    "cohortBadge": "Cohort-afgestemd",
     "addPhotosTitle": "Voeg 3–5 foto's toe van het werk",
     "addPhotosDesc": "Meerdere hoeken helpen Vasco materialen, afmetingen en werk te herkennen. Voeg een muntstuk of rolmaat toe als ijkpunt.",
     "takePhoto": "Maak foto",

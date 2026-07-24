@@ -5,7 +5,7 @@
 // line items into the pricing intelligence database for the AI moat.
 // =============================================================================
 
-import { formatMoney } from '../i18n/formatting';
+import { formatMoney, currencyForCountry, type Country } from '../i18n/formatting';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { emitBusinessEvent, emitMaterialPurchased } from '../intelligence/dataCollector';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
@@ -68,12 +68,21 @@ export async function scanInvoicePhoto(
   }
   await AsyncStorage.setItem(RATE_LIMIT_KEY, String(Date.now()));
 
-  // Try real API first
+  // Try real API first — one retry with backoff before falling through.
+  // A transient invoke failure used to drop straight to mock (dev) / null
+  // (prod); a scanned invoice is worth a second attempt.
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-photo', {
-        body: { imageBase64, country, mode: 'invoice' },
-      });
+      let data: any = null;
+      let error: any = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await supabase.functions.invoke('analyze-photo', {
+          body: { imageBase64, country, mode: 'invoice' },
+        });
+        data = res.data; error = res.error;
+        if (!error && data && data.lineItems) break;
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 900));
+      }
 
       if (!error && data && data.lineItems) {
         const invoice: ScannedInvoice = {
@@ -136,7 +145,16 @@ export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
   // dataCollector writes one row.
   const userTrade = getCurrentTrade();
   const userCountry = getCurrentCountry() || 'NL';
+  // #6: country-aware currency — was hardcoded 'EUR', mis-tagging every GBP/USD
+  // scanned line. The moat aggregates by currency, so a mis-tag silently mixed
+  // £ and € into one average.
+  const moatCurrency = currencyForCountry(userCountry as Country);
+  // #3b: don't train the moat on OCR we don't trust. A mis-read unit price on a
+  // low-confidence line poisons the cohort average for that material. Feed only
+  // confident lines; the scan itself is still saved in full for the contractor.
+  const MOAT_MIN_LINE_CONFIDENCE = 50;
   for (const item of invoice.lineItems) {
+    if (typeof item.confidence === 'number' && item.confidence < MOAT_MIN_LINE_CONFIDENCE) continue;
     const itemTrade = item.category || userTrade || 'general';
     emitMaterialPurchased(userId, {
       materialName: item.description,
@@ -150,7 +168,7 @@ export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
       materialCategory: item.category,
       brand: item.brand,
       eanCode: item.ean,
-      currency: 'EUR',
+      currency: moatCurrency,
       vatRate: item.vatRate,
       observedAt: invoice.documentDate,
       source: 'invoice_scan',
@@ -204,7 +222,7 @@ async function saveScanHistory(invoice: ScannedInvoice): Promise<void> {
         subtotal: invoice.subtotal,
         vat_amount: invoice.vatAmount,
         total: invoice.total,
-        currency: 'EUR',
+        currency: currencyForCountry((getCurrentCountry() || 'NL') as Country),
         payment_terms: invoice.paymentTerms ?? null,
         confidence: invoice.confidence,
         line_items: invoice.lineItems,
@@ -325,6 +343,56 @@ export async function getPriceRecommendations(): Promise<PriceRecommendation[]> 
 
   // Sort by savings potential (highest first)
   return recommendations.sort((a, b) => b.savingsPotential - a.savingsPotential);
+}
+
+// ---------------------------------------------------------------------------
+// Scanned unit-price index — the contractor's OWN supplier prices, keyed by
+// material name. Feeds the photo→quote repricing (quoteMoatRepricing) so a
+// detected material line is priced from what THIS contractor actually paid,
+// not a generic AI guess. Uses the median across scans to shrug off one-off
+// outliers / typos in the OCR.
+// ---------------------------------------------------------------------------
+
+export interface ScannedUnitPrice {
+  unitPrice: number;
+  unit: string;
+  supplier: string;
+  samples: number;
+  lastObserved: string;
+  // Carried through for exact EAN / article-number matching (#2) — the strong
+  // link that beats fuzzy description matching.
+  ean?: string;
+  articleNumber?: string;
+}
+
+export async function getScannedUnitPriceIndex(): Promise<Map<string, ScannedUnitPrice>> {
+  const history = await getScanHistory();
+  const acc = new Map<string, { prices: number[]; unit: string; supplier: string; last: string; ean?: string; articleNumber?: string }>();
+  for (const scan of history) {
+    for (const item of scan.lineItems) {
+      const key = item.description.toLowerCase().trim();
+      if (!key || !(item.unitPrice > 0)) continue;
+      const e = acc.get(key) ?? { prices: [], unit: item.unit, supplier: scan.supplierName, last: scan.documentDate, ean: item.ean, articleNumber: item.articleNumber };
+      e.prices.push(item.unitPrice);
+      // Keep the most recent supplier/date + identifiers as representative.
+      if (scan.documentDate > e.last) {
+        e.last = scan.documentDate;
+        e.supplier = scan.supplierName;
+        if (item.ean) e.ean = item.ean;
+        if (item.articleNumber) e.articleNumber = item.articleNumber;
+      }
+      if (!e.ean && item.ean) e.ean = item.ean;
+      if (!e.articleNumber && item.articleNumber) e.articleNumber = item.articleNumber;
+      acc.set(key, e);
+    }
+  }
+  const out = new Map<string, ScannedUnitPrice>();
+  for (const [k, v] of acc) {
+    const sorted = v.prices.slice().sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    out.set(k, { unitPrice: median, unit: v.unit, supplier: v.supplier, samples: v.prices.length, lastObserved: v.last, ean: v.ean, articleNumber: v.articleNumber });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------

@@ -366,6 +366,8 @@
     "noJobsTodayDesc": "La giornata è libera — pianifica la prossima settimana."
   },
   "jobs": {
+    "statusChangedWithWarnings": "Stato aggiornato con avvisi",
+    "completedWithWarnings": "Completato con avvisi",
     "title": "Cantieri",
     "pipeline": "Pipeline",
     "calendar": "Calendario",
@@ -623,6 +625,12 @@
     "count": "{{count}} foto"
   },
   "aiQuote": {
+    "unavailable": "L'analisi AI non è al momento disponibile. Aggiungi le voci manualmente o riprova più tardi.",
+    "demoResults": "Analisi AI non disponibile — risultati demo mostrati",
+    "analyzeFailed": "Impossibile analizzare le foto. Riprova o aggiungi le voci manualmente.",
+    "verifyBadge": "Verifica",
+    "ownPriceBadge": "Il tuo prezzo",
+    "cohortBadge": "Regolato per coorte",
     "addPhotosTitle": "Aggiungi 3–5 foto del lavoro",
     "addPhotosDesc": "Più angolazioni aiutano Vasco a rilevare materiali, misure e lavoro necessario. Includi una moneta o metro per la scala se possibile.",
     "takePhoto": "Scatta foto",

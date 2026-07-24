@@ -2540,6 +2540,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         setInvoices((prev) => [newInvoice, ...prev]);
 
+        // #5: carry the originating quote's line items onto the invoice so the
+        // bill is auditable against the estimate (was total-only). Reuses the
+        // same document_number-keyed map the quote→invoice + Moneybird-export
+        // paths already read from — no new field, no migration.
+        const jobInvSourceItems = job.quoteId ? (lineItems[job.quoteId] ?? []) : [];
+        if (jobInvSourceItems.length > 0) {
+          setLineItems((prev) => ({ ...prev, [docNumber]: jobInvSourceItems }));
+        }
+
         if (isSupabaseConfigured) {
           // R66 round 47: persist leveringsdatum from the linked job's
           // completedAt. Pre-R47 R34 derived this FE-side at PDF render
@@ -2565,7 +2574,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             delivery_date: deliveryDateIso,
           };
           try {
-            await withTimeout(createDocument(invPayload), 3000, 'addInvoiceFromJob');
+            const row = await withTimeout(createDocument(invPayload), 3000, 'addInvoiceFromJob');
+            // Persist the carried-over quote lines (mirrors the quote→invoice
+            // path). Per-line VAT honors KOR/Kleinunternehmer (0%) via the profile.
+            if (jobInvSourceItems.length > 0) {
+              const invoiceLineVatRate = getEffectiveVatRate(businessProfile);
+              await withTimeout(
+                upsertLineItems(
+                  row.id,
+                  jobInvSourceItems.map((item, idx) => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    unit_price: item.unitPrice,
+                    total_price: item.unitPrice * item.quantity,
+                    position: idx,
+                    vat_rate: (item as any).vatRate ?? invoiceLineVatRate,
+                  })),
+                ),
+                3000,
+                'addInvoiceFromJob.lineItems',
+              );
+            }
           } catch (err) {
             logWarn('AppState', `addInvoiceFromJob persist failed, queueing: ${err}`);
             try {

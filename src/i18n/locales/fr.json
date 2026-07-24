@@ -366,6 +366,8 @@
     "noJobsTodayDesc": "Votre journée est libre — planifiez la semaine prochaine."
   },
   "jobs": {
+    "statusChangedWithWarnings": "Statut mis à jour avec des avertissements",
+    "completedWithWarnings": "Terminé avec des avertissements",
     "title": "Chantiers",
     "pipeline": "Pipeline",
     "calendar": "Calendrier",
@@ -623,6 +625,12 @@
     "count": "{{count}} photos"
   },
   "aiQuote": {
+    "unavailable": "L'analyse IA est indisponible pour le moment. Ajoutez des lignes manuellement ou réessayez plus tard.",
+    "demoResults": "Analyse IA indisponible — résultats de démonstration affichés",
+    "analyzeFailed": "Impossible d'analyser les photos. Réessayez ou ajoutez des lignes manuellement.",
+    "verifyBadge": "Vérifier",
+    "ownPriceBadge": "Votre prix",
+    "cohortBadge": "Ajusté cohorte",
     "addPhotosTitle": "Ajoutez 3 à 5 photos du chantier",
     "addPhotosDesc": "Plusieurs angles aident Vasco à identifier les matériaux, dimensions et travaux. Ajoutez une pièce ou un mètre pour l'échelle si possible.",
     "takePhoto": "Prendre une photo",

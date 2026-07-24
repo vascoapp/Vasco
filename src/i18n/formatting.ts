@@ -11,6 +11,13 @@ const COUNTRY_CONFIG: Record<Country, { currency: string; locale: string }> = {
   US: { currency: 'USD', locale: 'en-US' },
 };
 
+/** ISO currency code for a country (UK→GBP, US→USD, EU6→EUR). Single source
+ *  of truth so services that persist a currency (e.g. the pricing moat) don't
+ *  hardcode 'EUR' and mis-tag GBP/USD rows. */
+export function currencyForCountry(country: Country = 'NL'): string {
+  return (COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL).currency;
+}
+
 export function formatCurrency(amount: number, country: Country = 'NL'): string {
   const { currency, locale } = COUNTRY_CONFIG[country];
   return new Intl.NumberFormat(locale, {

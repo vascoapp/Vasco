@@ -169,7 +169,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown, no explanation. Use this exact s
 
 {
   "jobType": "Brief description of the work needed",
-  "complexity": "simple" | "medium" | "complex",
+  "complexity": "simple" | "moderate" | "complex",
   "estimatedHours": number,
   "detectedItems": [
     {
@@ -179,7 +179,12 @@ IMPORTANT: Return ONLY valid JSON, no markdown, no explanation. Use this exact s
       "confidence": 0-100,
       "suggestedQuantity": number,
       "unit": "m²" | "m" | "stuk" | "uur" | "job",
-      "suggestedPrice": number in ${currency} (labor + materials per unit),
+      "materialCostPerUnit": number in ${currency} (materials ONLY, per unit),
+      "laborCostPerUnit": number in ${currency} (labor ONLY, per unit),
+      "suggestedPrice": number in ${currency} (MUST equal materialCostPerUnit + laborCostPerUnit),
+      "brand": "Brand ONLY if a specific product is clearly identifiable, else omit",
+      "articleNumber": "Article/SKU ONLY if a product label is legible in the photo, else omit",
+      "ean": "EAN/barcode ONLY if legible on packaging in the photo, else omit",
       "selected": true
     }
   ],
@@ -189,80 +194,102 @@ IMPORTANT: Return ONLY valid JSON, no markdown, no explanation. Use this exact s
 
 Guidelines for pricing (${countryContext} market rates):
 - Labor rates: ${countryContext === 'DE' ? '€45-65/hr' : countryContext === 'NL' ? '€45-60/hr' : '£35-55/hr'}
-- Include both labor and materials in suggestedPrice per unit
+- Split EVERY line into materialCostPerUnit (materials) and laborCostPerUnit (labor); suggestedPrice MUST be their exact sum
 - Be realistic — contractors will judge your estimates
 - Detect 4-8 line items typically
 - Set confidence based on how clearly you can identify the work
+- Only fill brand/articleNumber/ean when the identifier is ACTUALLY VISIBLE on a product label or box in the photo — never guess them
 - Mark items as selected:true if they seem definitely needed, selected:false if optional`;
 
-    // Call Claude Vision API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        // Haiku is 10-20x cheaper than Sonnet/Opus — sufficient for structured photo analysis
-        // Haiku: ~$0.001/image vs Sonnet: ~$0.015/image. Multi-photo scales linearly.
-        model: 'claude-haiku-4-5-20251001',
-        // Slightly more tokens for multi-photo since multi-entity lists can be longer.
-        max_tokens: totalImages > 1 ? 1536 : 1024,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              ...urls.map((u: string) => ({
-                type: 'image' as const,
-                source: { type: 'url' as const, url: u },
-              })),
-              ...photos.map((b: string) => ({
-                type: 'image' as const,
-                source: { type: 'base64' as const, media_type: 'image/jpeg' as const, data: b },
-              })),
-              { type: 'text' as const, text: prompt },
-            ],
-          },
-        ],
-      }),
-    });
+    // Call Claude Vision API — with one retry on transient upstream errors
+    // (429 / 5xx) and on a JSON parse miss, so a single hiccup doesn't dead-end
+    // the contractor's scan (#4b). Each attempt is an independent Haiku call.
+    const callClaude = async (): Promise<
+      | { ok: true; result: any }
+      | { ok: false; transient: boolean; status?: number; detail?: string; raw?: string; parseFail?: boolean }
+    > => {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          // Haiku is 10-20x cheaper than Sonnet/Opus — sufficient for structured photo analysis
+          // Haiku: ~$0.001/image vs Sonnet: ~$0.015/image. Multi-photo scales linearly.
+          model: 'claude-haiku-4-5-20251001',
+          // Slightly more tokens for multi-photo since multi-entity lists can be longer.
+          max_tokens: totalImages > 1 ? 1536 : 1024,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                ...urls.map((u: string) => ({
+                  type: 'image' as const,
+                  source: { type: 'url' as const, url: u },
+                })),
+                ...photos.map((b: string) => ({
+                  type: 'image' as const,
+                  source: { type: 'base64' as const, media_type: 'image/jpeg' as const, data: b },
+                })),
+                { type: 'text' as const, text: prompt },
+              ],
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
+      if (!response.ok) {
+        const errorText = await response.text();
+        return { ok: false, transient: response.status === 429 || response.status >= 500, status: response.status, detail: errorText };
+      }
+
+      const claudeResponse = await response.json();
+      const content = claudeResponse.content?.[0]?.text || '';
+      try {
+        // Claude might wrap in ```json ... ``` — strip that
+        const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        return { ok: true, result: JSON.parse(cleaned) };
+      } catch {
+        return { ok: false, transient: true, parseFail: true, raw: content };
+      }
+    };
+
+    let attempt = 0;
+    let outcome = await callClaude();
+    while (!outcome.ok && outcome.transient && attempt < 1) {
+      attempt++;
+      await new Promise((r) => setTimeout(r, 700));
+      outcome = await callClaude();
+    }
+
+    if (!outcome.ok) {
+      if (outcome.parseFail) {
+        // Both attempts produced unparseable output — return debug + empty fallback.
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to parse Claude response',
+            raw: outcome.raw,
+            fallback: {
+              jobType: 'Analyse niet beschikbaar',
+              complexity: 'moderate',
+              estimatedHours: 8,
+              detectedItems: [],
+              notes: ['AI kon de foto niet volledig analyseren. Probeer een duidelijkere foto.'],
+              warnings: [],
+            },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       return new Response(
-        JSON.stringify({ error: `Claude API error: ${response.status}`, detail: errorText }),
+        JSON.stringify({ error: `Claude API error: ${outcome.status}`, detail: outcome.detail }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const claudeResponse = await response.json();
-    const content = claudeResponse.content?.[0]?.text || '';
-
-    // Parse the JSON from Claude's response
-    let analysisResult;
-    try {
-      // Claude might wrap in ```json ... ``` — strip that
-      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      analysisResult = JSON.parse(cleaned);
-    } catch {
-      // If JSON parsing fails, return the raw text for debugging
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to parse Claude response',
-          raw: content,
-          fallback: {
-            jobType: 'Analyse niet beschikbaar',
-            complexity: 'medium',
-            estimatedHours: 8,
-            detectedItems: [],
-            notes: ['AI kon de foto niet volledig analyseren. Probeer een duidelijkere foto.'],
-            warnings: [],
-          },
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    let analysisResult = outcome.result;
 
     // Alias the AI's raw keys to the shape the app + pricing moat actually read.
     // AIQuoteFromPhoto / persistPhotoAnalysis expect estimatedComplexity /

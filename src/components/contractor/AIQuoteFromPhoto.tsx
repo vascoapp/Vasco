@@ -22,10 +22,13 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { getCurrentTrade, getCurrentCountry, getCurrentVatScheme } from '../../lib/currentUser';
+import { getCurrentTrade, getCurrentCountry, getCurrentVatScheme, getCurrentUserId } from '../../lib/currentUser';
 import { getEffectiveVatRate, type VatScheme, type BusinessProfile } from '../../domain/business';
 import { hapticSuccess, hapticWarning } from '../../utils/haptics';
 import { withTimeout } from '../../utils/withTimeout';
+import { repriceQuoteLinesFromMoat } from '../../services/quoteMoatRepricing';
+import { recordDelta, type DeltaSource } from '../../services/reasonCodeService';
+import { normalizeComplexity } from '../../utils/complexity';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,6 +44,17 @@ interface DetectedItem {
   suggestedPrice: number;
   pricebookMatch?: string;
   selected: boolean;
+  // Strong identifiers + material/labour split (edge fn) — power the EAN-based
+  // scanned-price match and material-only repricing in quoteMoatRepricing (#2).
+  ean?: string;
+  articleNumber?: string;
+  materialCostPerUnit?: number;
+  laborCostPerUnit?: number;
+  // Moat provenance (set by quoteMoatRepricing) — how this price was derived.
+  moatSource?: 'ai' | 'cohort' | 'scan';
+  cohortContractors?: number;
+  scanSupplier?: string;
+  needsReview?: boolean;
 }
 
 interface AIAnalysisResult {
@@ -107,6 +121,13 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   // alongside their own AI-suggested estimate. RPC enforces k-anonymity
   // at ≥5 contractors before returning real numbers.
   const [photoCohort, setPhotoCohort] = useState<import('../../services/intelligenceCaptureService').PhotoAnalysisCohort | null>(null);
+
+  // Learning-loop plumbing (P4). baselinesRef holds the pre-edit (post-moat)
+  // qty/price per line so a contractor correction is captured as a delta
+  // against what we showed them. editedRef dedupes so we record one delta per
+  // line per session (matches TieredQuoteBuilder's contract).
+  const baselinesRef = useRef<Map<string, { qty: number; price: number; source: DeltaSource }>>(new Map());
+  const editedRef = useRef<Set<string>>(new Set());
 
   // Derive a primary photo for legacy single-photo render paths.
   const photo = photos[0]?.uri ?? null;
@@ -186,84 +207,133 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     setAnalyzing(true);
     setError(null);
 
-    // If Supabase not configured, use mock
+    const isDemo = __DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+
+    // No backend configured: only demo/dev may show indicative mock data.
+    // In production we must never fabricate line items into a customer quote.
     if (!isSupabaseConfigured) {
-      setTimeout(() => {
-        setAnalysis(MOCK_RESULT);
-        setItems(MOCK_RESULT.detectedItems);
+      if (isDemo) {
+        setTimeout(() => {
+          setAnalysis(MOCK_RESULT);
+          setItems(MOCK_RESULT.detectedItems);
+          setAnalyzing(false);
+          hapticSuccess();
+        }, 1500);
+      } else {
+        setError(t('aiQuote.unavailable', 'AI analysis is unavailable right now. Add items manually or try again later.'));
+        setAnalysis(null);
+        setItems([]);
         setAnalyzing(false);
-        hapticSuccess();
-      }, 1500);
+      }
       return;
     }
 
-    try {
-      const trade = getCurrentTrade() || 'general';
-      const country = getCurrentCountry() || 'NL';
-      // 45s hard ceiling: multi-photo AI vision can be slow, and a hung invoke
-      // would leave the "analyzing" spinner stuck forever (the finally only runs
-      // if the await resolves/rejects). On timeout this throws → the catch below
-      // falls back to demo results and the finally clears `analyzing`.
-      const { data, error: fnError } = await withTimeout(
-        supabase.functions.invoke('analyze-photo', {
-          body: {
-            // New multi-photo path — Edge Function also falls back to legacy single imageBase64.
-            imagesBase64: batch,
-            imageBase64: batch[0],
-            trade,
-            country,
-          },
-        }),
-        45000,
-        'analyze-photo',
-      );
+    const trade = getCurrentTrade() || 'general';
+    const country = getCurrentCountry() || 'NL';
 
-      if (fnError || !data) {
-        // Fallback to mock on error
-        setAnalysis(MOCK_RESULT);
-        setItems(MOCK_RESULT.detectedItems);
-        setError('AI analyse niet beschikbaar — demo resultaten getoond');
-        hapticWarning();
-      } else if (data.error) {
-        setAnalysis(data.fallback || MOCK_RESULT);
-        setItems((data.fallback || MOCK_RESULT).detectedItems);
-        setError(data.error);
+    // Success path: reprice detected lines against the pricing moat (cohort +
+    // own scanned prices) BEFORE display, seed delta baselines for the learning
+    // loop, then persist analysis + load the cohort benchmark.
+    const applyRealResult = async (data: any) => {
+      const rawItems: DetectedItem[] = Array.isArray(data.detectedItems) ? data.detectedItems : [];
+      const rawSelected = new Map(rawItems.map((i) => [i.id, i.selected !== false]));
+      const { items: repriced, baselines } = await repriceQuoteLinesFromMoat(
+        rawItems.map((i) => ({
+          id: i.id, description: i.description, category: i.category, unit: i.unit,
+          confidence: i.confidence, suggestedQuantity: i.suggestedQuantity, suggestedPrice: i.suggestedPrice,
+          ean: i.ean, articleNumber: i.articleNumber,
+          materialCostPerUnit: i.materialCostPerUnit, laborCostPerUnit: i.laborCostPerUnit,
+        })),
+        { trade, country, userId: getCurrentUserId() },
+      );
+      baselinesRef.current = baselines;
+      editedRef.current = new Set();
+      setAnalysis(data);
+      setItems(repriced.map((r) => ({
+        id: r.id,
+        description: r.description,
+        category: r.category ?? '',
+        confidence: r.confidence ?? 100,
+        suggestedQuantity: r.suggestedQuantity,
+        unit: r.unit ?? 'stuk',
+        suggestedPrice: r.suggestedPrice,
+        // Confidence gate AND the AI's own optional flag both have to pass.
+        selected: r.selected && (rawSelected.get(r.id) ?? true),
+        moatSource: r.moatSource,
+        cohortContractors: r.cohortContractors,
+        scanSupplier: r.scanSupplier,
+        needsReview: r.needsReview,
+      })));
+      hapticSuccess();
+      // R238: persist for cross-quote learning + future agent queries.
+      import('../../services/intelligenceCaptureService').then((m) =>
+        m.persistPhotoAnalysis({
+          trade,
+          detectedRooms: data.detectedRooms ?? data.rooms ?? undefined,
+          detectedMaterials: data.detectedItems ?? undefined,
+          estimatedComplexity: data.estimatedComplexity ?? undefined,
+          estimatedDurationHours: data.estimatedDurationHours ?? undefined,
+          estimatedCostEur: data.estimatedTotal ?? undefined,
+          rawResponse: data,
+        }),
+      ).catch(() => {});
+      // R66 round 35: cohort benchmark lookup. Normalize the legacy FE `medium`
+      // to the BE `simple|moderate|complex` vocabulary via the shared helper (#7).
+      const beComplexity = normalizeComplexity(data.estimatedComplexity);
+      import('../../services/intelligenceCaptureService').then((m) =>
+        m.getPhotoAnalysisCohort(trade, country, beComplexity).then((c) => {
+          if (c && c.contractorCount >= 5) setPhotoCohort(c);
+        }),
+      ).catch(() => {});
+    };
+
+    // One retry with a short backoff — a transient invoke/timeout used to fall
+    // straight to fabricated mock line items. 45s hard ceiling per attempt so a
+    // hung invoke can't leave the spinner stuck forever.
+    let data: any = null;
+    let fnError: any = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await withTimeout(
+          supabase.functions.invoke('analyze-photo', {
+            body: { imagesBase64: batch, imageBase64: batch[0], trade, country },
+          }),
+          45000,
+          'analyze-photo',
+        );
+        data = res.data; fnError = res.error;
+      } catch (e) {
+        fnError = e; data = null;
+      }
+      // Success = transport ok, payload present, and not the edge fn's JSON
+      // parse-failure fallback (which carries `error` + an empty `fallback`).
+      if (!fnError && data && !data.error) break;
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 900));
+    }
+
+    try {
+      if (!fnError && data && !data.error) {
+        try {
+          await applyRealResult(data);
+        } catch {
+          // Repricing/persist hiccup — still show the real AI result unrepriced
+          // rather than nothing. Never fall to mock here.
+          setAnalysis(data);
+          setItems(Array.isArray(data.detectedItems) ? data.detectedItems : []);
+          hapticSuccess();
+        }
+      } else if (isDemo) {
+        setAnalysis(data?.fallback || MOCK_RESULT);
+        setItems((data?.fallback || MOCK_RESULT).detectedItems);
+        setError(t('aiQuote.demoResults', 'AI analysis unavailable — showing demo results'));
         hapticWarning();
       } else {
-        setAnalysis(data);
-        setItems(data.detectedItems || []);
-        hapticSuccess();
-        // R238: persist for cross-quote learning + future agent queries.
-        import('../../services/intelligenceCaptureService').then((m) =>
-          m.persistPhotoAnalysis({
-            trade,
-            detectedRooms: data.detectedRooms ?? data.rooms ?? undefined,
-            detectedMaterials: data.detectedItems ?? undefined,
-            estimatedComplexity: data.estimatedComplexity ?? undefined,
-            estimatedDurationHours: data.estimatedDurationHours ?? undefined,
-            estimatedCostEur: data.estimatedTotal ?? undefined,
-            rawResponse: data,
-          }),
-        ).catch(() => {});
-        // R66 round 35: cohort benchmark lookup. The FE `complexity` enum
-        // is `simple|medium|complex` for legacy reasons but BE schema is
-        // `simple|moderate|complex`; remap before the RPC call so cohort
-        // rows actually match. When AI returns no complexity we send null
-        // and get the broader trade-level cohort.
-        const beComplexity = data.estimatedComplexity === 'medium'
-          ? 'moderate'
-          : (data.estimatedComplexity as 'simple' | 'moderate' | 'complex' | undefined);
-        import('../../services/intelligenceCaptureService').then((m) =>
-          m.getPhotoAnalysisCohort(trade, country, beComplexity).then((c) => {
-            if (c && c.contractorCount >= 5) setPhotoCohort(c);
-          }),
-        ).catch(() => {});
+        // Production: no fabricated line items. Explicit, recoverable error.
+        setAnalysis(null);
+        setItems([]);
+        setError(t('aiQuote.analyzeFailed', "Couldn't analyze the photos. Try again or add items manually."));
+        hapticWarning();
       }
-    } catch {
-      setAnalysis(MOCK_RESULT);
-      setItems(MOCK_RESULT.detectedItems);
-      setError('Verbinding mislukt — demo resultaten getoond');
-      hapticWarning();
     } finally {
       setAnalyzing(false);
     }
@@ -275,9 +345,37 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     ));
   };
 
+  // P4 — learning loop. A quantity correction on this (primary) path now feeds
+  // quote_line_deltas, same as TieredQuoteBuilder. Fires once per line per
+  // session, only once the edit is material (≥1 unit or ≥5% off the baseline we
+  // showed). Best-effort + offline-queued inside recordDelta.
+  const maybeRecordQtyDelta = (item: DetectedItem, newQty: number) => {
+    const baseline = baselinesRef.current.get(item.id);
+    if (!baseline || editedRef.current.has(item.id)) return;
+    const diff = Math.abs(newQty - baseline.qty);
+    if (diff < 1 && diff < baseline.qty * 0.05) return;
+    editedRef.current.add(item.id);
+    recordDelta({
+      lineItemId: item.id,
+      description: item.description,
+      originalQty: baseline.qty,
+      newQty,
+      originalUnitPrice: baseline.price,
+      newUnitPrice: item.suggestedPrice,
+      source: baseline.source,
+      trade: getCurrentTrade() || 'general',
+      country: getCurrentCountry() || 'NL',
+    }).catch(() => {});
+  };
+
   const updateQuantity = (id: string, delta: number) => {
+    const current = items.find((i) => i.id === id);
+    if (!current) return;
+    const newQty = Math.max(0.5, current.suggestedQuantity + delta);
+    // Capture the learning signal outside the state updater (no double-fire).
+    maybeRecordQtyDelta(current, newQty);
     setItems(items.map(item =>
-      item.id === id ? { ...item, suggestedQuantity: Math.max(0.5, item.suggestedQuantity + delta) } : item
+      item.id === id ? { ...item, suggestedQuantity: newQty } : item
     ));
   };
 
@@ -344,6 +442,14 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
             </Pressable>
           )}
         </View>
+        {/* Surfaces a hard analyze failure (production has no mock fallback) so
+            the contractor can retry or add items manually instead of a dead end. */}
+        {error && (
+          <View style={[styles.errorBanner, { marginHorizontal: 20, marginTop: 8, marginBottom: 0 }]}>
+            <Ionicons name="information-circle" size={16} color={SemanticColors.feedbackWarning} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
         <ScrollView style={styles.scrollView} contentContainerStyle={{ padding: Spacing.md, gap: Spacing.md }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm, paddingVertical: Spacing.xs }}>
             {photos.map((p, i) => (
@@ -499,6 +605,28 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
             <View style={{ flex: 1 }}>
               <Text style={styles.itemDesc}>{item.description}</Text>
               <Text style={styles.itemCategory}>{item.category} · {t('aiQuote.confidenceLabel', '{{pct}}% confident', { pct: item.confidence })}</Text>
+              {(item.needsReview || item.moatSource === 'cohort' || item.moatSource === 'scan') && (
+                <View style={styles.badgeRow}>
+                  {item.needsReview && (
+                    <View style={[styles.badge, styles.badgeReview]}>
+                      <Ionicons name="alert-circle-outline" size={11} color={SemanticColors.feedbackWarning} />
+                      <Text style={[styles.badgeText, { color: SemanticColors.feedbackWarning }]}>{t('aiQuote.verifyBadge', 'Verify')}</Text>
+                    </View>
+                  )}
+                  {item.moatSource === 'scan' && (
+                    <View style={[styles.badge, styles.badgeMoat]}>
+                      <Ionicons name="pricetag-outline" size={11} color={Palette.hermesOrange} />
+                      <Text style={[styles.badgeText, { color: Palette.hermesOrange }]}>{t('aiQuote.ownPriceBadge', 'Your price')}</Text>
+                    </View>
+                  )}
+                  {item.moatSource === 'cohort' && (
+                    <View style={[styles.badge, styles.badgeMoat]}>
+                      <Ionicons name="people-outline" size={11} color={Palette.hermesOrange} />
+                      <Text style={[styles.badgeText, { color: Palette.hermesOrange }]}>{t('aiQuote.cohortBadge', 'Cohort-tuned')}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
             <View style={styles.itemRight}>
               <View style={styles.qtyRow}>
@@ -618,6 +746,11 @@ const styles = StyleSheet.create({
   photoResult: { width: '100%', height: 180, borderRadius: RADIUS.lg, marginBottom: 16 },
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.feedbackWarning + '10', borderRadius: RADIUS.md, padding: 12, marginBottom: 12 },
   errorText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: 'Inter_400Regular', color: SemanticColors.feedbackWarning },
+  badgeRow: { flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeReview: { backgroundColor: SemanticColors.feedbackWarning + '18' },
+  badgeMoat: { backgroundColor: Palette.hermesOrange + '14' },
+  badgeText: { fontSize: TYPE.tinySize, fontFamily: 'Inter_600SemiBold' },
 
   summaryRow: { flexDirection: 'row', backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 16, marginBottom: 16 },
   summaryItem: { flex: 1, alignItems: 'center' },
