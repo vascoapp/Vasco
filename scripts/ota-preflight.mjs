@@ -511,6 +511,96 @@ async function checkManualCurrency() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// CHECK 8: no untranslated locale VALUES ("parity != translated")
+// ---------------------------------------------------------------------------
+// i18n:audit compares key PRESENCE and reports 0 missing; the OTA preflight's
+// check 3 only proves referenced ⊆ en.json. Neither can see that a value was
+// never translated. That blind spot let TEN whole namespaces ship as English to
+// de/fr/es/it — including customerView, the page the CUSTOMER reads to accept a
+// quote. This check closes it: flag any value byte-identical to en.
+//
+// Signal vs noise: plenty of strings are legitimately identical (Total, Email,
+// IBAN, SIRET, brand names, pure-format strings). Those are allowlisted below
+// with a reason, so a NEW identical value is a real finding rather than noise.
+
+// Values that are correct as-is in at least one target language. Compared
+// case-sensitively against the en value.
+const SAME_WORD_OK = new Set([
+  // words English shares with de/fr/es/it in this domain
+  'Total', 'Subtotal', 'Email', 'Date', 'Description', 'Notes', 'Photos',
+  'Photo', 'Client', 'Status', 'Team', 'Standard', 'Budget', 'Material',
+  'Installation', 'Excellent', 'Active', 'Legal', 'Error', 'Formal',
+  'General', 'Support', 'Performance', 'Account', 'Radius', 'Filter', 'Info',
+  'Optional', 'Details', 'Impact', 'Urgent', 'URGENT', 'Important', 'Options',
+  'Attention', 'Stable', 'Confirmation', 'Certifications', 'Licences',
+  'Inspection', 'Incident', 'Incidents', 'Observation', 'Observations',
+  'Documents', 'Type', 'zones', 'Trend', 'Median', 'Winter', 'Manual',
+  'Personal', 'PLAN', 'Notifications', 'Signatures', 'Timer', 'Feedback',
+  'Follow-up', 'Start', 'Benchmarking', 'Stock', 'Cashflow', 'Compliance',
+  'En route', 'Auto-entrepreneur', 'Simple', 'Actions', 'actions', 'photos',
+  'Name', 'Name *', 'Contacts', 'Pipeline', 'Leads', 'Live', 'Normal',
+  'Planning', 'Incidents (total)', 'Articles ({{count}})', 'Password',
+  // interpolated strings whose only word is already correct in the target
+  // language: "Feedback"/"Material" (de/it/es), "photo(s)" (fr), "d" = días (es)
+  'Feedback: {{customer}}', 'Material {{id}}', '{{count}} photo',
+  '{{count}} photos', '+{{days}}d · {{prob}}%',
+  // acronyms, legal/registration terms, brand and product names
+  'IBAN', 'BIC / SWIFT', 'SIRET', 'Partita IVA', 'USt-IdNr.', 'Codice Fiscale',
+  'EIRL', 'SARL', 'S.L.', 'S.A.', 'S.r.l.', 'S.n.c.', 'S-Corp', 'LTIR', 'RAMS',
+  'WhatsApp', 'Stripe Payments', 'Excel/CSV', 'Solar / PV', 'litre', 'container',
+  'API + white-label', 'Kleinunternehmer (§19 UStG)',
+  'KOR — Kleineondernemersregeling', 'GoBD Audit-Trail',
+  'Vasco GoBD audit trail', 'Vasco Analyst', 'Vasco Finance', 'Vasco Engine',
+  'Vasco Queue',
+]);
+
+// Namespaces whose locale values are DEAD CODE — never rendered, so an English
+// value there is not a bug. workflowPackService.pickTemplateForLocale resolves
+// `defaults[locale]` FIRST and ships de/fr/es/it copy for all 23 steps, so the
+// i18n keys are a legacy fallback that never wins.
+const DEAD_VALUE_NAMESPACES = new Set(['workflowPacks']);
+
+// A value carrying no translatable words: only placeholders, digits, currency
+// symbols and punctuation (e.g. '{{count}}×', ' (€{{amt}})', '10 min').
+function isFormatOnly(v) {
+  return /^[\s\d\p{P}\p{S}]*(\{\{\w+\}\}[\s\d\p{P}\p{S}]*)*(min|h|d|g|j|T)?[\s\d\p{P}\p{S}]*$/u.test(v);
+}
+
+async function checkUntranslatedValues() {
+  process.stdout.write('8. locale values are translated, not copied from en ... ');
+  const en = primaryLocale ?? (await loadLocale(PRIMARY_LOCALE));
+  const flat = (obj, prefix = '', out = {}) => {
+    for (const [k, v] of Object.entries(obj)) {
+      const key = prefix ? `${prefix}.${k}` : k;
+      if (v && typeof v === 'object') flat(v, key, out);
+      else if (typeof v === 'string') out[key] = v;
+    }
+    return out;
+  };
+  const flatEn = flat(en);
+  const hits = [];
+  for (const loc of LOCALES) {
+    if (loc === PRIMARY_LOCALE || loc === 'nl') continue; // nl is hand-authored alongside en
+    const flatLoc = flat(await loadLocale(loc));
+    for (const [k, v] of Object.entries(flatLoc)) {
+      if (flatEn[k] !== v) continue;
+      if (v.length <= 3) continue;
+      if (SAME_WORD_OK.has(v)) continue;
+      if (DEAD_VALUE_NAMESPACES.has(k.split('.')[0])) continue;
+      if (isFormatOnly(v)) continue;
+      hits.push(`${loc} ${k} = ${JSON.stringify(v)}`);
+    }
+  }
+  if (hits.length === 0) {
+    console.log('✓');
+  } else {
+    console.log(`✗ (${hits.length})`);
+    for (const h of hits.slice(0, 15)) err(`Untranslated value: ${h}`);
+    if (hits.length > 15) err(`...and ${hits.length - 15} more`);
+  }
+}
+
 async function main() {
   console.log('OTA-update preflight\n');
   const t0 = Date.now();
@@ -521,6 +611,7 @@ async function main() {
   await checkInterpolationMismatch();
   await checkRawIdFallbacks();
   await checkManualCurrency();
+  await checkUntranslatedValues();
   const dt = ((Date.now() - t0) / 1000).toFixed(1);
 
   console.log('');
