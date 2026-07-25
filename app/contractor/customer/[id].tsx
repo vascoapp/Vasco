@@ -14,6 +14,7 @@ import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
 import { formatCurrency, type Country } from '../../../src/i18n/formatting';
+import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import { generateSmartReplies, type SmartReply } from '../../../src/services/customerSmartReplyService';
 import { useCustomerInbox, type InboundChannel } from '../../../src/services/customerInboxService';
@@ -33,13 +34,8 @@ export default function CustomerDetailScreen() {
   // Status enums must render in the app locale, not as raw English
   // ('completed', 'accepted', 'overdue' leaked straight onto the cards).
   // Missing keys (e.g. job 'cancelled') fall back to a humanised label.
-  const humanize = (v: string) => v.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  const jobStatusLabel = (raw: string) => {
-    const key = ({ 'in-progress': 'inProgress', in_progress: 'inProgress', quoted: 'quote' } as Record<string, string>)[raw] ?? raw;
-    return t(`jobs.status.${key}`, humanize(raw));
-  };
-  const quoteStatusLabel = (raw: string) => t(`quotes.status.${raw}`, humanize(raw));
-  const invoiceStatusLabel = (raw: string) => t(`invoices.status.${raw}`, humanize(raw));
+  // Shared implementation — see src/i18n/entityLabels.ts.
+  const { jobStatusLabel, quoteStatusLabel, invoiceStatusLabel } = makeEntityLabels(t);
 
   const customer = useMemo(() => customers.find(c => c.id === id), [customers, id]);
   const customerJobs = useMemo(() => jobs.filter((j: any) => j.customerId === id), [jobs, id]);

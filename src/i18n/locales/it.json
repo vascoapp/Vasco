@@ -2183,6 +2183,7 @@
     "demoModeTitle": "Modalità demo",
     "demoModeResetMsg": "Il ripristino della password non è disponibile in modalità demo. Usa qualsiasi password per accedere.",
     "tooManyAttempts": "Troppi tentativi. Riprova tra 30 secondi.",
+    "resetRateLimited": "Troppe richieste. Attendi un minuto e riprova.",
     "networkError": "Impossibile contattare il server. Controlla la connessione e riprova.",
     "accountLocked": "Account temporaneamente bloccato. Riprova tra qualche minuto.",
     "demoDisabled": "Gli account demo sono disabilitati in produzione.",

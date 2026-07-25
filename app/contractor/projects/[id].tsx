@@ -11,6 +11,9 @@ import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
+import { useAuth } from '../../../src/context/AuthContext';
+import { formatCurrency, formatCurrency0, type Country } from '../../../src/i18n/formatting';
+import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import type { ProjectStatus } from '../../../src/types/project';
@@ -29,6 +32,12 @@ export default function ProjectDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { projects, updateProject, jobs, invoices, customers, getProjectPnL, addJobToProject } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
+  // The job rows printed the raw JobStatus enum ('completed', 'in-progress')
+  // and a hardcoded € formatted in the DEVICE locale, on an aannemer P&L
+  // screen. Same class as the R322 werk/customer-detail fixes.
+  const { jobStatusLabel } = makeEntityLabels(t);
   const [refreshing, setRefreshing] = useState(false);
 
   const project = useMemo(() => projects.find(p => p.id === id), [projects, id]);
@@ -108,30 +117,30 @@ export default function ProjectDetailScreen() {
               <Text style={styles.sectionTitle}>{t('project.financialOverview')}</Text>
               <View style={styles.pnlRow}>
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{project.totalBudget.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlValue}>{formatCurrency0(project.totalBudget, country)}</Text>
                   <Text style={styles.pnlLabel}>{t('project.budget')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{pnl.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlValue}>{formatCurrency0(pnl.revenue, country)}</Text>
                   <Text style={styles.pnlLabel}>{t('project.revenue')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
                   <Text style={[styles.pnlValue, { color: pnl.grossProfit >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                    €{pnl.grossProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {formatCurrency0(pnl.grossProfit, country)}
                   </Text>
                   <Text style={styles.pnlLabel}>{t('project.profit')}</Text>
                 </View>
               </View>
               <View style={styles.pnlRow}>
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{pnl.materialCosts.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlValue}>{formatCurrency0(pnl.materialCosts, country)}</Text>
                   <Text style={styles.pnlLabel}>{t('project.material')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>€{pnl.laborCosts.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.pnlValue}>{formatCurrency0(pnl.laborCosts, country)}</Text>
                   <Text style={styles.pnlLabel}>{t('project.labor')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />
@@ -166,7 +175,7 @@ export default function ProjectDetailScreen() {
                   <View style={[styles.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
                   <View style={{ flex: 1, padding: 12 }}>
                     <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
-                    <Text style={styles.jobMeta}>{job.status} · €{(job.quotedAmount ?? 0).toLocaleString(undefined)}</Text>
+                    <Text style={styles.jobMeta}>{jobStatusLabel(job.status)} · {formatCurrency(job.quotedAmount ?? 0, country)}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} style={{ marginRight: 12 }} />
                 </Pressable>

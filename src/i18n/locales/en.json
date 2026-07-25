@@ -2183,6 +2183,7 @@
     "demoModeTitle": "Demo mode",
     "demoModeResetMsg": "Password reset is not available in demo mode. Use any password to log in.",
     "tooManyAttempts": "Too many attempts. Try again in 30 seconds.",
+    "resetRateLimited": "Too many requests. Please wait a minute and try again.",
     "networkError": "Cannot reach server. Check your internet and try again.",
     "accountLocked": "Account temporarily locked. Try again in a few minutes.",
     "demoDisabled": "Demo accounts are disabled in production.",

@@ -2183,6 +2183,7 @@
     "demoModeTitle": "Demo-Modus",
     "demoModeResetMsg": "Passwort zurücksetzen ist im Demo-Modus nicht verfügbar. Verwenden Sie ein beliebiges Passwort.",
     "tooManyAttempts": "Zu viele Versuche. Bitte in 30 Sekunden erneut versuchen.",
+    "resetRateLimited": "Zu viele Anfragen. Bitte warten Sie eine Minute und versuchen Sie es erneut.",
     "networkError": "Server nicht erreichbar. Bitte Internet prüfen und erneut versuchen.",
     "accountLocked": "Konto vorübergehend gesperrt. Bitte in wenigen Minuten erneut versuchen.",
     "demoDisabled": "Demo-Konten sind in der Produktion deaktiviert.",

@@ -26,6 +26,7 @@ import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { formatCurrency } from '../../src/i18n/formatting';
+import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { todayKey } from '../../src/utils/dateKey';
 import type { Country } from '../../src/i18n/formatting';
 
@@ -64,16 +65,11 @@ export default function WerkScreen() {
   const today = todayKey();
   const todaySchedule = useDaySchedule(today);
 
-  // Job status must render in the app locale — the list rows concatenated the
-  // raw enum ('completed', 'in-progress', 'scheduled') straight into the meta.
-  const jobStatusLabel = useCallback((raw: string) => {
-    const key = ({ 'in-progress': 'inProgress', in_progress: 'inProgress', quoted: 'quote' } as Record<string, string>)[raw]
-      ?? raw;
-    return t(`jobs.status.${key}`, raw.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
-  }, [t]);
-  // Trade renders as a raw slug ('plumbing') on some jobs; localise it. Jobs that
-  // already store a display name miss the key and fall through unchanged.
-  const tradeLabel = useCallback((raw: string) => t(`onboarding.trades.${raw}`, raw), [t]);
+  // Job status and trade must render in the app locale — the list rows
+  // concatenated the raw enum ('completed', 'in-progress') and the raw trade
+  // slug ('plumbing') straight into the meta. Shared with the other screens
+  // that render the same enums; see src/i18n/entityLabels.ts.
+  const { jobStatusLabel, tradeLabel } = useMemo(() => makeEntityLabels(t), [t]);
   // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
   const routeOptimizationEnabled = useFeatureFlag('route_optimization', { country: user?.country as any });
 

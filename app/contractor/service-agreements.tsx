@@ -28,6 +28,7 @@ import {
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency, type Country } from '../../src/i18n/formatting';
+import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
 
@@ -43,6 +44,9 @@ export default function ServiceAgreementsScreen() {
   // the status badge used a raw capitalised enum).
   const freqLabel = (f: RecurringFrequency) => t(`agreements.freq.${f}`, getFrequencyLabel(f));
   const statusLabel = (st: string) => t(`agreements.status.${st}`, st.charAt(0).toUpperCase() + st.slice(1));
+  // The trade meta rendered the raw slug ('plumbing') next to the localised
+  // frequency and status the R322 pass fixed — same leak, one row over.
+  const { tradeLabel } = makeEntityLabels(t);
   const router = useRouter();
   const { jobs, customers } = useAppState();
   const {
@@ -295,7 +299,7 @@ export default function ServiceAgreementsScreen() {
                   {agreement.trade && (
                     <View style={s.metaItem}>
                       <Ionicons name="construct-outline" size={13} color={SemanticColors.textTertiary} />
-                      <Text style={s.metaText}>{agreement.trade}</Text>
+                      <Text style={s.metaText}>{tradeLabel(agreement.trade)}</Text>
                     </View>
                   )}
                   <View style={s.metaItem}>

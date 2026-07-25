@@ -2183,6 +2183,7 @@
     "demoModeTitle": "Mode démo",
     "demoModeResetMsg": "La réinitialisation du mot de passe n'est pas disponible en mode démo. Utilisez n'importe quel mot de passe.",
     "tooManyAttempts": "Trop de tentatives. Réessayez dans 30 secondes.",
+    "resetRateLimited": "Trop de demandes. Veuillez patienter une minute et réessayer.",
     "networkError": "Serveur injoignable. Vérifiez votre connexion internet et réessayez.",
     "accountLocked": "Compte temporairement verrouillé. Réessayez dans quelques minutes.",
     "demoDisabled": "Les comptes démo sont désactivés en production.",

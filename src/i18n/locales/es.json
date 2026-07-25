@@ -2183,6 +2183,7 @@
     "demoModeTitle": "Modo demo",
     "demoModeResetMsg": "El restablecimiento de contraseña no está disponible en modo demo. Usa cualquier contraseña para iniciar sesión.",
     "tooManyAttempts": "Demasiados intentos. Inténtalo de nuevo en 30 segundos.",
+    "resetRateLimited": "Demasiadas solicitudes. Espera un minuto e inténtalo de nuevo.",
     "networkError": "No se puede acceder al servidor. Comprueba tu conexión e inténtalo de nuevo.",
     "accountLocked": "Cuenta bloqueada temporalmente. Inténtalo de nuevo en unos minutos.",
     "demoDisabled": "Las cuentas demo están desactivadas en producción.",
