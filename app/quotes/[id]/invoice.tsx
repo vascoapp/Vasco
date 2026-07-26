@@ -11,6 +11,8 @@ import { Radius } from '../../../src/theme/radius';
 import { Spacing } from '../../../src/theme/spacing';
 import { Typography } from '../../../src/theme/typography';
 import { useAppState } from '../../../src/state/AppState';
+import { useAuth } from '../../../src/context/AuthContext';
+import { formatCurrency, type Country } from '../../../src/i18n/formatting';
 import { logError } from '../../../src/utils/errorHandler';
 
 export default function InvoiceFromQuoteScreen() {
@@ -18,6 +20,8 @@ export default function InvoiceFromQuoteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { quotes, lineItems, addInvoice, markInvoiceSent, invoices } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [creating, setCreating] = useState(false);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
 
@@ -114,7 +118,7 @@ export default function InvoiceFromQuoteScreen() {
           <View style={styles.row}>
             <Text style={Typography.muted}>{t('quoteToInvoice.amount')}</Text>
             <Text style={[Typography.body, { fontWeight: '700' }]}>
-              €{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              {formatCurrency(quote.amount, country)}
             </Text>
           </View>
         </View>
@@ -128,11 +132,11 @@ export default function InvoiceFromQuoteScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={Typography.body}>{item.description}</Text>
                   <Text style={Typography.muted}>
-                    {item.quantity} × €{item.unitPrice.toFixed(2)}
+                    {item.quantity} × {formatCurrency(item.unitPrice, country)}
                   </Text>
                 </View>
                 <Text style={Typography.body}>
-                  €{(item.quantity * item.unitPrice).toFixed(2)}
+                  {formatCurrency(item.quantity * item.unitPrice, country)}
                 </Text>
               </View>
             ))}
@@ -146,7 +150,7 @@ export default function InvoiceFromQuoteScreen() {
             <View style={styles.row}>
               <Text style={Typography.body}>{t('quoteToInvoice.invoiceRef', { id: invoiceId })}</Text>
               <Text style={Typography.body}>
-                €{quote.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {formatCurrency(quote.amount, country)}
               </Text>
             </View>
             <Text style={Typography.muted}>

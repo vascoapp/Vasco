@@ -26,6 +26,8 @@ import { MOCK_CONTRACTOR_INVOICES } from '../../data/mockContractor';
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import { formatCurrency, formatCurrency0, type Country } from '../../i18n/formatting';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
   platform: 'ios' as const,
@@ -211,6 +213,8 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
   onSendReminder,
   onCopyLink,
 }) => {
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const dueDate = new Date(invoice.dueDate);
   const today = new Date();
   const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -225,7 +229,7 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
         </View>
         <View style={styles.invoiceAmountContainer}>
           <Text style={styles.invoiceAmount}>
-            {'\u20AC'}{invoice.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {formatCurrency(invoice.total, country)}
           </Text>
           <View style={[
             styles.dueBadge,
@@ -290,6 +294,8 @@ interface PaidInvoiceCardProps {
 }
 
 const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink }) => {
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   return (
     <View style={[styles.invoiceCard, styles.paidInvoiceCard]}>
       <View style={styles.invoiceHeader}>
@@ -299,7 +305,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
         </View>
         <View style={styles.invoiceAmountContainer}>
           <Text style={[styles.invoiceAmount, styles.paidAmount]}>
-            {'\u20AC'}{paymentLink.paidAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {formatCurrency(paymentLink.paidAmount ?? 0, country)}
           </Text>
           <View style={styles.paidBadge}>
             <Ionicons name="checkmark-circle" size={12} color={Colors.success} />
@@ -330,7 +336,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
         <View style={styles.paymentDetailRow}>
           <Text style={styles.paymentDetailLabel}>Net received</Text>
           <Text style={styles.paymentDetailValue}>
-            {'\u20AC'}{paymentLink.netAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {formatCurrency(paymentLink.netAmount ?? 0, country)}
             <Text style={styles.feeText}> (fee: {'\u20AC'}{paymentLink.providerFee})</Text>
           </Text>
         </View>
@@ -348,6 +354,8 @@ interface IntegratedPaymentsProps {
 }
 
 export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose }) => {
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'outstanding' | 'paid' | 'settings'>('outstanding');
@@ -494,7 +502,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
         <View style={[styles.summaryCard, styles.summaryCardOutstanding]}>
           <Text style={styles.summaryLabel}>Outstanding</Text>
           <Text style={styles.summaryValue}>
-            {'\u20AC'}{totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            {formatCurrency0(totalOutstanding, country)}
           </Text>
           <Text style={styles.summarySubtext}>
             {outstandingInvoices.length} invoice{outstandingInvoices.length !== 1 ? 's' : ''}
@@ -503,7 +511,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
         <View style={[styles.summaryCard, styles.summaryCardOverdue]}>
           <Text style={styles.summaryLabel}>Overdue</Text>
           <Text style={[styles.summaryValue, { color: Colors.error }]}>
-            {'\u20AC'}{totalOverdue.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            {formatCurrency0(totalOverdue, country)}
           </Text>
           <Text style={styles.summarySubtext}>Needs attention</Text>
         </View>

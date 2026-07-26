@@ -23,6 +23,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -71,6 +72,7 @@ export default function TimesheetScreen() {
   const { t } = useTranslation();
   const { jobs, updateJob, customers, businessProfile } = useAppState();
   const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [activeTab, setActiveTab] = useState<TabType>('vandaag');
   const [entries, setEntries] = useState<SoloTimeEntry[]>([]);
 
@@ -279,7 +281,7 @@ export default function TimesheetScreen() {
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>
-            €{(displayHours * 55).toLocaleString()}
+            {formatCurrency0(displayHours * 55, country)}
           </Text>
           <Text style={styles.summaryLabel}>{t('timesheet.value', 'Waarde')}</Text>
         </View>

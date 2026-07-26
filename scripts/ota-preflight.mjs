@@ -455,7 +455,27 @@ async function checkRawIdFallbacks() {
 // The enterprise surfaces (hub screens, CFO/director dashboards and the
 // generators scoped to those roles) are deliberately excluded: they are a
 // UK-oriented product where a fixed £ is intentional, not a locale bug.
-const CURRENCY_FMT_RE = /[€£$]\s*\$\{[^}]*\.(toFixed|toLocaleString)\s*\(/;
+// TWO shapes, because for a long time this only matched the first one and the
+// JSX form is the commoner one in this codebase — 42 sites were invisible to a
+// green check, incl. 8 on the Facturen tab and 2 on the photo->quote path:
+//   1. template literal   `€${x.toFixed(2)}`   /  `€${x.toLocaleString()}`
+//   2. JSX                 €{x.toLocaleString()}  /  {'€'}{x.toFixed(2)}
+// `toLocaleString()` with no locale argument formats in the DEVICE locale, so
+// a contractor whose phone is set to English reads "1,234.56" on a Dutch
+// screen; passing i18n.language is no better, since the app locale and the
+// contractor's COUNTRY are separate (an English-speaking NL contractor still
+// bills in €1.234,56). Only formatCurrency/formatCurrency0/compactCurrency,
+// which take the country, are correct.
+// Kept as two explicit alternatives rather than one clever one: a combined
+// `[€£$]\s*(?:\$\{|\{)` also matches a bare `${x.toFixed(2)}`, because the `$`
+// of the interpolation satisfies the currency class — that fired on 190 lines
+// with no currency symbol at all.
+const CURRENCY_TEMPLATE_RE = /[€£$]\s*\$\{[^}]*\.(?:toFixed|toLocaleString)\s*\(/;
+const CURRENCY_JSX_RE =
+  /(?:[€£]|\{\s*'(?:\\u20AC|€|£|\$)'\s*\})\s*\{[^}]*\.(?:toFixed|toLocaleString)\s*\(/;
+const CURRENCY_FMT_RE = {
+  test: (line) => CURRENCY_TEMPLATE_RE.test(line) || CURRENCY_JSX_RE.test(line),
+};
 const CURRENCY_EXEMPT_PATHS = [
   // Enterprise surfaces: a UK-oriented product where a fixed £ is intentional.
   'app/hub/',

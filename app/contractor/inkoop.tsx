@@ -6,7 +6,7 @@
 // Vasco tips behind the scenes (not shown in UI).
 // =============================================================================
 
-import { formatMoney } from '../../src/i18n/formatting';
+import { formatMoney, formatCurrency, formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -309,7 +309,7 @@ export default function InkoopScreen() {
                     <View style={styles.supplierBottom}>
                       <View style={styles.costRow}>
                         <Text style={styles.qtyText}>{suggestion.suggestedQuantity}×</Text>
-                        <Text style={styles.costText}>€{suggestion.estimatedCost.toFixed(0)}</Text>
+                        <Text style={styles.costText}>{formatCurrency0(suggestion.estimatedCost, country as Country)}</Text>
                         {suggestion.bulkDiscount && (
                           <View style={styles.savingsChip}>
                             <Text style={styles.savingsChipText}>-{suggestion.bulkDiscount.discountPercent}%</Text>
@@ -395,7 +395,7 @@ export default function InkoopScreen() {
                     <View key={c.id} style={styles.legendRow}>
                       <View style={[styles.legendDot, { backgroundColor: c.color }]} />
                       <Text style={styles.legendLabel}>{c.label}</Text>
-                      <Text style={styles.legendAmount}>€{c.amount.toLocaleString(undefined)}</Text>
+                      <Text style={styles.legendAmount}>{formatCurrency0(c.amount, country as Country)}</Text>
                       <Text style={styles.legendPct}>{pct}%</Text>
                     </View>
                   );
@@ -407,7 +407,7 @@ export default function InkoopScreen() {
                 <View style={styles.timelineTop}>
                   <View>
                     <Text style={styles.timelineLabel}>{t('inkoop.savedThisMonth', 'Saved this month')}</Text>
-                    <Text style={styles.timelineAmount}>€{savings.totalSavedThisMonth.toLocaleString(undefined)}</Text>
+                    <Text style={styles.timelineAmount}>{formatCurrency0(savings.totalSavedThisMonth, country as Country)}</Text>
                   </View>
                   {/* Hidden when the trend is unknown — it used to render a
                       bare "+%" (hardcoded 12 before, null now) beside the
@@ -427,7 +427,7 @@ export default function InkoopScreen() {
                 return (
                   <View key={m.month} style={styles.barCol}>
                     {isCurrent && (
-                      <Text style={styles.barValue}>€{m.amount.toLocaleString(undefined)}</Text>
+                      <Text style={styles.barValue}>{formatCurrency0(m.amount, country as Country)}</Text>
                     )}
                     <View style={[styles.bar, {
                       height: barH,

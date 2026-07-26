@@ -23,6 +23,8 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 
 // Services
 import {
@@ -330,6 +332,8 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
 // ============================================
 
 export default function CertificatenScreen() {
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
@@ -747,7 +751,7 @@ export default function CertificatenScreen() {
               {selectedItem.renewalCost && (
                 <View style={styles.modalSection}>
                   <Text style={styles.modalLabel}>{t('compliance.renewalCost', 'Vernieuwingskosten')}</Text>
-                  <Text style={styles.modalValue}>€{selectedItem.renewalCost.toLocaleString(undefined)}</Text>
+                  <Text style={styles.modalValue}>{formatCurrency0(selectedItem.renewalCost, country)}</Text>
                 </View>
               )}
 

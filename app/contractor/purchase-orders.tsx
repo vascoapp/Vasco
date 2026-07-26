@@ -14,6 +14,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { usePurchaseOrders, usePOStats, type PurchaseOrder, type POStatus } from '../../src/services/purchaseOrderService';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency, formatCurrency0, compactCurrency, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
@@ -39,6 +40,7 @@ export default function PurchaseOrdersScreen() {
   const stats = usePOStats();
   const { suppliers, jobs, businessProfile } = useAppState();
   const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600); }, []);
@@ -119,7 +121,7 @@ export default function PurchaseOrdersScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{t('purchaseOrders.title', 'Inkooporders')}</Text>
           <Text style={styles.headerSubtitle}>
-            {stats.pendingOrders} {t('purchaseOrders.pending', 'openstaand')} · €{stats.pendingValue.toLocaleString(undefined)}
+            {stats.pendingOrders} {t('purchaseOrders.pending', 'openstaand')} · {formatCurrency0(stats.pendingValue, country)}
           </Text>
         </View>
         <Pressable
@@ -152,7 +154,7 @@ export default function PurchaseOrdersScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>€{(stats.totalSpentThisMonth / 1000).toFixed(1)}k</Text>
+            <Text style={styles.statValue}>{compactCurrency(stats.totalSpentThisMonth, country)}</Text>
             <Text style={styles.statLabel}>{t('purchaseOrders.spent', 'Besteed')}</Text>
           </View>
         </View>
@@ -208,7 +210,7 @@ export default function PurchaseOrdersScreen() {
                   )}
                 </View>
                 <View style={styles.orderRight}>
-                  <Text style={styles.orderAmount}>€{order.total.toLocaleString(undefined)}</Text>
+                  <Text style={styles.orderAmount}>{formatCurrency(order.total, country)}</Text>
                   <Text style={[styles.orderStatus, { color: config.color }]}>{t(config.labelKey, config.fallback)}</Text>
                 </View>
               </Pressable>
@@ -220,22 +222,22 @@ export default function PurchaseOrdersScreen() {
                     <View key={item.id} style={styles.lineItem}>
                       <Text style={styles.lineDesc} numberOfLines={1}>{item.description}</Text>
                       <Text style={styles.lineQty}>{item.quantity} {item.unit}</Text>
-                      <Text style={styles.lineTotal}>€{item.total.toLocaleString(undefined)}</Text>
+                      <Text style={styles.lineTotal}>{formatCurrency(item.total, country)}</Text>
                     </View>
                   ))}
 
                   {/* Totals */}
                   <View style={styles.totalsRow}>
                     <Text style={styles.totalsLabel}>{t('purchaseOrders.subtotal', 'Subtotaal')}</Text>
-                    <Text style={styles.totalsValue}>€{order.subtotal.toLocaleString(undefined)}</Text>
+                    <Text style={styles.totalsValue}>{formatCurrency(order.subtotal, country)}</Text>
                   </View>
                   <View style={styles.totalsRow}>
                     <Text style={styles.totalsLabel}>BTW {order.vatRate}%</Text>
-                    <Text style={styles.totalsValue}>€{order.vatAmount.toLocaleString(undefined)}</Text>
+                    <Text style={styles.totalsValue}>{formatCurrency(order.vatAmount, country)}</Text>
                   </View>
                   <View style={[styles.totalsRow, styles.totalsFinal]}>
                     <Text style={styles.totalsFinalLabel}>{t('purchaseOrders.total', 'Totaal')}</Text>
-                    <Text style={styles.totalsFinalValue}>€{order.total.toLocaleString(undefined)}</Text>
+                    <Text style={styles.totalsFinalValue}>{formatCurrency(order.total, country)}</Text>
                   </View>
 
                   {/* Expected delivery */}

@@ -42,7 +42,7 @@ import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist
 import { listJobPhotos } from '../../../src/services/jobPhotoService';
 import { SignaturePad } from '../../../src/components/shared/SignaturePad';
 import { useAuth } from '../../../src/context/AuthContext';
-import { formatCurrency } from '../../../src/i18n/formatting';
+import { formatCurrency, formatCurrency0 } from '../../../src/i18n/formatting';
 import type { Country } from '../../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -772,11 +772,11 @@ export default function JobDetailPage() {
               <View style={styles.costGrid}>
                 <View style={styles.costCol}>
                   <Text style={styles.costColHeader}>{t('quotes.quote', 'Quote')}</Text>
-                  <Text style={styles.costColValue}>{'\u20AC'}{costVariance.estimatedTotal.toLocaleString(undefined)}</Text>
+                  <Text style={styles.costColValue}>{formatCurrency0(costVariance.estimatedTotal, country)}</Text>
                 </View>
                 <View style={styles.costCol}>
                   <Text style={styles.costColHeader}>{t('jobs.actual', 'Actual')}</Text>
-                  <Text style={styles.costColValue}>{'\u20AC'}{costVariance.actualTotal.toLocaleString(undefined)}</Text>
+                  <Text style={styles.costColValue}>{formatCurrency0(costVariance.actualTotal, country)}</Text>
                 </View>
                 <View style={styles.costCol}>
                   <Text style={styles.costColHeader}>{t('jobs.variance', 'Variance')}</Text>
@@ -784,7 +784,7 @@ export default function JobDetailPage() {
                     styles.costColValue,
                     { color: costVariance.marginDelta <= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }
                   ]}>
-                    {costVariance.marginDelta > 0 ? '+' : ''}{'\u20AC'}{costVariance.marginDelta.toLocaleString(undefined)}
+                    {costVariance.marginDelta > 0 ? '+' : ''}{formatCurrency0(costVariance.marginDelta, country)}
                   </Text>
                 </View>
               </View>

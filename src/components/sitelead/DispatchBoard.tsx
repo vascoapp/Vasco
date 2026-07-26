@@ -14,6 +14,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
+import { formatMoney } from '../../i18n/formatting';
 import type { Worker, DispatchJob } from '../../types/sitelead';
 import { MOCK_WORKERS, MOCK_DISPATCH_JOBS } from '../../data/mockSiteLead';
 import { useTranslation } from 'react-i18next';
@@ -162,7 +163,7 @@ function JobCard({ job, onAssign, onViewDetails }: JobCardProps) {
           </Text>
         </View>
 
-        <Text style={styles.jobValue}>{'\u20AC'}{job.estimatedValue.toLocaleString()}</Text>
+        <Text style={styles.jobValue}>{formatMoney(job.estimatedValue)}</Text>
 
         {job.status === 'unassigned' && (
           <Pressable style={styles.assignButton} onPress={onAssign}>

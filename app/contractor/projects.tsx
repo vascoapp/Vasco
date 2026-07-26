@@ -11,6 +11,8 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Modal } from 'react-native';
@@ -33,6 +35,8 @@ export default function ProjectsScreen() {
   const router = useRouter();
   const STATUS_CONFIG = useMemo(() => getStatusConfig(t), [t]);
   const { projects, addProject, jobs, customers, getProjectPnL } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
@@ -120,7 +124,7 @@ export default function ProjectsScreen() {
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
-              <Text style={styles.metricValue}>{'\u20AC'}{(pnl.revenue || project.totalBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.metricValue}>{formatCurrency0(pnl.revenue || project.totalBudget, country)}</Text>
               <Text style={styles.metricLabel}>{t('contractor.projects.budget', 'Budget')}</Text>
             </View>
             <View style={styles.metricDivider} />

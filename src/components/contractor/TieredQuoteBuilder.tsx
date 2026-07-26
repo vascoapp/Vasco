@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { DK } from '../../theme/draftkings';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, type Country } from '../../i18n/formatting';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
@@ -937,7 +937,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary }}>{rec.description}</Text>
                     <Text style={{ fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary }}>
-                      €{rec.suggestedUnitPrice.toFixed(2)} · {Math.round(rec.recommendationRate * 100)}% van vergelijkbare offertes · {rec.contractorCount} aannemers
+                      {formatCurrency(rec.suggestedUnitPrice, country as Country)} · {Math.round(rec.recommendationRate * 100)}% van vergelijkbare offertes · {rec.contractorCount} aannemers
                     </Text>
                   </View>
                 </Pressable>

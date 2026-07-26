@@ -14,6 +14,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
+import { formatMoney } from '../../i18n/formatting';
 import { MOCK_SITE_REPORT } from '../../data/mockSiteLead';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -301,7 +302,7 @@ export function DeepReports({ onClose }: DeepReportsProps) {
                 <Text style={styles.performerName}>{performer.workerName}</Text>
                 <View style={styles.performerMetrics}>
                   <Text style={styles.performerJobs}>{performer.jobsCompleted} klussen</Text>
-                  <Text style={styles.performerRevenue}>{'\u20AC'}{performer.revenue.toLocaleString()}</Text>
+                  <Text style={styles.performerRevenue}>{formatMoney(performer.revenue)}</Text>
                 </View>
               </View>
             ))}

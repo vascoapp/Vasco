@@ -19,7 +19,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, formatCurrency0, type Country } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { getCurrentTrade, getCurrentCountry, getCurrentVatScheme, getCurrentUserId } from '../../lib/currentUser';
@@ -108,6 +108,10 @@ interface CapturedPhoto {
 }
 
 export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoProps) {
+  // Cohort figures are money — format for the contractor's country, not the
+  // device locale. Resolved here rather than threaded as a prop, matching how
+  // the rest of this component already reads getCurrentCountry().
+  const cohortCountry = ((getCurrentCountry() as Country) ?? 'NL');
   const { t } = useTranslation();
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
@@ -576,13 +580,13 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
               {photoCohort.medianCostEur != null && (
                 <View style={styles.cohortItem}>
                   <Text style={styles.cohortLabel}>{t('aiQuote.cohortMedianCost', 'Median cost')}</Text>
-                  <Text style={styles.cohortValue}>€{Math.round(photoCohort.medianCostEur).toLocaleString()}</Text>
+                  <Text style={styles.cohortValue}>{formatCurrency0(photoCohort.medianCostEur, cohortCountry)}</Text>
                 </View>
               )}
               {photoCohort.avgCostEur != null && (
                 <View style={styles.cohortItem}>
                   <Text style={styles.cohortLabel}>{t('aiQuote.cohortAvgCost', 'Avg cost')}</Text>
-                  <Text style={styles.cohortValue}>€{Math.round(photoCohort.avgCostEur).toLocaleString()}</Text>
+                  <Text style={styles.cohortValue}>{formatCurrency0(photoCohort.avgCostEur, cohortCountry)}</Text>
                 </View>
               )}
             </View>

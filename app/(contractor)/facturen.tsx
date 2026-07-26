@@ -113,6 +113,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
   const { t } = useTranslation();
   const { businessProfile, customers, jobs } = useAppState();
   const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const router = useRouter();
   // R300: customer tag drives gateReminderSend behavior — VIP gets a softer
   // confirm, INACTIVE gets a "are you sure?" prompt, others fall through.
@@ -266,7 +267,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   styles.invoiceAmount,
                   invoice.status === 'paid' && { color: SemanticColors.feedbackSuccess }
                 ]}>
-                  €{invoice.amount.toLocaleString()}
+                  {formatCurrency(invoice.amount, country)}
                 </Text>
                 <Text style={[styles.invoiceStatus, { color: status.color }]}>{status.label}</Text>
                 {invoice.status === 'overdue' && (() => {
@@ -274,7 +275,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   const interest = calculateLatePaymentInterest(invoice.amount, daysOverdue);
                   return (
                     <Text style={{ fontSize: 10, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError, marginTop: 2 }}>
-                      {t('invoices.lateInterest', 'Interest')}: €{interest.interest.toLocaleString(undefined, { minimumFractionDigits: 2 })} ({t('invoices.commercialInterestRate', '8% commercial interest')})
+                      {t('invoices.lateInterest', 'Interest')}: {formatCurrency(interest.interest, country)} ({t('invoices.commercialInterestRate', '8% commercial interest')})
                     </Text>
                   );
                 })()}
@@ -427,6 +428,8 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
 
 function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const getStatusConfig = (status: QuoteStatus) => {
     switch (status) {
       case 'viewed':
@@ -451,7 +454,7 @@ function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
         <Text style={styles.quoteTitle} numberOfLines={1}>{quote.title}</Text>
       </View>
       <View style={styles.quoteRight}>
-        <Text style={styles.quoteAmount}>€{quote.total.toLocaleString()}</Text>
+        <Text style={styles.quoteAmount}>{formatCurrency(quote.total, country)}</Text>
         <Text style={[styles.quoteStatus, { color: status.color }]}>{status.label}</Text>
       </View>
     </Pressable>
@@ -468,6 +471,7 @@ export default function FacturenScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [activeTab, setActiveTab] = useState<TabView>('offertes');
   const [showQuoteBuilder, setShowQuoteBuilder] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -607,7 +611,7 @@ export default function FacturenScreen() {
           <View style={styles.stickyOverdueLeft}>
             <Ionicons name="alert-circle" size={16} color={SemanticColors.feedbackError} />
             <Text style={styles.stickyOverdueText}>
-              {overdueInvoices.length} {t('invoices.invoicesOverdue', 'facturen verlopen')} · {'\u20AC'}{overdueValue.toLocaleString()}
+              {overdueInvoices.length} {t('invoices.invoicesOverdue', 'facturen verlopen')} · {formatCurrency(overdueValue, country)}
             </Text>
           </View>
           <View style={styles.stickyOverdueActions}>
@@ -715,7 +719,7 @@ export default function FacturenScreen() {
                   <View key={approval.id} style={styles.approvalItem}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.approvalCustomer}>{approval.customerName}</Text>
-                      <Text style={styles.approvalRef}>{approval.quoteReference} · €{approval.amount.toLocaleString()}</Text>
+                      <Text style={styles.approvalRef}>{approval.quoteReference} · {formatCurrency(approval.amount, country)}</Text>
                     </View>
                     <View style={styles.approvalActions}>
                       <Pressable
@@ -908,7 +912,7 @@ export default function FacturenScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.overdueBannerTitle} numberOfLines={1}>{t('invoices.sendReminder', 'Stuur Herinnering')}</Text>
                   <Text style={styles.overdueBannerSub} numberOfLines={1}>
-                    {'\u20AC'}{overdueValue.toLocaleString()} verlopen · {overdueInvoices.length} facturen
+                    {formatCurrency(overdueValue, country)} verlopen · {overdueInvoices.length} facturen
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Palette.white} />
@@ -955,7 +959,7 @@ export default function FacturenScreen() {
                   <View key={seq.id} style={styles.dunningCard}>
                     <View style={styles.dunningHeader}>
                       <Text style={styles.dunningCustomer} numberOfLines={1}>{seq.customerName}</Text>
-                      <Text style={styles.dunningAmount}>{'\u20AC'}{seq.invoiceAmount.toLocaleString()}</Text>
+                      <Text style={styles.dunningAmount}>{formatCurrency(seq.invoiceAmount, country)}</Text>
                     </View>
                     <View style={styles.dunningMeta}>
                       <View style={[styles.dunningStepBadge, { backgroundColor: (stepColors[seq.currentStep] || SemanticColors.textTertiary) + '14' }]}>
@@ -1012,7 +1016,7 @@ export default function FacturenScreen() {
                     </View>
                     <Text style={[styles.cashGapAmount, {
                       color: alert.severity === 'kritiek' ? SemanticColors.feedbackError : SemanticColors.feedbackWarning,
-                    }]}>{'\u20AC'}{alert.gapAmount.toLocaleString()}</Text>
+                    }]}>{formatCurrency(alert.gapAmount, country)}</Text>
                   </View>
                 ))}
               </View>

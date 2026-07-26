@@ -216,7 +216,7 @@ export default function ExpensesScreen() {
                 )}
               </View>
               <View style={styles.expenseRight}>
-                <Text style={styles.expenseAmount}>€{expense.amount.toLocaleString(undefined)}</Text>
+                <Text style={styles.expenseAmount}>{formatCurrency(expense.amount, country)}</Text>
                 {expense.deductible && (
                   <View style={styles.deductBadge}>
                     <Text style={styles.deductText}>{expense.deductionPercentage}% {t('expenses.deduction', 'aftrek')}</Text>

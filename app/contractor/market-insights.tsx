@@ -25,6 +25,7 @@ import {
   type DailyMetricPoint,
 } from '../../src/services/intelligenceCaptureService';
 import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 
 interface MonthRow { month: string; avgMargin: number; medianMargin: number; quotes: number; }
 interface BucketRow { amountBucket: string; winRate: number; quotes: number; contractors: number; }
@@ -152,7 +153,7 @@ export default function MarketInsightsScreen() {
               </View>
               <View style={[styles.row, styles.rowBorder]}>
                 <Text style={styles.rowLabel}>{t('marketInsights.received', 'Received')}</Text>
-                <Text style={styles.rowValue}>€{totals30d.paidEur.toLocaleString(i18n.language, { maximumFractionDigits: 0 })}</Text>
+                <Text style={styles.rowValue}>{formatCurrency0(totals30d.paidEur, country as Country)}</Text>
               </View>
             </View>
           </View>
