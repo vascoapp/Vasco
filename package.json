@@ -12,6 +12,7 @@
     "contrast:check": "node scripts/contrast-audit.js",
     "i18n:audit": "node scripts/i18n-audit.js",
     "smoke:golden": "node scripts/golden-path-smoke.mjs",
+    "check:grants": "node scripts/check-grants.mjs",
     "smoke:endpoints": "node scripts/endpoint-health.mjs",
     "render:icons": "node scripts/render-icons.mjs",
     "capture:screenshots": "bash scripts/capture-screenshots.sh",
