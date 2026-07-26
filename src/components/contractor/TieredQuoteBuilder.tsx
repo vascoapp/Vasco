@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { DK } from '../../theme/draftkings';
-import { formatCurrency, type Country } from '../../i18n/formatting';
+import { formatCurrency, type Country, currencySymbol } from '../../i18n/formatting';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
@@ -631,9 +631,9 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         w.length >= 4 && m.item.name.toLowerCase().split(/[\s\-]+/).some((iw: string) => iw.length >= 4 && levenshtein(w, iw) <= 2)
       ) : [];
       if (matchedWords.length > 0) {
-        explanations[m.item.id] = `Matched "${matchedWords.join(', ')}" from your description. ${TRADE_LABELS[trade] || trade} standard rate: \u20AC${m.item.basePrice}/${m.unit}.`;
+        explanations[m.item.id] = `Matched "${matchedWords.join(', ')}" from your description. ${TRADE_LABELS[trade] || trade} standard rate: ${formatCurrency(m.item.basePrice, country)}/${m.unit}.`;
       } else if (fuzzyWords.length > 0) {
-        explanations[m.item.id] = `Fuzzy match for "${fuzzyWords.join(', ')}". ${TRADE_LABELS[trade] || trade} standard rate: \u20AC${m.item.basePrice}/${m.unit}.`;
+        explanations[m.item.id] = `Fuzzy match for "${fuzzyWords.join(', ')}". ${TRADE_LABELS[trade] || trade} standard rate: ${formatCurrency(m.item.basePrice, country)}/${m.unit}.`;
       } else {
         explanations[m.item.id] = `Common ${TRADE_LABELS[trade] || trade} service \u2014 suggested based on typical ${trade} job scope.`;
       }
@@ -835,7 +835,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
                 style={[s.customInput, { flex: 1 }]}
                 value={customPrice}
                 onChangeText={setCustomPrice}
-                placeholder={t('quotes.customServicePrice', 'Price (€)')}
+                placeholder={t('quotes.customServicePrice', 'Price ({{sym}})', { sym: currencySymbol(country) })}
                 placeholderTextColor={SemanticColors.textTertiary}
                 keyboardType="decimal-pad"
               />

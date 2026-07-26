@@ -181,7 +181,7 @@ export default function PayrollScreen() {
               </View>
               <View style={styles.memberInfo}>
                 <Text style={styles.memberName}>{line.name}</Text>
-                <Text style={styles.memberRole}>{line.role} · €{line.hourlyRate}/u</Text>
+                <Text style={styles.memberRole}>{line.role} · {fmt(line.hourlyRate)}/u</Text>
               </View>
               <Text style={styles.memberTotal}>{fmt(line.totalPay)}</Text>
             </View>

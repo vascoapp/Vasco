@@ -115,7 +115,7 @@ class PricingEngineService {
     logPrediction({
       generatorId: 'smart-pricing',
       predictedAt: new Date().toISOString(),
-      prediction: `Optimale prijs ${params.projectType} ${params.scope}: €${adjustedPrice}`,
+      prediction: `Optimale prijs ${params.projectType} ${params.scope}: ${formatMoney(adjustedPrice)}`,
       predictedValue: adjustedPrice,
     });
 
@@ -250,7 +250,7 @@ class PricingEngineService {
     logPrediction({
       generatorId: 'smart-pricing',
       predictedAt: new Date(Date.now() - MS_PER_DAY).toISOString(), // assume predicted yesterday
-      prediction: `Prijs uitkomst: voorgesteld €${suggestedPrice}, werkelijk €${finalPrice}`,
+      prediction: `Prijs uitkomst: voorgesteld ${formatMoney(suggestedPrice)}, werkelijk ${formatMoney(finalPrice)}`,
       predictedValue: suggestedPrice,
     }).then(id => {
       import('../intelligence/calibration').then(mod => {
@@ -267,6 +267,7 @@ export const pricingEngineService = new PricingEngineService();
 // ============================================
 
 import { useState, useCallback, useMemo } from 'react';
+import { formatMoney } from '../i18n/formatting';
 
 export function usePricingEngine() {
   const [suggestion, setSuggestion] = useState<PricingSuggestion | null>(null);

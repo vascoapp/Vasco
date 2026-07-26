@@ -20,6 +20,7 @@ import {
   DEFAULT_DUTCH_BENCHMARKS,
 } from '../types/roi-metrics';
 import { registerSingletonReset } from './singletonReset';
+import { formatMoney } from '../i18n/formatting';
 
 // ============================================
 // MOCK DATA
@@ -441,7 +442,7 @@ class ROIMetricsService {
 
     return {
       headline: `Vasco bespaarde je ${hours} uur deze week`,
-      subheadline: `Dat is €${value} aan tijdswaarde`,
+      subheadline: `Dat is ${formatMoney(value)} aan tijdswaarde`,
       breakdown: hs.byAutomationType.slice(0, 4).map((item) => ({
         category: this.getAutomationLabel(item.type),
         icon: this.getAutomationIcon(item.type),

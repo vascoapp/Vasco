@@ -10,6 +10,7 @@ import { Platform, Alert } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import i18n from '../i18n/i18n';
 import type { Job } from '../domain/jobs';
+import { formatMoney } from '../i18n/formatting';
 
 // =============================================================================
 // TYPES
@@ -192,7 +193,7 @@ export async function syncJobToCalendar(job: Job): Promise<boolean> {
     const notes = [
       job.description || '',
       job.trade ? `Trade: ${job.trade}` : '',
-      job.quotedAmount ? `Quote: \u20AC${job.quotedAmount.toLocaleString()}` : '',
+      job.quotedAmount ? `Quote: ${formatMoney(job.quotedAmount)}` : '',
     ].filter(Boolean).join('\n');
 
     const eventDetails: any = {

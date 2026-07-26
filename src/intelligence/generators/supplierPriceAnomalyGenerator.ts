@@ -23,6 +23,7 @@ import { logPrediction } from '../calibration';
 import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { gt } from '../generatorTranslations';
 import { detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
+import { formatMoney } from '../../i18n/formatting';
 
 // ── Analysis types ──────────────────────────────────────────────────────────
 
@@ -196,7 +197,7 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
   logPrediction({
     generatorId: 'supplier-price-anomaly',
     predictedAt: new Date().toISOString(),
-    prediction: `Prijsafwijking: \u20AC${Math.round(summary.totalMaterialPriceVariance)} (${round1(priceVariancePct)}% van geschat materiaal)`,
+    prediction: `Prijsafwijking: ${formatMoney(Math.round(summary.totalMaterialPriceVariance))} (${round1(priceVariancePct)}% van geschat materiaal)`,
     predictedValue: summary.totalMaterialPriceVariance,
   });
 
@@ -213,21 +214,21 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
     : 'low' as const;
 
   const title = isOvercharge
-    ? `Leveranciersprijzen \u20AC${Math.round(summary.totalMaterialPriceVariance)} boven offerte`
+    ? `Leveranciersprijzen ${formatMoney(Math.round(summary.totalMaterialPriceVariance))} boven offerte`
     : hasCrossSavings
       ? `${crossSavings.length} materialen goedkoper bij andere leverancier`
-      : `Materiaalkosten \u20AC${Math.abs(Math.round(summary.totalMaterialPriceVariance))} lager door slimme inkoop`;
+      : `Materiaalkosten ${formatMoney(Math.abs(Math.round(summary.totalMaterialPriceVariance)))} lager door slimme inkoop`;
 
   const messageParts: string[] = [];
   if (isOvercharge && worstSupplier) {
     messageParts.push(
-      `${worstSupplier.name} rekent gemiddeld ${worstSupplier.avgPriceDeviationPercent}% meer dan geoffreerd (netto \u20AC${Math.round(worstSupplier.netImpact)} impact).`,
+      `${worstSupplier.name} rekent gemiddeld ${worstSupplier.avgPriceDeviationPercent}% meer dan geoffreerd (netto ${formatMoney(Math.round(worstSupplier.netImpact))} impact).`,
     );
   }
   if (hasCrossSavings) {
     const top = crossSavings[0];
     messageParts.push(
-      `${top.materialName}: ${top.savingsPercent}% goedkoper bij ${top.cheaperSupplier} (\u20AC${Math.round(top.estimatedAnnualSavings)}/jaar besparing).`,
+      `${top.materialName}: ${top.savingsPercent}% goedkoper bij ${top.cheaperSupplier} (${formatMoney(Math.round(top.estimatedAnnualSavings))}/jaar besparing).`,
     );
   }
   if (!isOvercharge && !hasCrossSavings) {
@@ -244,7 +245,7 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
     for (const sp of supplierProfiles.slice(0, 4)) {
       const direction = sp.netImpact > 0 ? '+' : '\u2212';
       detailParts.push(
-        `\u2022 ${sp.name}: ${direction}\u20AC${Math.abs(Math.round(sp.netImpact))} netto (${sp.overchargeCount} duurder, ${sp.savingsCount} goedkoper)`,
+        `\u2022 ${sp.name}: ${direction}${formatMoney(Math.abs(Math.round(sp.netImpact)))} netto (${sp.overchargeCount} duurder, ${sp.savingsCount} goedkoper)`,
       );
     }
   }
@@ -254,12 +255,12 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
     detailParts.push('Besparingsmogelijkheden (andere leverancier):');
     for (const cs of crossSavings.slice(0, 4)) {
       detailParts.push(
-        `\u2022 ${cs.materialName}: \u20AC${cs.cheaperPrice} bij ${cs.cheaperSupplier} vs. \u20AC${cs.expensivePrice} bij ${cs.expensiveSupplier} (\u2212${cs.savingsPercent}%, \u20AC${Math.round(cs.estimatedAnnualSavings)}/jaar)`,
+        `\u2022 ${cs.materialName}: ${formatMoney(cs.cheaperPrice)} bij ${cs.cheaperSupplier} vs. ${formatMoney(cs.expensivePrice)} bij ${cs.expensiveSupplier} (\u2212${cs.savingsPercent}%, ${formatMoney(Math.round(cs.estimatedAnnualSavings))}/jaar)`,
       );
     }
     if (totalCrossSupplierSavings > 0) {
       detailParts.push(
-        `Totale geschatte jaarlijkse besparing door leverancierswisseling: \u20AC${Math.round(totalCrossSupplierSavings)}`,
+        `Totale geschatte jaarlijkse besparing door leverancierswisseling: ${formatMoney(Math.round(totalCrossSupplierSavings))}`,
       );
     }
   }
@@ -267,7 +268,7 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
   if (annualizedOvercharge !== 0) {
     detailParts.push('');
     detailParts.push(
-      `Projectie: bij huidig inkooppatroon is de jaarlijkse prijsafwijking \u20AC${Math.abs(Math.round(annualizedOvercharge))} ${annualizedOvercharge > 0 ? 'extra kosten' : 'besparing'}.${seasonNote}`,
+      `Projectie: bij huidig inkooppatroon is de jaarlijkse prijsafwijking ${formatMoney(Math.abs(Math.round(annualizedOvercharge)))} ${annualizedOvercharge > 0 ? 'extra kosten' : 'besparing'}.${seasonNote}`,
     );
   }
 
@@ -278,7 +279,7 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
 
   detailParts.push('');
   detailParts.push(
-    `Variantie-decompositie: prijs \u20AC${Math.round(summary.totalMaterialPriceVariance)}, hoeveelheid \u20AC${Math.round(summary.totalMaterialQuantityVariance)}, mix \u20AC${Math.round(summary.totalMaterialMixVariance)} | CPI: ${summary.cpi.toFixed(2)}`,
+    `Variantie-decompositie: prijs ${formatMoney(Math.round(summary.totalMaterialPriceVariance))}, hoeveelheid ${formatMoney(Math.round(summary.totalMaterialQuantityVariance))}, mix ${formatMoney(Math.round(summary.totalMaterialMixVariance))} | CPI: ${summary.cpi.toFixed(2)}`,
   );
 
   // ── 8. Continuous confidence ──────────────────────────────────────────
@@ -309,7 +310,7 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
     source: gt('source_procurement', ctx.language),
     metric: {
       label: isOvercharge ? 'Prijsafwijking' : 'Besparing',
-      value: `${summary.totalMaterialPriceVariance > 0 ? '+' : ''}\u20AC${Math.abs(Math.round(summary.totalMaterialPriceVariance))}`,
+      value: `${summary.totalMaterialPriceVariance > 0 ? '+' : ''}${formatMoney(Math.abs(Math.round(summary.totalMaterialPriceVariance)))}`,
       trend: isOvercharge ? 'down' : 'up',
     },
     rootCauseTags: ['supplier', 'price-variance', 'procurement'],
@@ -322,11 +323,11 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
           : 'Materiaalkosten lager dan geoffreerd door betere leverancierskeuze',
       evidence: [
         `${summary.jobCount} klussen geanalyseerd`,
-        `Materiaal prijsvariantie: \u20AC${Math.round(summary.totalMaterialPriceVariance)} (${round1(priceVariancePct)}%)`,
-        `Hoeveelheid: \u20AC${Math.round(summary.totalMaterialQuantityVariance)}, mix: \u20AC${Math.round(summary.totalMaterialMixVariance)}`,
+        `Materiaal prijsvariantie: ${formatMoney(Math.round(summary.totalMaterialPriceVariance))} (${round1(priceVariancePct)}%)`,
+        `Hoeveelheid: ${formatMoney(Math.round(summary.totalMaterialQuantityVariance))}, mix: ${formatMoney(Math.round(summary.totalMaterialMixVariance))}`,
         `CPI: ${summary.cpi.toFixed(2)}`,
         worstSupplier
-          ? `Duurste leverancier: ${worstSupplier.name} (netto +\u20AC${Math.round(worstSupplier.netImpact)})`
+          ? `Duurste leverancier: ${worstSupplier.name} (netto +${formatMoney(Math.round(worstSupplier.netImpact))})`
           : null,
         anomaly.isAnomaly
           ? `Anomalie: ${anomaly.severity} (${anomaly.zScore.toFixed(1)}\u03C3)`
@@ -337,8 +338,8 @@ export function useSupplierPriceAnomalyInsight(ctx: GeneratorContext): ScoredIns
         })(),
       ].filter(Boolean).join('. '),
       implication: isOvercharge
-        ? `Jaarlijkse impact bij huidig patroon: \u20AC${Math.abs(Math.round(annualizedOvercharge))} extra materiaalkosten.${totalCrossSupplierSavings > 0 ? ` Wisselen van leverancier bespaart \u20AC${Math.round(totalCrossSupplierSavings)}/jaar.` : ''}`
-        : `Door prijzen te vergelijken bespaar je gemiddeld \u20AC${Math.abs(Math.round(summary.totalMaterialPriceVariance / Math.max(summary.jobCount, 1)))} per klus.`,
+        ? `Jaarlijkse impact bij huidig patroon: ${formatMoney(Math.abs(Math.round(annualizedOvercharge)))} extra materiaalkosten.${totalCrossSupplierSavings > 0 ? ` Wisselen van leverancier bespaart ${formatMoney(Math.round(totalCrossSupplierSavings))}/jaar.` : ''}`
+        : `Door prijzen te vergelijken bespaar je gemiddeld ${formatMoney(Math.abs(Math.round(summary.totalMaterialPriceVariance / Math.max(summary.jobCount, 1))))} per klus.`,
       suggestion: isOvercharge
         ? `Vraag vooraf actuele prijzen op bij 2+ leveranciers.${worstOvercharge ? ` Begin met ${worstOvercharge.name} \u2014 hier is het verschil het grootst.` : ''}${crossSavings.length > 0 ? ` Wissel ${crossSavings[0].materialName} naar ${crossSavings[0].cheaperSupplier} voor directe besparing.` : ''}`
         : 'Houd deze werkwijze aan. Overweeg raamcontracten voor materialen die je het vaakst gebruikt.',

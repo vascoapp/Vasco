@@ -43,6 +43,7 @@ import {
   useAuditStats,
   auditorService,
 } from '../../services/auditorService';
+import { compactMoney } from '../../i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -71,10 +72,9 @@ function formatBedrag(amount: number): string {
 }
 
 function formatCompact(value: number): string {
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `\u20AC${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `\u20AC${(value / 1_000).toFixed(0)}K`;
-  return `\u20AC${value.toFixed(0)}`;
+  // compactCurrency resolves symbol + grouping from the contractor's country
+  // (was a hardcoded euro on every tier, wrong for UK/US).
+  return compactMoney(value);
 }
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';

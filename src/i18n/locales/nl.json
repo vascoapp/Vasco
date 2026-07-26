@@ -387,7 +387,7 @@
     "customerSignatureDesc": "Vraag de klant hieronder te tekenen om het werk af te ronden.",
     "signaturesSectionLabel": "Handtekeningen",
     "qualityFeedback": "Feedback",
-    "postcodeCohort": "Postcodegebied: €{{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes",
+    "postcodeCohort": "Postcodegebied: {{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes",
     "requestSignature": "Vraag aan klant",
     "signatureRequestTitle": "Aftekenverzoek",
     "signatureRequestBody": "Hoi {{customer}}, teken het uitgevoerde werk voor \"{{job}}\" af: vascobuild.com/sign/{{ref}}",
@@ -1039,14 +1039,14 @@
     "copiedToClipboard": "Gekopieerd naar klembord",
     "customer": "klant",
     "paymentReminder": "Betaalherinnering voor {{customer}}",
-    "invoiceOverdue": "Factuur {{reference}} is {{days}} dagen achterstallig · €{{amount}}",
+    "invoiceOverdue": "Factuur {{reference}} is {{days}} dagen achterstallig · {{amount}}",
     "sendReminder": "Herinnering sturen",
-    "reminderMessage": "Beste {{customer}},\n\nHierbij een vriendelijke herinnering voor factuur {{reference}} ter waarde van €{{amount}}.\n\nKunt u deze zo spoedig mogelijk voldoen?\n\nMet vriendelijke groet",
+    "reminderMessage": "Beste {{customer}},\n\nHierbij een vriendelijke herinnering voor factuur {{reference}} ter waarde van {{amount}}.\n\nKunt u deze zo spoedig mogelijk voldoen?\n\nMet vriendelijke groet",
     "createInvoice": "Factuur aanmaken voor \"{{title}}\"",
-    "jobNotInvoiced": "Klus afgerond maar nog niet gefactureerd · €{{amount}}",
+    "jobNotInvoiced": "Klus afgerond maar nog niet gefactureerd · {{amount}}",
     "createInvoiceBtn": "Factuur aanmaken",
     "followUpQuote": "Opvolging offerte {{customer}}",
-    "quoteSentNotAnswered": "Offerte voor \"{{job}}\" is verstuurd maar nog niet beantwoord · €{{amount}}",
+    "quoteSentNotAnswered": "Offerte voor \"{{job}}\" is verstuurd maar nog niet beantwoord · {{amount}}",
     "sendFollowUp": "Opvolging sturen",
     "followUpMessage": "Beste {{customer}},\n\nIk wilde even informeren of u de offerte voor {{job}} heeft kunnen bekijken.\n\nHeeft u vragen of wilt u wijzigingen bespreken? Ik hoor het graag.\n\nMet vriendelijke groet",
     "jobInDays": "{{title}} — over {{count}} dag",
@@ -1476,7 +1476,7 @@
     "push": {
       "paidTitle": "Betaling ontvangen",
       "paidBody": "Factuur {{ref}}{{amount}} gemarkeerd als betaald.",
-      "amountSuffix": " (€{{amt}})",
+      "amountSuffix": " ({{amt}})",
       "quoteAcceptedTitle": "Offerte geaccepteerd",
       "quoteAcceptedBody": "Offerte {{ref}} geaccepteerd{{tier}}{{total}}.",
       "quoteRejectedTitle": "Offerte afgewezen",
@@ -1495,7 +1495,7 @@
       "eveTitle": "Vasco heeft iets voor je",
       "eveTapToReview": "Tik om te bekijken",
       "paymentReminderTitle": "Betaalherinnering",
-      "paymentReminderBody": "Factuur voor {{customer}} (€{{amount}}) is over {{days}} dagen verlopen",
+      "paymentReminderBody": "Factuur voor {{customer}} ({{amount}}) is over {{days}} dagen verlopen",
       "quoteFollowupTitle": "Offerte opvolgen",
       "quoteFollowupBody": "Offerte voor {{customer}} is {{days}} dagen geleden verstuurd — tijd om op te volgen",
       "outcomeFollowupTitle": "Reageerde de klant?",
@@ -1777,7 +1777,7 @@
     "acceptAndCreateJob": "Accepteren en klus aanmaken",
     "addCustomService": "Eigen dienst toevoegen",
     "customServiceName": "Naam dienst",
-    "customServicePrice": "Prijs (€)",
+    "customServicePrice": "Prijs ({{sym}})",
     "customServiceUnit": "Eenheid",
     "orFromPricebook": "Of kies uit je prijslijst",
     "editPrice": "Prijs aanpassen",
@@ -1791,11 +1791,11 @@
     "lowWinTitle": "Lage winkans · {{customer}}",
     "lowWinDescription": "Model voorspelt {{pct}}% acceptatie. Overweeg een belletje of kleine korting.",
     "lowWinAction": "Follow-up plannen",
-    "lowWinImpact": "~€{{value}} op het spel",
+    "lowWinImpact": "~{{value}} op het spel",
     "lateRiskTitle": "Risico op late betaling · {{customer}}",
     "lateRiskDescription": "Model voorspelt ~{{days}} dagen ({{conf}}% zekerheid). Stuur een vroege herinnering of vraag een aanbetaling op de volgende factuur.",
     "lateRiskAction": "Vroege herinnering plannen",
-    "lateRiskImpact": "~€{{value}} loopt vertraging op"
+    "lateRiskImpact": "~{{value}} loopt vertraging op"
   },
   "activation": {
     "title": "Aan de slag",
@@ -1910,9 +1910,9 @@
     "progressTitle": "Voortgang: {{title}}",
     "customerSatisfaction": "Klanttevredenheid",
     "regenerateInvoice": "Factuur {{id}} opnieuw genereren",
-    "daysOverdueWithFee": "{{days}} dagen achterstallig · +€{{fee}} boete",
+    "daysOverdueWithFee": "{{days}} dagen achterstallig · +{{fee}} boete",
     "regenerate": "Opnieuw genereren",
-    "quoteExpiryMsg": "Hi {{customer}}, uw offerte voor {{job}} (€{{amount}}) verloopt op {{date}}. Wilt u doorgaan?",
+    "quoteExpiryMsg": "Hi {{customer}}, uw offerte voor {{job}} ({{amount}}) verloopt op {{date}}. Wilt u doorgaan?",
     "quoteExpiring": "Offerte verloopt: {{customer}}",
     "recoverRevenue": "Omzet terugwinnen",
     "materialsFor": "Materialen voor {{title}}",
@@ -1974,7 +1974,7 @@
     "overpaying": "Te veel betaald voor {{name}}",
     "aboveMarket": "boven marktprijs",
     "monthlySavings": "Maandelijks besparingsrapport: {{count}} items",
-    "monthlySavingsDesc": "Wissel van leverancier en bespaar €{{amount}}/maand",
+    "monthlySavingsDesc": "Wissel van leverancier en bespaar {{amount}}/maand",
     "viewSavings": "Bekijk besparing",
     "month": "maand",
     "permitExpired": "{{name}} is {{days}} dagen geleden verlopen",
@@ -2273,8 +2273,8 @@
       "tryDifferentSearch": "Probeer een andere zoekterm",
       "possibleDuplicate": "Mogelijk duplicaat",
       "addAnyway": "Toch toevoegen",
-      "totalAmount": "€{{amount}} totaal",
-      "outstandingAmount": "€{{amount}} openstaand",
+      "totalAmount": "{{amount}} totaal",
+      "outstandingAmount": "{{amount}} openstaand",
       "limitReached": "Je hebt de klantlimiet van dit abonnement bereikt.",
       "jobs_one": "{{count}} klus",
       "jobs_other": "{{count}} klussen"
@@ -2935,7 +2935,7 @@
     "titlePlaceholder": "Jaarlijks ketelonderhoud",
     "descLabel": "Beschrijving (optioneel)",
     "customDays": "Aangepast interval (dagen)",
-    "amount": "Bedrag (€)",
+    "amount": "Bedrag ({{sym}})",
     "durationHours": "Duur (uren)",
     "reminderDays": "Herinner X dagen vooraf",
     "monthly": "Maandelijks",
@@ -3037,9 +3037,9 @@
     "cumulative": "Cumulatief",
     "cat": {
       "time": "Tijdsbesparing",
-      "timeDesc": "Route-optimalisatie (€{{route}}) + minder idle-time",
+      "timeDesc": "Route-optimalisatie ({{route}}) + minder idle-time",
       "purchasing": "Slimmer inkopen",
-      "purchasingDesc": "Leverancierskorting potentieel: €{{total}} (40% gerealiseerd)",
+      "purchasingDesc": "Leverancierskorting potentieel: {{total}} (40% gerealiseerd)",
       "fasterPayments": "Snellere betalingen",
       "fasterPaymentsDesc": "DSO {{dso}}d vs branche {{industry}}d — {{delta}}d sneller",
       "conversion": "Snellere conversie",
@@ -3061,14 +3061,14 @@
     "activate": "Activeer",
     "orderNow": "Bestel nu",
     "activateSaving": "Besparing activeren",
-    "activateConfirm": "Wil je \"{{title}}\" activeren? Verwachte besparing: €{{amount}}.",
+    "activateConfirm": "Wil je \"{{title}}\" activeren? Verwachte besparing: {{amount}}.",
     "foundByVasco": "Bespaarkansen gevonden door Vasco",
     "totalPotential": "Totaal potentieel",
     "savingsOpportunities": "Bespaarkansen",
     "foundCount": "Vasco vond {{count}} bespaarkansen",
     "noneFound": "Geen bespaarkansen gevonden",
-    "upToPotential": "Tot €{{amount}} potentieel",
-    "savedThisMonth": "€{{amount}} al bespaard deze maand",
+    "upToPotential": "Tot {{amount}} potentieel",
+    "savedThisMonth": "{{amount}} al bespaard deze maand",
     "actionsScheduled": "{{count}} acties ingepland",
     "allGood": "Alles op orde",
     "priceIntelligence": "Prijsintelligentie",
@@ -3140,8 +3140,8 @@
   "inkoop": {
     "title": "Inkoop",
     "cohortGapTitle": "Boven cohort-mediaan",
-    "cohortGapSub": "{{n}} materialen waar je boven de mediaan zit · €{{saved}} potentiële besparing per eenheid",
-    "cohortGapRow": "Jij €{{user}} · {{cohort}} €{{median}}",
+    "cohortGapSub": "{{n}} materialen waar je boven de mediaan zit · {{saved}} potentiële besparing per eenheid",
+    "cohortGapRow": "Jij {{user}} · {{cohort}} {{median}}",
     "receiptScanner": "Bon scanner",
     "receiptScannerDesc": "Scan een bon om kosten te verwerken",
     "reorder": "Herbestellen",
@@ -3370,8 +3370,8 @@
     "import": "Importeren",
     "similarOthersUse": "Vergelijkbare materialen die anderen gebruiken",
     "switchTo": "Wissel naar {{name}}",
-    "unitPrice": "Stuksprijs (€)",
-    "bestPriceHint": "eerder: €{{p}}",
+    "unitPrice": "Stuksprijs ({{sym}})",
+    "bestPriceHint": "eerder: {{p}}",
     "unitPricePlaceholder": "0,00",
     "enterValidQuantity": "Voer een geldige hoeveelheid in.",
     "couldNotAdd": "Kon materiaal niet toevoegen.",
@@ -4005,14 +4005,14 @@
   },
   "workflowPacks": {
     "incasso": {
-      "preReminder": "Beste {{customer}}, uw factuur {{invoice}} van €{{amount}} vervalt over 3 dagen.",
-      "friendlyReminder": "Beste {{customer}}, dit is een vriendelijke herinnering voor factuur {{invoice}} van €{{amount}}.",
-      "reminder": "Beste {{customer}}, uw factuur {{invoice}} van €{{amount}} is 7 dagen over de vervaldatum.",
-      "urgentReminder": "Herinnering: factuur {{invoice}} €{{amount}} is 14 dagen achterstallig. Gelieve direct te betalen.",
+      "preReminder": "Beste {{customer}}, uw factuur {{invoice}} van {{amount}} vervalt over 3 dagen.",
+      "friendlyReminder": "Beste {{customer}}, dit is een vriendelijke herinnering voor factuur {{invoice}} van {{amount}}.",
+      "reminder": "Beste {{customer}}, uw factuur {{invoice}} van {{amount}} is 7 dagen over de vervaldatum.",
+      "urgentReminder": "Herinnering: factuur {{invoice}} {{amount}} is 14 dagen achterstallig. Gelieve direct te betalen.",
       "finalNotice": "Laatste herinnering: factuur {{invoice}} is 30 dagen achterstallig. Zonder betaling binnen 7 dagen starten we incasso."
     },
     "quoteFollowup": {
-      "day3": "Beste {{customer}}, heeft u de offerte voor {{job}} van €{{amount}} kunnen bekijken? Ik hoor graag van u.",
+      "day3": "Beste {{customer}}, heeft u de offerte voor {{job}} van {{amount}} kunnen bekijken? Ik hoor graag van u.",
       "day7": "Beste {{customer}}, ter herinnering: de offerte voor {{job}} is nog 7 dagen geldig. Laat u het weten als u vragen heeft?"
     },
     "maintenance": {
@@ -4033,9 +4033,9 @@
       "urgent": "{{customer}}, uw keuzes voor {{project}} zijn nodig om vertraging te voorkomen. Reageer alstublieft vandaag."
     },
     "purchasing": {
-      "stockLow": "{{material}} bijna op ({{stock}} over). Bestel bij {{supplier}} voor €{{price}}/stuk.",
-      "priceDrop": "{{material}} is {{pct}}% goedkoper bij {{supplier}}. Bespaar €{{savings}} per bestelling.",
-      "bulk": "Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar €{{savings}} met bulkkorting."
+      "stockLow": "{{material}} bijna op ({{stock}} over). Bestel bij {{supplier}} voor {{price}}/stuk.",
+      "priceDrop": "{{material}} is {{pct}}% goedkoper bij {{supplier}}. Bespaar {{savings}} per bestelling.",
+      "bulk": "Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar {{savings}} met bulkkorting."
     },
     "dailyUpdate": {
       "progress": "Hi {{customer}}, update: {{hours}}u gewerkt aan {{job}} vandaag. Alles op schema. Vragen? Laat het weten!"
@@ -4172,7 +4172,7 @@
     "impact": "Impact",
     "observation": "Verband gevonden tussen {{sources}}",
     "evidence": "Op basis van {{count}} gekoppelde databronnen",
-    "implication": "Geschatte impact: €{{amount}}",
+    "implication": "Geschatte impact: {{amount}}",
     "viewDetails": "Bekijk de details voor meer informatie"
   },
   "tierGate": {
@@ -4253,9 +4253,9 @@
     "createFailed": "Kan factuur niet aanmaken. Probeer opnieuw."
   },
   "whatsapp": {
-    "invoiceReminder": "Hallo {{name}},\n\nEen vriendelijke herinnering aan factuur {{ref}} voor €{{amount}}{{overdue}}.\n\nKunt u de betaling op korte termijn regelen?\n\nDank u,\nVerzonden via Vasco",
+    "invoiceReminder": "Hallo {{name}},\n\nEen vriendelijke herinnering aan factuur {{ref}} voor {{amount}}{{overdue}}.\n\nKunt u de betaling op korte termijn regelen?\n\nDank u,\nVerzonden via Vasco",
     "invoiceOverdue": " die {{days}} dagen verlopen is",
-    "quoteFollowup": "Hallo {{name}},\n\nIk wilde even opvolgen op de offerte voor \"{{job}}\" (€{{amount}}).\n\nHeeft u nog vragen of wilt u doorgaan?\n\nMet vriendelijke groet,\nVerzonden via Vasco",
+    "quoteFollowup": "Hallo {{name}},\n\nIk wilde even opvolgen op de offerte voor \"{{job}}\" ({{amount}}).\n\nHeeft u nog vragen of wilt u doorgaan?\n\nMet vriendelijke groet,\nVerzonden via Vasco",
     "progressUpdate": "Hallo {{name}},\n\nKorte update over \"{{job}}\": vandaag {{hours}}u gewerkt. Alles ligt op schema.\n\nVerzonden via Vasco",
     "openFailed": "Kon WhatsApp niet openen. Controleer of het geïnstalleerd is."
   },
@@ -4403,7 +4403,7 @@
   "geld": {
     "cashflowShortfallTitle": "Cashflowtekort voorspeld",
     "cashflowSurplusTitle": "Cashflowoverschot voorspeld",
-    "cashflowGapSub": "€{{amount}} {{direction}} in komende {{days}}d",
+    "cashflowGapSub": "{{amount}} {{direction}} in komende {{days}}d",
     "short": "tekort",
     "surplus": "overschot"
   },
@@ -4531,10 +4531,10 @@
   "purchasing": {
     "noAITips": "Op dit moment geen AI-tips",
     "cohortGap": "{{material}} — {{percent}}% boven cohortmediaan",
-    "cohortGapDesc": "Je laatste inkoop €{{user}} · cohortmediaan €{{median}} ({{cohort}})",
+    "cohortGapDesc": "Je laatste inkoop {{user}} · cohortmediaan {{median}} ({{cohort}})",
     "findCheaper": "Zoek een goedkopere leverancier",
     "savingPotential": "besparingspotentieel per stuk",
-    "bulkSaving": "Bulkbestelling bespaart €{{amount}}",
+    "bulkSaving": "Bulkbestelling bespaart {{amount}}",
     "bulkDesc": "{{count}} materialen verdeeld over {{jobs}} klussen — bestel samen bij {{supplier}}",
     "createBulkOrder": "Bulkbestelling aanmaken",
     "viewDetails": "Details bekijken",
@@ -4629,10 +4629,10 @@
     "rejectAction": "Actie afwijzen"
   },
   "action": {
-    "reminderBody": "Beste {{customer}},\n\nDit is een vriendelijke herinnering voor factuur {{invoice}} van €{{amount}}.\n\nMet vriendelijke groet",
+    "reminderBody": "Beste {{customer}},\n\nDit is een vriendelijke herinnering voor factuur {{invoice}} van {{amount}}.\n\nMet vriendelijke groet",
     "customer": "klant",
     "reminderTitle": "Betalingsherinnering",
-    "reminderSent": "Herinnering verstuurd voor €{{amount}}",
+    "reminderSent": "Herinnering verstuurd voor {{amount}}",
     "shareCancelled": "Delen geannuleerd",
     "invoiceCreated": "Factuur {{id}} aangemaakt",
     "invoiceFailed": "Kon factuur niet aanmaken: {{err}}",
@@ -4640,15 +4640,15 @@
     "orderCreated": "Inkooporder aangemaakt voor {{material}}",
     "materials": "materialen",
     "jobScheduled": "Klus ingepland: {{title}}",
-    "quoteAdjusted": "Offerte {{id}} aangepast naar €{{price}}",
+    "quoteAdjusted": "Offerte {{id}} aangepast naar {{price}}",
     "renewalStarted": "Verlenging gestart voor {{cert}}",
     "certificate": "certificaat",
     "followupBody": "Beste {{customer}},\n\nIk wil graag even checken of je de kans hebt gehad om offerte {{quote}} te bekijken. Laat het me weten als je nog vragen hebt.\n\nMet vriendelijke groet",
     "followupTitle": "Offerte-opvolging",
     "followupSent": "Opvolging verstuurd",
     "escalated": "Escalatie gemeld: {{issue}}",
-    "expenseLogged": "Uitgave geregistreerd: €{{amount}}",
-    "supplierSwitched": "Overstappen van {{from}} naar {{to}} — bespaar €{{savings}}/order",
+    "expenseLogged": "Uitgave geregistreerd: {{amount}}",
+    "supplierSwitched": "Overstappen van {{from}} naar {{to}} — bespaar {{savings}}/order",
     "defectClosed": "Gebrek {{id}} afgesloten",
     "submittingReport": "Melding wordt verstuurd...",
     "executed": "Actie uitgevoerd",
@@ -4671,11 +4671,11 @@
     "theCustomer": "de klant",
     "onMyWayDesc": "Je hebt net ingeklokt — even snel een berichtje uit beleefdheid.",
     "onMyWayImpact": "Wekt vertrouwen",
-    "paidThanksBody": "Bedankt {{customer}} — betaling ontvangen voor factuur {{invoice}} (€{{amount}}). Het kwitantie komt eraan.",
+    "paidThanksBody": "Bedankt {{customer}} — betaling ontvangen voor factuur {{invoice}} ({{amount}}). Het kwitantie komt eraan.",
     "paidThanksTitle": "{{customer}} bedanken voor betaling",
     "paidThanksDesc": "Betaling ontvangen — een snel bedankje zorgt voor terugkerende klanten.",
     "paidThanksImpact": "Zorgt voor terugkerende klanten",
-    "invoiceSentBody": "Hoi {{customer}}, factuur {{invoice}} (€{{amount}}) is onderweg. Betaaltermijn: {{days}} dagen. Bedankt!",
+    "invoiceSentBody": "Hoi {{customer}}, factuur {{invoice}} ({{amount}}) is onderweg. Betaaltermijn: {{days}} dagen. Bedankt!",
     "invoiceSentTitle": "{{customer}} laten weten: factuur verstuurd",
     "invoiceSentDesc": "Even een seintje zodat de klant de factuur verwacht.",
     "invoiceSentImpact": "Snellere betaling"
@@ -4709,7 +4709,7 @@
     "syncFailedDesc": "Kon de agenda niet bereiken. Probeer het opnieuw."
   },
   "approval": {
-    "shareMessage": "Hoi {{customer}},\n\nHier is je offerte voor {{job}} — €{{amount}}.\n\nOnline accepteren: {{url}}\n\n30 dagen geldig.\n\nMet vriendelijke groet",
+    "shareMessage": "Hoi {{customer}},\n\nHier is je offerte voor {{job}} — {{amount}}.\n\nOnline accepteren: {{url}}\n\n30 dagen geldig.\n\nMet vriendelijke groet",
     "quoteTitle": "Offerte"
   },
   "validator": {
@@ -4726,13 +4726,13 @@
     "inactiveReminderBody": "Deze klant is al meer dan een jaar inactief. Toch doorgaan?",
     "reminderWarningTitle": "Herinnering sturen?",
     "noCustomer": "Offerte heeft geen klant gekoppeld",
-    "zeroAmount": "Offertetotaal is €0 — voeg regels toe",
+    "zeroAmount": "Offertetotaal is {{zero}} — voeg regels toe",
     "noLineItems": "Offerte heeft geen regels",
     "zeroPriceItems": "{{count}} regels hebben geen prijs",
     "possibleDuplicate": "Er bestaat al een vergelijkbare offerte voor deze klant",
     "unknownVAT": "Geen btw-tarief ingesteld voor {{country}}",
     "invoiceNoCustomer": "Factuur heeft geen klant",
-    "invoiceZeroAmount": "Factuurbedrag is €0",
+    "invoiceZeroAmount": "Factuurbedrag is {{zero}}",
     "jobAlreadyInvoiced": "Deze klus is al gefactureerd",
     "duplicateInvoice": "Duplicaat: zelfde klant + bedrag binnen 7 dagen",
     "noDueDate": "Geen vervaldatum ingesteld — standaard 30 dagen",
@@ -4763,13 +4763,13 @@
       "draftInvoice": {
         "title": "Factuur opstellen voor {{job}}",
         "description": "{{job}} staat op afgerond — factureer nu en houd je cashflow op peil.",
-        "impact": "€{{amount}} omzet",
+        "impact": "{{amount}} omzet",
         "action": "Factuur opstellen"
       },
       "overdue": {
         "title": "Factuur {{invoice}} {{days}}d te laat",
-        "description": "€{{amount}} openstaand — {{tone}} aanbevolen.",
-        "impact": "€{{amount}} incassorisico",
+        "description": "{{amount}} openstaand — {{tone}} aanbevolen.",
+        "impact": "{{amount}} incassorisico",
         "action": "Bekijken",
         "toneFinal": "laatste aanmaning",
         "toneFirm": "stevige herinnering",
@@ -4791,9 +4791,9 @@
       "followUp": {
         "title": "Offerte {{quote}} opvolgen",
         "description": "Offerte is {{days}} dagen geleden verstuurd — stille klanten tekenen vaak na een zetje.",
-        "impact": "€{{amount}} potentieel",
+        "impact": "{{amount}} potentieel",
         "impactFallback": "Meer conversie",
-        "template": "Hallo {{customer}}, ik kom even terug op de offerte voor {{quote}} (€{{amount}}). Nog vragen?",
+        "template": "Hallo {{customer}}, ik kom even terug op de offerte voor {{quote}} ({{amount}}). Nog vragen?",
         "action": "Opvolgen"
       },
       "jobStarted": {

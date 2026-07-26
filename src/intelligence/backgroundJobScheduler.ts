@@ -7,7 +7,7 @@
 // - Daily: cohort benchmarks, template suggestions, morning briefing
 // =============================================================================
 
-import { formatMoney } from '../i18n/formatting';
+import { formatMoney, formatMoney2 } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { populateQueue, addToQueue, queueEntityLabel } from '../services/aiActionQueueService';
 import { evaluateTriggers } from '../services/workflowPackService';
@@ -847,7 +847,7 @@ async function runScheduledTick(
                 // R66r46: alert semantic shifted from "price fell" (Math.random
                 // noise pre-R46) to "you're paying X% above cohort median".
                 title: t('purchasing.cohortGap', { defaultValue: '{{material}} — {{percent}}% above cohort median', material: drop.materialName, percent: drop.dropPercent }),
-                description: t('purchasing.cohortGapDesc', { defaultValue: 'Your last buy €{{user}} · cohort median €{{median}} ({{cohort}})', user: drop.previousPrice.toFixed(2), median: drop.currentPrice.toFixed(2), cohort: drop.supplier.name }),
+                description: t('purchasing.cohortGapDesc', { defaultValue: 'Your last buy {{user}} · cohort median {{median}} ({{cohort}})', user: formatMoney2(drop.previousPrice), median: formatMoney2(drop.currentPrice), cohort: drop.supplier.name }),
                 preparedData: { type: 'cohort_gap', ...drop, affiliateUrl: drop.affiliateUrl },
                 actionLabel: t('purchasing.findCheaper', 'Find a cheaper supplier'),
                 estimatedImpact: `${formatMoney((drop.previousPrice - drop.currentPrice))} ${t('purchasing.savingPotential', 'saving potential per unit')}`,
@@ -861,7 +861,7 @@ async function runScheduledTick(
               const bulk = purchasingResults.bulkOpportunity;
               await addToQueue({
                 type: 'bulk_purchase',
-                title: t('purchasing.bulkSaving', { defaultValue: 'Bulk order saves €{{amount}}', amount: bulk.savingsAmount.toFixed(0) }),
+                title: t('purchasing.bulkSaving', { defaultValue: 'Bulk order saves {{amount}}', amount: formatMoney(bulk.savingsAmount) }),
                 description: t('purchasing.bulkDesc', { defaultValue: '{{count}} materials across {{jobs}} jobs — order together at {{supplier}}', count: bulk.materials.length, jobs: bulk.materials.reduce((s: number, m: any) => s + m.jobIds.length, 0), supplier: bulk.bestSupplier.name }),
                 preparedData: { type: 'bulk_opportunity', ...bulk },
                 actionLabel: t('purchasing.createBulkOrder', 'Create bulk order'),

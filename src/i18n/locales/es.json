@@ -403,7 +403,7 @@
     "customerSignatureDesc": "Pide al cliente que firme abajo para confirmar que el trabajo está finalizado.",
     "signaturesSectionLabel": "Firmas",
     "qualityFeedback": "Comentarios",
-    "postcodeCohort": "Código postal: €{{price}}/h mediana · {{accept}}% aceptación · {{n}} presupuestos",
+    "postcodeCohort": "Código postal: {{price}}/h mediana · {{accept}}% aceptación · {{n}} presupuestos",
     "requestSignature": "Pedir al cliente",
     "signatureRequestTitle": "Solicitud de firma",
     "signatureRequestBody": "Hola {{customer}}, firma la recepción del trabajo \"{{job}}\": vascobuild.com/sign/{{ref}}",
@@ -1055,14 +1055,14 @@
     "copiedToClipboard": "Copiado al portapapeles",
     "customer": "cliente",
     "paymentReminder": "Recordatorio de pago para {{customer}}",
-    "invoiceOverdue": "Factura {{reference}} tiene {{days}} días de retraso · €{{amount}}",
+    "invoiceOverdue": "Factura {{reference}} tiene {{days}} días de retraso · {{amount}}",
     "sendReminder": "Enviar recordatorio",
-    "reminderMessage": "Estimado/a {{customer}},\n\nEste es un recordatorio amable de la factura {{reference}} por un importe de €{{amount}}.\n\n¿Podría liquidarla a la mayor brevedad?\n\nAtentamente",
+    "reminderMessage": "Estimado/a {{customer}},\n\nEste es un recordatorio amable de la factura {{reference}} por un importe de {{amount}}.\n\n¿Podría liquidarla a la mayor brevedad?\n\nAtentamente",
     "createInvoice": "Crear factura para \"{{title}}\"",
-    "jobNotInvoiced": "Trabajo completado pero sin facturar · €{{amount}}",
+    "jobNotInvoiced": "Trabajo completado pero sin facturar · {{amount}}",
     "createInvoiceBtn": "Crear factura",
     "followUpQuote": "Seguimiento presupuesto {{customer}}",
-    "quoteSentNotAnswered": "Presupuesto para \"{{job}}\" enviado sin respuesta · €{{amount}}",
+    "quoteSentNotAnswered": "Presupuesto para \"{{job}}\" enviado sin respuesta · {{amount}}",
     "sendFollowUp": "Enviar seguimiento",
     "followUpMessage": "Estimado/a {{customer}},\n\nQuería consultar si ha tenido oportunidad de revisar el presupuesto para {{job}}.\n\n¿Tiene preguntas o desea discutir cambios?\n\nAtentamente",
     "jobInDays": "{{title}} — en {{count}} día",
@@ -1214,7 +1214,7 @@
     "push": {
       "paidTitle": "Pago recibido",
       "paidBody": "Factura {{ref}}{{amount}} marcada como pagada.",
-      "amountSuffix": " (€{{amt}})",
+      "amountSuffix": " ({{amt}})",
       "quoteAcceptedTitle": "Presupuesto aceptado",
       "quoteAcceptedBody": "Presupuesto {{ref}} aceptado{{tier}}{{total}}.",
       "quoteRejectedTitle": "Presupuesto rechazado",
@@ -1233,7 +1233,7 @@
       "eveTitle": "Vasco tiene algo para ti",
       "eveTapToReview": "Toca para ver",
       "paymentReminderTitle": "Recordatorio de pago",
-      "paymentReminderBody": "Factura para {{customer}} (€{{amount}}) vencida hace {{days}} días",
+      "paymentReminderBody": "Factura para {{customer}} ({{amount}}) vencida hace {{days}} días",
       "quoteFollowupTitle": "Seguir presupuesto",
       "quoteFollowupBody": "Presupuesto para {{customer}} enviado hace {{days}} días — toca seguir",
       "outcomeFollowupTitle": "¿Respondió el cliente?",
@@ -1793,7 +1793,7 @@
     "acceptAndCreateJob": "Aceptar y crear trabajo",
     "addCustomService": "Añadir un servicio personalizado",
     "customServiceName": "Nombre del servicio",
-    "customServicePrice": "Precio (€)",
+    "customServicePrice": "Precio ({{sym}})",
     "customServiceUnit": "Unidad",
     "orFromPricebook": "O elige de tu lista de precios",
     "editPrice": "Editar precio",
@@ -1807,11 +1807,11 @@
     "lowWinTitle": "Baja probabilidad · {{customer}}",
     "lowWinDescription": "El modelo predice {{pct}}% de aceptación. Considera una llamada de seguimiento o un pequeño descuento.",
     "lowWinAction": "Planificar seguimiento",
-    "lowWinImpact": "~€{{value}} en juego",
+    "lowWinImpact": "~{{value}} en juego",
     "lateRiskTitle": "Riesgo de impago · {{customer}}",
     "lateRiskDescription": "El modelo predice ~{{days}} días ({{conf}}% conf). Envía un recordatorio anticipado o solicita un anticipo en la próxima factura.",
     "lateRiskAction": "Planificar recordatorio",
-    "lateRiskImpact": "~€{{value}} en riesgo de retraso"
+    "lateRiskImpact": "~{{value}} en riesgo de retraso"
   },
   "activation": {
     "title": "Configuración",
@@ -1926,9 +1926,9 @@
     "progressTitle": "Progreso: {{title}}",
     "customerSatisfaction": "Satisfacción del cliente",
     "regenerateInvoice": "Regenerar factura {{id}}",
-    "daysOverdueWithFee": "{{days}} días vencidos · +€{{fee}} recargo",
+    "daysOverdueWithFee": "{{days}} días vencidos · +{{fee}} recargo",
     "regenerate": "Regenerar",
-    "quoteExpiryMsg": "Hola {{customer}}, su presupuesto para {{job}} (€{{amount}}) vence el {{date}}. ¿Desea continuar?",
+    "quoteExpiryMsg": "Hola {{customer}}, su presupuesto para {{job}} ({{amount}}) vence el {{date}}. ¿Desea continuar?",
     "quoteExpiring": "Presupuesto venciendo: {{customer}}",
     "recoverRevenue": "Recuperar ingresos",
     "materialsFor": "Materiales para {{title}}",
@@ -1990,7 +1990,7 @@
     "overpaying": "Pagas de más por {{name}}",
     "aboveMarket": "por encima del mercado",
     "monthlySavings": "Informe mensual de ahorro: {{count}} artículos",
-    "monthlySavingsDesc": "Cambia de proveedor para ahorrar €{{amount}}/mes",
+    "monthlySavingsDesc": "Cambia de proveedor para ahorrar {{amount}}/mes",
     "viewSavings": "Ver ahorro",
     "month": "mes",
     "permitExpired": "{{name}} caducó hace {{days}} días",
@@ -2289,8 +2289,8 @@
       "tryDifferentSearch": "Prueba con otro término de búsqueda",
       "possibleDuplicate": "Posible duplicado",
       "addAnyway": "Añadir igualmente",
-      "totalAmount": "€{{amount}} en total",
-      "outstandingAmount": "€{{amount}} pendiente",
+      "totalAmount": "{{amount}} en total",
+      "outstandingAmount": "{{amount}} pendiente",
       "limitReached": "Has alcanzado el límite de clientes de este plan.",
       "jobs_one": "{{count}} trabajo",
       "jobs_other": "{{count}} trabajos"
@@ -2922,7 +2922,7 @@
     "titlePlaceholder": "Mantenimiento anual caldera",
     "descLabel": "Descripción (opcional)",
     "customDays": "Intervalo personalizado (días)",
-    "amount": "Importe (€)",
+    "amount": "Importe ({{sym}})",
     "durationHours": "Duración (horas)",
     "reminderDays": "Recordar X días antes",
     "monthly": "Mensual",
@@ -3053,9 +3053,9 @@
     "cumulative": "Acumulado",
     "cat": {
       "time": "Ahorro de tiempo",
-      "timeDesc": "Optimización de rutas (€{{route}}) + menos tiempo inactivo",
+      "timeDesc": "Optimización de rutas ({{route}}) + menos tiempo inactivo",
       "purchasing": "Compras inteligentes",
-      "purchasingDesc": "Potencial de descuento de proveedor: €{{total}} (40% realizado)",
+      "purchasingDesc": "Potencial de descuento de proveedor: {{total}} (40% realizado)",
       "fasterPayments": "Pagos más rápidos",
       "fasterPaymentsDesc": "DSO {{dso}}d vs sector {{industry}}d — {{delta}}d más rápido",
       "conversion": "Conversión más rápida",
@@ -3077,14 +3077,14 @@
     "activate": "Activar",
     "orderNow": "Pedir ahora",
     "activateSaving": "Activar ahorro",
-    "activateConfirm": "¿Quieres activar \"{{title}}\"? Ahorro estimado: €{{amount}}.",
+    "activateConfirm": "¿Quieres activar \"{{title}}\"? Ahorro estimado: {{amount}}.",
     "foundByVasco": "Oportunidades de ahorro encontradas por Vasco",
     "totalPotential": "Potencial total",
     "savingsOpportunities": "Oportunidades de ahorro",
     "foundCount": "Vasco encontró {{count}} oportunidades de ahorro",
     "noneFound": "No se encontraron oportunidades de ahorro",
-    "upToPotential": "Hasta €{{amount}} de potencial",
-    "savedThisMonth": "€{{amount}} ya ahorrados este mes",
+    "upToPotential": "Hasta {{amount}} de potencial",
+    "savedThisMonth": "{{amount}} ya ahorrados este mes",
     "actionsScheduled": "{{count}} acciones programadas",
     "allGood": "Todo en orden",
     "priceIntelligence": "Inteligencia de precios",
@@ -3156,8 +3156,8 @@
   "inkoop": {
     "title": "Compras",
     "cohortGapTitle": "Por encima de la mediana del grupo",
-    "cohortGapSub": "{{n}} materiales en los que estás por encima de la mediana · €{{saved}} ahorro potencial por unidad",
-    "cohortGapRow": "Tú €{{user}} · {{cohort}} €{{median}}",
+    "cohortGapSub": "{{n}} materiales en los que estás por encima de la mediana · {{saved}} ahorro potencial por unidad",
+    "cohortGapRow": "Tú {{user}} · {{cohort}} {{median}}",
     "receiptScanner": "Escáner de recibos",
     "receiptScannerDesc": "Escanea un recibo para registrar gastos",
     "reorder": "Volver a pedir",
@@ -3386,8 +3386,8 @@
     "import": "Importar",
     "similarOthersUse": "Materiales similares que otros usan",
     "switchTo": "Cambiar a {{name}}",
-    "unitPrice": "Precio unitario (€)",
-    "bestPriceHint": "anterior: €{{p}}",
+    "unitPrice": "Precio unitario ({{sym}})",
+    "bestPriceHint": "anterior: {{p}}",
     "unitPricePlaceholder": "0,00",
     "enterValidQuantity": "Introduce una cantidad válida.",
     "couldNotAdd": "No se pudo añadir el material.",
@@ -3979,14 +3979,14 @@
   },
   "workflowPacks": {
     "incasso": {
-      "preReminder": "Dear {{customer}}, your invoice {{invoice}} of €{{amount}} is due in 3 days.",
-      "friendlyReminder": "Dear {{customer}}, this is a friendly reminder for invoice {{invoice}} of €{{amount}}.",
-      "reminder": "Dear {{customer}}, your invoice {{invoice}} of €{{amount}} is 7 days past due.",
-      "urgentReminder": "Reminder: invoice {{invoice}} €{{amount}} is 14 days overdue. Please pay immediately.",
+      "preReminder": "Dear {{customer}}, your invoice {{invoice}} of {{amount}} is due in 3 days.",
+      "friendlyReminder": "Dear {{customer}}, this is a friendly reminder for invoice {{invoice}} of {{amount}}.",
+      "reminder": "Dear {{customer}}, your invoice {{invoice}} of {{amount}} is 7 days past due.",
+      "urgentReminder": "Reminder: invoice {{invoice}} {{amount}} is 14 days overdue. Please pay immediately.",
       "finalNotice": "Final reminder: invoice {{invoice}} is 30 days overdue. Without payment within 7 days we will start collections."
     },
     "quoteFollowup": {
-      "day3": "Dear {{customer}}, have you had a chance to look at the quote for {{job}} of €{{amount}}? Looking forward to hearing from you.",
+      "day3": "Dear {{customer}}, have you had a chance to look at the quote for {{job}} of {{amount}}? Looking forward to hearing from you.",
       "day7": "Dear {{customer}}, reminder: the quote for {{job}} is valid for another 7 days. Let us know if you have any questions."
     },
     "maintenance": {
@@ -4007,9 +4007,9 @@
       "urgent": "{{customer}}, your decisions for {{project}} are needed to avoid delays. Please respond today."
     },
     "purchasing": {
-      "stockLow": "{{material}} almost out ({{stock}} left). Order from {{supplier}} for €{{price}}/unit.",
-      "priceDrop": "{{material}} is {{pct}}% cheaper at {{supplier}}. Save €{{savings}} per order.",
-      "bulk": "Combine orders for {{material}} across {{jobCount}} jobs — save €{{savings}} with bulk discount."
+      "stockLow": "{{material}} almost out ({{stock}} left). Order from {{supplier}} for {{price}}/unit.",
+      "priceDrop": "{{material}} is {{pct}}% cheaper at {{supplier}}. Save {{savings}} per order.",
+      "bulk": "Combine orders for {{material}} across {{jobCount}} jobs — save {{savings}} with bulk discount."
     },
     "dailyUpdate": {
       "progress": "Hi {{customer}}, update: {{hours}}h worked on {{job}} today. On schedule. Questions? Let us know!"
@@ -4146,7 +4146,7 @@
     "impact": "Impacto",
     "observation": "Conexión encontrada entre {{sources}}",
     "evidence": "Basado en {{count}} fuentes de datos vinculadas",
-    "implication": "Impacto estimado: €{{amount}}",
+    "implication": "Impacto estimado: {{amount}}",
     "viewDetails": "Ver detalles para más información"
   },
   "tierGate": {
@@ -4227,9 +4227,9 @@
     "createFailed": "No se pudo crear la factura. Inténtalo de nuevo."
   },
   "whatsapp": {
-    "invoiceReminder": "Hola {{name}},\n\nEste es un recordatorio amistoso sobre la factura {{ref}} por €{{amount}}{{overdue}}.\n\n¿Podrías organizar el pago lo antes posible?\n\nGracias,\nEnviado vía Vasco",
+    "invoiceReminder": "Hola {{name}},\n\nEste es un recordatorio amistoso sobre la factura {{ref}} por {{amount}}{{overdue}}.\n\n¿Podrías organizar el pago lo antes posible?\n\nGracias,\nEnviado vía Vasco",
     "invoiceOverdue": " que lleva {{days}} días vencida",
-    "quoteFollowup": "Hola {{name}},\n\nQuería hacer seguimiento del presupuesto para \"{{job}}\" (€{{amount}}).\n\n¿Tienes alguna pregunta o quieres continuar?\n\nUn saludo,\nEnviado vía Vasco",
+    "quoteFollowup": "Hola {{name}},\n\nQuería hacer seguimiento del presupuesto para \"{{job}}\" ({{amount}}).\n\n¿Tienes alguna pregunta o quieres continuar?\n\nUn saludo,\nEnviado vía Vasco",
     "progressUpdate": "Hola {{name}},\n\nActualización rápida sobre \"{{job}}\": hoy se trabajaron {{hours}}h. Todo va según lo previsto.\n\nEnviado vía Vasco",
     "openFailed": "No se pudo abrir WhatsApp. Asegúrate de que esté instalado."
   },
@@ -4419,7 +4419,7 @@
   "geld": {
     "cashflowShortfallTitle": "Déficit de tesorería previsto",
     "cashflowSurplusTitle": "Superávit de tesorería previsto",
-    "cashflowGapSub": "€{{amount}} de {{direction}} en los próximos {{days}}d",
+    "cashflowGapSub": "{{amount}} de {{direction}} en los próximos {{days}}d",
     "short": "déficit",
     "surplus": "superávit"
   },
@@ -4547,10 +4547,10 @@
   "purchasing": {
     "noAITips": "No hay consejos de IA ahora mismo",
     "cohortGap": "{{material}} — {{percent}}% por encima de la mediana del grupo",
-    "cohortGapDesc": "Tu última compra €{{user}} · mediana del grupo €{{median}} ({{cohort}})",
+    "cohortGapDesc": "Tu última compra {{user}} · mediana del grupo {{median}} ({{cohort}})",
     "findCheaper": "Buscar un proveedor más barato",
     "savingPotential": "ahorro potencial por unidad",
-    "bulkSaving": "El pedido al por mayor ahorra €{{amount}}",
+    "bulkSaving": "El pedido al por mayor ahorra {{amount}}",
     "bulkDesc": "{{count}} materiales en {{jobs}} obras — pídelos juntos en {{supplier}}",
     "createBulkOrder": "Crear pedido al por mayor",
     "viewDetails": "Ver detalles",
@@ -4645,10 +4645,10 @@
     "rejectAction": "Rechazar acción"
   },
   "action": {
-    "reminderBody": "Estimado/a {{customer}}:\n\nEste es un recordatorio amistoso de la factura {{invoice}} por importe de €{{amount}}.\n\nUn cordial saludo",
+    "reminderBody": "Estimado/a {{customer}}:\n\nEste es un recordatorio amistoso de la factura {{invoice}} por importe de {{amount}}.\n\nUn cordial saludo",
     "customer": "cliente",
     "reminderTitle": "Recordatorio de pago",
-    "reminderSent": "Recordatorio enviado por €{{amount}}",
+    "reminderSent": "Recordatorio enviado por {{amount}}",
     "shareCancelled": "Compartir cancelado",
     "invoiceCreated": "Factura {{id}} creada",
     "invoiceFailed": "No se pudo crear la factura: {{err}}",
@@ -4656,15 +4656,15 @@
     "orderCreated": "Pedido de compra creado para {{material}}",
     "materials": "materiales",
     "jobScheduled": "Obra programada: {{title}}",
-    "quoteAdjusted": "Presupuesto {{id}} ajustado a €{{price}}",
+    "quoteAdjusted": "Presupuesto {{id}} ajustado a {{price}}",
     "renewalStarted": "Renovación iniciada para {{cert}}",
     "certificate": "certificado",
     "followupBody": "Estimado/a {{customer}}:\n\nQuería comprobar si has tenido ocasión de revisar el presupuesto {{quote}}. Avísame si tienes alguna pregunta.\n\nUn cordial saludo",
     "followupTitle": "Seguimiento de presupuesto",
     "followupSent": "Seguimiento enviado",
     "escalated": "Escalado notificado: {{issue}}",
-    "expenseLogged": "Gasto registrado: €{{amount}}",
-    "supplierSwitched": "Cambia de {{from}} a {{to}} — ahorra €{{savings}}/pedido",
+    "expenseLogged": "Gasto registrado: {{amount}}",
+    "supplierSwitched": "Cambia de {{from}} a {{to}} — ahorra {{savings}}/pedido",
     "defectClosed": "Defecto {{id}} cerrado",
     "submittingReport": "Enviando informe...",
     "executed": "Acción ejecutada",
@@ -4687,11 +4687,11 @@
     "theCustomer": "el cliente",
     "onMyWayDesc": "Acabas de fichar — un aviso rápido de cortesía.",
     "onMyWayImpact": "Genera confianza",
-    "paidThanksBody": "Gracias {{customer}} — pago recibido de la factura {{invoice}} (€{{amount}}). El recibo va en camino.",
+    "paidThanksBody": "Gracias {{customer}} — pago recibido de la factura {{invoice}} ({{amount}}). El recibo va en camino.",
     "paidThanksTitle": "Agradecer el pago a {{customer}}",
     "paidThanksDesc": "Pago recibido — un agradecimiento rápido fideliza.",
     "paidThanksImpact": "Fideliza clientes",
-    "invoiceSentBody": "Hola {{customer}}, la factura {{invoice}} (€{{amount}}) va en camino. Plazo de pago: {{days}} días. ¡Gracias!",
+    "invoiceSentBody": "Hola {{customer}}, la factura {{invoice}} ({{amount}}) va en camino. Plazo de pago: {{days}} días. ¡Gracias!",
     "invoiceSentTitle": "Avisar a {{customer}}: factura enviada",
     "invoiceSentDesc": "Un aviso para que el cliente espere la factura.",
     "invoiceSentImpact": "Cobro más rápido"
@@ -4725,7 +4725,7 @@
     "syncFailedDesc": "No se pudo acceder al calendario. Inténtalo de nuevo."
   },
   "approval": {
-    "shareMessage": "Hola {{customer}}:\n\nAquí tienes tu presupuesto para {{job}} — €{{amount}}.\n\nAceptar en línea: {{url}}\n\nVálido durante 30 días.\n\nUn cordial saludo",
+    "shareMessage": "Hola {{customer}}:\n\nAquí tienes tu presupuesto para {{job}} — {{amount}}.\n\nAceptar en línea: {{url}}\n\nVálido durante 30 días.\n\nUn cordial saludo",
     "quoteTitle": "Presupuesto"
   },
   "validator": {
@@ -4742,13 +4742,13 @@
     "inactiveReminderBody": "Este cliente lleva más de un año inactivo. ¿Continuar igualmente?",
     "reminderWarningTitle": "¿Enviar recordatorio?",
     "noCustomer": "El presupuesto no tiene cliente asignado",
-    "zeroAmount": "El total del presupuesto es €0 — añade líneas",
+    "zeroAmount": "El total del presupuesto es {{zero}} — añade líneas",
     "noLineItems": "El presupuesto no tiene líneas",
     "zeroPriceItems": "{{count}} líneas no tienen precio",
     "possibleDuplicate": "Ya existe un presupuesto similar para este cliente",
     "unknownVAT": "No hay tipo de IVA configurado para {{country}}",
     "invoiceNoCustomer": "La factura no tiene cliente",
-    "invoiceZeroAmount": "El importe de la factura es €0",
+    "invoiceZeroAmount": "El importe de la factura es {{zero}}",
     "jobAlreadyInvoiced": "Esta obra ya tiene una factura",
     "duplicateInvoice": "Duplicado: mismo cliente + importe en 7 días",
     "noDueDate": "Sin fecha de vencimiento — por defecto 30 días",
@@ -4779,13 +4779,13 @@
       "draftInvoice": {
         "title": "Preparar factura de {{job}}",
         "description": "{{job}} está marcado como completado — factura ahora y asegura la caja.",
-        "impact": "{{amount}} € de ingresos",
+        "impact": "{{amount}} de ingresos",
         "action": "Preparar factura"
       },
       "overdue": {
         "title": "Factura {{invoice}} {{days}}d vencida",
-        "description": "{{amount}} € pendientes — se recomienda {{tone}}.",
-        "impact": "{{amount}} € en riesgo de cobro",
+        "description": "{{amount}} pendientes — se recomienda {{tone}}.",
+        "impact": "{{amount}} en riesgo de cobro",
         "action": "Revisar",
         "toneFinal": "aviso final",
         "toneFirm": "recordatorio firme",
@@ -4807,9 +4807,9 @@
       "followUp": {
         "title": "Dar seguimiento al presupuesto {{quote}}",
         "description": "El presupuesto se envió hace {{days}} días — los clientes silenciosos aceptan cuando se les recuerda.",
-        "impact": "{{amount}} € potenciales",
+        "impact": "{{amount}} potenciales",
         "impactFallback": "Más conversión",
-        "template": "Hola {{customer}}, te escribo por el presupuesto de {{quote}} ({{amount}} €). ¿Alguna duda?",
+        "template": "Hola {{customer}}, te escribo por el presupuesto de {{quote}} ({{amount}}). ¿Alguna duda?",
         "action": "Dar seguimiento"
       },
       "jobStarted": {

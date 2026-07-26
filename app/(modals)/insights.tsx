@@ -6,6 +6,7 @@ import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { useAppState } from '../../src/state/AppState';
+import { formatMoney } from '../../src/i18n/formatting';
 
 export default function InsightsModal() {
   const { priceRisks } = useAppState();
@@ -33,7 +34,7 @@ export default function InsightsModal() {
                   <Text style={Typography.subtitle}>Price risk detected</Text>
                   <Text style={Typography.muted}>{risk.customer}</Text>
                   <Text style={Typography.muted}>{risk.reason}</Text>
-                  <Text style={styles.impact}>Save €{risk.estimatedSavings}</Text>
+                  <Text style={styles.impact}>Save {formatMoney(risk.estimatedSavings)}</Text>
                 </Pressable>
               </Link>
             ))}

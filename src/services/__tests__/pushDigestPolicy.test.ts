@@ -115,19 +115,20 @@ describe('formatForLocale', () => {
   })!;
 
   test('NL overdue uses "te laat" with dot thousands', () => {
-    const out = formatForLocale(overdue, 'nl');
-    expect(out.title).toContain('€3.500 te laat');
+    const out = formatForLocale(overdue, 'nl', 'NL');
+    expect(out.title).toContain('3.500');
+    expect(out.title).toContain('te laat');
     expect(out.body).toContain('facturen staan open');
   });
 
   test('DE overdue uses "überfällig"', () => {
-    const out = formatForLocale(overdue, 'de');
+    const out = formatForLocale(overdue, 'de', 'DE');
     expect(out.title).toContain('überfällig');
     expect(out.body).toContain('Rechnungen');
   });
 
   test('FR overdue uses space thousands', () => {
-    const out = formatForLocale(overdue, 'fr');
+    const out = formatForLocale(overdue, 'fr', 'FR');
     // FR uses space-as-thousands — match any whitespace char to avoid
     // flakes across Node ICU / intl datasets.
     expect(out.title).toMatch(/3\s500/);
@@ -135,13 +136,21 @@ describe('formatForLocale', () => {
   });
 
   test('ES overdue uses "vencidos" + dot thousands', () => {
-    const out = formatForLocale(overdue, 'es');
-    expect(out.title).toContain('3.500');
+    // ES (and IT) set CLDR minimumGroupingDigits=2: four-digit amounts are
+    // written WITHOUT a separator ("3500 €"), grouping only kicks in at five
+    // digits ("13.500 €"). The old hand-rolled formatter grouped every
+    // thousand and was wrong here — assert the real rule, both halves.
+    const out = formatForLocale(overdue, 'es', 'ES');
+    expect(out.title).toContain('3500');
+    expect(out.title).not.toContain('3.500');
     expect(out.title).toContain('vencidos');
+
+    const bigger = pickDailyPush({ ...zero, overdueInvoiceCount: 2, overdueInvoiceAmount: 13500 })!;
+    expect(formatForLocale(bigger, 'es', 'ES').title).toContain('13.500');
   });
 
   test('IT overdue uses "in scadenza"', () => {
-    const out = formatForLocale(overdue, 'it');
+    const out = formatForLocale(overdue, 'it', 'IT');
     expect(out.title).toContain('in scadenza');
     expect(out.body).toContain('fatture scadute');
   });
@@ -149,7 +158,7 @@ describe('formatForLocale', () => {
   test('queue_waiting has no plural variant — uses "any" in all 6 locales', () => {
     const dec = pickDailyPush({ ...zero, queuePendingCount: 4 })!;
     for (const loc of ['en', 'nl', 'de', 'fr', 'es', 'it'] as const) {
-      const out = formatForLocale(dec, loc);
+      const out = formatForLocale(dec, loc, 'NL');
       expect(out.title).toContain('4');
       expect(out.body.length).toBeGreaterThan(10);
     }
@@ -157,9 +166,22 @@ describe('formatForLocale', () => {
 
   test('singular variant fires when count === 1', () => {
     const dec = pickDailyPush({ ...zero, stalingQuoteCount: 1 })!;
-    const nl = formatForLocale(dec, 'nl');
+    const nl = formatForLocale(dec, 'nl', 'NL');
     // NL has distinct singular ("offerte loopt vast") vs plural ("offertes lopen vast")
     expect(nl.title).toContain('offerte loopt vast');
+  });
+
+  // R-currency: 'en' serves UK and US as well as generic English, and the
+  // template used to hardcode "€{amount}" — so a British contractor read a
+  // euro sign on their lock screen for money they bill in pounds. The symbol
+  // now comes from the COUNTRY, never the locale.
+  test('currency follows the country, not the locale', () => {
+    expect(formatForLocale(overdue, 'en', 'UK').title).toContain('£');
+    expect(formatForLocale(overdue, 'en', 'UK').title).not.toContain('€');
+    expect(formatForLocale(overdue, 'en', 'US').title).toContain('$');
+    expect(formatForLocale(overdue, 'en', 'US').title).not.toContain('€');
+    expect(formatForLocale(overdue, 'nl', 'NL').title).toContain('€');
+    expect(formatForLocale(overdue, 'de', 'DE').title).toContain('€');
   });
 
   test('every (locale, type) combo resolves to a non-empty title+body', () => {
@@ -171,7 +193,7 @@ describe('formatForLocale', () => {
     ];
     for (const dec of fixtures) {
       for (const loc of ['en', 'nl', 'de', 'fr', 'es', 'it'] as const) {
-        const out = formatForLocale(dec, loc);
+        const out = formatForLocale(dec, loc, 'NL');
         expect(out.title.length).toBeGreaterThan(0);
         expect(out.body.length).toBeGreaterThan(0);
         // {count} / {amount} placeholders must be resolved.

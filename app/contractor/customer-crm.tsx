@@ -25,6 +25,7 @@ import { isValidEmail, isValidPhone, sanitizeInput } from '../../src/utils/valid
 import { CustomerTagBadge } from '../../src/components/contractor/CustomerTagBadge';
 import { scoreAllCustomers } from '../../src/services/customerTaggingService';
 import { findDuplicates } from '../../src/services/customerDedupService';
+import { formatMoney } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -229,8 +230,8 @@ export default function CustomerPhonebookScreen() {
                     // R12.2: was hardcoded English "total" / "outstanding" labels.
                     return (
                       <Text style={s.contactFinancial} numberOfLines={1}>
-                        {totalInvoiced > 0 ? t('contractor.customers.totalAmount', { defaultValue: '€{{amount}} total', amount: totalInvoiced.toLocaleString(undefined, { maximumFractionDigits: 0 }) }) : ''}
-                        {outstanding > 0 ? ` · ${t('contractor.customers.outstandingAmount', { defaultValue: '€{{amount}} outstanding', amount: outstanding.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}` : ''}
+                        {totalInvoiced > 0 ? t('contractor.customers.totalAmount', { defaultValue: '{{amount}} total', amount: formatMoney(totalInvoiced) }) : ''}
+                        {outstanding > 0 ? ` · ${t('contractor.customers.outstandingAmount', { defaultValue: '{{amount}} outstanding', amount: formatMoney(outstanding) })}` : ''}
                       </Text>
                     );
                   })()}

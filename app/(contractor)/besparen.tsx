@@ -174,7 +174,7 @@ export default function BesparenScreen() {
       // Confirm activation of the tip
       Alert.alert(
         t('savings.activateSaving', 'Besparing activeren'),
-        t('savings.activateConfirm', { defaultValue: 'Wil je "{{title}}" activeren? Verwachte besparing: €{{amount}}.', title: action.title, amount: action.saving.toLocaleString(undefined) }),
+        t('savings.activateConfirm', { defaultValue: 'Wil je "{{title}}" activeren? Verwachte besparing: {{amount}}.', title: action.title, amount: formatCurrency0(action.saving, country) }),
         [
           { text: t('common.cancel', 'Annuleren'), style: 'cancel' },
           {
@@ -243,12 +243,12 @@ export default function BesparenScreen() {
               </Text>
               {totalPotential > 0 && (
                 <Text style={s.summaryAmount}>
-                  {t('savings.upToPotential', { defaultValue: 'Tot €{{amount}} potentieel', amount: totalPotential.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
+                  {t('savings.upToPotential', { defaultValue: 'Tot {{amount}} potentieel', amount: formatCurrency0(totalPotential, country) })}
                 </Text>
               )}
               {savings.totalSavedThisMonth > 0 && (
                 <Text style={s.summarySaved}>
-                  {t('savings.savedThisMonth', { defaultValue: '€{{amount}} al bespaard deze maand', amount: savings.totalSavedThisMonth.toLocaleString(undefined, { maximumFractionDigits: 0 }) })}
+                  {t('savings.savedThisMonth', { defaultValue: '{{amount}} al bespaard deze maand', amount: formatCurrency0(savings.totalSavedThisMonth, country) })}
                 </Text>
               )}
             </View>

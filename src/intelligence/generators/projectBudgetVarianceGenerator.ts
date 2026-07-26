@@ -32,14 +32,17 @@ export function useProjectBudgetVarianceInsight(ctx: GeneratorContext): ScoredIn
   const bac = worst.metrics.budgetAtCompletion;
   const overrun = eac - bac;
 
+  // The symbol follows the PROJECT's currency, same as every other line in
+  // this generator — the prediction log hardcoded £ while the insight below it
+  // resolved the real one, so a EUR project logged a pound overrun.
+  const currency = worst.project.currency === 'GBP' ? '£' : '€';
+
   logPrediction({
     generatorId: 'project-budget-variance',
     predictedAt: new Date().toISOString(),
-    prediction: `${worst.project.name} CPI: ${worst.cpi.toFixed(2)}, EAC overschrijding: £${Math.round(overrun / 1000)}K`,
+    prediction: `${worst.project.name} CPI: ${worst.cpi.toFixed(2)}, EAC overschrijding: ${currency}${Math.round(overrun / 1000)}K`,
     predictedValue: worst.cpi,
   });
-
-  const currency = worst.project.currency === 'GBP' ? '£' : '€';
   const formatM = (v: number) => `${currency}${(Math.abs(v) / 1_000_000).toFixed(1)}M`;
 
   return {

@@ -168,6 +168,7 @@ export const supplierNegotiationService = new SupplierNegotiationService();
 // =============================================================================
 
 import { useExpenses } from './expenseService';
+import { formatMoney } from '../i18n/formatting';
 
 const TIER_THRESHOLDS: { tier: SupplierLeverage['loyaltyTier']; nextTierName: string; threshold: number; nextThreshold: number; discount: number; potential: number }[] = [
   { tier: 'bronze',   nextTierName: 'Silver',   threshold: 0,     nextThreshold: 5000,  discount: 0,  potential: 5  },
@@ -229,7 +230,7 @@ function deriveSupplierLeverage(expenses: any[]): SupplierLeverage[] {
         leverageScore: score,
         leverageFactors: factors.length > 0 ? factors : ['Stable spend'],
         negotiationTip: spend < tier.nextThreshold
-          ? `€${Math.round(tier.nextThreshold - spend)} more to reach ${tier.nextTierName} (${tier.potential}% discount)`
+          ? `${formatMoney(Math.round(tier.nextThreshold - spend))} more to reach ${tier.nextTierName} (${tier.potential}% discount)`
           : `You're a top customer — ask for an exclusive price list.`,
       };
     })

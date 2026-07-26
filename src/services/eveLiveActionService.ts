@@ -18,6 +18,7 @@
 
 import i18n from '../i18n/i18n';
 import type { EveAction } from './eveAgentService';
+import { formatMoney2, formatMoney } from '../i18n/formatting';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -95,7 +96,7 @@ export function buildLiveActions(input: Input): EveAction[] {
         '{{job}} is marked completed — lock in cash flow by invoicing now.',
         { job: j.title },
       ),
-      impact: t('eve.live.draftInvoice.impact', '€{{amount}} revenue', { amount: Math.round(amount) }),
+      impact: t('eve.live.draftInvoice.impact', '{{amount}} revenue', { amount: formatMoney(amount) }),
       priority: amount > 2000 ? 'high' : 'medium',
       status: 'pending',
       preparedData: { jobId: j.id, amount },
@@ -128,11 +129,11 @@ export function buildLiveActions(input: Input): EveAction[] {
         invoice: invoiceLabel(inv),
         days,
       }),
-      description: t('eve.live.overdue.description', '€{{amount}} outstanding — {{tone}} recommended.', {
-        amount: amount.toFixed(0),
+      description: t('eve.live.overdue.description', '{{amount}} outstanding — {{tone}} recommended.', {
+        amount: formatMoney(amount),
         tone,
       }),
-      impact: t('eve.live.overdue.impact', '€{{amount}} collection risk', { amount: amount.toFixed(0) }),
+      impact: t('eve.live.overdue.impact', '{{amount}} collection risk', { amount: formatMoney(amount) }),
       priority: days >= 14 ? 'critical' : days >= 7 ? 'high' : 'medium',
       status: 'pending',
       preparedData: { invoiceId: inv.id, daysOverdue: days },
@@ -241,7 +242,7 @@ export function buildLiveActions(input: Input): EveAction[] {
         },
       ),
       impact: q.amount
-        ? t('eve.live.followUp.impact', '€{{amount}} potential', { amount: Math.round(q.amount) })
+        ? t('eve.live.followUp.impact', '{{amount}} potential', { amount: formatMoney(q.amount) })
         : t('eve.live.followUp.impactFallback', 'Conversion uplift'),
       priority: 'medium',
       status: 'pending',
@@ -250,11 +251,11 @@ export function buildLiveActions(input: Input): EveAction[] {
         customerId: q.customer,
         template: t(
           'eve.live.followUp.template',
-          'Hi {{customer}}, just following up on the quote for {{quote}} (€{{amount}}). Any questions?',
+          'Hi {{customer}}, just following up on the quote for {{quote}} ({{amount}}). Any questions?',
           {
             customer: salutation(q.customerId, q.customer),
             quote: quoteLabel(q),
-            amount: q.amount ?? 0,
+            amount: formatMoney2(q.amount ?? 0),
           },
         ),
       },

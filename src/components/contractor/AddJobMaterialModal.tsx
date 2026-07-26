@@ -17,7 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, formatMoney2, currencySymbol } from '../../i18n/formatting';
 import { useAppState } from '../../state/AppState';
 import type { Material } from '../../domain/materials';
 import { findSimilarMaterials } from '../../services/embeddingService';
@@ -312,8 +312,8 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                 comma support for NL/DE/FR/ES/IT keyboards. */}
             <View style={s.fieldSection}>
               <Text style={s.fieldLabel}>
-                {t('materials.unitPrice', 'Unit price (€)')}
-                {bestPrice?.price ? ` · ${t('materials.bestPriceHint', 'cached: €{{p}}', { p: bestPrice.price.toFixed(2) })}` : ''}
+                {t('materials.unitPrice', 'Unit price ({{sym}})', { sym: currencySymbol() })}
+                {bestPrice?.price ? ` · ${t('materials.bestPriceHint', 'cached: {{p}}', { p: formatMoney2(bestPrice.price) })}` : ''}
               </Text>
               <TextInput
                 style={s.fieldInput}

@@ -28,6 +28,7 @@ import { parseSpreadsheet, detectSpreadsheetType, type ParsedSpreadsheet } from 
 import { extractFromSpreadsheet } from '../../src/ingestion/spreadsheetExtractor';
 import { extractBudgetWorkbook } from '../../src/ingestion/budgetExtractor';
 import { processExtraction, type ProcessExtractionStats } from '../../src/ingestion/intelligenceBridge';
+import { formatMoney2, formatMoney } from '../../src/i18n/formatting';
 
 type Tab = 'upload' | 'paste' | 'excel';
 
@@ -50,8 +51,7 @@ export default function IngestionModal() {
 
   const pdfCount = extractedDocs.length;
 
-  const formatCurrency = (value: number) =>
-    `\u20AC${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatCurrency = (value: number) => formatMoney2(value);
 
   const confidenceLabel = (c: number) => {
     if (c >= 0.8) return 'High';
@@ -156,8 +156,7 @@ export default function IngestionModal() {
             const budgetResult = extractBudgetWorkbook(parsed);
             setPendingBudgetExtraction(budgetResult);
 
-            const fmtCurrency = (n: number) =>
-              `\u20AC${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            const fmtCurrency = (n: number) => formatMoney(n);
 
             Alert.alert(
               'Begroting gedetecteerd',

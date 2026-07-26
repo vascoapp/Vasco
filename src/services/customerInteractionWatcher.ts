@@ -9,6 +9,7 @@
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { sendInstantNotification, isInQuietHours } from './pushNotificationService';
 import i18n from '../i18n/i18n';
+import { formatMoney2 } from '../i18n/formatting';
 
 type Unsubscribe = () => void;
 let active: ReturnType<typeof supabase.channel> | null = null;
@@ -87,7 +88,7 @@ function summarize(row: InteractionRow): string {
       return i18n.t('notifications.push.quoteAcceptedBody', {
         ref,
         tier: tierId ? ` (${tierId})` : '',
-        total: total ? ` — €${total}` : '',
+        total: total ? ` — ${formatMoney2(total)}` : '',
       });
     }
     case 'change_request':

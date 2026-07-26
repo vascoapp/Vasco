@@ -11,6 +11,7 @@
 
 import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { formatMoney } from '../i18n/formatting';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -62,7 +63,7 @@ export function validateQuoteBeforeSend(quote: {
 
   // Zero amount
   if (!quote.amount || quote.amount <= 0) {
-    errors.push({ code: 'QUOTE_ZERO_AMOUNT', field: 'amount', message: t('validator.zeroAmount', 'Quote total is €0 — add line items') });
+    errors.push({ code: 'QUOTE_ZERO_AMOUNT', field: 'amount', message: t('validator.zeroAmount', 'Quote total is {{zero}} — add line items', { zero: formatMoney(0) }) });
   }
 
   // No line items
@@ -117,7 +118,7 @@ export function validateInvoiceBeforeCreate(invoice: {
 
   // Zero amount
   if (!invoice.amount || invoice.amount <= 0) {
-    errors.push({ code: 'INV_ZERO_AMOUNT', field: 'amount', message: t('validator.invoiceZeroAmount', 'Invoice amount is €0') });
+    errors.push({ code: 'INV_ZERO_AMOUNT', field: 'amount', message: t('validator.invoiceZeroAmount', 'Invoice amount is {{zero}}', { zero: formatMoney(0) }) });
   }
 
   // Job already invoiced

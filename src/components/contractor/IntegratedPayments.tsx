@@ -337,7 +337,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
           <Text style={styles.paymentDetailLabel}>Net received</Text>
           <Text style={styles.paymentDetailValue}>
             {formatCurrency(paymentLink.netAmount ?? 0, country)}
-            <Text style={styles.feeText}> (fee: {'\u20AC'}{paymentLink.providerFee})</Text>
+            <Text style={styles.feeText}> (fee: {formatCurrency(paymentLink.providerFee ?? 0, country)})</Text>
           </Text>
         </View>
       </View>

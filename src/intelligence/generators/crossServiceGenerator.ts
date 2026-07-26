@@ -48,7 +48,7 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
   logPrediction({
     generatorId: 'cross-service',
     predictedAt: new Date().toISOString(),
-    prediction: `Cross-service correlation: ${relevantInsight.title} (impact €${relevantInsight.impact.value})`,
+    prediction: `Cross-service correlation: ${relevantInsight.title} (impact ${formatMoney(relevantInsight.impact.value)})`,
     predictedValue: relevantInsight.impact.value,
   });
 
@@ -85,8 +85,8 @@ export function useCrossServiceInsight(ctx: GeneratorContext): ScoredInsight | n
       }),
       implication: hasMoneyImpact
         ? t('crossService.implication', {
-            defaultValue: 'Estimated impact: €{{amount}}',
-            amount: relevantInsight.impact.value.toLocaleString(locale),
+            defaultValue: 'Estimated impact: {{amount}}',
+            amount: formatMoney(relevantInsight.impact.value),
           })
         : relevantInsight.description,
       suggestion: relevantInsight.actionLabel || t('crossService.viewDetails', {

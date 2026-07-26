@@ -19,6 +19,7 @@ import { gt } from '../generatorTranslations';
 import { logPrediction } from '../calibration';
 import { computeOwnLeadSourceStats } from '../../services/leadSourceStatsService';
 import { MS_PER_DAY } from '../../utils/timeConstants';
+import { formatMoney } from '../../i18n/formatting';
 
 const STALE_HOURS_NEW = 24;
 const STALE_HOURS_CONTACTED = 72;
@@ -81,7 +82,7 @@ export function useLeadFollowupInsight(ctx: GeneratorContext): ScoredInsight | n
 
     const customerLabel = top.lead.customerName || gt('lead_followup_customer_unknown', ctx.language);
     const valueLabel = top.lead.estimatedValue
-      ? ` · €${Math.round(top.lead.estimatedValue)}`
+      ? ` · ${formatMoney(Math.round(top.lead.estimatedValue))}`
       : '';
     const hoursLabel = top.hoursStale >= 48
       ? `${Math.round(top.hoursStale / 24)}d`

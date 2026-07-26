@@ -344,7 +344,7 @@ export function DeepReports({ onClose }: DeepReportsProps) {
                   <Text style={styles.materialQty}>{material.quantity} stuks</Text>
                 </View>
                 <View style={styles.materialCost}>
-                  <Text style={styles.materialCostValue}>{'\u20AC'}{material.cost}</Text>
+                  <Text style={styles.materialCostValue}>{formatMoney(material.cost)}</Text>
                   <Ionicons
                     name={material.trend === 'up' ? 'trending-up' : material.trend === 'down' ? 'trending-down' : 'remove'}
                     size={14}

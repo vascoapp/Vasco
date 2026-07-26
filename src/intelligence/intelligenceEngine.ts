@@ -34,6 +34,7 @@ import {
 import { logWarn, logInfo } from '../utils/errorHandler';
 import { getCurrentUserId as _resolveUserId } from '../lib/currentUser';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { formatMoney } from '../i18n/formatting';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SECTION: Types (FeedbackObservation, FeedbackWeights, IntelligenceAPI)
@@ -799,7 +800,7 @@ class VascoIntelligenceEngine implements IntelligenceAPI {
       },
       confidence: 0.75,
       explanation: [
-        `Based on ${sqm}m² at market rate of €${marketRate}/m²`,
+        `Based on ${sqm}m² at market rate of ${formatMoney(marketRate)}/m²`,
         'Recommended 10% buffer for negotiation',
       ],
     };

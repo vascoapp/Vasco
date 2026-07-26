@@ -4,6 +4,7 @@
 
 import { Linking, Alert } from 'react-native';
 import i18n from '../i18n/i18n';
+import { formatMoney2 } from '../i18n/formatting';
 
 /** Open WhatsApp with a pre-filled message to a phone number */
 export async function sendWhatsApp(phone: string, message: string): Promise<boolean> {
@@ -37,14 +38,14 @@ export async function sendWhatsApp(phone: string, message: string): Promise<bool
 
 /** Send invoice reminder via WhatsApp */
 export function buildInvoiceReminderMessage(customerName: string, invoiceId: string, amount: number, daysOverdue: number): string {
-  const amt = amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  const amt = formatMoney2(amount);
   const overdue = daysOverdue > 0 ? i18n.t('whatsapp.invoiceOverdue', { days: daysOverdue }) : '';
   return i18n.t('whatsapp.invoiceReminder', { name: customerName, ref: invoiceId, amount: amt, overdue });
 }
 
 /** Send quote follow-up via WhatsApp */
 export function buildQuoteFollowUpMessage(customerName: string, jobTitle: string, amount: number): string {
-  const amt = amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  const amt = formatMoney2(amount);
   return i18n.t('whatsapp.quoteFollowup', { name: customerName, job: jobTitle, amount: amt });
 }
 

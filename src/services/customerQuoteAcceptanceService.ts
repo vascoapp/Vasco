@@ -18,6 +18,7 @@ import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
+import { formatMoney } from '../i18n/formatting';
 import {
   createAcceptanceLink as dbCreateAcceptanceLink,
   getAcceptanceLinkByToken,
@@ -322,10 +323,10 @@ export async function shareQuoteWithAcceptanceLink(quote: {
     ? quote.description.split(/\n/)[0].slice(0, 80)
     : '';
   const message = t('approval.shareMessage', {
-    defaultValue: `Hi {{customer}},\n\nHere is your quote for {{job}} — €{{amount}}.\n\nAccept online: {{url}}\n\nValid for 30 days.\n\nKind regards`,
+    defaultValue: `Hi {{customer}},\n\nHere is your quote for {{job}} — {{amount}}.\n\nAccept online: {{url}}\n\nValid for 30 days.\n\nKind regards`,
     customer: quote.customerName || quote.customer || '',
     job: quote.job || firstLineFallback,
-    amount: quote.amount.toLocaleString(),
+    amount: formatMoney(quote.amount),
     url,
   });
 

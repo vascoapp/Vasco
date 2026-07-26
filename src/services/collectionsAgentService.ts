@@ -308,6 +308,7 @@ class CollectionsAgentService {
 // ---------------------------------------------------------------------------
 
 import { useAppState } from '../state/AppState';
+import { formatMoney } from '../i18n/formatting';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -400,7 +401,7 @@ function deriveCashGapAlerts(invoices: any[]): CashGapAlert[] {
     out.push({
       id: 'cga-overdue-total',
       title: `${overdue.length} overdue invoice${overdue.length > 1 ? 's' : ''}`,
-      description: `€${Math.round(total)} outstanding past due date.`,
+      description: `${formatMoney(Math.round(total))} outstanding past due date.`,
       severity: total > 5000 ? 'kritiek' : 'waarschuwing',
       gapAmount: total,
       suggestedAction: 'Send reminders to overdue customers',
@@ -411,7 +412,7 @@ function deriveCashGapAlerts(invoices: any[]): CashGapAlert[] {
     out.push({
       id: `cga-longest-${longest.inv.id}`,
       title: `${longest.days}d overdue: ${longest.inv.customerName ?? longest.inv.customer ?? ''}`,
-      description: `Invoice ${longest.inv.id} (€${Math.round(longest.inv.amount ?? 0)}). Collections risk rising.`,
+      description: `Invoice ${longest.inv.id} (${formatMoney(Math.round(longest.inv.amount ?? 0))}). Collections risk rising.`,
       severity: 'kritiek',
       gapAmount: longest.inv.amount ?? 0,
       suggestedAction: 'Escalate to formal notice or call',

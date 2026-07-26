@@ -5,7 +5,7 @@
 // Analyzes seasonal patterns and offers financing suggestions
 // =============================================================================
 
-import { formatMoney } from '../i18n/formatting';
+import { formatMoney, formatMoney2 } from '../i18n/formatting';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
@@ -458,13 +458,13 @@ class CashFlowService {
   private getMessageTemplate(action: PaymentReminder['suggestedAction'], invoice: Invoice): string {
     switch (action) {
       case 'reminder':
-        return `Beste ${invoice.customerName}, graag herinneren wij u aan factuur #${invoice.id} van €${invoice.amount}. Wilt u deze binnen 7 dagen voldoen?`;
+        return `Beste ${invoice.customerName}, graag herinneren wij u aan factuur #${invoice.id} van ${formatMoney2(invoice.amount)}. Wilt u deze binnen 7 dagen voldoen?`;
       case 'call':
-        return `Telefonisch contact opnemen over factuur #${invoice.id} (€${invoice.amount})`;
+        return `Telefonisch contact opnemen over factuur #${invoice.id} (${formatMoney2(invoice.amount)})`;
       case 'final_notice':
-        return `LAATSTE HERINNERING: Factuur #${invoice.id} van €${invoice.amount} is nog niet voldaan. Betaal binnen 7 dagen om incassokosten te voorkomen.`;
+        return `LAATSTE HERINNERING: Factuur #${invoice.id} van ${formatMoney2(invoice.amount)} is nog niet voldaan. Betaal binnen 7 dagen om incassokosten te voorkomen.`;
       case 'collection':
-        return `Incassoprocedure starten voor factuur #${invoice.id} (€${invoice.amount})`;
+        return `Incassoprocedure starten voor factuur #${invoice.id} (${formatMoney2(invoice.amount)})`;
     }
   }
 

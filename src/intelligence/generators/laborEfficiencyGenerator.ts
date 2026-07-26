@@ -8,6 +8,7 @@ import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { isAboveThreshold, detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
 import { gt } from '../generatorTranslations';
+import { formatMoney } from '../../i18n/formatting';
 
 export const laborEfficiencyGenerator: InsightGenerator = {
   id: 'labor-efficiency',
@@ -28,7 +29,7 @@ export function useLaborEfficiencyInsight(ctx: GeneratorContext): ScoredInsight 
   logPrediction({
     generatorId: 'labor-efficiency',
     predictedAt: new Date().toISOString(),
-    prediction: `Leegloop: ${labor.idleTime.idlePercent}% (€${labor.idleTime.idleCost} kosten)`,
+    prediction: `Leegloop: ${labor.idleTime.idlePercent}% (${formatMoney(labor.idleTime.idleCost)} kosten)`,
     predictedValue: labor.idleTime.idlePercent,
   });
 
@@ -66,14 +67,14 @@ export function useLaborEfficiencyInsight(ctx: GeneratorContext): ScoredInsight 
     detail: trendText ? trendText.trim() : undefined,
     icon: 'time',
     source: gt('source_labor', ctx.language),
-    metric: { label: 'Verloren waarde', value: `€${labor.idleTime.idleCost}`, trend: 'down' },
+    metric: { label: 'Verloren waarde', value: `${formatMoney(labor.idleTime.idleCost)}`, trend: 'down' },
 
     rootCauseTags: ['idle-time', 'labor'],
     rawScore: 0,
     reasoning: {
       observation: `${labor.idleTime.idlePercent}% van de werktijd is niet-productief`,
       evidence: `Op basis van ${totalHours} geregistreerde uren${trend ? `, trend: ${trend.direction}` : ''}${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}`,
-      implication: `€${labor.idleTime.idleCost} aan gemiste productiviteit${trendText}`,
+      implication: `${formatMoney(labor.idleTime.idleCost)} aan gemiste productiviteit${trendText}`,
       suggestion: labor.idleTime.suggestion || 'Optimaliseer reistijd en wachttijden tussen klussen',
     },
     dataPoints: totalHours,

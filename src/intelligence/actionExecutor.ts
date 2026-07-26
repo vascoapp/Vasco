@@ -14,6 +14,7 @@ import { getCurrentUserId } from '../lib/currentUser';
 import i18n from '../i18n/i18n';
 
 import type { InsightAction, InsightActionType } from './generators/types';
+import { formatMoney2, formatMoney } from '../i18n/formatting';
 
 const ACTION_LOG_KEY = '@vasco_action_log';
 const MAX_ACTION_LOG = 200;
@@ -72,14 +73,14 @@ const handlers: Record<InsightActionType, ActionHandler> = {
     const t = i18n.t.bind(i18n);
     const { customerName, invoiceId, amount } = params;
     const text = t('action.reminderBody', {
-      defaultValue: 'Dear {{customer}},\n\nThis is a friendly reminder for invoice {{invoice}} of €{{amount}}.\n\nKind regards',
+      defaultValue: 'Dear {{customer}},\n\nThis is a friendly reminder for invoice {{invoice}} of {{amount}}.\n\nKind regards',
       customer: customerName || t('action.customer', 'customer'),
       invoice: invoiceId || '',
-      amount: (amount || 0).toLocaleString(),
+      amount: formatMoney2(amount || 0),
     });
     try {
       await Share.share({ message: text, title: t('action.reminderTitle', 'Payment reminder') });
-      return { success: true, message: t('action.reminderSent', { defaultValue: 'Reminder sent for €{{amount}}', amount }) };
+      return { success: true, message: t('action.reminderSent', { defaultValue: 'Reminder sent for {{amount}}', amount: formatMoney2(amount || 0) }) };
     } catch {
       return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
     }
@@ -136,7 +137,7 @@ const handlers: Record<InsightActionType, ActionHandler> = {
         await bindings.updateQuoteAmount(String(quoteId), suggestedPrice);
       } catch {}
     }
-    return { success: true, message: t('action.quoteAdjusted', { defaultValue: 'Quote {{id}} adjusted to €{{price}}', id: quoteId, price: suggestedPrice }), data: { route: `/quotes/${quoteId}` } };
+    return { success: true, message: t('action.quoteAdjusted', { defaultValue: 'Quote {{id}} adjusted to {{price}}', id: quoteId, price: formatMoney2(suggestedPrice) }), data: { route: `/quotes/${quoteId}` } };
   },
 
   renew_cert: async (params) => {
@@ -167,13 +168,13 @@ const handlers: Record<InsightActionType, ActionHandler> = {
 
   log_expense: async (params) => {
     const t = i18n.t.bind(i18n);
-    return { success: true, message: t('action.expenseLogged', { defaultValue: 'Expense logged: €{{amount}}', amount: params.amount || 0 }), data: { route: '/contractor/expenses' } };
+    return { success: true, message: t('action.expenseLogged', { defaultValue: 'Expense logged: {{amount}}', amount: formatMoney2(params.amount || 0) }), data: { route: '/contractor/expenses' } };
   },
 
   switch_supplier: async (params) => {
     const t = i18n.t.bind(i18n);
     const { currentSupplier, newSupplier, savings } = params;
-    return { success: true, message: t('action.supplierSwitched', { defaultValue: 'Switch from {{from}} to {{to}} — save €{{savings}}/order', from: currentSupplier, to: newSupplier, savings }), data: { route: '/contractor/inkoop' } };
+    return { success: true, message: t('action.supplierSwitched', { defaultValue: 'Switch from {{from}} to {{to}} — save {{savings}}/order', from: currentSupplier, to: newSupplier, savings: formatMoney(savings || 0) }), data: { route: '/contractor/inkoop' } };
   },
 
   close_defect: async (params) => {

@@ -470,9 +470,18 @@ async function checkRawIdFallbacks() {
 // `[€£$]\s*(?:\$\{|\{)` also matches a bare `${x.toFixed(2)}`, because the `$`
 // of the interpolation satisfies the currency class — that fired on 190 lines
 // with no currency symbol at all.
-const CURRENCY_TEMPLATE_RE = /[€£$]\s*\$\{[^}]*\.(?:toFixed|toLocaleString)\s*\(/;
+// Round 3 widened it twice more, both found by sites the green check missed:
+//   a. the symbol can be UNICODE-ESCAPED — `€${amount.toLocaleString()}`
+//      is the same bug as `€${...}` but the literal-char class never saw it
+//      (it hid the Geld card's overdue metric and ~30 generator/report sites);
+//   b. the number needs no .toFixed/.toLocaleString call at all — `€{price}`
+//      on a RAW number is worse, not better (no grouping, full float tail:
+//      "€1234.5666"). Requiring a format call made those invisible too.
+// So the shapes are now "currency symbol immediately followed by an
+// interpolation", in either template or JSX form, formatted or not.
+const CURRENCY_TEMPLATE_RE = /(?:[€£]|\\u20AC|\\u00A3)\s*\$\{|\$\$\{/;
 const CURRENCY_JSX_RE =
-  /(?:[€£]|\{\s*'(?:\\u20AC|€|£|\$)'\s*\})\s*\{[^}]*\.(?:toFixed|toLocaleString)\s*\(/;
+  /(?:[€£]|\{\s*'(?:\\u20AC|€|£|\$)'\s*\})\s*\{[^}]*\}/;
 const CURRENCY_FMT_RE = {
   test: (line) => CURRENCY_TEMPLATE_RE.test(line) || CURRENCY_JSX_RE.test(line),
 };
@@ -502,6 +511,12 @@ const CURRENCY_EXEMPT_PATHS = [
   'src/services/lateFeeService',
   // Demo/aannemer-gated approval notes (see quote-approval gating).
   'src/services/quoteApprovalService',
+  // VASCO'S OWN subscription pricing, not the contractor's money. The tier
+  // prices in subscriptionService are single EUR numbers with no per-country
+  // variant, so formatting them by contractor country would invent a £39 /
+  // $39 tier that nobody can actually be billed. Changing this is a pricing
+  // decision, not a locale fix.
+  'app/contractor/profile',
 ];
 
 async function checkManualCurrency() {
@@ -621,6 +636,61 @@ async function checkUntranslatedValues() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// CHECK 9: no currency symbol baked into a locale VALUE
+// ---------------------------------------------------------------------------
+// Check 7 only sees source files, so it cannot see "€{{amount}} outstanding"
+// sitting in en/nl/de/fr/es/it.json. 51 keys did — including the WhatsApp
+// invoice reminder and quote follow-up a CUSTOMER receives, the EVE queue
+// impact lines, and the late-fee description. A UK contractor chasing £2,450
+// sent a message that said €2,450, and no amount of correct formatting at the
+// call site could fix it: the symbol was in the sentence, not the number.
+//
+// The rule: the LOCALE owns the words, the FORMATTER owns the money. A value
+// may not put a currency symbol next to a placeholder — pass a formatted
+// amount (formatMoney / formatMoney2 / formatCurrency0) in instead. Nor may it
+// hardcode a unit label "(€)" over an input: pass currencySymbol().
+//
+// A symbol NOT adjacent to a placeholder is fine and deliberately not matched
+// — "turnover above €20.000" is the KOR/Kleinunternehmer threshold, a fact
+// about NL/DE tax law rather than a formatting decision.
+const LOCALE_CURRENCY_ADJACENT_RE = /[€£$][   ]{0,2}\{\{|\}\}[   ]{0,2}[€£$]/;
+const LOCALE_CURRENCY_UNIT_RE = /\(\s*[€£$]\s*\)/;
+// Keys where a fixed symbol is correct because the FEATURE is single-market.
+const LOCALE_CURRENCY_OK = new Map([
+  ['pipeline.value', 'US-only leads CRM (R74) — dollars by definition'],
+  ['crew.hourlyCost', 'US-only crew dispatch (R87) — dollars by definition'],
+]);
+
+async function checkCurrencyInLocaleValues() {
+  process.stdout.write('9. no currency symbol baked into locale values ... ');
+  const hits = [];
+  const flat = (obj, prefix = '', out = {}) => {
+    for (const [k, v] of Object.entries(obj)) {
+      const key = prefix ? `${prefix}.${k}` : k;
+      if (v && typeof v === 'object') flat(v, key, out);
+      else if (typeof v === 'string') out[key] = v;
+    }
+    return out;
+  };
+  for (const loc of LOCALES) {
+    const flatLoc = flat(await loadLocale(loc));
+    for (const [k, v] of Object.entries(flatLoc)) {
+      if (LOCALE_CURRENCY_OK.has(k)) continue;
+      if (LOCALE_CURRENCY_ADJACENT_RE.test(v) || LOCALE_CURRENCY_UNIT_RE.test(v)) {
+        hits.push(`${loc} ${k} = ${JSON.stringify(v).slice(0, 100)}`);
+      }
+    }
+  }
+  if (hits.length === 0) {
+    console.log('✓');
+  } else {
+    console.log(`✗ (${hits.length})`);
+    for (const h of hits.slice(0, 15)) err(`Currency in locale value: ${h}`);
+    if (hits.length > 15) err(`...and ${hits.length - 15} more`);
+  }
+}
+
 async function main() {
   console.log('OTA-update preflight\n');
   const t0 = Date.now();
@@ -632,6 +702,7 @@ async function main() {
   await checkRawIdFallbacks();
   await checkManualCurrency();
   await checkUntranslatedValues();
+  await checkCurrencyInLocaleValues();
   const dt = ((Date.now() - t0) / 1000).toFixed(1);
 
   console.log('');

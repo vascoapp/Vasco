@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_HOUR } from '../utils/timeConstants';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import i18n from '../i18n/i18n';
+import { formatMoney } from '../i18n/formatting';
 
 const TOKEN_KEY = '@vasco_push_token';
 const DEVICE_ID_KEY = '@vasco_device_id';
@@ -222,7 +223,7 @@ export async function schedulePaymentReminder(data: {
         title: i18n.t('notifications.push.paymentReminderTitle'),
         body: i18n.t('notifications.push.paymentReminderBody', {
           customer: data.customerName,
-          amount: data.amount.toLocaleString(undefined),
+          amount: formatMoney(data.amount),
           days: data.daysUntilDue,
         }),
         data: { type: 'payment_reminder', invoiceId: data.invoiceId },

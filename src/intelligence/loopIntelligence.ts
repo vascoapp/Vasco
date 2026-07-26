@@ -12,6 +12,7 @@ import { syncJobOutcome, syncInvoiceOutcome } from './cloudSync';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 
 import type { AccountingLoopState, LoopStage } from '../services/accountingLoopService';
+import { formatMoney } from '../i18n/formatting';
 
 // ---------------------------------------------------------------------------
 // Stage-specific AI actions
@@ -80,7 +81,7 @@ export async function onStageTransition(
       await logPrediction({
         generatorId: 'estimation-calibration',
         predictedAt: new Date().toISOString(),
-        prediction: `Job ${loop.jobId}: estimated €${loop.amounts.quoted}, actual work done`,
+        prediction: `Job ${loop.jobId}: estimated ${formatMoney(loop.amounts.quoted)}, actual work done`,
         predictedValue: loop.amounts.quoted,
       });
       break;

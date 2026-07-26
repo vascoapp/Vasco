@@ -20,6 +20,7 @@ import {
   getRecurringInstances,
   type RecurringJobInstance,
 } from '../../services/recurringJobsService';
+import { formatMoney } from '../../i18n/formatting';
 
 const HORIZON_DAYS = 30;
 const MAX_VISIBLE = 4;
@@ -96,7 +97,7 @@ function UpcomingRecurringWidgetImpl() {
                 </Text>
               </View>
               {inst.template.estimatedAmount ? (
-                <Text style={styles.amount}>€{Math.round(inst.template.estimatedAmount)}</Text>
+                <Text style={styles.amount}>{formatMoney(inst.template.estimatedAmount)}</Text>
               ) : null}
               <Ionicons name="chevron-forward" size={16} color={DK.colors.textMuted} />
             </Pressable>

@@ -12,6 +12,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { LineOptimization, ScenarioResult, CategoryOptimization } from './budgetOptimizerService';
+import { formatMoney } from '../i18n/formatting';
 
 export type PdfLang = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
@@ -177,9 +178,9 @@ function buildHtml(
       <td style="font-weight:600">${opt.costCode}</td>
       <td>${opt.description}</td>
       <td>${opt.category}</td>
-      <td style="text-align:right">\u20AC${fmt(opt.currentTotal)}</td>
-      <td style="text-align:right">\u20AC${fmt(opt.suggestedTotal)}</td>
-      <td style="text-align:right;color:#34C759;font-weight:600">\u20AC${fmt(opt.savings)}</td>
+      <td style="text-align:right">${formatMoney(opt.currentTotal)}</td>
+      <td style="text-align:right">${formatMoney(opt.suggestedTotal)}</td>
+      <td style="text-align:right;color:#34C759;font-weight:600">${formatMoney(opt.savings)}</td>
       <td style="text-align:center">
         <span style="background:${riskColor(opt.risk)}22;color:${riskColor(opt.risk)};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">
           ${riskLabel(opt.risk, L)}
@@ -195,7 +196,7 @@ function buildHtml(
     <tr>
       <td>${name}</td>
       <td style="text-align:center">${count}</td>
-      <td style="text-align:right;color:#34C759;font-weight:600">\u20AC${fmt(savings)}</td>
+      <td style="text-align:right;color:#34C759;font-weight:600">${formatMoney(savings)}</td>
     </tr>`,
     )
     .join('\n');
@@ -237,15 +238,15 @@ function buildHtml(
 
   <div class="summary-grid">
     <div class="summary-item">
-      <div class="value">\u20AC${fmt(scenario.totalBudget)}</div>
+      <div class="value">${formatMoney(scenario.totalBudget)}</div>
       <div class="label">${L.originalBudget}</div>
     </div>
     <div class="summary-item">
-      <div class="value">\u20AC${fmt(scenario.totalBudget - totalApprovedSavings)}</div>
+      <div class="value">${formatMoney(scenario.totalBudget - totalApprovedSavings)}</div>
       <div class="label">${L.optimizedBudget}</div>
     </div>
     <div class="summary-item savings">
-      <div class="value">\u20AC${fmt(totalApprovedSavings)}</div>
+      <div class="value">${formatMoney(totalApprovedSavings)}</div>
       <div class="label">${L.totalSavings}</div>
     </div>
     <div class="summary-item savings">

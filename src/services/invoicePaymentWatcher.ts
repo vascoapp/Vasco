@@ -9,6 +9,7 @@
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { sendInstantNotification, isInQuietHours } from './pushNotificationService';
 import i18n from '../i18n/i18n';
+import { formatMoney2 } from '../i18n/formatting';
 
 type Unsubscribe = () => void;
 
@@ -76,7 +77,7 @@ export function watchInvoicePayments(
           // critical NL contractor moment (a payment landing).
           const ref = next.document_number ?? next.reference ?? next.id;
           const amountDisplay = event.amount != null
-            ? i18n.t('notifications.push.amountSuffix', { amt: event.amount.toFixed(2) })
+            ? i18n.t('notifications.push.amountSuffix', { amt: formatMoney2(event.amount) })
             : '';
           const title = i18n.t('notifications.push.paidTitle');
           const body = i18n.t('notifications.push.paidBody', { ref, amount: amountDisplay });

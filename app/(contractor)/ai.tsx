@@ -28,6 +28,7 @@ import { useAutomations, type AutomationContext } from '../../src/services/autom
 import { exportAllData } from '../../src/services/dataExportService';
 import { requestAccountDeletion } from '../../src/services/accountDeletionService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { formatMoney2 } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabKey = 'queue' | 'insights' | 'automations' | 'more';
@@ -153,7 +154,7 @@ export default function VascoScreen() {
 
     invoices.filter((i: any) => i.status === 'overdue').forEach((inv: any) => {
       const customerName = inv.customer || inv.customerName || t('ai.customer');
-      const invAmount = (inv.total || inv.amount || 0).toLocaleString(undefined);
+      const invAmount = formatMoney2(inv.total || inv.amount || 0);
       // NEVER fall back to inv.id: `reference` feeds both this card's text and
       // `shareText`, which is the message actually sent to the CUSTOMER — a
       // raw "inv-seed-1" was reaching them. Omit the reference instead, and
@@ -172,7 +173,7 @@ export default function VascoScreen() {
     const completedNoInvoice = jobs.filter((j: any) => j.status === 'completed' && j.completedAt &&
       !invoices.some((i: any) => i.job === j.title || i.jobId === j.id));
     completedNoInvoice.forEach((job: any) => {
-      const jobAmount = (job.quotedAmount || job.agreedAmount || 0).toLocaleString(undefined);
+      const jobAmount = formatMoney2(job.quotedAmount || job.agreedAmount || 0);
       actions.push({
         id: `invoice-${job.id}`, icon: 'receipt-outline', iconColor: DK.colors.accent,
         title: t('ai.createInvoice', { title: job.title }),
@@ -184,7 +185,7 @@ export default function VascoScreen() {
 
     quotes.filter((q: any) => q.status === 'sent').forEach((q: any) => {
       const customerName = q.customer || t('ai.customer');
-      const qAmount = (q.amount || 0).toLocaleString(undefined);
+      const qAmount = formatMoney2(q.amount || 0);
       const jobName = q.job || 'project';
       actions.push({
         id: `followup-${q.id}`, icon: 'chatbubble-outline', iconColor: DK.colors.highlight,

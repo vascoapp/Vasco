@@ -25,6 +25,7 @@ import {
   type RecurringJobTemplate,
 } from '../../../src/services/recurringJobsService';
 import { hapticSuccess, hapticWarning } from '../../../src/utils/haptics';
+import { currencySymbol } from '../../../src/i18n/formatting';
 
 const CADENCES: { value: RecurrenceCadence; labelKey: string; fallback: string }[] = [
   { value: 'monthly', labelKey: 'recurring.monthly', fallback: 'Monthly' },
@@ -159,7 +160,7 @@ export default function RecurringEditScreen() {
         )}
 
         <DKLabel style={styles.section}>{t('recurring.estimates', 'ESTIMATES')}</DKLabel>
-        <Field label={t('recurring.amount', 'Amount (€)')} value={estimatedAmount} onChange={setEstimatedAmount} keyboardType="numeric" />
+        <Field label={t('recurring.amount', 'Amount ({{sym}})', { sym: currencySymbol() })} value={estimatedAmount} onChange={setEstimatedAmount} keyboardType="numeric" />
         <Field label={t('recurring.durationHours', 'Duration (hours)')} value={estimatedDuration} onChange={setEstimatedDuration} keyboardType="numeric" />
         <Field label={t('recurring.reminderDays', 'Remind X days before due')} value={reminderDays} onChange={setReminderDays} keyboardType="numeric" />
 

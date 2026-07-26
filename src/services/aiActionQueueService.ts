@@ -5,7 +5,7 @@
 // Pattern: AI does the thinking → queues result → human approves → action executes
 // =============================================================================
 
-import { formatMoney } from '../i18n/formatting';
+import { formatMoney, formatMoney2 } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCurrentUserId } from '../lib/currentUser';
@@ -809,15 +809,13 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const interest = feeBreakdown.interest;
     const recoveryFee = feeBreakdown.recoveryFee;
     const lateFee = Math.round((interest + recoveryFee) * 100) / 100;
-    const currencySymbol = feeBreakdown.currency === 'GBP' ? '£' : '€';
     const id = await addToQueue({
       type: 'invoice_regenerate',
       title: t('automation.regenerateInvoice', { defaultValue: 'Regenerate invoice {{id}}', id: queueEntityLabel(inv, context.customers) }),
       description: t('automation.daysOverdueWithFee', {
-        defaultValue: '{{days}} days overdue · +{{currency}}{{fee}} late fee',
+        defaultValue: '{{days}} days overdue · +{{fee}} late fee',
         days: daysOverdue,
-        fee: lateFee.toFixed(2),
-        currency: currencySymbol,
+        fee: formatMoney2(lateFee),
       }),
       preparedData: {
         invoiceId: inv.id,
@@ -830,10 +828,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
         disclosureLine: feeBreakdown.disclosureLine,
         newTotal: (inv.amount || 0) + lateFee,
         customer: inv.customer,
-        reasoning: `${daysOverdue} days overdue. EU Directive 2011/7/EU entitles you to ${feeBreakdown.effectiveRatePct.toFixed(2)}% statutory interest (${currencySymbol}${interest.toFixed(2)}) + ${currencySymbol}${recoveryFee.toFixed(0)} fixed recovery fee.`,
+        reasoning: `${daysOverdue} days overdue. EU Directive 2011/7/EU entitles you to ${feeBreakdown.effectiveRatePct.toFixed(2)}% statutory interest (${formatMoney2(interest)}) + ${formatMoney(recoveryFee)} fixed recovery fee.`,
       },
       actionLabel: t('automation.regenerate', 'Regenerate'),
-      estimatedImpact: `${currencySymbol}${((inv.amount || 0) + lateFee).toLocaleString(undefined)}`,
+      estimatedImpact: formatMoney2((inv.amount || 0) + lateFee),
       expiresAt: new Date(now + 7 * dayMs).toISOString(),
       sourceGeneratorId: 'automation_invoice_regen',
     });
@@ -850,10 +848,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const expiryDate = new Date(q.validUntil).toLocaleDateString();
     const cust = (context.customers ?? []).find((c: any) => c.id === q.customerId);
     const message = t('automation.quoteExpiryMsg', {
-      defaultValue: 'Hi {{customer}}, your quote for {{job}} (€{{amount}}) expires on {{date}}. Would you like to proceed?',
+      defaultValue: 'Hi {{customer}}, your quote for {{job}} ({{amount}}) expires on {{date}}. Would you like to proceed?',
       customer: cust?.name || q.customer || '',
       job: q.description || q.job || '',
-      amount: (q.amount ?? 0).toLocaleString(undefined),
+      amount: formatMoney2(q.amount ?? 0),
       date: expiryDate,
     });
     const id = await addToQueue({
@@ -1123,7 +1121,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       const id = await addToQueue({
         type: 'supplier_comparison',
         title: t('automation.supplierComparison', { defaultValue: 'Better price: {{name}}', name }),
-        description: `€${mostExpensive.unitPrice} → €${cheapest.unitPrice} (${t('automation.save', 'save')} ${formatMoney(savings)})`,
+        description: `${formatMoney2(mostExpensive.unitPrice)} → ${formatMoney2(cheapest.unitPrice)} (${t('automation.save', 'save')} ${formatMoney(savings)})`,
         preparedData: { materialName: name, currentPrice: mostExpensive.unitPrice, bestPrice: cheapest.unitPrice, savings },
         actionLabel: t('automation.compareSuppliers', 'Compare'),
         estimatedImpact: `${formatMoney(savings)} ${t('automation.perUnit', 'per unit')}`,
@@ -1288,10 +1286,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'bulk_purchase',
       title: t('automation.bulkOpportunity', { defaultValue: 'Bulk order: {{name}}', name }),
-      description: `${data.jobs.length} ${t('automation.jobsNeed', 'jobs need')} ${data.totalQty}x · ${t('automation.save', 'save')} €${savings}`,
+      description: `${data.jobs.length} ${t('automation.jobsNeed', 'jobs need')} ${data.totalQty}x · ${t('automation.save', 'save')} ${formatMoney(savings)}`,
       preparedData: { materialName: name, jobCount: data.jobs.length, totalQty: data.totalQty, estimatedSavings: savings },
       actionLabel: t('automation.orderBulk', 'Order bulk'),
-      estimatedImpact: `€${savings} ${t('automation.savings', 'savings')}`,
+      estimatedImpact: `${formatMoney(savings)} ${t('automation.savings', 'savings')}`,
       expiresAt: new Date(now + 7 * dayMs).toISOString(),
       sourceGeneratorId: 'automation_bulk_purchase',
     });
@@ -1394,8 +1392,8 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
               count: overpayingItems.length,
             }),
             description: t('automation.monthlySavingsDesc', {
-              defaultValue: 'Switch suppliers to save €{{amount}}/month',
-              amount: Math.round(totalMonthlySavings),
+              defaultValue: 'Switch suppliers to save {{amount}}/month',
+              amount: formatMoney(totalMonthlySavings),
             }),
             preparedData: {
               overpayingItems: overpayingItems.map(i => ({
@@ -1409,7 +1407,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
               itemCount: overpayingItems.length,
             },
             actionLabel: t('automation.viewSavings', 'View savings'),
-            estimatedImpact: `€${Math.round(totalMonthlySavings)} / ${t('automation.month', 'month')}`,
+            estimatedImpact: `${formatMoney(totalMonthlySavings)} / ${t('automation.month', 'month')}`,
             expiresAt: new Date(now + 14 * dayMs).toISOString(),
             sourceGeneratorId: 'automation_monthly_savings',
           });
@@ -1840,10 +1838,10 @@ export async function queuePaymentReceivedThanks(args: {
   const t = i18n.t.bind(i18n);
   const customerLabel = args.customerName?.trim() || args.customerId || '';
   const template = t('messageTrigger.paidThanksBody', {
-    defaultValue: 'Thanks {{customer}} — payment received for invoice {{invoice}} (€{{amount}}). Receipt on its way.',
+    defaultValue: 'Thanks {{customer}} — payment received for invoice {{invoice}} ({{amount}}). Receipt on its way.',
     customer: customerLabel,
     invoice: args.invoiceId,
-    amount: Math.round(args.amount ?? 0),
+    amount: formatMoney2(args.amount ?? 0),
   });
   return addToQueue({
     type: 'satisfaction_survey',
@@ -1876,10 +1874,10 @@ export async function queueInvoiceSentNotice(args: {
   const t = i18n.t.bind(i18n);
   const customerLabel = args.customerName?.trim() || args.customerId || '';
   const template = t('messageTrigger.invoiceSentBody', {
-    defaultValue: 'Hi {{customer}}, invoice {{invoice}} (€{{amount}}) is on its way. Payment terms: {{days}} days. Thanks!',
+    defaultValue: 'Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Payment terms: {{days}} days. Thanks!',
     customer: customerLabel,
     invoice: args.invoiceId,
-    amount: Math.round(args.amount ?? 0),
+    amount: formatMoney2(args.amount ?? 0),
     days: args.dueInDays ?? 14,
   });
   return addToQueue({

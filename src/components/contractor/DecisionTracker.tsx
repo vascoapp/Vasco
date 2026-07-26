@@ -31,6 +31,7 @@ import {
   getTrackerStats,
 } from '../../data/mockDecisions';
 import { useAuth } from '../../context/AuthContext';
+import { formatMoney } from '../../i18n/formatting';
 
 const TRACKER_KEY = '@vasco_decision_trackers';
 function usePersistedTrackers(): CustomerDecisionTracker[] {
@@ -906,7 +907,7 @@ function DecisionItemCard({
                       styles.optionPrice,
                       { color: option.priceImpact > 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess },
                     ]}>
-                      {option.priceImpact > 0 ? '+' : ''}{'\u20AC'}{option.priceImpact}
+                      {option.priceImpact > 0 ? '+' : ''}{formatMoney(option.priceImpact)}
                     </Text>
                   )}
                 </Pressable>

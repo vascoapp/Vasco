@@ -15,6 +15,7 @@
 import { predictQuoteWin } from '../intelligence/mlModels';
 import i18n from '../i18n/i18n';
 import type { QueueItem } from './aiActionQueueService';
+import { formatMoney } from '../i18n/formatting';
 
 type QueueItemDraft = Omit<QueueItem, 'id' | 'status' | 'createdAt'>;
 
@@ -68,8 +69,8 @@ export async function generateLowWinAlert(
       recommendation: prediction.recommendation,
     },
     actionLabel: t('queue.lowWinAction', 'Plan follow-up'),
-    estimatedImpact: t('queue.lowWinImpact', '~€{{value}} at stake', {
-      value: Math.round(input.amount),
+    estimatedImpact: t('queue.lowWinImpact', '~{{value}} at stake', {
+      value: formatMoney(input.amount),
     }),
     sourceGeneratorId: 'lowWinAlertGenerator',
     entityKey: `low_win:${input.quoteId}`,

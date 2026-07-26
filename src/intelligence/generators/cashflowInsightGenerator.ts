@@ -14,6 +14,7 @@ import { gt } from '../generatorTranslations';
 import { useAppState } from '../../state/AppState';
 import { useCohortDso } from '../../services/paymentTimingMoatService';
 import { useMarginDrift } from '../../services/marginDriftService';
+import { formatMoney } from '../../i18n/formatting';
 
 export const cashflowInsightGenerator: InsightGenerator = {
   id: 'cashflow-insight',
@@ -51,17 +52,17 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       generatorId: 'cashflow-insight',
       category: 'financial',
       priority: fin.overdueAmount > 2000 ? 'critical' : 'high',
-      title: gt('fin_overdue_title', lang, { count: fin.overdueCount, amount }),
+      title: gt('fin_overdue_title', lang, { count: fin.overdueCount, amount: formatMoney(amount) }),
       message: gt('fin_overdue_message', lang, {
         count: fin.overdueCount,
-        amount: amount.toLocaleString(),
+        amount: formatMoney(amount),
         days: fin.avgDaysToPayment,
       }),
       detail: fin.overdueDetails
         .slice(0, 3)
         .map(d => gt('fin_overdue_detail_item', lang, {
           customer: d.customer,
-          amount: d.amount,
+          amount: formatMoney(d.amount),
           days: d.daysOverdue,
         }))
         .join('. '),
@@ -69,11 +70,11 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       actionLabel: gt('fin_action_send_invoices', lang),
       actionRoute: '/(contractor)/facturen',
       source: gt('source_financial_analysis', lang),
-      metric: { label: gt('fin_overdue_metric', lang), value: `\u20AC${amount.toLocaleString()}`, trend: 'down' },
+      metric: { label: gt('fin_overdue_metric', lang), value: formatMoney(amount), trend: 'down' },
       rootCauseTags: ['cashflow', 'overdue'],
       rawScore: 0.95,
       reasoning: {
-        observation: `${fin.overdueCount} invoices are past due, totaling \u20AC${amount}`,
+        observation: `${fin.overdueCount} invoices are past due, totaling ${formatMoney(amount)}`,
         evidence: `Based on ${fin.overdueDetails.length} overdue invoices. Avg DSO: ${fin.avgDaysToPayment} days.`,
         implication: `Delayed payments reduce working capital and create cash flow pressure.`,
         suggestion: `Send reminders for oldest overdue invoices first. Consider auto-reminders.`,
@@ -103,7 +104,7 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
         ? gt('fin_revenue_growth_title', lang, { pct })
         : gt('fin_revenue_decline_title', lang, { pct }),
       message: growing
-        ? `Monthly revenue increased by ${pct}%. Avg monthly: \u20AC${Math.round(fin.avgMonthlyRevenue).toLocaleString()}.`
+        ? `Monthly revenue increased by ${pct}%. Avg monthly: ${formatMoney(fin.avgMonthlyRevenue)}.`
         : `Monthly revenue decreased by ${pct}%. Review pipeline and pricing.`,
       icon: growing ? 'trending-up' : 'trending-down',
       actionLabel: growing ? undefined : gt('fin_action_review_pricing', lang),
@@ -114,7 +115,7 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       rawScore: growing ? 0.5 : 0.8,
       reasoning: {
         observation: `Revenue ${growing ? 'grew' : 'declined'} ${pct}% month-over-month`,
-        evidence: `Based on paid invoices. Avg monthly revenue: \u20AC${Math.round(fin.avgMonthlyRevenue)}.`,
+        evidence: `Based on paid invoices. Avg monthly revenue: ${formatMoney(fin.avgMonthlyRevenue)}.`,
         implication: growing
           ? `Positive trend — maintain current pace.`
           : `Declining trend may indicate pipeline issues or seasonal dip.`,
@@ -146,7 +147,7 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       rawScore: 0.65,
       reasoning: {
         observation: `Top customer accounts for ${top.percentage}% of total revenue`,
-        evidence: `${top.customer}: \u20AC${top.revenue} from ${top.invoiceCount} invoices.`,
+        evidence: `${top.customer}: ${formatMoney(top.revenue)} from ${top.invoiceCount} invoices.`,
         implication: `High customer concentration increases business risk.`,
         suggestion: `Actively pursue new customers. Aim for no single client above 30%.`,
       },
@@ -164,16 +165,16 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       category: 'financial',
       priority: 'high',
       title: gt('fin_cashflow_negative_title', lang),
-      message: `Projected cashflow: \u20AC${fin.projectedCashflow.toLocaleString()}. Send pending invoices and follow up on overdue payments.`,
+      message: `Projected cashflow: ${formatMoney(fin.projectedCashflow)}. Send pending invoices and follow up on overdue payments.`,
       icon: 'arrow-down-circle',
       actionLabel: gt('fin_action_send_invoices', lang),
       actionRoute: '/(contractor)/facturen',
       source: gt('source_financial_analysis', lang),
-      metric: { label: 'Cashflow', value: `\u20AC${fin.projectedCashflow.toLocaleString()}`, trend: 'down' },
+      metric: { label: 'Cashflow', value: formatMoney(fin.projectedCashflow), trend: 'down' },
       rootCauseTags: ['cashflow', 'negative-projection'],
       rawScore: 0.85,
       reasoning: {
-        observation: `Next month projected cashflow is negative: \u20AC${fin.projectedCashflow}`,
+        observation: `Next month projected cashflow is negative: ${formatMoney(fin.projectedCashflow)}`,
         evidence: `Based on 3-month trailing average and pipeline conversion rate.`,
         implication: `Working capital shortfall may require financing or payment acceleration.`,
         suggestion: `Invoice completed work immediately. Send reminders for overdue invoices.`,
@@ -198,7 +199,7 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       category: 'financial',
       priority: fin.quoteWinRate < 30 ? 'high' : 'medium',
       title: gt('fin_winrate_drop_title', lang, { pct: fin.quoteWinRate }),
-      message: `Win rate: ${fin.quoteWinRate}%. Pipeline: \u20AC${fin.quotePipeline.toLocaleString()}. Avg quote: \u20AC${fin.avgQuoteValue.toLocaleString()}.`,
+      message: `Win rate: ${fin.quoteWinRate}%. Pipeline: ${formatMoney(fin.quotePipeline)}. Avg quote: ${formatMoney(fin.avgQuoteValue)}.`,
       icon: 'stats-chart',
       actionLabel: gt('fin_action_review_pricing', lang),
       actionRoute: '/(contractor)/geld',

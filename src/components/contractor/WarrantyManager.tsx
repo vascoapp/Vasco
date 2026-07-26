@@ -17,7 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, formatMoney } from '../../i18n/formatting';
 import {
   useWarranties,
   useWarrantyClaims,
@@ -314,7 +314,7 @@ export const WarrantyManager: React.FC = () => {
         `${t('auditor.status', 'Status')}: ${statusLabels[claim.status] || claim.status}`,
         `${t('warranty.issue', 'Issue')}: ${claim.issueDescription}`,
         `${t('warranty.filed', 'Filed')}: ${claim.claimDate.toLocaleDateString(undefined)} (${t('warranty.daysAgo', '{{days}} days ago', { days: daysSinceFiled })})`,
-        claim.estimatedCost ? `${t('warranty.estimatedValue', 'Estimated value')}: \u20AC${claim.estimatedCost}` : null,
+        claim.estimatedCost ? `${t('warranty.estimatedValue', 'Estimated value')}: ${formatMoney(claim.estimatedCost)}` : null,
       ].filter(Boolean).join('\n'),
       [{ text: t('common.close', 'Close'), style: 'cancel' }],
     );

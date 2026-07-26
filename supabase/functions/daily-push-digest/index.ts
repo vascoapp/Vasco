@@ -48,7 +48,7 @@ interface Decision {
 type TemplatePair = { title: string; body: string };
 const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?: TemplatePair; any?: TemplatePair }>> = {
   en: {
-    overdue_invoices: { one: { title: '€{amount} overdue', body: '{count} invoice past due. Send a reminder in 2 taps.' }, many: { title: '€{amount} overdue', body: '{count} invoices past due. Send a reminder in 2 taps.' } },
+    overdue_invoices: { one: { title: '{amount} overdue', body: '{count} invoice past due. Send a reminder in 2 taps.' }, many: { title: '{amount} overdue', body: '{count} invoices past due. Send a reminder in 2 taps.' } },
     queue_waiting: { any: { title: '{count} actions waiting', body: 'Vasco prepared {count} things for you. Approve or skip.' } },
     staling_quotes: { one: { title: '{count} quote going stale', body: 'Cohort usually accepts within a week. A nudge often unsticks them.' }, many: { title: '{count} quotes going stale', body: 'Cohort usually accepts within a week. A nudge often unsticks them.' } },
     jobs_tomorrow: { one: { title: '{count} job tomorrow', body: 'Materials ready? Route planned? Tap to prep in 30 seconds.' }, many: { title: '{count} jobs tomorrow', body: 'Materials ready? Route planned? Tap to prep in 30 seconds.' } },
@@ -56,7 +56,7 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
     license_expiring: { any: { title: 'License expiring in {days}d', body: 'Your {licenseType} renewal is due. Tap to review.' } },
   },
   nl: {
-    overdue_invoices: { one: { title: '€{amount} te laat', body: '{count} factuur staat open. Stuur herinnering in 2 tikken.' }, many: { title: '€{amount} te laat', body: '{count} facturen staan open. Stuur herinnering in 2 tikken.' } },
+    overdue_invoices: { one: { title: '{amount} te laat', body: '{count} factuur staat open. Stuur herinnering in 2 tikken.' }, many: { title: '{amount} te laat', body: '{count} facturen staan open. Stuur herinnering in 2 tikken.' } },
     queue_waiting: { any: { title: '{count} acties wachten', body: 'Vasco heeft {count} dingen voor je klaarstaan. Keur goed of sla over.' } },
     staling_quotes: { one: { title: '{count} offerte loopt vast', body: 'Cohort accepteert meestal binnen een week. Een nudge helpt vaak.' }, many: { title: '{count} offertes lopen vast', body: 'Cohort accepteert meestal binnen een week. Een nudge helpt vaak.' } },
     jobs_tomorrow: { one: { title: '{count} klus morgen', body: 'Materiaal gereed? Route gepland? Tik om in 30s voor te bereiden.' }, many: { title: '{count} klussen morgen', body: 'Materiaal gereed? Route gepland? Tik om in 30s voor te bereiden.' } },
@@ -65,28 +65,28 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
     license_expiring: { any: { title: 'License expiring in {days}d', body: 'Your {licenseType} renewal is due.' } },
   },
   de: {
-    overdue_invoices: { one: { title: '€{amount} überfällig', body: '{count} Rechnung überfällig. In 2 Taps erinnern.' }, many: { title: '€{amount} überfällig', body: '{count} Rechnungen überfällig. In 2 Taps erinnern.' } },
+    overdue_invoices: { one: { title: '{amount} überfällig', body: '{count} Rechnung überfällig. In 2 Taps erinnern.' }, many: { title: '{amount} überfällig', body: '{count} Rechnungen überfällig. In 2 Taps erinnern.' } },
     queue_waiting: { any: { title: '{count} Aktionen warten', body: 'Vasco hat {count} Dinge vorbereitet. Genehmigen oder überspringen.' } },
     staling_quotes: { one: { title: '{count} Angebot bleibt hängen', body: 'Die Kohorte nimmt meist innerhalb einer Woche an. Ein Nachfassen hilft.' }, many: { title: '{count} Angebote bleiben hängen', body: 'Die Kohorte nimmt meist innerhalb einer Woche an. Ein Nachfassen hilft.' } },
     jobs_tomorrow: { one: { title: '{count} Auftrag morgen', body: 'Material bereit? Route geplant? 30 Sekunden bis startklar.' }, many: { title: '{count} Aufträge morgen', body: 'Material bereit? Route geplant? 30 Sekunden bis startklar.' } },
     license_expiring: { any: { title: 'License expiring in {days}d', body: 'Your {licenseType} renewal is due.' } },
   },
   fr: {
-    overdue_invoices: { one: { title: '{amount} € en retard', body: '{count} facture impayée. Relance en 2 taps.' }, many: { title: '{amount} € en retard', body: '{count} factures impayées. Relance en 2 taps.' } },
+    overdue_invoices: { one: { title: '{amount} en retard', body: '{count} facture impayée. Relance en 2 taps.' }, many: { title: '{amount} en retard', body: '{count} factures impayées. Relance en 2 taps.' } },
     queue_waiting: { any: { title: '{count} actions en attente', body: 'Vasco a préparé {count} éléments. Approuvez ou passez.' } },
     staling_quotes: { one: { title: '{count} devis ralenti', body: 'La cohorte accepte habituellement en une semaine. Une relance aide.' }, many: { title: '{count} devis ralentis', body: 'La cohorte accepte habituellement en une semaine. Une relance aide.' } },
     jobs_tomorrow: { one: { title: '{count} chantier demain', body: 'Matériel prêt ? Itinéraire ? 30s pour tout préparer.' }, many: { title: '{count} chantiers demain', body: 'Matériel prêt ? Itinéraires ? 30s pour tout préparer.' } },
     license_expiring: { any: { title: 'License expiring in {days}d', body: 'Your {licenseType} renewal is due.' } },
   },
   es: {
-    overdue_invoices: { one: { title: '{amount} € vencidos', body: '{count} factura vencida. Envía recordatorio en 2 toques.' }, many: { title: '{amount} € vencidos', body: '{count} facturas vencidas. Envía recordatorio en 2 toques.' } },
+    overdue_invoices: { one: { title: '{amount} vencidos', body: '{count} factura vencida. Envía recordatorio en 2 toques.' }, many: { title: '{amount} vencidos', body: '{count} facturas vencidas. Envía recordatorio en 2 toques.' } },
     queue_waiting: { any: { title: '{count} acciones esperando', body: 'Vasco preparó {count} cosas. Aprueba o salta.' } },
     staling_quotes: { one: { title: '{count} presupuesto atascado', body: 'La cohorte acepta en ~1 semana. Un recordatorio suele funcionar.' }, many: { title: '{count} presupuestos atascados', body: 'La cohorte acepta en ~1 semana. Un recordatorio suele funcionar.' } },
     jobs_tomorrow: { one: { title: '{count} obra mañana', body: '¿Materiales listos? ¿Ruta? 30s para prepararlo.' }, many: { title: '{count} obras mañana', body: '¿Materiales listos? ¿Rutas? 30s para prepararlo.' } },
     license_expiring: { any: { title: 'License expiring in {days}d', body: 'Your {licenseType} renewal is due.' } },
   },
   it: {
-    overdue_invoices: { one: { title: '{amount} € in scadenza', body: '{count} fattura scaduta. Invia sollecito in 2 tap.' }, many: { title: '{amount} € in scadenza', body: '{count} fatture scadute. Invia sollecito in 2 tap.' } },
+    overdue_invoices: { one: { title: '{amount} in scadenza', body: '{count} fattura scaduta. Invia sollecito in 2 tap.' }, many: { title: '{amount} in scadenza', body: '{count} fatture scadute. Invia sollecito in 2 tap.' } },
     queue_waiting: { any: { title: '{count} azioni in attesa', body: 'Vasco ha preparato {count} cose. Approva o salta.' } },
     staling_quotes: { one: { title: '{count} preventivo fermo', body: 'La coorte accetta di solito entro una settimana. Un sollecito aiuta.' }, many: { title: '{count} preventivi fermi', body: 'La coorte accetta di solito entro una settimana. Un sollecito aiuta.' } },
     jobs_tomorrow: { one: { title: '{count} cantiere domani', body: 'Materiali pronti? Percorso? 30s per prepararti.' }, many: { title: '{count} cantieri domani', body: 'Materiali pronti? Percorsi? 30s per prepararti.' } },
@@ -106,19 +106,36 @@ function localeForCountry(country: string | null | undefined): PushLocale {
   }
 }
 
-function formatAmount(n: number, locale: PushLocale): string {
-  const group = locale === 'en' ? ',' : locale === 'fr' ? ' ' : '.';
-  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, group);
+// Mirrors pushDigestPolicy.formatAmount. The symbol is no longer baked into
+// the templates: 'en' serves UK and US as well, so a euro there reached a
+// British lock screen. Deno has full Intl, so format from the country.
+const PUSH_CURRENCY: Record<string, { currency: string; locale: string }> = {
+  NL: { currency: 'EUR', locale: 'nl-NL' },
+  DE: { currency: 'EUR', locale: 'de-DE' },
+  FR: { currency: 'EUR', locale: 'fr-FR' },
+  ES: { currency: 'EUR', locale: 'es-ES' },
+  IT: { currency: 'EUR', locale: 'it-IT' },
+  UK: { currency: 'GBP', locale: 'en-GB' },
+  US: { currency: 'USD', locale: 'en-US' },
+};
+
+function formatAmount(n: number, country: string | null | undefined): string {
+  const cfg = PUSH_CURRENCY[(country ?? '').toUpperCase()] ?? PUSH_CURRENCY.NL;
+  return new Intl.NumberFormat(cfg.locale, {
+    style: 'currency', currency: cfg.currency,
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
+  }).format(Math.round(n));
 }
 
 function fillTemplate(
   tpl: string,
   params: { count: number; amount?: number; days?: number; licenseType?: string },
   locale: PushLocale,
+  country: string | null | undefined,
 ): string {
   return tpl
     .replace('{count}', String(params.count))
-    .replace('{amount}', params.amount != null ? formatAmount(params.amount, locale) : '')
+    .replace('{amount}', params.amount != null ? formatAmount(params.amount, country) : '')
     .replace('{days}', params.days != null ? String(params.days) : '')
     .replace('{licenseType}', params.licenseType ?? 'license');
 }
@@ -127,13 +144,14 @@ function formatForLocale(
   type: PushType,
   params: { count: number; amount?: number; days?: number; licenseType?: string },
   locale: PushLocale,
+  country: string | null | undefined,
 ): { title: string; body: string } {
   const entry = (TEMPLATES[locale] ?? TEMPLATES.en)[type];
   const pluralKey = params.count > 1 ? 'many' : 'one';
   const pair = entry.any ?? (entry as any)[pluralKey] ?? entry.one ?? entry.many!;
   return {
-    title: fillTemplate(pair.title, params, locale),
-    body:  fillTemplate(pair.body,  params, locale),
+    title: fillTemplate(pair.title, params, locale, country),
+    body:  fillTemplate(pair.body,  params, locale, country),
   };
 }
 
@@ -146,12 +164,12 @@ function pickDailyPush(input: {
   // R80 US Phase 2: license-expiry signal. Highest priority since a
   // lapsed license can void insurance + trigger per-job fines.
   expiringLicense?: { days: number; type: string; state: string };
-}, locale: PushLocale): Decision | null {
+}, locale: PushLocale, country: string | null | undefined): Decision | null {
   // License expiry — fire at 14, 7, 0 days only so the contractor doesn't
   // get daily spam between 30d and renewal.
   if (input.expiringLicense && [14, 7, 0].includes(input.expiringLicense.days)) {
     const params = { count: 1, days: input.expiringLicense.days, licenseType: input.expiringLicense.type.replace(/_/g, ' ') };
-    const { title, body } = formatForLocale('license_expiring', params, locale);
+    const { title, body } = formatForLocale('license_expiring', params, locale, country);
     return {
       type: 'license_expiring',
       title,
@@ -162,22 +180,22 @@ function pickDailyPush(input: {
   }
   if (input.overdueInvoiceCount >= MIN_OVERDUE_COUNT && input.overdueInvoiceAmount >= MIN_OVERDUE_AMOUNT) {
     const params = { count: input.overdueInvoiceCount, amount: input.overdueInvoiceAmount };
-    const { title, body } = formatForLocale('overdue_invoices', params, locale);
+    const { title, body } = formatForLocale('overdue_invoices', params, locale, country);
     return { type: 'overdue_invoices', title, body, entityKey: `overdue:${input.overdueInvoiceCount}:${input.overdueInvoiceAmount}`, params };
   }
   if (input.queuePendingCount >= MIN_QUEUE) {
     const params = { count: input.queuePendingCount };
-    const { title, body } = formatForLocale('queue_waiting', params, locale);
+    const { title, body } = formatForLocale('queue_waiting', params, locale, country);
     return { type: 'queue_waiting', title, body, entityKey: `queue:${input.queuePendingCount}`, params };
   }
   if (input.stalingQuoteCount >= MIN_STALING) {
     const params = { count: input.stalingQuoteCount };
-    const { title, body } = formatForLocale('staling_quotes', params, locale);
+    const { title, body } = formatForLocale('staling_quotes', params, locale, country);
     return { type: 'staling_quotes', title, body, entityKey: `staling:${input.stalingQuoteCount}`, params };
   }
   if (input.jobsTomorrowCount >= MIN_JOBS_TOMORROW) {
     const params = { count: input.jobsTomorrowCount };
-    const { title, body } = formatForLocale('jobs_tomorrow', params, locale);
+    const { title, body } = formatForLocale('jobs_tomorrow', params, locale, country);
     return { type: 'jobs_tomorrow', title, body, entityKey: `tomorrow:${input.jobsTomorrowCount}`, params };
   }
   return null;
@@ -304,7 +322,7 @@ Deno.serve(async (req) => {
       stalingQuoteCount: (staling.data ?? []).length,
       jobsTomorrowCount: tomorrow.count ?? 0,
       expiringLicense,
-    }, locale);
+    }, locale, country);
 
     if (!decision) {
       results.push({ userId, decision: 'none', delivery: 'skipped' });

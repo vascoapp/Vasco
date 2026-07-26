@@ -117,6 +117,45 @@ export function formatMoney(amount: number): string {
   return formatCurrency0(amount, COUNTRY_CONFIG[c] ? c : 'NL');
 }
 
+/**
+ * Two-decimal sibling of formatMoney, for amounts a CUSTOMER sees or pays:
+ * invoice totals, quote totals, per-unit material prices. Cents are part of
+ * the number there — rounding an invoice to whole euros in a payment reminder
+ * makes the message disagree with the invoice it is chasing.
+ */
+export function formatMoney2(amount: number): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatCurrency(amount, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+/**
+ * Compact sibling of formatMoney for KPI tiles built outside a component
+ * (€4,5K / £1,2M). Same country resolution as formatMoney.
+ */
+export function compactMoney(amount: number): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return compactCurrency(amount, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+/**
+ * Bare currency symbol for the signed-in contractor's country — for FIELD
+ * LABELS that name a unit ("Unit price (€)") rather than render an amount.
+ * Those cannot use formatMoney: there is no number to format, and a hardcoded
+ * "(€)" sits above an input a British contractor types pounds into.
+ */
+export function currencySymbol(country?: Country): string {
+  const c = country ?? ((getCurrentCountry() as Country) ?? 'NL');
+  const { currency, locale } = COUNTRY_CONFIG[c] ?? COUNTRY_CONFIG.NL;
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency', currency, currencyDisplay: 'narrowSymbol',
+      minimumFractionDigits: 0, maximumFractionDigits: 0,
+    }).formatToParts(0).find((p) => p.type === 'currency')?.value ?? '€';
+  } catch {
+    return '€';
+  }
+}
+
 export function getCountryConfig(country: Country) {
   return COUNTRY_CONFIG[country];
 }

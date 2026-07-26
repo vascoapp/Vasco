@@ -101,7 +101,7 @@ function WorkerCard({ worker, isSelected, onSelect, assignedJob }: WorkerCardPro
           <Ionicons name="briefcase-outline" size={12} color={SemanticColors.textSecondary} />
           <Text style={styles.workerStatText}>{worker.jobsCompleted}</Text>
         </View>
-        <Text style={styles.workerRate}>{'\u20AC'}{worker.hourlyRate}/u</Text>
+        <Text style={styles.workerRate}>{formatMoney(worker.hourlyRate)}/u</Text>
       </View>
     </Pressable>
   );

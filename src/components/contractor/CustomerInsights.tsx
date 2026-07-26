@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, formatMoney } from '../../i18n/formatting';
 import {
   useCustomerProfiles,
   useCustomerSegments,
@@ -387,8 +387,8 @@ export const CustomerInsights: React.FC = () => {
       (customer.email ? `E-mail: ${customer.email}\n` : '') +
       `Adres: ${customer.address}, ${customer.city}\n\n` +
       `Totaal klussen: ${customer.totalJobs}\n` +
-      `Gem. kluswaarde: \u20AC${customer.avgJobValue.toLocaleString()}\n` +
-      `Lifetime value: \u20AC${customer.lifetimeValue.toLocaleString()}\n` +
+      `Gem. kluswaarde: ${formatMoney(customer.avgJobValue)}\n` +
+      `Lifetime value: ${formatMoney(customer.lifetimeValue)}\n` +
       `Tevredenheid: ${customer.satisfaction.toFixed(1)} / 5\n` +
       `Betaalgedrag: ${paymentLabels[customer.paymentBehavior] ?? customer.paymentBehavior}\n` +
       `Laatste contact: ${daysSinceContact} dagen geleden`,
@@ -404,7 +404,7 @@ export const CustomerInsights: React.FC = () => {
     Alert.alert(
       t('customerInsights.actionFor', 'Action for {{name}}', { name: prediction.customerName }),
       `${t('customerInsights.churnRisk', 'Churn risk')}: ${prediction.probability}%\n` +
-      `${t('customerInsights.lifetimeValue', 'Lifetime value')}: \u20AC${prediction.lifetimeValue.toLocaleString()}\n` +
+      `${t('customerInsights.lifetimeValue', 'Lifetime value')}: ${formatMoney(prediction.lifetimeValue)}\n` +
       `${t('customerInsights.lastContact', 'Last contact')}: ${daysSinceContact} ${t('common.daysAgo', 'days ago')}`,
       [
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },

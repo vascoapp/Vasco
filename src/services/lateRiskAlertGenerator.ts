@@ -13,6 +13,7 @@
 import { predictPaymentTiming } from '../intelligence/mlModels';
 import i18n from '../i18n/i18n';
 import type { QueueItem } from './aiActionQueueService';
+import { formatMoney } from '../i18n/formatting';
 
 type QueueItemDraft = Omit<QueueItem, 'id' | 'status' | 'createdAt'>;
 
@@ -67,8 +68,8 @@ export async function generateLateRiskAlert(
       risk: prediction.risk,
     },
     actionLabel: t('queue.lateRiskAction', 'Plan early reminder'),
-    estimatedImpact: t('queue.lateRiskImpact', '~€{{value}} at risk of delay', {
-      value: Math.round(input.amount),
+    estimatedImpact: t('queue.lateRiskImpact', '~{{value}} at risk of delay', {
+      value: formatMoney(input.amount),
     }),
     sourceGeneratorId: 'lateRiskAlertGenerator',
     entityKey: `late_risk:${input.invoiceId}`,

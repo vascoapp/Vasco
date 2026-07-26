@@ -15,6 +15,7 @@ import { useSupplierNegotiation } from './supplierNegotiationService';
 import { useCollectionsAgent } from './collectionsAgentService';
 import { useJobCostSummary } from './jobCostTrackingService';
 import { useAppState } from '../state/AppState';
+import { formatMoney } from '../i18n/formatting';
 
 // =============================================================================
 // TYPES
@@ -121,7 +122,7 @@ export function useSavingsAggregation(): SavingsAggregation {
         label: t('savings.cat.time', 'Time savings'),
         icon: 'time',
         amount: timeSavings,
-        description: t('savings.cat.timeDesc', 'Route optimization (€{{route}}) + less idle time', { route: laborCosts.travelAnalysis.clusteringPotential }),
+        description: t('savings.cat.timeDesc', 'Route optimization ({{route}}) + less idle time', { route: formatMoney(laborCosts.travelAnalysis.clusteringPotential) }),
         trend: 'up',
         trendPercent: null, // no MoM history — see SavingsCategory.trendPercent
       },
@@ -130,7 +131,7 @@ export function useSavingsAggregation(): SavingsAggregation {
         label: t('savings.cat.purchasing', 'Smart purchasing'),
         icon: 'cart',
         amount: purchasingSavings,
-        description: t('savings.cat.purchasingDesc', 'Supplier discount potential: €{{total}} (40% realized)', { total: supplierNeg.totalDiscountPotential }),
+        description: t('savings.cat.purchasingDesc', 'Supplier discount potential: {{total}} (40% realized)', { total: formatMoney(supplierNeg.totalDiscountPotential) }),
         trend: 'up',
         trendPercent: null, // no MoM history
       },

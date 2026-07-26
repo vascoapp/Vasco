@@ -25,6 +25,7 @@ import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';
 import { checkPriceDrops, type PriceDropAlert } from '../../services/purchasingAgentService';
 import type { Country } from '../../context/AuthContext';
+import { formatMoney2 } from '../../i18n/formatting';
 
 const CACHE_KEY = '@vasco_price_drops_card';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
@@ -105,9 +106,9 @@ export function PriceDropAlertCard({ trade, country, postcode }: Props) {
         <View style={{ flex: 1 }}>
           <DKLabel style={styles.title}>{t('inkoop.cohortGapTitle', 'Boven cohort-mediaan')}</DKLabel>
           <Text style={styles.sub}>
-            {t('inkoop.cohortGapSub', '{{n}} materialen waar je boven de mediaan zit · €{{saved}} potentiële besparing per eenheid', {
+            {t('inkoop.cohortGapSub', '{{n}} materialen waar je boven de mediaan zit · {{saved}} potentiële besparing per eenheid', {
               n: top.length,
-              saved: totalSavings.toFixed(2),
+              saved: formatMoney2(totalSavings),
             })}
           </Text>
         </View>
@@ -123,10 +124,10 @@ export function PriceDropAlertCard({ trade, country, postcode }: Props) {
             <View style={{ flex: 1 }}>
               <Text style={styles.rowName} numberOfLines={1}>{a.materialName}</Text>
               <Text style={styles.rowSub} numberOfLines={1}>
-                {t('inkoop.cohortGapRow', 'Jij €{{user}} · {{cohort}} €{{median}}', {
-                  user: a.previousPrice.toFixed(2),
+                {t('inkoop.cohortGapRow', 'Jij {{user}} · {{cohort}} {{median}}', {
+                  user: formatMoney2(a.previousPrice),
                   cohort: a.supplier.name,
-                  median: a.currentPrice.toFixed(2),
+                  median: formatMoney2(a.currentPrice),
                 })}
               </Text>
             </View>

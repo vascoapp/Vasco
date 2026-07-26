@@ -828,8 +828,8 @@ export default function JobDetailPage() {
                   color: SemanticColors.textSecondary,
                   marginTop: GRID.xs,
                 }}>
-                  {t('jobs.postcodeCohort', 'Postcode area: €{{price}}/u median · {{accept}}% accept · {{n}} quotes', {
-                    price: Math.round(postcodeCohort.medianUnitPrice),
+                  {t('jobs.postcodeCohort', 'Postcode area: {{price}}/u median · {{accept}}% accept · {{n}} quotes', {
+                    price: formatCurrency0(postcodeCohort.medianUnitPrice, country),
                     accept: Math.round((postcodeCohort.acceptanceRate ?? 0) * 100),
                     n: postcodeCohort.sampleSize,
                   })}
@@ -895,7 +895,7 @@ export default function JobDetailPage() {
             <View style={styles.sectionRow}>
               <Text style={styles.sectionLabel}>{t('jobs.upsellOpportunities', 'Upsell opportunities')}</Text>
               <View style={styles.upsellBadge}>
-                <Text style={styles.upsellBadgeText}>€{upsells.reduce((s, u) => s + u.potentialRevenue, 0)}</Text>
+                <Text style={styles.upsellBadgeText}>{formatCurrency0(upsells.reduce((s, u) => s + u.potentialRevenue, 0), country)}</Text>
               </View>
             </View>
             {upsells.map((item) => (
@@ -919,7 +919,7 @@ export default function JobDetailPage() {
                   <Text style={styles.upsellDesc} numberOfLines={1} ellipsizeMode="tail">{item.description}</Text>
                 </View>
                 <View style={styles.upsellRight}>
-                  <Text style={styles.upsellAmount}>€{item.potentialRevenue}</Text>
+                  <Text style={styles.upsellAmount}>{formatCurrency0(item.potentialRevenue, country)}</Text>
                   <View style={styles.confidenceBar}>
                     <View style={[styles.confidenceFill, { width: `${item.confidence}%` }]} />
                   </View>

@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { formatMoney } from '../i18n/formatting';
 
 // ---------------------------------------------------------------------------
 // Trade terminology per country
@@ -745,7 +746,7 @@ export function getCustomerIntelligence(
     parts.push(`Repeat customer`);
   }
   if (lifetimeValue > 0) {
-    parts.push(`\u20AC${lifetimeValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+    parts.push(formatMoney(lifetimeValue));
   }
   if (jobCount > 0) {
     parts.push(`${jobCount} job${jobCount !== 1 ? 's' : ''}`);

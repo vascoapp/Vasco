@@ -13,6 +13,8 @@
 // Only one push per user per day.
 // =============================================================================
 
+import { formatCurrency0, type Country } from '../i18n/formatting';
+
 export type PushType =
   | 'overdue_invoices'
   | 'queue_waiting'
@@ -70,7 +72,11 @@ const MIN_JOBS_TOMORROW = 1;
  * localization ships in a follow-up round; the Edge Function will
  * swap in the user's locale-specific string table at send time.
  */
-export function pickDailyPush(input: PushDigestInput): PushDecision | null {
+// `country` decides the currency of the PROVISIONAL title/body filled in
+// below. Those are English placeholders (note the hardcoded 'en' locale) that
+// every consumer replaces via formatForLocale with the contractor's real
+// locale AND country — hence the en-coherent default rather than a euro one.
+export function pickDailyPush(input: PushDigestInput, country: Country = 'UK'): PushDecision | null {
   // 1. Overdue invoices — highest priority (real money at stake).
   if (
     input.overdueInvoiceCount >= MIN_OVERDUE_COUNT
@@ -82,7 +88,7 @@ export function pickDailyPush(input: PushDigestInput): PushDecision | null {
       entityKey: `overdue:${input.overdueInvoiceCount}:${input.overdueInvoiceAmount}`,
       params: { count: input.overdueInvoiceCount, amount: input.overdueInvoiceAmount },
     };
-    const en = formatForLocale(decision, 'en');
+    const en = formatForLocale(decision, 'en', country);
     return { ...decision, title: en.title, body: en.body };
   }
 
@@ -94,7 +100,7 @@ export function pickDailyPush(input: PushDigestInput): PushDecision | null {
       entityKey: `queue:${input.queuePendingCount}`,
       params: { count: input.queuePendingCount },
     };
-    const en = formatForLocale(decision, 'en');
+    const en = formatForLocale(decision, 'en', country);
     return { ...decision, title: en.title, body: en.body };
   }
 
@@ -106,7 +112,7 @@ export function pickDailyPush(input: PushDigestInput): PushDecision | null {
       entityKey: `staling:${input.stalingQuoteCount}`,
       params: { count: input.stalingQuoteCount },
     };
-    const en = formatForLocale(decision, 'en');
+    const en = formatForLocale(decision, 'en', country);
     return { ...decision, title: en.title, body: en.body };
   }
 
@@ -118,7 +124,7 @@ export function pickDailyPush(input: PushDigestInput): PushDecision | null {
       entityKey: `tomorrow:${input.jobsTomorrowCount}`,
       params: { count: input.jobsTomorrowCount },
     };
-    const en = formatForLocale(decision, 'en');
+    const en = formatForLocale(decision, 'en', country);
     return { ...decision, title: en.title, body: en.body };
   }
 
@@ -144,8 +150,8 @@ type TemplatePair = { title: string; body: string };
 const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?: TemplatePair; any?: TemplatePair }>> = {
   en: {
     overdue_invoices: {
-      one:  { title: '€{amount} overdue',            body: '{count} invoice past due. Send a reminder in 2 taps.' },
-      many: { title: '€{amount} overdue',            body: '{count} invoices past due. Send a reminder in 2 taps.' },
+      one:  { title: '{amount} overdue',            body: '{count} invoice past due. Send a reminder in 2 taps.' },
+      many: { title: '{amount} overdue',            body: '{count} invoices past due. Send a reminder in 2 taps.' },
     },
     queue_waiting: { any: { title: '{count} actions waiting', body: 'Vasco prepared {count} things for you. Approve or skip.' } },
     staling_quotes: {
@@ -159,8 +165,8 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
   },
   nl: {
     overdue_invoices: {
-      one:  { title: '€{amount} te laat',            body: '{count} factuur staat open. Stuur herinnering in 2 tikken.' },
-      many: { title: '€{amount} te laat',            body: '{count} facturen staan open. Stuur herinnering in 2 tikken.' },
+      one:  { title: '{amount} te laat',            body: '{count} factuur staat open. Stuur herinnering in 2 tikken.' },
+      many: { title: '{amount} te laat',            body: '{count} facturen staan open. Stuur herinnering in 2 tikken.' },
     },
     queue_waiting: { any: { title: '{count} acties wachten', body: 'Vasco heeft {count} dingen voor je klaarstaan. Keur goed of sla over.' } },
     staling_quotes: {
@@ -174,8 +180,8 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
   },
   de: {
     overdue_invoices: {
-      one:  { title: '€{amount} überfällig',         body: '{count} Rechnung überfällig. In 2 Taps erinnern.' },
-      many: { title: '€{amount} überfällig',         body: '{count} Rechnungen überfällig. In 2 Taps erinnern.' },
+      one:  { title: '{amount} überfällig',         body: '{count} Rechnung überfällig. In 2 Taps erinnern.' },
+      many: { title: '{amount} überfällig',         body: '{count} Rechnungen überfällig. In 2 Taps erinnern.' },
     },
     queue_waiting: { any: { title: '{count} Aktionen warten', body: 'Vasco hat {count} Dinge vorbereitet. Genehmigen oder überspringen.' } },
     staling_quotes: {
@@ -189,8 +195,8 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
   },
   fr: {
     overdue_invoices: {
-      one:  { title: '{amount} € en retard',         body: '{count} facture impayée. Relance en 2 taps.' },
-      many: { title: '{amount} € en retard',         body: '{count} factures impayées. Relance en 2 taps.' },
+      one:  { title: '{amount} en retard',         body: '{count} facture impayée. Relance en 2 taps.' },
+      many: { title: '{amount} en retard',         body: '{count} factures impayées. Relance en 2 taps.' },
     },
     queue_waiting: { any: { title: '{count} actions en attente', body: 'Vasco a préparé {count} éléments. Approuvez ou passez.' } },
     staling_quotes: {
@@ -204,8 +210,8 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
   },
   es: {
     overdue_invoices: {
-      one:  { title: '{amount} € vencidos',          body: '{count} factura vencida. Envía recordatorio en 2 toques.' },
-      many: { title: '{amount} € vencidos',          body: '{count} facturas vencidas. Envía recordatorio en 2 toques.' },
+      one:  { title: '{amount} vencidos',          body: '{count} factura vencida. Envía recordatorio en 2 toques.' },
+      many: { title: '{amount} vencidos',          body: '{count} facturas vencidas. Envía recordatorio en 2 toques.' },
     },
     queue_waiting: { any: { title: '{count} acciones esperando', body: 'Vasco preparó {count} cosas. Aprueba o salta.' } },
     staling_quotes: {
@@ -219,8 +225,8 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
   },
   it: {
     overdue_invoices: {
-      one:  { title: '{amount} € in scadenza',       body: '{count} fattura scaduta. Invia sollecito in 2 tap.' },
-      many: { title: '{amount} € in scadenza',       body: '{count} fatture scadute. Invia sollecito in 2 tap.' },
+      one:  { title: '{amount} in scadenza',       body: '{count} fattura scaduta. Invia sollecito in 2 tap.' },
+      many: { title: '{amount} in scadenza',       body: '{count} fatture scadute. Invia sollecito in 2 tap.' },
     },
     queue_waiting: { any: { title: '{count} azioni in attesa', body: 'Vasco ha preparato {count} cose. Approva o salta.' } },
     staling_quotes: {
@@ -234,16 +240,19 @@ const TEMPLATES: Record<PushLocale, Record<PushType, { one?: TemplatePair; many?
   },
 };
 
-function formatAmount(n: number, locale: PushLocale): string {
-  // Dot thousands for NL/DE/IT/ES; narrow no-break space for FR; comma for EN.
-  const group = locale === 'en' ? ',' : locale === 'fr' ? ' ' : '.';
-  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, group);
+// The SYMBOL is no longer baked into the templates. 'en' serves UK and US as
+// well as generic English (see localeForCountry), so a euro in the English
+// string put "€" on a British contractor's lock screen for money they bill in
+// pounds. The COUNTRY decides the currency; Intl decides symbol, position and
+// grouping. Mirrored by formatAmount in the daily-push-digest Edge Function.
+function formatAmount(n: number, country: Country): string {
+  return formatCurrency0(n, country);
 }
 
-function fillTemplate(tpl: string, params: { count: number; amount?: number }, locale: PushLocale): string {
+function fillTemplate(tpl: string, params: { count: number; amount?: number }, country: Country): string {
   return tpl
     .replace('{count}', String(params.count))
-    .replace('{amount}', params.amount != null ? formatAmount(params.amount, locale) : '');
+    .replace('{amount}', params.amount != null ? formatAmount(params.amount, country) : '');
 }
 
 export interface FormattedPush {
@@ -256,14 +265,14 @@ export interface FormattedPush {
  * locale is unknown or the template pair is missing (shouldn't happen —
  * tests cover every combo).
  */
-export function formatForLocale(decision: PushDecision, locale: PushLocale): FormattedPush {
+export function formatForLocale(decision: PushDecision, locale: PushLocale, country: Country): FormattedPush {
   const table = TEMPLATES[locale] ?? TEMPLATES.en;
   const entry = table[decision.type];
   const pluralKey = decision.params.count > 1 ? 'many' : 'one';
   const pair = entry.any ?? entry[pluralKey] ?? entry.one ?? entry.many!;
   return {
-    title: fillTemplate(pair.title, decision.params, locale),
-    body:  fillTemplate(pair.body,  decision.params, locale),
+    title: fillTemplate(pair.title, decision.params, country),
+    body:  fillTemplate(pair.body,  decision.params, country),
   };
 }
 

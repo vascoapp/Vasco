@@ -76,10 +76,10 @@ export function scoreCustomer(ctx: Context): CustomerProfile {
     reasoning = `Only ${Math.round(onTimeRate * 100)}% of invoices paid on time, has overdue balance`;
   } else if (lifetimeValue >= 5000 && jobsCompleted >= 3 && onTimeRate >= 0.8) {
     tag = 'vip';
-    reasoning = `€${Math.round(lifetimeValue)} lifetime, ${jobsCompleted} jobs, ${Math.round(onTimeRate * 100)}% on-time`;
+    reasoning = `${formatMoney(Math.round(lifetimeValue))} lifetime, ${jobsCompleted} jobs, ${Math.round(onTimeRate * 100)}% on-time`;
   } else if (jobsCompleted >= 2) {
     tag = 'loyal';
-    reasoning = `${jobsCompleted} completed jobs, €${Math.round(lifetimeValue)} lifetime`;
+    reasoning = `${jobsCompleted} completed jobs, ${formatMoney(Math.round(lifetimeValue))} lifetime`;
   } else {
     tag = 'new';
     reasoning = jobsCompleted === 0

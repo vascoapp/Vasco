@@ -20,6 +20,7 @@ import {
   recordToApprovals,
   type BudgetWorkbook,
 } from './budgetStorageService';
+import { formatMoney } from '../i18n/formatting';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -368,29 +369,26 @@ class BudgetOptimizerService {
     const savingsPercent = line.total > 0 ? ((savingsAmount / line.total) * 100).toFixed(1) : '0';
     const suggestedRate =
       line.quantity > 0
-        ? ((line.total - savingsAmount) / line.quantity).toFixed(2)
-        : (currentRate * (1 - savingsAmount / line.total)).toFixed(2);
-
-    const fmt = (n: number) =>
-      n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        ? (line.total - savingsAmount) / line.quantity
+        : currentRate * (1 - savingsAmount / line.total);
 
     switch (action.type) {
       case 'negotiate_rate':
         return (
-          `Huidig tarief \u20AC${fmt(currentRate)}/eenheid ligt ${savingsPercent}% boven marktgemiddelde ` +
-          `(\u20AC${suggestedRate}). Onderhandeling kan \u20AC${fmt(savingsAmount)} besparen.`
+          `Huidig tarief ${formatMoney(currentRate)}/eenheid ligt ${savingsPercent}% boven marktgemiddelde ` +
+          `(${formatMoney(suggestedRate)}). Onderhandeling kan ${formatMoney(savingsAmount)} besparen.`
         );
 
       case 'switch_supplier':
         return (
-          `Alternatieve leverancier biedt vergelijkbare kwaliteit voor \u20AC${suggestedRate}/eenheid, ` +
+          `Alternatieve leverancier biedt vergelijkbare kwaliteit voor ${formatMoney(suggestedRate)}/eenheid, ` +
           `${savingsPercent}% goedkoper.`
         );
 
       case 'alternative_material':
         return (
           `Alternatief materiaal met vergelijkbare specificaties beschikbaar voor ` +
-          `\u20AC${suggestedRate}/eenheid.`
+          `${formatMoney(suggestedRate)}/eenheid.`
         );
 
       case 'bulk_purchase':
@@ -401,29 +399,29 @@ class BudgetOptimizerService {
       case 'reduce_quantity':
         return (
           `Hoeveelheid kan worden geoptimaliseerd op basis van vergelijkbare projecten. ` +
-          `Verwachte besparing: \u20AC${fmt(savingsAmount)}.`
+          `Verwachte besparing: ${formatMoney(savingsAmount)}.`
         );
 
       case 'phase_timing':
         return (
           `Door fasering aan te passen kunnen tarieven dalen. ` +
-          `Geschatte besparing: \u20AC${fmt(savingsAmount)} (${savingsPercent}%).`
+          `Geschatte besparing: ${formatMoney(savingsAmount)} (${savingsPercent}%).`
         );
 
       case 'spec_optimization':
         return (
           `Specificatie-optimalisatie mogelijk zonder kwaliteitsverlies. ` +
-          `Besparing: \u20AC${fmt(savingsAmount)}.`
+          `Besparing: ${formatMoney(savingsAmount)}.`
         );
 
       case 'remove_redundant':
         return (
           `Post lijkt overlappend met andere begrotingsregels. ` +
-          `Verwijdering bespaart \u20AC${fmt(savingsAmount)}.`
+          `Verwijdering bespaart ${formatMoney(savingsAmount)}.`
         );
 
       default:
-        return `Optimalisatie mogelijk: \u20AC${fmt(savingsAmount)} besparing (${savingsPercent}%).`;
+        return `Optimalisatie mogelijk: ${formatMoney(savingsAmount)} besparing (${savingsPercent}%).`;
     }
   }
 

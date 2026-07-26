@@ -18,6 +18,7 @@ import { DK } from '../../theme/draftkings';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';
 import { getCashflowGapPrediction, type CashflowGapPrediction } from '../../services/intelligenceCaptureService';
+import { formatMoney } from '../../i18n/formatting';
 
 const MIN_GAP_EUR = 500;
 const MIN_CONFIDENCE = 0.5;
@@ -59,8 +60,8 @@ export function CashflowGapPredictionCard() {
             : t('geld.cashflowSurplusTitle', 'Cashflow surplus predicted')}
         </DKLabel>
         <Text style={styles.sub}>
-          {t('geld.cashflowGapSub', '€{{amount}} {{direction}} in next {{days}}d', {
-            amount: absEur.toLocaleString(),
+          {t('geld.cashflowGapSub', '{{amount}} {{direction}} in next {{days}}d', {
+            amount: formatMoney(absEur),
             direction: isShortfall ? t('geld.short', 'short') : t('geld.surplus', 'surplus'),
             days: pred.horizonDays,
           })}
