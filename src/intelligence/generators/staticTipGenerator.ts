@@ -3,6 +3,14 @@
 // =============================================================================
 // Replaces the old hardcoded templates that had no data backing.
 // These are generic contextual tips with low base relevance.
+//
+// R323: the whole tip table was hardcoded DUTCH while this generator is
+// registered for every screen a contractor opens (today / invoices / savings /
+// decisions). A German, French, Spanish, Italian or UK contractor read Dutch
+// tip cards on their home tab. The table now holds gt() KEYS and the text is
+// resolved per ctx.language at generate() time — the pattern `source` already
+// used. Nothing here may become a bare string again: this is module scope, so
+// it would be frozen in one language before a language is even known.
 // =============================================================================
 
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
@@ -12,7 +20,9 @@ import { gt } from '../generatorTranslations';
 interface StaticTip {
   roles: GeneratorContext['role'][];
   screens: GeneratorContext['screen'][];
-  insight: Omit<VascoInsight, 'id'>;
+  /** Non-text fields of the insight; every string field lives in `keys`. */
+  insight: Omit<VascoInsight, 'id' | 'title' | 'message' | 'detail' | 'actionLabel'>;
+  keys: { title: string; message: string; detail?: string; actionLabel?: string };
   tipId: string;
 }
 
@@ -25,12 +35,10 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'financial',
       priority: 'low',
-      title: 'Sneller betaald worden',
-      message: "Facturen met een gedetailleerde omschrijving worden gemiddeld 3 dagen sneller betaald.",
-      detail: "Voeg foto's van het afgeronde werk toe aan je factuur. Klanten die het resultaat zien betalen sneller.",
       icon: 'bulb',
       source: 'source_vasco_ai',
     },
+    keys: { title: 'tip_invoice_title', message: 'tip_invoice_msg', detail: 'tip_invoice_detail' },
   },
   {
     tipId: 'bulk-savings',
@@ -39,13 +47,16 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'opportunity',
       priority: 'low',
-      title: 'Bundel je bestellingen',
-      message: 'Je bestelt gemiddeld 3x per week bij dezelfde leverancier. Door te bundelen bespaar je €45/maand aan verzendkosten.',
       icon: 'cart',
-      actionLabel: 'Bundelen instellen',
       source: 'source_procurement',
-      metric: { label: 'Potentiële besparing', value: '€540/jaar', trend: 'up' },
+      // R323: the metric used to read "Potentiële besparing · €540/jaar" and
+      // the message claimed "je bestelt gemiddeld 3x per week bij dezelfde
+      // leverancier" — both INVENTED. This is the static-tip generator: it has
+      // no purchase data at all (dataPoints: 0, confidence 0.4), so a number
+      // that specific reads as measured when nothing measured it. The real
+      // cohort figure is supplierPriceAnomalyGenerator's job — it has the data.
     },
+    keys: { title: 'tip_bulk_title', message: 'tip_bulk_msg', actionLabel: 'tip_bulk_action' },
   },
   {
     tipId: 'decision-followup',
@@ -54,13 +65,11 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'tip',
       priority: 'low',
-      title: 'Klant wacht op antwoord',
-      message: 'Klanten die binnen 7 dagen worden opgevolgd kiezen 40% vaker voor jou.',
       icon: 'chatbubble',
-      actionLabel: 'Opvolgen',
       actionRoute: '/(contractor)/decisions',
       source: 'source_customer',
     },
+    keys: { title: 'tip_decision_title', message: 'tip_decision_msg', actionLabel: 'tip_decision_action' },
   },
   // Site Lead tips
   {
@@ -70,12 +79,10 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'schedule',
       priority: 'medium',
-      title: 'Team onderbezet',
-      message: 'Overweeg om klussen van morgen naar vandaag te verplaatsen bij onderbezetting.',
       icon: 'people',
-      actionLabel: 'Herverdelen',
       source: 'source_capacity',
     },
+    keys: { title: 'tip_crew_title', message: 'tip_crew_msg', actionLabel: 'tip_crew_action' },
   },
   {
     tipId: 'safety-check',
@@ -84,12 +91,10 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'compliance',
       priority: 'high',
-      title: 'Veiligheidsinspectie morgen',
-      message: 'Controleer of alle PBM-middelen compleet zijn voor de geplande inspectie.',
       icon: 'shield-checkmark',
-      actionLabel: 'Checklist bekijken',
       source: 'source_compliance',
     },
+    keys: { title: 'tip_safety_title', message: 'tip_safety_msg', actionLabel: 'tip_safety_action' },
   },
   // CFO tips
   {
@@ -99,12 +104,10 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'financial',
       priority: 'high',
-      title: 'Cash flow druk komende 2 weken',
-      message: 'Overweeg draw requests te versnellen bij verwacht tekort.',
       icon: 'trending-down',
-      actionLabel: 'Draw requests',
       source: 'source_cashflow',
     },
+    keys: { title: 'tip_cashflow_title', message: 'tip_cashflow_msg', actionLabel: 'tip_cashflow_action' },
   },
   // COO tips
   {
@@ -114,12 +117,10 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'schedule',
       priority: 'high',
-      title: 'Kritiek pad in gevaar',
-      message: 'Vertragingen op het kritieke pad kunnen de totale oplevering beïnvloeden.',
       icon: 'warning',
-      actionLabel: 'What-if analyse',
       source: 'source_scheduling',
     },
+    keys: { title: 'tip_schedule_title', message: 'tip_schedule_msg', actionLabel: 'tip_schedule_action' },
   },
   // Director tips
   {
@@ -129,12 +130,10 @@ const STATIC_TIPS: StaticTip[] = [
     insight: {
       category: 'financial',
       priority: 'medium',
-      title: 'Portfolio update',
-      message: 'Controleer projecten die aandacht vereisen op basis van budget en planning.',
       icon: 'pie-chart',
-      actionLabel: 'Portfolio overzicht',
       source: 'source_portfolio',
     },
+    keys: { title: 'tip_portfolio_title', message: 'tip_portfolio_msg', actionLabel: 'tip_portfolio_action' },
   },
 ];
 
@@ -147,28 +146,30 @@ function generateDynamicTip(ctx: GeneratorContext): ScoredInsight | null {
   const jobs = profile.jobCompletionHistory;
   const savings = profile.savingsProfile;
   const invoices = profile.invoicePatterns;
+  const lang = ctx.language;
 
   // Dynamic tip: estimation accuracy insight from job history
   if (jobs.length >= 3) {
     const avgRatio = jobs.reduce((s, j) => s + (j.estimatedHours > 0 ? j.actualHours / j.estimatedHours : 1), 0) / jobs.length;
     if (avgRatio > 1.15) {
+      const pct = Math.round((avgRatio - 1) * 100);
       return {
         id: 'dynamic-tip-underestimate',
         generatorId: 'static-tip',
         category: 'tip',
         priority: 'low',
-        title: 'Je schat uren structureel te laag',
-        message: `Je klussen duren gemiddeld ${Math.round((avgRatio - 1) * 100)}% langer dan begroot. Verhoog je uurschatting bij de volgende offerte.`,
-        detail: `Op basis van ${jobs.length} afgeronde klussen.`,
+        title: gt('tip_dyn_underest_title', lang),
+        message: gt('tip_dyn_underest_msg', lang, { pct }),
+        detail: gt('tip_dyn_based_on_jobs', lang, { count: jobs.length }),
         icon: 'bulb',
-        source: gt('source_vasco_personal', ctx.language),
+        source: gt('source_vasco_personal', lang),
         rootCauseTags: ['tip', 'personalized'],
         rawScore: 0,
         reasoning: {
-          observation: `Uren wijken gemiddeld ${Math.round((avgRatio - 1) * 100)}% af van begroting`,
-          evidence: `Op basis van ${jobs.length} afgeronde klussen uit je profiel`,
-          implication: 'Structurele onderschatting erodeert je marge',
-          suggestion: 'Verhoog je standaard uurschatting met dit percentage',
+          observation: gt('tip_dyn_underest_obs', lang, { pct }),
+          evidence: gt('tip_dyn_based_on_jobs', lang, { count: jobs.length }),
+          implication: gt('tip_dyn_underest_impl', lang),
+          suggestion: gt('tip_dyn_underest_sugg', lang),
         },
         dataPoints: jobs.length,
         confidence: 0.65,
@@ -179,24 +180,28 @@ function generateDynamicTip(ctx: GeneratorContext): ScoredInsight | null {
 
   // Dynamic tip: savings streak motivation
   if (savings.savingsStreak >= 3) {
+    const streak = savings.savingsStreak;
+    const tail = savings.topSavingsCategory
+      ? gt('tip_dyn_streak_best', lang, { cat: savings.topSavingsCategory })
+      : gt('tip_dyn_streak_keepgoing', lang);
     return {
       id: 'dynamic-tip-streak',
       generatorId: 'static-tip',
       category: 'opportunity',
       priority: 'low',
-      title: `${savings.savingsStreak} maanden besparingen op rij!`,
-      message: `Je bespaart al ${savings.savingsStreak} maanden achter elkaar. ${savings.topSavingsCategory ? `Je beste categorie: ${savings.topSavingsCategory}.` : 'Goed bezig!'}`,
+      title: gt('tip_dyn_streak_title', lang, { count: streak }),
+      message: `${gt('tip_dyn_streak_msg', lang, { count: streak })} ${tail}`,
       icon: 'trophy',
-      source: gt('source_vasco_personal', ctx.language),
+      source: gt('source_vasco_personal', lang),
       rootCauseTags: ['tip', 'personalized'],
       rawScore: 0,
       reasoning: {
-        observation: `${savings.savingsStreak} opeenvolgende maanden met besparingen`,
-        evidence: 'Op basis van je besparingsprofiel',
-        implication: 'Consistente besparingen beschermen je marge op lange termijn',
-        suggestion: 'Verhoog je maanddoel om de volgende stap te zetten',
+        observation: gt('tip_dyn_streak_obs', lang, { count: streak }),
+        evidence: gt('tip_dyn_streak_evidence', lang),
+        implication: gt('tip_dyn_streak_impl', lang),
+        suggestion: gt('tip_dyn_streak_sugg', lang),
       },
-      dataPoints: savings.savingsStreak,
+      dataPoints: streak,
       confidence: 0.6,
       freshness: 48,
     };
@@ -204,24 +209,25 @@ function generateDynamicTip(ctx: GeneratorContext): ScoredInsight | null {
 
   // Dynamic tip: invoice payment advice
   if (invoices.totalInvoices > 5 && invoices.onTimeRate < 0.7) {
+    const pct = Math.round(invoices.onTimeRate * 100);
     return {
       id: 'dynamic-tip-payment',
       generatorId: 'static-tip',
       category: 'financial',
       priority: 'low',
-      title: 'Betaalgedrag verbeteren',
-      message: `Slechts ${Math.round(invoices.onTimeRate * 100)}% van je facturen wordt op tijd betaald. Automatische herinneringen kunnen dit verbeteren.`,
+      title: gt('tip_dyn_payment_title', lang),
+      message: gt('tip_dyn_payment_msg', lang, { pct }),
       icon: 'bulb',
-      source: gt('source_vasco_personal', ctx.language),
-      actionLabel: 'Herinneringen instellen',
+      source: gt('source_vasco_personal', lang),
+      actionLabel: gt('tip_dyn_payment_action', lang),
       actionRoute: '/(contractor)/facturen',
       rootCauseTags: ['tip', 'personalized'],
       rawScore: 0,
       reasoning: {
-        observation: `On-time betaalratio: ${Math.round(invoices.onTimeRate * 100)}%`,
-        evidence: `Op basis van ${invoices.totalInvoices} facturen`,
-        implication: 'Late betalingen beperken je werkkapitaal',
-        suggestion: 'Schakel automatische herinneringen in op dag 3 en dag 7',
+        observation: gt('tip_dyn_payment_obs', lang, { pct }),
+        evidence: gt('tip_dyn_payment_evidence', lang, { count: invoices.totalInvoices }),
+        implication: gt('tip_dyn_payment_impl', lang),
+        suggestion: gt('tip_dyn_payment_sugg', lang),
       },
       dataPoints: invoices.totalInvoices,
       confidence: 0.7,
@@ -255,19 +261,27 @@ export const staticTipGenerator: InsightGenerator = {
     if (matching.length === 0) return null;
 
     const selected = matching[dayIndex % matching.length];
+    const lang = ctx.language;
+    const title = gt(selected.keys.title, lang);
+    const message = gt(selected.keys.message, lang);
+    const detail = selected.keys.detail ? gt(selected.keys.detail, lang) : undefined;
 
     return {
       ...selected.insight,
-      source: gt(selected.insight.source as string, ctx.language),
+      title,
+      message,
+      detail,
+      actionLabel: selected.keys.actionLabel ? gt(selected.keys.actionLabel, lang) : undefined,
+      source: gt(selected.insight.source as string, lang),
       id: `static-${selected.tipId}`,
       generatorId: 'static-tip',
       rootCauseTags: ['tip', 'general'],
       rawScore: 0,
       reasoning: {
-        observation: selected.insight.title,
-        evidence: 'Op basis van branche-gemiddelden',
-        implication: selected.insight.message,
-        suggestion: selected.insight.detail || 'Bekijk de details voor meer informatie',
+        observation: title,
+        evidence: gt('tip_evidence_industry', lang),
+        implication: message,
+        suggestion: detail || gt('tip_suggestion_see_details', lang),
       },
       dataPoints: 0,
       confidence: 0.4,
