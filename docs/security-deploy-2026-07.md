@@ -1,13 +1,36 @@
 # Security Deploy Runbook — 2026-07 Audit Series
 
 Deploy checklist for the FE↔DB + security audit (rounds 1–18, see
-`memory/audit-2026-07-findings.md`). Everything below is **committed on `main`
-but not yet deployed**. For the broader release flow see `docs/go-live-checklist.md`
-and `docs/supabase-go-live.md`; this doc covers only what the audit added.
+`memory/audit-2026-07-findings.md`).
 
-> ⚠️ **The whole series is unpushed.** `origin/main` is many commits behind
-> `HEAD`. Step 0 is a push, and it needs an account with write access to the
-> repo (prior sessions noted `SammySam*` lacks write).
+> ## ✅ DEPLOYED 2026-07-26 — this runbook is now a record, not a to-do.
+>
+> Executed in the required order: edge fn `sign-customer-upload` → Vercel
+> `admin` redeploy (prod alias `vascobuild.com`) → `supabase db push` (9 pending
+> migrations incl. `20260711000001`–`000004`). All applied clean. Everything is
+> pushed to `origin/main`.
+>
+> **Post-deploy probes all pass** (anon key, live):
+> - `GET /rest/v1/customer_questions?select=tracker_access_token` → `42501`
+> - anon `list('customer-uploads')` → `[]`, and the broad policy is dropped
+> - `get_portal_by_access_code` + `get_customer_question_status` still callable
+>   by anon, so the portal keeps working
+> - RLS `true` on `extracted_line_items` + `cohort_benchmarks`;
+>   `next_document_number` pinned to `search_path=public, pg_temp`
+>
+> ### ⚠️ The severity in this runbook was wrong — in both directions
+> R14/R15/R17 were graded HIGH by reading *policies*. Live, `anon` held **zero
+> table GRANTs**, and GRANT is checked *before* RLS, so the broad policy was
+> inert and the tables held 0 rows — not exploitable. Meanwhile the one
+> genuinely open hole, the `customer-uploads` broad anon SELECT, was barely
+> ranked; it was harmless only because the bucket was empty and would have
+> leaked every customer's photos on the first upload.
+>
+> **Grade RLS findings against the live GRANT table, not the migration files.**
+> That same blind spot hid a far worse bug in the opposite direction — see
+> `learnings.md` #87: 19 of 21 client tables had no grant at all, so the app
+> could not persist anything. Recipe for querying prod is in
+> `memory/supabase-prod-paused.md`.
 
 ---
 

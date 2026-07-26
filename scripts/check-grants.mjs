@@ -141,6 +141,42 @@ const anonGrants = await query(tok, `
   select distinct table_name from information_schema.role_table_grants
    where table_schema = 'public' and grantee = 'anon'`);
 
+// 5. SECURITY DEFINER with a mutable search_path = privilege escalation, since
+//    the function runs as its owner and an unqualified name can be shadowed.
+const unpinnedSecdef = await query(tok, `
+  select p.proname
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef and p.proconfig is null`);
+
+// 6. CREATE on schema public is the precondition that makes #5 exploitable.
+//    Postgres 15+ revokes it from PUBLIC by default; app roles never do DDL.
+const schemaCreate = await query(tok, `
+  select r.rolname from pg_roles r
+   where r.rolname in ('anon','authenticated')
+     and has_schema_privilege(r.rolname, 'public', 'CREATE')`);
+
+// 7. The anon-callable SECURITY DEFINER surface. Those bypass RLS entirely, so
+//    the list must stay short and deliberate. NOTE the `prosecdef` filter: a
+//    plain function runs as the CALLER, so RLS still applies and it is not a
+//    bypass vector — without this filter the check flags ~200 harmless things
+//    including pgvector's math helpers. Also note that anon reaching a function
+//    usually means PostgreSQL's DEFAULT `PUBLIC EXECUTE`, not an explicit
+//    grant: R18 of the audit counted only explicit grants, concluded there were
+//    "4 anon-executable RPCs", and missed 59.
+const ANON_RPC_OK = new Map([
+  ['get_portal_by_access_code', 'customer portal entry point, scoped by the access code itself'],
+  ['get_customer_question_status', 'portal Q&A poll, scoped by the tracker access token (R17)'],
+  ['write_signature_via_portal', 'customer signs from the portal, scoped by access token'],
+  ['get_cron_health', 'cron liveness for the admin dashboard; exposes job names + timestamps only'],
+]);
+const anonRpcs = await query(tok, `
+  select p.proname
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef
+     and has_function_privilege('anon', p.oid, 'EXECUTE')
+   order by 1`);
+const unexpectedAnonRpc = anonRpcs.filter((r) => !ANON_RPC_OK.has(r.proname));
+
 let bad = 0;
 const report = (label, rows, fmt) => {
   if (rows.length === 0) { console.log(`✓ ${label}`); return; }
@@ -153,6 +189,9 @@ report('every client table is readable+writable by authenticated', missing, (r) 
 report('every client table exists', absent.map((t) => ({ t })), (r) => `${r.t} — client calls .from('${r.t}') but no such table`);
 report('no table is granted to authenticated without RLS', ungoverned, (r) => `${r.relname} — granted but RLS off: cross-tenant read`);
 report('anon holds no table grants', anonGrants, (r) => `${r.table_name} — anon should read via SECURITY DEFINER RPC only`);
+report('every SECURITY DEFINER function pins search_path', unpinnedSecdef, (r) => `${r.proname} — runs as owner with a mutable search_path: privilege escalation`);
+report('anon/authenticated cannot CREATE in schema public', schemaCreate, (r) => `${r.rolname} holds CREATE — lets an attacker shadow an unqualified name`);
+report('no unexpected anon-callable RPC', unexpectedAnonRpc, (r) => `${r.proname} — executable by anon; if SECURITY DEFINER it bypasses RLS. Add to ANON_RPC_OK with a reason, or revoke.`);
 
 console.log('');
 if (bad > 0) {
