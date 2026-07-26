@@ -74,8 +74,16 @@ jobs:
       - name: Install without dev deps
         run: npm ci --omit=dev --no-audit --no-fund
 
-      - name: Audit production deps
-        run: npm audit --omit=dev --audit-level=high
+      # Was `npm audit --omit=dev --audit-level=high`, which was RED on every
+      # push from 2026-07-18 and could never go green: --omit=dev drops OUR dev
+      # deps but keeps the build toolchain Expo/RN declare as runtime deps of
+      # themselves (@expo/cli, metro, react-devtools-core, xcpretty, xcode).
+      # None of that ships to a device, and Expo pins the versions, so it was
+      # unfixable noise that trained everyone to ignore CI. audit:runtime fails
+      # on high/critical in code that actually ships, reports build tooling, and
+      # separately asserts shipping packages sit on patched versions.
+      - name: Audit production deps (runtime-scoped)
+        run: npm run audit:runtime
 
   unit-tests:
     name: Jest unit tests
