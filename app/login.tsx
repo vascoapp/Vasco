@@ -243,7 +243,10 @@ export default function LoginScreen() {
                       full-width Text renders complete. Ionicons is itself a
                       Text glyph, so nesting keeps the icon inline while the
                       label gets the full row width and never shrink-wraps. */}
-                  <Text style={styles.accessCodeLinkText}>
+                  {/* Hidden from the a11y tree so TalkBack reads the Pressable's
+                      accessibilityLabel once, rather than also announcing the
+                      key glyph and the two spacer characters. */}
+                  <Text style={styles.accessCodeLinkText} importantForAccessibility="no">
                     <Ionicons name="key-outline" size={15} color={DK.colors.textMuted} />
                     {'  '}
                     {t('auth.haveAccessCode', 'I have an access code')}
