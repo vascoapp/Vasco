@@ -10,6 +10,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { EnrichedBudgetLine, SavingsAction } from './budgetEnrichmentService';
 import type { BudgetExtractionResult, BudgetCategorySummary } from '../ingestion/budgetExtractor';
 import { enrichBudgetLines } from './budgetEnrichmentService';
+import { getCohortBenchmarks, type MaterialBenchmark } from './cohortBenchmarkService';
+import { getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import {
   getCurrentWorkbook,
@@ -587,8 +589,21 @@ export function useBudgetOptimizer(role: string = 'contractor') {
       setExtractionResult(result);
 
       try {
-        // Enrich lines with market data and savings actions
-        const enriched = enrichBudgetLines(result.lines);
+        // Enrich lines against the real cross-contractor cohort. Without this
+        // the enrichment had only the demo keyword table, which is empty in
+        // production -- so every line came back unenriched.
+        let benchmarks: MaterialBenchmark[] = [];
+        try {
+          const cohort = await getCohortBenchmarks(
+            getCurrentTrade() ?? 'general',
+            getCurrentCountry() ?? 'NL',
+          );
+          benchmarks = cohort.materialBenchmarks;
+        } catch {
+          // Offline or cohort unavailable: lines enrich to "no market data"
+          // rather than failing the extraction.
+        }
+        const enriched = enrichBudgetLines(result.lines, benchmarks);
         setEnrichedLines(enriched);
 
         // Set default constraints from extraction

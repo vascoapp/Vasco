@@ -8,6 +8,86 @@
 
 import type { ExtractedBudgetLine } from '../ingestion/budgetExtractor';
 import { DEMO_MODE } from '../config/demo';
+import { findBenchmark, type MaterialBenchmark } from './cohortBenchmarkService';
+
+// Same k-anonymity floor the quote optimizer applies: a material has to be
+// observed by enough contractors before its median can be quoted back as a
+// market rate.
+const MIN_COHORT_SAMPLE = 5;
+
+/**
+ * Turn a cross-contractor benchmark into the MarketRateData shape.
+ *
+ * The single `source` entry is the cohort itself, carrying its real sample
+ * size and observation date. The demo table invented named third parties
+ * (Cobouw, NVTB, ...) with made-up reliability scores; a cohort has one honest
+ * provenance, and its reliability is a function of how many observations back
+ * it -- saturating at 20, past which more samples add little.
+ */
+function cohortRate(match: MaterialBenchmark, unit: string): MarketRateData {
+  return {
+    avgRate: match.medianPrice,
+    lowRate: match.p25,
+    highRate: match.p75,
+    unit,
+    trend: match.trend,
+    sources: [
+      {
+        name: 'Vasco cohort',
+        price: match.medianPrice,
+        unit,
+        lastUpdated: match.lastUpdated,
+        reliability: Math.min(1, match.sampleSize / 20),
+      },
+    ],
+  };
+}
+
+/**
+ * Cohort rate for a budget line, or null.
+ *
+ * Only `source: 'cohort'` rows qualify. cohortBenchmarkService synthesises
+ * benchmarks from the contractor's OWN scan history when the cloud has
+ * nothing; comparing a budget line against the contractor's own past prices
+ * and calling the result a market saving is circular.
+ */
+function cohortRateForLine(
+  description: string,
+  unit: string,
+  benchmarks: MaterialBenchmark[],
+): MarketRateData | null {
+  const usable = benchmarks.filter(
+    (b) => b.source === 'cohort' && b.sampleSize >= MIN_COHORT_SAMPLE,
+  );
+  if (usable.length === 0) return null;
+
+  // Exact / canonical first (materialNormalization), which is what a quote line
+  // gets. Budget lines are free prose though -- "Sloopwerk begane grond" will
+  // never canonicalise equal to a cohort row stored as "sloopwerk" -- so fall
+  // back to token containment: every token of the benchmark name must appear as
+  // a whole token in the line description.
+  //
+  // Token containment, not substring: `includes()` would match "verf" inside
+  // "verfafbijt", which is a different product at a different price. At least
+  // one token must be 4+ characters so a row named "m2" or "uur" cannot match
+  // half the budget. Longest name wins, so "cv-ketel" beats "ketel".
+  const direct = findBenchmark(description, usable);
+  if (direct) return cohortRate(direct, unit);
+
+  const tokens = (text: string) =>
+    text.toLowerCase().split(/[^a-z0-9]+/i).filter(Boolean);
+  const lineTokens = new Set(tokens(description));
+
+  let best: MaterialBenchmark | null = null;
+  for (const b of usable) {
+    const nameTokens = tokens(b.materialName);
+    if (nameTokens.length === 0) continue;
+    if (!nameTokens.some((t) => t.length >= 4)) continue;
+    if (!nameTokens.every((t) => lineTokens.has(t))) continue;
+    if (!best || b.materialName.length > best.materialName.length) best = b;
+  }
+  return best ? cohortRate(best, unit) : null;
+}
 
 // =============================================================================
 // TYPES
@@ -585,7 +665,10 @@ function buildSavingsActions(
 // ENRICHMENT — SINGLE LINE
 // =============================================================================
 
-export function enrichBudgetLine(line: ExtractedBudgetLine): EnrichedBudgetLine {
+export function enrichBudgetLine(
+  line: ExtractedBudgetLine,
+  benchmarks: MaterialBenchmark[] = [],
+): EnrichedBudgetLine {
   const matchedKey = fuzzyMatchMaterial(line.description);
 
   // Base enriched line (copies all original fields)
@@ -606,13 +689,16 @@ export function enrichBudgetLine(line: ExtractedBudgetLine): EnrichedBudgetLine 
     savingsPotential: null,
   };
 
-  if (!matchedKey) {
+  // Real cross-contractor rate first; the keyword table is a demo fallback and
+  // is empty in production.
+  const cohort = cohortRateForLine(line.description, line.unit, benchmarks);
+  const rate = cohort ?? (matchedKey ? MOCK_MARKET_RATES[matchedKey] : undefined);
+
+  if (!rate) {
     // No market data available — return unenriched
     base.confidence = 0;
     return base;
   }
-
-  const rate = MOCK_MARKET_RATES[matchedKey];
 
   // ── Market enrichment ───────────────────────────────────────────────────
   const range = rate.highRate - rate.lowRate;
@@ -620,10 +706,14 @@ export function enrichBudgetLine(line: ExtractedBudgetLine): EnrichedBudgetLine 
     range > 0 ? ((line.unitRate - rate.lowRate) / range) * 100 : 50;
   const percentileVsMarket = Math.max(0, Math.min(100, Math.round(rawPercentile)));
 
-  // Confidence based on source count and their average reliability
+  // Confidence. The source-count factor is a heuristic for the demo table,
+  // which lists three invented providers per material -- it must not apply to a
+  // cohort rate, where the single source is an aggregate over many contractors
+  // and its reliability already encodes the sample size. Scaling that by 1/3
+  // would rate real observed data below three fabricated ones.
   const avgReliability =
     rate.sources.reduce((sum, s) => sum + s.reliability, 0) / rate.sources.length;
-  const sourceCountFactor = Math.min(rate.sources.length / 3, 1); // max at 3+ sources
+  const sourceCountFactor = cohort ? 1 : Math.min(rate.sources.length / 3, 1);
   const enrichmentConfidence =
     Math.round(avgReliability * sourceCountFactor * 100) / 100;
 
@@ -675,6 +765,7 @@ export function enrichBudgetLine(line: ExtractedBudgetLine): EnrichedBudgetLine 
 
 export function enrichBudgetLines(
   lines: ExtractedBudgetLine[],
+  benchmarks: MaterialBenchmark[] = [],
 ): EnrichedBudgetLine[] {
-  return lines.map(enrichBudgetLine);
+  return lines.map((line) => enrichBudgetLine(line, benchmarks));
 }
