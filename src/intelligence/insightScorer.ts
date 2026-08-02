@@ -25,6 +25,7 @@ import { getConfidenceMultiplier, getCalibrationScores, logPrediction } from './
 import type { CalibrationScore } from './calibration';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getQueueHistory, getOutcomes } from '../services/aiActionQueueService';
+import { getSituationalMultiplier } from './ranking/rankingStore';
 
 // =============================================================================
 // GENERATOR DISPLAY NAMES (for consolidation evidence)
@@ -521,7 +522,18 @@ export function scoreInsight(
   // Approval rate from queue history: learn what the contractor actually acts on
   const approvalMult = getApprovalRateMultiplier(insight.generatorId);
 
-  const finalScore = (baseScore + crossBoost + outcomeBoost) * calibrationMult * dataPointFactor * approvalMult;
+  // Situational weight from the LLM ranking hint (tier 2). 1.0 whenever there
+  // is no hint, it is stale, or it was computed for a different situation — so
+  // this multiplier is inert by default and the ordering is exactly the rules'.
+  //
+  // It is LAST in the chain and hard-clamped to [0.75, 1.35] by the contract,
+  // deliberately: calibration, data volume and approval rate are learned from
+  // measured outcomes, and a language model's read of the week may nudge them
+  // but must never overrule them.
+  const situationalMult = getSituationalMultiplier(insight.generatorId);
+
+  const finalScore = (baseScore + crossBoost + outcomeBoost)
+    * calibrationMult * dataPointFactor * approvalMult * situationalMult;
 
   // Low-data confidence warning for insights based on few data points
   const confidenceWarning = dp < 5

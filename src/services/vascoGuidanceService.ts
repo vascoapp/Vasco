@@ -13,6 +13,7 @@ import { useLearningProfile, incrementInsightsShown, setActiveRole } from '../in
 import { useAllGenerators } from '../intelligence/generators';
 import type { ScoredInsight, UserRole, ScreenContext, GeneratorLanguage, DataCounts } from '../intelligence/generators';
 import { scoreAndRankInsights, refreshCalibrationCache, refreshApprovalRateCache } from '../intelligence/insightScorer';
+import { refreshRankingHint } from '../intelligence/ranking/rankingRefresh';
 import { enqueueInsightsIfHinted } from '../intelligence/generators/emitToQueue';
 import { useAppState } from '../state/AppState';
 
@@ -83,6 +84,48 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
 
     return ranked;
   }, [rawInsights, screen, profile, now, role]);
+
+  // Situational ranking (tier 2). Fire-and-forget, and deliberately AFTER the
+  // synchronous ranking above: this render uses whatever hint already exists,
+  // and the refresh improves the NEXT one. Nothing here can block a card.
+  //
+  // `refreshRankingHint` no-ops when the situation digest is unchanged, when
+  // there are fewer than three insights, when Supabase is not configured, and
+  // on any error — so the steady state is one call per contractor per day, not
+  // one per render. See rankingRefresh.ts.
+  const rankingSignature = rawInsights.map((i) => i.generatorId).sort().join(',');
+  useEffect(() => {
+    if (!rawInsights.length) return;
+    refreshRankingHint(
+      rawInsights.map((i) => ({
+        generatorId: i.generatorId,
+        category: i.category,
+        // Generator-assigned and semantic — what KIND of problem, how urgent
+        // the rule thinks it is — all independent of rawScore.
+        priority: i.priority,
+        ageDays: Math.round((i.freshness ?? 0) / 24),
+        confidence: i.confidence,
+        // `magnitude` is deliberately NOT sent.
+        //
+        // The obvious thing is to bucket it from rawScore, and the first version
+        // did. That is wrong twice over: rawScore is the SCORE the rules already
+        // assigned, not the size of the underlying problem, so the label lies to
+        // the model — and we then multiply that same rawScore by the answer the
+        // model gives back, which is a feedback loop carrying no new information.
+        //
+        // A true magnitude would be the size of the thing itself (euros overdue,
+        // days late) bucketed to small/medium/large. No generator exposes one
+        // today, so the field stays empty rather than being faked.
+      })),
+      {
+        country: (businessProfile?.country as string) ?? 'NL',
+        trade: businessProfile?.trade as string | undefined,
+      },
+    ).catch(() => {});
+    // Keyed on the generator SET, not the insight objects: a rawScore wobble
+    // must not trigger a refresh, a different set of insights must.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rankingSignature, businessProfile?.country, businessProfile?.trade]);
 
   // Side-effect: any insight with an enqueueHint flows into the AI action
   // queue so the user sees it as an actionable item in VascoCard, not just
