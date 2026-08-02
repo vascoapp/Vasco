@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     backgroundColor: DK.colors.accent,
     paddingHorizontal: GRID.xl, paddingVertical: GRID.md,
     borderRadius: RADIUS.full,
-    shadowColor: DK.colors.accent, shadowOpacity: 0.4, shadowRadius: 12,
+    shadowColor: DK.colors.accent, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
   },
   retryBtnText: { color: '#000', fontFamily: TYPE.titleFamily, fontSize: 14, letterSpacing: 1.4 },
   devBox: {

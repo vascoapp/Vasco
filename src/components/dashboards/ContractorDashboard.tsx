@@ -844,6 +844,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
         visible={showIntelligence}
         animationType="slide"
         presentationStyle="pageSheet"
+        onRequestClose={() => setShowIntelligence(false)}
       >
         <IntelligenceDashboard onClose={() => setShowIntelligence(false)} />
       </Modal>
@@ -853,6 +854,7 @@ export function ContractorDashboard({ initialTab = 'dashboard' }: ContractorDash
         visible={showROI}
         animationType="slide"
         presentationStyle="pageSheet"
+        onRequestClose={() => setShowROI(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>

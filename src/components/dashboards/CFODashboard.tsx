@@ -477,7 +477,7 @@ function ConfirmationModal({ visible, approval, onConfirm, onCancel }: Confirmat
   if (!approval) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>

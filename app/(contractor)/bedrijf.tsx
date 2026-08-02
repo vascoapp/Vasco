@@ -482,7 +482,7 @@ export default function BedrijfScreen() {
       </ScrollView>
 
       {/* ─── ADD CUSTOMER MODAL ─── */}
-      <Modal visible={showAddModal} transparent animationType="slide">
+      <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
             <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>

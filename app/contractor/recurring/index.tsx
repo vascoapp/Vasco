@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     paddingVertical: GRID.md,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: DK.colors.accent, shadowOpacity: 0.4, shadowRadius: 12,
+    shadowColor: DK.colors.accent, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
   },
   emptyCtaText: { color: '#FFFFFF', fontFamily: TYPE.titleFamily, fontSize: 13, letterSpacing: 1.4 },
 
@@ -327,6 +327,7 @@ const styles = StyleSheet.create({
     shadowColor: DK.colors.accent,
     shadowOpacity: 0.4,
     shadowRadius: 12,
+    elevation: 8,
   },
   addBtnText: { fontSize: 14, fontFamily: TYPE.titleFamily, color: '#000', letterSpacing: 1.4 },
 });

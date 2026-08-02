@@ -7,7 +7,10 @@
 // =============================================================================
 
 import * as Print from 'expo-print';
-import { Share } from 'react-native';
+// expo-sharing, not react-native's Share: the latter ignores `url` on Android,
+// so the receipt PDF was never attached there — and the call still resolved,
+// so this returned { ok: true } on a share that shared nothing.
+import * as Sharing from 'expo-sharing';
 import type { Invoice } from '../domain/documents';
 
 interface ReceiptArgs {
@@ -75,7 +78,14 @@ function html(args: ReceiptArgs): string {
 export async function shareReceipt(args: ReceiptArgs): Promise<{ ok: boolean; uri?: string; error?: string }> {
   try {
     const { uri } = await Print.printToFileAsync({ html: html(args) });
-    await Share.share({ url: uri, title: `${HEADINGS[args.locale ?? 'nl'] ?? 'Receipt'} ${args.invoice.id}` });
+    if (!(await Sharing.isAvailableAsync())) {
+      return { ok: false, uri, error: 'Sharing is not available on this device' };
+    }
+    await Sharing.shareAsync(uri, {
+      mimeType: 'application/pdf',
+      dialogTitle: `${HEADINGS[args.locale ?? 'nl'] ?? 'Receipt'} ${args.invoice.id}`,
+      UTI: 'com.adobe.pdf',
+    });
     return { ok: true, uri };
   } catch (err) {
     return { ok: false, error: String(err) };

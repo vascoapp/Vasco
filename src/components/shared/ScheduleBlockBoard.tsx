@@ -155,7 +155,7 @@ export function ScheduleBlockBoard({ blocks, unassigned, workers, onReassign }: 
       ))}
 
       {/* Worker selection modal */}
-      <Modal visible={showWorkerModal} transparent animationType="slide">
+      <Modal visible={showWorkerModal} transparent animationType="slide" onRequestClose={() => { setShowWorkerModal(false); setSelectedBlock(null); }}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

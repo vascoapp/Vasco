@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   saveBtn: {
     marginTop: GRID.md,
     backgroundColor: DK.colors.accent, borderRadius: RADIUS.full, paddingVertical: GRID.md,
-    alignItems: 'center', shadowColor: DK.colors.accent, shadowOpacity: 0.4, shadowRadius: 12,
+    alignItems: 'center', shadowColor: DK.colors.accent, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
   },
   saveBtnText: { color: '#000', fontFamily: TYPE.titleFamily, fontSize: 14, letterSpacing: 1.4 },
   deleteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm, paddingVertical: GRID.md, marginTop: GRID.sm },

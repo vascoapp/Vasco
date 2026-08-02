@@ -8,6 +8,7 @@
 import { Tabs, Redirect } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { TYPE } from '../../src/theme/tabStyles';
@@ -73,9 +74,14 @@ const HIDDEN_TABS = [
   'error',
 ];
 
+// Bar height above the safe-area inset. 54 + 34 reproduces the previous 88 on
+// a notched iPhone exactly; elsewhere the total now follows the real inset.
+const TAB_BAR_CONTENT_HEIGHT = 54;
+
 export default function ContractorLayout() {
   const { t } = useTranslation();
   const { isAuthenticated, isAuthHydrating } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Auth gate (fixes the Vandaag⇄login bounce loop).
   //
@@ -105,7 +111,15 @@ export default function ContractorLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        // The bottom inset must come from the device, not a constant. The old
+        // style hardcoded paddingBottom: 34 (the iPhone home-indicator inset)
+        // with an explicit height, which also stops React Navigation applying
+        // the inset itself. On Android that put the bar under the gesture pill
+        // / 3-button nav bar; on non-notched iPhones it left 34px of dead space.
+        tabBarStyle: [
+          styles.tabBar,
+          { height: TAB_BAR_CONTENT_HEIGHT + insets.bottom, paddingBottom: insets.bottom },
+        ],
         tabBarActiveTintColor: Palette.hermesOrange,
         tabBarInactiveTintColor: SemanticColors.textTertiary,
         tabBarLabelStyle: styles.tabLabel,
@@ -156,9 +170,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: SemanticColors.borderDefault,
-    height: 88,
     paddingTop: 8,
-    paddingBottom: 34,
+    // height + paddingBottom are applied inline from useSafeAreaInsets().
   },
   tabLabel: {
     fontSize: 11,

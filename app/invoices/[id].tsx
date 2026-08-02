@@ -28,6 +28,11 @@ import { effectiveStep, renderReminder } from '../../src/services/reminderCadenc
 import { computeLateFee, disclosureLineLocalized, type LateFeeCountry } from '../../src/services/lateFeeService';
 import { generateXRechnungXML, generateZUGFeRDXML, type EInvoiceData } from '../../src/integrations/einvoice';
 import { Share as RNShare } from 'react-native';
+// react-native's Share ignores `url` on Android (message/title only), so the
+// e-invoice XML exports below silently shared nothing there — and because it
+// resolves rather than throws, the plain-text catch never fired. expo-sharing
+// is the cross-platform file share, and is what the PDF services already use.
+import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
 import { getEffectiveVatRate } from '../../src/domain/business';
@@ -503,7 +508,15 @@ export default function InvoiceDetailScreen() {
     try {
       const file = new File(Paths.cache, filename);
       file.write(xml);
-      await RNShare.share({ url: file.uri, title: filename });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/xml',
+          dialogTitle: filename,
+          UTI: 'public.xml',
+        });
+      } else {
+        await RNShare.share({ message: xml, title: filename });
+      }
       hapticSuccess();
     } catch {
       // Fallback: share XML as plain text if filesystem/share fails
@@ -581,7 +594,15 @@ export default function InvoiceDetailScreen() {
     try {
       const file = new File(Paths.cache, filename);
       file.write(xml);
-      await RNShare.share({ url: file.uri, title: filename });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/xml',
+          dialogTitle: filename,
+          UTI: 'public.xml',
+        });
+      } else {
+        await RNShare.share({ message: xml, title: filename });
+      }
       hapticSuccess();
     } catch {
       await RNShare.share({ message: xml, title: filename });
@@ -651,7 +672,15 @@ export default function InvoiceDetailScreen() {
     try {
       const file = new File(Paths.cache, filename);
       file.write(xml);
-      await RNShare.share({ url: file.uri, title: filename });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/xml',
+          dialogTitle: filename,
+          UTI: 'public.xml',
+        });
+      } else {
+        await RNShare.share({ message: xml, title: filename });
+      }
       hapticSuccess();
     } catch {
       await RNShare.share({ message: xml, title: filename });

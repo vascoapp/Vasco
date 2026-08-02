@@ -136,7 +136,7 @@ export function VascoKarmaStrip({ role }: Props) {
       </Pressable>
 
       {/* Expanded modal */}
-      <Modal visible={expanded} transparent animationType="slide">
+      <Modal visible={expanded} transparent animationType="slide" onRequestClose={toggleExpand}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

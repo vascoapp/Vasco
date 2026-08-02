@@ -670,7 +670,7 @@ export default function GeldScreen() {
       </ScrollView>
 
       {/* ─── FILTER MODALS ─── */}
-      <Modal visible={showInvoiceFilterModal} transparent animationType="fade">
+      <Modal visible={showInvoiceFilterModal} transparent animationType="fade" onRequestClose={() => setShowInvoiceFilterModal(false)}>
         <Pressable style={s.modalOverlay} onPress={() => setShowInvoiceFilterModal(false)}>
           <View style={s.modalSheet}>
             <DKLabel style={s.modalTitle}>{t('dk.actions.filterInvoices', 'Filter invoices')}</DKLabel>
@@ -692,7 +692,7 @@ export default function GeldScreen() {
         </Pressable>
       </Modal>
 
-      <Modal visible={showQuoteFilterModal} transparent animationType="fade">
+      <Modal visible={showQuoteFilterModal} transparent animationType="fade" onRequestClose={() => setShowQuoteFilterModal(false)}>
         <Pressable style={s.modalOverlay} onPress={() => setShowQuoteFilterModal(false)}>
           <View style={s.modalSheet}>
             <DKLabel style={s.modalTitle}>{t('dk.actions.filterQuotes', 'Filter quotes')}</DKLabel>

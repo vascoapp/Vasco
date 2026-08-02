@@ -84,7 +84,7 @@ export default function ExpensesScreen() {
       </View>
 
       {/* Add Expense Modal */}
-      <Modal visible={showAddForm} transparent animationType="slide">
+      <Modal visible={showAddForm} transparent animationType="slide" onRequestClose={() => setShowAddForm(false)}>
         <View style={styles.modalOverlay}>
           <Pressable style={styles.modalDismiss} onPress={() => setShowAddForm(false)} accessibilityLabel={t('common.close', 'Close')} />
           <View style={styles.modalSheet}>

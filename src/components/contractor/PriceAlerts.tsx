@@ -137,6 +137,7 @@ export function PriceAlerts({ onClose }: PriceAlertsProps) {
         visible={showCreateModal}
         animationType="slide"
         presentationStyle="pageSheet"
+        onRequestClose={() => setShowCreateModal(false)}
       >
         <CreateAlertModal onClose={() => setShowCreateModal(false)} />
       </Modal>

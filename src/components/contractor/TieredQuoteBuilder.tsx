@@ -1091,7 +1091,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
         )}
 
         {/* AI Quote Modal */}
-        <Modal visible={showAIQuote} animationType="slide" presentationStyle="pageSheet">
+        <Modal visible={showAIQuote} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowAIQuote(false)}>
           <AIQuoteFromPhoto
             onCreateQuote={(items) => {
               const mapped = items.filter(i => i.selected).map(item => ({

@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../src/theme/colors';
@@ -67,6 +68,9 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const tabs = getTabsForRole(user?.role, t);
   const primaryColor = roleConfig?.primaryColor || SemanticColors.actionPrimary;
+  // Real device inset, not the hardcoded iPhone home-indicator 34 — see the
+  // same fix in app/(contractor)/_layout.tsx. 54 + 34 == the previous 88.
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={{ flex: 1 }}>
@@ -84,8 +88,8 @@ export default function TabsLayout() {
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           paddingTop: 8,
-          paddingBottom: 34,
-          height: 88,
+          paddingBottom: insets.bottom,
+          height: 54 + insets.bottom,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.08,

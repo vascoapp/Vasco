@@ -1033,6 +1033,7 @@ export default function FacturenScreen() {
         visible={showQuoteBuilder}
         animationType="slide"
         presentationStyle="pageSheet"
+        onRequestClose={() => setShowQuoteBuilder(false)}
       >
         <TieredQuoteBuilder
           onSend={(quote) => {

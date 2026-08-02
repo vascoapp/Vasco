@@ -452,7 +452,7 @@ export default function InkoopScreen() {
           OCR (invoiceScanService.ts:98). Calling feedPricingMoat again here
           double-counted every camera scan in material_price_history,
           inflating cohort sample sizes by 2x. */}
-      <Modal visible={showReceiptScanner} animationType="slide" presentationStyle="fullScreen">
+      <Modal visible={showReceiptScanner} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setShowReceiptScanner(false)}>
         <ReceiptScanner
           onClose={() => setShowReceiptScanner(false)}
           onComplete={() => setShowReceiptScanner(false)}

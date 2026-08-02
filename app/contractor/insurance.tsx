@@ -309,7 +309,7 @@ export default function InsuranceScreen() {
       </ScrollView>
 
       {/* Claim modal */}
-      <Modal visible={showClaimModal} animationType="slide" transparent>
+      <Modal visible={showClaimModal} animationType="slide" transparent onRequestClose={() => setShowClaimModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

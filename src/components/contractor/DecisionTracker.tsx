@@ -1865,6 +1865,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
   },
   emptyHeroTitle: {
     fontSize: 22,
@@ -1896,6 +1897,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
   },
   emptyHeroCtaText: {
     color: '#FFFFFF',

@@ -220,7 +220,7 @@ export default function ProjectsScreen() {
       </ScrollView>
 
       {/* Create project modal */}
-      <Modal visible={showCreate} transparent animationType="slide">
+      <Modal visible={showCreate} transparent animationType="slide" onRequestClose={() => setShowCreate(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowCreate(false)}>
           <Pressable style={styles.modalContent} onPress={() => {}}>
             <Text style={styles.modalTitle}>{t('contractor.projects.newProject', 'New project')}</Text>

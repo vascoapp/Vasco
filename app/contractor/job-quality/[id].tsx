@@ -178,6 +178,7 @@ const styles = StyleSheet.create({
     shadowColor: DK.colors.accent,
     shadowOpacity: 0.4,
     shadowRadius: 12,
+    elevation: 8,
   },
   submitDisabled: { opacity: 0.5 },
   submitText: {

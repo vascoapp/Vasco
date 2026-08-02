@@ -386,7 +386,7 @@ export default function WerkScreen() {
       </ScrollView>
 
       {/* ─── NEW JOB MODAL ─── */}
-      <Modal visible={showNewJob} transparent animationType="slide">
+      <Modal visible={showNewJob} transparent animationType="slide" onRequestClose={() => setShowNewJob(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={styles.modalOverlay} onPress={() => setShowNewJob(false)}>
             <Pressable style={styles.modalSheet} onPress={() => {}}>
