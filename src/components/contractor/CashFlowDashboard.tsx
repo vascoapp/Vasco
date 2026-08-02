@@ -19,11 +19,12 @@ import { PAGE_BG } from '../../theme/tabStyles';
 import { TYPE, RADIUS } from '../../theme/tabStyles';
 import { EmptyState } from '../shared/EmptyState';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency as formatCurrencyForCountry, type Country } from '../../i18n/formatting';
+import { getCurrentCountry } from '../../lib/currentUser';
 import {
   useCashFlow,
   usePaymentReminders,
   useFinancingSuggestions,
-  useSeasonalPatterns,
   Invoice,
   CashFlowForecast,
   PaymentReminder,
@@ -37,29 +38,34 @@ export function CashFlowDashboard() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  const { invoices, expenses, summary, aging, forecast, markPaid, sendReminder } = useCashFlow();
+  // seasonalPatterns comes off the same useCashFlow call rather than the
+  // useSeasonalPatterns hook, which would subscribe to AppState a second time.
+  const { invoices, expenses, summary, aging, forecast, seasonalPatterns, markPaid, sendReminder } = useCashFlow();
   const { reminders } = usePaymentReminders();
   const financingSuggestions = useFinancingSuggestions();
-  const seasonalPatterns = useSeasonalPatterns();
 
   const tabs: Array<{ key: TabType; label: string; icon: string }> = [
-    { key: 'overview', label: 'Overzicht', icon: 'wallet-outline' },
-    { key: 'invoices', label: 'Facturen', icon: 'document-text-outline' },
-    { key: 'forecast', label: 'Voorspelling', icon: 'trending-up-outline' },
-    { key: 'expenses', label: 'Uitgaven', icon: 'receipt-outline' },
+    { key: 'overview', label: t('cashflow.tabOverview', 'Overview'), icon: 'wallet-outline' },
+    { key: 'invoices', label: t('cashflow.tabInvoices', 'Invoices'), icon: 'document-text-outline' },
+    { key: 'forecast', label: t('cashflow.tabForecast', 'Forecast'), icon: 'trending-up-outline' },
+    { key: 'expenses', label: t('cashflow.tabExpenses', 'Expenses'), icon: 'receipt-outline' },
   ];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(amount);
-  };
+  // Was `new Intl.NumberFormat(undefined, { currency: 'EUR' })`, which pinned
+  // every amount on this screen to euros regardless of the contractor's
+  // country -- a UK or US contractor read their balance in the wrong currency.
+  // `undefined` as the locale also meant the grouping/decimal separators came
+  // from the device, not the app locale.
+  const country = (getCurrentCountry() as Country) ?? 'NL';
+  const formatCurrency = (amount: number) => formatCurrencyForCountry(amount, country);
 
   const getStatusStyle = (status: Invoice['status']) => {
     switch (status) {
-      case 'paid': return { color: Palette.green500, bg: Palette.green500 + '20', label: 'Betaald' };
+      case 'paid': return { color: Palette.green500, bg: Palette.green500 + '20', label: t('cashflow.statusPaid', 'Paid') };
       case 'sent': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: t('common.sent', 'Sent') };
-      case 'viewed': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: 'Bekeken' };
-      case 'overdue': return { color: Palette.red500, bg: Palette.red500 + '20', label: 'Verlopen' };
-      case 'draft': return { color: Palette.gray500, bg: Palette.gray500 + '20', label: 'Concept' };
+      case 'viewed': return { color: Palette.hermesOrange, bg: Palette.hermesOrange + '20', label: t('cashflow.statusViewed', 'Viewed') };
+      case 'overdue': return { color: Palette.red500, bg: Palette.red500 + '20', label: t('cashflow.statusOverdue', 'Overdue') };
+      case 'draft': return { color: Palette.gray500, bg: Palette.gray500 + '20', label: t('cashflow.statusDraft', 'Draft') };
       default: return { color: Palette.gray500, bg: Palette.gray500 + '20', label: status };
     }
   };
@@ -80,7 +86,7 @@ export function CashFlowDashboard() {
       {/* Health Score */}
       <View style={styles.healthCard}>
         <View style={styles.healthLeft}>
-          <Text style={styles.healthTitle}>Financiële gezondheid</Text>
+          <Text style={styles.healthTitle}>{t('cashflow.healthTitle', 'Financial health')}</Text>
           <View style={[styles.healthCircle, { borderColor: getHealthColor(summary.healthScore) }]}>
             <Text style={[styles.healthScore, { color: getHealthColor(summary.healthScore) }]}>
               {summary.healthScore}
@@ -89,11 +95,11 @@ export function CashFlowDashboard() {
         </View>
         <View style={styles.healthRight}>
           <View style={styles.healthStat}>
-            <Text style={styles.healthStatLabel}>Huidig saldo</Text>
+            <Text style={styles.healthStatLabel}>{t('cashflow.currentBalance', 'Current balance')}</Text>
             <Text style={styles.healthStatValue}>{formatCurrency(summary.currentBalance)}</Text>
           </View>
           <View style={styles.healthStat}>
-            <Text style={styles.healthStatLabel}>30-dagen voorspelling</Text>
+            <Text style={styles.healthStatLabel}>{t('cashflow.forecast30', '30-day forecast')}</Text>
             <Text style={[styles.healthStatValue, { color: summary.projectedBalance30Days >= summary.currentBalance ? Palette.green500 : Palette.red500 }]}>
               {formatCurrency(summary.projectedBalance30Days)}
             </Text>
@@ -127,39 +133,39 @@ export function CashFlowDashboard() {
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <Ionicons name="arrow-up-circle-outline" size={24} color={Palette.green500} />
-          <Text style={styles.statLabel}>Te ontvangen</Text>
+          <Text style={styles.statLabel}>{t('cashflow.toReceive', 'To receive')}</Text>
           <Text style={styles.statValue}>{formatCurrency(summary.pendingIncome)}</Text>
         </View>
         <View style={styles.statCard}>
           <Ionicons name="arrow-down-circle-outline" size={24} color={Palette.red500} />
-          <Text style={styles.statLabel}>Te betalen</Text>
+          <Text style={styles.statLabel}>{t('cashflow.toPay', 'To pay')}</Text>
           <Text style={styles.statValue}>{formatCurrency(summary.pendingExpenses)}</Text>
         </View>
       </View>
 
       {/* Invoice Aging */}
       <View style={styles.agingCard}>
-        <Text style={styles.sectionTitle}>Factuur leeftijd</Text>
+        <Text style={styles.sectionTitle}>{t('cashflow.agingTitle', 'Invoice aging')}</Text>
         <View style={styles.agingRow}>
           <View style={styles.agingItem}>
-            <Text style={styles.agingLabel}>Actueel</Text>
+            <Text style={styles.agingLabel}>{t('cashflow.agingCurrent', 'Current')}</Text>
             <Text style={[styles.agingValue, { color: Palette.green500 }]}>{formatCurrency(aging.current.total)}</Text>
-            <Text style={styles.agingCount}>{aging.current.count} facturen</Text>
+            <Text style={styles.agingCount}>{t('cashflow.invoiceCount', { count: aging.current.count })}</Text>
           </View>
           <View style={styles.agingItem}>
-            <Text style={styles.agingLabel}>1-30 dagen</Text>
+            <Text style={styles.agingLabel}>{t('cashflow.aging30', '1-30 days')}</Text>
             <Text style={[styles.agingValue, { color: Palette.orange500 }]}>{formatCurrency(aging.days30.total)}</Text>
-            <Text style={styles.agingCount}>{aging.days30.count} facturen</Text>
+            <Text style={styles.agingCount}>{t('cashflow.invoiceCount', { count: aging.days30.count })}</Text>
           </View>
           <View style={styles.agingItem}>
-            <Text style={styles.agingLabel}>31-60 dagen</Text>
+            <Text style={styles.agingLabel}>{t('cashflow.aging60', '31-60 days')}</Text>
             <Text style={[styles.agingValue, { color: Palette.red500 }]}>{formatCurrency(aging.days60.total)}</Text>
-            <Text style={styles.agingCount}>{aging.days60.count} facturen</Text>
+            <Text style={styles.agingCount}>{t('cashflow.invoiceCount', { count: aging.days60.count })}</Text>
           </View>
           <View style={styles.agingItem}>
-            <Text style={styles.agingLabel}>60+ dagen</Text>
+            <Text style={styles.agingLabel}>{t('cashflow.aging90', '60+ days')}</Text>
             <Text style={[styles.agingValue, { color: Palette.red500 }]}>{formatCurrency(aging.days90Plus.total)}</Text>
-            <Text style={styles.agingCount}>{aging.days90Plus.count} facturen</Text>
+            <Text style={styles.agingCount}>{t('cashflow.invoiceCount', { count: aging.days90Plus.count })}</Text>
           </View>
         </View>
       </View>
@@ -167,20 +173,20 @@ export function CashFlowDashboard() {
       {/* Payment Reminders */}
       {reminders.length > 0 && (
         <View style={styles.remindersSection}>
-          <Text style={styles.sectionTitle}>Betalingsherinneringen</Text>
+          <Text style={styles.sectionTitle}>{t('cashflow.remindersTitle', 'Payment reminders')}</Text>
           {reminders.slice(0, 3).map((reminder) => (
             <View key={reminder.id} style={styles.reminderCard}>
               <View style={styles.reminderInfo}>
                 <Text style={styles.reminderCustomer}>{reminder.customerName}</Text>
                 <Text style={styles.reminderAmount}>{formatCurrency(reminder.amount)}</Text>
-                <Text style={styles.reminderDays}>{reminder.daysOverdue} dagen verlopen</Text>
+                <Text style={styles.reminderDays}>{t('cashflow.daysOverdue', { count: reminder.daysOverdue })}</Text>
               </View>
               <Pressable
                 style={styles.reminderButton}
                 onPress={() => sendReminder(reminder.invoiceId)}
               >
                 <Ionicons name="mail-outline" size={18} color={Palette.hermesOrange} />
-                <Text style={styles.reminderButtonText}>Herinner</Text>
+                <Text style={styles.reminderButtonText}>{t('cashflow.remindAction', 'Remind')}</Text>
               </Pressable>
             </View>
           ))}
@@ -190,7 +196,7 @@ export function CashFlowDashboard() {
       {/* Financing */}
       {financingSuggestions.length > 0 && (
         <View style={styles.financingSection}>
-          <Text style={styles.sectionTitle}>Financieringsopties</Text>
+          <Text style={styles.sectionTitle}>{t('cashflow.financingTitle', 'Financing options')}</Text>
           {financingSuggestions.map((suggestion) => (
             <Pressable key={suggestion.id} style={styles.financingCard}>
               <View style={styles.financingIcon}>
@@ -200,7 +206,7 @@ export function CashFlowDashboard() {
                 <Text style={styles.financingTitle}>{suggestion.title}</Text>
                 <Text style={styles.financingDesc}>{suggestion.description}</Text>
                 <Text style={styles.financingAmount}>
-                  Tot {formatCurrency(suggestion.potentialAmount)} beschikbaar
+                  {t('cashflow.financingAvailable', { amount: formatCurrency(suggestion.potentialAmount) })}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
@@ -225,10 +231,10 @@ export function CashFlowDashboard() {
           <Text style={styles.invoiceProject}>{invoice.projectName}</Text>
           <View style={styles.invoiceMeta}>
             <Text style={styles.invoiceDate}>
-              Vervaldatum: {new Date(invoice.dueDate).toLocaleDateString(undefined)}
+              {t('cashflow.dueDateLabel', { date: new Date(invoice.dueDate).toLocaleDateString(undefined) })}
             </Text>
             {invoice.remindersSent > 0 && (
-              <Text style={styles.invoiceReminders}>{invoice.remindersSent} herinnering(en)</Text>
+              <Text style={styles.invoiceReminders}>{t('cashflow.remindersSent', { count: invoice.remindersSent })}</Text>
             )}
           </View>
         </View>
@@ -246,8 +252,8 @@ export function CashFlowDashboard() {
         <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
           <EmptyState
             icon="cash-outline"
-            title="Nog geen facturen"
-            description="Markeer een klus als afgerond om je eerste factuur op te stellen."
+            title={t('cashflow.noInvoicesTitle', 'No invoices yet')}
+            description={t('cashflow.noInvoicesDesc', 'Mark a job as completed to create your first invoice.')}
           />
         </ScrollView>
       );
@@ -255,10 +261,10 @@ export function CashFlowDashboard() {
 
     return (
       <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Openstaand ({unpaid.length})</Text>
+        <Text style={styles.sectionTitle}>{t('cashflow.outstandingCount', { count: unpaid.length })}</Text>
         {unpaid.map(renderInvoiceCard)}
 
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Betaald ({paid.length})</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('cashflow.paidCount', { count: paid.length })}</Text>
         {paid.map(renderInvoiceCard)}
       </ScrollView>
     );
@@ -294,28 +300,36 @@ export function CashFlowDashboard() {
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {/* Forecast Chart */}
       <View style={styles.forecastCard}>
-        <Text style={styles.sectionTitle}>8-Weken voorspelling</Text>
+        <Text style={styles.sectionTitle}>{t('cashflow.forecast8Weeks', '8-week forecast')}</Text>
         <View style={styles.forecastChart}>
           {forecast.map(renderForecastBar)}
         </View>
         <View style={styles.forecastLegend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: Palette.green500 }]} />
-            <Text style={styles.legendText}>Positief</Text>
+            <Text style={styles.legendText}>{t('cashflow.positive', 'Positive')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: Palette.red500 }]} />
-            <Text style={styles.legendText}>Negatief</Text>
+            <Text style={styles.legendText}>{t('cashflow.negative', 'Negative')}</Text>
           </View>
         </View>
       </View>
 
-      {/* Seasonal Patterns */}
+      {/* Seasonal Patterns — computed from the contractor's own paid invoices
+          and recorded expenses, so it is empty until there is history. */}
       <View style={styles.seasonalCard}>
-        <Text style={styles.sectionTitle}>Seizoenspatronen</Text>
+        <Text style={styles.sectionTitle}>{t('cashflow.seasonalTitle', 'Seasonal patterns')}</Text>
+        {seasonalPatterns.length === 0 && (
+          <Text style={styles.emptyHint}>
+            {t('cashflow.noSeasonalData', 'Not enough history yet for seasonal patterns.')}
+          </Text>
+        )}
         <View style={styles.seasonalGrid}>
-          {seasonalPatterns.map((pattern, index) => {
-            const isCurrentMonth = index === new Date().getMonth();
+          {seasonalPatterns.map((pattern) => {
+            // Compare the real calendar month, not the array position: months
+            // with no history are omitted, so index !== month.
+            const isCurrentMonth = pattern.monthIndex === new Date().getMonth();
             return (
               <View
                 key={pattern.month}
@@ -332,7 +346,11 @@ export function CashFlowDashboard() {
                     color: pattern.trend === 'high' ? Palette.green500 :
                       pattern.trend === 'medium' ? Palette.orange500 : Palette.red500,
                   }]}>
-                    {pattern.trend === 'high' ? 'Hoog' : pattern.trend === 'medium' ? 'Middel' : 'Laag'}
+                    {pattern.trend === 'high'
+                      ? t('cashflow.trendHigh', 'High')
+                      : pattern.trend === 'medium'
+                        ? t('cashflow.trendMedium', 'Medium')
+                        : t('cashflow.trendLow', 'Low')}
                   </Text>
                 </View>
               </View>
@@ -343,7 +361,7 @@ export function CashFlowDashboard() {
 
       {/* Forecast Details */}
       <View style={styles.forecastDetails}>
-        <Text style={styles.sectionTitle}>Details per week</Text>
+        <Text style={styles.sectionTitle}>{t('cashflow.weekDetails', 'Weekly detail')}</Text>
         {forecast.slice(0, 4).map((week, index) => (
           <View key={index} style={styles.forecastDetailRow}>
             <Text style={styles.forecastDetailPeriod}>{week.period}</Text>
@@ -390,13 +408,13 @@ export function CashFlowDashboard() {
       <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
         {/* Summary */}
         <View style={styles.expenseSummary}>
-          <Text style={styles.expenseSummaryLabel}>Totaal deze maand</Text>
+          <Text style={styles.expenseSummaryLabel}>{t('cashflow.totalThisMonth', 'Total this month')}</Text>
           <Text style={styles.expenseSummaryValue}>{formatCurrency(totalThisMonth)}</Text>
         </View>
 
         {/* By Category */}
         <View style={styles.categoryBreakdown}>
-          <Text style={styles.sectionTitle}>Per categorie</Text>
+          <Text style={styles.sectionTitle}>{t('cashflow.perCategory', 'By category')}</Text>
           {Object.entries(byCategory).map(([category, amount]) => {
             const style = getCategoryStyle(category);
             const percentage = (amount / totalThisMonth) * 100;
@@ -421,9 +439,9 @@ export function CashFlowDashboard() {
 
         {/* Recent Expenses */}
         <View style={styles.recentExpenses}>
-          <Text style={styles.sectionTitle}>Recente uitgaven</Text>
+          <Text style={styles.sectionTitle}>{t('cashflow.recentExpenses', 'Recent expenses')}</Text>
           {expenses.length === 0 && (
-            <Text style={styles.emptyHint}>Nog geen uitgaven geregistreerd.</Text>
+            <Text style={styles.emptyHint}>{t('cashflow.noExpenses', 'No expenses recorded yet.')}</Text>
           )}
           {expenses.slice(0, 10).map((expense) => {
             const style = getCategoryStyle(expense.category);
@@ -448,7 +466,7 @@ export function CashFlowDashboard() {
         {/* Add Expense Button */}
         <Pressable style={styles.addExpenseButton}>
           <Ionicons name="add-circle-outline" size={24} color={Palette.hermesOrange} />
-          <Text style={styles.addExpenseText}>Uitgave toevoegen</Text>
+          <Text style={styles.addExpenseText}>{t('cashflow.addExpense', 'Add expense')}</Text>
         </Pressable>
       </ScrollView>
     );
@@ -456,8 +474,19 @@ export function CashFlowDashboard() {
 
   return (
     <View style={styles.container}>
-      {/* Tabs */}
-      <View style={styles.tabBar}>
+      {/* Tabs — horizontally scrollable rather than four flex:1 cells.
+          Four fixed cells left each label ~89dp for an 18dp icon plus its
+          text, so the last tab ran to the very edge of the content box and
+          its pill was clipped. English is the SHORT case here: "Prévisions",
+          "Rechnungen" and "Panoramica" are all longer than "Forecast", so a
+          fixed row cannot fit every locale. Sizing each pill to its own
+          content and letting the row scroll works at any label length. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabBarWrap}
+        contentContainerStyle={styles.tabBar}
+      >
         {tabs.map((tab) => (
           <Pressable
             key={tab.key}
@@ -474,7 +503,7 @@ export function CashFlowDashboard() {
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       {/* Content */}
       {activeTab === 'overview' && renderOverviewTab()}
@@ -494,7 +523,7 @@ export function CashFlowDashboard() {
             <Pressable onPress={() => setShowInvoiceModal(false)}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </Pressable>
-            <Text style={styles.modalTitle}>Factuur details</Text>
+            <Text style={styles.modalTitle}>{t('cashflow.invoiceDetails', 'Invoice details')}</Text>
             <View style={{ width: 24 }} />
           </View>
 
@@ -510,24 +539,24 @@ export function CashFlowDashboard() {
               </View>
 
               <View style={styles.invoiceDetailSection}>
-                <Text style={styles.invoiceDetailLabel}>Klant</Text>
+                <Text style={styles.invoiceDetailLabel}>{t('cashflow.customerLabel', 'Customer')}</Text>
                 <Text style={styles.invoiceDetailValue}>{selectedInvoice.customerName}</Text>
               </View>
 
               <View style={styles.invoiceDetailSection}>
-                <Text style={styles.invoiceDetailLabel}>Project</Text>
+                <Text style={styles.invoiceDetailLabel}>{t('cashflow.projectLabel', 'Project')}</Text>
                 <Text style={styles.invoiceDetailValue}>{selectedInvoice.projectName}</Text>
               </View>
 
               <View style={styles.invoiceDetailRow}>
                 <View style={styles.invoiceDetailSection}>
-                  <Text style={styles.invoiceDetailLabel}>Factuurdatum</Text>
+                  <Text style={styles.invoiceDetailLabel}>{t('cashflow.invoiceDate', 'Invoice date')}</Text>
                   <Text style={styles.invoiceDetailValue}>
                     {new Date(selectedInvoice.issueDate).toLocaleDateString(undefined)}
                   </Text>
                 </View>
                 <View style={styles.invoiceDetailSection}>
-                  <Text style={styles.invoiceDetailLabel}>Vervaldatum</Text>
+                  <Text style={styles.invoiceDetailLabel}>{t('cashflow.dueDate', 'Due date')}</Text>
                   <Text style={styles.invoiceDetailValue}>
                     {new Date(selectedInvoice.dueDate).toLocaleDateString(undefined)}
                   </Text>
@@ -544,7 +573,7 @@ export function CashFlowDashboard() {
                     }}
                   >
                     <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.markPaidText}>Markeer als betaald</Text>
+                    <Text style={styles.markPaidText}>{t('cashflow.markAsPaid', 'Mark as paid')}</Text>
                   </Pressable>
                   <Pressable
                     style={styles.sendReminderButton}
@@ -553,7 +582,7 @@ export function CashFlowDashboard() {
                     }}
                   >
                     <Ionicons name="mail-outline" size={20} color={Palette.hermesOrange} />
-                    <Text style={styles.sendReminderText}>Stuur herinnering</Text>
+                    <Text style={styles.sendReminderText}>{t('cashflow.sendReminderAction', 'Send reminder')}</Text>
                   </Pressable>
                 </View>
               )}
@@ -572,14 +601,18 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: PAGE_BG,
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
     gap: 8,
   },
+  tabBarWrap: {
+    flexGrow: 0,
+    backgroundColor: PAGE_BG,
+  },
   tab: {
-    flex: 1,
     flexDirection: 'row',
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,

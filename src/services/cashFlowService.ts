@@ -6,8 +6,14 @@
 // =============================================================================
 
 import { formatMoney, formatMoney2 } from '../i18n/formatting';
+import i18n from '../i18n/i18n';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
+
+// The "low cash flow" alert used to hardcode "€5.000" into its sentence while
+// the branch tested a bare `5000`, so the two could drift and the euro sign was
+// wrong for any non-euro country. One constant now feeds both.
+const LOW_BALANCE_THRESHOLD = 5000;
 
 // ============================================
 // TYPES
@@ -87,6 +93,9 @@ export interface FinancingSuggestion {
 
 export interface SeasonalPattern {
   month: string;
+  /** 0-11 calendar month. Callers must not infer this from array position:
+   *  months with no history are omitted, so the array is sparse. */
+  monthIndex: number;
   avgIncome: number;
   avgExpenses: number;
   trend: 'high' | 'medium' | 'low';
@@ -321,8 +330,15 @@ class CashFlowService {
         })
         .reduce((sum, inv) => sum + inv.amount, 0);
 
-      // Recurring income estimate
-      const recurringIncome = i === 0 ? 0 : 2500; // Simplified
+      // Recurring income. This was `i === 0 ? 0 : 2500` -- a flat EUR 2,500 a
+      // week conjured from nothing, which is why every forecast bar from week
+      // 2 onward rendered the identical "+EUR 2.500,00" and why the 8-week
+      // chart looked like a staircase of guaranteed revenue. There is no
+      // recurring-income source in the data model (only expenses carry a
+      // `recurring` flag), so there is nothing to derive it from: the honest
+      // value is zero. A forecast that shows only money someone actually owes
+      // is worth more than one padded with EUR 17,500 of invented revenue.
+      const recurringIncome = 0;
 
       // Scheduled expenses
       const scheduledExpenses = this.getExpenses()
@@ -342,15 +358,28 @@ class CashFlowService {
               .reduce((sum, exp) => sum + exp.amount, 0)
           : 0);
 
+      // Invoices the customer has actually received are committed; drafts are not.
+      const committedIncome = this.getInvoices()
+        .filter((inv) => {
+          const dueDate = new Date(inv.dueDate);
+          return inv.status !== 'paid' && inv.status !== 'draft'
+            && dueDate >= weekStart && dueDate <= weekEnd;
+        })
+        .reduce((sum, inv) => sum + inv.amount, 0);
+
       const expectedIncome = invoicesDue + recurringIncome;
       const expectedExpenses = scheduledExpenses + recurringExpenses;
 
       forecasts.push({
-        period: `Week ${i + 1}`,
+        period: i18n.t('cashflow.weekN', { n: i + 1 }),
         expectedIncome,
         expectedExpenses,
         netCashFlow: expectedIncome - expectedExpenses,
-        confidence: Math.max(0.5, 0.95 - i * 0.05),
+        // Share of this week's expected income that is backed by an invoice
+        // the customer has actually been sent, rather than an estimate. Was
+        // `0.95 - i * 0.05`: a straight function of the week index that knew
+        // nothing about the data, rendered next to real money as "90%", "85%".
+        confidence: expectedIncome > 0 ? committedIncome / expectedIncome : 1,
         breakdown: {
           invoicesDue,
           recurringIncome,
@@ -374,7 +403,15 @@ class CashFlowService {
       .reduce((sum, e) => sum + e.amount, 0);
 
     const forecast = this.getCashFlowForecast(4);
-    const projectedBalance30Days = 15000 + forecast.reduce((sum, f) => sum + f.netCashFlow, 0);
+    // Opens from money that actually landed. This used to start at a literal
+    // 15000 -- the same invented opening balance R26 already removed from
+    // `currentBalance` a few lines below, but left in place here. That made the
+    // card self-contradictory: it showed a real current balance next to a
+    // 30-day projection that had silently assumed EUR 15,000 in the bank.
+    const paidTotal = this.getInvoices()
+      .filter((i) => i.status === 'paid')
+      .reduce((sum, i) => sum + i.amount, 0);
+    const projectedBalance30Days = paidTotal + forecast.reduce((sum, f) => sum + f.netCashFlow, 0);
 
     const overdue = invoices.filter((i) => i.status === 'overdue');
     const alerts: CashFlowAlert[] = [];
@@ -384,21 +421,24 @@ class CashFlowService {
       alerts.push({
         id: 'alert_overdue',
         type: 'warning',
-        title: `${overdue.length} openstaande facturen`,
-        description: `${formatMoney(overdueTotal)} aan betalingen zijn verlopen`,
+        title: i18n.t('cashflow.alertOverdueTitle', { count: overdue.length }),
+        description: i18n.t('cashflow.alertOverdueDesc', { amount: formatMoney(overdueTotal) }),
         actionable: true,
-        action: 'Stuur herinneringen',
+        action: i18n.t('cashflow.alertOverdueAction', 'Send reminders'),
       });
     }
 
-    if (projectedBalance30Days < 5000) {
+    if (projectedBalance30Days < LOW_BALANCE_THRESHOLD) {
       alerts.push({
         id: 'alert_low_balance',
         type: 'warning',
-        title: 'Lage cashflow verwacht',
-        description: 'Je saldo kan binnen 30 dagen onder €5.000 komen',
+        title: i18n.t('cashflow.alertLowCashTitle', 'Low cash flow expected'),
+        // The threshold was baked into the sentence as a literal "€5.000",
+        // which contradicted the actual 5000 test above for any non-euro
+        // country. Format the same constant the branch compares against.
+        description: i18n.t('cashflow.alertLowCashDesc', { amount: formatMoney(LOW_BALANCE_THRESHOLD) }),
         actionable: true,
-        action: 'Bekijk financieringsopties',
+        action: i18n.t('cashflow.alertLowCashAction', 'View financing options'),
       });
     }
 
@@ -410,9 +450,7 @@ class CashFlowService {
 
     // R26: was hardcoded 15000 — pure fiction for every contractor regardless
     // of actual finances. Now sums paid invoices (cash that's actually landed).
-    const currentBalance = this.getInvoices()
-      .filter((i) => i.status === 'paid')
-      .reduce((sum, i) => sum + i.amount, 0);
+    const currentBalance = paidTotal;
 
     return {
       currentBalance,
@@ -480,12 +518,12 @@ class CashFlowService {
       suggestions.push({
         id: 'fin_factoring',
         type: 'invoice_factoring',
-        title: 'Factoring',
-        description: 'Verkoop je openstaande facturen voor direct werkkapitaal',
+        title: i18n.t('cashflow.finFactoringTitle', 'Factoring'),
+        description: i18n.t('cashflow.finFactoringDesc', 'Sell your outstanding invoices for immediate working capital'),
         potentialAmount: Math.round((aging.days30.total + aging.days60.total) * 0.9),
         estimatedCost: Math.round((aging.days30.total + aging.days60.total) * 0.03),
         provider: 'Vasco Financing',
-        requirements: ['Geverifieerde facturen', 'Zakelijke klanten'],
+        requirements: [i18n.t('cashflow.finFactoringReq1', 'Verified invoices'), i18n.t('cashflow.finFactoringReq2', 'Business customers')],
       });
     }
 
@@ -494,12 +532,12 @@ class CashFlowService {
       suggestions.push({
         id: 'fin_credit',
         type: 'credit_line',
-        title: 'Zakelijk krediet',
-        description: 'Flexibele kredietlijn voor werkkapitaal',
+        title: i18n.t('cashflow.finCreditTitle', 'Business credit'),
+        description: i18n.t('cashflow.finCreditDesc', 'Flexible credit line for working capital'),
         potentialAmount: 25000,
         estimatedCost: 250,
         provider: 'Vasco Business Credit',
-        requirements: ['6+ maanden actief', 'Positieve cashflow historie'],
+        requirements: [i18n.t('cashflow.finCreditReq1', '6+ months active'), i18n.t('cashflow.finCreditReq2', 'Positive cash flow history')],
       });
     }
 
@@ -511,22 +549,10 @@ class CashFlowService {
   // -----------------------------------------
 
   getSeasonalPatterns(): SeasonalPattern[] {
-    const months = ['Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
-    const patterns: SeasonalPattern[] = [
-      { month: 'Jan', avgIncome: 18000, avgExpenses: 12000, trend: 'low', yearOverYear: -5 },
-      { month: 'Feb', avgIncome: 20000, avgExpenses: 13000, trend: 'low', yearOverYear: 2 },
-      { month: 'Mrt', avgIncome: 28000, avgExpenses: 16000, trend: 'medium', yearOverYear: 8 },
-      { month: 'Apr', avgIncome: 35000, avgExpenses: 20000, trend: 'high', yearOverYear: 12 },
-      { month: 'Mei', avgIncome: 42000, avgExpenses: 24000, trend: 'high', yearOverYear: 15 },
-      { month: 'Jun', avgIncome: 40000, avgExpenses: 23000, trend: 'high', yearOverYear: 10 },
-      { month: 'Jul', avgIncome: 32000, avgExpenses: 18000, trend: 'medium', yearOverYear: 5 },
-      { month: 'Aug', avgIncome: 28000, avgExpenses: 16000, trend: 'medium', yearOverYear: 3 },
-      { month: 'Sep', avgIncome: 38000, avgExpenses: 22000, trend: 'high', yearOverYear: 8 },
-      { month: 'Okt', avgIncome: 30000, avgExpenses: 18000, trend: 'medium', yearOverYear: 4 },
-      { month: 'Nov', avgIncome: 22000, avgExpenses: 14000, trend: 'low', yearOverYear: -2 },
-      { month: 'Dec', avgIncome: 16000, avgExpenses: 11000, trend: 'low', yearOverYear: -8 },
-    ];
-    return patterns;
+    // Delegates to the pure aggregator over whatever this singleton holds.
+    // In practice the app uses `useCashFlow().seasonalPatterns`, which feeds
+    // it the contractor's real AppState invoices and expenses.
+    return computeSeasonalPatterns(this.getInvoices(), this.getExpenses());
   }
 
   // -----------------------------------------
@@ -552,6 +578,101 @@ export const cashFlowService = new CashFlowService();
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppState } from '../state/AppState';
 import { useExpenses } from './expenseService';
+
+// ---------------------------------------------------------------------------
+// Seasonal patterns — computed from real history
+// ---------------------------------------------------------------------------
+// This used to `return` a literal twelve-row table (Jan 18000 / Feb 20000 /
+// ... / Mei 42000), so every contractor on every account saw the same invented
+// monthly averages and the same year-over-year percentages, presented as their
+// own seasonality. Nothing about it responded to their data.
+//
+// Now it aggregates the contractor's actual invoices and expenses by calendar
+// month. Months with no history are omitted rather than zero-filled, and
+// yearOverYear is only produced when the same month exists in two different
+// years -- with a single year of history there is nothing to compare against,
+// so it stays 0 instead of implying a trend.
+export function computeSeasonalPatterns(
+  invoices: Invoice[],
+  expenses: Expense[],
+): SeasonalPattern[] {
+  // month index -> year -> total
+  const income = new Map<number, Map<number, number>>();
+  const spend = new Map<number, Map<number, number>>();
+
+  const add = (bucket: Map<number, Map<number, number>>, iso: string, amount: number) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return;
+    const m = d.getMonth();
+    const y = d.getFullYear();
+    if (!bucket.has(m)) bucket.set(m, new Map());
+    const byYear = bucket.get(m)!;
+    byYear.set(y, (byYear.get(y) ?? 0) + amount);
+  };
+
+  // Only money that actually landed counts as income for a past month; a draft
+  // or still-open invoice is not evidence about that month's seasonality.
+  for (const inv of invoices) {
+    if (inv.status !== 'paid') continue;
+    add(income, inv.issueDate, inv.amount);
+  }
+  for (const exp of expenses) add(spend, exp.date, exp.amount);
+
+  const months = Array.from(new Set([...income.keys(), ...spend.keys()])).sort((a, b) => a - b);
+  if (months.length === 0) return [];
+
+  const mean = (byYear?: Map<number, number>) => {
+    if (!byYear || byYear.size === 0) return 0;
+    let total = 0;
+    for (const v of byYear.values()) total += v;
+    return total / byYear.size;
+  };
+
+  const rows = months.map((m) => {
+    const byYear = income.get(m);
+    const avgIncome = mean(byYear);
+    const avgExpenses = mean(spend.get(m));
+
+    // Year over year needs the same month in two different years.
+    let yearOverYear = 0;
+    if (byYear && byYear.size >= 2) {
+      const years = Array.from(byYear.keys()).sort((a, b) => a - b);
+      const prev = byYear.get(years[years.length - 2]) ?? 0;
+      const latest = byYear.get(years[years.length - 1]) ?? 0;
+      if (prev > 0) yearOverYear = Math.round(((latest - prev) / prev) * 100);
+    }
+
+    return { monthIndex: m, avgIncome, avgExpenses, yearOverYear };
+  });
+
+  // `trend` is relative to this contractor's own average month, not an
+  // absolute euro threshold -- a one-person painter and a ten-crew firm have
+  // very different "high" months.
+  const overall = rows.reduce((sum, r) => sum + r.avgIncome, 0) / rows.length;
+  const label = (m: number) => {
+    const d = new Date(2000, m, 1);
+    try {
+      return new Intl.DateTimeFormat(i18n.language, { month: 'short' }).format(d);
+    } catch {
+      return String(m + 1);
+    }
+  };
+
+  return rows.map((r) => ({
+    month: label(r.monthIndex),
+    monthIndex: r.monthIndex,
+    avgIncome: Math.round(r.avgIncome),
+    avgExpenses: Math.round(r.avgExpenses),
+    trend: overall <= 0
+      ? ('medium' as const)
+      : r.avgIncome > overall * 1.15
+        ? ('high' as const)
+        : r.avgIncome < overall * 0.85
+          ? ('low' as const)
+          : ('medium' as const),
+    yearOverYear: r.yearOverYear,
+  }));
+}
 
 export function useCashFlow() {
   const { invoices: appInvoices } = useAppState();
@@ -628,23 +749,26 @@ export function useCashFlow() {
       alerts.push({
         id: 'alert_overdue',
         type: 'warning',
-        title: `${overdue.length} openstaande facturen`,
-        description: `${formatMoney(overdueTotal)} aan betalingen zijn verlopen`,
+        title: i18n.t('cashflow.alertOverdueTitle', { count: overdue.length }),
+        description: i18n.t('cashflow.alertOverdueDesc', { amount: formatMoney(overdueTotal) }),
         actionable: true,
-        action: 'Stuur herinneringen',
+        action: i18n.t('cashflow.alertOverdueAction', 'Send reminders'),
       });
     }
 
     const projectedBalance30Days = paidTotal + pendingIncome - pendingExpenses;
 
-    if (projectedBalance30Days < 5000) {
+    if (projectedBalance30Days < LOW_BALANCE_THRESHOLD) {
       alerts.push({
         id: 'alert_low_balance',
         type: 'warning',
-        title: 'Lage cashflow verwacht',
-        description: 'Je saldo kan binnen 30 dagen onder €5.000 komen',
+        title: i18n.t('cashflow.alertLowCashTitle', 'Low cash flow expected'),
+        // The threshold was baked into the sentence as a literal "€5.000",
+        // which contradicted the actual 5000 test above for any non-euro
+        // country. Format the same constant the branch compares against.
+        description: i18n.t('cashflow.alertLowCashDesc', { amount: formatMoney(LOW_BALANCE_THRESHOLD) }),
         actionable: true,
-        action: 'Bekijk financieringsopties',
+        action: i18n.t('cashflow.alertLowCashAction', 'View financing options'),
       });
     }
 
@@ -679,12 +803,20 @@ export function useCashFlow() {
     return cashFlowService.addExpense(expense);
   }, []);
 
+  // Real seasonality, derived from this contractor's own paid invoices and
+  // recorded expenses. Empty until there is history to aggregate.
+  const seasonalPatterns = useMemo(
+    () => computeSeasonalPatterns(invoices, expenses),
+    [invoices, expenses],
+  );
+
   return {
     invoices,
     expenses,
     summary,
     aging,
     forecast,
+    seasonalPatterns,
     markPaid,
     sendReminder,
     addExpense,
@@ -708,6 +840,9 @@ export function useFinancingSuggestions() {
   return useMemo(() => cashFlowService.getFinancingSuggestions(), []);
 }
 
+// Reads the contractor's real invoices/expenses out of AppState. Previously
+// this called the singleton, which R26 left permanently empty -- so it returned
+// the hardcoded twelve-month table for everyone, forever.
 export function useSeasonalPatterns() {
-  return useMemo(() => cashFlowService.getSeasonalPatterns(), []);
+  return useCashFlow().seasonalPatterns;
 }
