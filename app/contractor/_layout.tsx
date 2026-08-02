@@ -1,7 +1,35 @@
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
+import { View } from 'react-native';
 import { SemanticColors } from '../../src/theme/colors';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function ContractorLayout() {
+  // Auth gate, mirroring app/(contractor)/_layout.tsx.
+  //
+  // These 41 drill-downs had NO gate, so an unauthenticated visit rendered a
+  // blank WHITE screen — not even the dark app background — instead of the
+  // login redirect the tab group performs. Found by deep-linking the routes on
+  // Android after a JS reload dropped the demo session; the breadcrumb read
+  // `{ authenticated: false }` while the screen showed nothing at all.
+  //
+  // Not merely theoretical: `vasco://` deep links are what push notifications
+  // and emails open. A contractor tapping a payment-reminder notification after
+  // their session expired lands here, and a white void is the worst possible
+  // answer — it reads as a broken app rather than "please sign in".
+  //
+  // No data exposure either way (services return empty with no user); this is
+  // purely about not showing a dead screen.
+  const { isAuthenticated, isAuthHydrating } = useAuth();
+
+  if (isAuthHydrating) {
+    // Themed blank while the session restores, so a cold start does not flash
+    // white before resolving.
+    return <View style={{ flex: 1, backgroundColor: SemanticColors.surfaceBackground }} />;
+  }
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
+
   return (
     <Stack
       screenOptions={{
