@@ -11,7 +11,7 @@ Mobile-first app for construction trades (plumbing, electrical, gas, painting, c
 - **Payments:** Mollie (6 countries)
 - **Accounting:** 19 providers (Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero, QuickBooks, etc.)
 - **E-Invoicing:** XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA, Peppol
-- **AI:** Claude Haiku Vision (photo analysis), 45 intelligence generators, ML prediction models
+- **AI:** Claude Haiku Vision (photo analysis — stays on Claude), 45 intelligence generators, ML prediction models. Text-only LLM stages route via a provider abstraction (`supabase/functions/_shared/llm.ts`) that speaks Claude **or** Kimi/Moonshot with automatic Claude fallback, chosen per task by env (defaults to Claude). Customer PII is tokenized/scrubbed before any third-party (Kimi) call — see `_shared/pii.ts`.
 - **Icons:** Ionicons
 - **i18n:** i18next (6 locales: en/nl/de/fr/es/it, 687 keys each)
 

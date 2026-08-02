@@ -14,6 +14,8 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { rateLimit } from '../_shared/ratelimit.ts';
+import { chat } from '../_shared/llm.ts';
+import { scrubFreeText, tokenizeIdentities } from '../_shared/pii.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,8 +64,9 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!supabaseUrl || !anonKey || !anthropicKey) {
+    // Provider keys are validated inside `chat()` (llm.ts) so this task can run
+    // on Kimi, Claude, or Kimi-with-Claude-fallback purely from env config.
+    if (!supabaseUrl || !anonKey) {
       return new Response(JSON.stringify({ ok: false, error: 'Server misconfigured' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -121,6 +124,14 @@ Deno.serve(async (req) => {
     const tone: Tone = body.tone ?? 'friendly';
     const lang = body.language ?? 'nl';
 
+    // Data-residency (Option A): the customer is a third party who never
+    // consented to a third-party model processing their name. Replace names
+    // with placeholder tokens before the prompt leaves this function, scrub
+    // PII out of any carried-over free text, and rehydrate the real names into
+    // the model's output afterwards. See _shared/pii.ts.
+    const ident = tokenizeIdentities(body.customerName, body.businessName);
+    const knownNames = [body.customerName, body.businessName];
+
     const linesText = body.lineItems
       .map((item, i) => {
         const qty = item.quantity ? ` × ${item.quantity}${item.unit ? ` ${item.unit}` : ''}` : '';
@@ -128,27 +139,33 @@ Deno.serve(async (req) => {
       })
       .join('\n');
 
+    const jobTitleSafe = body.jobTitle
+      ? scrubFreeText(body.jobTitle, knownNames)
+      : '(not provided)';
+
     const examplesBlock = body.toneExamples && body.toneExamples.length > 0
       ? `\n\nThe contractor's voice — match this prose style:\n${body.toneExamples
           .slice(0, 3)
-          .map((ex, i) => `Example ${i + 1}:\n"""\n${ex.slice(0, 800)}\n"""`)
+          .map((ex, i) => `Example ${i + 1}:\n"""\n${scrubFreeText(ex.slice(0, 800), knownNames)}\n"""`)
           .join('\n\n')}`
       : '';
 
     const dossierBlock = body.dossierBrief
-      ? `\n\nJob context (use to ground specifics, do not quote verbatim):\n"""\n${body.dossierBrief.slice(0, 1200)}\n"""`
+      ? `\n\nJob context (use to ground specifics, do not quote verbatim):\n"""\n${scrubFreeText(body.dossierBrief.slice(0, 1200), knownNames)}\n"""`
       : '';
 
     const prompt = `You are drafting a scope-of-work narrative for a construction trade quote.
 Target language: ${lang}. ${TONE_GUIDANCE[tone]}
 
 Trade: ${body.trade ?? 'general construction'}
-Job title: ${body.jobTitle ?? '(not provided)'}
-Customer: ${body.customerName ?? 'Customer'}
-Business: ${body.businessName ?? 'Contractor'}
+Job title: ${jobTitleSafe}
+Customer: ${ident.customerRef}
+Business: ${ident.businessRef}
 
 Line items being quoted:
 ${linesText}${examplesBlock}${dossierBlock}
+
+If a placeholder such as [CUSTOMER_NAME] or [BUSINESS_NAME] appears above, reproduce it verbatim wherever that party should be named — never invent a real name.
 
 Write the scope of work as exactly three paragraphs, in this order, separated by ONE blank line:
 1. INCLUDES — what the quote covers, derived from the line items. Make the actual work concrete (mention sizes, materials, locations where line items make this clear).
@@ -159,46 +176,46 @@ Return ONLY JSON matching:
 {"scopeText":"INCLUDES paragraph\\n\\nEXCLUDES paragraph\\n\\nWARRANTY paragraph"}
 No markdown fences. No extra commentary.`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 800,
-        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
-      }),
-    });
-    if (!resp.ok) {
-      const errText = await resp.text();
+    // Text-only reasoning stage — routed by env (Kimi primary + Claude
+    // fallback, or all-Claude by default). The photo never reaches this stage;
+    // it was turned into structured line items by analyze-photo (Claude Vision)
+    // upstream, so from here it is a pure text problem.
+    let result: { text: string; provider: string; model: string };
+    try {
+      result = await chat({
+        task: 'sow',
+        maxTokens: 800,
+        jsonMode: true,
+        messages: [{ role: 'user', content: prompt }],
+      });
+    } catch (err) {
       return new Response(JSON.stringify({
         ok: false,
-        error: `Claude ${resp.status}`,
-        detail: errText.slice(0, 300),
+        error: 'Model call failed',
+        detail: String(err).slice(0, 300),
       }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    const json: any = await resp.json();
-    const text: string = json?.content?.[0]?.text ?? '';
+
+    const text: string = result.text ?? '';
     try {
       const parsed = JSON.parse(text.replace(/```json\n?|```/g, '').trim());
-      const scopeText: string = String(parsed?.scopeText ?? '').trim();
+      // Rehydrate the real names into the model's output (they were tokenized
+      // out before the prompt left this function).
+      const scopeText: string = ident.rehydrate(String(parsed?.scopeText ?? '').trim());
       if (!scopeText) {
         return new Response(JSON.stringify({ ok: false, error: 'Empty scope text from model' }), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      return new Response(JSON.stringify({ ok: true, scopeText }), {
+      return new Response(JSON.stringify({ ok: true, scopeText, provider: result.provider }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch {
       return new Response(JSON.stringify({
         ok: false,
-        error: 'Could not parse Claude response',
+        error: 'Could not parse model response',
         raw: text.slice(0, 400),
       }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

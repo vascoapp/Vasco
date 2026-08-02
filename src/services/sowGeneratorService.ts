@@ -52,6 +52,10 @@ export interface GenerateSowResult {
   raw?: string;
   /** R64 (audit fix #5): seconds to wait before retrying (set on 429). */
   retryAfter?: number;
+  /** Which LLM provider served the request ('anthropic' | 'moonshot'). Set on
+   *  success for observability; the FE ignores it. Kimi routing is server-side
+   *  via env, so the app never needs to know or choose the provider. */
+  provider?: string;
 }
 
 /**
