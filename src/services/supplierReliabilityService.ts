@@ -474,22 +474,22 @@ class SupplierReliabilityService {
     return { direction, percentage: Math.round(percentage) };
   }
 
-  private getHistoricalScores(supplierId: string): { date: string; score: number }[] {
-    // In production, this would fetch from historical data
-    // Simplified mock implementation
-    const today = new Date();
-    const scores: { date: string; score: number }[] = [];
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setMonth(date.getMonth() - i);
-      scores.push({
-        date: date.toISOString().split('T')[0],
-        score: 75 + Math.floor(Math.random() * 20),
-      });
-    }
-
-    return scores;
+  private getHistoricalScores(_supplierId: string): { date: string; score: number }[] {
+    // This used to synthesise seven months of `75 + Math.random() * 20`
+    // scores. Everything downstream treated them as measurements: calculateTrend
+    // reported "improving" or "declining" with a percentage, and detectDrift
+    // raised alerts by comparing the current score against their average. Both
+    // were reading noise, and because the numbers were redrawn on every call
+    // the same supplier could read "improving 8%" and "declining 6%" seconds
+    // apart.
+    //
+    // No score history is persisted anywhere -- performanceCache is in-memory
+    // and cleared on reset -- so there is nothing truthful to return. An empty
+    // array degrades correctly: calculateTrend short-circuits to
+    // { direction: 'stable', percentage: 0 } on fewer than 2 entries, and
+    // detectDrift's `historicalScores.length > 1` guard skips the comparison.
+    // Wire this to a real store before trusting trend or drift output.
+    return [];
   }
 
   // ----------------------------------------
