@@ -234,8 +234,18 @@ export default function LoginScreen() {
                   accessibilityRole="link"
                   accessibilityLabel={t('auth.haveAccessCode', 'I have an access code')}
                 >
-                  <Ionicons name="key-outline" size={15} color={DK.colors.textMuted} />
+                  {/* Icon is nested INSIDE the Text rather than sitting beside
+                      it in a flex row. On Android a shrink-to-fit Text drops
+                      its last word ("I have an access" / "Log in" → "Log"):
+                      the glyphs are painted narrower than the box Yoga sized,
+                      so the tail wraps to a second line the single-line height
+                      then clips. Verified on-device — the same string in a
+                      full-width Text renders complete. Ionicons is itself a
+                      Text glyph, so nesting keeps the icon inline while the
+                      label gets the full row width and never shrink-wraps. */}
                   <Text style={styles.accessCodeLinkText}>
+                    <Ionicons name="key-outline" size={15} color={DK.colors.textMuted} />
+                    {'  '}
                     {t('auth.haveAccessCode', 'I have an access code')}
                   </Text>
                 </Pressable>
@@ -663,16 +673,21 @@ const styles = StyleSheet.create({
     borderRadius: 14, paddingVertical: 16,
     backgroundColor: SemanticColors.surfacePrimary,
   },
+  // `alignSelf: 'stretch'` + `textAlign: 'center'` instead of letting the label
+  // shrink-wrap: a shrink-to-fit Text loses its last word on Android (this
+  // button rendered "Log"). Stretching hands it the button's full content
+  // width, so there is nothing to wrap.
   secondaryBtnText: {
     fontSize: 15, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary,
     letterSpacing: 0.4,
+    alignSelf: 'stretch', textAlign: 'center',
   },
   accessCodeLink: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     paddingVertical: 12, marginTop: 4,
   },
   accessCodeLinkText: {
     fontSize: 13, fontFamily: 'Inter_500Medium', color: DK.colors.textMuted,
+    textAlign: 'center',
   },
   // Back affordance in the sign-in view → returns to the welcome/sign-up view.
   backToWelcome: {
