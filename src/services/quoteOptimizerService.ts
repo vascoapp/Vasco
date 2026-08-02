@@ -129,7 +129,7 @@ export interface QuoteAnalysis {
 // MOCK DATA
 // ============================================
 
-const MOCK_MARKET_DATA: Record<string, MarketPriceData> = {
+const DEMO_MARKET_DATA: Record<string, MarketPriceData> = {
   'mat_dulux_white_5l': {
     materialId: 'mat_dulux_white_5l',
     materialName: 'Dulux Trade Eggshell White 5L',
@@ -206,6 +206,14 @@ const DEMO_MOCK_UPSELL_SUGGESTIONS: UpsellSuggestion[] = [
 
 /** Demo fixture — empty in production builds (see src/config/demo.ts). */
 const MOCK_UPSELL_SUGGESTIONS: UpsellSuggestion[] = DEMO_MODE ? DEMO_MOCK_UPSELL_SUGGESTIONS : [];
+
+// DEMO ONLY. Invented regional prices for real, named branded products
+// (Dulux Trade Eggshell White 5L, Sigma S2U Allure, Grohe Eurosmart). Gated at
+// the constant so every consumer is covered at once -- MOCK_UPSELL_SUGGESTIONS
+// in this same file was already gated, this table was missed. In production the
+// record is empty and getMarketData returns null, which the analyse loop
+// already handles by skipping the item.
+const MOCK_MARKET_DATA: Record<string, MarketPriceData> = DEMO_MODE ? DEMO_MARKET_DATA : {};
 
 // ============================================
 // SERVICE CLASS
@@ -376,18 +384,14 @@ class QuoteOptimizerService {
   private getMarketData(materialId: string, currentPrice: number): MarketPriceData | null {
     const baseData = MOCK_MARKET_DATA[materialId];
     if (!baseData) {
-      // Generate synthetic market data for unknown materials
-      return {
-        materialId,
-        materialName: 'Onbekend materiaal',
-        category: 'Overig',
-        regionAvgPrice: currentPrice * 0.95,
-        regionLowPrice: currentPrice * 0.85,
-        regionHighPrice: currentPrice * 1.15,
-        percentile: 55,
-        trend: 'stable',
-        trendPercent: 0,
-      };
+      // Was "generate synthetic market data for unknown materials": it derived
+      // regionAvgPrice as `currentPrice * 0.95` and the range as +/-15% of the
+      // contractor's own price. That is circular -- the market average was
+      // *defined* as 95% of what they charge, so the comparison could only ever
+      // conclude they were ~5% above market, on every unknown material. With no
+      // real source there is nothing to compare against; the analyse loop
+      // already skips items whose market data is null.
+      return null;
     }
 
     // Calculate percentile based on current price
@@ -405,9 +409,14 @@ class QuoteOptimizerService {
   /**
    * Get competitor insights for a material
    */
-  private getCompetitorInsight(materialId: string, currentPrice: number): CompetitorInsight {
+  private getCompetitorInsight(materialId: string, currentPrice: number): CompetitorInsight | null {
     const marketData = MOCK_MARKET_DATA[materialId];
-    const avgPrice = marketData?.regionAvgPrice || currentPrice;
+    // `avgPrice` used to fall back to the contractor's own price, which makes
+    // priceDiff exactly 0 -- the insight then "concluded" they were precisely
+    // at market by construction, and that fed competitiveScore and the
+    // positioning suggestions the UI shows.
+    if (!marketData) return null;
+    const avgPrice = marketData.regionAvgPrice;
 
     const priceDiff = ((currentPrice - avgPrice) / avgPrice) * 100;
     let position: 'below' | 'average' | 'above' = 'average';
@@ -421,7 +430,9 @@ class QuoteOptimizerService {
 
     return {
       materialId,
-      competitorCount: Math.floor(Math.random() * 8) + 3,
+      // Not displayed anywhere; there is no competitor-count source, and this
+      // was `Math.random() * 8 + 3`, redrawn on every render.
+      competitorCount: 0,
       avgCompetitorPrice: avgPrice,
       yourPricePosition: position,
       priceDifferencePercent: Math.round(priceDiff),
