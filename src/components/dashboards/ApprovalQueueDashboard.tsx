@@ -321,7 +321,7 @@ export function ApprovalQueueDashboard() {
               <Text style={styles.auditLabel}>Audit Trail:</Text>
               {action.auditTrail.slice(-5).map((entry, index) => (
                 <View key={index} style={styles.auditRow}>
-                  <Text style={styles.auditTime}>
+                  <Text style={styles.auditTime} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
                     {new Date(entry.timestamp).toLocaleString('en-GB', {
                       day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
                     })}

@@ -136,7 +136,7 @@ const InvoiceCard: React.FC<{
                   {item.description}
                 </Text>
                 <Text style={styles.lineItemQty}>{item.quantity}x</Text>
-                <Text style={styles.lineItemPrice}>{formatCurrency(item.total)}</Text>
+                <Text style={styles.lineItemPrice} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{formatCurrency(item.total)}</Text>
               </View>
             ))}
             <View style={styles.totalRow}>
@@ -767,6 +767,10 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
     marginHorizontal: 12,
   },
+  // Fixed width + localised content: guarded at the call sites with
+  // adjustsFontSizeToFit rather than plain numberOfLines. NEVER ellipsize a
+  // monetary value — "EUR 1.234" clipped to "EUR 1.2..." reads as a different
+  // number. Shrinking is safe; truncating money is not.
   lineItemPrice: {
     fontSize: TYPE.bodySize - 1,
     fontFamily: TYPE.labelFamily,

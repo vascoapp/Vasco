@@ -101,11 +101,11 @@ export default function MarketInsightsScreen() {
                 const barPct = Math.max(2, Math.min(100, m.avgMargin * 2));
                 return (
                   <View key={m.month} style={[styles.row, idx > 0 && styles.rowBorder]}>
-                    <Text style={styles.rowLabel}>{monthLabel}</Text>
+                    <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{monthLabel}</Text>
                     <View style={styles.barTrack}>
                       <View style={[styles.barFill, { width: `${barPct}%` }]} />
                     </View>
-                    <Text style={styles.rowValue}>{m.avgMargin.toFixed(1)}%</Text>
+                    <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{m.avgMargin.toFixed(1)}%</Text>
                     <Text style={styles.rowMeta}>n={m.quotes}</Text>
                   </View>
                 );
@@ -122,11 +122,11 @@ export default function MarketInsightsScreen() {
                 const barPct = Math.max(2, Math.min(100, wr.winRate * 100));
                 return (
                   <View key={wr.amountBucket} style={[styles.row, idx > 0 && styles.rowBorder]}>
-                    <Text style={styles.rowLabel}>{labelBucket(wr.amountBucket)}</Text>
+                    <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{labelBucket(wr.amountBucket)}</Text>
                     <View style={styles.barTrack}>
                       <View style={[styles.barFill, { width: `${barPct}%`, backgroundColor: DK.colors.success }]} />
                     </View>
-                    <Text style={styles.rowValue}>{Math.round(wr.winRate * 100)}%</Text>
+                    <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{Math.round(wr.winRate * 100)}%</Text>
                     <Text style={styles.rowMeta}>n={wr.quotes}</Text>
                   </View>
                 );
@@ -140,20 +140,20 @@ export default function MarketInsightsScreen() {
             <DKLabel style={styles.sectionLabel}>{t('marketInsights.last30Days', 'LAST 30 DAYS — YOUR ACTIVITY')}</DKLabel>
             <View style={styles.card}>
               <View style={styles.row}>
-                <Text style={styles.rowLabel}>{t('marketInsights.quotesSent', 'Quotes sent')}</Text>
-                <Text style={styles.rowValue}>{totals30d.sent}</Text>
+                <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('marketInsights.quotesSent', 'Quotes sent')}</Text>
+                <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{totals30d.sent}</Text>
               </View>
               <View style={[styles.row, styles.rowBorder]}>
-                <Text style={styles.rowLabel}>{t('marketInsights.accepted', 'Accepted')}</Text>
-                <Text style={styles.rowValue}>{totals30d.accepted} <Text style={styles.rowMeta}>· {acceptRate30d}%</Text></Text>
+                <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('marketInsights.accepted', 'Accepted')}</Text>
+                <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{totals30d.accepted} <Text style={styles.rowMeta}>· {acceptRate30d}%</Text></Text>
               </View>
               <View style={[styles.row, styles.rowBorder]}>
-                <Text style={styles.rowLabel}>{t('marketInsights.invoicesPaid', 'Invoices paid')}</Text>
-                <Text style={styles.rowValue}>{totals30d.paid}</Text>
+                <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('marketInsights.invoicesPaid', 'Invoices paid')}</Text>
+                <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{totals30d.paid}</Text>
               </View>
               <View style={[styles.row, styles.rowBorder]}>
-                <Text style={styles.rowLabel}>{t('marketInsights.received', 'Received')}</Text>
-                <Text style={styles.rowValue}>{formatCurrency0(totals30d.paidEur, country as Country)}</Text>
+                <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('marketInsights.received', 'Received')}</Text>
+                <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{formatCurrency0(totals30d.paidEur, country as Country)}</Text>
               </View>
             </View>
           </View>
@@ -198,6 +198,10 @@ const styles = StyleSheet.create({
     borderRadius: 3, overflow: 'hidden',
   },
   barFill: { height: '100%', backgroundColor: DK.colors.accent },
+  // Fixed width + localised content: guarded at the call sites with
+  // adjustsFontSizeToFit rather than plain numberOfLines. NEVER ellipsize a
+  // monetary value — "EUR 1.234" clipped to "EUR 1.2..." reads as a different
+  // number. Shrinking is safe; truncating money is not.
   rowValue: { width: 60, textAlign: 'right', fontSize: 13, fontFamily: TYPE.titleFamily, color: DK.colors.text },
   rowMeta: { fontSize: 11, fontFamily: TYPE.tinyFamily, color: DK.colors.textMuted, minWidth: 36, textAlign: 'right' },
   footnote: {
