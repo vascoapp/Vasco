@@ -11,6 +11,12 @@ import { useFinancialAnalysis } from '../../services/financialAnalysisService';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
+// gtv() === gt() until a validated phrasing pack is loaded. The overdue branch
+// is wired first because it is the highest-traffic insight in the app, and
+// because learnings #466 caught this exact card shipping a Dutch heading over
+// an English sentence — so all FOUR of its user-visible fields move together.
+// Partial adoption is the bug, not the migration step.
+import { gtv } from '../phrasing/phrasingStore';
 import { useAppState } from '../../state/AppState';
 import { useCohortDso } from '../../services/paymentTimingMoatService';
 import { useMarginDrift } from '../../services/marginDriftService';
@@ -52,15 +58,15 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       generatorId: 'cashflow-insight',
       category: 'financial',
       priority: fin.overdueAmount > 2000 ? 'critical' : 'high',
-      title: gt('fin_overdue_title', lang, { count: fin.overdueCount, amount: formatMoney(amount) }),
-      message: gt('fin_overdue_message', lang, {
+      title: gtv('fin_overdue_title', lang, { count: fin.overdueCount, amount: formatMoney(amount) }),
+      message: gtv('fin_overdue_message', lang, {
         count: fin.overdueCount,
         amount: formatMoney(amount),
         days: fin.avgDaysToPayment,
       }),
       detail: fin.overdueDetails
         .slice(0, 3)
-        .map(d => gt('fin_overdue_detail_item', lang, {
+        .map(d => gtv('fin_overdue_detail_item', lang, {
           customer: d.customer,
           amount: formatMoney(d.amount),
           days: d.daysOverdue,
@@ -70,7 +76,7 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       actionLabel: gt('fin_action_send_invoices', lang),
       actionRoute: '/(contractor)/facturen',
       source: gt('source_financial_analysis', lang),
-      metric: { label: gt('fin_overdue_metric', lang), value: formatMoney(amount), trend: 'down' },
+      metric: { label: gtv('fin_overdue_metric', lang), value: formatMoney(amount), trend: 'down' },
       rootCauseTags: ['cashflow', 'overdue'],
       rawScore: 0.95,
       reasoning: {

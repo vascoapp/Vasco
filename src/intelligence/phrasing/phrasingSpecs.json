@@ -1,0 +1,111 @@
+{
+  "tone": "You are writing one short notification line for a self-employed construction tradesperson. They read it on a phone, outdoors, between jobs. Be direct and concrete. Use the trade register of the target language, not office or corporate register. Never hedge (no 'you may want to consider') — say the thing. Never write a number, percentage, amount, date or quantity: numbers are supplied at render time through {{placeholders}}. Using a literal digit is a hard failure, and so is SPELLING a number out (no 'three', 'drei', 'trois', 'tre', 'tres', 'drie') — that hard-codes the count just as badly. Keep every {{placeholder}} exactly as given, including the double braces.",
+  "specs": [
+    {
+      "key": "fin_overdue_title",
+      "placeholders": [
+        "count",
+        "amount"
+      ],
+      "required": [
+        "count",
+        "amount"
+      ],
+      "maxChars": 48
+    },
+    {
+      "key": "fin_overdue_message",
+      "placeholders": [
+        "count",
+        "amount",
+        "days"
+      ],
+      "required": [
+        "count",
+        "amount"
+      ],
+      "maxChars": 96
+    },
+    {
+      "key": "fin_overdue_metric",
+      "placeholders": [],
+      "required": [],
+      "maxChars": 20
+    },
+    {
+      "key": "fin_overdue_detail_item",
+      "placeholders": [
+        "customer",
+        "amount",
+        "days"
+      ],
+      "required": [
+        "customer",
+        "amount"
+      ],
+      "maxChars": 32
+    },
+    {
+      "key": "overdue_title_multi",
+      "placeholders": [
+        "count"
+      ],
+      "required": [
+        "count"
+      ],
+      "maxChars": 31
+    },
+    {
+      "key": "overdue_message",
+      "placeholders": [
+        "amount"
+      ],
+      "required": [
+        "amount"
+      ],
+      "maxChars": 92
+    },
+    {
+      "key": "cert_expires_this_week",
+      "placeholders": [
+        "name"
+      ],
+      "required": [
+        "name"
+      ],
+      "maxChars": 32
+    },
+    {
+      "key": "cert_expires_in_days",
+      "placeholders": [
+        "days",
+        "name"
+      ],
+      "required": [
+        "days",
+        "name"
+      ],
+      "maxChars": 29
+    },
+    {
+      "key": "cert_renew_message",
+      "placeholders": [
+        "type"
+      ],
+      "required": [
+        "type"
+      ],
+      "maxChars": 88
+    },
+    {
+      "key": "cert_more_expiring",
+      "placeholders": [
+        "count"
+      ],
+      "required": [
+        "count"
+      ],
+      "maxChars": 49
+    }
+  ]
+}

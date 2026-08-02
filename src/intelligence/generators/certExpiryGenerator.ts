@@ -5,7 +5,11 @@
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useExpiryCalendar } from '../../services/complianceService';
 import { logPrediction } from '../calibration';
-import { gt } from '../generatorTranslations';
+// gtv() === gt() for any key without a phrasing spec, so this swap is a
+// strict superset: spec'd keys gain LLM wording, everything else is
+// byte-identical. Whole-file rather than per-key on purpose — learnings
+// #466: partial adoption inside one generator is the bug, not the fix.
+import { gtv } from '../phrasing/phrasingStore';
 import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export const certExpiryGenerator: InsightGenerator = {
@@ -44,13 +48,13 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
     category: 'compliance',
     priority,
     title: daysUntil <= 7
-      ? gt('cert_expires_this_week', ctx.language, { name: soonest.name })
-      : gt('cert_expires_in_days', ctx.language, { name: soonest.name, days: daysUntil }),
-    message: `${gt('cert_renew_message', ctx.language, { type: soonest.type })}${expiringItems.length > 1 ? ` ${gt('cert_more_expiring', ctx.language, { count: expiringItems.length - 1 })}` : ''}`,
+      ? gtv('cert_expires_this_week', ctx.language, { name: soonest.name })
+      : gtv('cert_expires_in_days', ctx.language, { name: soonest.name, days: daysUntil }),
+    message: `${gtv('cert_renew_message', ctx.language, { type: soonest.type })}${expiringItems.length > 1 ? ` ${gtv('cert_more_expiring', ctx.language, { count: expiringItems.length - 1 })}` : ''}`,
     icon: 'document-text',
     actionLabel: 'Vernieuwen',
     actionRoute: '/(contractor)/certificaten',
-    source: gt('source_compliance', ctx.language),
+    source: gtv('source_compliance', ctx.language),
 
     rootCauseTags: ['compliance', 'certification'],
     rawScore: 0,
@@ -58,8 +62,8 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
       observation: `${expiringItems.length} certificaat/vergunning${expiringItems.length > 1 ? 'en' : ''} verloop${expiringItems.length > 1 ? 'en' : 't'} binnenkort`,
       evidence: `Op basis van je certificatenregister`,
       implication: daysUntil <= 14
-        ? gt('cert_implication_urgent', ctx.language)
-        : gt('cert_implication_plan', ctx.language),
+        ? gtv('cert_implication_urgent', ctx.language)
+        : gtv('cert_implication_plan', ctx.language),
       suggestion: `Start het vernieuwingsproces voor ${soonest.name} zo snel mogelijk`,
     },
     dataPoints: expiringItems.length,
@@ -67,10 +71,10 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
     freshness: 1,
     action: {
       type: 'renew_cert',
-      label: gt('action_renew_cert', ctx.language),
+      label: gtv('action_renew_cert', ctx.language),
       params: { certName: soonest.name, certType: soonest.type, daysUntil },
       requiresApproval: false,
-      estimatedImpact: daysUntil <= 14 ? gt('cert_impact_prevent', ctx.language) : gt('cert_impact_plan', ctx.language),
+      estimatedImpact: daysUntil <= 14 ? gtv('cert_impact_prevent', ctx.language) : gtv('cert_impact_plan', ctx.language),
     },
   };
 }
