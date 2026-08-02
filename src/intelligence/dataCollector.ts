@@ -9,6 +9,8 @@ import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
 import { subscribeIdRemap, type IdRemapEvent } from '../services/idRemapBus';
+// Dependency-free pure module — safe to import from the collector with no cycle.
+import { canonicalMaterialKey } from '../services/materialNormalization';
 import { isTempIdFast } from '../lib/idShape';
 const supabase: any = _supabase;
 
@@ -500,6 +502,17 @@ export async function emitMaterialPurchased(userId: string, data: {
         supplier_id: data.supplierId,
         supplier_name: data.supplierName,
         material_name: data.materialName,
+        // Normalised cohort key alongside the raw name (migration
+        // 20260802000001). material_name stays RAW because it is user-visible;
+        // canonical_name is what the benchmark view will group on once the
+        // historic backfill has run. Identity-first: an EAN or supplier article
+        // number wins outright over text similarity.
+        canonical_name: canonicalMaterialKey({
+          description: data.materialName,
+          ean: data.eanCode,
+          supplierId: data.supplierId,
+          unit: data.unit,
+        }).key || null,
         material_category: data.materialCategory ?? null,
         brand: data.brand ?? null,
         ean_code: data.eanCode ?? null,

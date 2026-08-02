@@ -12,6 +12,8 @@ import { recordMetricSnapshot } from '../intelligence/learningStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMaterialBaselines } from './cohortBenchmarkService';
 import { getCurrentUserId, getCurrentCountry, getCurrentTrade } from '../lib/currentUser';
+import { logWarn } from '../utils/errorHandler';
+import { verifyExtractedInvoice, summariseVerification } from './extractionVerification';
 
 const SCAN_HISTORY_KEY = '@vasco_invoice_scans';
 const RATE_LIMIT_KEY = '@vasco_last_invoice_scan';
@@ -135,6 +137,23 @@ export async function scanInvoicePhoto(
 
 export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
   const userId = getCurrentUserId();
+
+  // ARITHMETIC GATE. The per-line confidence filter below is the extractor
+  // grading its own homework; this is an independent check that the document
+  // reconciles against itself (line totals sum to the subtotal, subtotal + VAT
+  // equals the total). An extractor that mis-read a decimal or dropped a line
+  // usually reports high confidence anyway, and a poisoned
+  // `material_price_history` is the one thing we cannot un-poison: it is the
+  // training data the entire cohort moat runs on.
+  //
+  // Deliberately gates ONLY the moat write. The contractor still gets their
+  // scan saved in full — a document that does not add up is often still a
+  // perfectly useful receipt to keep.
+  const verification = verifyExtractedInvoice(invoice);
+  if (!verification.moatSafe) {
+    logWarn('InvoiceScan', `Not feeding moat: ${summariseVerification(verification)}`);
+    return;
+  }
 
   // R282: cohort attribution — fall back to user's profile when the OCR
   // doesn't return a category (most invoices don't).

@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getScanHistory } from './invoiceScanService';
+import { canonicalMaterialKey } from './materialNormalization';
 
 const CACHE_KEY = '@vasco_cohort_benchmarks';
 const CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
@@ -240,7 +241,20 @@ export function compareToMarket(
   yourPrice: number,
   benchmarks: MaterialBenchmark[],
 ): { position: 'below' | 'average' | 'above' | 'unknown'; percentile: number; savings: number } {
-  const match = benchmarks.find(b => b.materialName === materialName.toLowerCase().trim());
+  // Exact match first — cheapest, and correct when both sides were written the
+  // same way. Then fall back to canonical comparison, because the benchmark was
+  // stored under whatever spelling the OBSERVING contractor used: a quote line
+  // reading "YMvK 3x2,5mm²" would otherwise never find a cohort stored as
+  // "kabel ymvk 3 x 2.5 mm2", and the contractor sees "unknown" while a perfectly
+  // good benchmark sits one spelling away. See materialNormalization.ts.
+  const wanted = materialName.toLowerCase().trim();
+  let match = benchmarks.find(b => b.materialName === wanted);
+  if (!match) {
+    const wantedKey = canonicalMaterialKey({ description: materialName }).key;
+    if (wantedKey) {
+      match = benchmarks.find(b => canonicalMaterialKey({ description: b.materialName }).key === wantedKey);
+    }
+  }
   if (!match || match.sampleSize < 2) return { position: 'unknown', percentile: 50, savings: 0 };
 
   if (yourPrice <= match.p25) return { position: 'below', percentile: 25, savings: 0 };
