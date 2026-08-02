@@ -7,6 +7,7 @@
 // =============================================================================
 
 import type { ExtractedBudgetLine } from '../ingestion/budgetExtractor';
+import { DEMO_MODE } from '../config/demo';
 
 // =============================================================================
 // TYPES
@@ -89,14 +90,30 @@ interface MarketRateData {
 }
 
 // =============================================================================
-// MOCK MARKET RATES — 30+ Dutch construction materials
+// DEMO MARKET RATES — 30+ Dutch construction materials
 // =============================================================================
-// Rates reflect realistic NL market pricing (2024-2025).
-// avgRate is set slightly below typical budget quotes so enrichment
-// surfaces ~60% of lines with savings potential ranging 2-20%.
+// DEMO ONLY. These are invented figures, and the header used to say so out
+// loud: "avgRate is set slightly below typical budget quotes so enrichment
+// surfaces ~60% of lines with savings potential ranging 2-20%" -- the rates
+// were tuned to manufacture savings findings rather than measured from
+// anything.
+//
+// They also carry `sources` naming real organisations (Cobouw, NVTB,
+// Bouwkosten Kompas) with invented prices, lastUpdated dates and reliability
+// scores, and the dashboard renders those names and tells the contractor
+// "Op basis van N marktbronnen adviseert Vasco...". Attributing made-up
+// numbers to a named trade body is worse than showing no number at all, so
+// this table must never reach a production build.
+//
+// Gated at the constant so every consumer is covered at once. In production
+// the record is empty, fuzzyMatchMaterial finds no key, and enrichBudgetLine
+// takes its existing "no market data available" path: marketData stays null,
+// confidence drops to 0, and the UI's null guards hide the market column.
+// Replace with a real rate source (scanned-invoice cohort medians already
+// exist in the pricing moat) before re-enabling.
 // =============================================================================
 
-const MOCK_MARKET_RATES: Record<string, MarketRateData> = {
+const DEMO_MARKET_RATES: Record<string, MarketRateData> = {
   // ── Sloopwerk ──────────────────────────────────────────────────────────────
   sloopwerk: {
     avgRate: 42.0,
@@ -469,6 +486,8 @@ const MOCK_MARKET_RATES: Record<string, MarketRateData> = {
  * Keys are sorted longest-first so "afvoer sloopafval" matches before
  * "sloopwerk", and "cv-ketel" before "ketel", etc.
  */
+const MOCK_MARKET_RATES: Record<string, MarketRateData> = DEMO_MODE ? DEMO_MARKET_RATES : {};
+
 const SORTED_KEYS = Object.keys(MOCK_MARKET_RATES).sort(
   (a, b) => b.length - a.length,
 );
