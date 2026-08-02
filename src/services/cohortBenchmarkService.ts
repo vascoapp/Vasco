@@ -45,6 +45,17 @@ export interface MaterialBenchmark {
   // Data quality
   sampleSize: number;
   lastUpdated: string;
+  /**
+   * Where this benchmark came from. 'cohort' is aggregated across other
+   * contractors (k-anonymity >=5, enforced server-side). 'own' is computed
+   * locally from THIS contractor's own scan history.
+   *
+   * Callers must not present 'own' as a market comparison: comparing someone's
+   * price against their own past prices and calling it "the market" is circular
+   * and will always conclude they are at market. The two are only
+   * distinguishable here, so anything drawing a market conclusion has to check.
+   */
+  source: 'cohort' | 'own';
 }
 
 export interface TradeBenchmark {
@@ -112,6 +123,7 @@ async function fetchCohortFromCloud(trade: string, country: string): Promise<Coh
           volatility: 0,
           sampleSize: Number(r.sample_size ?? 0),
           lastUpdated: String(r.last_observed ?? new Date().toISOString()),
+          source: 'cohort' as const,
         }))
       : [];
 
@@ -186,6 +198,8 @@ async function computeLocalBenchmarks(trade: string, country: string): Promise<C
       volatility: mean > 0 ? Math.round((stddev / mean) * 100) / 100 : 0,
       sampleSize: prices.length,
       lastUpdated: new Date().toISOString(),
+      // Computed from this contractor's own scans, NOT from other contractors.
+      source: 'own',
     });
   }
 
@@ -196,7 +210,10 @@ async function computeLocalBenchmarks(trade: string, country: string): Promise<C
     materialBenchmarks: materialBenchmarks.sort((a, b) => b.sampleSize - a.sampleSize),
     tradeBenchmarks,
     lastSync: new Date().toISOString(),
-    contractorsInCohort: tradeBenchmarks[0]?.sampleSize ?? 150,
+    // Static baselines report sampleSize 0 (R34), so this is 0 -- there is no
+    // cohort in the local path. The old `?? 150` never fired (0 is not nullish)
+    // but read as though a fallback crowd of 150 contractors existed.
+    contractorsInCohort: 0,
   };
 }
 
@@ -233,6 +250,32 @@ export async function getCohortBenchmarks(trade: string, country: string): Promi
 }
 
 // ---------------------------------------------------------------------------
+// Benchmark lookup
+// ---------------------------------------------------------------------------
+// Exact match first — cheapest, and correct when both sides were written the
+// same way. Then fall back to canonical comparison, because the benchmark was
+// stored under whatever spelling the OBSERVING contractor used: a quote line
+// reading "YMvK 3x2,5mm²" would otherwise never find a cohort stored as
+// "kabel ymvk 3 x 2.5 mm2". See materialNormalization.ts.
+//
+// Extracted from compareToMarket so callers that need the benchmark itself
+// (price levels, sample size, trend) share one matching rule instead of
+// reimplementing it and drifting.
+export function findBenchmark(
+  materialName: string,
+  benchmarks: MaterialBenchmark[],
+): MaterialBenchmark | null {
+  const wanted = materialName.toLowerCase().trim();
+  const exact = benchmarks.find(b => b.materialName === wanted);
+  if (exact) return exact;
+  const wantedKey = canonicalMaterialKey({ description: materialName }).key;
+  if (!wantedKey) return null;
+  return benchmarks.find(
+    b => canonicalMaterialKey({ description: b.materialName }).key === wantedKey,
+  ) ?? null;
+}
+
+// ---------------------------------------------------------------------------
 // Compare contractor's price to cohort benchmark
 // ---------------------------------------------------------------------------
 
@@ -247,14 +290,7 @@ export function compareToMarket(
   // reading "YMvK 3x2,5mm²" would otherwise never find a cohort stored as
   // "kabel ymvk 3 x 2.5 mm2", and the contractor sees "unknown" while a perfectly
   // good benchmark sits one spelling away. See materialNormalization.ts.
-  const wanted = materialName.toLowerCase().trim();
-  let match = benchmarks.find(b => b.materialName === wanted);
-  if (!match) {
-    const wantedKey = canonicalMaterialKey({ description: materialName }).key;
-    if (wantedKey) {
-      match = benchmarks.find(b => canonicalMaterialKey({ description: b.materialName }).key === wantedKey);
-    }
-  }
+  const match = findBenchmark(materialName, benchmarks);
   if (!match || match.sampleSize < 2) return { position: 'unknown', percentile: 50, savings: 0 };
 
   if (yourPrice <= match.p25) return { position: 'below', percentile: 25, savings: 0 };

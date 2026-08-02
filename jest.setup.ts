@@ -149,6 +149,19 @@ jest.mock('./src/services/invoiceScanService', () => ({
 
 jest.mock('./src/services/cohortBenchmarkService', () => ({
   getTradeBaselines: jest.fn(() => Promise.resolve(null)),
+  // Stubbed alongside getTradeBaselines so suites that transitively import
+  // this module (quoteOptimizerService) do not hit `is not a function` on a
+  // partially-mocked module. Tests that need the real matching behaviour
+  // unmock this module explicitly.
+  getCohortBenchmarks: jest.fn(() =>
+    Promise.resolve({
+      materialBenchmarks: [],
+      tradeBenchmarks: [],
+      lastSync: new Date().toISOString(),
+      contractorsInCohort: 0,
+    }),
+  ),
+  findBenchmark: jest.fn(() => null),
 }));
 
 jest.mock('./src/intelligence/tradeContext', () => ({

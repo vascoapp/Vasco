@@ -36,6 +36,18 @@
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { DEMO_MODE } from '../config/demo';
+import {
+  getCohortBenchmarks,
+  findBenchmark,
+  type MaterialBenchmark,
+} from './cohortBenchmarkService';
+import { getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
+
+// A cohort row has to clear k-anonymity before it can be quoted back as "the
+// market". The server already enforces >=5 for the aggregate; this re-checks
+// per material row so a thinly-observed material cannot slip through on the
+// back of a well-observed trade.
+const MIN_COHORT_SAMPLE = 5;
 
 // ============================================
 // TYPES
@@ -229,7 +241,11 @@ class QuoteOptimizerService {
   /**
    * Analyze a quote and generate optimizations
    */
-  analyzeQuote(quoteId: string, lineItems: QuoteLineItem[]): QuoteAnalysis {
+  analyzeQuote(
+    quoteId: string,
+    lineItems: QuoteLineItem[],
+    benchmarks: MaterialBenchmark[] = [],
+  ): QuoteAnalysis {
     const optimizations: QuoteOptimization[] = [];
     const marketData: MarketPriceData[] = [];
     const competitorInsights: CompetitorInsight[] = [];
@@ -237,7 +253,7 @@ class QuoteOptimizerService {
     // Analyze each line item
     lineItems.forEach((item) => {
       // Get market data
-      const market = this.getMarketData(item.materialId, item.unitPrice);
+      const market = this.getMarketData(item, benchmarks);
       if (market) {
         marketData.push(market);
 
@@ -247,7 +263,7 @@ class QuoteOptimizerService {
       }
 
       // Get competitor insights
-      const competitor = this.getCompetitorInsight(item.materialId, item.unitPrice);
+      const competitor = this.getCompetitorInsight(item, benchmarks);
       if (competitor) {
         competitorInsights.push(competitor);
 
@@ -381,8 +397,56 @@ class QuoteOptimizerService {
   /**
    * Get market data for a material
    */
-  private getMarketData(materialId: string, currentPrice: number): MarketPriceData | null {
-    const baseData = MOCK_MARKET_DATA[materialId];
+  /**
+   * Real market data for a line item, from the cross-contractor cohort.
+   *
+   * Only `source: 'cohort'` rows are eligible. cohortBenchmarkService also
+   * synthesises benchmarks from the contractor's OWN scan history when the
+   * cloud has nothing; using those here would compare the contractor against
+   * themselves and always conclude "at market" -- the same circularity the old
+   * `currentPrice * 0.95` fallback had.
+   */
+  private cohortMarketData(
+    item: QuoteLineItem,
+    benchmarks: MaterialBenchmark[],
+  ): MarketPriceData | null {
+    const usable = benchmarks.filter(
+      (b) => b.source === 'cohort' && b.sampleSize >= MIN_COHORT_SAMPLE,
+    );
+    if (usable.length === 0) return null;
+
+    const match = findBenchmark(item.materialName, usable);
+    if (!match) return null;
+
+    // p25..p75 is the comparison band; a price outside it is what the
+    // optimizer acts on. Median rather than mean: material prices are skewed
+    // by occasional bulk or emergency purchases.
+    const range = match.p75 - match.p25;
+    const percentile = range > 0
+      ? Math.round(((item.unitPrice - match.p25) / range) * 100)
+      : 50;
+
+    return {
+      materialId: item.materialId,
+      materialName: match.materialName,
+      category: match.category,
+      regionAvgPrice: match.medianPrice,
+      regionLowPrice: match.p25,
+      regionHighPrice: match.p75,
+      percentile: Math.max(0, Math.min(100, percentile)),
+      trend: match.trend,
+      trendPercent: match.priceChange30d,
+    };
+  }
+
+  private getMarketData(
+    item: QuoteLineItem,
+    benchmarks: MaterialBenchmark[],
+  ): MarketPriceData | null {
+    const cohort = this.cohortMarketData(item, benchmarks);
+    if (cohort) return cohort;
+
+    const baseData = MOCK_MARKET_DATA[item.materialId];
     if (!baseData) {
       // Was "generate synthetic market data for unknown materials": it derived
       // regionAvgPrice as `currentPrice * 0.95` and the range as +/-15% of the
@@ -397,7 +461,7 @@ class QuoteOptimizerService {
     // Calculate percentile based on current price
     const range = baseData.regionHighPrice - baseData.regionLowPrice;
     const percentile = Math.round(
-      ((currentPrice - baseData.regionLowPrice) / range) * 100
+      ((item.unitPrice - baseData.regionLowPrice) / range) * 100
     );
 
     return {
@@ -409,14 +473,21 @@ class QuoteOptimizerService {
   /**
    * Get competitor insights for a material
    */
-  private getCompetitorInsight(materialId: string, currentPrice: number): CompetitorInsight | null {
-    const marketData = MOCK_MARKET_DATA[materialId];
-    // `avgPrice` used to fall back to the contractor's own price, which makes
-    // priceDiff exactly 0 -- the insight then "concluded" they were precisely
-    // at market by construction, and that fed competitiveScore and the
-    // positioning suggestions the UI shows.
-    if (!marketData) return null;
-    const avgPrice = marketData.regionAvgPrice;
+  private getCompetitorInsight(
+    item: QuoteLineItem,
+    benchmarks: MaterialBenchmark[],
+  ): CompetitorInsight | null {
+    // Same eligibility rule as market data: a real cross-contractor band, or
+    // nothing. `avgPrice` used to fall back to the contractor's own price,
+    // which makes priceDiff exactly 0 -- the insight then "concluded" they were
+    // precisely at market by construction, and that fed competitiveScore and
+    // the positioning suggestions the UI shows.
+    const market = this.cohortMarketData(item, benchmarks)
+      ?? (MOCK_MARKET_DATA[item.materialId] ? this.getMarketData(item, benchmarks) : null);
+    if (!market) return null;
+    const materialId = item.materialId;
+    const currentPrice = item.unitPrice;
+    const avgPrice = market.regionAvgPrice;
 
     const priceDiff = ((currentPrice - avgPrice) / avgPrice) * 100;
     let position: 'below' | 'average' | 'above' = 'average';
@@ -615,14 +686,33 @@ export function useQuoteOptimizer(quoteId: string, lineItems: QuoteLineItem[]) {
       return;
     }
 
-    // Analyze quote
+    // Analyze quote against the real cross-contractor cohort. This used to be
+    // `setTimeout(..., 500)` with the comment "Simulate async analysis" -- a
+    // fake spinner in front of a synchronous call over a hardcoded table. The
+    // wait is now an actual network/cache fetch.
+    let cancelled = false;
     setIsAnalyzing(true);
-    // Simulate async analysis
-    setTimeout(() => {
-      const result = quoteOptimizerService.analyzeQuote(quoteId, lineItems);
+    (async () => {
+      let benchmarks: MaterialBenchmark[] = [];
+      try {
+        const cohort = await getCohortBenchmarks(
+          getCurrentTrade() ?? 'general',
+          getCurrentCountry() ?? 'NL',
+        );
+        benchmarks = cohort.materialBenchmarks;
+      } catch {
+        // Offline or cohort unavailable: analyse with no market data rather
+        // than blocking the quote. Market-dependent optimizations drop out.
+      }
+      if (cancelled) return;
+      const result = quoteOptimizerService.analyzeQuote(quoteId, lineItems, benchmarks);
       setAnalysis(result);
       setIsAnalyzing(false);
-    }, 500);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [quoteId, lineItems]);
 
   const applyOptimization = useCallback(
