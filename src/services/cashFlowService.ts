@@ -54,7 +54,8 @@ export interface CashFlowForecast {
   expectedIncome: number;
   expectedExpenses: number;
   netCashFlow: number;
-  confidence: number;
+  /** null when the week expects no income -- nothing to be confident about. */
+  confidence: number | null;
   breakdown: {
     invoicesDue: number;
     recurringIncome: number;
@@ -313,83 +314,7 @@ class CashFlowService {
   // -----------------------------------------
 
   getCashFlowForecast(weeks: number = 8): CashFlowForecast[] {
-    const forecasts: CashFlowForecast[] = [];
-    const now = new Date();
-
-    for (let i = 0; i < weeks; i++) {
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() + i * 7);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-
-      // Calculate expected income from invoices due this week
-      const invoicesDue = this.getInvoices()
-        .filter((inv) => {
-          const dueDate = new Date(inv.dueDate);
-          return inv.status !== 'paid' && dueDate >= weekStart && dueDate <= weekEnd;
-        })
-        .reduce((sum, inv) => sum + inv.amount, 0);
-
-      // Recurring income. This was `i === 0 ? 0 : 2500` -- a flat EUR 2,500 a
-      // week conjured from nothing, which is why every forecast bar from week
-      // 2 onward rendered the identical "+EUR 2.500,00" and why the 8-week
-      // chart looked like a staircase of guaranteed revenue. There is no
-      // recurring-income source in the data model (only expenses carry a
-      // `recurring` flag), so there is nothing to derive it from: the honest
-      // value is zero. A forecast that shows only money someone actually owes
-      // is worth more than one padded with EUR 17,500 of invented revenue.
-      const recurringIncome = 0;
-
-      // Scheduled expenses
-      const scheduledExpenses = this.getExpenses()
-        .filter((exp) => {
-          const expDate = new Date(exp.date);
-          return !exp.recurring && expDate >= weekStart && expDate <= weekEnd;
-        })
-        .reduce((sum, exp) => sum + exp.amount, 0);
-
-      // Recurring expenses
-      const recurringExpenses = this.getExpenses()
-        .filter((exp) => exp.recurring && exp.recurringFrequency === 'weekly')
-        .reduce((sum, exp) => sum + exp.amount, 0) +
-        (i % 4 === 0
-          ? this.getExpenses()
-              .filter((exp) => exp.recurring && exp.recurringFrequency === 'monthly')
-              .reduce((sum, exp) => sum + exp.amount, 0)
-          : 0);
-
-      // Invoices the customer has actually received are committed; drafts are not.
-      const committedIncome = this.getInvoices()
-        .filter((inv) => {
-          const dueDate = new Date(inv.dueDate);
-          return inv.status !== 'paid' && inv.status !== 'draft'
-            && dueDate >= weekStart && dueDate <= weekEnd;
-        })
-        .reduce((sum, inv) => sum + inv.amount, 0);
-
-      const expectedIncome = invoicesDue + recurringIncome;
-      const expectedExpenses = scheduledExpenses + recurringExpenses;
-
-      forecasts.push({
-        period: i18n.t('cashflow.weekN', { n: i + 1 }),
-        expectedIncome,
-        expectedExpenses,
-        netCashFlow: expectedIncome - expectedExpenses,
-        // Share of this week's expected income that is backed by an invoice
-        // the customer has actually been sent, rather than an estimate. Was
-        // `0.95 - i * 0.05`: a straight function of the week index that knew
-        // nothing about the data, rendered next to real money as "90%", "85%".
-        confidence: expectedIncome > 0 ? committedIncome / expectedIncome : 1,
-        breakdown: {
-          invoicesDue,
-          recurringIncome,
-          scheduledExpenses,
-          recurringExpenses,
-        },
-      });
-    }
-
-    return forecasts;
+    return computeForecast(this.getInvoices(), this.getExpenses(), weeks);
   }
 
   getCashFlowSummary(): CashFlowSummary {
@@ -578,6 +503,88 @@ export const cashFlowService = new CashFlowService();
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppState } from '../state/AppState';
 import { useExpenses } from './expenseService';
+
+// ---------------------------------------------------------------------------
+// Forecast — pure, so the hook can feed it the contractor's real data
+// ---------------------------------------------------------------------------
+// This lived on the service class and read `this.invoices`, which R26 left
+// permanently empty (real invoices flow through AppState, not the singleton).
+// The hook called it anyway -- with `[invoices, expenses]` in its dependency
+// array but nothing in the body using them -- so the 8-week chart was computed
+// from an empty invoice set for every contractor. The flat EUR 2,500/week of
+// invented recurring income was the only thing making it look populated; with
+// that removed the emptiness became visible as a row of zeroes despite real
+// outstanding invoices sitting one tab away.
+export function computeForecast(
+  invoices: Invoice[],
+  expenses: Expense[],
+  weeks: number = 8,
+): CashFlowForecast[] {
+  const forecasts: CashFlowForecast[] = [];
+  const now = new Date();
+
+  for (let i = 0; i < weeks; i++) {
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() + i * 7);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    const inWeek = (iso: string) => {
+      const d = new Date(iso);
+      return d >= weekStart && d <= weekEnd;
+    };
+
+    const unpaidDue = invoices.filter((inv) => inv.status !== 'paid' && inWeek(inv.dueDate));
+    const invoicesDue = unpaidDue.reduce((sum, inv) => sum + inv.amount, 0);
+
+    // No recurring-income source exists in the data model (only expenses carry
+    // a `recurring` flag), so there is nothing to derive this from. It was a
+    // flat 2500/week literal.
+    const recurringIncome = 0;
+
+    const scheduledExpenses = expenses
+      .filter((exp) => !exp.recurring && inWeek(exp.date))
+      .reduce((sum, exp) => sum + exp.amount, 0);
+
+    const recurringExpenses = expenses
+      .filter((exp) => exp.recurring && exp.recurringFrequency === 'weekly')
+      .reduce((sum, exp) => sum + exp.amount, 0) +
+      (i % 4 === 0
+        ? expenses
+            .filter((exp) => exp.recurring && exp.recurringFrequency === 'monthly')
+            .reduce((sum, exp) => sum + exp.amount, 0)
+        : 0);
+
+    // An invoice the customer has actually received is committed; a draft is not.
+    const committedIncome = unpaidDue
+      .filter((inv) => inv.status !== 'draft')
+      .reduce((sum, inv) => sum + inv.amount, 0);
+
+    const expectedIncome = invoicesDue + recurringIncome;
+    const expectedExpenses = scheduledExpenses + recurringExpenses;
+
+    forecasts.push({
+      period: i18n.t('cashflow.weekN', { n: i + 1 }),
+      expectedIncome,
+      expectedExpenses,
+      netCashFlow: expectedIncome - expectedExpenses,
+      // Share of this week's expected income backed by an invoice the customer
+      // has actually been sent. Was `0.95 - i * 0.05`: the week index dressed
+      // up as a percentage and rendered next to real money as "90%", "85%".
+      // null when the week expects nothing -- there is no confidence to report
+      // about an empty week, and "100%" beside EUR 0,00 reads as a claim.
+      confidence: expectedIncome > 0 ? committedIncome / expectedIncome : null,
+      breakdown: {
+        invoicesDue,
+        recurringIncome,
+        scheduledExpenses,
+        recurringExpenses,
+      },
+    });
+  }
+
+  return forecasts;
+}
 
 // ---------------------------------------------------------------------------
 // Seasonal patterns — computed from real history
@@ -789,7 +796,7 @@ export function useCashFlow() {
   }, [invoices, expenses]);
 
   const aging = useMemo(() => cashFlowService.getInvoiceAging(), [invoices]);
-  const forecast = useMemo(() => cashFlowService.getCashFlowForecast(8), [invoices, expenses]);
+  const forecast = useMemo(() => computeForecast(invoices, expenses, 8), [invoices, expenses]);
 
   const markPaid = useCallback((invoiceId: string, method: string) => {
     cashFlowService.markInvoicePaid(invoiceId, method);

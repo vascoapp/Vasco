@@ -378,9 +378,13 @@ export function CashFlowDashboard() {
                 {week.netCashFlow >= 0 ? '+' : ''}{formatCurrency(week.netCashFlow)}
               </Text>
             </View>
-            <View style={styles.confidenceBadge}>
-              <Text style={styles.confidenceText}>{Math.round(week.confidence * 100)}%</Text>
-            </View>
+            {/* Omitted for weeks that expect no income: a "100%" badge next to
+                EUR 0,00 reads as a claim about nothing. */}
+            {week.confidence !== null && (
+              <View style={styles.confidenceBadge}>
+                <Text style={styles.confidenceText}>{Math.round(week.confidence * 100)}%</Text>
+              </View>
+            )}
           </View>
         ))}
       </View>
