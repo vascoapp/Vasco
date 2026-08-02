@@ -5122,5 +5122,8 @@
     "draftQuotes": "Concept-offertes",
     "sendFirst": "Verstuur deze eerst, factureer daarna",
     "noQuotes": "Nog geen offertes. Maak eerst een offerte."
+  },
+  "quoteOptimizer": {
+    "estimatedMargin": "Geschatte marge"
   }
 }

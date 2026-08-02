@@ -106,8 +106,11 @@ export interface UpsellSuggestion {
 export interface QuoteAnalysis {
   quoteId: string;
   totalValue: number;
-  estimatedMargin: number;
-  marginPercent: number;
+  /** null when there is no cost basis to compute a margin from. QuoteLineItem
+   *  carries only sale-side fields (unitPrice/totalPrice), no cost, so this is
+   *  currently always null rather than a guess. */
+  estimatedMargin: number | null;
+  marginPercent: number | null;
   competitiveScore: number; // 0-100, how competitive this quote is
   winProbability: number; // 0-1
   optimizations: QuoteOptimization[];
@@ -245,15 +248,23 @@ class QuoteOptimizerService {
         if (compOpt) optimizations.push(compOpt);
       }
 
-      // Check margin warnings
-      const marginOpt = this.checkMarginWarning(item);
-      if (marginOpt) optimizations.push(marginOpt);
+      // Margin warnings removed: checkMarginWarning derived cost as
+      // `unitPrice * 0.7`, so every item scored exactly 30% and the
+      // `margin < 15` branch could never be reached. It looked like a
+      // safeguard while checking nothing. Restore it when line items carry
+      // real cost.
     });
 
     // Calculate totals
     const totalValue = lineItems.reduce((sum, item) => sum + item.totalPrice, 0);
-    const estimatedMargin = totalValue * 0.25; // Simplified margin calculation
-    const marginPercent = 25;
+    // Was `totalValue * 0.25` with a literal `marginPercent = 25`, so the
+    // optimizer reported the identical "25%" margin on every quote for every
+    // contractor and rendered it as fact on the summary card. QuoteLineItem has
+    // no cost field -- only unitPrice/totalPrice -- so margin is not derivable
+    // here at all. Report "unknown" and let the UI omit it, rather than print a
+    // number that is the same for a EUR 200 repair and a EUR 40,000 renovation.
+    const estimatedMargin: number | null = null;
+    const marginPercent: number | null = null;
 
     // Calculate competitive score
     const competitiveScore = this.calculateCompetitiveScore(competitorInsights);
@@ -477,31 +488,6 @@ class QuoteOptimizerService {
     return null;
   }
 
-  private checkMarginWarning(item: QuoteLineItem): QuoteOptimization | null {
-    // Simplified margin check (in reality would use actual cost data)
-    const estimatedCost = item.unitPrice * 0.7;
-    const margin = ((item.unitPrice - estimatedCost) / item.unitPrice) * 100;
-
-    if (margin < 15) {
-      return {
-        lineItemId: item.id,
-        type: 'margin_warning',
-        title: 'Lage marge waarschuwing',
-        description: `De geschatte marge op dit item is slechts ${Math.round(margin)}%. Overweeg prijsverhoging.`,
-        impact: {
-          currentValue: margin,
-          suggestedValue: 25,
-          difference: 25 - margin,
-          differencePercent: ((25 - margin) / margin) * 100,
-        },
-        confidence: 0.82,
-        source: 'market_data',
-      };
-    }
-
-    return null;
-  }
-
   // -----------------------------------------
   // Upsell Suggestions
   // -----------------------------------------
@@ -527,11 +513,15 @@ class QuoteOptimizerService {
 
   private calculateWinProbability(
     competitiveScore: number,
-    marginPercent: number
+    marginPercent: number | null
   ): number {
-    // Simple model: balance competitiveness with margin
+    // Simple model: balance competitiveness with margin. With margin unknown
+    // the factor is neutral -- previously it was fed a constant 25, which
+    // always landed in the middle band and made this term a no-op anyway.
     const competitiveFactor = competitiveScore / 100;
-    const marginFactor = marginPercent < 20 ? 0.8 : marginPercent > 30 ? 0.6 : 1;
+    const marginFactor = marginPercent === null
+      ? 1
+      : marginPercent < 20 ? 0.8 : marginPercent > 30 ? 0.6 : 1;
 
     return Math.round(competitiveFactor * marginFactor * 100) / 100;
   }

@@ -5138,5 +5138,8 @@
     "draftQuotes": "Presupuestos borrador",
     "sendFirst": "Envíalos primero, luego factura",
     "noQuotes": "Aún no hay presupuestos. Crea uno primero."
+  },
+  "quoteOptimizer": {
+    "estimatedMargin": "Margen estimado"
   }
 }

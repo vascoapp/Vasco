@@ -5138,5 +5138,8 @@
     "draftQuotes": "Draft quotes",
     "sendFirst": "Send these first, then invoice",
     "noQuotes": "No quotes yet. Create a quote first."
+  },
+  "quoteOptimizer": {
+    "estimatedMargin": "Estimated margin"
   }
 }

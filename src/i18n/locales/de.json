@@ -5138,5 +5138,8 @@
     "draftQuotes": "Angebotsentwürfe",
     "sendFirst": "Zuerst senden, dann abrechnen",
     "noQuotes": "Noch keine Angebote. Erstellen Sie zuerst ein Angebot."
+  },
+  "quoteOptimizer": {
+    "estimatedMargin": "Geschätzte Marge"
   }
 }

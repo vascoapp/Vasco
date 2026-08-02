@@ -5138,5 +5138,8 @@
     "draftQuotes": "Preventivi in bozza",
     "sendFirst": "Inviali prima, poi fattura",
     "noQuotes": "Nessun preventivo. Creane uno prima."
+  },
+  "quoteOptimizer": {
+    "estimatedMargin": "Margine stimato"
   }
 }

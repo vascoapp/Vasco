@@ -5138,5 +5138,8 @@
     "draftQuotes": "Devis brouillons",
     "sendFirst": "Envoyez-les d’abord, puis facturez",
     "noQuotes": "Aucun devis. Créez d’abord un devis."
+  },
+  "quoteOptimizer": {
+    "estimatedMargin": "Marge estimée"
   }
 }

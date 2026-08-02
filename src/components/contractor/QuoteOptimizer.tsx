@@ -27,7 +27,9 @@ import {
   MarketPriceData,
 } from '../../services/quoteOptimizerService';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { useTranslation } from 'react-i18next';const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { useTranslation } from 'react-i18next';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ============================================
 // TYPES
@@ -50,6 +52,7 @@ export function QuoteOptimizer({
   onApplyOptimization,
   onApplyUpsell,
 }: QuoteOptimizerProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'overview' | 'optimize' | 'upsell' | 'market'>('overview');
   const [selectedOptimization, setSelectedOptimization] = useState<QuoteOptimization | null>(null);
   const [selectedUpsell, setSelectedUpsell] = useState<UpsellSuggestion | null>(null);
@@ -209,6 +212,7 @@ function OverviewTab({
   analysis: NonNullable<ReturnType<typeof useQuoteOptimizer>['analysis']>;
   statistics: ReturnType<typeof useQuoteOptimizer>['statistics'];
 }) {
+  const { t } = useTranslation();
   const getScoreColor = (score: number) => {
     if (score >= 70) return SemanticColors.feedbackSuccess;
     if (score >= 50) return SemanticColors.feedbackWarning;
@@ -256,12 +260,17 @@ function OverviewTab({
             {formatCurrency(analysis.totalValue)}
           </Text>
         </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Geschatte marge</Text>
-          <Text style={styles.summaryValue}>
-            {formatCurrency(analysis.estimatedMargin)} ({analysis.marginPercent}%)
-          </Text>
-        </View>
+        {/* Only shown when a margin can actually be derived. It used to print
+            a flat "25%" on every quote regardless of the work, because the
+            service hardcoded it -- quote line items carry no cost. */}
+        {analysis.estimatedMargin !== null && analysis.marginPercent !== null && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>{t('quoteOptimizer.estimatedMargin', 'Estimated margin')}</Text>
+            <Text style={styles.summaryValue}>
+              {formatCurrency(analysis.estimatedMargin)} ({analysis.marginPercent}%)
+            </Text>
+          </View>
+        )}
         <View style={styles.divider} />
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Optimalisaties beschikbaar</Text>
