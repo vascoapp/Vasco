@@ -43,7 +43,7 @@ import {
 // MOCK DATA - Replace with real data sources
 // ============================================
 
-const MOCK_MARKET_RATES: Record<string, number> = {
+const DEMO_MARKET_RATES: Record<string, number> = {
   'steel-brackets': 38,
   'copper-pipe-15mm': 12.50,
   'electrical-cable-2.5mm': 0.85,
@@ -113,7 +113,7 @@ const DEMO_MOCK_BUDGETS: Record<string, BudgetData> = {
 /** Demo fixture — empty in production builds (see src/config/demo.ts). */
 const MOCK_BUDGETS: Record<string, BudgetData> = DEMO_MODE ? DEMO_MOCK_BUDGETS : {};
 
-const MOCK_HISTORICAL_RATES: Record<string, { vendor: string; item: string; rates: { date: string; rate: number }[] }[]> = {
+const DEMO_HISTORICAL_RATES: Record<string, { vendor: string; item: string; rates: { date: string; rate: number }[] }[]> = {
   'vendor-002': [
     {
       vendor: 'MechServ',
@@ -127,6 +127,14 @@ const MOCK_HISTORICAL_RATES: Record<string, { vendor: string; item: string; rate
     },
   ],
 };
+// Gated alongside MOCK_INVOICES/MOCK_BUDGETS above, which were already covered.
+// These two were not, and detectRateCreep reads DEMO_HISTORICAL_RATES
+// ['vendor-002'] with no guard of its own -- so wiring analyzeOverpayments to a
+// screen would have emitted a "rate creep" finding about a hardcoded demo
+// vendor for every project. Nothing calls it from the UI today; this closes the
+// trap rather than relying on that staying true.
+const MOCK_MARKET_RATES: Record<string, number> = DEMO_MODE ? DEMO_MARKET_RATES : {};
+const MOCK_HISTORICAL_RATES: typeof DEMO_HISTORICAL_RATES = DEMO_MODE ? DEMO_HISTORICAL_RATES : {};
 
 // ============================================
 // CONFIGURATION

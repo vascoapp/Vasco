@@ -58,7 +58,7 @@ export interface FeedbackLoopSummary {
 
 // ── Mock Data ───────────────────────────────────────────────────────────────
 
-const MOCK_ACCURACY: EstimationAccuracy = {
+const DEMO_ACCURACY: EstimationAccuracy = {
   overallScore: 78,
   trend: 'improving',
   trendDelta: 5,
@@ -68,6 +68,24 @@ const MOCK_ACCURACY: EstimationAccuracy = {
   averageMaterialQuantityDeviation: 5.2,
   averageMaterialPriceDeviation: 3.8,
 };
+
+// Returned when the contractor has no cost variances to analyse -- which is the
+// normal state until jobs are completed and costed. Previously DEMO_ACCURACY
+// was returned unconditionally in that case, so every contractor was shown an
+// estimation scorecard claiming 124 analysed jobs and a 78/100 score they had
+// never earned.
+const EMPTY_ACCURACY: EstimationAccuracy = {
+  overallScore: 0,
+  trend: 'stable',
+  trendDelta: 0,
+  totalJobsAnalyzed: 0,
+  averageHoursDeviation: 0,
+  averageMaterialDeviation: 0,
+  averageMaterialQuantityDeviation: 0,
+  averageMaterialPriceDeviation: 0,
+};
+
+const MOCK_ACCURACY: EstimationAccuracy = DEMO_MODE ? DEMO_ACCURACY : EMPTY_ACCURACY;
 
 const DEMO_MOCK_CALIBRATIONS: JobTypeCalibration[] = [
   {
@@ -207,9 +225,14 @@ class EstimationFeedbackService {
 
     return {
       overallScore,
-      trend: overallScore > MOCK_ACCURACY.overallScore ? 'improving'
-        : overallScore < MOCK_ACCURACY.overallScore ? 'declining' : 'stable',
-      trendDelta: overallScore - MOCK_ACCURACY.overallScore,
+      // Trend used to be measured against MOCK_ACCURACY.overallScore -- the
+      // hardcoded 78 -- so a real computed score was reported as "improving" or
+      // "declining" relative to a number that belonged to nobody. A real trend
+      // needs the contractor's own previous score, which is not persisted
+      // anywhere; until it is, report no movement rather than invent a
+      // direction.
+      trend: 'stable',
+      trendDelta: 0,
       totalJobsAnalyzed: variances.length,
       averageHoursDeviation: round1(avgHoursDev),
       averageMaterialDeviation: round1(avgMatDev),
