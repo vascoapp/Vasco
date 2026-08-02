@@ -3979,6 +3979,8 @@
   },
   "workflowPacks": {
     "incasso": {
+      "name": "Cobros automáticos",
+      "description": "Recordatorios de pago automáticos a los 3, 7, 14 y 30 días",
       "preReminder": "Dear {{customer}}, your invoice {{invoice}} of {{amount}} is due in 3 days.",
       "friendlyReminder": "Dear {{customer}}, this is a friendly reminder for invoice {{invoice}} of {{amount}}.",
       "reminder": "Dear {{customer}}, your invoice {{invoice}} of {{amount}} is 7 days past due.",
@@ -3986,39 +3988,57 @@
       "finalNotice": "Final reminder: invoice {{invoice}} is 30 days overdue. Without payment within 7 days we will start collections."
     },
     "quoteFollowup": {
+      "name": "Seguimiento de presupuestos",
+      "description": "Seguimiento automático a los 3 y 7 días sin respuesta",
       "day3": "Dear {{customer}}, have you had a chance to look at the quote for {{job}} of {{amount}}? Looking forward to hearing from you.",
       "day7": "Dear {{customer}}, reminder: the quote for {{job}} is valid for another 7 days. Let us know if you have any questions."
     },
     "maintenance": {
+      "name": "Recordatorio de mantenimiento",
+      "description": "Recordatorio anual de mantenimiento para los clientes",
       "reminder": "Dear {{customer}}, it has been almost a year since we did {{job}} for you. Time for maintenance?",
       "followup": "Reminder: time for annual maintenance. Call us at {{phone}} to schedule."
     },
     "endOfDay": {
+      "name": "Rutina de fin de jornada",
+      "description": "Registra horas, revisa tareas y prepara el día siguiente",
       "logHours": "Hours today: {{hours}}h worked across {{jobCount}} jobs.",
       "incompleteJobs": "{{count}} jobs not finished today.",
       "prepTomorrow": "Tomorrow: {{tomorrowJobs}} jobs scheduled."
     },
     "newCustomer": {
+      "name": "Bienvenida a nuevos clientes",
+      "description": "Mensaje de bienvenida y calendario automáticos tras el primer presupuesto",
       "welcome": "Welcome {{customer}}! Thanks for your trust. Your project {{job}} is scheduled. Track progress via your customer portal.",
       "start": "Good news: we have started {{job}}! Expected completion: {{endDate}}."
     },
     "decisions": {
+      "name": "Recordatorio de decisiones",
+      "description": "Recuerda a los clientes las decisiones pendientes a los 3 y 7 días",
       "reminder": "Dear {{customer}}, you still have open decisions for {{project}}. Let us know so we can move forward.",
       "urgent": "{{customer}}, your decisions for {{project}} are needed to avoid delays. Please respond today."
     },
     "purchasing": {
+      "name": "Compras automáticas",
+      "description": "Avisos de stock bajo, bajadas de precio y oportunidades de compra",
       "stockLow": "{{material}} almost out ({{stock}} left). Order from {{supplier}} for {{price}}/unit.",
       "priceDrop": "{{material}} is {{pct}}% cheaper at {{supplier}}. Save {{savings}} per order.",
       "bulk": "Combine orders for {{material}} across {{jobCount}} jobs — save {{savings}} with bulk discount."
     },
     "dailyUpdate": {
+      "name": "Actualización diaria al cliente",
+      "description": "Mensaje de avance automático al cliente tras una jornada en la obra",
       "progress": "Hi {{customer}}, update: {{hours}}h worked on {{job}} today. On schedule. Questions? Let us know!"
     },
     "handover": {
+      "name": "Paquete de entrega",
+      "description": "Paquete de entrega automático al finalizar el trabajo (fotos, horas, materiales)",
       "ready": "Handover package ready: {{photoCount}} photos, {{hours}}h worked. Send to {{customer}}.",
       "survey": "Hi {{customer}}, how was your experience with {{job}}? Your feedback helps us improve!"
     },
     "permits": {
+      "name": "Comprobación de permisos",
+      "description": "Comprueba automáticamente los permisos exigidos por país en cada trabajo nuevo",
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
     }
   },

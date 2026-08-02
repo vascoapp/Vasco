@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
-import { useWorkflowPacks, getPackROI, getPackHealth, type PackHealth } from '../../src/services/workflowPackService';
+import { useWorkflowPacks, getPackROI, getPackHealth, resolvePackName, resolvePackDescription, type PackHealth } from '../../src/services/workflowPackService';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -67,8 +67,10 @@ export default function AutomationsScreen() {
           </View>
         </FadeIn>
 
-        {/* Packs — names and descriptions come from workflowPackService (AsyncStorage).
-           These are persisted in the user's locale at creation time, which is fine for backwards compat. */}
+        {/* Packs — names/descriptions are resolved per render via
+           resolvePackName/resolvePackDescription. The `pack.name` literals in
+           workflowPackService are hardcoded Dutch, so rendering them raw showed
+           a Dutch title over English step labels on the same card. */}
         {packs.map((pack, i) => (
           <FadeIn key={pack.id} delay={50 + i * 30}>
             <View style={s.packCard}>
@@ -77,8 +79,8 @@ export default function AutomationsScreen() {
                   <Ionicons name={pack.icon as IconName} size={22} color={pack.enabled ? Palette.hermesOrange : SemanticColors.textTertiary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.packName}>{pack.name}</Text>
-                  <Text style={s.packDesc}>{pack.description}</Text>
+                  <Text style={s.packName}>{resolvePackName(pack)}</Text>
+                  <Text style={s.packDesc}>{resolvePackDescription(pack)}</Text>
                 </View>
                 <Switch
                   value={pack.enabled}

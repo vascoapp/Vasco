@@ -14,6 +14,9 @@ import {
   updatePackStep,
   evaluateTriggers,
   DEFAULT_PACKS,
+  PACK_I18N_NS,
+  resolvePackName,
+  resolvePackDescription,
   WorkflowPack,
 } from '../workflowPackService';
 
@@ -312,6 +315,70 @@ describe('workflowPackService', () => {
       });
 
       expect(result).toBe(0);
+    });
+  });
+  // ─── Localised pack names (walk finding, Android /contractor/automations) ──
+  // The card titles rendered `pack.name`, a hardcoded Dutch literal, directly
+  // above correctly-translated step labels — an English contractor read
+  // "Incasso Automatisch" over "After 3 days: Send friendly reminder".
+  //
+  // This asserts the locale DATA, not the i18n runtime: jest.setup mocks
+  // `src/i18n/i18n` with a `t` that always returns `defaultValue`, so calling
+  // resolvePackName() here would return the Dutch literal no matter what the
+  // locale files contain. The regression that actually bites is a pack added
+  // without keys, or keys added to en/nl only — both are visible in the JSON.
+  describe('pack name localisation', () => {
+    const LANGS = ['en', 'nl', 'de', 'fr', 'es', 'it'] as const;
+    const locales: Record<string, any> = {
+      en: require('../../i18n/locales/en.json'),
+      nl: require('../../i18n/locales/nl.json'),
+      de: require('../../i18n/locales/de.json'),
+      fr: require('../../i18n/locales/fr.json'),
+      es: require('../../i18n/locales/es.json'),
+      it: require('../../i18n/locales/it.json'),
+    };
+
+    it('maps every default pack to an i18n namespace', () => {
+      for (const pack of DEFAULT_PACKS) {
+        expect(PACK_I18N_NS[pack.id]).toBeTruthy();
+      }
+    });
+
+    it('has a name and description for every pack in all six locales', () => {
+      for (const lang of LANGS) {
+        for (const pack of DEFAULT_PACKS) {
+          const ns = locales[lang].workflowPacks[PACK_I18N_NS[pack.id]];
+          expect(typeof ns?.name).toBe('string');
+          expect(typeof ns?.description).toBe('string');
+          expect(ns.name.trim().length).toBeGreaterThan(0);
+          expect(ns.description.trim().length).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it('does not leave the Dutch string in the other five locales', () => {
+      for (const lang of LANGS.filter((l) => l !== 'nl')) {
+        for (const pack of DEFAULT_PACKS) {
+          const ns = locales[lang].workflowPacks[PACK_I18N_NS[pack.id]];
+          const dutch = locales.nl.workflowPacks[PACK_I18N_NS[pack.id]];
+          expect(ns.name).not.toBe(dutch.name);
+          expect(ns.description).not.toBe(dutch.description);
+        }
+      }
+    });
+
+    // The resolver keys off `pack.id`, deliberately not off a field on the
+    // pack object, so a pack round-tripped through AsyncStorage before this
+    // fix still localises. A new field would be undefined for exactly the
+    // users who already have the bug.
+    it('resolves from the id alone, with no extra fields on the pack', () => {
+      expect(resolvePackName({ id: 'incasso_auto', name: 'x' })).toBeTruthy();
+      expect(resolvePackDescription({ id: 'incasso_auto', description: 'x' })).toBeTruthy();
+    });
+
+    it('degrades to the literal for an unknown pack id', () => {
+      expect(resolvePackName({ id: 'made_up', name: 'Fallback' })).toBe('Fallback');
+      expect(resolvePackDescription({ id: 'made_up', description: 'Desc' })).toBe('Desc');
     });
   });
 });

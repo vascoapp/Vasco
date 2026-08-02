@@ -4005,6 +4005,8 @@
   },
   "workflowPacks": {
     "incasso": {
+      "name": "Incasso Automatisch",
+      "description": "Automatische betaalherinneringen na 3, 7, 14 en 30 dagen",
       "preReminder": "Beste {{customer}}, uw factuur {{invoice}} van {{amount}} vervalt over 3 dagen.",
       "friendlyReminder": "Beste {{customer}}, dit is een vriendelijke herinnering voor factuur {{invoice}} van {{amount}}.",
       "reminder": "Beste {{customer}}, uw factuur {{invoice}} van {{amount}} is 7 dagen over de vervaldatum.",
@@ -4012,39 +4014,57 @@
       "finalNotice": "Laatste herinnering: factuur {{invoice}} is 30 dagen achterstallig. Zonder betaling binnen 7 dagen starten we incasso."
     },
     "quoteFollowup": {
+      "name": "Offerte Opvolging",
+      "description": "Automatisch opvolgen na 3 en 7 dagen zonder reactie",
       "day3": "Beste {{customer}}, heeft u de offerte voor {{job}} van {{amount}} kunnen bekijken? Ik hoor graag van u.",
       "day7": "Beste {{customer}}, ter herinnering: de offerte voor {{job}} is nog 7 dagen geldig. Laat u het weten als u vragen heeft?"
     },
     "maintenance": {
+      "name": "Onderhoud Herinnering",
+      "description": "Jaarlijkse herinnering aan klanten voor onderhoud",
       "reminder": "Beste {{customer}}, het is bijna een jaar geleden dat we {{job}} voor u hebben uitgevoerd. Tijd voor onderhoud?",
       "followup": "Herinnering: tijd voor jaarlijks onderhoud. Bel ons op {{phone}} voor een afspraak."
     },
     "endOfDay": {
+      "name": "Einde Dag Routine",
+      "description": "Automatisch uren loggen, taken controleren, morgen voorbereiden",
       "logHours": "Uren vandaag: {{hours}}u gewerkt op {{jobCount}} klussen.",
       "incompleteJobs": "{{count}} klussen nog niet afgerond vandaag.",
       "prepTomorrow": "Morgen: {{tomorrowJobs}} klussen gepland."
     },
     "newCustomer": {
+      "name": "Nieuwe Klant Welkom",
+      "description": "Automatisch welkomstbericht + tijdlijn na eerste offerte",
       "welcome": "Welkom {{customer}}! Bedankt voor uw vertrouwen. Uw project {{job}} staat ingepland. U kunt de voortgang volgen via uw klantportaal.",
       "start": "Goed nieuws: we zijn begonnen met {{job}}! Verwachte oplevering: {{endDate}}."
     },
     "decisions": {
+      "name": "Klant Keuze Herinnering",
+      "description": "Herinner klanten aan openstaande keuzes na 3 en 7 dagen",
       "reminder": "Beste {{customer}}, u heeft nog openstaande keuzes voor {{project}}. Laat het ons weten zodat we verder kunnen.",
       "urgent": "{{customer}}, uw keuzes voor {{project}} zijn nodig om vertraging te voorkomen. Reageer alstublieft vandaag."
     },
     "purchasing": {
+      "name": "Inkoop Automatisch",
+      "description": "Melding bij lage voorraad, prijsdalingen en bestelkansen",
       "stockLow": "{{material}} bijna op ({{stock}} over). Bestel bij {{supplier}} voor {{price}}/stuk.",
       "priceDrop": "{{material}} is {{pct}}% goedkoper bij {{supplier}}. Bespaar {{savings}} per bestelling.",
       "bulk": "Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar {{savings}} met bulkkorting."
     },
     "dailyUpdate": {
+      "name": "Dagelijkse Klant Update",
+      "description": "Automatisch voortgangsbericht naar klant na werkdag op klus",
       "progress": "Hi {{customer}}, update: {{hours}}u gewerkt aan {{job}} vandaag. Alles op schema. Vragen? Laat het weten!"
     },
     "handover": {
+      "name": "Oplevering Pakket",
+      "description": "Automatisch opleveringspakket na afronding klus (foto's, uren, materialen)",
       "ready": "Opleveringspakket klaar: {{photoCount}} foto's, {{hours}}u gewerkt. Verstuur naar {{customer}}.",
       "survey": "Hi {{customer}}, hoe was je ervaring met {{job}}? Je feedback helpt ons verbeteren!"
     },
     "permits": {
+      "name": "Vergunning Check",
+      "description": "Automatisch controleren van vereiste vergunningen per land bij nieuwe klus",
       "check": "Vergunningscheck voor {{job}}: {{permitCount}} vereisten gevonden voor {{country}}."
     }
   },

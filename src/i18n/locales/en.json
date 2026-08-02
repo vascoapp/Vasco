@@ -3979,6 +3979,8 @@
   },
   "workflowPacks": {
     "incasso": {
+      "name": "Automatic Collections",
+      "description": "Automatic payment reminders after 3, 7, 14 and 30 days",
       "preReminder": "Dear {{customer}}, your invoice {{invoice}} of {{amount}} is due in 3 days.",
       "friendlyReminder": "Dear {{customer}}, this is a friendly reminder for invoice {{invoice}} of {{amount}}.",
       "reminder": "Dear {{customer}}, your invoice {{invoice}} of {{amount}} is 7 days past due.",
@@ -3986,39 +3988,57 @@
       "finalNotice": "Final reminder: invoice {{invoice}} is 30 days overdue. Without payment within 7 days we will start collections."
     },
     "quoteFollowup": {
+      "name": "Quote Follow-up",
+      "description": "Follow up automatically after 3 and 7 days without a reply",
       "day3": "Dear {{customer}}, have you had a chance to look at the quote for {{job}} of {{amount}}? Looking forward to hearing from you.",
       "day7": "Dear {{customer}}, reminder: the quote for {{job}} is valid for another 7 days. Let us know if you have any questions."
     },
     "maintenance": {
+      "name": "Maintenance Reminder",
+      "description": "Yearly maintenance reminder sent to customers",
       "reminder": "Dear {{customer}}, it has been almost a year since we did {{job}} for you. Time for maintenance?",
       "followup": "Reminder: time for annual maintenance. Call us at {{phone}} to schedule."
     },
     "endOfDay": {
+      "name": "End of Day Routine",
+      "description": "Log hours, check tasks and prepare tomorrow automatically",
       "logHours": "Hours today: {{hours}}h worked across {{jobCount}} jobs.",
       "incompleteJobs": "{{count}} jobs not finished today.",
       "prepTomorrow": "Tomorrow: {{tomorrowJobs}} jobs scheduled."
     },
     "newCustomer": {
+      "name": "New Customer Welcome",
+      "description": "Automatic welcome message and timeline after the first quote",
       "welcome": "Welcome {{customer}}! Thanks for your trust. Your project {{job}} is scheduled. Track progress via your customer portal.",
       "start": "Good news: we have started {{job}}! Expected completion: {{endDate}}."
     },
     "decisions": {
+      "name": "Customer Decision Reminder",
+      "description": "Remind customers of pending choices after 3 and 7 days",
       "reminder": "Dear {{customer}}, you still have open decisions for {{project}}. Let us know so we can move forward.",
       "urgent": "{{customer}}, your decisions for {{project}} are needed to avoid delays. Please respond today."
     },
     "purchasing": {
+      "name": "Automatic Purchasing",
+      "description": "Alerts for low stock, price drops and ordering opportunities",
       "stockLow": "{{material}} almost out ({{stock}} left). Order from {{supplier}} for {{price}}/unit.",
       "priceDrop": "{{material}} is {{pct}}% cheaper at {{supplier}}. Save {{savings}} per order.",
       "bulk": "Combine orders for {{material}} across {{jobCount}} jobs — save {{savings}} with bulk discount."
     },
     "dailyUpdate": {
+      "name": "Daily Customer Update",
+      "description": "Automatic progress message to the customer after a day on the job",
       "progress": "Hi {{customer}}, update: {{hours}}h worked on {{job}} today. On schedule. Questions? Let us know!"
     },
     "handover": {
+      "name": "Handover Package",
+      "description": "Automatic handover package after job completion (photos, hours, materials)",
       "ready": "Handover package ready: {{photoCount}} photos, {{hours}}h worked. Send to {{customer}}.",
       "survey": "Hi {{customer}}, how was your experience with {{job}}? Your feedback helps us improve!"
     },
     "permits": {
+      "name": "Permit Check",
+      "description": "Automatically check required permits per country on a new job",
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
     }
   },

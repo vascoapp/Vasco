@@ -604,6 +604,52 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Pack display names — localised at render time, not at seed time
+// ---------------------------------------------------------------------------
+// The `name`/`description` literals above are hardcoded Dutch and were rendered
+// raw, so an English/German/French contractor saw "Incasso Automatisch" and
+// "Automatische betaalherinneringen na 3, 7, 14 en 30 dagen" sitting directly
+// above their correctly-translated step labels ("After 3 days: Send friendly
+// reminder"). Found by walking /contractor/automations on Android in English.
+//
+// Resolution is keyed off `pack.id`, deliberately NOT off a `nameKey` field on
+// the pack object: packs are persisted to AsyncStorage, and `getWorkflowPacks`
+// returns the STORED object for any id it already knows. Every contractor who
+// has ever opened this screen therefore has a stored pack that predates this
+// fix — a new field on the interface would be `undefined` for exactly the
+// users who have the bug. The id survives round-tripping; a new field does not.
+//
+// The Dutch literal stays as the `defaultValue` so an unknown id (a pack added
+// later without a matching namespace) degrades to the old behaviour instead of
+// rendering a raw key.
+// ---------------------------------------------------------------------------
+
+export const PACK_I18N_NS: Record<string, string> = {
+  incasso_auto: 'incasso',
+  offerte_opvolging: 'quoteFollowup',
+  onderhoud_herinnering: 'maintenance',
+  einde_dag: 'endOfDay',
+  nieuw_klant_welkom: 'newCustomer',
+  klant_keuze_herinnering: 'decisions',
+  inkoop_automatisch: 'purchasing',
+  dagelijkse_update: 'dailyUpdate',
+  oplevering_pakket: 'handover',
+  vergunning_check: 'permits',
+};
+
+export function resolvePackName(pack: { id: string; name: string }): string {
+  const ns = PACK_I18N_NS[pack.id];
+  if (!ns) return pack.name;
+  return i18n.t(`workflowPacks.${ns}.name`, { defaultValue: pack.name });
+}
+
+export function resolvePackDescription(pack: { id: string; description: string }): string {
+  const ns = PACK_I18N_NS[pack.id];
+  if (!ns) return pack.description;
+  return i18n.t(`workflowPacks.${ns}.description`, { defaultValue: pack.description });
+}
+
+// ---------------------------------------------------------------------------
 // Persistence
 // ---------------------------------------------------------------------------
 
@@ -620,7 +666,19 @@ export async function getWorkflowPacks(): Promise<WorkflowPack[]> {
     // packs, splicing in defaults (with their default `enabled`) for any
     // pack id present in DEFAULT_PACKS but missing from storage.
     const byId = new Map(stored.map((p) => [p.id, p]));
-    const merged: WorkflowPack[] = DEFAULT_PACKS.map((d) => byId.get(d.id) ?? d);
+    // Cosmetic fields (name/description/icon/category) are refreshed from
+    // DEFAULT_PACKS; user state (`enabled`) and edited `steps` are kept from
+    // storage. Pre-fix this returned the stored object wholesale, so a stored
+    // pack froze its presentation at whatever shipped the day the contractor
+    // first opened the screen — a corrected description or a changed icon
+    // reached new installs only. `steps` must NOT be refreshed: updatePackStep
+    // persists per-step timing/channel edits into this same blob.
+    const merged: WorkflowPack[] = DEFAULT_PACKS.map((d) => {
+      const s = byId.get(d.id);
+      return s
+        ? { ...s, name: d.name, description: d.description, icon: d.icon, category: d.category }
+        : d;
+    });
     // If we added missing packs, write the merged list back so future reads
     // are stable (and a fresh JSON.parse of stored bytes returns all 10).
     if (merged.length !== stored.length) {
@@ -782,7 +840,7 @@ export async function getActiveAutomations(): Promise<{
     .filter(p => p.enabled)
     .map(p => ({
       packId: p.id,
-      packName: p.name,
+      packName: resolvePackName(p),
       pendingActions: [],
     }));
 }
@@ -986,7 +1044,7 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
 
           const id = await addToQueue({
             type: mapActionToQueueType(step.action),
-            title: `${pack.name}: ${match.label || ''}`,
+            title: `${resolvePackName(pack)}: ${match.label || ''}`,
             description: resolved.slice(0, 100),
             preparedData: {
               template: resolved,
