@@ -188,5 +188,29 @@ select cron.schedule(
   $$
 );
 
+-- 2026-07-25 — daily operator watchdog, 09:00 Europe/Amsterdam.
+-- Posts a Telegram digest: Supabase platform logs (API 4xx/5xx, edge-function
+-- failures, auth errors, postgres ERROR/FATAL), the good and bad of paying
+-- customers, app backend activity, and an analysis of every vasco-* schedule
+-- below (including whether the watchdog itself missed a run).
+--
+-- DST: pg_cron runs in UTC. 09:00 Amsterdam is 07:00 UTC in summer (CEST) and
+-- 08:00 UTC in winter (CET), so this fires at BOTH and the function no-ops
+-- unless it is genuinely 09:00 local. No twice-yearly edit needed.
+select cron.schedule(
+  'vasco-watchdog-daily',
+  '0 7,8 * * *',
+  $$
+    select net.http_post(
+      url := '<SUPABASE_URL>/functions/v1/watchdog-daily',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      ),
+      body := '{}'::jsonb
+    );
+  $$
+);
+
 -- Listing live jobs (run in psql after setup to verify):
 -- select * from cron.job;
