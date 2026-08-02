@@ -28,6 +28,11 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { useTranslation } from 'react-i18next';type TabType = 'predict' | 'materials' | 'capacity' | 'templates';
 
 export function ProjectPlanner() {
+  const { t } = useTranslation();
+  // Dutch 'u' (uren) was hardcoded here — an English contractor read "7.5u".
+  // common.durationH is the localised unit: {{h}}h · {{h}}u · {{h}} Std.
+  const hoursLabel = (h: number) =>
+    t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
   const [activeTab, setActiveTab] = useState<TabType>('predict');
   const [showPredictModal, setShowPredictModal] = useState(false);
   const [selectedProjectType, setSelectedProjectType] = useState('Schilderwerk');
@@ -266,7 +271,7 @@ export function ProjectPlanner() {
               style={[styles.capacityFill, { width: `${forecast.utilization}%`, backgroundColor: utilizationColor }]}
             />
           </View>
-          <Text style={styles.capacityHours}>{forecast.booked}/{forecast.capacity}u</Text>
+          <Text style={styles.capacityHours}>{forecast.booked}/{hoursLabel(forecast.capacity)}</Text>
         </View>
         <Text style={[styles.capacityPercent, { color: utilizationColor }]}>
           {forecast.utilization}%

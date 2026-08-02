@@ -4,6 +4,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
@@ -83,6 +84,11 @@ function BlockCard({ block, onPress, isSelected }: {
 }
 
 export function ScheduleBlockBoard({ blocks, unassigned, workers, onReassign }: Props) {
+  const { t } = useTranslation();
+  // Dutch 'u' (uren) was hardcoded here — an English contractor read "7.5u".
+  // common.durationH is the localised unit: {{h}}h · {{h}}u · {{h}} Std.
+  const hoursLabel = (h: number) =>
+    t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
   const [selectedBlock, setSelectedBlock] = useState<ScheduleBlock | null>(null);
   const [showWorkerModal, setShowWorkerModal] = useState(false);
 
@@ -168,7 +174,7 @@ export function ScheduleBlockBoard({ blocks, unassigned, workers, onReassign }: 
               <View style={styles.modalJobInfo}>
                 <Text style={styles.modalJobTitle}>{selectedBlock.jobTitle}</Text>
                 <Text style={styles.modalJobMeta}>
-                  {String(selectedBlock.startHour).padStart(2, '0')}:00 · {selectedBlock.durationHours}u · {selectedBlock.zone}
+                  {String(selectedBlock.startHour).padStart(2, '0')}:00 · {hoursLabel(selectedBlock.durationHours)} · {selectedBlock.zone}
                 </Text>
               </View>
             )}

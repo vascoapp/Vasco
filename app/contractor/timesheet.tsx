@@ -111,6 +111,14 @@ export default function TimesheetScreen() {
 
   // Computed
   const todayEntries = entries.filter(e => e.date === todayStr);
+  // The hours unit was a hardcoded "u" (Dutch *uren*) in three places, so an
+  // English or German contractor read "0.0u". werk.tsx already hit and fixed
+  // this exact class — the comment there notes the same `${h}u` shape — but the
+  // fix never reached this screen. `common.durationH` is the existing localised
+  // unit: "{{h}}h" (en) · "{{h}}u" (nl) · "{{h}} Std." (de).
+  const hoursLabel = (h: number) =>
+    t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
+
   const todayHours = todayEntries.reduce((sum, e) => sum + e.totalHours, 0);
 
   const weekStart = new Date(renderNow);
@@ -224,7 +232,7 @@ export default function TimesheetScreen() {
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>{t('timesheet.title', 'Urenregistratie')}</Text>
           <Text style={styles.headerSubtitle}>
-            {todayHours.toFixed(1)}u {t('timesheet.today', 'vandaag')} · {weekHours.toFixed(1)}u {t('timesheet.thisWeek', 'deze week')}
+            {hoursLabel(todayHours)} {t('timesheet.today', 'vandaag')} · {hoursLabel(weekHours)} {t('timesheet.thisWeek', 'deze week')}
           </Text>
         </View>
       </View>
@@ -261,7 +269,7 @@ export default function TimesheetScreen() {
             onPress={() => setActiveTab(tab)}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab === 'vandaag' ? t('timesheet.today', 'Vandaag') : tab === 'week' ? t('timesheet.week', 'Week') : t('timesheet.month', 'Maand')}
+              {tab === 'vandaag' ? t('common.today', 'Today') : tab === 'week' ? t('timesheet.week', 'Week') : t('timesheet.month', 'Maand')}
             </Text>
           </Pressable>
         ))}
@@ -270,7 +278,7 @@ export default function TimesheetScreen() {
       {/* Summary */}
       <View style={styles.summaryBar}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>{displayHours.toFixed(1)}u</Text>
+          <Text style={styles.summaryValue}>{hoursLabel(displayHours)}</Text>
           <Text style={styles.summaryLabel}>{t('timesheet.total', 'Totaal')}</Text>
         </View>
         <View style={styles.summaryDivider} />
@@ -304,7 +312,7 @@ export default function TimesheetScreen() {
                     <Ionicons name="time-outline" size={16} color={SemanticColors.textSecondary} />
                     <Text style={styles.entryTime}>{entry.clockIn} – {entry.clockOut || '...'}</Text>
                   </View>
-                  <Text style={styles.entryHours}>{entry.totalHours.toFixed(1)}u</Text>
+                  <Text style={styles.entryHours}>{hoursLabel(entry.totalHours)}</Text>
                 </View>
                 {entry.jobTitle && (
                   <Text style={styles.entryJob} numberOfLines={1}>{entry.jobTitle}</Text>

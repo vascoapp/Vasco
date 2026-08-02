@@ -6,6 +6,7 @@
 
 import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -32,6 +33,11 @@ interface PayrollLine {
 }
 
 export default function PayrollScreen() {
+  const { t } = useTranslation();
+  // Dutch 'u' (uren) was hardcoded here — an English contractor read "7.5u".
+  // common.durationH is the localised unit: {{h}}h · {{h}}u · {{h}} Std.
+  const hoursLabel = (h: number) =>
+    t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
   const router = useRouter();
   const [period, setPeriod] = useState<PeriodType>('week');
   const { members } = useTeamMembers();
@@ -142,7 +148,7 @@ export default function PayrollScreen() {
       <View style={styles.summaryCard}>
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{payrollData.totalHours.toFixed(1)}u</Text>
+            <Text style={styles.summaryValue}>{hoursLabel(payrollData.totalHours)}</Text>
             <Text style={styles.summaryLabel}>Totaal uren</Text>
           </View>
           <View style={styles.summaryDivider} />
@@ -187,7 +193,7 @@ export default function PayrollScreen() {
             </View>
             <View style={styles.memberDetails}>
               <View style={styles.detailCol}>
-                <Text style={styles.detailValue}>{line.regularHours.toFixed(1)}u</Text>
+                <Text style={styles.detailValue}>{hoursLabel(line.regularHours)}</Text>
                 <Text style={styles.detailLabel}>Regulier</Text>
               </View>
               <View style={styles.detailCol}>

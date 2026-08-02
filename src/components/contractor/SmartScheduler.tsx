@@ -32,6 +32,10 @@ import { useTranslation } from 'react-i18next';
 type ViewType = 'day' | 'week' | 'list';
 
 export function SmartScheduler() {
+  // Dutch 'u' (uren) was hardcoded here — an English contractor read "7.5u".
+  // common.durationH is the localised unit: {{h}}h · {{h}}u · {{h}} Std.
+  const hoursLabel = (h: number) =>
+    t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
   const { t } = useTranslation();
   const { user } = useAuth();
   const [viewType, setViewType] = useState<ViewType>('week');
@@ -301,7 +305,7 @@ export function SmartScheduler() {
           <Text style={styles.dayStatLabel}>Afspraken</Text>
         </View>
         <View style={styles.dayStat}>
-          <Text style={styles.dayStatValue}>{Math.round(daySchedule.totalWorkTime / 60)}u</Text>
+          <Text style={styles.dayStatValue}>{hoursLabel(daySchedule.totalWorkTime / 60)}</Text>
           <Text style={styles.dayStatLabel}>Werktijd</Text>
         </View>
         <View style={styles.dayStat}>
