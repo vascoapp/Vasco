@@ -222,7 +222,7 @@ export default function GeldScreen() {
         {/* ─── 3-KPI STADIUM ─── */}
         <View style={s.kpiRow}>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
-            <DKLabel style={s.kpiLabel}>{t('dk.pill.revenue', 'Revenue')}</DKLabel>
+            <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.revenue', 'Revenue')}</DKLabel>
             <View style={s.kpiValueRow}>
               <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal)}</Text>
               {revenueTrend.icon ? (
@@ -231,11 +231,11 @@ export default function GeldScreen() {
             </View>
           </Pressable>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
-            <DKLabel style={s.kpiLabel}>{t('dk.pill.outstanding', 'Outstanding')}</DKLabel>
+            <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.outstanding', 'Outstanding')}</DKLabel>
             <Text style={[s.kpiValue, { color: DK.colors.accent }]}>{compactCurrency(outstandingTotal)}</Text>
           </Pressable>
           <Pressable style={s.kpiTile}>
-            <DKLabel style={s.kpiLabel}>{t('dk.pill.pipeline', 'Pipeline')}</DKLabel>
+            <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.pipeline', 'Pipeline')}</DKLabel>
             <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline)}</Text>
           </Pressable>
         </View>
@@ -797,6 +797,13 @@ const s = StyleSheet.create({
     padding: 14, minHeight: 82,
     justifyContent: 'space-between',
   },
+  // The three tiles are flex:1 across the row, so the label box is ~92dp. Dutch
+  // "OPENSTAAND" fits; English "OUTSTANDING" does not and wrapped, orphaning the
+  // final letter onto its own line ("OUTSTANDIN" / "G") — seen on the Android
+  // emulator in en-US. Call sites pass numberOfLines + adjustsFontSizeToFit so a
+  // long label shrinks a little instead of wrapping; NOT defaulted inside
+  // DKLabel, because R107 removed exactly that default after it ellipsized
+  // unrelated chips and headers.
   kpiLabel: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.3 },
   kpiValueRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   kpiValue: { fontFamily: DK.type.display900, fontSize: 22, letterSpacing: -0.6, lineHeight: 24 },

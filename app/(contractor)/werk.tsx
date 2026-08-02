@@ -586,7 +586,9 @@ function TodayContent({ todayJobs, onOpenJob, onPlanCta, t }: { todayJobs: any[]
             style={({ pressed }) => [styles.todayRow, pressed && { opacity: 0.9 }]}
             onPress={() => onOpenJob(entry.id)}
           >
-            <Text style={styles.todayTime}>{timeStr}</Text>
+            {/* numberOfLines guarantees it can never wrap even if a locale
+                produces something longer still (e.g. a narrow-width device). */}
+            <Text style={styles.todayTime} numberOfLines={1}>{timeStr}</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.todayTitle} numberOfLines={1}>
                 {entry.title || entry.jobTitle || entry.projectName || 'Job'}
@@ -776,7 +778,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: DK.colors.accent,
     letterSpacing: -0.3,
-    width: 52,
+    // `width: 52` fit "09:00" and nothing else. `toLocaleTimeString` follows the
+    // DEVICE locale, so an en-US phone renders "9:00 AM" — which wrapped inside
+    // 52pt and split the meridiem onto its own line ("9:00 A" / "M"). Seen on
+    // the Android emulator; invisible on a nl device because 24-hour time is
+    // shorter. It broke for exactly the market en-US exists for.
+    //
+    // minWidth keeps 24-hour rows aligned as before; flexShrink stops the
+    // flex:1 title column from squeezing it back to the wrapping width.
+    minWidth: 52,
+    flexShrink: 0,
   },
   todayTitle: { fontFamily: DK.type.display800, fontSize: 14, color: DK.colors.text },
   todayMeta: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, marginTop: 2 },
