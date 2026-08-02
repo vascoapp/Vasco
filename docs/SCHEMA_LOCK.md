@@ -1,6 +1,8 @@
 # SCHEMA LOCK — VascoApp BE↔FE Contract
 
-**Version:** 1.9 — updated 2026-05-30 (R308 portal payment fields + Q&A realtime)
+**Version:** 1.11 — updated 2026-08-02 (regulated_submissions)
+<!-- v1.11 (migration 20260802000002): NEW TABLE regulated_submissions — status for every async statutory filing (SDI/FACe/PDP/Peppol e-invoice, HMRC CIS, HMRC MTD). One table, not five: all six channels share the shape build payload -> hand to authority -> ack now, accept/reject later. Columns: user_id, channel CHECK(sdi|face|pdp|peppol|hmrc_cis|hmrc_mtd), subject_id, state CHECK(draft|queued|submitting|submitted|accepted|rejected|failed|cancelled), idempotency_key UNIQUE(user_id,idempotency_key), provider_ref, authority_code (verbatim, e.g. SDI scarto 00404), attempts JSONB trail. state=submitted means the PROVIDER has it; ONLY state=accepted means filed. Owner-scoped RLS + explicit GRANT to authenticated (learnings #87: policy without grant is inert); no DELETE policy — a statutory trail is not the contractor's to erase. Transition authority is src/services/submissionLifecycle.ts, not the CHECK. Prev: -->
+<!-- v1.10 (migration 20260802000001): material_price_history += canonical_name TEXT — the normalised cohort key from src/services/materialNormalization.ts (ean:<gtin> | art:<supplier>:<code> | sorted canonical tokens). material_name stays RAW because it is user-visible. ADDITIVE ONLY: material_price_benchmarks and get_material_cohort_stats still group on LOWER(material_name). Repointing them is a deliberate step-3 follow-up that must wait for a client-side backfill of historic rows — canonicalisation lives in TS and cannot be reproduced in SQL, so switching early would split every existing cohort. Prev: -->
 <!-- v1.9 (migration 20260530000001): decision_trackers += payment_link TEXT, payment_status TEXT CHECK(NULL|pending|paid|partial). get_portal_by_access_code now also returns paymentLink + paymentStatus. customer_questions added to the supabase_realtime publication + REPLICA IDENTITY FULL so the customer portal Q&A thread receives approved_reply/ai_reply_draft/auto_sent/status live (web + mobile). Contractor side must still populate decision_trackers.payment_link when it mints a Mollie/Stripe checkout. Prev: v1.8 — 2026-05-27 (intelligence retrofit Stage 5). -->
 
 **Owner:** changes require explicit version bump + sign-off from BE + FE leads
@@ -623,7 +625,8 @@ extracted_line_items.confidence   numeric(3,2)
 id                  uuid PK
 trade               text NOT NULL
 country             text NOT NULL default 'NL'
-material_name       text NOT NULL
+material_name       text NOT NULL          -- RAW description, user-visible
+canonical_name      text                   -- v1.10: normalised cohort key (see materialNormalization.ts)
 material_category   text
 brand               text
 ean_code            text
