@@ -77,8 +77,11 @@ export default function LoginScreen() {
       const { ENV, isSupabaseConfigured } = await import('../src/config/env');
       const { DEMO_MODE } = await import('../src/config/demo');
       const urlPreview = ENV.SUPABASE_URL ? `${ENV.SUPABASE_URL.slice(0, 30)}…(${ENV.SUPABASE_URL.length})` : '(empty)';
+      // Audit F11: verify the key was inlined by Metro WITHOUT printing any key
+      // characters — presence + length is enough to diagnose the "no API key"
+      // TF bundle issue, and never exposes material if a wrong key is misconfigured.
       const keyPreview = ENV.SUPABASE_ANON_KEY
-        ? `${ENV.SUPABASE_ANON_KEY.slice(0, 12)}…${ENV.SUPABASE_ANON_KEY.slice(-6)} (${ENV.SUPABASE_ANON_KEY.length})`
+        ? `present (len ${ENV.SUPABASE_ANON_KEY.length})`
         : '(empty)';
 
       const raw = await AsyncStorage.getItem('@vasco_auth_event_log');

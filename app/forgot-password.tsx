@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase, isSupabaseConfigured } from '../src/lib/supabase';
+import { isValidEmail } from '../src/utils/validation';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea } from '../src/theme/spacing';
 import { DK } from '../src/theme/draftkings';
@@ -37,7 +38,14 @@ export default function ForgotPasswordScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleReset = async () => {
-    if (!email.trim()) return;
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    // Audit F7: validate format for parity with signup — Supabase rejects
+    // malformed addresses, but catching it here gives an instant, localized error.
+    if (!isValidEmail(trimmed)) {
+      Alert.alert(t('common.error', 'Error'), t('signup.emailInvalid', 'Please enter a valid email address.'));
+      return;
+    }
 
     if (!isSupabaseConfigured) {
       Alert.alert(
@@ -58,7 +66,17 @@ export default function ForgotPasswordScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert(t('common.error', 'Error'), error.message);
+      // Audit F8: surface a friendly localized message for rate-limits instead
+      // of Supabase's raw "For security purposes… after N seconds" string.
+      const msg = (error.message || '').toLowerCase();
+      if (/rate|too many|after \d+ seconds|security purposes/.test(msg)) {
+        Alert.alert(
+          t('common.error', 'Error'),
+          t('auth.resetRateLimited', 'Too many requests. Please wait a minute and try again.'),
+        );
+      } else {
+        Alert.alert(t('common.error', 'Error'), error.message);
+      }
     } else {
       setSent(true);
     }

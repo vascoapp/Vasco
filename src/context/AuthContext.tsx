@@ -742,8 +742,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error = res.error;
         realAuthData = res.data;
       } catch {
+        // R322 (audit F4): a network timeout is NOT a wrong-password attempt.
+        // Recording it here locked out contractors on flaky signal (the app's
+        // core environment) after 5 timeouts despite never mistyping. Only
+        // genuine credential failures increment the lockout counter.
         setIsLoading(false);
-        await checkAndRecordFailedAttempt(normalizedEmail);
         return { ok: false, reason: 'network' };
       }
       setIsLoading(false);
@@ -759,18 +762,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { ok: true };
       }
       if (error) {
-        await checkAndRecordFailedAttempt(normalizedEmail);
         // Distinguish network failures from credential failures. Supabase
         // surfaces fetch failures as AuthRetryableFetchError or with a
         // message matching /fetch|network|timeout/i.
         const msg = (error.message || '').toLowerCase();
         const isNetwork = /fetch|network|timeout|enotfound|econnreset|failed to fetch/.test(msg);
+        // R322 (audit F4): only count real wrong-credential failures toward the
+        // lockout — never network/timeout errors.
+        if (!isNetwork) await checkAndRecordFailedAttempt(normalizedEmail);
         return { ok: false, reason: isNetwork ? 'network' : 'invalid' };
       }
       return { ok: false, reason: 'unknown' };
     }
 
-    await checkAndRecordFailedAttempt(normalizedEmail);
+    // Supabase not configured → treat as a network/offline condition, not a
+    // failed credential attempt (R322 audit F4).
     setIsLoading(false);
     return { ok: false, reason: 'network' };
   }, []);
@@ -803,13 +809,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     //
     // The /auth/callback* path is also added to apple-app-site-association
     // and assetlinks.json so iOS/Android auto-open the app.
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: 'https://admin.vascobuild.com/auth/callback' },
-    });
+    // R322: hard 15s deadline — mirrors login(). Without it a hung signUp
+    // left the Create-account button spinning forever with no error and no
+    // way out (audit F10). On timeout we surface it as a network failure so
+    // signup.tsx shows the "cannot reach server" message instead of hanging.
+    let data: Awaited<ReturnType<typeof supabase.auth.signUp>>['data'] | null = null;
+    let error: Awaited<ReturnType<typeof supabase.auth.signUp>>['error'] = null;
+    try {
+      const res = await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: 'https://admin.vascobuild.com/auth/callback' },
+        }),
+        15000,
+        'signUp',
+      );
+      data = res.data;
+      error = res.error;
+    } catch {
+      setIsLoading(false);
+      return { success: false, error: 'network' };
+    }
     setIsLoading(false);
-    if (error) return { success: false, error: error.message };
+    if (error || !data) return { success: false, error: error?.message ?? 'Could not create account.' };
     // Activation funnel — top of funnel. `confirmed` = signed in immediately
     // (email-confirmation OFF) vs pending email verification.
     trackEvent('signup', { confirmed: !!data.session }).catch(() => {});
