@@ -66,3 +66,6 @@ video/.remotion-cache/
 
 # Local build artifacts
 *.ipa
+
+# Supabase CLI local state (linked project ref, CLI version) — machine-specific
+supabase/.temp/
