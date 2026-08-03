@@ -60,6 +60,13 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     sentAt: row.sent_at ?? undefined,
     dueDate: row.due_date ?? undefined,
     createdAt: row.created_at,
+    // Progress billing (rule #8 step 5). Without these an instalment invoice
+    // forgets which project and which term it belongs to on cold start, and
+    // the retentie withheld from it is silently lost -- which is real money.
+    projectId: row.project_id ?? undefined,
+    billingTermId: row.billing_term_id ?? undefined,
+    retentionAmount: row.retention_amount != null ? Number(row.retention_amount) : undefined,
+    isRetentionRelease: row.is_retention_release || undefined,
   };
 }
 

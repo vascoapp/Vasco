@@ -56,4 +56,20 @@ export type Invoice = {
   // on documents.delivery_date. PDF render reads from here so the date
   // survives if the linked job is later deleted.
   deliveryDate?: string;
+  // ── Progress billing (termijnfacturen) ────────────────────────────────────
+  // Projects already carried `invoiceIds`, but there was no invoice -> project
+  // link and progress billing has to walk that direction.
+  projectId?: string;
+  /** The ProjectBillingTerm this instalment was raised for. */
+  billingTermId?: string;
+  /**
+   * Retentie withheld from THIS invoice. `amount` stays the full term value --
+   * VAT is charged on the full amount -- and what the customer pays now is
+   * `amount - retentionAmount`. That figure is derived, never stored, so it
+   * cannot drift. Deducting retention from `amount` instead would under-report
+   * VAT and produce an e-invoice total that disagrees with the contract.
+   */
+  retentionAmount?: number;
+  /** The final invoice that releases everything withheld. Withholds nothing itself. */
+  isRetentionRelease?: boolean;
 };

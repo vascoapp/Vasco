@@ -382,6 +382,8 @@ export async function createProject(
     total_budget?: number | null;
     address?: { street?: string; city?: string; postcode?: string; country?: string } | null;
     milestones?: unknown[];
+    billing_terms?: unknown[];
+    retention_percent?: number;
   },
 ): Promise<ProjectRow> {
   const userId = await getUserId();

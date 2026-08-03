@@ -63,6 +63,9 @@ export default function ProjectsScreen() {
       quoteIds: [],
       invoiceIds: [],
       subcontractorIds: [],
+      // No terms means "bill as one invoice" -- the existing behaviour.
+      billingTerms: [],
+      retentionPercent: 0,
     });
     setNewTitle('');
     setNewCustomer('');

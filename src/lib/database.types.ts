@@ -179,6 +179,15 @@ export type DocumentRow = {
   // create from linked job's completed_at; PDF render reads from here
   // (no longer joins jobs at render time).
   delivery_date: string | null;
+  // Progress billing — migration 20260803000001_progress_billing.sql.
+  // `project_id` is a new direction of travel: projects carried invoice_ids,
+  // but nothing linked an invoice back to its project.
+  project_id: string | null;
+  billing_term_id: string | null;
+  /** Retentie withheld from this invoice. total_amount stays the full term
+   *  value so VAT is charged on the full amount; payable-now is derived. */
+  retention_amount: number;
+  is_retention_release: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -427,6 +436,12 @@ export type ProjectRow = {
   total_paid: number | null;
   address: { street?: string; city?: string; postcode?: string; country?: string } | null;
   milestones: unknown[];
+  // Progress billing — migration 20260803000001_progress_billing.sql.
+  // Instalments (termijnen) for the project, and the percent of each one
+  // withheld until oplevering. Separate from `milestones`: a milestone is a
+  // point in the schedule, a term is money.
+  billing_terms: unknown[];
+  retention_percent: number;
   created_at: string;
   updated_at: string;
 };

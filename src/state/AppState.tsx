@@ -209,6 +209,8 @@ type AppState = {
   // Returns the checkout URL. Throws on provider failure (caller shows an error).
   requestTrackerDeposit: (accessCode: string, amount: number) => Promise<string>;
   addInvoiceFromJob: (jobId: string) => Promise<string>;
+  /** Raise the invoice for one project billing term (termijnfactuur). */
+  addTermInvoice: (projectId: string, termId: string) => Promise<string>;
   convertQuoteToJob: (quoteId: string) => Promise<string>;
   updateQuote: (id: string, updates: Partial<Quote>) => void;
   // Project mode (aannemer)
@@ -349,7 +351,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     {
       id: 'proj-seed-1', title: 'Badkamer renovatie — Fam. Jansen', customerId: 'cust-002', customerName: 'Fam. Jansen',
       status: 'active', totalBudget: 12500, totalQuoted: 12500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
+      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0,
       startDate: localDateKey(new Date(Date.now() - MS_PER_DAY * 7)),
       targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 21)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date().toISOString(),
@@ -357,7 +359,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     {
       id: 'proj-seed-2', title: 'Keuken verbouwing — Bakkerij Smit', customerId: 'cust-003', customerName: 'Bakkerij Smit',
       status: 'planning', totalBudget: 18000, totalQuoted: 16500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-4'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [],
+      jobIds: ['j-seed-4'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0,
       targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 45)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString(),
     },
@@ -479,6 +481,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               totalInvoiced: r.total_invoiced ?? 0,
               totalPaid: r.total_paid ?? 0,
               milestones: Array.isArray(r.milestones) ? r.milestones : [],
+              // Progress billing. Rule #8 step 5 — without these the terms a
+              // contractor set up vanish on cold start.
+              billingTerms: Array.isArray(r.billing_terms) ? r.billing_terms : [],
+              retentionPercent: Number(r.retention_percent ?? 0),
               jobIds: [],
               quoteIds: [],
               invoiceIds: [],
@@ -2625,6 +2631,145 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         return docNumber;
       },
 
+      // ── Progress billing (termijnfacturen) ────────────────────────────────
+      // Raise the invoice for one instalment of a project.
+      //
+      // The retentie split is the part to be careful with: `total_amount` is
+      // the FULL term value so VAT is charged on the whole of it, and
+      // `retention_amount` separately records what is withheld from payment.
+      // What the customer pays now is derived from the two (see
+      // progressBillingService.payableNow) and never stored, so it cannot
+      // drift.
+      addTermInvoice: async (projectId: string, termId: string) => {
+        const project = projects.find((p) => p.id === projectId);
+        if (!project) throw new Error(`Project ${projectId} not found`);
+        const term = (project.billingTerms ?? []).find((t) => t.id === termId);
+        if (!term) throw new Error(`Billing term ${termId} not found on project ${projectId}`);
+        if (term.status === 'invoiced' || term.status === 'paid') {
+          throw new Error(`Term "${term.title}" has already been invoiced`);
+        }
+
+        const {
+          validateBillingSchedule,
+          termAmount,
+          retentionForTerm,
+        } = await import('../services/progressBillingService');
+
+        // Refuse to bill against a schedule that does not add up. Billing past
+        // 100% of a contract is the failure that costs real money, and it is
+        // cheaper to stop here than to credit-note it later.
+        const scheduleErrors = validateBillingSchedule(project);
+        if (scheduleErrors.length > 0) {
+          throw new Error(`Billing schedule is invalid: ${scheduleErrors[0].message}`);
+        }
+
+        const amount = termAmount(project, term);
+        if (amount <= 0) {
+          throw new Error(`Term "${term.title}" bills nothing`);
+        }
+        const retention = retentionForTerm(project, term);
+
+        const docNumber = await nextDocumentNumber('invoice');
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+
+        const customer = customers.find((c) => c.id === project.customerId);
+        const customerName = customer?.name ?? '';
+
+        const newInvoice: Invoice = {
+          id: docNumber,
+          customer: customerName,
+          customerId: project.customerId || undefined,
+          customerName,
+          job: `${project.title} — ${term.title}`,
+          amount,
+          status: 'draft',
+          dueInDays: 14,
+          projectId,
+          billingTermId: termId,
+          retentionAmount: retention,
+        };
+        setInvoices((prev) => [newInvoice, ...prev]);
+
+        // Mark the term invoiced optimistically, so the UI cannot offer the
+        // same instalment twice while the write is in flight.
+        const invoicedAt = new Date().toISOString();
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id !== projectId
+              ? p
+              : {
+                  ...p,
+                  billingTerms: (p.billingTerms ?? []).map((t) =>
+                    t.id === termId
+                      ? { ...t, status: 'invoiced' as const, invoiceId: docNumber, invoicedAt }
+                      : t,
+                  ),
+                },
+          ),
+        );
+
+        if (isSupabaseConfigured) {
+          const invPayload = {
+            doc_type: 'invoice' as const,
+            status: 'draft' as const,
+            document_number: docNumber,
+            customer_id: isUuid(project.customerId) ? project.customerId : null,
+            job_id: null,
+            total_amount: amount,
+            due_date: dueDate.toISOString(),
+            // Rule #8 step 4 — the write mappers for the document-side
+            // progress-billing columns.
+            project_id: isUuid(projectId) ? projectId : null,
+            billing_term_id: termId,
+            retention_amount: retention,
+            is_retention_release: false,
+          };
+          try {
+            await withTimeout(createDocument(invPayload), 3000, 'addTermInvoice');
+          } catch (err) {
+            logWarn('AppState', `addTermInvoice persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
+            } catch {}
+          }
+          // Persist the term-status change through the same project patch path
+          // every other project edit uses.
+          try {
+            const { updateProject: updateProjectRow } = await import('../lib/dataProvider');
+            const patched = (projects.find((p) => p.id === projectId)?.billingTerms ?? []).map((t) =>
+              t.id === termId ? { ...t, status: 'invoiced' as const, invoiceId: docNumber, invoicedAt } : t,
+            );
+            await withTimeout(
+              updateProjectRow(projectId, { billing_terms: patched }),
+              3000,
+              'addTermInvoice.terms',
+            );
+          } catch (err) {
+            logWarn('AppState', `addTermInvoice term-status persist failed: ${err}`);
+          }
+        }
+
+        // Post-create housekeeping runs regardless of which branch persisted
+        // (rule #7): an offline instalment must still reach the audit trail
+        // and the funnel.
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({
+            type: 'invoice_created',
+            ref: docNumber,
+            payload: { amount, customer: project.customerId ?? null, projectId, billingTermId: termId, retention },
+          }),
+        ).catch(() => {});
+        emitInvoiceSent(getCurrentUserId(), docNumber, {
+          customerId: project.customerId ?? '',
+          amount,
+          dueDate: dueDate.toISOString(),
+        }).catch(() => {});
+        trackEvent('invoice_created', { invoiceId: docNumber, projectId, billingTermId: termId }).catch(() => {});
+        return docNumber;
+      },
+
       convertQuoteToJob: async (quoteId: string) => {
         const quote = quotes.find((q) => q.id === quoteId);
         if (!quote) throw new Error(`Quote ${quoteId} not found`);
@@ -3148,6 +3293,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 total_budget: project.totalBudget,
                 address: project.address ?? null,
                 milestones: project.milestones ?? [],
+                billing_terms: project.billingTerms ?? [],
+                retention_percent: project.retentionPercent ?? 0,
               }), 3000, 'addProject');
               setProjects(prev => prev.map(p => p.id === tempId ? { ...p, id: (row as any).id } : p));
             } catch (err) {
@@ -3169,6 +3316,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     total_budget: project.totalBudget,
                     address: project.address ?? null,
                     milestones: project.milestones ?? [],
+                billing_terms: project.billingTerms ?? [],
+                retention_percent: project.retentionPercent ?? 0,
                   },
                 });
               } catch {}
@@ -3198,6 +3347,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             if (updates.totalBudget !== undefined) patch.total_budget = updates.totalBudget;
             if (updates.address !== undefined) patch.address = updates.address;
             if (updates.milestones !== undefined) patch.milestones = updates.milestones;
+            // Rule #8 step 4 — write mappers for progress billing.
+            if (updates.billingTerms !== undefined) patch.billing_terms = updates.billingTerms;
+            if (updates.retentionPercent !== undefined) patch.retention_percent = updates.retentionPercent;
             if (Object.keys(patch).length === 0) return;
 
             if (id.startsWith('proj-')) {

@@ -218,6 +218,10 @@ describe('R66r43 — quote editing e2e', () => {
         deleted_at: null,
         notes: null,
         delivery_date: null,
+        project_id: null,
+        billing_term_id: null,
+        retention_amount: 0,
+        is_retention_release: false,
         created_at: '2026-05-08T10:00:00Z',
         updated_at: '2026-05-08T10:00:00Z',
       };
