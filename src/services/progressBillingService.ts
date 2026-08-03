@@ -18,7 +18,7 @@
 // contract.
 // =============================================================================
 
-import type { Project, ProjectBillingTerm } from '../types/project';
+import type { Project, ProjectBillingTerm, ProjectChangeOrder } from '../types/project';
 import type { Invoice } from '../domain/documents';
 
 /** Currency rounding. Money is compared and summed in cents to avoid the
@@ -236,6 +236,135 @@ export function canReleaseRetention(
 }
 
 // ---------------------------------------------------------------------------
+// Meerwerk / minderwerk (change orders)
+// ---------------------------------------------------------------------------
+// Change orders are billed on their OWN invoice and deliberately do not
+// re-base the percentage terms. Re-spreading them across the remaining terms
+// under-bills the project: bill 30% of 80k, approve 20k of meerwerk, then bill
+// the remaining 70% of the new 100k, and you have invoiced 94k of a 100k job.
+// Keeping the schedule anchored to the original contract makes total billed
+// exactly contract + changes.
+// ---------------------------------------------------------------------------
+
+/** Sum of change orders in the given states. Signed: minderwerk subtracts. */
+export function changeOrderTotal(
+  project: Pick<Project, 'changeOrders'>,
+  statuses: ReadonlyArray<ProjectChangeOrder['status']> = ['approved', 'invoiced'],
+): number {
+  return round2(
+    (project.changeOrders ?? [])
+      .filter((c) => statuses.includes(c.status))
+      .reduce((sum, c) => sum + Number(c.amount ?? 0), 0),
+  );
+}
+
+/**
+ * What the project is worth now: the contract plus agreed changes.
+ *
+ * Distinct from `contractValue`, which stays anchored to the original quote
+ * because the percentage terms are computed against it.
+ */
+export function projectValue(
+  project: Pick<Project, 'totalQuoted' | 'totalBudget' | 'changeOrders'>,
+): number {
+  return round2(contractValue(project) + changeOrderTotal(project));
+}
+
+export interface ChangeOrderGate {
+  allowed: boolean;
+  reason?: string;
+  /** Set when the block is the art. 7:755 warning, so the UI can offer to send it. */
+  needsWarning?: boolean;
+}
+
+/**
+ * Whether a change order can be billed.
+ *
+ * The warning check is the one that matters. Art. 7:755 BW gives the
+ * contractor a right to the price increase only if they warned the client in
+ * time that the change required one. Invoicing meerwerk that was never
+ * notified is how a contractor ends up unable to collect it — so this refuses,
+ * and tells the caller it is the warning that is missing rather than failing
+ * opaquely.
+ *
+ * Minderwerk is exempt: a reduction is in the customer's favour and needs no
+ * warning.
+ */
+export function canInvoiceChangeOrder(order: ProjectChangeOrder): ChangeOrderGate {
+  if (order.status === 'invoiced') {
+    return { allowed: false, reason: `"${order.title}" has already been billed` };
+  }
+  if (order.status === 'rejected') {
+    return { allowed: false, reason: `"${order.title}" was declined by the customer` };
+  }
+  if (order.status !== 'approved') {
+    return { allowed: false, reason: `"${order.title}" has not been approved by the customer yet` };
+  }
+  if (Number(order.amount ?? 0) === 0) {
+    return { allowed: false, reason: `"${order.title}" has no amount` };
+  }
+  if (Number(order.amount) > 0 && !order.warnedAt) {
+    return {
+      allowed: false,
+      needsWarning: true,
+      reason:
+        `"${order.title}" has no record of the customer being warned that this ` +
+        `carried a price increase (art. 7:755 BW). Record the warning before billing it.`,
+    };
+  }
+  return { allowed: true };
+}
+
+export interface ChangeOrderError {
+  code: 'no_amount' | 'approved_without_warning' | 'duplicate_sort_order' | 'reduces_below_zero';
+  message: string;
+  changeOrderId?: string;
+}
+
+export function validateChangeOrders(
+  project: Pick<Project, 'totalQuoted' | 'totalBudget' | 'changeOrders'>,
+): ChangeOrderError[] {
+  const errors: ChangeOrderError[] = [];
+  const orders = project.changeOrders ?? [];
+  const seen = new Set<number>();
+
+  for (const order of orders) {
+    if (Number(order.amount ?? 0) === 0) {
+      errors.push({ code: 'no_amount', message: `"${order.title}" has no amount`, changeOrderId: order.id });
+    }
+    // Surfaced as a warning-level problem at approval time rather than only at
+    // billing time, so the contractor can still send the notice while the work
+    // is fresh rather than discovering it when they try to invoice.
+    if (order.status === 'approved' && Number(order.amount ?? 0) > 0 && !order.warnedAt) {
+      errors.push({
+        code: 'approved_without_warning',
+        message: `"${order.title}" is approved but has no record of the price warning (art. 7:755 BW)`,
+        changeOrderId: order.id,
+      });
+    }
+    if (seen.has(order.sortOrder)) {
+      errors.push({
+        code: 'duplicate_sort_order',
+        message: `Two change orders share position ${order.sortOrder}`,
+        changeOrderId: order.id,
+      });
+    }
+    seen.add(order.sortOrder);
+  }
+
+  // Minderwerk that wipes out more than the contract is a data-entry error, not
+  // a negotiation outcome.
+  if (projectValue(project) < 0) {
+    errors.push({
+      code: 'reduces_below_zero',
+      message: 'Reductions exceed the contract value, leaving the project worth less than nothing',
+    });
+  }
+
+  return errors;
+}
+
+// ---------------------------------------------------------------------------
 // Progress
 // ---------------------------------------------------------------------------
 
@@ -250,7 +379,14 @@ export function nextTermToInvoice(
 }
 
 export interface BillingProgress {
+  /** The original contract. Percentage terms are computed against this. */
   contractValue: number;
+  /** Contract + approved changes: what the project is worth now. */
+  projectValue: number;
+  /** Approved meerwerk/minderwerk, signed. */
+  changeOrders: number;
+  /** Approved changes not yet billed. */
+  changeOrdersUnbilled: number;
   /** Face value of every term already invoiced. */
   invoiced: number;
   /** Contract value not yet covered by a term invoice. */
@@ -268,7 +404,7 @@ export interface BillingProgress {
  * because it is a payment timing matter, not a billing one.
  */
 export function billingProgress(
-  project: Pick<Project, 'totalQuoted' | 'totalBudget' | 'retentionPercent' | 'billingTerms'> & { id: string },
+  project: Pick<Project, 'totalQuoted' | 'totalBudget' | 'retentionPercent' | 'billingTerms' | 'changeOrders'> & { id: string },
   invoices: Invoice[],
 ): BillingProgress {
   const terms = project.billingTerms ?? [];
@@ -277,8 +413,15 @@ export function billingProgress(
     .filter((t) => t.status === 'invoiced' || t.status === 'paid')
     .reduce((sum, t) => sum + termAmount(project, t), 0);
 
+  const unbilled = (project.changeOrders ?? [])
+    .filter((c) => c.status === 'approved')
+    .reduce((sum, c) => sum + Number(c.amount ?? 0), 0);
+
   return {
     contractValue: round2(value),
+    projectValue: projectValue(project),
+    changeOrders: changeOrderTotal(project),
+    changeOrdersUnbilled: round2(unbilled),
     invoiced: round2(billed),
     remaining: round2(Math.max(0, value - billed)),
     percentInvoiced: value > 0 ? round2((billed / value) * 100) : 0,

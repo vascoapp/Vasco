@@ -66,6 +66,7 @@ export default function ProjectsScreen() {
       // No terms means "bill as one invoice" -- the existing behaviour.
       billingTerms: [],
       retentionPercent: 0,
+      changeOrders: [],
     });
     setNewTitle('');
     setNewCustomer('');

@@ -384,6 +384,7 @@ export async function createProject(
     milestones?: unknown[];
     billing_terms?: unknown[];
     retention_percent?: number;
+    change_orders?: unknown[];
   },
 ): Promise<ProjectRow> {
   const userId = await getUserId();

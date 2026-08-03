@@ -211,6 +211,8 @@ type AppState = {
   addInvoiceFromJob: (jobId: string) => Promise<string>;
   /** Raise the invoice for one project billing term (termijnfactuur). */
   addTermInvoice: (projectId: string, termId: string) => Promise<string>;
+  /** Bill one meerwerk/minderwerk item on its own invoice. */
+  addChangeOrderInvoice: (projectId: string, changeOrderId: string) => Promise<string>;
   convertQuoteToJob: (quoteId: string) => Promise<string>;
   updateQuote: (id: string, updates: Partial<Quote>) => void;
   // Project mode (aannemer)
@@ -351,7 +353,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     {
       id: 'proj-seed-1', title: 'Badkamer renovatie — Fam. Jansen', customerId: 'cust-002', customerName: 'Fam. Jansen',
       status: 'active', totalBudget: 12500, totalQuoted: 12500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0,
+      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0, changeOrders: [],
       startDate: localDateKey(new Date(Date.now() - MS_PER_DAY * 7)),
       targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 21)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date().toISOString(),
@@ -359,7 +361,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     {
       id: 'proj-seed-2', title: 'Keuken verbouwing — Bakkerij Smit', customerId: 'cust-003', customerName: 'Bakkerij Smit',
       status: 'planning', totalBudget: 18000, totalQuoted: 16500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-4'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0,
+      jobIds: ['j-seed-4'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0, changeOrders: [],
       targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 45)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString(),
     },
@@ -485,6 +487,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               // contractor set up vanish on cold start.
               billingTerms: Array.isArray(r.billing_terms) ? r.billing_terms : [],
               retentionPercent: Number(r.retention_percent ?? 0),
+              changeOrders: Array.isArray(r.change_orders) ? r.change_orders : [],
               jobIds: [],
               quoteIds: [],
               invoiceIds: [],
@@ -2770,6 +2773,118 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         return docNumber;
       },
 
+      // Bill one meerwerk / minderwerk item on its own invoice.
+      //
+      // Kept off the term schedule on purpose: re-spreading approved changes
+      // across the remaining percentage terms under-bills the project (see
+      // types/project.ts). Total billed stays contract + changes exactly.
+      addChangeOrderInvoice: async (projectId: string, changeOrderId: string) => {
+        const project = projects.find((p) => p.id === projectId);
+        if (!project) throw new Error(`Project ${projectId} not found`);
+        const order = (project.changeOrders ?? []).find((c) => c.id === changeOrderId);
+        if (!order) throw new Error(`Change order ${changeOrderId} not found on project ${projectId}`);
+
+        const { canInvoiceChangeOrder } = await import('../services/progressBillingService');
+        const gate = canInvoiceChangeOrder(order);
+        if (!gate.allowed) {
+          // Includes the art. 7:755 warning check: billing meerwerk the
+          // customer was never warned about is how a contractor ends up unable
+          // to collect it.
+          throw new Error(gate.reason ?? 'This change order cannot be billed');
+        }
+
+        const amount = Number(order.amount);
+        const docNumber = await nextDocumentNumber('invoice');
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+
+        const customer = customers.find((c) => c.id === project.customerId);
+        const customerName = customer?.name ?? '';
+        const invoicedAt = new Date().toISOString();
+
+        const newInvoice: Invoice = {
+          id: docNumber,
+          customer: customerName,
+          customerId: project.customerId || undefined,
+          customerName,
+          job: `${project.title} — ${order.title}`,
+          amount,
+          status: 'draft',
+          dueInDays: 14,
+          projectId,
+          changeOrderId,
+        };
+        setInvoices((prev) => [newInvoice, ...prev]);
+
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id !== projectId
+              ? p
+              : {
+                  ...p,
+                  changeOrders: (p.changeOrders ?? []).map((c) =>
+                    c.id === changeOrderId
+                      ? { ...c, status: 'invoiced' as const, invoiceId: docNumber, invoicedAt }
+                      : c,
+                  ),
+                },
+          ),
+        );
+
+        if (isSupabaseConfigured) {
+          const invPayload = {
+            doc_type: 'invoice' as const,
+            status: 'draft' as const,
+            document_number: docNumber,
+            customer_id: isUuid(project.customerId) ? project.customerId : null,
+            job_id: null,
+            total_amount: amount,
+            due_date: dueDate.toISOString(),
+            project_id: isUuid(projectId) ? projectId : null,
+            change_order_id: changeOrderId,
+            retention_amount: 0,
+            is_retention_release: false,
+          };
+          try {
+            await withTimeout(createDocument(invPayload), 3000, 'addChangeOrderInvoice');
+          } catch (err) {
+            logWarn('AppState', `addChangeOrderInvoice persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
+            } catch {}
+          }
+          try {
+            const { updateProject: updateProjectRow } = await import('../lib/dataProvider');
+            const patched = (projects.find((p) => p.id === projectId)?.changeOrders ?? []).map((c) =>
+              c.id === changeOrderId ? { ...c, status: 'invoiced' as const, invoiceId: docNumber, invoicedAt } : c,
+            );
+            await withTimeout(
+              updateProjectRow(projectId, { change_orders: patched }),
+              3000,
+              'addChangeOrderInvoice.orders',
+            );
+          } catch (err) {
+            logWarn('AppState', `addChangeOrderInvoice status persist failed: ${err}`);
+          }
+        }
+
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({
+            type: 'invoice_created',
+            ref: docNumber,
+            payload: { amount, customer: project.customerId ?? null, projectId, changeOrderId, warnedAt: order.warnedAt ?? null },
+          }),
+        ).catch(() => {});
+        emitInvoiceSent(getCurrentUserId(), docNumber, {
+          customerId: project.customerId ?? '',
+          amount,
+          dueDate: dueDate.toISOString(),
+        }).catch(() => {});
+        trackEvent('invoice_created', { invoiceId: docNumber, projectId, changeOrderId }).catch(() => {});
+        return docNumber;
+      },
+
       convertQuoteToJob: async (quoteId: string) => {
         const quote = quotes.find((q) => q.id === quoteId);
         if (!quote) throw new Error(`Quote ${quoteId} not found`);
@@ -3295,6 +3410,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 milestones: project.milestones ?? [],
                 billing_terms: project.billingTerms ?? [],
                 retention_percent: project.retentionPercent ?? 0,
+                change_orders: project.changeOrders ?? [],
               }), 3000, 'addProject');
               setProjects(prev => prev.map(p => p.id === tempId ? { ...p, id: (row as any).id } : p));
             } catch (err) {
@@ -3318,6 +3434,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     milestones: project.milestones ?? [],
                 billing_terms: project.billingTerms ?? [],
                 retention_percent: project.retentionPercent ?? 0,
+                change_orders: project.changeOrders ?? [],
                   },
                 });
               } catch {}
@@ -3350,6 +3467,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             // Rule #8 step 4 — write mappers for progress billing.
             if (updates.billingTerms !== undefined) patch.billing_terms = updates.billingTerms;
             if (updates.retentionPercent !== undefined) patch.retention_percent = updates.retentionPercent;
+            if (updates.changeOrders !== undefined) patch.change_orders = updates.changeOrders;
             if (Object.keys(patch).length === 0) return;
 
             if (id.startsWith('proj-')) {

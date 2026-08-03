@@ -18,8 +18,12 @@ import {
   nextTermToInvoice,
   billingProgress,
   markTermsReadyForCompletedMilestones,
+  changeOrderTotal,
+  projectValue,
+  canInvoiceChangeOrder,
+  validateChangeOrders,
 } from '../progressBillingService';
-import type { Project, ProjectBillingTerm } from '../../types/project';
+import type { Project, ProjectBillingTerm, ProjectChangeOrder } from '../../types/project';
 import type { Invoice } from '../../domain/documents';
 
 function term(over: Partial<ProjectBillingTerm> = {}): ProjectBillingTerm {
@@ -47,6 +51,7 @@ function project(over: Partial<Project> = {}): Project {
     milestones: [],
     billingTerms: [],
     retentionPercent: 5,
+    changeOrders: [],
     jobIds: [],
     quoteIds: [],
     invoiceIds: [],
@@ -304,5 +309,128 @@ describe('milestone triggers', () => {
   it('does not touch terms with no milestone trigger', () => {
     const p = project({ billingTerms: [term({ id: 'a', sortOrder: 1, status: 'pending' })] });
     expect(markTermsReadyForCompletedMilestones(p)[0].status).toBe('pending');
+  });
+});
+
+// ── Meerwerk / minderwerk ───────────────────────────────────────────────────
+function order(over: Partial<ProjectChangeOrder> = {}): ProjectChangeOrder {
+  return {
+    id: 'co1',
+    title: 'Extra stopcontacten',
+    amount: 2000,
+    status: 'approved',
+    warnedAt: '2026-02-01T09:00:00.000Z',
+    warnedVia: 'whatsapp',
+    createdAt: '2026-02-01T09:00:00.000Z',
+    sortOrder: 1,
+    ...over,
+  };
+}
+
+describe('change orders and project value', () => {
+  it('adds approved meerwerk to the project value, leaving the contract alone', () => {
+    const p = project({ changeOrders: [order({ amount: 20000 })] });
+    expect(contractValue(p)).toBe(80000);
+    expect(projectValue(p)).toBe(100000);
+  });
+
+  it('subtracts minderwerk', () => {
+    const p = project({ changeOrders: [order({ amount: -5000, warnedAt: undefined })] });
+    expect(projectValue(p)).toBe(75000);
+  });
+
+  it('ignores orders the customer has not agreed to', () => {
+    const p = project({
+      changeOrders: [
+        order({ id: 'a', amount: 5000, status: 'proposed' }),
+        order({ id: 'b', amount: 3000, status: 'rejected' }),
+        order({ id: 'c', amount: 1000, status: 'draft' }),
+      ],
+    });
+    expect(changeOrderTotal(p)).toBe(0);
+    expect(projectValue(p)).toBe(80000);
+  });
+});
+
+// This is the property that makes the two features safe together.
+describe('approved meerwerk does NOT re-base the billing terms', () => {
+  const withChange = project({
+    billingTerms: [
+      term({ id: 'a', percent: 30, sortOrder: 1, status: 'invoiced' }),
+      term({ id: 'b', percent: 70, sortOrder: 2, status: 'pending' }),
+    ],
+    changeOrders: [order({ amount: 20000 })],
+  });
+
+  it('keeps each term anchored to the original contract', () => {
+    // Re-basing would make term b 70% of 100k = 70,000, and with term a
+    // already billed at 24,000 the project would invoice 94,000 of a 100,000
+    // job -- 6,000 lost, silently.
+    expect(termAmount(withChange, withChange.billingTerms[0])).toBe(24000);
+    expect(termAmount(withChange, withChange.billingTerms[1])).toBe(56000);
+  });
+
+  it('so terms plus changes bill the project exactly', () => {
+    const terms = withChange.billingTerms.reduce((s, t) => s + termAmount(withChange, t), 0);
+    expect(terms + changeOrderTotal(withChange)).toBe(projectValue(withChange));
+  });
+
+  it('reports the contract and the changes separately', () => {
+    const prog = billingProgress(withChange, []);
+    expect(prog.contractValue).toBe(80000);
+    expect(prog.projectValue).toBe(100000);
+    expect(prog.changeOrders).toBe(20000);
+    expect(prog.changeOrdersUnbilled).toBe(20000);
+  });
+});
+
+// art. 7:755 BW — the contractor may charge for meerwerk only if they warned
+// the client in time that it carried a price increase.
+describe('billing a change order', () => {
+  it('refuses meerwerk with no record of the price warning', () => {
+    const gate = canInvoiceChangeOrder(order({ warnedAt: undefined }));
+    expect(gate.allowed).toBe(false);
+    // The caller needs to know it is the warning that is missing, so it can
+    // offer to send one rather than fail opaquely.
+    expect(gate.needsWarning).toBe(true);
+  });
+
+  it('allows meerwerk that was warned about', () => {
+    expect(canInvoiceChangeOrder(order()).allowed).toBe(true);
+  });
+
+  it('does not require a warning for minderwerk', () => {
+    // A reduction is in the customer's favour.
+    expect(canInvoiceChangeOrder(order({ amount: -1500, warnedAt: undefined })).allowed).toBe(true);
+  });
+
+  it('refuses anything the customer has not approved', () => {
+    expect(canInvoiceChangeOrder(order({ status: 'proposed' })).allowed).toBe(false);
+    expect(canInvoiceChangeOrder(order({ status: 'rejected' })).allowed).toBe(false);
+    expect(canInvoiceChangeOrder(order({ status: 'draft' })).allowed).toBe(false);
+  });
+
+  it('refuses to bill the same order twice', () => {
+    expect(canInvoiceChangeOrder(order({ status: 'invoiced' })).allowed).toBe(false);
+  });
+
+  it('refuses an order with no amount', () => {
+    expect(canInvoiceChangeOrder(order({ amount: 0 })).allowed).toBe(false);
+  });
+});
+
+describe('change order validation', () => {
+  it('flags an approved order with no warning while the work is still fresh', () => {
+    const p = project({ changeOrders: [order({ warnedAt: undefined })] });
+    expect(validateChangeOrders(p).map((e) => e.code)).toContain('approved_without_warning');
+  });
+
+  it('flags reductions that exceed the contract', () => {
+    const p = project({ changeOrders: [order({ amount: -90000, warnedAt: undefined })] });
+    expect(validateChangeOrders(p).map((e) => e.code)).toContain('reduces_below_zero');
+  });
+
+  it('accepts a normal approved order', () => {
+    expect(validateChangeOrders(project({ changeOrders: [order()] }))).toEqual([]);
   });
 });

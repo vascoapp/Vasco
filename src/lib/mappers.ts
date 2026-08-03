@@ -65,6 +65,7 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     // the retentie withheld from it is silently lost -- which is real money.
     projectId: row.project_id ?? undefined,
     billingTermId: row.billing_term_id ?? undefined,
+    changeOrderId: row.change_order_id ?? undefined,
     retentionAmount: row.retention_amount != null ? Number(row.retention_amount) : undefined,
     isRetentionRelease: row.is_retention_release || undefined,
   };

@@ -62,6 +62,9 @@ export type Invoice = {
   projectId?: string;
   /** The ProjectBillingTerm this instalment was raised for. */
   billingTermId?: string;
+  /** The ProjectChangeOrder this invoice bills, when it is meerwerk rather
+   *  than a scheduled instalment. Negative-amount orders settle as a credit. */
+  changeOrderId?: string;
   /**
    * Retentie withheld from THIS invoice. `amount` stays the full term value --
    * VAT is charged on the full amount -- and what the customer pays now is

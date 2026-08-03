@@ -184,6 +184,8 @@ export type DocumentRow = {
   // but nothing linked an invoice back to its project.
   project_id: string | null;
   billing_term_id: string | null;
+  /** Set when this invoice bills a meerwerk item rather than a term. */
+  change_order_id: string | null;
   /** Retentie withheld from this invoice. total_amount stays the full term
    *  value so VAT is charged on the full amount; payable-now is derived. */
   retention_amount: number;
@@ -442,6 +444,9 @@ export type ProjectRow = {
   // point in the schedule, a term is money.
   billing_terms: unknown[];
   retention_percent: number;
+  /** Meerwerk / minderwerk agreed after the contract. Does NOT re-base the
+   *  percentage terms — see types/project.ts for why. */
+  change_orders: unknown[];
   created_at: string;
   updated_at: string;
 };
