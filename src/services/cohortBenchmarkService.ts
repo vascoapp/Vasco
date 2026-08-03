@@ -18,7 +18,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getScanHistory } from './invoiceScanService';
 import { canonicalMaterialKey } from './materialNormalization';
 
-const CACHE_KEY = '@vasco_cohort_benchmarks';
+const CACHE_KEY_PREFIX = '@vasco_cohort_benchmarks';
+
+// Keyed by trade and country. It used to be one global key, so the first fetch
+// to land -- say plumbing/NL -- was served for four hours to every subsequent
+// caller regardless of what they asked for, including electrical/DE. One
+// contractor usually has one trade and country, so this stayed invisible until
+// the trade changed or a second cohort was queried in the same session.
+const cacheKey = (trade: string, country: string) =>
+  `${CACHE_KEY_PREFIX}:${trade}:${country}`;
 const CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
 
 // ---------------------------------------------------------------------------
@@ -226,10 +234,29 @@ async function computeLocalBenchmarks(trade: string, country: string): Promise<C
  * for the `useCohortBenchmarks` hook below. UI code should call the hook;
  * non-React contexts (workers, schedulers) call this function directly.
  */
-export async function getCohortBenchmarks(trade: string, country: string): Promise<CohortStats> {
+// Concurrent callers share one fetch. The AsyncStorage cache below cannot
+// dedupe them: it is still empty while the first request is in flight, so a
+// cold start with the quote optimizer and the budget optimizer both mounting
+// fires two identical round trips. Registration is synchronous -- the map is
+// written before any await, or the guard would not cover the very cold-start
+// case it exists for (learnings #97).
+const inFlight = new Map<string, Promise<CohortStats>>();
+
+export function getCohortBenchmarks(trade: string, country: string): Promise<CohortStats> {
+  const key = `${trade}|${country}`;
+  const existing = inFlight.get(key);
+  if (existing) return existing;
+  const promise = loadCohortBenchmarks(trade, country).finally(() => {
+    inFlight.delete(key);
+  });
+  inFlight.set(key, promise);
+  return promise;
+}
+
+async function loadCohortBenchmarks(trade: string, country: string): Promise<CohortStats> {
   // Check cache
   try {
-    const cached = await AsyncStorage.getItem(CACHE_KEY);
+    const cached = await AsyncStorage.getItem(cacheKey(trade, country));
     if (cached) {
       const { data, timestamp } = JSON.parse(cached);
       if (Date.now() - timestamp < CACHE_TTL) return data;
@@ -239,13 +266,13 @@ export async function getCohortBenchmarks(trade: string, country: string): Promi
   // Try cloud first
   const cloud = await fetchCohortFromCloud(trade, country);
   if (cloud) {
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify({ data: cloud, timestamp: Date.now() })).catch(() => {});
+    await AsyncStorage.setItem(cacheKey(trade, country), JSON.stringify({ data: cloud, timestamp: Date.now() })).catch(() => {});
     return cloud;
   }
 
   // Fall back to local computation
   const local = await computeLocalBenchmarks(trade, country);
-  await AsyncStorage.setItem(CACHE_KEY, JSON.stringify({ data: local, timestamp: Date.now() })).catch(() => {});
+  await AsyncStorage.setItem(cacheKey(trade, country), JSON.stringify({ data: local, timestamp: Date.now() })).catch(() => {});
   return local;
 }
 
