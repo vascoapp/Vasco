@@ -711,8 +711,13 @@ export function enrichBudgetLine(
   // cohort rate, where the single source is an aggregate over many contractors
   // and its reliability already encodes the sample size. Scaling that by 1/3
   // would rate real observed data below three fabricated ones.
-  const avgReliability =
-    rate.sources.reduce((sum, s) => sum + s.reliability, 0) / rate.sources.length;
+  // Guard the divisor: a rate with no sources would make avgReliability NaN,
+  // and NaN propagates all the way to a rendered "NaN%" confidence. No live
+  // path produces one today (a cohort rate always has exactly one source), but
+  // the type permits it.
+  const avgReliability = rate.sources.length > 0
+    ? rate.sources.reduce((sum, s) => sum + s.reliability, 0) / rate.sources.length
+    : 0;
   const sourceCountFactor = cohort ? 1 : Math.min(rate.sources.length / 3, 1);
   const enrichmentConfidence =
     Math.round(avgReliability * sourceCountFactor * 100) / 100;

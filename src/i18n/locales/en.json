@@ -5241,6 +5241,7 @@
     "moveUp": "Move up",
     "moveDown": "Move down",
     "lockedInvoiced": "Invoiced instalments can no longer be changed",
-    "confirmDeleteTerm": "Delete this instalment?"
+    "confirmDeleteTerm": "Delete this instalment?",
+    "nextUp": "Next up"
   }
 }

@@ -5241,6 +5241,7 @@
     "moveUp": "Sposta su",
     "moveDown": "Sposta giù",
     "lockedInvoiced": "Le rate fatturate non sono più modificabili",
-    "confirmDeleteTerm": "Eliminare questa rata?"
+    "confirmDeleteTerm": "Eliminare questa rata?",
+    "nextUp": "Prossima"
   }
 }

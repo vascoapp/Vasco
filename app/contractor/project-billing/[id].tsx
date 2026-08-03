@@ -38,6 +38,9 @@ import {
   validateBillingSchedule,
   canInvoiceChangeOrder,
   canReleaseRetention,
+  blockingErrorsForTerm,
+  nextTermToInvoice,
+  validateChangeOrders,
 } from '../../../src/services/progressBillingService';
 import type { ProjectBillingTerm, ProjectChangeOrder } from '../../../src/types/project';
 
@@ -86,6 +89,16 @@ export default function ProjectBillingScreen() {
   );
   const scheduleErrors = useMemo(
     () => (project ? validateBillingSchedule(project) : []),
+    [project],
+  );
+  const changeOrderErrors = useMemo(
+    () => (project ? validateChangeOrders(project) : []),
+    [project],
+  );
+  // Which instalment is up next, so the row can say so rather than making the
+  // contractor work it out from the status column.
+  const nextTerm = useMemo(
+    () => (project ? nextTermToInvoice(project) : null),
     [project],
   );
 
@@ -213,10 +226,13 @@ export default function ProjectBillingScreen() {
   };
 
   const invoiceTerm = async (term: ProjectBillingTerm) => {
-    if (scheduleErrors.length > 0) {
-      // Billing past 100% of a contract is expensive to unwind, so stop here
-      // rather than at the mutator and say which rule broke.
-      Alert.alert(t('projectBilling.scheduleInvalid', 'Instalment schedule is invalid'), scheduleErrors[0].message);
+    // Only the errors that actually bear on THIS term. A dangling milestone
+    // trigger on a different instalment is not a reason to refuse this one --
+    // it used to be, which stranded the contractor until they fixed an
+    // unrelated row.
+    const blocking = blockingErrorsForTerm(scheduleErrors, term.id);
+    if (blocking.length > 0) {
+      Alert.alert(t('projectBilling.scheduleInvalid', 'Instalment schedule is invalid'), blocking[0].message);
       return;
     }
     try {
@@ -328,12 +344,13 @@ export default function ProjectBillingScreen() {
             const now = payableNow(project, term);
             const billable = term.status === 'pending' || term.status === 'ready';
             return (
-              <View key={term.id} style={styles.row}>
+              <View key={term.id} style={[styles.row, nextTerm?.id === term.id && styles.rowNext]}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{term.title}</Text>
                   <Text style={styles.rowMeta}>
                     {term.basis === 'percent' ? `${term.percent}% · ` : ''}
                     {t(TERM_STATUS_KEY[term.status], term.status)}
+                    {nextTerm?.id === term.id ? ` · ${t('projectBilling.nextUp', 'Next up')}` : ''}
                   </Text>
                   {withheld > 0 && (
                     // The invoice is issued for `full`; this is what the
@@ -396,6 +413,13 @@ export default function ProjectBillingScreen() {
             <Ionicons name="add-circle-outline" size={22} color={Palette.hermesOrange} />
           </Pressable>
         </View>
+
+        {changeOrderErrors.length > 0 && (
+          <View style={styles.errorCard}>
+            <Ionicons name="warning-outline" size={16} color={SemanticColors.feedbackError} />
+            <Text style={styles.errorText}>{changeOrderErrors[0].message}</Text>
+          </View>
+        )}
 
         {changeOrders.length === 0 ? (
           <View style={styles.emptyCard}>
@@ -579,6 +603,7 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,
     padding: GRID.md, marginBottom: GRID.sm,
   },
+  rowNext: { borderLeftWidth: 3, borderLeftColor: Palette.hermesOrange },
   rowTitle: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
   rowMeta: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary, marginTop: 2 },
   rowRetention: { fontSize: TYPE.captionSize, color: Palette.hermesOrange, marginTop: 4 },

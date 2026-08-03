@@ -18,6 +18,7 @@ import {
   nextTermToInvoice,
   billingProgress,
   markTermsReadyForCompletedMilestones,
+  blockingErrorsForTerm,
   changeOrderTotal,
   projectValue,
   canInvoiceChangeOrder,
@@ -469,5 +470,33 @@ describe('the release invoice settles the balance', () => {
   it('never reports a negative balance if a release overshoots', () => {
     // A hand-edited release should not make the project look owed-to.
     expect(held([{}, { amount: 9999, retentionAmount: 0, isRetentionRelease: true }])).toBe(0);
+  });
+});
+
+describe('which errors block which term', () => {
+  // Refusing to bill instalment A because instalment C has a dangling
+  // milestone trigger strands the contractor on an unrelated row.
+  const errs = [
+    { code: 'unknown_milestone' as const, message: 'C has a dead trigger', termId: 'c' },
+    { code: 'empty_term' as const, message: 'C bills nothing', termId: 'c' },
+  ];
+
+  it('lets an unaffected term bill through another term\'s problem', () => {
+    expect(blockingErrorsForTerm(errs, 'a')).toEqual([]);
+  });
+
+  it('still blocks the term that has the problem', () => {
+    expect(blockingErrorsForTerm(errs, 'c')).toHaveLength(2);
+  });
+
+  it('blocks every term on a contract-level error', () => {
+    const overBilled = [{ code: 'percent_over_100' as const, message: 'over' }];
+    expect(blockingErrorsForTerm(overBilled, 'a')).toHaveLength(1);
+    expect(blockingErrorsForTerm(overBilled, 'z')).toHaveLength(1);
+  });
+
+  it('treats duplicate ordering as contract-level, since "next" has no answer', () => {
+    const dupe = [{ code: 'duplicate_sort_order' as const, message: 'dupe', termId: 'b' }];
+    expect(blockingErrorsForTerm(dupe, 'a')).toHaveLength(1);
   });
 });

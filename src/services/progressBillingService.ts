@@ -157,6 +157,32 @@ export function validateBillingSchedule(
   return errors;
 }
 
+/**
+ * Errors that must stop a specific term from being billed.
+ *
+ * Not every schedule error is a reason to refuse every term. A term whose
+ * trigger milestone was deleted is a problem with THAT term; blocking an
+ * unrelated instalment because of it strands the contractor. What genuinely
+ * has to block is anything that would over-bill the contract (a contract-level
+ * fact, so it blocks everything) or a defect on the term being billed.
+ */
+export function blockingErrorsForTerm(
+  errors: BillingScheduleError[],
+  termId: string,
+): BillingScheduleError[] {
+  const CONTRACT_LEVEL: ReadonlyArray<BillingScheduleError['code']> = [
+    'percent_over_100',
+    'fixed_over_contract',
+    'retention_out_of_range',
+    // Ordering is global: with duplicate positions, "which term is next" has
+    // no answer, so no term should be billed until it is resolved.
+    'duplicate_sort_order',
+  ];
+  return errors.filter(
+    (e) => CONTRACT_LEVEL.includes(e.code) || e.termId === termId,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Retentie
 // ---------------------------------------------------------------------------

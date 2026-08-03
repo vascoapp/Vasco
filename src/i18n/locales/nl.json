@@ -5225,6 +5225,7 @@
     "moveUp": "Omhoog",
     "moveDown": "Omlaag",
     "lockedInvoiced": "Gefactureerde termijnen kun je niet meer wijzigen",
-    "confirmDeleteTerm": "Termijn verwijderen?"
+    "confirmDeleteTerm": "Termijn verwijderen?",
+    "nextUp": "Nu aan de beurt"
   }
 }

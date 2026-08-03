@@ -5241,6 +5241,7 @@
     "moveUp": "Subir",
     "moveDown": "Bajar",
     "lockedInvoiced": "Los plazos facturados ya no se pueden cambiar",
-    "confirmDeleteTerm": "¿Eliminar este plazo?"
+    "confirmDeleteTerm": "¿Eliminar este plazo?",
+    "nextUp": "Siguiente"
   }
 }

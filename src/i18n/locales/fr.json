@@ -5241,6 +5241,7 @@
     "moveUp": "Monter",
     "moveDown": "Descendre",
     "lockedInvoiced": "Les échéances facturées ne sont plus modifiables",
-    "confirmDeleteTerm": "Supprimer cette échéance ?"
+    "confirmDeleteTerm": "Supprimer cette échéance ?",
+    "nextUp": "Prochaine"
   }
 }

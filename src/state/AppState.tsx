@@ -46,6 +46,7 @@ import {
   emitLicenseRenewed,
 } from '../intelligence/dataCollector';
 import { validateQuoteBeforeSend, validateInvoiceBeforeCreate, validateJobStatusChange } from '../services/workflowValidatorService';
+import { markTermsReadyForCompletedMilestones } from '../services/progressBillingService';
 import { schedulePaymentReminder, scheduleQuoteFollowUp } from '../services/pushNotificationService';
 import { addBreadcrumb } from '../lib/errorReporting';
 import { exportInvoiceToMoneybird } from '../integrations/moneybird';
@@ -3531,8 +3532,28 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         return tempId;
       },
       updateProject: (id, updates) => {
+        // A billing term can be triggered by a schedule milestone. Completing
+        // that milestone has to flip the term to `ready`, and doing it here --
+        // rather than at whatever UI toggles the checkbox -- means no future
+        // caller can forget. Without this the trigger was inert: terms with a
+        // milestoneId sat `pending` forever no matter what happened on site.
+        let effective = updates;
+        if (updates.milestones !== undefined) {
+          const current = projects.find((p) => p.id === id);
+          if (current && (current.billingTerms ?? []).some((t) => t.milestoneId)) {
+            const merged = { ...current, ...updates };
+            // The tested implementation, not a second copy of the rule.
+            const readied = markTermsReadyForCompletedMilestones(merged);
+            // Only widen the patch when something actually changed, so a plain
+            // milestone rename does not rewrite the billing terms.
+            if (readied.some((t, i) => t.status !== (merged.billingTerms ?? [])[i]?.status)) {
+              effective = { ...updates, billingTerms: readied };
+            }
+          }
+        }
+
         setProjects(prev => prev.map(p =>
-          p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+          p.id === id ? { ...p, ...effective, updatedAt: new Date().toISOString() } : p
         ));
 
         // R56: was gated by `!id.startsWith('proj-')` — offline-created
@@ -3542,6 +3563,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (isSupabaseConfigured) {
           (async () => {
             const patch: Record<string, unknown> = {};
+            const updates = effective;
             if (updates.title !== undefined) patch.name = updates.title;
             if (updates.description !== undefined) patch.description = updates.description;
             if (updates.status !== undefined) patch.status = updates.status;
