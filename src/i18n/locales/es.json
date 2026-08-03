@@ -75,7 +75,8 @@
     "purchasingAgent": "Agente de compras",
     "teamFeatures": "Funciones de equipo",
     "seats": "usuarios",
-    "apiWhiteLabel": "API + marca blanca"
+    "apiWhiteLabel": "API + marca blanca",
+    "supportOnboarding": "Soporte dedicado + incorporación"
   },
   "tabs": {
     "today": "Hoy",

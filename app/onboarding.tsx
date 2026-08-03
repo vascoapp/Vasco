@@ -1236,7 +1236,13 @@ export default function OnboardingScreen() {
               : [
                   { text: t('common.teamFeatures', 'Team features'), highlight: true },
                   { text: `${contractorTier.limits.maxTeamSeats} ${t('common.seats', 'seats')}`, highlight: true },
-                  { text: t('common.apiWhiteLabel', 'API + white-label'), highlight: true },
+                  // Was 'API + white-label'. Neither exists: there is no public
+                  // API surface and no white-label theming anywhere in the app,
+                  // and hasApiAccess/hasWhiteLabel have zero consumers. Selling
+                  // them at EUR 69 is a promise the product cannot keep.
+                  // Dedicated support and onboarding assistance are the two
+                  // top-tier promises the operator can actually honour today.
+                  { text: t('common.supportOnboarding', 'Dedicated support + onboarding'), highlight: true },
                   { text: '1% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
                 ],
           },

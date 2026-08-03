@@ -22,6 +22,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
 import { todayKey } from '../../src/utils/dateKey';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -49,16 +50,35 @@ export default function MyScheduleScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const timer = useClockIn();
-  const { jobs, customers } = useAppState();
+  const { jobs, customers, workers } = useAppState();
+  const { user } = useAuth();
 
   const todayStr = todayKey();
 
-  // Build today's assigned jobs from AppState
+  // Which crew member is signed in. Worker records carry an optional email and
+  // that is the only link to an auth user -- User has no workerId -- so the
+  // match is by email, case-insensitively.
+  const me = useMemo(() => {
+    const email = user?.email?.toLowerCase().trim();
+    if (!email) return undefined;
+    return workers.find((w: any) => w.email?.toLowerCase().trim() === email);
+  }, [workers, user?.email]);
+
+  // Build today's assigned jobs from AppState.
+  //
+  // This screen used to filter on date and status ONLY, so every worker saw
+  // every job on the account -- including customer names and addresses for work
+  // they were not on. Jobs carry `assignedWorkerId` (set from the job detail
+  // screen), so scope to the signed-in worker's own jobs. If the account has no
+  // Worker row matching this login there is nothing to show: an unrecognised
+  // worker must not fall through to "everything".
   const todayJobs: WorkerJob[] = useMemo(() => {
+    if (!me) return [];
     return jobs
       .filter((j: any) => {
         const jobDate = j.scheduledDate || '';
-        return jobDate === todayStr && j.status !== 'cancelled';
+        return jobDate === todayStr && j.status !== 'cancelled'
+          && j.assignedWorkerId === me.id;
       })
       .map((j: any) => {
         const cust = customers.find((c: any) => c.id === j.customerId);
@@ -76,7 +96,7 @@ export default function MyScheduleScreen() {
         };
       })
       .sort((a: WorkerJob, b: WorkerJob) => a.startTime.localeCompare(b.startTime));
-  }, [jobs, customers, todayStr]);
+  }, [jobs, customers, todayStr, me]);
 
   // Calculate hours worked today
   const hoursToday = useMemo(() => {

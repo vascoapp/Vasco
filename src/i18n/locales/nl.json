@@ -75,7 +75,8 @@
     "purchasingAgent": "Inkoopagent",
     "teamFeatures": "Teamfuncties",
     "seats": "gebruikers",
-    "apiWhiteLabel": "API + white-label"
+    "apiWhiteLabel": "API + white-label",
+    "supportOnboarding": "Vaste support + onboarding"
   },
   "tabs": {
     "today": "Vandaag",

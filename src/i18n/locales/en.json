@@ -75,7 +75,8 @@
     "purchasingAgent": "Purchasing agent",
     "teamFeatures": "Team features",
     "seats": "seats",
-    "apiWhiteLabel": "API + white-label"
+    "apiWhiteLabel": "API + white-label",
+    "supportOnboarding": "Dedicated support + onboarding"
   },
   "tabs": {
     "today": "Today",
