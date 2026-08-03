@@ -5279,6 +5279,11 @@
     "noFormsForTrade": "No hay formulario para este oficio",
     "percentDone": "{{percent}}% completado",
     "markComplete": "Finalizar",
-    "incomplete": "Aún no está completo"
+    "incomplete": "Aún no está completo",
+    "editForm": "Editar formulario",
+    "needName": "Ponle un nombre al formulario",
+    "needField": "Añade al menos un punto",
+    "startAnother": "Rellenar otro formulario",
+    "completed": "Finalizado"
   }
 }

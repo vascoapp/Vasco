@@ -5279,6 +5279,11 @@
     "noFormsForTrade": "No form for this trade",
     "percentDone": "{{percent}}% filled in",
     "markComplete": "Complete",
-    "incomplete": "Not complete yet"
+    "incomplete": "Not complete yet",
+    "editForm": "Edit form",
+    "needName": "Give the form a name",
+    "needField": "Add at least one item",
+    "startAnother": "Fill in another form",
+    "completed": "Completed"
   }
 }

@@ -40,6 +40,7 @@ export default function JobFormScreen() {
 
   const [templates, setTemplates] = useState<JobFormTemplate[]>([]);
   const [response, setResponse] = useState<JobFormResponse | null>(null);
+  const [responses, setResponses] = useState<JobFormResponse[]>([]);
   const [loading, setLoading] = useState(true);
   // Raw text per numeric field, so an in-progress "1." survives the keystroke.
   const [numberText, setNumberText] = useState<Record<string, string>>({});
@@ -48,9 +49,15 @@ export default function JobFormScreen() {
     (async () => {
       const [tpls, existing] = await Promise.all([loadTemplates(), responsesForJob(String(jobId))]);
       setTemplates(tpls);
-      // Resume rather than restart: a crew member who backed out to check
-      // something should not lose what they already recorded.
-      if (existing.length > 0) setResponse(existing[0]);
+      setResponses(existing);
+      // Resume the one still IN PROGRESS -- a crew member who backed out to
+      // check something should not lose what they recorded. Resuming on any
+      // response, as this first did, meant the picker never came back: an
+      // aannemer who finished the electrical form could never start the
+      // plumbing one on the same job. Once everything is finished we fall
+      // through to the picker instead.
+      const open = existing.find((r) => !r.completedAt);
+      if (open) setResponse(open);
       setLoading(false);
     })();
   }, [jobId]);
@@ -59,6 +66,8 @@ export default function JobFormScreen() {
     () => templatesForJob(templates, (job as any)?.trade),
     [templates, job],
   );
+
+  const finished = useMemo(() => responses.filter((r) => !!r.completedAt), [responses]);
 
   const activeTemplate = useMemo(
     () => templates.find((t2) => t2.id === response?.templateId) ?? null,
@@ -98,7 +107,10 @@ export default function JobFormScreen() {
   // — on site the phone locks and people get called away mid-form.
   useEffect(() => {
     if (!response) return;
-    const id = setTimeout(() => { saveResponse(response).catch(() => {}); }, 400);
+    const id = setTimeout(() => {
+      saveResponse(response).catch(() => {});
+      setResponses((prev) => [response, ...prev.filter((r) => r.id !== response.id)]);
+    }, 400);
     return () => clearTimeout(id);
   }, [response]);
 
@@ -120,6 +132,7 @@ export default function JobFormScreen() {
     const done = { ...response, completedAt: new Date().toISOString() };
     await saveResponse(done);
     setResponse(done);
+    setResponses((prev) => [done, ...prev.filter((r) => r.id !== done.id)]);
     hapticSuccess();
     router.back();
   };
@@ -138,28 +151,47 @@ export default function JobFormScreen() {
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {loading ? null : !response ? (
-          available.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>{t('jobForms.noFormsForTrade', 'No form for this trade')}</Text>
-              <Text style={styles.emptyHint}>{t('jobForms.emptyHint', '')}</Text>
-              <Pressable style={styles.emptyBtn} onPress={() => router.push('/contractor/job-forms' as any)}>
-                <Text style={styles.emptyBtnText}>{t('jobForms.newForm', 'New form')}</Text>
-              </Pressable>
-            </View>
-          ) : (
-            // More than one form can apply (trade-specific plus any
-            // trade-agnostic ones), so pick rather than assume.
-            available.map((tpl) => (
-              <Pressable key={tpl.id} style={styles.pickRow} onPress={() => start(tpl)}>
-                <Ionicons name="clipboard-outline" size={18} color={Palette.hermesOrange} />
+          <>
+            {/* What has already been recorded on this job, reopenable. */}
+            {finished.map((r) => (
+              <Pressable key={r.id} style={styles.pickRow} onPress={() => setResponse(r)}>
+                <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{tpl.name}</Text>
-                  <Text style={styles.rowMeta}>{t('jobForms.fieldCount', { count: tpl.fields.length })}</Text>
+                  <Text style={styles.rowTitle}>{r.templateName}</Text>
+                  <Text style={styles.rowMeta}>{t('jobForms.completed', 'Completed')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
               </Pressable>
-            ))
-          )
+            ))}
+
+            {available.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyTitle}>{t('jobForms.noFormsForTrade', 'No form for this trade')}</Text>
+                <Text style={styles.emptyHint}>{t('jobForms.emptyHint', '')}</Text>
+                <Pressable style={styles.emptyBtn} onPress={() => router.push('/contractor/job-forms' as any)}>
+                  <Text style={styles.emptyBtnText}>{t('jobForms.newForm', 'New form')}</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                {finished.length > 0 ? (
+                  <Text style={styles.sectionLabel}>{t('jobForms.startAnother', 'Fill in another form')}</Text>
+                ) : null}
+                {/* More than one form can apply (trade-specific plus any
+                    trade-agnostic ones), so pick rather than assume. */}
+                {available.map((tpl) => (
+                  <Pressable key={tpl.id} style={styles.pickRow} onPress={() => start(tpl)}>
+                    <Ionicons name="clipboard-outline" size={18} color={Palette.hermesOrange} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowTitle}>{tpl.name}</Text>
+                      <Text style={styles.rowMeta}>{t('jobForms.fieldCount', { count: tpl.fields.length })}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
+                  </Pressable>
+                ))}
+              </>
+            )}
+          </>
         ) : (
           <>
             <View style={styles.progressRow}>
@@ -266,6 +298,10 @@ const styles = StyleSheet.create({
   headerTitle: { flex: 1, textAlign: 'center', fontSize: TYPE.titleSize, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
   content: { paddingHorizontal: GRID.md },
 
+  sectionLabel: {
+    fontSize: TYPE.captionSize, fontFamily: 'Inter_600SemiBold',
+    color: SemanticColors.textSecondary, marginTop: GRID.md, marginBottom: GRID.xs,
+  },
   pickRow: {
     flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,

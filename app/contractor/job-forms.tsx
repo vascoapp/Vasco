@@ -21,7 +21,6 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
-import { useAppState } from '../../src/state/AppState';
 import {
   useJobFormTemplates,
   type JobFormTemplate,
@@ -39,18 +38,22 @@ export default function JobFormsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { templates, upsert, remove } = useJobFormTemplates();
-  const { businessProfile } = useAppState();
 
   const [editing, setEditing] = useState<JobFormTemplate | null>(null);
+  // The editor is reused for both; without this it always claimed "New form".
+  const [isNewForm, setIsNewForm] = useState(false);
 
   const startNew = () => {
     const now = new Date().toISOString();
+    setIsNewForm(true);
     setEditing({
       id: `jf-${Date.now()}`,
       name: '',
-      // Defaults to the contractor's own trade: the common case is one trade,
-      // and an aannemer can widen it. Pre-filling beats an empty picker.
-      trade: businessProfile?.trade,
+      // Deliberately NOT prefilled from the profile trade. A solo contractor
+      // has one trade, so tagging every form with it narrows nothing and only
+      // risks hiding the form from jobs whose trade was never set. An aannemer
+      // who genuinely runs four trades sets it themselves.
+      trade: undefined,
       fields: [],
       createdAt: now,
       updatedAt: now,
@@ -91,7 +94,16 @@ export default function JobFormsScreen() {
     // A form with no name is unfindable in the picker on the job screen, and
     // one with no items cannot be completed at all (validateResponse returns
     // empty_template), so both are refused here rather than saved broken.
-    if (!editing.name.trim() || editing.fields.length === 0) return;
+    // Say why rather than doing nothing. A button that silently no-ops reads
+    // as a broken app -- the same dead-CTA class found elsewhere this session.
+    if (!editing.name.trim()) {
+      Alert.alert(t('jobForms.needName', 'Give the form a name'));
+      return;
+    }
+    if (editing.fields.filter((f) => f.label.trim().length > 0).length === 0) {
+      Alert.alert(t('jobForms.needField', 'Add at least one item'));
+      return;
+    }
     const cleaned = {
       ...editing,
       name: editing.name.trim(),
@@ -99,11 +111,10 @@ export default function JobFormsScreen() {
         .filter((f) => f.label.trim().length > 0)
         .map((f, i) => ({ ...f, label: f.label.trim(), sortOrder: i + 1 })),
     };
-    if (cleaned.fields.length === 0) return;
     await upsert(cleaned);
     hapticSuccess();
     setEditing(null);
-  }, [editing, upsert]);
+  }, [editing, upsert, t]);
 
   const confirmDelete = (tpl: JobFormTemplate) => {
     Alert.alert(t('jobForms.confirmDelete', 'Delete this form?'), t('jobForms.deleteKeepsRecords', ''), [
@@ -141,7 +152,7 @@ export default function JobFormsScreen() {
         ) : (
           templates.map((tpl, i) => (
             <FadeIn key={tpl.id} delay={40 * i}>
-              <Pressable style={styles.row} onPress={() => setEditing(tpl)}>
+              <Pressable style={styles.row} onPress={() => { setIsNewForm(false); setEditing(tpl); }}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{tpl.name}</Text>
                   <Text style={styles.rowMeta}>
@@ -167,7 +178,9 @@ export default function JobFormsScreen() {
             <Pressable onPress={() => setEditing(null)} hitSlop={8}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </Pressable>
-            <Text style={styles.headerTitle}>{t('jobForms.newForm', 'New form')}</Text>
+            <Text style={styles.headerTitle}>
+              {isNewForm ? t('jobForms.newForm', 'New form') : t('jobForms.editForm', 'Edit form')}
+            </Text>
             <Pressable onPress={save} hitSlop={8}>
               <Text style={styles.saveText}>{t('jobForms.save', 'Save')}</Text>
             </Pressable>

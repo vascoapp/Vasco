@@ -26,6 +26,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 const TEMPLATES_KEY = '@vasco_job_form_templates';
 const RESPONSES_KEY = '@vasco_job_form_responses';
+const MAX_RESPONSES = 500;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -165,13 +166,22 @@ export function completionPercent(
  * Matching is case-insensitive because trade comes from onboarding in one place
  * and from the job in another, and "Loodgieter" vs "loodgieter" should not
  * silently hide a contractor's own form.
+ *
+ * An UNKNOWN job trade returns everything, which is the whole reason this
+ * function is not a one-line filter. `Job.trade` is optional and the only
+ * in-app job-creation path never sets it, so in practice almost every real job
+ * arrives here with `undefined`. Reading that as "this job is trade-agnostic"
+ * hid every trade-tagged form and left the contractor staring at "no form for
+ * this trade" on a job they had just written a form for. Undefined means we
+ * cannot narrow, so we offer the lot and let them pick.
  */
 export function templatesForJob(
   templates: JobFormTemplate[],
   trade: string | undefined,
 ): JobFormTemplate[] {
   const t = trade?.toLowerCase().trim();
-  return templates.filter((tpl) => !tpl.trade || (!!t && tpl.trade.toLowerCase().trim() === t));
+  if (!t) return templates;
+  return templates.filter((tpl) => !tpl.trade || tpl.trade.toLowerCase().trim() === t);
 }
 
 /** Build a blank answer set so the UI has something to bind to. */
@@ -213,7 +223,10 @@ export async function saveResponse(response: JobFormResponse): Promise<void> {
   const all = await loadResponses();
   // Replace by id so re-saving an in-progress form does not accumulate
   // duplicates every time the crew taps save.
-  const next = [response, ...all.filter((r) => r.id !== response.id)];
+  // Newest first, and capped: these never expire on their own, and AsyncStorage
+  // is a single blob that is re-serialised on every keystroke-triggered save.
+  // 500 is years of work for a solo contractor and keeps the write cheap.
+  const next = [response, ...all.filter((r) => r.id !== response.id)].slice(0, MAX_RESPONSES);
   await AsyncStorage.setItem(RESPONSES_KEY, JSON.stringify(next)).catch(() => {});
 }
 

@@ -5279,6 +5279,11 @@
     "noFormsForTrade": "Nessun modulo per questo mestiere",
     "percentDone": "{{percent}}% compilato",
     "markComplete": "Completa",
-    "incomplete": "Non ancora completo"
+    "incomplete": "Non ancora completo",
+    "editForm": "Modifica modulo",
+    "needName": "Dai un nome al modulo",
+    "needField": "Aggiungi almeno una voce",
+    "startAnother": "Compila un altro modulo",
+    "completed": "Completato"
   }
 }

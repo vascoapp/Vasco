@@ -111,8 +111,22 @@ describe('which templates a job can use', () => {
     expect(templatesForJob([plumbing], 'Plumbing').map((t) => t.id)).toEqual(['p']);
   });
 
-  it('falls back to trade-agnostic forms when the job has no trade', () => {
-    expect(templatesForJob([plumbing, anyTrade], undefined).map((t) => t.id)).toEqual(['g']);
+  it('offers everything when the job has no trade', () => {
+    // `Job.trade` is optional and the only in-app job-creation path never sets
+    // it, so this is the COMMON case, not an edge case. Treating an unknown
+    // trade as "trade-agnostic" filtered out every trade-tagged form and left
+    // the contractor on "no form for this trade" for a form they had just
+    // written. Unknown means we cannot narrow, so offer the lot.
+    expect(templatesForJob([plumbing, anyTrade, electrical], undefined).map((t) => t.id)).toEqual([
+      'p',
+      'g',
+      'e',
+    ]);
+  });
+
+  it('does not silently hide a trade-tagged form on an untyped job', () => {
+    // The regression proper: one form, tagged, and a job with no trade.
+    expect(templatesForJob([plumbing], undefined)).toHaveLength(1);
   });
 });
 

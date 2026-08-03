@@ -5279,6 +5279,11 @@
     "noFormsForTrade": "Kein Formular für dieses Gewerk",
     "percentDone": "{{percent}}% ausgefüllt",
     "markComplete": "Abschließen",
-    "incomplete": "Noch nicht vollständig"
+    "incomplete": "Noch nicht vollständig",
+    "editForm": "Formular bearbeiten",
+    "needName": "Geben Sie dem Formular einen Namen",
+    "needField": "Fügen Sie mindestens einen Punkt hinzu",
+    "startAnother": "Weiteres Formular ausfüllen",
+    "completed": "Abgeschlossen"
   }
 }

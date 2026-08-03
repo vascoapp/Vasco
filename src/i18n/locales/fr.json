@@ -5279,6 +5279,11 @@
     "noFormsForTrade": "Aucun formulaire pour ce métier",
     "percentDone": "{{percent}}% rempli",
     "markComplete": "Terminer",
-    "incomplete": "Pas encore complet"
+    "incomplete": "Pas encore complet",
+    "editForm": "Modifier le formulaire",
+    "needName": "Donnez un nom au formulaire",
+    "needField": "Ajoutez au moins un point",
+    "startAnother": "Remplir un autre formulaire",
+    "completed": "Terminé"
   }
 }

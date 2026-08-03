@@ -5263,6 +5263,11 @@
     "noFormsForTrade": "Geen formulier voor dit vak",
     "percentDone": "{{percent}}% ingevuld",
     "markComplete": "Afronden",
-    "incomplete": "Nog niet compleet"
+    "incomplete": "Nog niet compleet",
+    "editForm": "Formulier bewerken",
+    "needName": "Geef het formulier een naam",
+    "needField": "Voeg minstens één punt toe",
+    "startAnother": "Nog een formulier invullen",
+    "completed": "Afgerond"
   }
 }
