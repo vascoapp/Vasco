@@ -5141,5 +5141,42 @@
   },
   "quoteOptimizer": {
     "estimatedMargin": "Estimated margin"
+  },
+  "moat": {
+    "winRateByGroup": "Win rate by quote size",
+    "last30Days": "Last 30 days",
+    "sent": "Sent",
+    "accepted": "Accepted",
+    "received": "Received",
+    "quoteCount_one": "{{count}} quote",
+    "quoteCount_other": "{{count}} quotes",
+    "cohortMargin": "Cohort margin {{trade}}/{{country}}",
+    "bucketUnder": "Under {{amount}}",
+    "bucketRange": "{{low}} – {{high}}",
+    "bucketOver": "Over {{amount}}"
+  },
+  "payroll": {
+    "totalHours": "Total hours",
+    "totalPayroll": "Total payroll",
+    "noTeamTitle": "No team members yet",
+    "noTeamDesc": "Add team members to see their hours and payroll here.",
+    "exportSub": "Share as CSV for your accounting software or bookkeeper"
+  },
+  "aiAssistant": {
+    "welcomeTitle": "Hi! I'm your Vasco assistant",
+    "welcomeText": "I can help with quotes, scheduling, finances and more. What can I do for you?",
+    "canHelpWith": "I can help with",
+    "askPlaceholder": "Ask a question...",
+    "activeInsights_one": "{{count}} active insight",
+    "activeInsights_other": "{{count}} active insights",
+    "insightsSubtitle": "Personalised recommendations based on your business data",
+    "allClear": "All clear!",
+    "noInsights": "There are no new insights for you right now.",
+    "basedOn": "Based on: {{source}}",
+    "suggestionsTitle": "Business suggestions",
+    "suggestionsSubtitle": "AI-generated optimisations based on your data",
+    "tabChat": "Chat",
+    "tabInsights": "Insights",
+    "tabSuggestions": "Suggestions"
   }
 }

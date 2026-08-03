@@ -32,6 +32,7 @@ import {
 type ViewMode = 'chat' | 'insights' | 'suggestions';
 
 export function AIAssistant() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>('chat');
   const [inputText, setInputText] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
@@ -126,9 +127,9 @@ export function AIAssistant() {
             <View style={styles.welcomeIcon}>
               <Ionicons name="sparkles" size={32} color={Palette.hermesOrange} />
             </View>
-            <Text style={styles.welcomeTitle}>Hoi! Ik ben je Vasco assistent</Text>
+            <Text style={styles.welcomeTitle}>{t('aiAssistant.welcomeTitle', "Hi! I'm your Vasco assistant")}</Text>
             <Text style={styles.welcomeText}>
-              Ik kan je helpen met offertes, planning, financiën en meer. Wat kan ik voor je doen?
+              {t('aiAssistant.welcomeText', 'I can help with quotes, scheduling, finances and more. What can I do for you?')}
             </Text>
 
             {/* Quick Actions */}
@@ -147,7 +148,7 @@ export function AIAssistant() {
             </View>
 
             {/* Capabilities */}
-            <Text style={styles.capabilitiesTitle}>Ik kan helpen met</Text>
+            <Text style={styles.capabilitiesTitle}>{t('aiAssistant.canHelpWith', 'I can help with')}</Text>
             {capabilities.slice(0, 4).map((cap) => (
               <View key={cap.id} style={styles.capabilityCard}>
                 <Text style={styles.capabilityName}>{cap.name}</Text>
@@ -176,7 +177,7 @@ export function AIAssistant() {
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Stel een vraag..."
+          placeholder={t('aiAssistant.askPlaceholder', 'Ask a question...')}
           placeholderTextColor={SemanticColors.textSecondary}
           value={inputText}
           onChangeText={setInputText}
@@ -240,9 +241,9 @@ export function AIAssistant() {
   const renderInsightsView = () => (
     <ScrollView style={styles.insightsContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.insightsHeader}>
-        <Text style={styles.insightsTitle}>{activeCount} actieve inzichten</Text>
+        <Text style={styles.insightsTitle}>{t('aiAssistant.activeInsights', { count: activeCount })}</Text>
         <Text style={styles.insightsSubtitle}>
-          Gepersonaliseerde aanbevelingen op basis van je bedrijfsdata
+          {t('aiAssistant.insightsSubtitle', 'Personalised recommendations based on your business data')}
         </Text>
       </View>
 
@@ -251,8 +252,8 @@ export function AIAssistant() {
       ) : (
         <View style={styles.emptyState}>
           <Ionicons name="checkmark-circle-outline" size={48} color={Palette.green500} />
-          <Text style={styles.emptyTitle}>Alles op orde!</Text>
-          <Text style={styles.emptyText}>Er zijn momenteel geen nieuwe inzichten voor je.</Text>
+          <Text style={styles.emptyTitle}>{t('aiAssistant.allClear', 'All clear!')}</Text>
+          <Text style={styles.emptyText}>{t('aiAssistant.noInsights', 'There are no new insights for you right now.')}</Text>
         </View>
       )}
     </ScrollView>
@@ -281,7 +282,7 @@ export function AIAssistant() {
 
       <View style={styles.basedOnBox}>
         <Ionicons name="analytics-outline" size={16} color={SemanticColors.textSecondary} />
-        <Text style={styles.basedOnText}>Gebaseerd op: {suggestion.basedOn}</Text>
+        <Text style={styles.basedOnText}>{t('aiAssistant.basedOn', { source: suggestion.basedOn })}</Text>
       </View>
 
       <View style={styles.actionSteps}>
@@ -306,9 +307,9 @@ export function AIAssistant() {
   const renderSuggestionsView = () => (
     <ScrollView style={styles.suggestionsContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.suggestionsHeader}>
-        <Text style={styles.suggestionsTitle}>Bedrijfssuggesties</Text>
+        <Text style={styles.suggestionsTitle}>{t('aiAssistant.suggestionsTitle', 'Business suggestions')}</Text>
         <Text style={styles.suggestionsSubtitle}>
-          AI-gegenereerde optimalisaties gebaseerd op jouw data
+          {t('aiAssistant.suggestionsSubtitle', 'AI-generated optimisations based on your data')}
         </Text>
       </View>
 
@@ -330,7 +331,7 @@ export function AIAssistant() {
             color={viewMode === 'chat' ? Palette.hermesOrange : SemanticColors.textSecondary}
           />
           <Text style={[styles.viewButtonText, viewMode === 'chat' && styles.viewButtonTextActive]}>
-            Chat
+            {t('aiAssistant.tabChat', 'Chat')}
           </Text>
         </Pressable>
 
@@ -351,7 +352,7 @@ export function AIAssistant() {
             )}
           </View>
           <Text style={[styles.viewButtonText, viewMode === 'insights' && styles.viewButtonTextActive]}>
-            Inzichten
+            {t('aiAssistant.tabInsights', 'Insights')}
           </Text>
         </Pressable>
 
@@ -365,7 +366,7 @@ export function AIAssistant() {
             color={viewMode === 'suggestions' ? Palette.hermesOrange : SemanticColors.textSecondary}
           />
           <Text style={[styles.viewButtonText, viewMode === 'suggestions' && styles.viewButtonTextActive]}>
-            Suggesties
+            {t('aiAssistant.tabSuggestions', 'Suggestions')}
           </Text>
         </Pressable>
       </View>

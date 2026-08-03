@@ -28,6 +28,7 @@ import {
 } from '../../services/intelligenceCaptureService';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency0, type Country } from '../../i18n/formatting';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   trade?: string;
@@ -42,6 +43,7 @@ interface State {
 }
 
 function MoatInsightsCardImpl({ trade, country }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const effectiveTrade = trade ?? user?.trade ?? 'plumbing';
@@ -118,19 +120,19 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
 
       {recentMonth && (
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Cohort margin {effectiveTrade}/{effectiveCountry}</Text>
+          <Text style={styles.rowLabel}>{t('moat.cohortMargin', { trade: effectiveTrade, country: effectiveCountry })}</Text>
           <Text style={styles.rowValue}>
-            {recentMonth.avgMargin.toFixed(1)}% <Text style={styles.rowMeta}>· {recentMonth.quotes} offertes</Text>
+            {recentMonth.avgMargin.toFixed(1)}% <Text style={styles.rowMeta}>· {t('moat.quoteCount', { count: recentMonth.quotes })}</Text>
           </Text>
         </View>
       )}
 
       {state.winRates.length > 0 && (
         <>
-          <Text style={styles.subtitle}>Win-rate per offerte-groep</Text>
+          <Text style={styles.subtitle}>{t('moat.winRateByGroup', 'Win rate by quote size')}</Text>
           {state.winRates.map((wr) => (
             <View key={wr.amountBucket} style={styles.row}>
-              <Text style={styles.rowLabel}>{labelBucket(wr.amountBucket)}</Text>
+              <Text style={styles.rowLabel}>{labelBucket(wr.amountBucket, effectiveCountry as Country, t)}</Text>
               <Text style={styles.rowValue}>
                 {(wr.winRate * 100).toFixed(0)}% <Text style={styles.rowMeta}>· n={wr.quotes}</Text>
               </Text>
@@ -141,19 +143,19 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
 
       {totals30d.quotes > 0 && (
         <>
-          <Text style={styles.subtitle}>Laatste 30 dagen</Text>
+          <Text style={styles.subtitle}>{t('moat.last30Days', 'Last 30 days')}</Text>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Verstuurd</Text>
+            <Text style={styles.rowLabel}>{t('moat.sent', 'Sent')}</Text>
             <Text style={styles.rowValue}>{totals30d.quotes}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Geaccepteerd</Text>
+            <Text style={styles.rowLabel}>{t('moat.accepted', 'Accepted')}</Text>
             <Text style={styles.rowValue}>
               {totals30d.accepted} <Text style={styles.rowMeta}>· {totals30d.quotes > 0 ? Math.round((totals30d.accepted / totals30d.quotes) * 100) : 0}%</Text>
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Ontvangen</Text>
+            <Text style={styles.rowLabel}>{t('moat.received', 'Received')}</Text>
             <Text style={styles.rowValue}>{formatCurrency0(totals30d.paidEur, effectiveCountry as Country)}</Text>
           </View>
         </>
@@ -162,14 +164,31 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
   );
 }
 
-function labelBucket(b: string): string {
-  return ({
-    under_1k: 'Onder €1k',
-    '1k_5k': '€1k – €5k',
-    '5k_10k': '€5k – €10k',
-    '10k_25k': '€10k – €25k',
-    over_25k: 'Boven €25k',
-  } as Record<string, string>)[b] ?? b;
+// Boundaries were hardcoded with a euro sign ("Onder €1k", "Boven €25k"), so a
+// UK or US contractor read their own buckets in the wrong currency. The bucket
+// edges are thresholds in the contractor's own currency context -- the cohort
+// is keyed by (trade, country) -- so format them for that country rather than
+// translating the symbol away.
+function labelBucket(
+  b: string,
+  country: Country,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  const money = (n: number) => formatCurrency0(n, country);
+  switch (b) {
+    case 'under_1k':
+      return t('moat.bucketUnder', { amount: money(1000) });
+    case '1k_5k':
+      return t('moat.bucketRange', { low: money(1000), high: money(5000) });
+    case '5k_10k':
+      return t('moat.bucketRange', { low: money(5000), high: money(10000) });
+    case '10k_25k':
+      return t('moat.bucketRange', { low: money(10000), high: money(25000) });
+    case 'over_25k':
+      return t('moat.bucketOver', { amount: money(25000) });
+    default:
+      return b;
+  }
 }
 
 const styles = StyleSheet.create({

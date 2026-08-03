@@ -5141,5 +5141,42 @@
   },
   "quoteOptimizer": {
     "estimatedMargin": "Geschätzte Marge"
+  },
+  "moat": {
+    "winRateByGroup": "Gewinnrate nach Angebotsgröße",
+    "last30Days": "Letzte 30 Tage",
+    "sent": "Versendet",
+    "accepted": "Angenommen",
+    "received": "Erhalten",
+    "quoteCount_one": "{{count}} Angebot",
+    "quoteCount_other": "{{count}} Angebote",
+    "cohortMargin": "Kohorten-Marge {{trade}}/{{country}}",
+    "bucketUnder": "Unter {{amount}}",
+    "bucketRange": "{{low}} – {{high}}",
+    "bucketOver": "Über {{amount}}"
+  },
+  "payroll": {
+    "totalHours": "Gesamtstunden",
+    "totalPayroll": "Lohnsumme gesamt",
+    "noTeamTitle": "Noch keine Teammitglieder",
+    "noTeamDesc": "Fügen Sie Teammitglieder hinzu, um deren Stunden und Löhne hier zu sehen.",
+    "exportSub": "Als CSV für Ihre Buchhaltungssoftware oder Ihren Buchhalter teilen"
+  },
+  "aiAssistant": {
+    "welcomeTitle": "Hallo! Ich bin Ihr Vasco-Assistent",
+    "welcomeText": "Ich helfe bei Angeboten, Planung, Finanzen und mehr. Was kann ich für Sie tun?",
+    "canHelpWith": "Ich kann helfen bei",
+    "askPlaceholder": "Stellen Sie eine Frage...",
+    "activeInsights_one": "{{count}} aktive Erkenntnis",
+    "activeInsights_other": "{{count}} aktive Erkenntnisse",
+    "insightsSubtitle": "Personalisierte Empfehlungen auf Basis Ihrer Geschäftsdaten",
+    "allClear": "Alles in Ordnung!",
+    "noInsights": "Derzeit gibt es keine neuen Erkenntnisse für Sie.",
+    "basedOn": "Basierend auf: {{source}}",
+    "suggestionsTitle": "Geschäftsvorschläge",
+    "suggestionsSubtitle": "KI-generierte Optimierungen auf Basis Ihrer Daten",
+    "tabChat": "Chat",
+    "tabInsights": "Erkenntnisse",
+    "tabSuggestions": "Vorschläge"
   }
 }

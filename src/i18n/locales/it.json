@@ -5141,5 +5141,42 @@
   },
   "quoteOptimizer": {
     "estimatedMargin": "Margine stimato"
+  },
+  "moat": {
+    "winRateByGroup": "Tasso di successo per fascia di preventivo",
+    "last30Days": "Ultimi 30 giorni",
+    "sent": "Inviati",
+    "accepted": "Accettati",
+    "received": "Incassato",
+    "quoteCount_one": "{{count}} preventivo",
+    "quoteCount_other": "{{count}} preventivi",
+    "cohortMargin": "Margine di coorte {{trade}}/{{country}}",
+    "bucketUnder": "Sotto {{amount}}",
+    "bucketRange": "{{low}} – {{high}}",
+    "bucketOver": "Oltre {{amount}}"
+  },
+  "payroll": {
+    "totalHours": "Ore totali",
+    "totalPayroll": "Totale retribuzioni",
+    "noTeamTitle": "Nessun membro del team",
+    "noTeamDesc": "Aggiungi membri del team per vedere qui le loro ore e retribuzioni.",
+    "exportSub": "Condividi in CSV per il tuo software di contabilità o il commercialista"
+  },
+  "aiAssistant": {
+    "welcomeTitle": "Ciao! Sono il tuo assistente Vasco",
+    "welcomeText": "Posso aiutarti con preventivi, pianificazione, finanze e altro. Di cosa hai bisogno?",
+    "canHelpWith": "Posso aiutarti con",
+    "askPlaceholder": "Fai una domanda...",
+    "activeInsights_one": "{{count}} spunto attivo",
+    "activeInsights_other": "{{count}} spunti attivi",
+    "insightsSubtitle": "Consigli personalizzati sui dati della tua attività",
+    "allClear": "Tutto a posto!",
+    "noInsights": "Al momento non ci sono nuovi spunti per te.",
+    "basedOn": "Basato su: {{source}}",
+    "suggestionsTitle": "Suggerimenti per l'attività",
+    "suggestionsSubtitle": "Ottimizzazioni generate dall'IA sui tuoi dati",
+    "tabChat": "Chat",
+    "tabInsights": "Spunti",
+    "tabSuggestions": "Suggerimenti"
   }
 }

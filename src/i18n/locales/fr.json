@@ -5141,5 +5141,42 @@
   },
   "quoteOptimizer": {
     "estimatedMargin": "Marge estimée"
+  },
+  "moat": {
+    "winRateByGroup": "Taux de réussite par tranche de devis",
+    "last30Days": "30 derniers jours",
+    "sent": "Envoyés",
+    "accepted": "Acceptés",
+    "received": "Encaissé",
+    "quoteCount_one": "{{count}} devis",
+    "quoteCount_other": "{{count}} devis",
+    "cohortMargin": "Marge de cohorte {{trade}}/{{country}}",
+    "bucketUnder": "Moins de {{amount}}",
+    "bucketRange": "{{low}} – {{high}}",
+    "bucketOver": "Plus de {{amount}}"
+  },
+  "payroll": {
+    "totalHours": "Total des heures",
+    "totalPayroll": "Masse salariale totale",
+    "noTeamTitle": "Aucun membre d'équipe",
+    "noTeamDesc": "Ajoutez des membres d'équipe pour voir ici leurs heures et leur paie.",
+    "exportSub": "Partager en CSV pour votre logiciel comptable ou votre comptable"
+  },
+  "aiAssistant": {
+    "welcomeTitle": "Bonjour ! Je suis votre assistant Vasco",
+    "welcomeText": "Je peux vous aider sur les devis, le planning, les finances et plus. Que puis-je faire ?",
+    "canHelpWith": "Je peux vous aider pour",
+    "askPlaceholder": "Posez une question...",
+    "activeInsights_one": "{{count}} analyse active",
+    "activeInsights_other": "{{count}} analyses actives",
+    "insightsSubtitle": "Recommandations personnalisées à partir de vos données",
+    "allClear": "Tout est en ordre !",
+    "noInsights": "Aucune nouvelle analyse pour le moment.",
+    "basedOn": "D'après : {{source}}",
+    "suggestionsTitle": "Suggestions pour l'entreprise",
+    "suggestionsSubtitle": "Optimisations générées par IA à partir de vos données",
+    "tabChat": "Chat",
+    "tabInsights": "Analyses",
+    "tabSuggestions": "Suggestions"
   }
 }

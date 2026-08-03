@@ -5125,5 +5125,42 @@
   },
   "quoteOptimizer": {
     "estimatedMargin": "Geschatte marge"
+  },
+  "moat": {
+    "winRateByGroup": "Win-rate per offerte-groep",
+    "last30Days": "Laatste 30 dagen",
+    "sent": "Verstuurd",
+    "accepted": "Geaccepteerd",
+    "received": "Ontvangen",
+    "quoteCount_one": "{{count}} offerte",
+    "quoteCount_other": "{{count}} offertes",
+    "cohortMargin": "Cohort-marge {{trade}}/{{country}}",
+    "bucketUnder": "Onder {{amount}}",
+    "bucketRange": "{{low}} – {{high}}",
+    "bucketOver": "Boven {{amount}}"
+  },
+  "payroll": {
+    "totalHours": "Totaal uren",
+    "totalPayroll": "Totaal verloning",
+    "noTeamTitle": "Nog geen teamleden",
+    "noTeamDesc": "Voeg teamleden toe om hun uren en verloning hier te zien.",
+    "exportSub": "Deel als CSV voor Moneybird of boekhouder"
+  },
+  "aiAssistant": {
+    "welcomeTitle": "Hoi! Ik ben je Vasco assistent",
+    "welcomeText": "Ik kan je helpen met offertes, planning, financiën en meer. Wat kan ik voor je doen?",
+    "canHelpWith": "Ik kan helpen met",
+    "askPlaceholder": "Stel een vraag...",
+    "activeInsights_one": "{{count}} actief inzicht",
+    "activeInsights_other": "{{count}} actieve inzichten",
+    "insightsSubtitle": "Gepersonaliseerde aanbevelingen op basis van je bedrijfsdata",
+    "allClear": "Alles op orde!",
+    "noInsights": "Er zijn momenteel geen nieuwe inzichten voor je.",
+    "basedOn": "Gebaseerd op: {{source}}",
+    "suggestionsTitle": "Bedrijfssuggesties",
+    "suggestionsSubtitle": "AI-gegenereerde optimalisaties gebaseerd op jouw data",
+    "tabChat": "Chat",
+    "tabInsights": "Inzichten",
+    "tabSuggestions": "Suggesties"
   }
 }

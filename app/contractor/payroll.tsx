@@ -149,7 +149,7 @@ export default function PayrollScreen() {
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>{hoursLabel(payrollData.totalHours)}</Text>
-            <Text style={styles.summaryLabel}>Totaal uren</Text>
+            <Text style={styles.summaryLabel}>{t('payroll.totalHours', 'Total hours')}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
@@ -165,7 +165,7 @@ export default function PayrollScreen() {
           </View>
         </View>
         <View style={styles.grandTotalRow}>
-          <Text style={styles.grandTotalLabel}>Totaal verloning</Text>
+          <Text style={styles.grandTotalLabel}>{t('payroll.totalPayroll', 'Total payroll')}</Text>
           <Text style={styles.grandTotalValue}>{fmt(payrollData.grandTotal)}</Text>
         </View>
       </View>
@@ -175,8 +175,8 @@ export default function PayrollScreen() {
         {payrollData.lines.length === 0 && (
           <EmptyState
             icon="people-outline"
-            title="Nog geen teamleden"
-            description="Voeg teamleden toe om hun uren en verloning hier te zien."
+            title={t('payroll.noTeamTitle', 'No team members yet')}
+            description={t('payroll.noTeamDesc', 'Add team members to see their hours and payroll here.')}
           />
         )}
         {payrollData.lines.map(line => (
@@ -219,7 +219,7 @@ export default function PayrollScreen() {
           <Ionicons name="download-outline" size={22} color="#fff" />
           <View style={{ flex: 1 }}>
             <Text style={styles.exportBannerTitle}>Exporteren</Text>
-            <Text style={styles.exportBannerSub}>Deel als CSV voor Moneybird of boekhouder</Text>
+            <Text style={styles.exportBannerSub}>{t('payroll.exportSub', 'Share as CSV for your accounting software or bookkeeper')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color="#fff" />
         </Pressable>

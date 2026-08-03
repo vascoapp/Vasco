@@ -5141,5 +5141,42 @@
   },
   "quoteOptimizer": {
     "estimatedMargin": "Margen estimado"
+  },
+  "moat": {
+    "winRateByGroup": "Tasa de éxito por tramo de presupuesto",
+    "last30Days": "Últimos 30 días",
+    "sent": "Enviados",
+    "accepted": "Aceptados",
+    "received": "Cobrado",
+    "quoteCount_one": "{{count}} presupuesto",
+    "quoteCount_other": "{{count}} presupuestos",
+    "cohortMargin": "Margen de cohorte {{trade}}/{{country}}",
+    "bucketUnder": "Menos de {{amount}}",
+    "bucketRange": "{{low}} – {{high}}",
+    "bucketOver": "Más de {{amount}}"
+  },
+  "payroll": {
+    "totalHours": "Horas totales",
+    "totalPayroll": "Nómina total",
+    "noTeamTitle": "Aún no hay miembros del equipo",
+    "noTeamDesc": "Añade miembros del equipo para ver aquí sus horas y su nómina.",
+    "exportSub": "Comparte en CSV para tu software contable o tu gestor"
+  },
+  "aiAssistant": {
+    "welcomeTitle": "¡Hola! Soy tu asistente Vasco",
+    "welcomeText": "Puedo ayudarte con presupuestos, planificación, finanzas y más. ¿Qué necesitas?",
+    "canHelpWith": "Puedo ayudarte con",
+    "askPlaceholder": "Haz una pregunta...",
+    "activeInsights_one": "{{count}} idea activa",
+    "activeInsights_other": "{{count}} ideas activas",
+    "insightsSubtitle": "Recomendaciones personalizadas según los datos de tu negocio",
+    "allClear": "¡Todo en orden!",
+    "noInsights": "Ahora mismo no hay nuevas ideas para ti.",
+    "basedOn": "Basado en: {{source}}",
+    "suggestionsTitle": "Sugerencias para el negocio",
+    "suggestionsSubtitle": "Optimizaciones generadas por IA a partir de tus datos",
+    "tabChat": "Chat",
+    "tabInsights": "Ideas",
+    "tabSuggestions": "Sugerencias"
   }
 }
