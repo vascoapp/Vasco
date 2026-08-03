@@ -185,6 +185,30 @@ export default function ProjectDetailScreen() {
         </FadeIn>
 
         {/* R246: Site-lead actions for aannemer running this project. */}
+        {/* Billing. Top-level on the project rather than inside the financial
+            card: for an aannemer, raising the next termijn is the reason they
+            open a project, not a sub-detail of a P&L readout. */}
+        <FadeIn delay={120}>
+          <Pressable
+            style={styles.billingCta}
+            onPress={() => router.push(`/contractor/project-billing/${project.id}` as any)}
+          >
+            <Ionicons name="cash-outline" size={20} color={Palette.hermesOrange} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.billingCtaTitle}>
+                {t('projectBilling.title', 'Instalments & change orders')}
+              </Text>
+              <Text style={styles.billingCtaSub}>
+                {t('projectBilling.invoicedOf', {
+                  invoiced: formatCurrency0(project.totalInvoiced ?? 0, country),
+                  total: formatCurrency0(project.totalQuoted || project.totalBudget || 0, country),
+                })}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
+          </Pressable>
+        </FadeIn>
+
         {/* Wires the existing site-lead drill-downs into the contractor view. */}
         <FadeIn delay={150}>
           <View style={styles.section}>
@@ -247,6 +271,13 @@ export default function ProjectDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  billingCta: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,
+    padding: GRID.md, marginBottom: GRID.md,
+  },
+  billingCtaTitle: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  billingCtaSub: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary, marginTop: 2 },
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: {
     flexDirection: 'row', alignItems: 'center',

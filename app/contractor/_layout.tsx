@@ -59,6 +59,7 @@ export default function ContractorLayout() {
       <Stack.Screen name="expenses" />
       <Stack.Screen name="closeout" />
       <Stack.Screen name="projects" />
+      <Stack.Screen name="project-billing/[id]" />
       <Stack.Screen name="market-prices" />
       <Stack.Screen name="search" />
       <Stack.Screen name="automations" />

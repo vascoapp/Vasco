@@ -1,0 +1,510 @@
+// =============================================================================
+// PROJECT BILLING — termijnen (instalments) + meerwerk (change orders)
+// =============================================================================
+// An aannemer bills a project in instalments and agrees extra work along the
+// way. This screen is where both happen.
+//
+// Two things it deliberately makes visible rather than hiding:
+//
+// 1. What the customer pays NOW versus the invoice face value. Retentie is
+//    withheld from payment, not deducted from the invoice -- VAT is charged on
+//    the full amount -- so the row shows the full term and the withheld figure
+//    beneath it rather than one blended number.
+//
+// 2. Whether the customer was warned that meerwerk carried a price increase.
+//    Art. 7:755 BW makes that warning the condition for being allowed to
+//    charge at all, so an approved change order without one is shown as a
+//    blocker with the fix attached, not as a quiet disabled button.
+// =============================================================================
+
+import { useMemo, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, Modal } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
+import { SemanticColors, Palette } from '../../../src/theme/colors';
+import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
+import { SafeArea } from '../../../src/theme/spacing';
+import { useAppState } from '../../../src/state/AppState';
+import { useAuth } from '../../../src/context/AuthContext';
+import { formatCurrency, type Country } from '../../../src/i18n/formatting';
+import { hapticSuccess } from '../../../src/utils/haptics';
+import { FadeIn } from '../../../src/components/shared/FadeIn';
+import {
+  billingProgress,
+  termAmount,
+  retentionForTerm,
+  payableNow,
+  validateBillingSchedule,
+  canInvoiceChangeOrder,
+} from '../../../src/services/progressBillingService';
+import type { ProjectBillingTerm, ProjectChangeOrder } from '../../../src/types/project';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+const TERM_STATUS_KEY: Record<ProjectBillingTerm['status'], string> = {
+  pending: 'projectBilling.statusPending',
+  ready: 'projectBilling.statusReady',
+  invoiced: 'projectBilling.statusInvoiced',
+  paid: 'projectBilling.statusPaid',
+};
+
+const CO_STATUS_KEY: Record<ProjectChangeOrder['status'], string> = {
+  draft: 'projectBilling.coStatusDraft',
+  proposed: 'projectBilling.coStatusProposed',
+  approved: 'projectBilling.coStatusApproved',
+  rejected: 'projectBilling.coStatusRejected',
+  invoiced: 'projectBilling.statusInvoiced',
+};
+
+export default function ProjectBillingScreen() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { projects, invoices, updateProject, addTermInvoice, addChangeOrderInvoice } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
+  const money = useCallback((n: number) => formatCurrency(n, country), [country]);
+
+  const project = useMemo(() => projects.find((p) => p.id === id), [projects, id]);
+
+  const [showTermForm, setShowTermForm] = useState(false);
+  const [termTitle, setTermTitle] = useState('');
+  const [termPercent, setTermPercent] = useState('');
+  const [showCoForm, setShowCoForm] = useState(false);
+  const [coTitle, setCoTitle] = useState('');
+  const [coAmount, setCoAmount] = useState('');
+
+  const progress = useMemo(
+    () => (project ? billingProgress(project, invoices) : null),
+    [project, invoices],
+  );
+  const scheduleErrors = useMemo(
+    () => (project ? validateBillingSchedule(project) : []),
+    [project],
+  );
+
+  if (!project || !progress) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  const terms = [...(project.billingTerms ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+  const changeOrders = [...(project.changeOrders ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const saveTerm = () => {
+    const pct = Number(termPercent.replace(',', '.'));
+    if (!termTitle.trim() || !Number.isFinite(pct) || pct <= 0) return;
+    const next: ProjectBillingTerm = {
+      id: `bt-${Date.now()}`,
+      title: termTitle.trim(),
+      basis: 'percent',
+      percent: pct,
+      status: 'pending',
+      sortOrder: terms.length + 1,
+    };
+    updateProject(project.id, { billingTerms: [...terms, next] });
+    hapticSuccess();
+    setTermTitle('');
+    setTermPercent('');
+    setShowTermForm(false);
+  };
+
+  const saveChangeOrder = () => {
+    const amt = Number(coAmount.replace(',', '.'));
+    if (!coTitle.trim() || !Number.isFinite(amt) || amt === 0) return;
+    const next: ProjectChangeOrder = {
+      id: `co-${Date.now()}`,
+      title: coTitle.trim(),
+      amount: amt,
+      status: 'draft',
+      createdAt: new Date().toISOString(),
+      sortOrder: changeOrders.length + 1,
+    };
+    updateProject(project.id, { changeOrders: [...changeOrders, next] });
+    hapticSuccess();
+    setCoTitle('');
+    setCoAmount('');
+    setShowCoForm(false);
+  };
+
+  const patchOrder = (orderId: string, patch: Partial<ProjectChangeOrder>) => {
+    updateProject(project.id, {
+      changeOrders: changeOrders.map((c) => (c.id === orderId ? { ...c, ...patch } : c)),
+    });
+    hapticSuccess();
+  };
+
+  const invoiceTerm = async (term: ProjectBillingTerm) => {
+    if (scheduleErrors.length > 0) {
+      // Billing past 100% of a contract is expensive to unwind, so stop here
+      // rather than at the mutator and say which rule broke.
+      Alert.alert(t('projectBilling.scheduleInvalid', 'Instalment schedule is invalid'), scheduleErrors[0].message);
+      return;
+    }
+    try {
+      await addTermInvoice(project.id, term.id);
+      hapticSuccess();
+    } catch (err) {
+      Alert.alert(t('common.error', 'Error'), String(err instanceof Error ? err.message : err));
+    }
+  };
+
+  const invoiceChangeOrder = async (order: ProjectChangeOrder) => {
+    const gate = canInvoiceChangeOrder(order);
+    if (!gate.allowed) {
+      Alert.alert(
+        gate.needsWarning
+          ? t('projectBilling.warningMissing', 'Customer not warned about the price increase')
+          : t('common.error', 'Error'),
+        gate.reason,
+      );
+      return;
+    }
+    try {
+      await addChangeOrderInvoice(project.id, order.id);
+      hapticSuccess();
+    } catch (err) {
+      Alert.alert(t('common.error', 'Error'), String(err instanceof Error ? err.message : err));
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('projectBilling.title', 'Instalments & change orders')}</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Contract vs project value: kept as two figures because meerwerk
+            does not re-base the terms, and blending them would hide that. */}
+        <FadeIn>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>{t('projectBilling.contractValue', 'Contract value')}</Text>
+              <Text style={styles.summaryValue}>{money(progress.contractValue)}</Text>
+            </View>
+            {progress.changeOrders !== 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>{t('projectBilling.projectValue', 'Project value')}</Text>
+                <Text style={styles.summaryValue}>{money(progress.projectValue)}</Text>
+              </View>
+            )}
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${Math.min(100, progress.percentInvoiced)}%` }]} />
+            </View>
+            <Text style={styles.summaryMeta}>
+              {t('projectBilling.invoicedOf', {
+                invoiced: money(progress.invoiced),
+                total: money(progress.contractValue),
+              })}
+            </Text>
+            {progress.retentionHeld > 0 && (
+              <View style={styles.retentionRow}>
+                <Ionicons name="lock-closed-outline" size={14} color={Palette.hermesOrange} />
+                <Text style={styles.retentionText}>
+                  {t('projectBilling.retentionHeld', 'Retention held')}: {money(progress.retentionHeld)}
+                </Text>
+              </View>
+            )}
+          </View>
+        </FadeIn>
+
+        {/* ── Instalments ─────────────────────────────────────────────────── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('projectBilling.terms', 'Instalments')}</Text>
+          <Pressable onPress={() => setShowTermForm(true)} hitSlop={8}>
+            <Ionicons name="add-circle-outline" size={22} color={Palette.hermesOrange} />
+          </Pressable>
+        </View>
+
+        {scheduleErrors.length > 0 && (
+          <View style={styles.errorCard}>
+            <Ionicons name="warning-outline" size={16} color={SemanticColors.feedbackError} />
+            <Text style={styles.errorText}>{scheduleErrors[0].message}</Text>
+          </View>
+        )}
+
+        {terms.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>{t('projectBilling.noTerms', 'No instalments yet')}</Text>
+            <Text style={styles.emptyHint}>
+              {t('projectBilling.noTermsHint', 'Without instalments this project is billed as a single invoice.')}
+            </Text>
+          </View>
+        ) : (
+          terms.map((term) => {
+            const full = termAmount(project, term);
+            const withheld = retentionForTerm(project, term);
+            const now = payableNow(project, term);
+            const billable = term.status === 'pending' || term.status === 'ready';
+            return (
+              <View key={term.id} style={styles.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle}>{term.title}</Text>
+                  <Text style={styles.rowMeta}>
+                    {term.basis === 'percent' ? `${term.percent}% · ` : ''}
+                    {t(TERM_STATUS_KEY[term.status], term.status)}
+                  </Text>
+                  {withheld > 0 && (
+                    // The invoice is issued for `full`; this is what the
+                    // customer actually transfers now.
+                    <Text style={styles.rowRetention}>
+                      {t('projectBilling.payableNow', 'Payable now')} {money(now)} —{' '}
+                      {t('projectBilling.withheld', { amount: money(withheld) })}
+                    </Text>
+                  )}
+                </View>
+                <View style={styles.rowRight}>
+                  <Text style={styles.rowAmount}>{money(full)}</Text>
+                  {billable && (
+                    <Pressable style={styles.rowBtn} onPress={() => invoiceTerm(term)}>
+                      <Text style={styles.rowBtnText}>{t('projectBilling.invoiceTerm', 'Invoice')}</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+            );
+          })
+        )}
+
+        {/* ── Change orders ───────────────────────────────────────────────── */}
+        <View style={[styles.sectionHeader, { marginTop: GRID.lg }]}>
+          <Text style={styles.sectionTitle}>{t('projectBilling.changeOrders', 'Change orders')}</Text>
+          <Pressable onPress={() => setShowCoForm(true)} hitSlop={8}>
+            <Ionicons name="add-circle-outline" size={22} color={Palette.hermesOrange} />
+          </Pressable>
+        </View>
+
+        {changeOrders.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>{t('projectBilling.noChangeOrders', 'No change orders yet')}</Text>
+          </View>
+        ) : (
+          changeOrders.map((order) => {
+            const gate = canInvoiceChangeOrder(order);
+            const isReduction = order.amount < 0;
+            return (
+              <View key={order.id} style={styles.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle}>{order.title}</Text>
+                  <Text style={styles.rowMeta}>
+                    {t(CO_STATUS_KEY[order.status], order.status)}
+                    {isReduction ? ` · ${t('projectBilling.reduction', 'Reduction')}` : ''}
+                    {order.warnedAt
+                      ? ` · ${t('projectBilling.warnedOn', { date: new Date(order.warnedAt).toLocaleDateString() })}`
+                      : ''}
+                  </Text>
+
+                  {/* The art. 7:755 blocker, shown with its fix rather than as
+                      a silently disabled button. */}
+                  {gate.needsWarning && (
+                    <View style={styles.warnBox}>
+                      <Text style={styles.warnTitle}>
+                        {t('projectBilling.warningMissing', 'Customer not warned about the price increase')}
+                      </Text>
+                      <Text style={styles.warnHint}>
+                        {t('projectBilling.warningMissingHint', '')}
+                      </Text>
+                      <Pressable
+                        style={styles.warnBtn}
+                        onPress={() =>
+                          patchOrder(order.id, { warnedAt: new Date().toISOString(), warnedVia: 'app' })
+                        }
+                      >
+                        <Text style={styles.warnBtnText}>
+                          {t('projectBilling.recordWarning', 'Record warning')}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  )}
+
+                  {(order.status === 'draft' || order.status === 'proposed') && (
+                    <Pressable
+                      style={styles.linkBtn}
+                      onPress={() =>
+                        patchOrder(order.id, { status: 'approved', approvedAt: new Date().toISOString() })
+                      }
+                    >
+                      <Text style={styles.linkBtnText}>
+                        {t('projectBilling.markApproved', 'Customer approved')}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+                <View style={styles.rowRight}>
+                  <Text style={[styles.rowAmount, isReduction && { color: SemanticColors.feedbackSuccess }]}>
+                    {money(order.amount)}
+                  </Text>
+                  {gate.allowed && (
+                    <Pressable style={styles.rowBtn} onPress={() => invoiceChangeOrder(order)}>
+                      <Text style={styles.rowBtnText}>{t('projectBilling.invoiceTerm', 'Invoice')}</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+            );
+          })
+        )}
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+
+      {/* Add instalment */}
+      <Modal visible={showTermForm} transparent animationType="slide" onRequestClose={() => setShowTermForm(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowTermForm(false)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>{t('projectBilling.addTerm', 'Add instalment')}</Text>
+            <TextInput
+              style={styles.input}
+              value={termTitle}
+              onChangeText={setTermTitle}
+              placeholder={t('projectBilling.termTitlePlaceholder', 'E.g. Start of work')}
+              placeholderTextColor={SemanticColors.textTertiary}
+            />
+            <TextInput
+              style={styles.input}
+              value={termPercent}
+              onChangeText={setTermPercent}
+              keyboardType="decimal-pad"
+              placeholder={t('projectBilling.percentLabel', 'Percentage')}
+              placeholderTextColor={SemanticColors.textTertiary}
+            />
+            <Pressable style={styles.saveBtn} onPress={saveTerm}>
+              <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Add change order */}
+      <Modal visible={showCoForm} transparent animationType="slide" onRequestClose={() => setShowCoForm(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowCoForm(false)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>{t('projectBilling.addChangeOrder', 'Add change order')}</Text>
+            <TextInput
+              style={styles.input}
+              value={coTitle}
+              onChangeText={setCoTitle}
+              placeholder={t('projectBilling.termTitlePlaceholder', 'E.g. Extra sockets')}
+              placeholderTextColor={SemanticColors.textTertiary}
+            />
+            <TextInput
+              style={styles.input}
+              value={coAmount}
+              onChangeText={setCoAmount}
+              keyboardType="numbers-and-punctuation"
+              placeholder={t('projectBilling.amountLabel', 'Amount')}
+              placeholderTextColor={SemanticColors.textTertiary}
+            />
+            <Pressable style={styles.saveBtn} onPress={saveChangeOrder}>
+              <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: PAGE_BG },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingTop: SafeArea.top, paddingHorizontal: GRID.md, paddingBottom: GRID.sm,
+  },
+  headerTitle: { fontSize: TYPE.titleSize, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
+  content: { paddingHorizontal: GRID.md },
+
+  summaryCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    padding: GRID.md, marginBottom: GRID.md,
+  },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: GRID.xs },
+  summaryLabel: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary },
+  summaryValue: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  summaryMeta: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary, marginTop: GRID.xs },
+  progressTrack: {
+    height: 6, borderRadius: 3, backgroundColor: SemanticColors.borderDefault, marginTop: GRID.sm, overflow: 'hidden',
+  },
+  progressFill: { height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },
+  retentionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: GRID.sm },
+  retentionText: { fontSize: TYPE.captionSize, color: Palette.hermesOrange },
+
+  sectionHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: GRID.sm, marginTop: GRID.sm,
+  },
+  sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
+
+  row: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,
+    padding: GRID.md, marginBottom: GRID.sm,
+  },
+  rowTitle: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  rowMeta: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary, marginTop: 2 },
+  rowRetention: { fontSize: TYPE.captionSize, color: Palette.hermesOrange, marginTop: 4 },
+  rowRight: { alignItems: 'flex-end', gap: GRID.xs },
+  rowAmount: { fontSize: TYPE.bodySize, fontFamily: 'Inter_700Bold', color: SemanticColors.textPrimary },
+  rowBtn: {
+    paddingHorizontal: GRID.sm, paddingVertical: 6, borderRadius: RADIUS.sm,
+    backgroundColor: Palette.hermesOrange + '18',
+  },
+  rowBtnText: { fontSize: TYPE.captionSize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+
+  linkBtn: { marginTop: GRID.xs },
+  linkBtnText: { fontSize: TYPE.captionSize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+
+  warnBox: {
+    marginTop: GRID.sm, padding: GRID.sm, borderRadius: RADIUS.sm,
+    backgroundColor: SemanticColors.feedbackError + '12',
+    borderLeftWidth: 3, borderLeftColor: SemanticColors.feedbackError,
+  },
+  warnTitle: { fontSize: TYPE.captionSize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError },
+  warnHint: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary, marginTop: 4 },
+  warnBtn: { marginTop: GRID.xs },
+  warnBtnText: { fontSize: TYPE.captionSize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+
+  emptyCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,
+    padding: GRID.md, marginBottom: GRID.sm,
+  },
+  emptyTitle: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  emptyHint: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary, marginTop: 4 },
+
+  errorCard: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.xs,
+    backgroundColor: SemanticColors.feedbackError + '12', borderRadius: RADIUS.sm,
+    padding: GRID.sm, marginBottom: GRID.sm,
+  },
+  errorText: { flex: 1, fontSize: TYPE.captionSize, color: SemanticColors.feedbackError },
+
+  modalOverlay: { flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end' },
+  modalCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    padding: GRID.lg, gap: GRID.sm, paddingBottom: GRID.xl,
+  },
+  modalTitle: { fontSize: TYPE.sectionSize, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
+  input: {
+    backgroundColor: PAGE_BG, borderRadius: RADIUS.md, padding: GRID.md,
+    fontSize: TYPE.bodySize, color: SemanticColors.textPrimary,
+  },
+  saveBtn: {
+    backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md,
+    paddingVertical: GRID.md, alignItems: 'center', marginTop: GRID.xs,
+  },
+  saveBtnText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_700Bold', color: Palette.white },
+});
