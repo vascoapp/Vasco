@@ -19,13 +19,49 @@ export function currencyForCountry(country: Country = 'NL'): string {
 }
 
 export function formatCurrency(amount: number, country: Country = 'NL'): string {
-  const { currency, locale } = COUNTRY_CONFIG[country];
+  // Fall back rather than throw on an unrecognised key. `currencyForCountry`
+  // right above already does this; this one did not, so passing anything that
+  // is not a Country -- a currency CODE, most easily -- destructured undefined
+  // and threw "Cannot read properties of undefined (reading 'currency')",
+  // taking the whole screen down. See formatCurrencyCode below for callers
+  // that legitimately hold a currency rather than a country.
+  const { currency, locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+/**
+ * Format an amount that is denominated in a specific ISO currency.
+ *
+ * `formatCurrency` takes a COUNTRY and derives the currency from it, which is
+ * right for a contractor's own money. Enterprise dashboards are different: a
+ * portfolio holds projects in several currencies at once, so the amount
+ * carries its own currency code and only the grouping/decimal separators
+ * should follow the viewer. Passing that code into formatCurrency's country
+ * slot is what threw.
+ */
+export function formatCurrencyCode(
+  amount: number,
+  currencyCode: string,
+  country: Country = 'NL',
+): string {
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    // Intl throws on a malformed currency code; show the number rather than
+    // nothing, and never take the screen down over a formatting detail.
+    return `${currencyCode} ${amount.toFixed(2)}`;
+  }
 }
 
 export function formatDate(date: Date | string, country: Country = 'NL'): string {

@@ -24,7 +24,7 @@ import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { hapticSuccess } from '../../utils/haptics';
 import { Spacing, SafeArea } from '../../theme/spacing';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrencyCode } from '../../i18n/formatting';
 import {
   mockProjects,
   mockAppraisals,
@@ -287,20 +287,23 @@ const MOCK_SCENARIOS = DEMO_MODE ? DEMO_MOCK_SCENARIOS : [];
 // HELPERS
 // =============================================================================
 
-function formatCompact(value: number, _currency: string = 'GBP'): string {
+// The currency argument used to be `_currency` -- accepted and ignored -- so
+// every call site dutifully passed 'GBP' and the value rendered in euros
+// anyway. It is honoured now.
+function formatCompact(value: number, currency: string = 'EUR'): string {
   const absValue = Math.abs(value);
   const sign = value < 0 ? '-' : '';
 
   if (absValue >= 1_000_000_000) {
-    return `${sign}${formatCurrency(absValue / 1_000_000_000).replace(/,00$|\.00$/, '')}B`;
+    return `${sign}${formatCurrencyCode(absValue / 1_000_000_000, currency).replace(/,00$|\.00$/, '')}B`;
   }
   if (absValue >= 1_000_000) {
-    return `${sign}${formatCurrency(absValue / 1_000_000).replace(/,00$|\.00$/, '')}M`;
+    return `${sign}${formatCurrencyCode(absValue / 1_000_000, currency).replace(/,00$|\.00$/, '')}M`;
   }
   if (absValue >= 1_000) {
-    return `${sign}${formatCurrency(absValue / 1_000).replace(/,00$|\.00$/, '')}K`;
+    return `${sign}${formatCurrencyCode(absValue / 1_000, currency).replace(/,00$|\.00$/, '')}K`;
   }
-  return formatCurrency(value);
+  return formatCurrencyCode(value, currency);
 }
 
 // =============================================================================
@@ -658,9 +661,9 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
           title: 'Financieel Overzicht',
           subtitle: `${mockProjects.length} actieve projecten`,
           metrics: [
-            { value: formatCompact(portfolioMetrics.totalGdv, 'GBP'), label: 'Totaal GDV' },
+            { value: formatCompact(portfolioMetrics.totalGdv, currency), label: 'Totaal GDV' },
             { value: formatPercent(portfolioMetrics.avgIrr), label: 'Gem. IRR', color: CFO_COLOR },
-            { value: formatCompact(portfolioMetrics.uncommitted, 'GBP'), label: 'Ongecommitteerd' },
+            { value: formatCompact(portfolioMetrics.uncommitted, currency), label: 'Ongecommitteerd' },
           ],
         };
       case 'savings':
@@ -684,9 +687,9 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
           title: 'Rendement & IRR',
           subtitle: 'Portefeuilleprestaties',
           metrics: [
-            { value: formatCompact(portfolioMetrics.totalGdv, 'GBP'), label: 'GDV' },
+            { value: formatCompact(portfolioMetrics.totalGdv, currency), label: 'GDV' },
             { value: formatPercent(portfolioMetrics.avgIrr), label: 'IRR', color: CFO_COLOR },
-            { value: formatCompact(portfolioMetrics.totalGdv - portfolioMetrics.totalBudget, 'GBP'), label: 'Winst' },
+            { value: formatCompact(portfolioMetrics.totalGdv - portfolioMetrics.totalBudget, currency), label: 'Winst' },
           ],
         };
       default:
@@ -790,11 +793,11 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
             <FinancialKPIGrid
               accentColor={CFO_COLOR}
               tiles={[
-                { label: 'Portfolio GDV', value: formatCompact(portfolioMetrics.totalGdv, 'GBP'), variance: '+3.2%', varianceDirection: 'up', status: 'green' },
+                { label: 'Portfolio GDV', value: formatCompact(portfolioMetrics.totalGdv, currency), variance: '+3.2%', varianceDirection: 'up', status: 'green' },
                 { label: 'Gemiddeld IRR', value: formatPercent(portfolioMetrics.avgIrr), variance: '+1.1%', varianceDirection: 'up', status: 'green', heroBg: true },
-                { label: 'Totaal Budget', value: formatCompact(portfolioMetrics.totalBudget, 'GBP'), budgetLabel: `${mockProjects.length} projecten` },
-                { label: 'Totaal Besteed', value: formatCompact(portfolioMetrics.totalSpent, 'GBP'), variance: '-2.1%', varianceDirection: 'down', status: 'amber' },
-                { label: 'Ongecommitteerd', value: formatCompact(portfolioMetrics.uncommitted, 'GBP'), status: 'green' },
+                { label: 'Totaal Budget', value: formatCompact(portfolioMetrics.totalBudget, currency), budgetLabel: `${mockProjects.length} projecten` },
+                { label: 'Totaal Besteed', value: formatCompact(portfolioMetrics.totalSpent, currency), variance: '-2.1%', varianceDirection: 'down', status: 'amber' },
+                { label: 'Ongecommitteerd', value: formatCompact(portfolioMetrics.uncommitted, currency), status: 'green' },
                 { label: 'Goedkeuringen', value: `${pendingApprovalCount}`, status: pendingApprovalCount > 2 ? 'red' : 'amber', onPress: () => setActiveTab('savings') },
               ]}
             />
@@ -970,7 +973,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                         <Text style={styles.handoverContractor}>{handover.contractor}</Text>
                       </View>
                       <View style={styles.handoverPayment}>
-                        <Text style={styles.handoverAmount}>{formatCompact(handover.paymentAmount, 'GBP')}</Text>
+                        <Text style={styles.handoverAmount}>{formatCompact(handover.paymentAmount, currency)}</Text>
                         <View style={[
                           styles.handoverStatusBadge,
                           handover.handoverStatus === 'awaiting-signoff' && styles.handoverStatusSignoff,
@@ -1030,7 +1033,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
               <View style={styles.handoverSummary}>
                 <Ionicons name="lock-closed" size={16} color={SemanticColors.feedbackWarning} />
                 <Text style={styles.handoverSummaryText}>
-                  {formatCompact(MOCK_PENDING_HANDOVERS.reduce((sum, h) => sum + h.paymentAmount, 0), 'GBP')} geblokkeerd in afwachting van overdracht
+                  {formatCompact(MOCK_PENDING_HANDOVERS.reduce((sum, h) => sum + h.paymentAmount, 0), currency)} geblokkeerd in afwachting van overdracht
                 </Text>
               </View>
             </View>
@@ -1073,7 +1076,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                       <Text style={styles.drawRequestStage}>{request.stage}</Text>
                     </View>
                     <View style={styles.drawRequestRight}>
-                      <Text style={styles.drawRequestAmount}>{formatCompact(request.amount, 'GBP')}</Text>
+                      <Text style={styles.drawRequestAmount}>{formatCompact(request.amount, currency)}</Text>
                       <View style={[
                         styles.drawRequestStatus,
                         request.status === 'in-review' && styles.drawRequestStatusReview,
@@ -1118,7 +1121,7 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                 { label: 'Totale Winst', value: '\u00A318.4M', variance: '+5.2%', varianceDirection: 'up', status: 'green' },
                 { label: 'Equity Multiple', value: '1.82x', status: 'green' },
                 { label: 'Gem. PoC', value: '24.5%', status: 'amber' },
-                { label: 'GDV', value: formatCompact(portfolioMetrics.totalGdv, 'GBP') },
+                { label: 'GDV', value: formatCompact(portfolioMetrics.totalGdv, currency) },
                 { label: 'NPV', value: '\u00A314.8M', budgetLabel: 'Discontovoet 8%' },
               ]}
             />
@@ -1189,8 +1192,8 @@ export function CFODashboard({ initialTab = 'overview', showTabBar = true }: CFO
                       <View style={[styles.investorFlowBarFill, { width: `${distPercent}%` }]} />
                     </View>
                     <View style={styles.investorFlowFooter}>
-                      <Text style={styles.investorFlowDistributed}>{formatCompact(investor.distributed, 'GBP')} uitgekeerd</Text>
-                      <Text style={styles.investorFlowCommitted}>van {formatCompact(investor.committed, 'GBP')}</Text>
+                      <Text style={styles.investorFlowDistributed}>{formatCompact(investor.distributed, currency)} uitgekeerd</Text>
+                      <Text style={styles.investorFlowCommitted}>van {formatCompact(investor.committed, currency)}</Text>
                     </View>
                   </View>
                 );
