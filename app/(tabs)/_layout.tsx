@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { SemanticColors } from '../../src/theme/colors';
 import { useAuth, type UserRole } from '../../src/context/AuthContext';
 import { OfflineBanner } from '../../src/components/shared/OfflineBanner';
+import { isFeatureEnabled } from '../../src/services/featureFlagService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -63,14 +64,34 @@ const getTabsForRole = (role: UserRole | undefined, t: (key: string, fallback: s
   }
 };
 
+// The real-estate portfolio roles. Kept out of reach while
+// `enterprise_portfolio` is off -- see featureFlagService for the reasoning.
+// `site-lead` is deliberately absent: it is a real persona and this layout is
+// its home.
+const PORTFOLIO_ROLES: UserRole[] = ['cfo', 'coo', 'director'];
+
 export default function TabsLayout() {
-  const { user, roleConfig } = useAuth();
+  const { user, roleConfig, isAuthenticated, isAuthHydrating } = useAuth();
   const { t } = useTranslation();
   const tabs = getTabsForRole(user?.role, t);
   const primaryColor = roleConfig?.primaryColor || SemanticColors.actionPrimary;
   // Real device inset, not the hardcoded iPhone home-indicator 34 — see the
   // same fix in app/(contractor)/_layout.tsx. 54 + 34 == the previous 88.
   const insets = useSafeAreaInsets();
+
+  // Auth gate: without it an unauthenticated deep link rendered a blank white
+  // screen rather than redirecting to login.
+  if (isAuthHydrating) {
+    return <View style={{ flex: 1, backgroundColor: SemanticColors.surfaceBackground }} />;
+  }
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
+  // Enforced here as well as at login, so a `vasco://` deep link straight into
+  // (tabs) cannot bypass the routing decision.
+  if (user?.role && PORTFOLIO_ROLES.includes(user.role) && !isFeatureEnabled('enterprise_portfolio')) {
+    return <Redirect href="/(contractor)" />;
+  }
 
   return (
     <View style={{ flex: 1 }}>

@@ -27,14 +27,27 @@ import { DK } from '../src/theme/draftkings';
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { DKLabel } from '../src/components/shared/DKLabel';
+import { isFeatureEnabled } from '../src/services/featureFlagService';
 
-const ENTERPRISE_ROLES: UserRole[] = ['cfo', 'coo', 'site-lead', 'director'];
+// Roles that land in the (tabs) layout rather than the contractor tabs.
+// `site-lead` is a real, fully-built persona and always routes here.
+const TABS_ROLES: UserRole[] = ['site-lead'];
+
+// The real-estate portfolio roles. Behind `enterprise_portfolio`, which is off:
+// see featureFlagService for why. With the flag off they fall through to the
+// contractor app rather than landing on a frozen surface.
+const PORTFOLIO_ROLES: UserRole[] = ['cfo', 'coo', 'director'];
 
 const getRouteForEmail = (email: string) => {
   const normalizedEmail = email.toLowerCase().trim();
   const account = DEMO_ACCOUNTS.find((demo) => demo.email === normalizedEmail);
   const role = account?.role;
-  return role && ENTERPRISE_ROLES.includes(role) ? '/(tabs)' : '/(contractor)';
+  if (!role) return '/(contractor)';
+  if (TABS_ROLES.includes(role)) return '/(tabs)';
+  if (PORTFOLIO_ROLES.includes(role)) {
+    return isFeatureEnabled('enterprise_portfolio') ? '/(tabs)' : '/(contractor)';
+  }
+  return '/(contractor)';
 };
 
 export default function LoginScreen() {

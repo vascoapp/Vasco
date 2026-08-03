@@ -23,7 +23,8 @@ export type FeatureKey =
   | 'sms_us'
   | 'tax_real_lookup'
   | 'route_optimization'
-  | 'office_bot';
+  | 'office_bot'
+  | 'enterprise_portfolio';
 
 interface FlagRow {
   key: string;
@@ -63,6 +64,20 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   // decision, 2026-07-20 — "not important anymore"). Remote kill switch;
   // the screen stays in the tree, just no entry point.
   office_bot: false,
+  // Real-estate portfolio surface (CFO / COO / Director dashboards). OFF, and
+  // deliberately so — user decision 2026-08-03.
+  //
+  // It is a different product from the trades app, not an upmarket tier of it:
+  // GDV, IRR, NPV, equity multiple, cap rate, lender draw requests, investor
+  // updates. Nothing in it shares a data model or the pricing moat with the
+  // contractor product, 20 of 22 dashboard components are backed entirely by
+  // fixtures, and no real signup path can reach the roles anyway (signup always
+  // assigns 'contractor'). Frozen rather than deleted: it is a credible demo
+  // asset, and the demo accounts still need it.
+  //
+  // NOTE: 'site-lead' is NOT part of this. The uitvoerder is a real persona
+  // with 12 route screens and no mock data, and keeps working regardless.
+  enterprise_portfolio: false,
 };
 
 let memo: Record<string, FlagRow> = {};
