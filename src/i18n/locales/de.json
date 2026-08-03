@@ -5232,6 +5232,15 @@
     "amountLabel": "Betrag",
     "retentionLabel": "Einbehalt %",
     "save": "Speichern",
-    "scheduleInvalid": "Ratenplan ist ungültig"
+    "scheduleInvalid": "Ratenplan ist ungültig",
+    "retentionRelease": "Einbehalt-Freigabe",
+    "releaseRetention": "Einbehalt freigeben",
+    "releaseBlocked": "Noch nicht freizugeben",
+    "editTerm": "Rate bearbeiten",
+    "deleteTerm": "Löschen",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "lockedInvoiced": "Berechnete Raten können nicht mehr geändert werden",
+    "confirmDeleteTerm": "Rate löschen?"
   }
 }

@@ -5232,6 +5232,15 @@
     "amountLabel": "Importo",
     "retentionLabel": "Ritenuta %",
     "save": "Salva",
-    "scheduleInvalid": "Il piano rate non è valido"
+    "scheduleInvalid": "Il piano rate non è valido",
+    "retentionRelease": "Svincolo ritenuta",
+    "releaseRetention": "Svincola ritenuta",
+    "releaseBlocked": "Non ancora svincolabile",
+    "editTerm": "Modifica rata",
+    "deleteTerm": "Elimina",
+    "moveUp": "Sposta su",
+    "moveDown": "Sposta giù",
+    "lockedInvoiced": "Le rate fatturate non sono più modificabili",
+    "confirmDeleteTerm": "Eliminare questa rata?"
   }
 }

@@ -5232,6 +5232,15 @@
     "amountLabel": "Montant",
     "retentionLabel": "Retenue %",
     "save": "Enregistrer",
-    "scheduleInvalid": "Échéancier invalide"
+    "scheduleInvalid": "Échéancier invalide",
+    "retentionRelease": "Libération de la retenue",
+    "releaseRetention": "Libérer la retenue",
+    "releaseBlocked": "Pas encore libérable",
+    "editTerm": "Modifier l'échéance",
+    "deleteTerm": "Supprimer",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "lockedInvoiced": "Les échéances facturées ne sont plus modifiables",
+    "confirmDeleteTerm": "Supprimer cette échéance ?"
   }
 }

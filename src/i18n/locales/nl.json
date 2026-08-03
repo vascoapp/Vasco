@@ -5216,6 +5216,15 @@
     "amountLabel": "Bedrag",
     "retentionLabel": "Retentie %",
     "save": "Opslaan",
-    "scheduleInvalid": "Termijnschema klopt niet"
+    "scheduleInvalid": "Termijnschema klopt niet",
+    "retentionRelease": "Retentie vrijgave",
+    "releaseRetention": "Retentie vrijgeven",
+    "releaseBlocked": "Nog niet vrij te geven",
+    "editTerm": "Termijn bewerken",
+    "deleteTerm": "Verwijderen",
+    "moveUp": "Omhoog",
+    "moveDown": "Omlaag",
+    "lockedInvoiced": "Gefactureerde termijnen kun je niet meer wijzigen",
+    "confirmDeleteTerm": "Termijn verwijderen?"
   }
 }

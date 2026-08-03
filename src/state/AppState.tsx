@@ -213,6 +213,8 @@ type AppState = {
   addTermInvoice: (projectId: string, termId: string) => Promise<string>;
   /** Bill one meerwerk/minderwerk item on its own invoice. */
   addChangeOrderInvoice: (projectId: string, changeOrderId: string) => Promise<string>;
+  /** Release the retentie held on a project as a single invoice. */
+  addRetentionReleaseInvoice: (projectId: string) => Promise<string>;
   convertQuoteToJob: (quoteId: string) => Promise<string>;
   updateQuote: (id: string, updates: Partial<Quote>) => void;
   // Project mode (aannemer)
@@ -2885,6 +2887,91 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         return docNumber;
       },
 
+      // Release the retentie held on a project: one invoice for everything
+      // withheld across its instalments.
+      //
+      // The gate is the point of this mutator. Releasing early hands back the
+      // contractor's only leverage before the work is signed off, so it refuses
+      // unless the project is complete AND every term has been billed -- a
+      // project can be marked complete with an instalment still outstanding.
+      addRetentionReleaseInvoice: async (projectId: string) => {
+        const project = projects.find((p) => p.id === projectId);
+        if (!project) throw new Error(`Project ${projectId} not found`);
+
+        const [{ retentionHeld, canReleaseRetention }, i18nMod] = await Promise.all([
+          import('../services/progressBillingService'),
+          // AppState imports i18n lazily elsewhere too (see the queue-item
+          // notice path) rather than at module scope.
+          import('../i18n/i18n'),
+        ]);
+        const held = retentionHeld(projectId, invoices);
+        const gate = canReleaseRetention(project, held);
+        if (!gate.allowed) throw new Error(gate.reason ?? 'Retention cannot be released yet');
+
+        const docNumber = await nextDocumentNumber('invoice');
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+
+        const customer = customers.find((c) => c.id === project.customerId);
+        const customerName = customer?.name ?? '';
+
+        const newInvoice: Invoice = {
+          id: docNumber,
+          customer: customerName,
+          customerId: project.customerId || undefined,
+          customerName,
+          job: `${project.title} — ${i18nMod.default.t('projectBilling.retentionRelease', 'Retention release')}`,
+          amount: held,
+          status: 'draft',
+          dueInDays: 14,
+          projectId,
+          // Withholds nothing itself, and is what retentionHeld nets off so a
+          // released project stops reporting a balance.
+          retentionAmount: 0,
+          isRetentionRelease: true,
+        };
+        setInvoices((prev) => [newInvoice, ...prev]);
+
+        if (isSupabaseConfigured) {
+          const invPayload = {
+            doc_type: 'invoice' as const,
+            status: 'draft' as const,
+            document_number: docNumber,
+            customer_id: isUuid(project.customerId) ? project.customerId : null,
+            job_id: null,
+            total_amount: held,
+            due_date: dueDate.toISOString(),
+            project_id: isUuid(projectId) ? projectId : null,
+            retention_amount: 0,
+            is_retention_release: true,
+          };
+          try {
+            await withTimeout(createDocument(invPayload), 3000, 'addRetentionReleaseInvoice');
+          } catch (err) {
+            logWarn('AppState', `addRetentionReleaseInvoice persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
+            } catch {}
+          }
+        }
+
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({
+            type: 'invoice_created',
+            ref: docNumber,
+            payload: { amount: held, customer: project.customerId ?? null, projectId, retentionRelease: true },
+          }),
+        ).catch(() => {});
+        emitInvoiceSent(getCurrentUserId(), docNumber, {
+          customerId: project.customerId ?? '',
+          amount: held,
+          dueDate: dueDate.toISOString(),
+        }).catch(() => {});
+        trackEvent('invoice_created', { invoiceId: docNumber, projectId, retentionRelease: true }).catch(() => {});
+        return docNumber;
+      },
+
       convertQuoteToJob: async (quoteId: string) => {
         const quote = quotes.find((q) => q.id === quoteId);
         if (!quote) throw new Error(`Quote ${quoteId} not found`);
@@ -3501,7 +3588,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const project = projects.find(p => p.id === projectId);
         if (!project) return { projectId, revenue: 0, materialCosts: 0, laborCosts: 0, subcontractorCosts: 0, otherCosts: 0, grossProfit: 0, grossMargin: 0, budgetVariance: 0, budgetVariancePct: 0 };
         const projectJobs = jobs.filter(j => project.jobIds.includes(j.id));
-        const projectInvoices = invoices.filter((i: any) => project.invoiceIds?.includes(i.id));
+        // Match on EITHER linkage. `invoiceIds` is the original denormalised
+        // array; `invoice.projectId` is the column progress billing added, and
+        // term/change-order invoices carry it. Filtering on invoiceIds alone
+        // left every instalment out of project revenue, because the billing
+        // mutators link the other way round.
+        const projectInvoices = invoices.filter(
+          (i: any) => project.invoiceIds?.includes(i.id) || i.projectId === project.id,
+        );
         const revenue = projectInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
         const materialCosts = projectJobs.reduce((s, j) => {
           const mats = jobMaterialsMap[j.id] ?? [];

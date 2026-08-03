@@ -434,3 +434,40 @@ describe('change order validation', () => {
     expect(validateChangeOrders(project({ changeOrders: [order()] }))).toEqual([]);
   });
 });
+
+describe('the release invoice settles the balance', () => {
+  // The release invoice raised by addRetentionReleaseInvoice has
+  // amount = everything held and withholds nothing itself. Pinning the round
+  // trip stops a future change from letting a project be released twice.
+  const held = (invs: Partial<Invoice>[]) =>
+    retentionHeld(
+      'p1',
+      invs.map((o, i) => ({
+        id: `inv-${i}`, customer: 'c1', job: '', amount: 24000, status: 'sent',
+        dueInDays: 30, projectId: 'p1', retentionAmount: 1200, ...o,
+      })) as Invoice[],
+    );
+
+  it('drops the balance to zero once released', () => {
+    const before = held([{}, {}, {}]);
+    expect(before).toBe(3600);
+    const after = held([
+      {}, {}, {},
+      { amount: before, retentionAmount: 0, isRetentionRelease: true },
+    ]);
+    expect(after).toBe(0);
+  });
+
+  it('so a second release is refused', () => {
+    const p = project({
+      status: 'completed',
+      billingTerms: [term({ id: 'a', percent: 100, sortOrder: 1, status: 'paid' })],
+    });
+    expect(canReleaseRetention(p, 0).allowed).toBe(false);
+  });
+
+  it('never reports a negative balance if a release overshoots', () => {
+    // A hand-edited release should not make the project look owed-to.
+    expect(held([{}, { amount: 9999, retentionAmount: 0, isRetentionRelease: true }])).toBe(0);
+  });
+});

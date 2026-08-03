@@ -17,6 +17,7 @@ import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import type { ProjectStatus } from '../../../src/types/project';
+import { billingProgress } from '../../../src/services/progressBillingService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -42,6 +43,10 @@ export default function ProjectDetailScreen() {
 
   const project = useMemo(() => projects.find(p => p.id === id), [projects, id]);
   const pnl = useMemo(() => project ? getProjectPnL(project.id) : null, [project]);
+  const billing = useMemo(
+    () => (project ? billingProgress(project, invoices) : null),
+    [project, invoices],
+  );
   const projectJobs = useMemo(() => project ? jobs.filter(j => project.jobIds.includes(j.id)) : [], [project, jobs]);
   const unassignedJobs = useMemo(() => jobs.filter(j => !projects.some(p => p.jobIds.includes(j.id))), [jobs, projects]);
   const customer = useMemo(() => project ? customers.find(c => c.id === project.customerId) : null, [project, customers]);
@@ -188,6 +193,7 @@ export default function ProjectDetailScreen() {
         {/* Billing. Top-level on the project rather than inside the financial
             card: for an aannemer, raising the next termijn is the reason they
             open a project, not a sub-detail of a P&L readout. */}
+        {billing && (
         <FadeIn delay={120}>
           <Pressable
             style={styles.billingCta}
@@ -200,14 +206,19 @@ export default function ProjectDetailScreen() {
               </Text>
               <Text style={styles.billingCtaSub}>
                 {t('projectBilling.invoicedOf', {
-                  invoiced: formatCurrency0(project.totalInvoiced ?? 0, country),
-                  total: formatCurrency0(project.totalQuoted || project.totalBudget || 0, country),
+                  // Derived, not `project.totalInvoiced`: nothing maintains that
+                  // column, so it reads 0 however many instalments have been
+                  // billed. Same computation the billing screen uses, so the two
+                  // screens cannot disagree.
+                  invoiced: formatCurrency0(billing.invoiced, country),
+                  total: formatCurrency0(billing.contractValue, country),
                 })}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
           </Pressable>
         </FadeIn>
+        )}
 
         {/* Wires the existing site-lead drill-downs into the contractor view. */}
         <FadeIn delay={150}>

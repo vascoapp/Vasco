@@ -37,6 +37,7 @@ import {
   payableNow,
   validateBillingSchedule,
   canInvoiceChangeOrder,
+  canReleaseRetention,
 } from '../../../src/services/progressBillingService';
 import type { ProjectBillingTerm, ProjectChangeOrder } from '../../../src/types/project';
 
@@ -61,7 +62,10 @@ export default function ProjectBillingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { projects, invoices, updateProject, addTermInvoice, addChangeOrderInvoice } = useAppState();
+  const {
+    projects, invoices, updateProject,
+    addTermInvoice, addChangeOrderInvoice, addRetentionReleaseInvoice,
+  } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const money = useCallback((n: number) => formatCurrency(n, country), [country]);
@@ -71,6 +75,7 @@ export default function ProjectBillingScreen() {
   const [showTermForm, setShowTermForm] = useState(false);
   const [termTitle, setTermTitle] = useState('');
   const [termPercent, setTermPercent] = useState('');
+  const [editingTerm, setEditingTerm] = useState<ProjectBillingTerm | null>(null);
   const [showCoForm, setShowCoForm] = useState(false);
   const [coTitle, setCoTitle] = useState('');
   const [coAmount, setCoAmount] = useState('');
@@ -112,9 +117,7 @@ export default function ProjectBillingScreen() {
     };
     updateProject(project.id, { billingTerms: [...terms, next] });
     hapticSuccess();
-    setTermTitle('');
-    setTermPercent('');
-    setShowTermForm(false);
+    closeTermForm();
   };
 
   const saveChangeOrder = () => {
@@ -140,6 +143,73 @@ export default function ProjectBillingScreen() {
       changeOrders: changeOrders.map((c) => (c.id === orderId ? { ...c, ...patch } : c)),
     });
     hapticSuccess();
+  };
+
+  // Invoiced terms are historical facts: an issued invoice cannot be re-priced
+  // by editing the term behind it, so editing and deleting stop at that point.
+  const termLocked = (term: ProjectBillingTerm) =>
+    term.status === 'invoiced' || term.status === 'paid';
+
+  const persistTerms = (next: ProjectBillingTerm[]) => {
+    // Renumber so sortOrder stays dense and unique after a move or a delete --
+    // duplicates would make the billing order undefined, which the validator
+    // rejects.
+    updateProject(project.id, {
+      billingTerms: next.map((t, i) => ({ ...t, sortOrder: i + 1 })),
+    });
+    hapticSuccess();
+  };
+
+  const moveTerm = (index: number, delta: number) => {
+    const next = [...terms];
+    const target = index + delta;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    persistTerms(next);
+  };
+
+  const deleteTerm = (term: ProjectBillingTerm) => {
+    Alert.alert(t('projectBilling.confirmDeleteTerm', 'Delete this instalment?'), term.title, [
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      {
+        text: t('projectBilling.deleteTerm', 'Delete'),
+        style: 'destructive',
+        onPress: () => persistTerms(terms.filter((x) => x.id !== term.id)),
+      },
+    ]);
+  };
+
+  // The add and edit forms share `termTitle`/`termPercent`, so anything left
+  // behind by a cancelled edit would pre-fill the next "Add instalment".
+  const closeTermForm = () => {
+    setShowTermForm(false);
+    setEditingTerm(null);
+    setTermTitle('');
+    setTermPercent('');
+  };
+
+  const saveEditedTerm = () => {
+    if (!editingTerm) return;
+    const pct = Number(termPercent.replace(',', '.'));
+    if (!termTitle.trim() || !Number.isFinite(pct) || pct <= 0) return;
+    persistTerms(
+      terms.map((x) => (x.id === editingTerm.id ? { ...x, title: termTitle.trim(), percent: pct } : x)),
+    );
+    closeTermForm();
+  };
+
+  const releaseRetention = async () => {
+    const gate = canReleaseRetention(project, progress.retentionHeld);
+    if (!gate.allowed) {
+      Alert.alert(t('projectBilling.releaseBlocked', 'Not releasable yet'), gate.reason);
+      return;
+    }
+    try {
+      await addRetentionReleaseInvoice(project.id);
+      hapticSuccess();
+    } catch (err) {
+      Alert.alert(t('common.error', 'Error'), String(err instanceof Error ? err.message : err));
+    }
   };
 
   const invoiceTerm = async (term: ProjectBillingTerm) => {
@@ -216,6 +286,14 @@ export default function ProjectBillingScreen() {
                 <Text style={styles.retentionText}>
                   {t('projectBilling.retentionHeld', 'Retention held')}: {money(progress.retentionHeld)}
                 </Text>
+                {/* Shown whether or not it is releasable: a contractor should be
+                    able to see WHY it is still held, so the blocked tap explains
+                    rather than the button simply being absent. */}
+                <Pressable style={styles.releaseBtn} onPress={releaseRetention} hitSlop={8}>
+                  <Text style={styles.releaseBtnText}>
+                    {t('projectBilling.releaseRetention', 'Release retention')}
+                  </Text>
+                </Pressable>
               </View>
             )}
           </View>
@@ -244,7 +322,7 @@ export default function ProjectBillingScreen() {
             </Text>
           </View>
         ) : (
-          terms.map((term) => {
+          terms.map((term, index) => {
             const full = termAmount(project, term);
             const withheld = retentionForTerm(project, term);
             const now = payableNow(project, term);
@@ -264,6 +342,38 @@ export default function ProjectBillingScreen() {
                       {t('projectBilling.payableNow', 'Payable now')} {money(now)} —{' '}
                       {t('projectBilling.withheld', { amount: money(withheld) })}
                     </Text>
+                  )}
+                  {!termLocked(term) && (
+                    <View style={styles.termControls}>
+                      <Pressable
+                        style={styles.termControlBtn}
+                        hitSlop={8}
+                        onPress={() => {
+                          setEditingTerm(term);
+                          setTermTitle(term.title);
+                          setTermPercent(String(term.percent ?? ''));
+                        }}
+                      >
+                        <Ionicons name="create-outline" size={16} color={SemanticColors.textSecondary} />
+                      </Pressable>
+                      <Pressable style={styles.termControlBtn} hitSlop={8} onPress={() => moveTerm(index, -1)}>
+                        <Ionicons
+                          name="arrow-up"
+                          size={16}
+                          color={index === 0 ? SemanticColors.textTertiary : SemanticColors.textSecondary}
+                        />
+                      </Pressable>
+                      <Pressable style={styles.termControlBtn} hitSlop={8} onPress={() => moveTerm(index, 1)}>
+                        <Ionicons
+                          name="arrow-down"
+                          size={16}
+                          color={index === terms.length - 1 ? SemanticColors.textTertiary : SemanticColors.textSecondary}
+                        />
+                      </Pressable>
+                      <Pressable style={styles.termControlBtn} hitSlop={8} onPress={() => deleteTerm(term)}>
+                        <Ionicons name="trash-outline" size={16} color={SemanticColors.feedbackError} />
+                      </Pressable>
+                    </View>
                   )}
                 </View>
                 <View style={styles.rowRight}>
@@ -362,10 +472,19 @@ export default function ProjectBillingScreen() {
       </ScrollView>
 
       {/* Add instalment */}
-      <Modal visible={showTermForm} transparent animationType="slide" onRequestClose={() => setShowTermForm(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowTermForm(false)}>
+      <Modal
+        visible={showTermForm || editingTerm !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={closeTermForm}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeTermForm}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-            <Text style={styles.modalTitle}>{t('projectBilling.addTerm', 'Add instalment')}</Text>
+            <Text style={styles.modalTitle}>
+              {editingTerm
+                ? t('projectBilling.editTerm', 'Edit instalment')
+                : t('projectBilling.addTerm', 'Add instalment')}
+            </Text>
             <TextInput
               style={styles.input}
               value={termTitle}
@@ -381,7 +500,7 @@ export default function ProjectBillingScreen() {
               placeholder={t('projectBilling.percentLabel', 'Percentage')}
               placeholderTextColor={SemanticColors.textTertiary}
             />
-            <Pressable style={styles.saveBtn} onPress={saveTerm}>
+            <Pressable style={styles.saveBtn} onPress={editingTerm ? saveEditedTerm : saveTerm}>
               <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
             </Pressable>
           </Pressable>
@@ -440,7 +559,14 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },
   retentionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: GRID.sm },
-  retentionText: { fontSize: TYPE.captionSize, color: Palette.hermesOrange },
+  retentionText: { fontSize: TYPE.captionSize, color: Palette.hermesOrange, flex: 1 },
+  releaseBtn: {
+    paddingHorizontal: GRID.sm, paddingVertical: 4, borderRadius: RADIUS.sm,
+    backgroundColor: Palette.hermesOrange + '18',
+  },
+  releaseBtnText: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  termControls: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, marginTop: GRID.xs },
+  termControlBtn: { padding: 2 },
 
   sectionHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

@@ -5232,6 +5232,15 @@
     "amountLabel": "Amount",
     "retentionLabel": "Retention %",
     "save": "Save",
-    "scheduleInvalid": "Instalment schedule is invalid"
+    "scheduleInvalid": "Instalment schedule is invalid",
+    "retentionRelease": "Retention release",
+    "releaseRetention": "Release retention",
+    "releaseBlocked": "Not releasable yet",
+    "editTerm": "Edit instalment",
+    "deleteTerm": "Delete",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "lockedInvoiced": "Invoiced instalments can no longer be changed",
+    "confirmDeleteTerm": "Delete this instalment?"
   }
 }

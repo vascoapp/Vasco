@@ -5232,6 +5232,15 @@
     "amountLabel": "Importe",
     "retentionLabel": "Retención %",
     "save": "Guardar",
-    "scheduleInvalid": "El calendario de plazos no es válido"
+    "scheduleInvalid": "El calendario de plazos no es válido",
+    "retentionRelease": "Liberación de retención",
+    "releaseRetention": "Liberar retención",
+    "releaseBlocked": "Aún no liberable",
+    "editTerm": "Editar plazo",
+    "deleteTerm": "Eliminar",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "lockedInvoiced": "Los plazos facturados ya no se pueden cambiar",
+    "confirmDeleteTerm": "¿Eliminar este plazo?"
   }
 }
