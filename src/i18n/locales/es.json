@@ -4041,6 +4041,12 @@
       "name": "Comprobación de permisos",
       "description": "Comprueba automáticamente los permisos exigidos por país en cada trabajo nuevo",
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
+    },
+    "appointment": {
+      "name": "Recordatorio de cita",
+      "description": "Recuerda al cliente el día antes y confirma la mañana de la visita",
+      "dayBefore": "El día antes",
+      "morningOf": "La mañana de"
     }
   },
   "mollie": {

@@ -4041,6 +4041,12 @@
       "name": "Permit Check",
       "description": "Automatically check required permits per country on a new job",
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
+    },
+    "appointment": {
+      "name": "Appointment Reminder",
+      "description": "Remind the customer the day before and confirm on the morning of the visit",
+      "dayBefore": "Day before",
+      "morningOf": "Morning of"
     }
   },
   "mollie": {

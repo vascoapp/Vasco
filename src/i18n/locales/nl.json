@@ -4067,6 +4067,12 @@
       "name": "Vergunning Check",
       "description": "Automatisch controleren van vereiste vergunningen per land bij nieuwe klus",
       "check": "Vergunningscheck voor {{job}}: {{permitCount}} vereisten gevonden voor {{country}}."
+    },
+    "appointment": {
+      "name": "Afspraak Herinnering",
+      "description": "Herinner de klant een dag vooraf en bevestig 's ochtends dat je komt",
+      "dayBefore": "Morgen",
+      "morningOf": "Ochtend van de afspraak"
     }
   },
   "mollie": {

@@ -4041,6 +4041,12 @@
       "name": "Vérification des autorisations",
       "description": "Vérifier automatiquement les autorisations requises par pays pour un nouveau chantier",
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
+    },
+    "appointment": {
+      "name": "Rappel de rendez-vous",
+      "description": "Rappelez au client la veille et confirmez le matin de l'intervention",
+      "dayBefore": "La veille",
+      "morningOf": "Le matin même"
     }
   },
   "mollie": {

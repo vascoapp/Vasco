@@ -381,4 +381,65 @@ describe('workflowPackService', () => {
       expect(resolvePackDescription({ id: 'made_up', description: 'Desc' })).toBe('Desc');
     });
   });
+
+  // ─── Appointment reminders (job_scheduled) ────────────────────────────────
+  // Every other trigger looks BACKWARDS at something that already happened.
+  // This one looks forward, so the cases worth pinning are the ones that would
+  // send a customer the wrong thing: a reminder for cancelled work, a reminder
+  // on the wrong day, or one with nobody to send it to.
+  describe('appointment reminder trigger', () => {
+    const dayKey = (offset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+
+    const ctx = (jobs: any[]) => ({
+      invoices: [], quotes: [], jobs,
+      customers: [{ id: 'c1', name: 'Familie de Vries' }],
+    });
+
+    const job = (over: any = {}) => ({
+      id: 'j1', title: 'Badkamer', customerId: 'c1', status: 'scheduled',
+      scheduledDate: dayKey(1), scheduledStartTime: '09:00', ...over,
+    });
+
+    beforeEach(() => clearStorage());
+
+    async function queuedTitles(jobs: any[]) {
+      mockAddToQueue.mockClear();
+      const pack = DEFAULT_PACKS.find((p) => p.id === 'afspraak_herinnering')!;
+      await saveWorkflowPacks([{ ...pack, enabled: true }]);
+      await evaluateTriggers(ctx(jobs) as any);
+      return mockAddToQueue.mock.calls.map((c: any[]) => String(c[0].title));
+    }
+
+    it('reminds the customer the day before', async () => {
+      const titles = await queuedTitles([job({ scheduledDate: dayKey(1) })]);
+      expect(titles.length).toBeGreaterThan(0);
+    });
+
+    it('does not remind about a cancelled visit', async () => {
+      // "See you tomorrow" for work that was called off is worse than silence.
+      expect(await queuedTitles([job({ status: 'cancelled' })])).toHaveLength(0);
+    });
+
+    it('does not remind about work already finished', async () => {
+      expect(await queuedTitles([job({ status: 'completed' })])).toHaveLength(0);
+    });
+
+    it('ignores a visit that is not on the target day', async () => {
+      expect(await queuedTitles([job({ scheduledDate: dayKey(5) })])).toHaveLength(0);
+    });
+
+    it('skips a job with no customer to remind', async () => {
+      // Queueing it would hand the contractor an action they cannot send.
+      expect(await queuedTitles([job({ customerId: 'nobody' })])).toHaveLength(0);
+    });
+
+    it('skips a job with no scheduled date at all', async () => {
+      expect(await queuedTitles([job({ scheduledDate: undefined })])).toHaveLength(0);
+    });
+  });
 });

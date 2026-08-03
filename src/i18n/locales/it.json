@@ -4041,6 +4041,12 @@
       "name": "Verifica dei permessi",
       "description": "Controlla automaticamente i permessi richiesti per paese a ogni nuovo lavoro",
       "check": "Permit check for {{job}}: {{permitCount}} requirements found for {{country}}."
+    },
+    "appointment": {
+      "name": "Promemoria appuntamento",
+      "description": "Ricorda al cliente il giorno prima e conferma la mattina dell'intervento",
+      "dayBefore": "Il giorno prima",
+      "morningOf": "La mattina stessa"
     }
   },
   "mollie": {

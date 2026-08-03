@@ -268,6 +268,46 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
     ],
   },
   {
+    id: 'afspraak_herinnering',
+    name: 'Afspraak Herinnering',
+    description: "Herinner de klant een dag vooraf en bevestig 's ochtends dat je komt",
+    icon: 'alarm-outline',
+    category: 'customer',
+    customizable: true,
+    // ON by default. A customer who is not home is a wasted trip for the
+    // contractor and the most common complaint about trades in general; every
+    // comparable product (Jobber, Housecall Pro) sends these as standard, and
+    // a contractor has to opt OUT of professional rather than in.
+    enabled: true,
+    steps: [
+      {
+        // delayDays is negative for job_scheduled: -1 = the day before.
+        trigger: 'job_scheduled', delayDays: -1, action: 'send_appointment_reminder', channel: 'sms',
+        i18nKey: 'workflowPacks.appointment.dayBefore',
+        template: 'Hoi {{customer}}, morgen om {{time}} komen we langs voor {{job}}. Schikt dat nog?',
+        defaults: {
+          en: 'Hi {{customer}}, we are coming tomorrow at {{time}} for {{job}}. Does that still suit you?',
+          de: 'Hallo {{customer}}, wir kommen morgen um {{time}} für {{job}}. Passt das noch?',
+          fr: 'Bonjour {{customer}}, nous passons demain à {{time}} pour {{job}}. Cela vous convient toujours ?',
+          es: 'Hola {{customer}}, pasamos mañana a las {{time}} para {{job}}. ¿Te sigue viniendo bien?',
+          it: 'Ciao {{customer}}, passiamo domani alle {{time}} per {{job}}. Ti va ancora bene?',
+        },
+      },
+      {
+        trigger: 'job_scheduled', delayDays: 0, action: 'send_on_my_way', channel: 'sms',
+        i18nKey: 'workflowPacks.appointment.morningOf',
+        template: 'Goedemorgen {{customer}}, we komen vandaag om {{time}} voor {{job}}. Tot straks!',
+        defaults: {
+          en: 'Good morning {{customer}}, we are coming today at {{time}} for {{job}}. See you soon!',
+          de: 'Guten Morgen {{customer}}, wir kommen heute um {{time}} für {{job}}. Bis gleich!',
+          fr: 'Bonjour {{customer}}, nous venons aujourd\'hui à {{time}} pour {{job}}. À tout à l\'heure !',
+          es: 'Buenos días {{customer}}, vamos hoy a las {{time}} para {{job}}. ¡Hasta ahora!',
+          it: 'Buongiorno {{customer}}, veniamo oggi alle {{time}} per {{job}}. A presto!',
+        },
+      },
+    ],
+  },
+  {
     id: 'offerte_opvolging',
     name: 'Offerte Opvolging',
     description: 'Automatisch opvolgen na 3 en 7 dagen zonder reactie',
@@ -626,6 +666,7 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
 
 export const PACK_I18N_NS: Record<string, string> = {
   incasso_auto: 'incasso',
+  afspraak_herinnering: 'appointment',
   offerte_opvolging: 'quoteFollowup',
   onderhoud_herinnering: 'maintenance',
   einde_dag: 'endOfDay',
@@ -859,7 +900,12 @@ interface TriggerContext {
   // and sent a raw row id to customers — the type hid the mistake.
   invoices: Array<{ id: string; status?: string; amount?: number; total?: number; customer?: string; customerId?: string; sentAt?: string; createdAt?: string; lastUpdated?: string; dueDate?: string; reference?: string; invoiceNumber?: string }>;
   quotes: Array<{ id: string; status?: string; amount?: number; customer?: string; customerId?: string; sentAt?: string; createdAt?: string; lastUpdated?: string; description?: string; job?: string }>;
-  jobs: Array<{ id: string; status?: string; title?: string; customerId?: string | null; completedAt?: string; lastUpdated?: string; trade?: string }>;
+  // `scheduledDate` / `scheduledStartTime` were absent, which is why no pack
+  // could fire BEFORE a visit — every trigger keyed off invoice/quote state or
+  // a job that had already started or finished. The call site
+  // (app/(contractor)/index.tsx) has always passed AppState jobs, which carry
+  // both; only this type and the switch below omitted them.
+  jobs: Array<{ id: string; status?: string; title?: string; customerId?: string | null; completedAt?: string; lastUpdated?: string; trade?: string; scheduledDate?: string; scheduledStartTime?: string; address?: unknown }>;
   // R66r49 #6: phone added so evaluateTriggers can resolve customer.phone →
   // E.164 → wa.me URL, queueing into preparedData.affiliateUrl. The shareable
   // executor branch then prefers Linking.openURL over Share.share when the
@@ -1099,11 +1145,11 @@ function matchTrigger(
   step: WorkflowStep,
   ctx: TriggerContext,
   now: number,
-): { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string; permitCount?: number; country?: string }[] {
+): { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string; permitCount?: number; country?: string; time?: string; date?: string }[] {
   const dayMs = MS_PER_DAY;
   // 2-day window so triggers aren't missed if the app isn't opened for a day
   const windowMs = 2 * dayMs;
-  const results: { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string; permitCount?: number; country?: string }[] = [];
+  const results: { label: string; customerId?: string; entityId?: string; customer?: string; amount?: number; job?: string; invoice?: string; permitCount?: number; country?: string; time?: string; date?: string }[] = [];
 
   switch (step.trigger) {
     case 'invoice_sent': {
@@ -1173,6 +1219,48 @@ function matchTrigger(
             job: q.description || q.job || '',
           });
         }
+      }
+      break;
+    }
+    case 'job_scheduled': {
+      // Fires BEFORE the visit. `delayDays` is negative here and means "this
+      // many days ahead": -1 is the day before, 0 is the morning of.
+      //
+      // Every other trigger in this switch looks backwards at something that
+      // already happened. This one looks forward, which is what an appointment
+      // reminder needs and why none existed.
+      const daysAhead = Math.abs(step.delayDays);
+      const today = new Date();
+      const targetKey = new Date(today.getFullYear(), today.getMonth(), today.getDate() + daysAhead);
+      // Compare on the LOCAL calendar day. toISOString() would shift the day
+      // between midnight and the UTC offset -- the same bug the werk/planning
+      // split had (see localDateKey in utils/dateKey).
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const wanted = `${targetKey.getFullYear()}-${pad(targetKey.getMonth() + 1)}-${pad(targetKey.getDate())}`;
+
+      for (const job of ctx.jobs) {
+        if (!job?.scheduledDate) continue;
+        // Only work that is still going to happen. A cancelled or already
+        // finished job must never trigger "see you tomorrow".
+        if (job.status === 'cancelled' || job.status === 'completed') continue;
+        if (job.scheduledDate.slice(0, 10) !== wanted) continue;
+
+        const cust = (ctx.customers ?? []).find((c: any) => c.id === job.customerId);
+        // No customer means nobody to remind; queueing it would produce an
+        // action the contractor cannot send.
+        if (!cust) continue;
+
+        results.push({
+          label: cust.name || job.title || '',
+          customerId: job.customerId ?? undefined,
+          entityId: job.id,
+          customer: cust.name || '',
+          job: job.title || '',
+          // Customer-facing: the time they should expect someone, not a raw
+          // timestamp. Falls back to the date alone when no start time is set.
+          time: job.scheduledStartTime || '',
+          date: job.scheduledDate.slice(0, 10),
+        });
       }
       break;
     }
