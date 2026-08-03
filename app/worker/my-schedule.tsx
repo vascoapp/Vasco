@@ -23,6 +23,7 @@ import { useClockIn } from '../../src/services/clockInService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
+import { openDirections, formatDestination } from '../../src/utils/directions';
 import { todayKey } from '../../src/utils/dateKey';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -36,6 +37,9 @@ interface WorkerJob {
   title: string;
   customer: string;
   address: string;
+  /** Structured address, for directions. The display string above is
+   *  street-only and would navigate to the wrong Kerkstraat. */
+  addressFull?: any;
   startTime: string;
   endTime: string;
   status: 'upcoming' | 'active' | 'completed';
@@ -90,6 +94,7 @@ export default function MyScheduleScreen() {
           title: j.title,
           customer: cust?.name || '',
           address: j.address?.street || j.address || '',
+          addressFull: j.address,
           startTime: j.scheduledStartTime || '09:00',
           endTime: j.scheduledEndTime || '17:00',
           status,
@@ -250,6 +255,21 @@ export default function MyScheduleScreen() {
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={SemanticColors.textDisabled} />
                       <Text style={styles.jobAddress} numberOfLines={1}>{job.address}</Text>
+                      {/* The crew member standing at the van is who needs this
+                          most; retyping an address into maps is the daily
+                          friction Jobber's route sheets remove. */}
+                      {formatDestination(job.addressFull) ? (
+                        <Pressable
+                          hitSlop={8}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('jobs.directions', 'Directions')}
+                          onPress={(e) => { e.stopPropagation?.(); openDirections(job.addressFull); }}
+                          style={styles.workerDirectionsBtn}
+                        >
+                          <Ionicons name="navigate" size={12} color={Palette.hermesOrange} />
+                          <Text style={styles.workerDirectionsText}>{t('jobs.directions', 'Directions')}</Text>
+                        </Pressable>
+                      ) : null}
                     </View>
 
                     {/* Clock in/out button */}
@@ -294,6 +314,13 @@ export default function MyScheduleScreen() {
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
+  workerDirectionsBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 6, paddingVertical: 3, borderRadius: RADIUS.sm,
+    backgroundColor: Palette.hermesOrange + '18',
+    flexShrink: 0,
+  },
+  workerDirectionsText: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
   container: {
     flex: 1,
     backgroundColor: PAGE_BG,

@@ -510,7 +510,8 @@
     "photoAdded": "Foto aggiunta",
     "photoAddedDesc": "Foto {{count}} acquisita e salvata.",
     "photoLibrary": "Galleria foto",
-    "orderedDescNoSupplier": "{{name}} è stato ordinato."
+    "orderedDescNoSupplier": "{{name}} è stato ordinato.",
+    "directions": "Indicazioni"
   },
   "compliance": {
     "manageInsurance": "Gestisci assicurazioni e sinistri",

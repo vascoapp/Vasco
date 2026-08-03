@@ -494,7 +494,8 @@
     "photoAdded": "Foto toegevoegd",
     "photoAddedDesc": "Foto {{count}} gemaakt en opgeslagen.",
     "photoLibrary": "Fotobibliotheek",
-    "orderedDescNoSupplier": "{{name}} is besteld."
+    "orderedDescNoSupplier": "{{name}} is besteld.",
+    "directions": "Route"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",

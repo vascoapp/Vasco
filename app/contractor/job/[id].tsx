@@ -34,6 +34,7 @@ import { useJobCostVariance } from '../../../src/services/jobCostTrackingService
 import { getCohortCostVariance, type CohortCostVariance } from '../../../src/services/costVarianceMoatService';
 import { usePostcodeCohort } from '../../../src/services/cohortBenchmarkService';
 import { useAppState } from '../../../src/state/AppState';
+import { openDirections, formatDestination } from '../../../src/utils/directions';
 import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor/PhotoGallery';
 import { showPhotoPicker } from '../../../src/utils/photoPicker';
 import JobComments from '../../../src/components/contractor/JobComments';
@@ -200,6 +201,10 @@ export default function JobDetailPage() {
       customerName: cust?.name || '',
       customerId: appJob.customerId,
       address: appJob.address?.street || '',
+      // The full object, kept so directions can use postcode + city. The
+      // display string above is street-only, which reads fine next to a
+      // customer name but would navigate a van to the wrong Kerkstraat.
+      addressFull: appJob.address,
       type: appJob.trade || 'general',
       startTime: appJob.scheduledDate ? `${appJob.scheduledDate}T${appJob.scheduledStartTime || '09:00'}` : new Date().toISOString(),
       endTime: appJob.scheduledDate ? `${appJob.scheduledDate}T${appJob.scheduledEndTime || '17:00'}` : new Date().toISOString(),
@@ -443,6 +448,20 @@ export default function JobDetailPage() {
                   <Ionicons name="location" size={14} color={Palette.hermesOrange} />
                 </View>
                 <Text style={styles.heroDetailText} numberOfLines={2}>{job.address}</Text>
+                {/* Hidden when there is nothing to navigate to, rather than
+                    offering a button that silently does nothing. */}
+                {formatDestination((job as any).addressFull) ? (
+                  <Pressable
+                    style={styles.directionsBtn}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('jobs.directions', 'Directions')}
+                    onPress={() => { hapticSuccess(); openDirections((job as any).addressFull); }}
+                  >
+                    <Ionicons name="navigate" size={13} color={Palette.hermesOrange} />
+                    <Text style={styles.directionsBtnText}>{t('jobs.directions', 'Directions')}</Text>
+                  </Pressable>
+                ) : null}
               </View>
             ) : null}
             {job.travelTime && (
@@ -1283,6 +1302,13 @@ export default function JobDetailPage() {
 // ============================================
 
 const styles = StyleSheet.create({
+  directionsBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm,
+    backgroundColor: Palette.hermesOrange + '18',
+    flexShrink: 0,
+  },
+  directionsBtnText: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
   container: {
     flex: 1,
     backgroundColor: PAGE_BG,

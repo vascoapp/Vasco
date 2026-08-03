@@ -510,7 +510,8 @@
     "photoAdded": "Photo added",
     "photoAddedDesc": "Photo {{count}} captured and saved.",
     "photoLibrary": "Photo Library",
-    "orderedDescNoSupplier": "{{name}} has been ordered."
+    "orderedDescNoSupplier": "{{name}} has been ordered.",
+    "directions": "Directions"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",

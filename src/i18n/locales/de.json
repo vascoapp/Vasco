@@ -510,7 +510,8 @@
     "photoAdded": "Foto hinzugefügt",
     "photoAddedDesc": "Foto {{count}} aufgenommen und gespeichert.",
     "photoLibrary": "Fotomediathek",
-    "orderedDescNoSupplier": "{{name}} wurde bestellt."
+    "orderedDescNoSupplier": "{{name}} wurde bestellt.",
+    "directions": "Route"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
