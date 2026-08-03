@@ -5162,5 +5162,22 @@
     "tabChat": "Chat",
     "tabInsights": "Inzichten",
     "tabSuggestions": "Suggesties"
+  },
+  "budgetOptimizer": {
+    "analysing": "Budget analyseren...",
+    "analysingSub": "Marktdata ophalen en optimalisaties berekenen",
+    "totalBudget": "Totaal budget",
+    "lines": "Regels",
+    "categories": "Categorieën",
+    "heroCaption_one": "AI-analyse van {{count}} begrotingsregel",
+    "heroCaption_other": "AI-analyse van {{count}} begrotingsregels",
+    "noOptimizations": "Geen optimalisaties gevonden",
+    "viewAllTips": "Bekijk alle inkooptips",
+    "viewAllTipsSub": "Prijsalerts, trends & besteladvies",
+    "filterAll": "Alle",
+    "optimizationsCount": "Optimalisaties ({{count}})",
+    "noResults": "Geen resultaten gevonden",
+    "total": "Totaal",
+    "currentTotal": "Huidig totaal"
   }
 }

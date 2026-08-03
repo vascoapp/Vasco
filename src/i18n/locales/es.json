@@ -5178,5 +5178,22 @@
     "tabChat": "Chat",
     "tabInsights": "Ideas",
     "tabSuggestions": "Sugerencias"
+  },
+  "budgetOptimizer": {
+    "analysing": "Analizando el presupuesto...",
+    "analysingSub": "Obteniendo datos de mercado y calculando optimizaciones",
+    "totalBudget": "Presupuesto total",
+    "lines": "Líneas",
+    "categories": "Categorías",
+    "heroCaption_one": "Análisis IA de {{count}} línea de presupuesto",
+    "heroCaption_other": "Análisis IA de {{count}} líneas de presupuesto",
+    "noOptimizations": "No se han encontrado optimizaciones",
+    "viewAllTips": "Ver todos los consejos de compra",
+    "viewAllTipsSub": "Alertas de precio, tendencias y consejos de pedido",
+    "filterAll": "Todos",
+    "optimizationsCount": "Optimizaciones ({{count}})",
+    "noResults": "No se han encontrado resultados",
+    "total": "Total",
+    "currentTotal": "Total actual"
   }
 }

@@ -5178,5 +5178,22 @@
     "tabChat": "Chat",
     "tabInsights": "Insights",
     "tabSuggestions": "Suggestions"
+  },
+  "budgetOptimizer": {
+    "analysing": "Analysing budget...",
+    "analysingSub": "Fetching market data and calculating optimisations",
+    "totalBudget": "Total budget",
+    "lines": "Lines",
+    "categories": "Categories",
+    "heroCaption_one": "AI analysis of {{count}} budget line",
+    "heroCaption_other": "AI analysis of {{count}} budget lines",
+    "noOptimizations": "No optimisations found",
+    "viewAllTips": "See all purchasing tips",
+    "viewAllTipsSub": "Price alerts, trends and ordering advice",
+    "filterAll": "All",
+    "optimizationsCount": "Optimisations ({{count}})",
+    "noResults": "No results found",
+    "total": "Total",
+    "currentTotal": "Current total"
   }
 }

@@ -5178,5 +5178,22 @@
     "tabChat": "Chat",
     "tabInsights": "Erkenntnisse",
     "tabSuggestions": "Vorschläge"
+  },
+  "budgetOptimizer": {
+    "analysing": "Budget wird analysiert...",
+    "analysingSub": "Marktdaten abrufen und Optimierungen berechnen",
+    "totalBudget": "Gesamtbudget",
+    "lines": "Positionen",
+    "categories": "Kategorien",
+    "heroCaption_one": "KI-Analyse von {{count}} Budgetposition",
+    "heroCaption_other": "KI-Analyse von {{count}} Budgetpositionen",
+    "noOptimizations": "Keine Optimierungen gefunden",
+    "viewAllTips": "Alle Einkaufstipps ansehen",
+    "viewAllTipsSub": "Preisalarme, Trends und Bestellempfehlungen",
+    "filterAll": "Alle",
+    "optimizationsCount": "Optimierungen ({{count}})",
+    "noResults": "Keine Ergebnisse gefunden",
+    "total": "Gesamt",
+    "currentTotal": "Aktueller Gesamtbetrag"
   }
 }

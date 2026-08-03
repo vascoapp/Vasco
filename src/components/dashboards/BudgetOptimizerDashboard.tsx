@@ -276,6 +276,13 @@ export default function BudgetOptimizerDashboard({
   const projectName = optimizer.extractionResult?.projectName ?? MOCK_PROJECTS[selectedProjectIdx];
   const totalBudget = optimizer.extractionResult?.totalBudget ?? 0;
   const lineCount = optimizer.extractionResult?.lines.length ?? 0;
+  // Was a literal `8` in the hero stats, next to a real budget total and a real
+  // line count -- so two thirds of the row responded to the file and one third
+  // did not, whatever the workbook actually contained.
+  const categoryCount = useMemo(() => {
+    const lines = optimizer.extractionResult?.lines ?? [];
+    return new Set(lines.map((l) => l.category || 'Overig')).size;
+  }, [optimizer.extractionResult]);
 
   // Action types present in active scenario
   const actionTypes = useMemo(() => {
@@ -359,9 +366,9 @@ export default function BudgetOptimizerDashboard({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={ACCENT} />
-        <Text style={styles.loadingText}>Budget analyseren...</Text>
+        <Text style={styles.loadingText}>{t('budgetOptimizer.analysing', 'Analysing budget...')}</Text>
         <Text style={styles.loadingSubtext}>
-          Marktdata ophalen en optimalisaties berekenen
+          {t('budgetOptimizer.analysingSub', 'Fetching market data and calculating optimisations')}
         </Text>
       </View>
     );
@@ -444,21 +451,21 @@ export default function BudgetOptimizerDashboard({
           <View style={styles.heroStats}>
             <View style={styles.heroStat}>
               <Text style={styles.heroStatValue}>{fmtCompact(totalBudget)}</Text>
-              <Text style={styles.heroStatLabel}>Totaal budget</Text>
+              <Text style={styles.heroStatLabel}>{t('budgetOptimizer.totalBudget', 'Total budget')}</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
               <Text style={styles.heroStatValue}>{lineCount}</Text>
-              <Text style={styles.heroStatLabel}>Regels</Text>
+              <Text style={styles.heroStatLabel}>{t('budgetOptimizer.lines', 'Lines')}</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatValue}>8</Text>
-              <Text style={styles.heroStatLabel}>Categorieën</Text>
+              <Text style={styles.heroStatValue}>{categoryCount}</Text>
+              <Text style={styles.heroStatLabel}>{t('budgetOptimizer.categories', 'Categories')}</Text>
             </View>
           </View>
           <Text style={styles.heroCaption}>
-            AI-analyse van {lineCount} begrotingsregels
+            {t('budgetOptimizer.heroCaption', { count: lineCount })}
           </Text>
         </View>
       )}
@@ -600,7 +607,7 @@ export default function BudgetOptimizerDashboard({
                   </Pressable>
                 ))}
                 {catOpts.length === 0 && !tcoMatch && matchedSupplierWins.length === 0 && (
-                  <Text style={styles.catBarNoOpts}>Geen optimalisaties gevonden</Text>
+                  <Text style={styles.catBarNoOpts}>{t('budgetOptimizer.noOptimizations', 'No optimisations found')}</Text>
                 )}
               </View>
             );
@@ -711,8 +718,8 @@ export default function BudgetOptimizerDashboard({
           <Ionicons name="cart" size={18} color={SemanticColors.feedbackSuccess} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.enrichItemTitle}>Bekijk alle inkooptips</Text>
-          <Text style={styles.enrichItemSubtitle}>Prijsalerts, trends & besteladvies</Text>
+          <Text style={styles.enrichItemTitle}>{t('budgetOptimizer.viewAllTips', 'See all purchasing tips')}</Text>
+          <Text style={styles.enrichItemSubtitle}>{t('budgetOptimizer.viewAllTipsSub', 'Price alerts, trends and ordering advice')}</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
       </Pressable>
@@ -770,7 +777,7 @@ export default function BudgetOptimizerDashboard({
             style={[styles.chip, !filterAction && [styles.chipActive, { backgroundColor: ACCENT }]]}
             onPress={() => setFilterAction(null)}
           >
-            <Text style={[styles.chipText, !filterAction && styles.chipTextActive]}>Alle</Text>
+            <Text style={[styles.chipText, !filterAction && styles.chipTextActive]}>{t('budgetOptimizer.filterAll', 'All')}</Text>
           </Pressable>
           {actionTypes.map((type) => (
             <Pressable
@@ -836,7 +843,7 @@ export default function BudgetOptimizerDashboard({
                   {catOptimizations.length > 0 && (
                     <View style={styles.detailOptSection}>
                       <Text style={styles.detailOptTitle}>
-                        Optimalisaties ({catOptimizations.length})
+                        {t('budgetOptimizer.optimizationsCount', { count: catOptimizations.length })}
                       </Text>
                       {catOptimizations.map((opt) => {
                         const isApproved = approvals.get(opt.costCode) === true;
@@ -905,7 +912,7 @@ export default function BudgetOptimizerDashboard({
         {filteredCategories.length === 0 && (
           <View style={styles.emptyState}>
             <Ionicons name="document-text" size={40} color={SemanticColors.textTertiary} />
-            <Text style={styles.emptyStateText}>Geen resultaten gevonden</Text>
+            <Text style={styles.emptyStateText}>{t('budgetOptimizer.noResults', 'No results found')}</Text>
           </View>
         )}
       </>
@@ -969,7 +976,7 @@ export default function BudgetOptimizerDashboard({
                   </Text>
                 </View>
                 <View style={styles.modalRow}>
-                  <Text style={styles.modalLabel}>Totaal</Text>
+                  <Text style={styles.modalLabel}>{t('budgetOptimizer.total', 'Total')}</Text>
                   <Text style={[styles.modalValue, { fontWeight: '700' }]}>
                     {fmt(Math.round(detailLine.total))}
                   </Text>
@@ -1038,7 +1045,7 @@ export default function BudgetOptimizerDashboard({
                     Besparingspotentieel
                   </Text>
                   <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Huidig totaal</Text>
+                    <Text style={styles.modalLabel}>{t('budgetOptimizer.currentTotal', 'Current total')}</Text>
                     <Text style={styles.modalValue}>
                       {fmt(Math.round(sp.currentTotal))}
                     </Text>
