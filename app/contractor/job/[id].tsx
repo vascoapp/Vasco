@@ -1013,6 +1013,21 @@ export default function JobDetailPage() {
             <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
             <Text style={styles.actionSecondaryText}>{t('jobs.photo', 'Photo')}{photoCount > 0 ? ` (${photoCount})` : ''}</Text>
           </Pressable>
+          {/* Job form. Sits with Photo rather than behind completion: the
+              checklist is what you work THROUGH on site, not something you
+              fill in afterwards from memory. */}
+          <Pressable
+            style={styles.actionSecondary}
+            accessibilityRole="button"
+            accessibilityLabel={t('jobForms.fillIn', 'Fill in form')}
+            onPress={() => {
+              hapticSuccess();
+              router.push(`/contractor/job-form/${job.id}` as any);
+            }}
+          >
+            <Ionicons name="clipboard-outline" size={18} color={Palette.hermesOrange} />
+            <Text style={styles.actionSecondaryText}>{t('jobForms.fillIn', 'Form')}</Text>
+          </Pressable>
           {jobCompleted && (
             <Pressable
               style={styles.actionSecondary}

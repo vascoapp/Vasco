@@ -56,6 +56,8 @@ export default function ContractorLayout() {
       <Stack.Screen name="permits" />
       <Stack.Screen name="payroll" />
       <Stack.Screen name="quote-templates" />
+      <Stack.Screen name="job-forms" />
+      <Stack.Screen name="job-form/[jobId]" />
       <Stack.Screen name="expenses" />
       <Stack.Screen name="closeout" />
       <Stack.Screen name="projects" />

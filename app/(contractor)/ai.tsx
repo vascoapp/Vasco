@@ -586,6 +586,12 @@ export default function VascoScreen() {
 
             <DKLabel style={s.subsectionLabel}>{t('dk.ai.tools', 'Tools')}</DKLabel>
             <View style={s.chipRow}>
+              {/* Ungated: a solo plumber wants their own boiler checklist just
+                  as much as an aannemer wants one per trade. */}
+              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/job-forms' as any)}>
+                <Ionicons name="clipboard-outline" size={14} color={DK.colors.accent} />
+                <DKLabel style={s.chipText}>{t('jobForms.title', 'Job forms')}</DKLabel>
+              </Pressable>
               {/* Kantoorbot hidden for launch (2026-07-20) — gated on the
                   office_bot flag (remote kill switch). */}
               {officeBotEnabled && (
