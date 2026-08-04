@@ -12,6 +12,7 @@
 // =============================================================================
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -63,6 +64,12 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
   const { t } = useTranslation();
   const { user } = useAuth();
   const country = user?.country ?? 'NL';
+  // This component is rendered BOTH as a routed screen and inside a full-screen
+  // <Modal> (the picker in the quote flow). A Modal sits outside the navigator,
+  // so it gets no safe-area inset of its own and the header rendered straight
+  // under the Dynamic Island. Reading the inset covers both cases; the fixed
+  // paddingTop the header used to carry only ever suited the routed one.
+  const insets = useSafeAreaInsets();
   const { entries, loading, refresh } = usePricebook();
 
   // This list stays mounted while the editor is pushed on top of it, and the
@@ -93,7 +100,7 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + GRID.sm }]}>
         {onClose && (
           <Pressable onPress={onClose} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
@@ -127,10 +134,20 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
         />
       </View>
 
-      {/* Category Filters */}
+      {/* Category filters. Hidden entirely when there is nothing to filter: an
+          empty book has no categories, so the row was a lone "All" pill that
+          filtered nothing. */}
+      {categories.length > 0 && (
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        // flexGrow:0 is load-bearing. A horizontal ScrollView is still a flex
+        // child of this column, so without it the row expanded to ~440px of
+        // empty space and pushed the list off the bottom of the screen. An
+        // earlier fix set alignItems:'center' on the content container, which
+        // stopped the PILLS stretching but left the BOX tall — it just centred
+        // one pill in a half-screen void. Constrain the box, not the contents.
+        style={styles.categoryFiltersScroll}
         contentContainerStyle={styles.categoryFilters}
       >
         <Pressable
@@ -162,6 +179,7 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
           );
         })}
       </ScrollView>
+      )}
 
       {/* Items List */}
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
@@ -182,7 +200,13 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
                   <Ionicons name={categoryConfig.icon} size={20} color={categoryConfig.color} />
                 </View>
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{item.name}</Text>
+                  {/* Two lines, because a trade service name is routinely two
+                      words ("CV-ketel onderhoud") and one line ellipsised it.
+                      A single word longer than the column still breaks, which
+                      is why the column is widened below rather than relying on
+                      this alone — "Wandvoorbereiding" was rendering as
+                      "Wandvoorbereidin / g". */}
+                  <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
                   <Text style={styles.itemDescription} numberOfLines={1}>
                     {item.description}
                   </Text>
@@ -373,7 +397,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.md,
-    paddingTop: Spacing.xl,
+    // paddingTop is applied inline from the safe-area inset — see the header.
+    paddingBottom: 12,
     backgroundColor: SemanticColors.surfacePrimary,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
@@ -407,7 +432,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: SemanticColors.surfacePrimary,
     marginHorizontal: Spacing.md,
-    marginVertical: Spacing.sm,
+    marginTop: 12,
+    marginBottom: 10,
     paddingHorizontal: Spacing.md,
     borderRadius: RADIUS.md,
     borderWidth: 1,
@@ -416,13 +442,17 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     color: SemanticColors.textPrimary,
     fontSize: TYPE.bodySize,
   },
+  categoryFiltersScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   categoryFilters: {
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingBottom: 10,
     gap: Spacing.xs,
     // A horizontal ScrollView's content container defaults to
     // alignItems:'stretch', so each pill grew to the full height of the
@@ -457,7 +487,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    // The filter row already supplies the breathing room above the first card;
+    // a full 16 on top of it read as a gap rather than as spacing.
+    paddingTop: 4,
     paddingBottom: 100,
     gap: Spacing.sm,
   },
@@ -471,12 +504,18 @@ const styles = StyleSheet.create({
   itemHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
+    // 12/14 rather than a flat 16: the 40pt icon already sets the row height,
+    // so the extra vertical padding only made each row taller without making
+    // it clearer, and three services filled the screen.
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     gap: Spacing.sm,
   },
   itemIcon: {
-    width: 44,
-    height: 44,
+    // 40 rather than 44: every point here comes straight out of the name
+    // column, which is the tightest box on the row in every locale.
+    width: 40,
+    height: 40,
     borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -495,10 +534,14 @@ const styles = StyleSheet.create({
   },
   itemPricing: {
     alignItems: 'flex-end',
+    // Never absorb slack from the name, and never shrink the price itself —
+    // a truncated price is far worse than a truncated name.
+    flexGrow: 0,
+    flexShrink: 0,
   },
   itemPrice: {
     color: SemanticColors.textPrimary,
-    fontSize: TYPE.titleSize,
+    fontSize: TYPE.bodySize,
     fontFamily: TYPE.sectionFamily,
   },
   itemUnit: {
@@ -506,9 +549,10 @@ const styles = StyleSheet.create({
     fontSize: TYPE.tinySize,
   },
   itemExpanded: {
-    padding: Spacing.md,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
     paddingTop: 0,
-    gap: Spacing.md,
+    gap: 12,
   },
   statsRow: {
     flexDirection: 'row',
