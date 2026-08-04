@@ -1,56 +1,92 @@
-// Pricebook - Service catalog with Good-Better-Best pricing
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+// =============================================================================
+// PRICEBOOK — the contractor's own service catalogue
+// =============================================================================
+// Until now this screen rendered MOCK_PRICEBOOK: twelve invented painting
+// services belonging to "contractor-001", shown to every real contractor as
+// their own price list, above an add button with no handler. It now reads and
+// writes the real catalogue (pricebookService, AsyncStorage).
+//
+// Margin is shown only when the contractor has entered what the work costs
+// them. When they have not, the row is absent rather than showing a plausible
+// number — see the design notes in pricebookService.
+// =============================================================================
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
-import type { PricebookItem, PricebookVariant } from '../../types/contractor-features';
-import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
+import { useAuth } from '../../context/AuthContext';
+import {
+  usePricebook,
+  searchEntries,
+  categoriesInUse,
+  marginOf,
+  costOf,
+  type PricebookEntry,
+  type PricebookVariantEntry,
+  type PricebookCategory,
+} from '../../services/pricebookService';
 import { useTranslation } from 'react-i18next';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 interface PricebookProps {
-  onSelectItem?: (item: PricebookItem, variant?: PricebookVariant) => void;
+  onSelectItem?: (item: PricebookEntry, variant?: PricebookVariantEntry) => void;
   onClose?: () => void;
+  /** Opens the editor. Undefined hides the add/edit affordances entirely. */
+  onEditItem?: (id: string) => void;
+  onCreateItem?: () => void;
   mode?: 'browse' | 'select';
 }
 
-const CATEGORY_CONFIG: Record<string, { label: string; icon: IconName; color: string }> = {
+const CATEGORY_CONFIG: Record<PricebookCategory, { label: string; icon: IconName; color: string }> = {
+  // legacy, painting-shop categories
   preparation: { label: 'Preparation', icon: 'construct-outline', color: '#F59E0B' },
   painting: { label: 'Painting', icon: 'color-palette-outline', color: '#3B82F6' },
   repairs: { label: 'Repairs', icon: 'hammer-outline', color: '#EF4444' },
   finishing: { label: 'Finishing', icon: 'sparkles-outline', color: '#8B5CF6' },
   specialty: { label: 'Specialty', icon: 'star-outline', color: '#EC4899' },
   consultation: { label: 'Consultation', icon: 'chatbubbles-outline', color: '#10B981' },
+  // trade-neutral
+  callout: { label: 'Call-out', icon: 'car-outline', color: '#F97316' },
+  installation: { label: 'Installation', icon: 'build-outline', color: '#0EA5E9' },
+  maintenance: { label: 'Maintenance', icon: 'refresh-outline', color: '#14B8A6' },
+  inspection: { label: 'Inspection', icon: 'search-outline', color: '#A855F7' },
+  other: { label: 'Other', icon: 'ellipsis-horizontal-outline', color: '#94A3B8' },
 };
 
-export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookProps) {
+const FALLBACK_CATEGORY = CATEGORY_CONFIG.other;
+
+export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mode = 'browse' }: PricebookProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const country = user?.country ?? 'NL';
+  const { entries, loading, refresh } = usePricebook();
+
+  // This list stays mounted while the editor is pushed on top of it, and the
+  // editor holds its OWN copy of the pricebook. Without this, saving an edit
+  // and tapping back showed the pre-edit list — and adding a first service
+  // returned you to the empty state you had just left.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<PricebookCategory | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
-  // formatCurrency imported from ../../i18n/formatting
+  const filteredItems = searchEntries(entries, searchQuery, selectedCategory);
+  const categories = categoriesInUse(entries);
 
-  // Filter items
-  const filteredItems = MOCK_PRICEBOOK.filter((item) => {
-    const matchesSearch = !searchQuery ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || item.category === selectedCategory;
-    return matchesSearch && matchesCategory && item.isActive;
-  });
-
-  // Group by category
-  const categories = [...new Set(MOCK_PRICEBOOK.map((i) => i.category))];
-
-  const handleSelectVariant = (item: PricebookItem, variant: PricebookVariant) => {
+  const handleSelectVariant = (item: PricebookEntry, variant: PricebookVariantEntry) => {
     onSelectItem?.(item, variant);
   };
 
-  const handleSelectBase = (item: PricebookItem) => {
+  const handleSelectBase = (item: PricebookEntry) => {
     onSelectItem?.(item);
   };
 
@@ -65,11 +101,18 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
         )}
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>{t('pricebook.title', 'Pricebook')}</Text>
-          <Text style={styles.headerSubtitle}>{t('pricebook.count', { count: MOCK_PRICEBOOK.length, defaultValue: '{{count}} services' })}</Text>
+          <Text style={styles.headerSubtitle}>{t('pricebook.count', { count: entries.filter((e) => e.isActive).length, defaultValue: '{{count}} services' })}</Text>
         </View>
-        <Pressable style={styles.addButton}>
-          <Ionicons name="add" size={22} color="#fff" />
-        </Pressable>
+        {onCreateItem && (
+          <Pressable
+            style={styles.addButton}
+            onPress={onCreateItem}
+            accessibilityRole="button"
+            accessibilityLabel={t('pricebook.add', 'Add service')}
+          >
+            <Ionicons name="add" size={22} color="#fff" />
+          </Pressable>
+        )}
       </View>
 
       {/* Search */}
@@ -99,7 +142,7 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
           </Text>
         </Pressable>
         {categories.map((cat) => {
-          const config = CATEGORY_CONFIG[cat];
+          const config = CATEGORY_CONFIG[cat] ?? FALLBACK_CATEGORY;
           const isActive = selectedCategory === cat;
           return (
             <Pressable
@@ -123,8 +166,10 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
       {/* Items List */}
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
         {filteredItems.map((item) => {
-          const categoryConfig = CATEGORY_CONFIG[item.category];
+          const categoryConfig = CATEGORY_CONFIG[item.category] ?? FALLBACK_CATEGORY;
           const isExpanded = expandedItemId === item.id;
+          const margin = marginOf(item);
+          const cost = costOf(item);
 
           return (
             <View key={item.id} style={styles.itemCard}>
@@ -143,8 +188,11 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
                   </Text>
                 </View>
                 <View style={styles.itemPricing}>
-                  <Text style={styles.itemPrice}>{formatCurrency(item.basePrice)}</Text>
-                  <Text style={styles.itemUnit}>/{item.unit}</Text>
+                  <Text style={styles.itemPrice}>{formatCurrency(item.basePrice, country)}</Text>
+                  {/* A fixed price has no unit, and "/undefined" was rendering. */}
+                  {item.pricingType !== 'fixed' && !!item.unit && (
+                    <Text style={styles.itemUnit}>/{item.unit}</Text>
+                  )}
                 </View>
                 <Ionicons
                   name={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -156,30 +204,52 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
               {/* Expanded Content */}
               {isExpanded && (
                 <View style={styles.itemExpanded}>
-                  {/* Stats Row */}
+                  {/* Stats Row. Margin and cost appear only when the contractor
+                      has entered cost inputs; otherwise we do not know them and
+                      show nothing rather than a guess. */}
                   <View style={styles.statsRow}>
-                    <View style={styles.statItem}>
-                      <Text style={styles.statLabel}>Margin</Text>
-                      <Text style={[styles.statValue, { color: SemanticColors.feedbackSuccess }]}>
-                        {item.margin}%
-                      </Text>
-                    </View>
-                    <View style={styles.statItem}>
-                      <Text style={styles.statLabel}>Used</Text>
-                      <Text style={styles.statValue}>{item.usageCount}x</Text>
-                    </View>
-                    {item.laborMinutes && (
+                    {margin !== null && (
                       <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>Time</Text>
-                        <Text style={styles.statValue}>{item.laborMinutes}m</Text>
+                        <Text style={styles.statLabel}>{t('pricebook.margin', 'Margin')}</Text>
+                        <Text
+                          style={[
+                            styles.statValue,
+                            { color: margin < 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess },
+                          ]}
+                        >
+                          {margin.toFixed(0)}%
+                        </Text>
+                      </View>
+                    )}
+                    {cost !== null && (
+                      <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>{t('pricebook.cost', 'Cost')}</Text>
+                        <Text style={styles.statValue}>{formatCurrency(cost, country)}</Text>
+                      </View>
+                    )}
+                    <View style={styles.statItem}>
+                      <Text style={styles.statLabel}>{t('pricebook.used', 'Used')}</Text>
+                      <Text style={styles.statValue}>{t('pricebook.usedTimes', { count: item.usageCount, defaultValue: '{{count}}x' })}</Text>
+                    </View>
+                    {!!item.laborMinutes && (
+                      <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>{t('pricebook.time', 'Time')}</Text>
+                        <Text style={styles.statValue}>{t('pricebook.minutes', { count: item.laborMinutes, defaultValue: '{{count}} min' })}</Text>
                       </View>
                     )}
                   </View>
 
+                  {onEditItem && (
+                    <Pressable style={styles.editButton} onPress={() => onEditItem(item.id)}>
+                      <Ionicons name="create-outline" size={16} color={SemanticColors.textSecondary} />
+                      <Text style={styles.editButtonText}>{t('pricebook.edit', 'Edit')}</Text>
+                    </Pressable>
+                  )}
+
                   {/* Variants (Good-Better-Best) */}
                   {item.variants && item.variants.length > 0 ? (
                     <View style={styles.variantsSection}>
-                      <Text style={styles.variantsTitle}>Pricing Options</Text>
+                      <Text style={styles.variantsTitle}>{t('pricebook.pricingOptions', 'Pricing options')}</Text>
                       <View style={styles.variantsGrid}>
                         {item.variants.map((variant) => (
                           <Pressable
@@ -192,16 +262,18 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
                           >
                             {variant.isRecommended && (
                               <View style={styles.recommendedBadge}>
-                                <Text style={styles.recommendedBadgeText}>POPULAR</Text>
+                                <Text style={styles.recommendedBadgeText}>{t('pricebook.popular', 'POPULAR')}</Text>
                               </View>
                             )}
                             <Text style={styles.variantTier}>
-                              {variant.tier.charAt(0).toUpperCase() + variant.tier.slice(1)}
+                              {t(`pricebook.tier.${variant.tier}`, variant.tier)}
                             </Text>
                             <Text style={styles.variantName}>{variant.name}</Text>
                             <Text style={styles.variantPrice}>
-                              {formatCurrency(variant.price)}
-                              <Text style={styles.variantUnit}>/{item.unit}</Text>
+                              {formatCurrency(variant.price, country)}
+                              {item.pricingType !== 'fixed' && !!item.unit && (
+                                <Text style={styles.variantUnit}>/{item.unit}</Text>
+                              )}
                             </Text>
                             <View style={styles.variantFeatures}>
                               {variant.features.slice(0, 3).map((feature, idx) => (
@@ -231,7 +303,7 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
                                     variant.isRecommended && styles.selectButtonTextRecommended,
                                   ]}
                                 >
-                                  Select
+                                  {t('pricebook.select', 'Select')}
                                 </Text>
                               </Pressable>
                             )}
@@ -246,7 +318,7 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
                         onPress={() => handleSelectBase(item)}
                       >
                         <Ionicons name="add-circle" size={18} color={SemanticColors.actionPrimary} />
-                        <Text style={styles.addToQuoteText}>Add to Quote</Text>
+                        <Text style={styles.addToQuoteText}>{t('pricebook.addToQuote', 'Add to quote')}</Text>
                       </Pressable>
                     )
                   )}
@@ -256,10 +328,35 @@ export function Pricebook({ onSelectItem, onClose, mode = 'browse' }: PricebookP
           );
         })}
 
-        {filteredItems.length === 0 && (
+        {/* Three distinct states. An empty book and a filter that matched
+            nothing are different problems, and offering "add your first
+            service" to someone who has forty of them reads as broken. */}
+        {loading && (
           <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={48} color={SemanticColors.textTertiary} />
-            <Text style={styles.emptyStateText}>No services found</Text>
+            <ActivityIndicator color={SemanticColors.actionPrimary} />
+          </View>
+        )}
+
+        {!loading && filteredItems.length === 0 && entries.length > 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="search-outline" size={48} color={SemanticColors.textTertiary} />
+            <Text style={styles.emptyStateText}>{t('pricebook.noMatches', 'No services match')}</Text>
+          </View>
+        )}
+
+        {!loading && entries.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="book-outline" size={48} color={SemanticColors.textTertiary} />
+            <Text style={styles.emptyStateText}>{t('pricebook.emptyTitle', 'No services yet')}</Text>
+            <Text style={styles.emptyStateHint}>
+              {t('pricebook.emptyHint', 'Add the work you quote most often, with the price you charge. Then a quote is picking from a list instead of typing it out.')}
+            </Text>
+            {onCreateItem && (
+              <Pressable style={styles.emptyCta} onPress={onCreateItem}>
+                <Ionicons name="add" size={18} color={Palette.white} />
+                <Text style={styles.emptyCtaText}>{t('pricebook.addFirst', 'Add your first service')}</Text>
+              </Pressable>
+            )}
           </View>
         )}
       </ScrollView>
@@ -554,5 +651,42 @@ const styles = StyleSheet.create({
   emptyStateText: {
     color: SemanticColors.textTertiary,
     fontSize: TYPE.bodySize - 1,
+  },
+  emptyStateHint: {
+    color: SemanticColors.textTertiary,
+    fontSize: TYPE.captionSize,
+    textAlign: 'center',
+    lineHeight: 19,
+    paddingHorizontal: Spacing.md,
+  },
+  emptyCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: Spacing.sm,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: RADIUS.full,
+    backgroundColor: SemanticColors.actionPrimary,
+  },
+  emptyCtaText: {
+    color: Palette.white,
+    fontSize: TYPE.bodySize - 1,
+    fontFamily: TYPE.titleFamily,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  editButtonText: {
+    color: SemanticColors.textSecondary,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
   },
 });

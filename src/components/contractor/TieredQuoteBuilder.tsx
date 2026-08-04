@@ -18,6 +18,8 @@ import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
 import { MS_PER_DAY } from '../../utils/timeConstants';
 import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
+import { usePricebook } from '../../services/pricebookService';
+import { DEMO_MODE } from '../../config/demo';
 import { SimilarJobsSuggest } from '../shared/SimilarJobsSuggest';
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { useQuoteCalibration } from '../../services/estimationFeedbackService';
@@ -55,9 +57,19 @@ import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate } from '..
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // =============================================================================
-// Trade-specific pricebook items — shown when MOCK_PRICEBOOK doesn't have trade items
+// DEMO-ONLY starter catalogue.
 // =============================================================================
-const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: number; unit: string }[]> = {
+// These prices were invented — €85/uur for a leak repair, €450 for a
+// groepenkast — and were served to every contractor in every country as though
+// they were that contractor's own price list, then used to draft real quotes.
+// A price list nobody set is worse than an empty one: it looks authoritative
+// and it is nothing but a guess about someone else's business.
+//
+// The real catalogue is `pricebookService` (what the contractor entered). This
+// table now only populates the demo accounts, so the walkthrough still has
+// something to show. Gated at the constant per learnings #103.
+// =============================================================================
+const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: number; unit: string }[]> = DEMO_MODE ? {
   plumbing: [
     { id: 'plb-1', name: 'Lekkage reparatie', basePrice: 85, unit: 'uur' },
     { id: 'plb-2', name: 'CV-ketel onderhoud', basePrice: 120, unit: 'stuk' },
@@ -95,7 +107,7 @@ const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: num
     { id: 'gen-4', name: 'Tegelwerk', basePrice: 40, unit: 'm²' },
     { id: 'gen-5', name: 'Transport & afvoer', basePrice: 150, unit: 'rit' },
   ],
-};
+} : {};
 
 const TRADE_LABELS: Record<string, string> = {
   painting: 'Schilderwerk',
@@ -139,6 +151,9 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const reducedRate = getReducedVatRate(country);
   const [useReducedVat, setUseReducedVat] = useState(false);
   const [step, setStep] = useState<'select' | 'preview'>('select');
+  // The contractor's own catalogue. See the tradePricebook memo below for how
+  // it takes precedence over the demo starter table.
+  const { entries: myPricebook } = usePricebook();
   const [selectedServices, setSelectedServices] = useState<{ item: PricebookItem; quantity: number; unit: string }[]>([]);
   const [showPricebook, setShowPricebook] = useState(false);
   // Custom (non-pricebook) service entry — lets a contractor add a one-off
@@ -354,14 +369,25 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   const calibrationLineItems = selectedServices.map(s => ({ description: s.item.name, estimate: s.item.basePrice * s.quantity }));
   const calibrations = useQuoteCalibration(calibrationLineItems);
 
-  // Build trade-specific pricebook
+  // The catalogue this quote is built from. One source, used both by the
+  // service picker and by the AI scope→lines matcher below, so the builder can
+  // never draft from a list the picker does not show.
+  //
+  // The contractor's own pricebook wins whenever they have one. Only a demo
+  // account with an empty book falls through to the starter table; a real
+  // contractor with an empty book gets an empty list and the "add custom
+  // service" path, which is honest — we do not know what they charge.
   const tradePricebook = useMemo(() => {
-    // First try MOCK_PRICEBOOK (has variants for painting)
-    const fromMock = MOCK_PRICEBOOK.filter(i => i.variants && i.variants.length > 0);
-    if (trade === 'painting' && fromMock.length > 0) return fromMock;
+    if (myPricebook.length > 0) {
+      return myPricebook
+        .filter(e => e.isActive)
+        .map(e => ({ ...e, contractorId: '' })) as unknown as PricebookItem[];
+    }
 
-    // For other trades, build from TRADE_PRICEBOOK
-    const tradeItems = TRADE_PRICEBOOK[trade] ?? TRADE_PRICEBOOK.general;
+    const withVariants = MOCK_PRICEBOOK.filter(i => i.variants && i.variants.length > 0);
+    if (trade === 'painting' && withVariants.length > 0) return withVariants;
+
+    const tradeItems = TRADE_PRICEBOOK[trade] ?? TRADE_PRICEBOOK.general ?? [];
     return tradeItems.map(item => ({
       ...item,
       contractorId: '',
@@ -369,7 +395,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       category: trade,
       pricingType: 'fixed' as const,
     })) as unknown as PricebookItem[];
-  }, [trade]);
+  }, [trade, myPricebook]);
 
   const fmt = (n: number) => formatCurrency(n);
 
@@ -418,7 +444,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     if (existing) {
       setSelectedServices(selectedServices.map(s => s.item.id === item.id ? { ...s, quantity: s.quantity + 1 } : s));
     } else {
-      setSelectedServices([...selectedServices, { item, quantity: 1, unit: item.unit || 'stuk' }]);
+      setSelectedServices([...selectedServices, { item, quantity: 1, unit: item.unit || t('quotes.unitPiece', 'piece') }]);
     }
     setShowPricebook(false);
   };
@@ -546,7 +572,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
   // completed job. Prefill the scope with that job's title so handleAIDraft
   // can do the rest of the work.
   const handlePickSimilarJob = (jobId: string) => {
-    const existing = MOCK_PRICEBOOK.find((pb) => pb.id === jobId);
+    const existing = tradePricebook.find((pb) => pb.id === jobId);
     if (existing?.name) {
       setScopeText((prev) => prev ? `${prev} · ${existing.name}` : existing.name);
     }
@@ -558,8 +584,12 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     setAiDrafting(true);
     // Match scope words against trade pricebook items (fully case-insensitive)
     const words = scopeText.toLowerCase().split(/[\s,.\-;:]+/).filter(w => w.length > 2);
-    const tradeItems = TRADE_PRICEBOOK[trade] ?? TRADE_PRICEBOOK.general;
-    const allItems = [...tradeItems, ...(TRADE_PRICEBOOK.general ?? [])];
+    // Draft from the same catalogue the picker shows — the contractor's own
+    // pricebook when they have one. Previously this matched against the
+    // invented TRADE_PRICEBOOK regardless, so the AI could put a service the
+    // contractor does not offer, at a price they never set, onto a real quote.
+    const tradeItems = tradePricebook;
+    const allItems = tradeItems;
     const matched: { item: PricebookItem; quantity: number; unit: string; score: number }[] = [];
     const usedIds = new Set(selectedServices.map(s => s.item.id));
 
@@ -577,9 +607,13 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       }
       if (score > 0) {
         matched.push({
-          item: { ...item, contractorId: '', description: TRADE_LABELS[trade] ?? trade, category: trade, pricingType: 'fixed' as const } as unknown as PricebookItem,
+          // Used as-is: overwriting pricingType with 'fixed' turned a real
+          // per-unit service (€20/m²) into a flat €20 line on the quote.
+          item,
           quantity: 1,
-          unit: item.unit,
+          // A fixed-price service legitimately has no unit ("€95 to service the
+          // boiler"), so fall back to the same translated default the picker uses.
+          unit: item.unit || t('quotes.unitPiece', 'piece'),
           score,
         });
         usedIds.add(item.id);
@@ -606,9 +640,13 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       // Suggest top 3 items from trade pricebook as fallback
       for (const item of availableFallbacks.slice(0, 3)) {
         matched.push({
-          item: { ...item, contractorId: '', description: TRADE_LABELS[trade] ?? trade, category: trade, pricingType: 'fixed' as const } as unknown as PricebookItem,
+          // Used as-is: overwriting pricingType with 'fixed' turned a real
+          // per-unit service (€20/m²) into a flat €20 line on the quote.
+          item,
           quantity: 1,
-          unit: item.unit,
+          // A fixed-price service legitimately has no unit ("€95 to service the
+          // boiler"), so fall back to the same translated default the picker uses.
+          unit: item.unit || t('quotes.unitPiece', 'piece'),
           score: 0,
         });
       }
@@ -630,12 +668,17 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
       const fuzzyWords = matchedWords.length === 0 ? words.filter(w =>
         w.length >= 4 && m.item.name.toLowerCase().split(/[\s\-]+/).some((iw: string) => iw.length >= 4 && levenshtein(w, iw) <= 2)
       ) : [];
+      // "Standard rate" was a claim we could not support: the price comes from
+      // the contractor's own pricebook, not from any industry standard. Naming
+      // it as theirs is both true and more useful \u2014 it tells them which entry
+      // to edit if the number is wrong.
+      const rate = `${formatCurrency(m.item.basePrice, country)}/${m.unit}`;
       if (matchedWords.length > 0) {
-        explanations[m.item.id] = `Matched "${matchedWords.join(', ')}" from your description. ${TRADE_LABELS[trade] || trade} standard rate: ${formatCurrency(m.item.basePrice, country)}/${m.unit}.`;
+        explanations[m.item.id] = t('quotes.aiMatchExact', 'Matched "{{words}}" from your description. Your price: {{rate}}.', { words: matchedWords.join(', '), rate });
       } else if (fuzzyWords.length > 0) {
-        explanations[m.item.id] = `Fuzzy match for "${fuzzyWords.join(', ')}". ${TRADE_LABELS[trade] || trade} standard rate: ${formatCurrency(m.item.basePrice, country)}/${m.unit}.`;
+        explanations[m.item.id] = t('quotes.aiMatchFuzzy', 'Close match for "{{words}}". Your price: {{rate}}.', { words: fuzzyWords.join(', '), rate });
       } else {
-        explanations[m.item.id] = `Common ${TRADE_LABELS[trade] || trade} service \u2014 suggested based on typical ${trade} job scope.`;
+        explanations[m.item.id] = t('quotes.aiMatchFallback', 'From your pricebook \u2014 {{rate}}. Not matched to your description, so check it belongs here.', { rate });
       }
     }
 

@@ -1,4 +1,5 @@
 // Mock data for Pricebook, Smart Purchasing, and Payments
+import { DEMO_MODE } from '../config/demo';
 import type {
   PricebookItem,
   MaterialCatalogItem,
@@ -13,7 +14,13 @@ import type {
 // PRICEBOOK ITEMS
 // ============================================
 
-export const MOCK_PRICEBOOK: PricebookItem[] = [
+// Twelve invented painting services belonging to "contractor-001". These were
+// rendered to every real contractor as their own catalogue, with an add button
+// that had no handler — so the book could be read and never corrected.
+// Gated at the CONSTANT rather than at each call site: that covers every
+// consumer at once and cannot be forgotten at a new one (learnings #103).
+// The real catalogue now lives in pricebookService (AsyncStorage).
+export const MOCK_PRICEBOOK: PricebookItem[] = DEMO_MODE ? [
   {
     id: 'pb-001',
     contractorId: 'contractor-001',
@@ -257,7 +264,7 @@ export const MOCK_PRICEBOOK: PricebookItem[] = [
     createdAt: '2023-06-01',
     updatedAt: '2023-06-01',
   },
-];
+] : [];
 
 // ============================================
 // MATERIAL SUPPLIERS

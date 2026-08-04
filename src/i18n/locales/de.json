@@ -842,7 +842,9 @@
       "viewed": "Angesehen",
       "paid": "Bezahlt",
       "overdue": "Überfällig"
-    }
+    },
+    "quoteTemplates": "Vorlagen",
+    "pricebook": "Preisliste"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1803,7 +1805,10 @@
     "customServiceInvalidTitle": "Name und Preis angeben",
     "customServiceInvalidBody": "Gib einen Leistungsnamen und einen Preis über null ein.",
     "startedQuestions_one": "{{count}} Frage begonnen",
-    "startedQuestions_other": "{{count}} Fragen begonnen"
+    "startedQuestions_other": "{{count}} Fragen begonnen",
+    "aiMatchExact": "Treffer für „{{words}}“ aus Ihrer Beschreibung. Ihr Preis: {{rate}}.",
+    "aiMatchFuzzy": "Ähnlich zu „{{words}}“. Ihr Preis: {{rate}}.",
+    "aiMatchFallback": "Aus Ihrer Preisliste — {{rate}}. Kein Bezug zu Ihrer Beschreibung, bitte prüfen."
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -4119,7 +4124,8 @@
     "addLineItem": "+ Position hinzufügen",
     "total": "Gesamt",
     "saving": "Speichern...",
-    "saveDraft": "Entwurf speichern"
+    "saveDraft": "Entwurf speichern",
+    "fromPricebook": "+ Aus Preisliste"
   },
   "checklist": {
     "beforePhoto": "Foto vorher",
@@ -5113,7 +5119,69 @@
       "repairs": "Reparaturen",
       "finishing": "Endbearbeitung",
       "specialty": "Spezialgebiet",
-      "consultation": "Beratung"
+      "consultation": "Beratung",
+      "callout": "Anfahrt",
+      "installation": "Installation",
+      "maintenance": "Wartung",
+      "inspection": "Prüfung",
+      "other": "Sonstiges"
+    },
+    "add": "Leistung hinzufügen",
+    "margin": "Marge",
+    "cost": "Kosten",
+    "used": "Genutzt",
+    "time": "Zeit",
+    "usedTimes_one": "{{count}}x",
+    "usedTimes_other": "{{count}}x",
+    "minutes_one": "{{count}} Min.",
+    "minutes_other": "{{count}} Min.",
+    "edit": "Bearbeiten",
+    "pricingOptions": "Preisoptionen",
+    "popular": "BELIEBT",
+    "select": "Wählen",
+    "addToQuote": "Zum Angebot hinzufügen",
+    "noMatches": "Keine Leistungen gefunden",
+    "emptyTitle": "Noch keine Leistungen",
+    "emptyHint": "Tragen Sie die Arbeiten ein, die Sie am häufigsten anbieten, mit Ihrem Preis. Dann wird ein Angebot zum Auswählen statt zum Abtippen.",
+    "addFirst": "Erste Leistung hinzufügen",
+    "newTitle": "Neue Leistung",
+    "editTitle": "Leistung bearbeiten",
+    "notFoundTitle": "Leistung nicht gefunden",
+    "sectionWhat": "Was Sie anbieten",
+    "name": "Name der Leistung",
+    "namePlaceholder": "z. B. Heizungswartung",
+    "description": "Was enthalten ist",
+    "descriptionPlaceholder": "Erscheint auf der Angebotszeile",
+    "category": "Kategorie",
+    "sectionCharge": "Was Sie berechnen",
+    "typeFixed": "Festpreis",
+    "typePerUnit": "Pro Einheit",
+    "typeHourly": "Pro Stunde",
+    "price": "Preis",
+    "unit": "Pro",
+    "unitHour": "Stunde",
+    "unitExample": "m²",
+    "sectionCost": "Was es Sie kostet",
+    "costHint": "Optional. Wenn Sie das ausfüllen, zeigt Vasco Ihre Marge — lassen Sie es leer, wird keine Marge angezeigt statt einer geschätzten.",
+    "labourMinutes": "Arbeit (Minuten)",
+    "labourCostRate": "Diese Stunde kostet Sie",
+    "materialsCost": "Materialkosten",
+    "yourCost": "Ihre Kosten",
+    "priceForMargin": "Preis für eine Marge von",
+    "lossWarning": "Diese Leistung kostet Sie mehr, als Sie dafür berechnen.",
+    "active": "Diese Leistung anbieten",
+    "activeHint": "Ausschalten, um sie aus Angeboten auszublenden, ohne sie zu löschen.",
+    "deleteTitle": "Diese Leistung löschen?",
+    "deleteBody": "Bereits versendete Angebote sind nicht betroffen.",
+    "tier": {
+      "good": "Basis",
+      "better": "Standard",
+      "best": "Premium"
+    },
+    "error": {
+      "nameRequired": "Geben Sie dieser Leistung einen Namen",
+      "priceRequired": "Geben Sie einen Preis von null oder mehr ein",
+      "unitRequired": "Geben Sie an, wofür der Preis gilt — „12 €“ allein ist kein für Kunden nachvollziehbarer Preis"
     }
   },
   "jobQuality": {

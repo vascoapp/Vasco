@@ -6,11 +6,9 @@ export default function PricebookScreen() {
 
   return (
     <Pricebook
-      onSelectItem={() => {
-        // Placeholder — selecting from this screen doesn't route anywhere
-        // (callers that want to add-to-quote use the embedded Pricebook
-        // inside TieredQuoteBuilder, which handles selection directly).
-      }}
+      // "new" is not an entry id — the editor reads it as "create".
+      onCreateItem={() => router.push('/contractor/pricebook/new')}
+      onEditItem={(id) => router.push(`/contractor/pricebook/${id}`)}
       onClose={() => router.back()}
     />
   );

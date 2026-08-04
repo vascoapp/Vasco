@@ -826,7 +826,9 @@
       "viewed": "Bekeken",
       "paid": "Betaald",
       "overdue": "Achterstallig"
-    }
+    },
+    "quoteTemplates": "Sjablonen",
+    "pricebook": "Prijslijst"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1787,7 +1789,10 @@
     "customServiceInvalidTitle": "Voeg een naam en prijs toe",
     "customServiceInvalidBody": "Vul een naam in en een prijs groter dan nul.",
     "startedQuestions_one": "{{count}} vraag gestart",
-    "startedQuestions_other": "{{count}} vragen gestart"
+    "startedQuestions_other": "{{count}} vragen gestart",
+    "aiMatchExact": "Gevonden op “{{words}}” in je omschrijving. Jouw prijs: {{rate}}.",
+    "aiMatchFuzzy": "Vergelijkbaar met “{{words}}”. Jouw prijs: {{rate}}.",
+    "aiMatchFallback": "Uit je prijslijst — {{rate}}. Niet gekoppeld aan je omschrijving, controleer of dit hoort."
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -4145,7 +4150,8 @@
     "addLineItem": "+ Regel toevoegen",
     "total": "Totaal",
     "saving": "Opslaan...",
-    "saveDraft": "Concept opslaan"
+    "saveDraft": "Concept opslaan",
+    "fromPricebook": "+ Uit prijslijst"
   },
   "checklist": {
     "beforePhoto": "Foto vooraf",
@@ -5097,7 +5103,69 @@
       "repairs": "Reparaties",
       "finishing": "Afwerking",
       "specialty": "Specialisme",
-      "consultation": "Advies"
+      "consultation": "Advies",
+      "callout": "Voorrijden",
+      "installation": "Installatie",
+      "maintenance": "Onderhoud",
+      "inspection": "Keuring",
+      "other": "Overig"
+    },
+    "add": "Dienst toevoegen",
+    "margin": "Marge",
+    "cost": "Kostprijs",
+    "used": "Gebruikt",
+    "time": "Tijd",
+    "usedTimes_one": "{{count}}x",
+    "usedTimes_other": "{{count}}x",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "edit": "Bewerken",
+    "pricingOptions": "Prijsopties",
+    "popular": "POPULAIR",
+    "select": "Kies",
+    "addToQuote": "Aan offerte toevoegen",
+    "noMatches": "Geen diensten gevonden",
+    "emptyTitle": "Nog geen diensten",
+    "emptyHint": "Zet het werk dat je het vaakst offreert erin, met de prijs die je rekent. Dan is een offerte kiezen uit een lijst in plaats van uittypen.",
+    "addFirst": "Voeg je eerste dienst toe",
+    "newTitle": "Nieuwe dienst",
+    "editTitle": "Dienst bewerken",
+    "notFoundTitle": "Dienst niet gevonden",
+    "sectionWhat": "Wat je verkoopt",
+    "name": "Naam van de dienst",
+    "namePlaceholder": "bijv. CV-ketel onderhoud",
+    "description": "Wat het omvat",
+    "descriptionPlaceholder": "Verschijnt op de offerteregel",
+    "category": "Categorie",
+    "sectionCharge": "Wat je rekent",
+    "typeFixed": "Vaste prijs",
+    "typePerUnit": "Per eenheid",
+    "typeHourly": "Per uur",
+    "price": "Prijs",
+    "unit": "Per",
+    "unitHour": "uur",
+    "unitExample": "m²",
+    "sectionCost": "Wat het jou kost",
+    "costHint": "Optioneel. Vul je dit in, dan laat Vasco je marge zien — laat je het leeg, dan tonen we geen marge in plaats van een geschatte.",
+    "labourMinutes": "Arbeid (minuten)",
+    "labourCostRate": "Dat uur kost jou",
+    "materialsCost": "Materiaalkosten",
+    "yourCost": "Jouw kostprijs",
+    "priceForMargin": "Prijs voor een marge van",
+    "lossWarning": "Deze dienst kost je meer dan je ervoor rekent.",
+    "active": "Bied deze dienst aan",
+    "activeHint": "Zet uit om hem uit offertes te verbergen zonder te verwijderen.",
+    "deleteTitle": "Deze dienst verwijderen?",
+    "deleteBody": "Offertes die je al verstuurd hebt veranderen niet.",
+    "tier": {
+      "good": "Basis",
+      "better": "Standaard",
+      "best": "Premium"
+    },
+    "error": {
+      "nameRequired": "Geef deze dienst een naam",
+      "priceRequired": "Vul een prijs van nul of hoger in",
+      "unitRequired": "Zeg waar de prijs per is — “€12” alleen is geen prijs die een klant kan controleren"
     }
   },
   "jobQuality": {

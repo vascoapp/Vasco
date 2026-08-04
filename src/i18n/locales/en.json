@@ -842,7 +842,9 @@
       "viewed": "Viewed",
       "paid": "Paid",
       "overdue": "Overdue"
-    }
+    },
+    "quoteTemplates": "Templates",
+    "pricebook": "Pricebook"
   },
   "expenses": {
     "title": "Expenses",
@@ -1803,7 +1805,10 @@
     "customServiceInvalidTitle": "Add a name and price",
     "customServiceInvalidBody": "Enter a service name and a price greater than zero.",
     "startedQuestions_one": "Started {{count}} question",
-    "startedQuestions_other": "Started {{count}} questions"
+    "startedQuestions_other": "Started {{count}} questions",
+    "aiMatchExact": "Matched “{{words}}” from your description. Your price: {{rate}}.",
+    "aiMatchFuzzy": "Close match for “{{words}}”. Your price: {{rate}}.",
+    "aiMatchFallback": "From your pricebook — {{rate}}. Not matched to your description, so check it belongs here."
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -4119,7 +4124,8 @@
     "addLineItem": "+ Add line item",
     "total": "Total",
     "saving": "Saving...",
-    "saveDraft": "Save draft"
+    "saveDraft": "Save draft",
+    "fromPricebook": "+ From pricebook"
   },
   "checklist": {
     "beforePhoto": "Before photo",
@@ -5113,7 +5119,69 @@
       "repairs": "Repairs",
       "finishing": "Finishing",
       "specialty": "Specialty",
-      "consultation": "Consultation"
+      "consultation": "Consultation",
+      "callout": "Call-out",
+      "installation": "Installation",
+      "maintenance": "Maintenance",
+      "inspection": "Inspection",
+      "other": "Other"
+    },
+    "add": "Add service",
+    "margin": "Margin",
+    "cost": "Cost",
+    "used": "Used",
+    "time": "Time",
+    "usedTimes_one": "{{count}}x",
+    "usedTimes_other": "{{count}}x",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "edit": "Edit",
+    "pricingOptions": "Pricing options",
+    "popular": "POPULAR",
+    "select": "Select",
+    "addToQuote": "Add to quote",
+    "noMatches": "No services match",
+    "emptyTitle": "No services yet",
+    "emptyHint": "Add the work you quote most often, with the price you charge. Then a quote is picking from a list instead of typing it out.",
+    "addFirst": "Add your first service",
+    "newTitle": "New service",
+    "editTitle": "Edit service",
+    "notFoundTitle": "Service not found",
+    "sectionWhat": "What you sell",
+    "name": "Service name",
+    "namePlaceholder": "e.g. Boiler service",
+    "description": "What it covers",
+    "descriptionPlaceholder": "Appears on the quote line",
+    "category": "Category",
+    "sectionCharge": "What you charge",
+    "typeFixed": "Fixed price",
+    "typePerUnit": "Per unit",
+    "typeHourly": "Hourly",
+    "price": "Price",
+    "unit": "Per",
+    "unitHour": "hour",
+    "unitExample": "m²",
+    "sectionCost": "What it costs you",
+    "costHint": "Optional. Fill this in and Vasco can show your margin — leave it blank and no margin is shown, rather than a guessed one.",
+    "labourMinutes": "Labour (minutes)",
+    "labourCostRate": "That hour costs you",
+    "materialsCost": "Materials cost",
+    "yourCost": "Your cost",
+    "priceForMargin": "Price it for a margin of",
+    "lossWarning": "This service costs more than you charge for it.",
+    "active": "Offer this service",
+    "activeHint": "Turn off to hide it from quotes without deleting it.",
+    "deleteTitle": "Delete this service?",
+    "deleteBody": "Quotes you have already sent are not affected.",
+    "tier": {
+      "good": "Basic",
+      "better": "Standard",
+      "best": "Premium"
+    },
+    "error": {
+      "nameRequired": "Give this service a name",
+      "priceRequired": "Enter a price of zero or more",
+      "unitRequired": "Say what the price is per — “€12” alone is not a price a customer can check"
     }
   },
   "jobQuality": {

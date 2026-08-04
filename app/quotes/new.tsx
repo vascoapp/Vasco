@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -20,6 +21,8 @@ import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency, type Country } from '../../src/i18n/formatting';
 import { useInlineInsight, useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { QuoteLineItem } from '../../src/domain/lineItems';
+import { Pricebook } from '../../src/components/contractor';
+import { recordUsage, type PricebookEntry, type PricebookVariantEntry } from '../../src/services/pricebookService';
 import { logError } from '../../src/utils/errorHandler';
 import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
@@ -73,6 +76,33 @@ export default function NewQuoteScreen() {
       ...prev,
       { id: `li-${Date.now()}`, description: '', quantity: 1, unitPrice: 0 },
     ]);
+  }, []);
+
+  const [showPricebook, setShowPricebook] = useState(false);
+
+  // Pull a saved service onto the quote. This is what makes maintaining a
+  // pricebook worth the contractor's time — without it the catalogue is a
+  // screen you visit once.
+  const addFromPricebook = useCallback((entry: PricebookEntry, variant?: PricebookVariantEntry) => {
+    const unitPrice = variant?.price ?? entry.basePrice;
+    const line: QuoteLineItem = {
+      id: `li-${Date.now()}`,
+      // The variant name alone ("Premium") means nothing on a customer's quote.
+      description: variant ? `${entry.name} — ${variant.name}` : entry.name,
+      quantity: 1,
+      unitPrice,
+    };
+    setItems((prev) => {
+      // Replace the trailing blank line rather than leaving it stranded above
+      // the service the contractor just picked.
+      const last = prev[prev.length - 1];
+      const lastIsBlank = last && !last.description.trim() && !last.unitPrice;
+      return lastIsBlank ? [...prev.slice(0, -1), line] : [...prev, line];
+    });
+    // Usage is what ranks the book by what they actually sell. Failing to
+    // record it must never block the quote, so it is deliberately not awaited.
+    recordUsage(entry.id).catch(() => {});
+    setShowPricebook(false);
   }, []);
 
   const removeLineItem = useCallback((index: number) => {
@@ -268,9 +298,14 @@ export default function NewQuoteScreen() {
                 </View>
               </View>
             ))}
-            <Pressable onPress={addLineItem} style={styles.addItemBtn}>
-              <Text style={{ color: SemanticColors.actionPrimary, fontWeight: '600' }}>{t('quoteNew.addLineItem', '+ Add line item')}</Text>
-            </Pressable>
+            <View style={styles.addRow}>
+              <Pressable onPress={addLineItem} style={[styles.addItemBtn, styles.addItemBtnFlex]}>
+                <Text style={{ color: SemanticColors.actionPrimary, fontWeight: '600' }}>{t('quoteNew.addLineItem', '+ Add line item')}</Text>
+              </Pressable>
+              <Pressable onPress={() => setShowPricebook(true)} style={[styles.addItemBtn, styles.addItemBtnFlex]}>
+                <Text style={{ color: SemanticColors.actionPrimary, fontWeight: '600' }}>{t('quoteNew.fromPricebook', '+ From pricebook')}</Text>
+              </Pressable>
+            </View>
           </View>
 
           {/* Total */}
@@ -292,6 +327,23 @@ export default function NewQuoteScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* onRequestClose is required on Android — without it the hardware back
+          button does nothing and the modal traps the user. */}
+      <Modal
+        visible={showPricebook}
+        animationType="slide"
+        onRequestClose={() => setShowPricebook(false)}
+      >
+        <Pricebook
+          mode="select"
+          onSelectItem={addFromPricebook}
+          onClose={() => setShowPricebook(false)}
+          // No add/edit affordances here: this is a picker mid-quote, and
+          // sending someone to the catalogue editor would lose the quote
+          // they are part-way through writing.
+        />
+      </Modal>
     </Screen>
   );
 }
@@ -343,6 +395,13 @@ const styles = StyleSheet.create({
   addItemBtn: {
     paddingVertical: Spacing.sm,
     alignItems: 'center',
+  },
+  addRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  addItemBtnFlex: {
+    flex: 1,
   },
   pickerDropdown: {
     backgroundColor: SemanticColors.surfacePrimary,

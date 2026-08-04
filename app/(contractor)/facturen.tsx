@@ -676,25 +676,38 @@ export default function FacturenScreen() {
         {activeTab === 'offertes' ? (
           <View style={{ gap: Spacing.sm }}>
             {/* Nieuwe Offerte CTA — front and center */}
+            <Pressable
+              style={styles.nieuweOfferteCta}
+              onPress={() => setShowQuoteBuilder(true)}
+            >
+              <Ionicons name="add-circle" size={24} color={Palette.white} />
+              <Text style={styles.nieuweOfferteCtaText}>{t('invoices.newQuote', 'Nieuwe offerte')}</Text>
+            </Pressable>
+
+            {/* The two libraries a quote is assembled FROM. Templates used to
+                sit beside the CTA and starve it: the chip is content-sized, the
+                CTA was flex:1, and "Nieuwe offerte" is one of the shorter
+                labels in the six locales. Given a row of their own both fit at
+                any language, and grouping them says what they are — reusable
+                content, not actions. */}
             <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
               <Pressable
-                style={[styles.nieuweOfferteCta, { flex: 1 }]}
-                onPress={() => setShowQuoteBuilder(true)}
-              >
-                <Ionicons name="add-circle" size={24} color={Palette.white} />
-                <Text style={styles.nieuweOfferteCtaText}>{t('invoices.newQuote', 'Nieuwe offerte')}</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [{
-                  flexDirection: 'row', alignItems: 'center', gap: 6,
-                  backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12,
-                  paddingHorizontal: 14, paddingVertical: 12,
-                  borderWidth: 1, borderColor: SemanticColors.borderDefault,
-                }, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [styles.quoteLibraryChip, pressed && { opacity: 0.85 }]}
                 onPress={() => router.push('/contractor/quote-templates' as any)}
               >
                 <Ionicons name="copy-outline" size={18} color={Palette.hermesOrange} />
-                <Text style={{ fontSize: 13, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary }}>Templates</Text>
+                <Text style={styles.quoteLibraryChipText} numberOfLines={1}>
+                  {t('invoices.quoteTemplates', 'Templates')}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.quoteLibraryChip, pressed && { opacity: 0.85 }]}
+                onPress={() => router.push('/contractor/pricebook' as any)}
+              >
+                <Ionicons name="book-outline" size={18} color={Palette.hermesOrange} />
+                <Text style={styles.quoteLibraryChipText} numberOfLines={1}>
+                  {t('invoices.pricebook', 'Prijslijst')}
+                </Text>
               </Pressable>
             </View>
 
@@ -1535,6 +1548,25 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: Spacing.md,
+  },
+  quoteLibraryChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  quoteLibraryChipText: {
+    fontSize: 13,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    flexShrink: 1,
   },
   nieuweOfferteCtaText: {
     fontSize: 17,

@@ -842,7 +842,9 @@
       "viewed": "Consultée",
       "paid": "Payée",
       "overdue": "En retard"
-    }
+    },
+    "quoteTemplates": "Modèles",
+    "pricebook": "Grille tarifaire"
   },
   "expenses": {
     "title": "Dépenses",
@@ -1803,7 +1805,10 @@
     "customServiceInvalidTitle": "Ajoutez un nom et un prix",
     "customServiceInvalidBody": "Saisissez un nom de service et un prix supérieur à zéro.",
     "startedQuestions_one": "{{count}} question entamée",
-    "startedQuestions_other": "{{count}} questions entamées"
+    "startedQuestions_other": "{{count}} questions entamées",
+    "aiMatchExact": "Correspondance avec « {{words}} » dans votre description. Votre prix : {{rate}}.",
+    "aiMatchFuzzy": "Proche de « {{words}} ». Votre prix : {{rate}}.",
+    "aiMatchFallback": "Depuis votre grille tarifaire — {{rate}}. Sans lien avec votre description, à vérifier."
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",
@@ -4119,7 +4124,8 @@
     "addLineItem": "+ Ajouter une ligne",
     "total": "Total",
     "saving": "Enregistrement...",
-    "saveDraft": "Enregistrer le brouillon"
+    "saveDraft": "Enregistrer le brouillon",
+    "fromPricebook": "+ Depuis la grille"
   },
   "checklist": {
     "beforePhoto": "Photo avant",
@@ -5113,7 +5119,69 @@
       "repairs": "Réparations",
       "finishing": "Finition",
       "specialty": "Spécialité",
-      "consultation": "Conseil"
+      "consultation": "Conseil",
+      "callout": "Déplacement",
+      "installation": "Installation",
+      "maintenance": "Entretien",
+      "inspection": "Contrôle",
+      "other": "Autre"
+    },
+    "add": "Ajouter une prestation",
+    "margin": "Marge",
+    "cost": "Coût",
+    "used": "Utilisée",
+    "time": "Durée",
+    "usedTimes_one": "{{count}}x",
+    "usedTimes_other": "{{count}}x",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "edit": "Modifier",
+    "pricingOptions": "Options tarifaires",
+    "popular": "POPULAIRE",
+    "select": "Choisir",
+    "addToQuote": "Ajouter au devis",
+    "noMatches": "Aucune prestation trouvée",
+    "emptyTitle": "Aucune prestation",
+    "emptyHint": "Ajoutez les travaux que vous chiffrez le plus souvent, avec votre prix. Un devis se compose alors en choisissant dans une liste plutôt qu'en le saisissant.",
+    "addFirst": "Ajouter votre première prestation",
+    "newTitle": "Nouvelle prestation",
+    "editTitle": "Modifier la prestation",
+    "notFoundTitle": "Prestation introuvable",
+    "sectionWhat": "Ce que vous vendez",
+    "name": "Nom de la prestation",
+    "namePlaceholder": "ex. Entretien de chaudière",
+    "description": "Ce qu'elle couvre",
+    "descriptionPlaceholder": "Apparaît sur la ligne du devis",
+    "category": "Catégorie",
+    "sectionCharge": "Ce que vous facturez",
+    "typeFixed": "Prix fixe",
+    "typePerUnit": "À l'unité",
+    "typeHourly": "À l'heure",
+    "price": "Prix",
+    "unit": "Par",
+    "unitHour": "heure",
+    "unitExample": "m²",
+    "sectionCost": "Ce que cela vous coûte",
+    "costHint": "Facultatif. Si vous le remplissez, Vasco affiche votre marge — sinon aucune marge n'est affichée, plutôt qu'une marge estimée.",
+    "labourMinutes": "Main-d'œuvre (minutes)",
+    "labourCostRate": "Cette heure vous coûte",
+    "materialsCost": "Coût des matériaux",
+    "yourCost": "Votre coût",
+    "priceForMargin": "Fixer le prix pour une marge de",
+    "lossWarning": "Cette prestation vous coûte plus que ce que vous la facturez.",
+    "active": "Proposer cette prestation",
+    "activeHint": "Désactivez pour la masquer des devis sans la supprimer.",
+    "deleteTitle": "Supprimer cette prestation ?",
+    "deleteBody": "Les devis déjà envoyés ne sont pas modifiés.",
+    "tier": {
+      "good": "Essentiel",
+      "better": "Standard",
+      "best": "Premium"
+    },
+    "error": {
+      "nameRequired": "Donnez un nom à cette prestation",
+      "priceRequired": "Saisissez un prix égal ou supérieur à zéro",
+      "unitRequired": "Indiquez à quoi correspond le prix — « 12 € » seul n'est pas un prix vérifiable par le client"
     }
   },
   "jobQuality": {

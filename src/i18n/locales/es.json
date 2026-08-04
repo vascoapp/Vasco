@@ -842,7 +842,9 @@
       "viewed": "Vista",
       "paid": "Pagada",
       "overdue": "Vencida"
-    }
+    },
+    "quoteTemplates": "Plantillas",
+    "pricebook": "Lista de precios"
   },
   "expenses": {
     "title": "Gastos",
@@ -1803,7 +1805,10 @@
     "customServiceInvalidTitle": "Añade un nombre y un precio",
     "customServiceInvalidBody": "Introduce un nombre de servicio y un precio mayor que cero.",
     "startedQuestions_one": "{{count}} pregunta iniciada",
-    "startedQuestions_other": "{{count}} preguntas iniciadas"
+    "startedQuestions_other": "{{count}} preguntas iniciadas",
+    "aiMatchExact": "Coincide con «{{words}}» de tu descripción. Tu precio: {{rate}}.",
+    "aiMatchFuzzy": "Parecido a «{{words}}». Tu precio: {{rate}}.",
+    "aiMatchFallback": "De tu lista de precios — {{rate}}. No coincide con tu descripción, compruébalo."
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -4119,7 +4124,8 @@
     "addLineItem": "+ Añadir línea",
     "total": "Total",
     "saving": "Guardando...",
-    "saveDraft": "Guardar borrador"
+    "saveDraft": "Guardar borrador",
+    "fromPricebook": "+ De la lista"
   },
   "checklist": {
     "beforePhoto": "Foto antes",
@@ -5113,7 +5119,69 @@
       "repairs": "Reparaciones",
       "finishing": "Acabado",
       "specialty": "Especialidad",
-      "consultation": "Asesoramiento"
+      "consultation": "Asesoramiento",
+      "callout": "Desplazamiento",
+      "installation": "Instalación",
+      "maintenance": "Mantenimiento",
+      "inspection": "Inspección",
+      "other": "Otros"
+    },
+    "add": "Añadir servicio",
+    "margin": "Margen",
+    "cost": "Coste",
+    "used": "Usado",
+    "time": "Tiempo",
+    "usedTimes_one": "{{count}}x",
+    "usedTimes_other": "{{count}}x",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "edit": "Editar",
+    "pricingOptions": "Opciones de precio",
+    "popular": "POPULAR",
+    "select": "Elegir",
+    "addToQuote": "Añadir al presupuesto",
+    "noMatches": "No se encontraron servicios",
+    "emptyTitle": "Aún no hay servicios",
+    "emptyHint": "Añade los trabajos que presupuestas más a menudo, con el precio que cobras. Así un presupuesto se elige de una lista en lugar de escribirse.",
+    "addFirst": "Añade tu primer servicio",
+    "newTitle": "Nuevo servicio",
+    "editTitle": "Editar servicio",
+    "notFoundTitle": "Servicio no encontrado",
+    "sectionWhat": "Lo que vendes",
+    "name": "Nombre del servicio",
+    "namePlaceholder": "p. ej. Mantenimiento de caldera",
+    "description": "Qué incluye",
+    "descriptionPlaceholder": "Aparece en la línea del presupuesto",
+    "category": "Categoría",
+    "sectionCharge": "Lo que cobras",
+    "typeFixed": "Precio fijo",
+    "typePerUnit": "Por unidad",
+    "typeHourly": "Por hora",
+    "price": "Precio",
+    "unit": "Por",
+    "unitHour": "hora",
+    "unitExample": "m²",
+    "sectionCost": "Lo que te cuesta",
+    "costHint": "Opcional. Si lo rellenas, Vasco muestra tu margen — si lo dejas vacío no se muestra ningún margen, en lugar de uno estimado.",
+    "labourMinutes": "Mano de obra (minutos)",
+    "labourCostRate": "Esa hora te cuesta",
+    "materialsCost": "Coste de materiales",
+    "yourCost": "Tu coste",
+    "priceForMargin": "Ponle precio para un margen del",
+    "lossWarning": "Este servicio te cuesta más de lo que cobras por él.",
+    "active": "Ofrecer este servicio",
+    "activeHint": "Desactiva para ocultarlo de los presupuestos sin borrarlo.",
+    "deleteTitle": "¿Eliminar este servicio?",
+    "deleteBody": "Los presupuestos ya enviados no se ven afectados.",
+    "tier": {
+      "good": "Básico",
+      "better": "Estándar",
+      "best": "Premium"
+    },
+    "error": {
+      "nameRequired": "Ponle un nombre a este servicio",
+      "priceRequired": "Introduce un precio de cero o más",
+      "unitRequired": "Indica a qué corresponde el precio — «12 €» por sí solo no es un precio que el cliente pueda comprobar"
     }
   },
   "jobQuality": {
