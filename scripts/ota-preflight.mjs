@@ -313,8 +313,51 @@ function parseCallArgs(text, openParen) {
 
 // Top-level property names from an object-literal source '{ a: 1, b, ...c }'.
 // Handles long-form, shorthand, spread and computed keys (latter two => skip).
+/**
+ * Remove // and block comments, respecting string literals.
+ *
+ * Without this, a comment inside an options object is split on its own commas
+ * and each fragment's first word is read as a KEY. A real call site annotated
+ *   t('projectBilling.invoicedOf', {
+ *     // Derived, not `project.totalInvoiced`: nothing maintains it, so ...
+ *     invoiced: ..., total: ...,
+ *   })
+ * was reported as passing `{not, so, total}` and missing `{{invoiced}}` — the
+ * prose swallowed the key that followed it. A gate that reports a correct call
+ * site as broken is how gates get ignored, so the checker is fixed rather than
+ * the comment moved.
+ */
+function stripComments(s) {
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === "'" || c === '"' || c === '`') {
+      const end = skipLiteralEnd(s, i);
+      out += s.slice(i, end + 1);
+      i = end;
+      continue;
+    }
+    if (c === '/' && s[i + 1] === '/') {
+      const nl = s.indexOf('\n', i);
+      if (nl === -1) break;
+      i = nl - 1;
+      out += '\n';
+      continue;
+    }
+    if (c === '/' && s[i + 1] === '*') {
+      const end = s.indexOf('*/', i + 2);
+      if (end === -1) break;
+      i = end + 1;
+      out += ' ';
+      continue;
+    }
+    out += c;
+  }
+  return out;
+}
+
 function objectKeys(src) {
-  const inner = src.slice(src.indexOf('{') + 1, src.lastIndexOf('}'));
+  const inner = stripComments(src.slice(src.indexOf('{') + 1, src.lastIndexOf('}')));
   const keys = new Set();
   let hasSpreadOrComputed = false, depth = 0, tokenStart = 0;
   const parts = [];
@@ -588,6 +631,15 @@ const SAME_WORD_OK = new Set([
   'KOR — Kleineondernemersregeling', 'GoBD Audit-Trail',
   'Vasco GoBD audit trail', 'Vasco Analyst', 'Vasco Finance', 'Vasco Engine',
   'Vasco Queue',
+  // Loanwords carried unchanged into de/fr/es/it in this domain. "Factoring" is
+  // the actual financial term in DE/ES/IT (not "Forderungsverkauf" in trade
+  // usage); "Chat" and "Text" are the ordinary German/French words; French
+  // spells "Suggestions" and "Optimisations" identically to English.
+  'Factoring', 'Chat', 'Text', 'Suggestions', 'Optimisations ({{count}})',
+  // Pricebook tiers: "Premium" and "POPULAR" are the same word in every target
+  // language here. The neighbouring tiers ("Basis"/"Base", "Standard") do
+  // differ and are translated.
+  'Premium', 'POPULAR',
 ]);
 
 // Namespaces whose locale values are DEAD CODE — never rendered, so an English
