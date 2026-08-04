@@ -5371,6 +5371,11 @@
     "emptyHint": "Een klant verschijnt hier zodra je {{count}} bezoeken hebt afgerond en het volgende binnen ongeveer twee maanden valt.",
     "insightTitle_one": "{{count}} klant toe aan terugkerend werk",
     "insightTitle_other": "{{count}} klanten toe aan terugkerend werk",
-    "insightBody": "Uit je afgeronde klussen — wie je al met een vast ritme bezoekt, en wanneer de volgende beurt valt."
+    "insightBody": "Uit je afgeronde klussen — wie je al met een vast ritme bezoekt, en wanneer de volgende beurt valt.",
+    "offerVisit": "Volgende beurt aanbieden",
+    "aboutMonths_one": "ongeveer een maand",
+    "aboutMonths_other": "ongeveer {{count}} maanden",
+    "theWork": "het werk",
+    "shareFailed": "Kon het deelvenster niet openen"
   }
 }

@@ -5387,6 +5387,11 @@
     "emptyHint": "Un cliente compare qui quando hai completato {{count}} visite e la prossima cade entro circa due mesi.",
     "insightTitle_one": "{{count}} cliente da rivedere",
     "insightTitle_other": "{{count}} clienti da rivedere",
-    "insightBody": "Dai tuoi lavori conclusi: chi visiti già con una certa cadenza e quando tocca la prossima."
+    "insightBody": "Dai tuoi lavori conclusi: chi visiti già con una certa cadenza e quando tocca la prossima.",
+    "offerVisit": "Proponi la prossima visita",
+    "aboutMonths_one": "circa un mese",
+    "aboutMonths_other": "circa {{count}} mesi",
+    "theWork": "il lavoro",
+    "shareFailed": "Impossibile aprire il menu di condivisione"
   }
 }

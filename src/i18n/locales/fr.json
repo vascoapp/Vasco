@@ -5387,6 +5387,11 @@
     "emptyHint": "Un client apparaît ici dès que vous avez terminé {{count}} visites pour lui et que la prochaine tombe d'ici environ deux mois.",
     "insightTitle_one": "{{count}} client à revoir",
     "insightTitle_other": "{{count}} clients à revoir",
-    "insightBody": "D'après vos chantiers terminés — chez qui vous intervenez déjà régulièrement, et quand la prochaine visite tombe."
+    "insightBody": "D'après vos chantiers terminés — chez qui vous intervenez déjà régulièrement, et quand la prochaine visite tombe.",
+    "offerVisit": "Proposer la prochaine visite",
+    "aboutMonths_one": "environ un mois",
+    "aboutMonths_other": "environ {{count}} mois",
+    "theWork": "les travaux",
+    "shareFailed": "Impossible d'ouvrir le menu de partage"
   }
 }

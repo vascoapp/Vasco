@@ -13,7 +13,7 @@
 // is absent rather than guessed.
 // =============================================================================
 
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Share, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +23,8 @@ import { SafeArea } from '../../src/theme/spacing';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { formatCurrency } from '../../src/i18n/formatting';
 import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
+import { renderTemplate, type Locale } from '../../src/services/whatsappTemplateService';
 import {
   useMaintenanceOpportunities,
   MIN_VISITS_FOR_RHYTHM,
@@ -43,8 +45,39 @@ export default function RepeatWorkScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const { businessProfile } = useAppState();
   const country = user?.country ?? 'NL';
   const opportunities = useMaintenanceOpportunities();
+
+  /**
+   * Offer the next visit.
+   *
+   * Renders the message and hands it to the system share sheet — the pattern
+   * every other customer-facing message in this app uses (R300), so the
+   * contractor picks WhatsApp, iMessage or email themselves and sees the text
+   * before it goes. Deliberately NOT a "sent!" confirmation: nothing here can
+   * know whether they actually sent it, and claiming otherwise is the bug this
+   * codebase has just spent a day removing from the payments screen.
+   */
+  const offerNextVisit = async (o: MaintenanceOpportunity) => {
+    const locale = ((businessProfile as { language?: string } | undefined)?.language ?? 'en') as Locale;
+    const months = Math.max(1, Math.round(o.intervalDays / 30.44));
+    const text = renderTemplate('maintenance_due', locale, {
+      customer: o.customerName,
+      // A plain phrase, not a date: the interval is a median of past gaps.
+      since: t('repeatWork.aboutMonths', 'about {{count}} months', { count: months }),
+      // Falls back to a generic noun rather than printing an empty gap in the
+      // middle of a sentence sent to a customer.
+      job: o.trade || t('repeatWork.theWork', 'the work'),
+      business: businessProfile?.businessName ?? '',
+    });
+
+    try {
+      await Share.share({ message: text });
+    } catch {
+      Alert.alert(t('repeatWork.shareFailed', 'Could not open the share sheet'));
+    }
+  };
 
   const renderRow = (o: MaintenanceOpportunity) => {
     const overdue = o.dueInDays < 0;
@@ -89,6 +122,17 @@ export default function RepeatWorkScreen() {
             {t('repeatWork.irregular', 'Timing varies — worth a conversation, not a fixed date.')}
           </Text>
         )}
+
+        {/* The action, not a report. Opens the share sheet with the message
+            already written; the contractor reads it and chooses how to send. */}
+        <Pressable
+          style={({ pressed }) => [styles.offerBtn, pressed && { opacity: 0.85 }]}
+          onPress={() => offerNextVisit(o)}
+          accessibilityRole="button"
+        >
+          <Ionicons name="chatbubble-ellipses-outline" size={16} color={Palette.white} />
+          <Text style={styles.offerBtnText}>{t('repeatWork.offerVisit', 'Offer next visit')}</Text>
+        </Pressable>
       </Pressable>
     );
   };
@@ -165,6 +209,21 @@ const styles = StyleSheet.create({
   loose: { color: SemanticColors.textTertiary, fontSize: TYPE.captionSize },
   empty: { alignItems: 'center', padding: GRID.xl, gap: GRID.sm },
   emptyTitle: { color: SemanticColors.textSecondary, fontSize: TYPE.bodySize },
+  offerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 4,
+    paddingVertical: 10,
+    borderRadius: RADIUS.full,
+    backgroundColor: SemanticColors.actionPrimary,
+  },
+  offerBtnText: {
+    color: Palette.white,
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily,
+  },
   emptyHint: {
     color: SemanticColors.textTertiary,
     fontSize: TYPE.captionSize,

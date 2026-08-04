@@ -5387,6 +5387,11 @@
     "emptyHint": "A customer shows up here once you have completed {{count}} visits for them and the next one is within about two months.",
     "insightTitle_one": "{{count}} customer due for repeat work",
     "insightTitle_other": "{{count}} customers due for repeat work",
-    "insightBody": "Read from your finished jobs — who you already visit on a rhythm, and when the next one is due."
+    "insightBody": "Read from your finished jobs — who you already visit on a rhythm, and when the next one is due.",
+    "offerVisit": "Offer next visit",
+    "aboutMonths_one": "about a month",
+    "aboutMonths_other": "about {{count}} months",
+    "theWork": "the work",
+    "shareFailed": "Could not open the share sheet"
   }
 }

@@ -5387,6 +5387,11 @@
     "emptyHint": "Un cliente aparece aquí cuando le has completado {{count}} visitas y la siguiente cae dentro de unos dos meses.",
     "insightTitle_one": "{{count}} cliente pendiente de trabajo recurrente",
     "insightTitle_other": "{{count}} clientes pendientes de trabajo recurrente",
-    "insightBody": "De tus trabajos terminados: a quién ya visitas con cierto ritmo y cuándo toca la siguiente."
+    "insightBody": "De tus trabajos terminados: a quién ya visitas con cierto ritmo y cuándo toca la siguiente.",
+    "offerVisit": "Ofrecer la próxima visita",
+    "aboutMonths_one": "aproximadamente un mes",
+    "aboutMonths_other": "aproximadamente {{count}} meses",
+    "theWork": "el trabajo",
+    "shareFailed": "No se pudo abrir el menú de compartir"
   }
 }

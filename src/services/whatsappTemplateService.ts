@@ -15,7 +15,8 @@ export type TemplateId =
   | 'quote_sent'
   | 'payment_reminder'
   | 'payment_thanks'
-  | 'review_request';
+  | 'review_request'
+  | 'maintenance_due';
 
 export type Locale = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
@@ -59,6 +60,22 @@ const TEMPLATES: Record<TemplateId, Record<Locale, string>> = {
     fr: `Merci {{customer}} — paiement reçu pour la facture {{ref}}. Reçu à suivre. — {{business}}`,
     es: `Gracias {{customer}} — pago recibido para la factura {{ref}}. Recibo en camino. — {{business}}`,
     it: `Grazie {{customer}} — pagamento ricevuto per la fattura {{ref}}. Ricevuta in arrivo. — {{business}}`,
+  },
+  // Offering the next visit to a customer the history says is due. Phrased as
+  // an offer with a question, not a booking: nothing has been scheduled, and a
+  // message that implies a date the contractor has not set would put them in
+  // the wrong with their own customer.
+  //
+  // `since` carries a plain phrase ("about a year") rather than a date — the
+  // interval is a median of past gaps, so quoting it to the day would claim a
+  // precision the observation does not have.
+  maintenance_due: {
+    en: `Hi {{customer}}, it's been {{since}} since I last looked at {{job}}. Want me to book the next visit? — {{business}}`,
+    nl: `Hoi {{customer}}, het is inmiddels {{since}} geleden dat ik naar {{job}} heb gekeken. Zal ik de volgende beurt inplannen? — {{business}}`,
+    de: `Hallo {{customer}}, es ist etwa {{since}} her, dass ich mir {{job}} angesehen habe. Soll ich den nächsten Termin einplanen? — {{business}}`,
+    fr: `Bonjour {{customer}}, cela fait {{since}} que je ne suis pas passé pour {{job}}. Je vous programme la prochaine visite ? — {{business}}`,
+    es: `Hola {{customer}}, hace {{since}} que no reviso {{job}}. ¿Te programo la próxima visita? — {{business}}`,
+    it: `Ciao {{customer}}, è passato circa {{since}} dall'ultima volta che ho controllato {{job}}. Ti fisso la prossima visita? — {{business}}`,
   },
   review_request: {
     en: `Hi {{customer}}, hope everything works well. Would you mind leaving a short review? {{link}} — {{business}}`,

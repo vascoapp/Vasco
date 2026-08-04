@@ -5387,6 +5387,11 @@
     "emptyHint": "Ein Kunde erscheint hier, sobald Sie {{count}} Besuche abgeschlossen haben und der nächste in etwa zwei Monaten ansteht.",
     "insightTitle_one": "{{count}} Kunde für Wiederholungsarbeiten fällig",
     "insightTitle_other": "{{count}} Kunden für Wiederholungsarbeiten fällig",
-    "insightBody": "Aus Ihren abgeschlossenen Aufträgen — wen Sie bereits regelmäßig besuchen und wann der nächste Termin ansteht."
+    "insightBody": "Aus Ihren abgeschlossenen Aufträgen — wen Sie bereits regelmäßig besuchen und wann der nächste Termin ansteht.",
+    "offerVisit": "Nächsten Termin anbieten",
+    "aboutMonths_one": "etwa ein Monat",
+    "aboutMonths_other": "etwa {{count}} Monate",
+    "theWork": "die Arbeiten",
+    "shareFailed": "Teilen-Menü konnte nicht geöffnet werden"
   }
 }
