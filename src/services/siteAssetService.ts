@@ -95,6 +95,21 @@ export function siteKeyFor(address?: { street?: string; postcode?: string }): st
   return `${street}|${postcode}`;
 }
 
+/**
+ * Site key from a single free-text address line — the shape Customer.address
+ * has. Same normalisation as siteKeyFor so a customer-level and a job-level
+ * address for the same place do not produce two different sites.
+ *
+ * There is no postcode component to separate out of a free-text line, so the
+ * whole string is the key. That makes it coarser than the structured version:
+ * two properties for one customer collapse into one site unless the job itself
+ * carries an address. Coarse and correct beats precise and wrong.
+ */
+export function siteKeyFromText(address?: string): string | null {
+  const norm = (address ?? '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return norm ? `${norm}|` : null;
+}
+
 // ---------------------------------------------------------------------------
 // Proposals
 // ---------------------------------------------------------------------------
@@ -105,7 +120,18 @@ export interface ProposalJob {
   status: string;
   completedAt?: string;
   updatedAt?: string;
+  /**
+   * Where the work happened.
+   *
+   * Almost always absent in practice: `addJob(title)` is the only in-app
+   * job-creation path and passes no address, so this is populated for
+   * imported jobs and little else. `fallbackAddress` below is what makes the
+   * feature work on the data that exists — checked before building on the
+   * field, not after (learnings #109).
+   */
   address?: { street?: string; postcode?: string; city?: string };
+  /** The customer's own address, used when the job carries none. */
+  fallbackAddress?: string;
 }
 
 const DONE = new Set(['completed', 'invoiced', 'paid']);
@@ -127,7 +153,7 @@ export function proposeAssets(
   for (const job of jobs) {
     if (!job.customerId) continue;
     if (!DONE.has(job.status)) continue;
-    const siteKey = siteKeyFor(job.address);
+    const siteKey = siteKeyFor(job.address) ?? siteKeyFromText(job.fallbackAddress);
     if (!siteKey) continue;
     if (known.has(`${job.customerId}::${siteKey}`)) continue;
 
@@ -150,7 +176,9 @@ export function proposeAssets(
         customerId: job.customerId,
         customerName: name,
         siteKey,
-        siteLabel: [job.address?.street, job.address?.city].filter(Boolean).join(', '),
+        siteLabel:
+          [job.address?.street, job.address?.city].filter(Boolean).join(', ') ||
+          (job.fallbackAddress ?? ''),
         visits: 1,
         lastVisit: when,
         recentWork: [job.title],
@@ -166,7 +194,8 @@ export function proposeAssets(
 /** Work done at one site, newest first — the "what did we do here?" answer. */
 export function historyForSite(jobs: ProposalJob[], customerId: string, siteKey: string): ProposalJob[] {
   return jobs
-    .filter((j) => j.customerId === customerId && DONE.has(j.status) && siteKeyFor(j.address) === siteKey)
+    .filter((j) => j.customerId === customerId && DONE.has(j.status)
+      && (siteKeyFor(j.address) ?? siteKeyFromText(j.fallbackAddress)) === siteKey)
     .sort((a, b) => (b.completedAt ?? b.updatedAt ?? '').localeCompare(a.completedAt ?? a.updatedAt ?? ''));
 }
 
@@ -262,14 +291,19 @@ export function useCustomerSiteAssets(customerId: string) {
 
   const mine = useMemo(() => assets.filter((a) => a.customerId === customerId), [assets, customerId]);
 
-  const proposals = useMemo(
+  const customerAddress = customers.find((c) => c.id === customerId)?.address;
+
+  const withFallback = useMemo(
     () =>
-      proposeAssets(
-        jobs.filter((j) => j.customerId === customerId) as unknown as ProposalJob[],
-        assets,
-        (id) => customers.find((c) => c.id === id)?.name,
-      ),
-    [jobs, assets, customers, customerId],
+      jobs
+        .filter((j) => j.customerId === customerId)
+        .map((j) => ({ ...(j as unknown as ProposalJob), fallbackAddress: customerAddress })),
+    [jobs, customerId, customerAddress],
+  );
+
+  const proposals = useMemo(
+    () => proposeAssets(withFallback, assets, (id) => customers.find((c) => c.id === id)?.name),
+    [withFallback, assets, customers],
   );
 
   return { assets: mine, proposals, loading, refresh, upsert, remove };

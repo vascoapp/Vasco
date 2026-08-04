@@ -903,7 +903,8 @@
     "noCustomersFound": "No se han encontrado clientes",
     "segments": "Segmentos de clientes",
     "insights": "Información de clientes",
-    "namePlaceholder": "Nombre del cliente"
+    "namePlaceholder": "Nombre del cliente",
+    "addressPlaceholder": "Dirección"
   },
   "team": {
     "title": "Equipo",
@@ -2300,7 +2301,8 @@
       "outstandingAmount": "{{amount}} pendiente",
       "limitReached": "Has alcanzado el límite de clientes de este plan.",
       "jobs_one": "{{count}} trabajo",
-      "jobs_other": "{{count}} trabajos"
+      "jobs_other": "{{count}} trabajos",
+      "addressPlaceholder": "Dirección"
     },
     "projects": {
       "title": "Proyectos",

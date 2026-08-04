@@ -11,6 +11,7 @@ import {
   siteKeyFor,
   proposeAssets,
   historyForSite,
+  siteKeyFromText,
   nextServiceDue,
   MIN_VISITS_TO_PROPOSE,
   type ProposalJob,
@@ -140,5 +141,43 @@ describe('next service due', () => {
   it('adds the interval to the last visit', () => {
     const due = nextServiceDue({ ...asset, serviceIntervalMonths: 12 }, '2026-01-15T00:00:00.000Z');
     expect(due?.slice(0, 10)).toBe('2027-01-15');
+  });
+});
+
+describe('falling back to the customer address', () => {
+  // job.address is almost never populated: addJob(title) is the only in-app
+  // creation path and passes none. Without this fallback the whole feature
+  // matched nothing in production while demoing fine — the job-forms bug again.
+  const noAddr = (over: Partial<ProposalJob> = {}): ProposalJob =>
+    ({ ...job(), address: undefined, ...over });
+
+  it('proposes from the customer address when the job carries none', () => {
+    const jobs = [
+      noAddr({ fallbackAddress: 'Prinsengracht 123, Amsterdam' }),
+      noAddr({ fallbackAddress: 'Prinsengracht 123, Amsterdam' }),
+    ];
+    const out = proposeAssets(jobs, [], named);
+    expect(out).toHaveLength(1);
+    expect(out[0].siteLabel).toBe('Prinsengracht 123, Amsterdam');
+  });
+
+  it('still proposes nothing when neither the job nor the customer has one', () => {
+    expect(proposeAssets([noAddr(), noAddr()], [], named)).toEqual([]);
+  });
+
+  it('normalises the free-text form the same way', () => {
+    expect(siteKeyFromText('Prinsengracht 123, Amsterdam'))
+      .toBe(siteKeyFromText('prinsengracht123 amsterdam'));
+    expect(siteKeyFromText('  ')).toBeNull();
+  });
+
+  it('prefers the job address over the customer one when both exist', () => {
+    // The job address is the more specific fact: a property manager's jobs
+    // happen at their tenants' addresses, not at their office.
+    const out = proposeAssets(
+      [job({ fallbackAddress: 'Kantoor Herengracht 1' }), job({ fallbackAddress: 'Kantoor Herengracht 1' })],
+      [], named,
+    );
+    expect(out[0].siteLabel).toBe('Prinsengracht 123, Amsterdam');
   });
 });

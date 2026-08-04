@@ -903,7 +903,8 @@
     "noCustomersFound": "Aucun client trouvé",
     "segments": "Segments de clients",
     "insights": "Analyses clients",
-    "namePlaceholder": "Nom du client"
+    "namePlaceholder": "Nom du client",
+    "addressPlaceholder": "Adresse"
   },
   "team": {
     "title": "Équipe",
@@ -2300,7 +2301,8 @@
       "outstandingAmount": "{{amount}} en attente",
       "limitReached": "Vous avez atteint la limite de clients de ce forfait.",
       "jobs_one": "{{count}} mission",
-      "jobs_other": "{{count}} missions"
+      "jobs_other": "{{count}} missions",
+      "addressPlaceholder": "Adresse"
     },
     "projects": {
       "title": "Projets",

@@ -887,7 +887,8 @@
     "noCustomersFound": "Geen klanten gevonden",
     "segments": "Klantsegmenten",
     "insights": "Klantinzichten",
-    "namePlaceholder": "Naam klant"
+    "namePlaceholder": "Naam klant",
+    "addressPlaceholder": "Adres"
   },
   "team": {
     "title": "Team",
@@ -2284,7 +2285,8 @@
       "outstandingAmount": "{{amount}} openstaand",
       "limitReached": "Je hebt de klantlimiet van dit abonnement bereikt.",
       "jobs_one": "{{count}} klus",
-      "jobs_other": "{{count}} klussen"
+      "jobs_other": "{{count}} klussen",
+      "addressPlaceholder": "Adres"
     },
     "projects": {
       "title": "Projecten",

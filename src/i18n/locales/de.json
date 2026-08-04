@@ -903,7 +903,8 @@
     "noCustomersFound": "Keine Kunden gefunden",
     "segments": "Kundensegmente",
     "insights": "Kundeneinblicke",
-    "namePlaceholder": "Kundenname"
+    "namePlaceholder": "Kundenname",
+    "addressPlaceholder": "Adresse"
   },
   "team": {
     "title": "Team",
@@ -2300,7 +2301,8 @@
       "outstandingAmount": "{{amount}} offen",
       "limitReached": "Du hast das Kundenlimit dieses Tarifs erreicht.",
       "jobs_one": "{{count}} Auftrag",
-      "jobs_other": "{{count}} Aufträge"
+      "jobs_other": "{{count}} Aufträge",
+      "addressPlaceholder": "Adresse"
     },
     "projects": {
       "title": "Projekte",

@@ -42,6 +42,9 @@ export default function CustomerPhonebookScreen() {
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  // See bedrijf.tsx: neither contractor path captured an address, so the app
+  // held no location for any customer a contractor created.
+  const [newAddress, setNewAddress] = useState('');
 
   // Build contact list with job count + auto-tags
   const contacts = useMemo(() => {
@@ -99,6 +102,7 @@ export default function CustomerPhonebookScreen() {
     const cleanName = sanitizeInput(newName);
     const cleanEmail = sanitizeInput(newEmail);
     const cleanPhone = sanitizeInput(newPhone);
+    const cleanAddress = sanitizeInput(newAddress);
 
     if (cleanEmail && !isValidEmail(cleanEmail)) {
       Alert.alert(t('common.error', 'Error'), t('validation.invalidEmail', 'Please enter a valid email address'));
@@ -135,11 +139,12 @@ export default function CustomerPhonebookScreen() {
       customers as any,
     );
     const commit = async () => {
-      await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined);
+      await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined, cleanAddress || undefined);
       hapticSuccess();
       setNewName('');
       setNewPhone('');
       setNewEmail('');
+      setNewAddress('');
       setShowAdd(false);
     };
     if (dupes.length > 0) {
@@ -336,6 +341,13 @@ export default function CustomerPhonebookScreen() {
                 onChangeText={setNewEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+              />
+              <TextInput
+                style={s.input}
+                placeholder={t('contractor.customers.addressPlaceholder', 'Address')}
+                placeholderTextColor={SemanticColors.textTertiary}
+                value={newAddress}
+                onChangeText={setNewAddress}
               />
 
               <Pressable

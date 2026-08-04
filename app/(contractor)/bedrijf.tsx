@@ -89,6 +89,11 @@ export default function BedrijfScreen() {
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  // Address was not captured here at all, only in the enterprise-tab customer
+  // modal that a contractor never sees. Without it the app holds no location
+  // for anyone a contractor adds, which quietly disables directions-to-job and
+  // any per-site history.
+  const [newAddress, setNewAddress] = useState('');
   const { customers, invoices, jobs, addCustomer, isLoading } = useAppState();
   const { user } = useAuth();
   const [trackers, setTrackers] = useState<TrackerData[]>([]);
@@ -135,11 +140,16 @@ export default function BedrijfScreen() {
 
   const handleAddCustomer = useCallback(async () => {
     if (!newName.trim()) return;
-    await addCustomer(newName.trim(), newEmail.trim() || undefined, newPhone.trim() || undefined);
+    await addCustomer(
+      newName.trim(),
+      newEmail.trim() || undefined,
+      newPhone.trim() || undefined,
+      newAddress.trim() || undefined,
+    );
     hapticSuccess();
-    setNewName(''); setNewEmail(''); setNewPhone('');
+    setNewName(''); setNewEmail(''); setNewPhone(''); setNewAddress('');
     setShowAddModal(false);
-  }, [newName, newEmail, newPhone, addCustomer]);
+  }, [newName, newEmail, newPhone, newAddress, addCustomer]);
 
   const handleSendReminder = useCallback(async (trackerId: string) => {
     try {
@@ -491,6 +501,7 @@ export default function BedrijfScreen() {
               <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />
               <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
               <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.textMuted} keyboardType="phone-pad" />
+              <TextInput style={s.modalInput} value={newAddress} onChangeText={setNewAddress} placeholder={t('customers.addressPlaceholder', 'Address')} placeholderTextColor={DK.colors.textMuted} />
               <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
                 <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                 <DKLabel style={s.modalSubmitText}>{t('dk.actions.addCustomer', 'Add customer')}</DKLabel>
