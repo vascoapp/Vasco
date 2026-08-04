@@ -11,6 +11,7 @@ import { Customer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
 import { Invoice, Quote } from '../domain/documents';
+import { completionStampFor } from '../domain/jobs';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
 import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
 import { Supplier } from '../domain/suppliers';
@@ -1363,14 +1364,38 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
         }
 
+        // Stamp completedAt on the transition to `completed`.
+        //
+        // Nothing wrote this field. It is declared on Job, mapped both ways
+        // (`completed_at`) and read in several places — but only the ten seeded
+        // jobs ever carried a value, so every real contractor's jobs had it
+        // undefined and it demoed perfectly. Same shape as the job-forms trade
+        // bug: an optional field only fixtures populate.
+        //
+        // It is not cosmetic. addInvoiceFromJob snapshots the invoice's
+        // leveringsdatum from `job.completedAt` (NL Belastingdienst Art. 35
+        // lid 1.b), so with it never set EVERY invoice raised from a job
+        // persisted delivery_date = null.
+        //
+        // `?? now` rather than always-now: re-completing a job must not move a
+        // date an invoice has already snapshotted and reported.
+        const completedStamp = completionStampFor(status, job?.completedAt);
         setJobs((prev) =>
           prev.map((j) =>
-            j.id === id ? { ...j, status, updatedAt: new Date().toISOString() } : j,
+            j.id === id
+              ? {
+                  ...j,
+                  status,
+                  ...(completedStamp ? { completedAt: completedStamp } : {}),
+                  updatedAt: new Date().toISOString(),
+                }
+              : j,
           ),
         );
         if (isSupabaseConfigured) {
+          const jobPatch = { status, ...(completedStamp ? { completedAt: completedStamp } : {}) };
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('jobs', 'update', () => dbUpdateJob(id, { status }), { rowId: id, payload: { status } }),
+            persistOrQueue('jobs', 'update', () => dbUpdateJob(id, jobPatch), { rowId: id, payload: jobPatch }),
           ).catch(() => {});
         }
         // AI data collector — track job lifecycle events

@@ -78,3 +78,26 @@ export type Job = {
   createdAt: string;
   updatedAt: string;
 };
+
+/**
+ * The completion timestamp to persist when a job moves to `status`.
+ *
+ * Returns undefined for every status except `completed`, so callers can spread
+ * it without branching.
+ *
+ * This is a legal rule, not bookkeeping: `addInvoiceFromJob` snapshots the
+ * invoice's leveringsdatum from `job.completedAt` (NL Belastingdienst Art. 35
+ * lid 1.b). Nothing wrote the field until 2026-08-04 — only seeded jobs carried
+ * one — so every invoice raised from a real job persisted delivery_date = null.
+ *
+ * An existing stamp is preserved rather than refreshed: re-completing a job
+ * must not move a date an invoice has already snapshotted and reported.
+ */
+export function completionStampFor(
+  status: JobStatus,
+  existing: string | undefined,
+  now: () => string = () => new Date().toISOString(),
+): string | undefined {
+  if (status !== 'completed') return undefined;
+  return existing ?? now();
+}
