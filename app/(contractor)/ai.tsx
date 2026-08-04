@@ -28,6 +28,7 @@ import { useAutomations, type AutomationContext } from '../../src/services/autom
 import { exportAllData } from '../../src/services/dataExportService';
 import { requestAccountDeletion } from '../../src/services/accountDeletionService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { useMaintenanceOpportunities } from '../../src/services/maintenanceOpportunityService';
 import { formatMoney2 } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -81,6 +82,8 @@ export default function VascoScreen() {
   // Kantoorbot hidden for launch (2026-07-20). Remote kill switch.
   const officeBotEnabled = useFeatureFlag('office_bot', { country: user?.country as any });
   const { jobs, invoices, quotes, customers, isLoading, businessProfile } = useAppState();
+  // Recurring revenue read out of this contractor's own finished work.
+  const repeatWork = useMaintenanceOpportunities();
   const aiQueue = useAIQueue();
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
@@ -453,7 +456,31 @@ export default function VascoScreen() {
         )}
 
         {tab === 'insights' && (
-          recommendations.length > 0 ? (
+          <>
+            {/* Repeat work leads Insights when anything is actually due.
+                The chip under More → Sales is the always-available entry, but
+                More is a drawer, and a recurring-revenue prompt that nobody
+                finds is the same as not having built it. Rendered only when the
+                contractor's own history produced something — never as an empty
+                teaser. */}
+            {repeatWork.length > 0 && (
+              <Pressable
+                style={({ pressed }) => [s.recCard, pressed && { opacity: 0.9 }, { marginBottom: 10 }]}
+                onPress={() => router.push('/contractor/repeat-work' as any)}
+              >
+                <View style={s.recAccent} />
+                <View style={{ flex: 1, padding: 12 }}>
+                  <Text style={s.recTitle} numberOfLines={1}>
+                    {t('repeatWork.insightTitle', '{{count}} customers due for repeat work', { count: repeatWork.length })}
+                  </Text>
+                  <Text style={s.recDesc} numberOfLines={2}>
+                    {t('repeatWork.insightBody', 'Read from your finished jobs — who you already visit on a rhythm, and when the next one is due.')}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={DK.colors.textMuted} style={{ marginRight: 12 }} />
+              </Pressable>
+            )}
+          {recommendations.length > 0 ? (
             <View style={s.recList}>
               {recommendations.map((rec: any) => (
                 <Pressable
@@ -470,9 +497,10 @@ export default function VascoScreen() {
                 </Pressable>
               ))}
             </View>
-          ) : (
+          ) : repeatWork.length === 0 ? (
             <EmptyPanel icon="bulb-outline" title={t('dk.empty.noInsights', 'No insights').toUpperCase()} desc={t('dk.empty.noInsightsDesc', 'Vasco is scanning your data. New insights appear here when they are relevant.')} />
-          )
+          ) : null}
+          </>
         )}
 
         {tab === 'automations' && (
@@ -534,17 +562,24 @@ export default function VascoScreen() {
                 Ungated, an NL contractor saw their pipeline as "$12,500".
                 Gated at the ENTRY POINT rather than in-screen — per R89, a
                 "US only" empty state is worse UX than not showing the chip. */}
-            {isUSContractor && (
-              <>
-                <DKLabel style={s.subsectionLabel}>{t('dk.ai.sales', 'Sales')}</DKLabel>
-                <View style={s.chipRow}>
-                  <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/pipeline' as any)}>
-                    <Ionicons name="git-network-outline" size={14} color={DK.colors.accent} />
-                    <DKLabel style={s.chipText}>{t('ai.pipeline', 'Pipeline')}</DKLabel>
-                  </Pressable>
-                </View>
-              </>
-            )}
+            {/* Sales is no longer US-only. It was gated as a whole because its
+                single chip (Pipeline / leads CRM) is a US-market feature, but
+                repeat work is read from any contractor's own job history and is
+                the recurring-revenue story in every market — so the section
+                shows for everyone and Pipeline stays gated inside it. */}
+            <DKLabel style={s.subsectionLabel}>{t('dk.ai.sales', 'Sales')}</DKLabel>
+            <View style={s.chipRow}>
+              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/repeat-work' as any)}>
+                <Ionicons name="repeat-outline" size={14} color={DK.colors.accent} />
+                <DKLabel style={s.chipText}>{t('repeatWork.title', 'Repeat work')}</DKLabel>
+              </Pressable>
+              {isUSContractor && (
+                <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/pipeline' as any)}>
+                  <Ionicons name="git-network-outline" size={14} color={DK.colors.accent} />
+                  <DKLabel style={s.chipText}>{t('ai.pipeline', 'Pipeline')}</DKLabel>
+                </Pressable>
+              )}
+            </View>
 
             {/* R109: only show the Team subsection to contractors who
                 actually have a team (teamSize !== 'solo') OR coordinate

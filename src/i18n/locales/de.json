@@ -5368,5 +5368,25 @@
     "needField": "Fügen Sie mindestens einen Punkt hinzu",
     "startAnother": "Weiteres Formular ausfüllen",
     "completed": "Abgeschlossen"
+  },
+  "repeatWork": {
+    "title": "Wiederkehrende Arbeiten",
+    "intro": "Kunden, die Sie bereits regelmäßig besuchen. Aus Ihren abgeschlossenen Aufträgen gelesen — Intervall und Beträge sind Ihre eigenen, kein Branchendurchschnitt.",
+    "everyYear": "jedes Jahr",
+    "everyMonths_one": "jeden Monat",
+    "everyMonths_other": "alle {{count}} Monate",
+    "everyDays_one": "jeden Tag",
+    "everyDays_other": "alle {{count}} Tage",
+    "visits_one": "{{count}} Besuch",
+    "visits_other": "{{count}} Besuche",
+    "dueIn": "in {{count}} T fällig",
+    "overdueBy": "{{count}} T überfällig",
+    "worthPerYear": "{{amount}} pro Jahr zu Ihren jetzigen Preisen",
+    "irregular": "Die Abstände schwanken — ein Gespräch wert, kein fester Termin.",
+    "emptyTitle": "Noch nichts fällig",
+    "emptyHint": "Ein Kunde erscheint hier, sobald Sie {{count}} Besuche abgeschlossen haben und der nächste in etwa zwei Monaten ansteht.",
+    "insightTitle_one": "{{count}} Kunde für Wiederholungsarbeiten fällig",
+    "insightTitle_other": "{{count}} Kunden für Wiederholungsarbeiten fällig",
+    "insightBody": "Aus Ihren abgeschlossenen Aufträgen — wen Sie bereits regelmäßig besuchen und wann der nächste Termin ansteht."
   }
 }

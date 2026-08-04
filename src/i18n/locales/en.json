@@ -5368,5 +5368,25 @@
     "needField": "Add at least one item",
     "startAnother": "Fill in another form",
     "completed": "Completed"
+  },
+  "repeatWork": {
+    "title": "Repeat work",
+    "intro": "Customers you already visit on a rhythm. Read from your finished jobs — the interval and the amounts are yours, not an industry average.",
+    "everyYear": "every year",
+    "everyMonths_one": "every month",
+    "everyMonths_other": "every {{count}} months",
+    "everyDays_one": "every day",
+    "everyDays_other": "every {{count}} days",
+    "visits_one": "{{count}} visit",
+    "visits_other": "{{count}} visits",
+    "dueIn": "due in {{count}}d",
+    "overdueBy": "{{count}}d overdue",
+    "worthPerYear": "{{amount}} a year at what you already charge",
+    "irregular": "Timing varies — worth a conversation, not a fixed date.",
+    "emptyTitle": "Nothing due yet",
+    "emptyHint": "A customer shows up here once you have completed {{count}} visits for them and the next one is within about two months.",
+    "insightTitle_one": "{{count}} customer due for repeat work",
+    "insightTitle_other": "{{count}} customers due for repeat work",
+    "insightBody": "Read from your finished jobs — who you already visit on a rhythm, and when the next one is due."
   }
 }

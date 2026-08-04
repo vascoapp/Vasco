@@ -5368,5 +5368,25 @@
     "needField": "Aggiungi almeno una voce",
     "startAnother": "Compila un altro modulo",
     "completed": "Completato"
+  },
+  "repeatWork": {
+    "title": "Lavoro ricorrente",
+    "intro": "Clienti che visiti già con una certa cadenza. Ricavato dai tuoi lavori conclusi: l'intervallo e gli importi sono i tuoi, non una media di settore.",
+    "everyYear": "ogni anno",
+    "everyMonths_one": "ogni mese",
+    "everyMonths_other": "ogni {{count}} mesi",
+    "everyDays_one": "ogni giorno",
+    "everyDays_other": "ogni {{count}} giorni",
+    "visits_one": "{{count}} visita",
+    "visits_other": "{{count}} visite",
+    "dueIn": "tra {{count}} g",
+    "overdueBy": "{{count}} g di ritardo",
+    "worthPerYear": "{{amount}} all'anno alle tariffe che applichi già",
+    "irregular": "I tempi variano: vale una chiacchierata, non una data fissa.",
+    "emptyTitle": "Niente in scadenza",
+    "emptyHint": "Un cliente compare qui quando hai completato {{count}} visite e la prossima cade entro circa due mesi.",
+    "insightTitle_one": "{{count}} cliente da rivedere",
+    "insightTitle_other": "{{count}} clienti da rivedere",
+    "insightBody": "Dai tuoi lavori conclusi: chi visiti già con una certa cadenza e quando tocca la prossima."
   }
 }

@@ -5368,5 +5368,25 @@
     "needField": "Añade al menos un punto",
     "startAnother": "Rellenar otro formulario",
     "completed": "Finalizado"
+  },
+  "repeatWork": {
+    "title": "Trabajo recurrente",
+    "intro": "Clientes a los que ya visitas con cierto ritmo. Deducido de tus trabajos terminados: el intervalo y los importes son tuyos, no una media del sector.",
+    "everyYear": "cada año",
+    "everyMonths_one": "cada mes",
+    "everyMonths_other": "cada {{count}} meses",
+    "everyDays_one": "cada día",
+    "everyDays_other": "cada {{count}} días",
+    "visits_one": "{{count}} visita",
+    "visits_other": "{{count}} visitas",
+    "dueIn": "en {{count}} d",
+    "overdueBy": "{{count}} d de retraso",
+    "worthPerYear": "{{amount}} al año con lo que ya cobras",
+    "irregular": "Los plazos varían: merece una conversación, no una fecha fija.",
+    "emptyTitle": "Nada pendiente aún",
+    "emptyHint": "Un cliente aparece aquí cuando le has completado {{count}} visitas y la siguiente cae dentro de unos dos meses.",
+    "insightTitle_one": "{{count}} cliente pendiente de trabajo recurrente",
+    "insightTitle_other": "{{count}} clientes pendientes de trabajo recurrente",
+    "insightBody": "De tus trabajos terminados: a quién ya visitas con cierto ritmo y cuándo toca la siguiente."
   }
 }

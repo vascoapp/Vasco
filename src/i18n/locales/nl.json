@@ -5352,5 +5352,25 @@
     "needField": "Voeg minstens één punt toe",
     "startAnother": "Nog een formulier invullen",
     "completed": "Afgerond"
+  },
+  "repeatWork": {
+    "title": "Terugkerend werk",
+    "intro": "Klanten die je al met een vast ritme bezoekt. Afgeleid uit je afgeronde klussen — het interval en de bedragen zijn van jou, geen branchegemiddelde.",
+    "everyYear": "elk jaar",
+    "everyMonths_one": "elke maand",
+    "everyMonths_other": "elke {{count}} maanden",
+    "everyDays_one": "elke dag",
+    "everyDays_other": "elke {{count}} dagen",
+    "visits_one": "{{count}} bezoek",
+    "visits_other": "{{count}} bezoeken",
+    "dueIn": "over {{count}}d",
+    "overdueBy": "{{count}}d te laat",
+    "worthPerYear": "{{amount}} per jaar tegen wat je nu al rekent",
+    "irregular": "Timing wisselt — een gesprek waard, geen vaste datum.",
+    "emptyTitle": "Nog niets op de planning",
+    "emptyHint": "Een klant verschijnt hier zodra je {{count}} bezoeken hebt afgerond en het volgende binnen ongeveer twee maanden valt.",
+    "insightTitle_one": "{{count}} klant toe aan terugkerend werk",
+    "insightTitle_other": "{{count}} klanten toe aan terugkerend werk",
+    "insightBody": "Uit je afgeronde klussen — wie je al met een vast ritme bezoekt, en wanneer de volgende beurt valt."
   }
 }

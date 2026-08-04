@@ -5368,5 +5368,25 @@
     "needField": "Ajoutez au moins un point",
     "startAnother": "Remplir un autre formulaire",
     "completed": "Terminé"
+  },
+  "repeatWork": {
+    "title": "Travail récurrent",
+    "intro": "Les clients chez qui vous intervenez déjà régulièrement. Déduit de vos chantiers terminés — l'intervalle et les montants sont les vôtres, pas une moyenne du secteur.",
+    "everyYear": "chaque année",
+    "everyMonths_one": "chaque mois",
+    "everyMonths_other": "tous les {{count}} mois",
+    "everyDays_one": "chaque jour",
+    "everyDays_other": "tous les {{count}} jours",
+    "visits_one": "{{count}} visite",
+    "visits_other": "{{count}} visites",
+    "dueIn": "dans {{count}} j",
+    "overdueBy": "{{count}} j de retard",
+    "worthPerYear": "{{amount}} par an à vos tarifs actuels",
+    "irregular": "Les délais varient — à discuter, sans date fixe.",
+    "emptyTitle": "Rien à prévoir pour l'instant",
+    "emptyHint": "Un client apparaît ici dès que vous avez terminé {{count}} visites pour lui et que la prochaine tombe d'ici environ deux mois.",
+    "insightTitle_one": "{{count}} client à revoir",
+    "insightTitle_other": "{{count}} clients à revoir",
+    "insightBody": "D'après vos chantiers terminés — chez qui vous intervenez déjà régulièrement, et quand la prochaine visite tombe."
   }
 }
