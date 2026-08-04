@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
   try {
     const { imageBase64, imagesBase64, imageUrls, trade, country, mode } = await req.json();
-    const analysisMode = mode || 'quote'; // 'quote' | 'invoice'
+    const analysisMode = mode || 'quote'; // 'quote' | 'invoice' | 'certificate' | 'completion'
 
     // Input shape priority: imageUrls[] (Claude fetches server-side) > imagesBase64[] > legacy imageBase64.
     // URL path is used by the contractor's "Draft quote from these photos" flow when customer
@@ -159,7 +159,50 @@ Guidelines:
 - If expiryDate isn't explicitly printed, leave it undefined (do NOT guess)
 - Set confidence low (<60) when fields are unclear or blurry`;
 
-    const prompt = analysisMode === 'certificate' ? certificatePrompt
+    // ── COMPLETION MODE ──────────────────────────────────────────────────────
+    // The mirror of quote mode, at the other end of the job.
+    //
+    // Quote mode looks at work to be DONE and prices it. Nothing looked at work
+    // that WAS done, so the record of it was only ever created by typing — and
+    // it mostly was not. Job.trade, Job.completedAt, job.address and actualCost
+    // are all declared, read and filtered on across this codebase while being
+    // populated by nothing, which is what a missing capture step looks like from
+    // the inside.
+    //
+    // Rules that keep this honest, and they are stricter than quote mode's:
+    // this output becomes an invoice line and a service record, so an invented
+    // material is something a customer gets charged for and an invented reading
+    // is a false maintenance record. The model may only report what is VISIBLE.
+    const completionPrompt = `You are documenting FINISHED ${tradeContext} work in ${countryContext} for the tradesperson who did it.${multiPhotoHint}
+
+These photos were taken AFTER the work was completed. Describe what was done, so it can become an invoice line and a service record.
+
+Return ONLY valid JSON, no markdown:
+
+{
+  "summary": "One sentence a customer would understand, in ${countryContext === 'NL' ? 'Dutch' : countryContext === 'DE' ? 'German' : countryContext === 'FR' ? 'French' : countryContext === 'ES' ? 'Spanish' : countryContext === 'IT' ? 'Italian' : 'English'}",
+  "workDone": [
+    { "description": "A discrete task that is visibly complete", "confidence": 0-100 }
+  ],
+  "materialsVisible": [
+    { "name": "Material or part visible in the photo", "quantity": number or null, "unit": "stuk" | "m" | "m²" | null, "confidence": 0-100 }
+  ],
+  "assetServiced": { "name": "The unit worked on, e.g. CV-ketel Remeha Avanta", "identifier": "Model or serial ONLY if legible", "confidence": 0-100 } | null,
+  "followUp": ["Something visibly left to do, or empty"],
+  "confidence": 0-100
+}
+
+HARD RULES — this becomes an invoice and a service record:
+- Report ONLY what is visible. Do not infer standard steps that "must have" happened.
+- NEVER invent a quantity. If you cannot count it, use null — not a guess.
+- NEVER invent a model or serial number. Omit "identifier" unless a label is legible.
+- assetServiced is null unless a specific unit is actually visible.
+- Do NOT estimate hours or prices. That is not what this photo shows.
+- Low confidence (<60) is the correct answer for a blurry or partial photo.
+- Empty arrays are correct when nothing is visible. Say nothing rather than something plausible.`;
+
+    const prompt = analysisMode === 'completion' ? completionPrompt
+      : analysisMode === 'certificate' ? certificatePrompt
       : analysisMode === 'invoice' ? invoicePrompt
       : `You are an expert construction trades estimator for ${tradeContext} work in ${countryContext}.${multiPhotoHint}
 
