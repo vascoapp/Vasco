@@ -2223,6 +2223,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.routingNumber !== undefined) dbUpdates.routing_number = updates.routingNumber || null;
           if (updates.bankAccountNumber !== undefined) dbUpdates.bank_account_number = updates.bankAccountNumber || null;
           if (updates.licenses !== undefined) dbUpdates.licenses = updates.licenses ?? [];
+          // R66r24/R83 class, third time in this table: business-settings wrote
+          // this into AppState and the mapper dropped it, so a contractor who
+          // switched a payment method off found it back on after a cold start —
+          // and their customers were offered it again. Migration
+          // 20260805000001 adds the column. `?? null` not `?? []`: null means
+          // "never configured", [] means "all turned off", and the reader
+          // treats those differently.
+          if (updates.enabledPaymentMethods !== undefined) dbUpdates.enabled_payment_methods = updates.enabledPaymentMethods ?? null;
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
             // R83: cast is to the BusinessSettingsRow Partial expected by
             // upsertBusinessSettings — the row type now includes the 4
@@ -3575,6 +3583,26 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               effective = { ...updates, billingTerms: readied };
             }
           }
+        }
+
+        // Stamp actualEndDate on the transition to `completed`, for the same
+        // reason Job.completedAt is stamped on job completion: the field was
+        // declared, mapped both ways and read, but nothing ever set it, so
+        // oplevering existed only as a status with no date attached.
+        //
+        // It matters beyond tidiness — retentie is released at oplevering, and
+        // repeat-work reads a completed project's end date to spot customers who
+        // commission a job every year. Without it both fall back to
+        // targetEndDate, which is a plan rather than a fact.
+        //
+        // Existing value preserved: re-completing a project must not move a date
+        // a retention release has already been argued from.
+        const projectNow = projects.find(p => p.id === id);
+        const endStamp = effective.status === 'completed'
+          ? (projectNow?.actualEndDate ?? new Date().toISOString())
+          : undefined;
+        if (endStamp && effective.actualEndDate === undefined) {
+          effective = { ...effective, actualEndDate: endStamp };
         }
 
         setProjects(prev => prev.map(p =>

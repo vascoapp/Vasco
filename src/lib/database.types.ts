@@ -49,6 +49,9 @@ export type BusinessSettingsRow = {
   // issueDate?, issuingAuthority? }. Type is intentionally loose here —
   // the canonical ContractorLicense shape lives in src/domain/business.ts.
   licenses: Array<Record<string, unknown>> | null;
+  // Migration 20260805000001. NULL = not configured (app falls back to every
+  // method the country supports); [] = contractor disabled all of them.
+  enabled_payment_methods: string[] | null;
   created_at: string;
   updated_at: string;
 };

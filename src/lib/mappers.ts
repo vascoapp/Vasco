@@ -134,6 +134,9 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
     // state + ACH columns; 20260520000001 added licenses jsonb.
     state: row.state ?? undefined,
     routingNumber: row.routing_number ?? undefined,
+    // undefined (not []) when the column is null, so the caller's
+    // `?? allPaymentMethods` fallback still fires for an unconfigured profile.
+    enabledPaymentMethods: row.enabled_payment_methods ?? undefined,
     bankAccountNumber: row.bank_account_number ?? undefined,
     licenses: row.licenses
       ? (row.licenses as unknown as BusinessProfile['licenses'])
