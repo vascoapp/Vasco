@@ -182,6 +182,11 @@ export type DocumentRow = {
   // create from linked job's completed_at; PDF render reads from here
   // (no longer joins jobs at render time).
   delivery_date: string | null;
+  // Migration 20260805000002. Generated-and-shared, NOT accepted.
+  // Optional on the type: the column is new and nullable, and requiring it
+  // would force every existing DocumentRow fixture to be rewritten to say
+  // nothing about a field they predate.
+  einvoice_submitted?: string | null;
   // Progress billing — migration 20260803000001_progress_billing.sql.
   // `project_id` is a new direction of travel: projects carried invoice_ids,
   // but nothing linked an invoice back to its project.

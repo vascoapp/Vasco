@@ -223,6 +223,7 @@ type AppState = {
   projects: Project[];
   addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'totalInvoiced' | 'totalPaid'>) => string;
   updateProject: (id: string, updates: Partial<Project>) => void;
+  markEInvoiceSubmitted: (id: string) => void;
   addJobToProject: (projectId: string, jobId: string) => void;
   getProjectPnL: (projectId: string) => ProjectPnL;
   pendingBudgetExtraction: BudgetExtractionResult | null;
@@ -1617,6 +1618,39 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         markStepComplete('first_quote_sent').catch(() => {});
         const sentQuote = quotes.find(q => q.id === id);
         fireNotification('approval_request', 'medium', 'Quote sent', `Quote for ${sentQuote?.customer || id} sent. Follow-up scheduled in 3 days.`, `/(contractor)/facturen`);
+      },
+      /**
+       * Record that an e-invoice XML was generated and shared for this invoice.
+       *
+       * Called from the export handlers, not from the queue approval: approving
+       * the queue item only deep-links to the invoice screen, and the
+       * contractor can still back out before anything is produced. Recording it
+       * at approval would mark unfiled invoices as filed.
+       *
+       * Idempotent — an existing timestamp is kept, because the first export is
+       * the one that was filed and a re-share should not rewrite that date.
+       */
+      markEInvoiceSubmitted: (id) => {
+        const when = new Date().toISOString();
+        let changed = false;
+        setInvoices((prev) =>
+          prev.map((inv) => {
+            if (inv.id !== id || inv.einvoiceSubmitted) return inv;
+            changed = true;
+            return { ...inv, einvoiceSubmitted: when };
+          }),
+        );
+        if (!changed) return;
+        if (isSupabaseConfigured) {
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue(
+              'documents',
+              'update',
+              () => updateDocument(id, { einvoice_submitted: when } as never),
+              { rowId: id, payload: { einvoice_submitted: when } },
+            ),
+          ).catch((err) => logWarn('AppState', `markEInvoiceSubmitted persist failed: ${err}`));
+        }
       },
       markInvoiceSent: (id) => {
         const invoice = invoices.find((inv) => inv.id === id);

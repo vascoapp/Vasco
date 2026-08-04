@@ -90,6 +90,7 @@ export default function InvoiceDetailScreen() {
     businessProfile,
     lineItems: appLineItems,
     jobs,
+    markEInvoiceSubmitted,
   } = useAppState();
   const { user } = useAuth();
   const invoice = invoices.find((item) => item.id === id);
@@ -518,9 +519,11 @@ export default function InvoiceDetailScreen() {
         await RNShare.share({ message: xml, title: filename });
       }
       hapticSuccess();
+      markEInvoiceSubmitted(invoice.id);
     } catch {
       // Fallback: share XML as plain text if filesystem/share fails
       await RNShare.share({ message: xml, title: filename });
+      markEInvoiceSubmitted(invoice.id);
     }
   };
 
@@ -604,8 +607,13 @@ export default function InvoiceDetailScreen() {
         await RNShare.share({ message: xml, title: filename });
       }
       hapticSuccess();
+      // Recorded here, not on queue approval: approving only deep-links to this
+      // screen and the contractor can still back out, so recording earlier would
+      // mark unfiled invoices as filed.
+      markEInvoiceSubmitted(invoice.id);
     } catch {
       await RNShare.share({ message: xml, title: filename });
+      markEInvoiceSubmitted(invoice.id);
     }
   };
 
@@ -682,8 +690,13 @@ export default function InvoiceDetailScreen() {
         await RNShare.share({ message: xml, title: filename });
       }
       hapticSuccess();
+      // Recorded here, not on queue approval: approving only deep-links to this
+      // screen and the contractor can still back out, so recording earlier would
+      // mark unfiled invoices as filed.
+      markEInvoiceSubmitted(invoice.id);
     } catch {
       await RNShare.share({ message: xml, title: filename });
+      markEInvoiceSubmitted(invoice.id);
     }
   };
 
