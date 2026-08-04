@@ -4517,7 +4517,21 @@
   },
   "payments": {
     "newQuoteFab": "New quote",
-    "upgradeRequiredDesc": "Online payment links require a paid plan."
+    "upgradeRequiredDesc": "Online payment links require a paid plan.",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "account": "Account: {{id}}",
+    "statsTitle": "Your payment record",
+    "avgDaysToPay": "Avg. days to pay",
+    "paidOnTime": "Paid on time",
+    "invoicesPaid": "Invoices paid",
+    "preferences": "Preferences",
+    "reminders": "Payment reminders",
+    "remindersSub": "Set up in Automations",
+    "paymentTerms": "Payment terms",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "enabledMethods": "Enabled payment methods:"
   },
   "leads": {
     "noHotLeads": "No hot leads right now"

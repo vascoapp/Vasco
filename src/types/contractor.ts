@@ -262,6 +262,9 @@ export interface ContractorInvoice {
   id: string;
   contractorId: string;
   customerId: string;
+  /** Display name. Without it the payments screen fell back to rendering the
+   *  last three characters of `customerId` as "Customer #003". */
+  customerName?: string;
   jobId?: string;
   quoteId?: string;
 

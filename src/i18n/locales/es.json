@@ -4517,7 +4517,21 @@
   },
   "payments": {
     "newQuoteFab": "Nuevo presupuesto",
-    "upgradeRequiredDesc": "Los enlaces de pago online requieren un plan de pago."
+    "upgradeRequiredDesc": "Los enlaces de pago online requieren un plan de pago.",
+    "connected": "Conectado",
+    "notConnected": "No conectado",
+    "account": "Cuenta: {{id}}",
+    "statsTitle": "Tu historial de cobro",
+    "avgDaysToPay": "Días medios de pago",
+    "paidOnTime": "Pagado a tiempo",
+    "invoicesPaid": "Facturas pagadas",
+    "preferences": "Preferencias",
+    "reminders": "Recordatorios de pago",
+    "remindersSub": "Configúralo en Automatizaciones",
+    "paymentTerms": "Plazo de pago",
+    "days_one": "{{count}} día",
+    "days_other": "{{count}} días",
+    "enabledMethods": "Métodos de pago activados:"
   },
   "leads": {
     "noHotLeads": "No hay clientes potenciales calientes ahora mismo"

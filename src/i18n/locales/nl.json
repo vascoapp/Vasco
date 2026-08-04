@@ -4501,7 +4501,21 @@
   },
   "payments": {
     "newQuoteFab": "Nieuwe offerte",
-    "upgradeRequiredDesc": "Online betaallinks vereisen een betaald abonnement."
+    "upgradeRequiredDesc": "Online betaallinks vereisen een betaald abonnement.",
+    "connected": "Verbonden",
+    "notConnected": "Niet verbonden",
+    "account": "Account: {{id}}",
+    "statsTitle": "Jouw betaalgedrag",
+    "avgDaysToPay": "Gem. dagen tot betaling",
+    "paidOnTime": "Op tijd betaald",
+    "invoicesPaid": "Facturen betaald",
+    "preferences": "Voorkeuren",
+    "reminders": "Betaalherinneringen",
+    "remindersSub": "Instellen bij Automatiseringen",
+    "paymentTerms": "Betaaltermijn",
+    "days_one": "{{count}} dag",
+    "days_other": "{{count}} dagen",
+    "enabledMethods": "Ingeschakelde betaalmethoden:"
   },
   "leads": {
     "noHotLeads": "Op dit moment geen hot leads"

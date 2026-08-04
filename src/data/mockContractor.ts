@@ -1,4 +1,5 @@
 // Mock data for Contractor Mode
+import { DEMO_MODE } from '../config/demo';
 import type {
   ContractorProfile,
   Customer,
@@ -474,7 +475,12 @@ export const MOCK_QUOTES: Quote[] = [
 // INVOICES
 // ============================================
 
-export const MOCK_CONTRACTOR_INVOICES: ContractorInvoice[] = [
+// Fabricated invoices. These were rendered UNGATED on `/contractor/payments`,
+// so a real contractor opened a payments screen and read "INV-2024-0022 ·
+// € 1.051 · 918d overdue" as money they were owed. That screen now reads the
+// real invoice list from AppState; the fixture is gated at the constant so no
+// future consumer can pick it up either (learnings #103).
+export const MOCK_CONTRACTOR_INVOICES: ContractorInvoice[] = DEMO_MODE ? [
   {
     id: 'inv-003',
     contractorId: 'contractor-001',
@@ -566,7 +572,7 @@ export const MOCK_CONTRACTOR_INVOICES: ContractorInvoice[] = [
     sentAt: '2024-01-15T10:00:00Z',
     createdAt: '2024-01-15T09:30:00Z',
   },
-];
+] : [];
 
 // ============================================
 // SCHEDULE

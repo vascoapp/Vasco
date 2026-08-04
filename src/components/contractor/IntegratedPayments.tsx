@@ -1,8 +1,9 @@
 // IntegratedPayments.tsx - iDEAL/Mollie Integration for Dutch Contractors
 // Quick payment links, reminders, and payment tracking
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DEMO_MODE } from '../../config/demo';
+import { useAppState } from '../../state/AppState';
 import {
   View,
   Text,
@@ -132,9 +133,13 @@ const PaymentMethodBadge: React.FC<PaymentMethodBadgeProps> = ({ method, size = 
 
 interface ConnectionStatusProps {
   settings: PaymentSettings;
+  /** From the contractor's business profile. Undefined = not set, so the row
+   *  is hidden rather than defaulting to the fixture's 14 days. */
+  paymentTermsDays?: number;
 }
 
-const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ settings }) => {
+const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ settings, paymentTermsDays }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.connectionCard}>
       <View style={styles.connectionHeader}>
@@ -145,7 +150,11 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ settings }) => {
           <View>
             <Text style={styles.connectionTitle}>Mollie Payments</Text>
             <Text style={styles.connectionSubtitle}>
-              {settings.isConnected ? `Account: ${settings.accountId}` : 'Not connected'}
+              {settings.isConnected
+                ? (settings.accountId
+                    ? t('payments.account', 'Account: {{id}}', { id: settings.accountId })
+                    : t('payments.connected', 'Connected'))
+                : t('payments.notConnected', 'Not connected')}
             </Text>
           </View>
         </View>
@@ -167,33 +176,37 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ settings }) => {
         </View>
       </View>
 
-      <View style={styles.enabledMethods}>
-        <Text style={styles.enabledMethodsLabel}>Enabled payment methods:</Text>
-        <View style={styles.methodsList}>
-          {settings.enabledMethods.map((method) => (
-            <PaymentMethodBadge key={method} method={method} />
-          ))}
+      {/* Hidden when nothing is enabled — "Enabled payment methods:" above an
+          empty row reads as a rendering failure. */}
+      {settings.enabledMethods.length > 0 && (
+        <View style={styles.enabledMethods}>
+          <Text style={styles.enabledMethodsLabel}>
+            {t('payments.enabledMethods', 'Enabled payment methods:')}
+          </Text>
+          <View style={styles.methodsList}>
+            {settings.enabledMethods.map((method) => (
+              <PaymentMethodBadge key={method} method={method} />
+            ))}
+          </View>
         </View>
-      </View>
+      )}
 
-      <View style={styles.settingsRow}>
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>Payment Terms</Text>
-          <Text style={styles.settingValue}>{settings.defaultPaymentTermsDays} days</Text>
+      {/* "Deposit Required 30%" and "Auto Reminders On" lived here as well as on
+          the toggles below, and were the same untrue claim: no deposit is ever
+          required and nothing sends an automatic reminder. Removed rather than
+          restyled. Payment terms are real — the contractor sets them in their
+          business profile — so that one stays, and is hidden when unset instead
+          of falling back to the fixture's 14. */}
+      {typeof paymentTermsDays === 'number' && (
+        <View style={styles.settingsRow}>
+          <View style={styles.settingItem}>
+            <Text style={styles.settingLabel}>{t('payments.paymentTerms', 'Payment terms')}</Text>
+            <Text style={styles.settingValue}>
+              {t('payments.days', { count: paymentTermsDays, defaultValue: '{{count}} days' })}
+            </Text>
+          </View>
         </View>
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>Deposit Required</Text>
-          <Text style={styles.settingValue}>
-            {settings.requireDeposit ? `${settings.depositPercent}%` : 'No'}
-          </Text>
-        </View>
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>Auto Reminders</Text>
-          <Text style={styles.settingValue}>
-            {settings.autoSendReminders ? 'On' : 'Off'}
-          </Text>
-        </View>
-      </View>
+      )}
     </View>
   );
 };
@@ -224,8 +237,16 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
     <View style={styles.invoiceCard}>
       <View style={styles.invoiceHeader}>
         <View>
-          <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
-          <Text style={styles.invoiceCustomer}>Customer #{invoice.customerId.slice(-3)}</Text>
+          {/* Headline is the invoice reference when there is one, otherwise the
+              customer — never the row id. The old code rendered
+              "Customer #{last 3 of the id}" as the subtitle, which identified
+              nobody. */}
+          <Text style={styles.invoiceNumber}>
+            {invoice.invoiceNumber || invoice.customerName || ''}
+          </Text>
+          {!!invoice.invoiceNumber && !!invoice.customerName && (
+            <Text style={styles.invoiceCustomer}>{invoice.customerName}</Text>
+          )}
         </View>
         <View style={styles.invoiceAmountContainer}>
           <Text style={styles.invoiceAmount}>
@@ -300,8 +321,16 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
     <View style={[styles.invoiceCard, styles.paidInvoiceCard]}>
       <View style={styles.invoiceHeader}>
         <View>
-          <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
-          <Text style={styles.invoiceCustomer}>Customer #{invoice.customerId.slice(-3)}</Text>
+          {/* Headline is the invoice reference when there is one, otherwise the
+              customer — never the row id. The old code rendered
+              "Customer #{last 3 of the id}" as the subtitle, which identified
+              nobody. */}
+          <Text style={styles.invoiceNumber}>
+            {invoice.invoiceNumber || invoice.customerName || ''}
+          </Text>
+          {!!invoice.invoiceNumber && !!invoice.customerName && (
+            <Text style={styles.invoiceCustomer}>{invoice.customerName}</Text>
+          )}
         </View>
         <View style={styles.invoiceAmountContainer}>
           <Text style={[styles.invoiceAmount, styles.paidAmount]}>
@@ -359,9 +388,86 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'outstanding' | 'paid' | 'settings'>('outstanding');
-  const [settings] = useState<PaymentSettings>(MOCK_PAYMENT_SETTINGS);
-  const [invoices] = useState<ContractorInvoice[]>(MOCK_CONTRACTOR_INVOICES);
+  const { invoices: appInvoices, mollieConnected, businessProfile } = useAppState();
+
+  // Was MOCK_CONTRACTOR_INVOICES — an ungated fixture, so this screen showed
+  // every contractor a fabricated "INV-2024-0022 · € 1.051 · 918d overdue" as
+  // their own outstanding money, on a surface whose entire job is telling them
+  // what they are owed. Now the real invoice list.
+  //
+  // Only six fields are read off an invoice here, so the shapes reconcile with
+  // a small view-model rather than a rewrite. `customer` is a NAME, which also
+  // removes the "Customer #003" id leak the old fixture forced.
+  const invoices = useMemo<ContractorInvoice[]>(
+    () =>
+      appInvoices.map((inv) => ({
+        ...(inv as unknown as ContractorInvoice),
+        id: inv.id,
+        // NOT `?? inv.id`: falling back to the row id printed "inv-seed-1" and
+        // "i-1043" as if they were invoice numbers. An invoice without a
+        // reference has no number to show, and the card falls back to the
+        // customer name instead (learnings #67 — the raw-id leak class).
+        invoiceNumber: inv.reference ?? '',
+        customerId: inv.customerId ?? '',
+        customerName: inv.customerName ?? inv.customer ?? '',
+        dueDate: inv.dueDate ?? '',
+        status: inv.status,
+        total: inv.total ?? inv.amount ?? 0,
+      })),
+    [appInvoices],
+  );
+
+  // The Mollie panel used to read a fixture that hardcoded isConnected:true and
+  // "Account: mol_xxx123", so it told every contractor their payment provider
+  // was live when nothing was connected. AppState owns the real flag.
+  // accountId is blanked rather than passed through: "mol_xxx123" was invented
+  // too, and a made-up account number on a payments screen is the kind of
+  // detail a contractor would reasonably quote back to their bank.
+  const settings = useMemo<PaymentSettings>(
+    () => ({
+      ...MOCK_PAYMENT_SETTINGS,
+      isConnected: mollieConnected,
+      accountId: '',
+      // No provider connected means no method is enabled, whatever the fixture
+      // said. Ticking iDEAL/Bancontact for someone who cannot take a payment is
+      // the same false reassurance as the "Connected" badge was.
+      enabledMethods: mollieConnected ? MOCK_PAYMENT_SETTINGS.enabledMethods : [],
+    }),
+    [mollieConnected],
+  );
   const [paymentLinks] = useState<PaymentLink[]>(MOCK_PAYMENT_LINKS);
+
+  // Derived from the contractor's own paid invoices. Each figure is null when
+  // the data to compute it is absent — a contractor with no paid invoice has no
+  // "days to pay", and 0 would read as "you get paid instantly".
+  const paymentStats = useMemo(() => {
+    const paid = appInvoices.filter((inv) => inv.status === 'paid');
+    if (paid.length === 0) return null;
+
+    const withDuration = paid
+      .map((inv) => {
+        const sent = inv.sentAt ?? inv.createdAt;
+        if (!sent || !inv.paidAt) return null;
+        const days = (new Date(inv.paidAt).getTime() - new Date(sent).getTime()) / 86_400_000;
+        return Number.isFinite(days) && days >= 0 ? days : null;
+      })
+      .filter((d): d is number => d !== null);
+
+    const withDue = paid.filter((inv) => inv.dueDate && inv.paidAt);
+
+    return {
+      paidCount: paid.length,
+      avgDaysToPay: withDuration.length
+        ? withDuration.reduce((s, d) => s + d, 0) / withDuration.length
+        : null,
+      onTimePercent: withDue.length
+        ? Math.round(
+            (withDue.filter((inv) => new Date(inv.paidAt!) <= new Date(inv.dueDate!)).length /
+              withDue.length) * 100,
+          )
+        : null,
+    };
+  }, [appInvoices]);
 
   // Filter invoices
   const outstandingInvoices = invoices.filter(
@@ -579,78 +685,71 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                 );
               })}
 
-            {/* Quick Stats */}
-            <View style={styles.paidStats}>
-              <Text style={styles.paidStatsTitle}>This Month</Text>
-              <View style={styles.paidStatsRow}>
-                <View style={styles.paidStatItem}>
-                  <Text style={styles.paidStatValue}>8.2</Text>
-                  <Text style={styles.paidStatLabel}>Avg. days to pay</Text>
-                </View>
-                <View style={styles.paidStatItem}>
-                  <Text style={styles.paidStatValue}>92%</Text>
-                  <Text style={styles.paidStatLabel}>Paid on time</Text>
-                </View>
-                <View style={styles.paidStatItem}>
-                  <Text style={styles.paidStatValue}>iDEAL</Text>
-                  <Text style={styles.paidStatLabel}>Most used</Text>
+            {/* Quick stats. These read "8.2 avg days to pay / 92% paid on time
+                / iDEAL most used" as hardcoded literals — every contractor was
+                shown the same invented performance as their own. Both figures
+                below are now derived from paid invoices, and the block is
+                hidden when nothing has been paid yet rather than showing a
+                confident zero. "Most used method" is gone: payment method is
+                not recorded on an invoice, so there was nothing to derive it
+                from (learnings #103). */}
+            {paymentStats && (
+              <View style={styles.paidStats}>
+                <Text style={styles.paidStatsTitle}>{t('payments.statsTitle', 'Your payment record')}</Text>
+                <View style={styles.paidStatsRow}>
+                  {paymentStats.avgDaysToPay !== null && (
+                    <View style={styles.paidStatItem}>
+                      <Text style={styles.paidStatValue}>{paymentStats.avgDaysToPay.toFixed(1)}</Text>
+                      <Text style={styles.paidStatLabel}>{t('payments.avgDaysToPay', 'Avg. days to pay')}</Text>
+                    </View>
+                  )}
+                  {paymentStats.onTimePercent !== null && (
+                    <View style={styles.paidStatItem}>
+                      <Text style={styles.paidStatValue}>{paymentStats.onTimePercent}%</Text>
+                      <Text style={styles.paidStatLabel}>{t('payments.paidOnTime', 'Paid on time')}</Text>
+                    </View>
+                  )}
+                  <View style={styles.paidStatItem}>
+                    <Text style={styles.paidStatValue}>{paymentStats.paidCount}</Text>
+                    <Text style={styles.paidStatLabel}>{t('payments.invoicesPaid', 'Invoices paid')}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
+            )}
           </View>
         )}
 
         {activeTab === 'settings' && (
           <View style={styles.tabContent}>
-            <ConnectionStatus settings={settings} />
+            <ConnectionStatus settings={settings} paymentTermsDays={businessProfile?.defaultPaymentTerms} />
 
-            {/* Quick Settings */}
+            {/* This block held three toggles — Auto Reminders, Require Deposit,
+                Enable Tipping — with no onPress and no setter behind them, so
+                none could be changed. Worse than dead: "Auto Reminders · send at
+                7, 3, 1, 0 days before due" rendered switched ON while nothing in
+                the app sent them, which is a claim a contractor could rely on
+                and then lose money to.
+                Reminders DO exist, in the automation packs, so that row now goes
+                where the real setting lives. Deposits and tipping have no
+                backing behaviour at all and are gone rather than mocked. */}
             <View style={styles.settingsSection}>
-              <Text style={styles.settingsSectionTitle}>Preferences</Text>
+              <Text style={styles.settingsSectionTitle}>{t('payments.preferences', 'Preferences')}</Text>
 
-              <Pressable style={styles.settingsRow2}>
+              <Pressable
+                style={styles.settingsRow2}
+                onPress={() => router.push('/contractor/automations' as any)}
+                accessibilityRole="button"
+              >
                 <View style={styles.settingsRowLeft}>
                   <Ionicons name="notifications-outline" size={20} color={Colors.textSecondary} />
                   <View>
-                    <Text style={styles.settingsRowTitle}>Auto Reminders</Text>
+                    <Text style={styles.settingsRowTitle}>{t('payments.reminders', 'Payment reminders')}</Text>
                     <Text style={styles.settingsRowSubtitle}>
-                      Send at {settings.reminderDays.join(', ')} days before due
+                      {t('payments.remindersSub', 'Set up in Automations')}
                     </Text>
                   </View>
                 </View>
-                <View style={[styles.toggle, settings.autoSendReminders && styles.toggleOn]}>
-                  <View style={[styles.toggleKnob, settings.autoSendReminders && styles.toggleKnobOn]} />
-                </View>
-              </Pressable>
-
-              <Pressable style={styles.settingsRow2}>
-                <View style={styles.settingsRowLeft}>
-                  <Ionicons name="cash-outline" size={20} color={Colors.textSecondary} />
-                  <View>
-                    <Text style={styles.settingsRowTitle}>Require Deposit</Text>
-                    <Text style={styles.settingsRowSubtitle}>
-                      {settings.depositPercent}% upfront for new customers
-                    </Text>
-                  </View>
-                </View>
-                <View style={[styles.toggle, settings.requireDeposit && styles.toggleOn]}>
-                  <View style={[styles.toggleKnob, settings.requireDeposit && styles.toggleKnobOn]} />
-                </View>
-              </Pressable>
-
-              <Pressable style={styles.settingsRow2}>
-                <View style={styles.settingsRowLeft}>
-                  <Ionicons name="heart-outline" size={20} color={Colors.textSecondary} />
-                  <View>
-                    <Text style={styles.settingsRowTitle}>Enable Tipping</Text>
-                    <Text style={styles.settingsRowSubtitle}>
-                      Let customers add a tip when paying
-                    </Text>
-                  </View>
-                </View>
-                <View style={[styles.toggle, settings.enableTipping && styles.toggleOn]}>
-                  <View style={[styles.toggleKnob, settings.enableTipping && styles.toggleKnobOn]} />
-                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.textSecondary} />
               </Pressable>
             </View>
 
@@ -662,7 +761,10 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                   const info = PAYMENT_METHOD_INFO[method];
                   const isEnabled = settings.enabledMethods.includes(method);
                   return (
-                    <Pressable
+                    // A View, not a Pressable: this grid had no onPress, so it
+                    // offered a tap target that could never change anything.
+                    // Which methods are live is configured in Mollie, not here.
+                    <View
                       key={method}
                       style={[styles.methodCard, isEnabled && styles.methodCardEnabled]}
                     >
@@ -682,7 +784,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                           style={styles.methodCardCheck}
                         />
                       )}
-                    </Pressable>
+                    </View>
                   );
                 })}
               </View>

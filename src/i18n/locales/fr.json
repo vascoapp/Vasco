@@ -4517,7 +4517,21 @@
   },
   "payments": {
     "newQuoteFab": "Nouveau devis",
-    "upgradeRequiredDesc": "Les liens de paiement en ligne nécessitent une offre payante."
+    "upgradeRequiredDesc": "Les liens de paiement en ligne nécessitent une offre payante.",
+    "connected": "Connecté",
+    "notConnected": "Non connecté",
+    "account": "Compte : {{id}}",
+    "statsTitle": "Vos délais de paiement",
+    "avgDaysToPay": "Jours moyens de paiement",
+    "paidOnTime": "Payé à temps",
+    "invoicesPaid": "Factures payées",
+    "preferences": "Préférences",
+    "reminders": "Relances de paiement",
+    "remindersSub": "À configurer dans Automatisations",
+    "paymentTerms": "Délai de paiement",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "enabledMethods": "Moyens de paiement activés :"
   },
   "leads": {
     "noHotLeads": "Aucun prospect chaud pour l'instant"

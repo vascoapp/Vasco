@@ -4517,7 +4517,21 @@
   },
   "payments": {
     "newQuoteFab": "Nuovo preventivo",
-    "upgradeRequiredDesc": "I link di pagamento online richiedono un piano a pagamento."
+    "upgradeRequiredDesc": "I link di pagamento online richiedono un piano a pagamento.",
+    "connected": "Connesso",
+    "notConnected": "Non connesso",
+    "account": "Conto: {{id}}",
+    "statsTitle": "I tuoi tempi di incasso",
+    "avgDaysToPay": "Giorni medi di pagamento",
+    "paidOnTime": "Pagato in tempo",
+    "invoicesPaid": "Fatture pagate",
+    "preferences": "Preferenze",
+    "reminders": "Solleciti di pagamento",
+    "remindersSub": "Configura in Automazioni",
+    "paymentTerms": "Termini di pagamento",
+    "days_one": "{{count}} giorno",
+    "days_other": "{{count}} giorni",
+    "enabledMethods": "Metodi di pagamento attivi:"
   },
   "leads": {
     "noHotLeads": "Nessun lead caldo al momento"

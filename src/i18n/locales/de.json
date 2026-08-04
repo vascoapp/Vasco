@@ -4517,7 +4517,21 @@
   },
   "payments": {
     "newQuoteFab": "Neues Angebot",
-    "upgradeRequiredDesc": "Online-Zahlungslinks erfordern einen kostenpflichtigen Tarif."
+    "upgradeRequiredDesc": "Online-Zahlungslinks erfordern einen kostenpflichtigen Tarif.",
+    "connected": "Verbunden",
+    "notConnected": "Nicht verbunden",
+    "account": "Konto: {{id}}",
+    "statsTitle": "Ihr Zahlungsverhalten",
+    "avgDaysToPay": "Ø Tage bis Zahlung",
+    "paidOnTime": "Pünktlich bezahlt",
+    "invoicesPaid": "Bezahlte Rechnungen",
+    "preferences": "Einstellungen",
+    "reminders": "Zahlungserinnerungen",
+    "remindersSub": "In Automatisierungen einrichten",
+    "paymentTerms": "Zahlungsziel",
+    "days_one": "{{count}} Tag",
+    "days_other": "{{count}} Tage",
+    "enabledMethods": "Aktivierte Zahlungsarten:"
   },
   "leads": {
     "noHotLeads": "Aktuell keine heißen Leads"
