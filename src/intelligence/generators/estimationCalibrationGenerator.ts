@@ -21,24 +21,29 @@ export const estimationCalibrationGenerator: InsightGenerator = {
 export function useEstimationCalibrationInsight(ctx: GeneratorContext): ScoredInsight | null {
   const accuracy = useEstimationAccuracy();
 
-  // Record estimation accuracy for trend tracking
-  if (accuracy) {
-    recordMetricSnapshot('estimationAccuracy', accuracy.overallScore);
+  // No completed job with both an estimate and actual hours means there is no
+  // accuracy to report. This used to arrive as a confident 100, which both fed
+  // the trend store a fake perfect reading and let the generator reason about a
+  // score derived from nothing.
+  const score = accuracy?.overallScore ?? null;
+
+  if (score !== null) {
+    recordMetricSnapshot('estimationAccuracy', score);
   }
 
   // Only trigger if estimation accuracy is below contractor's adaptive threshold
   // isAboveThreshold for estimationAccuracy returns true when value is BELOW threshold (lower-is-bad)
-  if (!accuracy || !isAboveThreshold(ctx.profile, 'estimationAccuracy', accuracy.overallScore)) return null;
+  if (score === null || !isAboveThreshold(ctx.profile, 'estimationAccuracy', score)) return null;
 
   // Log prediction for calibration
   logPrediction({
     generatorId: 'estimation-calibration',
     predictedAt: new Date().toISOString(),
-    prediction: `Schattingsnauwkeurigheid: ${accuracy.overallScore}%`,
-    predictedValue: accuracy.overallScore,
+    prediction: `Schattingsnauwkeurigheid: ${score}%`,
+    predictedValue: score,
   });
 
-  const priority = accuracy.overallScore < 70 ? 'medium' : 'low';
+  const priority = score < 70 ? 'medium' : 'low';
   const avgDeviation = Math.round(accuracy.averageHoursDeviation);
 
   return {
@@ -47,20 +52,22 @@ export function useEstimationCalibrationInsight(ctx: GeneratorContext): ScoredIn
     category: 'tip',
     priority,
     title: 'Vasco leert van je klussen',
-    message: `Je offertenauwkeurigheid is ${accuracy.overallScore}%.${avgDeviation > 10 ? ` Uren wijken gemiddeld ${avgDeviation}% af van de begroting.` : ''}`,
+    message: `Je offertenauwkeurigheid is ${score}%.${avgDeviation > 10 ? ` Uren wijken gemiddeld ${avgDeviation}% af van de begroting.` : ''}`,
     detail: 'Gebruik de Vasco Kalibratie bij je volgende offerte om automatisch betere schattingen te maken.',
     icon: 'analytics',
     actionLabel: 'Bekijk kalibratie',
     actionRoute: '/(contractor)/besparen',
     source: gt('source_estimation', ctx.language),
-    metric: { label: 'Nauwkeurigheid', value: `${accuracy.overallScore}%`, trend: accuracy.trend === 'improving' ? 'up' : 'down' },
+    metric: { label: 'Nauwkeurigheid', value: `${score}%`, // trend is not computed yet; omit rather than defaulting to 'down',
+      // which asserted a decline on every insight.
+      trend: accuracy.trend === 'improving' ? 'up' : accuracy.trend === 'declining' ? 'down' : undefined },
 
     rootCauseTags: ['estimation', 'accuracy'],
     rawScore: 0,
     reasoning: {
-      observation: `Offertenauwkeurigheid staat op ${accuracy.overallScore}%`,
+      observation: `Offertenauwkeurigheid staat op ${score}%`,
       evidence: `Op basis van ${accuracy.totalJobsAnalyzed} afgeronde klussen${(() => { const t = getTrend(ctx.profile, 'estimationAccuracy', 4); return t && t.slope !== 0 ? ` — nauwkeurigheidstrend: ${t.direction}` : ''; })()}`,
-      implication: accuracy.overallScore < 70
+      implication: score < 70
         ? 'Onnauwkeurige offertes kosten je gemiddeld 10-15% marge per klus'
         : 'Kleine verbeteringen in schattingen beschermen je marge',
       suggestion: 'Gebruik historische data om je schattingen te verbeteren',

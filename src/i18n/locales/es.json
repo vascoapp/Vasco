@@ -5393,5 +5393,35 @@
     "aboutMonths_other": "aproximadamente {{count}} meses",
     "theWork": "el trabajo",
     "shareFailed": "No se pudo abrir el menú de compartir"
+  },
+  "siteAssets": {
+    "title": "Equipos atendidos",
+    "suggested": "Merece registrarse",
+    "visitsSoFar": "{{count}} visitas — {{work}}",
+    "name": "¿Qué mantienes aquí?",
+    "namePlaceholder": "p. ej. caldera Remeha Avanta",
+    "details": "Modelo, número de serie, ubicación",
+    "detailsPlaceholder": "Opcional",
+    "category": "Categoría",
+    "interval": "Mantenimiento cada",
+    "months_one": "{{count}} mes",
+    "months_other": "{{count}} meses",
+    "nextDue": "Próximo mantenimiento {{date}}",
+    "serviceHistory_one": "{{count}} visita registrada",
+    "serviceHistory_other": "{{count}} visitas registradas",
+    "nameRequired": "Ponle un nombre primero",
+    "deleteTitle": "¿Eliminar este equipo?",
+    "deleteBody": "El historial de trabajos en esta dirección no se ve afectado.",
+    "emptyTitle": "Nada que registrar aún",
+    "emptyHint": "Cuando hayas terminado trabajo dos veces en la misma dirección, aparecerá aquí para registrarla.",
+    "cat": {
+      "heating": "Calefacción",
+      "water": "Agua",
+      "electrical": "Electricidad",
+      "ventilation": "Ventilación",
+      "roof": "Tejado",
+      "exterior": "Exterior",
+      "other": "Otros"
+    }
   }
 }

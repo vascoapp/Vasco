@@ -5393,5 +5393,35 @@
     "aboutMonths_other": "about {{count}} months",
     "theWork": "the work",
     "shareFailed": "Could not open the share sheet"
+  },
+  "siteAssets": {
+    "title": "Serviced assets",
+    "suggested": "Worth registering",
+    "visitsSoFar": "{{count}} visits — {{work}}",
+    "name": "What do you service here?",
+    "namePlaceholder": "e.g. CV-ketel Remeha Avanta",
+    "details": "Model, serial, position",
+    "detailsPlaceholder": "Optional",
+    "category": "Category",
+    "interval": "Service every",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months",
+    "nextDue": "Next service due {{date}}",
+    "serviceHistory_one": "{{count}} visit on record",
+    "serviceHistory_other": "{{count}} visits on record",
+    "nameRequired": "Give it a name first",
+    "deleteTitle": "Remove this asset?",
+    "deleteBody": "The job history at this address is not affected.",
+    "emptyTitle": "Nothing to register yet",
+    "emptyHint": "Once you have finished work at the same address twice, it shows up here to register.",
+    "cat": {
+      "heating": "Heating",
+      "water": "Water",
+      "electrical": "Electrical",
+      "ventilation": "Ventilation",
+      "roof": "Roof",
+      "exterior": "Exterior",
+      "other": "Other"
+    }
   }
 }

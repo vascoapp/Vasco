@@ -640,6 +640,10 @@ const SAME_WORD_OK = new Set([
   // language here. The neighbouring tiers ("Basis"/"Base", "Standard") do
   // differ and are translated.
   'Premium', 'POPULAR',
+  // Asset categories: French spells 'Ventilation' and Spanish 'Exterior'
+  // exactly as English. Their neighbours in the same list (Chauffage, Tejado,
+  // Riscaldamento…) do differ and are translated.
+  'Ventilation', 'Exterior',
 ]);
 
 // Namespaces whose locale values are DEAD CODE — never rendered, so an English

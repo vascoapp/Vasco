@@ -5377,5 +5377,35 @@
     "aboutMonths_other": "ongeveer {{count}} maanden",
     "theWork": "het werk",
     "shareFailed": "Kon het deelvenster niet openen"
+  },
+  "siteAssets": {
+    "title": "Onderhouden objecten",
+    "suggested": "Waard om vast te leggen",
+    "visitsSoFar": "{{count}} bezoeken — {{work}}",
+    "name": "Wat onderhoud je hier?",
+    "namePlaceholder": "bijv. CV-ketel Remeha Avanta",
+    "details": "Model, serienummer, plek",
+    "detailsPlaceholder": "Optioneel",
+    "category": "Categorie",
+    "interval": "Onderhoud elke",
+    "months_one": "{{count}} maand",
+    "months_other": "{{count}} maanden",
+    "nextDue": "Volgend onderhoud {{date}}",
+    "serviceHistory_one": "{{count}} bezoek vastgelegd",
+    "serviceHistory_other": "{{count}} bezoeken vastgelegd",
+    "nameRequired": "Geef het eerst een naam",
+    "deleteTitle": "Dit object verwijderen?",
+    "deleteBody": "De klusgeschiedenis op dit adres verandert niet.",
+    "emptyTitle": "Nog niets vast te leggen",
+    "emptyHint": "Zodra je twee keer werk hebt afgerond op hetzelfde adres, verschijnt het hier om vast te leggen.",
+    "cat": {
+      "heating": "Verwarming",
+      "water": "Water",
+      "electrical": "Elektra",
+      "ventilation": "Ventilatie",
+      "roof": "Dak",
+      "exterior": "Buiten",
+      "other": "Overig"
+    }
   }
 }

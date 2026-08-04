@@ -5,9 +5,23 @@ import { jobCostTrackingService, type JobCostVariance } from './jobCostTrackingS
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
 export interface EstimationAccuracy {
-  overallScore: number; // 0-100
-  trend: 'improving' | 'declining' | 'stable';
-  trendDelta: number; // e.g. +5
+  /**
+   * 0-100, or null when no completed job has both an estimate and actual
+   * hours to compare.
+   *
+   * Was 100 in that case, which told a contractor with no tracked jobs that
+   * their quoting was flawless. A confident score computed from nothing is the
+   * same failure as an invented market rate (learnings #103): callers must
+   * render nothing rather than a number.
+   */
+  overallScore: number | null;
+  /**
+   * Null until a trend is actually computed. It was hardcoded to 'stable' with
+   * a delta of 0 on every result, so the UI could show "stable" for a
+   * contractor whose accuracy was in free fall.
+   */
+  trend: 'improving' | 'declining' | 'stable' | null;
+  trendDelta: number | null;
   totalJobsAnalyzed: number;
   averageHoursDeviation: number;             // %
   averageMaterialDeviation: number;          // % combined (backward compat)
@@ -520,9 +534,9 @@ export function useEstimationAccuracy(): EstimationAccuracy {
     );
     if (tracked.length === 0) {
       return {
-        overallScore: 100,
-        trend: 'stable',
-        trendDelta: 0,
+        overallScore: null,
+        trend: null,
+        trendDelta: null,
         totalJobsAnalyzed: 0,
         averageHoursDeviation: 0,
         averageMaterialDeviation: 0,
@@ -536,8 +550,9 @@ export function useEstimationAccuracy(): EstimationAccuracy {
     const avgHoursDev = hoursDevs.reduce((s: number, d: number) => s + d, 0) / hoursDevs.length;
     return {
       overallScore: Math.max(0, Math.round(100 - avgHoursDev * 0.6)),
-      trend: 'stable',
-      trendDelta: 0,
+      // Still not computed — but null now says so instead of asserting 'stable'.
+      trend: null,
+      trendDelta: null,
       totalJobsAnalyzed: tracked.length,
       averageHoursDeviation: Math.round(avgHoursDev * 10) / 10,
       averageMaterialDeviation: 0,

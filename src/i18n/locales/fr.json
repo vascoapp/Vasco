@@ -5393,5 +5393,35 @@
     "aboutMonths_other": "environ {{count}} mois",
     "theWork": "les travaux",
     "shareFailed": "Impossible d'ouvrir le menu de partage"
+  },
+  "siteAssets": {
+    "title": "Équipements suivis",
+    "suggested": "À enregistrer",
+    "visitsSoFar": "{{count}} visites — {{work}}",
+    "name": "Qu'entretenez-vous ici ?",
+    "namePlaceholder": "ex. chaudière Remeha Avanta",
+    "details": "Modèle, numéro de série, emplacement",
+    "detailsPlaceholder": "Facultatif",
+    "category": "Catégorie",
+    "interval": "Entretien tous les",
+    "months_one": "{{count}} mois",
+    "months_other": "{{count}} mois",
+    "nextDue": "Prochain entretien le {{date}}",
+    "serviceHistory_one": "{{count}} visite enregistrée",
+    "serviceHistory_other": "{{count}} visites enregistrées",
+    "nameRequired": "Donnez-lui d'abord un nom",
+    "deleteTitle": "Supprimer cet équipement ?",
+    "deleteBody": "L'historique des chantiers à cette adresse n'est pas modifié.",
+    "emptyTitle": "Rien à enregistrer",
+    "emptyHint": "Dès que vous aurez terminé deux chantiers à la même adresse, elle apparaîtra ici.",
+    "cat": {
+      "heating": "Chauffage",
+      "water": "Eau",
+      "electrical": "Électricité",
+      "ventilation": "Ventilation",
+      "roof": "Toiture",
+      "exterior": "Extérieur",
+      "other": "Autre"
+    }
   }
 }

@@ -5393,5 +5393,35 @@
     "aboutMonths_other": "circa {{count}} mesi",
     "theWork": "il lavoro",
     "shareFailed": "Impossibile aprire il menu di condivisione"
+  },
+  "siteAssets": {
+    "title": "Impianti seguiti",
+    "suggested": "Da registrare",
+    "visitsSoFar": "{{count}} visite — {{work}}",
+    "name": "Che cosa segui qui?",
+    "namePlaceholder": "es. caldaia Remeha Avanta",
+    "details": "Modello, matricola, posizione",
+    "detailsPlaceholder": "Facoltativo",
+    "category": "Categoria",
+    "interval": "Manutenzione ogni",
+    "months_one": "{{count}} mese",
+    "months_other": "{{count}} mesi",
+    "nextDue": "Prossima manutenzione {{date}}",
+    "serviceHistory_one": "{{count}} visita registrata",
+    "serviceHistory_other": "{{count}} visite registrate",
+    "nameRequired": "Dagli prima un nome",
+    "deleteTitle": "Rimuovere questo impianto?",
+    "deleteBody": "Lo storico dei lavori a questo indirizzo non viene modificato.",
+    "emptyTitle": "Niente da registrare",
+    "emptyHint": "Dopo due lavori conclusi allo stesso indirizzo, comparirà qui per essere registrato.",
+    "cat": {
+      "heating": "Riscaldamento",
+      "water": "Acqua",
+      "electrical": "Elettrico",
+      "ventilation": "Ventilazione",
+      "roof": "Tetto",
+      "exterior": "Esterni",
+      "other": "Altro"
+    }
   }
 }

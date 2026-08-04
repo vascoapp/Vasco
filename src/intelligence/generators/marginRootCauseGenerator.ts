@@ -32,7 +32,13 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
 
   // Record margin leakage snapshot
   recordMetricSnapshot('marginLeakage', costSummary.totalMarginLeakage);
-  recordMetricSnapshot('estimationAccuracy', estimation.overallScore);
+  // Null when no job has both an estimate and actual hours. Previously arrived
+  // as a confident 100, which fed the trend store a fake reading and let
+  // "estimation" be named as a margin cause on no evidence at all.
+  const estScore = estimation.overallScore;
+  if (estScore !== null) {
+    recordMetricSnapshot('estimationAccuracy', estScore);
+  }
 
   // Log prediction for calibration
   logPrediction({
@@ -56,14 +62,14 @@ export function useMarginRootCauseInsight(ctx: GeneratorContext): ScoredInsight 
   const causes: RootCause[] = [];
 
   // 1. Estimation accuracy issues (adaptive: alert when below contractor's threshold)
-  if (isAboveThreshold(ctx.profile, 'estimationAccuracy', estimation.overallScore)) {
-    const estImpact = costSummary.totalMarginLeakage * (1 - estimation.overallScore / 100);
+  if (estScore !== null && isAboveThreshold(ctx.profile, 'estimationAccuracy', estScore)) {
+    const estImpact = costSummary.totalMarginLeakage * (1 - estScore / 100);
     causes.push({
       id: 'estimation',
       label: gt('margin_rc_label_estimation', ctx.language),
       amount: Math.round(estImpact),
       explanation: gt('margin_rc_expl_estimation', ctx.language, {
-        score: estimation.overallScore,
+        score: estScore,
         hours: `${estimation.averageHoursDeviation > 0 ? '+' : ''}${estimation.averageHoursDeviation.toFixed(1)}`,
         qty: `${estimation.averageMaterialQuantityDeviation > 0 ? '+' : ''}${estimation.averageMaterialQuantityDeviation.toFixed(1)}`,
         price: `${estimation.averageMaterialPriceDeviation > 0 ? '+' : ''}${estimation.averageMaterialPriceDeviation.toFixed(1)}`,

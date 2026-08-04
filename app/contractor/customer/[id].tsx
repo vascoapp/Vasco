@@ -173,6 +173,21 @@ export default function CustomerDetailScreen() {
           </View>
         </FadeIn>
 
+        {/* Serviced assets. Entry sits directly under the KPI row because "what
+            is installed here and when did we last touch it" is the question a
+            contractor has on the way to the address, not a settings concern. */}
+        <FadeIn delay={20}>
+          <Pressable
+            style={s.assetsRow}
+            onPress={() => router.push(`/contractor/site-assets/${id}` as any)}
+            accessibilityRole="button"
+          >
+            <Ionicons name="cube-outline" size={18} color={Palette.hermesOrange} />
+            <Text style={s.assetsRowText}>{t('siteAssets.title', 'Serviced assets')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={SemanticColors.textSecondary} />
+          </Pressable>
+        </FadeIn>
+
         {/* R271: Inbound message inbox — captured customer messages feed
              smart-reply context. Shows latest inbound + "Capture" CTA. */}
         <FadeIn delay={30}>
@@ -440,6 +455,24 @@ const s = StyleSheet.create({
     lineHeight: 16,
   },
   // R271: inbox section
+  assetsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginTop: GRID.sm,
+  },
+  assetsRowText: {
+    flex: 1,
+    color: SemanticColors.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
   inboxHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: SafeArea.side, marginTop: GRID.md, marginBottom: GRID.xs,

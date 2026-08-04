@@ -5393,5 +5393,35 @@
     "aboutMonths_other": "etwa {{count}} Monate",
     "theWork": "die Arbeiten",
     "shareFailed": "Teilen-Menü konnte nicht geöffnet werden"
+  },
+  "siteAssets": {
+    "title": "Betreute Anlagen",
+    "suggested": "Erfassenswert",
+    "visitsSoFar": "{{count}} Besuche — {{work}}",
+    "name": "Was warten Sie hier?",
+    "namePlaceholder": "z. B. Heizkessel Remeha Avanta",
+    "details": "Modell, Seriennummer, Position",
+    "detailsPlaceholder": "Optional",
+    "category": "Kategorie",
+    "interval": "Wartung alle",
+    "months_one": "{{count}} Monat",
+    "months_other": "{{count}} Monate",
+    "nextDue": "Nächste Wartung {{date}}",
+    "serviceHistory_one": "{{count}} Besuch erfasst",
+    "serviceHistory_other": "{{count}} Besuche erfasst",
+    "nameRequired": "Bitte zuerst einen Namen vergeben",
+    "deleteTitle": "Diese Anlage entfernen?",
+    "deleteBody": "Die Auftragshistorie an dieser Adresse bleibt bestehen.",
+    "emptyTitle": "Noch nichts zu erfassen",
+    "emptyHint": "Sobald Sie zweimal an derselben Adresse gearbeitet haben, erscheint sie hier zur Erfassung.",
+    "cat": {
+      "heating": "Heizung",
+      "water": "Wasser",
+      "electrical": "Elektro",
+      "ventilation": "Lüftung",
+      "roof": "Dach",
+      "exterior": "Außen",
+      "other": "Sonstiges"
+    }
   }
 }

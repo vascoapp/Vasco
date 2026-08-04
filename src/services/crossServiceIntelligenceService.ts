@@ -111,7 +111,11 @@ export function useCrossServiceIntelligence(): CrossIntelligenceSummary {
     }
 
     // 4. Estimation accuracy → Margin leakage causation
-    if (estimation.overallScore < 85 && costSummary.totalMarginLeakage > 500) {
+    // `overallScore` is null when no completed job carries both an estimate and
+    // actual hours. It used to arrive as 100 in that case — which happened to
+    // suppress this insight — but null makes the absence explicit rather than
+    // relying on a fake perfect score to do it.
+    if (estimation.overallScore !== null && estimation.overallScore < 85 && costSummary.totalMarginLeakage > 500) {
       insights.push({
         id: 'cross_estimation_margin',
         type: 'causation',
@@ -154,12 +158,15 @@ export function useCrossServiceIntelligence(): CrossIntelligenceSummary {
         relationship: 'Arbeid bepaalt projectmarge',
         strength: 95,
       },
-      {
+      // Only claim this link when there is a score behind it. With none, the
+      // row used to read "Inschattingsscore 100%" at strength 0 — a
+      // relationship asserted from no data.
+      ...(estimation.overallScore !== null ? [{
         from: 'estimationFeedbackService',
         to: 'jobCostTrackingService',
         relationship: `Inschattingsscore ${estimation.overallScore}% → marge-lek ${formatMoney(costSummary.totalMarginLeakage)}`,
         strength: Math.min(95, Math.round(100 - estimation.overallScore)),
-      },
+      }] : []),
       {
         from: 'collectionsAgentService',
         to: 'cashFlowService',
