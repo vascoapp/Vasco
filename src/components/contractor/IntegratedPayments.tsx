@@ -215,7 +215,7 @@ interface OutstandingInvoiceCardProps {
   invoice: ContractorInvoice;
   paymentLink?: PaymentLink;
   onCreateLink: () => void;
-  onSendReminder: () => void;
+  onOpenInvoice: () => void;
   onCopyLink: () => void;
 }
 
@@ -223,10 +223,11 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
   invoice,
   paymentLink,
   onCreateLink,
-  onSendReminder,
+  onOpenInvoice,
   onCopyLink,
 }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const country = (user?.country ?? 'NL') as Country;
   const dueDate = new Date(invoice.dueDate);
   const today = new Date();
@@ -291,18 +292,19 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
         </Pressable>
       )}
 
+      {/* This row was three buttons: "Send Reminder", "WhatsApp", "QR Code".
+          The last two had no onPress at all. The first showed a confirm and
+          then an alert reading "Email reminder sent!" while sending nothing —
+          it only fired a tracking event. A contractor could chase an overdue
+          customer, be told it was sent, and never follow up again.
+          The real reminder flow (payment link + tag-aware template + share)
+          already exists on the Geld tab and the invoice screen. Rather than
+          duplicate it here and let the two drift, this now opens the invoice,
+          where the working actions live. */}
       <View style={styles.invoiceActions}>
-        <Pressable style={styles.actionButton} onPress={onSendReminder}>
-          <Ionicons name="notifications-outline" size={16} color={Colors.textSecondary} />
-          <Text style={styles.actionButtonText}>Send Reminder</Text>
-        </Pressable>
-        <Pressable style={styles.actionButton}>
-          <Ionicons name="chatbubble-outline" size={16} color={Colors.textSecondary} />
-          <Text style={styles.actionButtonText}>WhatsApp</Text>
-        </Pressable>
-        <Pressable style={styles.actionButton}>
-          <Ionicons name="qr-code-outline" size={16} color={Colors.textSecondary} />
-          <Text style={styles.actionButtonText}>QR Code</Text>
+        <Pressable style={styles.actionButton} onPress={onOpenInvoice}>
+          <Ionicons name="open-outline" size={16} color={Colors.textSecondary} />
+          <Text style={styles.actionButtonText}>{t('payments.openInvoice', 'Open invoice')}</Text>
         </Pressable>
       </View>
     </View>
@@ -388,7 +390,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'outstanding' | 'paid' | 'settings'>('outstanding');
-  const { invoices: appInvoices, mollieConnected, businessProfile } = useAppState();
+  const { invoices: appInvoices, mollieConnected, businessProfile, createPaymentLink } = useAppState();
 
   // Was MOCK_CONTRACTOR_INVOICES — an ungated fixture, so this screen showed
   // every contractor a fabricated "INV-2024-0022 · € 1.051 · 918d overdue" as
@@ -484,98 +486,52 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
     })
     .reduce((sum, inv) => sum + inv.total, 0);
 
-  const handleCreateLink = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    Alert.alert(
-      'Create Payment Link',
-      'Generate an iDEAL payment link for this invoice?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Create Link',
-          onPress: () => {
-            // Track invoice sent for intelligence learning
-            intelligence.trackEvent({
-              eventType: 'invoice_sent',
-              userId: getCurrentUserId(),
-              sessionId: 'current',
-              context: createTrackingContext(),
-              payload: {
-                invoiceId,
-                invoiceNumber: invoice?.invoiceNumber,
-                amount: invoice?.total,
-                customerId: invoice?.customerId,
-                paymentMethod: 'ideal',
-                linkCreated: true,
-              },
-              entities: invoice ? [
-                { id: invoice.customerId, type: 'customer', name: `Customer ${invoice.customerId.slice(-3)}`, confidence: 0.9 },
-              ] : [],
-            });
-            Alert.alert(t('paymentAlerts.linkCreatedTitle'), t('paymentAlerts.linkCreatedBody'));
-          },
-        },
-      ]
-    );
-  };
+  // Was: show a confirm, fire a tracking event, then alert "Payment link
+  // created and copied to clipboard!" — while creating no link and copying
+  // nothing. AppState.createPaymentLink is the real, country-routed mutator
+  // (Stripe for UK/US, Mollie for EU6) and it THROWS on provider failure, so
+  // success is only reported when a link actually exists.
+  const handleCreateLink = async (invoiceId: string) => {
+    const invoice = invoices.find((inv) => inv.id === invoiceId);
+    if (!invoice) return;
 
-  const handleSendReminder = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    Alert.alert(
-      'Send Reminder',
-      'Send a payment reminder to the customer?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Email',
-          onPress: () => {
-            // Track reminder sent for intelligence
-            intelligence.trackEvent({
-              eventType: 'payment_reminder_sent',
-              userId: getCurrentUserId(),
-              sessionId: 'current',
-              context: createTrackingContext(),
-              payload: {
-                invoiceId,
-                invoiceNumber: invoice?.invoiceNumber,
-                amount: invoice?.total,
-                customerId: invoice?.customerId,
-                channel: 'email',
-                daysOverdue: invoice ? Math.ceil((new Date().getTime() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)) : 0,
-              },
-              entities: invoice ? [
-                { id: invoice.customerId, type: 'customer', name: `Customer ${invoice.customerId.slice(-3)}`, confidence: 0.9 },
-              ] : [],
-            });
-            Alert.alert(t('paymentAlerts.reminderEmailTitle'), t('paymentAlerts.reminderEmailBody'));
-          },
+    // Same gate the invoice screen uses: with no provider connected there is
+    // nothing to create, so send them to connect rather than fail at them.
+    if (!mollieConnected) {
+      router.push('/(modals)/mollie' as any);
+      return;
+    }
+
+    try {
+      await createPaymentLink(invoice.id, invoice.total);
+      intelligence.trackEvent({
+        eventType: 'invoice_sent',
+        userId: getCurrentUserId(),
+        sessionId: 'current',
+        context: createTrackingContext(),
+        payload: {
+          invoiceId,
+          invoiceNumber: invoice.invoiceNumber,
+          amount: invoice.total,
+          customerId: invoice.customerId,
+          paymentMethod: 'ideal',
+          linkCreated: true,
         },
-        {
-          text: 'WhatsApp',
-          onPress: () => {
-            // Track reminder sent for intelligence
-            intelligence.trackEvent({
-              eventType: 'payment_reminder_sent',
-              userId: getCurrentUserId(),
-              sessionId: 'current',
-              context: createTrackingContext(),
-              payload: {
-                invoiceId,
-                invoiceNumber: invoice?.invoiceNumber,
-                amount: invoice?.total,
-                customerId: invoice?.customerId,
-                channel: 'whatsapp',
-                daysOverdue: invoice ? Math.ceil((new Date().getTime() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)) : 0,
-              },
-              entities: invoice ? [
-                { id: invoice.customerId, type: 'customer', name: `Customer ${invoice.customerId.slice(-3)}`, confidence: 0.9 },
-              ] : [],
-            });
-            Alert.alert(t('paymentAlerts.reminderEmailTitle'), t('paymentAlerts.reminderWhatsappBody'));
-          },
-        },
-      ]
-    );
+        // The entity name was `Customer ${customerId.slice(-3)}` — a raw id
+        // written into the ontology, not just shown on screen.
+        entities: invoice.customerName
+          ? [{ id: invoice.customerId, type: 'customer', name: invoice.customerName, confidence: 0.9 }]
+          : [],
+      });
+      Alert.alert(t('paymentAlerts.linkCreatedTitle'), t('paymentAlerts.linkCreatedBody'));
+    } catch (err) {
+      Alert.alert(
+        t('paymentAlerts.paymentLinkFailedTitle', 'Payment link failed'),
+        err instanceof Error && err.message
+          ? err.message
+          : t('paymentAlerts.paymentLinkFailedBody', 'Please retry or check your payment provider settings.'),
+      );
+    }
   };
 
   const handleCopyLink = (url: string) => {
@@ -664,7 +620,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                     invoice={invoice}
                     paymentLink={link}
                     onCreateLink={() => handleCreateLink(invoice.id)}
-                    onSendReminder={() => handleSendReminder(invoice.id)}
+                    onOpenInvoice={() => router.push(`/invoices/${invoice.id}` as any)}
                     onCopyLink={() => link && handleCopyLink(link.shortUrl || link.url)}
                   />
                 );

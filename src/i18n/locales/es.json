@@ -4531,7 +4531,8 @@
     "paymentTerms": "Plazo de pago",
     "days_one": "{{count}} día",
     "days_other": "{{count}} días",
-    "enabledMethods": "Métodos de pago activados:"
+    "enabledMethods": "Métodos de pago activados:",
+    "openInvoice": "Abrir factura"
   },
   "leads": {
     "noHotLeads": "No hay clientes potenciales calientes ahora mismo"

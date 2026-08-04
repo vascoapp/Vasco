@@ -4531,7 +4531,8 @@
     "paymentTerms": "Payment terms",
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
-    "enabledMethods": "Enabled payment methods:"
+    "enabledMethods": "Enabled payment methods:",
+    "openInvoice": "Open invoice"
   },
   "leads": {
     "noHotLeads": "No hot leads right now"

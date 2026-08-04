@@ -4531,7 +4531,8 @@
     "paymentTerms": "Termini di pagamento",
     "days_one": "{{count}} giorno",
     "days_other": "{{count}} giorni",
-    "enabledMethods": "Metodi di pagamento attivi:"
+    "enabledMethods": "Metodi di pagamento attivi:",
+    "openInvoice": "Apri fattura"
   },
   "leads": {
     "noHotLeads": "Nessun lead caldo al momento"

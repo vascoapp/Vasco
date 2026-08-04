@@ -4531,7 +4531,8 @@
     "paymentTerms": "Délai de paiement",
     "days_one": "{{count}} jour",
     "days_other": "{{count}} jours",
-    "enabledMethods": "Moyens de paiement activés :"
+    "enabledMethods": "Moyens de paiement activés :",
+    "openInvoice": "Ouvrir la facture"
   },
   "leads": {
     "noHotLeads": "Aucun prospect chaud pour l'instant"
