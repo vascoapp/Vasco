@@ -4305,7 +4305,8 @@
     "vsLastYear": "vs. gleiches Quartal Vorjahr",
     "reviewNeeded": "Zu prüfen",
     "allLines": "Alle Posten",
-    "shareAccountant": "An Steuerberater senden"
+    "shareAccountant": "An Steuerberater senden",
+    "accountantSeat": "Steuerberater dauerhaften Zugang geben"
   },
   "automations": {
     "healthNew": "NEU",
@@ -5459,5 +5460,27 @@
     "insightTitle_one": "{{count}} Rechnung wurde nicht eingereicht",
     "insightTitle_other": "{{count}} Rechnungen wurden nicht eingereicht",
     "insightBody": "Die Behörde hat sie abgelehnt, diese Rechnungen wurden also nie ausgestellt. Sie müssen korrigiert und erneut gesendet werden."
+  },
+  "accountantAccess": {
+    "title": "Zugang für Steuerberater",
+    "intro": "Ein Zugang gibt Ihrem Steuerberater eine Nur-Lese-Webseite mit den Rechnungen, die die Behörde tatsächlich akzeptiert hat — das Einzige, was sein Buchhaltungsprogramm ihm nicht sagen kann. Ändern kann er nichts.",
+    "newSeat": "Steuerberater Zugang geben",
+    "namePlaceholder": "Name des Steuerberaters oder der Kanzlei",
+    "publish": "Veröffentlichen und Link senden",
+    "hint": "Erneutes Veröffentlichen unter demselben Namen aktualisiert die vorhandene Seite, statt einen zweiten Link zu senden.",
+    "active": "Aktive Zugänge",
+    "empty": "Niemand hat Zugang. Veröffentlichen Sie oben einen Zugang für Ihren Steuerberater.",
+    "nameRequired": "Für wen ist das?",
+    "nameRequiredBody": "Geben Sie den Namen Ihres Steuerberaters an, damit Sie Ihre Zugänge später unterscheiden können.",
+    "shareMessage": "{{business}} — Meldestatus {{start}} bis {{end}}: {{url}}",
+    "needsOnline": "Sie müssen online sein, um einen Zugang zu veröffentlichen — sonst versenden Sie einen Link, der noch nicht funktioniert.",
+    "revokeTitle": "Zugang entziehen?",
+    "revokeBody": "{{name}} kann den Link dann nicht mehr öffnen. Sie können jederzeit einen neuen Zugang veröffentlichen.",
+    "revoke": "Entziehen",
+    "revokeFailed": "Zugang konnte nicht entzogen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "neverOpened": "Noch nicht geöffnet",
+    "lastOpened": "Zuletzt geöffnet {{when}} · {{count}}×",
+    "expires": "Läuft ab {{when}}",
+    "resend": "Link erneut senden"
   }
 }

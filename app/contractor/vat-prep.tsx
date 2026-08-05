@@ -121,6 +121,19 @@ export default function VatPrepScreen() {
           onPress: () => { void shareAccountantHandover(businessName); },
         },
         {
+          // The standing version of the option above. Same moment of intent,
+          // but a seat the adviser can come back to during the filing week
+          // instead of a message they have to find again. Carries the period
+          // bounds so the seat covers the quarter on screen.
+          text: t('vatPrep.accountantSeat', 'Give accountant ongoing access'),
+          onPress: () => {
+            router.push({
+              pathname: '/contractor/accountant-access',
+              params: { periodStart: draft.periodStart, periodEnd: draft.periodEnd },
+            } as never);
+          },
+        },
+        {
           text: t('vatPrep.sharePdf', 'Share PDF'),
           onPress: () => {
             shareVatPdf(draft, businessName).catch((err) => {

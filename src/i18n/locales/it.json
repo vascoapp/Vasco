@@ -4305,7 +4305,8 @@
     "vsLastYear": "vs. stesso trimestre dell'anno scorso",
     "reviewNeeded": "Da controllare",
     "allLines": "Tutte le voci",
-    "shareAccountant": "Invia al commercialista"
+    "shareAccountant": "Invia al commercialista",
+    "accountantSeat": "Dai accesso continuativo al commercialista"
   },
   "automations": {
     "healthNew": "NUOVO",
@@ -5459,5 +5460,27 @@
     "insightTitle_one": "{{count}} fattura non è stata trasmessa",
     "insightTitle_other": "{{count}} fatture non sono state trasmesse",
     "insightBody": "L'ente le ha scartate, quindi quelle fatture non sono mai state emesse. Vanno corrette e reinviate."
+  },
+  "accountantAccess": {
+    "title": "Accesso commercialista",
+    "intro": "Un accesso dà al suo commercialista una pagina web in sola lettura con le fatture che l’amministrazione ha davvero accettato — l’unica cosa che il suo gestionale non può dirgli. Non può modificare nulla.",
+    "newSeat": "Dai accesso a un commercialista",
+    "namePlaceholder": "Nome del commercialista o dello studio",
+    "publish": "Pubblica e invia il link",
+    "hint": "Ripubblicare con lo stesso nome aggiorna la pagina che ha già, invece di inviare un secondo link.",
+    "active": "Accessi attivi",
+    "empty": "Nessuno ha accesso. Pubblica un accesso qui sopra per il tuo commercialista.",
+    "nameRequired": "Per chi è?",
+    "nameRequiredBody": "Indica il nome del commercialista, così potrai distinguere gli accessi in seguito.",
+    "shareMessage": "{{business}} — stato invii dal {{start}} al {{end}}: {{url}}",
+    "needsOnline": "Devi essere online per pubblicare un accesso — altrimenti invieresti un link che non funziona ancora.",
+    "revokeTitle": "Revocare l’accesso?",
+    "revokeBody": "{{name}} non potrà più aprire il link. Puoi pubblicare un nuovo accesso quando vuoi.",
+    "revoke": "Revoca",
+    "revokeFailed": "Impossibile revocare l’accesso. Controlla la connessione e riprova.",
+    "neverOpened": "Non ancora aperto",
+    "lastOpened": "Ultima apertura {{when}} · {{count}}×",
+    "expires": "Scade il {{when}}",
+    "resend": "Invia di nuovo il link"
   }
 }

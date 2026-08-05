@@ -4305,7 +4305,8 @@
     "vsLastYear": "vs. même trimestre l'an dernier",
     "reviewNeeded": "À vérifier",
     "allLines": "Toutes les lignes",
-    "shareAccountant": "Envoyer à l'expert-comptable"
+    "shareAccountant": "Envoyer à l'expert-comptable",
+    "accountantSeat": "Donner un accès permanent à l’expert-comptable"
   },
   "automations": {
     "healthNew": "NOUVEAU",
@@ -5459,5 +5460,27 @@
     "insightTitle_one": "{{count}} facture n'a pas été déposée",
     "insightTitle_other": "{{count}} factures n'ont pas été déposées",
     "insightBody": "L'administration les a refusées : ces factures n'ont jamais été émises. Elles doivent être corrigées et renvoyées."
+  },
+  "accountantAccess": {
+    "title": "Accès expert-comptable",
+    "intro": "Un accès donne à votre expert-comptable une page web en lecture seule indiquant quelles factures l’administration a réellement acceptées — la seule chose que son logiciel comptable ne peut pas lui dire. Il ne peut rien modifier.",
+    "newSeat": "Donner un accès à un expert-comptable",
+    "namePlaceholder": "Nom de l’expert-comptable ou du cabinet",
+    "publish": "Publier et envoyer le lien",
+    "hint": "Republier sous le même nom actualise la page qu’il possède déjà, au lieu d’envoyer un second lien.",
+    "active": "Accès actifs",
+    "empty": "Personne n’a accès. Publiez un accès ci-dessus pour votre expert-comptable.",
+    "nameRequired": "Pour qui ?",
+    "nameRequiredBody": "Indiquez le nom de votre expert-comptable afin de distinguer vos accès plus tard.",
+    "shareMessage": "{{business}} — état des dépôts du {{start}} au {{end}} : {{url}}",
+    "needsOnline": "Vous devez être en ligne pour publier un accès — sinon vous enverriez un lien qui ne fonctionne pas encore.",
+    "revokeTitle": "Retirer l’accès ?",
+    "revokeBody": "{{name}} ne pourra plus ouvrir le lien. Vous pouvez publier un nouvel accès à tout moment.",
+    "revoke": "Retirer",
+    "revokeFailed": "Impossible de retirer l’accès. Vérifiez votre connexion et réessayez.",
+    "neverOpened": "Pas encore ouvert",
+    "lastOpened": "Dernière ouverture {{when}} · {{count}}×",
+    "expires": "Expire le {{when}}",
+    "resend": "Renvoyer le lien"
   }
 }

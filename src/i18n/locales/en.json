@@ -4305,7 +4305,8 @@
     "vsLastYear": "vs. same quarter last year",
     "reviewNeeded": "Needs review",
     "allLines": "All lines",
-    "shareAccountant": "Send to accountant"
+    "shareAccountant": "Send to accountant",
+    "accountantSeat": "Give accountant ongoing access"
   },
   "automations": {
     "healthNew": "NEW",
@@ -5459,5 +5460,27 @@
     "insightTitle_one": "{{count}} invoice was not filed",
     "insightTitle_other": "{{count}} invoices were not filed",
     "insightBody": "The authority refused them, so those invoices were never issued. They need correcting and sending again."
+  },
+  "accountantAccess": {
+    "title": "Accountant access",
+    "intro": "A seat gives your accountant a read-only web page showing which invoices were actually accepted by the tax authority — the one thing their accounting package cannot tell them. They cannot change anything.",
+    "newSeat": "Give an accountant a seat",
+    "namePlaceholder": "Accountant or practice name",
+    "publish": "Publish and send link",
+    "hint": "Publishing again for the same name refreshes the page they already have, rather than sending a second link.",
+    "active": "Active seats",
+    "empty": "No one has access. Publish a seat above to give your accountant one.",
+    "nameRequired": "Who is this for?",
+    "nameRequiredBody": "Give the seat your accountant’s name so you can tell your seats apart later.",
+    "shareMessage": "{{business}} — filing position {{start}} to {{end}}: {{url}}",
+    "needsOnline": "You need to be online to publish a seat — otherwise you would be sending a link that does not work yet.",
+    "revokeTitle": "Withdraw access?",
+    "revokeBody": "{{name}} will no longer be able to open the link. You can publish a new seat for them at any time.",
+    "revoke": "Withdraw",
+    "revokeFailed": "Could not withdraw access. Check your connection and try again.",
+    "neverOpened": "Not opened yet",
+    "lastOpened": "Last opened {{when}} · {{count}}×",
+    "expires": "Expires {{when}}",
+    "resend": "Send link again"
   }
 }

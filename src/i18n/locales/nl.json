@@ -4331,7 +4331,8 @@
     "vsLastYear": "vs. zelfde kwartaal vorig jaar",
     "reviewNeeded": "Te controleren",
     "allLines": "Alle regels",
-    "shareAccountant": "Naar boekhouder sturen"
+    "shareAccountant": "Naar boekhouder sturen",
+    "accountantSeat": "Accountant doorlopend toegang geven"
   },
   "market": {
     "noBenchmarksDesc": "Meer data nodig voor benchmarks",
@@ -5443,5 +5444,27 @@
     "insightTitle_one": "{{count}} factuur is niet ingediend",
     "insightTitle_other": "{{count}} facturen zijn niet ingediend",
     "insightBody": "De instantie heeft ze geweigerd, dus die facturen zijn nooit uitgegeven. Ze moeten gecorrigeerd en opnieuw verstuurd worden."
+  },
+  "accountantAccess": {
+    "title": "Toegang accountant",
+    "intro": "Een plek geeft uw accountant een alleen-lezen webpagina met welke facturen de Belastingdienst daadwerkelijk heeft geaccepteerd — het enige dat hun boekhoudpakket niet kan vertellen. Ze kunnen niets wijzigen.",
+    "newSeat": "Geef een accountant toegang",
+    "namePlaceholder": "Naam accountant of kantoor",
+    "publish": "Publiceren en link sturen",
+    "hint": "Opnieuw publiceren voor dezelfde naam ververst de pagina die ze al hebben, in plaats van een tweede link te sturen.",
+    "active": "Actieve toegang",
+    "empty": "Niemand heeft toegang. Publiceer hierboven om uw accountant toegang te geven.",
+    "nameRequired": "Voor wie is dit?",
+    "nameRequiredBody": "Geef de naam van uw accountant op, zodat u later ziet welke toegang bij wie hoort.",
+    "shareMessage": "{{business}} — aangiftestatus {{start}} tot {{end}}: {{url}}",
+    "needsOnline": "U moet online zijn om toegang te publiceren — anders stuurt u een link die nog niet werkt.",
+    "revokeTitle": "Toegang intrekken?",
+    "revokeBody": "{{name}} kan de link dan niet meer openen. U kunt altijd opnieuw toegang geven.",
+    "revoke": "Intrekken",
+    "revokeFailed": "Kon toegang niet intrekken. Controleer uw verbinding en probeer het opnieuw.",
+    "neverOpened": "Nog niet geopend",
+    "lastOpened": "Laatst geopend {{when}} · {{count}}×",
+    "expires": "Verloopt {{when}}",
+    "resend": "Link opnieuw sturen"
   }
 }

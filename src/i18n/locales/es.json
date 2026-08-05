@@ -4305,7 +4305,8 @@
     "vsLastYear": "vs. mismo trimestre del año pasado",
     "reviewNeeded": "Por revisar",
     "allLines": "Todas las líneas",
-    "shareAccountant": "Enviar a la gestoría"
+    "shareAccountant": "Enviar a la gestoría",
+    "accountantSeat": "Dar acceso continuo al asesor"
   },
   "automations": {
     "healthNew": "NUEVO",
@@ -5459,5 +5460,27 @@
     "insightTitle_one": "{{count}} factura no se presentó",
     "insightTitle_other": "{{count}} facturas no se presentaron",
     "insightBody": "La administración las rechazó, así que esas facturas nunca se emitieron. Hay que corregirlas y enviarlas de nuevo."
+  },
+  "accountantAccess": {
+    "title": "Acceso del asesor",
+    "intro": "Un acceso da a su asesor una página web de solo lectura con las facturas que la administración aceptó realmente — lo único que su programa de contabilidad no puede decirle. No puede modificar nada.",
+    "newSeat": "Dar acceso a un asesor",
+    "namePlaceholder": "Nombre del asesor o despacho",
+    "publish": "Publicar y enviar enlace",
+    "hint": "Volver a publicar con el mismo nombre actualiza la página que ya tiene, en lugar de enviar un segundo enlace.",
+    "active": "Accesos activos",
+    "empty": "Nadie tiene acceso. Publique un acceso arriba para su asesor.",
+    "nameRequired": "¿Para quién es?",
+    "nameRequiredBody": "Indique el nombre de su asesor para poder distinguir los accesos más adelante.",
+    "shareMessage": "{{business}} — estado de presentación del {{start}} al {{end}}: {{url}}",
+    "needsOnline": "Necesita estar en línea para publicar un acceso — de lo contrario enviaría un enlace que aún no funciona.",
+    "revokeTitle": "¿Retirar el acceso?",
+    "revokeBody": "{{name}} ya no podrá abrir el enlace. Puede publicar un nuevo acceso cuando quiera.",
+    "revoke": "Retirar",
+    "revokeFailed": "No se pudo retirar el acceso. Compruebe su conexión e inténtelo de nuevo.",
+    "neverOpened": "Aún sin abrir",
+    "lastOpened": "Abierto por última vez {{when}} · {{count}}×",
+    "expires": "Caduca {{when}}",
+    "resend": "Enviar el enlace de nuevo"
   }
 }
