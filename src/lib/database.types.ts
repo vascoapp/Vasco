@@ -91,6 +91,8 @@ export type JobRow = {
   agreed_amount: number | null;
   // Work details
   trade: string | null;
+  /** Quote this job was created from — migration 20260806000005. */
+  quote_id: string | null;
   priority: string | null;
   rooms_areas: string[] | null;
   specifications: string | null;

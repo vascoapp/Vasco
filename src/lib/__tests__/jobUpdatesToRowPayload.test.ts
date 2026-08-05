@@ -112,12 +112,23 @@ describe('jobUpdatesToRowPayload', () => {
       materials: [] as any,
       photos: [] as any,
       notes: [] as any,
-      quoteId: 'q-1',
       invoiceId: 'inv-1',
       actualHours: 5,
       actualCost: 200,
     } as any);
     expect(out).toEqual({});
+  });
+
+  // Migration 20260806000005: quoteId is no longer "derived". Same shape as the
+  // R66r12 timeEntries note below — the previous version of this test asserted
+  // the drop as correct, which is how a broken contract survives a green suite.
+  //
+  // What it cost: the quote→job→invoice chain is the thing this product sells
+  // and it could not be followed in the data at all, only guessed at by
+  // matching names and amounts. The link lived in React state and died on cold
+  // start.
+  it('persists quoteId — the quote→job link is data, not a derived value', () => {
+    expect(jobUpdatesToRowPayload({ quoteId: 'q-1' } as any)).toEqual({ quote_id: 'q-1' });
   });
 
   // R66 round 12: timeEntries is no longer dropped — it persists as

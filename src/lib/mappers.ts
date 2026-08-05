@@ -185,6 +185,7 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   if ('quotedAmount' in updates)       out.quoted_amount = updates.quotedAmount;
   if ('agreedAmount' in updates)       out.agreed_amount = updates.agreedAmount;
   if ('trade' in updates)              out.trade = updates.trade;
+  if ('quoteId' in updates)            out.quote_id = updates.quoteId;
   if ('priority' in updates)           out.priority = updates.priority;
   if ('roomsAreas' in updates)         out.rooms_areas = updates.roomsAreas;
   if ('specifications' in updates)     out.specifications = updates.specifications;
@@ -207,7 +208,8 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
     if ('parkingNotes' in updates.address) out.address_parking_notes = updates.address.parkingNotes;
   }
   // FE-only / separate-table fields are intentionally dropped:
-  //   quoteId, invoiceId         — derived
+  //   invoiceId                  — derived
+  //   (quoteId is NO LONGER derived — jobs.quote_id, migration 20260806000005)
   //   actualHours, actualCost    — derived from time/material entries
   //   materials                  — separate table (job_materials)
   //   photos                     — separate table (job_photos)
@@ -244,6 +246,10 @@ export function jobRowToJob(row: JobRow): Job {
     quotedAmount: row.quoted_amount ?? undefined,
     agreedAmount: row.agreed_amount ?? undefined,
     trade: row.trade ?? undefined,
+    // Which quote this job came from. Was listed below as "FE-only derived",
+    // which meant it never survived a cold start and the quote→job→invoice
+    // chain could not actually be followed in the data.
+    quoteId: row.quote_id ?? undefined,
     priority: (row.priority as JobPriority) ?? 'normal',
     roomsAreas: row.rooms_areas ?? undefined,
     specifications: row.specifications ?? undefined,

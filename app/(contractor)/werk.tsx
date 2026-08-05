@@ -52,7 +52,7 @@ export default function WerkScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const { jobs, addJob, removeJob, projects, isLoading } = useAppState();
+  const { jobs, addJob, removeJob, projects, isLoading, businessProfile } = useAppState();
   const [showNewJob, setShowNewJob] = useState(false);
   const [newJobTitle, setNewJobTitle] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
@@ -102,7 +102,17 @@ export default function WerkScreen() {
         return;
       }
     } catch {}
-    await addJob(newJobTitle.trim());
+    // Stamp the contractor's own trade. This is the ONLY direct job-creation
+    // path in the app, and it passed a title and nothing else — so every job
+    // made here had `trade: undefined`, and `templatesForJob` reads an undefined
+    // trade as "this job is trade-agnostic" and returns only untagged forms.
+    // The result was that a contractor could write a job form and then open
+    // their own job to be told there is no form for this trade (learnings #109).
+    // A solo contractor's jobs are their trade; the quote path infers the same
+    // default. Absent and "applies to all" are different facts.
+    await addJob(newJobTitle.trim(), null, null, {
+      trade: (businessProfile as { trade?: string } | undefined)?.trade,
+    });
     hapticSuccess();
     setNewJobTitle('');
     setShowNewJob(false);

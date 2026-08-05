@@ -170,6 +170,8 @@ type AppState = {
     agreed_amount?: number;
     trade?: string;
     priority?: string;
+    /** The quote this job came from — set by the "start job from quote" flow. */
+    quote_id?: string;
   }) => Promise<string>;
   updateJobStatus: (id: string, status: JobStatus) => { warnings: string[] };
   updateJob: (id: string, updates: Partial<Job>) => void;
@@ -1256,6 +1258,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           quotedAmount: extra?.quoted_amount ?? undefined,
           agreedAmount: extra?.agreed_amount ?? undefined,
           trade: extra?.trade ?? undefined,
+          quoteId: extra?.quote_id ?? undefined,
           priority: (extra?.priority as JobPriority) ?? 'normal',
           photos: [],
           notes: [],
@@ -3074,6 +3077,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           status: 'scheduled',
           quotedAmount: quote.amount,
           agreedAmount: quote.amount,
+          // Mirrors the persisted payload below, so the optimistic row and the
+          // reloaded row agree. They did not before: the job rendered without a
+          // trade and then reloaded without one too, for different reasons.
+          trade: quote.trade ?? (businessProfile as { trade?: string } | undefined)?.trade ?? undefined,
           priority: 'normal',
           photos: [],
           notes: [],
@@ -3140,6 +3147,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             customer_id: isUuid(quote.customer) ? quote.customer : null,
             quoted_amount: quote.amount,
             agreed_amount: quote.amount,
+            // Everything below was built above, put on the optimistic job, and
+            // then dropped on the floor at the persist boundary — so it lived
+            // for one session and vanished on cold start (the R83 five-file
+            // class). Each one severs a different downstream part:
+            //
+            //   trade         → job forms filter on it, so a job converted from
+            //                   a quote matched NO template (learnings #109).
+            //                   Falls back to the contractor's own trade: a solo
+            //                   plumber's jobs are plumbing jobs, and "unknown"
+            //                   is not the same fact as "applies to all".
+            //   quote_id      → the chain link itself. Without it the
+            //                   quote→job→invoice path cannot be followed in the
+            //                   data at all, only guessed at from names.
+            //   scheduled_date→ computed just above from the customer's OWN
+            //                   preferred date in customer_interactions, with a
+            //                   staleness guard, and then not written. The
+            //                   customer told us when they wanted the work and
+            //                   the answer was thrown away.
+            trade: quote.trade ?? (businessProfile as { trade?: string } | undefined)?.trade ?? null,
+            quote_id: quoteId,
+            scheduled_date: scheduledDate ?? null,
           };
           try {
             const row = await dbCreateJob(jobPayload);
