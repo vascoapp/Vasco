@@ -12,10 +12,11 @@ import {
 export const metadata: Metadata = {
   title: "Answers for Construction Contractors | Vasco",
   description:
-    "Practical answers for self-employed contractors in Europe. Pricing, invoicing, compliance, job management, and quoting guides for 7 trades across 6 countries.",
+    "Practical answers for self-employed contractors in Europe. E-invoicing mandate deadlines by country, pricing, invoicing, compliance, job management and quoting guides for 7 trades across 6 countries.",
 };
 
 const TOPIC_LABELS: Record<TopicId, string> = {
+  "einvoicing-mandate": "E-invoicing mandate",
   pricing: "Pricing",
   invoicing: "Invoicing",
   compliance: "Compliance",

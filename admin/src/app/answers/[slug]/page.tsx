@@ -45,6 +45,7 @@ export async function generateMetadata({
 // ─── TOPIC + TRADE LABELS ──────────────────────────────────────────────────
 
 const TOPIC_LABELS: Record<TopicId, string> = {
+  "einvoicing-mandate": "E-invoicing mandate",
   pricing: "Pricing",
   invoicing: "Invoicing",
   compliance: "Compliance",

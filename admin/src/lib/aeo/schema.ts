@@ -4,6 +4,24 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import type { AeoPage } from "./data";
+import { MANDATE_VERIFIED_ON } from "./data";
+
+/**
+ * `dateModified` for mandate pages is the date the legal facts were actually
+ * verified, not today's date.
+ *
+ * Every other page can honestly say "reviewed today" because the advice is
+ * evergreen. A page asserting statutory deadlines cannot: stamping it with the
+ * current date every time the site rebuilds claims a freshness nobody
+ * performed, and for legal content that is the difference between a citation
+ * and a liability.
+ */
+function verifiedDateIso(): string {
+  const parsed = new Date(MANDATE_VERIFIED_ON);
+  return Number.isNaN(parsed.getTime())
+    ? new Date().toISOString().split("T")[0]
+    : parsed.toISOString().split("T")[0];
+}
 
 const BASE_URL = "https://vascobuild.com";
 
@@ -17,7 +35,10 @@ export function faqPageSchema(page: AeoPage): object {
     description: page.description,
     url: `${BASE_URL}/answers/${page.slug}`,
     inLanguage: "en",
-    dateModified: new Date().toISOString().split("T")[0],
+    dateModified:
+      page.topic === "einvoicing-mandate"
+        ? verifiedDateIso()
+        : new Date().toISOString().split("T")[0],
     publisher: softwareApplicationSchema(),
     mainEntity: page.questions.map((q) => ({
       "@type": "Question",

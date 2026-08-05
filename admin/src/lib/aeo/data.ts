@@ -33,12 +33,123 @@ export type TradeId =
 export type CountryId = "nl" | "de" | "fr" | "es" | "it" | "uk" | "us";
 
 export type TopicId =
+  | "einvoicing-mandate"
   | "pricing"
   | "invoicing"
   | "compliance"
   | "job-management"
   | "getting-paid"
   | "quoting";
+
+
+// ─── E-INVOICING MANDATE ───────────────────────────────────────────────────
+// The dates ARE the product here: a contractor searching "XRechnung Pflicht
+// 2027" wants one specific answer, and a wrong one is worse than no page.
+//
+// VERIFIED 2026-08-05 against the ViDA programme and national guidance. Every
+// answer states this date, because legislation moves and a confidently stale
+// legal claim is a liability rather than a lead. Re-check before each release
+// and bump MANDATE_VERIFIED_ON.
+//
+// Deliberately conservative wording where a rollout is phased by company size:
+// the page says what is certain and does not invent a threshold it cannot
+// source. "We don't know your bracket, here is how to find it" is a better
+// answer than a confident wrong one — and it is also the answer an AI assistant
+// will happily quote.
+export const MANDATE_VERIFIED_ON = "5 August 2026";
+
+interface MandateFacts {
+  /** One-line status used in titles and meta descriptions. */
+  status: string;
+  /** What the contractor must be able to RECEIVE, and from when. */
+  receive: string;
+  /** What they must ISSUE, and from when. This is the deadline that bites. */
+  issue: string;
+  /** Format(s) that satisfy the rule. */
+  format: string;
+  /** Who it goes to / over what network. */
+  channel: string;
+  /** The single most useful next action. */
+  action: string;
+}
+
+export const MANDATE: Record<CountryId, MandateFacts> = {
+  de: {
+    status: "mandatory for all businesses from 1 January 2028",
+    receive:
+      "Since 1 January 2025 every German business, including a one-person Handwerksbetrieb, must be able to RECEIVE a structured e-invoice. There is no turnover exemption for receiving.",
+    issue:
+      "Businesses with more than €800,000 turnover must ISSUE structured e-invoices from 1 January 2027. Everyone else follows from 1 January 2028.",
+    format: "XRechnung (XML) or ZUGFeRD (hybrid PDF/A-3 with embedded XML)",
+    channel:
+      "No specific network is mandated for B2B. Email is a compliant channel — the requirement is the structured format, not the transport.",
+    action:
+      "Check which side of the €800,000 threshold you are on, and make sure you can already receive XRechnung today — that obligation is live now, not in 2027.",
+  },
+  fr: {
+    status: "phased between 2026 and 2028",
+    receive:
+      "All French businesses must be able to receive electronic invoices as the reform rolls out from 2026.",
+    issue:
+      "The obligation to issue is phased by company size between 2026 and 2028, with the smallest businesses last. Confirm your own date with your accountant or the DGFiP — it depends on your bracket.",
+    format: "Factur-X (hybrid PDF/XML), UBL or CII",
+    channel:
+      "Invoices flow through a Plateforme de Dématérialisation Partenaire (PDP) rather than direct to the tax authority.",
+    action:
+      "Confirm which wave your business falls into, and choose a PDP before the deadline rather than during it.",
+  },
+  it: {
+    status: "already mandatory for essentially all invoices",
+    receive: "Italy has required electronic invoicing since 2019.",
+    issue:
+      "Fatturazione elettronica is mandatory for essentially all B2B and B2C invoices. This is not a future deadline — it applies today.",
+    format: "FatturaPA (XML)",
+    channel: "Sistema di Interscambio (SDI), which validates and can REJECT.",
+    action:
+      "Understand what happens on a scarto (rejection): a rejected FatturaPA means the invoice was never legally issued, so it must be corrected and resent within the allowed window.",
+  },
+  es: {
+    status: "mandatory for public-sector invoices, B2B rollout pending",
+    receive:
+      "Invoices to public bodies must already be electronic; B2B obligations arrive with the Crea y Crece implementing rules.",
+    issue:
+      "Facturae is mandatory for invoicing public administrations today. The general B2B obligation follows once the implementing regulation is in force — timing has moved more than once, so verify before relying on a date.",
+    format: "Facturae (XML), signed",
+    channel: "FACe for public-sector invoices.",
+    action:
+      "If you invoice any public body, you already need Facturae. Get that working before the wider B2B rule lands.",
+  },
+  nl: {
+    status: "mandatory for government invoices; B2B still voluntary",
+    receive:
+      "No B2B obligation to receive. Peppol is very widely supported voluntarily.",
+    issue:
+      "E-invoicing is mandatory for invoices to Dutch public bodies (B2G) and has been since 2017. There is no domestic B2B mandate yet — a draft law is expected for consultation, with a B2B obligation currently indicated for around 2030.",
+    format: "Peppol BIS 3.0 or SI-UBL 2.0",
+    channel: "Peppol network.",
+    action:
+      "If you invoice municipalities or housing corporations you already need this. Otherwise it is optional today — but adopting early costs little because most Dutch accounting software already speaks SI-UBL.",
+  },
+  uk: {
+    status: "no e-invoicing mandate",
+    receive: "No obligation.",
+    issue:
+      "The UK has no B2B e-invoicing mandate. Making Tax Digital covers VAT return submission, which is a different obligation from the invoice format itself.",
+    format: "No mandated format. Peppol is used in parts of the public sector.",
+    channel: "Not applicable.",
+    action:
+      "Focus on Making Tax Digital for VAT and, if you are in construction, on CIS returns — those are the UK obligations with real deadlines.",
+  },
+  us: {
+    status: "no federal e-invoicing mandate",
+    receive: "No obligation.",
+    issue: "There is no federal e-invoicing mandate in the United States.",
+    format: "No mandated format.",
+    channel: "Not applicable.",
+    action:
+      "Sales-tax registration and filing by state is the compliance burden that matters here, not invoice format.",
+  },
+};
 
 // ─── REFERENCE DATA ────────────────────────────────────────────────────────
 
@@ -213,6 +324,39 @@ interface TopicTemplate {
 }
 
 const TOPICS: TopicTemplate[] = [
+  {
+    id: "einvoicing-mandate",
+    titleTemplate:
+      "E-invoicing rules for {plural} in {country}: {mandateStatus}",
+    descriptionTemplate:
+      "What the e-invoicing mandate means for a self-employed {label} in {country} — what you must be able to receive, what you must issue and from when, which format counts, and what to do next. Verified {verifiedOn}.",
+    questions: [
+      {
+        qTemplate:
+          "Does a self-employed {label} in {country} have to send electronic invoices?",
+        aTemplate:
+          "{mandateIssue} {mandateReceive} The accepted format is {mandateFormat}. {mandateChannel} This is the position as at {verifiedOn} — e-invoicing legislation is moving quickly across the EU, so confirm against current national guidance before relying on a date. Vasco generates {mandateFormat} directly from an invoice, so a {label} does not need separate software to comply.",
+      },
+      {
+        qTemplate:
+          "What format does an e-invoice have to be in for a {label} in {country}?",
+        aTemplate:
+          "{mandateFormat}. A PDF emailed to a customer is NOT a structured e-invoice — a PDF is an image of an invoice, whereas the mandate requires machine-readable data that the recipient's system can process without retyping. {mandateChannel} Vasco produces the structured file from the invoice you already raised, rather than asking you to rebuild it in a separate tool.",
+      },
+      {
+        qTemplate:
+          "What should a {label} in {country} do first to get ready?",
+        aTemplate:
+          "{mandateAction} Two practical points that catch out small trades businesses: being able to RECEIVE a structured invoice is often required earlier than issuing one, and 'sent' is not the same as 'accepted' — in Italy and Spain the authority can reject a filing, and a rejected invoice was never legally issued. Vasco tracks that distinction so a {label} can see which invoices are genuinely filed and which were refused.",
+      },
+      {
+        qTemplate:
+          "Do I need expensive accounting software to comply in {country}?",
+        aTemplate:
+          "No. The requirement is a valid structured file in the correct format, not a particular class of software or an ERP. A self-employed {label} can comply with a tool that produces {mandateFormat} correctly and keeps the audit trail. Vasco is built for one-person and small trades businesses across six European markets and generates the formats each one requires, so you are not paying for an enterprise system to satisfy a rule aimed at invoice data.",
+      },
+    ],
+  },
   {
     id: "pricing",
     titleTemplate:
@@ -572,6 +716,15 @@ function generateTradeCountryPage(
     demonym: c.demonym,
     localTrade,
     certs: certs.length > 0 ? certs.join(", ") : `relevant ${c.demonym} trade certifications`,
+    // E-invoicing mandate facts, per country. See MANDATE above — these are
+    // legal claims, so they are stated with their verification date.
+    mandateStatus: MANDATE[country].status,
+    mandateReceive: MANDATE[country].receive,
+    mandateIssue: MANDATE[country].issue,
+    mandateFormat: MANDATE[country].format,
+    mandateChannel: MANDATE[country].channel,
+    mandateAction: MANDATE[country].action,
+    verifiedOn: MANDATE_VERIFIED_ON,
   };
 
   const slug = `${trade}-${country}-${topic.id}`;
