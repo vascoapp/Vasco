@@ -197,6 +197,11 @@ export async function feedPricingMoat(
       materialCategory: item.category,
       brand: item.brand,
       eanCode: item.ean,
+      // Carried so the cohort key can use identity rather than text. On the
+      // structured-invoice intake these are the supplier's own declared codes;
+      // on the photo intake they are usually absent, which is precisely why the
+      // two sources are worth telling apart.
+      articleNumber: item.articleNumber,
       currency: moatCurrency,
       vatRate: item.vatRate,
       observedAt: invoice.documentDate,

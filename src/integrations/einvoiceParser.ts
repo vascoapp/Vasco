@@ -62,6 +62,57 @@ function allMatches(xml: string, tag: string): string[] {
   return out;
 }
 
+/**
+ * An identifier nested inside a wrapper element.
+ *
+ * Scoping matters: a UBL invoice line has its own `cbc:ID` (the line number),
+ * so `firstMatch(line, 'ID')` returns "1", not the article number. The article
+ * number only means anything relative to its wrapper.
+ */
+function nestedValue(block: string, wrapper: string, tag = 'ID'): string | undefined {
+  const inner = firstMatch(block, wrapper);
+  if (!inner) return undefined;
+  const v = firstMatch(inner, tag);
+  return v ? v.trim() || undefined : undefined;
+}
+
+/**
+ * The `unitCode` attribute on a quantity element (UBL `unitCode`, CII
+ * `unitCode`), e.g. MTR / H87 / KGM.
+ *
+ * Not cosmetic: `unit` is one of the benchmark view's GROUP BY columns, so
+ * every line landing as 'piece' merges metres and kilograms into one cohort and
+ * makes the average meaningless. The previous behaviour hardcoded 'piece' for
+ * every structured invoice.
+ */
+function unitCode(block: string, tag: string): string | undefined {
+  const re = new RegExp(`<(?:[a-zA-Z]+:)?${tag}[^>]*unitCode="([^"]+)"`);
+  const m = block.match(re);
+  return m ? m[1].trim() || undefined : undefined;
+}
+
+/**
+ * UN/ECE Rec 20 codes → the unit vocabulary the moat already groups on.
+ *
+ * Unmapped codes are passed through lowercased rather than coerced to 'piece':
+ * an unrecognised-but-consistent unit still groups correctly with itself, while
+ * mislabelling it 'piece' pollutes a cohort that means something else.
+ */
+const UNIT_BY_CODE: Record<string, string> = {
+  H87: 'piece', C62: 'piece', EA: 'piece', PCE: 'piece',
+  MTR: 'meter', MTK: 'm2', MTQ: 'm3',
+  KGM: 'kg', GRM: 'g', TNE: 'ton',
+  LTR: 'liter', MLT: 'ml',
+  HUR: 'hour', DAY: 'day',
+  MMT: 'mm', CMT: 'cm', KMT: 'km',
+  SET: 'set', PK: 'pack', BX: 'box', RO: 'roll',
+};
+
+function mapUnit(code: string | undefined): string {
+  if (!code) return 'piece';
+  return UNIT_BY_CODE[code.toUpperCase()] ?? code.toLowerCase();
+}
+
 function num(s: string | null): number {
   if (!s) return 0;
   const cleaned = s.replace(/[^\d.,-]/g, '').replace(',', '.');
@@ -100,10 +151,19 @@ function parseUbl(xml: string): { invoice: ScannedInvoice; warnings: string[] } 
       description,
       category: 'unknown',
       quantity,
-      unit: 'piece',
+      unit: mapUnit(unitCode(block, 'InvoicedQuantity')),
       unitPrice: unitPrice || (quantity > 0 ? lineTotal / quantity : 0),
       totalPrice: lineTotal,
       vatRate: vatPct,
+      // THE MOAT'S BEST INPUT, and it was being thrown away. canonicalMaterialKey
+      // ranks identity above text: an EAN gives confidence 1 and a
+      // supplier-namespaced article number is next. Those keys need no
+      // canonicalisation, no LLM merge and no judgement — two contractors who
+      // scanned the same barcode are in the same cohort, full stop. The mandate
+      // is about to compel every merchant in four countries to send exactly
+      // this, and until now the parser dropped it on the floor.
+      ean: nestedValue(block, 'StandardItemIdentification'),
+      articleNumber: nestedValue(block, 'SellersItemIdentification'),
       confidence: 90,
     } as ScannedLineItem;
   });
@@ -152,8 +212,15 @@ function parseCii(xml: string): { invoice: ScannedInvoice; warnings: string[] } 
     const total = num(firstMatch(block, 'LineTotalAmount')) || unitPrice * quantity;
     const vatPct = num(firstMatch(block, 'RateApplicablePercent'));
     return {
-      description, category: 'unknown', quantity, unit: 'piece',
-      unitPrice, totalPrice: total, vatRate: vatPct, confidence: 90,
+      description, category: 'unknown', quantity,
+      unit: mapUnit(unitCode(block, 'BilledQuantity')),
+      unitPrice, totalPrice: total, vatRate: vatPct,
+      // CII names the same two identifiers differently: GlobalID carries the
+      // GTIN, SellerAssignedID the supplier's catalogue code. Both live inside
+      // SpecifiedTradeProduct, which is why they are read through the wrapper.
+      ean: nestedValue(block, 'SpecifiedTradeProduct', 'GlobalID'),
+      articleNumber: nestedValue(block, 'SpecifiedTradeProduct', 'SellerAssignedID'),
+      confidence: 90,
     } as ScannedLineItem;
   });
 

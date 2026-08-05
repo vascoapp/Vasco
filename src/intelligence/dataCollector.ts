@@ -470,6 +470,10 @@ export async function emitMaterialPurchased(userId: string, data: {
   // `source: 'invoice_scan'` explicitly.
   brand?: string;
   eanCode?: string;
+  /** Supplier's catalogue code. Identity-grade for the cohort key, but ONLY
+   *  together with supplierId — a code is unique inside one catalogue, not
+   *  across them. Structured e-invoices carry it; photographs rarely do. */
+  articleNumber?: string;
   currency?: string;
   vatRate?: number;
   observedAt?: string;
@@ -510,12 +514,18 @@ export async function emitMaterialPurchased(userId: string, data: {
         material_name: data.materialName,
         // Normalised cohort key alongside the raw name (migration
         // 20260802000001). material_name stays RAW because it is user-visible;
-        // canonical_name is what the benchmark view will group on once the
-        // historic backfill has run. Identity-first: an EAN or supplier article
-        // number wins outright over text similarity.
+        // canonical_name IS what the benchmark view groups on (migration
+        // 20260806000003 repointed it). Identity-first: an EAN or a
+        // supplier-namespaced article number wins outright over text
+        // similarity, and both come free on a structured e-invoice.
         canonical_name: canonicalMaterialKey({
           description: data.materialName,
           ean: data.eanCode,
+          // Without this the article-number tier could never fire, however well
+          // the extractor read the document — canonicalMaterialKey requires the
+          // code AND the supplier, because a catalogue code is only unique
+          // inside one catalogue.
+          articleNumber: data.articleNumber,
           supplierId: data.supplierId,
           unit: data.unit,
         }).key || null,
