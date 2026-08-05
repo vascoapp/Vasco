@@ -2,7 +2,6 @@
 export { ContractorDashboardHeader } from './ContractorDashboardHeader';
 
 // Contractor Mode Components
-export { QuoteBuilder } from './QuoteBuilder';
 
 // Advanced Contractor Features
 export { Pricebook } from './Pricebook';
@@ -16,7 +15,6 @@ export { ReceiptScanner } from './ReceiptScanner';
 
 // Recommendations & AI Features
 export { RecommendationFeedbackCard as RecommendationFeedback } from './RecommendationFeedback';
-export { TemplateSuggestion } from './TemplateSuggestion';
 
 // Supplier & Market Intelligence
 export { PriceComparison } from './PriceComparison';
@@ -27,8 +25,6 @@ export { MarketIntelligence } from './MarketIntelligence';
 // Phase 4: Network & Integration
 
 // Phase 5: Advanced Intelligence
-export { ProjectPlanner } from './ProjectPlanner';
-export { SmartPricing } from './SmartPricing';
 
 // Phase 6: Financial Intelligence & Workflow Automation
 export { CashFlowDashboard } from './CashFlowDashboard';

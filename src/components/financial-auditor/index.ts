@@ -7,7 +7,6 @@
  * 3. Detects overpayments
  */
 
-export { InvoiceVerificationPanel } from './InvoiceVerificationPanel';
 export { FinancialAuditorDashboard, FinancialAuditorDashboard as FinancialAuditDashboard } from './FinancialAuditorDashboard';
 
 // Re-export hooks from service for convenience
