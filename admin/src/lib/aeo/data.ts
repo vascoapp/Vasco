@@ -3,7 +3,7 @@
 // Trades × Countries × Topics → crawlable, schema-rich answer pages
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { MANDATE_I18N, LANG_FOR_COUNTRY } from "./mandate-i18n";
+import { MANDATE_I18N, LANG_FOR_COUNTRY, MANDATE_QUESTION_PAGES } from "./mandate-i18n";
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 
@@ -877,6 +877,50 @@ function slugify(input: string): string {
     .replace(/^-|-$/g, "");
 }
 
+
+/**
+ * One page per question people actually type.
+ *
+ * The trade × country set assumes the searcher describes themselves ("plumber
+ * in Germany"); most do not — they type the question, and it contains no trade,
+ * because the mandate does not care what trade you are. These carry no trade
+ * dimension for the same reason.
+ *
+ * The page title IS the question, verbatim. That is the whole point: it should
+ * match the query as typed rather than paraphrase it.
+ */
+function buildMandateQuestionPages(): AeoPage[] {
+  const pages: AeoPage[] = [];
+
+  for (const [countryId, lang] of Object.entries(LANG_FOR_COUNTRY)) {
+    if (!lang) continue;
+    const country = countryId as CountryId;
+    const L = MANDATE_I18N[lang];
+
+    for (const qp of MANDATE_QUESTION_PAGES[lang] ?? []) {
+      pages.push({
+        slug: qp.slug,
+        lang,
+        title: qp.question,
+        // The lead answer doubles as the meta description, trimmed. It is
+        // already written to stand alone, which is what a snippet needs.
+        description: qp.answer.length > 300 ? `${qp.answer.slice(0, 297)}…` : qp.answer,
+        topic: "einvoicing-mandate",
+        country,
+        source: MANDATE[country].source,
+        verifiedOn: MANDATE_VERIFIED_ON,
+        questions: [
+          { question: qp.question, answer: `${qp.answer} ${fillTemplate(L.verifiedLine, { verifiedOn: MANDATE_VERIFIED_ON })}` },
+          ...qp.supporting.map((sq) => ({ question: sq.q, answer: sq.a })),
+        ],
+        relatedSlugs: [],
+      });
+    }
+  }
+
+  return pages;
+}
+
 // ─── BUILD ALL PAGES ───────────────────────────────────────────────────────
 
 function buildAllPages(): AeoPage[] {
@@ -907,6 +951,9 @@ function buildAllPages(): AeoPage[] {
       en.alternates = { ...(en.alternates ?? {}), en: en.slug, [loc.lang]: loc.slug };
     }
   }
+
+  // Question-shaped pages — highest intent, no trade dimension.
+  pages.push(...buildMandateQuestionPages());
 
   // Universal pages
   pages.push(...UNIVERSAL_PAGES);

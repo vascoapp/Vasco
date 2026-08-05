@@ -251,3 +251,191 @@ export const MANDATE_I18N: Record<MandateLang, LocalisedMandate> = {
     ],
   },
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// QUESTION PAGES — one page per question people actually type
+// ═══════════════════════════════════════════════════════════════════════════
+// The trade × country set assumes the searcher describes themselves ("plumber
+// in Germany"). Most do not. They type the question: "Muss ich als
+// Kleinunternehmer E-Rechnungen stellen?" — no trade in it, because the mandate
+// does not care what trade you are.
+//
+// So these are keyed by QUESTION × COUNTRY and carry no trade dimension. Fewer
+// pages, higher intent, and each is the literal phrasing of a query rather than
+// a template that happens to contain the words.
+//
+// Each page carries a lead answer plus two supporting ones. A single-answer
+// page is thin, ranks badly and gives an assistant nothing to choose from; the
+// supporting pairs are the follow-up questions the same person asks next.
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface MandateQuestionPage {
+  /** Native slug — the words typed, hyphenated. */
+  slug: string;
+  /** H1 and the primary question. */
+  question: string;
+  answer: string;
+  /** Follow-ups the same searcher asks next. */
+  supporting: { q: string; a: string }[];
+}
+
+export const MANDATE_QUESTION_PAGES: Record<MandateLang, MandateQuestionPage[]> = {
+  de: [
+    {
+      slug: "muss-ich-als-kleinunternehmer-e-rechnungen-stellen",
+      question: "Muss ich als Kleinunternehmer E-Rechnungen stellen?",
+      answer:
+        "Für den EMPFANG gilt die Pflicht bereits: seit dem 1. Januar 2025 muss jedes deutsche Unternehmen strukturierte E-Rechnungen empfangen können, und dabei gibt es keine Kleinunternehmer-Ausnahme und keine Umsatzgrenze. Für das AUSSTELLEN hängt der Zeitpunkt vom Umsatz ab: Betriebe über 800.000 € ab dem 1. Januar 2027, alle übrigen — und damit die meisten Kleinunternehmer nach §19 UStG — ab dem 1. Januar 2028. Wer heute für 2028 plant, kann die Empfangspflicht also bereits verletzen.",
+      supporting: [
+        {
+          q: "Gilt das auch, wenn ich nur an Privatkunden fakturiere?",
+          a: "Die Pflicht betrifft den B2B-Bereich. Rechnungen an Privatpersonen sind davon nicht erfasst. Sobald Sie aber auch nur gelegentlich an ein anderes Unternehmen fakturieren — eine Hausverwaltung, einen Generalunternehmer, einen Gewerbebetrieb — fallen diese Rechnungen unter die Regelung.",
+        },
+        {
+          q: "Was passiert, wenn ich es nicht rechtzeitig umstelle?",
+          a: "Eine Rechnung, die nicht dem vorgeschriebenen Format entspricht, erfüllt die Anforderungen nicht — mit Folgen für den Vorsteuerabzug Ihres Kunden, weshalb Auftraggeber in der Praxis meist deutlich vor der Frist darauf bestehen. Der wirtschaftliche Druck kommt also eher vom Kunden als vom Finanzamt.",
+        },
+      ],
+    },
+    {
+      slug: "reicht-eine-pdf-rechnung-als-e-rechnung",
+      question: "Reicht eine PDF-Rechnung als E-Rechnung aus?",
+      answer:
+        "Nein. Eine PDF-Rechnung per E-Mail ist keine E-Rechnung im Sinne der Pflicht. Ein PDF ist ein Bild einer Rechnung; verlangt werden strukturierte, maschinenlesbare Daten, die das System des Empfängers ohne Abtippen verarbeiten kann. Zulässig sind XRechnung (reines XML) oder ZUGFeRD (PDF/A-3 mit eingebettetem XML). ZUGFeRD sieht für den Menschen weiterhin wie ein PDF aus — der Unterschied liegt in den eingebetteten Daten.",
+      supporting: [
+        {
+          q: "Was ist der Unterschied zwischen XRechnung und ZUGFeRD?",
+          a: "XRechnung ist reines XML: maschinenlesbar, für Menschen unhandlich, und der Standard für Rechnungen an öffentliche Auftraggeber. ZUGFeRD ist ein hybrides Format — ein normal lesbares PDF mit demselben strukturierten XML darin. Beide erfüllen die Anforderung; ZUGFeRD ist im Umgang mit Kunden meist angenehmer, weil der Empfänger weiterhin ein Dokument sieht, das er kennt.",
+        },
+        {
+          q: "Kann ich weiterhin per E-Mail versenden?",
+          a: "Ja. Für B2B ist kein bestimmtes Netzwerk vorgeschrieben — E-Mail ist ein zulässiger Übertragungsweg. Verpflichtend ist das Format der Rechnung, nicht der Kanal. Das ist der Punkt, der am häufigsten falsch verstanden wird: Sie brauchen kein Portal, Sie brauchen die richtige Datei.",
+        },
+      ],
+    },
+    {
+      slug: "ab-wann-gilt-die-e-rechnungspflicht-fuer-handwerker",
+      question: "Ab wann gilt die E-Rechnungspflicht für Handwerker?",
+      answer:
+        "Für Handwerksbetriebe gelten dieselben Stufen wie für alle anderen Unternehmen: Empfangen seit dem 1. Januar 2025 ohne Ausnahme, Ausstellen ab dem 1. Januar 2027 bei mehr als 800.000 € Umsatz und ab dem 1. Januar 2028 für alle übrigen. Eine eigene Handwerksregelung gibt es nicht. Praktisch bedeutet das für die meisten Ein-Mann- und Kleinbetriebe: 2028 für das Ausstellen — aber die Empfangspflicht besteht bereits heute.",
+      supporting: [
+        {
+          q: "Zählt der Umsatz des Vorjahres?",
+          a: "Die 800.000-€-Schwelle richtet sich nach dem Vorjahresumsatz. Wenn Sie in der Nähe der Grenze liegen, klären Sie mit Ihrem Steuerberater, welches Geschäftsjahr für Sie maßgeblich ist — bei einem schwankenden Auftragsjahr entscheidet das darüber, ob Sie 2027 oder 2028 dran sind.",
+        },
+        {
+          q: "Was sollte ich zuerst tun?",
+          a: "Prüfen Sie, ob Sie eine XRechnung heute überhaupt empfangen und lesen können — das ist die Pflicht, die bereits läuft und die am häufigsten übersehen wird. Danach klären Sie Ihre Stufe für das Ausstellen. Beides ist in einer halben Stunde erledigt und verhindert, dass Sie kurz vor der Frist umstellen müssen.",
+        },
+      ],
+    },
+  ],
+
+  it: [
+    {
+      slug: "cosa-succede-se-la-fattura-viene-scartata-dallo-sdi",
+      question: "Cosa succede se la fattura viene scartata dallo SDI?",
+      answer:
+        "Uno scarto non è un problema tecnico da rimandare: una fattura scartata NON è stata emessa dal punto di vista fiscale. L'operazione risulta non fatturata finché non trasmetti una versione corretta, e i termini per farlo sono stretti. Il messaggio di scarto contiene un codice — ad esempio 00400 per un'incoerenza tra natura e aliquota IVA — che indica esattamente cosa correggere. L'errore più costoso è considerare «inviata» una fattura che lo SDI ha rifiutato: la si scopre in genere solo in fase di riconciliazione.",
+      supporting: [
+        {
+          q: "Devo emettere una nuova fattura o correggere quella esistente?",
+          a: "La fattura scartata non è mai esistita ai fini fiscali, quindi si ritrasmette una fattura corretta — normalmente mantenendo la stessa data e lo stesso numero, entro i termini previsti. Non serve una nota di credito, perché non c'è nulla da stornare: non è mai stata emessa.",
+        },
+        {
+          q: "Come faccio a sapere se una fattura è stata accettata?",
+          a: "Lo SDI restituisce una ricevuta di consegna o di mancata consegna, oppure una notifica di scarto. «Trasmessa» e «accettata» sono stati diversi e vanno tenuti separati: Vasco li distingue esplicitamente e conserva il codice dell'ente, così sai quali fatture sono davvero passate.",
+        },
+      ],
+    },
+    {
+      slug: "un-pdf-vale-come-fattura-elettronica",
+      question: "Un PDF vale come fattura elettronica?",
+      answer:
+        "No. Un PDF inviato per email è l'immagine di una fattura, mentre la fattura elettronica richiede un file XML strutturato in formato FatturaPA, trasmesso attraverso il Sistema di Interscambio. Non è una questione di forma: senza il passaggio dallo SDI l'operazione non risulta fatturata, indipendentemente dal fatto che il cliente abbia ricevuto e pagato il PDF.",
+      supporting: [
+        {
+          q: "Serve il codice destinatario?",
+          a: "Sì: il codice destinatario (o in alternativa la PEC del cliente) indica allo SDI dove recapitare la fattura. Se manca o è errato la fattura può risultare non consegnata anche quando è stata accettata — vale la pena chiederlo al cliente insieme a partita IVA e indirizzo, una volta sola, all'apertura dell'anagrafica.",
+        },
+        {
+          q: "Vale anche per i forfettari?",
+          a: "Sì. L'obbligo è stato esteso anche ai contribuenti in regime forfettario, quindi anche un artigiano in proprio emette fattura elettronica tramite SDI.",
+        },
+      ],
+    },
+  ],
+
+  fr: [
+    {
+      slug: "qu-est-ce-qu-une-pdp-facturation-electronique",
+      question: "Qu'est-ce qu'une PDP et dois-je en choisir une ?",
+      answer:
+        "Une Plateforme de Dématérialisation Partenaire est l'intermédiaire immatriculé par lequel vos factures électroniques transitent : elle les transmet, récupère les statuts et assure la traçabilité. Dans la réforme française les factures ne partent pas directement vers l'administration fiscale — elles passent par une PDP. Choisir la vôtre fait partie de la mise en conformité, et il vaut mieux le faire avant votre échéance que pendant.",
+      supporting: [
+        {
+          q: "Quelle est ma date d'échéance exactement ?",
+          a: "L'obligation d'émettre est échelonnée par taille d'entreprise entre 2026 et 2028, les plus petites structures en dernier. La réception, elle, concerne tout le monde dès le début du déploiement. Confirmez votre vague auprès de votre expert-comptable ou de la DGFiP : elle dépend de votre catégorie, et le calendrier a déjà été modifié une fois.",
+        },
+        {
+          q: "Un artisan seul a-t-il besoin d'un logiciel lourd ?",
+          a: "Non. Ce qui est exigé, c'est une facture au bon format transmise par une plateforme, pas un ERP. Un artisan indépendant peut se mettre en conformité avec un outil qui produit du Factur-X correct et conserve la trace de ce qui a été transmis.",
+        },
+      ],
+    },
+    {
+      slug: "un-pdf-suffit-il-facture-electronique",
+      question: "Un PDF envoyé par e-mail suffit-il comme facture électronique ?",
+      answer:
+        "Non. Un PDF classique est une image de facture, alors que la réforme exige des données structurées exploitables automatiquement par le système du destinataire. Le format attendu est Factur-X — un PDF lisible contenant le XML — ou UBL/CII. Factur-X a l'avantage de rester un document normal à l'écran pour votre client, tout en portant les données requises.",
+      supporting: [
+        {
+          q: "Dois-je changer ma façon de facturer dès maintenant ?",
+          a: "La priorité est d'être capable de RECEVOIR des factures électroniques, car cette obligation arrive avant celle d'émettre pour beaucoup d'entreprises. Ensuite seulement vient l'émission, selon votre catégorie.",
+        },
+        {
+          q: "Que se passe-t-il si ma facture est rejetée ?",
+          a: "Une facture rejetée n'a pas été émise : il faut la corriger et la retransmettre. Distinguer « transmise » de « acceptée » évite de croire à tort qu'une facture est partie — c'est la confusion la plus coûteuse dans tous les pays qui ont déjà basculé.",
+        },
+      ],
+    },
+  ],
+
+  es: [
+    {
+      slug: "que-es-face-y-cuando-tengo-que-usarlo",
+      question: "¿Qué es FACe y cuándo tengo que usarlo?",
+      answer:
+        "FACe es el punto general de entrada de facturas electrónicas dirigidas a la Administración española. Si facturas a un ayuntamiento, a una comunidad autónoma o a cualquier organismo público, la factura debe presentarse en formato Facturae firmado y entrar por FACe. Esto ya es obligatorio hoy, con independencia del calendario de la obligación general entre empresas.",
+      supporting: [
+        {
+          q: "¿Y si solo facturo a empresas privadas?",
+          a: "La obligación general B2B llegará con el desarrollo reglamentario de Crea y Crece. El calendario se ha movido más de una vez, así que conviene confirmar la fecha vigente antes de planificar. Mientras tanto, si tienes cualquier cliente público, ya estás dentro del ámbito obligatorio.",
+        },
+        {
+          q: "¿Necesito firma electrónica?",
+          a: "Facturae para la Administración requiere factura firmada electrónicamente. Es uno de los motivos por los que un PDF no sirve: además del formato estructurado, hace falta la firma que acredita el origen y la integridad del documento.",
+        },
+      ],
+    },
+  ],
+
+  nl: [
+    {
+      slug: "moet-ik-al-e-factureren-als-zzper",
+      question: "Moet ik als zzp'er al e-factureren?",
+      answer:
+        "Voor gewone zakelijke klanten nog niet: Nederland kent op dit moment geen verplichting om onderling elektronisch te factureren. Wel geldt die verplichting al sinds 2017 voor facturen aan de overheid — factureer je aan een gemeente, een waterschap of een woningcorporatie, dan heb je dit vandaag al nodig. Een binnenlandse B2B-verplichting wordt verwacht, met de blik momenteel op ongeveer 2030.",
+      supporting: [
+        {
+          q: "Ik factureer aan een Duitse klant — geldt daar iets anders?",
+          a: "Ja, en dit wordt vaak over het hoofd gezien. Duitsland loopt jaren voor op Nederland: Duitse afnemers moeten sinds januari 2025 e-facturen kunnen ontvangen en gaan zelf vanaf 2027 of 2028 verplicht elektronisch factureren. Een Duitse opdrachtgever kan dus een gestructureerde factuur van je verlangen ruim voordat Nederland iets verplicht stelt.",
+        },
+        {
+          q: "Wat is Peppol precies?",
+          a: "Peppol is het netwerk waarover gestructureerde facturen worden uitgewisseld, met SI-UBL als het Nederlandse formaat. De meeste Nederlandse boekhoudpakketten ondersteunen het al, waardoor de vrijwillige adoptie hier hoog is — vroeg beginnen kost daardoor weinig moeite.",
+        },
+      ],
+    },
+  ],
+};
