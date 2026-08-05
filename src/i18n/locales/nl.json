@@ -3196,7 +3196,18 @@
     "scannerUpgradeRequired": "Bonnetjes scannen hoort bij het betaalde abonnement.",
     "noStockTracked": "Nog geen voorraad bijgehouden",
     "noStockTrackedSub": "Scan een bonnetje of importeer DATANORM om te beginnen.",
-    "savedThisMonth": "Bespaard deze maand"
+    "savedThisMonth": "Bespaard deze maand",
+    "eInvoiceImport": "E-factuur inlezen",
+    "eInvoiceReading": "Bezig…",
+    "eInvoiceFailedTitle": "Kon de e-factuur niet lezen",
+    "eInvoicePdfOnly": "Die PDF bevat geen factuurgegevens. Een gewone PDF is een plaatje van een factuur — ZUGFeRD en Factur-X hebben de gegevens ín de PDF, en een XRechnung is een los .xml-bestand.",
+    "eInvoiceUnknown": "Dit bestand herkennen we niet als e-factuur. Verwacht een XRechnung, ZUGFeRD, Factur-X of Peppol UBL-document.",
+    "eInvoiceNoLines": "Deze factuur heeft geen regels, dus er valt niets uit te lezen.",
+    "eInvoiceFailed": "Kon dit bestand niet lezen.",
+    "eInvoiceReadTitle": "Factuur ingelezen",
+    "eInvoiceReadBody": "{{supplier}} · {{count}} regels · {{total}}{{moat}}",
+    "eInvoiceUnknownSupplier": "Onbekende leverancier",
+    "eInvoicePricesAdded": "Prijzen toegevoegd aan je prijsindex."
   },
   "customerView": {
     "pickTierTitle": "Kies een pakket",

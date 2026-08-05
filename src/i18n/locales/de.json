@@ -3212,7 +3212,18 @@
     "scannerUpgradeRequired": "Belegscan ist Teil des kostenpflichtigen Tarifs.",
     "noStockTracked": "Noch kein Bestand erfasst",
     "noStockTrackedSub": "Scanne einen Beleg oder importiere DATANORM, um zu starten.",
-    "savedThisMonth": "Diesen Monat gespart"
+    "savedThisMonth": "Diesen Monat gespart",
+    "eInvoiceImport": "E-Rechnung einlesen",
+    "eInvoiceReading": "Wird gelesen…",
+    "eInvoiceFailedTitle": "E-Rechnung konnte nicht gelesen werden",
+    "eInvoicePdfOnly": "Diese PDF enthält keine Rechnungsdaten. Eine normale PDF ist ein Bild einer Rechnung — ZUGFeRD und Factur-X tragen die Daten in der PDF, und eine XRechnung ist eine separate .xml-Datei.",
+    "eInvoiceUnknown": "Diese Datei erkennen wir nicht als E-Rechnung. Erwartet wird XRechnung, ZUGFeRD, Factur-X oder ein Peppol-UBL-Dokument.",
+    "eInvoiceNoLines": "Diese Rechnung enthält keine Positionen, es gibt also nichts auszulesen.",
+    "eInvoiceFailed": "Diese Datei konnte nicht gelesen werden.",
+    "eInvoiceReadTitle": "Rechnung eingelesen",
+    "eInvoiceReadBody": "{{supplier}} · {{count}} Positionen · {{total}}{{moat}}",
+    "eInvoiceUnknownSupplier": "Unbekannter Lieferant",
+    "eInvoicePricesAdded": "Preise zu Ihrem Preisindex hinzugefügt."
   },
   "customerView": {
     "pickTierTitle": "Paket wählen",

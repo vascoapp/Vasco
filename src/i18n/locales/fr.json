@@ -3212,7 +3212,18 @@
     "scannerUpgradeRequired": "Le scan des reçus fait partie de l'offre payante.",
     "noStockTracked": "Aucun stock suivi pour l'instant",
     "noStockTrackedSub": "Scannez un reçu ou importez DATANORM pour commencer.",
-    "savedThisMonth": "Économisé ce mois-ci"
+    "savedThisMonth": "Économisé ce mois-ci",
+    "eInvoiceImport": "Lire une e-facture",
+    "eInvoiceReading": "Lecture…",
+    "eInvoiceFailedTitle": "Impossible de lire l'e-facture",
+    "eInvoicePdfOnly": "Ce PDF ne contient pas de données de facture. Un PDF classique est une image de facture — Factur-X et ZUGFeRD portent les données dans le PDF, et une XRechnung est un fichier .xml séparé.",
+    "eInvoiceUnknown": "Ce fichier n'est pas reconnu comme e-facture. Attendu : Factur-X, XRechnung, ZUGFeRD ou un document Peppol UBL.",
+    "eInvoiceNoLines": "Cette facture ne contient aucune ligne, il n'y a donc rien à lire.",
+    "eInvoiceFailed": "Impossible de lire ce fichier.",
+    "eInvoiceReadTitle": "Facture lue",
+    "eInvoiceReadBody": "{{supplier}} · {{count}} lignes · {{total}}{{moat}}",
+    "eInvoiceUnknownSupplier": "Fournisseur inconnu",
+    "eInvoicePricesAdded": "Prix ajoutés à votre index tarifaire."
   },
   "customerView": {
     "pickTierTitle": "Choisissez une formule",

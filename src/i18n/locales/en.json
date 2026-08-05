@@ -3212,7 +3212,18 @@
     "scannerUpgradeRequired": "Receipt scanning is part of the paid plan.",
     "noStockTracked": "No stock tracked yet",
     "noStockTrackedSub": "Scan a receipt or import DATANORM to start.",
-    "savedThisMonth": "Saved this month"
+    "savedThisMonth": "Saved this month",
+    "eInvoiceImport": "Read e-invoice",
+    "eInvoiceReading": "Reading…",
+    "eInvoiceFailedTitle": "Could not read the e-invoice",
+    "eInvoicePdfOnly": "That PDF has no invoice data inside it. A normal PDF is a picture of an invoice — ZUGFeRD and Factur-X carry the data within the PDF, and an XRechnung is a separate .xml file.",
+    "eInvoiceUnknown": "That file is not an e-invoice we recognise. Expected an XRechnung, ZUGFeRD, Factur-X or Peppol UBL document.",
+    "eInvoiceNoLines": "That invoice has no line items, so there is nothing to read from it.",
+    "eInvoiceFailed": "Could not read that file.",
+    "eInvoiceReadTitle": "Invoice read",
+    "eInvoiceReadBody": "{{supplier}} · {{count}} lines · {{total}}{{moat}}",
+    "eInvoiceUnknownSupplier": "Unknown supplier",
+    "eInvoicePricesAdded": "Prices added to your price index."
   },
   "customerView": {
     "pickTierTitle": "Pick a package",

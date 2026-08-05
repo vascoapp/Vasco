@@ -41,6 +41,7 @@ export default function InkoopScreen() {
   const trade = businessProfile?.trade ?? 'general';
   const country = businessProfile?.country ?? 'NL';
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [importingEInvoice, setImportingEInvoice] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -131,6 +132,52 @@ export default function InkoopScreen() {
     }
   }, []);
 
+  /**
+   * Read a supplier e-invoice (XRechnung / ZUGFeRD / Peppol UBL).
+   *
+   * Errors are reported specifically rather than as one generic failure: the
+   * overwhelmingly likely mistake is picking the PDF instead of the XML, and
+   * "that file is a PDF without embedded invoice data" is actionable where
+   * "import failed" is not.
+   */
+  const importEInvoice = useCallback(async () => {
+    setImportingEInvoice(true);
+    try {
+      const { pickAndImportEInvoice } = await import('../../src/services/einvoiceImportService');
+      const res = await pickAndImportEInvoice();
+
+      if (res.error === 'cancelled') return;
+
+      if (!res.ok) {
+        const body =
+          res.error === 'pdf_without_xml'
+            ? t('inkoop.eInvoicePdfOnly', 'That PDF has no invoice data inside it. A normal PDF is a picture of an invoice — ZUGFeRD and Factur-X carry the data within the PDF, and an XRechnung is a separate .xml file.')
+            : res.error === 'unrecognised_format'
+              ? t('inkoop.eInvoiceUnknown', 'That file is not an e-invoice we recognise. Expected an XRechnung, ZUGFeRD, Factur-X or Peppol UBL document.')
+              : res.error === 'no_line_items'
+                ? t('inkoop.eInvoiceNoLines', 'That invoice has no line items, so there is nothing to read from it.')
+                : t('inkoop.eInvoiceFailed', 'Could not read that file.');
+        Alert.alert(t('inkoop.eInvoiceFailedTitle', 'Could not read the e-invoice'), body);
+        return;
+      }
+
+      const inv = res.invoice!;
+      Alert.alert(
+        t('inkoop.eInvoiceReadTitle', 'Invoice read'),
+        t('inkoop.eInvoiceReadBody', '{{supplier}} · {{count}} lines · {{total}}{{moat}}', {
+          supplier: inv.supplierName || t('inkoop.eInvoiceUnknownSupplier', 'Unknown supplier'),
+          count: inv.lineItems.length,
+          total: formatCurrency(inv.total, country),
+          // Only claimed when it actually happened — feedPricingMoat has its own
+          // arithmetic gate and can legitimately decline.
+          moat: res.fedMoat ? `\n\n${t('inkoop.eInvoicePricesAdded', 'Prices added to your price index.')}` : '',
+        }),
+      );
+    } finally {
+      setImportingEInvoice(false);
+    }
+  }, [t, country]);
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical': return SemanticColors.feedbackError;
@@ -173,6 +220,18 @@ export default function InkoopScreen() {
           <Pressable style={styles.quickChip} onPress={() => openReceiptScanner()}>
             <Ionicons name="scan" size={16} color={Palette.hermesOrange} />
             <Text style={styles.quickChipText}>{t('inkoop.receiptScanner', 'Receipt scanner')}</Text>
+          </Pressable>
+          {/* Sits beside the camera because it is the same job with a better
+              input. A supplier's XRechnung already contains article numbers,
+              quantities and unit prices as the supplier declared them — no
+              vision extraction, no confidence gate, no mis-read decimal. */}
+          <Pressable style={styles.quickChip} onPress={importEInvoice} disabled={importingEInvoice}>
+            <Ionicons name="document-text-outline" size={16} color={Palette.hermesOrange} />
+            <Text style={styles.quickChipText}>
+              {importingEInvoice
+                ? t('inkoop.eInvoiceReading', 'Reading…')
+                : t('inkoop.eInvoiceImport', 'Read e-invoice')}
+            </Text>
           </Pressable>
           <Pressable style={styles.quickChip} onPress={() => {
             if (criticalCount > 0) {
