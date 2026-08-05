@@ -5425,5 +5425,27 @@
       "exterior": "Außen",
       "other": "Sonstiges"
     }
+  },
+  "filings": {
+    "title": "Meldungen",
+    "intro": "Strukturierte Rechnungen, die Sie übergeben haben. Gesendet ist nicht dasselbe wie angenommen — das entscheidet die Behörde, und nur Sie sehen deren Antwort.",
+    "needsAttention": "Nicht eingereicht",
+    "awaiting": "Wartet auf Bestätigung",
+    "accepted": "Eingereicht",
+    "code": "Code",
+    "replaces": "Ersetzt eine zuvor abgelehnte Einreichung",
+    "markAccepted": "Angenommen",
+    "markRejected": "Abgelehnt",
+    "correctInvoice": "Korrigieren und erneut senden",
+    "confirmAcceptedTitle": "Als angenommen markieren?",
+    "confirmAcceptedBody": "Erst tun, wenn die Behörde es bestätigt hat. Dies ist der Nachweis, dass Sie eingereicht haben.",
+    "confirmRejectedTitle": "Als abgelehnt markieren?",
+    "confirmRejectedBody": "Eine abgelehnte Einreichung wurde nie ausgestellt. Sie müssen die Rechnung korrigieren und erneut senden.",
+    "cannotChange": "Diese Einreichung kann nicht geändert werden",
+    "emptyTitle": "Noch keine Einreichungen",
+    "emptyHint": "Wenn Sie eine strukturierte E-Rechnung exportieren, wird sie hier erfasst, damit Sie verfolgen können, was die Behörde angenommen hat.",
+    "insightTitle_one": "{{count}} Rechnung wurde nicht eingereicht",
+    "insightTitle_other": "{{count}} Rechnungen wurden nicht eingereicht",
+    "insightBody": "Die Behörde hat sie abgelehnt, diese Rechnungen wurden also nie ausgestellt. Sie müssen korrigiert und erneut gesendet werden."
   }
 }

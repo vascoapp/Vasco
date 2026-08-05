@@ -644,6 +644,9 @@ const SAME_WORD_OK = new Set([
   // exactly as English. Their neighbours in the same list (Chauffage, Tejado,
   // Riscaldamento…) do differ and are translated.
   'Ventilation', 'Exterior',
+  // 'Code' is the same word in German and French, and it is the label on an
+  // authority's verbatim rejection code (SDI scarto, FACe).
+  'Code',
 ]);
 
 // Namespaces whose locale values are DEAD CODE — never rendered, so an English

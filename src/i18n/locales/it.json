@@ -5425,5 +5425,27 @@
       "exterior": "Esterni",
       "other": "Altro"
     }
+  },
+  "filings": {
+    "title": "Invii",
+    "intro": "Fatture strutturate che hai consegnato. Inviata non significa accettata — lo decide l'ente, e solo tu vedi la sua risposta.",
+    "needsAttention": "Non trasmessa",
+    "awaiting": "In attesa di conferma",
+    "accepted": "Trasmessa",
+    "code": "Codice",
+    "replaces": "Sostituisce un invio precedentemente scartato",
+    "markAccepted": "Accettata",
+    "markRejected": "Scartata",
+    "correctInvoice": "Correggi e reinvia",
+    "confirmAcceptedTitle": "Segnare come accettata?",
+    "confirmAcceptedBody": "Fallo solo dopo la conferma dell'ente. Questa è la prova che hai trasmesso.",
+    "confirmRejectedTitle": "Segnare come scartata?",
+    "confirmRejectedBody": "Un invio scartato non è mai stato emesso. Dovrai correggere la fattura e reinviarla.",
+    "cannotChange": "Impossibile modificare questo invio",
+    "emptyTitle": "Nessun invio",
+    "emptyHint": "Esportando una fattura elettronica strutturata viene registrata qui, così puoi seguire cosa ha accettato l'ente.",
+    "insightTitle_one": "{{count}} fattura non è stata trasmessa",
+    "insightTitle_other": "{{count}} fatture non sono state trasmesse",
+    "insightBody": "L'ente le ha scartate, quindi quelle fatture non sono mai state emesse. Vanno corrette e reinviate."
   }
 }

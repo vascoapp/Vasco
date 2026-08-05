@@ -14,6 +14,7 @@ import { DK } from '../../src/theme/draftkings';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
+import { recordHandover, channelForCountry } from '../../src/services/submissionStore';
 import { hapticError, hapticSuccess } from '../../src/utils/haptics';
 import { generateInvoicePdf, buildInvoicePdfBase64 } from '../../src/services/invoicePdfService';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
@@ -454,6 +455,26 @@ export default function InvoiceDetailScreen() {
     }
   };
 
+  /**
+   * Open a filing record for this invoice.
+   *
+   * The key is derived from the XML, so re-sharing the same document is the
+   * SAME filing rather than a second one — duplicate submission means two
+   * invoices carrying one number. It records `submitted`, never `accepted`:
+   * there is no transport here, the contractor hands the file over themselves,
+   * and only they will see what the authority says back.
+   *
+   * Fire-and-forget: an audit-trail write must never block or fail the export
+   * the contractor actually asked for.
+   */
+  const recordFiling = (xml: string) => {
+    recordHandover({
+      channel: channelForCountry(country),
+      subjectId: invoice.id,
+      payload: xml,
+    }).catch(() => {});
+  };
+
   const handleExportEInvoice = async (format: 'XRechnung' | 'ZUGFeRD') => {
     // Tier gate: e-invoicing is Contractor-only
     try {
@@ -520,10 +541,12 @@ export default function InvoiceDetailScreen() {
       }
       hapticSuccess();
       markEInvoiceSubmitted(invoice.id);
+      recordFiling(xml);
     } catch {
       // Fallback: share XML as plain text if filesystem/share fails
       await RNShare.share({ message: xml, title: filename });
       markEInvoiceSubmitted(invoice.id);
+      recordFiling(xml);
     }
   };
 
@@ -611,9 +634,11 @@ export default function InvoiceDetailScreen() {
       // screen and the contractor can still back out, so recording earlier would
       // mark unfiled invoices as filed.
       markEInvoiceSubmitted(invoice.id);
+      recordFiling(xml);
     } catch {
       await RNShare.share({ message: xml, title: filename });
       markEInvoiceSubmitted(invoice.id);
+      recordFiling(xml);
     }
   };
 
@@ -694,9 +719,11 @@ export default function InvoiceDetailScreen() {
       // screen and the contractor can still back out, so recording earlier would
       // mark unfiled invoices as filed.
       markEInvoiceSubmitted(invoice.id);
+      recordFiling(xml);
     } catch {
       await RNShare.share({ message: xml, title: filename });
       markEInvoiceSubmitted(invoice.id);
+      recordFiling(xml);
     }
   };
 

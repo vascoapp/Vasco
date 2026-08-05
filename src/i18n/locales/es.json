@@ -5425,5 +5425,27 @@
       "exterior": "Exterior",
       "other": "Otros"
     }
+  },
+  "filings": {
+    "title": "Presentaciones",
+    "intro": "Facturas estructuradas que has entregado. Enviada no es lo mismo que aceptada — eso lo decide la administración, y solo tú ves su respuesta.",
+    "needsAttention": "No presentada",
+    "awaiting": "Esperando confirmación",
+    "accepted": "Presentada",
+    "code": "Código",
+    "replaces": "Sustituye a una presentación rechazada anterior",
+    "markAccepted": "Aceptada",
+    "markRejected": "Rechazada",
+    "correctInvoice": "Corregir y reenviar",
+    "confirmAcceptedTitle": "¿Marcar como aceptada?",
+    "confirmAcceptedBody": "Hazlo solo cuando la administración lo haya confirmado. Este es el registro de que presentaste.",
+    "confirmRejectedTitle": "¿Marcar como rechazada?",
+    "confirmRejectedBody": "Una presentación rechazada nunca se emitió. Tendrás que corregir la factura y volver a enviarla.",
+    "cannotChange": "No se puede cambiar esta presentación",
+    "emptyTitle": "Aún no hay presentaciones",
+    "emptyHint": "Al exportar una factura electrónica estructurada se registra aquí, para que puedas seguir qué aceptó la administración.",
+    "insightTitle_one": "{{count}} factura no se presentó",
+    "insightTitle_other": "{{count}} facturas no se presentaron",
+    "insightBody": "La administración las rechazó, así que esas facturas nunca se emitieron. Hay que corregirlas y enviarlas de nuevo."
   }
 }

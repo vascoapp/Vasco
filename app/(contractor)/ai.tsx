@@ -29,6 +29,7 @@ import { exportAllData } from '../../src/services/dataExportService';
 import { requestAccountDeletion } from '../../src/services/accountDeletionService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { useMaintenanceOpportunities } from '../../src/services/maintenanceOpportunityService';
+import { useSubmissions } from '../../src/services/submissionStore';
 import { formatMoney2 } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -84,6 +85,9 @@ export default function VascoScreen() {
   const { jobs, invoices, quotes, customers, isLoading, businessProfile } = useAppState();
   // Recurring revenue read out of this contractor's own finished work.
   const repeatWork = useMaintenanceOpportunities();
+  // Rejected or failed filings. An unissued invoice is the loudest thing this
+  // screen can have on it.
+  const { attention: filingsNeedingAttention } = useSubmissions();
   const aiQueue = useAIQueue();
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
@@ -463,6 +467,24 @@ export default function VascoScreen() {
                 finds is the same as not having built it. Rendered only when the
                 contractor's own history produced something — never as an empty
                 teaser. */}
+            {filingsNeedingAttention.length > 0 && (
+              <Pressable
+                style={({ pressed }) => [s.recCard, pressed && { opacity: 0.9 }, { marginBottom: 10 }]}
+                onPress={() => router.push('/contractor/filings' as any)}
+              >
+                <View style={[s.recAccent, { backgroundColor: DK.colors.danger ?? '#EF4444' }]} />
+                <View style={{ flex: 1, padding: 12 }}>
+                  <Text style={s.recTitle} numberOfLines={1}>
+                    {t('filings.insightTitle', '{{count}} invoices were not filed', { count: filingsNeedingAttention.length })}
+                  </Text>
+                  <Text style={s.recDesc} numberOfLines={2}>
+                    {t('filings.insightBody', 'The authority refused them, so those invoices were never issued. They need correcting and sending again.')}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={DK.colors.textMuted} style={{ marginRight: 12 }} />
+              </Pressable>
+            )}
+
             {repeatWork.length > 0 && (
               <Pressable
                 style={({ pressed }) => [s.recCard, pressed && { opacity: 0.9 }, { marginBottom: 10 }]}
@@ -497,7 +519,7 @@ export default function VascoScreen() {
                 </Pressable>
               ))}
             </View>
-          ) : repeatWork.length === 0 ? (
+          ) : repeatWork.length === 0 && filingsNeedingAttention.length === 0 ? (
             <EmptyPanel icon="bulb-outline" title={t('dk.empty.noInsights', 'No insights').toUpperCase()} desc={t('dk.empty.noInsightsDesc', 'Vasco is scanning your data. New insights appear here when they are relevant.')} />
           ) : null}
           </>
@@ -601,6 +623,10 @@ export default function VascoScreen() {
 
             <DKLabel style={s.subsectionLabel}>{t('dk.ai.compliance', 'Compliance')}</DKLabel>
             <View style={s.chipRow}>
+              <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/contractor/filings' as any)}>
+                <Ionicons name="document-lock-outline" size={14} color={DK.colors.accent} />
+                <DKLabel style={s.chipText}>{t('filings.title', 'Filings')}</DKLabel>
+              </Pressable>
               <Pressable style={({ pressed }) => [s.chip, pressed && { opacity: 0.85 }]} onPress={() => router.push('/(contractor)/certificaten' as any)}>
                 <Ionicons name="shield-checkmark-outline" size={14} color={DK.colors.accent} />
                 <DKLabel style={s.chipText}>{t('ai.certificates', 'Certificates')}</DKLabel>

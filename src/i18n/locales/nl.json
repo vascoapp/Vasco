@@ -5409,5 +5409,27 @@
       "exterior": "Buiten",
       "other": "Overig"
     }
+  },
+  "filings": {
+    "title": "Aangiftes",
+    "intro": "Structurele facturen die je hebt aangeleverd. Verzonden is niet hetzelfde als geaccepteerd — dat bepaalt de instantie, en alleen jij ziet hun antwoord.",
+    "needsAttention": "Niet ingediend",
+    "awaiting": "Wacht op bevestiging",
+    "accepted": "Ingediend",
+    "code": "Code",
+    "replaces": "Vervangt een eerder afgewezen indiening",
+    "markAccepted": "Geaccepteerd",
+    "markRejected": "Afgewezen",
+    "correctInvoice": "Corrigeren en opnieuw sturen",
+    "confirmAcceptedTitle": "Als geaccepteerd markeren?",
+    "confirmAcceptedBody": "Doe dit pas als de instantie het heeft bevestigd. Dit is de vastlegging dat je hebt ingediend.",
+    "confirmRejectedTitle": "Als afgewezen markeren?",
+    "confirmRejectedBody": "Een afgewezen indiening is nooit uitgegeven. Je moet de factuur corrigeren en opnieuw sturen.",
+    "cannotChange": "Kan deze indiening niet wijzigen",
+    "emptyTitle": "Nog geen indieningen",
+    "emptyHint": "Als je een structurele e-factuur exporteert, wordt die hier vastgelegd zodat je kunt volgen wat de instantie heeft geaccepteerd.",
+    "insightTitle_one": "{{count}} factuur is niet ingediend",
+    "insightTitle_other": "{{count}} facturen zijn niet ingediend",
+    "insightBody": "De instantie heeft ze geweigerd, dus die facturen zijn nooit uitgegeven. Ze moeten gecorrigeerd en opnieuw verstuurd worden."
   }
 }

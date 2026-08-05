@@ -5425,5 +5425,27 @@
       "exterior": "Exterior",
       "other": "Other"
     }
+  },
+  "filings": {
+    "title": "Filings",
+    "intro": "Structured invoices you have handed over. Sent is not the same as accepted — only the authority decides that, and only you see their answer.",
+    "needsAttention": "Not filed",
+    "awaiting": "Awaiting confirmation",
+    "accepted": "Filed",
+    "code": "Code",
+    "replaces": "Replaces an earlier rejected filing",
+    "markAccepted": "Accepted",
+    "markRejected": "Rejected",
+    "correctInvoice": "Correct and resend",
+    "confirmAcceptedTitle": "Mark as accepted?",
+    "confirmAcceptedBody": "Only do this once the authority has confirmed it. This is the record that says you filed.",
+    "confirmRejectedTitle": "Mark as rejected?",
+    "confirmRejectedBody": "A rejected filing was never issued. You will need to correct the invoice and send it again.",
+    "cannotChange": "Cannot change this filing",
+    "emptyTitle": "No filings yet",
+    "emptyHint": "Exporting a structured e-invoice from an invoice records it here, so you can track what the authority accepted.",
+    "insightTitle_one": "{{count}} invoice was not filed",
+    "insightTitle_other": "{{count}} invoices were not filed",
+    "insightBody": "The authority refused them, so those invoices were never issued. They need correcting and sending again."
   }
 }

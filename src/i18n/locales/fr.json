@@ -5425,5 +5425,27 @@
       "exterior": "Extérieur",
       "other": "Autre"
     }
+  },
+  "filings": {
+    "title": "Dépôts",
+    "intro": "Factures structurées que vous avez transmises. Envoyé n'est pas accepté — seule l'administration en décide, et vous seul voyez sa réponse.",
+    "needsAttention": "Non déposée",
+    "awaiting": "En attente de confirmation",
+    "accepted": "Déposée",
+    "code": "Code",
+    "replaces": "Remplace un dépôt précédemment rejeté",
+    "markAccepted": "Acceptée",
+    "markRejected": "Rejetée",
+    "correctInvoice": "Corriger et renvoyer",
+    "confirmAcceptedTitle": "Marquer comme acceptée ?",
+    "confirmAcceptedBody": "À faire uniquement après confirmation de l'administration. C'est la preuve que vous avez déposé.",
+    "confirmRejectedTitle": "Marquer comme rejetée ?",
+    "confirmRejectedBody": "Un dépôt rejeté n'a jamais été émis. Vous devrez corriger la facture et la renvoyer.",
+    "cannotChange": "Impossible de modifier ce dépôt",
+    "emptyTitle": "Aucun dépôt",
+    "emptyHint": "Exporter une facture électronique structurée l'enregistre ici, pour suivre ce que l'administration a accepté.",
+    "insightTitle_one": "{{count}} facture n'a pas été déposée",
+    "insightTitle_other": "{{count}} factures n'ont pas été déposées",
+    "insightBody": "L'administration les a refusées : ces factures n'ont jamais été émises. Elles doivent être corrigées et renvoyées."
   }
 }
