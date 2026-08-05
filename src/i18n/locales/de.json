@@ -4304,7 +4304,8 @@
     "refund": "Erstattung",
     "vsLastYear": "vs. gleiches Quartal Vorjahr",
     "reviewNeeded": "Zu prüfen",
-    "allLines": "Alle Posten"
+    "allLines": "Alle Posten",
+    "shareAccountant": "An Steuerberater senden"
   },
   "automations": {
     "healthNew": "NEU",

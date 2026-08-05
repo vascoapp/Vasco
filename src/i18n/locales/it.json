@@ -4304,7 +4304,8 @@
     "refund": "Da rimborsare",
     "vsLastYear": "vs. stesso trimestre dell'anno scorso",
     "reviewNeeded": "Da controllare",
-    "allLines": "Tutte le voci"
+    "allLines": "Tutte le voci",
+    "shareAccountant": "Invia al commercialista"
   },
   "automations": {
     "healthNew": "NUOVO",

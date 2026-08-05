@@ -4330,7 +4330,8 @@
     "refund": "Terug te krijgen",
     "vsLastYear": "vs. zelfde kwartaal vorig jaar",
     "reviewNeeded": "Te controleren",
-    "allLines": "Alle regels"
+    "allLines": "Alle regels",
+    "shareAccountant": "Naar boekhouder sturen"
   },
   "market": {
     "noBenchmarksDesc": "Meer data nodig voor benchmarks",

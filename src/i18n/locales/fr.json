@@ -4304,7 +4304,8 @@
     "refund": "À récupérer",
     "vsLastYear": "vs. même trimestre l'an dernier",
     "reviewNeeded": "À vérifier",
-    "allLines": "Toutes les lignes"
+    "allLines": "Toutes les lignes",
+    "shareAccountant": "Envoyer à l'expert-comptable"
   },
   "automations": {
     "healthNew": "NOUVEAU",

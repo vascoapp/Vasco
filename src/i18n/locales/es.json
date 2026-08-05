@@ -4304,7 +4304,8 @@
     "refund": "A devolver",
     "vsLastYear": "vs. mismo trimestre del año pasado",
     "reviewNeeded": "Por revisar",
-    "allLines": "Todas las líneas"
+    "allLines": "Todas las líneas",
+    "shareAccountant": "Enviar a la gestoría"
   },
   "automations": {
     "healthNew": "NUEVO",

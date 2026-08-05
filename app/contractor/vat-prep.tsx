@@ -8,7 +8,7 @@
 // =============================================================================
 
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -69,6 +69,34 @@ export default function VatPrepScreen() {
 
   const lowConfLines = draft.lines.filter((l) => l.confidence < 0.75);
 
+  /**
+   * Build and share the accountant handover for the period on screen.
+   *
+   * Reuses the same period bounds the VAT draft was built from, so the adviser
+   * cannot receive a filing summary covering a different quarter from the
+   * numbers beside it.
+   */
+  const shareAccountantHandover = async (businessName: string) => {
+    try {
+      const [{ buildAccountantHandover, formatHandoverText }, { loadSubmissions }] = await Promise.all([
+        import('../../src/services/accountantHandoverService'),
+        import('../../src/services/submissionStore'),
+      ]);
+      const handover = buildAccountantHandover({
+        businessName,
+        country,
+        periodStart: draft.periodStart,
+        periodEnd: draft.periodEnd,
+        invoices: invoices as never,
+        submissions: await loadSubmissions(),
+      });
+      const text = formatHandoverText(handover, (n) => formatCurrency(n, country));
+      await Share.share({ message: text });
+    } catch (err) {
+      Alert.alert(t('common.error', 'Error'), String((err as Error)?.message ?? err));
+    }
+  };
+
   const handleExport = () => {
     const businessName = (businessProfile as any)?.businessName ?? 'Vasco';
     Alert.alert(
@@ -82,6 +110,15 @@ export default function VatPrepScreen() {
               Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
             });
           },
+        },
+        {
+          // The adviser-facing handover. Sits with the other share options
+          // because this is the moment the contractor is already thinking
+          // "send this to my bookkeeper" — and it carries the one thing no
+          // accounting package can tell them: which invoices the authority
+          // actually accepted.
+          text: t('vatPrep.shareAccountant', 'Send to accountant'),
+          onPress: () => { void shareAccountantHandover(businessName); },
         },
         {
           text: t('vatPrep.sharePdf', 'Share PDF'),

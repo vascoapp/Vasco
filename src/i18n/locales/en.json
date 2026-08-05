@@ -4304,7 +4304,8 @@
     "refund": "Refund",
     "vsLastYear": "vs. same quarter last year",
     "reviewNeeded": "Needs review",
-    "allLines": "All lines"
+    "allLines": "All lines",
+    "shareAccountant": "Send to accountant"
   },
   "automations": {
     "healthNew": "NEW",
