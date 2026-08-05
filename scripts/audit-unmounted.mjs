@@ -98,12 +98,51 @@ function mockHits(src) {
     .match(MOCK_RE)?.length ?? 0;
 }
 
-/** Services a component imports, resolved to files under src/services. */
+/**
+ * Map every identifier the services barrel re-exports back to its own module.
+ *
+ * Without this the audit has a hole big enough to walk through, and it did:
+ * ROIDashboard imported `useROIInsights` from '../../services' — the BARREL —
+ * rather than from '../../services/analyticsService'. The direct-path regex saw
+ * no service import at all and filed a 1024-line component backed by a service
+ * carrying 43 fabrication markers as 🟢 CLEAN PATH.
+ *
+ * A barrel is precisely a device for not naming your dependency, so an audit
+ * that only reads import paths will always under-report through one.
+ */
+function buildBarrelMap() {
+  const map = new Map(); // exported name -> service file
+  for (const barrel of [join(ROOT, 'src/services/index.ts')]) {
+    if (!existsSync(barrel)) continue;
+    const src = read(barrel);
+    for (const m of src.matchAll(/export\s*\{([^}]*)\}\s*from\s*'\.\/([a-zA-Z0-9_]+)'/g)) {
+      const file = join(ROOT, 'src/services', `${m[2]}.ts`);
+      if (!existsSync(file)) continue;
+      for (const raw of m[1].split(',')) {
+        // handles `foo`, `foo as bar`, and trailing comments
+        const name = raw.split(/\s+as\s+/).pop().trim().replace(/\/\/.*$/, '').trim();
+        if (name) map.set(name, file);
+      }
+    }
+  }
+  return map;
+}
+const BARREL = buildBarrelMap();
+
+/** Services a component depends on — directly AND through the barrel. */
 function importedServices(src) {
   const out = new Set();
   for (const m of src.matchAll(/from\s+'[^']*\/services\/([a-zA-Z0-9_]+)'/g)) {
     const p = join(ROOT, 'src/services', `${m[1]}.ts`);
     if (existsSync(p)) out.add(p);
+  }
+  // Barrel imports: `import { a, b } from '../../services'`
+  for (const m of src.matchAll(/import\s*\{([^}]*)\}\s*from\s*'[^']*\/services'/g)) {
+    for (const raw of m[1].split(',')) {
+      const name = raw.split(/\s+as\s+/)[0].trim();
+      const file = BARREL.get(name);
+      if (file) out.add(file);
+    }
   }
   return [...out];
 }

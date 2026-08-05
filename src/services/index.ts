@@ -13,25 +13,12 @@ export {
 
 // Phase 3: Data-Driven Intelligence
 export {
-  quoteOptimizerService,
-  useQuoteOptimizer,
-  useRegionalBenchmarks,
-} from './quoteOptimizerService';
-
-export {
   reorderService,
   useInventory,
   useReorderSuggestions,
   useReorderBundles,
 } from './reorderService';
 
-export {
-  followUpService,
-  useFollowUps,
-  useFollowUpTemplates,
-  useFollowUpPreferences,
-  useCustomers,
-} from './followUpService';
 
 // Phase 4: Network & Integration
 export {
@@ -49,13 +36,6 @@ export {
   useOrders,
 } from './supplierIntegrationService';
 
-export {
-  analyticsService,
-  useAnalytics,
-  useBenchmarks,
-  useInsights,
-  useDashboardSummary,
-} from './analyticsService';
 
 // Phase 5: Advanced Intelligence
 export {
@@ -283,4 +263,3 @@ export {
 } from './dutchComplianceService';
 
 // ROI Insights (alias)
-export { useInsights as useROIInsights } from './analyticsService';

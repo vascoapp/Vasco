@@ -2,14 +2,10 @@
 export { ContractorDashboardHeader } from './ContractorDashboardHeader';
 
 // Contractor Mode Components
-export { JobDetailScreen } from './JobDetailScreen';
-export { JobsList } from './JobsList';
 export { QuoteBuilder } from './QuoteBuilder';
-export { TimeTracker, TimeTrackerWidget } from './TimeTracker';
 
 // Advanced Contractor Features
 export { Pricebook } from './Pricebook';
-export { SmartPurchasing } from './SmartPurchasing';
 export { TieredQuoteBuilder } from './TieredQuoteBuilder';
 export { IntegratedPayments } from './IntegratedPayments';
 
@@ -25,17 +21,12 @@ export { TemplateSuggestion } from './TemplateSuggestion';
 // Supplier & Market Intelligence
 export { PriceComparison } from './PriceComparison';
 export { MarketIntelligence } from './MarketIntelligence';
-export { PriceAlerts } from './PriceAlerts';
 
 // Phase 3: Data-Driven Features
-export { QuoteOptimizer } from './QuoteOptimizer';
-export { SmartReorder } from './SmartReorder';
-export { CustomerFollowUp } from './CustomerFollowUp';
 
 // Phase 4: Network & Integration
 
 // Phase 5: Advanced Intelligence
-export { AnalyticsDashboard } from './AnalyticsDashboard';
 export { ProjectPlanner } from './ProjectPlanner';
 export { SmartPricing } from './SmartPricing';
 
@@ -53,12 +44,9 @@ export { LeadGeneration } from './LeadGeneration';
 export { WarrantyManager } from './WarrantyManager';
 
 // Phase 9: Business Intelligence & Automation
-export { InvoiceAutomation } from './InvoiceAutomation';
 export { RouteOptimizer } from './RouteOptimizer';
 export { CustomerInsights } from './CustomerInsights';
 
 // Evidence & Materials
 export { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
-export { JobCompletionEvidence } from './JobCompletionEvidence';
-export { JobMaterialsSuggestion } from './JobMaterialsSuggestion';
 export { HandoverPackBuilder } from './HandoverPackBuilder';
