@@ -14,6 +14,7 @@
     "smoke:golden": "node scripts/golden-path-smoke.mjs",
     "check:grants": "node scripts/check-grants.mjs",
     "audit:runtime": "node scripts/audit-runtime.mjs",
+    "audit:unmounted": "node scripts/audit-unmounted.mjs",
     "smoke:endpoints": "node scripts/endpoint-health.mjs",
     "render:icons": "node scripts/render-icons.mjs",
     "capture:screenshots": "bash scripts/capture-screenshots.sh",
