@@ -76,6 +76,40 @@ export function buildLiveActions(input: Input): EveAction[] {
   /** Salutation name — blank rather than a placeholder inside "Hi {name}," copy. */
   const salutation = (id?: string, fallbackName?: string): string =>
     fallbackName?.trim() || customerById.get(id ?? '')?.name?.trim() || '';
+  /**
+   * Phone number for the one-tap WhatsApp send.
+   *
+   * VascoCard only renders that button when `preparedData.customerPhone` is
+   * set, so leaving it undefined silently downgrades a card to the generic
+   * Share sheet — the contractor has to pick the customer out of a contact
+   * list that the app already knows the answer to.
+   *
+   * `Job.sitePhone` is preferred where it exists (it is the number for THIS
+   * site, e.g. the tenant rather than the landlord who is paying), but NO
+   * production path writes it — only fixtures do, which is why the appointment
+   * reminder's button rendered in demo and never in the field. The customer
+   * record is what actually holds a number, so it is the fallback.
+   *
+   * Documents carry the customer as an id on some paths and as a bare name on
+   * others, so both are tried. Returns undefined rather than '' — an empty
+   * string is truthy enough to render a button that dials nothing.
+   */
+  const customerByName = new Map<string, any>(
+    (input.customers ?? [])
+      .filter((c) => typeof c?.name === 'string' && c.name.trim())
+      .map((c) => [c.name.trim().toLowerCase(), c]),
+  );
+  const customerPhone = (
+    id?: string,
+    nameFallback?: string,
+    sitePhone?: string,
+  ): string | undefined => {
+    const record =
+      customerById.get(id ?? '') ??
+      customerByName.get((nameFallback ?? id ?? '').trim().toLowerCase());
+    const num = (sitePhone ?? record?.phone ?? '').trim();
+    return num || undefined;
+  };
   /** Invoice label: human reference ("F-2026-014") if set, else the customer. */
   const invoiceLabel = (inv: any): string =>
     inv?.reference?.trim() || customerName(inv?.customerId, inv?.customerName ?? inv?.customer);
@@ -211,7 +245,7 @@ export function buildLiveActions(input: Input): EveAction[] {
             job: j.title,
           },
         ),
-        customerPhone: j.sitePhone,
+        customerPhone: customerPhone(j.customerId, j.customerName, j.sitePhone),
       },
       actionLabel: t('eve.live.appointment.action', 'Send reminder'),
       requiresApproval: true,
@@ -249,6 +283,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       preparedData: {
         quoteId: q.id,
         customerId: q.customer,
+        customerPhone: customerPhone(q.customerId, q.customer),
         template: t(
           'eve.live.followUp.template',
           'Hi {{customer}}, just following up on the quote for {{quote}} ({{amount}}). Any questions?',
@@ -288,6 +323,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       status: 'pending',
       preparedData: {
         jobId: j.id,
+        customerPhone: customerPhone(j.customerId, j.customerName, j.sitePhone),
         template: t(
           'eve.live.jobStarted.template',
           "Hi {{customer}}, we've started work on {{job}}. We'll keep you posted on progress.",
@@ -319,6 +355,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       status: 'pending',
       preparedData: {
         jobId: j.id,
+        customerPhone: customerPhone(j.customerId, j.customerName, j.sitePhone),
         template: t(
           'eve.live.handover.template',
           'Hi {{customer}}, {{job}} is complete. Thanks for the trust — invoice on its way.',
@@ -353,6 +390,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       status: 'pending',
       preparedData: {
         invoiceId: inv.id,
+        customerPhone: customerPhone(inv.customerId, inv.customerName ?? inv.customer),
         template: t(
           'eve.live.paymentThanks.template',
           'Thanks {{customer}} — payment received for invoice {{invoice}}. Receipt on its way.',
@@ -391,6 +429,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       status: 'pending',
       preparedData: {
         quoteId: q.id,
+        customerPhone: customerPhone(q.customerId, q.customer),
         template: t(
           'eve.live.quoteSent.template',
           'Hi {{customer}}, I just sent the quote for {{quote}}. Check your email — let me know if you have any questions.',
@@ -423,6 +462,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       status: 'pending',
       preparedData: {
         invoiceId: inv.id,
+        customerPhone: customerPhone(inv.customerId, inv.customerName ?? inv.customer),
         template: t(
           'eve.live.invoiceSent.template',
           'Hi {{customer}}, invoice {{invoice}} is ready. Pay online or contact me if questions.',

@@ -149,6 +149,71 @@ describe('buildLiveActions — no raw entity ids in user-facing copy', () => {
   });
 });
 
+describe('buildLiveActions — customerPhone resolution', () => {
+  // VascoCard renders the one-tap WhatsApp button ONLY when
+  // preparedData.customerPhone is set. It used to come solely from
+  // Job.sitePhone, which no production path writes — so the button appeared in
+  // demo (fixtures set it) and never in the field. These pin the fallback.
+  const withPhones = [
+    { id: 'cust-003', name: 'Bakkerij Smit', phone: '+31612345678' },
+    { id: 'cust-005', name: 'Hotel NH', phone: '+31687654321' },
+  ];
+
+  test("falls back to the customer's number when the job has no sitePhone", () => {
+    const actions = buildLiveActions({
+      jobs: [{
+        id: 'j-1', title: 'Lekkage keuken', status: 'in-progress',
+        customerId: 'cust-003', updatedAt: iso(-60 * 60 * 1000),
+      }],
+      quotes: [], invoices: [], customers: withPhones,
+    });
+    const started = actions.find((a) => a.title.includes('Lekkage'));
+    expect(started?.preparedData?.customerPhone).toBe('+31612345678');
+  });
+
+  test('sitePhone still wins where it exists — it is the number for THIS site', () => {
+    const actions = buildLiveActions({
+      jobs: [{
+        id: 'j-1', title: 'Lekkage keuken', status: 'in-progress',
+        customerId: 'cust-003', sitePhone: '+31600000000',
+        updatedAt: iso(-60 * 60 * 1000),
+      }],
+      quotes: [], invoices: [], customers: withPhones,
+    });
+    const started = actions.find((a) => a.title.includes('Lekkage'));
+    expect(started?.preparedData?.customerPhone).toBe('+31600000000');
+  });
+
+  test('resolves by customer NAME when the document carries no id', () => {
+    // Quotes and invoices reference the customer as a bare name on some paths.
+    const actions = buildLiveActions({
+      jobs: [],
+      quotes: [{
+        id: 'q-1', job: 'Badkamer', customer: 'Hotel NH', amount: 2400,
+        status: 'sent', sentAt: iso(-5 * MS_PER_DAY),
+      }],
+      invoices: [], customers: withPhones,
+    });
+    const followUp = actions.find((a) => a.type === 'draft_followup');
+    expect(followUp?.preparedData?.customerPhone).toBe('+31687654321');
+  });
+
+  test('stays undefined — never empty string — when no number is known', () => {
+    // '' is truthy enough for the card's `&&` gate to render a button that
+    // dials nothing, which is worse than showing no button at all.
+    const actions = buildLiveActions({
+      jobs: [{
+        id: 'j-1', title: 'Lekkage keuken', status: 'in-progress',
+        customerId: 'cust-999', updatedAt: iso(-60 * 60 * 1000),
+      }],
+      quotes: [], invoices: [],
+      customers: [{ id: 'cust-999', name: 'Onbekend', phone: '   ' }],
+    });
+    const started = actions.find((a) => a.title.includes('Lekkage'));
+    expect(started?.preparedData?.customerPhone).toBeUndefined();
+  });
+});
+
 describe('buildLiveActions — i18n', () => {
   test('strings resolve through i18n, not hardcoded literals with raw keys', () => {
     const actions = buildLiveActions({

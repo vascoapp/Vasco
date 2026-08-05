@@ -473,7 +473,13 @@ export async function emitMaterialPurchased(userId: string, data: {
   currency?: string;
   vatRate?: number;
   observedAt?: string;
-  source?: 'manual' | 'api' | 'invoice_scan' | 'catalog';
+  // 'einvoice' is deliberately distinct from 'invoice_scan'. Both arrive from a
+  // supplier document, but one is the supplier's own declared figures parsed
+  // from XML and the other is vision extraction guessing at a photograph. The
+  // moat cannot weight, audit or rebuild from rows it cannot tell apart — and
+  // material_price_history is the one table we cannot un-poison. Column is
+  // unconstrained TEXT, so this needs no migration.
+  source?: 'manual' | 'api' | 'invoice_scan' | 'einvoice' | 'catalog';
 }): Promise<void> {
   await emitBusinessEvent(userId, {
     eventType: 'material_purchased',

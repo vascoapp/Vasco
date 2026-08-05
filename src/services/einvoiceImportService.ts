@@ -98,7 +98,12 @@ export async function importEInvoiceXml(xml: string): Promise<ImportResult> {
   // attempt was made, and never blocks the import if it throws.
   let fedMoat = false;
   try {
-    await feedPricingMoat(invoice);
+    // Tagged 'einvoice', not 'invoice_scan'. These rows are the supplier's own
+    // declared quantities and unit prices; the OCR rows are a model's reading
+    // of a photograph. Same table, materially different evidence — and if the
+    // vision path ever regresses, provenance is the only thing that makes the
+    // trustworthy rows separable.
+    await feedPricingMoat(invoice, 'einvoice');
     fedMoat = true;
   } catch (err) {
     logWarn('EInvoiceImport', `moat feed failed: ${String(err)}`);

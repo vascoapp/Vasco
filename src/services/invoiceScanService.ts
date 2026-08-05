@@ -135,7 +135,17 @@ export async function scanInvoicePhoto(
 // Feed scanned data into pricing moat
 // ---------------------------------------------------------------------------
 
-export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
+/**
+ * @param moatSource provenance recorded on every price row this call emits.
+ *   Defaults to 'invoice_scan' (the OCR path, which is the original caller).
+ *   The structured e-invoice intake passes 'einvoice': same downstream, but a
+ *   supplier's declared figures are not the same evidence as vision extraction
+ *   over a photograph, and flattening them makes the difference unrecoverable.
+ */
+export async function feedPricingMoat(
+  invoice: ScannedInvoice,
+  moatSource: 'invoice_scan' | 'einvoice' = 'invoice_scan',
+): Promise<void> {
   const userId = getCurrentUserId();
 
   // ARITHMETIC GATE. The per-line confidence filter below is the extractor
@@ -190,7 +200,7 @@ export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
       currency: moatCurrency,
       vatRate: item.vatRate,
       observedAt: invoice.documentDate,
-      source: 'invoice_scan',
+      source: moatSource,
     }).catch(() => {});
   }
 
@@ -207,6 +217,11 @@ export async function feedPricingMoat(invoice: ScannedInvoice): Promise<void> {
       total: invoice.total,
       lineItemCount: invoice.lineItems.length,
       confidence: invoice.confidence,
+      // The eventType stays 'invoice_scanned' so existing consumers keep
+      // working; the payload carries which intake it actually came from.
+      // `confidence` means very different things across the two — 90 from the
+      // parser is a structural fact, 90 from vision is an opinion.
+      source: moatSource,
     },
   }).catch(() => {});
 }

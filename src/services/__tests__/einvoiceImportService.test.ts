@@ -61,6 +61,16 @@ describe('importing a supplier e-invoice', () => {
     expect(r.fedMoat).toBe(true);
   });
 
+  it("tags the moat rows 'einvoice', not 'invoice_scan'", async () => {
+    // Provenance is the whole reason this intake is worth more than the photo
+    // one. These are the supplier's declared figures; the OCR rows are a model
+    // reading a photograph. Same table, different evidence — and if the vision
+    // path ever regresses, this tag is the only thing that makes the
+    // trustworthy rows separable in a table that cannot be un-poisoned.
+    await importEInvoiceXml(XRECHNUNG);
+    expect(feedPricingMoat).toHaveBeenCalledWith(expect.anything(), 'einvoice');
+  });
+
   it('still imports when the moat feed throws', async () => {
     // The contractor asked to read their invoice. A failure in our background
     // analytics must not take that away from them.
