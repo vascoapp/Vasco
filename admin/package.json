@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "check:validator": "tsx scripts/check-validator.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",
@@ -18,6 +19,7 @@
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
+    "@xmldom/xmldom": "^0.9.10",
     "postcss": "^8.0.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.0.0"

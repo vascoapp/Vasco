@@ -28,6 +28,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
+      // Free tool. The link-bait: high-intent query, and the page people send
+      // each other.
+      url: `${BASE_URL}/tools/e-invoice-validator`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 1.0,
+    },
+    {
       // Aimed at advisers, who answer for many clients at once.
       url: `${BASE_URL}/answers/for-accountants`,
       lastModified: new Date(),
