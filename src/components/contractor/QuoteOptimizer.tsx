@@ -1,8 +1,41 @@
 // =============================================================================
-// QUOTE OPTIMIZER COMPONENT
+// QUOTE OPTIMIZER COMPONENT — 🛑 DORMANT. DO NOT MOUNT THIS.
 // =============================================================================
-// Enhances quote creation with market intelligence
-// Shows optimization suggestions, competitive positioning, and upsell opportunities
+// Shows optimization suggestions, competitive positioning and upsell
+// opportunities. It is mounted NOWHERE, and that is correct. The canonical
+// quote surface is TieredQuoteBuilder, which is mounted in two screens and is
+// already wired to the real cohort (useCohortBenchmarks, applyCohortAdjustments,
+// the R247 line recommender).
+//
+// -----------------------------------------------------------------------------
+// WHY THIS WARNING IS HERE AND NOT ONLY ON THE SERVICE (2026-08-06)
+// -----------------------------------------------------------------------------
+// I nearly mounted this today, during a sweep for chain breaks. The reasoning
+// that led there was sound at every step and still wrong:
+//
+//   1. "The cohort moat has no payoff surface" — I found this component
+//      consuming getCohortBenchmarks and nothing importing it.
+//   2. I checked it for fabricated data the way the enterprise-hub lesson says
+//      to: `grep -oE "MOCK_[A-Z_]+|mock[A-Za-z]+"` over THIS FILE. Zero hits.
+//   3. So it looked like finished, real, moat-backed code that was merely
+//      unreachable — the #107 "mounted beats imported" class. I built the
+//      screen and the entry point.
+//
+// The mock lives in quoteOptimizerService.ts, one layer down: MOCK_MARKET_DATA
+// and MOCK_UPSELL_SUGGESTIONS, correctly gated so they are EMPTY in production.
+// Mounting this would therefore have shipped an analysis screen with no market
+// data — #106, where gating a fabrication leaves the screen empty and wiring it
+// is the second half nobody does.
+//
+// 🔑 THE LESSON, because the grep that was supposed to catch this did not:
+// A CLEAN COMPONENT PROVES NOTHING ABOUT ITS DATA SOURCE. Check the service the
+// hook calls, not just the file you are about to import. "Is this backed by real
+// data?" is a question about the whole path, and the fabrication sits wherever
+// it is furthest from the eye.
+//
+// If you want quote-time market intelligence, TieredQuoteBuilder already has it.
+// The R19 audit's recommendation was to delete this and the 647-line service on
+// the next dead-code sweep; that call is still open and still looks right.
 // =============================================================================
 
 import React, { useState, useMemo } from 'react';
