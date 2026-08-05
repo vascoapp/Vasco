@@ -481,6 +481,55 @@ export async function nextDocumentNumber(docType: 'quote' | 'invoice'): Promise<
   return offlineMintedDocNumber(docType);
 }
 
+/**
+ * The number the next quote/invoice will carry, without consuming one.
+ *
+ * Read-only counterpart to nextDocumentNumber — a settings screen showing
+ * "next: 88" must not advance the series just by being opened.
+ */
+export async function peekDocumentCounter(docType: 'quote' | 'invoice'): Promise<number | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('peek_document_counter', { p_doc_type: docType });
+    if (error) throw error;
+    return typeof data === 'number' ? data : Number(data);
+  } catch (err) {
+    logWarn('dataProvider', `peekDocumentCounter failed: ${String(err)}`);
+    return null;
+  }
+}
+
+/**
+ * Continue a numbering series from another system.
+ *
+ * `nextNumber` is what the contractor's NEXT document should be numbered —
+ * the question they can actually answer ("my last invoice was 87").
+ *
+ * The BE refuses to move the counter backwards, because lowering it re-mints
+ * numbers already issued and two invoices sharing a number is a compliance
+ * problem rather than a cosmetic one. That refusal arrives as an error and is
+ * returned here as `{ ok: false }` with the BE's message, which names the
+ * current position — the contractor needs to be told why, not just "failed".
+ */
+export async function setDocumentCounter(
+  docType: 'quote' | 'invoice',
+  nextNumber: number,
+): Promise<{ ok: true; next: number } | { ok: false; message: string }> {
+  if (!isSupabaseConfigured) return { ok: false, message: 'offline' };
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('set_document_counter', {
+      p_doc_type: docType,
+      p_next_number: nextNumber,
+    });
+    if (error) return { ok: false, message: String(error.message ?? error) };
+    return { ok: true, next: Number(data) };
+  } catch (err) {
+    return { ok: false, message: String((err as Error)?.message ?? err) };
+  }
+}
+
 // ── Aggregate loaders (for AppState) ─────────────────────────
 
 export async function loadQuotes(): Promise<Quote[]> {

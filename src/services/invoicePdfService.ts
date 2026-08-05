@@ -473,6 +473,15 @@ export function buildInvoiceShareText(
   businessName?: string,
   paymentUrl?: string,
   country?: Country,
+  /**
+   * The decision tracker's `access_code`, when this customer has a portal.
+   *
+   * Must be the access code and nothing else. The portal is keyed on
+   * `decision_trackers.access_code` — a 32-hex token minted by
+   * decisionTrackerService — so anything from another namespace resolves to
+   * "project not found" no matter how well-formed it looks.
+   */
+  portalAccessCode?: string,
 ): string {
   const curr = getCurrencySymbol(country);
   const taxLabel = vatLabel(country);
@@ -494,10 +503,19 @@ export function buildInvoiceShareText(
   ];
 
   if (paymentUrl) parts.push(``, `Pay online: ${paymentUrl}`);
-  // R192: was https://app.vascobuild.com/customer/{id} — host was never
-  // deployed, so every PDF that ever shipped to a customer pointed at a
-  // DNS error. Now uses the live R190 universal-link host.
-  if (invoice.customerId) parts.push(``, `Track your project: https://admin.vascobuild.com/customer/${invoice.customerId}`);
+  // R192 fixed the HOST here (app.vascobuild.com was never deployed, so every
+  // such link was a DNS error) but kept building the path from
+  // `invoice.customerId`. The portal resolves `decision_trackers.access_code`,
+  // which is a separate namespace — a customer id passes the RPC's format guard
+  // and then matches no tracker, so the link was still dead, now with a working
+  // hostname to make it look convincing.
+  //
+  // The identifier must therefore be passed in by a caller that actually has a
+  // tracker. No code, no line: an absent link is strictly better than one that
+  // reliably tells the customer their project does not exist.
+  if (portalAccessCode) {
+    parts.push(``, `Track your project: https://admin.vascobuild.com/customer/${portalAccessCode}`);
+  }
 
   return parts.join('\n');
 }

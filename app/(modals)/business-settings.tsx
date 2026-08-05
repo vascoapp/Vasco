@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -38,6 +38,18 @@ type FieldDef = {
   multiline?: boolean;
 };
 
+/**
+ * Keep a document-number prefix to what `next_document_number` will accept.
+ *
+ * The BE silently falls back to 'I'/'Q' for anything outside this shape, which
+ * is the right call there (refusing to number an invoice would block the sale
+ * over a settings typo) but makes it the FE's job not to accept input that
+ * would be quietly discarded.
+ */
+function cleanPrefix(raw: string): string {
+  return raw.replace(/[^A-Za-z0-9/_-]/g, '').slice(0, 12);
+}
+
 export default function BusinessSettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -49,6 +61,15 @@ export default function BusinessSettingsScreen() {
   const [kvkNumber, setKvkNumber] = useState(businessProfile.kvkNumber ?? '');
   const [vatNumber, setVatNumber] = useState(businessProfile.vatNumber ?? '');
   const [registrationNumber, setRegistrationNumber] = useState(businessProfile.registrationNumber ?? '');
+  // Document numbering. These two columns have existed since the base schema
+  // and were carried by both mappers, but nothing read them and no screen set
+  // them — so every contractor's invoices were I0001 regardless. The user this
+  // blocks is the one switching to Vasco mid-year, who must continue an
+  // existing series rather than restart it.
+  const [invoicePrefix, setInvoicePrefix] = useState(businessProfile.invoicePrefix ?? '');
+  const [quotePrefix, setQuotePrefix] = useState(businessProfile.quotePrefix ?? '');
+  const [nextInvoiceNo, setNextInvoiceNo] = useState('');
+  const [counterBusy, setCounterBusy] = useState(false);
   const [address, setAddress] = useState(businessProfile.address ?? '');
   const [email, setEmail] = useState(businessProfile.email ?? '');
   const [phone, setPhone] = useState(businessProfile.phone ?? '');
@@ -174,6 +195,42 @@ export default function BusinessSettingsScreen() {
     return [...common, ...countryFields, ...contactFields, ...paymentFields];
   }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, routingNumber, bankAccountNumber, t]);
 
+  // Show where the series actually stands. Uses the read-only peek RPC: a
+  // settings screen must not consume an invoice number just by being opened.
+  useEffect(() => {
+    let cancelled = false;
+    import('../../src/lib/dataProvider')
+      .then(({ peekDocumentCounter }) => peekDocumentCounter('invoice'))
+      .then((n) => { if (!cancelled && n != null) setNextInvoiceNo(String(n)); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const applyCounter = useCallback(async () => {
+    const n = parseInt(nextInvoiceNo, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      Alert.alert(t('common.error', 'Error'), t('settings.counterInvalid', 'Enter the number your next invoice should have.'));
+      return;
+    }
+    setCounterBusy(true);
+    try {
+      const { setDocumentCounter } = await import('../../src/lib/dataProvider');
+      const res = await setDocumentCounter('invoice', n);
+      if (res.ok) {
+        Alert.alert(
+          t('settings.counterSet', 'Numbering updated'),
+          t('settings.counterSetBody', 'Your next invoice will be number {{n}}.', { n: res.next }),
+        );
+      } else {
+        // The BE's message names the current position, which is the part the
+        // contractor needs — "failed" alone leaves them guessing.
+        Alert.alert(t('settings.counterRefused', 'Cannot move numbering backwards'), res.message);
+      }
+    } finally {
+      setCounterBusy(false);
+    }
+  }, [nextInvoiceNo, t]);
+
   const handleSave = useCallback(async () => {
     // Sanitize all inputs
     const cleanEmail = sanitizeInput(email);
@@ -233,6 +290,12 @@ export default function BusinessSettingsScreen() {
         bankAccountNumber: country === 'US' ? sanitizeInput(bankAccountNumber).replace(/\s/g, '').trim() : undefined,
         country,
         enabledPaymentMethods,
+        // Sanitised to the same shape the BE will accept: anything else is
+        // silently ignored there and would mint I0001 while the settings screen
+        // claimed otherwise. An invoice number ends up in e-invoice XML, in
+        // filenames and in URLs, so the restriction is not cosmetic.
+        invoicePrefix: cleanPrefix(invoicePrefix),
+        quotePrefix: cleanPrefix(quotePrefix),
       });
       router.back();
     } catch (err) {
@@ -241,7 +304,7 @@ export default function BusinessSettingsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, invoicePrefix, quotePrefix, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);
@@ -297,6 +360,78 @@ export default function BusinessSettingsScreen() {
                 />
               </View>
             ))}
+          </View>
+
+          {/* Document numbering */}
+          <View style={styles.card}>
+            <Text style={[Typography.title, { marginBottom: 4 }]}>
+              {t('settings.numbering', 'Invoice numbering')}
+            </Text>
+            <Text style={[Typography.muted, { marginBottom: 8 }]}>
+              {t('settings.numberingHelp', 'Leave blank to keep the default. If you are moving to Vasco part-way through the year, continue your existing series here so your numbering stays unbroken.')}
+            </Text>
+
+            <View style={styles.fieldColumn}>
+              <Text style={Typography.muted}>{t('settings.invoicePrefix', 'Invoice prefix')}</Text>
+              <TextInput
+                style={styles.input}
+                value={invoicePrefix}
+                onChangeText={(v) => setInvoicePrefix(cleanPrefix(v))}
+                placeholder="2026-"
+                placeholderTextColor={SemanticColors.textSecondary}
+                autoCapitalize="characters"
+                maxLength={12}
+              />
+              <Text style={Typography.muted}>
+                {t('settings.numberingPreview', 'Next: {{example}}', {
+                  example: `${invoicePrefix || 'I'}${String(nextInvoiceNo || '1').padStart(4, '0')}`,
+                })}
+              </Text>
+            </View>
+
+            <View style={styles.fieldColumn}>
+              <Text style={Typography.muted}>{t('settings.quotePrefix', 'Quote prefix')}</Text>
+              <TextInput
+                style={styles.input}
+                value={quotePrefix}
+                onChangeText={(v) => setQuotePrefix(cleanPrefix(v))}
+                placeholder="Q"
+                placeholderTextColor={SemanticColors.textSecondary}
+                autoCapitalize="characters"
+                maxLength={12}
+              />
+            </View>
+
+            <View style={styles.fieldColumn}>
+              <Text style={Typography.muted}>
+                {t('settings.nextInvoiceNo', 'Next invoice number')}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  value={nextInvoiceNo}
+                  onChangeText={(v) => setNextInvoiceNo(v.replace(/[^0-9]/g, '').slice(0, 7))}
+                  placeholder="88"
+                  placeholderTextColor={SemanticColors.textSecondary}
+                  keyboardType="number-pad"
+                />
+                <Pressable
+                  style={[styles.counterBtn, counterBusy && { opacity: 0.6 }]}
+                  onPress={applyCounter}
+                  disabled={counterBusy}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.counterBtnText}>{t('common.apply', 'Apply')}</Text>
+                </Pressable>
+              </View>
+              {/* Stated up front rather than discovered on refusal: the counter
+                  is one-way because lowering it re-issues numbers that already
+                  exist, and two invoices sharing a number is a compliance
+                  problem rather than an inconvenience. */}
+              <Text style={Typography.muted}>
+                {t('settings.counterOneWay', 'This can only move forwards — numbers already issued are never reused.')}
+              </Text>
+            </View>
           </View>
 
           {/* Accounting provider selection */}
@@ -443,6 +578,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: SemanticColors.borderDefault,
+  },
+  counterBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: Palette.hermesOrange,
+  },
+  counterBtnText: {
+    color: Palette.white,
+    fontWeight: '700' as const,
   },
   paymentMethodRow: {
     flexDirection: 'row' as const,

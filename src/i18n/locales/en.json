@@ -995,7 +995,18 @@
     "iban": "IBAN",
     "bic": "BIC / SWIFT",
     "paymentMethods": "Payment Methods",
-    "paymentMethodsDesc": "Choose which payment methods your customers can use."
+    "paymentMethodsDesc": "Choose which payment methods your customers can use.",
+    "numbering": "Invoice numbering",
+    "numberingHelp": "Leave blank to keep the default. If you are moving to Vasco part-way through the year, continue your existing series here so your numbering stays unbroken.",
+    "invoicePrefix": "Invoice prefix",
+    "quotePrefix": "Quote prefix",
+    "numberingPreview": "Next: {{example}}",
+    "nextInvoiceNo": "Next invoice number",
+    "counterOneWay": "This can only move forwards — numbers already issued are never reused.",
+    "counterInvalid": "Enter the number your next invoice should have.",
+    "counterSet": "Numbering updated",
+    "counterSetBody": "Your next invoice will be number {{n}}.",
+    "counterRefused": "Cannot move numbering backwards"
   },
   "financials": {
     "revenue": "Revenue",

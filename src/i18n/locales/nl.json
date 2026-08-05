@@ -979,7 +979,18 @@
     "iban": "IBAN",
     "bic": "BIC / SWIFT",
     "paymentMethods": "Betaalmethoden",
-    "paymentMethodsDesc": "Kies welke betaalmethoden je klanten kunnen gebruiken."
+    "paymentMethodsDesc": "Kies welke betaalmethoden je klanten kunnen gebruiken.",
+    "numbering": "Factuurnummering",
+    "numberingHelp": "Laat leeg voor de standaard. Stapt u halverwege het jaar over op Vasco? Zet hier uw bestaande reeks voort, zodat uw nummering doorloopt.",
+    "invoicePrefix": "Factuurvoorvoegsel",
+    "quotePrefix": "Offertevoorvoegsel",
+    "numberingPreview": "Volgende: {{example}}",
+    "nextInvoiceNo": "Volgend factuurnummer",
+    "counterOneWay": "Dit kan alleen vooruit — al uitgegeven nummers worden nooit hergebruikt.",
+    "counterInvalid": "Vul het nummer in dat uw volgende factuur moet krijgen.",
+    "counterSet": "Nummering bijgewerkt",
+    "counterSetBody": "Uw volgende factuur krijgt nummer {{n}}.",
+    "counterRefused": "Nummering kan niet terug"
   },
   "financials": {
     "revenue": "Omzet",

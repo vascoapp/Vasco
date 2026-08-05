@@ -995,7 +995,18 @@
     "iban": "IBAN",
     "bic": "BIC / SWIFT",
     "paymentMethods": "Moyens de paiement",
-    "paymentMethodsDesc": "Choisissez les moyens de paiement proposés à vos clients."
+    "paymentMethodsDesc": "Choisissez les moyens de paiement proposés à vos clients.",
+    "numbering": "Numérotation des factures",
+    "numberingHelp": "Laissez vide pour la valeur par défaut. Si vous passez à Vasco en cours d’année, poursuivez ici votre série existante afin que votre numérotation reste continue.",
+    "invoicePrefix": "Préfixe de facture",
+    "quotePrefix": "Préfixe de devis",
+    "numberingPreview": "Prochaine : {{example}}",
+    "nextInvoiceNo": "Prochain numéro de facture",
+    "counterOneWay": "Cela ne peut qu’avancer — les numéros déjà émis ne sont jamais réutilisés.",
+    "counterInvalid": "Saisissez le numéro que doit porter votre prochaine facture.",
+    "counterSet": "Numérotation mise à jour",
+    "counterSetBody": "Votre prochaine facture portera le numéro {{n}}.",
+    "counterRefused": "Impossible de reculer la numérotation"
   },
   "financials": {
     "revenue": "Chiffre d'affaires",
