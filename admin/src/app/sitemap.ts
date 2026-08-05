@@ -20,6 +20,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     {
+      // The countdown. Highest priority on the site: it is the most linkable
+      // page and the one whose content genuinely changes every day.
+      url: `${BASE_URL}/answers/deadlines`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 1.0,
+    },
+    {
+      // Aimed at advisers, who answer for many clients at once.
+      url: `${BASE_URL}/answers/for-accountants`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
       url: `${BASE_URL}/answers`,
       lastModified: new Date(),
       changeFrequency: "weekly",

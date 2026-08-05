@@ -210,6 +210,41 @@ export default async function AnswerPage({
         </div>
       )}
 
+      {/* Provenance, ABOVE the answers rather than buried at the bottom.
+          A reader deciding whether to trust a statutory deadline wants the
+          source before the claim, and a model extracting the page picks up the
+          citation alongside the text it quotes. */}
+      {page.source && (
+        <div
+          style={{
+            border: "1px solid #2A3038",
+            borderRadius: 10,
+            padding: "12px 14px",
+            marginBottom: 28,
+            fontSize: 13,
+            color: "#9CA3AF",
+            lineHeight: 1.6,
+          }}
+        >
+          {page.verifiedOn && (
+            <>
+              <strong style={{ color: "#FFFFFF" }}>Verified {page.verifiedOn}</strong>
+              {" · "}
+            </>
+          )}
+          Source:{" "}
+          <a
+            href={page.source.url}
+            rel="noopener"
+            style={{ color: "#F97316", textDecoration: "underline" }}
+          >
+            {page.source.name}
+          </a>
+          . E-invoicing legislation is changing across the EU — check the current
+          official guidance before acting on a date.
+        </div>
+      )}
+
       {/* Q&A pairs — the core AEO content */}
       <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
         {page.questions.map((q, i) => (

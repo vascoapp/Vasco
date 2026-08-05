@@ -42,6 +42,17 @@ export function faqPageSchema(page: AeoPage): object {
         ? verifiedDateIso()
         : new Date().toISOString().split("T")[0],
     publisher: softwareApplicationSchema(),
+    // A citation an assistant can follow and a reader can check. Unsourced
+    // statutory claims are exactly what a careful model declines to repeat.
+    ...(page.source
+      ? {
+          citation: {
+            "@type": "CreativeWork",
+            name: page.source.name,
+            url: page.source.url,
+          },
+        }
+      : {}),
     mainEntity: page.questions.map((q) => ({
       "@type": "Question",
       name: q.question,

@@ -9,6 +9,10 @@ import { MANDATE_I18N, LANG_FOR_COUNTRY } from "./mandate-i18n";
 
 export interface AeoPage {
   slug: string;
+  /** Official source for the legal claims on this page, when it makes any. */
+  source?: { name: string; url: string };
+  /** Date the legal facts were last verified. Only set where it is meaningful. */
+  verifiedOn?: string;
   /**
    * BCP-47 language of the CONTENT. Defaults to English when absent.
    *
@@ -87,6 +91,14 @@ interface MandateFacts {
   channel: string;
   /** The single most useful next action. */
   action: string;
+  /**
+   * The official source a reader — or an assistant — can check this against.
+   *
+   * Assistants weight sourced claims far more heavily than unsourced ones, and
+   * for statutory deadlines a citation is also the honest thing to publish: it
+   * lets someone verify us rather than trust us.
+   */
+  source?: { name: string; url: string };
 }
 
 export const MANDATE: Record<CountryId, MandateFacts> = {
@@ -101,6 +113,10 @@ export const MANDATE: Record<CountryId, MandateFacts> = {
       "No specific network is mandated for B2B. Email is a compliant channel — the requirement is the structured format, not the transport.",
     action:
       "Check which side of the €800,000 threshold you are on, and make sure you can already receive XRechnung today — that obligation is live now, not in 2027.",
+    source: {
+      name: "Bundesministerium der Finanzen (BMF)",
+      url: "https://www.bundesfinanzministerium.de/",
+    },
   },
   fr: {
     status: "phased between 2026 and 2028",
@@ -113,6 +129,10 @@ export const MANDATE: Record<CountryId, MandateFacts> = {
       "Invoices flow through a Plateforme de Dématérialisation Partenaire (PDP) rather than direct to the tax authority.",
     action:
       "Confirm which wave your business falls into, and choose a PDP before the deadline rather than during it.",
+    source: {
+      name: "Direction générale des Finances publiques (DGFiP) — impots.gouv.fr",
+      url: "https://www.impots.gouv.fr/facturation-electronique",
+    },
   },
   it: {
     status: "already mandatory for essentially all invoices",
@@ -123,6 +143,10 @@ export const MANDATE: Record<CountryId, MandateFacts> = {
     channel: "Sistema di Interscambio (SDI), which validates and can REJECT.",
     action:
       "Understand what happens on a scarto (rejection): a rejected FatturaPA means the invoice was never legally issued, so it must be corrected and resent within the allowed window.",
+    source: {
+      name: "Agenzia delle Entrate — Fatturazione elettronica",
+      url: "https://www.agenziaentrate.gov.it/portale/web/guest/aree-tematiche/fatturazione-elettronica",
+    },
   },
   es: {
     status: "mandatory for public-sector invoices, B2B rollout pending",
@@ -134,6 +158,10 @@ export const MANDATE: Record<CountryId, MandateFacts> = {
     channel: "FACe for public-sector invoices.",
     action:
       "If you invoice any public body, you already need Facturae. Get that working before the wider B2B rule lands.",
+    source: {
+      name: "Agencia Tributaria / Ministerio de Hacienda — FACe",
+      url: "https://face.gob.es/",
+    },
   },
   nl: {
     status: "mandatory for government invoices; B2B still voluntary",
@@ -145,6 +173,10 @@ export const MANDATE: Record<CountryId, MandateFacts> = {
     channel: "Peppol network.",
     action:
       "If you invoice municipalities or housing corporations you already need this. Otherwise it is optional today — but adopting early costs little because most Dutch accounting software already speaks SI-UBL.",
+    source: {
+      name: "Rijksoverheid / Logius — e-factureren",
+      url: "https://www.logius.nl/domeinen/gegevensuitwisseling/e-factureren",
+    },
   },
   uk: {
     status: "no e-invoicing mandate",
@@ -155,6 +187,10 @@ export const MANDATE: Record<CountryId, MandateFacts> = {
     channel: "Not applicable.",
     action:
       "Focus on Making Tax Digital for VAT and, if you are in construction, on CIS returns — those are the UK obligations with real deadlines.",
+    source: {
+      name: "HMRC — Making Tax Digital",
+      url: "https://www.gov.uk/government/collections/making-tax-digital",
+    },
   },
   us: {
     status: "no federal e-invoicing mandate",
@@ -164,6 +200,10 @@ export const MANDATE: Record<CountryId, MandateFacts> = {
     channel: "Not applicable.",
     action:
       "Sales-tax registration and filing by state is the compliance burden that matters here, not invoice format.",
+    source: {
+      name: "IRS — small business",
+      url: "https://www.irs.gov/businesses/small-businesses-self-employed",
+    },
   },
 };
 
@@ -744,9 +784,13 @@ function generateTradeCountryPage(
   };
 
   const slug = `${trade}-${country}-${topic.id}`;
+  const isMandate = topic.id === "einvoicing-mandate";
 
   return {
     slug,
+    ...(isMandate
+      ? { source: MANDATE[country].source, verifiedOn: MANDATE_VERIFIED_ON }
+      : {}),
     title: fillTemplate(topic.titleTemplate, vars),
     description: fillTemplate(topic.descriptionTemplate, vars),
     topic: topic.id,
@@ -795,6 +839,8 @@ function buildLocalisedMandatePages(): AeoPage[] {
       pages.push({
         slug,
         lang,
+        source: MANDATE[country].source,
+        verifiedOn: MANDATE_VERIFIED_ON,
         title: fillTemplate(L.titleTemplate, vars),
         description: fillTemplate(L.descriptionTemplate, vars),
         topic: "einvoicing-mandate",
