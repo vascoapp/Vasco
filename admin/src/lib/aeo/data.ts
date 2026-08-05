@@ -3,10 +3,26 @@
 // Trades × Countries × Topics → crawlable, schema-rich answer pages
 // ═══════════════════════════════════════════════════════════════════════════
 
+import { MANDATE_I18N, LANG_FOR_COUNTRY } from "./mandate-i18n";
+
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 
 export interface AeoPage {
   slug: string;
+  /**
+   * BCP-47 language of the CONTENT. Defaults to English when absent.
+   *
+   * Drives `inLanguage` in the JSON-LD and the `lang` attribute — an assistant
+   * or crawler that thinks a German page is English will not surface it for a
+   * German query, which is the entire point of publishing it.
+   */
+  lang?: string;
+  /**
+   * Slugs of the same answer in other languages, keyed by language. Rendered as
+   * hreflang alternates so Google treats them as one page in several languages
+   * rather than as duplicates competing with each other.
+   */
+  alternates?: Record<string, string>;
   title: string;
   description: string;
   topic: TopicId;
@@ -744,6 +760,77 @@ function generateTradeCountryPage(
   };
 }
 
+
+// ─── LOCALISED MANDATE PAGES ───────────────────────────────────────────────
+// The English mandate set answers the right question in the wrong language.
+// These are the same legal facts written the way each country's trades
+// actually search: "XRechnung Pflicht", not "e-invoicing obligation".
+
+function buildLocalisedMandatePages(): AeoPage[] {
+  const tradeIds = Object.keys(TRADES) as TradeId[];
+  const pages: AeoPage[] = [];
+
+  for (const [countryId, lang] of Object.entries(LANG_FOR_COUNTRY)) {
+    if (!lang) continue;
+    const country = countryId as CountryId;
+    const L = MANDATE_I18N[lang];
+    const c = COUNTRIES[country];
+
+    for (const trade of tradeIds) {
+      const localTrade = c.localTrade[trade];
+      const vars: Record<string, string> = {
+        trade: localTrade,
+        status: L.status,
+        receive: L.receive,
+        issue: L.issue,
+        format: L.format,
+        channel: L.channel,
+        action: L.action,
+        verifiedOn: MANDATE_VERIFIED_ON,
+      };
+
+      // Native slug: the words a contractor types, not a translated key.
+      const slug = `${slugify(localTrade)}-${country}-${L.topicSlug}`;
+
+      pages.push({
+        slug,
+        lang,
+        title: fillTemplate(L.titleTemplate, vars),
+        description: fillTemplate(L.descriptionTemplate, vars),
+        topic: "einvoicing-mandate",
+        trade,
+        country,
+        questions: L.questions.map((q, i) => ({
+          question: fillTemplate(q.q, vars),
+          // The verification line rides on the FIRST answer only: it is the one
+          // an assistant is most likely to quote whole, and repeating it four
+          // times reads as boilerplate rather than as provenance.
+          answer:
+            fillTemplate(q.a, vars) +
+            (i === 0 ? " " + fillTemplate(L.verifiedLine, vars) : ""),
+        })),
+        relatedSlugs: [],
+        alternates: {
+          en: `${trade}-${country}-einvoicing-mandate`,
+          [lang]: slug,
+        },
+      });
+    }
+  }
+
+  return pages;
+}
+
+/** Lowercase, ASCII-ish, hyphenated. Keeps native words readable in a URL. */
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 // ─── BUILD ALL PAGES ───────────────────────────────────────────────────────
 
 function buildAllPages(): AeoPage[] {
@@ -757,6 +844,21 @@ function buildAllPages(): AeoPage[] {
       for (const country of countryIds) {
         pages.push(generateTradeCountryPage(topic, trade, country));
       }
+    }
+  }
+
+  // Localised mandate pages — the acquisition-critical set.
+  const localised = buildLocalisedMandatePages();
+  pages.push(...localised);
+
+  // Pair each English mandate page with its localised sibling, so hreflang is
+  // declared from BOTH sides. Declaring it one-way is the classic mistake:
+  // Google treats unreciprocated alternates as unreliable and may ignore them.
+  for (const loc of localised) {
+    const enSlug = loc.alternates?.en;
+    const en = pages.find((p) => p.slug === enSlug);
+    if (en && loc.lang) {
+      en.alternates = { ...(en.alternates ?? {}), en: en.slug, [loc.lang]: loc.slug };
     }
   }
 

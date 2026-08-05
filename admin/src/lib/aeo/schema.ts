@@ -34,7 +34,9 @@ export function faqPageSchema(page: AeoPage): object {
     name: page.title,
     description: page.description,
     url: `${BASE_URL}/answers/${page.slug}`,
-    inLanguage: "en",
+    // The content language, not the site's. A German answer announced as
+    // English will not be surfaced for a German query.
+    inLanguage: page.lang ?? "en",
     dateModified:
       page.topic === "einvoicing-mandate"
         ? verifiedDateIso()

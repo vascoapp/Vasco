@@ -30,14 +30,34 @@ export async function generateMetadata({
     return { title: "Not Found" };
   }
 
+  // hreflang. Declared from both sides (see buildAllPages) because Google
+  // ignores unreciprocated alternates, and x-default points at the English
+  // page so a searcher in an unlisted locale lands somewhere sensible rather
+  // than on a German page.
+  const languages = page.alternates
+    ? Object.fromEntries(
+        Object.entries(page.alternates).map(([lang, slug]) => [
+          lang,
+          `https://vascobuild.com/answers/${slug}`,
+        ]),
+      )
+    : undefined;
+
   return {
     title: page.title,
     description: page.description,
+    alternates: {
+      canonical: `https://vascobuild.com/answers/${page.slug}`,
+      ...(languages
+        ? { languages: { ...languages, "x-default": languages.en ?? `https://vascobuild.com/answers/${page.slug}` } }
+        : {}),
+    },
     openGraph: {
       title: page.title,
       description: page.description,
       url: `https://vascobuild.com/answers/${page.slug}`,
       type: "article",
+      locale: page.lang ?? "en",
     },
   };
 }
@@ -83,7 +103,9 @@ export default async function AnswerPage({
     .slice(0, 6);
 
   return (
-    <article>
+    // lang on the article so assistive tech and crawlers read the localised
+    // answers as the language they are actually written in.
+    <article lang={page.lang ?? "en"}>
       {/* Breadcrumbs */}
       <nav style={{ fontSize: 13, color: "#888", marginBottom: 24 }}>
         <Link
