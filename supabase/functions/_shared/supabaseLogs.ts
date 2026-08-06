@@ -224,3 +224,56 @@ export function unavailableLogs(reason: string): PlatformLogs {
     errors: [],
   };
 }
+
+// ---------------------------------------------------------------------------
+// LLM provider key presence — is the "AI-native" part actually switched on?
+// ---------------------------------------------------------------------------
+// On 2026-08-06 the entire AI layer was dead in production and nothing noticed.
+// `analyze-photo`, `generate-sow`, `ai-command`, `classify-customer-question`,
+// `generate-phrasing` and the material-merge proposer all require
+// ANTHROPIC_API_KEY (or MOONSHOT/KIMI). None was set. A contractor photographing
+// a job got an HTTP 500; the watchdog reported fifteen healthy business metrics
+// and never mentioned that the product's headline capability could not run.
+//
+// The watchdog already holds a Management token for platform logs, so checking
+// this costs one API call and no model tokens. It reads only secret NAMES —
+// the Management API returns values as digests, and nothing here logs or
+// forwards them.
+//
+// Deliberately NOT a live model call: a daily probe that burns tokens to prove
+// tokens can be burnt is a bad trade, and a missing key is the failure that
+// actually happened.
+export interface LlmKeyStatus {
+  checked: boolean;
+  configured: boolean;
+  provider: string | null;
+  reason?: string;
+}
+
+export async function checkLlmKey(cfg: LogsConfig | null): Promise<LlmKeyStatus> {
+  if (!cfg) {
+    return { checked: false, configured: false, provider: null, reason: 'no management token' };
+  }
+  try {
+    const res = await fetch(
+      `https://api.supabase.com/v1/projects/${cfg.projectRef}/secrets`,
+      { headers: { Authorization: `Bearer ${cfg.token}` } },
+    );
+    if (!res.ok) {
+      return { checked: false, configured: false, provider: null, reason: `HTTP ${res.status}` };
+    }
+    const secrets = (await res.json()) as Array<{ name?: string }>;
+    const names = new Set(
+      (Array.isArray(secrets) ? secrets : []).map((s) => String(s?.name ?? '')),
+    );
+    if (names.has('ANTHROPIC_API_KEY')) {
+      return { checked: true, configured: true, provider: 'anthropic' };
+    }
+    if (names.has('MOONSHOT_API_KEY') || names.has('KIMI_API_KEY')) {
+      return { checked: true, configured: true, provider: 'moonshot' };
+    }
+    return { checked: true, configured: false, provider: null };
+  } catch (err) {
+    return { checked: false, configured: false, provider: null, reason: String(err).slice(0, 120) };
+  }
+}

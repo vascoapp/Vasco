@@ -43,6 +43,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { esc, readTelegramConfig, sendTelegram } from '../_shared/telegram.ts';
 import {
+  checkLlmKey,
+  type LlmKeyStatus,
   collectPlatformLogs,
   readLogsConfig,
   unavailableLogs,
@@ -405,6 +407,7 @@ function detectIssues(
   snapshotError: string | null,
   degraded: string[],
   now: Date,
+  llmKey: LlmKeyStatus,
 ): Issue[] {
   const issues: Issue[] = [];
   const add = (severity: Severity, text: string) => issues.push({ severity, text });
@@ -463,6 +466,17 @@ function detectIssues(
   const push = snapshot.push;
   if (sectionOk(push) && num(push.failed_24h) > 0) {
     add('warn', `${num(push.failed_24h)} push notification(s) failed to deliver`);
+  }
+
+  // AI layer — is the headline capability actually switched on?
+  // CRITICAL, not warn: with no provider key, analyze-photo returns HTTP 500,
+  // so a contractor photographing a job gets an error. That is a total outage
+  // of the thing the product is sold on, and on 2026-08-06 it ran that way
+  // unnoticed while every other metric here reported healthy.
+  if (llmKey.checked && !llmKey.configured) {
+    add('critical', 'No LLM provider key set — photo-to-quote, SOW drafting and the AI queue cannot run');
+  } else if (!llmKey.checked && llmKey.reason) {
+    add('warn', `LLM provider key not verified (${llmKey.reason})`);
   }
 
   // Automations
@@ -605,12 +619,13 @@ Deno.serve(async (req) => {
   // ---- collect (independently; one failure must not blank the digest) -------
   const logsCfg = readLogsConfig();
 
-  const [snapRes, cronRes, logsRes] = await Promise.all([
+  const [snapRes, cronRes, logsRes, llmKey] = await Promise.all([
     supabase.rpc('watchdog_snapshot', { p_since: since.toISOString() }),
     supabase.rpc('get_cron_runs_since', { p_since: since.toISOString() }),
     logsCfg
       ? collectPlatformLogs(logsCfg, since, now)
       : Promise.resolve(unavailableLogs('WATCHDOG_MGMT_TOKEN / WATCHDOG_PROJECT_REF not set')),
+    checkLlmKey(logsCfg),
   ]);
 
   const snapshot = (snapRes.data ?? {}) as Record<string, unknown>;
@@ -621,7 +636,7 @@ Deno.serve(async (req) => {
 
   const degraded = Array.isArray(snapshot.degraded) ? (snapshot.degraded as string[]) : [];
 
-  const issues = detectIssues(snapshot, logs, cron, cronError, snapshotError, degraded, now);
+  const issues = detectIssues(snapshot, logs, cron, cronError, snapshotError, degraded, now, llmKey);
   const severity: Severity = issues.some((i) => i.severity === 'critical')
     ? 'critical'
     : issues.length ? 'warn' : 'ok';
