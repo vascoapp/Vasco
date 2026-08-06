@@ -700,7 +700,16 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
                   likely to disagree with, and until now it was read-only — so a
                   wrong price could not be corrected on the path that produces
                   the quote, and the correction could never reach the moat. */}
-              <View style={styles.priceRow}>
+              {/* The whole row is a Pressable that toggles the line on/off, so
+                  the price input MUST claim the touch itself — otherwise tapping
+                  to edit a price also deselects the line (or fails to focus,
+                  depending on which responder wins). onStartShouldSetResponder
+                  stops the gesture reaching the parent. */}
+              <View
+                style={styles.priceRow}
+                onStartShouldSetResponder={() => true}
+                onTouchEnd={(e) => e.stopPropagation()}
+              >
                 <TextInput
                   style={styles.priceInput}
                   value={priceDraft[item.id] ?? String(item.suggestedPrice)}
