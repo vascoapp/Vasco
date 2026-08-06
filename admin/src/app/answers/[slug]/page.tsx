@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   ALL_PAGES,
   getPageBySlug,
@@ -85,16 +86,14 @@ export default async function AnswerPage({
   const page = getPageBySlug(slug);
 
   if (!page) {
-    return (
-      <div>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>Page not found</h1>
-        <p style={{ marginTop: 12 }}>
-          <Link href="/answers" style={{ color: "#E35205" }}>
-            Browse all answers
-          </Link>
-        </p>
-      </div>
-    );
+    // notFound() rather than rendering a "not found" body: this route has
+    // generateStaticParams, and with dynamicParams left at its default any
+    // unknown slug was rendered on demand and served HTTP **200** with a
+    // "Not Found" title. That is a soft-404, and Google treats soft-404s as a
+    // low-quality signal — self-defeating for a route whose entire purpose is
+    // being found in search. Verified live on admin.vascobuild.com: a garbage
+    // slug returned 200.
+    notFound();
   }
 
   const relatedPages = page.relatedSlugs
