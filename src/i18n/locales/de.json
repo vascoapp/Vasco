@@ -5470,11 +5470,12 @@
     "emptyHint": "Wenn Sie eine strukturierte E-Rechnung exportieren, wird sie hier erfasst, damit Sie verfolgen können, was die Behörde angenommen hat.",
     "insightTitle_one": "{{count}} Rechnung wurde nicht eingereicht",
     "insightTitle_other": "{{count}} Rechnungen wurden nicht eingereicht",
-    "insightBody": "Die Behörde hat sie abgelehnt, diese Rechnungen wurden also nie ausgestellt. Sie müssen korrigiert und erneut gesendet werden."
+    "insightBody": "Die Behörde hat sie abgelehnt, diese Rechnungen wurden also nie ausgestellt. Sie müssen korrigiert und erneut gesendet werden.",
+    "unknownSubject": "Rechnung nicht mehr in Ihrer Liste"
   },
   "accountantAccess": {
     "title": "Zugang für Steuerberater",
-    "intro": "Ein Zugang gibt Ihrem Steuerberater eine Nur-Lese-Webseite mit den Rechnungen, die die Behörde tatsächlich akzeptiert hat — das Einzige, was sein Buchhaltungsprogramm ihm nicht sagen kann. Ändern kann er nichts.",
+    "intro": "Ein Zugang gibt Ihrem Steuerberater eine Nur-Lese-Webseite mit den Rechnungen dieses Zeitraums und dem von Ihnen erfassten Meldestatus. Ändern kann er nichts. Wo eine Behörde Meldungen bestätigt, bleibt sein eigenes Portal die maßgebliche Quelle.",
     "newSeat": "Steuerberater Zugang geben",
     "namePlaceholder": "Name des Steuerberaters oder der Kanzlei",
     "publish": "Veröffentlichen und Link senden",
@@ -5492,6 +5493,8 @@
     "neverOpened": "Noch nicht geöffnet",
     "lastOpened": "Zuletzt geöffnet {{when}} · {{count}}×",
     "expires": "Läuft ab {{when}}",
-    "resend": "Link erneut senden"
+    "resend": "Link erneut senden",
+    "needsSignIn": "Melden Sie sich in Ihrem Vasco-Konto an, um einen Zugang zu veröffentlichen. Sind Sie bereits angemeldet? Melden Sie sich ab und wieder an und versuchen Sie es erneut.",
+    "publishFailed": "Der Zugang konnte nicht veröffentlicht werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
   }
 }

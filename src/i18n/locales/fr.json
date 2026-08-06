@@ -5470,11 +5470,12 @@
     "emptyHint": "Exporter une facture électronique structurée l'enregistre ici, pour suivre ce que l'administration a accepté.",
     "insightTitle_one": "{{count}} facture n'a pas été déposée",
     "insightTitle_other": "{{count}} factures n'ont pas été déposées",
-    "insightBody": "L'administration les a refusées : ces factures n'ont jamais été émises. Elles doivent être corrigées et renvoyées."
+    "insightBody": "L'administration les a refusées : ces factures n'ont jamais été émises. Elles doivent être corrigées et renvoyées.",
+    "unknownSubject": "Facture absente de votre liste"
   },
   "accountantAccess": {
     "title": "Accès expert-comptable",
-    "intro": "Un accès donne à votre expert-comptable une page web en lecture seule indiquant quelles factures l’administration a réellement acceptées — la seule chose que son logiciel comptable ne peut pas lui dire. Il ne peut rien modifier.",
+    "intro": "Un accès donne à votre expert-comptable une page web en lecture seule avec les factures de la période et l’état de dépôt que vous avez enregistré. Il ne peut rien modifier. Là où une administration confirme les dépôts, son propre portail reste la source de référence.",
     "newSeat": "Donner un accès à un expert-comptable",
     "namePlaceholder": "Nom de l’expert-comptable ou du cabinet",
     "publish": "Publier et envoyer le lien",
@@ -5492,6 +5493,8 @@
     "neverOpened": "Pas encore ouvert",
     "lastOpened": "Dernière ouverture {{when}} · {{count}}×",
     "expires": "Expire le {{when}}",
-    "resend": "Renvoyer le lien"
+    "resend": "Renvoyer le lien",
+    "needsSignIn": "Connectez-vous à votre compte Vasco pour publier un accès. Déjà connecté ? Déconnectez-vous puis reconnectez-vous et réessayez.",
+    "publishFailed": "L’accès n’a pas pu être publié. Vérifiez votre connexion et réessayez."
   }
 }

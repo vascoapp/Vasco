@@ -27,6 +27,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { logWarn } from '../../src/utils/errorHandler';
 import { useAppState } from '../../src/state/AppState';
 import {
   listSeats, publishSeat, revokeSeat, type AccountantSeat,
@@ -109,13 +110,27 @@ export default function AccountantAccessScreen() {
         }),
       });
     } catch (err) {
+      // Every branch here must produce a SENTENCE. The first version translated
+      // only 'offline' and passed everything else through, so walking this
+      // screen showed a contractor an alert reading exactly "not_signed_in" —
+      // an internal code, in English, in a Dutch app. Same family as the raw
+      // entity ids the queue generator is tested against: an identifier that
+      // reaches the user is a defect even when the logic behind it is right.
       const code = String((err as Error)?.message ?? err);
-      Alert.alert(
-        t('common.error', 'Error'),
+      const message =
         code === 'offline'
           ? t('accountantAccess.needsOnline', 'You need to be online to publish a seat — otherwise you would be sending a link that does not work yet.')
-          : code,
-      );
+          : code === 'not_signed_in'
+            ? t('accountantAccess.needsSignIn', 'Sign in to your Vasco account to publish a seat. If you are already signed in, sign out and back in, then try again.')
+            : code === 'label_required'
+              ? t('accountantAccess.nameRequiredBody', 'Give the seat your accountant’s name so you can tell your seats apart later.')
+              // Anything unrecognised gets a sentence too. The code still goes
+              // to the log, where it belongs, and not to the contractor.
+              : t('accountantAccess.publishFailed', 'The seat could not be published. Check your connection and try again.');
+      if (code !== 'offline' && code !== 'not_signed_in' && code !== 'label_required') {
+        logWarn('AccountantSeat', `publish failed: ${code}`);
+      }
+      Alert.alert(t('common.error', 'Error'), message);
     } finally {
       setPublishing(false);
     }

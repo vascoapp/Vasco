@@ -47,9 +47,27 @@ export default function FilingsScreen() {
   const accepted = submissions.filter((s) => s.state === 'accepted');
 
   /** The invoice this filing is about, by reference rather than row id. */
+  /**
+   * Human label for the thing being filed — NEVER the raw id.
+   *
+   * The old final fallback was `s.subjectId`, and walking this screen showed a
+   * filing listed as "inv-seed-2" sitting under "FILED" between two rows that
+   * correctly read "Hotel NH" and "Bouwgroep Atlas". Same defect the payments
+   * screen shipped and had to have removed twice.
+   *
+   * It is not only a demo-data artefact. A submission deliberately OUTLIVES the
+   * document it refers to — regulated_submissions has no DELETE policy, because
+   * a statutory trail is not the contractor's to erase — so an invoice that is
+   * removed leaves its filing behind, and this branch then runs in production
+   * on real data.
+   *
+   * A neutral noun is the right answer: the row still carries the channel, the
+   * date, the state and the authority code, which is what the contractor
+   * actually needs to chase it. An id tells them nothing they can act on.
+   */
   const subjectLabel = (s: Submission) => {
     const inv = invoices.find((i) => i.id === s.subjectId);
-    return inv?.reference || inv?.customer || s.subjectId;
+    return inv?.reference || inv?.customer || t('filings.unknownSubject', 'Invoice no longer in your list');
   };
 
   const confirmOutcome = (s: Submission, outcome: 'accepted' | 'rejected') => {

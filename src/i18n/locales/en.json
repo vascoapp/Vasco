@@ -5470,11 +5470,12 @@
     "emptyHint": "Exporting a structured e-invoice from an invoice records it here, so you can track what the authority accepted.",
     "insightTitle_one": "{{count}} invoice was not filed",
     "insightTitle_other": "{{count}} invoices were not filed",
-    "insightBody": "The authority refused them, so those invoices were never issued. They need correcting and sending again."
+    "insightBody": "The authority refused them, so those invoices were never issued. They need correcting and sending again.",
+    "unknownSubject": "Invoice no longer in your list"
   },
   "accountantAccess": {
     "title": "Accountant access",
-    "intro": "A seat gives your accountant a read-only web page showing which invoices were actually accepted by the tax authority — the one thing their accounting package cannot tell them. They cannot change anything.",
+    "intro": "A seat gives your accountant a read-only web page with this period’s invoices and whatever filing state you have recorded. They cannot change anything. Where an authority confirms filings, their own portal stays the authoritative source.",
     "newSeat": "Give an accountant a seat",
     "namePlaceholder": "Accountant or practice name",
     "publish": "Publish and send link",
@@ -5492,6 +5493,8 @@
     "neverOpened": "Not opened yet",
     "lastOpened": "Last opened {{when}} · {{count}}×",
     "expires": "Expires {{when}}",
-    "resend": "Send link again"
+    "resend": "Send link again",
+    "needsSignIn": "Sign in to your Vasco account to publish a seat. If you are already signed in, sign out and back in, then try again.",
+    "publishFailed": "The seat could not be published. Check your connection and try again."
   }
 }

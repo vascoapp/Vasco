@@ -5470,11 +5470,12 @@
     "emptyHint": "Esportando una fattura elettronica strutturata viene registrata qui, così puoi seguire cosa ha accettato l'ente.",
     "insightTitle_one": "{{count}} fattura non è stata trasmessa",
     "insightTitle_other": "{{count}} fatture non sono state trasmesse",
-    "insightBody": "L'ente le ha scartate, quindi quelle fatture non sono mai state emesse. Vanno corrette e reinviate."
+    "insightBody": "L'ente le ha scartate, quindi quelle fatture non sono mai state emesse. Vanno corrette e reinviate.",
+    "unknownSubject": "Fattura non più nel tuo elenco"
   },
   "accountantAccess": {
     "title": "Accesso commercialista",
-    "intro": "Un accesso dà al suo commercialista una pagina web in sola lettura con le fatture che l’amministrazione ha davvero accettato — l’unica cosa che il suo gestionale non può dirgli. Non può modificare nulla.",
+    "intro": "Un accesso dà al tuo commercialista una pagina web in sola lettura con le fatture del periodo e lo stato di invio che hai registrato. Non può modificare nulla. Dove un’amministrazione conferma gli invii, il suo portale resta la fonte autorevole.",
     "newSeat": "Dai accesso a un commercialista",
     "namePlaceholder": "Nome del commercialista o dello studio",
     "publish": "Pubblica e invia il link",
@@ -5492,6 +5493,8 @@
     "neverOpened": "Non ancora aperto",
     "lastOpened": "Ultima apertura {{when}} · {{count}}×",
     "expires": "Scade il {{when}}",
-    "resend": "Invia di nuovo il link"
+    "resend": "Invia di nuovo il link",
+    "needsSignIn": "Accedi al tuo account Vasco per pubblicare un accesso. Hai già effettuato l’accesso? Esci, rientra e riprova.",
+    "publishFailed": "Non è stato possibile pubblicare l’accesso. Controlla la connessione e riprova."
   }
 }

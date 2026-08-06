@@ -5470,11 +5470,12 @@
     "emptyHint": "Al exportar una factura electrónica estructurada se registra aquí, para que puedas seguir qué aceptó la administración.",
     "insightTitle_one": "{{count}} factura no se presentó",
     "insightTitle_other": "{{count}} facturas no se presentaron",
-    "insightBody": "La administración las rechazó, así que esas facturas nunca se emitieron. Hay que corregirlas y enviarlas de nuevo."
+    "insightBody": "La administración las rechazó, así que esas facturas nunca se emitieron. Hay que corregirlas y enviarlas de nuevo.",
+    "unknownSubject": "La factura ya no está en su lista"
   },
   "accountantAccess": {
     "title": "Acceso del asesor",
-    "intro": "Un acceso da a su asesor una página web de solo lectura con las facturas que la administración aceptó realmente — lo único que su programa de contabilidad no puede decirle. No puede modificar nada.",
+    "intro": "Un acceso da a su asesor una página web de solo lectura con las facturas del periodo y el estado de presentación que usted haya registrado. No puede modificar nada. Donde una administración confirma las presentaciones, su propio portal sigue siendo la fuente de referencia.",
     "newSeat": "Dar acceso a un asesor",
     "namePlaceholder": "Nombre del asesor o despacho",
     "publish": "Publicar y enviar enlace",
@@ -5492,6 +5493,8 @@
     "neverOpened": "Aún sin abrir",
     "lastOpened": "Abierto por última vez {{when}} · {{count}}×",
     "expires": "Caduca {{when}}",
-    "resend": "Enviar el enlace de nuevo"
+    "resend": "Enviar el enlace de nuevo",
+    "needsSignIn": "Inicie sesión en su cuenta de Vasco para publicar un acceso. ¿Ya ha iniciado sesión? Cierre sesión, vuelva a entrar e inténtelo de nuevo.",
+    "publishFailed": "No se pudo publicar el acceso. Compruebe su conexión e inténtelo de nuevo."
   }
 }

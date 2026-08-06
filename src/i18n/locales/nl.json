@@ -5454,11 +5454,12 @@
     "emptyHint": "Als je een structurele e-factuur exporteert, wordt die hier vastgelegd zodat je kunt volgen wat de instantie heeft geaccepteerd.",
     "insightTitle_one": "{{count}} factuur is niet ingediend",
     "insightTitle_other": "{{count}} facturen zijn niet ingediend",
-    "insightBody": "De instantie heeft ze geweigerd, dus die facturen zijn nooit uitgegeven. Ze moeten gecorrigeerd en opnieuw verstuurd worden."
+    "insightBody": "De instantie heeft ze geweigerd, dus die facturen zijn nooit uitgegeven. Ze moeten gecorrigeerd en opnieuw verstuurd worden.",
+    "unknownSubject": "Factuur staat niet meer in uw lijst"
   },
   "accountantAccess": {
     "title": "Toegang accountant",
-    "intro": "Een plek geeft uw accountant een alleen-lezen webpagina met welke facturen de Belastingdienst daadwerkelijk heeft geaccepteerd — het enige dat hun boekhoudpakket niet kan vertellen. Ze kunnen niets wijzigen.",
+    "intro": "Een plek geeft uw accountant een alleen-lezen webpagina met de facturen van deze periode en de indieningsstatus die u heeft vastgelegd. Ze kunnen niets wijzigen. Waar een instantie indieningen bevestigt, blijft hun eigen portaal de leidende bron.",
     "newSeat": "Geef een accountant toegang",
     "namePlaceholder": "Naam accountant of kantoor",
     "publish": "Publiceren en link sturen",
@@ -5476,6 +5477,8 @@
     "neverOpened": "Nog niet geopend",
     "lastOpened": "Laatst geopend {{when}} · {{count}}×",
     "expires": "Verloopt {{when}}",
-    "resend": "Link opnieuw sturen"
+    "resend": "Link opnieuw sturen",
+    "needsSignIn": "Log in op uw Vasco-account om toegang te publiceren. Bent u al ingelogd? Log uit en weer in en probeer het opnieuw.",
+    "publishFailed": "De toegang kon niet worden gepubliceerd. Controleer uw verbinding en probeer het opnieuw."
   }
 }
