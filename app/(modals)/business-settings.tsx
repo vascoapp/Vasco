@@ -209,7 +209,13 @@ export default function BusinessSettingsScreen() {
   const applyCounter = useCallback(async () => {
     const n = parseInt(nextInvoiceNo, 10);
     if (!Number.isFinite(n) || n < 1) {
-      Alert.alert(t('common.error', 'Error'), t('settings.counterInvalid', 'Enter the number your next invoice should have.'));
+      // Neutral title: nothing went wrong, they simply have not typed a number
+      // yet. "Something went wrong" on an empty field is alarming for a
+      // no-op, and it trains people to dismiss the alerts that DO matter.
+      Alert.alert(
+        t('settings.counterNeedsNumber', 'Which number?'),
+        t('settings.counterInvalid', 'Enter the number your next invoice should have.'),
+      );
       return;
     }
     setCounterBusy(true);

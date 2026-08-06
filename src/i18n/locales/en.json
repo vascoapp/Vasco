@@ -1008,7 +1008,8 @@
     "counterInvalid": "Enter the number your next invoice should have.",
     "counterSet": "Numbering updated",
     "counterSetBody": "Your next invoice will be number {{n}}.",
-    "counterRefused": "Cannot move numbering backwards"
+    "counterRefused": "Cannot move numbering backwards",
+    "counterNeedsNumber": "Which number?"
   },
   "financials": {
     "revenue": "Revenue",

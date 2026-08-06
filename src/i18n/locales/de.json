@@ -1008,7 +1008,8 @@
     "counterInvalid": "Geben Sie die Nummer ein, die Ihre nächste Rechnung tragen soll.",
     "counterSet": "Nummerierung aktualisiert",
     "counterSetBody": "Ihre nächste Rechnung erhält die Nummer {{n}}.",
-    "counterRefused": "Nummerierung kann nicht zurückgesetzt werden"
+    "counterRefused": "Nummerierung kann nicht zurückgesetzt werden",
+    "counterNeedsNumber": "Welche Nummer?"
   },
   "financials": {
     "revenue": "Umsatz",

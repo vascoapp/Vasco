@@ -108,3 +108,54 @@ describe('the written handover', () => {
     expect(text).toContain('INV-2');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Found by reading the REAL output on a device, not by reading the code.
+// ---------------------------------------------------------------------------
+describe('what the accountant actually reads', () => {
+  const inv = (over: Record<string, unknown> = {}) => ({
+    reference: 'Hotel NH', customer: 'Hotel NH', date: '2026-06-06',
+    amount: 350, status: 'overdue' as const, filing: 'rejected' as never, ...over,
+  });
+
+  const handover = (over: Record<string, unknown> = {}) => ({
+    businessName: 'Vasco', country: 'NL',
+    periodStart: '2026-04-01', periodEnd: '2026-06-30',
+    invoices: [inv()], totals: { invoiced: 350, count: 1 },
+    notFiled: [inv()], awaitingConfirmation: [],
+    mandateApplies: false, ...over,
+  }) as never;
+
+  const money = (n: number) => `€ ${n.toFixed(2)}`;
+
+  it('does not claim invoices were refused in a country with no mandate', () => {
+    // The output used to print "NOT FILED — these were refused, so they were
+    // never legally issued" AND "no filing is required in this country" in the
+    // same document. An accountant reading that chases their client over
+    // filings no authority ever wanted.
+    const out = formatHandoverText(handover(), money);
+    expect(out).not.toMatch(/NOT FILED/);
+    expect(out).toMatch(/No structured e-invoice filing is required/);
+  });
+
+  it('still shows the filing sections where a mandate DOES apply', () => {
+    const out = formatHandoverText(handover({ country: 'DE', mandateApplies: true }), money);
+    expect(out).toMatch(/NOT FILED \(1\)/);
+  });
+
+  it('does not print the customer name twice', () => {
+    // `reference` falls back to the customer when an invoice has none, so the
+    // naive template rendered "Hotel NH — Hotel NH — € 350,00" on every line.
+    const out = formatHandoverText(handover({ mandateApplies: true }), money);
+    expect(out).not.toMatch(/Hotel NH — Hotel NH/);
+    expect(out).toMatch(/Hotel NH/);
+  });
+
+  it('keeps both when the reference is a real one', () => {
+    const out = formatHandoverText(
+      handover({ mandateApplies: true, invoices: [inv({ reference: 'F-2026-014' })], notFiled: [] }),
+      money,
+    );
+    expect(out).toMatch(/F-2026-014 — Hotel NH/);
+  });
+});

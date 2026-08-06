@@ -127,6 +127,22 @@ export function buildAccountantHandover(input: {
  * will open on a desktop. Burying three unissued invoices under forty correct
  * ones is how they get missed.
  */
+
+/**
+ * "REF — Customer", collapsed to one when they are the same string.
+ *
+ * `reference` falls back to the customer name when an invoice has no human
+ * reference, so the naive template rendered "Hotel NH — Hotel NH — € 350,00" on
+ * every line. The earlier fix was careful never to fall back to the row id; it
+ * swapped an id leak for a duplicate.
+ */
+function label(i: HandoverInvoice): string {
+  const ref = (i.reference || '').trim();
+  const cust = (i.customer || '').trim();
+  if (!cust || ref === cust) return ref || cust || '—';
+  return `${ref} — ${cust}`;
+}
+
 export function formatHandoverText(h: AccountantHandover, money: (n: number) => string): string {
   const lines: string[] = [];
 
@@ -134,18 +150,25 @@ export function formatHandoverText(h: AccountantHandover, money: (n: number) => 
   lines.push(`${h.totals.count} invoices · ${money(h.totals.invoiced)}`);
   lines.push('');
 
-  if (h.notFiled.length > 0) {
+  // The filing sections are gated on the mandate, not just on being non-empty.
+  // Without this the output contradicted itself in the Netherlands: it printed
+  // "NOT FILED — these were refused, so they were never legally issued" and then
+  // "no structured e-invoice filing is required in this country". An accountant
+  // reading that chases their client about invoices no authority ever wanted —
+  // exactly the confusion this file was written to prevent ("no mandate here" is
+  // NOT "not filed yet"). Caught by reading the real output on device.
+  if (h.mandateApplies && h.notFiled.length > 0) {
     lines.push(`NOT FILED (${h.notFiled.length}) — these were refused, so they were never legally issued:`);
     for (const i of h.notFiled) {
-      lines.push(`  · ${i.reference} — ${i.customer} — ${money(i.amount)}`);
+      lines.push(`  · ${label(i)} — ${money(i.amount)}`);
     }
     lines.push('');
   }
 
-  if (h.awaitingConfirmation.length > 0) {
+  if (h.mandateApplies && h.awaitingConfirmation.length > 0) {
     lines.push(`AWAITING CONFIRMATION (${h.awaitingConfirmation.length}) — sent, no answer from the authority yet:`);
     for (const i of h.awaitingConfirmation) {
-      lines.push(`  · ${i.reference} — ${i.customer} — ${money(i.amount)}`);
+      lines.push(`  · ${label(i)} — ${money(i.amount)}`);
     }
     lines.push('');
   }
@@ -155,7 +178,7 @@ export function formatHandoverText(h: AccountantHandover, money: (n: number) => 
     // The filing column is omitted entirely where no mandate applies, rather
     // than printed as "none", which would read as a missing filing.
     const filing = h.mandateApplies ? ` · ${i.filing ?? 'no filing'}` : '';
-    lines.push(`  ${i.date ?? ''} ${i.reference} — ${i.customer} — ${money(i.amount)} · ${i.status}${filing}`);
+    lines.push(`  ${i.date ?? ''} ${label(i)} — ${money(i.amount)} · ${i.status}${filing}`);
   }
 
   if (!h.mandateApplies) {

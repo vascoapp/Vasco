@@ -1008,7 +1008,8 @@
     "counterInvalid": "Saisissez le numéro que doit porter votre prochaine facture.",
     "counterSet": "Numérotation mise à jour",
     "counterSetBody": "Votre prochaine facture portera le numéro {{n}}.",
-    "counterRefused": "Impossible de reculer la numérotation"
+    "counterRefused": "Impossible de reculer la numérotation",
+    "counterNeedsNumber": "Quel numéro ?"
   },
   "financials": {
     "revenue": "Chiffre d'affaires",

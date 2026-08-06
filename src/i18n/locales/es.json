@@ -1008,7 +1008,8 @@
     "counterInvalid": "Introduzca el número que debe llevar su próxima factura.",
     "counterSet": "Numeración actualizada",
     "counterSetBody": "Su próxima factura llevará el número {{n}}.",
-    "counterRefused": "No se puede retroceder la numeración"
+    "counterRefused": "No se puede retroceder la numeración",
+    "counterNeedsNumber": "¿Qué número?"
   },
   "financials": {
     "revenue": "Facturación",
