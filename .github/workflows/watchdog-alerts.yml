@@ -1,0 +1,107 @@
+# =============================================================================
+# WATCHDOG ALERT DELIVERY — the channel that needs no new secret
+# =============================================================================
+# The daily watchdog has been running and reporting to nobody. Its own digest
+# said so — "last ran 06 Aug, 09:00 (NOT delivered)" — but that line only
+# appears INSIDE the message that is not delivered, so the failure was
+# perfectly circular and invisible.
+#
+# It delivers over Telegram, which needs TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID.
+# Those come from @BotFather and are not set. So does the LLM provider key. All
+# of it is blocked on credentials the operator has to create.
+#
+# This does not wait for them. GitHub already emails the repo owner when a
+# workflow fails, and SUPABASE_URL / SUPABASE_ANON_KEY are already repo secrets
+# (the keep-alive uses them). So a red run IS the delivery channel, and it costs
+# nothing to set up.
+#
+# WHY `?dry=1`: it computes the full digest and returns it WITHOUT sending or
+# recording a run, so this cannot interfere with the real 09:00 watchdog or
+# double-count. We only read the severity it computed.
+#
+# Belt and braces on purpose: when Telegram is configured later this keeps
+# working, and two independent channels for "the product is down" is the right
+# number when one of them has already failed silently for weeks.
+#
+# ⚠️ NOT A VERCEL CRON, AND NOT AN OVERSIGHT. Tooling suggests moving scheduled
+# tasks to vercel.json crons; do not. An alarm must not share a failure domain
+# with the thing it watches — a broken `admin` deploy would silence it exactly
+# when it matters most. The supabase-keepalive workflow was placed here for the
+# same reason and says so. GitHub Actions is deliberately outside the app's
+# blast radius.
+# =============================================================================
+
+name: Watchdog alerts
+
+on:
+  schedule:
+    # 07:22 UTC — after the 06:17 keep-alive (so a paused project shows up as a
+    # keep-alive failure first, which is the more specific diagnosis), and off
+    # the hour because GitHub delays cron at :00.
+    - cron: '22 7 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: watchdog-alerts
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Fail the run if production is critical
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read watchdog severity
+        env:
+          URL: ${{ secrets.SUPABASE_URL }}
+          KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${URL:-}" ] || [ -z "${KEY:-}" ]; then
+            echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY repo secrets are not set — alert delivery is a no-op until they are."
+            exit 1
+          fi
+
+          code=$(curl -sS -o /tmp/wd.json -w '%{http_code}' \
+            -X POST "$URL/functions/v1/watchdog-daily?dry=1" \
+            -H "Authorization: Bearer $KEY" \
+            -H 'Content-Type: application/json' \
+            --max-time 120 --retry 2 --retry-delay 15 --retry-all-errors \
+            -d '{}')
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Watchdog returned HTTP $code — cannot assess production health."
+            head -c 400 /tmp/wd.json || true
+            exit 1
+          fi
+
+          severity=$(python3 -c "import json;print(json.load(open('/tmp/wd.json')).get('severity','unknown'))")
+          echo "severity=$severity"
+
+          # Print every issue into the run log so the failure email has the
+          # actual findings in it, not just a red tick.
+          python3 - <<'PY'
+          import json
+          d = json.load(open('/tmp/wd.json'))
+          issues = d.get('issues') or []
+          if not issues:
+              print('No issues reported.')
+          for i in issues:
+              sev = i.get('severity', '?')
+              print(f"[{sev.upper()}] {i.get('text','')}")
+          PY
+
+          case "$severity" in
+            critical)
+              echo "::error::Production has CRITICAL issues — see the list above."
+              exit 1
+              ;;
+            warn)
+              # A warning is not worth an email every morning; it is visible in
+              # the run log and in the digest. Only critical breaks the build.
+              echo "::warning::Production has warnings — not failing the run."
+              ;;
+            *)
+              echo "Healthy."
+              ;;
+          esac
