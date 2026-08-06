@@ -209,3 +209,59 @@ export async function flushPendingDeltas(): Promise<{ sent: number; remaining: n
     return { sent, remaining: 0 };
   }
 }
+
+/**
+ * Attach a quote id to the deltas recorded while building that quote.
+ *
+ * WHY THIS EXISTS — it is what turns a log into a loop.
+ *
+ * Corrections are captured BEFORE the quote exists: the contractor edits lines
+ * on the photo screen, and only afterwards is a quote created and given an id.
+ * So every delta from that path was written with `quote_id = null`, and a null
+ * quote id cannot be joined to an outcome.
+ *
+ * Without the join the system can only learn IMITATION — "contractors tend to
+ * raise this line by 12%" — and never the thing that actually matters, which is
+ * whether the raised price still WON the job. Those are different lessons, and
+ * optimising for the first will happily teach the model to price itself out of
+ * work.
+ *
+ * `quote_line_deltas.quote_id` already existed and was simply never populated
+ * from this path, so this needs no migration.
+ *
+ * Deliberately narrow: only deltas that (a) still have no quote id and (b) were
+ * recorded in the last `withinMinutes`. A contractor who abandons a quote and
+ * starts another an hour later must not have the first one's corrections
+ * silently attributed to the second.
+ */
+export async function attachQuoteIdToRecentDeltas(
+  quoteId: string,
+  withinMinutes = 90,
+): Promise<number> {
+  if (!quoteId) return 0;
+  const cutoff = Date.now() - withinMinutes * 60_000;
+
+  const all = await loadLocal();
+  const targets = all.filter(
+    (d) => !d.quoteId && new Date(d.createdAt).getTime() >= cutoff,
+  );
+  if (targets.length === 0) return 0;
+
+  const ids = new Set(targets.map((d) => d.id));
+  await saveLocal(all.map((d) => (ids.has(d.id) ? { ...d, quoteId } : d)));
+
+  // Best-effort BE update. The local copy is already correct, and the pending
+  // queue re-syncs unsent rows, so a failure here degrades to "linked locally"
+  // rather than losing the correction.
+  if (isSupabaseConfigured) {
+    try {
+      await (supabase.from as any)('quote_line_deltas')
+        .update({ quote_id: quoteId })
+        .in('line_item_id', targets.map((d) => d.lineItemId))
+        .is('quote_id', null);
+    } catch {
+      /* keep the local link; nothing to surface to the contractor */
+    }
+  }
+  return targets.length;
+}

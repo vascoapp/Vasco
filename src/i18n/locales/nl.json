@@ -652,7 +652,8 @@
     "vat": "BTW (21%)",
     "total": "Totaal",
     "retake": "Opnieuw",
-    "vatRate": "btw ({{rate}}%)"
+    "vatRate": "btw ({{rate}}%)",
+    "unitPriceLabel": "Stukprijs voor {{item}}"
   },
   "invoices": {
     "title": "Facturen",

@@ -668,7 +668,8 @@
     "vat": "IVA (21%)",
     "total": "Total",
     "retake": "Repetir foto",
-    "vatRate": "IVA ({{rate}}%)"
+    "vatRate": "IVA ({{rate}}%)",
+    "unitPriceLabel": "Precio unitario de {{item}}"
   },
   "invoices": {
     "title": "Facturas",

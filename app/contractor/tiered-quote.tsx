@@ -74,6 +74,15 @@ export default function TieredQuoteScreen() {
               tier.name || t('tieredQuote.quoteLabel'),
               lineItems,
             );
+            // Close the learning loop. Line corrections are captured while the
+            // contractor edits — BEFORE a quote exists — so they were written
+            // with quote_id = null and could never be joined to whether the
+            // quote was won. Without that join the moat can only learn to
+            // imitate edits, never whether the edited price still won the job.
+            // Fail-soft: a broken link must not fail sending a quote.
+            import('../../src/services/reasonCodeService')
+              .then((m) => m.attachQuoteIdToRecentDeltas(quoteId))
+              .catch(() => {});
             // R62: persist the SOW narrative the contractor reviewed in the
             // builder's preview step. Threaded through TieredQuote.description
             // so we don't change addQuote's signature. updateDocument

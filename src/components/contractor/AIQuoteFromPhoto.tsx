@@ -13,7 +13,7 @@
 // =============================================================================
 
 import { useState, useRef } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -117,6 +117,8 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
   const [items, setItems] = useState<DetectedItem[]>([]);
+  // Uncommitted price text, keyed by line id. Committed on blur — see commitPrice.
+  const [priceDraft, setPriceDraft] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   // R66 round 35: photo cohort benchmark — closes the dormant
   // get_photo_analysis_cohort RPC (R243 wired BE + FE wrapper, but no
@@ -353,11 +355,23 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   // quote_line_deltas, same as TieredQuoteBuilder. Fires once per line per
   // session, only once the edit is material (≥1 unit or ≥5% off the baseline we
   // showed). Best-effort + offline-queued inside recordDelta.
-  const maybeRecordQtyDelta = (item: DetectedItem, newQty: number) => {
+  const maybeRecordEdit = (item: DetectedItem, edit: { qty?: number; price?: number }) => {
     const baseline = baselinesRef.current.get(item.id);
     if (!baseline || editedRef.current.has(item.id)) return;
-    const diff = Math.abs(newQty - baseline.qty);
-    if (diff < 1 && diff < baseline.qty * 0.05) return;
+
+    const newQty = edit.qty ?? item.suggestedQuantity;
+    const newPrice = edit.price ?? item.suggestedPrice;
+
+    // Materiality gate, now applied to BOTH dimensions. A correction counts if
+    // the quantity moved ≥1 unit or ≥5%, OR the price moved ≥5% (or ≥1 currency
+    // unit on a cheap line). Without the price arm, a contractor could halve a
+    // price and the moat would never hear about it.
+    const qtyDiff = Math.abs(newQty - baseline.qty);
+    const qtyMaterial = qtyDiff >= 1 || qtyDiff >= baseline.qty * 0.05;
+    const priceDiff = Math.abs(newPrice - baseline.price);
+    const priceMaterial = priceDiff >= 1 || priceDiff >= baseline.price * 0.05;
+    if (!qtyMaterial && !priceMaterial) return;
+
     editedRef.current.add(item.id);
     recordDelta({
       lineItemId: item.id,
@@ -365,7 +379,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
       originalQty: baseline.qty,
       newQty,
       originalUnitPrice: baseline.price,
-      newUnitPrice: item.suggestedPrice,
+      newUnitPrice: newPrice,
       source: baseline.source,
       trade: getCurrentTrade() || 'general',
       country: getCurrentCountry() || 'NL',
@@ -377,10 +391,39 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     if (!current) return;
     const newQty = Math.max(0.5, current.suggestedQuantity + delta);
     // Capture the learning signal outside the state updater (no double-fire).
-    maybeRecordQtyDelta(current, newQty);
+    maybeRecordEdit(current, { qty: newQty });
     setItems(items.map(item =>
       item.id === id ? { ...item, suggestedQuantity: newQty } : item
     ));
+  };
+
+  /**
+   * Unit-price correction — the signal the loop was missing entirely.
+   *
+   * This screen had NO way to change a price: quantity had +/- buttons, price
+   * was read-only. Two consequences, and the second is worse.
+   *
+   *  1. A contractor who saw a wrong price could not fix it here at all. On the
+   *     primary quoting path, for the number they send a customer.
+   *  2. recordDelta always sent `newUnitPrice: item.suggestedPrice` — the value
+   *     we had just shown them — so every price delta written to
+   *     quote_line_deltas was EXACTLY ZERO. predict-price and the cohort tuner
+   *     read that table. The most valuable signal in the product was structurally
+   *     absent while looking like it was being collected.
+   *
+   * Committed on blur rather than per keystroke: "12" on the way to "125" is not
+   * a correction, and recording it would teach the moat a price the contractor
+   * never meant.
+   */
+  const commitPrice = (id: string, raw: string) => {
+    const current = items.find((i) => i.id === id);
+    if (!current) return;
+    const parsed = Number(raw.replace(',', '.').replace(/[^0-9.]/g, ''));
+    setPriceDraft((d) => { const n = { ...d }; delete n[id]; return n; });
+    if (!Number.isFinite(parsed) || parsed <= 0) return;          // ignore junk
+    if (Math.abs(parsed - current.suggestedPrice) < 0.01) return;  // no-op
+    maybeRecordEdit(current, { price: parsed });
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, suggestedPrice: parsed } : i)));
   };
 
   const selectedItems = items.filter(i => i.selected);
@@ -642,6 +685,22 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
                   <Ionicons name="add" size={14} color={SemanticColors.textPrimary} />
                 </Pressable>
               </View>
+              {/* Unit price is EDITABLE. It is the number the contractor is most
+                  likely to disagree with, and until now it was read-only — so a
+                  wrong price could not be corrected on the path that produces
+                  the quote, and the correction could never reach the moat. */}
+              <View style={styles.priceRow}>
+                <TextInput
+                  style={styles.priceInput}
+                  value={priceDraft[item.id] ?? String(item.suggestedPrice)}
+                  onChangeText={(v: string) => setPriceDraft((d) => ({ ...d, [item.id]: v }))}
+                  onBlur={() => commitPrice(item.id, priceDraft[item.id] ?? '')}
+                  keyboardType="decimal-pad"
+                  selectTextOnFocus
+                  accessibilityLabel={t('aiQuote.unitPriceLabel', 'Unit price for {{item}}', { item: item.description })}
+                />
+                <Text style={styles.perUnit}>/{item.unit}</Text>
+              </View>
               <Text style={styles.itemPrice}>{formatCurrency(item.suggestedPrice * item.suggestedQuantity)}</Text>
             </View>
           </Pressable>
@@ -778,6 +837,19 @@ const styles = StyleSheet.create({
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   qtyBtn: { width: 24, height: 24, borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
   qtyText: { fontSize: TYPE.captionSize, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary, minWidth: 50, textAlign: 'center' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
+  priceInput: {
+    minWidth: 54,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    color: SemanticColors.textPrimary,
+    fontSize: 13,
+    textAlign: 'right',
+  },
+  perUnit: { color: SemanticColors.textSecondary, fontSize: 11 },
   itemPrice: { fontSize: TYPE.bodySize, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
 
   notesSection: { marginTop: 16 },

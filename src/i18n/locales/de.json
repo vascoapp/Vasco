@@ -668,7 +668,8 @@
     "vat": "MwSt. (21 %)",
     "total": "Gesamt",
     "retake": "Neu aufnehmen",
-    "vatRate": "MwSt. ({{rate}}%)"
+    "vatRate": "MwSt. ({{rate}}%)",
+    "unitPriceLabel": "Stückpreis für {{item}}"
   },
   "invoices": {
     "title": "Rechnungen",

@@ -668,7 +668,8 @@
     "vat": "VAT (21%)",
     "total": "Total",
     "retake": "Retake",
-    "vatRate": "VAT ({{rate}}%)"
+    "vatRate": "VAT ({{rate}}%)",
+    "unitPriceLabel": "Unit price for {{item}}"
   },
   "invoices": {
     "title": "Invoices",
