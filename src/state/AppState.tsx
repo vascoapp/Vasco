@@ -3080,7 +3080,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // Mirrors the persisted payload below, so the optimistic row and the
           // reloaded row agree. They did not before: the job rendered without a
           // trade and then reloaded without one too, for different reasons.
-          trade: quote.trade ?? (businessProfile as { trade?: string } | undefined)?.trade ?? undefined,
+          trade: quote.trade ?? getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade ?? undefined,
           priority: 'normal',
           photos: [],
           notes: [],
@@ -3165,7 +3165,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             //                   staleness guard, and then not written. The
             //                   customer told us when they wanted the work and
             //                   the answer was thrown away.
-            trade: quote.trade ?? (businessProfile as { trade?: string } | undefined)?.trade ?? null,
+            trade: quote.trade ?? getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade ?? null,
             quote_id: quoteId,
             scheduled_date: scheduledDate ?? null,
           };

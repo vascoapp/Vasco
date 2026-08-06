@@ -110,8 +110,15 @@ export default function WerkScreen() {
     // their own job to be told there is no form for this trade (learnings #109).
     // A solo contractor's jobs are their trade; the quote path infers the same
     // default. Absent and "applies to all" are different facts.
+    // getCurrentTrade() FIRST, businessProfile second — the same chain
+    // AppState uses when it refreshes the user context. The trade is carried on
+    // the authenticated user; businessProfile.trade is the fallback and is
+    // frequently unset. Reading only the profile silently stamped nothing,
+    // which walking the screen exposed: new jobs listed as "Lead" with no trade
+    // while seeded ones read "Plumbing · Scheduled".
+    const { getCurrentTrade } = await import('../../src/lib/currentUser');
     await addJob(newJobTitle.trim(), null, null, {
-      trade: (businessProfile as { trade?: string } | undefined)?.trade,
+      trade: getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade,
     });
     hapticSuccess();
     setNewJobTitle('');
@@ -242,6 +249,28 @@ export default function WerkScreen() {
 
         {/* ─── QUICK LINK CHIPS ─── */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+          {/* NEW JOB leads the row, and is not part of quickLinks because it
+              opens a modal rather than navigating.
+
+              Before this, `setShowNewJob(true)` had exactly ONE call site: the
+              "no active jobs" empty state. So the affordance existed only while
+              a contractor had no jobs and vanished the moment they had one —
+              leaving the Jobs tab with no way to create a job at all, since the
+              FAB opens New quote. Verified on device with 2 active jobs.
+
+              The empty state offering it proves direct creation is intended, so
+              this was an artifact of CTA placement rather than a quote-first
+              funnel. The FAB is deliberately left alone: quote-first is the
+              product thesis, and this adds the missing path without competing
+              with it. */}
+          <Pressable
+            style={({ pressed }) => [styles.chip, styles.chipPrimary, pressed && { opacity: 0.85 }]}
+            onPress={() => setShowNewJob(true)}
+            accessibilityRole="button"
+          >
+            <Ionicons name="add-outline" size={14} color={DK.colors.accent} />
+            <DKLabel style={styles.chipText}>{t('dk.actions.newJob', 'New job').toUpperCase()}</DKLabel>
+          </Pressable>
           {quickLinks.map((q) => (
             <Pressable
               key={q.route}
@@ -695,6 +724,7 @@ const styles = StyleSheet.create({
 
   // Quick chip row
   chipRow: { gap: 8, paddingRight: 20 },
+  chipPrimary: { borderColor: DK.colors.accent + '66' },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 9, paddingHorizontal: 14,
