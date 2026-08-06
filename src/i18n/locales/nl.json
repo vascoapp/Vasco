@@ -653,7 +653,8 @@
     "total": "Totaal",
     "retake": "Opnieuw",
     "vatRate": "btw ({{rate}}%)",
-    "unitPriceLabel": "Stukprijs voor {{item}}"
+    "unitPriceLabel": "Stukprijs voor {{item}}",
+    "pricebookBadge": "Uit uw prijzenboek"
   },
   "invoices": {
     "title": "Facturen",

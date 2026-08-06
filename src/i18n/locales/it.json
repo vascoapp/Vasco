@@ -669,7 +669,8 @@
     "total": "Totale",
     "retake": "Riscatta la foto",
     "vatRate": "IVA ({{rate}}%)",
-    "unitPriceLabel": "Prezzo unitario per {{item}}"
+    "unitPriceLabel": "Prezzo unitario per {{item}}",
+    "pricebookBadge": "Dal tuo listino prezzi"
   },
   "invoices": {
     "title": "Fatture",

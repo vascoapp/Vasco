@@ -19,12 +19,16 @@
 
 const mockCohort = jest.fn();
 const mockScanIndex = jest.fn();
+const mockPricebook = jest.fn();
 
 jest.mock('../pricingMoatService', () => ({
   applyCohortAdjustments: (...a: unknown[]) => mockCohort(...a),
 }));
 jest.mock('../invoiceScanService', () => ({
   getScannedUnitPriceIndex: () => mockScanIndex(),
+}));
+jest.mock('../pricebookService', () => ({
+  loadPricebook: () => mockPricebook(),
 }));
 
 import { repriceQuoteLinesFromMoat, CONFIDENCE_GATE } from '../quoteMoatRepricing';
@@ -52,6 +56,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   cohortPassthrough();
   mockScanIndex.mockResolvedValue(new Map());
+  mockPricebook.mockResolvedValue([]);
 });
 
 describe('degrading safely', () => {
@@ -176,5 +181,79 @@ describe('the learning loop', () => {
     expect(r.items[0].moatSource).toBe('cohort');
     expect(r.items[0].cohortContractors).toBe(7);
     expect(r.baselines.get('l1')).toEqual({ qty: 10, price: 4.2, source: 'cohort' });
+  });
+});
+
+describe('cold start — the contractor’s own pricebook', () => {
+  // The cohort needs 5 distinct contractors before it may say anything, and
+  // that threshold is a privacy guarantee, not a tuning knob. So the first
+  // contractors — and any line type that never reaches five — get nothing from
+  // it, ever. The pricebook is what makes quote #1 useful.
+  const pb = (over: Record<string, unknown> = {}) => ({
+    id: 'p1', name: 'Wandcontactdoos plaatsen', basePrice: 65, unit: 'stuk', isActive: true, ...over,
+  });
+
+  it('prices a line from the pricebook when the cohort is empty', async () => {
+    mockPricebook.mockResolvedValue([pb()]);
+    const r = await repriceQuoteLinesFromMoat(
+      [line({ description: 'Wandcontactdoos plaatsen', suggestedPrice: 40 })],
+      OPTS,
+    );
+    expect(r.items[0].suggestedPrice).toBe(65);
+    expect(r.items[0].moatSource).toBe('pricebook');
+    expect(r.summary.pricebookMatched).toBe(1);
+  });
+
+  it('beats the cohort — an explicit decision outranks other people’s median', async () => {
+    mockCohort.mockImplementation((lines: Array<Record<string, unknown>>) => ({
+      lines: lines.map((l) => ({ ...l, unitPrice: 50, adjustmentApplied: true, cohortContractors: 9 })),
+    }));
+    mockPricebook.mockResolvedValue([pb()]);
+    const r = await repriceQuoteLinesFromMoat(
+      [line({ description: 'Wandcontactdoos plaatsen', suggestedPrice: 40 })],
+      OPTS,
+    );
+    expect(r.items[0].suggestedPrice).toBe(65);
+    expect(r.items[0].moatSource).toBe('pricebook');
+  });
+
+  it('does NOT hijack an unrelated line', async () => {
+    // A wrong match replaces a price wholesale, so matching requires equality
+    // or full containment — never loose token overlap.
+    mockPricebook.mockResolvedValue([pb()]);
+    const r = await repriceQuoteLinesFromMoat(
+      [line({ description: 'Plafond schilderen', suggestedPrice: 40 })],
+      OPTS,
+    );
+    expect(r.items[0].moatSource).toBe('ai');
+    expect(r.items[0].suggestedPrice).toBe(40);
+  });
+
+  it('prefers the more specific pricebook entry', async () => {
+    mockPricebook.mockResolvedValue([pb(), pb({ id: 'p2', name: 'Wandcontactdoos plaatsen dubbel', basePrice: 95 })]);
+    const r = await repriceQuoteLinesFromMoat(
+      [line({ description: 'Wandcontactdoos plaatsen dubbel', suggestedPrice: 40 })],
+      OPTS,
+    );
+    expect(r.items[0].suggestedPrice).toBe(95);
+  });
+
+  it('ignores inactive and zero-priced entries', async () => {
+    mockPricebook.mockResolvedValue([
+      pb({ isActive: false }),
+      pb({ id: 'p3', name: 'Wandcontactdoos plaatsen', basePrice: 0 }),
+    ]);
+    const r = await repriceQuoteLinesFromMoat(
+      [line({ description: 'Wandcontactdoos plaatsen', suggestedPrice: 40 })],
+      OPTS,
+    );
+    expect(r.items[0].moatSource).toBe('ai');
+  });
+
+  it('still works when the contractor has no pricebook at all', async () => {
+    mockPricebook.mockRejectedValue(new Error('nope'));
+    const r = await repriceQuoteLinesFromMoat([line()], OPTS);
+    expect(r.items).toHaveLength(1);
+    expect(r.items[0].moatSource).toBe('ai');
   });
 });

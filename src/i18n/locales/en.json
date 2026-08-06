@@ -669,7 +669,8 @@
     "total": "Total",
     "retake": "Retake",
     "vatRate": "VAT ({{rate}}%)",
-    "unitPriceLabel": "Unit price for {{item}}"
+    "unitPriceLabel": "Unit price for {{item}}",
+    "pricebookBadge": "From your pricebook"
   },
   "invoices": {
     "title": "Invoices",

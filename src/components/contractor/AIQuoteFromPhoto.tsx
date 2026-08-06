@@ -51,7 +51,7 @@ interface DetectedItem {
   materialCostPerUnit?: number;
   laborCostPerUnit?: number;
   // Moat provenance (set by quoteMoatRepricing) — how this price was derived.
-  moatSource?: 'ai' | 'cohort' | 'scan';
+  moatSource?: 'ai' | 'cohort' | 'scan' | 'pricebook';
   cohortContractors?: number;
   scanSupplier?: string;
   needsReview?: boolean;
@@ -652,12 +652,23 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
             <View style={{ flex: 1 }}>
               <Text style={styles.itemDesc}>{item.description}</Text>
               <Text style={styles.itemCategory}>{item.category} · {t('aiQuote.confidenceLabel', '{{pct}}% confident', { pct: item.confidence })}</Text>
-              {(item.needsReview || item.moatSource === 'cohort' || item.moatSource === 'scan') && (
+              {(item.needsReview || item.moatSource === 'cohort' || item.moatSource === 'scan' || item.moatSource === 'pricebook') && (
                 <View style={styles.badgeRow}>
                   {item.needsReview && (
                     <View style={[styles.badge, styles.badgeReview]}>
                       <Ionicons name="alert-circle-outline" size={11} color={SemanticColors.feedbackWarning} />
                       <Text style={[styles.badgeText, { color: SemanticColors.feedbackWarning }]}>{t('aiQuote.verifyBadge', 'Verify')}</Text>
+                    </View>
+                  )}
+                  {/* Pricebook wins outright, so it gets the most definite
+                      wording: this is not an estimate, it is what they decided
+                      to charge. Distinguishing the sources matters — a
+                      contractor trusts "my pricebook" differently from "what
+                      other contractors charge". */}
+                  {item.moatSource === 'pricebook' && (
+                    <View style={[styles.badge, styles.badgeMoat]}>
+                      <Ionicons name="bookmark-outline" size={11} color={Palette.hermesOrange} />
+                      <Text style={[styles.badgeText, { color: Palette.hermesOrange }]}>{t('aiQuote.pricebookBadge', 'From your pricebook')}</Text>
                     </View>
                   )}
                   {item.moatSource === 'scan' && (

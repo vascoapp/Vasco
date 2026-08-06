@@ -669,7 +669,8 @@
     "total": "Gesamt",
     "retake": "Neu aufnehmen",
     "vatRate": "MwSt. ({{rate}}%)",
-    "unitPriceLabel": "Stückpreis für {{item}}"
+    "unitPriceLabel": "Stückpreis für {{item}}",
+    "pricebookBadge": "Aus Ihrer Preisliste"
   },
   "invoices": {
     "title": "Rechnungen",

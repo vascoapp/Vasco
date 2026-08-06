@@ -21,6 +21,7 @@
 // =============================================================================
 
 import { applyCohortAdjustments, type AdjustableLine } from './pricingMoatService';
+import { loadPricebook } from './pricebookService';
 import { getScannedUnitPriceIndex, type ScannedUnitPrice } from './invoiceScanService';
 import type { DeltaSource } from './reasonCodeService';
 
@@ -66,7 +67,7 @@ export interface MoatLineOutput extends MoatLineInput {
   // Pre-moat displayed values — seed reasonCodeService baselines from these.
   baselineQuantity: number;
   baselineUnitPrice: number;
-  moatSource: 'ai' | 'cohort' | 'scan';
+  moatSource: 'ai' | 'cohort' | 'scan' | 'pricebook';
   cohortContractors: number;
   scanSupplier?: string;
   needsReview: boolean;
@@ -78,6 +79,8 @@ export interface MoatRepriceSummary {
   totalLines: number;
   cohortAdjusted: number;
   scanRepriced: number;
+  /** Lines priced from the contractor's OWN pricebook — the cold-start layer. */
+  pricebookMatched: number;
   lowConfidence: number;
   cohortContractors: number;
 }
@@ -92,6 +95,60 @@ export interface MoatRepriceResult {
 function clampPct(pct: number, cap: number): number {
   if (!Number.isFinite(pct)) return 0;
   return Math.max(-cap, Math.min(cap, pct));
+}
+
+/**
+ * THE COLD START — what a contractor gets before any cohort exists.
+ *
+ * The cohort layer needs 5 DISTINCT contractors on a line type before it may
+ * say anything, and that threshold is a privacy guarantee rather than a tuning
+ * knob — it does not move. Which means the first contractors, and every line
+ * type that never reaches five, get no cohort help at all.
+ *
+ * Their own scanned supplier prices help, but only once they have scanned
+ * something. On quote #1 a brand-new contractor had nothing but the raw model
+ * guess with a currency symbol on it.
+ *
+ * Their PRICEBOOK is the missing answer, and it is better evidence than either
+ * of the other layers: a cohort median is what other people charge, a scan is
+ * what a supplier charged, but a pricebook entry is a decision THIS contractor
+ * made about their own price. So when it matches, it wins outright rather than
+ * nudging — this is not an adjustment, it is their number.
+ *
+ * Matching is deliberately strict. A wrong match replaces a price wholesale, so
+ * this requires the normalised names to be equal or one to fully contain the
+ * other — never loose token overlap, which is fine for grouping a cohort and far
+ * too weak to redefine what someone charges.
+ */
+function normaliseName(s: string): string {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function matchPricebookEntry<T extends { name: string; basePrice: number; unit?: string; isActive?: boolean }>(
+  description: string,
+  entries: T[],
+): T | null {
+  const q = normaliseName(description);
+  if (!q || q.length < 3) return null;
+  let best: T | null = null;
+  for (const e of entries) {
+    if (e.isActive === false) continue;
+    if (!(e.basePrice > 0)) continue;
+    const n = normaliseName(e.name);
+    if (!n || n.length < 3) continue;
+    const hit = n === q || n.includes(q) || q.includes(n);
+    if (!hit) continue;
+    // Prefer the longest matching entry name: "wandcontactdoos dubbel" should
+    // beat "wandcontactdoos" when the detected line mentions both.
+    if (!best || n.length > normaliseName(best.name).length) best = e;
+  }
+  return best;
 }
 
 // Secondary lookup maps built once per reprice — exact EAN / article-number
@@ -155,7 +212,7 @@ export async function repriceQuoteLinesFromMoat(
   if (!rawItems || rawItems.length === 0) {
     return {
       items: [],
-      summary: { totalLines: 0, cohortAdjusted: 0, scanRepriced: 0, lowConfidence: 0, cohortContractors: 0 },
+      summary: { totalLines: 0, cohortAdjusted: 0, scanRepriced: 0, pricebookMatched: 0, lowConfidence: 0, cohortContractors: 0 },
       baselines,
     };
   }
@@ -173,10 +230,15 @@ export async function repriceQuoteLinesFromMoat(
 
   // Layer 2 — own scanned material prices. EAN/article indexes for exact match.
   const scanIndex = await getScannedUnitPriceIndex().catch(() => new Map<string, ScannedUnitPrice>());
+  // Layer 0 — the contractor's own pricebook. Loaded even when the cohort is
+  // thick, because an explicit decision about your own price outranks a median
+  // of other people's. Never throws: a contractor with no pricebook is normal.
+  const pricebook = await loadPricebook().catch(() => []);
   const scanIds = buildIdIndexes(scanIndex);
 
   let cohortAdjusted = 0;
   let scanRepriced = 0;
+  let pricebookMatched = 0;
   let lowConfidence = 0;
   let maxContractors = 0;
 
@@ -226,6 +288,19 @@ export async function repriceQuoteLinesFromMoat(
       }
     }
 
+    // Own pricebook wins outright when it matches — see matchPricebookEntry.
+    // Applied last so it takes precedence over both cohort and scan: those say
+    // what others charge and what a supplier charged; this is what THIS
+    // contractor decided to charge.
+    if (pricebook.length > 0) {
+      const pb = matchPricebookEntry(raw.description, pricebook);
+      if (pb && Math.abs(pb.basePrice - price) >= 0.01) {
+        price = pb.basePrice;
+        moatSource = 'pricebook';
+        pricebookMatched += 1;
+      }
+    }
+
     const confidence = typeof raw.confidence === 'number' ? raw.confidence : 100;
     const needsReview = confidence < CONFIDENCE_GATE;
     if (needsReview) lowConfidence += 1;
@@ -259,6 +334,7 @@ export async function repriceQuoteLinesFromMoat(
       totalLines: rawItems.length,
       cohortAdjusted,
       scanRepriced,
+      pricebookMatched,
       lowConfidence,
       cohortContractors: maxContractors,
     },
