@@ -79,6 +79,13 @@ npx expo start --port 8083       # Start on alternate port
 npx tsc --noEmit | grep "^app/"  # Check for TS errors (app/ only)
 cd admin && npm run dev           # Start admin dashboard (localhost:3000/admin, PIN: 2026)
 cd admin && npx tsc --noEmit     # Check admin TS errors
+
+# Audits — run these BEFORE building on a field or mounting a component
+python3 scripts/audit-dead-fields.py   # optional fields nothing writes (#110)
+npm run audit:unmounted                # components no screen reaches; follows the
+                                       # data path into their services (#111)
+npm run check:photo -- <photo.jpg> plumbing NL   # is photo→quote any good?
+node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
 ```
 
 ## Architecture
