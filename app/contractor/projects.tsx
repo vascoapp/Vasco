@@ -177,8 +177,8 @@ export default function ProjectsScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
             {([
               { key: 'all' as FilterStatus, label: t('common.all', 'All'), count: projects.length },
-              { key: 'active' as FilterStatus, label: t('contractor.projects.statusActive', 'Active'), count: activeProjects.length },
-              { key: 'completed' as FilterStatus, label: t('contractor.projects.statusCompleted', 'Completed'), count: completedProjects.length },
+              { key: 'active' as FilterStatus, label: t('contractor.projects.filterOpen', 'Open'), count: activeProjects.length },
+              { key: 'completed' as FilterStatus, label: t('contractor.projects.filterDone', 'Finished'), count: completedProjects.length },
             ]).map(chip => (
               <Pressable
                 key={chip.key}
@@ -208,13 +208,13 @@ export default function ProjectsScreen() {
           <>
             {(statusFilter === 'all' || statusFilter === 'active') && activeProjects.length > 0 && (
               <FadeIn delay={0}>
-                <Text style={styles.sectionTitle}>{t('contractor.projects.statusActive', 'Active')} ({activeProjects.length})</Text>
+                <Text style={styles.sectionTitle}>{t('contractor.projects.filterOpen', 'Open')} ({activeProjects.length})</Text>
                 {activeProjects.map(renderProject)}
               </FadeIn>
             )}
             {(statusFilter === 'all' || statusFilter === 'completed') && completedProjects.length > 0 && (
               <FadeIn delay={100}>
-                <Text style={styles.sectionTitle}>{t('contractor.projects.statusCompleted', 'Completed')} ({completedProjects.length})</Text>
+                <Text style={styles.sectionTitle}>{t('contractor.projects.filterDone', 'Finished')} ({completedProjects.length})</Text>
                 {completedProjects.map(renderProject)}
               </FadeIn>
             )}

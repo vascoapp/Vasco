@@ -368,7 +368,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     {
       id: 'proj-seed-2', title: 'Keuken verbouwing — Bakkerij Smit', customerId: 'cust-003', customerName: 'Bakkerij Smit',
       status: 'planning', totalBudget: 18000, totalQuoted: 16500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-4'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0, changeOrders: [],
+      // No jobs yet — this project is in PLANNING. It used to list 'j-seed-4',
+      // which is "Lekkage reparatie" (a €280 repair for the same customer,
+      // completed 12 days ago, i.e. 9 days BEFORE this project was created).
+      // A finished, unrelated job cannot belong to a project that did not exist
+      // yet, and because progress is derived as completed-jobs / total-jobs it
+      // drove the card to "Voortgang 100%" beside a "Planning" badge, inside a
+      // section headed "Actief", while the Afgerond filter read 0.
+      jobIds: [], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0, changeOrders: [],
       targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 45)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 3).toISOString(), updatedAt: new Date().toISOString(),
     },

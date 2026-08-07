@@ -2340,7 +2340,9 @@
       "createProject": "Crear proyecto",
       "projectNamePlaceholder": "Nombre del proyecto",
       "customerNamePlaceholder": "Nombre del cliente",
-      "budgetPlaceholder": "Importe del presupuesto"
+      "budgetPlaceholder": "Importe del presupuesto",
+      "filterOpen": "En curso",
+      "filterDone": "Finalizados"
     }
   },
   "legal": {

@@ -2324,7 +2324,9 @@
       "createProject": "Project aanmaken",
       "projectNamePlaceholder": "Projectnaam",
       "customerNamePlaceholder": "Klantnaam",
-      "budgetPlaceholder": "Budgetbedrag"
+      "budgetPlaceholder": "Budgetbedrag",
+      "filterOpen": "Lopend",
+      "filterDone": "Afgerond"
     }
   },
   "legal": {
