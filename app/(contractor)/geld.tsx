@@ -38,13 +38,22 @@ import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 
-const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function getLastNMonthLabels(n: number): string[] {
+/**
+ * Cashflow chart axis. Was a hardcoded English array, so the Dutch Geld tab
+ * plotted "Mar Apr May" — and "May"/"Mar"/"Oct" are not Dutch at all.
+ * Intl gives the right abbreviation per locale for free; cashFlowService.ts
+ * already did it this way.
+ */
+function getLastNMonthLabels(n: number, locale: string): string[] {
   const now = new Date();
   const labels: string[] = [];
+  const fmt = (() => {
+    try { return new Intl.DateTimeFormat(locale, { month: 'short' }); }
+    catch { return new Intl.DateTimeFormat('en', { month: 'short' }); }
+  })();
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    labels.push(MONTH_LABELS[d.getMonth()]);
+    labels.push(fmt.format(d));
   }
   return labels;
 }
@@ -52,7 +61,7 @@ function getLastNMonthLabels(n: number): string[] {
 type SortMode = 'value-desc' | 'date-desc' | 'status';
 
 export default function GeldScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   // Invoice/quote status was concatenated raw ('overdue'/'paid'/'draft') into
   // the list subtitle — localise it (the facturen drill-down already did).
@@ -146,7 +155,7 @@ export default function GeldScreen() {
   }, [quotes, quoteStatusFilter, quoteSort, t]);
 
   const sparkData = fin.monthlyInflows;
-  const sparkMonthLabels = useMemo(() => getLastNMonthLabels(sparkData.length || 6), [sparkData.length]);
+  const sparkMonthLabels = useMemo(() => getLastNMonthLabels(sparkData.length || 6, i18n.language), [sparkData.length, i18n.language]);
   const sparkMin = sparkData.length ? Math.min(...sparkData) : 0;
   const sparkMax = sparkData.length ? Math.max(...sparkData) : 0;
 
@@ -564,13 +573,13 @@ export default function GeldScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('dk.money.projectedMonth', 'Projected next month')}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
               <View style={[s.projIcon, { backgroundColor: (fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger) + '22' }]}>
                 <Ionicons name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'} size={16} color={fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger} />
               </View>
-              <DKLabel style={s.projLabel}>{t('dk.money.projectedMonth', 'Projected next month')}</DKLabel>
+              <DKLabel style={[s.projLabel, { flexShrink: 1 }]} numberOfLines={1}>{t('dk.money.projectedMonth', 'Projected next month')}</DKLabel>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
               <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger }]}>
                 {formatCurrency(fin.projectedCashflow)}
               </Text>
@@ -585,9 +594,9 @@ export default function GeldScreen() {
               accessibilityRole="button"
               accessibilityLabel={t('dk.money.avgDso', 'Avg payment term')}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                 <View style={[s.dsoDot, { backgroundColor: dsoStatus.color }]} />
-                <DKLabel style={s.dsoLabel}>{t('dk.money.avgDso', 'Avg payment term')}</DKLabel>
+                <DKLabel style={[s.dsoLabel, { flexShrink: 1 }]} numberOfLines={1}>{t('dk.money.avgDso', 'Avg payment term')}</DKLabel>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={[s.dsoValue, { color: dsoStatus.color }]}>{fin.avgDaysToPayment}{t('dk.status.daysShort', 'D')}</Text>
@@ -714,14 +723,14 @@ export default function GeldScreen() {
         </Pressable>
       </Modal>
 
-      {/* ─── FAB ─── */}
-      <Pressable
-        style={({ pressed }) => [s.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
-        onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
-      >
-        <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-      </Pressable>
+      {/* FAB REMOVED (2026-08-07 screen walk).
+          It pushed to `/contractor/tiered-quote` — the SAME route as the
+          full-width "New quote" CTA a few rows up, so it added no capability.
+          What it did add was a 56pt circle parked at right:20/bottom:110,
+          directly over the right-hand edge of the ACHTERSTALLIG rows: the
+          "Herinner" button on any overdue invoice scrolled to that height was
+          covered and could not be tapped. A duplicate action is not worth
+          blocking a real one. Same call as recurring/index.tsx's twin CTAs. */}
     </View>
   );
 }
@@ -1020,11 +1029,4 @@ const s = StyleSheet.create({
   fullEmptyBtnText: { fontFamily: DK.type.display900, fontSize: 13, color: '#FFFFFF', letterSpacing: 1.4 },
 
   // FAB
-  fab: {
-    position: 'absolute', right: 20, bottom: 110,
-    width: 56, height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden',
-    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 18, elevation: 10,
-  },
 });

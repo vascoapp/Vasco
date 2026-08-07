@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
+import i18n from '../i18n/i18n';
 import { useAppState } from '../state/AppState';
 import type { Invoice, Quote } from '../domain/documents';
 import { MS_PER_DAY } from '../utils/timeConstants';
@@ -82,7 +83,17 @@ export interface FinancialSummary {
 // HELPERS
 // =============================================================================
 
-const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Locale-aware, not a hardcoded English array: these labels go straight onto
+// the Geld cashflow chart, where "May"/"Mar"/"Oct" are simply not Dutch.
+function monthShort(monthIndex0: number, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale, { month: 'short' })
+      .format(new Date(2000, monthIndex0, 1));
+  } catch {
+    return new Intl.DateTimeFormat('en', { month: 'short' })
+      .format(new Date(2000, monthIndex0, 1));
+  }
+}
 
 function getMonthKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -90,7 +101,8 @@ function getMonthKey(date: Date): string {
 
 function getMonthLabel(key: string): string {
   const m = parseInt(key.split('-')[1], 10);
-  return MONTH_LABELS[m - 1] || key;
+  if (!Number.isFinite(m) || m < 1 || m > 12) return key;
+  return monthShort(m - 1, i18n.language);
 }
 
 function parseDate(dateStr?: string): Date | null {
