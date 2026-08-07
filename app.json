@@ -21,6 +21,11 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "icon": {
+        "light": "./assets/icon-ios-light.png",
+        "dark": "./assets/icon-ios-dark.png",
+        "tinted": "./assets/icon-ios-tinted.png"
+      },
       "bundleIdentifier": "com.vascobuild.app",
       "scheme": "vasco",
       "buildNumber": "45",
