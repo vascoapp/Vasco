@@ -1960,6 +1960,7 @@
     "orderMaterials": "Pedir materiales",
     "preventsDelay": "Previene retrasos",
     "weeklyBatch": "Lote semanal: {{count}} trabajos",
+    "plusMoreLikeThis": "{{title}} · +{{count}} de este tipo",
     "totalRevenue": "ingresos totales",
     "createAll": "Crear todo",
     "handoverPackage": "Entrega: {{title}}",

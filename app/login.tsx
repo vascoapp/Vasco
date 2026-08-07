@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -55,7 +55,10 @@ export default function LoginScreen() {
   // R188: prefill from `?email=` so /signup → "Sign in instead" lands on this
   // screen with the email already typed. Saves users a re-entry on the most
   // common confused-signup path.
-  const searchParams = useLocalSearchParams<{ email?: string | string[] }>();
+  const searchParams = useLocalSearchParams<{
+    email?: string | string[];
+    demo?: string | string[];
+  }>();
   const initialEmail = (() => {
     const raw = Array.isArray(searchParams.email) ? searchParams.email[0] : searchParams.email;
     return typeof raw === 'string' ? raw : '';
@@ -186,6 +189,30 @@ export default function LoginScreen() {
       setError(t('auth.networkError', 'Cannot reach server. Check your internet and try again.'));
     }
   };
+
+  // DEV/DEMO ONLY — `vasco:///login?demo=contractor@vasco.dev` signs the demo
+  // account in without a tap, so the whole authed surface can be walked with
+  // `simctl openurl` alone. The login hero's FadeIn corrupts the XCUITest
+  // accessibility snapshot (Maestro taps 500 on it) and host-side clicking is
+  // routinely blocked by whatever floating window happens to own the point, so
+  // "log in" was the one step of a screen walk that could not be automated.
+  //
+  // Not a production auth bypass: it is inert unless DEMO_MODE is on, and it
+  // goes through the SAME `login()` path as the visible demo chips — which
+  // itself returns `demo_disabled` in production. The email must also match a
+  // DEMO_ACCOUNTS entry, so this cannot be pointed at a real address.
+  const autoLoginFired = useRef(false);
+  const demoParam = Array.isArray(searchParams.demo) ? searchParams.demo[0] : searchParams.demo;
+  useEffect(() => {
+    if (!DEMO_MODE || autoLoginFired.current) return;
+    if (typeof demoParam !== 'string' || !demoParam) return;
+    if (!DEMO_ACCOUNTS.some((a) => a.email === demoParam)) return;
+    autoLoginFired.current = true;
+    handleDemoLogin(demoParam);
+    // handleDemoLogin is recreated each render; the ref guard is what makes
+    // this fire exactly once, so it is deliberately not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoParam]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>

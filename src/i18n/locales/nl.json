@@ -1944,6 +1944,7 @@
     "orderMaterials": "Materialen bestellen",
     "preventsDelay": "Voorkomt vertraging",
     "weeklyBatch": "Wekelijkse facturen: {{count}} klussen",
+    "plusMoreLikeThis": "{{title}} · +{{count}} van dit type",
     "totalRevenue": "totale omzet",
     "createAll": "Alles aanmaken",
     "handoverPackage": "Oplevering: {{title}}",

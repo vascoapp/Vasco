@@ -88,6 +88,14 @@ export interface QueueItem {
   mergedKeys?: string[];
   /** How many similar events rolled into this item (e.g. "3 overdue invoices"). */
   count?: number;
+  /**
+   * The title as its producer wrote it, before any "+N more" suffix. Kept so a
+   * second merge recomposes from the original instead of re-suffixing an
+   * already-suffixed string. Not parsed back out of `title`: that suffix is
+   * localised, so a regex would only strip it in whichever language happened to
+   * be active when it was written.
+   */
+  titleBase?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -308,6 +316,7 @@ const SINGLE_ACTION_PER_ENTITY_TYPES: readonly QueueItemType[] = [
 ];
 
 export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'createdAt'>): Promise<string> {
+  const t = i18n.t.bind(i18n);
   const id = `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const full: QueueItem = {
     ...item,
@@ -378,7 +387,26 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
       // Remember what got folded in, so this entity is recognised as already
       // queued on the next run instead of merging (and counting) a second time.
       sibling.mergedKeys = [...(sibling.mergedKeys ?? []), item.entityKey!];
-      sibling.title = sibling.count > 1 ? `${sibling.count}× ${stripCount(sibling.title)}` : sibling.title;
+      // A count PREFIX multiplies whatever the title says, and these titles are
+      // entity-specific — so folding the Bouwgroep Atlas alert into the Hotel NH
+      // one produced "2× Factuur Hotel NH 14d te laat" above a body still
+      // reading "€ 350 openstaand". That claims two Hotel NH invoices at 14 days
+      // and prices the pair at one invoice's amount; the real exposure was €800
+      // across two customers, which the Geld header showed correctly on the same
+      // screen.
+      //
+      // The card can only speak for the entity it actually describes, so the
+      // count becomes a separate "+N more like this" note rather than a
+      // multiplier on that description. Recomposed from `titleBase` so repeat
+      // merges don't stack suffixes.
+      sibling.titleBase = sibling.titleBase ?? stripCount(sibling.title);
+      sibling.title = sibling.count > 1
+        ? t('automation.plusMoreLikeThis', {
+            defaultValue: '{{title}} · +{{count}} more like this',
+            title: sibling.titleBase,
+            count: sibling.count - 1,
+          })
+        : sibling.titleBase;
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(existing));
       notifyQueueChanged();
       return sibling.id;

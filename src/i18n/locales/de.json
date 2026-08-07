@@ -1960,6 +1960,7 @@
     "orderMaterials": "Materialien bestellen",
     "preventsDelay": "Verhindert Verzögerung",
     "weeklyBatch": "Wöchentliche Rechnungen: {{count}} Aufträge",
+    "plusMoreLikeThis": "{{title}} · +{{count}} dieser Art",
     "totalRevenue": "Gesamtumsatz",
     "createAll": "Alle erstellen",
     "handoverPackage": "Übergabe: {{title}}",

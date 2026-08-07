@@ -256,7 +256,28 @@ describe('addToQueue sibling merge scoping', () => {
     const q = await getQueue();
     expect(q).toHaveLength(1);
     expect(q[0].count).toBe(2);
-    expect(q[0].title).toMatch(/^2× /);
+    // The count must NOT read as a multiplier on the surviving title. That
+    // produced "2× Factuur Hotel NH 14d te laat" — two invoices for one
+    // customer at one age — when the second was a different customer at a
+    // different age. The card still describes entity A, so it keeps A's title
+    // and reports the others as a separate "+N of this kind".
+    expect(q[0].title).not.toMatch(/^\d+×/);
+    expect(q[0].title).toContain('Reminder A');
+    expect(q[0].title).toMatch(/\+1/);
+    expect(q[0].titleBase).toBe('Reminder A');
+  });
+
+  test('a third sibling re-composes the suffix instead of stacking it', async () => {
+    await addToQueue({ ...base, title: 'Reminder A', entityKey: 'eve-appt-1', sourceGeneratorId: 'eve-agent' });
+    await addToQueue({ ...base, title: 'Reminder B', entityKey: 'eve-appt-2', sourceGeneratorId: 'eve-agent' });
+    await addToQueue({ ...base, title: 'Reminder C', entityKey: 'eve-appt-3', sourceGeneratorId: 'eve-agent' });
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].count).toBe(3);
+    expect(q[0].titleBase).toBe('Reminder A');
+    // Exactly one suffix, reporting 2 others — not "+1" appended twice.
+    expect(q[0].title).toMatch(/\+2/);
+    expect(q[0].title.match(/\+\d+/g)).toHaveLength(1);
   });
 
   test('same entityKey twice → skipped entirely, no count bump', async () => {

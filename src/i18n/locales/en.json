@@ -1960,6 +1960,7 @@
     "orderMaterials": "Order materials",
     "preventsDelay": "Prevents delay",
     "weeklyBatch": "Weekly invoice batch: {{count}} jobs",
+    "plusMoreLikeThis": "{{title}} · +{{count}} more like this",
     "totalRevenue": "total revenue",
     "createAll": "Create all",
     "handoverPackage": "Handover: {{title}}",
