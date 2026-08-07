@@ -15,6 +15,10 @@ import { calibrateModels } from './mlModels';
 import { validateWorkflowState } from '../services/workflowValidatorService';
 import { getSeasonalContext } from './tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import {
+  daysOverdue as invoiceDaysOverdue,
+  daysUntilDue as invoiceDaysUntilDue,
+} from '../utils/invoiceDue';
 import { loadOnboardingPreferences } from '../services/onboardingPreferencesService';
 import { loadSubscription, getTierLimits } from '../services/subscriptionService';
 import i18n from '../i18n/i18n';
@@ -71,7 +75,10 @@ function auditInvoices(invoices: any[]): AuditFinding[] {
     if (inv.status === 'sent' || inv.status === 'overdue') {
       const dueDate = inv.dueDate ? new Date(inv.dueDate) : null;
       if (dueDate && dueDate < now) {
-        const daysOverdue = Math.ceil((now.getTime() - dueDate.getTime()) / MS_PER_DAY);
+        // Calendar days via the shared helper — Math.ceil over the raw gap
+        // reported 15 for a 14-day-old invoice for most of the day, and this
+        // number drives the severity thresholds below.
+        const daysOverdue = invoiceDaysOverdue(inv as any, now) ?? 0;
         findings.push({
           id: `audit-inv-${inv.id}`,
           type: 'payment_overdue',
@@ -574,7 +581,7 @@ export async function generateMorningBriefing(context: {
     if (inv.status !== 'sent') continue;
     const dueDate = inv.dueDate ? new Date(inv.dueDate) : null;
     if (!dueDate) continue;
-    const daysUntilDue = Math.ceil((dueDate.getTime() - now2.getTime()) / MS_PER_DAY);
+    const daysUntilDue = invoiceDaysUntilDue(inv as any, now2) ?? 0;
     if (daysUntilDue > 0 && daysUntilDue <= 3) {
       proactiveAlerts.push(`Invoice ${inv.id} (${formatMoney((inv.amount ?? 0))}) due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}`);
     }

@@ -72,3 +72,27 @@ describe('daysOverdue never reports negative lateness', () => {
     expect(daysOverdue({ dueDate: '2026-09-01' }, new Date('2026-08-07T09:00:00'))).toBe(0);
   });
 });
+
+describe('the age of an invoice does not change during the day', () => {
+  // The bug this pins: `dueDate` is a date-only string, so `new Date(...)`
+  // parses it as UTC midnight. Rounding the raw millisecond gap therefore
+  // crosses a boundary partway through the day — Math.round tipped a 14-day-old
+  // invoice to 15 once local time passed ~12:00 UTC. On the sim, Vandaag said
+  // "15d te laat" while Geld and the aging table said 14, for one invoice.
+  const inv = { dueDate: '2026-07-24' };
+
+  it.each([
+    '2026-08-07T00:01:00',
+    '2026-08-07T08:00:00',
+    '2026-08-07T12:00:00',
+    '2026-08-07T14:30:00',
+    '2026-08-07T23:59:00',
+  ])('reads 14 days overdue at %s', (when) => {
+    expect(daysOverdue(inv, new Date(when))).toBe(14);
+  });
+
+  it('rolls over exactly once, at midnight', () => {
+    expect(daysOverdue(inv, new Date('2026-08-07T23:59:59'))).toBe(14);
+    expect(daysOverdue(inv, new Date('2026-08-08T00:00:01'))).toBe(15);
+  });
+});

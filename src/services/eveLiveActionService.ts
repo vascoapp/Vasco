@@ -19,6 +19,7 @@
 import i18n from '../i18n/i18n';
 import type { EveAction } from './eveAgentService';
 import { formatMoney2, formatMoney } from '../i18n/formatting';
+import { daysOverdue } from '../utils/invoiceDue';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -143,10 +144,12 @@ export function buildLiveActions(input: Input): EveAction[] {
 
   // ── Auditor: overdue invoices → compliance_gap + reminder draft ──
   for (const inv of (input.invoices ?? []).filter((i) => i.status === 'overdue').slice(0, 3)) {
-    const days = Math.max(
-      0,
-      Math.round((now.getTime() - new Date((inv as any).dueDate ?? now).getTime()) / MS_PER_DAY),
-    );
+    // Was Math.round over the raw millisecond gap. `dueDate` is a date-only
+    // string, so it parses to UTC midnight: past ~12:00 UTC the gap for a
+    // 14-day-old invoice is 14.5 days and rounded to 15, while Geld and the
+    // aging table — which count calendar days — still said 14. Same invoice,
+    // same screen session, two different ages depending on the time of day.
+    const days = daysOverdue(inv as any, now) ?? 0;
     const amount = inv.amount ?? 0;
     // Escalation tone by age — each is its own key so translators can pick the
     // register their market expects for a payment chase.

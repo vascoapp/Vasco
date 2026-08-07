@@ -8,6 +8,7 @@ import { recordMetricSnapshot, getTrend } from '../learningStorage';
 import { isAboveThreshold, detectAnomaly, getSeasonalMultiplier } from '../adaptiveThresholds';
 import { logPrediction } from '../calibration';
 import { gtMoney } from '../generatorTranslations';
+import { daysOverdue } from '../../utils/invoiceDue';
 // gtv() === gt() for any key without a phrasing spec, so this is a strict
 // superset: spec'd keys gain LLM wording, everything else is byte-identical.
 // Whole-file rather than per-key on purpose — learnings #466: partial adoption
@@ -31,11 +32,13 @@ export function useOverdueInvoiceInsight(ctx: GeneratorContext): ScoredInsight |
   if (overdueInvoices.length === 0) return null;
 
   const totalOverdue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
-  const avgDaysOverdue = overdueInvoices.reduce((sum, i) => {
-    const dueDate = new Date(i.dueDate);
-    const days = Math.floor((ctx.now.getTime() - dueDate.getTime()) / MS_PER_DAY);
-    return sum + Math.max(0, days);
-  }, 0) / overdueInvoices.length;
+  // Shared helper rather than a third local rounding of the same question:
+  // this used Math.floor, eveLiveActionService used Math.round and the audit
+  // scheduler Math.ceil, so one invoice could be 14, 15 and 15 days overdue
+  // simultaneously depending on which surface asked.
+  const avgDaysOverdue = overdueInvoices.reduce(
+    (sum, i) => sum + (daysOverdue(i as any, ctx.now) ?? 0), 0,
+  ) / overdueInvoices.length;
 
   // Record metric snapshot for trend tracking
   recordMetricSnapshot('overdueAmount', totalOverdue);
