@@ -3209,7 +3209,7 @@
     "stockOk": "Stock is in order",
     "noReorders": "No reorders needed right now.",
     "stockoutsAvoided": "Stockouts\navoided",
-    "totalSaved": "Total\nsaved",
+    "totalSaved": "Saved on\npurchasing",
     "forecastAccuracy": "Forecast\naccuracy",
     "stock": "Stock",
     "lowCount": "{{count}} low",

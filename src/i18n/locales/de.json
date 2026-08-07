@@ -3209,7 +3209,7 @@
     "stockOk": "Bestand ist in Ordnung",
     "noReorders": "Derzeit sind keine Nachbestellungen nötig.",
     "stockoutsAvoided": "Vermiedene\nFehlbestände",
-    "totalSaved": "Insgesamt\ngespart",
+    "totalSaved": "Gespart beim\nEinkauf",
     "forecastAccuracy": "Prognose-\ngenauigkeit",
     "stock": "Bestand",
     "lowCount": "{{count}} niedrig",

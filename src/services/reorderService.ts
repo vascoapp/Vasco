@@ -107,7 +107,13 @@ export interface ReorderStatistics {
   ordersPlaced: number;
   totalSavings: number;
   stockoutsAvoided: number;
-  accuracyRate: number;
+  /**
+   * null = never measured, which is NOT the same as 0%.
+   * Rendering 0 told the contractor our forecasts are 0% accurate; the truth is
+   * that prediction-vs-actual history does not exist yet. Same treatment as the
+   * savings-screen trend figures: UNKNOWN is a value, and the UI omits it.
+   */
+  accuracyRate: number | null;
 }
 
 // ============================================
@@ -638,7 +644,14 @@ class ReorderService {
     //
     // Derive what the service actually knows; demo keeps the showcase values
     // so the flow still demonstrates well.
-    if (DEMO_MODE) {
+    const all = Array.from(this.suggestions.values());
+    // Demo showcase values are kept, but ONLY once there is demo stock to
+    // justify them. With an empty suggestion list they rendered
+    // "12 stockouts avoided · EUR 1.245 saved · 87% accurate" directly above
+    // "Nog geen voorraad bijgehouden" and beside a real "EUR 2 saved this
+    // month" — a demo that visibly contradicts itself reads as a broken app,
+    // which is the opposite of what a showcase is for.
+    if (DEMO_MODE && all.length > 0) {
       return {
         suggestionsGenerated: 156,
         ordersPlaced: 89,
@@ -647,7 +660,6 @@ class ReorderService {
         accuracyRate: 87,
       };
     }
-    const all = Array.from(this.suggestions.values());
     const ordered = all.filter((s) => s.status === 'ordered');
     const savingsOf = (s: ReorderSuggestion) =>
       (s.bulkDiscount?.savings ?? 0) + (s.priceOptimization?.savings ?? 0);
@@ -660,8 +672,9 @@ class ReorderService {
       // attest to.
       stockoutsAvoided: ordered.filter((s) => s.priority === 'critical').length,
       // Forecast accuracy needs prediction-vs-actual history the service does
-      // not keep. 0 until that exists, rather than inventing a rate.
-      accuracyRate: 0,
+      // not keep. null (= unknown) until that exists — NOT 0, which reads as
+      // "our forecasts are never right".
+      accuracyRate: null,
     };
   }
 

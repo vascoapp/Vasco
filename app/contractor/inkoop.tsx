@@ -294,15 +294,21 @@ export default function InkoopScreen() {
               <Ionicons name="wallet" size={18} color={Palette.hermesOrange} />
             </View>
             <Text style={styles.heroValue}>{formatMoney(statistics.totalSavings)}</Text>
-            <Text style={styles.heroLabel}>{t('inkoop.totalSaved', 'Total\nsaved')}</Text>
+            <Text style={styles.heroLabel}>{t('inkoop.totalSaved', 'Saved on\npurchasing')}</Text>
           </View>
-          <View style={styles.heroCard}>
-            <View style={[styles.heroIconWrap, { backgroundColor: '#3B82F612' }]}>
-              <Ionicons name="analytics" size={18} color="#3B82F6" />
+          {/* Omitted, not zeroed. accuracyRate is null until prediction-vs-
+              actual history exists; "0% forecast accuracy" claims our
+              forecasts are never right, which is a different and worse
+              statement than "not measured yet". */}
+          {statistics.accuracyRate !== null && (
+            <View style={styles.heroCard}>
+              <View style={[styles.heroIconWrap, { backgroundColor: '#3B82F612' }]}>
+                <Ionicons name="analytics" size={18} color="#3B82F6" />
+              </View>
+              <Text style={styles.heroValue}>{statistics.accuracyRate}%</Text>
+              <Text style={styles.heroLabel}>{t('inkoop.forecastAccuracy', 'Forecast\naccuracy')}</Text>
             </View>
-            <Text style={styles.heroValue}>{statistics.accuracyRate}%</Text>
-            <Text style={styles.heroLabel}>{t('inkoop.forecastAccuracy', 'Forecast\naccuracy')}</Text>
-          </View>
+          )}
         </View>
 
         {/* Cohort intelligence — surfaces drift + price drops + ML forecasts, hidden when no signal */}
