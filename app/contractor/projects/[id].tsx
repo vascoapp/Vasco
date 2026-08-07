@@ -150,7 +150,19 @@ export default function ProjectDetailScreen() {
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
-                  <Text style={[styles.pnlValue, { color: Palette.hermesOrange }]}>{pnl.grossMargin}%</Text>
+                  {/* Margin is grossProfit/revenue, and getProjectPnL returns 0
+                      when revenue is 0 — so this printed a flat orange "0%"
+                      beside "Winst € -201", which reads as break-even on a
+                      project that is €201 down. With nothing invoiced there is
+                      no margin to report, so show a dash. The projects LIST
+                      already guards exactly this way; the detail did not. */}
+                  <Text style={[styles.pnlValue, {
+                    color: pnl.revenue <= 0
+                      ? SemanticColors.textSecondary
+                      : pnl.grossMargin > 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError,
+                  }]}>
+                    {pnl.revenue > 0 ? `${pnl.grossMargin}%` : '—'}
+                  </Text>
                   <Text style={styles.pnlLabel}>{t('project.margin')}</Text>
                 </View>
               </View>
