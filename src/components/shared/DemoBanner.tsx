@@ -30,14 +30,32 @@ const TOP_INSET =
     ? StatusBar.currentHeight ?? 24
     : initialWindowMetrics?.insets.top ?? 47;
 
+// 11pt line + 3pt padding top and bottom.
+const BANNER_HEIGHT = 17;
+
+// Sit in the LAST band of the inset rather than below it. The inset region is
+// blank on every screen (that is what makes it safe area), so the banner costs
+// nothing there — whereas hanging below it clipped the first line of content.
+// Not above it either: that is where the Dynamic Island is, and the text would
+// disappear behind the pill.
+const BANNER_TOP = Math.max(TOP_INSET - BANNER_HEIGHT, 0);
+
 export function DemoBanner() {
   if (!DEMO_MODE) return null;
 
   return (
-    // The outer fill matters as much as the padding: the banner tint is only
-    // ~9% opaque, and the window background behind the status bar is white, so
-    // an unfilled strip rendered as a bright cream band above a near-black app.
-    <View style={styles.inset}>
+    // OVERLAY, not a layout row. As a flex child this banner occupied
+    // TOP_INSET + its own height at the top of every screen, and the screen
+    // below it then applied the top inset AGAIN — so demo mode rendered with a
+    // tall black band that production never has. That is worse than ugly: it
+    // means every screen I walk on the simulator is laid out differently from
+    // the one a real user sees. Absolute keeps demo and production pixel-identical.
+    //
+    // pointerEvents none so it never eats a tap meant for the header beneath it.
+    <View style={styles.inset} pointerEvents="none">
+      {/* The fill matters as much as the padding: the banner tint is only ~9%
+          opaque, and the window background behind the status bar is white, so
+          an unfilled strip rendered as a bright cream band above a near-black app. */}
       <View style={styles.banner}>
         <Text style={styles.text}>Demo Mode</Text>
       </View>
@@ -47,7 +65,11 @@ export function DemoBanner() {
 
 const styles = StyleSheet.create({
   inset: {
-    paddingTop: TOP_INSET,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: BANNER_TOP,
     backgroundColor: DK.colors.bg,
     zIndex: 999,
   },

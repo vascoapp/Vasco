@@ -63,7 +63,7 @@ export default function JobQualityScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView edges={['bottom']} style={styles.root}>
       {/* DKScreenHeader/DKLabel uppercase their own text, so these strings
           stay natural-case — that also gives VoiceOver a readable label. */}
       <DKScreenHeader title={t('jobQuality.title', 'Job quality')} />

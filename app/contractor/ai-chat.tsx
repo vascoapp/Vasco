@@ -37,6 +37,8 @@ import { withTimeout } from '../../src/utils/withTimeout';
 import { SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
+import { currencySymbol } from '../../src/i18n/formatting';
+import { useAuth } from '../../src/context/AuthContext';
 
 interface ChatMessage {
   id: string;
@@ -47,17 +49,30 @@ interface ChatMessage {
   routeOnTap?: { path: string; label: string };
 }
 
-const SUGGESTIONS = [
-  'How was my week?',
-  'Show overdue invoices',
-  'Invoice John for $500',
-  'Status of active jobs',
-];
-
 export default function AiChatScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { customers, invoices, jobs, quotes } = useAppState();
+  const { user } = useAuth();
+
+  // Built INSIDE the component, not at module scope. As a top-level const this
+  // list was evaluated at import time — before a language existed — so it
+  // rendered English to every locale no matter what t() was wired to
+  // (learnings #86). It also hardcoded "$500" on a EU-first app and named an
+  // English "John"; the example now uses a real customer where there is one,
+  // and the contractor's own currency symbol.
+  const suggestions = useMemo(() => {
+    const sym = currencySymbol(user?.country as never);
+    const example = customers?.[0]?.name;
+    return [
+      t('aiChat.suggestWeek', 'How was my week?'),
+      t('aiChat.suggestOverdue', 'Show overdue invoices'),
+      example
+        ? t('aiChat.suggestInvoiceNamed', 'Invoice {{customer}} for {{sym}}500', { customer: example, sym })
+        : t('aiChat.suggestInvoice', 'Create an invoice for {{sym}}500', { sym }),
+      t('aiChat.suggestJobs', 'Status of active jobs'),
+    ];
+  }, [t, customers, user?.country]);
 
   // R118: welcome greeting now i18n-wired. Lazy initial state captures
   // the t() value at first render — chat history won't retroactively
@@ -223,14 +238,14 @@ export default function AiChatScreen() {
           ))}
           {sending ? (
             <View style={[styles.bubble, styles.bubbleAssistant]}>
-              <Text style={[styles.bubbleText, { color: SemanticColors.textTertiary }]}>Thinking…</Text>
+              <Text style={[styles.bubbleText, { color: SemanticColors.textTertiary }]}>{t('aiChat.thinking', 'Thinking…')}</Text>
             </View>
           ) : null}
         </ScrollView>
 
         {messages.length === 1 ? (
           <View style={styles.suggestions}>
-            {SUGGESTIONS.map((s) => (
+            {suggestions.map((s) => (
               <Pressable key={s} style={styles.suggestionChip} onPress={() => handleSend(s)}>
                 <Text style={styles.suggestionText}>{s}</Text>
               </Pressable>

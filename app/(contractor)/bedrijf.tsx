@@ -153,8 +153,15 @@ export default function BedrijfScreen() {
 
   const handleSendReminder = useCallback(async (trackerId: string) => {
     try {
-      await Share.share({ message: t('customers.reminderMessage', 'Hi, could you review the pending decisions for your project? This helps us stay on schedule.') });
-      setTrackers(prev => prev.map(tr => tr.id === trackerId ? { ...tr, lastActivity: 'Just now' } : tr));
+      const result = await Share.share({ message: t('customers.reminderMessage', 'Hi, could you review the pending decisions for your project? This helps us stay on schedule.') });
+      // Cancelling the share sheet must NOT record a reminder as sent — the
+      // customer never received anything, and the row would then claim it did.
+      // Same guard as ai.tsx:254; this was the third unguarded Share in the app.
+      if (result.action === Share.dismissedAction) return;
+      // 'Just now' was a hardcoded English string written into STATE and
+      // rendered verbatim, so it showed English in all six locales.
+      setTrackers(prev => prev.map(tr => tr.id === trackerId
+        ? { ...tr, lastActivity: t('common.justNow', 'Just now') } : tr));
       hapticSuccess();
     } catch {}
   }, [t]);

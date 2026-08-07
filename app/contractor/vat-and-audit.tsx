@@ -109,7 +109,7 @@ export default function VatAndAuditScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView edges={['bottom']} style={styles.root}>
       <DKScreenHeader title="VAT & AUDIT" />
       <ScrollView contentContainerStyle={styles.content}>
 

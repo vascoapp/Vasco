@@ -76,7 +76,10 @@
     "teamFeatures": "Funciones de equipo",
     "seats": "usuarios",
     "apiWhiteLabel": "API + marca blanca",
-    "supportOnboarding": "Soporte dedicado + incorporación"
+    "supportOnboarding": "Soporte dedicado + incorporación",
+    "select": "Seleccionar",
+    "noOptions": "Todavía no hay nada que elegir",
+    "justNow": "Ahora mismo"
   },
   "tabs": {
     "today": "Hoy",
@@ -2965,7 +2968,12 @@
     "heroChip": "Ingresos recurrentes",
     "heroActive": "Contratos activos",
     "heroMrr": "Por mes",
-    "heroNext": "Próximo: {{title}} · {{days}}d"
+    "heroNext": "Próximo: {{title}} · {{days}}d",
+    "pickCustomer": "Elige un cliente",
+    "noCustomers": "Añade primero un cliente y luego crea su contrato de mantenimiento.",
+    "previousWork": "Trabajos anteriores aquí",
+    "noPreviousWork": "Aún no hay trabajos terminados para este cliente. El trabajo completado aparecerá aquí.",
+    "allWork": "Los {{count}} trabajos"
   },
   "optStats": {
     "weekly": "Vasco optimizó {{count}} rutas esta semana",
@@ -4433,7 +4441,13 @@
     "parseError": "Lo siento, no pude interpretar eso. Intenta reformular.",
     "title": "Gestor de oficina",
     "placeholder": "Pregunta lo que quieras…",
-    "timeout": "Tardó demasiado — comprueba tu conexión e inténtalo de nuevo."
+    "timeout": "Tardó demasiado — comprueba tu conexión e inténtalo de nuevo.",
+    "suggestWeek": "¿Cómo ha ido mi semana?",
+    "suggestOverdue": "Mostrar facturas vencidas",
+    "suggestInvoiceNamed": "Facturar {{sym}}500 a {{customer}}",
+    "suggestInvoice": "Crear una factura de {{sym}}500",
+    "suggestJobs": "Estado de los trabajos activos",
+    "thinking": "Pensando…"
   },
   "share": {
     "shareWithCustomer": "Compartir con cliente",
@@ -4632,7 +4646,21 @@
     "bulkDesc": "{{count}} materiales en {{jobs}} obras — pídelos juntos en {{supplier}}",
     "createBulkOrder": "Crear pedido al por mayor",
     "viewDetails": "Ver detalles",
-    "seasonalSavings": "Precio de pretemporada"
+    "seasonalSavings": "Precio de pretemporada",
+    "seasons": {
+      "spring": "en primavera",
+      "summer": "en verano",
+      "autumn": "en otoño",
+      "winter": "en invierno"
+    },
+    "seasonal": {
+      "risingAdvice": "Los materiales para {{trade}} suelen ser más caros {{season}}.",
+      "risingAction": "Considera abastecerte antes de {{season}}.",
+      "fallingAdvice": "Los materiales para {{trade}} suelen ser más baratos {{season}}.",
+      "fallingAction": "Considera aplazar los pedidos grandes hasta {{season}}.",
+      "stableAdvice": "Los precios de materiales para {{trade}} varían poco entre estaciones.",
+      "stableAction": "Compra según lo necesites."
+    }
   },
   "reorder": {
     "noBundlesAvailable": "No hay paquetes disponibles"
@@ -4981,7 +5009,18 @@
     "phone": "Teléfono",
     "trade": "Especialidad",
     "hourlyCost": "Coste por hora para ti ($)",
-    "active": "Activo en nómina"
+    "active": "Activo en nómina",
+    "roles": {
+      "owner": "Propietario",
+      "lead_tech": "Jefe de equipo",
+      "tech": "Técnico",
+      "apprentice": "Aprendiz",
+      "subcontractor": "Subcontratista"
+    },
+    "openJobs_one": "{{count}} trabajo abierto",
+    "openJobs_other": "{{count}} trabajos abiertos",
+    "hourlyCostSym": "Coste por hora para ti ({{sym}})",
+    "namePlaceholder": "Nombre"
   },
   "reports": {
     "title": "Informes",

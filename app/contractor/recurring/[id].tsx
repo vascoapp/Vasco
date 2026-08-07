@@ -5,7 +5,7 @@
 // Otherwise → load existing + allow edits + delete.
 // =============================================================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -15,7 +15,10 @@ import { DK } from '../../../src/theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { DKLabel } from '../../../src/components/shared/DKLabel';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
+import { DKSelect, type DKSelectOption } from '../../../src/components/shared/DKSelect';
 import { useAppState } from '../../../src/state/AppState';
+import { useAuth } from '../../../src/context/AuthContext';
+import { historyForCustomer, type ProposalJob } from '../../../src/services/siteAssetService';
 import {
   createRecurring,
   updateRecurring,
@@ -25,7 +28,7 @@ import {
   type RecurringJobTemplate,
 } from '../../../src/services/recurringJobsService';
 import { hapticSuccess, hapticWarning } from '../../../src/utils/haptics';
-import { currencySymbol } from '../../../src/i18n/formatting';
+import { currencySymbol, formatCurrency, type Country } from '../../../src/i18n/formatting';
 
 const CADENCES: { value: RecurrenceCadence; labelKey: string; fallback: string }[] = [
   { value: 'monthly', labelKey: 'recurring.monthly', fallback: 'Monthly' },
@@ -35,12 +38,17 @@ const CADENCES: { value: RecurrenceCadence; labelKey: string; fallback: string }
   { value: 'custom', labelKey: 'recurring.custom', fallback: 'Custom' },
 ];
 
+/** Enough to recognise the pattern; the customer screen holds the full record. */
+const HISTORY_LIMIT = 5;
+
 export default function RecurringEditScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
-  const { customers } = useAppState();
+  const { customers, jobs } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -70,6 +78,32 @@ export default function RecurringEditScreen() {
   }, [id, isNew]);
 
   const customer = (customers ?? []).find((c: any) => c.id === customerId);
+
+  // Newest first. Not filtered to a site: a recurring template stores only a
+  // customerId, and job.address is unpopulated on everything addJob() creates.
+  const history = useMemo(
+    () => historyForCustomer(jobs as unknown as ProposalJob[], customerId),
+    [jobs, customerId],
+  );
+
+  // Address as the sublabel: two customers called "Jansen" are indistinguishable
+  // by name alone, and picking the wrong one silently schedules years of visits
+  // at the wrong house.
+  const customerOptions: DKSelectOption[] = useMemo(
+    () => (customers ?? []).map((c: any) => {
+      // Customer.address is an OBJECT ({street, city, postcode}), not a string.
+      // Reading it as a string put "[object Object]" one render away; the
+      // optional-chained flat fallback covers rows that stored it flat.
+      const street = c.address?.street ?? (typeof c.address === 'string' ? c.address : undefined);
+      const city = c.address?.city ?? c.city;
+      return {
+        value: c.id,
+        label: c.name,
+        sublabel: [street, city].filter(Boolean).join(', ') || undefined,
+      };
+    }),
+    [customers],
+  );
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -115,11 +149,11 @@ export default function RecurringEditScreen() {
   };
 
   if (!loaded) {
-    return <SafeAreaView style={styles.root}><DKScreenHeader title={t('recurring.loading', 'Loading')} /></SafeAreaView>;
+    return <SafeAreaView edges={['bottom']} style={styles.root}><DKScreenHeader title={t('recurring.loading', 'Loading')} /></SafeAreaView>;
   }
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView edges={['bottom']} style={styles.root}>
       <DKScreenHeader title={isNew ? t('recurring.newTitle', 'NEW MAINTENANCE') : t('recurring.editTitle', 'EDIT MAINTENANCE')} />
       <ScrollView contentContainerStyle={styles.content}>
 
@@ -128,19 +162,68 @@ export default function RecurringEditScreen() {
         <Field label={t('recurring.descLabel', 'Description (optional)')} value={description} onChange={setDescription} multiline />
 
         <DKLabel style={styles.section}>{t('recurring.customer', 'CUSTOMER')}</DKLabel>
-        <View style={styles.card}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ padding: GRID.md, gap: GRID.sm }}>
-            {(customers ?? []).map((c: any) => (
-              <Pressable
-                key={c.id}
-                style={[styles.pill, customerId === c.id && styles.pillActive]}
-                onPress={() => setCustomerId(c.id)}
-              >
-                <Text style={[styles.pillText, customerId === c.id && styles.pillTextActive]}>{c.name}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+        <DKSelect
+          title={t('recurring.customer', 'CUSTOMER')}
+          value={customerId}
+          onChange={setCustomerId}
+          options={customerOptions}
+          placeholder={t('recurring.pickCustomer', 'Choose a customer')}
+          emptyText={t('recurring.noCustomers', 'Add a customer first, then set up their maintenance contract.')}
+          testID="recurring-customer-select"
+        />
+
+        {/* Previous work at this customer — the whole reason to open a recurring
+            contract before a visit. "What did I do here last time, and when?"
+            is a question the app can already answer from the job history, and
+            the contractor was otherwise left to remember a job from a year ago
+            or dig through the customer screen for it. */}
+        {!!customerId && (
+          <>
+            <DKLabel style={styles.section}>
+              {t('recurring.previousWork', 'PREVIOUS WORK HERE')}
+            </DKLabel>
+            {history.length === 0 ? (
+              <Text style={styles.historyEmpty}>
+                {t('recurring.noPreviousWork', 'No finished jobs for this customer yet. Completed work will show up here.')}
+              </Text>
+            ) : (
+              <View style={styles.card}>
+                {history.slice(0, HISTORY_LIMIT).map((h, idx) => (
+                  <Pressable
+                    key={h.id ?? `${idx}`}
+                    disabled={!h.id}
+                    onPress={() => h.id && router.push(`/contractor/job/${h.id}` as any)}
+                    style={({ pressed }) => [
+                      styles.row,
+                      idx > 0 && styles.rowBorder,
+                      pressed && h.id ? styles.rowActive : null,
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowLabel} numberOfLines={1}>{h.title}</Text>
+                      <Text style={styles.historyMeta}>
+                        {formatHistoryDate(h)}
+                        {historyAmount(h) ? ` · ${formatCurrency(historyAmount(h)!, country)}` : ''}
+                      </Text>
+                    </View>
+                    {h.id ? <Ionicons name="chevron-forward" size={16} color={DK.colors.textMuted} /> : null}
+                  </Pressable>
+                ))}
+                {history.length > HISTORY_LIMIT && (
+                  <Pressable
+                    style={[styles.row, styles.rowBorder]}
+                    onPress={() => router.push(`/contractor/customer/${customerId}` as any)}
+                  >
+                    <Text style={[styles.rowLabel, { color: DK.colors.accent, flex: 1 }]}>
+                      {t('recurring.allWork', 'All {{count}} jobs', { count: history.length })}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color={DK.colors.accent} />
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </>
+        )}
 
         <DKLabel style={styles.section}>{t('recurring.cadence', 'CADENCE')}</DKLabel>
         <View style={styles.card}>
@@ -179,6 +262,27 @@ export default function RecurringEditScreen() {
   );
 }
 
+/**
+ * Locale date, or the ISO prefix if the timestamp will not parse. Never "—":
+ * a job with an unreadable date is still a job that was done, and hiding when
+ * it happened is worse than showing the raw string.
+ */
+function formatHistoryDate(h: ProposalJob): string {
+  const raw = h.completedAt ?? h.updatedAt ?? '';
+  if (!raw) return '';
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? raw.slice(0, 10) : d.toLocaleDateString();
+}
+
+/**
+ * What the job was worth, or null. Falls back rather than picking one field:
+ * finished jobs carry `agreedAmount` and leave `invoicedAmount` null, so
+ * reading only the invoiced figure would blank the amount on every row.
+ */
+function historyAmount(h: ProposalJob): number | null {
+  return h.invoicedAmount ?? h.agreedAmount ?? h.quotedAmount ?? null;
+}
+
 interface FieldProps { label: string; value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean; keyboardType?: 'default' | 'numeric'; }
 function Field({ label, value, onChange, placeholder, multiline, keyboardType = 'default' }: FieldProps) {
   return (
@@ -211,13 +315,11 @@ const styles = StyleSheet.create({
   rowBorder: { borderTopWidth: 1, borderTopColor: DK.colors.border },
   rowActive: { backgroundColor: DK.colors.accent + '15' },
   rowLabel: { fontSize: 14, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
-  pill: {
-    paddingHorizontal: GRID.md, paddingVertical: GRID.sm, borderRadius: RADIUS.full,
-    backgroundColor: DK.colors.bg, borderWidth: 1, borderColor: DK.colors.border,
+  historyMeta: { fontSize: 12, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted, marginTop: 2 },
+  historyEmpty: {
+    fontSize: 13, fontFamily: TYPE.bodyFamily, color: DK.colors.textMuted,
+    backgroundColor: DK.colors.panel, borderRadius: RADIUS.lg, padding: GRID.md,
   },
-  pillActive: { backgroundColor: DK.colors.accent, borderColor: DK.colors.accent },
-  pillText: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
-  pillTextActive: { color: '#000' },
   saveBtn: {
     marginTop: GRID.md,
     backgroundColor: DK.colors.accent, borderRadius: RADIUS.full, paddingVertical: GRID.md,

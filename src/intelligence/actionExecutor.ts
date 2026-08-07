@@ -79,7 +79,15 @@ const handlers: Record<InsightActionType, ActionHandler> = {
       amount: formatMoney2(amount || 0),
     });
     try {
-      await Share.share({ message: text, title: t('action.reminderTitle', 'Payment reminder') });
+      // Share.share RESOLVES on dismiss — it does not throw — so the catch
+      // below never ran and a cancelled share still returned success, marking
+      // the queue item done and the timeline "Reminder sent". The
+      // `action.shareCancelled` string right there shows the intent was always
+      // to handle this; only the mechanism was wrong.
+      const res = await Share.share({ message: text, title: t('action.reminderTitle', 'Payment reminder') });
+      if (res.action === Share.dismissedAction) {
+        return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
+      }
       return { success: true, message: t('action.reminderSent', { defaultValue: 'Reminder sent for {{amount}}', amount: formatMoney2(amount || 0) }) };
     } catch {
       return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
@@ -154,7 +162,10 @@ const handlers: Record<InsightActionType, ActionHandler> = {
       quote: quoteId || '',
     });
     try {
-      await Share.share({ message: text, title: t('action.followupTitle', 'Quote follow-up') });
+      const res = await Share.share({ message: text, title: t('action.followupTitle', 'Quote follow-up') });
+      if (res.action === Share.dismissedAction) {
+        return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
+      }
       return { success: true, message: t('action.followupSent', 'Follow-up sent') };
     } catch {
       return { success: false, message: t('action.shareCancelled', 'Share cancelled') };

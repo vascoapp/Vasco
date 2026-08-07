@@ -18,6 +18,7 @@ import { DK } from '../../src/theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
+import { currencySymbol } from '../../src/i18n/formatting';
 import {
   queryMarginTrend,
   queryWinrateDistribution,
@@ -75,14 +76,20 @@ export default function MarketInsightsScreen() {
   const hasAnyData = marginTrend.length > 0 || winRates.length > 0 || daily.length > 0;
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView edges={['bottom']} style={styles.root}>
       <DKScreenHeader title={t('marketInsights.title', 'MARKET INSIGHTS')} />
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={DK.colors.accent} />}
       >
         <Text style={styles.subtitle}>
-          {t('marketInsights.subtitle', '{{trade}} · {{country}} cohort benchmarks', { trade, country })}
+          {/* The trade arrives as a SLUG ("painting"). Interpolating it raw put
+              an English lowercase identifier at the top of a fully Dutch
+              screen; onboarding.trades.* already holds the display names ×6. */}
+          {t('marketInsights.subtitle', '{{trade}} · {{country}} cohort benchmarks', {
+            trade: t(`onboarding.trades.${String(trade).toLowerCase()}`, { defaultValue: trade }),
+            country,
+          })}
         </Text>
 
         {!hasAnyData && (
@@ -122,7 +129,7 @@ export default function MarketInsightsScreen() {
                 const barPct = Math.max(2, Math.min(100, wr.winRate * 100));
                 return (
                   <View key={wr.amountBucket} style={[styles.row, idx > 0 && styles.rowBorder]}>
-                    <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{labelBucket(wr.amountBucket)}</Text>
+                    <Text style={styles.rowLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{labelBucket(wr.amountBucket, currencySymbol(country as never)) ?? '—'}</Text>
                     <View style={styles.barTrack}>
                       <View style={[styles.barFill, { width: `${barPct}%`, backgroundColor: DK.colors.success }]} />
                     </View>
@@ -167,14 +174,19 @@ export default function MarketInsightsScreen() {
   );
 }
 
-function labelBucket(b: string): string {
+/**
+ * Quote-amount buckets. The symbol comes from the contractor's country — these
+ * were hardcoded €, so a UK contractor read their own turnover in euros.
+ * An unknown bucket returns null rather than leaking the raw enum ("under_1k").
+ */
+function labelBucket(b: string, sym: string): string | null {
   return ({
-    under_1k: '< €1k',
-    '1k_5k': '€1k–€5k',
-    '5k_10k': '€5k–€10k',
-    '10k_25k': '€10k–€25k',
-    over_25k: '> €25k',
-  } as Record<string, string>)[b] ?? b;
+    under_1k: `< ${sym}1k`,
+    '1k_5k': `${sym}1k–${sym}5k`,
+    '5k_10k': `${sym}5k–${sym}10k`,
+    '10k_25k': `${sym}10k–${sym}25k`,
+    over_25k: `> ${sym}25k`,
+  } as Record<string, string>)[b] ?? null;
 }
 
 const styles = StyleSheet.create({

@@ -115,11 +115,22 @@ export function siteKeyFromText(address?: string): string | null {
 // ---------------------------------------------------------------------------
 
 export interface ProposalJob {
+  /** Present so callers that show history can link through to the job itself. */
+  id?: string;
   customerId?: string | null;
   title: string;
   status: string;
   completedAt?: string;
   updatedAt?: string;
+  /**
+   * What the job was worth. Three fields because `Job` has three and only one
+   * of them is reliably filled: checked against stored demo + seeded jobs, the
+   * finished ones carry `agreedAmount` and leave `invoicedAmount` null, so
+   * reading any single field would have shown a blank amount on every row.
+   */
+  invoicedAmount?: number;
+  agreedAmount?: number;
+  quotedAmount?: number;
   /**
    * Where the work happened.
    *
@@ -196,6 +207,22 @@ export function historyForSite(jobs: ProposalJob[], customerId: string, siteKey:
   return jobs
     .filter((j) => j.customerId === customerId && DONE.has(j.status)
       && (siteKeyFor(j.address) ?? siteKeyFromText(j.fallbackAddress)) === siteKey)
+    .sort((a, b) => (b.completedAt ?? b.updatedAt ?? '').localeCompare(a.completedAt ?? a.updatedAt ?? ''));
+}
+
+/**
+ * Everything finished for one customer, newest first.
+ *
+ * Keyed on the CUSTOMER, not the site, because that is the only key a
+ * maintenance contract actually has — a recurring template stores a customerId
+ * and no address. Narrowing to a site here would return nothing for the very
+ * screen that needs it: `siteKeyFor` reads `job.address`, which `addJob()`
+ * never populates.
+ */
+export function historyForCustomer(jobs: ProposalJob[], customerId: string): ProposalJob[] {
+  if (!customerId) return [];
+  return jobs
+    .filter((j) => j.customerId === customerId && DONE.has(j.status))
     .sort((a, b) => (b.completedAt ?? b.updatedAt ?? '').localeCompare(a.completedAt ?? a.updatedAt ?? ''));
 }
 

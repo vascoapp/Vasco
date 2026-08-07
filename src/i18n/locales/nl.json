@@ -76,7 +76,10 @@
     "teamFeatures": "Teamfuncties",
     "seats": "gebruikers",
     "apiWhiteLabel": "API + white-label",
-    "supportOnboarding": "Vaste support + onboarding"
+    "supportOnboarding": "Vaste support + onboarding",
+    "select": "Kiezen",
+    "noOptions": "Nog niets om uit te kiezen",
+    "justNow": "Zojuist"
   },
   "tabs": {
     "today": "Vandaag",
@@ -108,7 +111,7 @@
       "settings": "Instellingen",
       "notifications": "Meldingen",
       "privacySettings": "Privacy-instellingen",
-      "helpSupport": "Help & Support",
+      "helpSupport": "Help & ondersteuning",
       "signOut": "Uitloggen",
       "accountingInvoices": "Boekhouding / Facturen",
       "paymentProcessing": "Betalingsverwerking",
@@ -1293,7 +1296,7 @@
     "progressNotes": "Notities over voortgang...",
     "safetySection": "Veiligheid",
     "incidentsCount": "Incidenten",
-    "nearMissesCount": "Near-misses",
+    "nearMissesCount": "Bijna-ongevallen",
     "safetyNotes": "Veiligheidsopmerkingen, toolbox talk onderwerp...",
     "deliveriesIssues": "Leveringen & Problemen",
     "deliveriesPlaceholder": "Leveringen ontvangen vandaag...",
@@ -2559,7 +2562,7 @@
       "saved": "Bespaard",
       "savedMonth": "Bespaard mnd",
       "revenueWeek": "Omzet wk",
-      "quotes": "Quotes",
+      "quotes": "Offertes",
       "outstanding": "Uitstaand",
       "pipeline": "Pipeline",
       "draft": "Concept",
@@ -2978,7 +2981,12 @@
     "heroChip": "Terugkerende omzet",
     "heroActive": "Actieve contracten",
     "heroMrr": "Per maand",
-    "heroNext": "Volgende: {{title}} · {{days}}d"
+    "heroNext": "Volgende: {{title}} · {{days}}d",
+    "pickCustomer": "Kies een klant",
+    "noCustomers": "Voeg eerst een klant toe, stel daarna het onderhoudscontract in.",
+    "previousWork": "Eerder werk hier",
+    "noPreviousWork": "Nog geen afgeronde klussen voor deze klant. Afgerond werk verschijnt hier.",
+    "allWork": "Alle {{count}} klussen"
   },
   "schedule": {
     "daySchedule": "Dagplanning",
@@ -3251,7 +3259,7 @@
     "questions": "Vragen?"
   },
   "ingestion": {
-    "title": "Ingestion pool",
+    "title": "Importpool",
     "subtitle": "Voeg eerdere offertes, facturen, e-mails of PDFs toe. Jij kiest wat gedeeld wordt.",
     "tabUpload": "PDF uploaden",
     "tabPaste": "Tekst plakken",
@@ -3273,11 +3281,11 @@
     "tryAgain": "Probeer opnieuw",
     "budgetDetected": "Begroting gedetecteerd",
     "budgetDetectedDesc": "Dit bestand lijkt een kostenbegroting te zijn. Open de Budget Optimizer voor AI-analyse en besparingsmogelijkheden.",
-    "openBudgetOptimizer": "Open Budget Optimizer",
+    "openBudgetOptimizer": "Budget-optimizer openen",
     "result": "Uitleesresultaat",
     "type": "Type",
     "supplier": "Leverancier",
-    "docNumber": "Doc #",
+    "docNumber": "Doc.nr.",
     "date": "Datum",
     "lineItems": "Regels ({{count}})",
     "subtotal": "Subtotaal",
@@ -4417,7 +4425,13 @@
     "parseError": "Sorry — ik kon dat niet begrijpen. Probeer het anders te formuleren.",
     "title": "Office manager",
     "placeholder": "Stel je vraag…",
-    "timeout": "Dat duurde te lang — controleer je verbinding en probeer opnieuw."
+    "timeout": "Dat duurde te lang — controleer je verbinding en probeer opnieuw.",
+    "suggestWeek": "Hoe was mijn week?",
+    "suggestOverdue": "Toon achterstallige facturen",
+    "suggestInvoiceNamed": "Factureer {{customer}} voor {{sym}}500",
+    "suggestInvoice": "Maak een factuur van {{sym}}500",
+    "suggestJobs": "Status van actieve klussen",
+    "thinking": "Even denken…"
   },
   "share": {
     "shareWithCustomer": "Deel met klant",
@@ -4616,7 +4630,21 @@
     "bulkDesc": "{{count}} materialen verdeeld over {{jobs}} klussen — bestel samen bij {{supplier}}",
     "createBulkOrder": "Bulkbestelling aanmaken",
     "viewDetails": "Details bekijken",
-    "seasonalSavings": "Voorseizoensprijs"
+    "seasonalSavings": "Voorseizoensprijs",
+    "seasons": {
+      "spring": "het voorjaar",
+      "summer": "de zomer",
+      "autumn": "het najaar",
+      "winter": "de winter"
+    },
+    "seasonal": {
+      "risingAdvice": "Materialen voor {{trade}} zijn in {{season}} meestal duurder.",
+      "risingAction": "Overweeg in te slaan vóór {{season}}.",
+      "fallingAdvice": "Materialen voor {{trade}} zijn in {{season}} meestal goedkoper.",
+      "fallingAction": "Overweeg bulkbestellingen uit te stellen tot {{season}}.",
+      "stableAdvice": "Prijzen voor materialen voor {{trade}} verschillen weinig per seizoen.",
+      "stableAction": "Koop in op het moment dat je het nodig hebt."
+    }
   },
   "reorder": {
     "noBundlesAvailable": "Geen bundels beschikbaar"
@@ -4965,7 +4993,18 @@
     "phone": "Telefoon",
     "trade": "Vakspecialisatie",
     "hourlyCost": "Uurkosten voor jou ($)",
-    "active": "Actief op de loonlijst"
+    "active": "Actief op de loonlijst",
+    "roles": {
+      "owner": "Eigenaar",
+      "lead_tech": "Voorman",
+      "tech": "Monteur",
+      "apprentice": "Leerling",
+      "subcontractor": "Onderaannemer"
+    },
+    "openJobs_one": "{{count}} openstaande klus",
+    "openJobs_other": "{{count}} openstaande klussen",
+    "hourlyCostSym": "Kosten per uur voor jou ({{sym}})",
+    "namePlaceholder": "Naam"
   },
   "reports": {
     "title": "Rapportages",

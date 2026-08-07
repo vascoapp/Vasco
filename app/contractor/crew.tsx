@@ -31,14 +31,23 @@ import type { Worker, WorkerRole } from '../../src/domain/worker';
 import { SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
+import { currencySymbol } from '../../src/i18n/formatting';
+import { useAuth } from '../../src/context/AuthContext';
 
-const ROLE_LABELS: Record<WorkerRole, string> = {
+// Was a module-scope Record of English strings, evaluated at import time before
+// any language existed, so a Dutch contractor with a team read "Lead Tech"
+// (learnings #86). This screen is gated on TEAM SIZE, not country, so it is
+// fully reachable outside the US.
+const ROLE_FALLBACK: Record<WorkerRole, string> = {
   owner: 'Owner',
   lead_tech: 'Lead Tech',
   tech: 'Tech',
   apprentice: 'Apprentice',
   subcontractor: 'Subcontractor',
 };
+type TFunc = (k: string, o?: Record<string, unknown>) => string;
+const roleLabel = (t: TFunc, r: WorkerRole): string =>
+  t(`crew.roles.${r}`, { defaultValue: ROLE_FALLBACK[r] });
 
 const ROLES: WorkerRole[] = ['owner', 'lead_tech', 'tech', 'apprentice', 'subcontractor'];
 
@@ -148,11 +157,11 @@ export default function CrewScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardName}>{w.name}</Text>
                   <Text style={styles.cardMeta}>
-                    {ROLE_LABELS[w.role]}
+                    {roleLabel(t, w.role)}
                     {w.trade ? ` · ${t(`onboarding.trades.${w.trade}`, w.trade)}` : ''}
                   </Text>
                   {openCount > 0 ? (
-                    <Text style={styles.cardJobs}>{openCount} open job{openCount === 1 ? '' : 's'}</Text>
+                    <Text style={styles.cardJobs}>{t('crew.openJobs', { count: openCount, defaultValue: '{{count}} open jobs' })}</Text>
                   ) : null}
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
@@ -170,7 +179,7 @@ export default function CrewScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.cardName, { color: SemanticColors.textSecondary }]}>{w.name}</Text>
-                    <Text style={styles.cardMeta}>{ROLE_LABELS[w.role]}</Text>
+                    <Text style={styles.cardMeta}>{roleLabel(t, w.role)}</Text>
                   </View>
                 </Pressable>
               ))}
@@ -203,6 +212,7 @@ interface WorkerModalProps {
 
 function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerModalProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [name, setName] = useState(original?.name ?? '');
   const [role, setRole] = useState<WorkerRole>(original?.role ?? 'tech');
   const [email, setEmail] = useState(original?.email ?? '');
@@ -245,7 +255,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
 
         <ScrollView contentContainerStyle={{ padding: GRID.lg }}>
           <Text style={styles.label}>{t('crew.name', 'Name *')}</Text>
-          <TextInput value={name} onChangeText={setName} placeholder="Mike Reynolds" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} />
+          <TextInput value={name} onChangeText={setName} placeholder={t('crew.namePlaceholder', 'Name')} placeholderTextColor={SemanticColors.textTertiary} style={styles.input} />
 
           <Text style={styles.label}>{t('crew.role', 'Role')}</Text>
           <View style={styles.roleGrid}>
@@ -258,7 +268,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
                   style={[styles.roleChip, selected && styles.roleChipSelected]}
                 >
                   <Text style={[styles.roleChipText, selected && styles.roleChipTextSelected]}>
-                    {ROLE_LABELS[r]}
+                    {roleLabel(t, r)}
                   </Text>
                 </Pressable>
               );
@@ -274,7 +284,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
           <Text style={styles.label}>{t('crew.trade', 'Trade specialty')}</Text>
           <TextInput value={trade} onChangeText={setTrade} placeholder="HVAC / electrical / plumbing…" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} />
 
-          <Text style={styles.label}>{t('crew.hourlyCost', 'Hourly cost to you ($)')}</Text>
+          <Text style={styles.label}>{t('crew.hourlyCostSym', 'Hourly cost to you ({{sym}})', { sym: currencySymbol(user?.country as never) })}</Text>
           <TextInput value={hourlyCost} onChangeText={setHourlyCost} placeholder="35" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} keyboardType="numeric" />
 
           <View style={styles.activeRow}>

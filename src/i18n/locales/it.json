@@ -76,7 +76,10 @@
     "teamFeatures": "Funzioni team",
     "seats": "postazioni",
     "apiWhiteLabel": "API + white-label",
-    "supportOnboarding": "Supporto dedicato + onboarding"
+    "supportOnboarding": "Supporto dedicato + onboarding",
+    "select": "Seleziona",
+    "noOptions": "Non c’è ancora niente da scegliere",
+    "justNow": "Proprio ora"
   },
   "tabs": {
     "today": "Oggi",
@@ -2965,7 +2968,12 @@
     "heroChip": "Ricavi ricorrenti",
     "heroActive": "Contratti attivi",
     "heroMrr": "Al mese",
-    "heroNext": "Prossimo: {{title}} · {{days}}g"
+    "heroNext": "Prossimo: {{title}} · {{days}}g",
+    "pickCustomer": "Scegli un cliente",
+    "noCustomers": "Aggiungi prima un cliente, poi crea il suo contratto di manutenzione.",
+    "previousWork": "Lavori precedenti qui",
+    "noPreviousWork": "Nessun lavoro completato per questo cliente. I lavori conclusi compariranno qui.",
+    "allWork": "Tutti i {{count}} lavori"
   },
   "optStats": {
     "weekly": "Vasco ha ottimizzato {{count}} percorsi questa settimana",
@@ -4433,7 +4441,13 @@
     "parseError": "Mi spiace, non sono riuscito a interpretarlo. Prova a riformulare.",
     "title": "Assistente d'ufficio",
     "placeholder": "Chiedi qualsiasi cosa…",
-    "timeout": "Ci è voluto troppo tempo — controlla la connessione e riprova."
+    "timeout": "Ci è voluto troppo tempo — controlla la connessione e riprova.",
+    "suggestWeek": "Com’è andata la settimana?",
+    "suggestOverdue": "Mostra le fatture scadute",
+    "suggestInvoiceNamed": "Fattura {{sym}}500 a {{customer}}",
+    "suggestInvoice": "Crea una fattura da {{sym}}500",
+    "suggestJobs": "Stato dei lavori attivi",
+    "thinking": "Sto pensando…"
   },
   "share": {
     "shareWithCustomer": "Condividi con il cliente",
@@ -4632,7 +4646,21 @@
     "bulkDesc": "{{count}} materiali per {{jobs}} lavori — ordinali insieme da {{supplier}}",
     "createBulkOrder": "Crea ordine cumulativo",
     "viewDetails": "Vedi dettagli",
-    "seasonalSavings": "Prezzi pre-stagione"
+    "seasonalSavings": "Prezzi pre-stagione",
+    "seasons": {
+      "spring": "in primavera",
+      "summer": "in estate",
+      "autumn": "in autunno",
+      "winter": "in inverno"
+    },
+    "seasonal": {
+      "risingAdvice": "I materiali per {{trade}} costano di solito di più {{season}}.",
+      "risingAction": "Valuta di fare scorta prima {{season}}.",
+      "fallingAdvice": "I materiali per {{trade}} costano di solito meno {{season}}.",
+      "fallingAction": "Valuta di rimandare gli ordini grandi {{season}}.",
+      "stableAdvice": "I prezzi dei materiali per {{trade}} variano poco tra le stagioni.",
+      "stableAction": "Acquista secondo necessità."
+    }
   },
   "reorder": {
     "noBundlesAvailable": "Nessun pacchetto disponibile"
@@ -4981,7 +5009,18 @@
     "phone": "Telefono",
     "trade": "Specializzazione",
     "hourlyCost": "Costo orario per te ($)",
-    "active": "Attivo in busta paga"
+    "active": "Attivo in busta paga",
+    "roles": {
+      "owner": "Titolare",
+      "lead_tech": "Caposquadra",
+      "tech": "Tecnico",
+      "apprentice": "Apprendista",
+      "subcontractor": "Subappaltatore"
+    },
+    "openJobs_one": "{{count}} lavoro aperto",
+    "openJobs_other": "{{count}} lavori aperti",
+    "hourlyCostSym": "Costo orario per te ({{sym}})",
+    "namePlaceholder": "Nome"
   },
   "reports": {
     "title": "Report",

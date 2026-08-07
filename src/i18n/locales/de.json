@@ -76,7 +76,10 @@
     "teamFeatures": "Team-Funktionen",
     "seats": "Plätze",
     "apiWhiteLabel": "API + White-Label",
-    "supportOnboarding": "Fester Support + Onboarding"
+    "supportOnboarding": "Fester Support + Onboarding",
+    "select": "Auswählen",
+    "noOptions": "Noch nichts zur Auswahl",
+    "justNow": "Gerade eben"
   },
   "tabs": {
     "today": "Heute",
@@ -2994,7 +2997,12 @@
     "heroChip": "Wiederkehrender Umsatz",
     "heroActive": "Aktive Verträge",
     "heroMrr": "Pro Monat",
-    "heroNext": "Nächste: {{title}} · {{days}}T"
+    "heroNext": "Nächste: {{title}} · {{days}}T",
+    "pickCustomer": "Kunde wählen",
+    "noCustomers": "Erst einen Kunden anlegen, dann den Wartungsvertrag einrichten.",
+    "previousWork": "Frühere Arbeiten hier",
+    "noPreviousWork": "Noch keine abgeschlossenen Aufträge für diesen Kunden. Erledigte Arbeiten erscheinen hier.",
+    "allWork": "Alle {{count}} Aufträge"
   },
   "schedule": {
     "daySchedule": "Tagesplan",
@@ -4433,7 +4441,13 @@
     "parseError": "Entschuldigung — ich konnte das nicht verarbeiten. Bitte umformulieren.",
     "title": "Büromanager",
     "placeholder": "Frag mich alles…",
-    "timeout": "Das hat zu lange gedauert — prüfe deine Verbindung und versuche es erneut."
+    "timeout": "Das hat zu lange gedauert — prüfe deine Verbindung und versuche es erneut.",
+    "suggestWeek": "Wie war meine Woche?",
+    "suggestOverdue": "Überfällige Rechnungen anzeigen",
+    "suggestInvoiceNamed": "{{customer}} über {{sym}}500 abrechnen",
+    "suggestInvoice": "Rechnung über {{sym}}500 erstellen",
+    "suggestJobs": "Status der aktiven Aufträge",
+    "thinking": "Einen Moment…"
   },
   "share": {
     "shareWithCustomer": "Mit Kunden teilen",
@@ -4632,7 +4646,21 @@
     "bulkDesc": "{{count}} Materialien über {{jobs}} Aufträge — gemeinsam bei {{supplier}} bestellen",
     "createBulkOrder": "Sammelbestellung erstellen",
     "viewDetails": "Details anzeigen",
-    "seasonalSavings": "Vorsaison-Preise"
+    "seasonalSavings": "Vorsaison-Preise",
+    "seasons": {
+      "spring": "im Frühjahr",
+      "summer": "im Sommer",
+      "autumn": "im Herbst",
+      "winter": "im Winter"
+    },
+    "seasonal": {
+      "risingAdvice": "Material für {{trade}} ist {{season}} meist teurer.",
+      "risingAction": "Vorrat anlegen, bevor es {{season}} teurer wird.",
+      "fallingAdvice": "Material für {{trade}} ist {{season}} meist günstiger.",
+      "fallingAction": "Größere Bestellungen ggf. bis {{season}} zurückstellen.",
+      "stableAdvice": "Die Materialpreise für {{trade}} schwanken saisonal kaum.",
+      "stableAction": "Nach Bedarf einkaufen."
+    }
   },
   "reorder": {
     "noBundlesAvailable": "Keine Bündel verfügbar"
@@ -4981,7 +5009,18 @@
     "phone": "Telefon",
     "trade": "Fachgebiet",
     "hourlyCost": "Stundenkosten für Sie ($)",
-    "active": "Aktiv auf der Gehaltsliste"
+    "active": "Aktiv auf der Gehaltsliste",
+    "roles": {
+      "owner": "Inhaber",
+      "lead_tech": "Vorarbeiter",
+      "tech": "Monteur",
+      "apprentice": "Auszubildender",
+      "subcontractor": "Subunternehmer"
+    },
+    "openJobs_one": "{{count}} offener Auftrag",
+    "openJobs_other": "{{count}} offene Aufträge",
+    "hourlyCostSym": "Stundenkosten für dich ({{sym}})",
+    "namePlaceholder": "Name"
   },
   "reports": {
     "title": "Berichte",

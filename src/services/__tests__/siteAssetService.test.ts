@@ -11,6 +11,7 @@ import {
   siteKeyFor,
   proposeAssets,
   historyForSite,
+  historyForCustomer,
   siteKeyFromText,
   nextServiceDue,
   MIN_VISITS_TO_PROPOSE,
@@ -119,6 +120,54 @@ describe('site history', () => {
     ];
     const out = historyForSite(jobs, 'c1', siteKeyFor(job().address)!);
     expect(out.map((j) => j.title)).toEqual(['nieuw', 'oud']);
+  });
+});
+
+describe('customer history — what a maintenance contract can actually ask for', () => {
+  // A recurring template stores a customerId and NO address, and job.address is
+  // unpopulated on everything addJob() creates. Keying this query on the site
+  // would return an empty list on the one screen built to show it.
+  it('returns finished work for the customer regardless of address', () => {
+    const jobs = [
+      job({ title: 'oud', completedAt: '2024-03-02T00:00:00.000Z' }),
+      job({ title: 'geen adres', address: undefined, completedAt: '2026-02-01T00:00:00.000Z' }),
+      job({ title: 'nieuw', completedAt: '2026-05-01T00:00:00.000Z' }),
+    ];
+    expect(historyForCustomer(jobs, 'c1').map((j) => j.title))
+      .toEqual(['nieuw', 'geen adres', 'oud']);
+  });
+
+  it('never leaks another customer’s work', () => {
+    const jobs = [job(), job({ customerId: 'c2', title: 'hotel' })];
+    expect(historyForCustomer(jobs, 'c1').map((j) => j.title)).toEqual(['CV-ketel onderhoud']);
+  });
+
+  it('excludes work that is not finished', () => {
+    // "Previous work" must mean done. Showing a scheduled or cancelled job as
+    // history tells the contractor they did something they did not.
+    const jobs = [
+      job({ title: 'gepland', status: 'scheduled' }),
+      job({ title: 'bezig', status: 'in-progress' }),
+      job({ title: 'geannuleerd', status: 'cancelled' }),
+      job({ title: 'gefactureerd', status: 'invoiced' }),
+      job({ title: 'betaald', status: 'paid' }),
+    ];
+    expect(historyForCustomer(jobs, 'c1').map((j) => j.title).sort())
+      .toEqual(['betaald', 'gefactureerd']);
+  });
+
+  it('returns nothing rather than everything when no customer is selected', () => {
+    // The screen renders this list whenever a customer is set. An empty id
+    // falling through to "all jobs" would show one customer another's history.
+    expect(historyForCustomer([job()], '')).toEqual([]);
+  });
+
+  it('falls back to updatedAt when a job was never stamped complete', () => {
+    const jobs = [
+      job({ title: 'a', completedAt: undefined, updatedAt: '2026-01-01T00:00:00.000Z' }),
+      job({ title: 'b', completedAt: undefined, updatedAt: '2026-06-01T00:00:00.000Z' }),
+    ];
+    expect(historyForCustomer(jobs, 'c1').map((j) => j.title)).toEqual(['b', 'a']);
   });
 });
 

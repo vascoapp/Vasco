@@ -76,7 +76,10 @@
     "teamFeatures": "Team features",
     "seats": "seats",
     "apiWhiteLabel": "API + white-label",
-    "supportOnboarding": "Dedicated support + onboarding"
+    "supportOnboarding": "Dedicated support + onboarding",
+    "select": "Select",
+    "noOptions": "Nothing to choose from yet",
+    "justNow": "Just now"
   },
   "tabs": {
     "today": "Today",
@@ -557,7 +560,7 @@
     "scoreActionNeeded": "Action needed",
     "scoreCritical": "Critical",
     "daysAgo": "days ago",
-    "daysRemaining": "Nog",
+    "daysRemaining": "In",
     "days": "days",
     "expires": "Expires",
     "renew": "Renew",
@@ -2994,7 +2997,12 @@
     "heroChip": "Recurring revenue",
     "heroActive": "Active contracts",
     "heroMrr": "Per month",
-    "heroNext": "Next: {{title}} · {{days}}d"
+    "heroNext": "Next: {{title}} · {{days}}d",
+    "pickCustomer": "Choose a customer",
+    "noCustomers": "Add a customer first, then set up their maintenance contract.",
+    "previousWork": "Previous work here",
+    "noPreviousWork": "No finished jobs for this customer yet. Completed work will show up here.",
+    "allWork": "All {{count}} jobs"
   },
   "schedule": {
     "daySchedule": "Day schedule",
@@ -4433,7 +4441,13 @@
     "parseError": "Sorry — I had trouble parsing that. Try rephrasing.",
     "title": "Office manager",
     "placeholder": "Ask anything…",
-    "timeout": "That took too long — check your connection and try again."
+    "timeout": "That took too long — check your connection and try again.",
+    "suggestWeek": "How was my week?",
+    "suggestOverdue": "Show overdue invoices",
+    "suggestInvoiceNamed": "Invoice {{customer}} for {{sym}}500",
+    "suggestInvoice": "Create an invoice for {{sym}}500",
+    "suggestJobs": "Status of active jobs",
+    "thinking": "Thinking…"
   },
   "share": {
     "shareWithCustomer": "Share with customer",
@@ -4632,7 +4646,21 @@
     "bulkDesc": "{{count}} materials across {{jobs}} jobs — order together at {{supplier}}",
     "createBulkOrder": "Create bulk order",
     "viewDetails": "View details",
-    "seasonalSavings": "Pre-season pricing"
+    "seasonalSavings": "Pre-season pricing",
+    "seasons": {
+      "spring": "spring",
+      "summer": "summer",
+      "autumn": "autumn",
+      "winter": "winter"
+    },
+    "seasonal": {
+      "risingAdvice": "Materials for {{trade}} are usually more expensive in {{season}}.",
+      "risingAction": "Consider stocking up before {{season}}.",
+      "fallingAdvice": "Materials for {{trade}} are usually cheaper in {{season}}.",
+      "fallingAction": "Consider holding bulk orders until {{season}}.",
+      "stableAdvice": "Prices for {{trade}} materials do not shift much between seasons.",
+      "stableAction": "Buy as needed."
+    }
   },
   "reorder": {
     "noBundlesAvailable": "No bundles available"
@@ -4981,7 +5009,18 @@
     "phone": "Phone",
     "trade": "Trade specialty",
     "hourlyCost": "Hourly cost to you ($)",
-    "active": "Active on payroll"
+    "active": "Active on payroll",
+    "roles": {
+      "owner": "Owner",
+      "lead_tech": "Lead Tech",
+      "tech": "Tech",
+      "apprentice": "Apprentice",
+      "subcontractor": "Subcontractor"
+    },
+    "openJobs_one": "{{count}} open job",
+    "openJobs_other": "{{count}} open jobs",
+    "hourlyCostSym": "Hourly cost to you ({{sym}})",
+    "namePlaceholder": "Name"
   },
   "reports": {
     "title": "Reports",

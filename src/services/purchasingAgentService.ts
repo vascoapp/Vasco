@@ -13,6 +13,7 @@
 // =============================================================================
 
 import { formatMoney } from '../i18n/formatting';
+import i18n from '../i18n/i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { haversineDistance } from '../utils/geo';
 import { useState, useEffect, useCallback } from 'react';
@@ -984,6 +985,21 @@ export async function scoreSuppliers(country: Country): Promise<SupplierScore[]>
 // Cross-references seasonal demand patterns with price trends to recommend
 // when to buy materials in bulk before prices rise.
 
+
+/** Season slug -> localised name. Falls back to the slug, never to a blank. */
+function seasonLabelFor(season: string): string {
+  return i18n.t(`purchasing.seasons.${season}`, { defaultValue: season });
+}
+
+/**
+ * Trade slug -> localised name, reusing the onboarding trade table rather than
+ * printing the raw slug ("painting") into a sentence shown to the contractor.
+ */
+function tradeLabelFor(trade: string): string {
+  const slug = trade.toLowerCase();
+  return i18n.t(`onboarding.trades.${slug}`, { defaultValue: trade });
+}
+
 export async function getSeasonalAdvice(
   trade: string,
   country: Country,
@@ -1025,21 +1041,51 @@ export async function getSeasonalAdvice(
   // Determine advice based on price trajectory
   const avgChange = materials.reduce((sum, m) => sum + m.changePercent, 0) / materials.length;
 
+  // Localised, and NO PERCENTAGE.
+  //
+  // This block used to render "expected to drop 12% next season". Both halves
+  // of that number are invented: `avgChange` is arithmetic over
+  // SEASONAL_PATTERNS multipliers, which are hardcoded judgement calls, applied
+  // to MARKET_BASELINES, which is a static reference table — nothing here is a
+  // measurement. Printing a percentage claims a forecast the app cannot make
+  // (learnings #103). The seasonal DIRECTION is a defensible trade heuristic;
+  // the decimal was false precision on top of it, so the direction stays and
+  // the number goes.
+  //
+  // It was also hardcoded English and reached the Vandaag queue in every
+  // locale — with a LOCALISED subtitle beside it, so the card rendered half
+  // translated.
+  const tradeName = tradeLabelFor(trade);
+  const seasonName = seasonLabelFor(nextSeason);
   let advice: string;
   let suggestedAction: string;
 
   if (avgChange > 5) {
-    // Prices going up next season
-    advice = `Prices for ${trade} materials are expected to rise ${Math.abs(Math.round(avgChange))}% next season (${nextSeason}). ${nextPattern.reason}`;
-    suggestedAction = `Stock up now on key materials before ${nextSeason} price increases.`;
+    advice = i18n.t('purchasing.seasonal.risingAdvice', {
+      trade: tradeName, season: seasonName,
+      defaultValue: 'Materials for {{trade}} are usually more expensive in {{season}}.',
+    });
+    suggestedAction = i18n.t('purchasing.seasonal.risingAction', {
+      season: seasonName,
+      defaultValue: 'Consider stocking up before {{season}}.',
+    });
   } else if (avgChange < -5) {
-    // Prices going down next season
-    advice = `Prices for ${trade} materials are expected to drop ${Math.abs(Math.round(avgChange))}% next season (${nextSeason}). ${nextPattern.reason}`;
-    suggestedAction = `Hold off on bulk purchases — better deals coming in ${nextSeason}.`;
+    advice = i18n.t('purchasing.seasonal.fallingAdvice', {
+      trade: tradeName, season: seasonName,
+      defaultValue: 'Materials for {{trade}} are usually cheaper in {{season}}.',
+    });
+    suggestedAction = i18n.t('purchasing.seasonal.fallingAction', {
+      season: seasonName,
+      defaultValue: 'Consider holding bulk orders until {{season}}.',
+    });
   } else {
-    // Stable pricing
-    advice = `Prices for ${trade} materials are expected to remain stable next season (${nextSeason}). ${currentPattern.reason}`;
-    suggestedAction = `Buy as needed — no significant price shifts expected.`;
+    advice = i18n.t('purchasing.seasonal.stableAdvice', {
+      trade: tradeName,
+      defaultValue: 'Prices for {{trade}} materials do not shift much between seasons.',
+    });
+    suggestedAction = i18n.t('purchasing.seasonal.stableAction', {
+      defaultValue: 'Buy as needed.',
+    });
   }
 
   await markBehaviorRun('seasonalAdvice');

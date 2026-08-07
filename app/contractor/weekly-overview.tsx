@@ -125,7 +125,7 @@ export default function WeeklyOverviewScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView edges={['bottom']} style={styles.root}>
       <DKScreenHeader title={t('weekly.title', 'WEEK OVERVIEW')} />
       <ScrollView contentContainerStyle={styles.content}>
 

@@ -324,8 +324,26 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       }, tag);
                       await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') + ` ${autoInv.invoiceNumber}` });
                     } else {
-                      hapticSuccess();
-                      Alert.alert(t('invoices.reminderSent', 'Herinnering verstuurd'), t('invoices.reminderSentDesc', 'Betaalherinnering verstuurd.'));
+                      // This branch used to alert "Herinnering verstuurd —
+                      // Betaalherinnering verstuurd" while sending NOTHING:
+                      // no share sheet, no email, no link. Same class as the
+                      // insurance claim that toasted success without ever
+                      // reaching an insurer. An invoice with no automation
+                      // record still has a customer, an amount and a due date,
+                      // so open the share sheet with a real reminder instead of
+                      // claiming one went out.
+                      const daysLate = Math.max(
+                        0,
+                        Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
+                      );
+                      const msg = t('money.reminderMessage', {
+                        defaultValue: 'Hi {{customer}}, a friendly reminder that your invoice of {{amount}} is now {{days}} days overdue. Could you arrange payment? Thanks!',
+                        customer: (invoice as any).customer ?? (invoice as any).customerName ?? '',
+                        amount: formatCurrency(invoice.amount, country),
+                        days: daysLate,
+                      });
+                      const res = await Share.share({ message: msg, title: t('invoices.sendReminder', 'Herinnering') });
+                      if (res.action !== Share.dismissedAction) hapticSuccess();
                     }
                   }}
                 >
