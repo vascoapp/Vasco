@@ -2,13 +2,14 @@
 // CASH FLOW FORECASTER SERVICE
 // =============================================================================
 // Predicts income/expenses, tracks invoices, provides payment reminders
-// Analyzes seasonal patterns and offers financing suggestions
+// Analyzes seasonal patterns and invoice aging
 // =============================================================================
 
 import { formatMoney, formatMoney2 } from '../i18n/formatting';
 import i18n from '../i18n/i18n';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { daysOverdue } from '../utils/invoiceDue';
 
 // The "low cash flow" alert used to hardcode "€5.000" into its sentence while
 // the branch tested a bare `5000`, so the two could drift and the euro sign was
@@ -81,16 +82,6 @@ export interface PaymentReminder {
   messageTemplate: string;
 }
 
-export interface FinancingSuggestion {
-  id: string;
-  type: 'invoice_factoring' | 'credit_line' | 'payment_plan';
-  title: string;
-  description: string;
-  potentialAmount: number;
-  estimatedCost: number;
-  provider?: string;
-  requirements: string[];
-}
 
 export interface SeasonalPattern {
   month: string;
@@ -221,37 +212,9 @@ class CashFlowService {
     return invoices.sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
   }
 
+  /** @deprecated Reads the permanently-empty singleton — see computeInvoiceAging. */
   getInvoiceAging(): InvoiceAging {
-    const now = new Date();
-    const unpaid = this.getInvoices().filter((i) => i.status !== 'paid' && i.status !== 'cancelled');
-
-    const aging: InvoiceAging = {
-      current: { count: 0, total: 0 },
-      days30: { count: 0, total: 0 },
-      days60: { count: 0, total: 0 },
-      days90Plus: { count: 0, total: 0 },
-    };
-
-    unpaid.forEach((invoice) => {
-      const dueDate = new Date(invoice.dueDate);
-      const daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (daysOverdue <= 0) {
-        aging.current.count++;
-        aging.current.total += invoice.amount;
-      } else if (daysOverdue <= 30) {
-        aging.days30.count++;
-        aging.days30.total += invoice.amount;
-      } else if (daysOverdue <= 60) {
-        aging.days60.count++;
-        aging.days60.total += invoice.amount;
-      } else {
-        aging.days90Plus.count++;
-        aging.days90Plus.total += invoice.amount;
-      }
-    });
-
-    return aging;
+    return computeInvoiceAging(this.getInvoices());
   }
 
   markInvoicePaid(invoiceId: string, paymentMethod: string): void {
@@ -362,8 +325,11 @@ class CashFlowService {
         // which contradicted the actual 5000 test above for any non-euro
         // country. Format the same constant the branch compares against.
         description: i18n.t('cashflow.alertLowCashDesc', { amount: formatMoney(LOW_BALANCE_THRESHOLD) }),
-        actionable: true,
-        action: i18n.t('cashflow.alertLowCashAction', 'View financing options'),
+        // Not actionable: this pointed at the "Financieringsopties" section,
+        // which advertised credit from providers that do not exist and has
+        // been removed. `actionable` only draws a chevron, and a chevron with
+        // nowhere to go is a promise the screen cannot keep.
+        actionable: false,
       });
     }
 
@@ -432,44 +398,6 @@ class CashFlowService {
   }
 
   // -----------------------------------------
-  // Financing Suggestions
-  // -----------------------------------------
-
-  getFinancingSuggestions(): FinancingSuggestion[] {
-    const aging = this.getInvoiceAging();
-    const suggestions: FinancingSuggestion[] = [];
-
-    if (aging.days30.total + aging.days60.total > 2000) {
-      suggestions.push({
-        id: 'fin_factoring',
-        type: 'invoice_factoring',
-        title: i18n.t('cashflow.finFactoringTitle', 'Factoring'),
-        description: i18n.t('cashflow.finFactoringDesc', 'Sell your outstanding invoices for immediate working capital'),
-        potentialAmount: Math.round((aging.days30.total + aging.days60.total) * 0.9),
-        estimatedCost: Math.round((aging.days30.total + aging.days60.total) * 0.03),
-        provider: 'Vasco Financing',
-        requirements: [i18n.t('cashflow.finFactoringReq1', 'Verified invoices'), i18n.t('cashflow.finFactoringReq2', 'Business customers')],
-      });
-    }
-
-    const summary = this.getCashFlowSummary();
-    if (summary.projectedBalance30Days < 10000) {
-      suggestions.push({
-        id: 'fin_credit',
-        type: 'credit_line',
-        title: i18n.t('cashflow.finCreditTitle', 'Business credit'),
-        description: i18n.t('cashflow.finCreditDesc', 'Flexible credit line for working capital'),
-        potentialAmount: 25000,
-        estimatedCost: 250,
-        provider: 'Vasco Business Credit',
-        requirements: [i18n.t('cashflow.finCreditReq1', '6+ months active'), i18n.t('cashflow.finCreditReq2', 'Positive cash flow history')],
-      });
-    }
-
-    return suggestions;
-  }
-
-  // -----------------------------------------
   // Seasonal Patterns
   // -----------------------------------------
 
@@ -515,6 +443,42 @@ import { useExpenses } from './expenseService';
 // invented recurring income was the only thing making it look populated; with
 // that removed the emptiness became visible as a row of zeroes despite real
 // outstanding invoices sitting one tab away.
+// ---------------------------------------------------------------------------
+// Invoice aging — pure, for exactly the same reason as the forecast below
+// ---------------------------------------------------------------------------
+// This had the identical defect one line further down in the hook:
+// `useMemo(() => cashFlowService.getInvoiceAging(), [invoices])` — the real
+// invoices in the dependency array, the empty singleton in the body. So the
+// aging table read € 0,00 / 0 facturen in all four buckets while the alert at
+// the top of the SAME screen said "2 openstaande facturen · € 800 aan
+// betalingen zijn verlopen". The one card whose entire job is to show how old
+// the overdue invoices are was the one card that could not see them.
+//
+// Buckets on calendar days via the shared `daysOverdue` helper, so this screen
+// and the Geld tab cannot drift on what "14 days late" means.
+export function computeInvoiceAging(invoices: Invoice[], now: Date = new Date()): InvoiceAging {
+  const aging: InvoiceAging = {
+    current: { count: 0, total: 0 },
+    days30: { count: 0, total: 0 },
+    days60: { count: 0, total: 0 },
+    days90Plus: { count: 0, total: 0 },
+  };
+
+  invoices
+    .filter((i) => i.status !== 'paid' && i.status !== 'cancelled')
+    .forEach((invoice) => {
+      const late = daysOverdue(invoice, now) ?? 0;
+      const bucket = late <= 0 ? aging.current
+        : late <= 30 ? aging.days30
+        : late <= 60 ? aging.days60
+        : aging.days90Plus;
+      bucket.count++;
+      bucket.total += invoice.amount;
+    });
+
+  return aging;
+}
+
 export function computeForecast(
   invoices: Invoice[],
   expenses: Expense[],
@@ -774,8 +738,11 @@ export function useCashFlow() {
         // which contradicted the actual 5000 test above for any non-euro
         // country. Format the same constant the branch compares against.
         description: i18n.t('cashflow.alertLowCashDesc', { amount: formatMoney(LOW_BALANCE_THRESHOLD) }),
-        actionable: true,
-        action: i18n.t('cashflow.alertLowCashAction', 'View financing options'),
+        // Not actionable: this pointed at the "Financieringsopties" section,
+        // which advertised credit from providers that do not exist and has
+        // been removed. `actionable` only draws a chevron, and a chevron with
+        // nowhere to go is a promise the screen cannot keep.
+        actionable: false,
       });
     }
 
@@ -795,7 +762,7 @@ export function useCashFlow() {
     };
   }, [invoices, expenses]);
 
-  const aging = useMemo(() => cashFlowService.getInvoiceAging(), [invoices]);
+  const aging = useMemo(() => computeInvoiceAging(invoices), [invoices]);
   const forecast = useMemo(() => computeForecast(invoices, expenses, 8), [invoices, expenses]);
 
   const markPaid = useCallback((invoiceId: string, method: string) => {
@@ -841,10 +808,6 @@ export function usePaymentReminders() {
   }, []);
 
   return { reminders, sendReminder: cashFlowService.sendReminder.bind(cashFlowService) };
-}
-
-export function useFinancingSuggestions() {
-  return useMemo(() => cashFlowService.getFinancingSuggestions(), []);
 }
 
 // Reads the contractor's real invoices/expenses out of AppState. Previously

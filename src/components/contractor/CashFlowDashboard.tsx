@@ -24,7 +24,6 @@ import { getCurrentCountry } from '../../lib/currentUser';
 import {
   useCashFlow,
   usePaymentReminders,
-  useFinancingSuggestions,
   Invoice,
   CashFlowForecast,
   PaymentReminder,
@@ -42,7 +41,6 @@ export function CashFlowDashboard() {
   // useSeasonalPatterns hook, which would subscribe to AppState a second time.
   const { invoices, expenses, summary, aging, forecast, seasonalPatterns, markPaid, sendReminder } = useCashFlow();
   const { reminders } = usePaymentReminders();
-  const financingSuggestions = useFinancingSuggestions();
 
   const tabs: Array<{ key: TabType; label: string; icon: string }> = [
     { key: 'overview', label: t('cashflow.tabOverview', 'Overview'), icon: 'wallet-outline' },
@@ -193,27 +191,25 @@ export function CashFlowDashboard() {
         </View>
       )}
 
-      {/* Financing */}
-      {financingSuggestions.length > 0 && (
-        <View style={styles.financingSection}>
-          <Text style={styles.sectionTitle}>{t('cashflow.financingTitle', 'Financing options')}</Text>
-          {financingSuggestions.map((suggestion) => (
-            <Pressable key={suggestion.id} style={styles.financingCard}>
-              <View style={styles.financingIcon}>
-                <Ionicons name="cash-outline" size={24} color={Palette.hermesOrange} />
-              </View>
-              <View style={styles.financingContent}>
-                <Text style={styles.financingTitle}>{suggestion.title}</Text>
-                <Text style={styles.financingDesc}>{suggestion.description}</Text>
-                <Text style={styles.financingAmount}>
-                  {t('cashflow.financingAvailable', { amount: formatCurrency(suggestion.potentialAmount) })}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
-            </Pressable>
-          ))}
-        </View>
-      )}
+      {/* "Financieringsopties" was removed here — it advertised credit that
+          does not exist. It offered a "Vasco Business Credit" line of
+          "Tot € 25.000,00 beschikbaar" for € 250, and a "Vasco Financing"
+          factoring facility: both providers are invented, both amounts were
+          literals (or a flat 90%/3% of the aging totals), and the cards had no
+          onPress behind their chevron, so there was nothing to apply to.
+
+          Telling a contractor with tight cash that €25.000 is "available" is
+          not a cosmetic fabrication — it is an inducement about credit, and it
+          showed up precisely when their projected balance was low.
+
+          It was also latent until now: the factoring card required
+          `aging.days30 + aging.days60 > 2000`, and the aging table was fed by
+          the empty singleton, so it was permanently 0 and neither card could
+          appear. Fixing the aging wiring in this same change would have
+          switched this on for anyone with >€2.000 overdue.
+
+          Restore only alongside a real financing partner, with amounts and
+          costs that come from that partner. */}
     </ScrollView>
   );
 

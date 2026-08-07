@@ -59,7 +59,6 @@ export {
   cashFlowService,
   useCashFlow,
   usePaymentReminders,
-  useFinancingSuggestions,
   useSeasonalPatterns,
 } from './cashFlowService';
 
