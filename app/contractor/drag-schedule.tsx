@@ -14,6 +14,7 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { slotHoursOr } from '../../src/utils/jobSlot';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { scheduleJobReminder } from '../../src/services/pushNotificationService';
 import { useTranslation } from 'react-i18next';
@@ -104,21 +105,10 @@ export default function DragScheduleScreen() {
     .map((j: any, idx: number) => {
       const startHour = j.scheduledStartTime ? parseInt(j.scheduledStartTime.split(':')[0], 10) : 9;
       const cust = customers.find((c: any) => c.id === j.customerId);
-      // Block length is TODAY'S SLOT (scheduledEndTime - scheduledStartTime),
-      // not j.estimatedDuration. estimatedDuration is the WHOLE job's estimate
-      // — a 24h Badkamer renovatie rendered as a block from 13:00 to 37:00
-      // (an invalid time, no rollover) and pushed Bezetting to 270%. Fall back
-      // to estimatedDuration only when the slot can't be derived.
-      const toMinutes = (hhmm?: string) => {
-        if (!hhmm) return null;
-        const [h, m] = hhmm.split(':').map((x: string) => parseInt(x, 10));
-        return Number.isNaN(h) ? null : h * 60 + (Number.isNaN(m) ? 0 : m);
-      };
-      const startMin = toMinutes(j.scheduledStartTime);
-      const endMin = toMinutes(j.scheduledEndTime);
-      const slotHours = startMin !== null && endMin !== null && endMin > startMin
-        ? Math.round(((endMin - startMin) / 60) * 100) / 100
-        : null;
+      // Block length is TODAY'S SLOT, not j.estimatedDuration (the WHOLE job's
+      // estimate — a 24h Badkamer renovatie rendered 13:00 to 37:00 and pushed
+      // Bezetting to 270%). Shared helper: the same mix-up also hit the Werk
+      // badge and Weekoverzicht, each with its own copy of this arithmetic.
       return {
         jobId: j.id,
         title: j.title,
@@ -126,7 +116,7 @@ export default function DragScheduleScreen() {
         // card as "cust-003". Blank is better than an internal id.
         customerName: cust?.name || '',
         startHour: isNaN(startHour) ? 9 : startHour,
-        duration: slotHours ?? j.estimatedDuration ?? 2,
+        duration: slotHoursOr(j, 2),
         color: COLORS[idx % COLORS.length],
       };
     });

@@ -22,6 +22,7 @@ import { DKLabel } from '../../src/components/shared/DKLabel';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useAppState } from '../../src/state/AppState';
 import { localDateKey } from '../../src/utils/dateKey';
+import { bookedHours } from '../../src/utils/jobSlot';
 
 interface DayBucket {
   date: string;                  // YYYY-MM-DD
@@ -62,7 +63,11 @@ export default function WeeklyOverviewScreen() {
       // day before, so Tuesday's jobs showed under Monday.
       const dateStr = localDateKey(d);
       const dayJobs = (jobs as any[]).filter((j) => j.scheduledDate === dateStr);
-      const totalHours = dayJobs.reduce((s, j) => s + (Number(j.estimatedDuration) || 2), 0);
+      // Today's SLOT per job, not `estimatedDuration`. That field is the
+      // whole-job estimate — the 24h Badkamer renovatie plus a 3h CV-ketel
+      // summed this Friday to "27h", more hours than a day contains. Third
+      // occurrence of that mix-up, hence the shared helper.
+      const totalHours = bookedHours(dayJobs);
       all.push({
         date: dateStr,
         weekday: d.toLocaleDateString(i18n.language, { weekday: 'short' }),
@@ -73,6 +78,17 @@ export default function WeeklyOverviewScreen() {
     }
     return all;
   }, [jobs, weekOffset, i18n.language]);
+
+  // The suffix was a hardcoded "h", so a Dutch contractor read "27h" where the
+  // rest of the app says "27u". `common.durationH`/`durationHm` already exist
+  // for exactly this (added when the same literal was found in werk.tsx).
+  const formatHours = (h: number) => {
+    const whole = Math.floor(h);
+    const mins = Math.round((h - whole) * 60);
+    return mins === 0
+      ? t('common.durationH', { h: whole, defaultValue: '{{h}}h' })
+      : t('common.durationHm', { h: whole, m: String(mins).padStart(2, '0'), defaultValue: '{{h}}h{{m}}' });
+  };
 
   const weekLabel = useMemo(() => {
     const start = buckets[0]?.date;
@@ -155,7 +171,7 @@ export default function WeeklyOverviewScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.dayCount}>{b.jobs.length} {b.jobs.length === 1 ? t('weekly.job', 'job') : t('weekly.jobs', 'jobs')}</Text>
-                <Text style={styles.dayHours}>{b.totalHours}h</Text>
+                <Text style={styles.dayHours}>{formatHours(b.totalHours)}</Text>
               </View>
               {/* Route optimisation hidden for launch (2026-07-20). */}
               {routeOptimizationEnabled && b.jobs.length >= 2 && (
