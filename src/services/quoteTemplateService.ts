@@ -93,6 +93,12 @@ export const TEMPLATE_CATEGORIES: { id: TemplateCategory; label: string; icon: s
 // MOCK DATA
 // =============================================================================
 
+// Built-ins ship with usageCount 0 and no lastUsed. Three of them used to
+// carry 34 / 12 / 8 uses and a lastUsed of "3 days ago" — and because these are
+// shipped content rather than demo seed, a contractor who had just installed
+// the app was told they had used a template 34 times and had opened it that
+// week. `useTemplate()` maintains both fields for real and persists them per
+// template id, so 0 is the honest starting point, not a dead default.
 const BUILTIN_TEMPLATES: QuoteTemplate[] = [
   {
     id: 'qt-1',
@@ -110,8 +116,7 @@ const BUILTIN_TEMPLATES: QuoteTemplate[] = [
     defaultPaymentTerms: 'Betaling bij oplevering',
     estimatedDuration: '1.5 uur',
     subtotal: 135,
-    usageCount: 34,
-    lastUsed: new Date(Date.now() - 3 * MS_PER_DAY),
+    usageCount: 0,
     createdAt: new Date('2025-06-01'),
   },
   {
@@ -131,8 +136,7 @@ const BUILTIN_TEMPLATES: QuoteTemplate[] = [
     defaultPaymentTerms: '50% aanbetaling, 50% bij oplevering',
     estimatedDuration: '2 dagen',
     subtotal: 4340,
-    usageCount: 12,
-    lastUsed: new Date(Date.now() - 7 * MS_PER_DAY),
+    usageCount: 0,
     createdAt: new Date('2025-09-15'),
   },
   {
@@ -150,7 +154,7 @@ const BUILTIN_TEMPLATES: QuoteTemplate[] = [
     defaultPaymentTerms: 'Betaling binnen 14 dagen',
     estimatedDuration: '1 dag',
     subtotal: 1155,
-    usageCount: 8,
+    usageCount: 0,
     createdAt: new Date('2025-11-01'),
   },
 
