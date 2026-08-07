@@ -45,6 +45,8 @@ import {
   type LeadStatus,
   type LeadSource,
 } from '../../src/domain/lead';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatCurrency0, currencySymbol, type Country } from '../../src/i18n/formatting';
 import { SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
@@ -75,9 +77,14 @@ function daysSince(iso: string): number {
   return Math.max(0, Math.floor(ms / (24 * 60 * 60 * 1000)));
 }
 
-function formatUsd(n?: number): string {
+// The Leads CRM was built for the US launch (R74–R89) and this formatter came
+// with it: a hardcoded "$" and an en-US grouping locale. The screen is reachable
+// by every contractor, so a Dutch pipeline reported its value as "$0" — and with
+// en-US grouping a real figure would have read "$12,500" to someone who writes
+// it "€ 12.500". Amount and symbol both follow the contractor's country now.
+function formatLeadValue(n: number | undefined, country: Country): string {
   if (n == null) return '—';
-  return `$${Math.round(n).toLocaleString('en-US')}`;
+  return formatCurrency0(Math.round(n), country);
 }
 
 // R90: column bounds snapshot for drag hit-testing. Captured via onLayout
@@ -94,6 +101,8 @@ export default function PipelineScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { leads, addLead, updateLead, removeLead, moveLeadStatus } = useAppState();
+  const { user } = useAuth();
+  const country = (user?.country as Country) ?? 'NL';
 
   const grouped = useMemo(() => groupLeadsByStatus(leads), [leads]);
   const totalValue = useMemo(() => pipelineValue(leads), [leads]);
@@ -183,7 +192,7 @@ export default function PipelineScreen() {
       {/* KPI strip */}
       <View style={styles.kpiStrip}>
         <KpiTile label={t('pipeline.openLeads', 'Open leads')} value={String(leads.filter((l) => l.status !== 'lost' && l.status !== 'won').length)} />
-        <KpiTile label={t('pipeline.value', 'Value')} value={formatUsd(totalValue)} />
+        <KpiTile label={t('pipeline.value', 'Value')} value={formatLeadValue(totalValue, country)} />
         <KpiTile label={t('pipeline.winRate', 'Win rate · 90d')} value={`${wr}%`} />
       </View>
 
@@ -272,7 +281,7 @@ export default function PipelineScreen() {
             <Text style={styles.cardDesc} numberOfLines={2}>{dragging.jobDescription}</Text>
           ) : null}
           <View style={styles.cardFoot}>
-            <Text style={styles.cardValue}>{formatUsd(dragging.estimatedValue)}</Text>
+            <Text style={styles.cardValue}>{formatLeadValue(dragging.estimatedValue, country)}</Text>
             <Text style={styles.cardAge}>{daysSince(dragging.createdAt)}d</Text>
           </View>
         </Animated.View>
@@ -351,6 +360,8 @@ function LeadCard({
   onDragEnd: () => void;
   onLongPressFallback: () => void;
 }) {
+  const { user } = useAuth();
+  const country = (user?.country as Country) ?? 'NL';
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartedRef = useRef(false);
   const movedRef = useRef(false);
@@ -422,7 +433,7 @@ function LeadCard({
         </Text>
       ) : null}
       <View style={styles.cardFoot}>
-        <Text style={styles.cardValue}>{formatUsd(lead.estimatedValue)}</Text>
+        <Text style={styles.cardValue}>{formatLeadValue(lead.estimatedValue, country)}</Text>
         <Text style={styles.cardAge}>{daysSince(lead.createdAt)}d</Text>
       </View>
     </Animated.View>
@@ -432,8 +443,23 @@ function LeadCard({
 function KpiTile({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.kpiTile}>
-      <Text style={styles.kpiLabel}>{label}</Text>
-      <Text style={styles.kpiValue}>{value}</Text>
+      {/* One third of the width, uppercase, letter-spaced — long localised
+          labels overflow it and RN then breaks INSIDE the word: the Dutch
+          "SCORINGSPERCENTAGE · 90D" rendered as "SCORINGSPE / RCENTAGE · 90D".
+          Shrink to fit over two lines instead of hyphen-less mid-word
+          splitting, so this holds for whichever locale has the longest word
+          rather than being tuned to the one that happened to break. */}
+      <Text
+        style={styles.kpiLabel}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {label}
+      </Text>
+      <Text style={styles.kpiValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -454,6 +480,9 @@ function LeadModal({ visible, original, onClose, onSave, onDelete }: LeadModalPr
   const [jobDescription, setDesc] = useState(original?.jobDescription ?? '');
   const [estimatedValue, setValue] = useState(original?.estimatedValue?.toString() ?? '');
   const [notes, setNotes] = useState(original?.notes ?? '');
+
+  const { user } = useAuth();
+  const country = (user?.country as Country) ?? 'NL';
 
   const canSave = customerName.trim().length > 0;
 
@@ -490,7 +519,7 @@ function LeadModal({ visible, original, onClose, onSave, onDelete }: LeadModalPr
           <Field label={t('pipeline.phone', 'Phone')} value={customerPhone} onChange={setPhone} placeholder="+1 555 0123" keyboardType="phone-pad" />
           <Field label={t('pipeline.email', 'Email')} value={customerEmail} onChange={setEmail} placeholder="jane@example.com" keyboardType="email-address" />
           <Field label={t('pipeline.job', 'Job description')} value={jobDescription} onChange={setDesc} placeholder="HVAC service call" multiline />
-          <Field label={t('pipeline.value', 'Estimated value ($)')} value={estimatedValue} onChange={setValue} placeholder="385" keyboardType="numeric" />
+          <Field label={t('pipeline.valueField', { defaultValue: 'Estimated value ({{currency}})', currency: currencySymbol(country) })} value={estimatedValue} onChange={setValue} placeholder="385" keyboardType="numeric" />
           <Field label={t('pipeline.notes', 'Notes')} value={notes} onChange={setNotes} placeholder="Customer prefers afternoon" multiline />
 
           {original && onDelete ? (
@@ -569,7 +598,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
-    paddingHorizontal: GRID.md,
+    // 16pt of horizontal padding left ~82pt of content in a third-width tile,
+    // which no readable size can fit a long compound label into. Half the
+    // padding buys back the room the Dutch labels need.
+    paddingHorizontal: GRID.sm,
     paddingVertical: GRID.sm,
   },
   kpiLabel: {
@@ -577,7 +609,9 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    // Was 1. On an 18-character uppercase word that is 18 extra points of
+    // width spent on a label that already did not fit.
+    letterSpacing: 0.4,
   },
   kpiValue: {
     fontSize: 22,
