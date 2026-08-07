@@ -2929,7 +2929,11 @@
     "activeProjects": "PROGETTI ATTIVI",
     "allLink": "Tutti ›",
     "newProject": "NUOVO",
-    "hint": "Tocca per deselezionare · tieni premuto per aprire · le azioni di cantiere su Oggi si adattano"
+    "hint": "Tocca per deselezionare · tieni premuto per aprire · le azioni di cantiere su Oggi si adattano",
+    "a11yViewAll": "Vedi tutti i progetti",
+    "a11yPillActive": "Progetto attivo {{title}}. Tocca per deselezionare, tieni premuto per aprire.",
+    "a11yPillInactive": "Progetto {{title}}. Tocca per selezionare, tieni premuto per aprire.",
+    "a11yCreate": "Crea un nuovo progetto"
   },
   "recurring": {
     "title": "MANUTENZIONE",

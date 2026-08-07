@@ -14,6 +14,7 @@
 import { memo, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
@@ -23,6 +24,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useActiveProject } from '../../services/activeProjectService';
 
 function ProjectSwitcherImpl() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const { projects } = useAppState();
@@ -46,9 +48,9 @@ function ProjectSwitcherImpl() {
   return (
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
-        <DKLabel style={styles.title}>ACTIVE PROJECTS</DKLabel>
-        <Pressable hitSlop={8} accessibilityRole="link" accessibilityLabel="View all projects" onPress={() => router.push('/contractor/projects' as any)}>
-          <Text style={styles.allLink}>All ›</Text>
+        <DKLabel style={styles.title}>{t('projectSwitcher.activeProjects')}</DKLabel>
+        <Pressable hitSlop={8} accessibilityRole="link" accessibilityLabel={t('projectSwitcher.a11yViewAll')} onPress={() => router.push('/contractor/projects' as any)}>
+          <Text style={styles.allLink}>{t('projectSwitcher.allLink')}</Text>
         </Pressable>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
@@ -61,7 +63,10 @@ function ProjectSwitcherImpl() {
               onPress={() => handleSelect(p.id)}
               onLongPress={() => handleOpenDetail(p.id)}
               accessibilityRole="button"
-              accessibilityLabel={`${isActive ? 'Active' : 'Inactive'} project ${p.title}. Tap to ${isActive ? 'deselect' : 'select'}, long-press to open.`}
+              accessibilityLabel={t(
+                isActive ? 'projectSwitcher.a11yPillActive' : 'projectSwitcher.a11yPillInactive',
+                { title: p.title },
+              )}
               accessibilityState={{ selected: isActive }}
             >
               <Ionicons
@@ -75,15 +80,13 @@ function ProjectSwitcherImpl() {
             </Pressable>
           );
         })}
-        <Pressable style={styles.addPill} accessibilityRole="button" accessibilityLabel="Create new project" onPress={() => router.push('/contractor/projects' as any)}>
+        <Pressable style={styles.addPill} accessibilityRole="button" accessibilityLabel={t('projectSwitcher.a11yCreate')} onPress={() => router.push('/contractor/projects' as any)}>
           <Ionicons name="add" size={16} color={DK.colors.accent} />
-          <Text style={styles.addPillText}>NEW</Text>
+          <Text style={styles.addPillText}>{t('projectSwitcher.newProject')}</Text>
         </Pressable>
       </ScrollView>
       {activeProjectId ? (
-        <Text style={styles.hint}>
-          Tap to deselect · long-press to open · site-lead actions on Vandaag scope to active project
-        </Text>
+        <Text style={styles.hint}>{t('projectSwitcher.hint')}</Text>
       ) : null}
     </View>
   );

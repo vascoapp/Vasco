@@ -2913,7 +2913,11 @@
     "activeProjects": "ACTIEVE PROJECTEN",
     "allLink": "Alle ›",
     "newProject": "NIEUW",
-    "hint": "Tik om te deselecteren · lang ingedrukt om te openen · werfacties op Vandaag passen zich aan"
+    "hint": "Tik om te deselecteren · lang ingedrukt om te openen · werfacties op Vandaag passen zich aan",
+    "a11yViewAll": "Alle projecten bekijken",
+    "a11yPillActive": "Actief project {{title}}. Tik om te deselecteren, lang ingedrukt om te openen.",
+    "a11yPillInactive": "Project {{title}}. Tik om te selecteren, lang ingedrukt om te openen.",
+    "a11yCreate": "Nieuw project aanmaken"
   },
   "vatScheme": {
     "standard": "Standaard BTW",

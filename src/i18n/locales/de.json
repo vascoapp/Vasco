@@ -2929,7 +2929,11 @@
     "activeProjects": "AKTIVE PROJEKTE",
     "allLink": "Alle ›",
     "newProject": "NEU",
-    "hint": "Tippen zum Abwählen · lang drücken zum Öffnen · Baustellen-Aktionen auf Heute passen sich an"
+    "hint": "Tippen zum Abwählen · lang drücken zum Öffnen · Baustellen-Aktionen auf Heute passen sich an",
+    "a11yViewAll": "Alle Projekte ansehen",
+    "a11yPillActive": "Aktives Projekt {{title}}. Tippen zum Abwählen, gedrückt halten zum Öffnen.",
+    "a11yPillInactive": "Projekt {{title}}. Tippen zum Auswählen, gedrückt halten zum Öffnen.",
+    "a11yCreate": "Neues Projekt anlegen"
   },
   "vatScheme": {
     "standard": "Standard-USt",

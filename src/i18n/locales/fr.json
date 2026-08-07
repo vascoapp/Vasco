@@ -2929,7 +2929,11 @@
     "activeProjects": "PROJETS ACTIFS",
     "allLink": "Tous ›",
     "newProject": "NOUVEAU",
-    "hint": "Touchez pour désélectionner · maintenez pour ouvrir · les actions chantier sur Aujourd'hui s'adaptent"
+    "hint": "Touchez pour désélectionner · maintenez pour ouvrir · les actions chantier sur Aujourd'hui s'adaptent",
+    "a11yViewAll": "Voir tous les projets",
+    "a11yPillActive": "Projet actif {{title}}. Appuyez pour désélectionner, appui long pour ouvrir.",
+    "a11yPillInactive": "Projet {{title}}. Appuyez pour sélectionner, appui long pour ouvrir.",
+    "a11yCreate": "Créer un nouveau projet"
   },
   "recurring": {
     "title": "ENTRETIEN",

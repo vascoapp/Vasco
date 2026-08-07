@@ -2929,7 +2929,11 @@
     "activeProjects": "ACTIVE PROJECTS",
     "allLink": "All ›",
     "newProject": "NEW",
-    "hint": "Tap to deselect · long-press to open · site-lead actions on Vandaag scope to active project"
+    "hint": "Tap to deselect · long-press to open · site-lead actions on Vandaag scope to active project",
+    "a11yViewAll": "View all projects",
+    "a11yPillActive": "Active project {{title}}. Tap to deselect, long-press to open.",
+    "a11yPillInactive": "Project {{title}}. Tap to select, long-press to open.",
+    "a11yCreate": "Create new project"
   },
   "vatScheme": {
     "standard": "Standard VAT",
