@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { formatMoney } from '../i18n/formatting';
+import { daysOverdue } from '../utils/invoiceDue';
 import i18n from '../i18n/i18n';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -274,8 +275,12 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
   const PAID_STATUSES = new Set(['paid', 'partial', 'draft']);
   for (const inv of state.invoices ?? []) {
     if (PAID_STATUSES.has(inv.status)) continue;
-    if (inv.status === 'overdue' || (typeof inv.dueInDays === 'number' && inv.dueInDays < 0)) {
-      const days = Math.abs(inv.dueInDays ?? 0);
+    // Derived from dueDate, not the stored dueInDays snapshot: that field is
+    // frozen at send time and decays, which had this inbox saying "14 dagen
+    // achterstallig" for an invoice the Geld tab correctly called 32.
+    const overdueDays = daysOverdue(inv);
+    if (inv.status === 'overdue' || (overdueDays !== null && overdueDays > 0)) {
+      const days = overdueDays ?? 0;
       out.push({
         id: `live-invoice-${inv.id}`,
         type: 'overdue_invoice',

@@ -1,4 +1,5 @@
 import { formatMoney } from '../i18n/formatting';
+import { daysOverdue, daysUntilDue } from '../utils/invoiceDue';
 import { AttentionItem } from '../domain/attention';
 import { BusinessProfile } from '../domain/business';
 import { Invoice, Quote } from '../domain/documents';
@@ -28,15 +29,19 @@ export function buildAttentionQueue({
   const overdueInvoices = invoices.filter((invoice) => invoice.status === 'overdue');
   if (overdueInvoices.length > 0) {
     const totalOverdue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
+    // Ranked on the DERIVED age, not the stored dueInDays snapshot — that
+    // field is frozen at send time, so "oldest" was picking whichever invoice
+    // happened to be seeded with the largest constant.
+    const ageOf = (i: (typeof overdueInvoices)[number]) => daysOverdue(i) ?? 0;
     const mostOverdue = overdueInvoices.reduce((prev, curr) =>
-      Math.abs(curr.dueInDays) > Math.abs(prev.dueInDays) ? curr : prev
+      ageOf(curr) > ageOf(prev) ? curr : prev
     );
 
     items.push({
       id: `overdue-${mostOverdue.id}`,
       title: `${formatCurrency(totalOverdue)} overdue`,
       subtitle: `${overdueInvoices.length} invoice${overdueInvoices.length > 1 ? 's' : ''} need follow-up`,
-      why: `Oldest: ${Math.abs(mostOverdue.dueInDays)} days past due`,
+      why: `Oldest: ${ageOf(mostOverdue)} days past due`,
       impact: 'Recover cash',
       tag: '€',
       tone: 'danger',
@@ -121,13 +126,19 @@ export function buildAttentionQueue({
 
   // 6. Sent invoices approaching due date (proactive follow-up)
   const dueSoonInvoices = invoices.filter(
-    (i) => i.status === 'sent' && i.dueInDays > 0 && i.dueInDays <= 3
+    (i) => {
+      const d = daysUntilDue(i);
+      return i.status === 'sent' && d !== null && d > 0 && d <= 3;
+    }
   );
   if (dueSoonInvoices.length > 0) {
     const soonestDue = dueSoonInvoices[0];
     items.push({
       id: `due-soon-${soonestDue.id}`,
-      title: `Invoice due in ${soonestDue.dueInDays} day${soonestDue.dueInDays > 1 ? 's' : ''}`,
+      title: (() => {
+        const d = daysUntilDue(soonestDue) ?? 0;
+        return `Invoice due in ${d} day${d > 1 ? 's' : ''}`;
+      })(),
       subtitle: soonestDue.customer,
       why: 'Send a friendly reminder',
       impact: 'Prevent overdue',

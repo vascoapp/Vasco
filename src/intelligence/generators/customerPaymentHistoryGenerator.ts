@@ -6,6 +6,7 @@
 // =============================================================================
 
 import type { ScoredInsight, GeneratorContext } from './types';
+import { daysUntilDue } from '../../utils/invoiceDue';
 import { useAppState } from '../../state/AppState';
 import { recordMetricSnapshot } from '../learningStorage';
 import { logPrediction } from '../calibration';
@@ -37,8 +38,18 @@ export function useCustomerPaymentHistoryInsight(ctx: GeneratorContext): ScoredI
     const overdueCount = custInvoices.filter(i => i.status === 'overdue').length;
     const paidInvoices = custInvoices.filter(i => i.status === 'paid');
 
-    // Estimate avg payment days from dueInDays (lower = paid faster)
-    const avgDays = custInvoices.reduce((sum, i) => sum + (i.dueInDays ?? 14), 0) / custInvoices.length;
+    // Estimate avg payment days from the due-date offset (lower = paid faster).
+    // Derived rather than read from the stored `dueInDays` snapshot, which is
+    // frozen at send time and decays — it biased this signal toward whatever
+    // constant an invoice happened to be created with.
+    //
+    // ⚠️ Still an approximation, and knowingly so: this measures how the DUE
+    // DATE sits relative to today, not when the customer actually paid. A real
+    // payment-speed signal needs a paidAt timestamp, which invoices do not
+    // carry yet. Named as an estimate because that is what it is.
+    const avgDays = custInvoices.reduce(
+      (sum, i) => sum + (daysUntilDue(i) ?? i.dueInDays ?? 14), 0,
+    ) / custInvoices.length;
     const totalAmount = custInvoices.reduce((sum, i) => sum + i.amount, 0);
 
     customerPaymentData.push({
