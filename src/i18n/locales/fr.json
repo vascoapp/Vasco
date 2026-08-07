@@ -5538,5 +5538,10 @@
     "resend": "Renvoyer le lien",
     "needsSignIn": "Connectez-vous à votre compte Vasco pour publier un accès. Déjà connecté ? Déconnectez-vous puis reconnectez-vous et réessayez.",
     "publishFailed": "L’accès n’a pas pu être publié. Vérifiez votre connexion et réessayez."
+  },
+  "notFound": {
+    "title": "Cette page a été déplacée",
+    "body": "Le lien que vous avez suivi ne mène plus nulle part. Rien n’est perdu — revenez en arrière ou repartez d’Aujourd’hui.",
+    "home": "Aller à Aujourd’hui"
   }
 }

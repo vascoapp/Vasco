@@ -89,6 +89,26 @@ export function formatNumber(n: number, country: Country = 'NL'): string {
   return new Intl.NumberFormat(locale).format(n);
 }
 
+/**
+ * One-decimal number in the contractor's locale — "1,5" in NL/DE/FR/ES/IT,
+ * "1.5" in UK/US.
+ *
+ * Exists because `toFixed(1)` always emits a POINT, so hour readouts rendered
+ * "0.0u" on Dutch screens: unit localised, number not. Half-localised is its
+ * own bug — it reads like a glitch rather than a translation gap.
+ */
+export function formatDecimal1(n: number, country: Country = 'NL'): string {
+  const { locale } = COUNTRY_CONFIG[country];
+  try {
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(n);
+  } catch {
+    return n.toFixed(1);
+  }
+}
+
 /** Whole-currency formatter (0 decimals) — right symbol + locale grouping.
  *  NL €1.234 · UK £1,234 · US $1,234. Use for compact amount displays that
  *  shouldn't show cents. narrowSymbol with a fallback for older Intl builds. */

@@ -5538,5 +5538,10 @@
     "resend": "Invia di nuovo il link",
     "needsSignIn": "Accedi al tuo account Vasco per pubblicare un accesso. Hai già effettuato l’accesso? Esci, rientra e riprova.",
     "publishFailed": "Non è stato possibile pubblicare l’accesso. Controlla la connessione e riprova."
+  },
+  "notFound": {
+    "title": "Questa pagina è stata spostata",
+    "body": "Il link che hai seguito non porta più da nessuna parte. Non è andato perso nulla: torna indietro o riparti da Oggi.",
+    "home": "Vai a Oggi"
   }
 }

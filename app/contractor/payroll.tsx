@@ -15,7 +15,7 @@ import { EmptyState } from '../../src/components/shared/EmptyState';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useTeamMembers, useTimeTracking } from '../../src/services/teamManagementService';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatDecimal1 } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 
 type PeriodType = 'week' | 'maand';
@@ -36,14 +36,14 @@ export default function PayrollScreen() {
   const { t } = useTranslation();
   // Dutch 'u' (uren) was hardcoded here — an English contractor read "7.5u".
   // common.durationH is the localised unit: {{h}}h · {{h}}u · {{h}} Std.
-  const hoursLabel = (h: number) =>
-    t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
   const router = useRouter();
   const [period, setPeriod] = useState<PeriodType>('week');
   const { members } = useTeamMembers();
   const { entries } = useTimeTracking();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
+  const hoursLabel = (h: number) =>
+    t('common.durationH', { defaultValue: '{{h}}h', h: formatDecimal1(h, country) });
 
   const roleNames: Record<string, string> = {
     owner: 'Eigenaar',
@@ -198,7 +198,7 @@ export default function PayrollScreen() {
               </View>
               <View style={styles.detailCol}>
                 <Text style={[styles.detailValue, line.overtimeHours > 0 && { color: Palette.hermesOrange }]}>
-                  {line.overtimeHours.toFixed(1)}u
+                  {hoursLabel(line.overtimeHours)}
                 </Text>
                 <Text style={styles.detailLabel}>Overwerk</Text>
               </View>

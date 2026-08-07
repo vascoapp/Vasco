@@ -5538,5 +5538,10 @@
     "resend": "Enviar el enlace de nuevo",
     "needsSignIn": "Inicie sesión en su cuenta de Vasco para publicar un acceso. ¿Ya ha iniciado sesión? Cierre sesión, vuelva a entrar e inténtelo de nuevo.",
     "publishFailed": "No se pudo publicar el acceso. Compruebe su conexión e inténtelo de nuevo."
+  },
+  "notFound": {
+    "title": "Esta página se ha movido",
+    "body": "El enlace que seguiste ya no lleva a ninguna parte. No se ha perdido nada: vuelve atrás o empieza de nuevo en Hoy.",
+    "home": "Ir a Hoy"
   }
 }

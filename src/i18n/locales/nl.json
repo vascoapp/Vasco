@@ -5522,5 +5522,10 @@
     "resend": "Link opnieuw sturen",
     "needsSignIn": "Log in op uw Vasco-account om toegang te publiceren. Bent u al ingelogd? Log uit en weer in en probeer het opnieuw.",
     "publishFailed": "De toegang kon niet worden gepubliceerd. Controleer uw verbinding en probeer het opnieuw."
+  },
+  "notFound": {
+    "title": "Deze pagina is verplaatst",
+    "body": "De link die je volgde wijst nergens meer naartoe. Er is niets kwijt — ga terug of begin opnieuw bij Vandaag.",
+    "home": "Naar Vandaag"
   }
 }

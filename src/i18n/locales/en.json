@@ -5538,5 +5538,10 @@
     "resend": "Send link again",
     "needsSignIn": "Sign in to your Vasco account to publish a seat. If you are already signed in, sign out and back in, then try again.",
     "publishFailed": "The seat could not be published. Check your connection and try again."
+  },
+  "notFound": {
+    "title": "This page has moved",
+    "body": "The link you followed no longer points anywhere. Nothing is lost — go back, or start again from Today.",
+    "home": "Go to Today"
   }
 }

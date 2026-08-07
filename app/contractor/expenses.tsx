@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
+import { DK } from '../../src/theme/draftkings';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useExpenses, useExpenseStats, EXPENSE_CATEGORIES, type ExpenseCategory } from '../../src/services/expenseService';
 import { useAppState } from '../../src/state/AppState';
@@ -66,22 +68,22 @@ export default function ExpensesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel={t('common.back', 'Back')}>
-          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('expenses.title', 'Uitgaven')}</Text>
-          <Text style={styles.headerSubtitle}>{t('expenses.expensesThisYear', { count: expenses.length })}</Text>
-        </View>
-        <Pressable
-          style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.85 }]}
-          onPress={() => setShowAddForm(true)}
-          accessibilityLabel={t('expenses.newExpense', 'New expense')}
-        >
-          <Ionicons name="add" size={22} color={Palette.white} />
-        </Pressable>
-      </View>
+      {/* Was a bespoke header with a hardcoded `paddingTop: SafeArea.top` (59,
+          an iPhone-notch guess), which crowded the title against the status bar
+          and looked nothing like the other drill-downs. DKScreenHeader already
+          takes a subtitle and right-hand actions — exactly this shape — and it
+          derives the inset instead of assuming it. CLAUDE.md names it as the
+          convention for drill-down screens. */}
+      <DKScreenHeader
+        title={t('expenses.title', 'Uitgaven')}
+        subtitle={t('expenses.expensesThisYear', { count: expenses.length })}
+        actions={[{
+          icon: 'add',
+          onPress: () => setShowAddForm(true),
+          accessibilityLabel: t('expenses.newExpense', 'New expense'),
+          tone: DK.colors.accent,
+        }]}
+      />
 
       {/* Add Expense Modal */}
       <Modal visible={showAddForm} transparent animationType="slide" onRequestClose={() => setShowAddForm(false)}>
@@ -234,10 +236,6 @@ export default function ExpensesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
-  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: Spacing.sm },
-  backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
-  headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   statsCard: { marginHorizontal: SafeArea.side, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: Spacing.md, marginBottom: Spacing.sm },
   statsRow: { flexDirection: 'row', marginBottom: Spacing.sm },
   statItem: { flex: 1, alignItems: 'center' },
@@ -263,7 +261,6 @@ const styles = StyleSheet.create({
   expenseAmount: { fontSize: 14, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
   deductBadge: { backgroundColor: SemanticColors.feedbackSuccess + '15', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 2 },
   deductText: { fontSize: 10, fontFamily: 'Archivo_700Bold', color: SemanticColors.feedbackSuccess },
-  addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: Palette.hermesOrange, alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalDismiss: { flex: 1 },
   modalSheet: { backgroundColor: SemanticColors.surfacePrimary, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40, gap: 12 },

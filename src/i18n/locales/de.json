@@ -5538,5 +5538,10 @@
     "resend": "Link erneut senden",
     "needsSignIn": "Melden Sie sich in Ihrem Vasco-Konto an, um einen Zugang zu veröffentlichen. Sind Sie bereits angemeldet? Melden Sie sich ab und wieder an und versuchen Sie es erneut.",
     "publishFailed": "Der Zugang konnte nicht veröffentlicht werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+  },
+  "notFound": {
+    "title": "Diese Seite wurde verschoben",
+    "body": "Der Link führt nicht mehr weiter. Es ist nichts verloren — geh zurück oder starte neu bei Heute.",
+    "home": "Zu Heute"
   }
 }

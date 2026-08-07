@@ -23,6 +23,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
+import { formatDecimal1 } from '../../src/i18n/formatting';
 import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
@@ -117,7 +118,9 @@ export default function TimesheetScreen() {
   // fix never reached this screen. `common.durationH` is the existing localised
   // unit: "{{h}}h" (en) · "{{h}}u" (nl) · "{{h}} Std." (de).
   const hoursLabel = (h: number) =>
-    t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
+    // toFixed(1) always emits a POINT, so the unit was localised ("u") while
+    // the number was not: "0.0u" on a Dutch screen.
+    t('common.durationH', { defaultValue: '{{h}}h', h: formatDecimal1(h, country) });
 
   const todayHours = todayEntries.reduce((sum, e) => sum + e.totalHours, 0);
 
