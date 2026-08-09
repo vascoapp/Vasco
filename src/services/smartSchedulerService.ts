@@ -9,7 +9,8 @@ import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { jobCostTrackingService } from './jobCostTrackingService';
 import { getLastFetchedForecast, type DayForecast } from './weatherService';
 import i18n from '../i18n/i18n';
-import { localDateKey } from '../utils/dateKey';
+import { localDateKey, todayKey } from '../utils/dateKey';
+import type { JobTimeEntry } from '../domain/jobs';
 
 // ============================================
 // TYPES
@@ -1150,12 +1151,30 @@ export function useJobLifecyclePipeline() {
     return next;
   }, [appJobs, updateJobStatus]);
 
+  // Writing only the `actualHours` scalar was still a silent discard, one
+  // layer down: the jobs write-mapper DROPS actualHours ("derived from time
+  // entries"), so every hour logged here lived in AsyncStorage on one device
+  // and was wiped by the next refreshData(). It also recorded no WHO and no
+  // WHEN, so an aannemer could never answer "what do I owe Ahmed this week"
+  // and project labour cost silently returned to zero after a refresh.
+  //
+  // Hours are now appended to `timeEntries`, which is a real JSONB column
+  // both mappers already round-trip, stamped with the day worked and the
+  // crew member assigned at the time. `actualHours` is kept in step as the
+  // derived total so existing readers are unaffected.
   const recordHours = useCallback((jobId: string, hours: number) => {
     const job = appJobs.find((j) => j.id === jobId);
     if (!job) return;
-    // Accumulate, matching the old service semantics (`actualHoursLogged + hours`).
-    const total = Math.round(((job.actualHours ?? 0) + hours) * 100) / 100;
-    updateJob(jobId, { actualHours: total });
+    const entries = job.timeEntries ?? [];
+    const entry: JobTimeEntry = {
+      id: `te-${Date.now()}-${Math.round(hours * 100)}`,
+      date: todayKey(),
+      hours,
+      workerId: job.assignedWorkerId,
+    };
+    const next = [...entries, entry];
+    const total = Math.round(next.reduce((s, e) => s + (e.hours ?? 0), 0) * 100) / 100;
+    updateJob(jobId, { timeEntries: next, actualHours: total });
   }, [appJobs, updateJob]);
 
   return { jobs, counts, advance, recordHours };

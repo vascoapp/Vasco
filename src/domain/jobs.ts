@@ -20,6 +20,31 @@ export type JobAddress = {
 
 export type JobPriority = 'low' | 'normal' | 'high' | 'emergency';
 
+/**
+ * One logged stretch of work on a job.
+ *
+ * Persisted as JSONB on `jobs.time_entries` (migration 20260507000002); both
+ * mappers already round-trip the whole array, so a new field INSIDE the entry
+ * needs no migration. This was typed `never[]`, which meant the column could
+ * be read but never legally written — every writer went through `as any`.
+ *
+ * `workerId` is which crew member did the work. Undefined = the contractor
+ * themselves, which covers every solo install and every entry logged before
+ * crews existed. It is deliberately a copy taken at logging time and NOT read
+ * from `job.assignedWorkerId`: assignment is who is on the job *now*, so
+ * reading it live would silently re-attribute last week's wages the moment a
+ * job is handed to someone else.
+ */
+export type JobTimeEntry = {
+  id: string;
+  /** Local date key `YYYY-MM-DD` — the day WORKED, not the day recorded. */
+  date: string;
+  hours: number;
+  workerId?: string;
+  clockIn?: string;
+  clockOut?: string;
+};
+
 // Re-export for convenience — job materials live in AppState.jobMaterials (keyed by jobId)
 export type { JobMaterial } from './materials';
 
@@ -53,7 +78,7 @@ export type Job = {
   // Stub arrays (loaded from separate tables in future)
   photos: never[];
   notes: never[];
-  timeEntries: never[];
+  timeEntries: JobTimeEntry[];
   materials: never[];
   // Recurring
   recurringPattern?: {

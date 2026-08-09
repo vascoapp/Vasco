@@ -11,6 +11,7 @@
  * Asserts the behaviour and the exact regression that caused it.
  */
 import { evaluateTriggers, pickTemplateForLocale, resolveTemplate, DEFAULT_PACKS } from '../workflowPackService';
+import { addToQueue } from '../aiActionQueueService';
 
 jest.mock('../../lib/currentUser', () => ({
   getAuthedUserId: () => 'u1',
@@ -18,6 +19,27 @@ jest.mock('../../lib/currentUser', () => ({
   getCurrentTrade: () => 'plumbing',
   getCurrentCountry: () => 'NL',
 }));
+
+// `evaluateTriggers` returns the count across ALL packs, so asserting on its
+// total made both cases depend on the wall clock: the end-of-day pack fires on
+// `daily_17:00`, so "queues nothing" was green every morning and red every
+// evening, and "queues something" would have passed even if the welcome pack
+// never fired. Assert on what was actually queued instead.
+jest.mock('../aiActionQueueService', () => ({
+  ...jest.requireActual('../aiActionQueueService'),
+  addToQueue: jest.fn(() => Promise.resolve('queued-1')),
+  getQueueHistory: () => Promise.resolve([]),
+  getRequiredPermits: () => [],
+}));
+
+const addToQueueMock = addToQueue as unknown as jest.Mock;
+
+/** Only the items the welcome pack queued, ignoring any clock-driven pack. */
+function welcomeItems() {
+  return addToQueueMock.mock.calls
+    .map((c) => c[0])
+    .filter((item) => item?.preparedData?.packId === 'nieuw_klant_welkom');
+}
 
 // evaluateTriggers returns 0 on its first line unless the tier runs packs.
 jest.mock('../subscriptionService', () => ({
@@ -45,20 +67,21 @@ const ctx = (quotes: any[]) => ({
 
 describe('Nieuw Klant Welkom', () => {
   beforeEach(async () => {
+    addToQueueMock.mockClear();
     await (globalThis as any).__asyncStorageMock &&
       Object.keys((globalThis as any).__asyncStorageMock ?? {}).forEach(
         (k) => delete (globalThis as any).__asyncStorageMock[k],
       );
   });
 
-  it('queues something for a quote accepted just now', async () => {
-    const queued = await evaluateTriggers(ctx([quote()]) as any);
-    expect(queued).toBeGreaterThan(0);
+  it('queues the welcome message for a quote accepted just now', async () => {
+    await evaluateTriggers(ctx([quote()]) as any);
+    expect(welcomeItems().length).toBeGreaterThan(0);
   });
 
-  it('queues nothing when the timestamp is unparseable — the original defect', async () => {
-    const queued = await evaluateTriggers(ctx([quote({ lastUpdated: 'Just now' })]) as any);
-    expect(queued).toBe(0);
+  it('queues no welcome when the timestamp is unparseable — the original defect', async () => {
+    await evaluateTriggers(ctx([quote({ lastUpdated: 'Just now' })]) as any);
+    expect(welcomeItems()).toHaveLength(0);
   });
 
   it('the message thanks the customer for the collaboration, in every locale', () => {

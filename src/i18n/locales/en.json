@@ -79,7 +79,8 @@
     "supportOnboarding": "Dedicated support + onboarding",
     "select": "Select",
     "noOptions": "Nothing to choose from yet",
-    "justNow": "Just now"
+    "justNow": "Just now",
+    "tryAgain": "Please try again."
   },
   "tabs": {
     "today": "Today",
@@ -5425,9 +5426,35 @@
   "payroll": {
     "totalHours": "Total hours",
     "totalPayroll": "Total payroll",
-    "noTeamTitle": "No team members yet",
-    "noTeamDesc": "Add team members to see their hours and payroll here.",
-    "exportSub": "Share as CSV for your accounting software or bookkeeper"
+    "exportSub": "Share as CSV for your accounting software or bookkeeper",
+    "title": "Payroll",
+    "you": "You",
+    "peopleCount_one": "{{count}} person",
+    "peopleCount_other": "{{count}} people",
+    "worked": "Worked",
+    "week": "Week",
+    "month": "Month",
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "hours": "Hours",
+    "jobsCount_one": "{{count}} job",
+    "jobsCount_other": "{{count}} jobs",
+    "onJobs": "On jobs",
+    "noRate": "No hourly cost recorded",
+    "perHour": "{{rate}}/h",
+    "inactive": "No longer on the crew",
+    "unpricedNote_one": "Excludes {{count}} person with no hourly cost recorded ({{hours}}h). Add it under Team.",
+    "unpricedNote_other": "Excludes {{count}} people with no hourly cost recorded ({{hours}}h). Add it under Team.",
+    "noHoursTitle": "No hours logged this period",
+    "noHoursSolo": "Log hours on a job and they appear here, ready to export for your bookkeeper.",
+    "noHoursCrew": "Hours logged against a job are attributed to whoever is assigned to it. Nothing has been logged for this period yet.",
+    "export": "Export",
+    "exportTitle": "Payroll export {{from}} — {{to}}",
+    "exportFailed": "Export failed",
+    "csvName": "Name",
+    "csvHours": "Hours",
+    "csvRate": "Hourly cost",
+    "csvCost": "Cost"
   },
   "aiAssistant": {
     "welcomeTitle": "Hi! I'm your Vasco assistant",

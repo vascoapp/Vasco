@@ -79,7 +79,8 @@
     "supportOnboarding": "Fester Support + Onboarding",
     "select": "Auswählen",
     "noOptions": "Noch nichts zur Auswahl",
-    "justNow": "Gerade eben"
+    "justNow": "Gerade eben",
+    "tryAgain": "Bitte versuchen Sie es erneut."
   },
   "tabs": {
     "today": "Heute",
@@ -5425,9 +5426,35 @@
   "payroll": {
     "totalHours": "Gesamtstunden",
     "totalPayroll": "Lohnsumme gesamt",
-    "noTeamTitle": "Noch keine Teammitglieder",
-    "noTeamDesc": "Fügen Sie Teammitglieder hinzu, um deren Stunden und Löhne hier zu sehen.",
-    "exportSub": "Als CSV für Ihre Buchhaltungssoftware oder Ihren Buchhalter teilen"
+    "exportSub": "Als CSV für Ihre Buchhaltungssoftware oder Ihren Buchhalter teilen",
+    "title": "Lohnabrechnung",
+    "you": "Sie",
+    "peopleCount_one": "{{count}} Person",
+    "peopleCount_other": "{{count}} Personen",
+    "worked": "Gearbeitet",
+    "week": "Woche",
+    "month": "Monat",
+    "thisWeek": "Diese Woche",
+    "thisMonth": "Dieser Monat",
+    "hours": "Stunden",
+    "jobsCount_one": "{{count}} Auftrag",
+    "jobsCount_other": "{{count}} Aufträge",
+    "onJobs": "Auf Aufträgen",
+    "noRate": "Kein Stundensatz hinterlegt",
+    "perHour": "{{rate}}/Std.",
+    "inactive": "Nicht mehr im Team",
+    "unpricedNote_one": "Ohne {{count}} Person ohne hinterlegten Stundensatz ({{hours}} Std.). Bitte unter Team ergänzen.",
+    "unpricedNote_other": "Ohne {{count}} Personen ohne hinterlegten Stundensatz ({{hours}} Std.). Bitte unter Team ergänzen.",
+    "noHoursTitle": "In diesem Zeitraum keine Stunden erfasst",
+    "noHoursSolo": "Erfassen Sie Stunden auf einem Auftrag – sie erscheinen hier, bereit für den Export an Ihre Buchhaltung.",
+    "noHoursCrew": "Auf einen Auftrag erfasste Stunden werden der zugewiesenen Person zugerechnet. Für diesen Zeitraum wurde noch nichts erfasst.",
+    "export": "Exportieren",
+    "exportTitle": "Lohnabrechnung Export {{from}} — {{to}}",
+    "exportFailed": "Export fehlgeschlagen",
+    "csvName": "Name",
+    "csvHours": "Stunden",
+    "csvRate": "Stundensatz",
+    "csvCost": "Kosten"
   },
   "aiAssistant": {
     "welcomeTitle": "Hallo! Ich bin Ihr Vasco-Assistent",

@@ -101,7 +101,10 @@ export type JobRow = {
   // R66 round 12: time entries persisted as JSONB on jobs. Migration
   // 20260507000002_jobs_time_entries.sql. Was previously dropped by the
   // mapper (comment: "separate table") even though no such table existed.
-  time_entries: Array<{ id: string; date: string; hours: number; clockIn?: string; clockOut?: string }>;
+  // `worker_id` inside the JSONB is which crew member logged the stretch —
+  // undefined means the contractor themselves. JSONB is schemaless, so this
+  // needed no migration; the column and both mappers already existed.
+  time_entries: Array<{ id: string; date: string; hours: number; workerId?: string; clockIn?: string; clockOut?: string }>;
   // R86 crew dispatch lite: which Worker is on this job. NULL for solo
   // contractors. Migration 20260520000004 adds the column + FK to
   // workers(id) ON DELETE SET NULL.

@@ -79,7 +79,8 @@
     "supportOnboarding": "Soporte dedicado + incorporación",
     "select": "Seleccionar",
     "noOptions": "Todavía no hay nada que elegir",
-    "justNow": "Ahora mismo"
+    "justNow": "Ahora mismo",
+    "tryAgain": "Inténtalo de nuevo."
   },
   "tabs": {
     "today": "Hoy",
@@ -5425,9 +5426,35 @@
   "payroll": {
     "totalHours": "Horas totales",
     "totalPayroll": "Nómina total",
-    "noTeamTitle": "Aún no hay miembros del equipo",
-    "noTeamDesc": "Añade miembros del equipo para ver aquí sus horas y su nómina.",
-    "exportSub": "Comparte en CSV para tu software contable o tu gestor"
+    "exportSub": "Comparte en CSV para tu software contable o tu gestor",
+    "title": "Nóminas",
+    "you": "Tú",
+    "peopleCount_one": "{{count}} persona",
+    "peopleCount_other": "{{count}} personas",
+    "worked": "Han trabajado",
+    "week": "Semana",
+    "month": "Mes",
+    "thisWeek": "Esta semana",
+    "thisMonth": "Este mes",
+    "hours": "Horas",
+    "jobsCount_one": "{{count}} trabajo",
+    "jobsCount_other": "{{count}} trabajos",
+    "onJobs": "En trabajos",
+    "noRate": "Sin coste por hora registrado",
+    "perHour": "{{rate}}/h",
+    "inactive": "Ya no está en el equipo",
+    "unpricedNote_one": "Excluye {{count}} persona sin coste por hora ({{hours}} h). Añádelo en Equipo.",
+    "unpricedNote_other": "Excluye {{count}} personas sin coste por hora ({{hours}} h). Añádelo en Equipo.",
+    "noHoursTitle": "No hay horas registradas en este periodo",
+    "noHoursSolo": "Registra horas en un trabajo y aparecerán aquí, listas para exportar a tu gestor.",
+    "noHoursCrew": "Las horas registradas en un trabajo se atribuyen a quien esté asignado. Todavía no se ha registrado nada en este periodo.",
+    "export": "Exportar",
+    "exportTitle": "Exportación de nóminas {{from}} — {{to}}",
+    "exportFailed": "Error al exportar",
+    "csvName": "Nombre",
+    "csvHours": "Horas",
+    "csvRate": "Coste por hora",
+    "csvCost": "Coste"
   },
   "aiAssistant": {
     "welcomeTitle": "¡Hola! Soy tu asistente Vasco",

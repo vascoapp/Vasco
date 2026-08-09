@@ -1,7 +1,19 @@
 // =============================================================================
 // PAYROLL — Verloning overzicht
 // =============================================================================
-// Team hours + rates summary with export capability
+// Hours actually logged, per person, at the rate recorded for them.
+//
+// This screen used to read `teamManagementService` — a demo-only singleton
+// with no persistence that NOTHING in the app ever adds a member to. So an
+// aannemer who had built a five-person crew in Team was told "no team members
+// yet", and in demo builds the export button offered their bookkeeper a CSV of
+// three fabricated employees at fabricated rates. It now reads the same
+// `workers` and `jobs` every other crew surface reads.
+//
+// The arithmetic lives in `payrollService` (pure, tested), including its two
+// deliberate refusals to invent a number: no overtime premium (CAO-dependent
+// across six countries) and an unknown rate stays unknown rather than
+// summing as zero.
 // =============================================================================
 
 import { useState, useMemo } from 'react';
@@ -13,109 +25,69 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { EmptyState } from '../../src/components/shared/EmptyState';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { useTeamMembers, useTimeTracking } from '../../src/services/teamManagementService';
+import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
+import { buildPayroll, periodBounds, type PayrollPeriod } from '../../src/services/payrollService';
 import { formatCurrency, formatDecimal1 } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
-
-type PeriodType = 'week' | 'maand';
-
-interface PayrollLine {
-  memberId: string;
-  name: string;
-  role: string;
-  hourlyRate: number;
-  regularHours: number;
-  overtimeHours: number;
-  regularPay: number;
-  overtimePay: number;
-  totalPay: number;
-}
 
 export default function PayrollScreen() {
   const { t } = useTranslation();
   // Dutch 'u' (uren) was hardcoded here — an English contractor read "7.5u".
   // common.durationH is the localised unit: {{h}}h · {{h}}u · {{h}} Std.
   const router = useRouter();
-  const [period, setPeriod] = useState<PeriodType>('week');
-  const { members } = useTeamMembers();
-  const { entries } = useTimeTracking();
+  const [period, setPeriod] = useState<PayrollPeriod>('week');
+  const { jobs, workers, businessProfile } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const hoursLabel = (h: number) =>
     t('common.durationH', { defaultValue: '{{h}}h', h: formatDecimal1(h, country) });
 
-  const roleNames: Record<string, string> = {
-    owner: 'Eigenaar',
-    foreman: 'Voorman',
-    technician: 'Monteur',
-    apprentice: 'Leerling',
-    admin: 'Administratie',
-  };
+  const contractorName = businessProfile?.businessName || user?.name || t('payroll.you', 'You');
 
-  const payrollData = useMemo(() => {
-    const now = new Date();
-    let startDate: Date;
-
-    if (period === 'week') {
-      startDate = new Date(now);
-      startDate.setDate(startDate.getDate() - startDate.getDay() + 1);
-      startDate.setHours(0, 0, 0, 0);
-    } else {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    }
-
-    const lines: PayrollLine[] = members.map(member => {
-      const memberEntries = entries.filter(
-        e => e.memberId === member.id && e.date >= startDate && e.status !== 'disputed',
-      );
-
-      const totalHours = memberEntries.reduce((sum, e) => sum + (e.totalHours ?? 0), 0);
-      const regularHours = Math.min(totalHours, period === 'week' ? 40 : 160);
-      const overtimeHours = Math.max(totalHours - regularHours, 0);
-      const overtimeRate = member.hourlyRate * 1.5;
-
-      return {
-        memberId: member.id,
-        name: `${member.firstName} ${member.lastName}`,
-        role: roleNames[member.role] ?? member.role,
-        hourlyRate: member.hourlyRate,
-        regularHours,
-        overtimeHours,
-        regularPay: regularHours * member.hourlyRate,
-        overtimePay: overtimeHours * overtimeRate,
-        totalPay: regularHours * member.hourlyRate + overtimeHours * overtimeRate,
-      };
-    });
-
-    const totalRegular = lines.reduce((sum, l) => sum + l.regularPay, 0);
-    const totalOvertime = lines.reduce((sum, l) => sum + l.overtimePay, 0);
-    const grandTotal = lines.reduce((sum, l) => sum + l.totalPay, 0);
-    const totalHours = lines.reduce((sum, l) => sum + l.regularHours + l.overtimeHours, 0);
-
-    return { lines, totalRegular, totalOvertime, grandTotal, totalHours };
-  }, [members, entries, period]);
+  const payrollData = useMemo(
+    () => buildPayroll({ jobs, workers, period, now: new Date(), contractorName }),
+    [jobs, workers, period, contractorName],
+  );
 
   const fmt = (n: number) => formatCurrency(n, country);
 
   const handleExport = async () => {
-    const header = 'Naam;Functie;Uurtarief;Regulier (u);Overwerk (u);Regulier (€);Overwerk (€);Totaal (€)';
+    const { from, to } = periodBounds(period, new Date());
+    // Semicolon-separated for EU bookkeeping imports. Values stay machine
+    // readable (plain `.` decimals) — the bookkeeper's software parses this,
+    // it is not a document anyone reads as prose.
+    const header = [
+      t('payroll.csvName', 'Name'),
+      t('payroll.csvHours', 'Hours'),
+      t('payroll.csvRate', 'Hourly cost'),
+      t('payroll.csvCost', 'Cost'),
+    ].join(';');
     const rows = payrollData.lines.map(l =>
-      `${l.name};${l.role};${l.hourlyRate};${l.regularHours.toFixed(1)};${l.overtimeHours.toFixed(1)};${l.regularPay.toFixed(2)};${l.overtimePay.toFixed(2)};${l.totalPay.toFixed(2)}`,
+      [
+        l.name,
+        l.hours.toFixed(2),
+        // An unknown rate exports as blank, never 0 — a 0 in a payroll import
+        // is a claim that the person costs nothing.
+        l.hourlyCost === undefined ? '' : l.hourlyCost.toFixed(2),
+        l.cost === undefined ? '' : l.cost.toFixed(2),
+      ].join(';'),
     );
-    const csv = [header, ...rows].join('\n');
+    const csv = [`# ${from} — ${to}`, header, ...rows].join('\n');
 
     try {
       await Share.share({
         message: csv,
-        title: `Verloning ${period === 'week' ? 'week' : 'maand'} export`,
+        title: t('payroll.exportTitle', 'Payroll export {{from}} — {{to}}', { from, to }),
       });
     } catch {
-      Alert.alert('Export mislukt', 'Probeer het opnieuw.');
+      Alert.alert(t('payroll.exportFailed', 'Export failed'), t('common.tryAgain', 'Please try again.'));
     }
   };
 
-  const periodLabel = period === 'week' ? 'Deze week' : 'Deze maand';
+  const periodLabel = period === 'week'
+    ? t('payroll.thisWeek', 'This week')
+    : t('payroll.thisMonth', 'This month');
 
   return (
     <View style={styles.container}>
@@ -125,8 +97,10 @@ export default function PayrollScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Verloning</Text>
-          <Text style={styles.headerSubtitle}>{periodLabel} · {members.length} medewerkers</Text>
+          <Text style={styles.headerTitle}>{t('payroll.title', 'Payroll')}</Text>
+          <Text style={styles.headerSubtitle}>
+            {periodLabel} · {t('payroll.peopleCount', { count: payrollData.lines.length, defaultValue: '{{count}} people' })}
+          </Text>
         </View>
         <Pressable style={styles.exportButton} onPress={handleExport}>
           <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
@@ -135,10 +109,10 @@ export default function PayrollScreen() {
 
       {/* Period Tabs */}
       <View style={styles.tabBar}>
-        {(['week', 'maand'] as PeriodType[]).map(p => (
+        {(['week', 'month'] as PayrollPeriod[]).map(p => (
           <Pressable key={p} style={[styles.tab, period === p && styles.tabActive]} onPress={() => setPeriod(p)}>
             <Text style={[styles.tabText, period === p && styles.tabTextActive]}>
-              {p === 'week' ? 'Week' : 'Maand'}
+              {p === 'week' ? t('payroll.week', 'Week') : t('payroll.month', 'Month')}
             </Text>
           </Pressable>
         ))}
@@ -153,76 +127,94 @@ export default function PayrollScreen() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{fmt(payrollData.totalRegular)}</Text>
-            <Text style={styles.summaryLabel}>Regulier</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, payrollData.totalOvertime > 0 && { color: Palette.hermesOrange }]}>
-              {fmt(payrollData.totalOvertime)}
+            <Text style={styles.summaryValue}>
+              {t('payroll.peopleCount', { count: payrollData.lines.length, defaultValue: '{{count}} people' })}
             </Text>
-            <Text style={styles.summaryLabel}>Overwerk</Text>
+            <Text style={styles.summaryLabel}>{t('payroll.worked', 'Worked')}</Text>
           </View>
         </View>
         <View style={styles.grandTotalRow}>
           <Text style={styles.grandTotalLabel}>{t('payroll.totalPayroll', 'Total payroll')}</Text>
-          <Text style={styles.grandTotalValue}>{fmt(payrollData.grandTotal)}</Text>
+          <Text style={styles.grandTotalValue}>{fmt(payrollData.knownCost)}</Text>
         </View>
+        {/* The total covers only the people who HAVE a rate. Saying so is the
+            difference between a wage bill and an understated one — a missing
+            rate must never quietly read as a free employee. */}
+        {payrollData.unpricedCount > 0 && (
+          <Text style={styles.unpricedNote}>
+            {t('payroll.unpricedNote', {
+              count: payrollData.unpricedCount,
+              hours: formatDecimal1(payrollData.unpricedHours, country),
+              defaultValue: 'Excludes {{count}} person with no hourly cost recorded ({{hours}}h). Add it under Team.',
+            })}
+          </Text>
+        )}
       </View>
 
       {/* Per-member breakdown */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Empty means "nobody logged an hour in this period", which is a
+            different problem from "you have no crew" — the old copy asserted
+            the latter to an aannemer with five people on the board. */}
         {payrollData.lines.length === 0 && (
           <EmptyState
-            icon="people-outline"
-            title={t('payroll.noTeamTitle', 'No team members yet')}
-            description={t('payroll.noTeamDesc', 'Add team members to see their hours and payroll here.')}
+            icon="time-outline"
+            title={t('payroll.noHoursTitle', 'No hours logged this period')}
+            description={
+              workers.length === 0
+                ? t('payroll.noHoursSolo', 'Log hours on a job and they appear here, ready to export for your bookkeeper.')
+                : t('payroll.noHoursCrew', 'Hours logged against a job are attributed to whoever is assigned to it. Nothing has been logged for this period yet.')
+            }
           />
         )}
         {payrollData.lines.map(line => (
-          <View key={line.memberId} style={styles.memberCard}>
+          <View key={line.workerId ?? 'self'} style={styles.memberCard}>
             <View style={styles.memberHeader}>
               <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>{line.name.split(' ').map(n => n[0]).join('')}</Text>
+                <Text style={styles.avatarText}>
+                  {line.name.split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('')}
+                </Text>
               </View>
               <View style={styles.memberInfo}>
-                <Text style={styles.memberName}>{line.name}</Text>
-                <Text style={styles.memberRole}>{line.role} · {fmt(line.hourlyRate)}/u</Text>
+                <Text style={styles.memberName} numberOfLines={1}>{line.name}</Text>
+                <Text style={styles.memberRole} numberOfLines={1}>
+                  {line.hourlyCost === undefined
+                    ? t('payroll.noRate', 'No hourly cost recorded')
+                    : t('payroll.perHour', '{{rate}}/h', { rate: fmt(line.hourlyCost) })}
+                  {line.isInactive ? ` · ${t('payroll.inactive', 'No longer on the crew')}` : ''}
+                </Text>
               </View>
-              <Text style={styles.memberTotal}>{fmt(line.totalPay)}</Text>
+              {/* An unknown cost prints a dash, not a figure. */}
+              <Text style={[styles.memberTotal, line.cost === undefined && styles.memberTotalUnknown]}>
+                {line.cost === undefined ? '—' : fmt(line.cost)}
+              </Text>
             </View>
             <View style={styles.memberDetails}>
               <View style={styles.detailCol}>
-                <Text style={styles.detailValue}>{hoursLabel(line.regularHours)}</Text>
-                <Text style={styles.detailLabel}>Regulier</Text>
+                <Text style={styles.detailValue}>{hoursLabel(line.hours)}</Text>
+                <Text style={styles.detailLabel}>{t('payroll.hours', 'Hours')}</Text>
               </View>
               <View style={styles.detailCol}>
-                <Text style={[styles.detailValue, line.overtimeHours > 0 && { color: Palette.hermesOrange }]}>
-                  {hoursLabel(line.overtimeHours)}
+                <Text style={styles.detailValue}>
+                  {t('payroll.jobsCount', { count: line.jobCount, defaultValue: '{{count}} jobs' })}
                 </Text>
-                <Text style={styles.detailLabel}>Overwerk</Text>
-              </View>
-              <View style={styles.detailCol}>
-                <Text style={styles.detailValue}>{fmt(line.regularPay)}</Text>
-                <Text style={styles.detailLabel}>Reg. loon</Text>
-              </View>
-              <View style={styles.detailCol}>
-                <Text style={styles.detailValue}>{fmt(line.overtimePay)}</Text>
-                <Text style={styles.detailLabel}>OW loon</Text>
+                <Text style={styles.detailLabel}>{t('payroll.onJobs', 'On jobs')}</Text>
               </View>
             </View>
           </View>
         ))}
 
-        {/* Export banner */}
-        <Pressable style={styles.exportBanner} onPress={handleExport}>
-          <Ionicons name="download-outline" size={22} color="#fff" />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.exportBannerTitle}>Exporteren</Text>
-            <Text style={styles.exportBannerSub}>{t('payroll.exportSub', 'Share as CSV for your accounting software or bookkeeper')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color="#fff" />
-        </Pressable>
+        {/* Export banner — pointless with nothing to export. */}
+        {payrollData.lines.length > 0 && (
+          <Pressable style={styles.exportBanner} onPress={handleExport}>
+            <Ionicons name="download-outline" size={22} color="#fff" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.exportBannerTitle}>{t('payroll.export', 'Export')}</Text>
+              <Text style={styles.exportBannerSub}>{t('payroll.exportSub', 'Share as CSV for your accounting software or bookkeeper')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#fff" />
+          </Pressable>
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -269,6 +261,10 @@ const styles = StyleSheet.create({
   memberName: { fontSize: 14, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
   memberRole: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 1 },
   memberTotal: { fontSize: 16, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
+  memberTotalUnknown: { color: SemanticColors.textTertiary },
+  unpricedNote: {
+    fontSize: 12, color: Palette.hermesOrange, marginTop: Spacing.xs, lineHeight: 16,
+  },
   memberDetails: { flexDirection: 'row', marginTop: Spacing.sm, paddingTop: Spacing.xs, borderTopWidth: 1, borderTopColor: SemanticColors.borderDefault },
   detailCol: { flex: 1, alignItems: 'center' },
   detailValue: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },

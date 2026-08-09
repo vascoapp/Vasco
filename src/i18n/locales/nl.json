@@ -79,7 +79,8 @@
     "supportOnboarding": "Vaste support + onboarding",
     "select": "Kiezen",
     "noOptions": "Nog niets om uit te kiezen",
-    "justNow": "Zojuist"
+    "justNow": "Zojuist",
+    "tryAgain": "Probeer het opnieuw."
   },
   "tabs": {
     "today": "Vandaag",
@@ -5409,9 +5410,35 @@
   "payroll": {
     "totalHours": "Totaal uren",
     "totalPayroll": "Totaal verloning",
-    "noTeamTitle": "Nog geen teamleden",
-    "noTeamDesc": "Voeg teamleden toe om hun uren en verloning hier te zien.",
-    "exportSub": "Deel als CSV voor Moneybird of boekhouder"
+    "exportSub": "Deel als CSV voor Moneybird of boekhouder",
+    "title": "Verloning",
+    "you": "Jij",
+    "peopleCount_one": "{{count}} persoon",
+    "peopleCount_other": "{{count}} personen",
+    "worked": "Gewerkt",
+    "week": "Week",
+    "month": "Maand",
+    "thisWeek": "Deze week",
+    "thisMonth": "Deze maand",
+    "hours": "Uren",
+    "jobsCount_one": "{{count}} klus",
+    "jobsCount_other": "{{count}} klussen",
+    "onJobs": "Op klussen",
+    "noRate": "Geen uurtarief vastgelegd",
+    "perHour": "{{rate}}/u",
+    "inactive": "Niet meer in dienst",
+    "unpricedNote_one": "Exclusief {{count}} persoon zonder uurtarief ({{hours}}u). Vul dit aan bij Team.",
+    "unpricedNote_other": "Exclusief {{count}} personen zonder uurtarief ({{hours}}u). Vul dit aan bij Team.",
+    "noHoursTitle": "Geen uren geregistreerd in deze periode",
+    "noHoursSolo": "Registreer uren op een klus en ze verschijnen hier, klaar om te exporteren voor je boekhouder.",
+    "noHoursCrew": "Uren die op een klus worden geregistreerd gaan naar degene die eraan is toegewezen. Voor deze periode is nog niets geregistreerd.",
+    "export": "Exporteren",
+    "exportTitle": "Verloning export {{from}} — {{to}}",
+    "exportFailed": "Export mislukt",
+    "csvName": "Naam",
+    "csvHours": "Uren",
+    "csvRate": "Uurtarief",
+    "csvCost": "Kosten"
   },
   "aiAssistant": {
     "welcomeTitle": "Hoi! Ik ben je Vasco assistent",

@@ -3790,17 +3790,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // falling back to the contractor's own rate. A lead tech and an
         // apprentice cost different amounts; charging one flat 45 to both made
         // per-project margin unusable for staffing decisions.
+        // Rate resolution, shared by both branches below: the person's own
+        // cost, else the contractor's, else a named placeholder.
+        const ownRate = (businessProfile as { hourlyRate?: number } | undefined)?.hourlyRate
+          ?? DEFAULT_LABOUR_COST_PER_HOUR;
+        const rateFor = (workerId?: string) =>
+          (workerId ? workers.find((w) => w.id === workerId)?.hourlyCost : undefined) ?? ownRate;
+
         const laborCosts = projectJobs.reduce((s, j) => {
-          const entryHours = (j as any).timeEntries?.reduce((h: number, e: any) => h + (e.hours ?? 0), 0) ?? 0;
-          const hours = entryHours || (j as any).actualHours || 0;
+          const entries = j.timeEntries ?? [];
+          if (entries.length > 0) {
+            // Price each logged stretch at the rate of whoever worked it.
+            // Applying the CURRENT assignee's rate to every hour on the job
+            // would make this disagree with Verloning about the same job the
+            // moment two people worked it, or the moment it was reassigned.
+            return s + entries.reduce((h, e) => h + (e.hours ?? 0) * rateFor(e.workerId), 0);
+          }
+          // Legacy rows carry only the aggregate `actualHours` with no
+          // per-entry attribution, so the assignee is the best signal there is.
+          const hours = j.actualHours ?? 0;
           if (!hours) return s;
-          const worker = (j as any).assignedWorkerId
-            ? workers.find((w) => w.id === (j as any).assignedWorkerId)
-            : undefined;
-          const rate = worker?.hourlyCost
-            ?? (businessProfile as { hourlyRate?: number } | undefined)?.hourlyRate
-            ?? DEFAULT_LABOUR_COST_PER_HOUR;
-          return s + hours * rate;
+          return s + hours * rateFor(j.assignedWorkerId);
         }, 0);
         const totalCosts = materialCosts + laborCosts;
         const grossProfit = revenue - totalCosts;

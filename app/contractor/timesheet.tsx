@@ -186,15 +186,20 @@ export default function TimesheetScreen() {
       if (prevState.jobId) {
         const job = jobs.find((j: any) => j.id === prevState.jobId);
         if (job) {
-          const existingEntries = (job as any).timeEntries ?? [];
+          const existingEntries = job.timeEntries ?? [];
+          // No workerId: this screen is the contractor clocking their OWN
+          // time. Undefined reads as "me" in the payroll grouping, which is
+          // what a solo install and an aannemer's own hours both need.
+          const nextEntries = [...existingEntries, {
+            id: newEntry.id,
+            date: todayStr,
+            hours: newEntry.totalHours,
+            clockIn: prevState.startTimeFormatted,
+            clockOut: outTime,
+          }];
           updateJob(prevState.jobId, {
-            timeEntries: [...existingEntries, {
-              id: newEntry.id,
-              date: todayStr,
-              hours: newEntry.totalHours,
-              clockIn: prevState.startTimeFormatted,
-              clockOut: outTime,
-            }] as any,
+            timeEntries: nextEntries,
+            actualHours: Math.round(nextEntries.reduce((s, e) => s + (e.hours ?? 0), 0) * 100) / 100,
           });
         }
       }

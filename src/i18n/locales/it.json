@@ -79,7 +79,8 @@
     "supportOnboarding": "Supporto dedicato + onboarding",
     "select": "Seleziona",
     "noOptions": "Non c’è ancora niente da scegliere",
-    "justNow": "Proprio ora"
+    "justNow": "Proprio ora",
+    "tryAgain": "Riprova."
   },
   "tabs": {
     "today": "Oggi",
@@ -5425,9 +5426,35 @@
   "payroll": {
     "totalHours": "Ore totali",
     "totalPayroll": "Totale retribuzioni",
-    "noTeamTitle": "Nessun membro del team",
-    "noTeamDesc": "Aggiungi membri del team per vedere qui le loro ore e retribuzioni.",
-    "exportSub": "Condividi in CSV per il tuo software di contabilità o il commercialista"
+    "exportSub": "Condividi in CSV per il tuo software di contabilità o il commercialista",
+    "title": "Buste paga",
+    "you": "Tu",
+    "peopleCount_one": "{{count}} persona",
+    "peopleCount_other": "{{count}} persone",
+    "worked": "Hanno lavorato",
+    "week": "Settimana",
+    "month": "Mese",
+    "thisWeek": "Questa settimana",
+    "thisMonth": "Questo mese",
+    "hours": "Ore",
+    "jobsCount_one": "{{count}} lavoro",
+    "jobsCount_other": "{{count}} lavori",
+    "onJobs": "Su lavori",
+    "noRate": "Nessun costo orario registrato",
+    "perHour": "{{rate}}/h",
+    "inactive": "Non fa più parte della squadra",
+    "unpricedNote_one": "Esclude {{count}} persona senza costo orario ({{hours}} h). Aggiungilo in Squadra.",
+    "unpricedNote_other": "Esclude {{count}} persone senza costo orario ({{hours}} h). Aggiungilo in Squadra.",
+    "noHoursTitle": "Nessuna ora registrata in questo periodo",
+    "noHoursSolo": "Registra le ore su un lavoro e appariranno qui, pronte da esportare per il tuo commercialista.",
+    "noHoursCrew": "Le ore registrate su un lavoro vengono attribuite alla persona assegnata. Per questo periodo non è stato ancora registrato nulla.",
+    "export": "Esporta",
+    "exportTitle": "Esportazione buste paga {{from}} — {{to}}",
+    "exportFailed": "Esportazione non riuscita",
+    "csvName": "Nome",
+    "csvHours": "Ore",
+    "csvRate": "Costo orario",
+    "csvCost": "Costo"
   },
   "aiAssistant": {
     "welcomeTitle": "Ciao! Sono il tuo assistente Vasco",

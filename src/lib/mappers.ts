@@ -258,6 +258,17 @@ export function jobRowToJob(row: JobRow): Job {
     // R66 round 12: hydrate from jobs.time_entries JSONB (was always [],
     // throwing away every cross-device hour read).
     timeEntries: Array.isArray(row.time_entries) ? (row.time_entries as any) : [],
+    // The write mapper drops `actualHours` as "derived from time entries" —
+    // but nothing ever derived it, so every hour logged through the job
+    // screen was local-only and vanished on the next refreshData(), taking
+    // project labour cost and margin back to zero with it. Deriving it here
+    // is what makes that comment true.
+    actualHours: Array.isArray(row.time_entries) && row.time_entries.length > 0
+      ? Math.round(
+          (row.time_entries as Array<{ hours?: number }>)
+            .reduce((s, e) => s + (e.hours ?? 0), 0) * 100,
+        ) / 100
+      : undefined,
     materials: [],
     // R301: signature columns wired through after migration
     // 20260502000003_job_signature_columns.sql
