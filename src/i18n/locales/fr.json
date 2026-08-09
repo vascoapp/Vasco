@@ -3030,7 +3030,19 @@
     "schedule": "Planifier",
     "optimizedApplied": "Appliqué au planning du jour.",
     "driveSummary": "{{km}}km · {{min}}min de trajet",
-    "endsAt": "Fin à {{time}}"
+    "endsAt": "Fin à {{time}}",
+    "crewBoard": "Équipe",
+    "unassignedLane": "Non attribué",
+    "assignTo": "Qui s’en charge ?",
+    "reassign": "Quelqu’un d’autre",
+    "reassignTo": "Vers un autre membre",
+    "unassign": "Ne pas attribuer",
+    "laneFree": "libre",
+    "sitesToday": "{{count}} chantiers",
+    "oneSite": "1 chantier",
+    "crewUtil": "{{booked}} sur {{capacity}}",
+    "doubleBooked": "{{name}} est déjà sur un chantier à cette heure",
+    "siteHop": "{{name}} est juste avant sur {{from}} — prévoyez le trajet vers {{to}}"
   },
   "marketInsights": {
     "title": "INSIGHTS DU MARCHÉ",

@@ -3046,7 +3046,19 @@
     "schedule": "Schedule",
     "optimizedApplied": "Applied to today's schedule.",
     "driveSummary": "{{km}}km · {{min}}min driving",
-    "endsAt": "Ends {{time}}"
+    "endsAt": "Ends {{time}}",
+    "crewBoard": "Crew",
+    "unassignedLane": "Unassigned",
+    "assignTo": "Who is doing this?",
+    "reassign": "Reassign",
+    "reassignTo": "Move to another crew member",
+    "unassign": "Leave unassigned",
+    "laneFree": "free",
+    "sitesToday": "{{count}} sites",
+    "oneSite": "1 site",
+    "crewUtil": "{{booked}} of {{capacity}}",
+    "doubleBooked": "{{name}} is already on a job at that time",
+    "siteHop": "{{name}} is at {{from}} right before this — allow travel time to {{to}}"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",

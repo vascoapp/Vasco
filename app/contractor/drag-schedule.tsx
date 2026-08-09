@@ -4,7 +4,7 @@
 // Long-press to pick up a job, drag to a time slot, drop to assign
 // =============================================================================
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Dimensions, PanResponder } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { todayKey } from '../../src/utils/dateKey';
@@ -23,6 +23,7 @@ import { shareAllScheduledJobs } from '../../src/services/calendarExportService'
 import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/calendarSyncService';
 import { detectConflicts } from '../../src/services/scheduleConflictService';
 import type { Job } from '../../src/domain/jobs';
+import type { Worker } from '../../src/domain/worker';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatWeekdayDayMonth } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -74,6 +75,11 @@ const hoursToHM = (h: number): string => {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
 const TIME_COL_WIDTH = 50;
+const LANE_WIDTH = 150;
+// A working day, used as each crew member's capacity denominator. The single
+// -lane view has used 10 since it shipped; keep one constant so the solo
+// utilisation bar and the per-person lane figures cannot drift apart.
+const WORKDAY_HOURS = 10;
 
 interface ScheduledJob {
   jobId: string;
@@ -82,6 +88,17 @@ interface ScheduledJob {
   startHour: number;
   duration: number; // in hours
   color: string;
+  /**
+   * Which crew member is on this job. Undefined = nobody assigned yet.
+   *
+   * A solo contractor never sets this and the planner stays a single lane.
+   * An aannemer runs several crews on several sites at once, so "when" is
+   * only half the question — the board below splits by WHO, and conflicts are
+   * scoped per person rather than across the whole company.
+   */
+  workerId?: string;
+  /** Site label (city), so a multi-site day is readable at a glance. */
+  site?: string;
 }
 
 const COLORS = [Palette.hermesOrange, '#3B82F6', '#10B981', '#EC4899', '#14B8A6', '#F97316', '#6366F1'];
@@ -93,7 +110,13 @@ export default function DragScheduleScreen() {
   // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
   const routeOptimizationEnabled = useFeatureFlag('route_optimization');
   const router = useRouter();
-  const { jobs, customers, updateJobStatus, updateJob } = useAppState();
+  const { jobs, customers, workers, updateJobStatus, updateJob } = useAppState();
+  // Only people currently on the crew get a lane. Inactive workers are kept
+  // for historical job records (see src/domain/worker.ts) and must not appear.
+  const activeWorkers = useMemo(() => workers.filter((w: Worker) => w.isActive), [workers]);
+  // Solo contractors have no crew, so the per-person board would be one lane
+  // labelled with their own name — noise. They keep the original timeline.
+  const crewMode = activeWorkers.length > 0;
   // R21: when entered from queue executor with ?jobId=, highlight the
   // suggested job in the unassigned pool so the contractor's eye lands on
   // it instantly. Was R1 deferral (schedule_suggestion didn't pre-position).
@@ -122,7 +145,13 @@ export default function DragScheduleScreen() {
         customerName: cust?.name || '',
         startHour: isNaN(startHour) ? 9 : startHour,
         duration: slotHoursOr(j, 2),
-        color: COLORS[idx % COLORS.length],
+        // In crew mode the colour identifies the PERSON, so the same worker
+        // reads the same everywhere; otherwise keep the per-job palette.
+        color: j.assignedWorkerId
+          ? (workers.find((w: Worker) => w.id === j.assignedWorkerId)?.color ?? COLORS[idx % COLORS.length])
+          : COLORS[idx % COLORS.length],
+        workerId: j.assignedWorkerId,
+        site: j.address?.city || undefined,
       };
     });
 
@@ -142,6 +171,7 @@ export default function DragScheduleScreen() {
         // card as "cust-003". Blank is better than an internal id.
         customerName: cust?.name || '',
         estimatedHours: j.estimatedDuration || 2,
+        site: j.address?.city || undefined,
       };
     });
 
@@ -170,15 +200,58 @@ export default function DragScheduleScreen() {
   // planner whose every other string was Dutch.
   const today = formatWeekdayDayMonth(new Date(), country);
 
-  const totalScheduledHours = schedule.reduce((sum, j) => sum + j.duration, 0);
-  const utilizationPct = Math.round((totalScheduledHours / 10) * 100); // 10h workday
+  // One lane per crew member, plus a lane for work nobody owns yet. The
+  // unassigned lane is the point of the board for an aannemer: it is the list
+  // of jobs that will not happen unless somebody is put on them.
+  const lanes = useMemo(() => {
+    if (!crewMode) return [];
+    const rows = activeWorkers.map((w) => ({
+      id: w.id as string | null,
+      name: w.name,
+      color: w.color ?? Palette.hermesOrange,
+      jobs: schedule.filter((s) => s.workerId === w.id),
+    }));
+    // Anything not sitting in one of the lanes above — no assignee, or an
+    // assignee who is no longer active. Deactivating a worker does NOT clear
+    // their assignments (only deleting one does, AppState ~1214), so without
+    // this the job would render in NO lane: scheduled work, invisible on the
+    // board. Every scheduled job must appear exactly once.
+    const laneIds = new Set(rows.map((r) => r.id));
+    const orphan = schedule.filter((s) => !s.workerId || !laneIds.has(s.workerId));
+    if (orphan.length) {
+      rows.push({ id: null, name: t('schedule.unassignedLane'), color: SemanticColors.textTertiary, jobs: orphan });
+    }
+    return rows;
+  }, [crewMode, activeWorkers, schedule, t]);
 
-  const handleDropOnSlot = (hour: number, job: { jobId: string; title: string; customerName: string; estimatedHours: number }) => {
+  const totalScheduledHours = schedule.reduce((sum, j) => sum + j.duration, 0);
+  // Capacity is the CREW's day, not one person's. With two crews booked 5h and
+  // 4h the bar read "9u / 10u (90%)" directly above lanes saying 5/10 and 4/10
+  // — the same screen disagreeing with itself, and a company that looks full
+  // while both crews are free all afternoon.
+  const dayCapacity = crewMode ? activeWorkers.length * WORKDAY_HOURS : WORKDAY_HOURS;
+  const utilizationPct = dayCapacity > 0
+    ? Math.round((totalScheduledHours / dayCapacity) * 100)
+    : 0;
+
+  const handleDropOnSlot = (
+    hour: number,
+    job: { jobId: string; title: string; customerName: string; estimatedHours: number; site?: string },
+    workerId?: string,
+  ) => {
     // R272: structured conflict detection — overlap + working hours (HARD)
     // and travel-buffer (SOFT, overridable).
+    //
+    // Scoped to the PERSON doing the job. Comparing a candidate against the
+    // whole company's day is right for a solo contractor and wrong for an
+    // aannemer: two crews working two sites at 09:00 is normal operation, not
+    // a clash, while the same person on both is the thing that must be caught.
+    const lane = crewMode
+      ? schedule.filter((s) => (s.workerId ?? null) === (workerId ?? null))
+      : schedule;
     const report = detectConflicts(
       { startHour: hour, durationHours: job.estimatedHours },
-      schedule.map((s) => ({ jobId: s.jobId, title: s.title, startHour: s.startHour, durationHours: s.duration })),
+      lane.map((s) => ({ jobId: s.jobId, title: s.title, startHour: s.startHour, durationHours: s.duration })),
     );
 
     // R13.1: was a real-bug — visual `proceed` was separate from persistence,
@@ -189,7 +262,8 @@ export default function DragScheduleScreen() {
     // (next app open showed it back in the unassigned column). Folded the
     // persistence calls into `proceed` so all three drop paths persist.
     const proceed = () => {
-      const color = COLORS[schedule.length % COLORS.length];
+      const worker = workerId ? activeWorkers.find((w) => w.id === workerId) : undefined;
+      const color = worker?.color ?? COLORS[schedule.length % COLORS.length];
       setSchedule(prev => [...prev, {
         jobId: job.jobId,
         title: job.title,
@@ -197,6 +271,8 @@ export default function DragScheduleScreen() {
         startHour: hour,
         duration: job.estimatedHours,
         color,
+        workerId,
+        site: job.site,
       }]);
       setUnassigned(prev => prev.filter(u => u.jobId !== job.jobId));
       hapticSuccess();
@@ -212,6 +288,9 @@ export default function DragScheduleScreen() {
           scheduledStartTime: startTime,
           scheduledEndTime: endTime,
           estimatedDuration: job.estimatedHours,
+          // Persisted so the board survives a reload and so the rest of the
+          // app (crew screen, job detail) agrees on who is on this job.
+          ...(crewMode ? { assignedWorkerId: workerId } : {}),
         });
         updateJobStatus(job.jobId, 'scheduled');
         // R269: contextual calendar prompt during scheduling — auto-sync if
@@ -278,6 +357,35 @@ export default function DragScheduleScreen() {
     }
   };
 
+  /**
+   * Move a scheduled job to a different crew member.
+   *
+   * Reassigning is the operation an aannemer performs most on a running day —
+   * someone calls in sick, a site over-runs — and it has to be reachable from
+   * the block itself rather than by deleting and re-scheduling.
+   */
+  const handleReassign = (job: ScheduledJob) => {
+    if (!crewMode) {
+      Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}`);
+      return;
+    }
+    const apply = (workerId?: string) => {
+      const worker = workerId ? activeWorkers.find((w) => w.id === workerId) : undefined;
+      setSchedule((prev) => prev.map((s2) => s2.jobId === job.jobId
+        ? { ...s2, workerId, color: worker?.color ?? COLORS[0] }
+        : s2));
+      try { updateJob(job.jobId, { assignedWorkerId: workerId }); } catch {}
+      hapticSuccess();
+    };
+    Alert.alert(t('schedule.reassignTo'), job.title, [
+      ...activeWorkers
+        .filter((w) => w.id !== job.workerId)
+        .map((w) => ({ text: w.name, onPress: () => apply(w.id) })),
+      ...(job.workerId ? [{ text: t('schedule.unassign'), onPress: () => apply(undefined) }] : []),
+      { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
+    ]);
+  };
+
   const handleRemoveFromSchedule = (jobId: string) => {
     const job = schedule.find(s => s.jobId === jobId);
     if (!job) return;
@@ -294,6 +402,7 @@ export default function DragScheduleScreen() {
             title: job.title,
             customerName: job.customerName,
             estimatedHours: job.duration,
+            site: job.site,
           }]);
           hapticSuccess();
         },
@@ -459,7 +568,7 @@ export default function DragScheduleScreen() {
           <Text style={styles.utilValue}>
             {t('common.durationH', { defaultValue: '{{h}}h', h: totalScheduledHours })}
             {' / '}
-            {t('common.durationH', { defaultValue: '{{h}}h', h: 10 })}
+            {t('common.durationH', { defaultValue: '{{h}}h', h: dayCapacity })}
             {` (${utilizationPct}%)`}
           </Text>
         </View>
@@ -477,6 +586,16 @@ export default function DragScheduleScreen() {
               <View key={job.jobId} style={[styles.poolCard, focusJobId && job.jobId === focusJobId && styles.poolCardFocus]}>
                 <Text style={styles.poolJobTitle} numberOfLines={1}>{job.title}</Text>
                 <Text style={styles.poolJobCustomer} numberOfLines={1}>{job.customerName}</Text>
+                {/* The site gets its own line. Joined with the customer on one
+                    fixed-width line it truncated to "Fam. de Vries · Haar…" —
+                    and WHERE the job is is exactly what you need before
+                    deciding which crew takes it. */}
+                {job.site ? (
+                  <View style={styles.poolSiteRow}>
+                    <Ionicons name="location-outline" size={11} color={SemanticColors.textTertiary} />
+                    <Text style={styles.poolJobCustomer} numberOfLines={1}>{job.site}</Text>
+                  </View>
+                ) : null}
                 <Text style={styles.poolJobHours}>{t('common.durationH', { defaultValue: '{{h}}h', h: job.estimatedHours })}</Text>
                 {/* Tap to pick time slot */}
                 <Pressable
@@ -485,8 +604,19 @@ export default function DragScheduleScreen() {
                   accessibilityLabel={`${t('schedule.schedule', 'Schedule')} ${job.title}`}
                   onPress={() => {
                     const slots = HOURS.filter(h => h + job.estimatedHours <= 19).slice(0, 5);
-                    Alert.alert(t('schedule.chooseSlot', 'Tijdslot kiezen'), t('schedule.whenSchedule', { defaultValue: 'When do you want to schedule {{job}}?', job: `"${job.title}"` }), [
-                      ...slots.map(h => ({ text: `${h}:00`, onPress: () => handleDropOnSlot(h, job) })),
+                    const pickSlot = (workerId?: string) => {
+                      Alert.alert(t('schedule.chooseSlot', 'Tijdslot kiezen'), t('schedule.whenSchedule', { defaultValue: 'When do you want to schedule {{job}}?', job: `"${job.title}"` }), [
+                        ...slots.map(h => ({ text: `${h}:00`, onPress: () => handleDropOnSlot(h, job, workerId) })),
+                        { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
+                      ]);
+                    };
+                    // With a crew, "when" is only half the decision — ask WHO
+                    // first, so the job lands in somebody's lane rather than in
+                    // an anonymous company-wide day.
+                    if (!crewMode) { pickSlot(); return; }
+                    Alert.alert(t('schedule.assignTo'), job.title, [
+                      ...activeWorkers.map((w) => ({ text: w.name, onPress: () => pickSlot(w.id) })),
+                      { text: t('schedule.unassign'), onPress: () => pickSlot(undefined) },
                       { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
                     ]);
                   }}
@@ -500,7 +630,87 @@ export default function DragScheduleScreen() {
         </View>
       )}
 
-      {/* Timeline */}
+      {/* Crew board — one column per person, hours down the side.
+          Only for contractors who actually have a crew; a solo contractor
+          falls through to the single-lane timeline below, unchanged. */}
+      {crewMode ? (
+        <ScrollView style={styles.timeline} showsVerticalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} stickyHeaderIndices={[]}>
+            <View>
+              {/* Lane headers: name, booked/capacity, and how many sites that
+                  person is expected at today. A day split across three sites
+                  is a different day from three jobs at one address. */}
+              <View style={styles.laneHeaderRow}>
+                <View style={{ width: TIME_COL_WIDTH }} />
+                {lanes.map((lane) => {
+                  const booked = lane.jobs.reduce((sum, j) => sum + j.duration, 0);
+                  const sites = new Set(lane.jobs.map((j) => j.site).filter(Boolean));
+                  return (
+                    <View key={lane.id ?? 'none'} style={styles.laneHeader}>
+                      <View style={[styles.laneDot, { backgroundColor: lane.color }]} />
+                      <Text style={styles.laneName} numberOfLines={1}>{lane.name}</Text>
+                      <Text style={styles.laneMeta} numberOfLines={1}>
+                        {booked > 0
+                          ? t('schedule.crewUtil', {
+                              booked: t('common.durationH', { defaultValue: '{{h}}h', h: booked }),
+                              capacity: t('common.durationH', { defaultValue: '{{h}}h', h: WORKDAY_HOURS }),
+                            })
+                          : t('schedule.laneFree')}
+                      </Text>
+                      {sites.size > 0 && (
+                        <Text style={styles.laneSites} numberOfLines={1}>
+                          {sites.size === 1
+                            ? (Array.from(sites)[0] as string)
+                            : t('schedule.sitesToday', { count: sites.size })}
+                        </Text>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+
+              {HOURS.map((hour) => (
+                <View key={hour} style={styles.hourRow}>
+                  <Text style={styles.hourLabel}>{hour}:00</Text>
+                  {lanes.map((lane) => (
+                    <View key={`${lane.id ?? 'none'}-${hour}`} style={styles.laneSlot}>
+                      {lane.jobs.filter((j) => j.startHour === hour).map((job) => (
+                        <Pressable
+                          key={job.jobId}
+                          style={[styles.laneBlock, {
+                            backgroundColor: job.color + '15',
+                            borderLeftColor: job.color,
+                            height: job.duration * SLOT_HEIGHT - 4,
+                          }]}
+                          onLongPress={() => handleRemoveFromSchedule(job.jobId)}
+                          onPress={() => handleReassign(job)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${job.title}, ${lane.name}, ${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}${job.site ? `, ${job.site}` : ''}`}
+                        >
+                          <Text style={[styles.blockTitle, { color: job.color }]} numberOfLines={1}>{job.title}</Text>
+                          {/* The site, not just the customer: on a multi-site
+                              day "where" is the question the board answers. */}
+                          {job.site ? (
+                            <View style={styles.blockTime}>
+                              <Ionicons name="location-outline" size={11} color={SemanticColors.textTertiary} />
+                              <Text style={styles.blockTimeText} numberOfLines={1}>{job.site}</Text>
+                            </View>
+                          ) : null}
+                          <Text style={styles.blockTimeText} numberOfLines={1}>
+                            {job.startHour}:00 – {hoursToHM(job.startHour + job.duration)}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      ) : (
+      /* Timeline */
       <ScrollView style={styles.timeline} showsVerticalScrollIndicator={false}>
         <View style={styles.timeGrid}>
           {HOURS.map(hour => (
@@ -539,6 +749,7 @@ export default function DragScheduleScreen() {
         </View>
         <View style={{ height: 40 }} />
       </ScrollView>
+      )}
     </View>
   );
 }
@@ -598,5 +809,25 @@ const styles = StyleSheet.create({
   blockDuration: { fontSize: 11, fontFamily: 'Archivo_700Bold', color: SemanticColors.textTertiary },
   blockCustomer: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 2 },
   blockTime: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  poolSiteRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  laneHeaderRow: { flexDirection: 'row', paddingBottom: 6 },
+  laneHeader: {
+    width: LANE_WIDTH, paddingHorizontal: 8, paddingVertical: 6,
+    borderLeftWidth: 1, borderLeftColor: SemanticColors.borderDefault,
+  },
+  laneDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 4 },
+  laneName: { fontSize: 13, fontWeight: '700', color: SemanticColors.textPrimary },
+  laneMeta: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 1 },
+  laneSites: { fontSize: 11, color: SemanticColors.textTertiary, marginTop: 1 },
+  laneSlot: {
+    width: LANE_WIDTH, height: SLOT_HEIGHT,
+    borderLeftWidth: 1, borderLeftColor: SemanticColors.borderDefault,
+    borderTopWidth: 1, borderTopColor: SemanticColors.borderMuted,
+    paddingHorizontal: 4,
+  },
+  laneBlock: {
+    borderLeftWidth: 3, borderRadius: 8, padding: 6,
+    overflow: 'hidden',
+  },
   blockTimeText: { fontSize: 11, color: SemanticColors.textTertiary },
 });

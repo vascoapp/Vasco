@@ -3030,7 +3030,19 @@
     "schedule": "Inplannen",
     "optimizedApplied": "Toegepast op de planning van vandaag.",
     "driveSummary": "{{km}}km · {{min}}min rijden",
-    "endsAt": "Klaar om {{time}}"
+    "endsAt": "Klaar om {{time}}",
+    "crewBoard": "Ploeg",
+    "unassignedLane": "Niet toegewezen",
+    "assignTo": "Wie doet deze klus?",
+    "reassign": "Iemand anders",
+    "reassignTo": "Naar een ander teamlid",
+    "unassign": "Niet toewijzen",
+    "laneFree": "vrij",
+    "sitesToday": "{{count}} werven",
+    "oneSite": "1 werf",
+    "crewUtil": "{{booked}} van {{capacity}}",
+    "doubleBooked": "{{name}} staat op dat moment al op een klus",
+    "siteHop": "{{name}} zit vlak daarvoor op {{from}} — reken reistijd naar {{to}}"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",

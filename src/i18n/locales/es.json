@@ -3030,7 +3030,19 @@
     "schedule": "Programar",
     "optimizedApplied": "Aplicado a la agenda de hoy.",
     "driveSummary": "{{km}}km · {{min}}min de trayecto",
-    "endsAt": "Termina a las {{time}}"
+    "endsAt": "Termina a las {{time}}",
+    "crewBoard": "Equipo",
+    "unassignedLane": "Sin asignar",
+    "assignTo": "¿Quién hace este trabajo?",
+    "reassign": "Otra persona",
+    "reassignTo": "A otro miembro del equipo",
+    "unassign": "Dejar sin asignar",
+    "laneFree": "libre",
+    "sitesToday": "{{count}} obras",
+    "oneSite": "1 obra",
+    "crewUtil": "{{booked}} de {{capacity}}",
+    "doubleBooked": "{{name}} ya está en un trabajo a esa hora",
+    "siteHop": "{{name}} está justo antes en {{from}}: cuenta el desplazamiento a {{to}}"
   },
   "marketInsights": {
     "title": "INSIGHTS DEL MERCADO",

@@ -3046,7 +3046,19 @@
     "schedule": "Einplanen",
     "optimizedApplied": "Auf den heutigen Plan angewendet.",
     "driveSummary": "{{km}}km · {{min}}min Fahrt",
-    "endsAt": "Endet um {{time}}"
+    "endsAt": "Endet um {{time}}",
+    "crewBoard": "Team",
+    "unassignedLane": "Nicht zugewiesen",
+    "assignTo": "Wer macht diesen Auftrag?",
+    "reassign": "Jemand anders",
+    "reassignTo": "An ein anderes Teammitglied",
+    "unassign": "Nicht zuweisen",
+    "laneFree": "frei",
+    "sitesToday": "{{count}} Baustellen",
+    "oneSite": "1 Baustelle",
+    "crewUtil": "{{booked}} von {{capacity}}",
+    "doubleBooked": "{{name}} ist zu dieser Zeit schon auf einem Auftrag",
+    "siteHop": "{{name}} ist kurz davor auf {{from}} — Fahrzeit nach {{to}} einplanen"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",
