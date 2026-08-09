@@ -241,6 +241,12 @@ const AppStateContext = createContext<AppState | null>(null);
 // Seed data flag — controlled by src/config/demo.ts (true in __DEV__ or when EXPO_PUBLIC_DEMO_MODE=true)
 const useSeedData = USE_SEED_DATA;
 
+// Fallback labour cost per hour, used only when neither the assigned worker's
+// `hourlyCost` nor the contractor's own `hourlyRate` is set. A placeholder, not
+// a measurement — every project that relies on it is telling the contractor to
+// go and enter a real rate.
+const DEFAULT_LABOUR_COST_PER_HOUR = 45;
+
 // Seed jobs — defined outside component to avoid Babel parse issues with inline ternaries
 const SEED_JOBS: Job[] = [
   { id: 'j-seed-1', customerId: 'cust-004', title: 'Lekkage inspectie — Fam. Bakker', description: null, status: 'lead', trade: 'plumbing', priority: 'normal', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
@@ -3771,9 +3777,30 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const mats = jobMaterialsMap[j.id] ?? [];
           return s + mats.reduce((ms, m) => ms + (m.totalPrice ?? 0), 0);
         }, 0);
+        // Labour is the largest cost of running a crew, and this was
+        // structurally ZERO for every project: it summed `j.timeEntries`, an
+        // array NOTHING writes. Hours are recorded via
+        // `updateJob(jobId, { actualHours })` (smartSchedulerService
+        // `recordHours`) — so an aannemer's project profit was
+        // revenue − materials, with their team free of charge, and the margin
+        // beside it measured nothing they could act on.
+        //
+        // The rate now comes from the person who did the work
+        // (`Worker.hourlyCost`, which exists for exactly this and was unused),
+        // falling back to the contractor's own rate. A lead tech and an
+        // apprentice cost different amounts; charging one flat 45 to both made
+        // per-project margin unusable for staffing decisions.
         const laborCosts = projectJobs.reduce((s, j) => {
-          const hours = (j as any).timeEntries?.reduce((h: number, e: any) => h + (e.hours ?? 0), 0) ?? 0;
-          return s + hours * 45;
+          const entryHours = (j as any).timeEntries?.reduce((h: number, e: any) => h + (e.hours ?? 0), 0) ?? 0;
+          const hours = entryHours || (j as any).actualHours || 0;
+          if (!hours) return s;
+          const worker = (j as any).assignedWorkerId
+            ? workers.find((w) => w.id === (j as any).assignedWorkerId)
+            : undefined;
+          const rate = worker?.hourlyCost
+            ?? (businessProfile as { hourlyRate?: number } | undefined)?.hourlyRate
+            ?? DEFAULT_LABOUR_COST_PER_HOUR;
+          return s + hours * rate;
         }, 0);
         const totalCosts = materialCosts + laborCosts;
         const grossProfit = revenue - totalCosts;

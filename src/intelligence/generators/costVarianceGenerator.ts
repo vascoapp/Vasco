@@ -20,6 +20,11 @@ export const costVarianceGenerator: InsightGenerator = {
   },
 };
 
+// Fallback labour cost per hour. This generator runs without a worker in
+// scope, so it cannot read `Worker.hourlyCost`; it is a screening heuristic
+// for "which jobs are running over", not an accounting figure.
+const LABOUR_COST_PER_HOUR = 45;
+
 const OVERRUN_PCT = 0.2;
 
 export function useCostVarianceInsight(ctx: GeneratorContext): ScoredInsight | null {
@@ -36,7 +41,12 @@ export function useCostVarianceInsight(ctx: GeneratorContext): ScoredInsight | n
     .map((j: any) => {
       const quoted = j.quotedAmount ?? j.agreedAmount ?? 0;
       const materialCost = (j.materials ?? []).reduce((s: number, m: any) => s + (m.totalCost ?? 0), 0);
-      const laborCost = (j.timeEntries ?? []).reduce((s: number, e: any) => s + (e.hours ?? 0) * 45, 0);
+      // Same defect as getProjectPnL: `timeEntries` is an array nothing
+      // writes, so labour was always 0 and this generator only ever flagged
+      // MATERIAL overruns. Hours land on `actualHours` via recordHours.
+      const entryHours = (j.timeEntries ?? []).reduce((s: number, e: any) => s + (e.hours ?? 0), 0);
+      const laborHours = entryHours || j.actualHours || 0;
+      const laborCost = laborHours * LABOUR_COST_PER_HOUR;
       const actual = materialCost + laborCost;
       const overrun = quoted > 0 ? (actual - quoted) / quoted : 0;
       return { j, quoted, actual, overrun };
