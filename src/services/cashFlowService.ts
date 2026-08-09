@@ -316,7 +316,13 @@ class CashFlowService {
       });
     }
 
-    if (projectedBalance30Days < LOW_BALANCE_THRESHOLD) {
+    // A FORECAST, so it must describe a change. This fired whenever the
+    // projection was under the threshold — including when the balance was
+    // ALREADY under it (€ 760, and € 0,00 on a new account), where "your
+    // balance could drop below € 5.000 within 30 days" is not a prediction but
+    // a restatement of the number printed directly above it. Only warn when
+    // the contractor is above the line today and the projection crosses it.
+    if (paidTotal >= LOW_BALANCE_THRESHOLD && projectedBalance30Days < LOW_BALANCE_THRESHOLD) {
       alerts.push({
         id: 'alert_low_balance',
         type: 'warning',
@@ -735,7 +741,13 @@ export function useCashFlow() {
 
     const projectedBalance30Days = paidTotal + pendingIncome - pendingExpenses;
 
-    if (projectedBalance30Days < LOW_BALANCE_THRESHOLD) {
+    // A FORECAST, so it must describe a change. This fired whenever the
+    // projection was under the threshold — including when the balance was
+    // ALREADY under it (€ 760, and € 0,00 on a new account), where "your
+    // balance could drop below € 5.000 within 30 days" is not a prediction but
+    // a restatement of the number printed directly above it. Only warn when
+    // the contractor is above the line today and the projection crosses it.
+    if (paidTotal >= LOW_BALANCE_THRESHOLD && projectedBalance30Days < LOW_BALANCE_THRESHOLD) {
       alerts.push({
         id: 'alert_low_balance',
         type: 'warning',

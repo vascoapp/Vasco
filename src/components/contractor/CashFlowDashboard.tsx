@@ -14,6 +14,7 @@ import {
   Modal,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG } from '../../theme/tabStyles';
 import { TYPE, RADIUS } from '../../theme/tabStyles';
@@ -33,6 +34,7 @@ type TabType = 'overview' | 'invoices' | 'forecast' | 'expenses';
 
 export function CashFlowDashboard() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -110,7 +112,19 @@ export function CashFlowDashboard() {
       {summary.alerts.length > 0 && (
         <View style={styles.alertsSection}>
           {summary.alerts.map((alert) => (
-            <Pressable key={alert.id} style={[styles.alertCard, { borderLeftColor: alert.type === 'warning' ? Palette.orange500 : Palette.hermesOrange }]}>
+            // An actionable alert draws a chevron and carries an `action`
+            // label ("Herinneringen sturen"), but the card had no onPress and
+            // never rendered the label — so the one alert a contractor most
+            // wants to act on looked tappable and did nothing. Overdue routes
+            // to the Geld tab, where the working per-invoice reminder lives.
+            <Pressable
+              key={alert.id}
+              style={[styles.alertCard, { borderLeftColor: alert.type === 'warning' ? Palette.orange500 : Palette.hermesOrange }]}
+              onPress={alert.actionable ? () => router.push('/(contractor)/geld' as any) : undefined}
+              disabled={!alert.actionable}
+              accessibilityRole={alert.actionable ? 'button' : undefined}
+              accessibilityLabel={alert.actionable ? alert.action : undefined}
+            >
               <Ionicons
                 name={alert.type === 'warning' ? 'warning-outline' : 'bulb-outline'}
                 size={20}
@@ -119,6 +133,9 @@ export function CashFlowDashboard() {
               <View style={styles.alertContent}>
                 <Text style={styles.alertTitle}>{alert.title}</Text>
                 <Text style={styles.alertDescription}>{alert.description}</Text>
+                {alert.actionable && alert.action ? (
+                  <Text style={styles.alertAction}>{alert.action}</Text>
+                ) : null}
               </View>
               {alert.actionable && (
                 <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
@@ -718,6 +735,12 @@ const styles = StyleSheet.create({
     fontSize: TYPE.bodySize - 1,
     fontFamily: 'Inter_600SemiBold',
     color: SemanticColors.textPrimary,
+  },
+  alertAction: {
+    fontFamily: TYPE.labelFamily,
+    fontSize: TYPE.labelSize,
+    color: Palette.hermesOrange,
+    marginTop: 4,
   },
   alertDescription: {
     fontSize: TYPE.labelSize,

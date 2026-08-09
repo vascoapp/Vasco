@@ -863,10 +863,8 @@
     "",
     "2 openstaande facturen",
     "€ 800 aan betalingen zijn verlopen",
+    "Stuur herinneringen",
     "",
-    "",
-    "Lage cashflow verwacht",
-    "Je saldo kan binnen 30 dagen onder € 5.000 komen",
     "",
     "Te ontvangen",
     "€ 1.440,00",
@@ -887,7 +885,9 @@
     "€ 0,00",
     "0 facturen"
    ],
-   "a11y": []
+   "a11y": [
+    "Stuur herinneringen"
+   ]
   },
   {
    "screen": "contractor/closeout",
@@ -1480,9 +1480,9 @@
     "",
     "Fam. Bakker",
     "",
-    "12:47",
+    "13:01",
     "–",
-    "12:47",
+    "13:01",
     "2u",
     "",
     "15",
