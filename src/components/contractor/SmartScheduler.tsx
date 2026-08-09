@@ -29,6 +29,7 @@ import {
 import { predictDuration, type DurationPrediction } from '../../intelligence/predictions';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { formatDayMonthAuto, formatTimeAuto } from '../../i18n/formatting';
 type ViewType = 'day' | 'week' | 'list';
 
 export function SmartScheduler() {
@@ -110,11 +111,11 @@ export function SmartScheduler() {
   };
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return formatTimeAuto(new Date(dateStr));
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    return formatDayMonthAuto(new Date(dateStr));
   };
 
   const openJob = (job: ScheduledJob) => {
@@ -209,7 +210,7 @@ export function SmartScheduler() {
     const isToday = dateStr === new Date().toISOString().split('T')[0];
     const isSelected = dateStr === selectedDate;
     const weatherStyle = getWeatherIcon(schedule.weatherOverview.condition);
-    const dayOfWeek = new Date(dateStr).toLocaleDateString(undefined, { weekday: 'short' });
+    const dayOfWeek = formatDayMonthAuto(new Date(dateStr));
     const dayNum = new Date(dateStr).getDate();
 
     return (

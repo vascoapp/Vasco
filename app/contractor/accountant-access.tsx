@@ -32,6 +32,7 @@ import { useAppState } from '../../src/state/AppState';
 import {
   listSeats, publishSeat, revokeSeat, type AccountantSeat,
 } from '../../src/services/accountantSeatService';
+import { formatDateShortAuto } from '../../src/i18n/formatting';
 
 export default function AccountantAccessScreen() {
   const { t } = useTranslation();
@@ -161,7 +162,7 @@ export default function AccountantAccessScreen() {
 
   const viewedLabel = (seat: AccountantSeat) => {
     if (!seat.lastViewedAt) return t('accountantAccess.neverOpened', 'Not opened yet');
-    const when = new Date(seat.lastViewedAt).toLocaleDateString();
+    const when = formatDateShortAuto(new Date(seat.lastViewedAt));
     return t('accountantAccess.lastOpened', 'Last opened {{when}} · {{count}}×', { when, count: seat.viewCount });
   };
 
@@ -225,7 +226,7 @@ export default function AccountantAccessScreen() {
               </Text>
               <Text style={styles.seatMeta}>
                 {t('accountantAccess.expires', 'Expires {{when}}', {
-                  when: new Date(seat.expiresAt).toLocaleDateString(),
+                  when: formatDateShortAuto(new Date(seat.expiresAt)),
                 })}
               </Text>
             </View>

@@ -19,6 +19,7 @@ import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import { SafeArea } from '../../theme/spacing';
 import { hapticSuccess } from '../../utils/haptics';
+import { formatDateAuto, formatDayMonthAuto } from '../../i18n/formatting';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const THUMB_SIZE = (SCREEN_WIDTH - GRID.md * 2 - GRID.sm * 2) / 3;
@@ -132,7 +133,7 @@ export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps
             {/* Date overlay */}
             <View style={styles.dateOverlay}>
               <Text style={styles.dateOverlayText}>
-                {new Date(photo.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                {formatDayMonthAuto(new Date(photo.date))}
               </Text>
             </View>
             {/* Label badge */}
@@ -243,12 +244,7 @@ export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps
           {selectedPhoto && (
             <View style={styles.modalFooter}>
               <Text style={styles.modalDate}>
-                {new Date(selectedPhoto.date).toLocaleDateString(undefined, {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {formatDateAuto(new Date(selectedPhoto.date))}
               </Text>
               {selectedPhoto.notes && (
                 <Text style={styles.modalNotes}>{selectedPhoto.notes}</Text>

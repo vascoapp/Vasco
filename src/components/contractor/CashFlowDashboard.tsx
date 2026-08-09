@@ -20,7 +20,7 @@ import { PAGE_BG } from '../../theme/tabStyles';
 import { TYPE, RADIUS } from '../../theme/tabStyles';
 import { EmptyState } from '../shared/EmptyState';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency as formatCurrencyForCountry, type Country } from '../../i18n/formatting';
+import { formatCurrency as formatCurrencyForCountry, type Country, formatDateShortAuto } from '../../i18n/formatting';
 import { getCurrentCountry } from '../../lib/currentUser';
 import {
   useCashFlow,
@@ -245,7 +245,7 @@ export function CashFlowDashboard() {
           <Text style={styles.invoiceProject}>{invoice.projectName}</Text>
           <View style={styles.invoiceMeta}>
             <Text style={styles.invoiceDate}>
-              {t('cashflow.dueDateLabel', { date: new Date(invoice.dueDate).toLocaleDateString(undefined) })}
+              {t('cashflow.dueDateLabel', { date: formatDateShortAuto(new Date(invoice.dueDate)) })}
             </Text>
             {invoice.remindersSent > 0 && (
               <Text style={styles.invoiceReminders}>{t('cashflow.remindersSent', { count: invoice.remindersSent })}</Text>
@@ -471,7 +471,7 @@ export function CashFlowDashboard() {
                 <View style={styles.expenseInfo}>
                   <Text style={styles.expenseDescription}>{expense.description}</Text>
                   <Text style={styles.expenseDate}>
-                    {new Date(expense.date).toLocaleDateString(undefined)}
+                    {formatDateShortAuto(new Date(expense.date))}
                     {expense.recurring && ' • Terugkerend'}
                   </Text>
                 </View>
@@ -570,13 +570,13 @@ export function CashFlowDashboard() {
                 <View style={styles.invoiceDetailSection}>
                   <Text style={styles.invoiceDetailLabel}>{t('cashflow.invoiceDate', 'Invoice date')}</Text>
                   <Text style={styles.invoiceDetailValue}>
-                    {new Date(selectedInvoice.issueDate).toLocaleDateString(undefined)}
+                    {formatDateShortAuto(new Date(selectedInvoice.issueDate))}
                   </Text>
                 </View>
                 <View style={styles.invoiceDetailSection}>
                   <Text style={styles.invoiceDetailLabel}>{t('cashflow.dueDate', 'Due date')}</Text>
                   <Text style={styles.invoiceDetailValue}>
-                    {new Date(selectedInvoice.dueDate).toLocaleDateString(undefined)}
+                    {formatDateShortAuto(new Date(selectedInvoice.dueDate))}
                   </Text>
                 </View>
               </View>

@@ -27,7 +27,7 @@ import {
 } from '../../src/services/recurringJobService';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency, type Country } from '../../src/i18n/formatting';
+import { formatCurrency, type Country, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -293,7 +293,7 @@ export default function ServiceAgreementsScreen() {
                   <View style={s.metaItem}>
                     <Ionicons name="calendar-outline" size={13} color={SemanticColors.textTertiary} />
                     <Text style={s.metaText}>
-                      {t('agreements.next', 'Next')}: {new Date(agreement.nextDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                      {t('agreements.next', 'Next')}: {formatDayMonthAuto(new Date(agreement.nextDate))}
                     </Text>
                   </View>
                   {agreement.trade && (

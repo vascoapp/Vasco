@@ -28,7 +28,7 @@ import { intelligence } from '../../intelligence/intelligenceEngine';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { formatCurrency, formatCurrency0, type Country } from '../../i18n/formatting';
+import { formatCurrency, formatCurrency0, type Country, formatDateShortAuto } from '../../i18n/formatting';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
   platform: 'ios' as const,
@@ -280,10 +280,10 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
           </View>
           <View style={styles.linkStats}>
             <Text style={styles.linkStatText}>
-              Created {new Date(paymentLink.createdAt).toLocaleDateString(undefined)}
+              Created {formatDateShortAuto(new Date(paymentLink.createdAt))}
             </Text>
             <Text style={styles.linkStatText}>
-              Expires {new Date(paymentLink.expiresAt).toLocaleDateString(undefined)}
+              Expires {formatDateShortAuto(new Date(paymentLink.expiresAt))}
             </Text>
           </View>
         </View>
@@ -358,13 +358,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
         <View style={styles.paymentDetailRow}>
           <Text style={styles.paymentDetailLabel}>{t('payments.paymentDate')}</Text>
           <Text style={styles.paymentDetailValue}>
-            {new Date(paymentLink.paidAt!).toLocaleDateString(undefined, {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {formatDateShortAuto(new Date(paymentLink.paidAt!))}
           </Text>
         </View>
         <View style={styles.paymentDetailRow}>

@@ -28,7 +28,7 @@ import {
   type RecurringJobTemplate,
 } from '../../../src/services/recurringJobsService';
 import { hapticSuccess, hapticWarning } from '../../../src/utils/haptics';
-import { currencySymbol, formatCurrency, type Country } from '../../../src/i18n/formatting';
+import { currencySymbol, formatCurrency, type Country, formatDateShortAuto } from '../../../src/i18n/formatting';
 
 const CADENCES: { value: RecurrenceCadence; labelKey: string; fallback: string }[] = [
   { value: 'monthly', labelKey: 'recurring.monthly', fallback: 'Monthly' },
@@ -271,7 +271,7 @@ function formatHistoryDate(h: ProposalJob): string {
   const raw = h.completedAt ?? h.updatedAt ?? '';
   if (!raw) return '';
   const d = new Date(raw);
-  return Number.isNaN(d.getTime()) ? raw.slice(0, 10) : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? raw.slice(0, 10) : formatDateShortAuto(d);
 }
 
 /**

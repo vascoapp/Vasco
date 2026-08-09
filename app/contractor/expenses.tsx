@@ -15,7 +15,7 @@ import { useExpenses, useExpenseStats, EXPENSE_CATEGORIES, type ExpenseCategory 
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { getVATRate } from '../../src/constants/taxRates';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatDayMonthAuto } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -211,7 +211,7 @@ export default function ExpensesScreen() {
               <View style={styles.expenseInfo}>
                 <Text style={styles.expenseName} numberOfLines={1}>{expense.description}</Text>
                 <Text style={styles.expenseMeta}>
-                  {catConfig?.label}{expense.supplier ? ` · ${expense.supplier}` : ''} · {expense.date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                  {catConfig?.label}{expense.supplier ? ` · ${expense.supplier}` : ''} · {formatDayMonthAuto(expense.date)}
                 </Text>
                 {expense.jobTitle && (
                   <Text style={styles.expenseJob} numberOfLines={1}>{expense.jobTitle}</Text>

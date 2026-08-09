@@ -23,7 +23,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatDecimal1 } from '../../src/i18n/formatting';
+import { formatDecimal1, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useClockIn } from '../../src/services/clockInService';
@@ -222,7 +222,7 @@ export default function TimesheetScreen() {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    return formatDayMonthAuto(d);
   };
 
   return (

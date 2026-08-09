@@ -18,7 +18,7 @@ import { scan as runComplianceScan, getLastRun, type ComplianceScanResult } from
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, formatDateShortAuto, formatDayMonthAuto } from '../../i18n/formatting';
 import { useTranslation } from 'react-i18next';
 import {
   useLicenses,
@@ -226,7 +226,7 @@ export function ComplianceCenter() {
               {entry.date.getDate()}
             </Text>
             <Text style={styles.calendarMonth}>
-              {entry.date.toLocaleDateString(undefined, { month: 'short' })}
+              {formatDayMonthAuto(entry.date)}
             </Text>
           </View>
           <View style={styles.calendarItems}>
@@ -263,7 +263,7 @@ export function ComplianceCenter() {
             <Text style={styles.alertDescription}>{alert.description}</Text>
             {alert.dueDate && (
               <Text style={styles.alertDue}>
-                Deadline: {alert.dueDate.toLocaleDateString(undefined)}
+                Deadline: {formatDateShortAuto(alert.dueDate)}
               </Text>
             )}
           </View>
@@ -311,7 +311,7 @@ export function ComplianceCenter() {
             <View style={styles.licenseDetail}>
               <Ionicons name="calendar" size={14} color={SemanticColors.textSecondary} />
               <Text style={styles.licenseDetailText}>
-                Verloopt: {license.expiryDate.toLocaleDateString(undefined)}
+                Verloopt: {formatDateShortAuto(license.expiryDate)}
               </Text>
             </View>
           </View>
@@ -361,7 +361,7 @@ export function ComplianceCenter() {
                 </View>
                 <View style={styles.certFooter}>
                   <Text style={styles.certExpiry}>
-                    Geldig tot: {cert.expiryDate.toLocaleDateString(undefined)}
+                    Geldig tot: {formatDateShortAuto(cert.expiryDate)}
                   </Text>
                 </View>
               </View>
@@ -393,7 +393,7 @@ export function ComplianceCenter() {
             </View>
             <View style={styles.certFooter}>
               <Text style={styles.certExpiry}>
-                Geldig tot: {cert.expiryDate.toLocaleDateString(undefined)}
+                Geldig tot: {formatDateShortAuto(cert.expiryDate)}
               </Text>
               <Text style={styles.certIssuerSmall}>{cert.issuingBody}</Text>
             </View>
@@ -468,7 +468,7 @@ export function ComplianceCenter() {
 
           <View style={styles.insuranceFooter}>
             <Text style={styles.insuranceExpiry}>
-              Looptijd tot: {policy.endDate.toLocaleDateString(undefined)}
+              Looptijd tot: {formatDateShortAuto(policy.endDate)}
             </Text>
             {policy.autoRenew && (
               <View style={styles.autoRenewBadge}>
@@ -516,7 +516,7 @@ export function ComplianceCenter() {
               </Text>
             </View>
             <Text style={styles.updateDate}>
-              {update.publishDate.toLocaleDateString(undefined)}
+              {formatDateShortAuto(update.publishDate)}
             </Text>
           </View>
 
@@ -767,7 +767,7 @@ export function ComplianceCenter() {
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Uitgiftedatum</Text>
                 <Text style={styles.detailValue}>
-                  {selectedLicense.issueDate.toLocaleDateString(undefined)}
+                  {formatDateShortAuto(selectedLicense.issueDate)}
                 </Text>
               </View>
               <View style={styles.detailRow}>
@@ -776,7 +776,7 @@ export function ComplianceCenter() {
                   styles.detailValue,
                   selectedLicense.status !== 'valid' && { color: getStatusColor(selectedLicense.status) },
                 ]}>
-                  {selectedLicense.expiryDate.toLocaleDateString(undefined)}
+                  {formatDateShortAuto(selectedLicense.expiryDate)}
                 </Text>
               </View>
               {selectedLicense.renewalCost && (
@@ -863,7 +863,7 @@ export function ComplianceCenter() {
               <Text style={styles.updateMetaText}>{selectedUpdate.source}</Text>
               <Text style={styles.updateMetaText}>•</Text>
               <Text style={styles.updateMetaText}>
-                {selectedUpdate.publishDate.toLocaleDateString(undefined)}
+                {formatDateShortAuto(selectedUpdate.publishDate)}
               </Text>
             </View>
 
@@ -871,7 +871,7 @@ export function ComplianceCenter() {
               <View style={styles.effectiveDate}>
                 <Ionicons name="calendar" size={16} color={SemanticColors.actionPrimary} />
                 <Text style={styles.effectiveDateText}>
-                  Ingangsdatum: {selectedUpdate.effectiveDate.toLocaleDateString(undefined)}
+                  Ingangsdatum: {formatDateShortAuto(selectedUpdate.effectiveDate)}
                 </Text>
               </View>
             )}
@@ -902,7 +902,7 @@ export function ComplianceCenter() {
                 </Text>
                 {selectedUpdate.actionDeadline && (
                   <Text style={styles.actionDeadline}>
-                    Deadline: {selectedUpdate.actionDeadline.toLocaleDateString(undefined)}
+                    Deadline: {formatDateShortAuto(selectedUpdate.actionDeadline)}
                   </Text>
                 )}
               </View>

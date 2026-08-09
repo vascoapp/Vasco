@@ -13,7 +13,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
-import { formatCurrency, type Country } from '../../../src/i18n/formatting';
+import { formatCurrency, type Country, formatDayMonthAuto } from '../../../src/i18n/formatting';
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import { generateSmartReplies, type SmartReply } from '../../../src/services/customerSmartReplyService';
@@ -214,7 +214,7 @@ export default function CustomerDetailScreen() {
                   color={SemanticColors.textTertiary}
                 />
                 <Text style={s.inboxMetaText}>
-                  {new Date(inbox.latest.capturedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                  {formatDayMonthAuto(new Date(inbox.latest.capturedAt))}
                   {inbox.messages.length > 1 ? ` · +${inbox.messages.length - 1} more` : ''}
                 </Text>
                 <Pressable

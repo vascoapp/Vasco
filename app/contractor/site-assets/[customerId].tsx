@@ -31,6 +31,7 @@ import {
   type SiteAssetProposal,
   type ProposalJob,
 } from '../../../src/services/siteAssetService';
+import { formatDateShortAuto } from '../../../src/i18n/formatting';
 
 const CATEGORIES: SiteAssetCategory[] = [
   'heating', 'water', 'electrical', 'ventilation', 'roof', 'exterior', 'other',
@@ -101,7 +102,7 @@ export default function SiteAssetsScreen() {
         {due && (
           <Text style={styles.due}>
             {t('siteAssets.nextDue', 'Next service due {{date}}', {
-              date: new Date(due).toLocaleDateString(),
+              date: formatDateShortAuto(new Date(due)),
             })}
           </Text>
         )}

@@ -31,7 +31,7 @@ import {
   getTrackerStats,
 } from '../../data/mockDecisions';
 import { useAuth } from '../../context/AuthContext';
-import { formatMoney } from '../../i18n/formatting';
+import { formatMoney, formatDayMonthAuto } from '../../i18n/formatting';
 
 const TRACKER_KEY = '@vasco_decision_trackers';
 function usePersistedTrackers(): CustomerDecisionTracker[] {
@@ -670,10 +670,7 @@ function OverviewTab({
                   {phase.phase.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </Text>
                 <Text style={styles.timelineDate}>
-                  {new Date(phase.startDate).toLocaleDateString(undefined, {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
+                  {formatDayMonthAuto(new Date(phase.startDate))}
                 </Text>
               </View>
             </View>
@@ -864,7 +861,7 @@ function DecisionItemCard({
               isOverdue && { color: SemanticColors.feedbackError, fontFamily: TYPE.labelFamily },
               isDueSoon && { color: SemanticColors.feedbackWarning },
             ]}>
-              {t('dt.due', { date: dueDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) })}
+              {t('dt.due', { date: formatDayMonthAuto(dueDate) })}
             </Text>
           </View>
           {isOverdue && (
@@ -989,12 +986,7 @@ function CompletedItemsList({ items }: { items: CustomerDecisionItem[] }) {
             </Text>
             {item.decidedAt && (
               <Text style={styles.completedDate}>
-                {new Date(item.decidedAt).toLocaleDateString(undefined, {
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {formatDayMonthAuto(new Date(item.decidedAt))}
               </Text>
             )}
           </View>

@@ -42,7 +42,7 @@ import { createPaymentLink as createStripePaymentLink } from '../../src/integrat
 import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
 import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
-import { formatCurrency, formatMoney } from '../../src/i18n/formatting';
+import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { calculateLatePaymentInterest } from '../../src/services/dutchComplianceService';
 import { useTranslation } from 'react-i18next';
@@ -559,7 +559,7 @@ export default function FacturenScreen() {
         customer: inv.customerName,
         title: inv.projectName,
         status: inv.status === 'viewed' ? 'viewed' : inv.status === 'draft' ? 'draft' : 'sent',
-        sentDate: new Date(inv.issueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
+        sentDate: formatDayMonthAuto(new Date(inv.issueDate)),
         total: inv.amount,
         tiers: {
           good: Math.round(inv.amount * 0.75),

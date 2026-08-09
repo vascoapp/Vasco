@@ -27,7 +27,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
-import { formatCurrency, type Country } from '../../../src/i18n/formatting';
+import { formatCurrency, type Country, formatDateShortAuto } from '../../../src/i18n/formatting';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import {
@@ -437,7 +437,7 @@ export default function ProjectBillingScreen() {
                     {t(CO_STATUS_KEY[order.status], order.status)}
                     {isReduction ? ` · ${t('projectBilling.reduction', 'Reduction')}` : ''}
                     {order.warnedAt
-                      ? ` · ${t('projectBilling.warnedOn', { date: new Date(order.warnedAt).toLocaleDateString() })}`
+                      ? ` · ${t('projectBilling.warnedOn', { date: formatDateShortAuto(new Date(order.warnedAt)) })}`
                       : ''}
                   </Text>
 

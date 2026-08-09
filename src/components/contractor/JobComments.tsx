@@ -17,6 +17,9 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import { formatTimeAgo } from '../../utils/timeAgo';
+import type { Country } from '../../i18n/formatting';
 import { Palette, SemanticColors } from '../../theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import {
@@ -37,28 +40,18 @@ interface JobCommentsProps {
 }
 
 // =============================================================================
-// TIME FORMATTING
-// =============================================================================
-
-function formatTimeAgo(isoDate: string): string {
-  const now = Date.now();
-  const then = new Date(isoDate).getTime();
-  const diffMin = Math.floor((now - then) / 60000);
-  if (diffMin < 1) return 'Just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHrs = Math.floor(diffMin / 60);
-  if (diffHrs < 24) return `${diffHrs}h ago`;
-  const diffDays = Math.floor(diffHrs / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return new Date(isoDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-}
-
-// =============================================================================
 // COMPONENT
 // =============================================================================
 
 export default function JobComments({ jobId }: JobCommentsProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
+  // Shared with the notifications inbox (src/utils/timeAgo.ts). The copy that
+  // used to live at module scope in this file returned "Just now" / "5m ago"
+  // in English and fell back to the DEVICE locale for older entries — on the
+  // job screen a Dutch contractor reads.
+  const timeAgo = (iso: string) => formatTimeAgo(iso, t as any, country);
   const { feed, loading, postComment } = useJobComments(jobId);
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
@@ -94,7 +87,7 @@ export default function JobComments({ jobId }: JobCommentsProps) {
           <View style={s.commentBubble}>
             <View style={s.commentHeader}>
               <Text style={s.commentAuthor}>{displayName}</Text>
-              <Text style={s.commentTime}>{formatTimeAgo(comment.createdAt)}</Text>
+              <Text style={s.commentTime}>{timeAgo(comment.createdAt)}</Text>
             </View>
             <Text style={s.commentText}>{comment.text}</Text>
           </View>
@@ -111,7 +104,7 @@ export default function JobComments({ jobId }: JobCommentsProps) {
           <Ionicons name={icon.name as IconName} size={14} color={icon.color} />
         </View>
         <Text style={s.activityText}>{activity.description}</Text>
-        <Text style={s.activityTime}>{formatTimeAgo(activity.createdAt)}</Text>
+        <Text style={s.activityTime}>{timeAgo(activity.createdAt)}</Text>
       </View>
     );
   };

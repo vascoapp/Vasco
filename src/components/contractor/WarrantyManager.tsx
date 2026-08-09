@@ -17,7 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { formatCurrency, formatMoney } from '../../i18n/formatting';
+import { formatCurrency, formatMoney, formatDateShortAuto } from '../../i18n/formatting';
 import {
   useWarranties,
   useWarrantyClaims,
@@ -122,21 +122,21 @@ const WarrantyCard: React.FC<{
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>{t('warranty.installation', 'Installation')}</Text>
               <Text style={styles.dateValue}>
-                {warranty.installDate.toLocaleDateString(undefined)}
+                {formatDateShortAuto(warranty.installDate)}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>{t('warranty.warrantyStartLabel', 'Warranty start')}</Text>
               <Text style={styles.dateValue}>
-                {warranty.warrantyStart.toLocaleDateString(undefined)}
+                {formatDateShortAuto(warranty.warrantyStart)}
               </Text>
             </View>
             <View style={styles.dateDivider} />
             <View style={styles.dateItem}>
               <Text style={styles.dateLabel}>{t('warranty.warrantyEndLabel', 'Warranty end')}</Text>
               <Text style={styles.dateValue}>
-                {warranty.warrantyEnd.toLocaleDateString(undefined)}
+                {formatDateShortAuto(warranty.warrantyEnd)}
               </Text>
             </View>
           </View>
@@ -271,8 +271,8 @@ export const WarrantyManager: React.FC = () => {
         `${t('warranty.customer', 'Customer')}: ${warranty.customerName}`,
         `${t('warranty.brandModel', 'Brand/Model')}: ${warranty.brand} ${warranty.model}`,
         warranty.serialNumber ? `${t('warranty.serialNumber', 'Serial number')}: ${warranty.serialNumber}` : null,
-        `${t('warranty.installation', 'Installation')}: ${warranty.installDate.toLocaleDateString(undefined)}`,
-        `${t('warranty.warranty', 'Warranty')}: ${warranty.warrantyStart.toLocaleDateString(undefined)} - ${warranty.warrantyEnd.toLocaleDateString(undefined)}`,
+        `${t('warranty.installation', 'Installation')}: ${formatDateShortAuto(warranty.installDate)}`,
+        `${t('warranty.warranty', 'Warranty')}: ${formatDateShortAuto(warranty.warrantyStart)} - ${formatDateShortAuto(warranty.warrantyEnd)}`,
         expiryInfo,
         warranty.coverage.length > 0 ? `\n${t('warranty.coverage', 'Coverage')}: ${warranty.coverage.join(', ')}` : null,
       ].filter(Boolean).join('\n'),
@@ -313,7 +313,7 @@ export const WarrantyManager: React.FC = () => {
         `${t('warranty.product', 'Product')}: ${claim.equipmentName}`,
         `${t('auditor.status', 'Status')}: ${statusLabels[claim.status] || claim.status}`,
         `${t('warranty.issue', 'Issue')}: ${claim.issueDescription}`,
-        `${t('warranty.filed', 'Filed')}: ${claim.claimDate.toLocaleDateString(undefined)} (${t('warranty.daysAgo', '{{days}} days ago', { days: daysSinceFiled })})`,
+        `${t('warranty.filed', 'Filed')}: ${formatDateShortAuto(claim.claimDate)} (${t('warranty.daysAgo', '{{days}} days ago', { days: daysSinceFiled })})`,
         claim.estimatedCost ? `${t('warranty.estimatedValue', 'Estimated value')}: ${formatMoney(claim.estimatedCost)}` : null,
       ].filter(Boolean).join('\n'),
       [{ text: t('common.close', 'Close'), style: 'cancel' }],

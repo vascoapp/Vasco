@@ -14,7 +14,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { usePurchaseOrders, usePOStats, type PurchaseOrder, type POStatus } from '../../src/services/purchaseOrderService';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency, formatCurrency0, compactCurrency, type Country } from '../../src/i18n/formatting';
+import { formatCurrency, formatCurrency0, compactCurrency, type Country, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
@@ -245,7 +245,7 @@ export default function PurchaseOrdersScreen() {
                     <View style={styles.deliveryRow}>
                       <Ionicons name="calendar-outline" size={14} color={SemanticColors.textSecondary} />
                       <Text style={styles.deliveryText}>
-                        {t('purchaseOrders.expectedDelivery', 'Verwachte levering')}: {order.expectedDelivery.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                        {t('purchaseOrders.expectedDelivery', 'Verwachte levering')}: {formatDayMonthAuto(order.expectedDelivery)}
                       </Text>
                     </View>
                   )}

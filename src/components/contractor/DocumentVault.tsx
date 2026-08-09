@@ -29,6 +29,7 @@ import {
 } from '../../services/documentVaultService';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { useTranslation } from 'react-i18next';type TabType = 'all' | 'expiring' | 'folders' | 'templates';
+import { formatDateShortAuto } from '../../i18n/formatting';
 
 export function DocumentVault() {
   const { t } = useTranslation();
@@ -89,11 +90,7 @@ export function DocumentVault() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+    return formatDateShortAuto(new Date(dateStr));
   };
 
   const openDocument = (doc: Document) => {

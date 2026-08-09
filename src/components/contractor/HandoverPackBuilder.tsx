@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, formatDateShortAuto } from '../../i18n/formatting';
 import type { EvidencePack, HandoverPackage, ChecklistCategory, EvidenceItem } from '../../types/contractor';
 import {
   evidencePackService,
@@ -422,7 +422,7 @@ export function HandoverPackBuilder({
             <View style={styles.documentInfo}>
               <Text style={styles.documentName}>{warranty.description}</Text>
               <Text style={styles.documentMeta}>
-                Valid until {new Date(warranty.endDate).toLocaleDateString()}
+                Valid until {formatDateShortAuto(new Date(warranty.endDate))}
               </Text>
             </View>
             <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
@@ -495,7 +495,7 @@ export function HandoverPackBuilder({
           </View>
           <View style={styles.certificateRow}>
             <Text style={styles.certificateLabel}>{t('handover.completionDate')}</Text>
-            <Text style={styles.certificateValue}>{new Date().toLocaleDateString()}</Text>
+            <Text style={styles.certificateValue}>{formatDateShortAuto(new Date())}</Text>
           </View>
           <View style={styles.certificateRow}>
             <Text style={styles.certificateLabel}>{t('handover.finalAmount')}</Text>

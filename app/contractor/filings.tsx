@@ -30,6 +30,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { useAppState } from '../../src/state/AppState';
 import { useSubmissions, recordAuthorityOutcome } from '../../src/services/submissionStore';
 import { describeState, type Submission } from '../../src/services/submissionLifecycle';
+import { formatDateShortAuto } from '../../src/i18n/formatting';
 
 const CHANNEL_LABEL: Record<string, string> = {
   sdi: 'SDI', face: 'FACe', pdp: 'PDP', peppol: 'Peppol',
@@ -107,7 +108,7 @@ export default function FilingsScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.subject} numberOfLines={1}>{subjectLabel(s)}</Text>
             <Text style={styles.meta}>
-              {CHANNEL_LABEL[s.channel] ?? s.channel} · {new Date(s.createdAt).toLocaleDateString()}
+              {CHANNEL_LABEL[s.channel] ?? s.channel} · {formatDateShortAuto(new Date(s.createdAt))}
             </Text>
           </View>
           <View style={[

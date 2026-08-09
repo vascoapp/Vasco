@@ -8,6 +8,9 @@
 import { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch, RefreshControl } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { formatTimeAgo as sharedTimeAgo } from '../../src/utils/timeAgo';
+import { useAuth } from '../../src/context/AuthContext';
+import type { Country } from '../../src/i18n/formatting';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -63,6 +66,8 @@ const TYPE_FALLBACKS: Record<NotificationType, string> = {
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
   // R272: combined feed = persisted user-fired + live-derived from AppState
@@ -83,15 +88,10 @@ export default function NotificationsScreen() {
     setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
 
-  const formatTimeAgo = (date: Date) => {
-    const mins = Math.floor((Date.now() - date.getTime()) / 60000);
-    if (mins < 1) return t('notifications.justNow', 'Just now');
-    if (mins < 60) return t('notifications.minutesAgo', '{{count}}m', { count: mins });
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return t('notifications.hoursAgo', '{{count}}h', { count: hours });
-    const days = Math.floor(hours / 24);
-    return t('notifications.daysAgo', '{{count}}d', { count: days });
-  };
+  // Shared with JobComments (src/utils/timeAgo.ts) so the two surfaces cannot
+  // word the same elapsed time differently. This copy was already localised;
+  // the other one was not, which is what prompted the extraction.
+  const formatTimeAgo = (date: Date) => sharedTimeAgo(date, t as any, country);
 
   const handlePress = (notif: AppNotification) => {
     if (!notif.read) { markRead(notif.id); hapticSuccess(); }

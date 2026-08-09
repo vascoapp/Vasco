@@ -13,7 +13,7 @@ import { DK } from '../../src/theme/draftkings';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useInsurancePolicies } from '../../src/services/complianceService';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatDateShortAuto } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { Toast } from '../../src/components/shared/Toast';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -205,7 +205,7 @@ export default function InsuranceScreen() {
               style={styles.policyCard}
               onPress={() => Alert.alert(
                 policy.name,
-                `${t('insurance.insurer', 'Verzekeraar')}: ${policy.provider}\n${t('insurance.coverage', 'Dekking')}: ${policy.coverage ? formatCurrency(policy.coverage, country) : t('insurance.notApplicable', 'n.v.t.')}\n${t('insurance.endDate', 'Einddatum')}: ${endDate.toLocaleDateString(undefined)}`,
+                `${t('insurance.insurer', 'Verzekeraar')}: ${policy.provider}\n${t('insurance.coverage', 'Dekking')}: ${policy.coverage ? formatCurrency(policy.coverage, country) : t('insurance.notApplicable', 'n.v.t.')}\n${t('insurance.endDate', 'Einddatum')}: ${formatDateShortAuto(endDate)}`,
                 [
                   { text: t('insurance.cancel', 'Annuleren'), style: 'cancel' },
                   { text: t('insurance.recordClaim', 'Claim vastleggen'), onPress: () => openClaimForm(policy.id) },
