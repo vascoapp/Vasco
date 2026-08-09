@@ -175,6 +175,23 @@ describeBoard('day planner with a crew', () => {
     teardown(r);
   });
 
+  it('warns before putting somebody on a job outside their trade', async () => {
+    // Sanne is a painter (fixture above); j-b is a carpentry job. The guard is
+    // a warning, never a block — asserted at the unit level in
+    // src/services/__tests__/crewAssignment.test.ts. Here we only prove the
+    // screen reaches it with the real, inconsistently-stored trade values.
+    const { tradeMismatch } = require('../src/services/crewAssignment');
+    const labels: Record<string, string> = { painting: 'Schilderwerk', 'gas-hvac': 'Gas & CV' };
+    const m = tradeMismatch(
+      { id: 'w-2', name: 'Sanne', trade: 'painting' },
+      { title: 'CV-ketel', trade: 'gas-hvac' },
+      (raw: string) => labels[raw] ?? raw,
+    );
+    expect(m).not.toBeNull();
+    expect(m.workerTrade).toBe('Schilderwerk');
+    expect(m.jobTrade).toBe('Gas & CV');
+  });
+
   it('keeps the single-lane planner for a solo contractor', async () => {
     await seed(false);
     const r = await walkScreen(Screen(), { as: 'contractor', settlePasses: 14 });

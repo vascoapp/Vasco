@@ -3066,7 +3066,11 @@
     "gapNobody": "{{project}} · {{milestone}} — diese Woche niemand eingeplant",
     "daysBooked": "{{count}} Tage",
     "oneDayBooked": "1 Tag",
-    "weekFree": "Ganze Woche frei"
+    "weekFree": "Ganze Woche frei",
+    "tradeMismatchTitle": "Anderes Gewerk",
+    "tradeMismatchBody": "{{worker}} macht {{workerTrade}} — dieser Auftrag ist {{jobTrade}}.",
+    "assignAnyway": "Trotzdem zuweisen",
+    "pickSomeoneElse": "Jemand anders"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",

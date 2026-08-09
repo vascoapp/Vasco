@@ -3050,7 +3050,11 @@
     "gapNobody": "{{project}} · {{milestone}} — personne de prévu cette semaine",
     "daysBooked": "{{count}} jours",
     "oneDayBooked": "1 jour",
-    "weekFree": "Libre toute la semaine"
+    "weekFree": "Libre toute la semaine",
+    "tradeMismatchTitle": "Autre métier",
+    "tradeMismatchBody": "{{worker}} fait {{workerTrade}} — ce chantier est {{jobTrade}}.",
+    "assignAnyway": "Attribuer quand même",
+    "pickSomeoneElse": "Quelqu’un d’autre"
   },
   "marketInsights": {
     "title": "INSIGHTS DU MARCHÉ",

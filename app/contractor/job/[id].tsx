@@ -43,6 +43,8 @@ import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist
 import { listJobPhotos } from '../../../src/services/jobPhotoService';
 import { SignaturePad } from '../../../src/components/shared/SignaturePad';
 import { useAuth } from '../../../src/context/AuthContext';
+import { tradeMismatch } from '../../../src/services/crewAssignment';
+import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { formatCurrency, formatCurrency0, formatTime } from '../../../src/i18n/formatting';
 import type { Country } from '../../../src/i18n/formatting';
 
@@ -133,6 +135,10 @@ export default function JobDetailPage() {
   const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers, businessProfile, updateJob, updateJobStatus, workers } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
+  // Shared enum→label map: trade is stored as a slug on some rows and as a
+  // display name on others, so the assignment guard must normalise before
+  // comparing, or it fires on correct assignments.
+  const { tradeLabel } = useMemo(() => makeEntityLabels(t), [t]);
   const [signatureModal, setSignatureModal] = useState<{ visible: boolean; onSigned?: () => void }>({ visible: false });
 
   // R66r57: fetch signature audit-trail rows. Refreshes whenever a new
@@ -496,9 +502,28 @@ export default function JobDetailPage() {
                             onPress: () => updateJob(id as string, { assignedWorkerId: undefined }),
                           }]
                         : []),
+                      // Same trade guard as the planner, so the two assignment
+                      // paths cannot disagree about the same person and job.
+                      // A warning, never a block.
                       ...activeCrew.map((w) => ({
                         text: w.name,
-                        onPress: () => updateJob(id as string, { assignedWorkerId: w.id }),
+                        onPress: () => {
+                          const assign = () => updateJob(id as string, { assignedWorkerId: w.id });
+                          const mismatch = tradeMismatch(w as any, appJob as any, tradeLabel);
+                          if (!mismatch) { assign(); return; }
+                          Alert.alert(
+                            t('schedule.tradeMismatchTitle'),
+                            t('schedule.tradeMismatchBody', {
+                              worker: mismatch.workerName,
+                              workerTrade: mismatch.workerTrade,
+                              jobTrade: mismatch.jobTrade,
+                            }),
+                            [
+                              { text: t('schedule.pickSomeoneElse'), style: 'cancel' as const },
+                              { text: t('schedule.assignAnyway'), onPress: assign },
+                            ],
+                          );
+                        },
                       })),
                       { text: t('common.cancel', 'Cancel'), style: 'cancel' as const },
                     ],

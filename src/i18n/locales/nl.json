@@ -3050,7 +3050,11 @@
     "gapNobody": "{{project}} · {{milestone}} — deze week niemand ingepland",
     "daysBooked": "{{count}} dagen",
     "oneDayBooked": "1 dag",
-    "weekFree": "Hele week vrij"
+    "weekFree": "Hele week vrij",
+    "tradeMismatchTitle": "Ander vakgebied",
+    "tradeMismatchBody": "{{worker}} doet {{workerTrade}} — deze klus is {{jobTrade}}.",
+    "assignAnyway": "Toch toewijzen",
+    "pickSomeoneElse": "Iemand anders"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",

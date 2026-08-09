@@ -26,6 +26,7 @@ import type { Job } from '../../src/domain/jobs';
 import type { Worker } from '../../src/domain/worker';
 import { staffingGapsForWeek, crewWeekLoad } from '../../src/services/crewWeekService';
 import { makeEntityLabels } from '../../src/i18n/entityLabels';
+import { tradeMismatch } from '../../src/services/crewAssignment';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatWeekdayDayMonth, formatDayMonth, formatWeekdayShort } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -402,6 +403,32 @@ export default function DragScheduleScreen() {
   };
 
   /**
+   * Warn before putting somebody on a job outside their trade, then run
+   * `then`. A WARNING, never a block: the contractor knows their crew — an
+   * apprentice shadowing a lead, a painter who also tiles. Blocking would
+   * teach people to route around the app.
+   */
+  const confirmTrade = (workerId: string | undefined, jobId: string, then: () => void) => {
+    const worker = workerId ? activeWorkers.find((w) => w.id === workerId) : undefined;
+    const appJob = (jobs as any[]).find((j) => j.id === jobId);
+    const mismatch = tradeMismatch(worker as any, appJob as any, tradeLabel);
+    if (!mismatch) { then(); return; }
+    hapticWarning();
+    Alert.alert(
+      t('schedule.tradeMismatchTitle'),
+      t('schedule.tradeMismatchBody', {
+        worker: mismatch.workerName,
+        workerTrade: mismatch.workerTrade,
+        jobTrade: mismatch.jobTrade,
+      }),
+      [
+        { text: t('schedule.pickSomeoneElse'), style: 'cancel' },
+        { text: t('schedule.assignAnyway'), onPress: then },
+      ],
+    );
+  };
+
+  /**
    * Move a scheduled job to a different crew member.
    *
    * Reassigning is the operation an aannemer performs most on a running day —
@@ -424,7 +451,7 @@ export default function DragScheduleScreen() {
     Alert.alert(t('schedule.reassignTo'), job.title, [
       ...activeWorkers
         .filter((w) => w.id !== job.workerId)
-        .map((w) => ({ text: w.name, onPress: () => apply(w.id) })),
+        .map((w) => ({ text: w.name, onPress: () => confirmTrade(w.id, job.jobId, () => apply(w.id)) })),
       ...(job.workerId ? [{ text: t('schedule.unassign'), onPress: () => apply(undefined) }] : []),
       { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
     ]);
@@ -702,7 +729,10 @@ export default function DragScheduleScreen() {
                     // an anonymous company-wide day.
                     if (!crewMode) { pickSlot(); return; }
                     Alert.alert(t('schedule.assignTo'), job.title, [
-                      ...activeWorkers.map((w) => ({ text: w.name, onPress: () => pickSlot(w.id) })),
+                      ...activeWorkers.map((w) => ({
+                        text: w.name,
+                        onPress: () => confirmTrade(w.id, job.jobId, () => pickSlot(w.id)),
+                      })),
                       { text: t('schedule.unassign'), onPress: () => pickSlot(undefined) },
                       { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
                     ]);
