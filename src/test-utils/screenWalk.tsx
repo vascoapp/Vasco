@@ -15,7 +15,7 @@ import renderer, { ReactTestRenderer, act } from 'react-test-renderer';
 // with all six locale files.
 import i18n from '../i18n/i18n';
 import { AppStateProvider } from '../state/AppState';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
 export interface WalkResult {
   /** Every string the screen rendered, in tree order. */
@@ -57,6 +57,28 @@ export interface WalkOptions {
   language?: string;
   /** Extra async settle passes. Screens that load from AsyncStorage need a few. */
   settlePasses?: number;
+  /**
+   * Who is signed in.
+   *
+   * Without this the tree renders with `user === null`, so every
+   * `user?.isAannemer` branch is false and the entire aannemer surface —
+   * the projects tab, ProjectSwitcher, multi-site crew — silently renders its
+   * solo-contractor variant instead. A walk that never signs in cannot see it.
+   */
+  as?: 'contractor' | 'aannemer';
+}
+
+/** Signs a demo account in through the real login path, as the app does. */
+function SignIn({ as, children }: { as: 'contractor' | 'aannemer'; children: React.ReactNode }) {
+  const { login, isAuthenticated } = useAuth();
+  const done = React.useRef(false);
+  React.useEffect(() => {
+    if (done.current) return;
+    done.current = true;
+    const email = as === 'aannemer' ? 'aannemer@vasco.dev' : 'contractor@vasco.dev';
+    login(email, 'walk').catch(() => {});
+  }, [as, login]);
+  return <>{isAuthenticated ? children : null}</>;
 }
 
 /**
@@ -69,7 +91,7 @@ export async function walkScreen(
   Screen: React.ComponentType<any>,
   options: WalkOptions = {},
 ): Promise<WalkResult> {
-  const { params = {}, language = 'nl', settlePasses = 6 } = options;
+  const { params = {}, language = 'nl', settlePasses = 6, as } = options;
 
   (globalThis as any).__routeParams = params;
   if (i18n.language !== language) {
@@ -81,11 +103,14 @@ export async function walkScreen(
 
   try {
     await act(async () => {
+      const body = (
+        <AppStateProvider>
+          <Screen />
+        </AppStateProvider>
+      );
       tree = renderer.create(
         <AuthProvider>
-          <AppStateProvider>
-            <Screen />
-          </AppStateProvider>
+          {as ? <SignIn as={as}>{body}</SignIn> : body}
         </AuthProvider>,
       );
     });

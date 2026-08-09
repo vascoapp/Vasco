@@ -259,7 +259,15 @@ jest.mock('./src/lib/supabase', () => {
         getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
         getUser: jest.fn(() => Promise.resolve({ data: { user: null }, error: null })),
         onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
-        signInWithPassword: jest.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+        // Must FAIL. AuthContext treats `!error` as success and then only
+        // calls setUser when `data.user` exists — a null-user "success" leaves
+        // isAuthenticated false forever, so no demo account can sign in and
+        // every isAannemer branch stays dark. Failing here is also what a real
+        // device does without a confirmed Supabase account: login falls through
+        // to the DEMO_MODE mock-user path.
+        signInWithPassword: jest.fn(() =>
+          Promise.resolve({ data: { user: null }, error: { message: 'walk: no supabase account' } }),
+        ),
         signOut: jest.fn(() => Promise.resolve({ error: null })),
       },
       channel: jest.fn(() => ({ on: jest.fn().mockReturnThis(), subscribe: jest.fn() })),

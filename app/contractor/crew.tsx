@@ -62,6 +62,7 @@ const ROLE_TONE: Record<WorkerRole, string> = {
 export default function CrewScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user } = useAuth();
   const { workers, addWorker, updateWorker, removeWorker, jobs } = useAppState();
 
   const [editing, setEditing] = useState<Worker | null>(null);
@@ -136,9 +137,17 @@ export default function CrewScreen() {
       {workers.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="people-outline" size={48} color={SemanticColors.textTertiary} />
-          <Text style={styles.emptyTitle}>{t('crew.empty', "You're solo today")}</Text>
+          {/* An AANNEMER runs crews across several sites — telling them "solo
+              contractors don't need this screen" dismisses the feature to the
+              exact customer it exists for. The solo copy stays for solo
+              contractors, who genuinely don't need it. */}
+          <Text style={styles.emptyTitle}>
+            {user?.isAannemer ? t('crew.emptyAannemer') : t('crew.empty', "You're solo today")}
+          </Text>
           <Text style={styles.emptyBody}>
-            {t('crew.emptyBody', 'Add crew members here once you have techs working under you. Solo contractors don\'t need this screen.')}
+            {user?.isAannemer
+              ? t('crew.emptyBodyAannemer')
+              : t('crew.emptyBody', 'Add crew members here once you have techs working under you. Solo contractors don\'t need this screen.')}
           </Text>
           <Pressable style={styles.emptyCta} onPress={() => setShowAdd(true)}>
             <Ionicons name="person-add" size={20} color={DK.colors.accent} />

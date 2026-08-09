@@ -636,6 +636,11 @@ const SAME_WORD_OK = new Set([
   // usage); "Chat" and "Text" are the ordinary German/French words; French
   // spells "Suggestions" and "Optimisations" identically to English.
   'Factoring', 'Chat', 'Text', 'Suggestions', 'Optimisations ({{count}})',
+  // Handover wizard step, one of five labels sharing a narrow strip. "Checklist"
+  // is the ordinary trade word in fr/es/it; the native forms ("liste de
+  // contrôle", "lista de control", "lista di controllo") do not fit and are not
+  // what a site manager says.
+  'Checklist',
   // Notification channel, shown as a tiny uppercase column beside EMAIL/SMS.
   // "Push" is the ordinary term in all five target languages; the descriptive
   // forms ("Pushmelding", "Push-Nachricht", "Notification push") do not fit

@@ -54,12 +54,14 @@ interface HandoverPackBuilderProps {
 
 type WizardStep = 'photos' | 'checklist' | 'documents' | 'certificate' | 'preview';
 
-const WIZARD_STEPS: { id: WizardStep; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { id: 'photos', label: 'Photos', icon: 'camera' },
-  { id: 'checklist', label: 'Checklist', icon: 'checkmark-done' },
-  { id: 'documents', label: 'Documents', icon: 'document-text' },
-  { id: 'certificate', label: 'Certificate', icon: 'ribbon' },
-  { id: 'preview', label: 'Preview', icon: 'eye' },
+// labelKey, not label: the wizard's step names are rendered on a Dutch
+// screen and were hardcoded English.
+const WIZARD_STEPS: { id: WizardStep; labelKey: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'photos', labelKey: 'handover.stepPhotos', icon: 'camera' },
+  { id: 'checklist', labelKey: 'handover.stepChecklist', icon: 'checkmark-done' },
+  { id: 'documents', labelKey: 'handover.stepDocuments', icon: 'document-text' },
+  { id: 'certificate', labelKey: 'handover.stepCertificate', icon: 'ribbon' },
+  { id: 'preview', labelKey: 'handover.stepPreview', icon: 'eye' },
 ];
 
 // ============================================
@@ -281,7 +283,7 @@ export function HandoverPackBuilder({
                 isCompleted && styles.stepLabelCompleted,
               ]}
             >
-              {step.label}
+              {t(step.labelKey)}
             </Text>
           </Pressable>
         );
@@ -291,9 +293,9 @@ export function HandoverPackBuilder({
 
   const renderPhotosStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Photo Evidence</Text>
+      <Text style={styles.stepTitle}>{t('handover.photoEvidence')}</Text>
       <Text style={styles.stepDescription}>
-        Add before, during, and after photos to document the completed work
+        {t('handover.photoEvidenceDesc')}
       </Text>
 
       {/* Photo Grid */}
@@ -315,7 +317,7 @@ export function HandoverPackBuilder({
           onPress={() => handleAddPhoto('photo_before')}
         >
           <Ionicons name="camera" size={24} color={SemanticColors.actionPrimary} />
-          <Text style={styles.addPhotoText}>Before</Text>
+          <Text style={styles.addPhotoText}>{t('handover.before')}</Text>
         </Pressable>
 
         <Pressable
@@ -323,7 +325,7 @@ export function HandoverPackBuilder({
           onPress={() => handleAddPhoto('photo_during')}
         >
           <Ionicons name="camera" size={24} color={SemanticColors.actionPrimary} />
-          <Text style={styles.addPhotoText}>During</Text>
+          <Text style={styles.addPhotoText}>{t('handover.during')}</Text>
         </Pressable>
 
         <Pressable
@@ -331,7 +333,7 @@ export function HandoverPackBuilder({
           onPress={() => handleAddPhoto('photo_after')}
         >
           <Ionicons name="camera" size={24} color={SemanticColors.feedbackSuccess} />
-          <Text style={[styles.addPhotoText, { color: SemanticColors.feedbackSuccess }]}>After</Text>
+          <Text style={[styles.addPhotoText, { color: SemanticColors.feedbackSuccess }]}>{t('handover.after')}</Text>
         </Pressable>
       </View>
 
@@ -339,7 +341,7 @@ export function HandoverPackBuilder({
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={18} color={SemanticColors.feedbackInfo} />
         <Text style={styles.infoText}>
-          {pack?.photos.length || 0} photos added. At least 1 photo required.
+          {t('handover.photosAddedMin', { count: pack?.photos.length || 0 })}
         </Text>
       </View>
     </View>
@@ -347,7 +349,7 @@ export function HandoverPackBuilder({
 
   const renderChecklistStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Completion Checklist</Text>
+      <Text style={styles.stepTitle}>{t('handover.completionChecklist')}</Text>
       <Text style={styles.stepDescription}>
         Verify all work has been completed to standard
       </Text>
@@ -355,7 +357,7 @@ export function HandoverPackBuilder({
       {/* Progress */}
       <View style={styles.progressSection}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Progress</Text>
+          <Text style={styles.progressTitle}>{t('handover.progress')}</Text>
           <Text style={styles.progressPercent}>{pack?.completionPercentage || 0}%</Text>
         </View>
         <View style={styles.progressBar}>
@@ -389,7 +391,7 @@ export function HandoverPackBuilder({
                 </Text>
                 {item.required && (
                   <View style={styles.requiredBadge}>
-                    <Text style={styles.requiredText}>Required</Text>
+                    <Text style={styles.requiredText}>{t('handover.required')}</Text>
                   </View>
                 )}
               </Pressable>
@@ -402,7 +404,7 @@ export function HandoverPackBuilder({
 
   const renderDocumentsStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Documents & Warranties</Text>
+      <Text style={styles.stepTitle}>{t('handover.documentsWarranties')}</Text>
       <Text style={styles.stepDescription}>
         Attach warranties, certificates, and other documentation
       </Text>
@@ -411,7 +413,7 @@ export function HandoverPackBuilder({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackSuccess} />
-          <Text style={styles.sectionTitle}>Warranties</Text>
+          <Text style={styles.sectionTitle}>{t('handover.warranties')}</Text>
         </View>
 
         {pack?.warranties.map((warranty) => (
@@ -429,7 +431,7 @@ export function HandoverPackBuilder({
 
         <Pressable style={styles.addButton}>
           <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
-          <Text style={styles.addButtonText}>Add Warranty</Text>
+          <Text style={styles.addButtonText}>{t('handover.addWarranty')}</Text>
         </Pressable>
       </View>
 
@@ -437,7 +439,7 @@ export function HandoverPackBuilder({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Ionicons name="ribbon" size={18} color={SemanticColors.feedbackInfo} />
-          <Text style={styles.sectionTitle}>Certificates</Text>
+          <Text style={styles.sectionTitle}>{t('handover.certificates')}</Text>
         </View>
 
         {pack?.certificates.map((cert) => (
@@ -453,7 +455,7 @@ export function HandoverPackBuilder({
 
         <Pressable style={styles.addButton}>
           <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
-          <Text style={styles.addButtonText}>Add Certificate</Text>
+          <Text style={styles.addButtonText}>{t('handover.addCertificate')}</Text>
         </Pressable>
       </View>
     </View>
@@ -461,7 +463,7 @@ export function HandoverPackBuilder({
 
   const renderCertificateStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Completion Certificate</Text>
+      <Text style={styles.stepTitle}>{t('handover.completionCertificate')}</Text>
       <Text style={styles.stepDescription}>
         Generate and sign the completion certificate
       </Text>
@@ -470,7 +472,7 @@ export function HandoverPackBuilder({
       <View style={styles.certificatePreview}>
         <View style={styles.certificateHeader}>
           <Ionicons name="ribbon" size={40} color={SemanticColors.actionPrimary} />
-          <Text style={styles.certificateTitle}>Certificate of Completion</Text>
+          <Text style={styles.certificateTitle}>{t('handover.certificateOfCompletion')}</Text>
         </View>
 
         <View style={styles.certificateContent}>
@@ -488,15 +490,15 @@ export function HandoverPackBuilder({
 
         <View style={styles.certificateDetails}>
           <View style={styles.certificateRow}>
-            <Text style={styles.certificateLabel}>Customer:</Text>
+            <Text style={styles.certificateLabel}>{t('handover.customerLabel')}</Text>
             <Text style={styles.certificateValue}>{job.customerName}</Text>
           </View>
           <View style={styles.certificateRow}>
-            <Text style={styles.certificateLabel}>Completion Date:</Text>
+            <Text style={styles.certificateLabel}>{t('handover.completionDate')}</Text>
             <Text style={styles.certificateValue}>{new Date().toLocaleDateString()}</Text>
           </View>
           <View style={styles.certificateRow}>
-            <Text style={styles.certificateLabel}>Final Amount:</Text>
+            <Text style={styles.certificateLabel}>{t('handover.finalAmount')}</Text>
             <Text style={styles.certificateValue}>{formatCurrency(job.finalAmount)}</Text>
           </View>
         </View>
@@ -504,7 +506,7 @@ export function HandoverPackBuilder({
 
       {/* Customer Sign-off */}
       <View style={styles.signatureSection}>
-        <Text style={styles.signatureTitle}>Customer Sign-off (Optional)</Text>
+        <Text style={styles.signatureTitle}>{t('handover.signOff')}</Text>
 
         <Pressable
           style={[
@@ -520,19 +522,19 @@ export function HandoverPackBuilder({
           {customerSignature ? (
             <>
               <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
-              <Text style={styles.signatureText}>Signature captured</Text>
+              <Text style={styles.signatureText}>{t('handover.signatureCaptured')}</Text>
             </>
           ) : (
             <>
               <Ionicons name="create" size={24} color={SemanticColors.textTertiary} />
-              <Text style={styles.signatureText}>Tap to capture customer signature</Text>
+              <Text style={styles.signatureText}>{t('handover.tapToSign')}</Text>
             </>
           )}
         </Pressable>
 
         {/* Rating */}
         <View style={styles.ratingSection}>
-          <Text style={styles.ratingLabel}>Customer Rating</Text>
+          <Text style={styles.ratingLabel}>{t('handover.customerRating')}</Text>
           <View style={styles.ratingStars}>
             {[1, 2, 3, 4, 5].map((star) => (
               <Pressable key={star} onPress={() => setCustomerRating(star)}>
@@ -549,7 +551,7 @@ export function HandoverPackBuilder({
         {/* Feedback */}
         <TextInput
           style={styles.feedbackInput}
-          placeholder="Customer feedback (optional)"
+          placeholder={t('handover.feedbackPlaceholder')}
           placeholderTextColor={SemanticColors.textTertiary}
           value={customerFeedback}
           onChangeText={setCustomerFeedback}
@@ -562,7 +564,7 @@ export function HandoverPackBuilder({
 
   const renderPreviewStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Handover Preview</Text>
+      <Text style={styles.stepTitle}>{t('handover.previewTitle')}</Text>
       <Text style={styles.stepDescription}>
         Review the handover package before sending to customer
       </Text>
@@ -580,27 +582,27 @@ export function HandoverPackBuilder({
         <View style={styles.summaryStats}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{pack?.totalPhotos || 0}</Text>
-            <Text style={styles.statLabel}>Photos</Text>
+            <Text style={styles.statLabel}>{t('handover.statPhotos')}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{pack?.warranties.length || 0}</Text>
-            <Text style={styles.statLabel}>Warranties</Text>
+            <Text style={styles.statLabel}>{t('handover.warranties')}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{pack?.completionPercentage || 0}%</Text>
-            <Text style={styles.statLabel}>Complete</Text>
+            <Text style={styles.statLabel}>{t('handover.statComplete')}</Text>
           </View>
         </View>
       </View>
 
       {/* Validation Results */}
       <View style={styles.validationSection}>
-        <Text style={styles.validationTitle}>Validation</Text>
+        <Text style={styles.validationTitle}>{t('handover.validation')}</Text>
 
         {validation?.isValid ? (
           <View style={styles.validationSuccess}>
             <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
-            <Text style={styles.validationSuccessText}>All requirements met</Text>
+            <Text style={styles.validationSuccessText}>{t('handover.allRequirementsMet')}</Text>
           </View>
         ) : (
           <View style={styles.validationWarnings}>
@@ -623,7 +625,7 @@ export function HandoverPackBuilder({
 
       {/* Compliance Status */}
       <View style={styles.complianceSection}>
-        <Text style={styles.validationTitle}>Compliance</Text>
+        <Text style={styles.validationTitle}>{t('handover.compliance')}</Text>
         <View style={[
           styles.complianceBadge,
           compliance?.status === 'compliant' && styles.complianceCompliant,
@@ -642,12 +644,12 @@ export function HandoverPackBuilder({
       <View style={styles.actionButtons}>
         <Pressable style={styles.actionButton} onPress={() => generatePDF()}>
           <Ionicons name="document-text" size={20} color={SemanticColors.actionPrimary} />
-          <Text style={styles.actionButtonText}>Generate PDF</Text>
+          <Text style={styles.actionButtonText}>{t('handover.generatePdf')}</Text>
         </Pressable>
 
         <Pressable style={styles.actionButton} onPress={() => createPortalLink()}>
           <Ionicons name="link" size={20} color={SemanticColors.actionPrimary} />
-          <Text style={styles.actionButtonText}>Create Portal Link</Text>
+          <Text style={styles.actionButtonText}>{t('handover.createPortalLink')}</Text>
         </Pressable>
       </View>
     </View>
@@ -684,7 +686,7 @@ export function HandoverPackBuilder({
           </Pressable>
         )}
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Create Handover Pack</Text>
+          <Text style={styles.headerTitle}>{t('handover.createTitle')}</Text>
           <Text style={styles.headerSubtitle}>{job.title}</Text>
         </View>
       </View>
@@ -715,7 +717,7 @@ export function HandoverPackBuilder({
               currentStepIndex === 0 && styles.footerButtonTextDisabled,
             ]}
           >
-            Back
+            {t('handover.back')}
           </Text>
         </Pressable>
 
@@ -725,7 +727,7 @@ export function HandoverPackBuilder({
             onPress={handleComplete}
             disabled={!canProceed}
           >
-            <Text style={styles.footerButtonTextPrimary}>Complete Handover</Text>
+            <Text style={styles.footerButtonTextPrimary}>{t('handover.completeHandover')}</Text>
             <Ionicons name="checkmark-circle" size={20} color="#fff" />
           </Pressable>
         ) : (
@@ -734,7 +736,7 @@ export function HandoverPackBuilder({
             onPress={goToNextStep}
             disabled={!canProceed}
           >
-            <Text style={styles.footerButtonTextPrimary}>Continue</Text>
+            <Text style={styles.footerButtonTextPrimary}>{t('handover.continue')}</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </Pressable>
         )}
