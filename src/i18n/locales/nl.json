@@ -4053,7 +4053,10 @@
       "sms": "Sms",
       "push": "Push",
       "in_app": "In de app"
-    }
+    },
+    "lockedTitle": "Automatiseringen vereisen een upgrade",
+    "lockedDesc": "Je abonnement voert automatiseringen nog niet uit, dus hieronder draait er niets. Upgrade en Vasco gaat dit werk voor je doen.",
+    "lockedSub": "Draait niet op jouw abonnement"
   },
   "packDiscovery": {
     "incasso": {

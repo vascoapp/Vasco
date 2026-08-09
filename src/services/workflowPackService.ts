@@ -15,6 +15,7 @@ import { loadSubscription, getTierLimits } from './subscriptionService';
 import { getAppStateSnapshot } from '../state/appStateSnapshot';
 import { emitPackQueued } from '../intelligence/dataCollector';
 import type { Country } from '../i18n/formatting';
+import { formatDecimal1 } from '../i18n/formatting';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 const MUTES_KEY = '@vasco_pack_mutes';
@@ -442,13 +443,17 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       {
         trigger: 'quote_accepted', delayDays: 0, action: 'send_welcome', channel: 'email',
         i18nKey: 'workflowPacks.newCustomer.welcome',
-        template: 'Welkom {{customer}}! Bedankt voor het vertrouwen. {{job}} staat ingepland — ik hou je op de hoogte.',
+        // The first thing a new customer hears after saying yes. Warm and
+        // explicitly grateful for the collaboration, not a scheduling notice.
+        // Register per locale: informal nl/es/it, formal de/fr — customer-facing
+        // copy keeps the same convention as the dunning templates.
+        template: 'Welkom {{customer}}, en heel erg bedankt voor je vertrouwen! Ik vind het echt leuk dat we samen aan {{job}} gaan werken. Het staat ingepland en ik hou je onderweg op de hoogte — vragen mag je me altijd stellen.',
         defaults: {
-          en: 'Welcome {{customer}}! Thanks for your trust. {{job}} is scheduled — I\'ll keep you posted.',
-          de: 'Willkommen {{customer}}! Danke für dein Vertrauen. {{job}} ist eingeplant — ich halte dich auf dem Laufenden.',
-          fr: 'Bienvenue {{customer}} ! Merci de votre confiance. {{job}} est planifié — je vous tiens au courant.',
-          es: 'Bienvenido {{customer}}. Gracias por tu confianza. {{job}} está programado — te mantengo informado.',
-          it: 'Benvenuto {{customer}}! Grazie per la fiducia. {{job}} è in programma — ti tengo aggiornato.',
+          en: 'Welcome {{customer}}, and thank you so much for your trust! I\'m really glad we get to work together on {{job}}. It\'s scheduled, I\'ll keep you posted along the way, and you can always reach out with questions.',
+          de: 'Willkommen {{customer}}, und ganz herzlichen Dank für Ihr Vertrauen! Ich freue mich sehr auf die Zusammenarbeit an {{job}}. Der Termin steht, ich halte Sie unterwegs auf dem Laufenden — bei Fragen melden Sie sich jederzeit.',
+          fr: 'Bienvenue {{customer}}, et un grand merci pour votre confiance ! Je suis ravi de travailler avec vous sur {{job}}. C\'est planifié, je vous tiens au courant tout au long, et n\'hésitez pas si vous avez des questions.',
+          es: 'Bienvenido {{customer}}, y muchísimas gracias por tu confianza. Me alegra mucho que trabajemos juntos en {{job}}. Ya está programado, te mantengo informado durante todo el proceso y puedes preguntarme lo que necesites.',
+          it: 'Benvenuto {{customer}}, e grazie mille per la fiducia! Sono davvero contento di lavorare insieme a te su {{job}}. È in programma, ti tengo aggiornato lungo il percorso e per qualsiasi domanda sono qui.',
         },
       },
       {
@@ -905,7 +910,7 @@ interface TriggerContext {
   // a job that had already started or finished. The call site
   // (app/(contractor)/index.tsx) has always passed AppState jobs, which carry
   // both; only this type and the switch below omitted them.
-  jobs: Array<{ id: string; status?: string; title?: string; customerId?: string | null; completedAt?: string; lastUpdated?: string; trade?: string; scheduledDate?: string; scheduledStartTime?: string; address?: unknown }>;
+  jobs: Array<{ id: string; status?: string; title?: string; customerId?: string | null; completedAt?: string; lastUpdated?: string; trade?: string; scheduledDate?: string; scheduledStartTime?: string; address?: unknown; actualHours?: number }>;
   // R66r49 #6: phone added so evaluateTriggers can resolve customer.phone →
   // E.164 → wa.me URL, queueing into preparedData.affiliateUrl. The shareable
   // executor branch then prefers Linking.openURL over Share.share when the
@@ -1374,13 +1379,30 @@ function matchTrigger(
         return Number.isFinite(t) && now - t < dayMs;
       }).length;
       const tomorrow = ctx.jobs.filter((j) => j.status === 'scheduled' || j.status === 'gepland').length;
+      const hoursToday = ctx.jobs.reduce((sum, j) => {
+        const worked = typeof j.actualHours === 'number' ? j.actualHours : 0;
+        if (!worked) return sum;
+        // Only hours belonging to today: a job completed today, or one still
+        // in progress today.
+        if (j.status === 'in-progress' || j.status === 'bezig') return sum + worked;
+        const done = new Date(j.completedAt || '').getTime();
+        return Number.isFinite(done) && now - done < dayMs ? sum + worked : sum;
+      }, 0);
+      // The auto_log_hours step reports hours; with none recorded it has
+      // nothing to report.
+      if (step.action === 'auto_log_hours' && hoursToday <= 0) break;
       results.push({
         label: '17:00',
         customer: '',
         job: '',
         amount: completedToday + tomorrow + todayCount,
         // hours/jobCount/count/tomorrowJobs interpolation pulled from match.* in resolveTemplate
-        ...(({ hours: '7', jobCount: String(todayCount + completedToday), count: String(todayCount), tomorrowJobs: String(tomorrow) }) as any),
+        // hours was the literal '7', so every contractor was told "Uren
+        // vandaag: 7u" every single evening regardless of what they worked.
+        // Sum the hours actually recorded against today's jobs instead; the
+        // step is skipped entirely below when nothing was logged, because
+        // "0u" is not worth a card and an invented 7 is worse.
+        ...(({ hours: formatDecimal1(hoursToday, (getCurrentCountry() ?? 'NL') as Country), jobCount: String(todayCount + completedToday), count: String(todayCount), tomorrowJobs: String(tomorrow) }) as any),
       });
       break;
     }

@@ -4390,7 +4390,10 @@
       "sms": "SMS",
       "push": "Push",
       "in_app": "In der App"
-    }
+    },
+    "lockedTitle": "Automatisierungen brauchen ein Upgrade",
+    "lockedDesc": "Dein Tarif führt Automatisierungspakete noch nicht aus — unten läuft also nichts. Mit einem Upgrade übernimmt Vasco diese Arbeit für dich.",
+    "lockedSub": "Läuft in deinem Tarif nicht"
   },
   "market": {
     "noBenchmarksDesc": "Mehr Daten für Benchmarks nötig",

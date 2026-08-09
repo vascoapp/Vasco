@@ -4390,7 +4390,10 @@
       "sms": "SMS",
       "push": "Push",
       "in_app": "Dans l'app"
-    }
+    },
+    "lockedTitle": "Les automatisations nécessitent une mise à niveau",
+    "lockedDesc": "Votre formule n’exécute pas encore les packs d’automatisation : rien ne se déclenche ci-dessous. Passez à une formule supérieure et Vasco s’en charge.",
+    "lockedSub": "Inactif avec votre formule"
   },
   "market": {
     "noBenchmarksDesc": "Plus de données nécessaires pour les benchmarks",

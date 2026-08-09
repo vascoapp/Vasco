@@ -4390,7 +4390,10 @@
       "sms": "SMS",
       "push": "Push",
       "in_app": "In app"
-    }
+    },
+    "lockedTitle": "Automations need an upgrade",
+    "lockedDesc": "Your plan does not run automation packs yet, so nothing below is firing. Upgrade and Vasco starts doing this work for you.",
+    "lockedSub": "Not running on your plan"
   },
   "market": {
     "noBenchmarksDesc": "More data needed for benchmarks",

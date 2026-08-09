@@ -32,6 +32,25 @@ export default function AutomationsScreen() {
   // (vs. the hardcoded 30%-recovery estimate in getPackROI).
   const [packHealths, setPackHealths] = useState<Record<string, PackHealth>>({});
 
+  // evaluateTriggers() returns 0 on its FIRST line when the tier has no
+  // `hasAutomationPacks`, so on the free plan not one of these packs ever
+  // fires. The screen had no tier gate at all and still said "9 actief ·
+  // Vasco werkt voor je" over nine green toggles — a claim the engine
+  // contradicts. Read the real limit and say so.
+  const [packsRun, setPacksRun] = useState(true);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { loadSubscription, getTierLimits } = await import('../../src/services/subscriptionService');
+        const sub = await loadSubscription();
+        setPacksRun(getTierLimits(sub.tier).hasAutomationPacks);
+      } catch {
+        // Never hide the packs because a subscription read failed.
+        setPacksRun(true);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     packs.filter(p => p.enabled).forEach(p => {
       getPackROI(p.id).then(roi => setPackROIs(prev => ({ ...prev, [p.id]: roi })));
@@ -51,20 +70,34 @@ export default function AutomationsScreen() {
           <Text style={s.headerTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {t('automations.title', 'Automatiseringen')}
           </Text>
-          <Text style={s.headerSub}>{t('automations.subtitle', { defaultValue: '{{count}} active · Vasco works for you', count: enabledCount })}</Text>
+          <Text style={s.headerSub}>
+            {packsRun
+              ? t('automations.subtitle', { defaultValue: '{{count}} active · Vasco works for you', count: enabledCount })
+              : t('automations.lockedSub')}
+          </Text>
         </View>
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Hero */}
+        {/* Hero — states what the engine will actually do for THIS plan. */}
         <FadeIn delay={0}>
-          <View style={s.heroCard}>
-            <Ionicons name="flash" size={24} color={Palette.hermesOrange} />
+          <Pressable
+            style={s.heroCard}
+            onPress={packsRun ? undefined : () => router.push('/contractor/profile' as any)}
+            disabled={packsRun}
+          >
+            <Ionicons name={packsRun ? 'flash' : 'lock-closed'} size={24} color={Palette.hermesOrange} />
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={s.heroTitle}>{t('automations.heroTitle', 'Bespaar tijd met automatiseringen')}</Text>
-              <Text style={s.heroDesc}>{t('automations.heroDesc', 'Activeer workflows en Vasco doet het werk. Je behoudt altijd controle.')}</Text>
+              <Text style={s.heroTitle}>
+                {packsRun ? t('automations.heroTitle', 'Bespaar tijd met automatiseringen') : t('automations.lockedTitle')}
+              </Text>
+              <Text style={s.heroDesc}>
+                {packsRun
+                  ? t('automations.heroDesc', 'Activeer workflows en Vasco doet het werk. Je behoudt altijd controle.')
+                  : t('automations.lockedDesc')}
+              </Text>
             </View>
-          </View>
+          </Pressable>
         </FadeIn>
 
         {/* Packs — names/descriptions are resolved per render via

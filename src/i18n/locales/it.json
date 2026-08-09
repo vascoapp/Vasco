@@ -4390,7 +4390,10 @@
       "sms": "SMS",
       "push": "Push",
       "in_app": "Nell’app"
-    }
+    },
+    "lockedTitle": "Le automazioni richiedono un upgrade",
+    "lockedDesc": "Il tuo piano non esegue ancora i pacchetti di automazione, quindi qui sotto non parte nulla. Fai l’upgrade e Vasco se ne occupa per te.",
+    "lockedSub": "Non attivo nel tuo piano"
   },
   "market": {
     "noBenchmarksDesc": "Servono più dati per i benchmark",
