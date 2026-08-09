@@ -1,8 +1,17 @@
-# Trade handover dependencies — design for review
+# Trade handover dependencies — design, and what shipped
 
-**Status: DESIGN, not built.** Written 2026-08-09 for sign-off before implementation.
-The last unbuilt item on the aannemer crew thread (after the crew board, week
-view, trade guard, project P&L and Verloning).
+**Status: BUILT 2026-08-10.** `src/services/projectSequenceService.ts` +
+`dependsOn` on `ProjectMilestone`, surfaced on the week view and project detail.
+Designed 2026-08-09; the milestone editor prerequisite flagged in red below
+shipped in `0756a63` first, exactly as the suggested order says.
+
+**One decision changed under test — decision 4, see the note beside it.** The
+rest were implemented as written.
+
+**Still not built:** trade-order templates per project type (option 3 under "How
+it gets edited"). A new project still arrives with an empty milestone list; the
+aannemer builds the sequence by hand once. That is the remaining gap between
+"a feature people use" and "one they have to set up first".
 
 ---
 
@@ -120,6 +129,25 @@ passed**. It does NOT move on a guess about how late the predecessor will be —
 we do not know that. The claim is "this cannot start yet", not "this will
 finish on the 14th". Anything stronger is a fabricated date on a plan the
 aannemer will schedule people against (#103).
+
+> ⚠️ **CHANGED IN IMPLEMENTATION.** The first cut carried the plan's *full*
+> interval forward: `projected(m) = max(planned(m), projected(p) + plannedLag)`.
+> A test written straight off this paragraph killed it. With sloop due week 1
+> running one week over, a tegels milestone planned for **week 8** was reported
+> as slipping to week 9 — which asserts the entire seven-week gap is serial
+> work. The plan never said that, and with no durations there is nothing that
+> could say it. That is precisely the fabricated date this decision forbids,
+> arriving through the propagation rule rather than the input.
+>
+> Shipped rule: **a lower bound, not a carried lag.** One piece of evidence —
+> an incomplete milestone whose week has passed cannot complete before the
+> current week — plus one structural claim: a successor cannot complete in the
+> same week as its predecessor *unless the plan itself put them in the same
+> week* (concurrent trades). A successor with room in the plan absorbs the
+> delay instead of inheriting it, so the strip stops crying wolf.
+>
+> This also means a milestone can be late **on its own account**, with no
+> `dependsOn` at all. That is the base case everything else propagates from.
 
 **5. This is not a Gantt engine.** No durations, no float, no critical path, no
 resource levelling. One question only: *what is blocked, by what, and has my

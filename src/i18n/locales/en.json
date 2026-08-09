@@ -1961,7 +1961,9 @@
     "milestoneTrade": "Which trade",
     "milestoneTradeHint": "Used to warn you when the week arrives with nobody of that trade booked.",
     "weekEarlier": "One week earlier",
-    "weekLater": "One week later"
+    "weekLater": "One week later",
+    "deleteMilestoneSuccessors_one": "{{titles}} will no longer wait for it.",
+    "deleteMilestoneSuccessors_other": "{{titles}} will no longer wait for it."
   },
   "automation": {
     "progressNote": "Hi {{customer}}, update on {{job}}: {{hours}}h worked today. Progress is on track. Any questions, let me know!",
@@ -3085,7 +3087,11 @@
     "tradeMismatchTitle": "Different trade",
     "tradeMismatchBody": "{{worker}} does {{workerTrade}} — this job is {{jobTrade}}.",
     "assignAnyway": "Assign anyway",
-    "pickSomeoneElse": "Someone else"
+    "pickSomeoneElse": "Someone else",
+    "blockedTitle": "Waiting on handover",
+    "blockedLine": "{{project}} · {{milestone}} — waiting on {{blocker}}",
+    "gapMore_one": "+{{count}} more",
+    "gapMore_other": "+{{count}} more"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",
@@ -5693,5 +5699,11 @@
     "title": "This page has moved",
     "body": "The link you followed no longer points anywhere. Nothing is lost — go back, or start again from Today.",
     "home": "Go to Today"
+  },
+  "sequence": {
+    "waitingOn": "Waiting on {{milestone}}",
+    "projectedWeek": "→ week {{week}}",
+    "waitsFor": "Waits for",
+    "waitsForHint": "When these run late, this milestone is reported as blocked instead of just unstaffed."
   }
 }

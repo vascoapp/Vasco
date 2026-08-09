@@ -1961,7 +1961,9 @@
     "milestoneTrade": "Welches Gewerk",
     "milestoneTradeHint": "Damit warnen wir Sie, wenn die Woche beginnt und niemand aus diesem Gewerk eingeplant ist.",
     "weekEarlier": "Eine Woche früher",
-    "weekLater": "Eine Woche später"
+    "weekLater": "Eine Woche später",
+    "deleteMilestoneSuccessors_one": "{{titles}} wartet nicht mehr darauf.",
+    "deleteMilestoneSuccessors_other": "{{titles}} warten nicht mehr darauf."
   },
   "automation": {
     "progressNote": "Hallo {{customer}}, Update zu {{job}}: {{hours}}h gearbeitet heute. Alles im Plan. Fragen? Melden Sie sich!",
@@ -3085,7 +3087,11 @@
     "tradeMismatchTitle": "Anderes Gewerk",
     "tradeMismatchBody": "{{worker}} macht {{workerTrade}} — dieser Auftrag ist {{jobTrade}}.",
     "assignAnyway": "Trotzdem zuweisen",
-    "pickSomeoneElse": "Jemand anders"
+    "pickSomeoneElse": "Jemand anders",
+    "blockedTitle": "Wartet auf Übergabe",
+    "blockedLine": "{{project}} · {{milestone}} — wartet auf {{blocker}}",
+    "gapMore_one": "+{{count}} weiterer",
+    "gapMore_other": "+{{count}} weitere"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",
@@ -5693,5 +5699,11 @@
     "title": "Diese Seite wurde verschoben",
     "body": "Der Link führt nicht mehr weiter. Es ist nichts verloren — geh zurück oder starte neu bei Heute.",
     "home": "Zu Heute"
+  },
+  "sequence": {
+    "waitingOn": "Wartet auf {{milestone}}",
+    "projectedWeek": "→ Woche {{week}}",
+    "waitsFor": "Wartet auf",
+    "waitsForHint": "Wenn diese sich verzögern, wird dieser Meilenstein als blockiert gemeldet und nicht nur als unbesetzt."
   }
 }

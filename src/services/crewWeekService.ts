@@ -18,6 +18,7 @@
 // =============================================================================
 
 import { localDateKey, startOfWeek } from '../utils/dateKey';
+import { sequenceByMilestoneId } from './projectSequenceService';
 import type { Project, ProjectMilestone } from '../types/project';
 
 export interface CrewWeekJob {
@@ -48,6 +49,14 @@ export interface StaffingGap {
   weekStartKey: string;
   /** True when nobody at all is booked on the project that week. */
   nobodyOnProject: boolean;
+  /**
+   * Title of the milestone this one is waiting on, when a handover is overdue.
+   *
+   * Set means booking the trade would NOT fix the gap — the room is not ready.
+   * That is a different instruction from "nobody booked", so the two must not
+   * be rendered with the same sentence.
+   */
+  blockedByTitle?: string;
 }
 
 /**
@@ -95,8 +104,11 @@ export function staffingGapsForWeek(args: {
   jobs: CrewWeekJob[];
   workers: CrewWeekWorker[];
   weekDayKeys: string[];
+  /** Now, for the handover check. Injectable so tests do not read the clock. */
+  today?: Date;
 }): StaffingGap[] {
   const { projects, jobs, workers, weekDayKeys } = args;
+  const today = args.today ?? new Date();
   if (!weekDayKeys.length) return [];
   const weekStartKey = weekDayKeys[0];
   const weekJobs = jobsInWeek(jobs, weekDayKeys);
@@ -105,6 +117,10 @@ export function staffingGapsForWeek(args: {
 
   for (const project of projects) {
     if (project.status === 'completed' || project.status === 'cancelled') continue;
+    // Blocked is judged as of NOW, not as of the week being looked at: a
+    // predecessor that is not yet overdue is not yet a handover failure, and
+    // claiming one for a future week would be a forecast, not a fact.
+    const sequence = sequenceByMilestoneId({ project, today });
     for (const milestone of project.milestones ?? []) {
       if (milestone.completed) continue;
       const trade = milestone.trade?.trim();
@@ -132,6 +148,7 @@ export function staffingGapsForWeek(args: {
         trade,
         weekStartKey,
         nobodyOnProject: staffed.length === 0,
+        blockedByTitle: sequence.get(milestone.id)?.blockedBy[0]?.title,
       });
     }
   }

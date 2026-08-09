@@ -1945,7 +1945,9 @@
     "milestoneTrade": "Welk vak",
     "milestoneTradeHint": "Hiermee waarschuwen we je als de week aanbreekt en er niemand van dat vak is ingepland.",
     "weekEarlier": "Een week eerder",
-    "weekLater": "Een week later"
+    "weekLater": "Een week later",
+    "deleteMilestoneSuccessors_one": "{{titles}} wacht er niet langer op.",
+    "deleteMilestoneSuccessors_other": "{{titles}} wachten er niet langer op."
   },
   "automation": {
     "progressNote": "Hi {{customer}}, update over {{job}}: {{hours}}u gewerkt vandaag. Alles op schema. Vragen? Laat het weten!",
@@ -3069,7 +3071,11 @@
     "tradeMismatchTitle": "Ander vakgebied",
     "tradeMismatchBody": "{{worker}} doet {{workerTrade}} — deze klus is {{jobTrade}}.",
     "assignAnyway": "Toch toewijzen",
-    "pickSomeoneElse": "Iemand anders"
+    "pickSomeoneElse": "Iemand anders",
+    "blockedTitle": "Wacht op oplevering",
+    "blockedLine": "{{project}} · {{milestone}} — wacht op {{blocker}}",
+    "gapMore_one": "+{{count}} meer",
+    "gapMore_other": "+{{count}} meer"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",
@@ -5677,5 +5683,11 @@
     "title": "Deze pagina is verplaatst",
     "body": "De link die je volgde wijst nergens meer naartoe. Er is niets kwijt — ga terug of begin opnieuw bij Vandaag.",
     "home": "Naar Vandaag"
+  },
+  "sequence": {
+    "waitingOn": "Wacht op {{milestone}}",
+    "projectedWeek": "→ week {{week}}",
+    "waitsFor": "Wacht op",
+    "waitsForHint": "Als deze uitlopen, wordt deze mijlpaal als geblokkeerd gemeld in plaats van alleen onbezet."
   }
 }

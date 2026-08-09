@@ -11,9 +11,23 @@ export interface ProjectMilestone {
   id: string;
   title: string;
   trade?: string;
-  weekNumber: number; // week offset from project start (1-based)
+  weekNumber: number; // week offset from project start (1-based) — THE PLAN, never written by the engine
   completed: boolean;
   jobIds: string[]; // linked jobs
+  /**
+   * Milestone ids that must be `completed` before this one can start.
+   *
+   * A renovation runs trades in sequence (sloop -> loodgieter -> tegelzetter ->
+   * stucwerk) and `weekNumber` alone cannot express that: it is an absolute
+   * offset, so when the plumber runs four days over the tiler's milestone still
+   * claims week 3 and the board keeps asserting a plan reality has left behind.
+   *
+   * Empty/absent = can start on its planned week. Unknown ids are ignored — a
+   * deleted predecessor must not block the project forever. See
+   * `projectSequenceService`, which derives the forecast and never writes it
+   * back into `weekNumber` (a stored copy of a derived value rots).
+   */
+  dependsOn?: string[];
 }
 
 // ---------------------------------------------------------------------------

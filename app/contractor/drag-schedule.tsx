@@ -257,6 +257,10 @@ export default function DragScheduleScreen() {
       : []),
     [crewMode, projects, jobs, activeWorkers, weekDayKeys],
   );
+  // "Book a tiler" and "the room is not ready" are opposite instructions, so
+  // they are split at the source rather than distinguished by wording.
+  const blockedGaps = useMemo(() => gaps.filter(g => !!g.blockedByTitle), [gaps]);
+  const unstaffedGaps = useMemo(() => gaps.filter(g => !g.blockedByTitle), [gaps]);
   const weekLabel = useMemo(
     () => t('schedule.weekOf', { date: formatDayMonth(startOfWeek(new Date()), country) }),
     [t, country],
@@ -654,14 +658,20 @@ export default function DragScheduleScreen() {
       )}
 
       {/* Staffing gaps — the plan says a trade is due this week and nobody of
-          that trade is on it. Shown in week view, where it is actionable. */}
-      {crewMode && viewMode === 'week' && gaps.length > 0 && (
+          that trade is on it. Shown in week view, where it is actionable.
+
+          Split in two, because the two halves call for opposite actions and a
+          single "Not staffed" heading asserted the wrong one over both (#127 —
+          adding a dimension leaves the old aggregate measuring the old thing).
+          Unstaffed: book someone. Blocked: booking someone would not help, the
+          room is not ready. */}
+      {crewMode && viewMode === 'week' && unstaffedGaps.length > 0 && (
         <View style={styles.gapCard}>
           <View style={styles.gapHeader}>
             <Ionicons name="warning-outline" size={16} color={Palette.orange500} />
             <Text style={styles.gapTitle}>{t('schedule.gapTitle')}</Text>
           </View>
-          {gaps.slice(0, 4).map((gap) => (
+          {unstaffedGaps.slice(0, 4).map((gap) => (
             <Text key={`${gap.projectId}-${gap.milestoneTitle}`} style={styles.gapLine} numberOfLines={2}>
               {gap.nobodyOnProject
                 ? t('schedule.gapNobody', { project: gap.projectTitle, milestone: gap.milestoneTitle })
@@ -672,6 +682,30 @@ export default function DragScheduleScreen() {
                   })}
             </Text>
           ))}
+          {unstaffedGaps.length > 4 ? (
+            <Text style={styles.gapMore}>{t('schedule.gapMore', { count: unstaffedGaps.length - 4 })}</Text>
+          ) : null}
+        </View>
+      )}
+
+      {crewMode && viewMode === 'week' && blockedGaps.length > 0 && (
+        <View style={styles.gapCard}>
+          <View style={styles.gapHeader}>
+            <Ionicons name="hourglass-outline" size={16} color={SemanticColors.feedbackWarning} />
+            <Text style={styles.gapTitle}>{t('schedule.blockedTitle')}</Text>
+          </View>
+          {blockedGaps.slice(0, 4).map((gap) => (
+            <Text key={`${gap.projectId}-${gap.milestoneTitle}`} style={styles.gapLine} numberOfLines={2}>
+              {t('schedule.blockedLine', {
+                project: gap.projectTitle,
+                milestone: gap.milestoneTitle,
+                blocker: gap.blockedByTitle,
+              })}
+            </Text>
+          ))}
+          {blockedGaps.length > 4 ? (
+            <Text style={styles.gapMore}>{t('schedule.gapMore', { count: blockedGaps.length - 4 })}</Text>
+          ) : null}
         </View>
       )}
 
@@ -1010,6 +1044,9 @@ const styles = StyleSheet.create({
   gapHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   gapTitle: { fontSize: 13, fontWeight: '700', color: SemanticColors.textPrimary },
   gapLine: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
+  // The list is capped at 4. Saying how many were dropped beats a silent
+  // truncation that reads as "that is all of them".
+  gapMore: { fontSize: 11, color: SemanticColors.textTertiary, marginTop: 4 },
   weekLabel: {
     fontSize: 13, fontWeight: '600', color: SemanticColors.textSecondary,
     marginHorizontal: Spacing.lg, marginBottom: 8,

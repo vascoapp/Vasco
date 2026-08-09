@@ -18,6 +18,12 @@ import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import type { ProjectStatus, ProjectMilestone } from '../../../src/types/project';
 import { billingProgress } from '../../../src/services/progressBillingService';
+import {
+  sequenceByMilestoneId,
+  defaultDependsOn,
+  transitivePredecessors,
+  removeMilestoneFromChain,
+} from '../../../src/services/projectSequenceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -86,27 +92,51 @@ export default function ProjectDetailScreen() {
     setEditingMilestone(null);
   };
 
+  // What is blocked, by what, and has the end date moved. Derived on every
+  // render from `dependsOn` — never written back into `weekNumber`, which has
+  // to survive as the plan for a slip to be visible against at all.
+  const sequence = useMemo(
+    () => (project ? sequenceByMilestoneId({ project }) : new Map()),
+    [project],
+  );
+
   const deleteMilestone = (milestoneId: string) => {
     if (!project) return;
     // A billing term may be triggered by this milestone. Deleting it would
     // leave that term waiting on something that no longer exists, so say so
     // rather than silently stranding the money.
     const linkedTerm = (project.billingTerms ?? []).find(term => term.milestoneId === milestoneId);
-    Alert.alert(
-      t('project.deleteMilestoneConfirm', 'Delete this milestone?'),
+    // Successors pointing at it lose their handover. The sequence service
+    // already ignores unknown ids, so nothing breaks — but say which trades
+    // stop waiting, because that is a change to the plan the aannemer staffs.
+    const successors = project.milestones.filter(m => (m.dependsOn ?? []).includes(milestoneId));
+    const warnings = [
       linkedTerm
         ? t('project.deleteMilestoneLinked', {
             defaultValue: 'The billing term "{{term}}" is triggered by this milestone and will no longer have a trigger.',
             term: linkedTerm.title,
           })
-        : undefined,
+        : null,
+      successors.length
+        ? t('project.deleteMilestoneSuccessors', {
+            defaultValue: '{{titles}} will no longer wait for it.',
+            titles: successors.map(m => m.title).join(', '),
+            count: successors.length,
+          })
+        : null,
+    ].filter(Boolean) as string[];
+    Alert.alert(
+      t('project.deleteMilestoneConfirm', 'Delete this milestone?'),
+      warnings.length ? warnings.join('\n\n') : undefined,
       [
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         {
           text: t('common.delete', 'Delete'),
           style: 'destructive',
           onPress: () => {
-            writeMilestones(project.milestones.filter(m => m.id !== milestoneId));
+            // Drops the id from every other milestone's `dependsOn` too — a
+            // re-created id must not silently reconnect a broken chain.
+            writeMilestones(removeMilestoneFromChain(project.milestones, milestoneId));
             setEditingMilestone(null);
           },
         },
@@ -354,7 +384,10 @@ export default function ProjectDetailScreen() {
             ) : (
               [...project.milestones]
                 .sort((a, b) => a.weekNumber - b.weekNumber)
-                .map(m => (
+                .map(m => {
+                  const seq = sequence.get(m.id);
+                  const waiting = seq?.blockedBy?.[0];
+                  return (
                   <View key={m.id} style={styles.milestoneRow}>
                     {/* Tapping the tick is the whole point of the list — it is
                         what marks a trade handed over. */}
@@ -374,10 +407,28 @@ export default function ProjectDetailScreen() {
                     <Pressable style={styles.milestoneMain} onPress={() => setEditingMilestone({ mode: 'edit', milestone: m })}>
                       <Text style={[styles.milestoneText, m.completed && styles.milestoneComplete]}>{m.title}</Text>
                       {m.trade ? <Text style={styles.milestoneTrade}>{tradeLabel(m.trade)}</Text> : null}
+                      {/* "Cannot start yet" is a different claim from "nobody
+                          booked", and it is the one that changes what the
+                          aannemer should do about it. */}
+                      {waiting ? (
+                        <Text style={styles.milestoneBlocked} numberOfLines={1}>
+                          {t('sequence.waitingOn', { defaultValue: 'Waiting on {{milestone}}', milestone: waiting.title })}
+                        </Text>
+                      ) : null}
                     </Pressable>
-                    <Text style={styles.milestoneWeek}>{t('project.week')} {m.weekNumber}</Text>
+                    <View style={styles.milestoneWeekCol}>
+                      <Text style={[styles.milestoneWeek, seq?.slipWeeks ? styles.milestoneWeekPlanned : null]}>
+                        {t('project.week')} {m.weekNumber}
+                      </Text>
+                      {seq?.slipWeeks ? (
+                        <Text style={styles.milestoneProjected}>
+                          {t('sequence.projectedWeek', { defaultValue: 'now wk {{week}}', week: seq.projectedWeek })}
+                        </Text>
+                      ) : null}
+                    </View>
                   </View>
-                ))
+                  );
+                })
             )}
           </View>
         </FadeIn>
@@ -387,7 +438,7 @@ export default function ProjectDetailScreen() {
 
       <MilestoneModal
         state={editingMilestone}
-        existingCount={project.milestones.length}
+        allMilestones={project.milestones}
         onClose={() => setEditingMilestone(null)}
         onSave={saveMilestone}
         onDelete={deleteMilestone}
@@ -407,13 +458,13 @@ const MILESTONE_TRADES = [
 
 interface MilestoneModalProps {
   state: { mode: 'new' } | { mode: 'edit'; milestone: ProjectMilestone } | null;
-  existingCount: number;
+  allMilestones: ProjectMilestone[];
   onClose: () => void;
   onSave: (m: ProjectMilestone) => void;
   onDelete: (id: string) => void;
 }
 
-function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: MilestoneModalProps) {
+function MilestoneModal({ state, allMilestones, onClose, onSave, onDelete }: MilestoneModalProps) {
   const { t } = useTranslation();
   const { tradeLabel } = makeEntityLabels(t);
   const existing = state?.mode === 'edit' ? state.milestone : undefined;
@@ -421,6 +472,11 @@ function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: Mil
   const [title, setTitle] = useState('');
   const [trade, setTrade] = useState<string | undefined>(undefined);
   const [week, setWeek] = useState(1);
+  const [dependsOn, setDependsOn] = useState<string[]>([]);
+  // Once the aannemer picks the handover themselves, stop re-guessing it from
+  // the week. Overwriting a deliberate choice on the next +/- tap would be the
+  // form arguing with the user.
+  const depsTouched = useRef(false);
 
   // Re-seed the form each time the modal opens for a different milestone.
   // `key` on the Modal would remount instead, but that loses the slide
@@ -429,11 +485,31 @@ function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: Mil
   const seededRef = useRef<string | null>(null);
   if (state && seededRef.current !== openedFor) {
     seededRef.current = openedFor;
+    const seedWeek = existing?.weekNumber ?? Math.max(1, allMilestones.length + 1);
     setTitle(existing?.title ?? '');
     setTrade(existing?.trade);
-    setWeek(existing?.weekNumber ?? Math.max(1, existingCount + 1));
+    setWeek(seedWeek);
+    depsTouched.current = !!existing;
+    // A renovation is a chain far more often than a graph, so a new milestone
+    // defaults to waiting on the last one planned before it. The aannemer then
+    // only edits the exceptions instead of drawing the whole sequence.
+    setDependsOn(existing?.dependsOn ?? defaultDependsOn(allMilestones, seedWeek));
   }
   if (!state && seededRef.current !== null) seededRef.current = null;
+
+  const setWeekAndMaybeRelink = (next: number) => {
+    const w = Math.max(1, next);
+    setWeek(w);
+    if (!depsTouched.current) setDependsOn(defaultDependsOn(allMilestones, w, existing?.id));
+  };
+
+  // A milestone already behind this one cannot also come before it. The
+  // sequence service survives a cycle by claiming nothing, but that would look
+  // like the tap did nothing — so the cycle is not offerable in the first place.
+  const behindThis = existing ? transitivePredecessors(allMilestones, existing.id) : new Set<string>();
+  const candidates = allMilestones
+    .filter(m => m.id !== existing?.id && !behindThis.has(m.id))
+    .sort((a, b) => a.weekNumber - b.weekNumber);
 
   const canSave = title.trim().length > 0;
 
@@ -446,6 +522,7 @@ function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: Mil
       weekNumber: Math.max(1, Math.round(week)),
       completed: existing?.completed ?? false,
       jobIds: existing?.jobIds ?? [],
+      dependsOn,
     });
   };
 
@@ -478,7 +555,7 @@ function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: Mil
           <Text style={styles.fieldLabel}>{t('project.milestoneWeek', 'Week of the project')}</Text>
           <View style={styles.weekRow}>
             <Pressable
-              onPress={() => setWeek(w => Math.max(1, w - 1))}
+              onPress={() => setWeekAndMaybeRelink(week - 1)}
               style={styles.weekBtn}
               accessibilityRole="button"
               accessibilityLabel={t('project.weekEarlier', 'One week earlier')}
@@ -487,7 +564,7 @@ function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: Mil
             </Pressable>
             <Text style={styles.weekValue}>{t('project.week')} {week}</Text>
             <Pressable
-              onPress={() => setWeek(w => w + 1)}
+              onPress={() => setWeekAndMaybeRelink(week + 1)}
               style={styles.weekBtn}
               accessibilityRole="button"
               accessibilityLabel={t('project.weekLater', 'One week later')}
@@ -514,6 +591,42 @@ function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: Mil
             ))}
           </View>
           <Text style={styles.fieldHint}>{t('project.milestoneTradeHint', 'Used to warn you when the week arrives with nobody of that trade booked.')}</Text>
+
+          {/* The handover. `weekNumber` alone cannot say this: it is an
+              absolute offset, so when the plumber runs over, the tiler's
+              milestone still claims its original week. */}
+          {candidates.length > 0 ? (
+            <>
+              <Text style={styles.fieldLabel}>{t('sequence.waitsFor', 'Waits for')}</Text>
+              <View style={styles.depList}>
+                {candidates.map(c => {
+                  const on = dependsOn.includes(c.id);
+                  return (
+                    <Pressable
+                      key={c.id}
+                      onPress={() => {
+                        depsTouched.current = true;
+                        setDependsOn(prev => (on ? prev.filter(x => x !== c.id) : [...prev, c.id]));
+                      }}
+                      style={[styles.depRow, on && styles.depRowOn]}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: on }}
+                      accessibilityLabel={c.title}
+                    >
+                      <Ionicons
+                        name={on ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={20}
+                        color={on ? Palette.hermesOrange : SemanticColors.textTertiary}
+                      />
+                      <Text style={[styles.depTitle, on && styles.depTitleOn]} numberOfLines={1}>{c.title}</Text>
+                      <Text style={styles.depWeek}>{t('project.week')} {c.weekNumber}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Text style={styles.fieldHint}>{t('sequence.waitsForHint', 'When these run late, this milestone is reported as blocked instead of just unstaffed.')}</Text>
+            </>
+          ) : null}
 
           {existing ? (
             <Pressable style={styles.deleteBtn} onPress={() => onDelete(existing.id)}>
@@ -573,6 +686,23 @@ const styles = StyleSheet.create({
   milestoneCtaText: { fontSize: TYPE.bodySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
   milestoneMain: { flex: 1 },
   milestoneTrade: { fontSize: TYPE.labelSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginTop: 1 },
+  milestoneBlocked: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.feedbackWarning, marginTop: 2 },
+  milestoneWeekCol: { alignItems: 'flex-end' },
+  // The plan stays legible next to the forecast — a slip is only visible as the
+  // distance between the two, so neither may replace the other.
+  milestoneWeekPlanned: { textDecorationLine: 'line-through', color: SemanticColors.textTertiary },
+  milestoneProjected: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: SemanticColors.feedbackWarning, marginTop: 1 },
+  depList: { gap: GRID.xs },
+  depRow: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.sm,
+    paddingHorizontal: GRID.md, paddingVertical: GRID.sm,
+    borderWidth: 1, borderColor: 'transparent',
+  },
+  depRowOn: { borderColor: Palette.hermesOrange },
+  depTitle: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
+  depTitleOn: { color: SemanticColors.textPrimary },
+  depWeek: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary },
   modalRoot: { flex: 1, backgroundColor: PAGE_BG },
   modalHead: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

@@ -1961,7 +1961,9 @@
     "milestoneTrade": "Quale lavorazione",
     "milestoneTradeHint": "Serve ad avvisarti quando arriva la settimana e non c'è nessuno di quella lavorazione pianificato.",
     "weekEarlier": "Una settimana prima",
-    "weekLater": "Una settimana dopo"
+    "weekLater": "Una settimana dopo",
+    "deleteMilestoneSuccessors_one": "{{titles}} non lo aspetterà più.",
+    "deleteMilestoneSuccessors_other": "{{titles}} non lo aspetteranno più."
   },
   "automation": {
     "progressNote": "Ciao {{customer}}, aggiornamento su {{job}}: {{hours}}h lavorate oggi. Tutto in programma. Domande?",
@@ -3069,7 +3071,11 @@
     "tradeMismatchTitle": "Altro mestiere",
     "tradeMismatchBody": "{{worker}} fa {{workerTrade}} — questo lavoro è {{jobTrade}}.",
     "assignAnyway": "Assegna comunque",
-    "pickSomeoneElse": "Qualcun altro"
+    "pickSomeoneElse": "Qualcun altro",
+    "blockedTitle": "In attesa di consegna",
+    "blockedLine": "{{project}} · {{milestone}} — in attesa di {{blocker}}",
+    "gapMore_one": "+{{count}} altro",
+    "gapMore_other": "+{{count}} altri"
   },
   "marketInsights": {
     "title": "INSIGHT DI MERCATO",
@@ -5693,5 +5699,11 @@
     "title": "Questa pagina è stata spostata",
     "body": "Il link che hai seguito non porta più da nessuna parte. Non è andato perso nulla: torna indietro o riparti da Oggi.",
     "home": "Vai a Oggi"
+  },
+  "sequence": {
+    "waitingOn": "In attesa di {{milestone}}",
+    "projectedWeek": "→ settimana {{week}}",
+    "waitsFor": "Attende",
+    "waitsForHint": "Se questi sono in ritardo, questa milestone viene segnalata come bloccata e non solo senza personale."
   }
 }
