@@ -25,6 +25,7 @@ import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { openDirections, formatDestination } from '../../src/utils/directions';
 import { todayKey } from '../../src/utils/dateKey';
+import { formatDateAuto } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -210,7 +211,7 @@ export default function MyScheduleScreen() {
         <View style={styles.dateHeader}>
           <Ionicons name="calendar-outline" size={14} color={SemanticColors.textTertiary} />
           <Text style={styles.dateHeaderText}>
-            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+            {formatDateAuto(new Date())}
           </Text>
         </View>
 

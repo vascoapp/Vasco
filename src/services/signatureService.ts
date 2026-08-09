@@ -18,6 +18,7 @@
 // =============================================================================
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { formatDateShortAuto } from '../i18n/formatting';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -227,7 +228,7 @@ export function signatureHtmlBlock(
     legalText?: string;
   },
 ): string {
-  const signedAtLabel = args.signedAt ? new Date(args.signedAt).toLocaleDateString() : '';
+  const signedAtLabel = args.signedAt ? formatDateShortAuto(new Date(args.signedAt)) : '';
   const role = args.signerRole ?? 'customer';
   // SVG embeds inline; base64 PNG would also work via data: URI but
   // SignaturePad in this app already produces SVG markup.

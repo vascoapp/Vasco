@@ -763,6 +763,54 @@ async function checkCurrencyInLocaleValues() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 10. Dates and times must follow the CONTRACTOR, not the handset
+// ---------------------------------------------------------------------------
+// `toLocaleDateString(undefined, …)` / `toLocaleTimeString(undefined, …)` — and
+// the no-argument forms — resolve against the DEVICE locale. The app language
+// comes from the saved profile, so on any phone whose language differs from the
+// contractor's the screen renders in two languages at once: "01:30 PM" above a
+// badge reading "3u30", "Jul 26 · 14 dagen te laat" in one string.
+//
+// It is invisible on a nl-NL handset, which is why 49 of these survived every
+// simulator walk. Use formatDate/formatTime/formatDayMonth(date, country) from
+// src/i18n/formatting, or the *Auto siblings where `country` is out of reach.
+const DEVICE_LOCALE_RE = /\.toLocale(?:Date|Time)String\s*\(\s*(?:undefined\b|\))/;
+
+async function checkDeviceLocaleDates() {
+  process.stdout.write('10. dates/times follow the contractor, not the device ... ');
+  const hits = [];
+  // Scoped to the surfaces that ship. `app/hub`, `app/sitelead`, `app/(tabs)`
+  // and the portfolio dashboards are the director/CFO/COO surface, which
+  // `enterprise_portfolio: false` ships to nobody — blocking an OTA on their
+  // date formatting would be a gate on code no contractor can reach.
+  // `app/worker` IS in scope: those screens are the aannemer's own crew.
+  for (const dir of [
+    'app/(contractor)', 'app/contractor', 'app/invoices', 'app/quotes',
+    'app/accept', 'app/customer', 'app/worker',
+    'src/components/contractor', 'src/components/shared', 'src/components/customer',
+    'src/services', 'src/utils', 'src/intelligence',
+  ]) {
+    for await (const file of walkFiles(dir)) {
+      if (!/\.tsx?$/.test(file) || file.includes('__tests__')) continue;
+      const src = await readFile(file, 'utf8');
+      src.split('\n').forEach((line, i) => {
+        const code = line.trim();
+        // Comments describing the rule are not violations of it.
+        if (code.startsWith('//') || code.startsWith('*')) return;
+        if (DEVICE_LOCALE_RE.test(line)) hits.push(`${file}:${i + 1}  ${code.slice(0, 90)}`);
+      });
+    }
+  }
+  if (hits.length === 0) {
+    console.log('✓');
+  } else {
+    console.log(`✗ (${hits.length})`);
+    for (const h of hits.slice(0, 15)) err(`Device-locale date/time: ${h}`);
+    if (hits.length > 15) err(`...and ${hits.length - 15} more`);
+  }
+}
+
 async function main() {
   console.log('OTA-update preflight\n');
   const t0 = Date.now();
@@ -775,6 +823,7 @@ async function main() {
   await checkManualCurrency();
   await checkUntranslatedValues();
   await checkCurrencyInLocaleValues();
+  await checkDeviceLocaleDates();
   const dt = ((Date.now() - t0) / 1000).toFixed(1);
 
   console.log('');

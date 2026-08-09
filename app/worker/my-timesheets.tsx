@@ -22,6 +22,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { localDateKey, todayKey } from '../../src/utils/dateKey';
+import { formatDayMonthAuto, formatWeekdayShortAuto } from '../../src/i18n/formatting';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,7 +71,7 @@ function formatDate(d: Date): string {
 }
 
 function getDayName(d: Date): string {
-  return d.toLocaleDateString(undefined, { weekday: 'short' });
+  return formatWeekdayShortAuto(d);
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +127,7 @@ export default function MyTimesheetsScreen() {
     const totalHours = Math.round(days.reduce((sum, d) => sum + d.totalHours, 0) * 10) / 10;
 
     return {
-      weekLabel: `${weekDates.start.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} - ${weekDates.end.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`,
+      weekLabel: `${formatDayMonthAuto(weekDates.start)} - ${formatDayMonthAuto(weekDates.end)}`,
       startDate: formatDate(weekDates.start),
       endDate: formatDate(weekDates.end),
       days,
@@ -254,7 +255,7 @@ export default function MyTimesheetsScreen() {
                   <View style={styles.dayHeaderLeft}>
                     <Text style={[styles.dayName, isToday && styles.dayNameToday]}>{day.dayName}</Text>
                     <Text style={styles.dayDate}>
-                      {new Date(day.date + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                      {formatDayMonthAuto(new Date(day.date + 'T00:00:00'))}
                     </Text>
                   </View>
                   <Text style={[

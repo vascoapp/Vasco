@@ -12,7 +12,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { LineOptimization, ScenarioResult, CategoryOptimization } from './budgetOptimizerService';
-import { formatMoney } from '../i18n/formatting';
+import { formatMoney, formatDateAuto } from '../i18n/formatting';
 
 export type PdfLang = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
@@ -152,11 +152,7 @@ function buildHtml(
   lang: PdfLang = 'en',
 ): string {
   const L = LABELS[lang] ?? LABELS.en;
-  const today = new Date().toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const today = formatDateAuto(new Date());
 
   const totalApprovedSavings = approvedOptimizations.reduce((s, o) => s + o.savings, 0);
 

@@ -536,7 +536,7 @@ class ServiceContractsService {
 
     for (let i = 0; i < months; i++) {
       const month = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const monthStr = month.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+      const monthStr = formatMonthYearAuto(month);
 
       let recurring = 0;
       this.contracts.filter(c => c.status === 'active').forEach(contract => {
@@ -611,6 +611,7 @@ export const serviceContractsService = ServiceContractsService.getInstance();
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { formatMonthYearAuto } from '../i18n/formatting';
 
 export function useServiceContracts(status?: ServiceContract['status']) {
   const [contracts, setContracts] = useState<ServiceContract[]>([]);

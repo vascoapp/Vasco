@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { complianceService, type License, type Certification, type InsurancePolicy, type ComplianceAlert } from './complianceService';
 import { addToQueue } from './aiActionQueueService';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { formatDateShortAuto } from '../i18n/formatting';
 
 const LAST_RUN_KEY = '@vasco_compliance_agent_last_run';
 const LAST_RESULT_KEY = '@vasco_compliance_agent_last_result';
@@ -62,7 +63,7 @@ function severityForStage(stage: ExpiryStage): ComplianceAlert['severity'] {
 }
 
 function describeStage(stage: ExpiryStage, name: string, expiryDate: Date): { title: string; description: string } {
-  const dateStr = expiryDate.toLocaleDateString();
+  const dateStr = formatDateShortAuto(expiryDate);
   switch (stage) {
     case 'expired':
       return {

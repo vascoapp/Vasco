@@ -120,6 +120,20 @@ export function formatWeekdayShort(date: Date | string, country: Country = 'NL')
   return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(d);
 }
 
+/** "jul" / "Jul" — bare short month, for period labels on a monthly series. */
+export function formatMonthShort(date: Date | string, country: Country = 'NL'): string {
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, { month: 'short' }).format(d);
+}
+
+/** "jul 2026" / "Jul 2026" — month buckets in a forecast that crosses a year. */
+export function formatMonthYear(date: Date | string, country: Country = 'NL'): string {
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(d);
+}
+
 /** "zondag 9 augustus" / "Sunday, August 9" — the day-planner header. */
 export function formatWeekdayDayMonth(date: Date | string, country: Country = 'NL'): string {
   const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
@@ -256,6 +270,30 @@ export function formatDayMonthAuto(date: Date | string): string {
 export function formatTimeAuto(date: Date | string): string {
   const c = (getCurrentCountry() as Country) ?? 'NL';
   return formatTime(date, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+// Every shape the explicit family has needs an Auto sibling. A GAP here is
+// what sends a call site back to `toLocaleDateString(undefined, …)`: the three
+// worst offenders in this sweep each reached for the device because the shape
+// they wanted (bare weekday, bare month, month+year) had no helper at all.
+export function formatWeekdayShortAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatWeekdayShort(date, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+export function formatWeekdayDayMonthAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatWeekdayDayMonth(date, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+export function formatMonthShortAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatMonthShort(date, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+export function formatMonthYearAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatMonthYear(date, COUNTRY_CONFIG[c] ? c : 'NL');
 }
 
 /**

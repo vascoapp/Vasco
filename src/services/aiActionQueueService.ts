@@ -5,7 +5,7 @@
 // Pattern: AI does the thinking → queues result → human approves → action executes
 // =============================================================================
 
-import { formatMoney, formatMoney2 } from '../i18n/formatting';
+import { formatMoney, formatMoney2, formatDateShortAuto } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCurrentUserId } from '../lib/currentUser';
@@ -882,7 +882,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     return validUntil && (validUntil - now) > 0 && (validUntil - now) < 3 * dayMs;
   });
   for (const q of expiringQuotes.slice(0, 2)) {
-    const expiryDate = new Date(q.validUntil).toLocaleDateString();
+    const expiryDate = formatDateShortAuto(new Date(q.validUntil));
     const cust = (context.customers ?? []).find((c: any) => c.id === q.customerId);
     const message = t('automation.quoteExpiryMsg', {
       defaultValue: 'Hi {{customer}}, your quote for {{job}} ({{amount}}) expires on {{date}}. Would you like to proceed?',

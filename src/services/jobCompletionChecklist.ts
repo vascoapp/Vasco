@@ -9,6 +9,7 @@
 import type { Job } from '../types/contractor';
 import type { JobPhotoRecord, PhotoKind } from './jobPhotoService';
 import { complianceService, type Certification } from './complianceService';
+import { formatDateShortAuto } from '../i18n/formatting';
 
 export type ChecklistItemId =
   | 'before_photo'
@@ -94,7 +95,7 @@ function certHint(
   if (!cert) return { hint: fallback, hintKey: fallbackKey };
   const days = Math.floor((new Date(cert.expiryDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
   if (days < 0) {
-    const date = new Date(cert.expiryDate).toLocaleDateString();
+    const date = formatDateShortAuto(new Date(cert.expiryDate));
     return {
       hint: `${cert.name} expired on ${date}. Renew before closing.`,
       hintKey: 'checklist.certExpired',

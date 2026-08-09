@@ -197,7 +197,7 @@ class UpsellEngineService {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
       performances.push({
-        period: date.toLocaleDateString(undefined, { month: 'short' }),
+        period: formatDayMonthAuto(date),
         presented: Math.floor(15 + Math.random() * 10),
         accepted: Math.floor(5 + Math.random() * 5),
         acceptanceRate: Math.floor(25 + Math.random() * 20),
@@ -230,6 +230,7 @@ export const upsellEngineService = UpsellEngineService.getInstance();
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { formatDayMonthAuto } from '../i18n/formatting';
 
 export function useUpsellRecommendations(jobId?: string) {
   const [recommendation, setRecommendation] = useState<ActiveRecommendation | null>(null);
