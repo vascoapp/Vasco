@@ -189,7 +189,8 @@
       "insulation": "Isolatie",
       "solar": "Zonnepanelen",
       "glazing": "Glasbewassing",
-      "landscaping": "Hovenieren"
+      "landscaping": "Hovenieren",
+      "demolition": "Sloopwerk"
     },
     "businessTypes": {
       "soleTrader": "Eenmanszaak",
@@ -1931,7 +1932,20 @@
     "statusActive": "Actief",
     "statusOnHold": "Gepauzeerd",
     "statusCompleted": "Afgerond",
-    "siteOps": "Werfacties"
+    "siteOps": "Werfacties",
+    "addMilestone": "Mijlpaal toevoegen",
+    "editMilestone": "Mijlpaal bewerken",
+    "deleteMilestone": "Mijlpaal verwijderen",
+    "deleteMilestoneConfirm": "Deze mijlpaal verwijderen?",
+    "deleteMilestoneLinked": "De termijn \"{{term}}\" wordt door deze mijlpaal geactiveerd en heeft straks geen trigger meer.",
+    "planTrades": "Plan de volgorde van de vakken",
+    "milestoneTitle": "Wat er gebeurt",
+    "milestoneTitlePlaceholder": "bijv. Ruwbouw gereed",
+    "milestoneWeek": "Week van het project",
+    "milestoneTrade": "Welk vak",
+    "milestoneTradeHint": "Hiermee waarschuwen we je als de week aanbreekt en er niemand van dat vak is ingepland.",
+    "weekEarlier": "Een week eerder",
+    "weekLater": "Een week later"
   },
   "automation": {
     "progressNote": "Hi {{customer}}, update over {{job}}: {{hours}}u gewerkt vandaag. Alles op schema. Vragen? Laat het weten!",

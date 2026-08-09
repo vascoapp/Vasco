@@ -189,7 +189,8 @@
       "insulation": "Isolation",
       "solar": "Solaire / PV",
       "glazing": "Vitrerie",
-      "landscaping": "Aménagement paysager"
+      "landscaping": "Aménagement paysager",
+      "demolition": "Démolition"
     },
     "businessTypes": {
       "soleTrader": "Auto-entrepreneur",
@@ -1947,7 +1948,20 @@
     "statusActive": "Actif",
     "statusOnHold": "En pause",
     "statusCompleted": "Terminé",
-    "siteOps": "Opérations de chantier"
+    "siteOps": "Opérations de chantier",
+    "addMilestone": "Ajouter un jalon",
+    "editMilestone": "Modifier le jalon",
+    "deleteMilestone": "Supprimer le jalon",
+    "deleteMilestoneConfirm": "Supprimer ce jalon ?",
+    "deleteMilestoneLinked": "L'échéance \"{{term}}\" est déclenchée par ce jalon et n'aura plus de déclencheur.",
+    "planTrades": "Planifier l'ordre des corps de métier",
+    "milestoneTitle": "Ce qui se passe",
+    "milestoneTitlePlaceholder": "ex. Gros œuvre terminé",
+    "milestoneWeek": "Semaine du projet",
+    "milestoneTrade": "Quel corps de métier",
+    "milestoneTradeHint": "Nous vous avertissons lorsque la semaine arrive sans personne de ce corps de métier planifié.",
+    "weekEarlier": "Une semaine plus tôt",
+    "weekLater": "Une semaine plus tard"
   },
   "automation": {
     "progressNote": "Bonjour {{customer}}, mise à jour sur {{job}} : {{hours}}h travaillées aujourd'hui. Tout est en ordre. Des questions ?",

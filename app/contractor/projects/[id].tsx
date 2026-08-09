@@ -2,8 +2,8 @@
 // PROJECT DETAIL — View/manage a multi-trade project
 // =============================================================================
 
-import { useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl } from 'react-native';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +16,7 @@ import { formatCurrency, formatCurrency0, type Country } from '../../../src/i18n
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
-import type { ProjectStatus } from '../../../src/types/project';
+import type { ProjectStatus, ProjectMilestone } from '../../../src/types/project';
 import { billingProgress } from '../../../src/services/progressBillingService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -38,8 +38,11 @@ export default function ProjectDetailScreen() {
   // The job rows printed the raw JobStatus enum ('completed', 'in-progress')
   // and a hardcoded € formatted in the DEVICE locale, on an aannemer P&L
   // screen. Same class as the R322 werk/customer-detail fixes.
-  const { jobStatusLabel } = makeEntityLabels(t);
+  const { jobStatusLabel, tradeLabel } = makeEntityLabels(t);
   const [refreshing, setRefreshing] = useState(false);
+  const [editingMilestone, setEditingMilestone] = useState<
+    { mode: 'new' } | { mode: 'edit'; milestone: ProjectMilestone } | null
+  >(null);
 
   const project = useMemo(() => projects.find(p => p.id === id), [projects, id]);
   const pnl = useMemo(() => project ? getProjectPnL(project.id) : null, [project]);
@@ -55,6 +58,61 @@ export default function ProjectDetailScreen() {
     setRefreshing(true);
     setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
+
+  // All three writes go through updateProject({ milestones }), which already
+  // persists to BE, queues offline, and cascades milestone completion into
+  // billing-term readiness. No new mutator needed.
+  const writeMilestones = (next: ProjectMilestone[]) => {
+    if (!project) return;
+    updateProject(project.id, { milestones: next });
+  };
+
+  const toggleMilestone = (milestoneId: string) => {
+    if (!project) return;
+    hapticSuccess();
+    writeMilestones(
+      project.milestones.map(m => (m.id === milestoneId ? { ...m, completed: !m.completed } : m)),
+    );
+  };
+
+  const saveMilestone = (draft: ProjectMilestone) => {
+    if (!project) return;
+    const exists = project.milestones.some(m => m.id === draft.id);
+    writeMilestones(
+      exists
+        ? project.milestones.map(m => (m.id === draft.id ? draft : m))
+        : [...project.milestones, draft],
+    );
+    setEditingMilestone(null);
+  };
+
+  const deleteMilestone = (milestoneId: string) => {
+    if (!project) return;
+    // A billing term may be triggered by this milestone. Deleting it would
+    // leave that term waiting on something that no longer exists, so say so
+    // rather than silently stranding the money.
+    const linkedTerm = (project.billingTerms ?? []).find(term => term.milestoneId === milestoneId);
+    Alert.alert(
+      t('project.deleteMilestoneConfirm', 'Delete this milestone?'),
+      linkedTerm
+        ? t('project.deleteMilestoneLinked', {
+            defaultValue: 'The billing term "{{term}}" is triggered by this milestone and will no longer have a trigger.',
+            term: linkedTerm.title,
+          })
+        : undefined,
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('common.delete', 'Delete'),
+          style: 'destructive',
+          onPress: () => {
+            writeMilestones(project.milestones.filter(m => m.id !== milestoneId));
+            setEditingMilestone(null);
+          },
+        },
+      ],
+    );
+  };
 
   const handleStatusChange = () => {
     if (!project) return;
@@ -267,29 +325,205 @@ export default function ProjectDetailScreen() {
 
         {/* Milestones placeholder */}
         <FadeIn delay={200}>
+          {/* The milestone list was READ-ONLY and every project is created with
+              `milestones: []` — nothing in the app could add one, so the trade/
+              week plan was empty for every project that has ever existed and
+              the week-view staffing strip (7ad78bc) could never fire. Ticking
+              one also flips any billing term that names it to `ready`, which
+              updateProject already handles. */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('project.milestones')}</Text>
+            <View style={styles.sectionHead}>
+              <Text style={styles.sectionTitle}>{t('project.milestones')}</Text>
+              <Pressable
+                onPress={() => setEditingMilestone({ mode: 'new' })}
+                style={styles.addMilestoneBtn}
+                accessibilityRole="button"
+                accessibilityLabel={t('project.addMilestone', 'Add milestone')}
+              >
+                <Ionicons name="add" size={20} color={Palette.hermesOrange} />
+              </Pressable>
+            </View>
             {project.milestones.length === 0 ? (
-              <Text style={styles.emptyText}>{t('project.noMilestones')}</Text>
+              <>
+                <Text style={styles.emptyText}>{t('project.noMilestones')}</Text>
+                <Pressable style={styles.milestoneCta} onPress={() => setEditingMilestone({ mode: 'new' })}>
+                  <Ionicons name="flag-outline" size={18} color={Palette.hermesOrange} />
+                  <Text style={styles.milestoneCtaText}>{t('project.planTrades', 'Plan the trade sequence')}</Text>
+                </Pressable>
+              </>
             ) : (
-              project.milestones.map(m => (
-                <View key={m.id} style={styles.milestoneRow}>
-                  <Ionicons
-                    name={m.completed ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={18}
-                    color={m.completed ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary}
-                  />
-                  <Text style={[styles.milestoneText, m.completed && styles.milestoneComplete]}>{m.title}</Text>
-                  <Text style={styles.milestoneWeek}>{t('project.week')} {m.weekNumber}</Text>
-                </View>
-              ))
+              [...project.milestones]
+                .sort((a, b) => a.weekNumber - b.weekNumber)
+                .map(m => (
+                  <View key={m.id} style={styles.milestoneRow}>
+                    {/* Tapping the tick is the whole point of the list — it is
+                        what marks a trade handed over. */}
+                    <Pressable
+                      onPress={() => toggleMilestone(m.id)}
+                      hitSlop={8}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: m.completed }}
+                      accessibilityLabel={m.title}
+                    >
+                      <Ionicons
+                        name={m.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={22}
+                        color={m.completed ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary}
+                      />
+                    </Pressable>
+                    <Pressable style={styles.milestoneMain} onPress={() => setEditingMilestone({ mode: 'edit', milestone: m })}>
+                      <Text style={[styles.milestoneText, m.completed && styles.milestoneComplete]}>{m.title}</Text>
+                      {m.trade ? <Text style={styles.milestoneTrade}>{tradeLabel(m.trade)}</Text> : null}
+                    </Pressable>
+                    <Text style={styles.milestoneWeek}>{t('project.week')} {m.weekNumber}</Text>
+                  </View>
+                ))
             )}
           </View>
         </FadeIn>
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      <MilestoneModal
+        state={editingMilestone}
+        existingCount={project.milestones.length}
+        onClose={() => setEditingMilestone(null)}
+        onSave={saveMilestone}
+        onDelete={deleteMilestone}
+      />
     </View>
+  );
+}
+
+// =============================================================================
+// MILESTONE EDITOR
+// =============================================================================
+
+const MILESTONE_TRADES = [
+  'demolition', 'plumbing', 'electrical', 'gas', 'carpentry', 'tiling',
+  'plastering', 'flooring', 'painting', 'roofing', 'insulation', 'glazing',
+] as const;
+
+interface MilestoneModalProps {
+  state: { mode: 'new' } | { mode: 'edit'; milestone: ProjectMilestone } | null;
+  existingCount: number;
+  onClose: () => void;
+  onSave: (m: ProjectMilestone) => void;
+  onDelete: (id: string) => void;
+}
+
+function MilestoneModal({ state, existingCount, onClose, onSave, onDelete }: MilestoneModalProps) {
+  const { t } = useTranslation();
+  const { tradeLabel } = makeEntityLabels(t);
+  const existing = state?.mode === 'edit' ? state.milestone : undefined;
+
+  const [title, setTitle] = useState('');
+  const [trade, setTrade] = useState<string | undefined>(undefined);
+  const [week, setWeek] = useState(1);
+
+  // Re-seed the form each time the modal opens for a different milestone.
+  // `key` on the Modal would remount instead, but that loses the slide
+  // animation; this keeps the fields in step with what was tapped.
+  const openedFor = state?.mode === 'edit' ? state.milestone.id : state?.mode ?? null;
+  const seededRef = useRef<string | null>(null);
+  if (state && seededRef.current !== openedFor) {
+    seededRef.current = openedFor;
+    setTitle(existing?.title ?? '');
+    setTrade(existing?.trade);
+    setWeek(existing?.weekNumber ?? Math.max(1, existingCount + 1));
+  }
+  if (!state && seededRef.current !== null) seededRef.current = null;
+
+  const canSave = title.trim().length > 0;
+
+  const submit = () => {
+    if (!canSave) return;
+    onSave({
+      id: existing?.id ?? `ms-${Date.now()}`,
+      title: title.trim(),
+      trade,
+      weekNumber: Math.max(1, Math.round(week)),
+      completed: existing?.completed ?? false,
+      jobIds: existing?.jobIds ?? [],
+    });
+  };
+
+  return (
+    <Modal visible={state !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={styles.modalRoot}>
+        <View style={styles.modalHead}>
+          <Pressable onPress={onClose} hitSlop={8}>
+            <Text style={styles.modalCancel}>{t('common.cancel', 'Cancel')}</Text>
+          </Pressable>
+          <Text style={styles.modalTitle}>
+            {existing ? t('project.editMilestone', 'Edit milestone') : t('project.addMilestone', 'Add milestone')}
+          </Text>
+          <Pressable onPress={submit} disabled={!canSave} hitSlop={8}>
+            <Text style={[styles.modalSave, !canSave && styles.modalSaveOff]}>{t('common.save', 'Save')}</Text>
+          </Pressable>
+        </View>
+
+        <ScrollView contentContainerStyle={{ padding: GRID.lg }} keyboardShouldPersistTaps="handled">
+          <Text style={styles.fieldLabel}>{t('project.milestoneTitle', 'What happens')}</Text>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder={t('project.milestoneTitlePlaceholder', 'e.g. Rough-in complete')}
+            placeholderTextColor={SemanticColors.textTertiary}
+            style={styles.input}
+            autoFocus={!existing}
+          />
+
+          <Text style={styles.fieldLabel}>{t('project.milestoneWeek', 'Week of the project')}</Text>
+          <View style={styles.weekRow}>
+            <Pressable
+              onPress={() => setWeek(w => Math.max(1, w - 1))}
+              style={styles.weekBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('project.weekEarlier', 'One week earlier')}
+            >
+              <Ionicons name="remove" size={20} color={SemanticColors.textPrimary} />
+            </Pressable>
+            <Text style={styles.weekValue}>{t('project.week')} {week}</Text>
+            <Pressable
+              onPress={() => setWeek(w => w + 1)}
+              style={styles.weekBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('project.weekLater', 'One week later')}
+            >
+              <Ionicons name="add" size={20} color={SemanticColors.textPrimary} />
+            </Pressable>
+          </View>
+
+          {/* Trade is what the week view checks staffing against — a milestone
+              with no trade is deliberately never reported as a staffing gap,
+              so leaving it blank is a real choice, not an unfinished form. */}
+          <Text style={styles.fieldLabel}>{t('project.milestoneTrade', 'Which trade')}</Text>
+          <View style={styles.tradeWrap}>
+            {MILESTONE_TRADES.map(slug => (
+              <Pressable
+                key={slug}
+                onPress={() => setTrade(trade === slug ? undefined : slug)}
+                style={[styles.tradeChip, trade === slug && styles.tradeChipOn]}
+              >
+                <Text style={[styles.tradeChipText, trade === slug && styles.tradeChipTextOn]}>
+                  {tradeLabel(slug)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text style={styles.fieldHint}>{t('project.milestoneTradeHint', 'Used to warn you when the week arrives with nobody of that trade booked.')}</Text>
+
+          {existing ? (
+            <Pressable style={styles.deleteBtn} onPress={() => onDelete(existing.id)}>
+              <Ionicons name="trash-outline" size={18} color={SemanticColors.feedbackError} />
+              <Text style={styles.deleteBtnText}>{t('project.deleteMilestone', 'Delete milestone')}</Text>
+            </Pressable>
+          ) : null}
+        </ScrollView>
+      </View>
+    </Modal>
   );
 }
 
@@ -326,6 +560,60 @@ const styles = StyleSheet.create({
   jobAccent: { width: 4, alignSelf: 'stretch' },
   jobTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   jobMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  addMilestoneBtn: {
+    width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Palette.hermesOrange + '1A',
+  },
+  milestoneCta: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm, marginTop: GRID.sm,
+    paddingVertical: 10, paddingHorizontal: GRID.md,
+    borderRadius: RADIUS.md, borderWidth: 1, borderColor: Palette.hermesOrange + '44',
+  },
+  milestoneCtaText: { fontSize: TYPE.bodySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
+  milestoneMain: { flex: 1 },
+  milestoneTrade: { fontSize: TYPE.labelSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginTop: 1 },
+  modalRoot: { flex: 1, backgroundColor: PAGE_BG },
+  modalHead: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: GRID.lg, paddingVertical: GRID.md,
+    borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault,
+  },
+  modalTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  modalCancel: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
+  modalSave: { fontSize: TYPE.bodySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
+  modalSaveOff: { color: SemanticColors.textTertiary },
+  fieldLabel: {
+    fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary,
+    textTransform: 'uppercase', letterSpacing: 1, marginBottom: GRID.xs, marginTop: GRID.md,
+  },
+  fieldHint: { fontSize: TYPE.labelSize, color: SemanticColors.textTertiary, marginTop: GRID.xs, lineHeight: 16 },
+  input: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    paddingHorizontal: GRID.md, paddingVertical: 12,
+    fontSize: TYPE.bodySize, color: SemanticColors.textPrimary,
+  },
+  weekRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.md },
+  weekBtn: {
+    width: 44, height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: SemanticColors.surfacePrimary, borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  weekValue: { flex: 1, textAlign: 'center', fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  tradeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID.xs },
+  tradeChip: {
+    paddingHorizontal: GRID.md, paddingVertical: 8, borderRadius: RADIUS.full,
+    backgroundColor: SemanticColors.surfacePrimary, borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  tradeChipOn: { backgroundColor: Palette.hermesOrange, borderColor: Palette.hermesOrange },
+  tradeChipText: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary },
+  tradeChipTextOn: { color: '#fff', fontFamily: TYPE.labelFamily },
+  deleteBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm,
+    marginTop: GRID.xl, paddingVertical: 12, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: SemanticColors.feedbackError + '55',
+  },
+  deleteBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.labelFamily, color: SemanticColors.feedbackError },
   milestoneRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
   milestoneText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   milestoneComplete: { textDecorationLine: 'line-through', color: SemanticColors.textTertiary },

@@ -189,7 +189,8 @@
       "insulation": "Insulation",
       "solar": "Solar / PV",
       "glazing": "Glazing",
-      "landscaping": "Landscaping"
+      "landscaping": "Landscaping",
+      "demolition": "Demolition"
     },
     "businessTypes": {
       "soleTrader": "Sole Trader",
@@ -1947,7 +1948,20 @@
     "statusActive": "Active",
     "statusOnHold": "On hold",
     "statusCompleted": "Completed",
-    "siteOps": "Site operations"
+    "siteOps": "Site operations",
+    "addMilestone": "Add milestone",
+    "editMilestone": "Edit milestone",
+    "deleteMilestone": "Delete milestone",
+    "deleteMilestoneConfirm": "Delete this milestone?",
+    "deleteMilestoneLinked": "The billing term \"{{term}}\" is triggered by this milestone and will no longer have a trigger.",
+    "planTrades": "Plan the trade sequence",
+    "milestoneTitle": "What happens",
+    "milestoneTitlePlaceholder": "e.g. Rough-in complete",
+    "milestoneWeek": "Week of the project",
+    "milestoneTrade": "Which trade",
+    "milestoneTradeHint": "Used to warn you when the week arrives with nobody of that trade booked.",
+    "weekEarlier": "One week earlier",
+    "weekLater": "One week later"
   },
   "automation": {
     "progressNote": "Hi {{customer}}, update on {{job}}: {{hours}}h worked today. Progress is on track. Any questions, let me know!",

@@ -189,7 +189,8 @@
       "insulation": "Isolamento",
       "solar": "Solare / FV",
       "glazing": "Vetreria",
-      "landscaping": "Giardinaggio e paesaggistica"
+      "landscaping": "Giardinaggio e paesaggistica",
+      "demolition": "Demolizioni"
     },
     "businessTypes": {
       "soleTrader": "Ditta individuale",
@@ -1947,7 +1948,20 @@
     "statusActive": "Attivo",
     "statusOnHold": "In pausa",
     "statusCompleted": "Completato",
-    "siteOps": "Operazioni di cantiere"
+    "siteOps": "Operazioni di cantiere",
+    "addMilestone": "Aggiungi milestone",
+    "editMilestone": "Modifica milestone",
+    "deleteMilestone": "Elimina milestone",
+    "deleteMilestoneConfirm": "Eliminare questa milestone?",
+    "deleteMilestoneLinked": "La rata \"{{term}}\" è attivata da questa milestone e resterà senza trigger.",
+    "planTrades": "Pianifica l'ordine delle lavorazioni",
+    "milestoneTitle": "Cosa succede",
+    "milestoneTitlePlaceholder": "es. Grezzo completato",
+    "milestoneWeek": "Settimana del progetto",
+    "milestoneTrade": "Quale lavorazione",
+    "milestoneTradeHint": "Serve ad avvisarti quando arriva la settimana e non c'è nessuno di quella lavorazione pianificato.",
+    "weekEarlier": "Una settimana prima",
+    "weekLater": "Una settimana dopo"
   },
   "automation": {
     "progressNote": "Ciao {{customer}}, aggiornamento su {{job}}: {{hours}}h lavorate oggi. Tutto in programma. Domande?",

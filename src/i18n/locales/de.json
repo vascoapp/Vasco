@@ -189,7 +189,8 @@
       "insulation": "Dämmung",
       "solar": "Solar / PV",
       "glazing": "Verglasung",
-      "landscaping": "Garten- und Landschaftsbau"
+      "landscaping": "Garten- und Landschaftsbau",
+      "demolition": "Abbrucharbeiten"
     },
     "businessTypes": {
       "soleTrader": "Einzelunternehmen",
@@ -1947,7 +1948,20 @@
     "statusActive": "Aktiv",
     "statusOnHold": "Pausiert",
     "statusCompleted": "Abgeschlossen",
-    "siteOps": "Baustellen-Aktionen"
+    "siteOps": "Baustellen-Aktionen",
+    "addMilestone": "Meilenstein hinzufügen",
+    "editMilestone": "Meilenstein bearbeiten",
+    "deleteMilestone": "Meilenstein löschen",
+    "deleteMilestoneConfirm": "Diesen Meilenstein löschen?",
+    "deleteMilestoneLinked": "Die Rate \"{{term}}\" wird durch diesen Meilenstein ausgelöst und hat danach keinen Auslöser mehr.",
+    "planTrades": "Reihenfolge der Gewerke planen",
+    "milestoneTitle": "Was passiert",
+    "milestoneTitlePlaceholder": "z. B. Rohbau fertig",
+    "milestoneWeek": "Projektwoche",
+    "milestoneTrade": "Welches Gewerk",
+    "milestoneTradeHint": "Damit warnen wir Sie, wenn die Woche beginnt und niemand aus diesem Gewerk eingeplant ist.",
+    "weekEarlier": "Eine Woche früher",
+    "weekLater": "Eine Woche später"
   },
   "automation": {
     "progressNote": "Hallo {{customer}}, Update zu {{job}}: {{hours}}h gearbeitet heute. Alles im Plan. Fragen? Melden Sie sich!",

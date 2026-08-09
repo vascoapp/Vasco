@@ -147,3 +147,36 @@ describe('crewWeekLoad', () => {
     expect(row.sites.size).toBe(2);    // Utrecht counted once
   });
 });
+
+/**
+ * The gap underneath all of the above: until the milestone editor shipped,
+ * `projects.tsx` created every project with `milestones: []` and nothing in the
+ * app could add one. Every assertion in this file constructs its milestones
+ * directly, which is correct for a unit test and proves nothing about whether
+ * such a row could exist — so the whole feature passed its tests while being
+ * unreachable for every user. This pins the boundary explicitly.
+ */
+describe('an empty milestone list — what every project used to have', () => {
+  it('reports no staffing gap, because there is no plan to check against', () => {
+    const gaps = staffingGapsForWeek({
+      projects: [project([])],
+      jobs: [],
+      workers: WORKERS,
+      weekDayKeys: week(0),
+    });
+    expect(gaps).toEqual([]);
+  });
+
+  it('reports a gap as soon as one milestone is planned', () => {
+    const gaps = staffingGapsForWeek({
+      projects: [project([
+        { id: 'ms-1', title: 'Tegelwerk', trade: 'tiling', weekNumber: 1, completed: false, jobIds: [] },
+      ])],
+      jobs: [],
+      workers: WORKERS,
+      weekDayKeys: week(0),
+    });
+    expect(gaps).toHaveLength(1);
+    expect(gaps[0].trade).toBe('tiling');
+  });
+});
