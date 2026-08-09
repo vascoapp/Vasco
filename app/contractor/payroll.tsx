@@ -45,9 +45,13 @@ export default function PayrollScreen() {
 
   const contractorName = businessProfile?.businessName || user?.name || t('payroll.you', 'You');
 
+  // Same rate `getProjectPnL` charges the contractor's own hours at, so the
+  // two surfaces cannot disagree about what one person's day cost.
+  const contractorHourlyCost = (businessProfile as { hourlyRate?: number } | undefined)?.hourlyRate;
+
   const payrollData = useMemo(
-    () => buildPayroll({ jobs, workers, period, now: new Date(), contractorName }),
-    [jobs, workers, period, contractorName],
+    () => buildPayroll({ jobs, workers, period, now: new Date(), contractorName, contractorHourlyCost }),
+    [jobs, workers, period, contractorName, contractorHourlyCost],
   );
 
   const fmt = (n: number) => formatCurrency(n, country);

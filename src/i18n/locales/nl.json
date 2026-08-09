@@ -5113,7 +5113,8 @@
     "hourlyCostSym": "Kosten per uur voor jou ({{sym}})",
     "namePlaceholder": "Naam",
     "emptyAannemer": "Stel je ploeg samen",
-    "emptyBodyAannemer": "Voeg de mensen toe die onder je werken en wijs ze toe aan klussen op je verschillende werven. Zodra ze hier staan zie je wie waar zit, wat elke werf aan arbeid kost en wie deze week nog ruimte heeft."
+    "emptyBodyAannemer": "Voeg de mensen toe die onder je werken en wijs ze toe aan klussen op je verschillende werven. Zodra ze hier staan zie je wie waar zit, wat elke werf aan arbeid kost en wie deze week nog ruimte heeft.",
+    "payrollSub": "Uren en kosten per persoon"
   },
   "reports": {
     "title": "Rapportages",

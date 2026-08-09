@@ -5129,7 +5129,8 @@
     "hourlyCostSym": "Coût horaire pour vous ({{sym}})",
     "namePlaceholder": "Nom",
     "emptyAannemer": "Constituez votre équipe",
-    "emptyBodyAannemer": "Ajoutez les personnes qui travaillent pour vous, puis affectez-les aux chantiers. Vous verrez alors qui est où, ce que chaque chantier coûte en main-d’œuvre et qui a de la disponibilité cette semaine."
+    "emptyBodyAannemer": "Ajoutez les personnes qui travaillent pour vous, puis affectez-les aux chantiers. Vous verrez alors qui est où, ce que chaque chantier coûte en main-d’œuvre et qui a de la disponibilité cette semaine.",
+    "payrollSub": "Heures et coût par personne"
   },
   "reports": {
     "title": "Rapports",

@@ -178,6 +178,21 @@ export default function CrewScreen() {
             );
           })}
 
+          {/* What the crew COSTS, from the same workers + logged hours this
+              screen already manages. Its only other entry point is a link at
+              the bottom of Timesheet, which is a strange place to look for it
+              once you have people. */}
+          <Pressable style={styles.payrollLink} onPress={() => router.push('/contractor/payroll' as any)}>
+            <View style={styles.payrollIcon}>
+              <Ionicons name="cash-outline" size={20} color={DK.colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.payrollTitle}>{t('payroll.title', 'Payroll')}</Text>
+              <Text style={styles.payrollSub}>{t('crew.payrollSub', 'Hours and cost per person')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+          </Pressable>
+
           {inactiveWorkers.length > 0 ? (
             <>
               <Text style={styles.sectionLabel}>{t('crew.inactive', 'Inactive')}</Text>
@@ -350,6 +365,18 @@ const styles = StyleSheet.create({
     padding: GRID.md, marginBottom: GRID.sm,
   },
   cardInactive: { opacity: 0.55 },
+  payrollLink: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.md,
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: DK.colors.accent + '33',
+    padding: GRID.md, marginTop: GRID.md,
+  },
+  payrollIcon: {
+    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: DK.colors.accent + '1A',
+  },
+  payrollTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  payrollSub: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary, marginTop: 2 },
   roleDot: {
     width: 44, height: 44, borderRadius: 22,
     alignItems: 'center', justifyContent: 'center',

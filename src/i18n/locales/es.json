@@ -5129,7 +5129,8 @@
     "hourlyCostSym": "Coste por hora para ti ({{sym}})",
     "namePlaceholder": "Nombre",
     "emptyAannemer": "Monta tu equipo",
-    "emptyBodyAannemer": "Añade a las personas que trabajan contigo y asígnalas a trabajos en tus distintas obras. Así verás quién está dónde, cuánta mano de obra cuesta cada obra y quién tiene hueco esta semana."
+    "emptyBodyAannemer": "Añade a las personas que trabajan contigo y asígnalas a trabajos en tus distintas obras. Así verás quién está dónde, cuánta mano de obra cuesta cada obra y quién tiene hueco esta semana.",
+    "payrollSub": "Horas y coste por persona"
   },
   "reports": {
     "title": "Informes",

@@ -15,6 +15,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { walkScreen, teardown } from '../src/test-utils/screenWalk';
 import { todayKey } from '../src/utils/dateKey';
 
+// The first mount here pulls in AppState + the whole payroll screen, which
+// exceeds jest's 5s default when this suite runs alongside the other eight
+// under parallel load — and a timeout mid-render leaves the following tests
+// rendering empty, so one slow mount reads as four unrelated failures.
+jest.setTimeout(30000);
+
 const today = todayKey();
 
 const WORKERS = [

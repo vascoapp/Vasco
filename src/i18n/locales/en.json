@@ -5129,7 +5129,8 @@
     "hourlyCostSym": "Hourly cost to you ({{sym}})",
     "namePlaceholder": "Name",
     "emptyAannemer": "Build your crew",
-    "emptyBodyAannemer": "Add the people working under you, then assign them to jobs across your sites. Once they are here you can see who is where, what each site costs in labour, and who has capacity this week."
+    "emptyBodyAannemer": "Add the people working under you, then assign them to jobs across your sites. Once they are here you can see who is where, what each site costs in labour, and who has capacity this week.",
+    "payrollSub": "Hours and cost per person"
   },
   "reports": {
     "title": "Reports",

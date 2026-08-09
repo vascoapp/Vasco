@@ -110,8 +110,15 @@ export function buildPayroll(args: {
   period: PayrollPeriod;
   now: Date;
   contractorName: string;
+  /**
+   * The contractor's own rate (`businessProfile.hourlyRate`), for the hours
+   * that carry no workerId. Without it this screen would call those hours
+   * unpriced while `getProjectPnL` charges them to the project at exactly
+   * this rate — the same hours costed on one screen and not the other.
+   */
+  contractorHourlyCost?: number;
 }): PayrollSummary {
-  const { jobs, workers, period, now, contractorName } = args;
+  const { jobs, workers, period, now, contractorName, contractorHourlyCost } = args;
   const { from, to } = periodBounds(period, now);
 
   // key: workerId ?? '' (empty string stands for the contractor)
@@ -136,7 +143,7 @@ export function buildPayroll(args: {
     // An entry can name a worker who has since been deleted outright. Their
     // hours still happened, so they get a line rather than vanishing.
     const name = key ? worker?.name ?? contractorName : contractorName;
-    const hourlyCost = key ? worker?.hourlyCost : undefined;
+    const hourlyCost = key ? worker?.hourlyCost : contractorHourlyCost;
     const hours = Math.round(row.hours * 100) / 100;
     lines.push({
       workerId: key || null,

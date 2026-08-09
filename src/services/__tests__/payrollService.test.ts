@@ -70,6 +70,24 @@ describe('buildPayroll', () => {
     expect(r.lines[0].name).toBe('Ik');
   });
 
+  // getProjectPnL charges unattributed hours to the project at exactly this
+  // rate. Leaving them unpriced here would cost the same hours on one screen
+  // and not the other.
+  it('prices the contractor’s own hours at their own rate when it is set', () => {
+    const r = buildPayroll({
+      jobs: [{ id: 'j1', timeEntries: [{ date: '2026-08-11', hours: 4 }] }],
+      workers, period: 'week', now: NOW, contractorName: 'Ik', contractorHourlyCost: 55,
+    });
+    expect(r.lines[0].cost).toBe(220);
+    expect(r.unpricedCount).toBe(0);
+  });
+
+  it('leaves the contractor’s own hours unpriced when no rate is set', () => {
+    const r = build([{ id: 'j1', timeEntries: [{ date: '2026-08-11', hours: 4 }] }]);
+    expect(r.lines[0].cost).toBeUndefined();
+    expect(r.unpricedCount).toBe(1);
+  });
+
   // The two refusals to invent a number — the point of the service.
   it('leaves cost UNDEFINED when no rate is recorded, never 0', () => {
     const r = build([{ id: 'j1', timeEntries: [{ date: '2026-08-11', hours: 10, workerId: 'w-norate' }] }]);

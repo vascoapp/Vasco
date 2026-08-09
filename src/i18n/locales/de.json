@@ -5129,7 +5129,8 @@
     "hourlyCostSym": "Stundenkosten für dich ({{sym}})",
     "namePlaceholder": "Name",
     "emptyAannemer": "Stell dein Team zusammen",
-    "emptyBodyAannemer": "Füge die Leute hinzu, die für dich arbeiten, und weise sie Aufträgen auf deinen Baustellen zu. Dann siehst du, wer wo ist, was jede Baustelle an Lohn kostet und wer diese Woche noch Kapazität hat."
+    "emptyBodyAannemer": "Füge die Leute hinzu, die für dich arbeiten, und weise sie Aufträgen auf deinen Baustellen zu. Dann siehst du, wer wo ist, was jede Baustelle an Lohn kostet und wer diese Woche noch Kapazität hat.",
+    "payrollSub": "Stunden und Kosten pro Person"
   },
   "reports": {
     "title": "Berichte",

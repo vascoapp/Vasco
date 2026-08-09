@@ -5129,7 +5129,8 @@
     "hourlyCostSym": "Costo orario per te ({{sym}})",
     "namePlaceholder": "Nome",
     "emptyAannemer": "Componi la tua squadra",
-    "emptyBodyAannemer": "Aggiungi le persone che lavorano per te e assegnale ai lavori nei tuoi cantieri. Vedrai chi è dove, quanto costa la manodopera per ogni cantiere e chi ha ancora disponibilità questa settimana."
+    "emptyBodyAannemer": "Aggiungi le persone che lavorano per te e assegnale ai lavori nei tuoi cantieri. Vedrai chi è dove, quanto costa la manodopera per ogni cantiere e chi ha ancora disponibilità questa settimana.",
+    "payrollSub": "Ore e costo per persona"
   },
   "reports": {
     "title": "Report",
