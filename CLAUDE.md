@@ -84,6 +84,17 @@ cd admin && npx tsc --noEmit     # Check admin TS errors
 python3 scripts/audit-dead-fields.py   # optional fields nothing writes (#110)
 npm run audit:unmounted                # components no screen reaches; follows the
                                        # data path into their services (#111)
+
+# Screen walk — mounts every contractor/aannemer screen headlessly, in Dutch,
+# with real providers. ~8s for the whole surface; catches what reading cannot.
+npm run walk                           # seeded demo contractor (what the sim shows)
+npm run walk:fresh                     # day one: backend up, zero rows
+# A quantity identical in BOTH postures is not computed from the contractor's
+# data. Detectors in __screenwalk__/detectors.test.tsx fail on new instances of
+# known defect shapes; its KNOWN list is the outstanding-findings list.
+# Walk a role with `walkScreen(S, { as: 'aannemer' })` — without it every
+# `isAannemer` branch renders its solo variant and the multi-site surface is
+# invisible.
 npm run check:photo -- <photo.jpg> plumbing NL   # is photo→quote any good?
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
 ```
