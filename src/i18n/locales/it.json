@@ -599,7 +599,8 @@
     "share": "Condividi",
     "renewAction": "Rinnova",
     "workBlocked_one": "{{count}} tipo di lavoro bloccato",
-    "workBlocked_other": "{{count}} tipi di lavoro bloccati"
+    "workBlocked_other": "{{count}} tipi di lavoro bloccati",
+    "scoreUnknown": "Ancora nulla da monitorare"
   },
   "billing": {
     "upgradeRequired": "Aggiornamento richiesto",
@@ -4422,7 +4423,8 @@
       "insulation": "Isolamento",
       "general": "Generale"
     },
-    "indexBasis": "Indice ({{country}}) · base 2015=100"
+    "indexBasis": "Indice ({{country}}) · base 2015=100",
+    "baselineNote": "Dati generali di settore — ancora troppo pochi professionisti nella tua zona per un benchmark tuo."
   },
   "pdfModal": {
     "labelInvoice": "Fattura",
@@ -5001,7 +5003,7 @@
       },
       "analyst": {
         "tagline": "Il tuo consulente di business intelligence",
-        "description": "Collega gli schemi dell’intera attività per far emergere approfondimenti: confronta le tue tariffe con oltre 14.000 professionisti UE, prevedi quali preventivi verranno vinti, stima il flusso di cassa a 90 giorni e individua quali tipi di lavoro offrono i margini migliori."
+        "description": "Collega gli schemi dell’intera attività per far emergere approfondimenti: confronta le tue tariffe con quelle di altri professionisti UE, prevedi quali preventivi verranno vinti, stima il flusso di cassa a 90 giorni e individua quali tipi di lavoro offrono i margini migliori."
       }
     }
   },

@@ -583,7 +583,8 @@
     "share": "Delen",
     "renewAction": "Vernieuwen",
     "workBlocked_one": "{{count}} type werk geblokkeerd",
-    "workBlocked_other": "{{count}} types werk geblokkeerd"
+    "workBlocked_other": "{{count}} types werk geblokkeerd",
+    "scoreUnknown": "Nog niets bijgehouden"
   },
   "billing": {
     "upgradeRequired": "Upgrade nodig",
@@ -4406,7 +4407,8 @@
       "insulation": "Isolatie",
       "general": "Algemeen"
     },
-    "indexBasis": "Index ({{country}}) · basis 2015=100"
+    "indexBasis": "Index ({{country}}) · basis 2015=100",
+    "baselineNote": "Algemene branchecijfers — nog te weinig vakmensen in je regio voor een eigen benchmark."
   },
   "pdfModal": {
     "labelInvoice": "Factuur",
@@ -4985,7 +4987,7 @@
       },
       "analyst": {
         "tagline": "Je business intelligence-adviseur",
-        "description": "Verbindt patronen uit je hele bedrijf tot inzichten: vergelijk je tarieven met 14.000+ EU-vakmensen, voorspel welke offertes worden gewonnen, prognosticeer de cashflow 90 dagen vooruit en ontdek welke soorten klussen de beste marges opleveren."
+        "description": "Verbindt patronen uit je hele bedrijf tot inzichten: vergelijk je tarieven met andere EU-vakmensen, voorspel welke offertes worden gewonnen, prognosticeer de cashflow 90 dagen vooruit en ontdek welke soorten klussen de beste marges opleveren."
       }
     }
   },

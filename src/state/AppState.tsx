@@ -480,7 +480,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         try {
           const { listProjects } = await import('../lib/dataProvider');
           const projectRows = await listProjects();
-          if (projectRows.length > 0) {
+          {
             const mapped: Project[] = projectRows.map((r: any) => ({
               id: r.id,
               title: r.name,
@@ -509,7 +509,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               createdAt: r.created_at,
               updatedAt: r.updated_at,
             }));
-            setProjects(mapped);
+            // An empty result is an ANSWER ("this account has no projects"),
+            // not a missing one. The previous `if (projectRows.length > 0)`
+            // guard made that case unreachable, so a project deleted on
+            // another device never disappeared here, and the demo seed
+            // survived signing into an account that genuinely had none.
+            // A FAILED call still throws into the catch below — that is what
+            // legitimately preserves local rows, and listProjects rethrows on
+            // error rather than returning [].
+            //
+            // Temp-id rows are kept for the same reason jobs/customers keep
+            // theirs (R57): offline creations the write queue has not yet
+            // promoted to a BE uuid.
+            setProjects((prev) => {
+              const tempRows = prev.filter((row) => isTempIdFast(row.id));
+              return [...tempRows, ...mapped];
+            });
           }
         } catch (err) {
           logWarn('AppState', `loadProjects failed: ${err}`);

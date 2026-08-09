@@ -68,7 +68,8 @@ export function CashFlowDashboard() {
     }
   };
 
-  const getHealthColor = (score: number) => {
+  const getHealthColor = (score: number | null) => {
+    if (score === null) return SemanticColors.textTertiary;
     if (score >= 70) return Palette.green500;
     if (score >= 40) return Palette.orange500;
     return Palette.red500;
@@ -87,7 +88,7 @@ export function CashFlowDashboard() {
           <Text style={styles.healthTitle}>{t('cashflow.healthTitle', 'Financial health')}</Text>
           <View style={[styles.healthCircle, { borderColor: getHealthColor(summary.healthScore) }]}>
             <Text style={[styles.healthScore, { color: getHealthColor(summary.healthScore) }]}>
-              {summary.healthScore}
+              {summary.healthScore === null ? '—' : summary.healthScore}
             </Text>
           </View>
         </View>

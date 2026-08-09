@@ -131,7 +131,7 @@ export const EVE_AGENTS: Record<EveAgentType, EveAgentConfig> = {
     type: 'analyst',
     name: 'Vasco Analyst',
     tagline: 'Your business intelligence advisor',
-    description: 'Connects patterns across your entire business to surface insights: benchmark your rates against 14,000+ EU contractors, predict which quotes will win, forecast cashflow 90 days out, and identify which job types deliver the best margins.',
+    description: 'Connects patterns across your entire business to surface insights: benchmark your rates against other EU contractors, predict which quotes will win, forecast cashflow 90 days out, and identify which job types deliver the best margins.',
     icon: 'analytics',
     color: '#10B981',
     actionTypes: [

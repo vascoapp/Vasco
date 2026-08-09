@@ -234,6 +234,14 @@ export default function MarketPricesScreen() {
         {benchmarks?.tradeBenchmarks && benchmarks.tradeBenchmarks.length > 0 && (
           <FadeIn delay={300}>
             <Text style={styles.sectionTitle}>{t('market.marketAverages', 'Marktgemiddelden')}</Text>
+            {/* Below the k-anonymity threshold getCohortBenchmarks falls back to
+                TRADE_BASELINES — published industry figures, not this region's
+                cohort. Unlabelled, the screen read "0 aannemers in jouw regio"
+                and "Meer data nodig voor benchmarks" directly above four precise
+                market averages, with no way to tell which was which. */}
+            {(benchmarks?.contractorsInCohort ?? 0) < 5 && (
+              <Text style={styles.sectionEmptyDesc}>{t('market.baselineNote')}</Text>
+            )}
             {benchmarks.tradeBenchmarks.map((tb, i) => (
               <View key={i} style={styles.card}>
                 <View style={styles.tradeRow}>

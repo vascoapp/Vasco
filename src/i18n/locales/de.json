@@ -599,7 +599,8 @@
     "share": "Teilen",
     "renewAction": "Erneuern",
     "workBlocked_one": "{{count}} Arbeitstyp blockiert",
-    "workBlocked_other": "{{count}} Arbeitstypen blockiert"
+    "workBlocked_other": "{{count}} Arbeitstypen blockiert",
+    "scoreUnknown": "Noch nichts erfasst"
   },
   "billing": {
     "upgradeRequired": "Upgrade erforderlich",
@@ -4422,7 +4423,8 @@
       "insulation": "Dämmung",
       "general": "Allgemein"
     },
-    "indexBasis": "Index ({{country}}) · Basis 2015=100"
+    "indexBasis": "Index ({{country}}) · Basis 2015=100",
+    "baselineNote": "Allgemeine Branchenwerte — noch zu wenige Handwerker in deiner Region für einen eigenen Benchmark."
   },
   "pdfModal": {
     "labelInvoice": "Rechnung",
@@ -5001,7 +5003,7 @@
       },
       "analyst": {
         "tagline": "Dein Business-Intelligence-Berater",
-        "description": "Verknüpft Muster aus deinem gesamten Betrieb zu Erkenntnissen: vergleiche deine Preise mit 14.000+ EU-Handwerkern, prognostiziere, welche Angebote gewonnen werden, sage den Cashflow 90 Tage voraus und erkenne, welche Auftragsarten die besten Margen liefern."
+        "description": "Verknüpft Muster aus deinem gesamten Betrieb zu Erkenntnissen: vergleiche deine Preise mit anderen EU-Handwerkern, prognostiziere, welche Angebote gewonnen werden, sage den Cashflow 90 Tage voraus und erkenne, welche Auftragsarten die besten Margen liefern."
       }
     }
   },

@@ -532,7 +532,7 @@
         "description": "Handles day-to-day execution: drafts invoices from completed jobs, sends payment reminders, follows up on stale estimates, suggests schedule optimizations, and prepares end-of-day updates. Works 24/7 so you can focus on the tools."
       },
       "analyst": {
-        "description": "Connects patterns across your entire business to surface insights: benchmark your rates against 14,000+ EU contractors, predict which estimates will win, forecast cashflow 90 days out, and identify which job types deliver the best margins."
+        "description": "Connects patterns across your entire business to surface insights: benchmark your rates against other contractors, predict which estimates will win, forecast cashflow 90 days out, and identify which job types deliver the best margins."
       }
     }
   },

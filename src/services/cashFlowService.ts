@@ -99,7 +99,7 @@ export interface CashFlowSummary {
   pendingIncome: number;
   pendingExpenses: number;
   projectedBalance30Days: number;
-  healthScore: number;
+  healthScore: number | null;
   alerts: CashFlowAlert[];
 }
 
@@ -333,11 +333,17 @@ class CashFlowService {
       });
     }
 
-    const healthScore = Math.min(100, Math.max(0,
-      50 +
-      (overdue.length === 0 ? 20 : -overdue.length * 5) +
-      (projectedBalance30Days > 10000 ? 30 : projectedBalance30Days > 5000 ? 15 : 0)
-    ));
+    // null when there is nothing to score. "No overdue invoices" scores +20,
+    // so an account with NO invoices at all scored 50 + 20 = 70 and a brand-new
+    // contractor was shown "Financiële gezondheid 70" beside € 0,00 in every
+    // other field. An empty set is not a healthy one.
+    const healthScore = (this.getInvoices().length === 0 && this.getExpenses().length === 0)
+      ? null
+      : Math.min(100, Math.max(0,
+          50 +
+          (overdue.length === 0 ? 20 : -overdue.length * 5) +
+          (projectedBalance30Days > 10000 ? 30 : projectedBalance30Days > 5000 ? 15 : 0)
+        ));
 
     // R26: was hardcoded 15000 — pure fiction for every contractor regardless
     // of actual finances. Now sums paid invoices (cash that's actually landed).
@@ -746,11 +752,17 @@ export function useCashFlow() {
       });
     }
 
-    const healthScore = Math.min(100, Math.max(0,
-      50 +
-      (overdue.length === 0 ? 20 : -overdue.length * 5) +
-      (projectedBalance30Days > 10000 ? 30 : projectedBalance30Days > 5000 ? 15 : 0)
-    ));
+    // null when there is nothing to score. "No overdue invoices" scores +20,
+    // so an account with NO invoices at all scored 50 + 20 = 70 and a brand-new
+    // contractor was shown "Financiële gezondheid 70" beside € 0,00 in every
+    // other field. An empty set is not a healthy one.
+    const healthScore = (invoices.length === 0 && expenses.length === 0)
+      ? null
+      : Math.min(100, Math.max(0,
+          50 +
+          (overdue.length === 0 ? 20 : -overdue.length * 5) +
+          (projectedBalance30Days > 10000 ? 30 : projectedBalance30Days > 5000 ? 15 : 0)
+        ));
 
     return {
       currentBalance: paidTotal,

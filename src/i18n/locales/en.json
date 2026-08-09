@@ -599,7 +599,8 @@
     "share": "Share",
     "renewAction": "Renew",
     "workBlocked_one": "{{count}} type of work blocked",
-    "workBlocked_other": "{{count}} types of work blocked"
+    "workBlocked_other": "{{count}} types of work blocked",
+    "scoreUnknown": "Nothing tracked yet"
   },
   "billing": {
     "upgradeRequired": "Upgrade required",
@@ -4422,7 +4423,8 @@
       "insulation": "Insulation",
       "general": "General"
     },
-    "indexBasis": "Index ({{country}}) · base 2015=100"
+    "indexBasis": "Index ({{country}}) · base 2015=100",
+    "baselineNote": "General industry figures — too few tradespeople in your region for your own benchmark yet."
   },
   "pdfModal": {
     "labelInvoice": "Invoice",
@@ -5001,7 +5003,7 @@
       },
       "analyst": {
         "tagline": "Your business intelligence advisor",
-        "description": "Connects patterns across your entire business to surface insights: benchmark your rates against 14,000+ EU contractors, predict which quotes will win, forecast cashflow 90 days out, and identify which job types deliver the best margins."
+        "description": "Connects patterns across your entire business to surface insights: benchmark your rates against other EU contractors, predict which quotes will win, forecast cashflow 90 days out, and identify which job types deliver the best margins."
       }
     }
   },

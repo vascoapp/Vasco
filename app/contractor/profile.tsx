@@ -165,20 +165,28 @@ export default function ProfileScreen() {
       if (!j.completedAt || !j.endDate) return true;
       return new Date(j.completedAt) <= new Date(j.endDate);
     }).length;
-    const onTimeRate = completedJobs > 0 ? onTimeJobs / completedJobs : 1;
+    // null, not 1. `: 1` meant "no completed jobs = perfectly on time", and
+    // since onTimeRate carries 35 of the 100 score points, a brand-new
+    // contractor with zero jobs was shown "Aannemer Score 35/100" and
+    // "Op-tijd percentage 100%" — both derived entirely from that placeholder.
+    const onTimeRate = completedJobs > 0 ? onTimeJobs / completedJobs : null;
     const customerJobCount = new Map<string, number>();
     jobs.forEach((j: any) => {
       if (j.customerId) customerJobCount.set(j.customerId, (customerJobCount.get(j.customerId) ?? 0) + 1);
     });
     const repeatCustomers = Array.from(customerJobCount.values()).filter(c => c >= 2).length;
     const totalCustomersWithJobs = customerJobCount.size;
-    const repeatRate = totalCustomersWithJobs > 0 ? repeatCustomers / totalCustomersWithJobs : 0;
-    const score = Math.round((completionRate * 40 + onTimeRate * 35 + repeatRate * 25));
+    const repeatRate = totalCustomersWithJobs > 0 ? repeatCustomers / totalCustomersWithJobs : null;
+    // A score needs finished work to describe. With none, there is no
+    // performance record yet — the screen says so instead of inventing one.
+    const score = completedJobs > 0
+      ? Math.round(completionRate * 40 + (onTimeRate ?? 0) * 35 + (repeatRate ?? 0) * 25)
+      : null;
     return {
-      score: Math.min(score, 100),
-      completionRate: Math.round(completionRate * 100),
-      onTimeRate: Math.round(onTimeRate * 100),
-      repeatRate: Math.round(repeatRate * 100),
+      score: score === null ? null : Math.min(score, 100),
+      completionRate: totalJobs > 0 ? Math.round(completionRate * 100) : null,
+      onTimeRate: onTimeRate === null ? null : Math.round(onTimeRate * 100),
+      repeatRate: repeatRate === null ? null : Math.round(repeatRate * 100),
     };
   }, [jobs]);
 
@@ -391,20 +399,22 @@ export default function ProfileScreen() {
             <View style={styles.scoreHeader}>
               <Ionicons name="trophy" size={20} color={Palette.hermesOrange} />
               <Text style={styles.scoreTitle}>{t('profile.contractorScore', 'Contractor Score')}</Text>
-              <Text style={styles.scoreValue}>{contractorScore.score}/100</Text>
+              <Text style={styles.scoreValue}>
+                {contractorScore.score === null ? '—' : `${contractorScore.score}/100`}
+              </Text>
             </View>
             <View style={styles.scoreBreakdown}>
               <View style={styles.scoreRow}>
                 <Text style={styles.scoreMetricLabel}>{t('profile.completionRate', 'Completion rate')}</Text>
-                <Text style={styles.scoreMetric}>{contractorScore.completionRate}%</Text>
+                <Text style={styles.scoreMetric}>{contractorScore.completionRate === null ? '—' : `${contractorScore.completionRate}%`}</Text>
               </View>
               <View style={styles.scoreRow}>
                 <Text style={styles.scoreMetricLabel}>{t('profile.onTimeRate', 'On-time rate')}</Text>
-                <Text style={styles.scoreMetric}>{contractorScore.onTimeRate}%</Text>
+                <Text style={styles.scoreMetric}>{contractorScore.onTimeRate === null ? '—' : `${contractorScore.onTimeRate}%`}</Text>
               </View>
               <View style={styles.scoreRow}>
                 <Text style={styles.scoreMetricLabel}>{t('profile.repeatCustomers', 'Repeat customers')}</Text>
-                <Text style={styles.scoreMetric}>{contractorScore.repeatRate}%</Text>
+                <Text style={styles.scoreMetric}>{contractorScore.repeatRate === null ? '—' : `${contractorScore.repeatRate}%`}</Text>
               </View>
             </View>
           </View>

@@ -599,7 +599,8 @@
     "share": "Partager",
     "renewAction": "Renouveler",
     "workBlocked_one": "{{count}} type de travaux bloqué",
-    "workBlocked_other": "{{count}} types de travaux bloqués"
+    "workBlocked_other": "{{count}} types de travaux bloqués",
+    "scoreUnknown": "Rien de suivi pour l’instant"
   },
   "billing": {
     "upgradeRequired": "Mise à niveau requise",
@@ -4422,7 +4423,8 @@
       "insulation": "Isolation",
       "general": "Général"
     },
-    "indexBasis": "Indice ({{country}}) · base 2015=100"
+    "indexBasis": "Indice ({{country}}) · base 2015=100",
+    "baselineNote": "Chiffres généraux du secteur — trop peu d’artisans dans votre région pour un benchmark propre."
   },
   "pdfModal": {
     "labelInvoice": "Facture",
@@ -5001,7 +5003,7 @@
       },
       "analyst": {
         "tagline": "Votre conseiller en intelligence d’affaires",
-        "description": "Relie les tendances de toute votre entreprise pour révéler des analyses : comparez vos tarifs à plus de 14 000 artisans de l’UE, prédisez quels devis seront acceptés, anticipez la trésorerie à 90 jours et identifiez les types de chantiers offrant les meilleures marges."
+        "description": "Relie les tendances de toute votre entreprise pour révéler des analyses : comparez vos tarifs à ceux d’autres artisans de l’UE, prédisez quels devis seront acceptés, anticipez la trésorerie à 90 jours et identifiez les types de chantiers offrant les meilleures marges."
       }
     }
   },

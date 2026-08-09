@@ -133,15 +133,17 @@ function formatDate(date: Date): string {
 // COMPONENTS
 // ============================================
 
-function ComplianceScoreRing({ score, size = 100 }: { score: number; size?: number }) {
+function ComplianceScoreRing({ score, size = 100 }: { score: number | null; size?: number }) {
   const { t } = useTranslation();
   const getScoreColor = () => {
+    if (score === null) return SemanticColors.textTertiary;
     if (score >= 90) return SemanticColors.feedbackSuccess;
     if (score >= 70) return SemanticColors.feedbackWarning;
     return SemanticColors.feedbackError;
   };
 
   const getScoreLabel = () => {
+    if (score === null) return t('compliance.scoreUnknown', 'Nog niets bijgehouden');
     if (score >= 90) return t('compliance.scoreExcellent', 'Uitstekend');
     if (score >= 70) return t('compliance.scoreActionNeeded', 'Actie nodig');
     return t('compliance.scoreCritical', 'Kritiek');
@@ -150,7 +152,7 @@ function ComplianceScoreRing({ score, size = 100 }: { score: number; size?: numb
   return (
     <View style={[styles.scoreRing, { width: size, height: size }]}>
       <View style={[styles.scoreRingInner, { borderColor: getScoreColor() }]}>
-        <Text style={[styles.scoreValue, { color: getScoreColor() }]}>{score}</Text>
+        <Text style={[styles.scoreValue, { color: getScoreColor() }]}>{score === null ? '—' : score}</Text>
         <Text style={styles.scoreLabel}>{getScoreLabel()}</Text>
       </View>
     </View>
@@ -411,9 +413,15 @@ export default function CertificatenScreen() {
   const expiredCount = allItems.filter(i => i.status === 'expired' || i.status === 'cancelled').length;
   const totalCount = allItems.length;
 
-  // Compliance score (0-100)
-  const complianceScore = useMemo(() => {
-    if (totalCount === 0) return 100;
+  // Compliance score (0-100), or null when there is nothing to score.
+  //
+  // This used to return 100 for an empty record, so a contractor tracking no
+  // certificates at all was told "100 / Uitstekend" on the COMPLIANCE screen —
+  // the one surface where a false reassurance costs the most. Nothing tracked
+  // is not the same fact as everything valid. Same UNKNOWN-vs-zero treatment
+  // as the savings trend fabrication.
+  const complianceScore = useMemo<number | null>(() => {
+    if (totalCount === 0) return null;
     const score = Math.round(((validCount + (expiringCount * 0.5)) / totalCount) * 100);
     return Math.max(0, Math.min(100, score));
   }, [validCount, expiringCount, totalCount]);
