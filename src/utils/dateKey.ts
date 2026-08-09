@@ -34,3 +34,34 @@ export function localDateKey(date: Date): string {
 export function todayKey(): string {
   return localDateKey(new Date());
 }
+
+/**
+ * Monday 00:00 of the week containing `d`, local time.
+ *
+ * Monday-start because every market this app ships to is EU (and the UK),
+ * where the working week starts Monday — `getDay()` returns 0 for Sunday, so
+ * the naive `-getDay()` lands a week early every Sunday.
+ *
+ * Extracted from `weekly-overview.tsx`, which had the only copy. The week
+ * planner needs the same boundary, and two private copies of calendar
+ * arithmetic is exactly how this codebase ended up with screens disagreeing
+ * about which day it is.
+ */
+export function startOfWeek(d: Date): Date {
+  const out = new Date(d);
+  const day = out.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  out.setDate(out.getDate() + diff);
+  out.setHours(0, 0, 0, 0);
+  return out;
+}
+
+/** The seven local date keys of the week containing `d`, Monday first. */
+export function weekKeys(d: Date): string[] {
+  const start = startOfWeek(d);
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(start);
+    day.setDate(start.getDate() + i);
+    return localDateKey(day);
+  });
+}

@@ -21,7 +21,7 @@ import { TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useAppState } from '../../src/state/AppState';
-import { localDateKey } from '../../src/utils/dateKey';
+import { localDateKey, startOfWeek } from '../../src/utils/dateKey';
 import { bookedHours } from '../../src/utils/jobSlot';
 
 interface DayBucket {
@@ -30,15 +30,6 @@ interface DayBucket {
   dayNum: number;
   jobs: any[];
   totalHours: number;
-}
-
-function startOfWeek(d: Date): Date {
-  const out = new Date(d);
-  const day = out.getDay();
-  const diff = day === 0 ? -6 : 1 - day;     // Monday-start (EU)
-  out.setDate(out.getDate() + diff);
-  out.setHours(0, 0, 0, 0);
-  return out;
 }
 
 export default function WeeklyOverviewScreen() {

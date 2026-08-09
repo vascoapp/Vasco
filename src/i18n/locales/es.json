@@ -3008,7 +3008,7 @@
     "optimizedTitle": "Ruta optimizada",
     "optimizeFailed": "Optimización fallida",
     "openDragToApply": "Abre la planificación para aplicar este orden.",
-    "viewWeek": "Vista semanal",
+    "viewWeek": "Semana",
     "calendarPromptTitle": "¿Sincronizar con tu calendario?",
     "calendarPromptBody": "Muestra tus trabajos en el calendario del teléfono para no perderte ninguno.",
     "calendarPromptDismiss": "Ahora no",
@@ -3042,7 +3042,15 @@
     "oneSite": "1 obra",
     "crewUtil": "{{booked}} de {{capacity}}",
     "doubleBooked": "{{name}} ya está en un trabajo a esa hora",
-    "siteHop": "{{name}} está justo antes en {{from}}: cuenta el desplazamiento a {{to}}"
+    "siteHop": "{{name}} está justo antes en {{from}}: cuenta el desplazamiento a {{to}}",
+    "viewDay": "Día",
+    "weekOf": "Semana del {{date}}",
+    "gapTitle": "Sin asignar",
+    "gapLine": "{{project}} · {{milestone}} — {{trade}} sin planificar",
+    "gapNobody": "{{project}} · {{milestone}}: nadie asignado esta semana",
+    "daysBooked": "{{count}} días",
+    "oneDayBooked": "1 día",
+    "weekFree": "Libre toda la semana"
   },
   "marketInsights": {
     "title": "INSIGHTS DEL MERCADO",

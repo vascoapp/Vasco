@@ -3008,7 +3008,7 @@
     "optimizedTitle": "Geoptimaliseerde route",
     "optimizeFailed": "Optimalisatie mislukt",
     "openDragToApply": "Open de planning om deze volgorde toe te passen.",
-    "viewWeek": "Weekoverzicht",
+    "viewWeek": "Week",
     "calendarPromptTitle": "Synchroniseren met je agenda?",
     "calendarPromptBody": "Toon je klussen in je telefoonagenda zodat je nooit een mist.",
     "calendarPromptDismiss": "Niet nu",
@@ -3042,7 +3042,15 @@
     "oneSite": "1 werf",
     "crewUtil": "{{booked}} van {{capacity}}",
     "doubleBooked": "{{name}} staat op dat moment al op een klus",
-    "siteHop": "{{name}} zit vlak daarvoor op {{from}} — reken reistijd naar {{to}}"
+    "siteHop": "{{name}} zit vlak daarvoor op {{from}} — reken reistijd naar {{to}}",
+    "viewDay": "Dag",
+    "weekOf": "Week van {{date}}",
+    "gapTitle": "Niet bemand",
+    "gapLine": "{{project}} · {{milestone}} — geen {{trade}} ingepland",
+    "gapNobody": "{{project}} · {{milestone}} — deze week niemand ingepland",
+    "daysBooked": "{{count}} dagen",
+    "oneDayBooked": "1 dag",
+    "weekFree": "Hele week vrij"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",

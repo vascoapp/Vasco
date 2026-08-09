@@ -3024,7 +3024,7 @@
     "optimizedTitle": "Optimierte Route",
     "optimizeFailed": "Optimierung fehlgeschlagen",
     "openDragToApply": "Öffne den Tagesplan, um diese Reihenfolge anzuwenden.",
-    "viewWeek": "Wochenübersicht",
+    "viewWeek": "Woche",
     "calendarPromptTitle": "Mit deinem Kalender synchronisieren?",
     "calendarPromptBody": "Zeige deine Aufträge im Telefonkalender, damit du keinen verpasst.",
     "calendarPromptDismiss": "Nicht jetzt",
@@ -3058,7 +3058,15 @@
     "oneSite": "1 Baustelle",
     "crewUtil": "{{booked}} von {{capacity}}",
     "doubleBooked": "{{name}} ist zu dieser Zeit schon auf einem Auftrag",
-    "siteHop": "{{name}} ist kurz davor auf {{from}} — Fahrzeit nach {{to}} einplanen"
+    "siteHop": "{{name}} ist kurz davor auf {{from}} — Fahrzeit nach {{to}} einplanen",
+    "viewDay": "Tag",
+    "weekOf": "Woche vom {{date}}",
+    "gapTitle": "Nicht besetzt",
+    "gapLine": "{{project}} · {{milestone}} — {{trade}} nicht eingeplant",
+    "gapNobody": "{{project}} · {{milestone}} — diese Woche niemand eingeplant",
+    "daysBooked": "{{count}} Tage",
+    "oneDayBooked": "1 Tag",
+    "weekFree": "Ganze Woche frei"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",

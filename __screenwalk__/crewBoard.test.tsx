@@ -15,8 +15,11 @@ import { todayKey } from '../src/utils/dateKey';
 const today = todayKey();
 
 const WORKERS = [
-  { id: 'w-1', name: 'Ahmed', role: 'lead_tech', isActive: true, color: '#3B82F6', createdAt: '', updatedAt: '' },
-  { id: 'w-2', name: 'Sanne', role: 'tech', isActive: true, color: '#10B981', createdAt: '', updatedAt: '' },
+  // Trades matter: a worker with no trade recorded is treated as able to cover
+  // anything (a blank field is not evidence the crew cannot do the work), so a
+  // staffing gap can only be asserted against people who HAVE a trade.
+  { id: 'w-1', name: 'Ahmed', role: 'lead_tech', trade: 'plumbing', isActive: true, color: '#3B82F6', createdAt: '', updatedAt: '' },
+  { id: 'w-2', name: 'Sanne', role: 'tech', trade: 'painting', isActive: true, color: '#10B981', createdAt: '', updatedAt: '' },
   // Inactive: kept for historical records, must NOT get a lane.
   { id: 'w-3', name: 'Oud-collega', role: 'tech', isActive: false, color: '#EC4899', createdAt: '', updatedAt: '' },
 ];
@@ -133,6 +136,42 @@ describeBoard('day planner with a crew', () => {
     const text = r.texts.join(' | ');
     expect(text).toContain('Badkamer Jansen');
     expect(text).toContain('Niet toegewezen');
+    teardown(r);
+  });
+
+  it('week view shows who is on which site on which day, in the app locale', async () => {
+    await seed(true);
+    const r = await walkScreen(Screen(), { as: 'aannemer', params: { view: 'week' }, settlePasses: 16 });
+    const text = r.texts.join(' | ');
+    // Dutch weekday headers. `Intl` with an undefined locale follows the
+    // DEVICE and printed "Mon Tue Wed" across a Dutch planner — the same
+    // device-locale defect this screen's header was fixed for.
+    expect(text).toMatch(/\bma\b/);
+    expect(text).toMatch(/\bzo\b/);
+    expect(text).not.toMatch(/\bMon\b/);
+    // Ahmed works Amsterdam and Utrecht this week; the cells name the site.
+    expect(text).toContain('Amsterdam');
+    teardown(r);
+  });
+
+  it('warns when a milestone week has nobody of that trade booked', async () => {
+    // Project starts this week, week-1 milestone needs a tiler, and the only
+    // person on it is a plumber. ProjectMilestone has carried trade+weekNumber
+    // since it was written and nothing read it.
+    const { startOfWeek, localDateKey } = require('../src/utils/dateKey');
+    await seed(true);
+    await AsyncStorage.setItem('@vasco_projects', JSON.stringify([{
+      id: 'p-1', title: 'Badkamer renovatie', customerId: 'c1', customerName: 'Fam. Jansen',
+      status: 'active', startDate: localDateKey(startOfWeek(new Date())),
+      totalBudget: 12500, totalQuoted: 12500, totalInvoiced: 0, totalPaid: 0,
+      milestones: [{ id: 'm1', title: 'Tegelwerk', trade: 'tiling', weekNumber: 1, completed: false, jobIds: [] }],
+      billingTerms: [], retentionPercent: 0, changeOrders: [],
+      jobIds: ['j-a'], quoteIds: [], invoiceIds: [], subcontractorIds: [], createdAt: '', updatedAt: '',
+    }]));
+    const r = await walkScreen(Screen(), { as: 'aannemer', params: { view: 'week' }, settlePasses: 16 });
+    const text = r.texts.join(' | ');
+    expect(text).toContain('Niet bemand');
+    expect(text).toContain('Tegelwerk');
     teardown(r);
   });
 

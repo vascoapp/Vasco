@@ -113,6 +113,13 @@ export function formatDayMonth(date: Date | string, country: Country = 'NL'): st
   return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(d);
 }
 
+/** "ma" / "Mon" — short weekday, for column headers. */
+export function formatWeekdayShort(date: Date | string, country: Country = 'NL'): string {
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(d);
+}
+
 /** "zondag 9 augustus" / "Sunday, August 9" — the day-planner header. */
 export function formatWeekdayDayMonth(date: Date | string, country: Country = 'NL'): string {
   const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;

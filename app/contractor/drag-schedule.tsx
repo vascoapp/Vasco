@@ -5,9 +5,9 @@
 // =============================================================================
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Dimensions, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { todayKey } from '../../src/utils/dateKey';
+import { todayKey, weekKeys, startOfWeek } from '../../src/utils/dateKey';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -24,8 +24,10 @@ import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/c
 import { detectConflicts } from '../../src/services/scheduleConflictService';
 import type { Job } from '../../src/domain/jobs';
 import type { Worker } from '../../src/domain/worker';
+import { staffingGapsForWeek, crewWeekLoad } from '../../src/services/crewWeekService';
+import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatWeekdayDayMonth } from '../../src/i18n/formatting';
+import { formatWeekdayDayMonth, formatDayMonth, formatWeekdayShort } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 
 const CAL_PROMPT_DISMISSED_KEY = '@vasco_calendar_prompt_dismissed';
@@ -59,9 +61,6 @@ async function maybePromptCalendarSync(
     // Best-effort — never block scheduling
   }
 }
-
-type IconName = keyof typeof Ionicons.glyphMap;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 7); // 07:00 - 18:00
 const SLOT_HEIGHT = 60;
@@ -117,10 +116,23 @@ export default function DragScheduleScreen() {
   // Solo contractors have no crew, so the per-person board would be one lane
   // labelled with their own name — noise. They keep the original timeline.
   const crewMode = activeWorkers.length > 0;
+  // Shared enum→label helper (src/i18n/entityLabels.ts) — the milestone's
+  // trade is a slug like 'tiling' and must not reach the strip raw.
+  const { tradeLabel } = useMemo(() => makeEntityLabels(t), [t]);
   // R21: when entered from queue executor with ?jobId=, highlight the
   // suggested job in the unassigned pool so the contractor's eye lands on
   // it instantly. Was R1 deferral (schedule_suggestion didn't pre-position).
-  const { jobId: focusJobId } = useLocalSearchParams<{ jobId?: string }>();
+  // `?view=week` so the week board is addressable — a queue item or
+  // notification about next week's staffing can land the contractor on the
+  // view that answers it, instead of on today.
+  const { jobId: focusJobId, view: viewParam } = useLocalSearchParams<{ jobId?: string; view?: string }>();
+
+  // Day is a call-out model. A renovation crew sits on one address for a week,
+  // and the plan that matters is trade order across weeks — so the week view
+  // is where an aannemer answers "is this staffed?". Day stays the default
+  // because it is what you open on the morning itself.
+  const [viewMode, setViewMode] = useState<'day' | 'week'>(viewParam === 'week' ? 'week' : 'day');
+
 
   // localDateKey, not toISOString(): in UTC+x the UTC date is still
   // yesterday between local midnight and 02:00, so the planner showed the
@@ -223,6 +235,38 @@ export default function DragScheduleScreen() {
     }
     return rows;
   }, [crewMode, activeWorkers, schedule, t]);
+
+  // ─── Week view ───────────────────────────────────────────────────────────
+  const { projects } = useAppState();
+  const weekDayKeys = useMemo(() => weekKeys(new Date()), []);
+  const weekLoad = useMemo(
+    () => crewWeekLoad({
+      jobs: jobs as any,
+      weekDayKeys,
+      hoursFor: (j: any) => slotHoursOr(j, 2),
+    }),
+    [jobs, weekDayKeys],
+  );
+  // ProjectMilestone has carried `trade` + `weekNumber` since it was written
+  // and nothing read it, so a plan could reach the week that needs a tiler
+  // with no tiler booked and the app said nothing.
+  const gaps = useMemo(
+    () => (crewMode
+      ? staffingGapsForWeek({ projects: projects as any, jobs: jobs as any, workers: activeWorkers as any, weekDayKeys })
+      : []),
+    [crewMode, projects, jobs, activeWorkers, weekDayKeys],
+  );
+  const weekLabel = useMemo(
+    () => t('schedule.weekOf', { date: formatDayMonth(startOfWeek(new Date()), country) }),
+    [t, country],
+  );
+  // formatWeekdayShort, not Intl with an undefined locale: `undefined` means
+  // the DEVICE, which printed "Mon Tue Wed" across a Dutch planner. Exactly the
+  // bug this file's own header comment was fixed for one round earlier.
+  const weekdayNames = useMemo(
+    () => weekDayKeys.map((k) => formatWeekdayShort(new Date(`${k}T12:00:00`), country)),
+    [weekDayKeys, country],
+  );
 
   const totalScheduledHours = schedule.reduce((sum, j) => sum + j.duration, 0);
   // Capacity is the CREW's day, not one person's. With two crews booked 5h and
@@ -561,6 +605,49 @@ export default function DragScheduleScreen() {
         </Pressable>
       </View>
 
+      {/* Day / Week. Only when there is a crew: a solo contractor has no
+          staffing question to answer, so the toggle would be a second way to
+          look at the same one person. */}
+      {crewMode && (
+        <View style={styles.viewToggle}>
+          {(['day', 'week'] as const).map((mode) => (
+            <Pressable
+              key={mode}
+              onPress={() => setViewMode(mode)}
+              style={[styles.viewToggleBtn, viewMode === mode && styles.viewToggleBtnActive]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: viewMode === mode }}
+            >
+              <Text style={[styles.viewToggleText, viewMode === mode && styles.viewToggleTextActive]}>
+                {mode === 'day' ? t('schedule.viewDay') : t('schedule.viewWeek')}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      {/* Staffing gaps — the plan says a trade is due this week and nobody of
+          that trade is on it. Shown in week view, where it is actionable. */}
+      {crewMode && viewMode === 'week' && gaps.length > 0 && (
+        <View style={styles.gapCard}>
+          <View style={styles.gapHeader}>
+            <Ionicons name="warning-outline" size={16} color={Palette.orange500} />
+            <Text style={styles.gapTitle}>{t('schedule.gapTitle')}</Text>
+          </View>
+          {gaps.slice(0, 4).map((gap) => (
+            <Text key={`${gap.projectId}-${gap.milestoneTitle}`} style={styles.gapLine} numberOfLines={2}>
+              {gap.nobodyOnProject
+                ? t('schedule.gapNobody', { project: gap.projectTitle, milestone: gap.milestoneTitle })
+                : t('schedule.gapLine', {
+                    project: gap.projectTitle,
+                    milestone: gap.milestoneTitle,
+                    trade: tradeLabel(gap.trade),
+                  })}
+            </Text>
+          ))}
+        </View>
+      )}
+
       {/* Utilization bar */}
       <View style={styles.utilBar}>
         <View style={styles.utilInfo}>
@@ -630,6 +717,71 @@ export default function DragScheduleScreen() {
         </View>
       )}
 
+      {crewMode && viewMode === 'week' ? (
+        <ScrollView style={styles.timeline} showsVerticalScrollIndicator={false}>
+          <Text style={styles.weekLabel}>{weekLabel}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View>
+              <View style={styles.weekHeaderRow}>
+                <View style={{ width: 96 }} />
+                {weekdayNames.map((name, i) => (
+                  <Text key={weekDayKeys[i]} style={styles.weekDayName}>{name}</Text>
+                ))}
+              </View>
+              {activeWorkers.map((w) => {
+                const load = weekLoad.get(w.id);
+                const days = load?.days ?? new Set<string>();
+                const sites = load?.sites ?? new Set<string>();
+                return (
+                  <View key={w.id} style={styles.weekRow}>
+                    <View style={styles.weekWho}>
+                      <Text style={styles.weekWhoName} numberOfLines={1}>{w.name}</Text>
+                      <Text style={styles.weekWhoMeta} numberOfLines={1}>
+                        {days.size === 0
+                          ? t('schedule.weekFree')
+                          : days.size === 1
+                            ? t('schedule.oneDayBooked')
+                            : t('schedule.daysBooked', { count: days.size })}
+                      </Text>
+                      {sites.size > 0 && (
+                        <Text style={styles.weekWhoSites} numberOfLines={1}>
+                          {sites.size === 1
+                            ? (Array.from(sites)[0] as string)
+                            : t('schedule.sitesToday', { count: sites.size })}
+                        </Text>
+                      )}
+                    </View>
+                    {weekDayKeys.map((key) => {
+                      const dayJobs = (jobs as any[]).filter(
+                        (j) => j.scheduledDate === key && j.assignedWorkerId === w.id,
+                      );
+                      return (
+                        <View key={key} style={styles.weekCell}>
+                          {dayJobs.slice(0, 2).map((j) => (
+                            <View
+                              key={j.id}
+                              style={[styles.weekChip, { backgroundColor: (w.color ?? Palette.hermesOrange) + '22', borderLeftColor: w.color ?? Palette.hermesOrange }]}
+                            >
+                              <Text style={styles.weekChipText} numberOfLines={1}>
+                                {j.address?.city || j.title}
+                              </Text>
+                            </View>
+                          ))}
+                          {dayJobs.length > 2 && (
+                            <Text style={styles.weekMore}>+{dayJobs.length - 2}</Text>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                );
+              })}
+            </View>
+          </ScrollView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      ) : (
+      <>
       {/* Crew board — one column per person, hours down the side.
           Only for contractors who actually have a crew; a solo contractor
           falls through to the single-lane timeline below, unchanged. */}
@@ -750,6 +902,8 @@ export default function DragScheduleScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
       )}
+      </>
+      )}
     </View>
   );
 }
@@ -810,6 +964,46 @@ const styles = StyleSheet.create({
   blockCustomer: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 2 },
   blockTime: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   poolSiteRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  viewToggle: {
+    flexDirection: 'row', gap: 6, marginHorizontal: Spacing.lg, marginBottom: 8,
+    backgroundColor: SemanticColors.surfaceSecondary, borderRadius: 10, padding: 3,
+  },
+  viewToggleBtn: { flex: 1, paddingVertical: 7, borderRadius: 8, alignItems: 'center' },
+  viewToggleBtnActive: { backgroundColor: SemanticColors.surfacePrimary },
+  viewToggleText: { fontSize: 13, fontWeight: '600', color: SemanticColors.textSecondary },
+  viewToggleTextActive: { color: SemanticColors.textPrimary },
+  gapCard: {
+    marginHorizontal: Spacing.lg, marginBottom: 10, padding: 12,
+    borderRadius: 12, borderLeftWidth: 3, borderLeftColor: Palette.orange500,
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  gapHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  gapTitle: { fontSize: 13, fontWeight: '700', color: SemanticColors.textPrimary },
+  gapLine: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
+  weekLabel: {
+    fontSize: 13, fontWeight: '600', color: SemanticColors.textSecondary,
+    marginHorizontal: Spacing.lg, marginBottom: 8,
+  },
+  weekHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingBottom: 6 },
+  weekDayName: {
+    width: 56, textAlign: 'center', fontSize: 11,
+    color: SemanticColors.textTertiary, textTransform: 'uppercase',
+  },
+  weekRow: {
+    flexDirection: 'row', alignItems: 'stretch', minHeight: 56,
+    borderTopWidth: 1, borderTopColor: SemanticColors.borderMuted,
+  },
+  weekWho: { width: 96, paddingVertical: 8, paddingRight: 6 },
+  weekWhoName: { fontSize: 13, fontWeight: '700', color: SemanticColors.textPrimary },
+  weekWhoMeta: { fontSize: 11, color: SemanticColors.textSecondary, marginTop: 1 },
+  weekWhoSites: { fontSize: 11, color: SemanticColors.textTertiary, marginTop: 1 },
+  weekCell: {
+    width: 56, paddingVertical: 6, paddingHorizontal: 2, gap: 3,
+    borderLeftWidth: 1, borderLeftColor: SemanticColors.borderMuted,
+  },
+  weekChip: { borderLeftWidth: 2, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 2 },
+  weekChipText: { fontSize: 9, color: SemanticColors.textPrimary },
+  weekMore: { fontSize: 9, color: SemanticColors.textTertiary, textAlign: 'center' },
   laneHeaderRow: { flexDirection: 'row', paddingBottom: 6 },
   laneHeader: {
     width: LANE_WIDTH, paddingHorizontal: 8, paddingVertical: 6,

@@ -3008,7 +3008,7 @@
     "optimizedTitle": "Itinéraire optimisé",
     "optimizeFailed": "Optimisation échouée",
     "openDragToApply": "Ouvrez la planification pour appliquer cet ordre.",
-    "viewWeek": "Vue hebdomadaire",
+    "viewWeek": "Semaine",
     "calendarPromptTitle": "Synchroniser avec votre agenda ?",
     "calendarPromptBody": "Affichez vos chantiers dans votre agenda pour ne plus en manquer.",
     "calendarPromptDismiss": "Plus tard",
@@ -3042,7 +3042,15 @@
     "oneSite": "1 chantier",
     "crewUtil": "{{booked}} sur {{capacity}}",
     "doubleBooked": "{{name}} est déjà sur un chantier à cette heure",
-    "siteHop": "{{name}} est juste avant sur {{from}} — prévoyez le trajet vers {{to}}"
+    "siteHop": "{{name}} est juste avant sur {{from}} — prévoyez le trajet vers {{to}}",
+    "viewDay": "Jour",
+    "weekOf": "Semaine du {{date}}",
+    "gapTitle": "Non pourvu",
+    "gapLine": "{{project}} · {{milestone}} — {{trade}} non planifié",
+    "gapNobody": "{{project}} · {{milestone}} — personne de prévu cette semaine",
+    "daysBooked": "{{count}} jours",
+    "oneDayBooked": "1 jour",
+    "weekFree": "Libre toute la semaine"
   },
   "marketInsights": {
     "title": "INSIGHTS DU MARCHÉ",

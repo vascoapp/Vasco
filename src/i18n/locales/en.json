@@ -3024,7 +3024,7 @@
     "optimizedTitle": "Optimized route",
     "optimizeFailed": "Optimization failed",
     "openDragToApply": "Open the drag schedule to apply this order.",
-    "viewWeek": "Week overview",
+    "viewWeek": "Week",
     "calendarPromptTitle": "Sync to your calendar?",
     "calendarPromptBody": "Show your jobs in your phone calendar so you never miss one.",
     "calendarPromptDismiss": "Not now",
@@ -3058,7 +3058,15 @@
     "oneSite": "1 site",
     "crewUtil": "{{booked}} of {{capacity}}",
     "doubleBooked": "{{name}} is already on a job at that time",
-    "siteHop": "{{name}} is at {{from}} right before this — allow travel time to {{to}}"
+    "siteHop": "{{name}} is at {{from}} right before this — allow travel time to {{to}}",
+    "viewDay": "Day",
+    "weekOf": "Week of {{date}}",
+    "gapTitle": "Not staffed",
+    "gapLine": "{{project}} · {{milestone}} — no {{trade}} booked",
+    "gapNobody": "{{project}} · {{milestone}} — nobody booked this week",
+    "daysBooked": "{{count}} days",
+    "oneDayBooked": "1 day",
+    "weekFree": "Free all week"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",
