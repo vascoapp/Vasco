@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState } from 'react';
+import { formatTimeAuto } from '../../i18n/formatting';
 import { View, Text, StyleSheet, Pressable, TextInput, Share, ActivityIndicator, Alert } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
@@ -124,7 +125,7 @@ export function VascoCard({
     collapsedSummary = t('vasco.findingsCount', { defaultValue: '{{count}} findings', count: findingsCount });
   } else {
     const checkedTime = briefing?.generatedAt
-      ? new Date(briefing.generatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+      ? formatTimeAuto(new Date(briefing.generatedAt))
       : '';
     collapsedSummary = checkedTime
       ? t('vasco.allClearAt', { defaultValue: 'All clear — checked at {{time}}', time: checkedTime })

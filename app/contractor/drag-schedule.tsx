@@ -23,6 +23,9 @@ import { shareAllScheduledJobs } from '../../src/services/calendarExportService'
 import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/calendarSyncService';
 import { detectConflicts } from '../../src/services/scheduleConflictService';
 import type { Job } from '../../src/domain/jobs';
+import { useAuth } from '../../src/context/AuthContext';
+import { formatWeekdayDayMonth } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 
 const CAL_PROMPT_DISMISSED_KEY = '@vasco_calendar_prompt_dismissed';
 
@@ -85,6 +88,8 @@ const COLORS = [Palette.hermesOrange, '#3B82F6', '#10B981', '#EC4899', '#14B8A6'
 
 export default function DragScheduleScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
   const routeOptimizationEnabled = useFeatureFlag('route_optimization');
   const router = useRouter();
@@ -161,7 +166,9 @@ export default function DragScheduleScreen() {
   const [draggedJob, setDraggedJob] = useState<string | null>(null);
   const [dropTargetHour, setDropTargetHour] = useState<number | null>(null);
 
-  const today = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  // App locale, not device: this header read "Sunday, August 9" on a Dutch
+  // planner whose every other string was Dutch.
+  const today = formatWeekdayDayMonth(new Date(), country);
 
   const totalScheduledHours = schedule.reduce((sum, j) => sum + j.duration, 0);
   const utilizationPct = Math.round((totalScheduledHours / 10) * 100); // 10h workday

@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCurrentUserId } from '../lib/currentUser';
 import i18n from '../i18n/i18n';
+import { applySavedLanguage } from '../i18n/savedLanguage';
 import { getScanHistory, getFirstScanInsights } from './invoiceScanService';
 import { getTradeBaselines } from './cohortBenchmarkService';
 import { getCustomerIntelligence } from '../intelligence/tradeContext';
@@ -703,6 +704,14 @@ export function queueEntityLabel(
 
 export async function populateQueue(context: PopulateQueueContext): Promise<number> {
   let added = 0;
+
+  // Every title/description below is resolved HERE and then PERSISTED into
+  // @vasco_ai_queue by addToQueue — nothing re-translates them on read. So the
+  // language must be settled before the first t(), or the card keeps the
+  // device language for the rest of its life. i18n.ts boots on the device
+  // locale and AuthContext applies the saved preference asynchronously; the
+  // scheduler can run inside that gap.
+  await applySavedLanguage();
 
   const t = i18n.t.bind(i18n);
   const now = Date.now();

@@ -103,7 +103,14 @@ export default function AcceptQuoteScreen() {
         }
       } else {
         setStatus('error');
-        setMessage(result.error || t('accept.couldNotProcess', 'Could not process approval'));
+        // errorKey, not result.error: the latter is an English sentence the
+        // service builds for logs, and rendering it here showed the CUSTOMER
+        // "Quote already accepted" in every locale.
+        setMessage(
+          result.errorKey
+            ? t(result.errorKey)
+            : t('accept.couldNotProcess', 'Could not process approval'),
+        );
       }
     }).catch(() => {
       setStatus('error');

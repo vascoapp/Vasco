@@ -27,7 +27,7 @@ import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/int
 import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { getVATRate } from '../../src/constants/taxRates';
-import { formatCurrency as fmtCurrency } from '../../src/i18n/formatting';
+import { formatCurrency as fmtCurrency, formatDate as fmtDate } from '../../src/i18n/formatting';
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   draft: { bg: SemanticColors.surfaceSecondary, fg: SemanticColors.textSecondary },
@@ -91,7 +91,7 @@ export default function QuoteDetailScreen() {
     Boolean(priceRisk?.lineItem) && suggestedUnitPrice > 0 && currentUnitPrice > suggestedUnitPrice;
 
   const validUntilDate = new Date(Date.now() + 30 * MS_PER_DAY);
-  const validUntilLabel = validUntilDate.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+  const validUntilLabel = fmtDate(validUntilDate, country);
   const statusColors = STATUS_COLORS[quote.status] ?? STATUS_COLORS.draft;
 
   return (
@@ -284,7 +284,7 @@ export default function QuoteDetailScreen() {
                 count: engagement.portalOpenedCount,
                 minutes: Math.round(engagement.totalEngagementSeconds / 60) || 1,
               })}
-              {engagement.lastSeenAt ? ` · ${t('quotes.lastSeen', 'last seen')} ${new Date(engagement.lastSeenAt).toLocaleDateString()}` : ''}
+              {engagement.lastSeenAt ? ` · ${t('quotes.lastSeen', 'last seen')} ${fmtDate(new Date(engagement.lastSeenAt), country)}` : ''}
             </Text>
             <View style={styles.engagementSignals}>
               {engagement.priceExpandedCount > 0 && (
@@ -325,7 +325,7 @@ export default function QuoteDetailScreen() {
                 quoteNumber: quote.id,
                 customerName: customerDisplayName ?? t('jobs.client', 'Client'),
                 jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
-                issueDate: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
+                issueDate: fmtDate(new Date(), country),
                 validUntil: validUntilLabel,
                 lineItems: items.map((i) => ({ description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, vatRate: vpct })),
                 subtotal: sub,

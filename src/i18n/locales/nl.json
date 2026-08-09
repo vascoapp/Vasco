@@ -2865,7 +2865,10 @@
     "quoteAccepted": "Offerte geaccepteerd! Je aannemer plant het werk in.",
     "acceptedButFailed": "Offerte geaccepteerd, maar klusaanmaak mislukte. Je aannemer is op de hoogte gebracht.",
     "couldNotProcess": "Goedkeuring kon niet verwerkt worden",
-    "somethingWentWrong": "Er ging iets mis. Probeer het opnieuw."
+    "somethingWentWrong": "Er ging iets mis. Probeer het opnieuw.",
+    "linkExpired": "Deze link is verlopen. Vraag je vakman om een nieuwe.",
+    "processingFailed": "We konden dit niet verwerken. Probeer het opnieuw.",
+    "alreadyDecided": "Deze offerte is al beantwoord."
   },
   "siteOps": {
     "dispatch": "Dispatch",
@@ -4043,6 +4046,12 @@
       "send_start_notification": "Startbericht sturen",
       "send_urgent_reminder": "Dringende herinnering sturen",
       "send_welcome": "Welkomstbericht sturen"
+    },
+    "channels": {
+      "email": "E-mail",
+      "sms": "Sms",
+      "push": "Push",
+      "in_app": "In de app"
     }
   },
   "packDiscovery": {
@@ -4569,7 +4578,24 @@
     "days_one": "{{count}} dag",
     "days_other": "{{count}} dagen",
     "enabledMethods": "Ingeschakelde betaalmethoden:",
-    "openInvoice": "Factuur openen"
+    "openInvoice": "Factuur openen",
+    "title": "Betalingen",
+    "subtitle": "iDEAL & Mollie",
+    "createPaymentLink": "Betaallink aanmaken",
+    "paidVia": "Betaald via",
+    "paymentDate": "Datum",
+    "netReceived": "Netto ontvangen",
+    "outstanding": "Openstaand",
+    "overdue": "Achterstallig",
+    "needsAttention": "Vraagt aandacht",
+    "allCaughtUp": "Alles bijgewerkt",
+    "noOutstanding": "Geen openstaande facturen",
+    "paymentMethods": "Betaalmethoden",
+    "tabSettings": "Instellingen",
+    "invoiceCount_one": "{{count}} factuur",
+    "invoiceCount_other": "{{count}} facturen",
+    "daysOverdue": "{{count}}d achterstallig",
+    "dueInDays": "Over {{count}}d"
   },
   "leads": {
     "noHotLeads": "Op dit moment geen hot leads"

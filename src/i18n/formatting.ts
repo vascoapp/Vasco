@@ -65,7 +65,7 @@ export function formatCurrencyCode(
 }
 
 export function formatDate(date: Date | string, country: Country = 'NL'): string {
-  const { locale } = COUNTRY_CONFIG[country];
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
   const d = typeof date === 'string' ? new Date(date) : date;
   return new Intl.DateTimeFormat(locale, {
     day: 'numeric',
@@ -75,12 +75,52 @@ export function formatDate(date: Date | string, country: Country = 'NL'): string
 }
 
 export function formatDateShort(date: Date | string, country: Country = 'NL'): string {
-  const { locale } = COUNTRY_CONFIG[country];
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
   const d = typeof date === 'string' ? new Date(date) : date;
   return new Intl.DateTimeFormat(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+  }).format(d);
+}
+
+// ─── Clock + calendar in the CONTRACTOR's locale, not the device's ──────────
+//
+// There was no time formatter here at all, so every call site reached for
+// `toLocaleTimeString(undefined, …)` / `toLocaleDateString(undefined, …)`,
+// which follows the DEVICE. A Dutch contractor holding an English phone read
+// "01:30 PM" on a screen that says "3u30" one line below, and "Geldig tot
+// September 8, 2026" under a Dutch heading. On a nl-NL device both render
+// correctly, which is why walking the simulator never showed it.
+//
+// `country` is the contractor's, from `useAuth().user.country` — the same
+// argument formatCurrency/formatDate already take.
+
+/** "13:30" everywhere in the EU6; "1:30 PM" for US/UK. */
+export function formatTime(date: Date | string, country: Country = 'NL'): string {
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
+}
+
+/** "12 jul" / "Jul 12" — day + short month, no year. */
+export function formatDayMonth(date: Date | string, country: Country = 'NL'): string {
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(d);
+}
+
+/** "zondag 9 augustus" / "Sunday, August 9" — the day-planner header. */
+export function formatWeekdayDayMonth(date: Date | string, country: Country = 'NL'): string {
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   }).format(d);
 }
 
@@ -182,6 +222,33 @@ export function formatMoney(amount: number): string {
 export function formatMoney2(amount: number): string {
   const c = (getCurrentCountry() as Country) ?? 'NL';
   return formatCurrency(amount, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+/**
+ * Date siblings of formatMoney, for call sites that cannot reach `country`:
+ * module-level helpers and leaf subcomponents that are not passed the user.
+ * Prefer the explicit `formatDate*(date, country)` forms in a component that
+ * already has `useAuth()`; these exist so the alternative is never
+ * `toLocaleDateString(undefined, …)`, which follows the DEVICE.
+ */
+export function formatDateAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatDate(date, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+export function formatDateShortAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatDateShort(date, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+export function formatDayMonthAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatDayMonth(date, COUNTRY_CONFIG[c] ? c : 'NL');
+}
+
+export function formatTimeAuto(date: Date | string): string {
+  const c = (getCurrentCountry() as Country) ?? 'NL';
+  return formatTime(date, COUNTRY_CONFIG[c] ? c : 'NL');
 }
 
 /**

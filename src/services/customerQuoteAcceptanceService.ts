@@ -175,10 +175,30 @@ export async function createAcceptanceLink(quote: {
 // Process customer acceptance
 // ---------------------------------------------------------------------------
 
+/**
+ * i18n key for a failure the CUSTOMER reads.
+ *
+ * These used to be English sentences built here and rendered verbatim by
+ * `app/accept/[token].tsx`, so the customer of a Dutch contractor was told
+ * "Quote already accepted" — and, when the row carried no status,
+ * "Quote already undefined". A service has no locale; the screen does. The
+ * English `error` stays for logs and existing callers.
+ *
+ * Note there is deliberately no status in `alreadyDecided`: interpolating a
+ * raw enum into customer copy is what produced the `undefined`, and "already
+ * answered" is what the customer needs to know either way.
+ */
+export type AcceptanceErrorKey =
+  | 'accept.invalidLink'
+  | 'accept.linkExpired'
+  | 'accept.processingFailed'
+  | 'accept.alreadyDecided';
+
 export async function processAcceptance(token: string): Promise<{
   success: boolean;
   link?: AcceptanceLink;
   error?: string;
+  errorKey?: AcceptanceErrorKey;
 }> {
   // R66 round 20: BE-first. The customer tapping this link is on a different
   // device than the contractor — AsyncStorage on the customer device is
@@ -187,15 +207,15 @@ export async function processAcceptance(token: string): Promise<{
   if (isSupabaseConfigured) {
     try {
       const existing = await getAcceptanceLinkByToken(token);
-      if (!existing) return { success: false, error: 'Invalid link' };
-      if (existing.status !== 'pending') return { success: false, error: `Quote already ${existing.status}` };
+      if (!existing) return { success: false, error: 'Invalid link', errorKey: 'accept.invalidLink' };
+      if (existing.status !== 'pending') return { success: false, error: `Quote already ${existing.status}`, errorKey: 'accept.alreadyDecided' };
       if (new Date(existing.expires_at) < new Date()) {
         // Don't mutate to 'expired' from anon — RLS would reject (CHECK
         // accepts only accepted/rejected). Just surface to the customer.
-        return { success: false, error: 'Link expired' };
+        return { success: false, error: 'Link expired', errorKey: 'accept.linkExpired' };
       }
       const updated = await decideAcceptanceLink(token, 'accepted');
-      if (!updated) return { success: false, error: 'Processing failed' };
+      if (!updated) return { success: false, error: 'Processing failed', errorKey: 'accept.processingFailed' };
       return { success: true, link: rowToLink(updated) };
     } catch (err) {
       logWarn('customerQuoteAcceptance', `BE processAcceptance failed: ${err}`);
@@ -209,12 +229,12 @@ export async function processAcceptance(token: string): Promise<{
     const links: AcceptanceLink[] = raw ? JSON.parse(raw) : [];
     const link = links.find(l => l.token === token);
 
-    if (!link) return { success: false, error: 'Invalid link' };
-    if (link.status !== 'pending') return { success: false, error: `Quote already ${link.status}` };
+    if (!link) return { success: false, error: 'Invalid link', errorKey: 'accept.invalidLink' };
+    if (link.status !== 'pending') return { success: false, error: `Quote already ${link.status}`, errorKey: 'accept.alreadyDecided' };
     if (new Date(link.expiresAt) < new Date()) {
       link.status = 'expired';
       await AsyncStorage.setItem(ACCEPTANCE_KEY, JSON.stringify(links));
-      return { success: false, error: 'Link expired' };
+      return { success: false, error: 'Link expired', errorKey: 'accept.linkExpired' };
     }
 
     link.status = 'accepted';
@@ -222,7 +242,7 @@ export async function processAcceptance(token: string): Promise<{
     await AsyncStorage.setItem(ACCEPTANCE_KEY, JSON.stringify(links));
     return { success: true, link };
   } catch {
-    return { success: false, error: 'Processing failed' };
+    return { success: false, error: 'Processing failed', errorKey: 'accept.processingFailed' };
   }
 }
 
@@ -234,19 +254,20 @@ export async function rejectAcceptance(token: string, reason?: string): Promise<
   success: boolean;
   link?: AcceptanceLink;
   error?: string;
+  errorKey?: AcceptanceErrorKey;
 }> {
   // R66 round 20: BE-first, same shape as processAcceptance. Reason is
   // passed through to the dataProvider which writes it into decline_reason.
   if (isSupabaseConfigured) {
     try {
       const existing = await getAcceptanceLinkByToken(token);
-      if (!existing) return { success: false, error: 'Invalid link' };
-      if (existing.status !== 'pending') return { success: false, error: `Quote already ${existing.status}` };
+      if (!existing) return { success: false, error: 'Invalid link', errorKey: 'accept.invalidLink' };
+      if (existing.status !== 'pending') return { success: false, error: `Quote already ${existing.status}`, errorKey: 'accept.alreadyDecided' };
       if (new Date(existing.expires_at) < new Date()) {
-        return { success: false, error: 'Link expired' };
+        return { success: false, error: 'Link expired', errorKey: 'accept.linkExpired' };
       }
       const updated = await decideAcceptanceLink(token, 'rejected', reason);
-      if (!updated) return { success: false, error: 'Processing failed' };
+      if (!updated) return { success: false, error: 'Processing failed', errorKey: 'accept.processingFailed' };
       return { success: true, link: rowToLink(updated) };
     } catch (err) {
       logWarn('customerQuoteAcceptance', `BE rejectAcceptance failed: ${err}`);
@@ -257,12 +278,12 @@ export async function rejectAcceptance(token: string, reason?: string): Promise<
     const links: AcceptanceLink[] = raw ? JSON.parse(raw) : [];
     const link = links.find(l => l.token === token);
 
-    if (!link) return { success: false, error: 'Invalid link' };
-    if (link.status !== 'pending') return { success: false, error: `Quote already ${link.status}` };
+    if (!link) return { success: false, error: 'Invalid link', errorKey: 'accept.invalidLink' };
+    if (link.status !== 'pending') return { success: false, error: `Quote already ${link.status}`, errorKey: 'accept.alreadyDecided' };
     if (new Date(link.expiresAt) < new Date()) {
       link.status = 'expired';
       await AsyncStorage.setItem(ACCEPTANCE_KEY, JSON.stringify(links));
-      return { success: false, error: 'Link expired' };
+      return { success: false, error: 'Link expired', errorKey: 'accept.linkExpired' };
     }
 
     link.status = 'rejected';
@@ -270,7 +291,7 @@ export async function rejectAcceptance(token: string, reason?: string): Promise<
     await AsyncStorage.setItem(ACCEPTANCE_KEY, JSON.stringify(links));
     return { success: true, link };
   } catch {
-    return { success: false, error: 'Processing failed' };
+    return { success: false, error: 'Processing failed', errorKey: 'accept.processingFailed' };
   }
 }
 

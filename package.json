@@ -34,7 +34,9 @@
     "supabase:types": "supabase gen types typescript --linked > src/types/supabase.ts",
     "supabase:push": "supabase db push",
     "supabase:reset": "supabase db reset --linked",
-    "phrasing:generate": "node scripts/generate-phrasing.mjs"
+    "phrasing:generate": "node scripts/generate-phrasing.mjs",
+    "walk": "jest --config jest.screens.config.js --forceExit",
+    "walk:fresh": "WALK_POSTURE=fresh jest --config jest.screens.config.js --forceExit"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",

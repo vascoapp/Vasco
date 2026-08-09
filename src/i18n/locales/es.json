@@ -2881,7 +2881,10 @@
     "quoteAccepted": "¡Presupuesto aceptado! Tu profesional empezará a programar el trabajo.",
     "acceptedButFailed": "Presupuesto aceptado, pero falló la creación del trabajo. Tu profesional ha sido notificado.",
     "couldNotProcess": "No se pudo procesar la aprobación",
-    "somethingWentWrong": "Algo salió mal. Inténtalo de nuevo."
+    "somethingWentWrong": "Algo salió mal. Inténtalo de nuevo.",
+    "linkExpired": "Este enlace ha caducado. Pide uno nuevo a tu profesional.",
+    "processingFailed": "No hemos podido procesarlo. Inténtalo de nuevo.",
+    "alreadyDecided": "Este presupuesto ya ha sido respondido."
   },
   "siteOps": {
     "dispatch": "Asignación",
@@ -4380,6 +4383,12 @@
       "send_start_notification": "Enviar aviso de inicio",
       "send_urgent_reminder": "Enviar recordatorio urgente",
       "send_welcome": "Enviar mensaje de bienvenida"
+    },
+    "channels": {
+      "email": "Correo",
+      "sms": "SMS",
+      "push": "Push",
+      "in_app": "En la app"
     }
   },
   "market": {
@@ -4585,7 +4594,24 @@
     "days_one": "{{count}} día",
     "days_other": "{{count}} días",
     "enabledMethods": "Métodos de pago activados:",
-    "openInvoice": "Abrir factura"
+    "openInvoice": "Abrir factura",
+    "title": "Pagos",
+    "subtitle": "iDEAL & Mollie",
+    "createPaymentLink": "Crear enlace de pago",
+    "paidVia": "Pagado con",
+    "paymentDate": "Fecha",
+    "netReceived": "Neto recibido",
+    "outstanding": "Pendiente",
+    "overdue": "Vencido",
+    "needsAttention": "Requiere atención",
+    "allCaughtUp": "Todo al día",
+    "noOutstanding": "No hay facturas pendientes",
+    "paymentMethods": "Métodos de pago",
+    "tabSettings": "Ajustes",
+    "invoiceCount_one": "{{count}} factura",
+    "invoiceCount_other": "{{count}} facturas",
+    "daysOverdue": "{{count}} d de retraso",
+    "dueInDays": "Vence en {{count}} d"
   },
   "leads": {
     "noHotLeads": "No hay clientes potenciales calientes ahora mismo"

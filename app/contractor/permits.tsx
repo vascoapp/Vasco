@@ -9,6 +9,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput } from 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTranslation } from 'react-i18next';
+import { formatDateShortAuto } from '../../src/i18n/formatting';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -348,7 +349,7 @@ export default function PermitsScreen() {
                         <View style={styles.detailRow}>
                           <Ionicons name="calendar-outline" size={14} color={SemanticColors.textSecondary} />
                           <Text style={styles.detailText}>
-                            {t('permits.submitted', 'Ingediend')}: {new Date(permit.submissionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {t('permits.submitted', 'Ingediend')}: {formatDateShortAuto(new Date(permit.submissionDate))}
                           </Text>
                         </View>
                       ) : null}
@@ -356,7 +357,7 @@ export default function PermitsScreen() {
                         <View style={styles.detailRow}>
                           <Ionicons name="time-outline" size={14} color={SemanticColors.textSecondary} />
                           <Text style={styles.detailText}>
-                            {t('permits.decisionExpected', 'Besluit verwacht')}: {new Date(permit.targetDecisionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {t('permits.decisionExpected', 'Besluit verwacht')}: {formatDateShortAuto(new Date(permit.targetDecisionDate))}
                           </Text>
                         </View>
                       ) : null}

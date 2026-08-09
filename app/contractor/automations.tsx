@@ -141,7 +141,11 @@ export default function AutomationsScreen() {
                   {pack.steps.map((step, j) => (
                     <View key={j} style={s.stepRow}>
                       <View style={s.stepDot} />
-                      <Text style={s.stepText} numberOfLines={1}>
+                      {/* Two lines, not one: the channel label sizes itself and
+                          was starving this flex:1 sibling, so Dutch steps cut to
+                          "Na 14 dagen: Dringende herinnerin…". Same flex-starvation
+                          shape as the queue rows and the eve.tsx approve button. */}
+                      <Text style={s.stepText} numberOfLines={2}>
                         {step.delayDays === 0
                           ? t('automations.immediately', 'Immediately')
                           : step.delayDays < 0
@@ -149,7 +153,11 @@ export default function AutomationsScreen() {
                             : t('automations.afterDays', { defaultValue: 'After {{days}} days', days: step.delayDays })
                         }: {t(`automations.actionLabels.${step.action}`, step.action.replace(/_/g, ' '))}
                       </Text>
-                      <Text style={s.stepChannel}>{step.channel}</Text>
+                      {/* The channel is an enum ('in_app'), not copy — it rendered
+                          raw as "IN_APP" beside localised EMAIL/SMS. */}
+                      <Text style={s.stepChannel}>
+                        {t(`automations.channels.${step.channel}`, step.channel.replace(/_/g, ' '))}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -191,8 +199,10 @@ const s = StyleSheet.create({
   healthPillTextLow: { color: SemanticColors.feedbackWarning },
   mutedText: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
   stepsPreview: { gap: 6, paddingLeft: 56 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stepDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },
-  stepText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
-  stepChannel: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: Palette.hermesOrange, textTransform: 'uppercase' },
+  stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  stepDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange, marginTop: 5 },
+  // minWidth:0 lets the flex child actually shrink; without it the text box
+  // keeps its intrinsic width and the row overflows instead of wrapping.
+  stepText: { flex: 1, minWidth: 0, fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  stepChannel: { flexShrink: 0, fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: Palette.hermesOrange, textTransform: 'uppercase' },
 });

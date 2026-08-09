@@ -43,7 +43,7 @@ import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist
 import { listJobPhotos } from '../../../src/services/jobPhotoService';
 import { SignaturePad } from '../../../src/components/shared/SignaturePad';
 import { useAuth } from '../../../src/context/AuthContext';
-import { formatCurrency, formatCurrency0 } from '../../../src/i18n/formatting';
+import { formatCurrency, formatCurrency0, formatTime } from '../../../src/i18n/formatting';
 import type { Country } from '../../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -280,8 +280,9 @@ export default function JobDetailPage() {
   });
   const reorderItems = materials.filter(m => m.reorderNeeded);
 
-  const startTime = new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  const endTime = new Date(job.endTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  // App locale, not device locale — see src/i18n/formatting.formatTime.
+  const startTime = formatTime(new Date(job.startTime), country);
+  const endTime = formatTime(new Date(job.endTime), country);
 
   // Duration of THIS SLOT, mirroring the Werk list. `job.duration` is the
   // whole job's estimate ((estimatedDuration || 2) * 60), so a 24h bathroom

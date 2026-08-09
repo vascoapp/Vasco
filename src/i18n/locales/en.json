@@ -2881,7 +2881,10 @@
     "quoteAccepted": "Quote accepted! Your contractor will start scheduling the work.",
     "acceptedButFailed": "Quote accepted but job creation failed. Your contractor has been notified.",
     "couldNotProcess": "Could not process approval",
-    "somethingWentWrong": "Something went wrong. Please try again."
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "linkExpired": "This link has expired. Ask your contractor for a new one.",
+    "processingFailed": "We could not process that. Please try again.",
+    "alreadyDecided": "This quote has already been answered."
   },
   "siteOps": {
     "dispatch": "Dispatch",
@@ -4380,6 +4383,12 @@
       "send_start_notification": "Send start notification",
       "send_urgent_reminder": "Send urgent reminder",
       "send_welcome": "Send welcome message"
+    },
+    "channels": {
+      "email": "Email",
+      "sms": "SMS",
+      "push": "Push",
+      "in_app": "In app"
     }
   },
   "market": {
@@ -4585,7 +4594,24 @@
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
     "enabledMethods": "Enabled payment methods:",
-    "openInvoice": "Open invoice"
+    "openInvoice": "Open invoice",
+    "title": "Payments",
+    "subtitle": "iDEAL & Mollie",
+    "createPaymentLink": "Create payment link",
+    "paidVia": "Paid via",
+    "paymentDate": "Date",
+    "netReceived": "Net received",
+    "outstanding": "Outstanding",
+    "overdue": "Overdue",
+    "needsAttention": "Needs attention",
+    "allCaughtUp": "All caught up",
+    "noOutstanding": "No outstanding invoices",
+    "paymentMethods": "Payment methods",
+    "tabSettings": "Settings",
+    "invoiceCount_one": "{{count}} invoice",
+    "invoiceCount_other": "{{count}} invoices",
+    "daysOverdue": "{{count}}d overdue",
+    "dueInDays": "Due in {{count}}d"
   },
   "leads": {
     "noHotLeads": "No hot leads right now"

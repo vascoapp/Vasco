@@ -24,7 +24,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency0, type Country } from '../../src/i18n/formatting';
+import { formatCurrency0, formatDateShortAuto, formatDayMonthAuto, type Country } from '../../src/i18n/formatting';
 
 // Services
 import {
@@ -121,8 +121,12 @@ function getDaysUntilExpiry(date: Date): number {
   return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
+// Shared formatter, not toLocaleDateString(undefined) — the latter follows
+// the DEVICE, so a Dutch contractor on an English phone read "Verloopt Mar 4".
+// `*Auto` resolves the country from the current user; this helper is called
+// from leaf subcomponents that are not passed one.
 function formatDate(date: Date): string {
-  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatDateShortAuto(date);
 }
 
 // ============================================
@@ -559,7 +563,7 @@ export default function CertificatenScreen() {
                     {kvk.verificationStatus === 'verified'
                       ? t('compliance.verified', 'Geverifieerd')
                       : t('compliance.unverified', 'Niet geverifieerd')}
-                    {kvk.lastVerified ? ` · ${new Date(kvk.lastVerified).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : ''}
+                    {kvk.lastVerified ? ` · ${formatDayMonthAuto(new Date(kvk.lastVerified))}` : ''}
                   </Text>
                 </View>
                 <Pressable
@@ -585,7 +589,7 @@ export default function CertificatenScreen() {
                   <Text style={styles.verificationMeta}>
                     {btw.isActive ? t('compliance.active', 'Actief') : t('compliance.inactive', 'Inactief')}
                     {btw.viesVerified ? ` · VIES ${t('compliance.verified', 'Geverifieerd')}` : ''}
-                    {btw.nextFilingDeadline ? ` · ${t('compliance.nextFiling', 'Aangifte')}: ${new Date(btw.nextFilingDeadline).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : ''}
+                    {btw.nextFilingDeadline ? ` · ${t('compliance.nextFiling', 'Aangifte')}: ${formatDayMonthAuto(new Date(btw.nextFilingDeadline))}` : ''}
                   </Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: btw.isActive ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>

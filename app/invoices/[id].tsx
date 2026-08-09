@@ -19,7 +19,8 @@ import { hapticError, hapticSuccess } from '../../src/utils/haptics';
 import { generateInvoicePdf, buildInvoicePdfBase64 } from '../../src/services/invoicePdfService';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatDate, formatDateShort, formatDayMonth } from '../../src/i18n/formatting';
+import type { Country } from '../../src/i18n/formatting';
 import {
   getCustomerPaymentPreference,
   getPaymentMethodLabel,
@@ -1128,7 +1129,7 @@ export default function InvoiceDetailScreen() {
               color={SemanticColors.textTertiary}
               label={t('invoices.created', 'Invoice created')}
               date={invoice.lastUpdated
-                ? new Date(invoice.lastUpdated).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+                ? formatDateShort(new Date(invoice.lastUpdated), country as Country)
                 : t('invoices.recently', 'Recently')}
               showLine
             />
@@ -1139,7 +1140,7 @@ export default function InvoiceDetailScreen() {
                 color={SemanticColors.feedbackInfo}
                 label={t('invoices.sentToCustomer', 'Sent to customer')}
                 date={invoice.dueDate
-                  ? new Date(new Date(invoice.dueDate).getTime() - 14 * 86400000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+                  ? formatDayMonth(new Date(new Date(invoice.dueDate).getTime() - 14 * 86400000), country as Country)
                   : ''}
                 showLine
               />
@@ -1152,7 +1153,7 @@ export default function InvoiceDetailScreen() {
                 label={t('invoices.overdueNotice', 'Payment overdue')}
                 labelColor={SemanticColors.feedbackError}
                 date={`${invoice.dueDate
-                  ? new Date(invoice.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+                  ? formatDayMonth(new Date(invoice.dueDate), country as Country)
                   : ''} · ${Math.abs(invoice.dueInDays)} ${t('invoices.daysLate', 'days late')}`}
                 showLine
               />
@@ -1209,7 +1210,7 @@ export default function InvoiceDetailScreen() {
                   ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: invoice.dueInDays })
                   : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(invoice.dueInDays) })}
                 date={invoice.dueDate
-                  ? new Date(invoice.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
+                  ? formatDate(new Date(invoice.dueDate), country as Country)
                   : ''}
               />
             )}

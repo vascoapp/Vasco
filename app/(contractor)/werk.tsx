@@ -25,7 +25,7 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { DKLabel } from '../../src/components/shared/DKLabel';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatTime } from '../../src/i18n/formatting';
 import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { todayKey } from '../../src/utils/dateKey';
 import type { Country } from '../../src/i18n/formatting';
@@ -51,6 +51,7 @@ export default function WerkScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [refreshing, setRefreshing] = useState(false);
   const { jobs, addJob, removeJob, projects, isLoading, businessProfile } = useAppState();
   const [showNewJob, setShowNewJob] = useState(false);
@@ -245,7 +246,7 @@ export default function WerkScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={DK.colors.accent} />}
       >
         {/* ─── HERO FEATURE CARD (if a job to spotlight) ─── */}
-        {heroJob ? <HeroJobCard heroJob={heroJob} onPress={() => router.push(`/contractor/job/${heroJob.job.id}` as any)} /> : null}
+        {heroJob ? <HeroJobCard heroJob={heroJob} country={country} onPress={() => router.push(`/contractor/job/${heroJob.job.id}` as any)} /> : null}
 
         {/* ─── QUICK LINK CHIPS ─── */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
@@ -361,6 +362,7 @@ export default function WerkScreen() {
               onOpenJob={(id) => router.push(`/contractor/job/${id}` as any)}
               onPlanCta={() => router.push('/contractor/drag-schedule' as any)}
               t={t}
+              country={country}
             />
           </>
         )}
@@ -410,7 +412,7 @@ export default function WerkScreen() {
                 <JobRow
                   key={project.id}
                   title={project.title}
-                  meta={`${project.jobIds.length} klussen · ${formatCurrency(project.totalBudget, (user?.country ?? 'NL') as Country)}`}
+                  meta={`${t('dk.pill.jobsCount', { count: project.jobIds.length })} · ${formatCurrency(project.totalBudget, (user?.country ?? 'NL') as Country)}`}
                   accent={project.status === 'active' ? DK.colors.accent : DK.colors.textMuted}
                   onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
                 />
@@ -522,14 +524,20 @@ export default function WerkScreen() {
 }
 
 // ─── Subcomponents ────────────────────────────────────────────────────────
-function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 'active'; job: any }; onPress: () => void }) {
+function HeroJobCard({ heroJob, onPress, country }: { heroJob: { type: 'live' | 'next' | 'active'; job: any }; onPress: () => void; country: Country }) {
   const { t } = useTranslation();
   const { type, job } = heroJob;
   const label = (type === 'live' ? t('dk.hero.liveBezig', 'Live · in progress') : type === 'next' ? t('dk.hero.next', 'Up next') : t('dk.hero.activeNow', 'Active now')).toUpperCase();
   const tone = type === 'live' ? DK.colors.danger : DK.colors.highlight;
+  // formatTime, not toLocaleTimeString(undefined): the latter follows the
+  // DEVICE, so a Dutch contractor on an English phone read "01:30 PM" above a
+  // slot badge that says "3u30".
   const startStr = job.startTime
-    ? new Date(job.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-    : (parseTime(job.scheduledStartTime)?.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) ?? '09:00');
+    ? formatTime(new Date(job.startTime), country)
+    : (() => {
+        const parsed = parseTime(job.scheduledStartTime);
+        return parsed ? formatTime(parsed, country) : '09:00';
+      })();
   // Matches how permits.tsx / handover render a JobAddress. Tolerates a plain
   // string too, since some call sites still pass one.
   const jobAddressLabel = typeof job.address === 'string'
@@ -577,7 +585,7 @@ function HeroJobCard({ heroJob, onPress }: { heroJob: { type: 'live' | 'next' | 
   );
 }
 
-function TodayContent({ todayJobs, onOpenJob, onPlanCta, t }: { todayJobs: any[]; onOpenJob: (id: string) => void; onPlanCta: () => void; t: any }) {
+function TodayContent({ todayJobs, onOpenJob, onPlanCta, t, country }: { todayJobs: any[]; onOpenJob: (id: string) => void; onPlanCta: () => void; t: any; country: Country }) {
   if (todayJobs.length === 0) {
     return (
       <EmptyBlock
@@ -595,8 +603,8 @@ function TodayContent({ todayJobs, onOpenJob, onPlanCta, t }: { todayJobs: any[]
       {todayJobs.map((entry: any, i: number) => {
         const startDate = parseTime(entry.startTime);
         const endDate = parseTime(entry.endTime);
-        const timeStr = startDate ? startDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '09:00';
-        const endStr = endDate ? endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '';
+        const timeStr = startDate ? formatTime(startDate, country) : '09:00';
+        const endStr = endDate ? formatTime(endDate, country) : '';
         // Prefer THIS SLOT (endTime - startTime) over entry.duration, which
         // carries the WHOLE JOB's estimate — a 24h bathroom renovation badged
         // "24u" next to the slot "13:30 – 17:00", mixing two different time

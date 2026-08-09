@@ -261,7 +261,9 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
               styles.dueBadgeText,
               { color: isOverdue ? Colors.error : Colors.warning },
             ]}>
-              {isOverdue ? `${Math.abs(daysUntilDue)}d overdue` : `Due in ${daysUntilDue}d`}
+              {isOverdue
+                ? t('payments.daysOverdue', { count: Math.abs(daysUntilDue) })
+                : t('payments.dueInDays', { count: daysUntilDue })}
             </Text>
           </View>
         </View>
@@ -288,7 +290,7 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
       ) : (
         <Pressable style={styles.createLinkButton} onPress={onCreateLink}>
           <Ionicons name="add-circle-outline" size={18} color={Colors.primary} />
-          <Text style={styles.createLinkText}>Create Payment Link</Text>
+          <Text style={styles.createLinkText}>{t('payments.createPaymentLink')}</Text>
         </Pressable>
       )}
 
@@ -317,6 +319,7 @@ interface PaidInvoiceCardProps {
 }
 
 const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   return (
@@ -340,20 +343,20 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
           </Text>
           <View style={styles.paidBadge}>
             <Ionicons name="checkmark-circle" size={12} color={Colors.success} />
-            <Text style={styles.paidBadgeText}>Paid</Text>
+            <Text style={styles.paidBadgeText}>{t('invoices.status.paid')}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.paymentDetails}>
         <View style={styles.paymentDetailRow}>
-          <Text style={styles.paymentDetailLabel}>Paid via</Text>
+          <Text style={styles.paymentDetailLabel}>{t('payments.paidVia')}</Text>
           <View style={styles.paymentMethodRow}>
             <PaymentMethodBadge method={paymentLink.paymentMethod!} size="medium" />
           </View>
         </View>
         <View style={styles.paymentDetailRow}>
-          <Text style={styles.paymentDetailLabel}>Date</Text>
+          <Text style={styles.paymentDetailLabel}>{t('payments.paymentDate')}</Text>
           <Text style={styles.paymentDetailValue}>
             {new Date(paymentLink.paidAt!).toLocaleDateString(undefined, {
               day: 'numeric',
@@ -365,7 +368,7 @@ const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink 
           </Text>
         </View>
         <View style={styles.paymentDetailRow}>
-          <Text style={styles.paymentDetailLabel}>Net received</Text>
+          <Text style={styles.paymentDetailLabel}>{t('payments.netReceived')}</Text>
           <Text style={styles.paymentDetailValue}>
             {formatCurrency(paymentLink.netAmount ?? 0, country)}
             <Text style={styles.feeText}> (fee: {formatCurrency(paymentLink.providerFee ?? 0, country)})</Text>
@@ -539,9 +542,9 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
   };
 
   const tabs = [
-    { id: 'outstanding' as const, label: 'Outstanding', badge: outstandingInvoices.length },
-    { id: 'paid' as const, label: 'Paid', badge: paidInvoices.length },
-    { id: 'settings' as const, label: 'Settings', badge: undefined },
+    { id: 'outstanding' as const, label: t('payments.outstanding'), badge: outstandingInvoices.length },
+    { id: 'paid' as const, label: t('invoices.status.paid'), badge: paidInvoices.length },
+    { id: 'settings' as const, label: t('payments.tabSettings'), badge: undefined },
   ];
 
   return (
@@ -549,8 +552,8 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Payments</Text>
-          <Text style={styles.subtitle}>iDEAL & Mollie Integration</Text>
+          <Text style={styles.title}>{t('payments.title')}</Text>
+          <Text style={styles.subtitle}>{t('payments.subtitle')}</Text>
         </View>
         {onClose && (
           <Pressable onPress={onClose} style={styles.closeButton}>
@@ -562,20 +565,20 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
       {/* Summary Cards */}
       <View style={styles.summaryRow}>
         <View style={[styles.summaryCard, styles.summaryCardOutstanding]}>
-          <Text style={styles.summaryLabel}>Outstanding</Text>
+          <Text style={styles.summaryLabel}>{t('payments.outstanding')}</Text>
           <Text style={styles.summaryValue}>
             {formatCurrency0(totalOutstanding, country)}
           </Text>
           <Text style={styles.summarySubtext}>
-            {outstandingInvoices.length} invoice{outstandingInvoices.length !== 1 ? 's' : ''}
+            {t('payments.invoiceCount', { count: outstandingInvoices.length })}
           </Text>
         </View>
         <View style={[styles.summaryCard, styles.summaryCardOverdue]}>
-          <Text style={styles.summaryLabel}>Overdue</Text>
+          <Text style={styles.summaryLabel}>{t('payments.overdue')}</Text>
           <Text style={[styles.summaryValue, { color: Colors.error }]}>
             {formatCurrency0(totalOverdue, country)}
           </Text>
-          <Text style={styles.summarySubtext}>Needs attention</Text>
+          <Text style={styles.summarySubtext}>{t('payments.needsAttention')}</Text>
         </View>
       </View>
 
@@ -606,8 +609,8 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
             {outstandingInvoices.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="checkmark-circle" size={48} color={Colors.success} />
-                <Text style={styles.emptyStateTitle}>All caught up!</Text>
-                <Text style={styles.emptyStateText}>No outstanding invoices</Text>
+                <Text style={styles.emptyStateTitle}>{t('payments.allCaughtUp')}</Text>
+                <Text style={styles.emptyStateText}>{t('payments.noOutstanding')}</Text>
               </View>
             ) : (
               outstandingInvoices.map((invoice) => {
@@ -711,7 +714,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
 
             {/* Payment Methods */}
             <View style={styles.settingsSection}>
-              <Text style={styles.settingsSectionTitle}>Payment Methods</Text>
+              <Text style={styles.settingsSectionTitle}>{t('payments.paymentMethods')}</Text>
               <View style={styles.methodsGrid}>
                 {(Object.keys(PAYMENT_METHOD_INFO) as PaymentMethodType[]).map((method) => {
                   const info = PAYMENT_METHOD_INFO[method];

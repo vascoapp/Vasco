@@ -636,6 +636,14 @@ const SAME_WORD_OK = new Set([
   // usage); "Chat" and "Text" are the ordinary German/French words; French
   // spells "Suggestions" and "Optimisations" identically to English.
   'Factoring', 'Chat', 'Text', 'Suggestions', 'Optimisations ({{count}})',
+  // Notification channel, shown as a tiny uppercase column beside EMAIL/SMS.
+  // "Push" is the ordinary term in all five target languages; the descriptive
+  // forms ("Pushmelding", "Push-Nachricht", "Notification push") do not fit
+  // that column and are not what a tradesperson calls it.
+  'Push',
+  // Two product names. iDEAL is the Dutch bank-transfer scheme and Mollie is
+  // the PSP — neither is translated anywhere.
+  'iDEAL & Mollie',
   // Pricebook tiers: "Premium" and "POPULAR" are the same word in every target
   // language here. The neighbouring tiers ("Basis"/"Base", "Standard") do
   // differ and are translated.

@@ -2881,7 +2881,10 @@
     "quoteAccepted": "Preventivo accettato! Il tuo professionista pianificherà il lavoro.",
     "acceptedButFailed": "Preventivo accettato, ma la creazione del lavoro è fallita. Il tuo professionista è stato avvisato.",
     "couldNotProcess": "Impossibile elaborare l'approvazione",
-    "somethingWentWrong": "Qualcosa è andato storto. Riprova."
+    "somethingWentWrong": "Qualcosa è andato storto. Riprova.",
+    "linkExpired": "Questo link è scaduto. Chiedine uno nuovo al tuo artigiano.",
+    "processingFailed": "Non siamo riusciti a elaborare la richiesta. Riprova.",
+    "alreadyDecided": "Questo preventivo ha già ricevuto una risposta."
   },
   "siteOps": {
     "dispatch": "Assegnazione",
@@ -4380,6 +4383,12 @@
       "send_start_notification": "Invia notifica di inizio",
       "send_urgent_reminder": "Invia promemoria urgente",
       "send_welcome": "Invia messaggio di benvenuto"
+    },
+    "channels": {
+      "email": "E-mail",
+      "sms": "SMS",
+      "push": "Push",
+      "in_app": "Nell’app"
     }
   },
   "market": {
@@ -4585,7 +4594,24 @@
     "days_one": "{{count}} giorno",
     "days_other": "{{count}} giorni",
     "enabledMethods": "Metodi di pagamento attivi:",
-    "openInvoice": "Apri fattura"
+    "openInvoice": "Apri fattura",
+    "title": "Pagamenti",
+    "subtitle": "iDEAL & Mollie",
+    "createPaymentLink": "Crea link di pagamento",
+    "paidVia": "Pagato con",
+    "paymentDate": "Data",
+    "netReceived": "Netto ricevuto",
+    "outstanding": "In sospeso",
+    "overdue": "Scaduto",
+    "needsAttention": "Richiede attenzione",
+    "allCaughtUp": "Tutto in regola",
+    "noOutstanding": "Nessuna fattura in sospeso",
+    "paymentMethods": "Metodi di pagamento",
+    "tabSettings": "Impostazioni",
+    "invoiceCount_one": "{{count}} fattura",
+    "invoiceCount_other": "{{count}} fatture",
+    "daysOverdue": "{{count}} g di ritardo",
+    "dueInDays": "Scade tra {{count}} g"
   },
   "leads": {
     "noHotLeads": "Nessun lead caldo al momento"
