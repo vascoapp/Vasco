@@ -1963,7 +1963,13 @@
     "weekEarlier": "Una semana antes",
     "weekLater": "Una semana después",
     "deleteMilestoneSuccessors_one": "{{titles}} ya no lo esperará.",
-    "deleteMilestoneSuccessors_other": "{{titles}} ya no lo esperarán."
+    "deleteMilestoneSuccessors_other": "{{titles}} ya no lo esperarán.",
+    "projectedHandover": "Entrega prevista",
+    "promisedHandover": "Prometida {{date}}",
+    "noPromisedHandover": "Sin fecha de entrega prometida",
+    "setPromisedHandover": "Fijar fecha prometida",
+    "clearPromisedHandover": "Eliminar fecha prometida",
+    "weekOf": "semana del {{date}}"
   },
   "projectTemplate": {
     "pick": "Empezar con una secuencia de oficios",

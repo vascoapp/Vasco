@@ -12,7 +12,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
-import { formatCurrency, formatCurrency0, type Country } from '../../../src/i18n/formatting';
+import { formatCurrency, formatCurrency0, formatDateShort, type Country } from '../../../src/i18n/formatting';
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
@@ -23,7 +23,11 @@ import {
   defaultDependsOn,
   candidatePredecessors,
   removeMilestoneFromChain,
+  handoverOutlook,
+  projectWeekStart,
+  currentProjectWeek,
 } from '../../../src/services/projectSequenceService';
+import { localDateKey, parseLocalDateKey } from '../../../src/utils/dateKey';
 import {
   PROJECT_TEMPLATES,
   buildMilestonesFromTemplate,
@@ -54,6 +58,8 @@ export default function ProjectDetailScreen() {
   const [editingMilestone, setEditingMilestone] = useState<
     { mode: 'new' } | { mode: 'edit'; milestone: ProjectMilestone } | null
   >(null);
+  /** Project-week being chosen as the promised handover; null = picker closed. */
+  const [promiseWeek, setPromiseWeek] = useState<number | null>(null);
 
   const project = useMemo(() => projects.find(p => p.id === id), [projects, id]);
   const pnl = useMemo(() => project ? getProjectPnL(project.id) : null, [project]);
@@ -121,6 +127,42 @@ export default function ProjectDetailScreen() {
     () => (project ? sequenceByMilestoneId({ project }) : new Map()),
     [project],
   );
+
+  // Promised vs projected handover. Null whenever there is nothing honest to
+  // say — no plan, no anchor, or everything already done.
+  const outlook = useMemo(
+    () => (project ? handoverOutlook({ project }) : null),
+    [project],
+  );
+
+  // The promise is stored as a real date but chosen by WEEK: the plan is
+  // week-grained, so offering a day picker would invite a precision the
+  // forecast underneath cannot match.
+  const openPromise = () => {
+    if (!project || !outlook) return;
+    const existing = parseLocalDateKey(project.targetEndDate);
+    const week = (existing ? currentProjectWeek(project, existing) : null) ?? outlook.projectedEndWeek;
+    // Clamp: a promise dated before the project start puts this at 0 or
+    // negative, and `projectWeekStart` floors at week 1 — so the stepper would
+    // read "Week 0" beside week 1's date and disagree with itself.
+    setPromiseWeek(Math.max(1, week));
+  };
+
+  const savePromise = () => {
+    if (!project || promiseWeek === null) return;
+    const start = projectWeekStart(project, promiseWeek);
+    if (!start) return;
+    hapticSuccess();
+    updateProject(project.id, { targetEndDate: localDateKey(start) });
+    setPromiseWeek(null);
+  };
+
+  const clearPromise = () => {
+    if (!project) return;
+    hapticSuccess();
+    updateProject(project.id, { targetEndDate: undefined });
+    setPromiseWeek(null);
+  };
 
   const deleteMilestone = (milestoneId: string) => {
     if (!project) return;
@@ -395,6 +437,47 @@ export default function ProjectDetailScreen() {
                 <Ionicons name="add" size={20} color={Palette.hermesOrange} />
               </Pressable>
             </View>
+            {/* Promised vs projected handover. Only rendered when the plan can
+                actually support the claim — `handoverOutlook` returns null with
+                no milestones, no start date, or everything already done. */}
+            {outlook ? (
+              <Pressable
+                style={[styles.handoverCard, outlook.missesPromise && styles.handoverCardLate]}
+                onPress={openPromise}
+                accessibilityRole="button"
+                accessibilityLabel={t('project.setPromisedHandover', 'Set promised handover')}
+              >
+                <View style={styles.handoverMain}>
+                  <Text style={styles.handoverLabel}>
+                    {t('project.projectedHandover', 'Projected handover')}
+                  </Text>
+                  <Text style={styles.handoverValue}>
+                    {t('project.weekOf', {
+                      defaultValue: 'week of {{date}}',
+                      date: formatDateShort(outlook.projectedWeekStart, country),
+                    })}
+                  </Text>
+                  {outlook.promised ? (
+                    <Text style={outlook.missesPromise ? styles.handoverLate : styles.handoverPromised}>
+                      {t('project.promisedHandover', {
+                        defaultValue: 'Promised {{date}}',
+                        date: formatDateShort(outlook.promised, country),
+                      })}
+                    </Text>
+                  ) : (
+                    <Text style={styles.handoverPromised}>
+                      {t('project.noPromisedHandover', 'No handover date promised')}
+                    </Text>
+                  )}
+                </View>
+                <Ionicons
+                  name={outlook.missesPromise ? 'alert-circle' : 'calendar-outline'}
+                  size={20}
+                  color={outlook.missesPromise ? SemanticColors.feedbackWarning : Palette.hermesOrange}
+                />
+              </Pressable>
+            ) : null}
+
             {project.milestones.length === 0 ? (
               <>
                 <Text style={styles.emptyText}>{t('project.noMilestones')}</Text>
@@ -493,6 +576,66 @@ export default function ProjectDetailScreen() {
         onSave={saveMilestone}
         onDelete={deleteMilestone}
       />
+
+      {/* Promised handover. Chosen by WEEK, not by day: the plan underneath is
+          week-grained, and a day picker would promise the customer a precision
+          the forecast cannot back. Reuses the milestone editor's own stepper
+          idiom rather than a raw YYYY-MM-DD field. */}
+      <Modal
+        visible={promiseWeek !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPromiseWeek(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setPromiseWeek(null)}>
+          <Pressable style={styles.modalCard} onPress={e => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>
+              {t('project.setPromisedHandover', 'Set promised handover')}
+            </Text>
+            <View style={styles.weekStepper}>
+              <Pressable
+                onPress={() => setPromiseWeek(w => Math.max(1, (w ?? 1) - 1))}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('project.weekEarlier', 'One week earlier')}
+              >
+                <Ionicons name="remove-circle-outline" size={28} color={Palette.hermesOrange} />
+              </Pressable>
+              <View style={styles.weekStepperMain}>
+                <Text style={styles.weekStepperValue}>
+                  {promiseWeek !== null && projectWeekStart(project, promiseWeek)
+                    ? t('project.weekOf', {
+                        defaultValue: 'week of {{date}}',
+                        date: formatDateShort(projectWeekStart(project, promiseWeek) as Date, country),
+                      })
+                    : '—'}
+                </Text>
+                <Text style={styles.weekStepperMeta}>
+                  {t('project.week')} {promiseWeek ?? 1}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setPromiseWeek(w => (w ?? 1) + 1)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('project.weekLater', 'One week later')}
+              >
+                <Ionicons name="add-circle-outline" size={28} color={Palette.hermesOrange} />
+              </Pressable>
+            </View>
+            <Pressable style={styles.createBtn} onPress={savePromise}>
+              <Text style={styles.createBtnText}>{t('common.save', 'Save')}</Text>
+            </Pressable>
+            {project.targetEndDate ? (
+              <Pressable style={styles.clearPromiseBtn} onPress={clearPromise}>
+                <Text style={styles.clearPromiseText}>
+                  {t('project.clearPromisedHandover', 'Remove promised date')}
+                </Text>
+              </Pressable>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -766,6 +909,36 @@ const styles = StyleSheet.create({
   depTitle: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
   depTitleOn: { color: SemanticColors.textPrimary },
   depWeek: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary },
+  // Handover outlook card
+  handoverCard: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg, padding: GRID.md,
+    borderWidth: 1, borderColor: 'transparent',
+  },
+  handoverCardLate: { borderColor: SemanticColors.feedbackWarning },
+  // flex:1 so the trailing icon cannot starve the dates.
+  handoverMain: { flex: 1 },
+  handoverLabel: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary },
+  handoverValue: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, marginTop: 2 },
+  handoverPromised: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary, marginTop: 2 },
+  handoverLate: { fontSize: TYPE.captionSize, fontFamily: TYPE.labelFamily, color: SemanticColors.feedbackWarning, marginTop: 2 },
+
+  // Promised-handover week picker
+  modalOverlay: { flex: 1, backgroundColor: '#00000099', justifyContent: 'flex-end' },
+  modalCard: {
+    backgroundColor: PAGE_BG, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    padding: GRID.lg, gap: GRID.md,
+  },
+  weekStepper: { flexDirection: 'row', alignItems: 'center', gap: GRID.md },
+  weekStepperMain: { flex: 1, alignItems: 'center' },
+  weekStepperValue: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
+  weekStepperMeta: { fontSize: TYPE.labelSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginTop: 2 },
+  createBtn: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 14, alignItems: 'center' },
+  createBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
+  clearPromiseBtn: { alignItems: 'center', paddingVertical: GRID.sm },
+  clearPromiseText: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
+
   modalRoot: { flex: 1, backgroundColor: PAGE_BG },
   modalHead: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

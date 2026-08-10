@@ -1963,7 +1963,13 @@
     "weekEarlier": "Eine Woche früher",
     "weekLater": "Eine Woche später",
     "deleteMilestoneSuccessors_one": "{{titles}} wartet nicht mehr darauf.",
-    "deleteMilestoneSuccessors_other": "{{titles}} warten nicht mehr darauf."
+    "deleteMilestoneSuccessors_other": "{{titles}} warten nicht mehr darauf.",
+    "projectedHandover": "Voraussichtliche Abnahme",
+    "promisedHandover": "Zugesagt {{date}}",
+    "noPromisedHandover": "Kein Abnahmetermin zugesagt",
+    "setPromisedHandover": "Abnahmetermin festlegen",
+    "clearPromisedHandover": "Abnahmetermin entfernen",
+    "weekOf": "Woche vom {{date}}"
   },
   "projectTemplate": {
     "pick": "Mit einer Gewerkefolge starten",

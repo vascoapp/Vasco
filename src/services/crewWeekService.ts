@@ -17,8 +17,8 @@
 // Pure functions over data the caller already has — no singleton, no store.
 // =============================================================================
 
-import { localDateKey, startOfWeek } from '../utils/dateKey';
-import { sequenceByMilestoneId } from './projectSequenceService';
+import { localDateKey } from '../utils/dateKey';
+import { sequenceByMilestoneId, projectWeekStart } from './projectSequenceService';
 import type { Project, ProjectMilestone } from '../types/project';
 
 export interface CrewWeekJob {
@@ -68,13 +68,10 @@ export interface StaffingGap {
  * no anchor and guessing one would invent a deadline.
  */
 export function milestoneWeekStart(project: Project, milestone: ProjectMilestone): Date | null {
-  if (!project.startDate) return null;
-  const start = startOfWeek(new Date(project.startDate));
-  if (Number.isNaN(start.getTime())) return null;
-  const offset = Math.max(0, (milestone.weekNumber ?? 1) - 1);
-  const out = new Date(start);
-  out.setDate(start.getDate() + offset * 7);
-  return out;
+  // Delegates: the same offset arithmetic is now needed for the projected
+  // handover week, and two private copies of calendar maths is how this
+  // codebase ended up with screens disagreeing about which day it is.
+  return projectWeekStart(project, milestone.weekNumber ?? 1);
 }
 
 /** Jobs scheduled inside the given week, keyed by local date. */

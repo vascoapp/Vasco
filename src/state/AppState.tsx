@@ -366,7 +366,26 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     {
       id: 'proj-seed-1', title: 'Badkamer renovatie — Fam. Jansen', customerId: 'cust-002', customerName: 'Fam. Jansen',
       status: 'active', totalBudget: 12500, totalQuoted: 12500, totalInvoiced: 0, totalPaid: 0,
-      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], milestones: [], billingTerms: [], retentionPercent: 0, changeOrders: [],
+      jobIds: ['j-seed-3'], quoteIds: [], invoiceIds: [], subcontractorIds: [], billingTerms: [], retentionPercent: 0, changeOrders: [],
+      // Both demo projects shipped `milestones: []`, so the staffing strip, the
+      // handover sequencer and the projected-handover card were all invisible
+      // on the demo account — the features existed and nothing could show them
+      // (#136). Mirrors PROJECT_TEMPLATES 'bathroom': same seven steps, same
+      // weeks, same chaining as `defaultDependsOn` produces. Titles inline in
+      // Dutch like every other string in this seed block.
+      //
+      // Week 1 is done and week 2 is under way, so the plan reads ON TRACK
+      // against the promised date below. Seeding a crisis would put a slip in
+      // front of every demo that is not actually happening.
+      milestones: [
+        { id: 'ms-seed-1-0', title: 'Sloopwerk gereed', trade: 'demolition', weekNumber: 1, completed: true, jobIds: [], dependsOn: [] },
+        { id: 'ms-seed-1-1', title: 'Leidingwerk gereed', trade: 'plumbing', weekNumber: 1, completed: true, jobIds: [], dependsOn: [] },
+        { id: 'ms-seed-1-2', title: 'Elektra ingefreesd', trade: 'electrical', weekNumber: 2, completed: false, jobIds: [], dependsOn: ['ms-seed-1-1'] },
+        { id: 'ms-seed-1-3', title: 'Wanden gereed', trade: 'plastering', weekNumber: 2, completed: false, jobIds: [], dependsOn: ['ms-seed-1-1'] },
+        { id: 'ms-seed-1-4', title: 'Tegelwerk gereed', trade: 'tiling', weekNumber: 3, completed: false, jobIds: [], dependsOn: ['ms-seed-1-3'] },
+        { id: 'ms-seed-1-5', title: 'Sanitair gemonteerd', trade: 'plumbing', weekNumber: 4, completed: false, jobIds: [], dependsOn: ['ms-seed-1-4'] },
+        { id: 'ms-seed-1-6', title: 'Oplevering', weekNumber: 4, completed: false, jobIds: [], dependsOn: ['ms-seed-1-4'] },
+      ],
       startDate: localDateKey(new Date(Date.now() - MS_PER_DAY * 7)),
       targetEndDate: localDateKey(new Date(Date.now() + MS_PER_DAY * 21)),
       createdAt: new Date(Date.now() - MS_PER_DAY * 14).toISOString(), updatedAt: new Date().toISOString(),
@@ -3722,7 +3741,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             if (updates.description !== undefined) patch.description = updates.description;
             if (updates.status !== undefined) patch.status = updates.status;
             if (updates.startDate !== undefined) patch.start_date = updates.startDate;
-            if (updates.targetEndDate !== undefined) patch.target_end_date = updates.targetEndDate;
+            // `in`, not `!== undefined`: this is the one field the UI can
+            // CLEAR (removing a promised handover). With the usual guard,
+            // `{ targetEndDate: undefined }` clears the local copy via the
+            // spread above but never reaches the patch, so the promise
+            // reappears on the next cold start — cleared on screen, still in
+            // the database. `?? null` is what actually empties the column.
+            if ('targetEndDate' in updates) patch.target_end_date = updates.targetEndDate ?? null;
             if (updates.actualEndDate !== undefined) patch.actual_end_date = updates.actualEndDate;
             if (updates.totalBudget !== undefined) patch.total_budget = updates.totalBudget;
             if (updates.address !== undefined) patch.address = updates.address;

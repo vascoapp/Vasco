@@ -18,7 +18,7 @@
 // Pure functions over data the caller already has — no singleton, no store.
 // =============================================================================
 
-import { startOfWeek } from '../utils/dateKey';
+import { startOfWeek, parseLocalDateKey } from '../utils/dateKey';
 import type { Project, ProjectMilestone } from '../types/project';
 
 /** What sequencing says about one milestone. `weekNumber` is never mutated. */
@@ -62,6 +62,27 @@ export function currentProjectWeek(project: Project, today: Date): number | null
   // this across a boundary.
   const weeks = Math.round((here.getTime() - start.getTime()) / msPerWeek);
   return weeks + 1;
+}
+
+/**
+ * Monday 00:00 of the given project-week, local time.
+ *
+ * `weekNumber` is a 1-based OFFSET from the project start, so this is the only
+ * place that converts the plan's units into a real date. Null when there is no
+ * start date — no anchor, no claim.
+ *
+ * `crewWeekService.milestoneWeekStart` delegates here. It had the only copy,
+ * and two private copies of calendar arithmetic is how this codebase ended up
+ * with screens disagreeing about which day it is.
+ */
+export function projectWeekStart(project: Project, weekNumber: number): Date | null {
+  if (!project.startDate) return null;
+  const start = startOfWeek(new Date(project.startDate));
+  if (Number.isNaN(start.getTime())) return null;
+  const offset = Math.max(0, Math.max(1, weekNumber) - 1);
+  const out = new Date(start);
+  out.setDate(start.getDate() + offset * 7);
+  return out;
 }
 
 /**
@@ -343,4 +364,59 @@ export function removeMilestoneFromChain(
         ? { ...m, dependsOn: (m.dependsOn ?? []).filter((id) => id !== removedId) }
         : m,
     );
+}
+
+// ---------------------------------------------------------------------------
+// Promised vs projected handover
+// ---------------------------------------------------------------------------
+
+export interface HandoverOutlook {
+  /** Project-week the plan puts the last open milestone in. */
+  plannedEndWeek: number;
+  /** Earliest project-week it could now finish, given what is demonstrably late. */
+  projectedEndWeek: number;
+  /** projectedEndWeek - plannedEndWeek. 0 when on plan. */
+  slipWeeks: number;
+  /** Monday of the projected end week: the EARLIEST the work could finish. */
+  projectedWeekStart: Date;
+  /** The handover the contractor promised, if they set one. */
+  promised: Date | null;
+  /**
+   * True only when the whole projected week falls after the promised date.
+   *
+   * This is a LOWER BOUND, deliberately. The plan is week-granular and the
+   * promise is a day, so "the projected week CONTAINS the promised date" is not
+   * evidence of anything — the work could still land on either side of it. Only
+   * when the earliest possible completion is already past the promise is it
+   * certain, and a claim that degrades to "no claim" beats one that degrades to
+   * a confident wrong date (#137).
+   */
+  missesPromise: boolean;
+}
+
+/**
+ * What the contractor promised the customer, against what the plan now says.
+ *
+ * Null when there is nothing to say: no milestones (no plan), no start date
+ * (no anchor), or every milestone already complete.
+ */
+export function handoverOutlook(args: {
+  project: Project;
+  today?: Date;
+}): HandoverOutlook | null {
+  const { project } = args;
+  const slip = projectSlip(args);
+  if (!slip) return null;
+
+  const projectedWeekStart = projectWeekStart(project, slip.projectedEndWeek);
+  if (!projectedWeekStart) return null;
+
+  const promised = parseLocalDateKey(project.targetEndDate);
+
+  return {
+    ...slip,
+    projectedWeekStart,
+    promised,
+    missesPromise: promised !== null && projectedWeekStart.getTime() > promised.getTime(),
+  };
 }

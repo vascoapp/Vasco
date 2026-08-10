@@ -1963,7 +1963,13 @@
     "weekEarlier": "One week earlier",
     "weekLater": "One week later",
     "deleteMilestoneSuccessors_one": "{{titles}} will no longer wait for it.",
-    "deleteMilestoneSuccessors_other": "{{titles}} will no longer wait for it."
+    "deleteMilestoneSuccessors_other": "{{titles}} will no longer wait for it.",
+    "projectedHandover": "Projected handover",
+    "promisedHandover": "Promised {{date}}",
+    "noPromisedHandover": "No handover date promised",
+    "setPromisedHandover": "Set promised handover",
+    "clearPromisedHandover": "Remove promised date",
+    "weekOf": "week of {{date}}"
   },
   "projectTemplate": {
     "pick": "Start from a trade sequence",

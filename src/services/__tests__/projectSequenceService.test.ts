@@ -19,6 +19,8 @@ import {
   transitivePredecessors,
   candidatePredecessors,
   removeMilestoneFromChain,
+  projectWeekStart,
+  handoverOutlook,
 } from '../projectSequenceService';
 import type { ProjectMilestone } from '../../types/project';
 
@@ -344,5 +346,99 @@ describe('removeMilestoneFromChain', () => {
     const chain = CHAIN();
     const next = removeMilestoneFromChain(chain, 'tegels');
     expect(next.find((m) => m.id === 'sloop')).toBe(chain[0]);
+  });
+});
+
+describe('projectWeekStart', () => {
+  it('puts week 1 on the project start week, not the week after', () => {
+    expect(projectWeekStart(project(CHAIN()), 1)).toEqual(new Date(`${PROJECT_START}T00:00:00`));
+  });
+
+  it('advances a whole week per project-week', () => {
+    expect(projectWeekStart(project(CHAIN()), 3)).toEqual(new Date('2026-08-17T00:00:00'));
+  });
+
+  it('has no answer without an anchor', () => {
+    expect(projectWeekStart(project(CHAIN(), { startDate: undefined }), 3)).toBeNull();
+  });
+
+  it('treats week 0 and negatives as week 1 rather than reaching back before the start', () => {
+    const wk1 = new Date(`${PROJECT_START}T00:00:00`);
+    expect(projectWeekStart(project(CHAIN()), 0)).toEqual(wk1);
+    expect(projectWeekStart(project(CHAIN()), -4)).toEqual(wk1);
+  });
+});
+
+describe('promised vs projected handover', () => {
+  // The plan is week-grained and the promise is a day, so the ONLY defensible
+  // claim is a lower bound: the projected week must start AFTER the promised
+  // date. A projection that merely lands in the same week is not evidence —
+  // the work could still finish on either side of it (#137).
+  const onPlan = (over: any = {}) => project(CHAIN(), over);
+
+  it('says nothing without a plan or without an anchor', () => {
+    expect(handoverOutlook({ project: project([]), today: dayInWeek(1) })).toBeNull();
+    expect(handoverOutlook({ project: onPlan({ startDate: undefined }), today: dayInWeek(1) })).toBeNull();
+  });
+
+  it('projects the plan end week when nothing has slipped', () => {
+    const out = handoverOutlook({ project: onPlan(), today: dayInWeek(1) })!;
+    expect(out.plannedEndWeek).toBe(3);
+    expect(out.projectedEndWeek).toBe(3);
+    expect(out.slipWeeks).toBe(0);
+    expect(out.projectedWeekStart).toEqual(new Date('2026-08-17T00:00:00'));
+  });
+
+  it('makes no claim when no handover was ever promised', () => {
+    const out = handoverOutlook({ project: onPlan(), today: dayInWeek(1) })!;
+    expect(out.promised).toBeNull();
+    expect(out.missesPromise).toBe(false);
+  });
+
+  it('reads the promise as a LOCAL day, not UTC midnight', () => {
+    // `new Date('2026-08-28')` is UTC midnight = 02:00 local in CEST. Comparing
+    // that against a local Monday boundary is hours out, which is how a promise
+    // lands on the wrong side of the line.
+    const out = handoverOutlook({ project: onPlan({ targetEndDate: '2026-08-28' }), today: dayInWeek(1) })!;
+    expect(out.promised).toEqual(new Date('2026-08-28T00:00:00'));
+  });
+
+  it('does NOT cry late when the projected week contains the promised date', () => {
+    // Projected week 3 starts Mon 17 Aug. A promise of Wed 19 Aug sits inside
+    // it: still makeable, so no claim.
+    const out = handoverOutlook({ project: onPlan({ targetEndDate: '2026-08-19' }), today: dayInWeek(1) })!;
+    expect(out.missesPromise).toBe(false);
+  });
+
+  it('does not cry late when the promise is the first day of the projected week', () => {
+    // Boundary: promised Mon 17 Aug, projected week starts Mon 17 Aug. Equal is
+    // not "after", and an off-by-one here reports every on-time project late.
+    const out = handoverOutlook({ project: onPlan({ targetEndDate: '2026-08-17' }), today: dayInWeek(1) })!;
+    expect(out.missesPromise).toBe(false);
+  });
+
+  it('cries late only once the whole projected week is past the promise', () => {
+    // Promised Sun 16 Aug; the earliest the work can now finish is the week
+    // beginning Mon 17 Aug. That is certain, so it is safe to say.
+    const out = handoverOutlook({ project: onPlan({ targetEndDate: '2026-08-16' }), today: dayInWeek(1) })!;
+    expect(out.missesPromise).toBe(true);
+  });
+
+  it('moves the projected week out when a predecessor is demonstrably late', () => {
+    // Week 5 and sloop (wk1) is still open, so it cannot finish before week 5.
+    // The chain then carries ONE week per handover (never the plan's full
+    // interval — that would convert float into slip): sloop 5 -> loodgieter 6
+    // -> tegels 7. Week 7 begins Mon 14 Sep, so a promise of 19 Aug is now
+    // certainly missed.
+    const out = handoverOutlook({ project: onPlan({ targetEndDate: '2026-08-19' }), today: dayInWeek(5) })!;
+    expect(out.projectedEndWeek).toBe(7);
+    expect(out.slipWeeks).toBe(4);
+    expect(out.projectedWeekStart).toEqual(new Date('2026-09-14T00:00:00'));
+    expect(out.missesPromise).toBe(true);
+  });
+
+  it('has nothing to project once every milestone is done', () => {
+    const done = CHAIN().map(m => ({ ...m, completed: true }));
+    expect(handoverOutlook({ project: project(done), today: dayInWeek(9) })).toBeNull();
   });
 });

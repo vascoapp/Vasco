@@ -1963,7 +1963,13 @@
     "weekEarlier": "Une semaine plus tôt",
     "weekLater": "Une semaine plus tard",
     "deleteMilestoneSuccessors_one": "{{titles}} ne l'attendra plus.",
-    "deleteMilestoneSuccessors_other": "{{titles}} ne l'attendront plus."
+    "deleteMilestoneSuccessors_other": "{{titles}} ne l'attendront plus.",
+    "projectedHandover": "Réception prévue",
+    "promisedHandover": "Promise le {{date}}",
+    "noPromisedHandover": "Aucune date de réception promise",
+    "setPromisedHandover": "Définir la date promise",
+    "clearPromisedHandover": "Supprimer la date promise",
+    "weekOf": "semaine du {{date}}"
   },
   "projectTemplate": {
     "pick": "Partir d'une séquence de corps de métier",

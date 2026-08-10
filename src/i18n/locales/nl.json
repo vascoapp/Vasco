@@ -1947,7 +1947,13 @@
     "weekEarlier": "Een week eerder",
     "weekLater": "Een week later",
     "deleteMilestoneSuccessors_one": "{{titles}} wacht er niet langer op.",
-    "deleteMilestoneSuccessors_other": "{{titles}} wachten er niet langer op."
+    "deleteMilestoneSuccessors_other": "{{titles}} wachten er niet langer op.",
+    "projectedHandover": "Verwachte oplevering",
+    "promisedHandover": "Beloofd {{date}}",
+    "noPromisedHandover": "Geen opleverdatum beloofd",
+    "setPromisedHandover": "Opleverdatum vastleggen",
+    "clearPromisedHandover": "Opleverdatum verwijderen",
+    "weekOf": "week van {{date}}"
   },
   "projectTemplate": {
     "pick": "Begin met een werkvolgorde",

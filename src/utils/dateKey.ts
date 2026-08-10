@@ -27,6 +27,25 @@ export function localDateKey(date: Date): string {
 }
 
 /**
+ * The inverse of `localDateKey`: a `YYYY-MM-DD` calendar day → LOCAL midnight.
+ *
+ * `new Date('2026-05-12')` parses a date-only string as **UTC** midnight, so in
+ * all six EU markets it lands at 01:00/02:00 local and any comparison against a
+ * local week boundary is hours out — the same bug this file exists to prevent,
+ * running the other way. The family could WRITE a local day key but not READ
+ * one, and a helper family with a gap invites the bug straight back (#130).
+ *
+ * Returns null rather than an Invalid Date: a caller that cannot tell the two
+ * apart renders "Invalid Date" at the user, which has happened here before.
+ */
+export function parseLocalDateKey(key: string | null | undefined): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(key ?? ''));
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
  * `YYYY-MM-DD` for today, local time. Call this at render/handler time —
  * never hoist the result to module scope, where it freezes at bundle load
  * and the app reports a stale "today" for the rest of the session.
