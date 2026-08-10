@@ -301,6 +301,30 @@ export function transitivePredecessors(
 }
 
 /**
+ * Milestones that may legally be picked as predecessors of `selfId`.
+ *
+ * Excludes itself and anything that already depends on it, transitively —
+ * otherwise the picker offers a tap that draws a cycle, which
+ * `sequenceMilestones` then neutralises, so the dependency silently does
+ * nothing and the UI looks broken.
+ *
+ * Lives here rather than inline in the modal because the test is easy to state
+ * and easy to get backwards: it is the CANDIDATE's ancestry that disqualifies
+ * it, not this milestone's. Reading this milestone's own predecessors instead
+ * hides the dependencies it already has AND offers every one that closes a
+ * loop — wrong in both directions, and invisible from a screen test.
+ */
+export function candidatePredecessors(
+  milestones: ProjectMilestone[],
+  selfId?: string,
+): ProjectMilestone[] {
+  return milestones
+    .filter((m) => m.id !== selfId)
+    .filter((m) => !selfId || !transitivePredecessors(milestones, m.id).has(selfId))
+    .sort((a, b) => Math.max(1, a.weekNumber ?? 1) - Math.max(1, b.weekNumber ?? 1));
+}
+
+/**
  * Drop a deleted milestone from every other milestone's `dependsOn`.
  *
  * `sequenceMilestones` already ignores unknown ids, so this is housekeeping

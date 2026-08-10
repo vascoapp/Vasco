@@ -17,6 +17,7 @@ import {
   projectSlip,
   defaultDependsOn,
   transitivePredecessors,
+  candidatePredecessors,
   removeMilestoneFromChain,
 } from '../projectSequenceService';
 import type { ProjectMilestone } from '../../types/project';
@@ -297,6 +298,38 @@ describe('transitivePredecessors', () => {
 
   it('ignores unknown ids', () => {
     expect(transitivePredecessors([ms({ id: 'x', dependsOn: ['weg'] })], 'x')).toEqual(new Set());
+  });
+});
+
+describe('candidatePredecessors', () => {
+  // This rule was written inline in the modal and inverted: it read the edited
+  // milestone's OWN predecessors, which hid the dependencies it already had and
+  // offered every one that closed a loop. 1704 tests were green through it,
+  // because nothing could reach a list computed inside a component.
+  it('offers the dependencies it already has, so they can be unticked', () => {
+    expect(candidatePredecessors(CHAIN(), 'tegels').map(m => m.id)).toContain('loodgieter');
+    expect(candidatePredecessors(CHAIN(), 'loodgieter').map(m => m.id)).toContain('sloop');
+  });
+
+  it('never offers a milestone that already depends on this one', () => {
+    // tegels -> loodgieter -> sloop. Nothing behind sloop may precede it.
+    expect(candidatePredecessors(CHAIN(), 'sloop').map(m => m.id)).toEqual([]);
+    expect(candidatePredecessors(CHAIN(), 'loodgieter').map(m => m.id)).toEqual(['sloop']);
+  });
+
+  it('never offers the milestone itself', () => {
+    expect(candidatePredecessors(CHAIN(), 'tegels').map(m => m.id)).not.toContain('tegels');
+  });
+
+  it('offers everything for a milestone that does not exist yet', () => {
+    expect(candidatePredecessors(CHAIN(), undefined).map(m => m.id)).toEqual([
+      'sloop', 'loodgieter', 'tegels',
+    ]);
+  });
+
+  it('orders by the plan, so the sequence reads in order', () => {
+    const jumbled = [ms({ id: 'c', weekNumber: 5 }), ms({ id: 'a', weekNumber: 1 }), ms({ id: 'b', weekNumber: 3 })];
+    expect(candidatePredecessors(jumbled, undefined).map(m => m.id)).toEqual(['a', 'b', 'c']);
   });
 });
 

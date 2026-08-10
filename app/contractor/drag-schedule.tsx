@@ -394,7 +394,10 @@ export default function DragScheduleScreen() {
       customerName: s.customerName,
       trade: 'general',
       createdAt: new Date().toISOString(),
-      scheduledDate: new Date().toISOString().split('T')[0],
+      // todayKey(), not toISOString(): the latter is the UTC date, so a job
+      // created between midnight and 02:00 CEST was filed under YESTERDAY and
+      // vanished from the planner it was just dragged onto.
+      scheduledDate: todayKey(),
       scheduledStartTime: `${s.startHour.toString().padStart(2, '0')}:00`,
       scheduledEndTime: hoursToHM(s.startHour + s.duration),
     } as any));

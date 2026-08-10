@@ -21,7 +21,7 @@ import { billingProgress } from '../../../src/services/progressBillingService';
 import {
   sequenceByMilestoneId,
   defaultDependsOn,
-  transitivePredecessors,
+  candidatePredecessors,
   removeMilestoneFromChain,
 } from '../../../src/services/projectSequenceService';
 
@@ -503,13 +503,10 @@ function MilestoneModal({ state, allMilestones, onClose, onSave, onDelete }: Mil
     if (!depsTouched.current) setDependsOn(defaultDependsOn(allMilestones, w, existing?.id));
   };
 
-  // A milestone already behind this one cannot also come before it. The
-  // sequence service survives a cycle by claiming nothing, but that would look
-  // like the tap did nothing — so the cycle is not offerable in the first place.
-  const behindThis = existing ? transitivePredecessors(allMilestones, existing.id) : new Set<string>();
-  const candidates = allMilestones
-    .filter(m => m.id !== existing?.id && !behindThis.has(m.id))
-    .sort((a, b) => a.weekNumber - b.weekNumber);
+  // A milestone already behind this one cannot also come before it — the rule
+  // and its tests live in the service, because it is easy to state and easy to
+  // get backwards, and a screen test cannot see which way round it is.
+  const candidates = candidatePredecessors(allMilestones, existing?.id);
 
   const canSave = title.trim().length > 0;
 
