@@ -4,6 +4,7 @@ import type { QuoteLineItem } from '../domain/lineItems';
 import type { BusinessProfile } from '../domain/business';
 import type { Customer } from '../domain/customers';
 import type { Job, JobStatus, JobPriority } from '../domain/jobs';
+import type { Project } from '../types/project';
 import type { Material, DemandPattern, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
 import type { Supplier, SupplierStatus } from '../domain/suppliers';
 import type { Lead } from '../domain/lead';
@@ -446,4 +447,50 @@ function formatRelativeDate(iso: string): string {
   if (diffDays <= 0) return 'Today';
   if (diffDays === 1) return '1 day ago';
   return `${diffDays} days ago`;
+}
+
+// ---------------------------------------------------------------------------
+// PROJECTS
+// ---------------------------------------------------------------------------
+
+/**
+ * camelCase Project patch -> projects row payload.
+ *
+ * Lifted out of an inline block inside AppState.updateProject. A rule computed
+ * inline in a component or a closure is unreachable by every test in the suite
+ * (#138), and this one had already gone wrong: it guarded on `!== undefined`,
+ * which can SET a field but never CLEAR one. Removing a promised handover
+ * updated the local copy through the spread and never reached the patch, so
+ * the date came back on the next cold start.
+ *
+ * Same two-part rule as `jobUpdatesToRowPayload`: `'x' in updates` decides
+ * whether the caller MENTIONED the field, `?? null` decides whether an explicit
+ * `undefined` can EMPTY it. A key holding `undefined` does not survive
+ * JSON.stringify, so without the coalesce the clear silently never happens.
+ *
+ * NOT NULL columns keep their bare assignment or a non-null default:
+ * `name` and `status` cannot take null, and `milestones`, `billing_terms`,
+ * `change_orders`, `retention_percent` are NOT NULL with defaults.
+ *
+ * Deliberately unchanged from the inline version: `customerId`, `totalQuoted`,
+ * `totalInvoiced` and `totalPaid` are still not written here. The first has no
+ * edit surface and the rest are derived from invoices — adding them would be a
+ * behaviour change, not a guard fix.
+ */
+export function projectUpdatesToRowPayload(updates: Partial<Project>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if ('title' in updates)            out.name = updates.title;               // NOT NULL
+  if ('description' in updates)      out.description = updates.description ?? null;
+  if ('status' in updates)           out.status = updates.status;            // NOT NULL
+  if ('startDate' in updates)        out.start_date = updates.startDate ?? null;
+  if ('targetEndDate' in updates)    out.target_end_date = updates.targetEndDate ?? null;
+  if ('actualEndDate' in updates)    out.actual_end_date = updates.actualEndDate ?? null;
+  // Nullish-only: a project budgeted at 0 is not a project with no budget.
+  if ('totalBudget' in updates)      out.total_budget = updates.totalBudget ?? null;
+  if ('address' in updates)          out.address = updates.address ?? null;
+  if ('milestones' in updates)       out.milestones = updates.milestones ?? [];        // NOT NULL
+  if ('billingTerms' in updates)     out.billing_terms = updates.billingTerms ?? [];   // NOT NULL
+  if ('retentionPercent' in updates) out.retention_percent = updates.retentionPercent ?? 0; // NOT NULL
+  if ('changeOrders' in updates)     out.change_orders = updates.changeOrders ?? [];   // NOT NULL
+  return out;
 }

@@ -3735,27 +3735,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // doesn't exist yet); for real ids try BE then queue on failure.
         if (isSupabaseConfigured) {
           (async () => {
-            const patch: Record<string, unknown> = {};
-            const updates = effective;
-            if (updates.title !== undefined) patch.name = updates.title;
-            if (updates.description !== undefined) patch.description = updates.description;
-            if (updates.status !== undefined) patch.status = updates.status;
-            if (updates.startDate !== undefined) patch.start_date = updates.startDate;
-            // `in`, not `!== undefined`: this is the one field the UI can
-            // CLEAR (removing a promised handover). With the usual guard,
-            // `{ targetEndDate: undefined }` clears the local copy via the
-            // spread above but never reaches the patch, so the promise
-            // reappears on the next cold start — cleared on screen, still in
-            // the database. `?? null` is what actually empties the column.
-            if ('targetEndDate' in updates) patch.target_end_date = updates.targetEndDate ?? null;
-            if (updates.actualEndDate !== undefined) patch.actual_end_date = updates.actualEndDate;
-            if (updates.totalBudget !== undefined) patch.total_budget = updates.totalBudget;
-            if (updates.address !== undefined) patch.address = updates.address;
-            if (updates.milestones !== undefined) patch.milestones = updates.milestones;
-            // Rule #8 step 4 — write mappers for progress billing.
-            if (updates.billingTerms !== undefined) patch.billing_terms = updates.billingTerms;
-            if (updates.retentionPercent !== undefined) patch.retention_percent = updates.retentionPercent;
-            if (updates.changeOrders !== undefined) patch.change_orders = updates.changeOrders;
+            // Extracted to mappers.ts so it can be tested: the previous inline
+            // version guarded on `!== undefined`, which can SET a field but
+            // never CLEAR one, and nothing in the suite could reach it (#138).
+            const { projectUpdatesToRowPayload } = await import('../lib/mappers');
+            const patch = projectUpdatesToRowPayload(effective);
             if (Object.keys(patch).length === 0) return;
 
             if (id.startsWith('proj-')) {
