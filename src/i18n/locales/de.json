@@ -1965,6 +1965,32 @@
     "deleteMilestoneSuccessors_one": "{{titles}} wartet nicht mehr darauf.",
     "deleteMilestoneSuccessors_other": "{{titles}} warten nicht mehr darauf."
   },
+  "projectTemplate": {
+    "pick": "Mit einer Gewerkefolge starten",
+    "stepCount_one": "{{count}} Meilenstein, danach anpassbar",
+    "stepCount_other": "{{count}} Meilensteine, danach anpassbar",
+    "name": {
+      "bathroom": "Badsanierung",
+      "kitchen": "Küchensanierung",
+      "attic": "Dachgeschossausbau",
+      "wholeHome": "Komplettsanierung"
+    },
+    "step": {
+      "stripOut": "Rückbau abgeschlossen",
+      "roughInPlumbing": "Sanitär-Rohinstallation",
+      "roughInElectrical": "Elektro-Rohinstallation",
+      "structureReady": "Rohbau fertig",
+      "roofDone": "Dach fertig",
+      "insulationDone": "Dämmung eingebaut",
+      "wallsReady": "Wände fertig",
+      "tilingDone": "Fliesenarbeiten fertig",
+      "floorLaid": "Boden verlegt",
+      "sanitaryFitted": "Sanitärobjekte montiert",
+      "kitchenFitted": "Küche montiert",
+      "paintingDone": "Malerarbeiten fertig",
+      "handover": "Abnahme"
+    }
+  },
   "automation": {
     "progressNote": "Hallo {{customer}}, Update zu {{job}}: {{hours}}h gearbeitet heute. Alles im Plan. Fragen? Melden Sie sich!",
     "progressTitle": "Fortschritt: {{title}}",

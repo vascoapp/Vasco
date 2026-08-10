@@ -1965,6 +1965,32 @@
     "deleteMilestoneSuccessors_one": "{{titles}} ya no lo esperará.",
     "deleteMilestoneSuccessors_other": "{{titles}} ya no lo esperarán."
   },
+  "projectTemplate": {
+    "pick": "Empezar con una secuencia de oficios",
+    "stepCount_one": "{{count}} hito, editable después",
+    "stepCount_other": "{{count}} hitos, editables después",
+    "name": {
+      "bathroom": "Reforma de baño",
+      "kitchen": "Reforma de cocina",
+      "attic": "Acondicionamiento de buhardilla",
+      "wholeHome": "Reforma integral"
+    },
+    "step": {
+      "stripOut": "Demolición terminada",
+      "roughInPlumbing": "Fontanería — primera fase",
+      "roughInElectrical": "Electricidad — primera fase",
+      "structureReady": "Estructura terminada",
+      "roofDone": "Cubierta terminada",
+      "insulationDone": "Aislamiento colocado",
+      "wallsReady": "Paredes listas",
+      "tilingDone": "Alicatado terminado",
+      "floorLaid": "Suelo colocado",
+      "sanitaryFitted": "Sanitarios instalados",
+      "kitchenFitted": "Cocina montada",
+      "paintingDone": "Pintura terminada",
+      "handover": "Entrega"
+    }
+  },
   "automation": {
     "progressNote": "Hola {{customer}}, actualización sobre {{job}}: {{hours}}h trabajadas hoy. Todo según lo previsto. ¿Preguntas?",
     "progressTitle": "Progreso: {{title}}",

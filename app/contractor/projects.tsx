@@ -14,9 +14,15 @@ import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { localDateKey } from '../../src/utils/dateKey';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Modal } from 'react-native';
 import type { Project, ProjectStatus } from '../../src/types/project';
+import {
+  PROJECT_TEMPLATES,
+  templateById,
+  buildMilestonesFromTemplate,
+} from '../../src/services/projectTemplateService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -41,6 +47,7 @@ export default function ProjectsScreen() {
   const [newTitle, setNewTitle] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
   const [newBudget, setNewBudget] = useState('');
+  const [newTemplate, setNewTemplate] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
 
@@ -52,13 +59,31 @@ export default function ProjectsScreen() {
   const handleCreate = () => {
     if (!newTitle.trim()) return;
     hapticSuccess();
+    // Every project used to be created with `milestones: []`, so the week-view
+    // staffing strip and the handover sequencer both read an empty list for
+    // every project that ever existed. A badkamer has a known trade order —
+    // shipping it means the plan exists before anyone types anything.
+    const template = newTemplate ? templateById(newTemplate) : undefined;
     addProject({
       title: newTitle.trim(),
       customerId: newCustomer || '',
       status: 'planning',
+      // The plan needs an anchor or it makes no claim at all. `weekNumber` is
+      // an OFFSET from the start date, so with `startDate` undefined both
+      // `currentProjectWeek` and `milestoneWeekStart` return null by design —
+      // and then the handover warning can never fire and slip is forever 0.
+      // Nothing in the UI has ever written this field, so only the demo seed
+      // (which sets it) exercised the sequencer; every real project created
+      // in the app had a dead one. Local, not UTC — matches SEED_PROJECTS.
+      startDate: localDateKey(new Date()),
       totalBudget: Number(newBudget) || 0,
       totalQuoted: 0,
-      milestones: [],
+      milestones: template
+        ? buildMilestonesFromTemplate({
+            template,
+            translate: (key, fallback) => t(key, fallback),
+          })
+        : [],
       jobIds: [],
       quoteIds: [],
       invoiceIds: [],
@@ -71,6 +96,7 @@ export default function ProjectsScreen() {
     setNewTitle('');
     setNewCustomer('');
     setNewBudget('');
+    setNewTemplate(null);
     setShowCreate(false);
   };
 
@@ -251,6 +277,37 @@ export default function ProjectsScreen() {
                 onChangeText={setNewBudget}
                 keyboardType="numeric"
               />
+              {/* The trade order, shipped as content. Optional: an aannemer
+                  with their own sequence picks nothing and gets the old
+                  empty-list behaviour. */}
+              <Text style={styles.templateLabel}>{t('projectTemplate.pick', 'Start from a trade sequence')}</Text>
+              <View style={styles.templateWrap}>
+                {PROJECT_TEMPLATES.map(tpl => {
+                  const on = newTemplate === tpl.id;
+                  return (
+                    <Pressable
+                      key={tpl.id}
+                      onPress={() => setNewTemplate(on ? null : tpl.id)}
+                      style={[styles.templateChip, on && styles.templateChipOn]}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: on }}
+                    >
+                      <Text style={[styles.templateChipText, on && styles.templateChipTextOn]}>
+                        {t(`projectTemplate.name.${tpl.nameKey}`, tpl.nameKey)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {newTemplate ? (
+                <Text style={styles.templateHint}>
+                  {t('projectTemplate.stepCount', {
+                    defaultValue: '{{count}} milestones, editable afterwards',
+                    count: templateById(newTemplate)?.steps.length ?? 0,
+                  })}
+                </Text>
+              ) : null}
+
               <Pressable
                 style={[styles.createBtn, !newTitle.trim() && { opacity: 0.5 }]}
                 onPress={handleCreate}
@@ -300,6 +357,17 @@ const styles = StyleSheet.create({
   form: { gap: 12, paddingBottom: 20 },
   input: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   createBtn: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 14, alignItems: 'center' },
+  templateLabel: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary, marginTop: 4 },
+  templateWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  templateChip: {
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1, borderColor: 'transparent',
+  },
+  templateChipOn: { borderColor: Palette.hermesOrange },
+  templateChipText: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
+  templateChipTextOn: { color: SemanticColors.textPrimary },
+  templateHint: { fontSize: TYPE.labelSize, color: SemanticColors.textTertiary },
   createBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
 
   // Filter chips

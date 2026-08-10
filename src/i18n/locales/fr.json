@@ -1965,6 +1965,32 @@
     "deleteMilestoneSuccessors_one": "{{titles}} ne l'attendra plus.",
     "deleteMilestoneSuccessors_other": "{{titles}} ne l'attendront plus."
   },
+  "projectTemplate": {
+    "pick": "Partir d'une séquence de corps de métier",
+    "stepCount_one": "{{count}} jalon, modifiable ensuite",
+    "stepCount_other": "{{count}} jalons, modifiables ensuite",
+    "name": {
+      "bathroom": "Rénovation de salle de bains",
+      "kitchen": "Rénovation de cuisine",
+      "attic": "Aménagement de combles",
+      "wholeHome": "Rénovation complète"
+    },
+    "step": {
+      "stripOut": "Dépose terminée",
+      "roughInPlumbing": "Plomberie — réseaux posés",
+      "roughInElectrical": "Électricité — réseaux posés",
+      "structureReady": "Gros œuvre terminé",
+      "roofDone": "Toiture terminée",
+      "insulationDone": "Isolation posée",
+      "wallsReady": "Murs prêts",
+      "tilingDone": "Carrelage terminé",
+      "floorLaid": "Sol posé",
+      "sanitaryFitted": "Sanitaires posés",
+      "kitchenFitted": "Cuisine posée",
+      "paintingDone": "Peinture terminée",
+      "handover": "Réception"
+    }
+  },
   "automation": {
     "progressNote": "Bonjour {{customer}}, mise à jour sur {{job}} : {{hours}}h travaillées aujourd'hui. Tout est en ordre. Des questions ?",
     "progressTitle": "Mise à jour: {{title}}",

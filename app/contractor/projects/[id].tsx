@@ -24,6 +24,11 @@ import {
   candidatePredecessors,
   removeMilestoneFromChain,
 } from '../../../src/services/projectSequenceService';
+import {
+  PROJECT_TEMPLATES,
+  buildMilestonesFromTemplate,
+  type ProjectTemplate,
+} from '../../../src/services/projectTemplateService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -90,6 +95,23 @@ export default function ProjectDetailScreen() {
         : [...project.milestones, draft],
     );
     setEditingMilestone(null);
+  };
+
+  // Every project that existed before templates has `milestones: []`, and the
+  // create screen's picker only reaches NEW ones. Without this, the entire
+  // installed base could only be planned one milestone at a time by hand.
+  //
+  // Offered as inline rows, NOT an Alert: RN's Android Alert keeps only the
+  // first three buttons ("At most three buttons (neutral, negative, positive).
+  // Ignore rest." — Alert.js), so four templates plus a cancel would have
+  // silently dropped the whole-home sequence AND the cancel on Android, and
+  // reordered the survivors into button slots.
+  const applyTemplate = (tpl: ProjectTemplate) => {
+    if (!project) return;
+    hapticSuccess();
+    writeMilestones(
+      buildMilestonesFromTemplate({ template: tpl, translate: (k, f) => t(k, f) }),
+    );
   };
 
   // What is blocked, by what, and has the end date moved. Derived on every
@@ -376,6 +398,34 @@ export default function ProjectDetailScreen() {
             {project.milestones.length === 0 ? (
               <>
                 <Text style={styles.emptyText}>{t('project.noMilestones')}</Text>
+                {/* Template first: a whole sequence in one tap beats seven
+                    trips through the editor, and the order is already known.
+                    The step count is shown up front because tapping writes
+                    7–11 milestones at once. */}
+                <Text style={styles.templateLabel}>
+                  {t('projectTemplate.pick', 'Start from a trade sequence')}
+                </Text>
+                {PROJECT_TEMPLATES.map(tpl => (
+                  <Pressable
+                    key={tpl.id}
+                    style={styles.templateRow}
+                    onPress={() => applyTemplate(tpl)}
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="layers-outline" size={18} color={Palette.hermesOrange} />
+                    <View style={styles.templateRowMain}>
+                      <Text style={styles.milestoneCtaText}>
+                        {t(`projectTemplate.name.${tpl.nameKey}`, tpl.nameKey)}
+                      </Text>
+                      <Text style={styles.templateRowCount}>
+                        {t('projectTemplate.stepCount', {
+                          defaultValue: '{{count}} milestones, editable afterwards',
+                          count: tpl.steps.length,
+                        })}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
                 <Pressable style={styles.milestoneCta} onPress={() => setEditingMilestone({ mode: 'new' })}>
                   <Ionicons name="flag-outline" size={18} color={Palette.hermesOrange} />
                   <Text style={styles.milestoneCtaText}>{t('project.planTrades', 'Plan the trade sequence')}</Text>
@@ -681,6 +731,22 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md, borderWidth: 1, borderColor: Palette.hermesOrange + '44',
   },
   milestoneCtaText: { fontSize: TYPE.bodySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
+  templateLabel: {
+    fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily,
+    color: SemanticColors.textSecondary, marginTop: GRID.sm,
+  },
+  templateRow: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    paddingVertical: 10, paddingHorizontal: GRID.md,
+    borderRadius: RADIUS.md, borderWidth: 1, borderColor: Palette.hermesOrange + '44',
+  },
+  // flex:1 so a long sequence name wraps instead of starving — the truncation
+  // pattern this app keeps reintroducing.
+  templateRowMain: { flex: 1 },
+  templateRowCount: {
+    fontSize: TYPE.labelSize, fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textTertiary, marginTop: 1,
+  },
   milestoneMain: { flex: 1 },
   milestoneTrade: { fontSize: TYPE.labelSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary, marginTop: 1 },
   milestoneBlocked: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.feedbackWarning, marginTop: 2 },

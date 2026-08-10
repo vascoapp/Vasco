@@ -1965,6 +1965,32 @@
     "deleteMilestoneSuccessors_one": "{{titles}} will no longer wait for it.",
     "deleteMilestoneSuccessors_other": "{{titles}} will no longer wait for it."
   },
+  "projectTemplate": {
+    "pick": "Start from a trade sequence",
+    "stepCount_one": "{{count}} milestone, editable afterwards",
+    "stepCount_other": "{{count}} milestones, editable afterwards",
+    "name": {
+      "bathroom": "Bathroom renovation",
+      "kitchen": "Kitchen renovation",
+      "attic": "Attic conversion",
+      "wholeHome": "Whole-home renovation"
+    },
+    "step": {
+      "stripOut": "Strip-out complete",
+      "roughInPlumbing": "Plumbing first fix",
+      "roughInElectrical": "Electrical first fix",
+      "structureReady": "Structure ready",
+      "roofDone": "Roof complete",
+      "insulationDone": "Insulation complete",
+      "wallsReady": "Walls ready",
+      "tilingDone": "Tiling complete",
+      "floorLaid": "Floor laid",
+      "sanitaryFitted": "Sanitaryware fitted",
+      "kitchenFitted": "Kitchen fitted",
+      "paintingDone": "Painting complete",
+      "handover": "Handover"
+    }
+  },
   "automation": {
     "progressNote": "Hi {{customer}}, update on {{job}}: {{hours}}h worked today. Progress is on track. Any questions, let me know!",
     "progressTitle": "Progress update: {{title}}",

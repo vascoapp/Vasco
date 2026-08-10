@@ -1949,6 +1949,32 @@
     "deleteMilestoneSuccessors_one": "{{titles}} wacht er niet langer op.",
     "deleteMilestoneSuccessors_other": "{{titles}} wachten er niet langer op."
   },
+  "projectTemplate": {
+    "pick": "Begin met een werkvolgorde",
+    "stepCount_one": "{{count}} mijlpaal, daarna aan te passen",
+    "stepCount_other": "{{count}} mijlpalen, daarna aan te passen",
+    "name": {
+      "bathroom": "Badkamerrenovatie",
+      "kitchen": "Keukenrenovatie",
+      "attic": "Zolderverbouwing",
+      "wholeHome": "Volledige woningrenovatie"
+    },
+    "step": {
+      "stripOut": "Sloopwerk gereed",
+      "roughInPlumbing": "Leidingwerk gereed",
+      "roughInElectrical": "Elektra ingefreesd",
+      "structureReady": "Constructie gereed",
+      "roofDone": "Dak gereed",
+      "insulationDone": "Isolatie aangebracht",
+      "wallsReady": "Wanden gereed",
+      "tilingDone": "Tegelwerk gereed",
+      "floorLaid": "Vloer gelegd",
+      "sanitaryFitted": "Sanitair gemonteerd",
+      "kitchenFitted": "Keuken gemonteerd",
+      "paintingDone": "Schilderwerk gereed",
+      "handover": "Oplevering"
+    }
+  },
   "automation": {
     "progressNote": "Hi {{customer}}, update over {{job}}: {{hours}}u gewerkt vandaag. Alles op schema. Vragen? Laat het weten!",
     "progressTitle": "Voortgang: {{title}}",
