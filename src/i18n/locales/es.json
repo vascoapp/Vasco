@@ -2400,7 +2400,9 @@
       "filterOpen": "En curso",
       "filterDone": "Finalizados",
       "retentionPlaceholder": "Retención % (opcional)",
-      "retentionHint": "{{percent}}% retenido en cada certificación hasta la entrega"
+      "retentionHint": "{{percent}}% retenido en cada certificación hasta la entrega",
+      "pickCustomer": "Cliente",
+      "noCustomersYet": "Aún no hay clientes — se puede crear un proyecto sin uno."
     }
   },
   "legal": {

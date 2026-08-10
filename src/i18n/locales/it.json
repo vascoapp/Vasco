@@ -2400,7 +2400,9 @@
       "filterOpen": "In corso",
       "filterDone": "Conclusi",
       "retentionPlaceholder": "Ritenuta a garanzia % (facoltativa)",
-      "retentionHint": "{{percent}}% trattenuto su ogni acconto fino alla consegna"
+      "retentionHint": "{{percent}}% trattenuto su ogni acconto fino alla consegna",
+      "pickCustomer": "Cliente",
+      "noCustomersYet": "Nessun cliente ancora — un progetto può essere creato senza."
     }
   },
   "legal": {

@@ -46,7 +46,7 @@ export default function ProjectsScreen() {
   const country = (user?.country ?? 'NL') as Country;
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [newCustomer, setNewCustomer] = useState('');
+  const [newCustomerId, setNewCustomerId] = useState('');
   const [newBudget, setNewBudget] = useState('');
   const [newRetention, setNewRetention] = useState('');
   const [newTemplate, setNewTemplate] = useState<string | null>(null);
@@ -68,7 +68,11 @@ export default function ProjectsScreen() {
     const template = newTemplate ? templateById(newTemplate) : undefined;
     addProject({
       title: newTitle.trim(),
-      customerId: newCustomer || '',
+      customerId: newCustomerId || '',
+      // The list renders `customer?.name ?? project.customerName`. Carrying the
+      // name keeps the card readable if the customer is later deleted — the FK
+      // is ON DELETE SET NULL, so the id alone would resolve to nothing.
+      customerName: customers.find(c => c.id === newCustomerId)?.name,
       status: 'planning',
       // The plan needs an anchor or it makes no claim at all. `weekNumber` is
       // an OFFSET from the start date, so with `startDate` undefined both
@@ -103,7 +107,7 @@ export default function ProjectsScreen() {
       changeOrders: [],
     });
     setNewTitle('');
-    setNewCustomer('');
+    setNewCustomerId('');
     setNewBudget('');
     setNewRetention('');
     setNewTemplate(null);
@@ -272,13 +276,39 @@ export default function ProjectsScreen() {
                 value={newTitle}
                 onChangeText={setNewTitle}
               />
-              <TextInput
-                style={styles.input}
-                placeholder={t('contractor.projects.customerNamePlaceholder', 'Customer name (optional)')}
-                placeholderTextColor={SemanticColors.textTertiary}
-                value={newCustomer}
-                onChangeText={setNewCustomer}
-              />
+              {/* Was a free-text "Customer name" box writing into `customerId`
+                  — a NAME in an id field. `customer_id` is
+                  `uuid references customers(id)`, so `isUuid` sent null to the
+                  database, `customers.find(c => c.id === …)` never matched, and
+                  the customer vanished on reload. A picker is the only thing
+                  that can produce a real link. Same fix as the decisions
+                  tracker got in R322. */}
+              <Text style={styles.templateLabel}>
+                {t('contractor.projects.pickCustomer', 'Customer')}
+              </Text>
+              <View style={styles.templateWrap}>
+                {customers.map(c => {
+                  const on = newCustomerId === c.id;
+                  return (
+                    <Pressable
+                      key={c.id}
+                      onPress={() => setNewCustomerId(on ? '' : c.id)}
+                      style={[styles.templateChip, on && styles.templateChipOn]}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: on }}
+                    >
+                      <Text style={[styles.templateChipText, on && styles.templateChipTextOn]}>
+                        {c.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {customers.length === 0 ? (
+                <Text style={styles.templateHint}>
+                  {t('contractor.projects.noCustomersYet', 'No customers yet — a project can be created without one.')}
+                </Text>
+              ) : null}
               <TextInput
                 style={styles.input}
                 placeholder={t('contractor.projects.budgetPlaceholder', 'Budget €')}

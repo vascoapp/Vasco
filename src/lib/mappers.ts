@@ -5,6 +5,7 @@ import type { BusinessProfile } from '../domain/business';
 import type { Customer } from '../domain/customers';
 import type { Job, JobStatus, JobPriority } from '../domain/jobs';
 import type { Project } from '../types/project';
+import { isUuid } from './idShape';
 import type { Material, DemandPattern, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
 import type { Supplier, SupplierStatus } from '../domain/suppliers';
 import type { Lead } from '../domain/lead';
@@ -479,6 +480,11 @@ function formatRelativeDate(iso: string): string {
  */
 export function projectUpdatesToRowPayload(updates: Partial<Project>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
+  // `customer_id` is `uuid references customers(id)`, so anything that is not a
+  // uuid must become null rather than reach the database — every other write
+  // site (addProject and the four offline-queue payloads) already guards this
+  // way, and the create screen can still hand us a free-typed NAME.
+  if ('customerId' in updates)       out.customer_id = isUuid(updates.customerId) ? updates.customerId : null;
   if ('title' in updates)            out.name = updates.title;               // NOT NULL
   if ('description' in updates)      out.description = updates.description ?? null;
   if ('status' in updates)           out.status = updates.status;            // NOT NULL

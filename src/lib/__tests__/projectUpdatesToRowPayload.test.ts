@@ -110,4 +110,31 @@ describe('projectUpdatesToRowPayload', () => {
       milestones: [{ id: 'm1' }],
     });
   });
+
+  describe('customerId is a uuid FK, not free text', () => {
+    // `customer_id uuid references customers(id) on delete set null`. The create
+    // screen used to hand a typed NAME straight into this field, so every other
+    // write site already guards with isUuid — this mapper had no line for it at
+    // all, which meant a project's customer could never be changed.
+    const UUID = '3f2504e0-4f89-11d3-9a0c-0305e82c3301';
+
+    it('writes a real uuid through', () => {
+      expect(projectUpdatesToRowPayload({ customerId: UUID })).toEqual({ customer_id: UUID });
+    });
+
+    it('nulls a name rather than sending it to a uuid column', () => {
+      // Reaching the database would be a type error / FK violation, failing the
+      // whole row write rather than just this field.
+      expect(projectUpdatesToRowPayload({ customerId: 'Fam. Jansen' })).toEqual({ customer_id: null });
+    });
+
+    it('nulls a temp id, which no customers row has yet', () => {
+      expect(projectUpdatesToRowPayload({ customerId: 'c-1754831200000' })).toEqual({ customer_id: null });
+    });
+
+    it('clears on empty string and on explicit undefined', () => {
+      expect(projectUpdatesToRowPayload({ customerId: '' })).toEqual({ customer_id: null });
+      expect(projectUpdatesToRowPayload({ customerId: undefined } as any)).toEqual({ customer_id: null });
+    });
+  });
 });

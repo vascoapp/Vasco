@@ -2400,7 +2400,9 @@
       "filterOpen": "Laufend",
       "filterDone": "Abgeschlossen",
       "retentionPlaceholder": "Sicherheitseinbehalt % (optional)",
-      "retentionHint": "{{percent}}% werden je Rate bis zur Abnahme einbehalten"
+      "retentionHint": "{{percent}}% werden je Rate bis zur Abnahme einbehalten",
+      "pickCustomer": "Kunde",
+      "noCustomersYet": "Noch keine Kunden — ein Projekt geht auch ohne."
     }
   },
   "legal": {

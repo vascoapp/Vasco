@@ -2400,7 +2400,9 @@
       "filterOpen": "Open",
       "filterDone": "Finished",
       "retentionPlaceholder": "Retention % (optional)",
-      "retentionHint": "{{percent}}% withheld from each instalment until handover"
+      "retentionHint": "{{percent}}% withheld from each instalment until handover",
+      "pickCustomer": "Customer",
+      "noCustomersYet": "No customers yet — a project can be created without one."
     }
   },
   "legal": {

@@ -2384,7 +2384,9 @@
       "filterOpen": "Lopend",
       "filterDone": "Afgerond",
       "retentionPlaceholder": "Retentie % (optioneel)",
-      "retentionHint": "{{percent}}% ingehouden op elke termijn tot de oplevering"
+      "retentionHint": "{{percent}}% ingehouden op elke termijn tot de oplevering",
+      "pickCustomer": "Klant",
+      "noCustomersYet": "Nog geen klanten — een project kan ook zonder."
     }
   },
   "legal": {

@@ -2400,7 +2400,9 @@
       "filterOpen": "En cours",
       "filterDone": "Terminés",
       "retentionPlaceholder": "Retenue de garantie % (facultatif)",
-      "retentionHint": "{{percent}}% retenus sur chaque situation jusqu’à la réception"
+      "retentionHint": "{{percent}}% retenus sur chaque situation jusqu’à la réception",
+      "pickCustomer": "Client",
+      "noCustomersYet": "Aucun client pour l'instant — un projet peut être créé sans."
     }
   },
   "legal": {
