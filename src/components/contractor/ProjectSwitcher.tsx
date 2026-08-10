@@ -1,7 +1,7 @@
 // =============================================================================
 // PROJECT SWITCHER (R248)
 // =============================================================================
-// Horizontal pill row on Vandaag for aannemer-mode contractors. Lets the
+// Balloon menu on Vandaag for aannemer-mode contractors. Lets the
 // contractor pick the active project context. Active selection persists
 // (activeProjectService) so subsequent site-lead navigations pre-fill
 // the projectId param.
@@ -12,13 +12,14 @@
 // =============================================================================
 
 import { memo, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import { DKLabel } from '../shared/DKLabel';
+import { DKMenu } from '../shared/DKMenu';
 import { useAppState } from '../../state/AppState';
 import { useAuth } from '../../context/AuthContext';
 import { useActiveProject } from '../../services/activeProjectService';
@@ -33,6 +34,11 @@ function ProjectSwitcherImpl() {
   const activeProjects = useMemo(
     () => (projects ?? []).filter((p: any) => p.status === 'active' || p.status === 'planning' || p.status === 'in_progress'),
     [projects],
+  );
+
+  const activeProject = useMemo(
+    () => activeProjects.find((p: any) => p.id === activeProjectId) ?? null,
+    [activeProjects, activeProjectId],
   );
 
   if (!user?.isAannemer || activeProjects.length === 0) return null;
@@ -53,38 +59,57 @@ function ProjectSwitcherImpl() {
           <Text style={styles.allLink}>{t('projectSwitcher.allLink')}</Text>
         </Pressable>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-        {activeProjects.map((p: any) => {
-          const isActive = activeProjectId === p.id;
-          return (
+      {/* Was a horizontal pill row. A strip of chips hides every option past
+          the right edge and never says how many there are — with four projects
+          the fourth was invisible. One anchor showing the current context,
+          opening a balloon that lists all of them, is the house pattern now
+          (see DKMenu). */}
+      <View style={styles.anchorRow}>
+        <DKMenu
+          accessibilityLabel={t('projectSwitcher.activeProjects')}
+          items={[
+            ...activeProjects.map((p: any) => ({
+              key: p.id,
+              label: p.title,
+              icon: 'folder-outline' as const,
+              selected: activeProjectId === p.id,
+              // Tapping the SELECTED project clears the context, which is what
+              // the pill toggle did. Unchanged so muscle memory survives.
+              onPress: () => { void handleSelect(p.id); },
+            })),
+            {
+              key: '__new',
+              label: t('projectSwitcher.newProject'),
+              icon: 'add' as const,
+              emphasis: true,
+              onPress: () => router.push('/contractor/projects' as any),
+            },
+          ]}
+          renderAnchor={(open) => (
             <Pressable
-              key={p.id}
-              style={[styles.pill, isActive && styles.pillActive]}
-              onPress={() => handleSelect(p.id)}
-              onLongPress={() => handleOpenDetail(p.id)}
+              style={styles.anchor}
+              onPress={open}
+              onLongPress={() => activeProject && handleOpenDetail(activeProject.id)}
               accessibilityRole="button"
-              accessibilityLabel={t(
-                isActive ? 'projectSwitcher.a11yPillActive' : 'projectSwitcher.a11yPillInactive',
-                { title: p.title },
-              )}
-              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={t('projectSwitcher.a11yOpenMenu', {
+                defaultValue: 'Choose active project',
+              })}
             >
               <Ionicons
-                name={isActive ? 'checkmark-circle' : 'folder-outline'}
-                size={14}
-                color={isActive ? '#000' : DK.colors.text}
+                name={activeProject ? 'checkmark-circle' : 'folder-outline'}
+                size={16}
+                color={activeProject ? DK.colors.accent : DK.colors.textMuted}
               />
-              <Text style={[styles.pillText, isActive && styles.pillTextActive]} numberOfLines={1}>
-                {p.title}
+              <Text style={styles.anchorText} numberOfLines={1}>
+                {activeProject
+                  ? activeProject.title
+                  : t('projectSwitcher.noneSelected', { defaultValue: 'No active project' })}
               </Text>
+              <Ionicons name="chevron-down" size={16} color={DK.colors.textMuted} />
             </Pressable>
-          );
-        })}
-        <Pressable style={styles.addPill} accessibilityRole="button" accessibilityLabel={t('projectSwitcher.a11yCreate')} onPress={() => router.push('/contractor/projects' as any)}>
-          <Ionicons name="add" size={16} color={DK.colors.accent} />
-          <Text style={styles.addPillText}>{t('projectSwitcher.newProject')}</Text>
-        </Pressable>
-      </ScrollView>
+          )}
+        />
+      </View>
       {activeProjectId ? (
         <Text style={styles.hint}>{t('projectSwitcher.hint')}</Text>
       ) : null}
@@ -111,53 +136,28 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.captionFamily,
     color: DK.colors.accent,
   },
-  row: {
+  anchorRow: {
     paddingHorizontal: GRID.md,
-    gap: GRID.sm,
     paddingVertical: GRID.xs,
   },
-  pill: {
+  anchor: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: GRID.sm,
     backgroundColor: DK.colors.panel,
-    borderRadius: RADIUS.full,
+    borderRadius: RADIUS.md,
     paddingHorizontal: GRID.md,
-    paddingVertical: GRID.sm,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: DK.colors.border,
-    maxWidth: 240,
   },
-  pillActive: {
-    backgroundColor: DK.colors.accent,
-    borderColor: DK.colors.accent,
-  },
-  pillText: {
-    fontSize: 13,
+  // flex:1 so a long project title truncates rather than shoving the chevron
+  // off the row — the starved-sibling shape this app keeps reintroducing.
+  anchorText: {
+    flex: 1,
+    fontSize: TYPE.bodySize,
     fontFamily: TYPE.bodyFamily,
     color: DK.colors.text,
-  },
-  pillTextActive: {
-    color: '#000',
-    fontFamily: TYPE.titleFamily,
-  },
-  addPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: DK.colors.panel,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: GRID.md,
-    paddingVertical: GRID.sm,
-    borderWidth: 1,
-    borderColor: DK.colors.accent,
-    borderStyle: 'dashed',
-  },
-  addPillText: {
-    fontSize: 11,
-    fontFamily: TYPE.titleFamily,
-    color: DK.colors.accent,
-    letterSpacing: 1.2,
   },
   hint: {
     fontSize: 11,

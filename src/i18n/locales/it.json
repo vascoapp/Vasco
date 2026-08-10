@@ -2998,7 +2998,9 @@
     "a11yViewAll": "Vedi tutti i progetti",
     "a11yPillActive": "Progetto attivo {{title}}. Tocca per deselezionare, tieni premuto per aprire.",
     "a11yPillInactive": "Progetto {{title}}. Tocca per selezionare, tieni premuto per aprire.",
-    "a11yCreate": "Crea un nuovo progetto"
+    "a11yCreate": "Crea un nuovo progetto",
+    "a11yOpenMenu": "Scegli progetto attivo",
+    "noneSelected": "Nessun progetto attivo"
   },
   "recurring": {
     "title": "MANUTENZIONE",

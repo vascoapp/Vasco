@@ -2998,7 +2998,9 @@
     "a11yViewAll": "View all projects",
     "a11yPillActive": "Active project {{title}}. Tap to deselect, long-press to open.",
     "a11yPillInactive": "Project {{title}}. Tap to select, long-press to open.",
-    "a11yCreate": "Create new project"
+    "a11yCreate": "Create new project",
+    "a11yOpenMenu": "Choose active project",
+    "noneSelected": "No active project"
   },
   "vatScheme": {
     "standard": "Standard VAT",

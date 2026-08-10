@@ -2998,7 +2998,9 @@
     "a11yViewAll": "Voir tous les projets",
     "a11yPillActive": "Projet actif {{title}}. Appuyez pour désélectionner, appui long pour ouvrir.",
     "a11yPillInactive": "Projet {{title}}. Appuyez pour sélectionner, appui long pour ouvrir.",
-    "a11yCreate": "Créer un nouveau projet"
+    "a11yCreate": "Créer un nouveau projet",
+    "a11yOpenMenu": "Choisir le projet actif",
+    "noneSelected": "Aucun projet actif"
   },
   "recurring": {
     "title": "ENTRETIEN",

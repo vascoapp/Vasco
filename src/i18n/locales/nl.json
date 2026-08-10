@@ -2982,7 +2982,9 @@
     "a11yViewAll": "Alle projecten bekijken",
     "a11yPillActive": "Actief project {{title}}. Tik om te deselecteren, lang ingedrukt om te openen.",
     "a11yPillInactive": "Project {{title}}. Tik om te selecteren, lang ingedrukt om te openen.",
-    "a11yCreate": "Nieuw project aanmaken"
+    "a11yCreate": "Nieuw project aanmaken",
+    "a11yOpenMenu": "Kies actief project",
+    "noneSelected": "Geen actief project"
   },
   "vatScheme": {
     "standard": "Standaard BTW",

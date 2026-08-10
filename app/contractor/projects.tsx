@@ -16,6 +16,7 @@ import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { localDateKey } from '../../src/utils/dateKey';
 import { parseRetentionPercent } from '../../src/services/progressBillingService';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Modal } from 'react-native';
 import type { Project, ProjectStatus } from '../../src/types/project';
@@ -283,27 +284,28 @@ export default function ProjectsScreen() {
                   the customer vanished on reload. A picker is the only thing
                   that can produce a real link. Same fix as the decisions
                   tracker got in R322. */}
-              <Text style={styles.templateLabel}>
-                {t('contractor.projects.pickCustomer', 'Customer')}
-              </Text>
-              <View style={styles.templateWrap}>
-                {customers.map(c => {
-                  const on = newCustomerId === c.id;
-                  return (
-                    <Pressable
-                      key={c.id}
-                      onPress={() => setNewCustomerId(on ? '' : c.id)}
-                      style={[styles.templateChip, on && styles.templateChipOn]}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: on }}
-                    >
-                      <Text style={[styles.templateChipText, on && styles.templateChipTextOn]}>
-                        {c.name}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              {/* House rule: single-choice pickers are balloon menus, never
+                  chip rows — a strip of chips hides every customer past the
+                  right edge. See DKMenu. */}
+              <DKMenu
+                accessibilityLabel={t('contractor.projects.pickCustomer', 'Customer')}
+                items={customers.map(c => ({
+                  key: c.id,
+                  label: c.name,
+                  icon: 'person-outline' as const,
+                  selected: newCustomerId === c.id,
+                  onPress: () => setNewCustomerId(newCustomerId === c.id ? '' : c.id),
+                }))}
+                renderAnchor={(open) => (
+                  <Pressable style={styles.pickerAnchor} onPress={open} accessibilityRole="button">
+                    <Text style={styles.pickerAnchorText} numberOfLines={1}>
+                      {customers.find(c => c.id === newCustomerId)?.name
+                        ?? t('contractor.projects.pickCustomer', 'Customer')}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
+                  </Pressable>
+                )}
+              />
               {customers.length === 0 ? (
                 <Text style={styles.templateHint}>
                   {t('contractor.projects.noCustomersYet', 'No customers yet — a project can be created without one.')}
@@ -345,25 +347,30 @@ export default function ProjectsScreen() {
               {/* The trade order, shipped as content. Optional: an aannemer
                   with their own sequence picks nothing and gets the old
                   empty-list behaviour. */}
-              <Text style={styles.templateLabel}>{t('projectTemplate.pick', 'Start from a trade sequence')}</Text>
-              <View style={styles.templateWrap}>
-                {PROJECT_TEMPLATES.map(tpl => {
-                  const on = newTemplate === tpl.id;
-                  return (
-                    <Pressable
-                      key={tpl.id}
-                      onPress={() => setNewTemplate(on ? null : tpl.id)}
-                      style={[styles.templateChip, on && styles.templateChipOn]}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: on }}
-                    >
-                      <Text style={[styles.templateChipText, on && styles.templateChipTextOn]}>
-                        {t(`projectTemplate.name.${tpl.nameKey}`, tpl.nameKey)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <DKMenu
+                accessibilityLabel={t('projectTemplate.pick', 'Start from a trade sequence')}
+                items={PROJECT_TEMPLATES.map(tpl => ({
+                  key: tpl.id,
+                  label: t(`projectTemplate.name.${tpl.nameKey}`, tpl.nameKey),
+                  detail: t('projectTemplate.stepCount', {
+                    defaultValue: '{{count}} milestones, editable afterwards',
+                    count: tpl.steps.length,
+                  }),
+                  icon: 'layers-outline' as const,
+                  selected: newTemplate === tpl.id,
+                  onPress: () => setNewTemplate(newTemplate === tpl.id ? null : tpl.id),
+                }))}
+                renderAnchor={(open) => (
+                  <Pressable style={styles.pickerAnchor} onPress={open} accessibilityRole="button">
+                    <Text style={styles.pickerAnchorText} numberOfLines={1}>
+                      {newTemplate
+                        ? t(`projectTemplate.name.${templateById(newTemplate)?.nameKey}`, '')
+                        : t('projectTemplate.pick', 'Start from a trade sequence')}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
+                  </Pressable>
+                )}
+              />
               {newTemplate ? (
                 <Text style={styles.templateHint}>
                   {t('projectTemplate.stepCount', {
@@ -422,16 +429,13 @@ const styles = StyleSheet.create({
   form: { gap: 12, paddingBottom: 20 },
   input: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   createBtn: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md, paddingVertical: 14, alignItems: 'center' },
-  templateLabel: { fontSize: TYPE.labelSize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary, marginTop: 4 },
-  templateWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  templateChip: {
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.sm,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderWidth: 1, borderColor: 'transparent',
+  pickerAnchor: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 12,
   },
-  templateChipOn: { borderColor: Palette.hermesOrange },
-  templateChipText: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
-  templateChipTextOn: { color: SemanticColors.textPrimary },
+  // flex:1 so a long name truncates instead of pushing the chevron out.
+  pickerAnchorText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   templateHint: { fontSize: TYPE.labelSize, color: SemanticColors.textTertiary },
   createBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
 

@@ -2998,7 +2998,9 @@
     "a11yViewAll": "Alle Projekte ansehen",
     "a11yPillActive": "Aktives Projekt {{title}}. Tippen zum Abwählen, gedrückt halten zum Öffnen.",
     "a11yPillInactive": "Projekt {{title}}. Tippen zum Auswählen, gedrückt halten zum Öffnen.",
-    "a11yCreate": "Neues Projekt anlegen"
+    "a11yCreate": "Neues Projekt anlegen",
+    "a11yOpenMenu": "Aktives Projekt wählen",
+    "noneSelected": "Kein aktives Projekt"
   },
   "vatScheme": {
     "standard": "Standard-USt",

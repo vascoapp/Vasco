@@ -129,6 +129,18 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
 - Generator strings use `gt()` from `generatorTranslations.ts` — never hardcode Dutch
 - UPPERCASE labels: use `DKLabel` from `src/components/shared/DKLabel.tsx` — preserves screen-reader accessibility via `accessibilityLabel`
 - Drill-down screens: use `DKScreenHeader` from `src/components/shared/DKScreenHeader.tsx` for consistent back + title
+- **🔴 NEVER build a chip/pill row as a MENU.** Picking one of N is always a
+  balloon menu — `DKMenu` from `src/components/shared/DKMenu.tsx`: an anchor
+  showing the current choice, opening an iOS-style popover listing all options
+  with a tick on the selected one. A horizontal chip strip hides every option
+  past the right edge, never says how many exist, and reads as a filter rather
+  than a choice.
+  - Chips ARE still correct for **multi-select filters and toggles** (Alle /
+    Lopend / Afgerond), where every option should be visible at once and more
+    than one can be on. The test: *is the user choosing one thing?* → menu.
+  - `DKMenu` is deliberately a JS popover, not a native `UIMenu`: a native menu
+    module would force a native rebuild and take fixes off the OTA channel, and
+    `UIMenu` does not exist on Android.
 - Always run `npx tsc --noEmit | grep "^app/"` after changes
 - Always update memory .md files after completing work
 
