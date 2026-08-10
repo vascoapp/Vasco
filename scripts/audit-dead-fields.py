@@ -153,7 +153,14 @@ for tf in TYPE_FILES:
 #
 # Both are candidate lists to confirm by hand, same as above.
 
-CONST_VALUE = r"(0|0\.0|''|\"\"|``|\[\]|\{\}|false|true|null|undefined)"
+# EMPTY literals only — deliberately NOT `true`/`false`.
+#
+# The pattern this looks for is a field pinned to its own default at a
+# construction site (`retentionPercent: 0`, `milestones: []`). A boolean literal
+# is the opposite: `isRetentionRelease: true` IS the captured value, and
+# treating it as a pinned constant reported a correctly-written field as one
+# nothing captures.
+CONST_VALUE = r"(0|0\.0|''|\"\"|``|\[\]|\{\}|null|undefined)"
 
 
 def const_write_re(field: str):
