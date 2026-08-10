@@ -48,6 +48,12 @@ const KNOWN_BUILD_ONLY = new Map([
   ['tar', 'expo>@expo/cli — downloads and unpacks build artifacts'],
   ['undici', 'expo>@expo/cli — HTTP client for the CLI itself'],
   ['ws', 'metro, @react-native/dev-middleware, react-devtools-core and @expo/cli dev sockets. The SHIPPING copy under @supabase/realtime-js is pinned separately — see RUNTIME_PINS'],
+  // Verified 2026-08-10: `expo > @expo/metro > metro > image-size`. metro is
+  // the bundler — image-size reads asset dimensions while building the JS
+  // bundle and never reaches a device. Cannot be pinned out: the advisory
+  // covers <=2.0.2 and the 1.x line ends at 1.2.1, so the only npm-offered fix
+  // is expo@57, a semver-major jump from 54.
+  ['image-size', 'expo>@expo/metro>metro — bundler reads asset dimensions at build time; no patched 1.x exists'],
 ]);
 
 // Packages that DO ship or touch production data, with the minimum patched
@@ -87,12 +93,61 @@ console.log('npm audit (production deps)');
 console.log(`  totals: ${Object.entries(counts).map(([s, n]) => `${n} ${s}`).join(', ') || 'none'}\n`);
 
 const severe = Object.entries(vulns).filter(([, v]) => v.severity === 'high' || v.severity === 'critical');
+
+// A package carries its OWN advisory when `via` holds advisory objects; when
+// `via` is only package names it is flagged purely because something beneath it
+// is. `metro`, `expo` and `react-native` are all in that second group — flagged
+// via image-size and the CLI plugin, with npm's suggested "fix" being expo@57
+// or a downgrade to react-native 0.72.
+//
+// Naming them in KNOWN_BUILD_ONLY would clear CI and quietly excuse the next
+// GENUINE react-native or expo advisory — the exact masking that RUNTIME_PINS
+// exists to prevent for `ws`. So instead: excuse a package only when it has no
+// advisory of its own AND every path beneath it lands on excused packages.
+// Anything with a direct advisory still has to be pinned or excused by name.
+const ownAdvisories = (v) => (v.via ?? []).filter((x) => typeof x !== 'string');
+const viaNames = (v) => (v.via ?? []).filter((x) => typeof x === 'string');
+
+const transitivelyExcused = (name, seen = new Set()) => {
+  if (KNOWN_BUILD_ONLY.has(name)) return true;
+  // Already being proven further up the stack. npm's graph has mutual edges
+  // (metro <-> metro-config), and treating a revisit as "unprovable" poisoned
+  // every chain through them. A cycle introduces no NEW advisory: the direct
+  // check below still runs on each node's first visit, so a package carrying
+  // its own advisory can never be excused by going round a loop.
+  if (seen.has(name)) return true;
+  const v = vulns[name];
+  if (!v) return false;
+  // Its own advisory is never inherited — but only a HIGH/CRITICAL one blocks,
+  // because that is the bar this gate enforces. `xcode > uuid` is a moderate
+  // bounds-check advisory in Xcode project manipulation at prebuild time;
+  // letting it fail the chain would have failed the whole expo tree on a
+  // severity the gate does not even fail on directly.
+  const ownSevere = ownAdvisories(v).length > 0 && (v.severity === 'high' || v.severity === 'critical');
+  if (ownSevere) return false;
+  seen.add(name);
+  // Empty `via` means a leaf whose only advisory is below the high/critical
+  // bar (checked above) — nothing severe sits beneath it, so it does not block.
+  // Requiring at least one parent here failed the entire expo tree on `uuid`,
+  // a moderate leaf under xcode.
+  return viaNames(v).every((p) => transitivelyExcused(p, seen));
+};
+
 const excused = severe.filter(([n]) => KNOWN_BUILD_ONLY.has(n));
-const shipping = severe.filter(([n]) => !KNOWN_BUILD_ONLY.has(n));
+const inherited = severe.filter(([n]) => !KNOWN_BUILD_ONLY.has(n) && transitivelyExcused(n));
+const shipping = severe.filter(([n]) => !KNOWN_BUILD_ONLY.has(n) && !transitivelyExcused(n));
 
 if (excused.length) {
   console.log(`Build-tooling advisories — reported, not failing (${excused.length}):`);
   for (const [n, v] of excused) console.log(`  · ${v.severity.padEnd(8)} ${n} — ${KNOWN_BUILD_ONLY.get(n)}`);
+  console.log('');
+}
+
+if (inherited.length) {
+  console.log(`Flagged only through build tooling — reported, not failing (${inherited.length}):`);
+  for (const [n, v] of inherited) {
+    console.log(`  · ${v.severity.padEnd(8)} ${n} — no advisory of its own; via ${viaNames(v).join(', ')}`);
+  }
   console.log('');
 }
 

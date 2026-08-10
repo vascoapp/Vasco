@@ -194,7 +194,11 @@ for tf in TYPE_FILES:
         if not r_real:
             continue  # nothing reads it; the pass above owns that case
 
-        app_writes = rg_in(rf"(^|[^.\w])({field}):\s", ("app",))
+        # `field: value` OR the shorthand `field,` on its own line. Missing the
+        # shorthand form reported `enabledPaymentMethods` — which has a full
+        # picker UI in business-settings and is saved as `{ enabledPaymentMethods }`
+        # — as a field no screen can set.
+        app_writes = rg_in(rf"(^|[^.\w])({field}):\s|^\s*{field},\s*$", ("app",))
         app_writes = [h for h in app_writes if not FIXTURE_HINT.search(h.split(":", 1)[0])]
 
         if not app_writes:
