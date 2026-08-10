@@ -176,8 +176,12 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   if ('title' in updates)              out.title = updates.title;
   if ('description' in updates)        out.description = updates.description;
   if ('status' in updates)             out.status = updates.status;
-  if ('siteContact' in updates)        out.site_contact = updates.siteContact;
-  if ('sitePhone' in updates)          out.site_phone = updates.sitePhone;
+  // `?? null` like assignedWorkerId below: these three are now user-editable
+  // and therefore user-CLEARABLE. Assigning a bare `undefined` leaves a key
+  // that JSON.stringify drops, so the column keeps its old value and the
+  // cleared field reappears on cold start — the learnings #143 shape.
+  if ('siteContact' in updates)        out.site_contact = updates.siteContact ?? null;
+  if ('sitePhone' in updates)          out.site_phone = updates.sitePhone ?? null;
   if ('scheduledDate' in updates)      out.scheduled_date = updates.scheduledDate;
   if ('scheduledStartTime' in updates) out.scheduled_start_time = updates.scheduledStartTime;
   if ('scheduledEndTime' in updates)   out.scheduled_end_time = updates.scheduledEndTime;
@@ -188,7 +192,7 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   if ('quoteId' in updates)            out.quote_id = updates.quoteId;
   if ('priority' in updates)           out.priority = updates.priority;
   if ('roomsAreas' in updates)         out.rooms_areas = updates.roomsAreas;
-  if ('specifications' in updates)     out.specifications = updates.specifications;
+  if ('specifications' in updates)     out.specifications = updates.specifications ?? null;
   if ('completedAt' in updates)        out.completed_at = updates.completedAt;
   if ('signatureSvg' in updates)       out.signature_svg = updates.signatureSvg;
   if ('customerSignoffAt' in updates)  out.customer_signoff_at = updates.customerSignoffAt;

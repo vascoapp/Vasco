@@ -170,4 +170,38 @@ describe('jobUpdatesToRowPayload', () => {
       address_street: 'New street',
     });
   });
+
+  // These three became user-editable on the job detail screen, which makes them
+  // user-CLEARABLE. A bare `undefined` leaves a key that JSON.stringify drops,
+  // so the column keeps its old value and the cleared field returns on cold
+  // start — the learnings #143 shape, already fixed once for targetEndDate.
+  describe('site contact and notes can be cleared, not just set', () => {
+    it('maps values through', () => {
+      expect(jobUpdatesToRowPayload({
+        siteContact: 'Building concierge',
+        sitePhone: '+31 20 555 1235',
+        specifications: 'Tiles 5cm higher than drawing',
+      })).toEqual({
+        site_contact: 'Building concierge',
+        site_phone: '+31 20 555 1235',
+        specifications: 'Tiles 5cm higher than drawing',
+      });
+    });
+
+    it('turns an explicit undefined into null so the column actually empties', () => {
+      const out = jobUpdatesToRowPayload({
+        siteContact: undefined,
+        sitePhone: undefined,
+        specifications: undefined,
+      });
+      expect(out).toEqual({ site_contact: null, site_phone: null, specifications: null });
+      // The point of the null: a key whose value is undefined does not survive
+      // serialisation, so the clear would never reach the database.
+      expect(JSON.parse(JSON.stringify(out))).toEqual(out);
+    });
+
+    it('leaves them out entirely when not mentioned', () => {
+      expect(jobUpdatesToRowPayload({ title: 'x' })).toEqual({ title: 'x' });
+    });
+  });
 });
