@@ -53,7 +53,18 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
   // Measured at open time, not on layout: the anchor can move (the strip sits
   // inside a scroll view), and a stale frame puts the balloon over the wrong row.
   const open = useCallback(() => {
-    anchorRef.current?.measureInWindow((x, y, width, height) => {
+    // Open FIRST, refine the position after. Measuring is best-effort: the
+    // callback may never fire (it does not under the test renderer, and a node
+    // that is detached or off-screen behaves the same on device), and waiting
+    // for it left the tap doing nothing at all — a dead control with no error,
+    // which is the failure mode this component exists to remove. A balloon in
+    // a slightly wrong place beats a button that ignores you.
+    setFrame({ x: SCREEN_MARGIN, y: 96, width: MENU_WIDTH, height: 0 });
+    const node: any = anchorRef.current;
+    if (typeof node?.measureInWindow !== 'function') return;
+    node.measureInWindow((x: number, y: number, width: number, height: number) => {
+      // Zeros mean "not laid out", not "at the origin" — keep the fallback.
+      if (!width && !height) return;
       setFrame({ x, y, width, height });
     });
   }, []);

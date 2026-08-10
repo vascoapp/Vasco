@@ -494,6 +494,9 @@ export default function ProjectDetailScreen() {
                     style={styles.templateRow}
                     onPress={() => applyTemplate(tpl)}
                     accessibilityRole="button"
+                    // Named explicitly so a screen reader announces the
+                    // sequence rather than the row's concatenated children.
+                    accessibilityLabel={t(`projectTemplate.name.${tpl.nameKey}`, tpl.nameKey)}
                   >
                     <Ionicons name="layers-outline" size={18} color={Palette.hermesOrange} />
                     <View style={styles.templateRowMain}>
