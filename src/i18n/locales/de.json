@@ -5584,7 +5584,11 @@
     "moveDown": "Nach unten",
     "lockedInvoiced": "Berechnete Raten können nicht mehr geändert werden",
     "confirmDeleteTerm": "Rate löschen?",
-    "nextUp": "Als Nächstes"
+    "nextUp": "Als Nächstes",
+    "retentionRate": "Sicherheitseinbehalt",
+    "editRetention": "Sicherheitseinbehalt % ändern",
+    "change": "Ändern",
+    "retentionAppliesForward": "Gilt für noch nicht abgerechnete Raten. Bereits Einbehaltenes ändert sich nicht."
   },
   "jobForms": {
     "title": "Arbeitsformulare",

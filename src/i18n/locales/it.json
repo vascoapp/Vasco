@@ -5584,7 +5584,11 @@
     "moveDown": "Sposta giù",
     "lockedInvoiced": "Le rate fatturate non sono più modificabili",
     "confirmDeleteTerm": "Eliminare questa rata?",
-    "nextUp": "Prossima"
+    "nextUp": "Prossima",
+    "retentionRate": "Ritenuta a garanzia",
+    "editRetention": "Modifica ritenuta %",
+    "change": "Modifica",
+    "retentionAppliesForward": "Si applica agli acconti non ancora fatturati. Quanto già trattenuto non cambia."
   },
   "jobForms": {
     "title": "Moduli di lavoro",

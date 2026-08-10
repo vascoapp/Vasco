@@ -5568,7 +5568,11 @@
     "moveDown": "Omlaag",
     "lockedInvoiced": "Gefactureerde termijnen kun je niet meer wijzigen",
     "confirmDeleteTerm": "Termijn verwijderen?",
-    "nextUp": "Nu aan de beurt"
+    "nextUp": "Nu aan de beurt",
+    "retentionRate": "Retentie",
+    "editRetention": "Retentie % aanpassen",
+    "change": "Wijzigen",
+    "retentionAppliesForward": "Geldt voor termijnen die nog niet gefactureerd zijn. Wat al is ingehouden verandert niet."
   },
   "jobForms": {
     "title": "Werkformulieren",

@@ -5584,7 +5584,11 @@
     "moveDown": "Descendre",
     "lockedInvoiced": "Les échéances facturées ne sont plus modifiables",
     "confirmDeleteTerm": "Supprimer cette échéance ?",
-    "nextUp": "Prochaine"
+    "nextUp": "Prochaine",
+    "retentionRate": "Retenue de garantie",
+    "editRetention": "Modifier la retenue %",
+    "change": "Modifier",
+    "retentionAppliesForward": "S'applique aux situations non encore facturées. Ce qui a déjà été retenu ne change pas."
   },
   "jobForms": {
     "title": "Formulaires de chantier",

@@ -5584,7 +5584,11 @@
     "moveDown": "Bajar",
     "lockedInvoiced": "Los plazos facturados ya no se pueden cambiar",
     "confirmDeleteTerm": "¿Eliminar este plazo?",
-    "nextUp": "Siguiente"
+    "nextUp": "Siguiente",
+    "retentionRate": "Retención",
+    "editRetention": "Editar retención %",
+    "change": "Cambiar",
+    "retentionAppliesForward": "Se aplica a las certificaciones aún no facturadas. Lo ya retenido no cambia."
   },
   "jobForms": {
     "title": "Formularios de trabajo",

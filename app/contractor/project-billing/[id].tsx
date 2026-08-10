@@ -33,6 +33,7 @@ import { FadeIn } from '../../../src/components/shared/FadeIn';
 import {
   billingProgress,
   termAmount,
+  parseRetentionPercent,
   retentionForTerm,
   payableNow,
   validateBillingSchedule,
@@ -79,6 +80,8 @@ export default function ProjectBillingScreen() {
   const [termTitle, setTermTitle] = useState('');
   const [termPercent, setTermPercent] = useState('');
   const [editingTerm, setEditingTerm] = useState<ProjectBillingTerm | null>(null);
+  const [showRetentionForm, setShowRetentionForm] = useState(false);
+  const [retentionInput, setRetentionInput] = useState('');
   const [showCoForm, setShowCoForm] = useState(false);
   const [coTitle, setCoTitle] = useState('');
   const [coAmount, setCoAmount] = useState('');
@@ -132,6 +135,30 @@ export default function ProjectBillingScreen() {
     hapticSuccess();
     closeTermForm();
   };
+
+  // Retention could only be set at project creation, so every project that
+  // already existed was stuck at 0% and the held/release surface below could
+  // never appear for it. This is where retention is consumed, so it is where
+  // it should be changeable.
+  const openRetentionForm = () => {
+    // Seed with the current value rather than blank: reopening a 5% project
+    // and seeing an empty box reads as "not set".
+    const pct = Number(project.retentionPercent ?? 0);
+    setRetentionInput(pct > 0 ? String(pct) : '');
+    setShowRetentionForm(true);
+  };
+
+  const saveRetention = () => {
+    updateProject(project.id, { retentionPercent: parseRetentionPercent(retentionInput) });
+    hapticSuccess();
+    setShowRetentionForm(false);
+  };
+
+  // Already-invoiced terms keep the figure they recorded — `retentionHeld` reads
+  // `invoice.retentionAmount` rather than re-deriving it, deliberately, because
+  // what was withheld is a historical fact. So a change here only reaches terms
+  // not yet invoiced, and the form says so instead of leaving it to be guessed.
+  const hasInvoicedTerms = terms.some(tm => tm.status === 'invoiced' || tm.status === 'paid');
 
   const saveChangeOrder = () => {
     const amt = Number(coAmount.replace(',', '.'));
@@ -296,6 +323,23 @@ export default function ProjectBillingScreen() {
                 total: money(progress.contractValue),
               })}
             </Text>
+            {/* Always shown, including at 0%: gating this on a non-zero rate
+                would hide the only control that can make it non-zero — which
+                is exactly how retention stayed dark for every project. */}
+            <Pressable
+              style={styles.retentionRow}
+              onPress={openRetentionForm}
+              accessibilityRole="button"
+              accessibilityLabel={t('projectBilling.editRetention', 'Edit retention %')}
+            >
+              <Ionicons name="options-outline" size={14} color={SemanticColors.textSecondary} />
+              <Text style={styles.retentionRateText}>
+                {t('projectBilling.retentionRate', 'Retention')}: {Number(project.retentionPercent ?? 0)}%
+              </Text>
+              <Text style={styles.retentionEditText}>
+                {t('projectBilling.change', 'Change')}
+              </Text>
+            </Pressable>
             {progress.retentionHeld > 0 && (
               <View style={styles.retentionRow}>
                 <Ionicons name="lock-closed-outline" size={14} color={Palette.hermesOrange} />
@@ -531,6 +575,42 @@ export default function ProjectBillingScreen() {
         </Pressable>
       </Modal>
 
+      {/* Retention rate */}
+      <Modal
+        visible={showRetentionForm}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRetentionForm(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowRetentionForm(false)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>
+              {t('projectBilling.editRetention', 'Edit retention %')}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={retentionInput}
+              onChangeText={setRetentionInput}
+              keyboardType="decimal-pad"
+              placeholder={t('projectBilling.retentionRate', 'Retention')}
+              placeholderTextColor={SemanticColors.textTertiary}
+              accessibilityLabel={t('projectBilling.editRetention', 'Edit retention %')}
+            />
+            {hasInvoicedTerms ? (
+              <Text style={styles.retentionNote}>
+                {t(
+                  'projectBilling.retentionAppliesForward',
+                  'Applies to instalments not yet invoiced. What was already withheld does not change.',
+                )}
+              </Text>
+            ) : null}
+            <Pressable style={styles.saveBtn} onPress={saveRetention}>
+              <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       {/* Add change order */}
       <Modal visible={showCoForm} transparent animationType="slide" onRequestClose={() => setShowCoForm(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowCoForm(false)}>
@@ -584,6 +664,11 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Palette.hermesOrange },
   retentionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: GRID.sm },
   retentionText: { fontSize: TYPE.captionSize, color: Palette.hermesOrange, flex: 1 },
+  // flex:1 so the rate keeps its space and the "Change" affordance cannot
+  // starve it — the truncation shape this app keeps reintroducing.
+  retentionRateText: { fontSize: TYPE.captionSize, color: SemanticColors.textSecondary, flex: 1 },
+  retentionEditText: { fontSize: TYPE.captionSize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
+  retentionNote: { fontSize: TYPE.labelSize, color: SemanticColors.textTertiary },
   releaseBtn: {
     paddingHorizontal: GRID.sm, paddingVertical: 4, borderRadius: RADIUS.sm,
     backgroundColor: Palette.hermesOrange + '18',

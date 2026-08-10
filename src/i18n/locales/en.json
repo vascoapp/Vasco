@@ -5584,7 +5584,11 @@
     "moveDown": "Move down",
     "lockedInvoiced": "Invoiced instalments can no longer be changed",
     "confirmDeleteTerm": "Delete this instalment?",
-    "nextUp": "Next up"
+    "nextUp": "Next up",
+    "retentionRate": "Retention",
+    "editRetention": "Edit retention %",
+    "change": "Change",
+    "retentionAppliesForward": "Applies to instalments not yet invoiced. What was already withheld does not change."
   },
   "jobForms": {
     "title": "Job forms",

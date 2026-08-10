@@ -299,7 +299,9 @@ export default function ProjectsScreen() {
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={newRetention}
                 onChangeText={setNewRetention}
-                keyboardType="numeric"
+                // decimal-pad, not numeric: this field accepts "7,5" and the
+                // numeric keypad has no separator key on iOS.
+                keyboardType="decimal-pad"
                 accessibilityLabel={t('contractor.projects.retentionPlaceholder', 'Retention % (optional)')}
               />
               {parseRetentionPercent(newRetention) > 0 ? (

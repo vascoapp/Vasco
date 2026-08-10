@@ -1484,9 +1484,9 @@
     "",
     "Fam. Bakker",
     "",
-    "19:13",
+    "19:34",
     "–",
-    "19:13",
+    "19:34",
     "2u",
     "",
     "15",
@@ -2169,6 +2169,12 @@
     "Contractwaarde",
     "€ 12.500,00",
     "€ 0,00 van € 12.500,00 gefactureerd",
+    "",
+    "Retentie",
+    ":",
+    "0",
+    "%",
+    "Wijzigen",
     "Termijnen",
     "",
     "Nog geen termijnen",
@@ -2177,7 +2183,9 @@
     "",
     "Nog geen meerwerk"
    ],
-   "a11y": []
+   "a11y": [
+    "Retentie % aanpassen"
+   ]
   },
   {
    "screen": "contractor/projects",
