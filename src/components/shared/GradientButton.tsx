@@ -45,7 +45,18 @@ export function GradientButton({ label, onPress, icon, loading, disabled, size =
         ) : (
           <View style={styles.content}>
             {icon && <Ionicons name={icon} size={size === 'md' ? 16 : 18} color={Palette.white} />}
-            <Text style={[styles.label, size === 'md' && styles.labelMd]}>{label}</Text>
+            {/* 2 lines, and flexShrink so the label can use the width the icon
+                leaves. Without these the row is sized by its content and
+                overflows the gradient: the Dutch "Account aanmaken" rendered as
+                "Account aanmake" on the login screen — the first screen a new
+                user sees — because English "Create account" happens to fit and
+                nothing else was ever checked. Same fix as the AI hero CTA. */}
+            <Text
+              style={[styles.label, size === 'md' && styles.labelMd]}
+              numberOfLines={2}
+            >
+              {label}
+            </Text>
           </View>
         )}
       </LinearGradient>
@@ -66,6 +77,8 @@ const styles = StyleSheet.create({
   gradient: {
     borderRadius: RADIUS.lg,
     paddingVertical: 17,
+    // Horizontal padding so a long label cannot run under the rounded corner.
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -76,13 +89,23 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    // `alignSelf: 'stretch'`, NOT `maxWidth: '100%'`. The gradient centres its
+    // children, so the row was sized by its own content and a percentage max
+    // resolved against a box that had not been laid out yet — the label ended
+    // up with a fraction of the ~318pt actually available and truncated at
+    // "Account aanm…" on a button wide enough for three times that. Stretch is
+    // a definite width, so the text gets the real remaining space.
+    alignSelf: 'stretch',
   },
   label: {
     color: Palette.white,
     fontSize: 16,
     fontFamily: 'Archivo_800ExtraBold',
     letterSpacing: 0.3,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   labelMd: {
     fontSize: 14,
