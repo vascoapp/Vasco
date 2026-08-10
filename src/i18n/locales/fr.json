@@ -516,7 +516,13 @@
     "photoAddedDesc": "Photo {{count}} prise et enregistrée.",
     "photoLibrary": "Photothèque",
     "orderedDescNoSupplier": "{{name}} a été commandé.",
-    "directions": "Itinéraire"
+    "directions": "Itinéraire",
+    "siteContact": "Contact sur le chantier",
+    "addSiteContact": "Ajouter un contact",
+    "callSite": "Appeler le chantier",
+    "siteContactDesc": "Qui est sur le chantier et à quel numéro le joindre. Vasco l'utilise à la place du numéro du client.",
+    "siteContactPlaceholder": "Nom ou fonction, ex. gardien",
+    "sitePhonePlaceholder": "Numéro sur le chantier"
   },
   "compliance": {
     "manageInsurance": "Gérer assurances & sinistres",

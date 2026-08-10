@@ -500,7 +500,13 @@
     "photoAddedDesc": "Foto {{count}} gemaakt en opgeslagen.",
     "photoLibrary": "Fotobibliotheek",
     "orderedDescNoSupplier": "{{name}} is besteld.",
-    "directions": "Route"
+    "directions": "Route",
+    "siteContact": "Contactpersoon op locatie",
+    "addSiteContact": "Contactpersoon toevoegen",
+    "callSite": "Bel locatie",
+    "siteContactDesc": "Wie er op de bouwplaats is en op welk nummer diegene bereikbaar is. Vasco gebruikt dit in plaats van het klantnummer.",
+    "siteContactPlaceholder": "Naam of rol, bijv. huismeester",
+    "sitePhonePlaceholder": "Telefoonnummer op locatie"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",

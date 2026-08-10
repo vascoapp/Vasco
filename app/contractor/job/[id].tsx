@@ -99,6 +99,8 @@ export default function JobDetailPage() {
   const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
   const [notes, setNotes] = useState('');
+  /** Site contact being edited; null = picker closed. */
+  const [editingSite, setEditingSite] = useState<{ contact: string; phone: string } | null>(null);
   const timer = useClockIn();
   const clockedIn = timer.active && timer.jobId === id;
   // R304: when reached via R286 executor's draft_invoice route with
@@ -221,7 +223,19 @@ export default function JobDetailPage() {
       travelTime: 15,
       status: appJob.status === 'in-progress' ? 'in_progress' as const : appJob.status === 'completed' ? 'completed' as const : 'confirmed' as const,
       priority: appJob.priority || 'normal',
-      notes: '',
+      // Was hardcoded ''. The Notes box below wrote to local state that nothing
+      // ever saved, and `jobs` has NO `notes` column — the same shape as the
+      // invoice notes bug fixed in R66 round 13 ("a full notes UI with no
+      // backing column — every save was lost on cold start"), still live here.
+      //
+      // Stored in `jobs.specifications`: an existing text column that nothing
+      // read and nothing wrote, already handled by BOTH mappers, whose only
+      // sample value was "Color: Flexa Pure White. Finish: Matte. Customer
+      // supplying paint." — job notes in all but name. Reusing it keeps this a
+      // JS-only fix; renaming the column to `notes` is a cosmetic migration.
+      notes: appJob.specifications ?? '',
+      siteContact: appJob.siteContact ?? '',
+      sitePhone: appJob.sitePhone ?? '',
       // Map the English domain status to the Dutch lifecycle enum. The old
       // `as any` let 'in-progress' through, which is absent from
       // LIFECYCLE_ORDER -> indexOf === -1 -> "Voortgang -14%".
@@ -229,6 +243,12 @@ export default function JobDetailPage() {
       quotedAmount: appJob.quotedAmount || 0,
     } as any;
   }, [id, jobs, customers]);
+
+  // Seed the notes editor from the persisted value once the job hydrates.
+  // Keyed on the job id, not the text, so a save does not fight the typist.
+  useEffect(() => {
+    setNotes(job?.notes ?? '');
+  }, [job?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // R66 round 17: removed dead `auditTrail` useMemo. Built a 6-event
   // timeline (Job created / Quote sent / Scheduled / Work started /
@@ -471,6 +491,41 @@ export default function JobDetailPage() {
                 ) : null}
               </View>
             ) : null}
+            {/* Site contact. `siteContact`/`sitePhone` have existed in the
+                schema, both mappers and the DB since 20260213 and were written
+                by exactly one mock fixture — while eveLiveActionService already
+                PREFERS `sitePhone` over the customer's number for outbound
+                contact, because on a renovation the useful number is the site
+                lead's, not the office's.
+                Shown even when empty: gating it on a value would hide the only
+                control that can set one. */}
+            <Pressable
+              style={styles.heroDetailItem}
+              onPress={() => setEditingSite({ contact: job.siteContact ?? '', phone: job.sitePhone ?? '' })}
+              accessibilityRole="button"
+              accessibilityLabel={t('jobs.siteContact', 'Site contact')}
+            >
+              <View style={styles.heroDetailIcon}>
+                <Ionicons name="person-circle-outline" size={14} color={Palette.hermesOrange} />
+              </View>
+              <Text style={styles.heroDetailText} numberOfLines={1}>
+                {job.siteContact || job.sitePhone
+                  ? [job.siteContact, job.sitePhone].filter(Boolean).join(' · ')
+                  : t('jobs.addSiteContact', 'Add site contact')}
+              </Text>
+              {job.sitePhone ? (
+                <Pressable
+                  style={styles.directionsBtn}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('jobs.callSite', 'Call site')}
+                  onPress={() => { hapticSuccess(); Linking.openURL(`tel:${job.sitePhone}`); }}
+                >
+                  <Ionicons name="call" size={13} color={Palette.hermesOrange} />
+                  <Text style={styles.directionsBtnText}>{t('jobs.callSite', 'Call site')}</Text>
+                </Pressable>
+              ) : null}
+            </Pressable>
             {job.travelTime && (
               <View style={styles.heroDetailItem}>
                 <View style={styles.heroDetailIcon}>
@@ -726,8 +781,14 @@ export default function JobDetailPage() {
               placeholder={t('jobs.notesPlaceholder', 'Type your notes here...')}
               placeholderTextColor={SemanticColors.textDisabled}
               multiline
-              value={notes || job.notes || ''}
+              value={notes}
               onChangeText={setNotes}
+              // Saved on blur rather than per keystroke: `updateJob` writes
+              // through to the BE, and one round-trip per character would
+              // queue a write for every letter typed on site.
+              onBlur={() => {
+                if (notes !== (job.notes ?? '')) updateJob(job.id, { specifications: notes });
+              }}
               textAlignVertical="top"
             />
           </View>
@@ -1288,6 +1349,57 @@ export default function JobDetailPage() {
 
         <View style={{ height: 140 }} />
       </ScrollView>
+
+      <Modal
+        visible={editingSite !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setEditingSite(null)}
+      >
+        <View style={styles.signatureBackdrop}>
+          <View style={styles.signatureSheet}>
+            <Text style={styles.signatureTitle}>{t('jobs.siteContact', 'Site contact')}</Text>
+            <Text style={styles.signatureSubtitle}>
+              {t('jobs.siteContactDesc', 'Who is on site and the number to reach them on. Used instead of the customer number when Vasco contacts the job.')}
+            </Text>
+            <TextInput
+              style={styles.siteInput}
+              placeholder={t('jobs.siteContactPlaceholder', 'Name or role, e.g. building concierge')}
+              placeholderTextColor={SemanticColors.textDisabled}
+              value={editingSite?.contact ?? ''}
+              onChangeText={(v) => setEditingSite((s) => (s ? { ...s, contact: v } : s))}
+            />
+            <TextInput
+              style={styles.siteInput}
+              placeholder={t('jobs.sitePhonePlaceholder', 'Phone number on site')}
+              placeholderTextColor={SemanticColors.textDisabled}
+              value={editingSite?.phone ?? ''}
+              onChangeText={(v) => setEditingSite((s) => (s ? { ...s, phone: v } : s))}
+              keyboardType="phone-pad"
+            />
+            <Pressable
+              style={styles.siteSaveBtn}
+              onPress={() => {
+                if (!editingSite) return;
+                hapticSuccess();
+                // Empty clears the field rather than storing "". mappers.ts
+                // uses `'siteContact' in updates`, so an explicit undefined
+                // does reach the patch as null here (unlike updateProject).
+                updateJob(job.id, {
+                  siteContact: editingSite.contact.trim() || undefined,
+                  sitePhone: editingSite.phone.trim() || undefined,
+                });
+                setEditingSite(null);
+              }}
+            >
+              <Text style={styles.siteSaveText}>{t('common.save', 'Save')}</Text>
+            </Pressable>
+            <Pressable style={styles.signatureCancel} onPress={() => setEditingSite(null)}>
+              <Text style={styles.signatureCancelText}>{t('common.cancel', 'Cancel')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={signatureModal.visible}
@@ -2169,6 +2281,24 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textSecondary,
   },
+  siteInput: {
+    backgroundColor: SemanticColors.surfaceSecondary,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textPrimary,
+    marginTop: GRID.sm,
+  },
+  siteSaveBtn: {
+    backgroundColor: Palette.hermesOrange,
+    borderRadius: RADIUS.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: GRID.md,
+  },
+  siteSaveText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
   signatureCancel: {
     alignSelf: 'center',
     paddingVertical: GRID.sm,

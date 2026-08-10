@@ -516,7 +516,13 @@
     "photoAddedDesc": "Foto {{count}} acquisita e salvata.",
     "photoLibrary": "Galleria foto",
     "orderedDescNoSupplier": "{{name}} è stato ordinato.",
-    "directions": "Indicazioni"
+    "directions": "Indicazioni",
+    "siteContact": "Referente in cantiere",
+    "addSiteContact": "Aggiungi referente",
+    "callSite": "Chiama il cantiere",
+    "siteContactDesc": "Chi è in cantiere e a quale numero è raggiungibile. Vasco lo usa al posto del numero del cliente.",
+    "siteContactPlaceholder": "Nome o ruolo, es. portiere",
+    "sitePhonePlaceholder": "Telefono in cantiere"
   },
   "compliance": {
     "manageInsurance": "Gestisci assicurazioni e sinistri",

@@ -516,7 +516,13 @@
     "photoAddedDesc": "Photo {{count}} captured and saved.",
     "photoLibrary": "Photo Library",
     "orderedDescNoSupplier": "{{name}} has been ordered.",
-    "directions": "Directions"
+    "directions": "Directions",
+    "siteContact": "Site contact",
+    "addSiteContact": "Add site contact",
+    "callSite": "Call site",
+    "siteContactDesc": "Who is on site and the number to reach them on. Used instead of the customer number when Vasco contacts the job.",
+    "siteContactPlaceholder": "Name or role, e.g. building concierge",
+    "sitePhonePlaceholder": "Phone number on site"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",

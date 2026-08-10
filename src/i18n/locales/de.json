@@ -516,7 +516,13 @@
     "photoAddedDesc": "Foto {{count}} aufgenommen und gespeichert.",
     "photoLibrary": "Fotomediathek",
     "orderedDescNoSupplier": "{{name}} wurde bestellt.",
-    "directions": "Route"
+    "directions": "Route",
+    "siteContact": "Ansprechpartner vor Ort",
+    "addSiteContact": "Ansprechpartner hinzufügen",
+    "callSite": "Baustelle anrufen",
+    "siteContactDesc": "Wer vor Ort ist und unter welcher Nummer erreichbar. Vasco nutzt diese statt der Kundennummer.",
+    "siteContactPlaceholder": "Name oder Rolle, z. B. Hausmeister",
+    "sitePhonePlaceholder": "Telefonnummer vor Ort"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",

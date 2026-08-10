@@ -516,7 +516,13 @@
     "photoAddedDesc": "Foto {{count}} capturada y guardada.",
     "photoLibrary": "Galería de fotos",
     "orderedDescNoSupplier": "{{name}} se ha pedido.",
-    "directions": "Cómo llegar"
+    "directions": "Cómo llegar",
+    "siteContact": "Contacto en obra",
+    "addSiteContact": "Añadir contacto",
+    "callSite": "Llamar a la obra",
+    "siteContactDesc": "Quién está en la obra y en qué número localizarle. Vasco lo usa en lugar del número del cliente.",
+    "siteContactPlaceholder": "Nombre o cargo, p. ej. conserje",
+    "sitePhonePlaceholder": "Teléfono en la obra"
   },
   "compliance": {
     "manageInsurance": "Gestionar seguros y siniestros",
