@@ -2386,7 +2386,9 @@
       "customerNamePlaceholder": "Nom du client",
       "budgetPlaceholder": "Montant du budget",
       "filterOpen": "En cours",
-      "filterDone": "Terminés"
+      "filterDone": "Terminés",
+      "retentionPlaceholder": "Retenue de garantie % (facultatif)",
+      "retentionHint": "{{percent}}% retenus sur chaque situation jusqu’à la réception"
     }
   },
   "legal": {

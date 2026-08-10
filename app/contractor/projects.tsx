@@ -15,6 +15,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { localDateKey } from '../../src/utils/dateKey';
+import { parseRetentionPercent } from '../../src/services/progressBillingService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Modal } from 'react-native';
 import type { Project, ProjectStatus } from '../../src/types/project';
@@ -47,6 +48,7 @@ export default function ProjectsScreen() {
   const [newTitle, setNewTitle] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
   const [newBudget, setNewBudget] = useState('');
+  const [newRetention, setNewRetention] = useState('');
   const [newTemplate, setNewTemplate] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
@@ -90,12 +92,20 @@ export default function ProjectsScreen() {
       subcontractorIds: [],
       // No terms means "bill as one invoice" -- the existing behaviour.
       billingTerms: [],
-      retentionPercent: 0,
+      // Was hardcoded 0, and nothing else in the app has ever written this
+      // field — so `retentionForTerm` took its `pct <= 0` early return for
+      // every project that has ever existed, and the whole retentie surface on
+      // project-billing (held / release / payable-now) could never render.
+      // Parsed in the service because every failure mode here is silent: a
+      // comma decimal, junk, or an over-100 value all look exactly like
+      // "this contract has no retention".
+      retentionPercent: parseRetentionPercent(newRetention),
       changeOrders: [],
     });
     setNewTitle('');
     setNewCustomer('');
     setNewBudget('');
+    setNewRetention('');
     setNewTemplate(null);
     setShowCreate(false);
   };
@@ -277,6 +287,29 @@ export default function ProjectsScreen() {
                 onChangeText={setNewBudget}
                 keyboardType="numeric"
               />
+              {/* Retentie. Deliberately NO suggested value: the customary rate
+                  differs per country and per contract form, and hardcoding one
+                  would be stating a compliance fact we cannot stand behind
+                  (same call as the per-country retention periods in
+                  vat-and-audit). Blank means no retention, which is what every
+                  project got before this field existed. */}
+              <TextInput
+                style={styles.input}
+                placeholder={t('contractor.projects.retentionPlaceholder', 'Retention % (optional)')}
+                placeholderTextColor={SemanticColors.textTertiary}
+                value={newRetention}
+                onChangeText={setNewRetention}
+                keyboardType="numeric"
+                accessibilityLabel={t('contractor.projects.retentionPlaceholder', 'Retention % (optional)')}
+              />
+              {parseRetentionPercent(newRetention) > 0 ? (
+                <Text style={styles.templateHint}>
+                  {t('contractor.projects.retentionHint', {
+                    defaultValue: '{{percent}}% withheld from each instalment until handover',
+                    percent: parseRetentionPercent(newRetention),
+                  })}
+                </Text>
+              ) : null}
               {/* The trade order, shipped as content. Optional: an aannemer
                   with their own sequence picks nothing and gets the old
                   empty-list behaviour. */}

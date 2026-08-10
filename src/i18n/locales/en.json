@@ -2386,7 +2386,9 @@
       "customerNamePlaceholder": "Customer name",
       "budgetPlaceholder": "Budget amount",
       "filterOpen": "Open",
-      "filterDone": "Finished"
+      "filterDone": "Finished",
+      "retentionPlaceholder": "Retention % (optional)",
+      "retentionHint": "{{percent}}% withheld from each instalment until handover"
     }
   },
   "legal": {

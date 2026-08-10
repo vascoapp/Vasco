@@ -2386,7 +2386,9 @@
       "customerNamePlaceholder": "Kundenname",
       "budgetPlaceholder": "Budgetbetrag",
       "filterOpen": "Laufend",
-      "filterDone": "Abgeschlossen"
+      "filterDone": "Abgeschlossen",
+      "retentionPlaceholder": "Sicherheitseinbehalt % (optional)",
+      "retentionHint": "{{percent}}% werden je Rate bis zur Abnahme einbehalten"
     }
   },
   "legal": {

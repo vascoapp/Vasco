@@ -187,6 +187,27 @@ export function blockingErrorsForTerm(
 // Retentie
 // ---------------------------------------------------------------------------
 
+/**
+ * Parse a retention percentage typed by a contractor into a stored number.
+ *
+ * Lives here rather than in the screen because getting it wrong is silent:
+ * `retentionForTerm` early-returns on `pct <= 0`, so every failed parse looks
+ * exactly like "this project has no retention" and the whole retentie surface
+ * on project-billing stays dark without an error anywhere.
+ *
+ * Five of the six locales type a decimal COMMA — `Number('7,5')` is NaN, which
+ * would have turned a real 7.5% into 0% for every contractor outside the UK.
+ *
+ * Clamped to 0–100 at entry: `validateBillingSchedule` does report
+ * `retention_out_of_range`, but only later and as a billing error, long after
+ * the number was typed and with no way to tell which field caused it.
+ */
+export function parseRetentionPercent(raw: string): number {
+  const n = Number(String(raw).trim().replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(100, round2(n));
+}
+
 /** Retentie withheld from one instalment. */
 export function retentionForTerm(
   project: Pick<Project, 'totalQuoted' | 'totalBudget' | 'retentionPercent'>,

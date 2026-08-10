@@ -2370,7 +2370,9 @@
       "customerNamePlaceholder": "Klantnaam",
       "budgetPlaceholder": "Budgetbedrag",
       "filterOpen": "Lopend",
-      "filterDone": "Afgerond"
+      "filterDone": "Afgerond",
+      "retentionPlaceholder": "Retentie % (optioneel)",
+      "retentionHint": "{{percent}}% ingehouden op elke termijn tot de oplevering"
     }
   },
   "legal": {

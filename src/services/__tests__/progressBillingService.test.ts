@@ -11,6 +11,7 @@ import {
   contractValue,
   termAmount,
   validateBillingSchedule,
+  parseRetentionPercent,
   retentionForTerm,
   payableNow,
   retentionHeld,
@@ -498,5 +499,55 @@ describe('which errors block which term', () => {
   it('treats duplicate ordering as contract-level, since "next" has no answer', () => {
     const dupe = [{ code: 'duplicate_sort_order' as const, message: 'dupe', termId: 'b' }];
     expect(blockingErrorsForTerm(dupe, 'a')).toHaveLength(1);
+  });
+});
+
+describe('parseRetentionPercent', () => {
+  // Retention was hardcoded 0 at project creation and written nowhere else, so
+  // `retentionForTerm`'s `pct <= 0` early return fired for every project that
+  // has ever existed and the retentie surface could never render. The parse is
+  // now the ONLY thing between a typed number and that dead branch, and every
+  // one of its failure modes is silent.
+  it('reads a decimal comma, which five of the six locales type', () => {
+    // Number('7,5') is NaN — that would have turned a real 7.5% into "no
+    // retention" for every contractor outside the UK, with no error.
+    expect(parseRetentionPercent('7,5')).toBe(7.5);
+    expect(parseRetentionPercent('7.5')).toBe(7.5);
+  });
+
+  it('treats blank, junk and negatives as no retention rather than throwing', () => {
+    for (const raw of ['', '   ', 'abc', '-5', 'NaN']) {
+      expect(parseRetentionPercent(raw)).toBe(0);
+    }
+  });
+
+  it('clamps above 100 instead of deferring to a later billing error', () => {
+    expect(parseRetentionPercent('150')).toBe(100);
+    expect(parseRetentionPercent('100')).toBe(100);
+  });
+
+  it('tolerates surrounding whitespace', () => {
+    expect(parseRetentionPercent(' 5 ')).toBe(5);
+  });
+
+  it('produces a value validateBillingSchedule always accepts', () => {
+    // The parse and the validator must not disagree: anything the form can
+    // produce has to survive the schedule check, or a project becomes
+    // un-billable because of what was typed into a create field.
+    for (const raw of ['', '5', '7,5', '150', '-3', 'abc', '99.999']) {
+      const errors = validateBillingSchedule(
+        project({ retentionPercent: parseRetentionPercent(raw) }),
+      );
+      expect(errors.filter(e => e.code === 'retention_out_of_range')).toEqual([]);
+    }
+  });
+
+  it('actually escapes the dead branch it exists to escape', () => {
+    // The whole point: a parsed percentage must make retentionForTerm return a
+    // real number instead of its `pct <= 0` early return.
+    const p = project({ totalQuoted: 10000, retentionPercent: parseRetentionPercent('5') });
+    const t = term({ percent: 100 });
+    expect(retentionForTerm(p, t)).toBe(500);
+    expect(payableNow(p, t)).toBe(9500);
   });
 });

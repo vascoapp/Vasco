@@ -2386,7 +2386,9 @@
       "customerNamePlaceholder": "Nome cliente",
       "budgetPlaceholder": "Importo budget",
       "filterOpen": "In corso",
-      "filterDone": "Conclusi"
+      "filterDone": "Conclusi",
+      "retentionPlaceholder": "Ritenuta a garanzia % (facoltativa)",
+      "retentionHint": "{{percent}}% trattenuto su ogni acconto fino alla consegna"
     }
   },
   "legal": {

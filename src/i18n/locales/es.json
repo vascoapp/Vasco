@@ -2386,7 +2386,9 @@
       "customerNamePlaceholder": "Nombre del cliente",
       "budgetPlaceholder": "Importe del presupuesto",
       "filterOpen": "En curso",
-      "filterDone": "Finalizados"
+      "filterDone": "Finalizados",
+      "retentionPlaceholder": "Retención % (opcional)",
+      "retentionHint": "{{percent}}% retenido en cada certificación hasta la entrega"
     }
   },
   "legal": {
