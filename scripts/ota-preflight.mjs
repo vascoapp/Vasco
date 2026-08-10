@@ -605,6 +605,28 @@ async function checkManualCurrency() {
 // Values that are correct as-is in at least one target language. Compared
 // case-sensitively against the en value.
 const SAME_WORD_OK = new Set([
+  // ── Dutch shares these with English (added when nl stopped being exempt
+  //    from this check). Legal/entity identifiers MUST NOT be translated;
+  //    the rest are ordinary Dutch loanwords in trade/business use.
+  'Project', 'Later', 'Postcode', 'Camera', 'Stop', 'Week', 'Open', 'Inbox',
+  'Checklist', 'Product', 'Chat', 'Percentage', 'Water', 'Code', 'Storm',
+  'Complex', 'Premium', 'Deadline', 'Factoring', 'Dispatch', 'Conflict',
+  'Gas / HVAC', 'Lead', 'Lead scoring', 'Download PDF', 'Quick wins: {{suppliers}}',
+  'Account & privacy', 'Data Intelligence', 'Vasco business intelligence',
+  'IBAN match', 'Planning Tools', 'items', 'Items', 'orders', 'Sale',
+  // Legal forms, tax ids and standards — translating these would be WRONG,
+  // not merely lazy: they are the literal registered terms.
+  'EIRL', 'SARL', 'S.L.', 'S.A.', 'S.r.l.', 'S.n.c.', 'S-Corp', 'USt-IdNr.',
+  'SIRET', 'Partita IVA', 'Codice Fiscale', 'IBAN', 'BIC / SWIFT', 'RAMS',
+  'LTIR', 'GoBD Audit-Trail', 'Vasco GoBD audit trail',
+  'KOR — Kleineondernemersregeling', 'Kleinunternehmer (§19 UStG)',
+  'State license #', 'Routing number', 'Secret key', 'Stripe Payments',
+  'WhatsApp', 'Excel/CSV', 'Push', 'iDEAL & Mollie', 'Contractor',
+  // Brand names.
+  'Vasco Analyst', 'Vasco Finance', 'Vasco Engine', 'Vasco Queue',
+  // Same word in Dutch, with interpolation around it.
+  'Test onboarding', '+{{trend}}% trend', '1 week', 'Account: {{id}}',
+  'Claims', 'Week {{n}}', '→ week {{week}}',
   // words English shares with de/fr/es/it in this domain
   'Total', 'Subtotal', 'Email', 'Date', 'Description', 'Notes', 'Photos',
   'Photo', 'Client', 'Status', 'Team', 'Standard', 'Budget', 'Material',
@@ -671,7 +693,7 @@ const DEAD_VALUE_NAMESPACES = new Set(['workflowPacks']);
 // A value carrying no translatable words: only placeholders, digits, currency
 // symbols and punctuation (e.g. '{{count}}×', ' (€{{amt}})', '10 min').
 function isFormatOnly(v) {
-  return /^[\s\d\p{P}\p{S}]*(\{\{\w+\}\}[\s\d\p{P}\p{S}]*)*(min|h|d|g|j|T)?[\s\d\p{P}\p{S}]*$/u.test(v);
+  return /^[\s\d\p{P}\p{S}]*(\{\{\w+\}\}[\s\d\p{P}\p{S}]*)*(min|h|d|g|j|T|x)?[\s\d\p{P}\p{S}]*$/u.test(v);
 }
 
 async function checkUntranslatedValues() {
@@ -688,7 +710,13 @@ async function checkUntranslatedValues() {
   const flatEn = flat(en);
   const hits = [];
   for (const loc of LOCALES) {
-    if (loc === PRIMARY_LOCALE || loc === 'nl') continue; // nl is hand-authored alongside en
+    // nl was skipped here on the theory that it is "hand-authored alongside
+    // en". That exempted the PRIMARY MARKET's language from the only check
+    // that asks whether a value was actually translated — and it was hiding
+    // `aiChat.title = "Office manager"`, the header of a screen whose own body
+    // text calls itself "je kantoorhulp". Dutch is checked like every other
+    // locale now.
+    if (loc === PRIMARY_LOCALE) continue;
     const flatLoc = flat(await loadLocale(loc));
     for (const [k, v] of Object.entries(flatLoc)) {
       if (flatEn[k] !== v) continue;

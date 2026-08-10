@@ -2694,7 +2694,7 @@
     },
     "fab": {
       "planSchedule": "Plan je week",
-      "planSchedule2": "Plan schedule"
+      "planSchedule2": "Planning maken"
     },
     "status": {
       "completed": "Voltooid",
@@ -2744,9 +2744,9 @@
       "sortBy": "SORTEREN OP"
     },
     "ai": {
-      "automationsTitle": "Automations",
-      "insightsTitle": "AI insights",
-      "queueTitle": "Vasco queue",
+      "automationsTitle": "Automatiseringen",
+      "insightsTitle": "AI-inzichten",
+      "queueTitle": "Vasco-wachtrij",
       "quickAccess": "Snel toegankelijk",
       "accountPrivacy": "Account & privacy",
       "manageAllAutomations": "Beheer alle automations",
@@ -3413,7 +3413,7 @@
     "budget": "Budget",
     "cpi": "CPI",
     "percentSpent": "{{pct}}% van budget besteed",
-    "contingencyTracker": "Contingency tracker",
+    "contingencyTracker": "Onvoorzien-tracker",
     "reserveFund": "Reservefonds",
     "totalContingency": "Totaal contingency",
     "used": "Gebruikt",
@@ -3504,7 +3504,7 @@
     "trendFalling": "Dalend",
     "trendStable": "Stabiel",
     "unknownSupplier": "Onbekend",
-    "sale": "Sale",
+    "sale": "Aanbieding",
     "suppliers": "Leveranciers",
     "searchPlaceholder": "Zoek materiaal, merk of SKU…",
     "all": "Alles",
@@ -4536,7 +4536,7 @@
   "aiChat": {
     "welcome": "Hallo! Ik ben je kantoorhulp. Vraag me om een klant te factureren, een klus in te plannen of cijfers te checken.",
     "parseError": "Sorry — ik kon dat niet begrijpen. Probeer het anders te formuleren.",
-    "title": "Office manager",
+    "title": "Kantoorhulp",
     "placeholder": "Stel je vraag…",
     "timeout": "Dat duurde te lang — controleer je verbinding en probeer opnieuw.",
     "suggestWeek": "Hoe was mijn week?",
