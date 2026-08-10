@@ -171,31 +171,40 @@ export function customerRowToCustomer(row: CustomerRow): Customer {
 // Skips fields stored in separate tables (timeEntries, materials, photos,
 // notes, recurringPattern) and FE-only derived fields (quoteId, invoiceId).
 export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, unknown> {
+  // `'x' in updates` decides whether the caller MENTIONED the field; `?? null`
+  // decides whether an explicit `undefined` can EMPTY it. They are two separate
+  // halves and only having the first is a silent bug: a bare `undefined` leaves
+  // a key that JSON.stringify drops, so the column keeps its old value and the
+  // cleared field reappears on the next cold start (learnings #143, hit twice —
+  // Project.targetEndDate and then Job.siteContact one file later).
+  //
+  // Every NULLABLE column below therefore coalesces. The exceptions are
+  // deliberate: `title` and `status` are NOT NULL in the schema, so nulling
+  // them would be rejected by the database rather than clear anything, and
+  // `time_entries` is NOT NULL with an array default (`?? []`).
   const out: Record<string, unknown> = {};
-  if ('customerId' in updates)         out.customer_id = updates.customerId;
-  if ('title' in updates)              out.title = updates.title;
-  if ('description' in updates)        out.description = updates.description;
-  if ('status' in updates)             out.status = updates.status;
-  // `?? null` like assignedWorkerId below: these three are now user-editable
-  // and therefore user-CLEARABLE. Assigning a bare `undefined` leaves a key
-  // that JSON.stringify drops, so the column keeps its old value and the
-  // cleared field reappears on cold start — the learnings #143 shape.
+  if ('customerId' in updates)         out.customer_id = updates.customerId ?? null;
+  if ('title' in updates)              out.title = updates.title;          // NOT NULL
+  if ('description' in updates)        out.description = updates.description ?? null;
+  if ('status' in updates)             out.status = updates.status;        // NOT NULL
   if ('siteContact' in updates)        out.site_contact = updates.siteContact ?? null;
   if ('sitePhone' in updates)          out.site_phone = updates.sitePhone ?? null;
-  if ('scheduledDate' in updates)      out.scheduled_date = updates.scheduledDate;
-  if ('scheduledStartTime' in updates) out.scheduled_start_time = updates.scheduledStartTime;
-  if ('scheduledEndTime' in updates)   out.scheduled_end_time = updates.scheduledEndTime;
-  if ('estimatedDuration' in updates)  out.estimated_duration = updates.estimatedDuration;
-  if ('quotedAmount' in updates)       out.quoted_amount = updates.quotedAmount;
-  if ('agreedAmount' in updates)       out.agreed_amount = updates.agreedAmount;
-  if ('trade' in updates)              out.trade = updates.trade;
-  if ('quoteId' in updates)            out.quote_id = updates.quoteId;
-  if ('priority' in updates)           out.priority = updates.priority;
-  if ('roomsAreas' in updates)         out.rooms_areas = updates.roomsAreas;
+  if ('scheduledDate' in updates)      out.scheduled_date = updates.scheduledDate ?? null;
+  if ('scheduledStartTime' in updates) out.scheduled_start_time = updates.scheduledStartTime ?? null;
+  if ('scheduledEndTime' in updates)   out.scheduled_end_time = updates.scheduledEndTime ?? null;
+  // Numbers coalesce on NULLISH only, so a real 0 still writes 0 — clearing an
+  // estimate and estimating zero are different statements.
+  if ('estimatedDuration' in updates)  out.estimated_duration = updates.estimatedDuration ?? null;
+  if ('quotedAmount' in updates)       out.quoted_amount = updates.quotedAmount ?? null;
+  if ('agreedAmount' in updates)       out.agreed_amount = updates.agreedAmount ?? null;
+  if ('trade' in updates)              out.trade = updates.trade ?? null;
+  if ('quoteId' in updates)            out.quote_id = updates.quoteId ?? null;
+  if ('priority' in updates)           out.priority = updates.priority ?? null;
+  if ('roomsAreas' in updates)         out.rooms_areas = updates.roomsAreas ?? null;
   if ('specifications' in updates)     out.specifications = updates.specifications ?? null;
-  if ('completedAt' in updates)        out.completed_at = updates.completedAt;
-  if ('signatureSvg' in updates)       out.signature_svg = updates.signatureSvg;
-  if ('customerSignoffAt' in updates)  out.customer_signoff_at = updates.customerSignoffAt;
+  if ('completedAt' in updates)        out.completed_at = updates.completedAt ?? null;
+  if ('signatureSvg' in updates)       out.signature_svg = updates.signatureSvg ?? null;
+  if ('customerSignoffAt' in updates)  out.customer_signoff_at = updates.customerSignoffAt ?? null;
   // R86 crew dispatch lite: write through worker assignment to BE.
   if ('assignedWorkerId' in updates)   out.assigned_worker_id = updates.assignedWorkerId ?? null;
   // R66 round 12: timeEntries was previously dropped here ("separate table")
@@ -204,12 +213,14 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   if ('timeEntries' in updates)        out.time_entries = updates.timeEntries ?? [];
   // Address is a nested object on Job; flatten to address_*
   if ('address' in updates && updates.address) {
-    if ('street' in updates.address)       out.address_street = updates.address.street;
-    if ('city' in updates.address)         out.address_city = updates.address.city;
-    if ('postcode' in updates.address)     out.address_postcode = updates.address.postcode;
-    if ('country' in updates.address)      out.address_country = updates.address.country;
-    if ('accessNotes' in updates.address)  out.address_access_notes = updates.address.accessNotes;
-    if ('parkingNotes' in updates.address) out.address_parking_notes = updates.address.parkingNotes;
+    // All six are nullable — same coalesce rule as above so a cleared address
+    // line actually empties instead of silently keeping the old street.
+    if ('street' in updates.address)       out.address_street = updates.address.street ?? null;
+    if ('city' in updates.address)         out.address_city = updates.address.city ?? null;
+    if ('postcode' in updates.address)     out.address_postcode = updates.address.postcode ?? null;
+    if ('country' in updates.address)      out.address_country = updates.address.country ?? null;
+    if ('accessNotes' in updates.address)  out.address_access_notes = updates.address.accessNotes ?? null;
+    if ('parkingNotes' in updates.address) out.address_parking_notes = updates.address.parkingNotes ?? null;
   }
   // FE-only / separate-table fields are intentionally dropped:
   //   invoiceId                  — derived

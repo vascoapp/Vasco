@@ -109,6 +109,13 @@ export type JobRow = {
   // contractors. Migration 20260520000004 adds the column + FK to
   // workers(id) ON DELETE SET NULL.
   assigned_worker_id: string | null;
+  /**
+   * Handover signature — migration 20260502000003_job_signature_columns.sql.
+   * Both columns existed and both mappers wrote them, but they were missing
+   * from this type, so rule #8 step 3 was never actually satisfied for them.
+   */
+  signature_svg: string | null;
+  customer_signoff_at: string | null;
   // Timestamps
   completed_at: string | null;
   created_at: string;

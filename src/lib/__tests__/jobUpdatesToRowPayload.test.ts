@@ -204,4 +204,63 @@ describe('jobUpdatesToRowPayload', () => {
       expect(jobUpdatesToRowPayload({ title: 'x' })).toEqual({ title: 'x' });
     });
   });
+
+  describe('every nullable column can be cleared; NOT NULL ones are left alone', () => {
+    // The rule, pinned once rather than per field: mentioning a nullable field
+    // with an explicit `undefined` must produce `null` — a key holding
+    // `undefined` does not survive JSON serialisation, so the clear would never
+    // reach the database and the value returns on cold start (#143).
+    const NULLABLE: Array<[string, string]> = [
+      ['customerId', 'customer_id'],
+      ['description', 'description'],
+      ['siteContact', 'site_contact'],
+      ['sitePhone', 'site_phone'],
+      ['scheduledDate', 'scheduled_date'],
+      ['scheduledStartTime', 'scheduled_start_time'],
+      ['scheduledEndTime', 'scheduled_end_time'],
+      ['estimatedDuration', 'estimated_duration'],
+      ['quotedAmount', 'quoted_amount'],
+      ['agreedAmount', 'agreed_amount'],
+      ['trade', 'trade'],
+      ['quoteId', 'quote_id'],
+      ['priority', 'priority'],
+      ['roomsAreas', 'rooms_areas'],
+      ['specifications', 'specifications'],
+      ['completedAt', 'completed_at'],
+      ['signatureSvg', 'signature_svg'],
+      ['customerSignoffAt', 'customer_signoff_at'],
+      ['assignedWorkerId', 'assigned_worker_id'],
+    ];
+
+    it.each(NULLABLE)('%s clears to null', (field, column) => {
+      const out = jobUpdatesToRowPayload({ [field]: undefined } as any);
+      expect(out).toEqual({ [column]: null });
+      // Survives the wire: an undefined value would vanish here.
+      expect(JSON.parse(JSON.stringify(out))).toEqual({ [column]: null });
+    });
+
+    it('clears nested address lines too', () => {
+      const out = jobUpdatesToRowPayload({
+        address: { street: undefined, city: undefined } as any,
+      });
+      expect(out).toEqual({ address_street: null, address_city: null });
+    });
+
+    it('does NOT null title or status, which are NOT NULL columns', () => {
+      // Coalescing these would send a null the database must reject, turning a
+      // clear that cannot work into a failed write of the whole row.
+      const out = jobUpdatesToRowPayload({ title: undefined, status: undefined } as any);
+      expect(out.title).toBeUndefined();
+      expect(out.status).toBeUndefined();
+    });
+
+    it('keeps a real zero rather than treating it as cleared', () => {
+      // `??` is nullish-only on purpose: estimating zero hours and clearing the
+      // estimate are different statements.
+      expect(jobUpdatesToRowPayload({ estimatedDuration: 0, quotedAmount: 0 })).toEqual({
+        estimated_duration: 0,
+        quoted_amount: 0,
+      });
+    });
+  });
 });
