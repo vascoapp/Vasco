@@ -16,6 +16,7 @@ import { formatCurrency0, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { localDateKey } from '../../src/utils/dateKey';
 import { parseRetentionPercent } from '../../src/services/progressBillingService';
+import { projectProgress } from '../../src/utils/projectProgress';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Modal } from 'react-native';
@@ -123,12 +124,16 @@ export default function ProjectsScreen() {
     const pnl = getProjectPnL(project.id);
     const jobCount = project.jobIds.length;
     const customer = customers.find(c => c.id === project.customerId);
-    // Calculate progress based on completed jobs
-    const completedJobCount = project.jobIds.filter(jid => {
-      const j = jobs.find((job: any) => job.id === jid);
-      return j && ['completed', 'invoiced', 'paid', 'gereed', 'gefactureerd', 'betaald'].includes(j.status);
-    }).length;
-    const progressPct = jobCount > 0 ? Math.round((completedJobCount / jobCount) * 100) : 0;
+    // Progress comes from the MILESTONE plan when the project has one, and only
+    // falls back to jobs when it does not. This card used to count jobs
+    // unconditionally, so the seeded badkamer read "Voortgang 0%" here while its
+    // detail screen showed "Sloopwerk gereed" ticked — two answers for one
+    // project. See src/utils/projectProgress.ts.
+    const progress = projectProgress(
+      project.milestones,
+      project.jobIds.map(jid => jobs.find((job: any) => job.id === jid)?.status),
+    );
+    const progressPct = progress.pct;
 
     return (
       <Pressable
@@ -151,16 +156,21 @@ export default function ProjectsScreen() {
             </View>
           </View>
 
-          {/* Progress bar */}
-          <View style={styles.progressSection}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>{t('jobs.progress', 'Progress')}</Text>
-              <Text style={[styles.progressPct, { color: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]}>{progressPct}%</Text>
+          {/* Progress bar. Omitted when there is neither a milestone plan nor a
+              job to measure against — "0%" would score an empty set as no
+              progress, and this same card already prints "—" for a margin it
+              cannot compute. */}
+          {progress.basis !== 'none' && (
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressLabel}>{t('jobs.progress', 'Progress')}</Text>
+                <Text style={[styles.progressPct, { color: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]}>{progressPct}%</Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${progressPct}%` as any, backgroundColor: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
+              </View>
             </View>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progressPct}%` as any, backgroundColor: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
-            </View>
-          </View>
+          )}
 
           <View style={styles.metricsRow}>
             <View style={styles.metric}>
