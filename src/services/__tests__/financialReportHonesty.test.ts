@@ -81,7 +81,7 @@ describe('the P&L never invents a cost', () => {
     expect(r.costOfMaterials).toBe(190);
   });
 
-  it('NEVER reports operating expenses or net income — the app captures neither', () => {
+  it('reports no operating expenses or net income when none are recorded', () => {
     const r = generateMonthlyReport(
       AUG, YEAR,
       [paidInvoice('i1', 760, 'j1')] as never,
@@ -174,5 +174,60 @@ describe('an empty material set is UNKNOWN, not zero', () => {
     );
     expect(r.costOfMaterials).toBe(0);
     expect(r.grossProfit).toBe(760);
+  });
+});
+
+describe('operating expenses come from the REAL expense ledger', () => {
+  // Correcting an earlier assumption of mine: the app DOES capture expenses
+  // (expenseService, persisted at @vasco_expenses, written by the receipt
+  // scanner and manual entry). It merely starts empty, which is not the same
+  // as having no feature.
+  const expense = (amount: number, category = 'kantoor', date = '2026-08-05T09:00:00.000Z') =>
+    ({ id: `e-${amount}-${category}`, description: 'x', category, amount, vatAmount: 0, vatRate: 0,
+       date: new Date(date), deductible: true, deductionPercentage: 100 } as never);
+
+  const withMaterials = { j1: [{ jobId: 'j1', totalPrice: 190 } as never] };
+
+  it('sums recorded expenses and completes the P&L down to net income', () => {
+    const r = generateMonthlyReport(
+      AUG, YEAR, [paidInvoice('i1', 760, 'j1')] as never, [], undefined,
+      withMaterials, [expense(76)],
+    );
+    expect(r.costOfMaterials).toBe(190);
+    expect(r.grossProfit).toBe(570);
+    expect(r.operatingExpenses).toBe(76);
+    expect(r.netIncome).toBe(494);
+    // Now a NET margin, because every cost is known.
+    expect(r.profitMargin).toBe(65);
+  });
+
+  it('EXCLUDES material-category expenses — they are already in costOfMaterials', () => {
+    // Double-counting a cost understates profit exactly as badly as inventing
+    // one overstates it.
+    const r = generateMonthlyReport(
+      AUG, YEAR, [paidInvoice('i1', 760, 'j1')] as never, [], undefined,
+      withMaterials, [expense(76), expense(500, 'materiaal')],
+    );
+    expect(r.operatingExpenses).toBe(76);
+    expect(r.netIncome).toBe(494);
+  });
+
+  it('ignores expenses dated outside the period', () => {
+    const r = generateMonthlyReport(
+      AUG, YEAR, [paidInvoice('i1', 760, 'j1')] as never, [], undefined,
+      withMaterials, [expense(76), expense(9999, 'kantoor', '2026-06-05T09:00:00.000Z')],
+    );
+    expect(r.operatingExpenses).toBe(76);
+  });
+
+  it('an empty ledger is UNKNOWN, so net income stays null', () => {
+    const r = generateMonthlyReport(
+      AUG, YEAR, [paidInvoice('i1', 760, 'j1')] as never, [], undefined,
+      withMaterials, [],
+    );
+    expect(r.operatingExpenses).toBeNull();
+    expect(r.netIncome).toBeNull();
+    // Falls back to the GROSS margin rather than reporting a net one.
+    expect(r.profitMargin).toBe(75);
   });
 });

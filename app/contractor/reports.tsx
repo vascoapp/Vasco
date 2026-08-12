@@ -11,6 +11,7 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { useExpenses } from '../../src/services/expenseService';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency } from '../../src/i18n/formatting';
 import {
@@ -38,6 +39,8 @@ export default function ReportsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { invoices, quotes, jobMaterials } = useAppState();
+  // Real recorded expenses (receipt scanner + manual entry).
+  const { expenses } = useExpenses();
   const { user } = useAuth();
   const MONTH_LABELS = useMemo(() => monthLabels(i18n.language), [i18n.language]);
 
@@ -63,9 +66,9 @@ export default function ReportsScreen() {
 
   const report: FinancialReport = useMemo(() => {
     if (mode === 'monthly') {
-      return generateMonthlyReport(selectedMonth, selectedYear, invoices, quotes, reportLabels, jobMaterials);
+      return generateMonthlyReport(selectedMonth, selectedYear, invoices, quotes, reportLabels, jobMaterials, expenses);
     }
-    return generateQuarterlyReport(selectedQuarter, selectedYear, invoices, quotes, reportLabels, jobMaterials);
+    return generateQuarterlyReport(selectedQuarter, selectedYear, invoices, quotes, reportLabels, jobMaterials, expenses);
   }, [mode, selectedMonth, selectedQuarter, selectedYear, invoices, quotes, reportLabels]);
 
   // Thread the user's country — formatCurrency defaults to 'NL', which

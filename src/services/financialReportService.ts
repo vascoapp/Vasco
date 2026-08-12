@@ -10,6 +10,7 @@ import { Share, Platform } from 'react-native';
 import { analyzeFinancials, type FinancialSummary, type MonthlyBucket } from './financialAnalysisService';
 import type { Invoice, Quote } from '../domain/documents';
 import type { JobMaterial } from '../domain/materials';
+import type { Expense } from './expenseService';
 
 // =============================================================================
 // TYPES
@@ -45,9 +46,9 @@ export interface FinancialReport {
   costOfMaterials: number | null;
   /** revenue - costOfMaterials. Null when material cost is unknown. */
   grossProfit: number | null;
-  /** Always null: the app has no expense capture, so there is nothing to sum. */
+  /** Real, summed from recorded expenses in the period. Null when none exist. */
   operatingExpenses: number | null;
-  /** Null while operatingExpenses is unknown — net income needs every cost. */
+  /** revenue - materials - operating expenses. Null unless BOTH costs are known. */
   netIncome: number | null;
   /** GROSS margin (grossProfit/revenue). Null when material cost is unknown. */
   profitMargin: number | null;
@@ -117,6 +118,25 @@ export type JobMaterialsByJob = Record<string, JobMaterial[]>;
  * The demo's paid invoice has no linked job at all, so this is the common case,
  * not an edge one.
  */
+
+function filterExpensesByMonth(expenses: Expense[], month: number, year: number): Expense[] {
+  return expenses.filter(e => {
+    const d = e.date instanceof Date ? e.date : new Date(e.date);
+    if (Number.isNaN(d.getTime())) return false;
+    return d.getFullYear() === year && d.getMonth() + 1 === month;
+  });
+}
+
+function filterExpensesByQuarter(expenses: Expense[], quarter: number, year: number): Expense[] {
+  const startMonth = (quarter - 1) * 3 + 1;
+  return expenses.filter(e => {
+    const d = e.date instanceof Date ? e.date : new Date(e.date);
+    if (Number.isNaN(d.getTime())) return false;
+    const m = d.getMonth() + 1;
+    return d.getFullYear() === year && m >= startMonth && m <= startMonth + 2;
+  });
+}
+
 function sumMaterialCostForJobs(jobMaterials: JobMaterialsByJob, jobIds: Set<string>): number | null {
   let total = 0;
   let rows = 0;
@@ -131,10 +151,26 @@ function sumMaterialCostForJobs(jobMaterials: JobMaterialsByJob, jobIds: Set<str
   return rows === 0 ? null : total;
 }
 
+
+/**
+ * Recorded operating expenses, EXCLUDING the material category.
+ *
+ * Materials already arrive through `costOfMaterials` (job materials), so
+ * counting a `materiaal` expense here would subtract the same euro twice.
+ * Returns null when nothing has been recorded — an empty ledger is not proof
+ * of zero spending, the same rule applied to materials above.
+ */
+function sumOperatingExpenses(expenses: Expense[]): number | null {
+  const operating = expenses.filter(e => e.category !== 'materiaal');
+  if (operating.length === 0) return null;
+  return operating.reduce((s, e) => s + (e.amount || 0), 0);
+}
+
 function calculatePeriodFinancials(
   invoices: Invoice[],
   quotes: Quote[],
   jobMaterials?: JobMaterialsByJob,
+  expenses?: Expense[],
 ): { revenue: number; costOfMaterials: number | null; grossProfit: number | null; operatingExpenses: number | null; netIncome: number | null; profitMargin: number | null; invoiceCount: number; paidCount: number; overdueAmount: number; outstandingAmount: number } {
   const paid = invoices.filter(i => i.status === 'paid');
   const revenue = paid.reduce((s, i) => s + (i.total || i.amount || 0), 0);
@@ -147,14 +183,30 @@ function calculatePeriodFinancials(
     : null;
   const grossProfit = costOfMaterials === null ? null : revenue - costOfMaterials;
 
-  // The app has no expense capture — there is no field anywhere to sum, so
-  // there is nothing honest to put here. Net income needs EVERY cost, so it
-  // stays unknown too, and the margin reported is the GROSS margin.
-  const operatingExpenses: number | null = null;
-  const netIncome: number | null = null;
-  const profitMargin = grossProfit === null || revenue <= 0
+  // REAL operating expenses: recorded via the receipt scanner or entered by
+  // hand (expenseService, persisted at @vasco_expenses). Material-category
+  // expenses are EXCLUDED — they are already counted in costOfMaterials above
+  // via the job materials, and double-counting a cost understates profit just
+  // as badly as inventing one.
+  //
+  // Correcting my own earlier claim: an initial pass asserted the app captures
+  // no expenses and hardcoded this to null. It does capture them; it simply
+  // starts empty (R26 removed the fake seed rows).
+  const operatingExpenses = expenses
+    ? sumOperatingExpenses(expenses)
+    : null;
+
+  // Net income needs EVERY cost. Unknown if either half is unknown.
+  const netIncome = grossProfit === null || operatingExpenses === null
     ? null
-    : Math.round((grossProfit / revenue) * 100);
+    : grossProfit - operatingExpenses;
+
+  // Net margin when net income is known, otherwise the GROSS margin — never a
+  // net figure derived from a partial cost picture.
+  const marginBase = netIncome ?? grossProfit;
+  const profitMargin = marginBase === null || revenue <= 0
+    ? null
+    : Math.round((marginBase / revenue) * 100);
 
   const overdue = invoices.filter(i => i.status === 'overdue');
   const overdueAmount = overdue.reduce((s, i) => s + (i.total || i.amount || 0), 0);
@@ -243,15 +295,16 @@ export function generateMonthlyReport(
   quotes: Quote[],
   labels: ReportLabels = DEFAULT_LABELS,
   jobMaterials?: JobMaterialsByJob,
+  expenses?: Expense[],
 ): FinancialReport {
   const currentInvoices = filterInvoicesByMonth(invoices, month, year);
-  const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials);
+  const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials, expenses && filterExpensesByMonth(expenses, month, year));
 
   // Previous month for comparison
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
   const prevInvoices = filterInvoicesByMonth(invoices, prevMonth, prevYear);
-  const prev = calculatePeriodFinancials(prevInvoices, quotes, jobMaterials);
+  const prev = calculatePeriodFinancials(prevInvoices, quotes, jobMaterials, expenses && filterExpensesByMonth(expenses, prevMonth, prevYear));
 
   const revenueChange = prev.revenue > 0
     ? Math.round(((current.revenue - prev.revenue) / prev.revenue) * 100)
@@ -296,15 +349,16 @@ export function generateQuarterlyReport(
   quotes: Quote[],
   labels: ReportLabels = DEFAULT_LABELS,
   jobMaterials?: JobMaterialsByJob,
+  expenses?: Expense[],
 ): FinancialReport {
   const currentInvoices = filterInvoicesByQuarter(invoices, quarter, year);
-  const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials);
+  const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials, expenses && filterExpensesByQuarter(expenses, quarter, year));
 
   // Previous quarter for comparison
   const prevQuarter = quarter === 1 ? 4 : quarter - 1;
   const prevYear = quarter === 1 ? year - 1 : year;
   const prevInvoices = filterInvoicesByQuarter(invoices, prevQuarter, prevYear);
-  const prev = calculatePeriodFinancials(prevInvoices, quotes, jobMaterials);
+  const prev = calculatePeriodFinancials(prevInvoices, quotes, jobMaterials, expenses && filterExpensesByQuarter(expenses, prevQuarter, prevYear));
 
   const revenueChange = prev.revenue > 0
     ? Math.round(((current.revenue - prev.revenue) / prev.revenue) * 100)
