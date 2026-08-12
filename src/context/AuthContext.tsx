@@ -10,6 +10,7 @@ import { withTimeout } from '../utils/withTimeout';
 import { setCurrentUser } from '../lib/currentUser';
 import { recordLogin as recordActivationLogin } from '../services/activationMilestonesService';
 import { addBreadcrumb } from '../lib/errorReporting';
+import { setAccountLanguage } from '../i18n/savedLanguage';
 import type { Session } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
@@ -440,6 +441,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // show the Projects tab + multi-trade quote builder for
           // renovation GCs.
           const md = s.user.user_metadata ?? {};
+          setAccountLanguage(md.language as string | undefined);
           setUser({
             id: s.user.id,
             email: s.user.email ?? '',
@@ -522,6 +524,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // R109: is_aannemer (renovation GC) determines whether the
         // contractor sees the Projects tab + multi-trade quote builder.
         const metaIsAannemer = md.is_aannemer === true;
+        setAccountLanguage(metaLanguage);
 
         setUser((prev) => {
           const sameUser = prev?.id === s.user.id;
@@ -609,27 +612,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restore persisted user profile (country, trade, language) on login
   useEffect(() => {
     if (!user) return;
-    AsyncStorage.getItem('@vasco_user_profile').then((raw) => {
-      if (!raw) return;
+    // Captured before the await so the account's own language survives the
+    // profile read regardless of what it returns.
+    const accountProfile = {
+      trade: user.trade,
+      country: user.country,
+      language: user.language,
+      onboardingComplete: user.onboardingComplete,
+    };
+    (async () => {
+      let savedLang: string | undefined;
+      let hadProfile = false;
       try {
-        const profile = JSON.parse(raw);
-        if (profile && typeof profile === 'object') {
-          setUser((prev) => prev ? { ...prev, ...profile } : null);
-          // R66 round 4: honor the saved language preference on cold-start.
-          // i18n.ts only reads device locale at boot — without this, a
-          // contractor whose phone is set to a different language than the
-          // one they picked in onboarding sees the wrong language.
-          const savedLang = (profile as { language?: string }).language;
-          if (savedLang && typeof savedLang === 'string') {
-            import('../i18n/i18n').then(({ default: i18n }) => {
-              if (i18n.language !== savedLang) {
-                i18n.changeLanguage(savedLang).catch(() => {});
-              }
-            }).catch(() => {});
+        const raw = await AsyncStorage.getItem('@vasco_user_profile');
+        if (raw) {
+          const profile = JSON.parse(raw);
+          if (profile && typeof profile === 'object') {
+            hadProfile = true;
+            setUser((prev) => prev ? { ...prev, ...profile } : null);
+            const l = (profile as { language?: unknown }).language;
+            if (typeof l === 'string' && l) savedLang = l;
           }
         }
       } catch {}
-    }).catch(() => {});
+
+      // R323: seed the profile from the ACCOUNT on first login. `updateUser`
+      // (a profile edit) and onboarding were the only writers of this key, so
+      // a first login — a demo account, or a returning user on a new device —
+      // left it absent. Everything that reads it then fell back to the device:
+      // `applySavedLanguage` (which the AI queue awaits before authoring the
+      // copy it PERSISTS) found nothing and kept the device language, and the
+      // effect below never ran. A Dutch contractor on an English phone got an
+      // English app, and any queue card generated in that state stayed English
+      // forever. Only written when absent, so a real saved profile always wins.
+      if (!hadProfile && accountProfile.language) {
+        await AsyncStorage.setItem(
+          '@vasco_user_profile', JSON.stringify(accountProfile),
+        ).catch(() => {});
+      }
+
+      // R66 round 4: honor the saved language preference on cold-start.
+      // i18n.ts only reads device locale at boot — without this, a contractor
+      // whose phone is set to a different language than the one they picked in
+      // onboarding sees the wrong language.
+      const lang = savedLang ?? accountProfile.language;
+      if (lang && typeof lang === 'string') {
+        try {
+          const { default: i18n } = await import('../i18n/i18n');
+          if (i18n.language !== lang) await i18n.changeLanguage(lang);
+        } catch {}
+      }
+    })();
     // Only run once when user first becomes non-null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [!!user]);
@@ -713,6 +746,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // on mount. Incrementing after that point loses the race and the card
       // stays visible one login too long.
       await recordActivationLogin().catch(() => {});
+      setAccountLanguage(mockUser.language);
       setUser(mockUser);
       setIsLoading(false);
       // R280: startAutoSync / startEventFlushing are now triggered uniformly
@@ -877,6 +911,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { clearUserScopedStorage } = await import('../services/sessionCleanup');
       await clearUserScopedStorage();
     } catch {}
+    // Module state outlives the session — leaving it set would apply the
+    // previous contractor's language to whoever signs in next.
+    setAccountLanguage(undefined);
     setUser(null);
     setSession(null);
   }, []);

@@ -3,6 +3,27 @@ import i18n from './i18n';
 
 const PROFILE_KEY = '@vasco_user_profile';
 
+let accountLanguage: string | undefined;
+
+/**
+ * Record the language carried by the signed-in ACCOUNT — synchronously, at the
+ * moment the user is set.
+ *
+ * `PROFILE_KEY` is only written by a profile edit or by onboarding, so on a
+ * first login it does not exist yet and the lookup below finds nothing. Worse,
+ * even once AuthContext seeds it, that write is a storage round-trip competing
+ * with `backgroundJobScheduler`, which calls `populateQueue` on app open. React
+ * effects fire bottom-up, so a provider-level effect cannot be relied on to win
+ * that race either.
+ *
+ * Setting this from the sign-in handler removes the race entirely: it is plain
+ * module state assigned before the resulting render commits, so it is already
+ * in place by the time anything schedules work.
+ */
+export function setAccountLanguage(lang?: string | null): void {
+  accountLanguage = typeof lang === 'string' && lang ? lang : undefined;
+}
+
 /**
  * Apply the contractor's saved language preference to i18next.
  *
@@ -21,14 +42,25 @@ const PROFILE_KEY = '@vasco_user_profile';
  * Idempotent and safe to call repeatedly; resolves to the active language.
  */
 export async function applySavedLanguage(): Promise<string> {
+  let saved: string | undefined;
+  // Read and parse in their own guard: a corrupt or unreadable profile must
+  // not also cost the contractor the account language below.
   try {
     const raw = await AsyncStorage.getItem(PROFILE_KEY);
     if (raw) {
       const profile = JSON.parse(raw) as { language?: unknown };
-      const saved = profile?.language;
-      if (typeof saved === 'string' && saved && i18n.language !== saved) {
-        await i18n.changeLanguage(saved);
-      }
+      const l = profile?.language;
+      if (typeof l === 'string' && l) saved = l;
+    }
+  } catch {}
+
+  try {
+    // An explicitly saved preference outranks the account's own language: the
+    // profile is what the contractor last chose, the account is only where
+    // they started.
+    const target = saved ?? accountLanguage;
+    if (target && i18n.language !== target) {
+      await i18n.changeLanguage(target);
     }
   } catch {
     // A formatting preference must never take down the caller. Falling through
