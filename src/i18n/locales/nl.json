@@ -5209,7 +5209,9 @@
       "operatingExpenses": "Bedrijfskosten",
       "netIncome": "Nettowinst"
     },
-    "plShort": "W&V"
+    "plShort": "W&V",
+    "grossProfit": "Brutowinst",
+    "grossMargin": "Brutomarge"
   },
   "agreements": {
     "selectJob": "Kies een klus",

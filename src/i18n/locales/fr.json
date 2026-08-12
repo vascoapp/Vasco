@@ -5225,7 +5225,9 @@
       "operatingExpenses": "Charges d’exploitation",
       "netIncome": "Résultat net"
     },
-    "plShort": "Résultat"
+    "plShort": "Résultat",
+    "grossProfit": "Marge brute",
+    "grossMargin": "Taux de marge brute"
   },
   "agreements": {
     "selectJob": "Sélectionner un chantier",

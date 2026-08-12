@@ -9,6 +9,7 @@ import { formatMoney, formatDateShortAuto } from '../i18n/formatting';
 import { Share, Platform } from 'react-native';
 import { analyzeFinancials, type FinancialSummary, type MonthlyBucket } from './financialAnalysisService';
 import type { Invoice, Quote } from '../domain/documents';
+import type { JobMaterial } from '../domain/materials';
 
 // =============================================================================
 // TYPES
@@ -28,13 +29,28 @@ export interface FinancialReport {
   generatedAt: string;
   type: 'monthly' | 'quarterly';
 
-  // P&L lines
+  // P&L lines.
+  //
+  // `null` means NOT KNOWN and must render as an omitted row — never as 0, and
+  // never as a guess. Only `revenue` is always measurable (paid invoices).
+  //
+  // Every one of these was previously a percentage of revenue:
+  //   costOfMaterials  = revenue * 0.25
+  //   operatingExpenses = revenue * 0.10
+  // …with grossProfit, netIncome and profitMargin derived from those. So a
+  // report titled "Profit & Loss" — exported to the contractor's accountant as
+  // PDF and CSV — carried four invented figures and one real one.
   revenue: number;
-  costOfMaterials: number;
-  grossProfit: number;
-  operatingExpenses: number;
-  netIncome: number;
-  profitMargin: number;
+  /** Real, summed from the job materials behind the paid invoices. */
+  costOfMaterials: number | null;
+  /** revenue - costOfMaterials. Null when material cost is unknown. */
+  grossProfit: number | null;
+  /** Always null: the app has no expense capture, so there is nothing to sum. */
+  operatingExpenses: number | null;
+  /** Null while operatingExpenses is unknown — net income needs every cost. */
+  netIncome: number | null;
+  /** GROSS margin (grossProfit/revenue). Null when material cost is unknown. */
+  profitMargin: number | null;
 
   // Comparison
   previousRevenue: number;
@@ -88,17 +104,57 @@ function filterInvoicesByQuarter(invoices: Invoice[], quarter: number, year: num
   });
 }
 
+/** AppState keys job materials by jobId, so this is a direct lookup. */
+export type JobMaterialsByJob = Record<string, JobMaterial[]>;
+
+/**
+ * Returns null when NO material row exists for these jobs.
+ *
+ * Finding nothing is not the same as spending nothing. Summing an empty set to
+ * 0 asserts "this work consumed no materials", which for a plumber is close to
+ * never true — and it propagates: 0 cost makes gross profit equal revenue and
+ * the margin exactly 100%, which is the fabrication back in a new costume.
+ * The demo's paid invoice has no linked job at all, so this is the common case,
+ * not an edge one.
+ */
+function sumMaterialCostForJobs(jobMaterials: JobMaterialsByJob, jobIds: Set<string>): number | null {
+  let total = 0;
+  let rows = 0;
+  for (const jobId of jobIds) {
+    for (const m of jobMaterials[jobId] ?? []) {
+      // Fall back to unitPrice*quantity so a row saved before totalPrice
+      // existed still counts — 0 would understate a real cost.
+      total += m.totalPrice ?? (m.unitPrice ?? 0) * (m.quantity ?? 0);
+      rows++;
+    }
+  }
+  return rows === 0 ? null : total;
+}
+
 function calculatePeriodFinancials(
   invoices: Invoice[],
   quotes: Quote[],
-): { revenue: number; costOfMaterials: number; grossProfit: number; operatingExpenses: number; netIncome: number; profitMargin: number; invoiceCount: number; paidCount: number; overdueAmount: number; outstandingAmount: number } {
+  jobMaterials?: JobMaterialsByJob,
+): { revenue: number; costOfMaterials: number | null; grossProfit: number | null; operatingExpenses: number | null; netIncome: number | null; profitMargin: number | null; invoiceCount: number; paidCount: number; overdueAmount: number; outstandingAmount: number } {
   const paid = invoices.filter(i => i.status === 'paid');
   const revenue = paid.reduce((s, i) => s + (i.total || i.amount || 0), 0);
-  const costOfMaterials = Math.round(revenue * 0.25); // 25% material costs heuristic
-  const grossProfit = revenue - costOfMaterials;
-  const operatingExpenses = Math.round(revenue * 0.10); // 10% operating expenses heuristic
-  const netIncome = grossProfit - operatingExpenses;
-  const profitMargin = revenue > 0 ? Math.round((netIncome / revenue) * 100) : 0;
+
+  // REAL material cost: sum the job materials behind the paid invoices.
+  // `jobMaterials` undefined = the caller cannot supply them, which is not the
+  // same as "zero" — the whole line goes unknown rather than being guessed.
+  const costOfMaterials = jobMaterials
+    ? sumMaterialCostForJobs(jobMaterials, new Set(paid.map(i => i.jobId).filter(Boolean) as string[]))
+    : null;
+  const grossProfit = costOfMaterials === null ? null : revenue - costOfMaterials;
+
+  // The app has no expense capture — there is no field anywhere to sum, so
+  // there is nothing honest to put here. Net income needs EVERY cost, so it
+  // stays unknown too, and the margin reported is the GROSS margin.
+  const operatingExpenses: number | null = null;
+  const netIncome: number | null = null;
+  const profitMargin = grossProfit === null || revenue <= 0
+    ? null
+    : Math.round((grossProfit / revenue) * 100);
 
   const overdue = invoices.filter(i => i.status === 'overdue');
   const overdueAmount = overdue.reduce((s, i) => s + (i.total || i.amount || 0), 0);
@@ -149,18 +205,35 @@ const DEFAULT_LABELS: ReportLabels = {
   monthNames: MONTH_NAMES,
 };
 
+/**
+ * A row is OMITTED when its value is unknown, never printed as 0.
+ *
+ * These items are what the screen renders AND what the CSV/PDF export writes,
+ * so a placeholder here becomes a zero cost line in a document that goes to an
+ * accountant. Operating expenses are always unknown today (no expense capture
+ * exists), so the statement legitimately ends at gross profit.
+ */
 function buildLineItems(
   L: ReportLabels,
-  current: { revenue: number; costOfMaterials: number; grossProfit: number; operatingExpenses: number; netIncome: number },
+  current: { revenue: number; costOfMaterials: number | null; grossProfit: number | null; operatingExpenses: number | null; netIncome: number | null },
 ): PLLineItem[] {
-  return [
+  const rows: PLLineItem[] = [
     { label: L.revenue, amount: current.revenue, isSubtotal: true },
     { label: L.paidInvoices, amount: current.revenue, indent: 1 },
-    { label: L.costOfMaterials, amount: -current.costOfMaterials },
-    { label: L.grossProfit, amount: current.grossProfit, isSubtotal: true },
-    { label: L.operatingExpenses, amount: -current.operatingExpenses },
-    { label: L.netIncome, amount: current.netIncome, isTotal: true },
   ];
+  if (current.costOfMaterials !== null) {
+    rows.push({ label: L.costOfMaterials, amount: -current.costOfMaterials });
+  }
+  if (current.grossProfit !== null) {
+    rows.push({ label: L.grossProfit, amount: current.grossProfit, isTotal: current.netIncome === null });
+  }
+  if (current.operatingExpenses !== null) {
+    rows.push({ label: L.operatingExpenses, amount: -current.operatingExpenses });
+  }
+  if (current.netIncome !== null) {
+    rows.push({ label: L.netIncome, amount: current.netIncome, isTotal: true });
+  }
+  return rows;
 }
 
 export function generateMonthlyReport(
@@ -169,21 +242,25 @@ export function generateMonthlyReport(
   invoices: Invoice[],
   quotes: Quote[],
   labels: ReportLabels = DEFAULT_LABELS,
+  jobMaterials?: JobMaterialsByJob,
 ): FinancialReport {
   const currentInvoices = filterInvoicesByMonth(invoices, month, year);
-  const current = calculatePeriodFinancials(currentInvoices, quotes);
+  const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials);
 
   // Previous month for comparison
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
   const prevInvoices = filterInvoicesByMonth(invoices, prevMonth, prevYear);
-  const prev = calculatePeriodFinancials(prevInvoices, quotes);
+  const prev = calculatePeriodFinancials(prevInvoices, quotes, jobMaterials);
 
   const revenueChange = prev.revenue > 0
     ? Math.round(((current.revenue - prev.revenue) / prev.revenue) * 100)
     : 0;
-  const netIncomeChange = prev.netIncome > 0
-    ? Math.round(((current.netIncome - prev.netIncome) / prev.netIncome) * 100)
+  // Both periods must be KNOWN for a change to mean anything. With net income
+  // unknown (no expense capture) this is 0 = "no claim", matching the omitted
+  // row rather than inventing a trend.
+  const netIncomeChange = (prev.netIncome ?? 0) > 0 && current.netIncome !== null
+    ? Math.round(((current.netIncome - prev.netIncome!) / prev.netIncome!) * 100)
     : 0;
 
   const lineItems = buildLineItems(labels, current);
@@ -201,7 +278,7 @@ export function generateMonthlyReport(
     netIncome: current.netIncome,
     profitMargin: current.profitMargin,
     previousRevenue: prev.revenue,
-    previousNetIncome: prev.netIncome,
+    previousNetIncome: prev.netIncome ?? 0,
     revenueChange,
     netIncomeChange,
     lineItems,
@@ -218,21 +295,25 @@ export function generateQuarterlyReport(
   invoices: Invoice[],
   quotes: Quote[],
   labels: ReportLabels = DEFAULT_LABELS,
+  jobMaterials?: JobMaterialsByJob,
 ): FinancialReport {
   const currentInvoices = filterInvoicesByQuarter(invoices, quarter, year);
-  const current = calculatePeriodFinancials(currentInvoices, quotes);
+  const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials);
 
   // Previous quarter for comparison
   const prevQuarter = quarter === 1 ? 4 : quarter - 1;
   const prevYear = quarter === 1 ? year - 1 : year;
   const prevInvoices = filterInvoicesByQuarter(invoices, prevQuarter, prevYear);
-  const prev = calculatePeriodFinancials(prevInvoices, quotes);
+  const prev = calculatePeriodFinancials(prevInvoices, quotes, jobMaterials);
 
   const revenueChange = prev.revenue > 0
     ? Math.round(((current.revenue - prev.revenue) / prev.revenue) * 100)
     : 0;
-  const netIncomeChange = prev.netIncome > 0
-    ? Math.round(((current.netIncome - prev.netIncome) / prev.netIncome) * 100)
+  // Both periods must be KNOWN for a change to mean anything. With net income
+  // unknown (no expense capture) this is 0 = "no claim", matching the omitted
+  // row rather than inventing a trend.
+  const netIncomeChange = (prev.netIncome ?? 0) > 0 && current.netIncome !== null
+    ? Math.round(((current.netIncome - prev.netIncome!) / prev.netIncome!) * 100)
     : 0;
 
   const startMonth = (quarter - 1) * 3;
@@ -253,7 +334,7 @@ export function generateQuarterlyReport(
     netIncome: current.netIncome,
     profitMargin: current.profitMargin,
     previousRevenue: prev.revenue,
-    previousNetIncome: prev.netIncome,
+    previousNetIncome: prev.netIncome ?? 0,
     revenueChange,
     netIncomeChange,
     lineItems,

@@ -37,7 +37,7 @@ function monthLabels(locale: string): string[] {
 export default function ReportsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { invoices, quotes } = useAppState();
+  const { invoices, quotes, jobMaterials } = useAppState();
   const { user } = useAuth();
   const MONTH_LABELS = useMemo(() => monthLabels(i18n.language), [i18n.language]);
 
@@ -63,9 +63,9 @@ export default function ReportsScreen() {
 
   const report: FinancialReport = useMemo(() => {
     if (mode === 'monthly') {
-      return generateMonthlyReport(selectedMonth, selectedYear, invoices, quotes, reportLabels);
+      return generateMonthlyReport(selectedMonth, selectedYear, invoices, quotes, reportLabels, jobMaterials);
     }
-    return generateQuarterlyReport(selectedQuarter, selectedYear, invoices, quotes, reportLabels);
+    return generateQuarterlyReport(selectedQuarter, selectedYear, invoices, quotes, reportLabels, jobMaterials);
   }, [mode, selectedMonth, selectedQuarter, selectedYear, invoices, quotes, reportLabels]);
 
   // Thread the user's country — formatCurrency defaults to 'NL', which
@@ -220,17 +220,20 @@ export default function ReportsScreen() {
               <Text style={s.kpiValue}>{fmt(report.revenue)}</Text>
               {changeIndicator(report.revenueChange)}
             </View>
+            {/* Gross profit, not net: net income needs operating expenses and
+                the app has no expense capture, so `netIncome` is null by
+                construction. A dash says "not known" — printing 0 or a
+                percentage of revenue is what this screen used to do. */}
             <View style={s.kpiCard}>
-              <Text style={s.kpiLabel}>{t('reports.netIncome', 'Net Income')}</Text>
-              <Text style={s.kpiValue}>{fmt(report.netIncome)}</Text>
-              {changeIndicator(report.netIncomeChange)}
+              <Text style={s.kpiLabel}>{t('reports.grossProfit', 'Gross profit')}</Text>
+              <Text style={s.kpiValue}>{report.grossProfit === null ? '—' : fmt(report.grossProfit)}</Text>
             </View>
           </View>
 
           <View style={s.kpiRow}>
             <View style={s.kpiCard}>
-              <Text style={s.kpiLabel}>{t('reports.margin', 'Margin')}</Text>
-              <Text style={s.kpiValue}>{report.profitMargin}%</Text>
+              <Text style={s.kpiLabel}>{t('reports.grossMargin', 'Gross margin')}</Text>
+              <Text style={s.kpiValue}>{report.profitMargin === null ? '—' : `${report.profitMargin}%`}</Text>
             </View>
             <View style={s.kpiCard}>
               <Text style={s.kpiLabel}>{t('reports.overdue', 'Overdue')}</Text>

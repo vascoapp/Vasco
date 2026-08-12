@@ -5225,7 +5225,9 @@
       "operatingExpenses": "Betriebskosten",
       "netIncome": "Nettogewinn"
     },
-    "plShort": "GuV"
+    "plShort": "GuV",
+    "grossProfit": "Bruttogewinn",
+    "grossMargin": "Bruttomarge"
   },
   "agreements": {
     "selectJob": "Auftrag auswählen",

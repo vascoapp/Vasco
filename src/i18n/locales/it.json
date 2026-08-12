@@ -5225,7 +5225,9 @@
       "operatingExpenses": "Spese operative",
       "netIncome": "Utile netto"
     },
-    "plShort": "CE"
+    "plShort": "CE",
+    "grossProfit": "Utile lordo",
+    "grossMargin": "Margine lordo"
   },
   "agreements": {
     "selectJob": "Seleziona un lavoro",
