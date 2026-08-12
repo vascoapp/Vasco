@@ -12,6 +12,8 @@ import { useMemo, useEffect, useState } from 'react';
 import { useLearningProfile, incrementInsightsShown, setActiveRole } from '../intelligence/learningStorage';
 import { useAllGenerators } from '../intelligence/generators';
 import type { ScoredInsight, UserRole, ScreenContext, GeneratorLanguage, DataCounts } from '../intelligence/generators';
+import appI18n from '../i18n/i18n';
+import { toGeneratorLanguage } from '../intelligence/generatorTranslations';
 import { scoreAndRankInsights, refreshCalibrationCache, refreshApprovalRateCache } from '../intelligence/insightScorer';
 import { refreshRankingHint } from '../intelligence/ranking/rankingRefresh';
 import { enqueueInsightsIfHinted } from '../intelligence/generators/emitToQueue';
@@ -30,8 +32,19 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
   // Set active role for role-aware storage (must be before useLearningProfile)
   setActiveRole(role);
   // Detect language from i18n
-  let currentLanguage: GeneratorLanguage = 'nl';
-  try { const i18n = require('i18next'); currentLanguage = (i18n.default?.language ?? i18n.language ?? 'nl') as GeneratorLanguage; } catch {}
+  // Read the APP's i18n instance directly, the way every other service does.
+  //
+  // This was `require('i18next')` inside a try/catch whose catch left the
+  // language at a hardcoded 'nl'. The require does not resolve here, so the
+  // catch fired on every render and EVERY generator string was Dutch — for
+  // every contractor in every country. It was invisible for as long as the app
+  // was walked in Dutch, because the wrong answer and the right answer were the
+  // same string. Walking as a German contractor made it obvious: an otherwise
+  // German Finanzen tab carrying "2 facturen achterstallig: 800 €".
+  //
+  // Normalised rather than cast, too: `i18n.language` can be 'en-US', a locale
+  // this app genuinely ships, which is not a TranslationMap key.
+  const currentLanguage: GeneratorLanguage = toGeneratorLanguage(appI18n.language);
   const { profile } = useLearningProfile();
 
   // Periodically update `now` so freshness/fatigue stay accurate in long sessions

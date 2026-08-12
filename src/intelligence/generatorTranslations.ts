@@ -590,11 +590,37 @@ const TRANSLATIONS: Record<string, TranslationMap> = {
  * Supports interpolation: gt('overdue_title_multi', 'en', { count: 5 })
  * Falls back to Dutch if language not found.
  */
+const SUPPORTED_LANGUAGES: readonly GeneratorLanguage[] = ['en', 'nl', 'de', 'fr', 'es', 'it'];
+
+/**
+ * Normalise an i18next language tag to a GeneratorLanguage.
+ *
+ * `useVascoGuidance` used to hand `i18n.language` straight to `gt()` behind an
+ * `as GeneratorLanguage` cast. That cast is a lie: the app ships **en-US** as a
+ * real locale (i18n.ts resolves the device tag to it), and 'en-US' is not a key
+ * in any TranslationMap — so every lookup missed and fell through to the Dutch
+ * fallback below. A US contractor read Dutch insight cards, and so did anyone
+ * else during the window before the saved language is applied.
+ *
+ * Region subtags are dropped ('en-US' -> 'en', 'de-AT' -> 'de') and anything
+ * unrecognised becomes English, which is the base locale and i18next's own
+ * fallbackLng — never Dutch.
+ */
+export function toGeneratorLanguage(tag: string | null | undefined): GeneratorLanguage {
+  const base = String(tag ?? '').split('-')[0].toLowerCase();
+  return (SUPPORTED_LANGUAGES as readonly string[]).includes(base)
+    ? (base as GeneratorLanguage)
+    : 'en';
+}
+
 export function gt(key: string, language: GeneratorLanguage, params?: Record<string, string | number>): string {
   const entry = TRANSLATIONS[key];
   if (!entry) return key; // key not found — return key itself as fallback
 
-  let text = entry[language] ?? entry['nl'] ?? key;
+  // Falls back to ENGLISH, not Dutch. All 428 entries carry all six locales, so
+  // this only fires for an unrecognised language — and when it did, it served
+  // Dutch to Germans and Americans rather than the base locale.
+  let text = entry[language] ?? entry['en'] ?? key;
 
   // Simple interpolation: replace {{param}} with value
   if (params) {
