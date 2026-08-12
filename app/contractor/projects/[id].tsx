@@ -15,6 +15,7 @@ import { useAuth } from '../../../src/context/AuthContext';
 import { formatCurrency, formatCurrency0, formatDateShort, type Country } from '../../../src/i18n/formatting';
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { hapticSuccess } from '../../../src/utils/haptics';
+import { isPnlReportable } from '../../../src/utils/projectPnl';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import type { ProjectStatus, ProjectMilestone } from '../../../src/types/project';
 import { billingProgress } from '../../../src/services/progressBillingService';
@@ -284,8 +285,22 @@ export default function ProjectDetailScreen() {
                 </View>
                 <View style={styles.pnlDivider} />
                 <View style={styles.pnlItem}>
-                  <Text style={[styles.pnlValue, { color: pnl.grossProfit >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
-                    {formatCurrency0(pnl.grossProfit, country)}
+                  {/* Same guard as Marge below, for the same reason. With
+                      nothing invoiced, grossProfit is just costs-so-far
+                      negated, so a project that has bought €201 of material
+                      and billed nothing reported "Winst € -201" in red — a
+                      LOSS on a job that is simply mid-flight and not yet
+                      billed. Every project reads as failing until its first
+                      invoice, which trains the contractor to ignore the
+                      figure. The costs themselves are not hidden: Materiaal
+                      and Arbeid are printed directly below. If the margin is
+                      unknowable this early then so is the profit. */}
+                  <Text style={[styles.pnlValue, {
+                    color: !isPnlReportable(pnl)
+                      ? SemanticColors.textSecondary
+                      : pnl.grossProfit >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError,
+                  }]}>
+                    {isPnlReportable(pnl) ? formatCurrency0(pnl.grossProfit, country) : '—'}
                   </Text>
                   <Text style={styles.pnlLabel}>{t('project.profit')}</Text>
                 </View>
@@ -309,11 +324,11 @@ export default function ProjectDetailScreen() {
                       no margin to report, so show a dash. The projects LIST
                       already guards exactly this way; the detail did not. */}
                   <Text style={[styles.pnlValue, {
-                    color: pnl.revenue <= 0
+                    color: !isPnlReportable(pnl)
                       ? SemanticColors.textSecondary
                       : pnl.grossMargin > 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError,
                   }]}>
-                    {pnl.revenue > 0 ? `${pnl.grossMargin}%` : '—'}
+                    {isPnlReportable(pnl) ? `${pnl.grossMargin}%` : '—'}
                   </Text>
                   <Text style={styles.pnlLabel}>{t('project.margin')}</Text>
                 </View>
