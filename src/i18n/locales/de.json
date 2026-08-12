@@ -2,7 +2,7 @@
   "common": {
     "durationMin": "{{m}} Min.",
     "durationH": "{{h}} Std.",
-    "durationHm": "{{h}} Std. {{m}}",
+    "durationHm": "{{h}}:{{m}} Std.",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "loading": "Laden...",
