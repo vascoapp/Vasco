@@ -2726,7 +2726,7 @@
       "daysShort": "T"
     },
     "savings": {
-      "savedThisMonth": "Vasco hat dir {{amount}} gespart",
+      "savedThisMonth": "Vasco hat Ihnen {{amount}} gespart",
       "monthSub": "Diesen Monat — Aufschlüsselung ansehen"
     },
     "money": {
@@ -2737,7 +2737,7 @@
       "projectedMonth": "Prognose nächster Monat",
       "avgDso": "Ø Zahlungsziel",
       "vatPrep": "USt-Voranmeldung vorbereiten",
-      "vatPrepSub": "Vasco klassifiziert Rechnungen + Ausgaben. Du reichst ein.",
+      "vatPrepSub": "Vasco klassifiziert Rechnungen + Ausgaben. Sie reichen ein.",
       "concentrationRisk": "Hohe Konzentration · diversifiziere deinen Kundenstamm",
       "completedCount": "{{count}} abgeschlossen",
       "profit": "Gewinn",
@@ -3206,7 +3206,7 @@
     "scanFirstInvoice": "Scannen Sie Ihre erste Lieferantenrechnung, um die Preisintelligenz zu starten.",
     "allGoodDesc": "Vasco scannt kontinuierlich Ihre Ausgaben und Marktpreise. Sobald es etwas zu sparen gibt, sehen Sie es hier.",
     "banner": {
-      "hero": "Vasco hat dir diesen Monat {{hours}} Std. und {{money}} gespart",
+      "hero": "Vasco hat Ihnen diesen Monat {{hours}} Std. und {{money}} gespart",
       "trend": "{{percent}}% mehr als letzten Monat",
       "viewDetails": "Aufschlüsselung ansehen"
     },
@@ -3339,7 +3339,7 @@
     "leadtimeRow": "+{{days}} T · {{prob}}%",
     "scannerUpgradeRequired": "Belegscan ist Teil des kostenpflichtigen Tarifs.",
     "noStockTracked": "Noch kein Bestand erfasst",
-    "noStockTrackedSub": "Scanne einen Beleg oder importiere DATANORM, um zu starten.",
+    "noStockTrackedSub": "Scannen Sie einen Beleg oder importieren Sie DATANORM, um zu starten.",
     "savedThisMonth": "Diesen Monat gespart",
     "eInvoiceImport": "E-Rechnung einlesen",
     "eInvoiceReading": "Wird gelesen…",
@@ -4415,7 +4415,7 @@
     "title": "Umsatzsteuer-Voranmeldung",
     "safetyBanner": "Vasco bereitet Ihre Erklärung vor. Sie reichen sie selbst über Ihr Steuerportal ein — Vasco übermittelt nie in Ihrem Namen.",
     "export": "Für Einreichung exportieren",
-    "exportDesc": "Vasco bereitet die Erklärung vor — du reichst sie über ELSTER ein oder leitest sie an deinen Buchhalter weiter. Es wird nie automatisch eingereicht.",
+    "exportDesc": "Vasco bereitet die Erklärung vor — Sie reichen sie über ELSTER ein oder leiten sie an Ihren Buchhalter weiter. Es wird nie automatisch eingereicht.",
     "shareSummary": "Zusammenfassung teilen",
     "sharePdf": "PDF teilen",
     "openElster": "ELSTER öffnen",
