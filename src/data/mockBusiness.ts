@@ -43,3 +43,45 @@ export const US_BUSINESS_PROFILE: BusinessProfile = {
   ],
   enabledPaymentMethods: ['credit_card', 'apple_pay'],
 };
+
+// Germany is the beachhead (docs/GO_TO_MARKET_PLAN.md), but the default seed
+// profile above carries NO country — and ~53 surfaces read
+// `businessProfile?.country ?? 'NL'`. So the German demo contractor rendered
+// Dutch currency ("€ 760" rather than "760 €") and, worse, every DE-gated
+// surface stayed hidden: the German VAT card in geld.tsx and the XRechnung /
+// ZUGFeRD paths all test `businessProfile?.country === 'DE'`. The market whose
+// e-invoice mandate IS the wedge could not be demonstrated at all.
+//
+// Same mechanism as US_BUSINESS_PROFILE: swapped in on user-change when
+// getCurrentCountry() is 'DE'. Kleinunternehmer is deliberately NOT used —
+// §19 UStG would suppress VAT entirely and hide the very surfaces this exists
+// to make reachable.
+export const DE_BUSINESS_PROFILE: BusinessProfile = {
+  isComplete: true,
+  completenessPercent: 100,
+  businessName: "Bergmann Sanitär & Heizung GmbH",
+  email: "kontakt@bergmann-shk.de",
+  phone: "+49 221 5550142",
+  address: "Aachener Straße 128, 50674 Köln",
+  city: "Köln",
+  postcode: "50674",
+  website: "https://bergmann-shk.de",
+  country: 'DE',
+  trade: "plumbing",
+  businessType: "gmbh",
+  teamSize: 'small',
+  vatScheme: 'standard',
+  // Handelsregisternummer + USt-IdNr. (DE + 9 digits) — the formats
+  // business-settings validates against for DE.
+  registrationNumber: "HRB 84521",
+  vatNumber: "DE812345678",
+  invoicePrefix: "RE",
+  quotePrefix: "AN",
+  defaultPaymentTerms: 14,
+  serviceAreaRadius: 30,
+  certifications: [
+    "Meisterbrief SHK",
+    "Eintrag Handwerksrolle Anlage A",
+    "Fachbetrieb nach §19l WHG",
+  ],
+};

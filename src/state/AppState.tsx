@@ -107,7 +107,7 @@ import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
-import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE } from '../data/mockBusiness';
+import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
@@ -609,6 +609,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           setBusinessProfile(US_BUSINESS_PROFILE);
           setCustomers(US_SEED_CUSTOMERS);
           setJobs(US_SEED_JOBS);
+        }
+        // Same reason as US above. Without a country on the business profile,
+        // the German demo contractor fell through every
+        // `businessProfile?.country ?? 'NL'` (53 sites) — Dutch currency
+        // formatting, and the DE-gated VAT / e-invoice surfaces never rendered
+        // at all. Customers and jobs stay the shared seed: the point is to make
+        // the German COUNTRY paths reachable, not to fork the demo data.
+        if (useSeedData && getCurrentCountry() === 'DE') {
+          setBusinessProfile(DE_BUSINESS_PROFILE);
         }
         // New user signed in — re-hydrate from BE for the new auth context.
         refreshData();

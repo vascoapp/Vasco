@@ -34,6 +34,12 @@ export const DEMO_ACCOUNTS: DemoAccount[] = DEMO_MODE
       // R75 US foundation: US demo contractor (Texas HVAC). Use to QA the
       // en-US locale + US invoice PDF + state picker flow.
       { email: 'contractor@vasco.us.dev', role: 'contractor', name: 'Mike Reynolds (US)', icon: 'flag-outline' },
+      // German SHK contractor. Germany is the beachhead (the product is priced
+      // German and the wedge is the DE e-invoice receive obligation), but it
+      // had no demo account, so the market the business case rests on could not
+      // be opened or screenshotted. Use to QA de copy, EUR/de-DE formatting,
+      // XRechnung/ZUGFeRD and the DE-only GoBD surfaces.
+      { email: 'handwerker@vasco.de.dev', role: 'contractor', name: 'Thomas Bergmann (DE)', icon: 'flag-outline' },
     ]
   : [];
 

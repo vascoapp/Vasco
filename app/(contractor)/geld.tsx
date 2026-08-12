@@ -25,7 +25,7 @@ import { useAppState } from '../../src/state/AppState';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
 import { MoatInsightsCard } from '../../src/components/contractor/MoatInsightsCard';
 import { ReconciliationCard } from '../../src/components/contractor/ReconciliationCard';
-import { formatCurrency, compactCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, compactCurrency, type Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { Sparkline } from '../../src/components/shared/Sparkline';
@@ -102,6 +102,11 @@ export default function GeldScreen() {
     ]);
   }, [removeInvoice, removeQuote, t]);
 
+  // compactCurrency defaults to NL, and these three tiles passed nothing — so a
+  // German contractor's KPIs rendered "€ 760" (Dutch: symbol first) directly
+  // above an insight card correctly reading "800 €" (German: symbol last).
+  // Two currency conventions on one screen.
+  const kpiCountry = (businessProfile?.country ?? 'NL') as Country;
   const outstandingTotal = fin.totalOutstanding;
   const paidTotal = fin.totalRevenue;
 
@@ -236,7 +241,7 @@ export default function GeldScreen() {
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.revenue', 'Revenue')}</DKLabel>
             <View style={s.kpiValueRow}>
-              <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal)}</Text>
+              <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal, kpiCountry)}</Text>
               {revenueTrend.icon ? (
                 <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
               ) : null}
@@ -244,11 +249,11 @@ export default function GeldScreen() {
           </Pressable>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.outstanding', 'Outstanding')}</DKLabel>
-            <Text style={[s.kpiValue, { color: DK.colors.accent }]}>{compactCurrency(outstandingTotal)}</Text>
+            <Text style={[s.kpiValue, { color: DK.colors.accent }]}>{compactCurrency(outstandingTotal, kpiCountry)}</Text>
           </Pressable>
           <Pressable style={s.kpiTile}>
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.pipeline', 'Pipeline')}</DKLabel>
-            <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline)}</Text>
+            <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline, kpiCountry)}</Text>
           </Pressable>
         </View>
 

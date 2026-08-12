@@ -200,6 +200,27 @@ const MOCK_USERS: Record<string, User> = {
     trade: 'gas-hvac',
     onboardingComplete: true,
   },
+  // Germany is the beachhead per docs/GO_TO_MARKET_PLAN.md — the product is
+  // priced German (€39/€69 sits inside DE's €20–80 band and is 3–5× the Dutch
+  // going rate) and the whole wedge is the German e-invoice RECEIVE obligation,
+  // binding since Jan 2025 with no turnover threshold. Yet every demo account
+  // was NL bar one US, so the market the business case rests on could not be
+  // opened, walked or screenshotted at all.
+  //
+  // SHK (Sanitär-Heizung-Klima) because it is the German trade most exposed to
+  // that obligation: it buys heavily from merchants who already send XRechnung.
+  'handwerker@vasco.de.dev': {
+    id: 'user-contractor-de-001',
+    email: 'handwerker@vasco.de.dev',
+    name: 'Thomas Bergmann',
+    role: 'contractor',
+    company: 'Bergmann Sanitär & Heizung',
+    projects: [],
+    country: 'DE',
+    language: 'de',
+    trade: 'plumbing',
+    onboardingComplete: true,
+  },
 };
 
 /**
