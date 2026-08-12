@@ -181,3 +181,50 @@ describe('formatting', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// R324: the money formatters defaulted to a hardcoded 'NL', and 189 call sites
+// across the app omit the country argument — so most money in the product
+// rendered in Dutch convention regardless of the contractor. Found by walking
+// as a German contractor: KPI tiles (which pass a country) read "760 €" while
+// the cashflow card and quote list directly below read "€ 760,00".
+// ---------------------------------------------------------------------------
+describe('money formatters follow the signed-in contractor by default', () => {
+  const { setCurrentUser } = require('../../lib/currentUser');
+  const { formatCurrency, formatCurrency0, compactCurrency } = require('../formatting');
+
+  afterEach(() => setCurrentUser(null));
+
+  it('formats in German convention for a DE contractor with no explicit country', () => {
+    setCurrentUser({ id: 'u1', country: 'DE', trade: 'plumbing' });
+    // de-DE puts the symbol AFTER the amount; nl-NL puts it before.
+    expect(formatCurrency0(760)).toMatch(/760\s?€/);
+    expect(formatCurrency0(760).startsWith('€')).toBe(false);
+  });
+
+  it('formats in Dutch convention for an NL contractor', () => {
+    setCurrentUser({ id: 'u1', country: 'NL', trade: 'plumbing' });
+    expect(formatCurrency0(760).startsWith('€')).toBe(true);
+  });
+
+  it('uses pounds for a UK contractor rather than defaulting to euros', () => {
+    setCurrentUser({ id: 'u1', country: 'UK', trade: 'plumbing' });
+    expect(formatCurrency(760)).toContain('£');
+    expect(formatCurrency(760)).not.toContain('€');
+  });
+
+  it('an explicit country still wins over the signed-in contractor', () => {
+    setCurrentUser({ id: 'u1', country: 'DE', trade: 'plumbing' });
+    expect(formatCurrency(760, 'UK')).toContain('£');
+  });
+
+  it('falls back to NL when nobody is signed in, exactly as before', () => {
+    setCurrentUser(null);
+    expect(formatCurrency0(760).startsWith('€')).toBe(true);
+  });
+
+  it('compactCurrency follows the contractor too', () => {
+    setCurrentUser({ id: 'u1', country: 'UK', trade: 'plumbing' });
+    expect(compactCurrency(4500)).toContain('£');
+  });
+});

@@ -18,7 +18,25 @@ export function currencyForCountry(country: Country = 'NL'): string {
   return (COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL).currency;
 }
 
-export function formatCurrency(amount: number, country: Country = 'NL'): string {
+/**
+ * Country defaults to the SIGNED-IN CONTRACTOR, not to NL.
+ *
+ * The default was a hardcoded 'NL' and 189 call sites across the app omit the
+ * argument — so most money in the product rendered in Dutch convention for
+ * everyone. Invisible while the app was only ever walked in Dutch; obvious as a
+ * German contractor, whose Finanzen tab showed "760 €" in the KPI tiles (which
+ * pass a country) directly above "€ 760,00" in the cashflow card and
+ * "€ 2.450,00" in the quote list, which do not.
+ *
+ * It also reaches OUTSIDE the app: geld.tsx builds the customer-facing
+ * payment-reminder message with formatCurrency, so a German contractor's
+ * reminder quoted a Dutch-formatted amount to their own customer.
+ *
+ * `currencySymbol` further down has always resolved it this way. Falls back to
+ * NL exactly as before when no contractor is signed in.
+ */
+export function formatCurrency(amount: number, countryArg?: Country): string {
+  const country = countryArg ?? ((getCurrentCountry() as Country) ?? 'NL');
   // Fall back rather than throw on an unrecognised key. `currencyForCountry`
   // right above already does this; this one did not, so passing anything that
   // is not a Country -- a currency CODE, most easily -- destructured undefined
@@ -173,8 +191,10 @@ export function formatDecimal1(n: number, country: Country = 'NL'): string {
 /** Whole-currency formatter (0 decimals) — right symbol + locale grouping.
  *  NL €1.234 · UK £1,234 · US $1,234. Use for compact amount displays that
  *  shouldn't show cents. narrowSymbol with a fallback for older Intl builds. */
-export function formatCurrency0(amount: number, country: Country = 'NL'): string {
-  const { currency, locale } = COUNTRY_CONFIG[country];
+/** Whole-currency variant. Same contractor default as formatCurrency above. */
+export function formatCurrency0(amount: number, countryArg?: Country): string {
+  const country = countryArg ?? ((getCurrentCountry() as Country) ?? 'NL');
+  const { currency, locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
   const rounded = Math.round(amount);
   try {
     return new Intl.NumberFormat(locale, {
@@ -197,10 +217,12 @@ export function formatCurrency0(amount: number, country: Country = 'NL'): string
  * comma. Values below 1000 stay whole, and the decimal separator follows the
  * country.
  */
-export function compactCurrency(amount: number, country: Country = 'NL'): string {
+/** Compact "4,5K" variant. Same contractor default as formatCurrency above. */
+export function compactCurrency(amount: number, countryArg?: Country): string {
+  const country = countryArg ?? ((getCurrentCountry() as Country) ?? 'NL');
   const abs = Math.abs(amount);
   if (abs < 1_000) return formatCurrency0(amount, country);
-  const { currency, locale } = COUNTRY_CONFIG[country];
+  const { currency, locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
   const divisor = abs >= 1_000_000 ? 1_000_000 : 1_000;
   const suffix = abs >= 1_000_000 ? 'M' : 'K';
   const scaled = amount / divisor;
