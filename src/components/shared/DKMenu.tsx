@@ -17,7 +17,7 @@
 // =============================================================================
 
 import { useRef, useState, useCallback, type ReactNode } from 'react';
-import { View, Text, Modal, Pressable, ScrollView, StyleSheet, type LayoutRectangle } from 'react-native';
+import { View, Text, Modal, Pressable, ScrollView, StyleSheet, type LayoutRectangle, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
@@ -43,12 +43,25 @@ interface Props {
   accessibilityLabel: string;
 }
 
-const MENU_WIDTH = 260;
+/** Comfortable width for a SMALL anchor. A wide anchor gets its own width. */
+const MENU_MIN_WIDTH = 260;
 const SCREEN_MARGIN = GRID.md;
 
 export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
   const anchorRef = useRef<View>(null);
   const [frame, setFrame] = useState<LayoutRectangle | null>(null);
+  // Live dimensions, not a module-level Dimensions.get(): that snapshot is
+  // taken before layout and survives rotation, which is how a previous bottom
+  // sheet came to rest 100pt short of the screen edge.
+  const { width: screenWidth } = useWindowDimensions();
+
+  // Never narrower than the control that opened it. At a fixed 260 the
+  // full-width project anchor produced a balloon that truncated every option
+  // ("Badkamer renovatie —…", "Keuken verbouwing —…") — which defeats the point
+  // of this component, since it exists so a chip strip cannot hide options.
+  const menuWidth = frame
+    ? Math.min(screenWidth - SCREEN_MARGIN * 2, Math.max(MENU_MIN_WIDTH, frame.width))
+    : MENU_MIN_WIDTH;
 
   // Measured at open time, not on layout: the anchor can move (the strip sits
   // inside a scroll view), and a stale frame puts the balloon over the wrong row.
@@ -59,7 +72,7 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
     // for it left the tap doing nothing at all — a dead control with no error,
     // which is the failure mode this component exists to remove. A balloon in
     // a slightly wrong place beats a button that ignores you.
-    setFrame({ x: SCREEN_MARGIN, y: 96, width: MENU_WIDTH, height: 0 });
+    setFrame({ x: SCREEN_MARGIN, y: 96, width: MENU_MIN_WIDTH, height: 0 });
     const node: any = anchorRef.current;
     if (typeof node?.measureInWindow !== 'function') return;
     node.measureInWindow((x: number, y: number, width: number, height: number) => {
@@ -87,9 +100,18 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
                 styles.balloon,
                 {
                   top: frame.y + frame.height + 6,
-                  // Clamp to the screen: an anchor near the right edge would
-                  // otherwise push the balloon off it.
-                  left: Math.max(SCREEN_MARGIN, frame.x + frame.width - MENU_WIDTH),
+                  width: menuWidth,
+                  // Right-align to the anchor, then clamp to BOTH screen edges:
+                  // an anchor near the right edge would push the balloon off,
+                  // and a menu widened to match a full-width anchor would
+                  // overflow the left if only the right were clamped.
+                  left: Math.max(
+                    SCREEN_MARGIN,
+                    Math.min(
+                      frame.x + frame.width - menuWidth,
+                      screenWidth - SCREEN_MARGIN - menuWidth,
+                    ),
+                  ),
                 },
               ]}
               onPress={(e) => e.stopPropagation()}
@@ -150,7 +172,6 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: '#00000055' },
   balloon: {
     position: 'absolute',
-    width: MENU_WIDTH,
     backgroundColor: DK.colors.panel2,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
