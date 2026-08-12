@@ -95,7 +95,13 @@ export default function VascoScreen() {
   const [editText, setEditText] = useState('');
   const [tab, setTab] = useState<TabKey>('queue');
 
-  const allGuidance = useVascoGuidance('contractor', 'compliance');
+  // 'ai', not 'compliance'. Every other caller passes its own screen (geld →
+  // 'geld', quotes/new → 'quote-new'); this one claimed to be the compliance
+  // screen, which no caller actually is. The context is stamped onto each
+  // insight as `shownOnScreen` and recorded as `screenContext` by
+  // VascoInsightCard's interaction tracking, so every insight surfaced here was
+  // being attributed to a screen the contractor was not on.
+  const allGuidance = useVascoGuidance('contractor', 'ai');
   const recommendations = useMemo(() =>
     allGuidance.filter(g => g.priority === 'critical' || g.priority === 'high').slice(0, 5),
     [allGuidance]
