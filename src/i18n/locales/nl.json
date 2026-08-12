@@ -3018,7 +3018,8 @@
     "sectionTitle": "Audit-spoor",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco audit-spoor",
-    "exportTitleGobd": "Vasco GoBD audit trail"
+    "exportTitleGobd": "Vasco GoBD audit trail",
+    "screenTitle": "BTW & audit"
   },
   "recurring": {
     "title": "ONDERHOUD",

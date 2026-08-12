@@ -3034,7 +3034,8 @@
     "sectionTitle": "Audit-Trail",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco Audit-Trail",
-    "exportTitleGobd": "Vasco GoBD audit trail"
+    "exportTitleGobd": "Vasco GoBD audit trail",
+    "screenTitle": "USt & Audit"
   },
   "recurring": {
     "title": "WARTUNG",

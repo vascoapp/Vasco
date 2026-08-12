@@ -3173,7 +3173,8 @@
     "sectionTitle": "Journal d’audit",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Journal d’audit Vasco",
-    "exportTitleGobd": "Vasco GoBD audit trail"
+    "exportTitleGobd": "Vasco GoBD audit trail",
+    "screenTitle": "TVA & audit"
   },
   "savings": {
     "trendSegment": "+{{trend}} % de tendance",

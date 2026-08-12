@@ -3173,7 +3173,8 @@
     "sectionTitle": "Registro di controllo",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Registro di controllo Vasco",
-    "exportTitleGobd": "Vasco GoBD audit trail"
+    "exportTitleGobd": "Vasco GoBD audit trail",
+    "screenTitle": "IVA e audit"
   },
   "savings": {
     "trendSegment": "+{{trend}}% di tendenza",

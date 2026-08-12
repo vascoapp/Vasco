@@ -110,7 +110,10 @@ export default function VatAndAuditScreen() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.root}>
-      <DKScreenHeader title="VAT & AUDIT" />
+      {/* Was the bare literal "VAT & AUDIT", so it rendered English in all six
+          locales — including on the German screen whose own body says
+          "Standard-USt" and "Umsatzsteuer". A Handwerker does not say VAT. */}
+      <DKScreenHeader title={t('audit.screenTitle', 'VAT & audit')} />
       <ScrollView contentContainerStyle={styles.content}>
 
         {/* R263: advisor banner — only when high-confidence and differs from current */}
@@ -147,7 +150,11 @@ export default function VatAndAuditScreen() {
         })()}
 
         {/* VAT scheme picker */}
-        <DKLabel style={styles.section}>VAT SCHEME</DKLabel>
+        {/* Reuses the existing profile key rather than a new one: it already
+            carries the right term per locale (USt-Schema / BTW-regeling /
+            Régime TVA). The AUDIT section below was localised in R322 — this
+            half of the same screen was left as a literal. */}
+        <DKLabel style={styles.section}>{t('profile.vatScheme', 'VAT scheme')}</DKLabel>
         <View style={styles.card}>
           {schemeOptions.filter((o) => o.visible).map((opt, idx) => (
             <Pressable
