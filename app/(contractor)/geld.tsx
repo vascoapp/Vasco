@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
+import { collectionRate as computeCollectionRate, issuedInvoices } from '../../src/utils/collectionRate';
 import { useAppState } from '../../src/state/AppState';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
 import { MoatInsightsCard } from '../../src/components/contractor/MoatInsightsCard';
@@ -117,10 +118,12 @@ export default function GeldScreen() {
       : { icon: 'trending-down', color: DK.colors.danger };
   }, [paidTotal, fin.monthlyInflows]);
 
-  const collectionRate = useMemo(() => {
-    if (invoices.length === 0) return 0;
-    return Math.round((invoices.filter((i: any) => i.status === 'paid').length / invoices.length) * 100);
-  }, [invoices]);
+  // Rule lives in src/utils/collectionRate.ts — it was wrong in two ways here
+  // (drafts in the denominator; counting documents rather than money, which
+  // contradicted the euros printed beside it) and nothing could test it while
+  // it sat inline in this component.
+  const issued = useMemo(() => issuedInvoices(invoices), [invoices]);
+  const collectionRate = useMemo(() => computeCollectionRate(invoices), [invoices]);
 
   const invoiceDocs = useMemo(() => {
     return invoices
@@ -257,7 +260,10 @@ export default function GeldScreen() {
         <MoatInsightsCard />
 
         {/* ─── COLLECTION RATE BADGE ─── */}
-        {invoices.length > 0 && (
+        {/* Gated on ISSUED, not on `invoices.length`: a contractor whose only
+            invoices are drafts has billed nothing, and showing them a red 0%
+            would score an empty set as a bad outcome. */}
+        {issued.length > 0 && (
           <View style={s.collectionBadge}>
             <Ionicons name="checkmark-circle" size={14} color={collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger} />
             <Text style={s.collectionText}>{t('dk.pill.collectionRate', 'Collection rate').toUpperCase()} · <Text style={{ color: collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger }}>{collectionRate}%</Text></Text>
