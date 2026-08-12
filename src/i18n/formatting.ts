@@ -1,7 +1,7 @@
 import { getCurrentCountry } from '../lib/currentUser';
 export type Country = 'UK' | 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'US';
 
-const COUNTRY_CONFIG: Record<Country, { currency: string; locale: string }> = {
+export const COUNTRY_CONFIG: Record<Country, { currency: string; locale: string }> = {
   UK: { currency: 'GBP', locale: 'en-GB' },
   NL: { currency: 'EUR', locale: 'nl-NL' },
   DE: { currency: 'EUR', locale: 'de-DE' },
