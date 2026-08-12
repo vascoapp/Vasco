@@ -1051,7 +1051,7 @@ export default function JobDetailPage() {
         {/* ============================================ */}
         {/* 8. QUICK ACTIONS                            */}
         {/* ============================================ */}
-        <View style={styles.actionsRow}>
+        <View style={styles.actionsBlock}>
           {!jobCompleted && (
             <Pressable
               style={[styles.actionPrimary, clockedIn && { backgroundColor: SemanticColors.feedbackError }]}
@@ -1088,6 +1088,13 @@ export default function JobDetailPage() {
               <Text style={styles.actionPrimaryText}>{clockedIn ? t('jobs.clockOut', 'Clock out') : t('jobs.clockIn', 'Clock in')}</Text>
             </Pressable>
           )}
+          {/* Secondary actions get their own row. Sharing one row with the
+              primary gave each of them ~54pt — narrower than any of their
+              labels in any locale, so "Formulier invullen" / "Remplir le
+              formulaire" wrapped to three lines and clipped. The captions are
+              short NOUNS (jobs.quick*); the full action sentence stays on
+              accessibilityLabel, so screen readers lose nothing. */}
+          <View style={styles.actionsSecondaryRow}>
           <Pressable
             style={styles.actionSecondary}
             accessibilityRole="button"
@@ -1098,7 +1105,7 @@ export default function JobDetailPage() {
             }}
           >
             <Ionicons name="camera" size={18} color={Palette.hermesOrange} />
-            <Text style={styles.actionSecondaryText}>{t('jobs.photo', 'Photo')}{photoCount > 0 ? ` (${photoCount})` : ''}</Text>
+            <Text style={styles.actionSecondaryText} numberOfLines={2}>{t('jobs.quickPhoto', 'Photo')}{photoCount > 0 ? ` (${photoCount})` : ''}</Text>
           </Pressable>
           {/* Job form. Sits with Photo rather than behind completion: the
               checklist is what you work THROUGH on site, not something you
@@ -1113,7 +1120,7 @@ export default function JobDetailPage() {
             }}
           >
             <Ionicons name="clipboard-outline" size={18} color={Palette.hermesOrange} />
-            <Text style={styles.actionSecondaryText}>{t('jobForms.fillIn', 'Form')}</Text>
+            <Text style={styles.actionSecondaryText} numberOfLines={2}>{t('jobs.quickForm', 'Form')}</Text>
           </Pressable>
           {jobCompleted && (
             <Pressable
@@ -1126,7 +1133,7 @@ export default function JobDetailPage() {
               }}
             >
               <Ionicons name="star-outline" size={18} color={Palette.hermesOrange} />
-              <Text style={styles.actionSecondaryText}>{t('jobs.qualityFeedback', 'Feedback')}</Text>
+              <Text style={styles.actionSecondaryText} numberOfLines={2}>{t('jobs.quickFeedback', 'Feedback')}</Text>
             </Pressable>
           )}
           {!jobCompleted && (contact.phone || contact.email) && (
@@ -1166,7 +1173,7 @@ export default function JobDetailPage() {
               }}
             >
               <Ionicons name="navigate" size={18} color={Palette.hermesOrange} />
-              <Text style={styles.actionSecondaryText}>{t('jobs.onMyWay', 'On my way')}</Text>
+              <Text style={styles.actionSecondaryText} numberOfLines={2}>{t('jobs.quickOnMyWay', 'On my way')}</Text>
             </Pressable>
           )}
           {!jobCompleted ? (
@@ -1263,14 +1270,15 @@ export default function JobDetailPage() {
               }}
             >
               <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
-              <Text style={styles.actionSecondaryText}>{t('jobs.done', 'Done')}</Text>
+              <Text style={styles.actionSecondaryText} numberOfLines={2}>{t('jobs.quickDone', 'Done')}</Text>
             </Pressable>
           ) : (
             <View style={[styles.actionSecondary, { backgroundColor: SemanticColors.feedbackSuccess + '14' }]}>
               <Ionicons name="checkmark-done" size={18} color={SemanticColors.feedbackSuccess} />
-              <Text style={[styles.actionSecondaryText, { color: SemanticColors.feedbackSuccess }]}>{t('jobs.statusCompleted', 'Completed')}</Text>
+              <Text style={[styles.actionSecondaryText, { color: SemanticColors.feedbackSuccess }]} numberOfLines={2}>{t('jobs.statusCompleted', 'Completed')}</Text>
             </View>
           )}
+          </View>
         </View>
 
         {/* ============================================ */}
@@ -1554,6 +1562,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: GRID.md,
     paddingTop: GRID.md,
     gap: GRID.lg,
+    // Without this the last section ended flush against the home indicator,
+    // with nothing to scroll past — and once the comment keyboard opened, the
+    // action buttons were clipped mid-glyph.
+    paddingBottom: SafeArea.bottom + GRID.lg,
   },
   emptyState: {
     flex: 1,
@@ -2118,12 +2130,14 @@ const styles = StyleSheet.create({
   },
 
   // Quick actions
-  actionsRow: {
+  actionsBlock: {
+    gap: 10,
+  },
+  actionsSecondaryRow: {
     flexDirection: 'row',
     gap: 10,
   },
   actionPrimary: {
-    flex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2149,7 +2163,10 @@ const styles = StyleSheet.create({
   actionSecondaryText: {
     fontSize: TYPE.tinySize,
     fontFamily: TYPE.titleFamily,
-    color: '#555',
+    // Was a hardcoded '#555' — near-invisible on the dark panel these buttons
+    // sit on, and a design-system violation besides.
+    color: SemanticColors.textSecondary,
+    textAlign: 'center',
   },
 
   // Factureer button

@@ -506,7 +506,12 @@
     "callSite": "Bel locatie",
     "siteContactDesc": "Wie er op de bouwplaats is en op welk nummer diegene bereikbaar is. Vasco gebruikt dit in plaats van het klantnummer.",
     "siteContactPlaceholder": "Naam of rol, bijv. huismeester",
-    "sitePhonePlaceholder": "Telefoonnummer op locatie"
+    "sitePhonePlaceholder": "Telefoonnummer op locatie",
+    "quickPhoto": "Foto",
+    "quickForm": "Formulier",
+    "quickOnMyWay": "Onderweg",
+    "quickDone": "Gereed",
+    "quickFeedback": "Feedback"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",

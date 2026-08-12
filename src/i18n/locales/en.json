@@ -522,7 +522,12 @@
     "callSite": "Call site",
     "siteContactDesc": "Who is on site and the number to reach them on. Used instead of the customer number when Vasco contacts the job.",
     "siteContactPlaceholder": "Name or role, e.g. building concierge",
-    "sitePhonePlaceholder": "Phone number on site"
+    "sitePhonePlaceholder": "Phone number on site",
+    "quickPhoto": "Photo",
+    "quickForm": "Form",
+    "quickOnMyWay": "On my way",
+    "quickDone": "Done",
+    "quickFeedback": "Feedback"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",

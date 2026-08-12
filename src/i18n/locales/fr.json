@@ -522,7 +522,12 @@
     "callSite": "Appeler le chantier",
     "siteContactDesc": "Qui est sur le chantier et à quel numéro le joindre. Vasco l'utilise à la place du numéro du client.",
     "siteContactPlaceholder": "Nom ou fonction, ex. gardien",
-    "sitePhonePlaceholder": "Numéro sur le chantier"
+    "sitePhonePlaceholder": "Numéro sur le chantier",
+    "quickPhoto": "Photo",
+    "quickForm": "Formulaire",
+    "quickOnMyWay": "En route",
+    "quickDone": "Terminé",
+    "quickFeedback": "Avis"
   },
   "compliance": {
     "manageInsurance": "Gérer assurances & sinistres",

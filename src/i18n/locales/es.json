@@ -522,7 +522,12 @@
     "callSite": "Llamar a la obra",
     "siteContactDesc": "Quién está en la obra y en qué número localizarle. Vasco lo usa en lugar del número del cliente.",
     "siteContactPlaceholder": "Nombre o cargo, p. ej. conserje",
-    "sitePhonePlaceholder": "Teléfono en la obra"
+    "sitePhonePlaceholder": "Teléfono en la obra",
+    "quickPhoto": "Foto",
+    "quickForm": "Formulario",
+    "quickOnMyWay": "En camino",
+    "quickDone": "Hecho",
+    "quickFeedback": "Opinión"
   },
   "compliance": {
     "manageInsurance": "Gestionar seguros y siniestros",

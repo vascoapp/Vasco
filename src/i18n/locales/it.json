@@ -522,7 +522,12 @@
     "callSite": "Chiama il cantiere",
     "siteContactDesc": "Chi è in cantiere e a quale numero è raggiungibile. Vasco lo usa al posto del numero del cliente.",
     "siteContactPlaceholder": "Nome o ruolo, es. portiere",
-    "sitePhonePlaceholder": "Telefono in cantiere"
+    "sitePhonePlaceholder": "Telefono in cantiere",
+    "quickPhoto": "Foto",
+    "quickForm": "Modulo",
+    "quickOnMyWay": "In arrivo",
+    "quickDone": "Fatto",
+    "quickFeedback": "Feedback"
   },
   "compliance": {
     "manageInsurance": "Gestisci assicurazioni e sinistri",

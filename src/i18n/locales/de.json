@@ -522,7 +522,12 @@
     "callSite": "Baustelle anrufen",
     "siteContactDesc": "Wer vor Ort ist und unter welcher Nummer erreichbar. Vasco nutzt diese statt der Kundennummer.",
     "siteContactPlaceholder": "Name oder Rolle, z. B. Hausmeister",
-    "sitePhonePlaceholder": "Telefonnummer vor Ort"
+    "sitePhonePlaceholder": "Telefonnummer vor Ort",
+    "quickPhoto": "Foto",
+    "quickForm": "Formular",
+    "quickOnMyWay": "Unterwegs",
+    "quickDone": "Fertig",
+    "quickFeedback": "Feedback"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
