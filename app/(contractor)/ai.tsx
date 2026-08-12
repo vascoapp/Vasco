@@ -730,30 +730,35 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
           />
         )}
 
-        <View style={heroStyles.ctaRow}>
-          <Pressable style={heroStyles.dismissBtn} onPress={onDismiss}>
-            <DKLabel style={heroStyles.dismissText}>{t('ai.later')}</DKLabel>
-          </Pressable>
+        {/* The PRIMARY action gets its own full-width row; Later + Edit sit
+            below it. Sharing one row left it `flex: 1` against two fixed-width
+            siblings, and an earlier fix allowed 2 lines to stop it ellipsizing
+            — but two lines cannot rescue a button narrower than a single WORD.
+            German broke "ERINNERUNG SENDEN" mid-word into "ERINNERUN / G
+            SENDEN" on the app's most prominent CTA. Same stacked remedy already
+            applied to InlineQueueRow, the geld rows and eve.tsx. */}
+        <View style={heroStyles.ctaStack}>
           <Pressable style={({ pressed }) => [heroStyles.approveBtn, pressed && { opacity: 0.92 }]} onPress={onApprove}>
-            {/* 2 lines, not 1: this is the hero card's PRIMARY action and it
-                shares a row with Later + Edit, so a longer label ellipsized
-                to "HERINNERING STUR…" — the one button that must stay
-                readable. Wrapping grows the button instead of cutting it. */}
             <DKLabel style={heroStyles.approveText} numberOfLines={2}>{action.actionLabel}</DKLabel>
             <Ionicons name={action.actionType === 'share' ? 'send' : action.actionType === 'navigate' ? 'arrow-forward' : 'checkmark'} size={12} color={DK.colors.bg} />
           </Pressable>
-          {action.actionType === 'share' && action.shareText && (
-            <Pressable
-              style={({ pressed }) => [heroStyles.editBtn, pressed && { opacity: 0.85 }]}
-              onPress={() => {
-                if (editing) setEditingId(null);
-                else { setEditingId(action.id); setEditText(action.shareText || ''); }
-              }}
-            >
-              <Ionicons name={editing ? 'checkmark' : 'create-outline'} size={20} color="#FFFFFF" />
-              <Text style={heroStyles.editBtnText}>{editing ? t('dk.actions.done', 'Done').toUpperCase() : t('dk.actions.edit', 'Edit').toUpperCase()}</Text>
+          <View style={heroStyles.ctaRow}>
+            <Pressable style={heroStyles.dismissBtn} onPress={onDismiss}>
+              <DKLabel style={heroStyles.dismissText}>{t('ai.later')}</DKLabel>
             </Pressable>
-          )}
+            {action.actionType === 'share' && action.shareText && (
+              <Pressable
+                style={({ pressed }) => [heroStyles.editBtn, pressed && { opacity: 0.85 }]}
+                onPress={() => {
+                  if (editing) setEditingId(null);
+                  else { setEditingId(action.id); setEditText(action.shareText || ''); }
+                }}
+              >
+                <Ionicons name={editing ? 'checkmark' : 'create-outline'} size={20} color="#FFFFFF" />
+                <Text style={heroStyles.editBtnText}>{editing ? t('dk.actions.done', 'Done').toUpperCase() : t('dk.actions.edit', 'Edit').toUpperCase()}</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
       </LinearGradient>
     </View>
@@ -1019,6 +1024,7 @@ const heroStyles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  ctaStack: { gap: 6 },
   ctaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   editBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
