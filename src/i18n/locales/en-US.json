@@ -56,7 +56,6 @@
   },
   "aiQuote": {
     "title": "AI estimate",
-    "vat": "Sales tax (21%)",
     "vatRate": "Sales tax ({{rate}}%)"
   },
   "invoices": {
