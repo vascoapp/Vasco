@@ -2652,7 +2652,9 @@
       "draft": "Brouillon",
       "paidWeek": "Payé sem",
       "collectionRate": "Taux de recouvrement",
-      "high": "Haut"
+      "high": "Haut",
+      "invoicesCount_one": "{{count}} facture",
+      "invoicesCount_other": "{{count}} factures"
     },
     "actions": {
       "newJob": "Nouvelle mission",

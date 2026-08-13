@@ -2652,7 +2652,9 @@
       "draft": "Bozza",
       "paidWeek": "Pagato sett",
       "collectionRate": "Tasso di incasso",
-      "high": "Alto"
+      "high": "Alto",
+      "invoicesCount_one": "{{count}} fattura",
+      "invoicesCount_other": "{{count}} fatture"
     },
     "actions": {
       "newJob": "Nuovo lavoro",

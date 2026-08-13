@@ -2636,7 +2636,9 @@
       "draft": "Concept",
       "paidWeek": "Betaald wk",
       "collectionRate": "Incassoratio",
-      "high": "Hoog"
+      "high": "Hoog",
+      "invoicesCount_one": "{{count}} factuur",
+      "invoicesCount_other": "{{count}} facturen"
     },
     "actions": {
       "newJob": "Nieuwe klus",

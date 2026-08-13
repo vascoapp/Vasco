@@ -685,7 +685,10 @@ export default function GeldScreen() {
                     <View style={s.customerBarTrack}>
                       <View style={[s.customerBarFill, { width: `${barWidth}%` as any, backgroundColor: cust.percentage > 50 ? DK.colors.highlight : DK.colors.accent }]} />
                     </View>
-                    <Text style={s.customerMeta}>{cust.invoiceCount} {t('invoices.invoices', 'Facturen').toUpperCase()} · {cust.percentage}%</Text>
+                    {/* Pluralised, not concatenated: this read "1 RECHNUNGEN" in German and
+                        "1 FACTUREN" in Dutch. Same bug feed2a4 fixed for "1 JOBS",
+                        and the same dk.pill.*Count _one/_other shape. */}
+                    <Text style={s.customerMeta}>{t('dk.pill.invoicesCount', { defaultValue: '{{count}} invoices', count: cust.invoiceCount }).toUpperCase()} · {cust.percentage}%</Text>
                   </View>
                 );
               })}

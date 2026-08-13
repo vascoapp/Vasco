@@ -2652,7 +2652,9 @@
       "draft": "Borrador",
       "paidWeek": "Pagado sem",
       "collectionRate": "Tasa de cobro",
-      "high": "Alto"
+      "high": "Alto",
+      "invoicesCount_one": "{{count}} factura",
+      "invoicesCount_other": "{{count}} facturas"
     },
     "actions": {
       "newJob": "Nuevo trabajo",

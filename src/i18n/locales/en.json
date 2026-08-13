@@ -2652,7 +2652,9 @@
       "draft": "Draft",
       "paidWeek": "Paid wk",
       "collectionRate": "Collection rate",
-      "high": "High"
+      "high": "High",
+      "invoicesCount_one": "{{count}} invoice",
+      "invoicesCount_other": "{{count}} invoices"
     },
     "actions": {
       "newJob": "New job",

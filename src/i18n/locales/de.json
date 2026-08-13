@@ -2652,7 +2652,9 @@
       "draft": "Entwurf",
       "paidWeek": "Bezahlt Wo",
       "collectionRate": "Inkassoquote",
-      "high": "Hoch"
+      "high": "Hoch",
+      "invoicesCount_one": "{{count}} Rechnung",
+      "invoicesCount_other": "{{count}} Rechnungen"
     },
     "actions": {
       "newJob": "Neuer Auftrag",
