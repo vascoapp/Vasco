@@ -74,3 +74,43 @@ describe('computeInvoiceAging', () => {
     expect(aging.days30.count).toBe(0);
   });
 });
+
+describe('a DRAFT invoice is not a receivable', () => {
+  // The German cashflow screen read "Zu erhalten 1.440,00 €" while the Geld
+  // tab said 800,00 € for the same moment. The extra 640 was the De Jong
+  // DRAFT, sitting in the "Aktuell" bucket: never sent, so the customer has
+  // not been billed, nothing is owed, and there is no due date they could have
+  // missed. Same rule as the collection-rate denominator.
+  it('excludes drafts from every bucket', () => {
+    const aging = computeInvoiceAging([
+      inv({ id: 'sent-overdue', amount: 350, dueDate: dayBefore(14) }),
+      inv({ id: 'draft-640', amount: 640, dueDate: dayBefore(0), status: 'draft' }),
+    ] as any, NOW);
+
+    expect(aging.days30).toEqual({ count: 1, total: 350 });
+    expect(aging.current).toEqual({ count: 0, total: 0 });
+    const grand = aging.current.total + aging.days30.total + aging.days60.total + aging.days90Plus.total;
+    expect(grand).toBe(350);
+  });
+
+  it('still counts VIEWED invoices — issued, unpaid, genuinely owed', () => {
+    // The filter is an exclusion rather than a whitelist precisely so this
+    // status is not silently dropped: hiding money owed is the dangerous
+    // direction on a receivables screen.
+    const aging = computeInvoiceAging([
+      inv({ id: 'viewed-200', amount: 200, dueDate: dayBefore(5), status: 'viewed' }),
+    ] as any, NOW);
+
+    expect(aging.days30).toEqual({ count: 1, total: 200 });
+  });
+
+  it('still excludes paid and cancelled', () => {
+    const aging = computeInvoiceAging([
+      inv({ id: 'paid', amount: 999, dueDate: dayBefore(5), status: 'paid' }),
+      inv({ id: 'cancelled', amount: 999, dueDate: dayBefore(5), status: 'cancelled' }),
+    ] as any, NOW);
+
+    const grand = aging.current.total + aging.days30.total + aging.days60.total + aging.days90Plus.total;
+    expect(grand).toBe(0);
+  });
+});

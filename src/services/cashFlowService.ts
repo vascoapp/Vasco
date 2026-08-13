@@ -283,7 +283,10 @@ class CashFlowService {
   getCashFlowSummary(): CashFlowSummary {
     const invoices = this.getInvoices();
     const pendingIncome = invoices
-      .filter((i) => i.status !== 'paid' && i.status !== 'cancelled')
+      // Drafts excluded: never sent, so nothing is owed and it cannot be
+      // "income to receive". Counting them made "Zu erhalten" read 1.440,00 €
+      // beside an aging table totalling 800,00 € on the SAME screen.
+      .filter((i) => i.status !== 'paid' && i.status !== 'cancelled' && i.status !== 'draft')
       .reduce((sum, i) => sum + i.amount, 0);
 
     const pendingExpenses = this.getExpenses()
@@ -477,7 +480,18 @@ export function computeInvoiceAging(invoices: Invoice[], now: Date = new Date())
   };
 
   invoices
-    .filter((i) => i.status !== 'paid' && i.status !== 'cancelled')
+    // A DRAFT was never sent, so the customer has not been billed, nothing is
+    // owed, and there is no due date for them to have missed — ageing one is
+    // meaningless. Including drafts made this screen report "Zu erhalten
+    // 1.440,00 €" while the Geld tab said 800,00 € at the same moment, the
+    // extra 640 being an unsent draft sitting in the "Aktuell" bucket.
+    //
+    // Stated as an EXCLUSION, not a whitelist: this file's Invoice type is
+    // wider than the domain one and also carries 'viewed', which IS issued and
+    // unpaid. Whitelisting sent/overdue would silently drop those, i.e. hide
+    // money genuinely owed. Excluding only what cannot be receivable fails in
+    // the safe direction.
+    .filter((i) => i.status !== 'paid' && i.status !== 'cancelled' && i.status !== 'draft')
     .forEach((invoice) => {
       const late = daysOverdue(invoice, now) ?? 0;
       const bucket = late <= 0 ? aging.current
@@ -713,7 +727,10 @@ export function useCashFlow() {
   // Build summary from real invoices
   const summary = useMemo<CashFlowSummary>(() => {
     const pendingIncome = invoices
-      .filter((i) => i.status !== 'paid' && i.status !== 'cancelled')
+      // Drafts excluded: never sent, so nothing is owed and it cannot be
+      // "income to receive". Counting them made "Zu erhalten" read 1.440,00 €
+      // beside an aging table totalling 800,00 € on the SAME screen.
+      .filter((i) => i.status !== 'paid' && i.status !== 'cancelled' && i.status !== 'draft')
       .reduce((sum, i) => sum + i.amount, 0);
 
     const pendingExpenses = expenses
