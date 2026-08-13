@@ -5,7 +5,7 @@
 // Step 2: Preview tiers + Vasco AI (calibration, pricing, tips) → send
 // =============================================================================
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -109,15 +109,6 @@ const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: num
   ],
 } : {};
 
-const TRADE_LABELS: Record<string, string> = {
-  painting: 'Schilderwerk',
-  plumbing: 'Loodgieterswerk',
-  electrical: 'Elektra',
-  gas: 'Installatie',
-  carpentry: 'Timmerwerk',
-  general: 'Bouw & Renovatie',
-};
-
 const TRADE_SUGGESTIONS: Record<string, string[]> = {
   painting: ['Afplakband', 'Grondverf', 'Schuurpapier', 'Primer'],
   plumbing: ['Teflon tape', 'Afdichtingsring', 'Soldeer', 'Koppelingen'],
@@ -141,6 +132,15 @@ interface TieredQuoteBuilderProps {
 
 export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBuilderProps) {
   const { t } = useTranslation();
+  // Was a hardcoded Dutch TRADE_LABELS map, so a German contractor's quote
+  // builder was headed "Loodgieterswerk" on an otherwise fully German screen —
+  // and the same string became the pricebook item `description`, which travels
+  // onto a quote line. `onboarding.trades.*` already carries every slug in all
+  // six locales and is what makeEntityLabels reads.
+  const tradeLabel = useCallback(
+    (raw: string) => t(`onboarding.trades.${raw}`, raw),
+    [t],
+  );
   const { user } = useAuth();
   const trade = user?.trade ?? 'general';
   const country = user?.country ?? 'NL';
@@ -391,7 +391,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     return tradeItems.map(item => ({
       ...item,
       contractorId: '',
-      description: `${TRADE_LABELS[trade] ?? trade}`,
+      description: tradeLabel(trade),
       category: trade,
       pricingType: 'fixed' as const,
     })) as unknown as PricebookItem[];
@@ -859,7 +859,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={s.headerTitle}>{t('quotes.addServices', 'Add services')}</Text>
-            <Text style={s.headerSub}>{TRADE_LABELS[trade] ?? t('quotes.services', 'Services')}</Text>
+            <Text style={s.headerSub}>{tradeLabel(trade)}</Text>
           </View>
         </View>
         <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
@@ -1037,7 +1037,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
           {/* Services section */}
           <View style={s.section}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={s.sectionTitle}>{TRADE_LABELS[trade] ?? t('quotes.services', 'Services')}</Text>
+              <Text style={s.sectionTitle}>{tradeLabel(trade)}</Text>
               <Pressable style={s.addBtn} onPress={() => setShowPricebook(true)}>
                 <Ionicons name="add" size={16} color={Palette.hermesOrange} />
                 <Text style={s.addBtnText}>{t('common.add', 'Add')}</Text>

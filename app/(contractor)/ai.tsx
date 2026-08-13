@@ -30,7 +30,7 @@ import { requestAccountDeletion } from '../../src/services/accountDeletionServic
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { useMaintenanceOpportunities } from '../../src/services/maintenanceOpportunityService';
 import { useSubmissions } from '../../src/services/submissionStore';
-import { formatMoney2 } from '../../src/i18n/formatting';
+import { formatMoney2, formatDecimal1, type Country } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabKey = 'queue' | 'insights' | 'automations' | 'more';
@@ -536,7 +536,7 @@ export default function VascoScreen() {
             {timeSaved.weeklyHoursSaved > 0 && (
               <View style={s.savedBanner}>
                 <Ionicons name="time-outline" size={14} color={DK.colors.success} />
-                <Text style={s.savedBannerText}>{t('dk.ai.hoursSavedPerWeek', { hours: timeSaved.weeklyHoursSaved.toFixed(1), defaultValue: '~{{hours}}h/week saving potential' }).toUpperCase()}</Text>
+                <Text style={s.savedBannerText}>{t('dk.ai.hoursSavedPerWeek', { hours: formatDecimal1(timeSaved.weeklyHoursSaved, (user?.country ?? 'NL') as Country), defaultValue: '~{{hours}}h/week saving potential' }).toUpperCase()}</Text>
               </View>
             )}
             <View style={s.autoList}>

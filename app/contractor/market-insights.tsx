@@ -26,7 +26,7 @@ import {
   type DailyMetricPoint,
 } from '../../src/services/intelligenceCaptureService';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency0, type Country } from '../../src/i18n/formatting';
+import { formatCurrency0, formatDecimal1, type Country } from '../../src/i18n/formatting';
 
 interface MonthRow { month: string; avgMargin: number; medianMargin: number; quotes: number; }
 interface BucketRow { amountBucket: string; winRate: number; quotes: number; contractors: number; }
@@ -112,7 +112,7 @@ export default function MarketInsightsScreen() {
                     <View style={styles.barTrack}>
                       <View style={[styles.barFill, { width: `${barPct}%` }]} />
                     </View>
-                    <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{m.avgMargin.toFixed(1)}%</Text>
+                    <Text style={styles.rowValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{formatDecimal1(m.avgMargin, country)}%</Text>
                     <Text style={styles.rowMeta}>n={m.quotes}</Text>
                   </View>
                 );

@@ -20,7 +20,7 @@ import { useCohortBenchmarks, compareToMarket } from '../../src/services/cohortB
 import { usePriceIndex } from '../../src/services/priceIndexService';
 import { getPriceRecommendations, type PriceRecommendation } from '../../src/services/invoiceScanService';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatDecimal1, type Country } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -115,11 +115,14 @@ export default function MarketPricesScreen() {
                 <View style={[styles.trendBadge, { backgroundColor: TREND_ICONS[index.overallIndex.trend].color + '15' }]}>
                   <Ionicons name={TREND_ICONS[index.overallIndex.trend].icon} size={14} color={TREND_ICONS[index.overallIndex.trend].color} />
                   <Text style={[styles.trendText, { color: TREND_ICONS[index.overallIndex.trend].color }]}>
-                    {index.overallIndex.changePercent12m > 0 ? '+' : ''}{index.overallIndex.changePercent12m.toFixed(1)}% /{t('market.year', 'jaar')}
+                    {index.overallIndex.changePercent12m > 0 ? '+' : ''}{formatDecimal1(index.overallIndex.changePercent12m, country as Country)}% /{t('market.year', 'jaar')}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.indexValue}>{index.overallIndex.currentIndex.toFixed(1)}</Text>
+              {/* toFixed always emits a DOT, so the German Baukostenindex rendered
+                  "140.5" and "+3.5%" where German writes "140,5" / "+3,5". The
+                  locale-aware helper already existed. */}
+              <Text style={styles.indexValue}>{formatDecimal1(index.overallIndex.currentIndex, country as Country)}</Text>
               <Text style={styles.indexLabel}>{t('market.indexBasis', { country })}</Text>
               {index.materials && index.materials.length > 0 && (
                 <View style={styles.trendsGrid}>
