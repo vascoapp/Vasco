@@ -177,7 +177,11 @@ export default function GeldScreen() {
     [fin.topCustomers]
   );
 
-  const marginPercent = paidTotal > 0 ? Math.round((fin.netIncome / paidTotal) * 100) : 0;
+  // Null = not known. Costs come from the expense ledger now, so a contractor
+  // who has recorded none has an UNKNOWN margin, not a 100% one.
+  const marginPercent = fin.netIncome !== null && paidTotal > 0
+    ? Math.round((fin.netIncome / paidTotal) * 100)
+    : null;
 
   const dsoStatus = useMemo((): { color: string } => {
     if (fin.avgDaysToPayment <= 21) return { color: DK.colors.success };
@@ -527,7 +531,7 @@ export default function GeldScreen() {
               accessibilityRole="button"
               accessibilityLabel={t('dk.money.costs', 'Costs')}
             >
-              <CfItem label={t('dk.money.costs', 'Costs').toUpperCase()} value={formatCurrency(fin.totalExpenses)} tone={DK.colors.text} />
+              <CfItem label={t('dk.money.costs', 'Costs').toUpperCase()} value={fin.totalExpenses === null ? '—' : formatCurrency(fin.totalExpenses)} tone={DK.colors.text} />
             </Pressable>
             <View style={s.cfDivider} />
             <Pressable
@@ -537,8 +541,8 @@ export default function GeldScreen() {
               accessibilityLabel={t('dk.money.profit', 'Profit')}
             >
               <View style={s.cfProfitRow}>
-                <Text style={[s.cfValue, { color: fin.netIncome >= 0 ? DK.colors.success : DK.colors.danger }]}>{formatCurrency(fin.netIncome)}</Text>
-                {paidTotal > 0 && (
+                <Text style={[s.cfValue, { color: (fin.netIncome ?? 0) >= 0 ? DK.colors.success : DK.colors.danger }]}>{fin.netIncome === null ? '—' : formatCurrency(fin.netIncome)}</Text>
+                {marginPercent !== null && (
                   <View style={[s.marginPill, { backgroundColor: (marginPercent >= 0 ? DK.colors.success : DK.colors.danger) + '22', borderColor: (marginPercent >= 0 ? DK.colors.success : DK.colors.danger) + '55' }]}>
                     <Text style={[s.marginPillText, { color: marginPercent >= 0 ? DK.colors.success : DK.colors.danger }]}>{marginPercent}%</Text>
                   </View>
@@ -547,14 +551,17 @@ export default function GeldScreen() {
               <DKLabel style={s.cfLabel}>{t('dk.money.profit', 'Profit')}</DKLabel>
             </Pressable>
           </View>
-          {/* Margin bar */}
-          <View style={s.marginBar}>
-            <LinearGradient
-              colors={[DK.colors.primary, DK.colors.accent, DK.colors.success]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` as any }]}
-            />
-          </View>
+          {/* Margin bar — omitted when the margin is unknown. An empty bar
+              reads as "0% margin", which is a claim, not an absence. */}
+          {fin.profitMargin !== null && (
+            <View style={s.marginBar}>
+              <LinearGradient
+                colors={[DK.colors.primary, DK.colors.accent, DK.colors.success]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={[s.marginFill, { width: `${Math.min(Math.max(fin.profitMargin, 0), 100)}%` as any }]}
+              />
+            </View>
+          )}
           {/* Sparkline */}
           {sparkData.length >= 2 && (
             <View style={s.sparkBlock}>

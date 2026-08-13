@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import i18n from '../i18n/i18n';
 import { useAppState } from '../state/AppState';
 import type { Invoice, Quote } from '../domain/documents';
+import { useExpenses, type Expense } from './expenseService';
 import { MS_PER_DAY } from '../utils/timeConstants';
 
 // =============================================================================
@@ -20,7 +21,7 @@ export interface MonthlyBucket {
   label: string;       // "Jan", "Feb" etc.
   revenue: number;     // paid invoices
   invoiced: number;    // all invoices created
-  expenses: number;    // estimated expenses (30% of revenue heuristic until real data)
+  expenses: number;    // REAL recorded expenses for the month (0 when none recorded)
 }
 
 export interface CustomerConcentration {
@@ -58,10 +59,15 @@ export interface FinancialSummary {
   quoteWinRate: number;           // accepted / (accepted + rejected + expired) %
   avgQuoteValue: number;
 
-  // Profit (estimated)
-  totalExpenses: number;
-  netIncome: number;
-  profitMargin: number;           // 0-100
+  // Profit. `null` = NOT KNOWN and must render as an omitted value, never 0.
+  //
+  // These were `invoiced * 0.30` — a hardcoded fraction of revenue, so the Geld
+  // tab reported "KOSTEN 660,00 € · GEWINN 100,00 € · 13%" that no stored field
+  // backed. It also disagreed with the P&L on the same month, which fabricated
+  // differently (25% + 10%). Both are now summed from the real expense ledger.
+  totalExpenses: number | null;
+  netIncome: number | null;
+  profitMargin: number | null;    // 0-100, GROSS of nothing — see costs above
 
   // Cash Flow
   monthlyInflows: number[];       // last 6 months payments received
@@ -133,6 +139,7 @@ export function analyzeFinancials(
   invoices: Invoice[],
   quotes: Quote[],
   now: Date = new Date(),
+  expenses?: Expense[],
 ): FinancialSummary {
   // ---- Revenue from paid invoices ----
   const paidInvoices = invoices.filter(i => i.status === 'paid');
@@ -166,10 +173,21 @@ export function analyzeFinancials(
 
   const monthlyRevenue = last12.map(mk => monthMap[mk]);
 
-  // Fill estimated expenses (30% of invoiced as heuristic — materials + fuel)
+  // REAL recorded expenses per month (receipt scanner + manual entry, via
+  // expenseService). Was `invoiced * 0.30`, which is not a measurement of
+  // anything — see the type above.
   for (const bucket of monthlyRevenue) {
-    bucket.expenses = Math.round(bucket.invoiced * 0.3);
+    bucket.expenses = (expenses ?? [])
+      .filter((e) => {
+        const d = e.date instanceof Date ? e.date : new Date(e.date);
+        return !Number.isNaN(d.getTime()) && getMonthKey(d) === bucket.month;
+      })
+      .reduce((sum, e) => sum + (e.amount || 0), 0);
   }
+  // Nothing recorded anywhere = we do not know this contractor's costs. An
+  // empty ledger is not a zero-cost business, and reporting 0 would make the
+  // profit equal the revenue and the margin 100%.
+  const hasExpenseData = (expenses ?? []).length > 0;
 
   // Average monthly revenue (only months with data)
   const monthsWithRevenue = monthlyRevenue.filter(m => m.revenue > 0);
@@ -234,10 +252,14 @@ export function analyzeFinancials(
     ? Math.round(quotes.reduce((s, q) => s + (q.amount || 0), 0) / quotes.length)
     : 0;
 
-  // ---- Profit (estimated) ----
-  const totalExpenses = monthlyRevenue.reduce((s, m) => s + m.expenses, 0);
-  const netIncome = totalRevenue - totalExpenses;
-  const profitMargin = totalRevenue > 0 ? Math.round((netIncome / totalRevenue) * 100) : 0;
+  // ---- Profit ----
+  const totalExpenses = hasExpenseData
+    ? monthlyRevenue.reduce((s, m) => s + m.expenses, 0)
+    : null;
+  const netIncome = totalExpenses === null ? null : totalRevenue - totalExpenses;
+  const profitMargin = netIncome === null || totalRevenue <= 0
+    ? null
+    : Math.round((netIncome / totalRevenue) * 100);
 
   // ---- Cash flow arrays (last 6 months) ----
   const last6 = last12.slice(-6);
@@ -337,5 +359,11 @@ export function analyzeFinancials(
 
 export function useFinancialAnalysis(): FinancialSummary {
   const { invoices, quotes } = useAppState();
-  return useMemo(() => analyzeFinancials(invoices, quotes), [invoices, quotes]);
+  // Real recorded expenses — the receipt scanner and manual entry both write
+  // here. Subscribed so a newly scanned receipt updates the Geld tab.
+  const { expenses } = useExpenses();
+  return useMemo(
+    () => analyzeFinancials(invoices, quotes, new Date(), expenses),
+    [invoices, quotes, expenses],
+  );
 }
