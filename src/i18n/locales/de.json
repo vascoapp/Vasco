@@ -2763,7 +2763,8 @@
       "reportsSub": "GuV, monatlich + quartalsweise. CSV/PDF Export.",
       "purchasing": "Einkauf",
       "purchasingSub": "Belegscanner, Nachbestellungen, Lieferantenpreise.",
-      "sortBy": "SORTIEREN NACH"
+      "sortBy": "SORTIEREN NACH",
+      "projectedIncomeMonth": "Erwarteter Eingang"
     },
     "ai": {
       "automationsTitle": "Automatisierungen",

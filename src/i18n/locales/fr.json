@@ -2763,7 +2763,8 @@
       "reportsSub": "P&L, mensuel + trimestriel. Export CSV/PDF.",
       "purchasing": "Achats",
       "purchasingSub": "Scanner reçus, recommandes, prix fournisseurs.",
-      "sortBy": "TRIER PAR"
+      "sortBy": "TRIER PAR",
+      "projectedIncomeMonth": "Encaissements prévus"
     },
     "ai": {
       "automationsTitle": "Automatisations",

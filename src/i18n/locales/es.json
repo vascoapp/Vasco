@@ -2763,7 +2763,8 @@
       "reportsSub": "P&G, mensual + trimestral. Exportar CSV/PDF.",
       "purchasing": "Compras",
       "purchasingSub": "Escáner de recibos, pedidos, precios de proveedores.",
-      "sortBy": "ORDENAR POR"
+      "sortBy": "ORDENAR POR",
+      "projectedIncomeMonth": "Ingresos previstos"
     },
     "ai": {
       "automationsTitle": "Automatizaciones",

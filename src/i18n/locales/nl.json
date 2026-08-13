@@ -2747,7 +2747,8 @@
       "reportsSub": "V&W, maandelijks + per kwartaal. CSV/PDF export.",
       "purchasing": "Inkoop",
       "purchasingSub": "Bon scanner, herbestellen, leveranciersprijzen.",
-      "sortBy": "SORTEREN OP"
+      "sortBy": "SORTEREN OP",
+      "projectedIncomeMonth": "Verwachte inkomsten"
     },
     "ai": {
       "automationsTitle": "Automatiseringen",

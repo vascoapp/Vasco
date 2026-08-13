@@ -2763,7 +2763,8 @@
       "reportsSub": "P&L, monthly + quarterly. CSV/PDF export.",
       "purchasing": "Purchasing",
       "purchasingSub": "Receipt scanner, reorders, supplier prices.",
-      "sortBy": "SORT BY"
+      "sortBy": "SORT BY",
+      "projectedIncomeMonth": "Expected income"
     },
     "ai": {
       "automationsTitle": "Automations",

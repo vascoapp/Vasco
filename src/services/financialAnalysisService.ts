@@ -71,9 +71,18 @@ export interface FinancialSummary {
 
   // Cash Flow
   monthlyInflows: number[];       // last 6 months payments received
-  monthlyOutflows: number[];      // last 6 months expenses (estimated)
+  monthlyOutflows: number[];      // last 6 months RECORDED expenses (0 if none)
   netCashflow: number[];          // inflows - outflows
-  projectedCashflow: number;      // next month estimate
+  projectedCashflow: number;      // next month estimate — see projectedIsNet
+  /**
+   * Whether `projectedCashflow` is a NET figure.
+   *
+   * False when no expenses have been recorded: outflows are then 0, so the
+   * projection is of money coming IN, not of what is left after costs. The
+   * number is real either way — what changes is what it may be called, and a
+   * gross figure labelled "projected next month" quietly promises profit.
+   */
+  projectedIsNet: boolean;
 
   // Trends
   bestMonth: { month: string; amount: number } | null;
@@ -267,7 +276,10 @@ export function analyzeFinancials(
   const monthlyOutflows = last6.map(mk => monthMap[mk]?.expenses || 0);
   const netCashflow = monthlyInflows.map((inflow, i) => inflow - monthlyOutflows[i]);
 
-  // Projected cashflow = trailing 3-month average net + outstanding pipeline probability
+  // Projected cashflow = trailing 3-month average net + outstanding pipeline
+  // probability. With no recorded expenses the "net" is just inflow, so this
+  // is an INCOME projection — `projectedIsNet` tells the UI which word to use
+  // rather than letting the figure imply the stronger claim.
   const recentNet = netCashflow.slice(-3);
   const avgRecentNet = recentNet.length > 0
     ? recentNet.reduce((s, v) => s + v, 0) / recentNet.length
@@ -340,6 +352,7 @@ export function analyzeFinancials(
     avgQuoteValue,
     totalExpenses,
     netIncome,
+    projectedIsNet: hasExpenseData,
     profitMargin,
     monthlyInflows,
     monthlyOutflows,

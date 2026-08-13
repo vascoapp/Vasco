@@ -179,6 +179,14 @@ export default function GeldScreen() {
 
   // Null = not known. Costs come from the expense ledger now, so a contractor
   // who has recorded none has an UNKNOWN margin, not a 100% one.
+  // With no recorded expenses the projection's outflows are 0, so the figure is
+  // money coming IN, not what is left after costs. Say which — a gross number
+  // under "projected next month" quietly promises profit. The income wording is
+  // also shorter, and this label already ellipsized in German.
+  const projectionLabel = fin.projectedIsNet
+    ? t('dk.money.projectedMonth', 'Projected next month')
+    : t('dk.money.projectedIncomeMonth', 'Expected income');
+
   const marginPercent = fin.netIncome !== null && paidTotal > 0
     ? Math.round((fin.netIncome / paidTotal) * 100)
     : null;
@@ -589,13 +597,13 @@ export default function GeldScreen() {
             style={({ pressed }) => [s.projRow, pressed && { opacity: 0.7 }]}
             onPress={() => router.push('/contractor/cashflow' as any)}
             accessibilityRole="button"
-            accessibilityLabel={t('dk.money.projectedMonth', 'Projected next month')}
+            accessibilityLabel={projectionLabel}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
               <View style={[s.projIcon, { backgroundColor: (fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger) + '22' }]}>
                 <Ionicons name={fin.projectedCashflow >= 0 ? 'trending-up' : 'trending-down'} size={16} color={fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger} />
               </View>
-              <DKLabel style={[s.projLabel, { flexShrink: 1 }]} numberOfLines={1}>{t('dk.money.projectedMonth', 'Projected next month')}</DKLabel>
+              <DKLabel style={[s.projLabel, { flexShrink: 1 }]} numberOfLines={1}>{projectionLabel}</DKLabel>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
               <Text style={[s.projValue, { color: fin.projectedCashflow >= 0 ? DK.colors.success : DK.colors.danger }]}>

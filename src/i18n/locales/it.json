@@ -2763,7 +2763,8 @@
       "reportsSub": "Conto economico, mensile + trimestrale. Export CSV/PDF.",
       "purchasing": "Acquisti",
       "purchasingSub": "Scanner ricevute, riordini, prezzi fornitori.",
-      "sortBy": "ORDINA PER"
+      "sortBy": "ORDINA PER",
+      "projectedIncomeMonth": "Incassi previsti"
     },
     "ai": {
       "automationsTitle": "Automazioni",

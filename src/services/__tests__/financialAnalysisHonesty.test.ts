@@ -67,3 +67,29 @@ describe('cashflow costs are recorded, never a fraction of revenue', () => {
     expect(fin.profitMargin).toBe(100);
   });
 });
+
+describe('the projection says whether it is net or gross', () => {
+  it('is NOT net when no expenses are recorded — outflows are 0, so it is income', () => {
+    const fin = analyzeFinancials([paid('i1', 1000, '2026-08-05T10:00:00')] as never, [], NOW);
+    expect(fin.projectedIsNet).toBe(false);
+    // The number itself is still real — it is the CLAIM that changes.
+    expect(typeof fin.projectedCashflow).toBe('number');
+  });
+
+  it('is net once costs are known', () => {
+    const fin = analyzeFinancials(
+      [paid('i1', 1000, '2026-08-05T10:00:00')] as never, [], NOW,
+      [expense(250, '2026-08-06T10:00:00')],
+    );
+    expect(fin.projectedIsNet).toBe(true);
+  });
+
+  it('recording expenses lowers the projection — it stops assuming zero cost', () => {
+    const gross = analyzeFinancials([paid('i1', 1000, '2026-08-05T10:00:00')] as never, [], NOW);
+    const net = analyzeFinancials(
+      [paid('i1', 1000, '2026-08-05T10:00:00')] as never, [], NOW,
+      [expense(300, '2026-08-06T10:00:00')],
+    );
+    expect(net.projectedCashflow).toBeLessThan(gross.projectedCashflow);
+  });
+});
