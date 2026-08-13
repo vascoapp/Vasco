@@ -106,7 +106,18 @@ export default function QuoteTemplatesScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('quoteTemplates.title', 'Quote templates')}</Text>
+          {/* One line, shrink to fit. "ANGEBOTSVORLAGEN" is a single 16-char
+              compound needing ~243pt at 24px + 1.2 letter-spacing, in a slot
+              it shares with a back button and a +. Wrapping a SINGLE word
+              breaks it mid-word — the header read "ANGEBOTSVORLAG / EN".
+              numberOfLines={1} is what makes adjustsFontSizeToFit actually
+              shrink rather than break (see learnings #113). */}
+          <Text
+            style={styles.headerTitle}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >{t('quoteTemplates.title', 'Quote templates')}</Text>
           <Text style={styles.headerSubtitle}>{t('quoteTemplates.available', '{{count}} templates available', { count: templates.length })}</Text>
         </View>
         <Pressable onPress={() => setShowCreate(!showCreate)} style={styles.addBtn}>
@@ -284,7 +295,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: SafeArea.side, paddingTop: SafeArea.top, paddingBottom: Spacing.sm },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 1.2 },
+  headerTitle: { fontSize: 24, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, textTransform: 'uppercase', letterSpacing: 0.6 },
   headerSubtitle: { fontSize: 14, color: SemanticColors.textSecondary, marginTop: 2 },
   categoryBar: { maxHeight: 40, marginBottom: Spacing.sm },
   categoryBarContent: { paddingHorizontal: SafeArea.side, gap: 6 },

@@ -3579,7 +3579,7 @@
   "quoteTemplates": {
     "title": "Modelli di preventivo",
     "available": "{{count}} modelli disponibili",
-    "all": "All",
+    "all": "Tutti",
     "newTemplate": "Nuovo modello",
     "templateName": "Nome del modello",
     "category": "Categoria",

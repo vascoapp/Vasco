@@ -3579,7 +3579,7 @@
   "quoteTemplates": {
     "title": "Plantillas de presupuesto",
     "available": "{{count}} plantillas disponibles",
-    "all": "All",
+    "all": "Todas",
     "newTemplate": "Nueva plantilla",
     "templateName": "Nombre de la plantilla",
     "category": "Categoría",

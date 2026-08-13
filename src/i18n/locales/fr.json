@@ -3579,7 +3579,7 @@
   "quoteTemplates": {
     "title": "Modèles de devis",
     "available": "{{count}} modèles disponibles",
-    "all": "All",
+    "all": "Tous",
     "newTemplate": "Nouveau modèle",
     "templateName": "Nom du modèle",
     "category": "Catégorie",

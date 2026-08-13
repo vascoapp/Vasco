@@ -3579,7 +3579,7 @@
   "quoteTemplates": {
     "title": "Angebotsvorlagen",
     "available": "{{count}} Vorlagen verfügbar",
-    "all": "All",
+    "all": "Alle",
     "newTemplate": "Neue Vorlage",
     "templateName": "Vorlagenname",
     "category": "Kategorie",
