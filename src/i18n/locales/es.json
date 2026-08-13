@@ -682,7 +682,6 @@
     "observations": "Observaciones",
     "warnings": "Advertencias",
     "subtotal": "Subtotal",
-    "vat": "IVA (21%)",
     "total": "Total",
     "retake": "Repetir foto",
     "vatRate": "IVA ({{rate}}%)",

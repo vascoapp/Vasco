@@ -666,7 +666,6 @@
     "observations": "Observaties",
     "warnings": "Let op",
     "subtotal": "Subtotaal",
-    "vat": "BTW (21%)",
     "total": "Totaal",
     "retake": "Opnieuw",
     "vatRate": "btw ({{rate}}%)",

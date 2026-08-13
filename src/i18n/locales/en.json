@@ -682,7 +682,6 @@
     "observations": "Observations",
     "warnings": "Warnings",
     "subtotal": "Subtotal",
-    "vat": "VAT (21%)",
     "total": "Total",
     "retake": "Retake",
     "vatRate": "VAT ({{rate}}%)",

@@ -682,7 +682,6 @@
     "observations": "Observations",
     "warnings": "Avertissements",
     "subtotal": "Sous-total",
-    "vat": "TVA (21 %)",
     "total": "Total",
     "retake": "Reprendre la photo",
     "vatRate": "TVA ({{rate}} %)",
