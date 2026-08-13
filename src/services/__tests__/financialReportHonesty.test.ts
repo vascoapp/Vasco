@@ -231,3 +231,45 @@ describe('operating expenses come from the REAL expense ledger', () => {
     expect(r.profitMargin).toBe(75);
   });
 });
+
+describe('receipt-only contractors are not left with an empty P&L', () => {
+  // Self-review catch: costOfMaterials read ONLY job materials, while
+  // material-category expenses were excluded from opex to avoid double
+  // counting. So someone who scans supplier receipts but never attaches
+  // materials to a job had that spend counted NOWHERE and the whole statement
+  // collapsed to unknown — for a contractor who had recorded everything.
+  const exp = (amount: number, category: string) =>
+    ({ id: `e-${amount}-${category}`, description: 'x', category, amount, vatAmount: 0, vatRate: 0,
+       date: new Date('2026-08-05T09:00:00.000Z'), deductible: true, deductionPercentage: 100 } as never);
+
+  it('falls back to material-category expenses when no job materials exist', () => {
+    const r = generateMonthlyReport(
+      AUG, YEAR, [paidInvoice('i1', 760, 'j1')] as never, [], undefined,
+      {}, [exp(190, 'materiaal'), exp(76, 'kantoor')],
+    );
+    expect(r.costOfMaterials).toBe(190);
+    expect(r.grossProfit).toBe(570);
+    expect(r.operatingExpenses).toBe(76);
+    expect(r.netIncome).toBe(494);
+  });
+
+  it('does NOT add both sources — that would double-count one purchase', () => {
+    // Materials logged on the job AND scanned as a receipt is one spend
+    // recorded twice. Job-linked wins; the receipt is not added on top.
+    const r = generateMonthlyReport(
+      AUG, YEAR, [paidInvoice('i1', 760, 'j1')] as never, [], undefined,
+      { j1: [{ jobId: 'j1', totalPrice: 190 } as never] },
+      [exp(190, 'materiaal')],
+    );
+    expect(r.costOfMaterials).toBe(190);
+    expect(r.costOfMaterials).not.toBe(380);
+  });
+
+  it('still unknown when neither source has anything', () => {
+    const r = generateMonthlyReport(
+      AUG, YEAR, [paidInvoice('i1', 760, 'j1')] as never, [], undefined, {}, [exp(76, 'kantoor')],
+    );
+    expect(r.costOfMaterials).toBeNull();
+    expect(r.netIncome).toBeNull();
+  });
+});

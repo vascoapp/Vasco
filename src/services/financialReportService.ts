@@ -108,17 +108,6 @@ function filterInvoicesByQuarter(invoices: Invoice[], quarter: number, year: num
 /** AppState keys job materials by jobId, so this is a direct lookup. */
 export type JobMaterialsByJob = Record<string, JobMaterial[]>;
 
-/**
- * Returns null when NO material row exists for these jobs.
- *
- * Finding nothing is not the same as spending nothing. Summing an empty set to
- * 0 asserts "this work consumed no materials", which for a plumber is close to
- * never true — and it propagates: 0 cost makes gross profit equal revenue and
- * the margin exactly 100%, which is the fabrication back in a new costume.
- * The demo's paid invoice has no linked job at all, so this is the common case,
- * not an edge one.
- */
-
 function filterExpensesByMonth(expenses: Expense[], month: number, year: number): Expense[] {
   return expenses.filter(e => {
     const d = e.date instanceof Date ? e.date : new Date(e.date);
@@ -137,6 +126,14 @@ function filterExpensesByQuarter(expenses: Expense[], quarter: number, year: num
   });
 }
 
+/**
+ * Returns null when NO material row exists for these jobs.
+ *
+ * Finding nothing is not the same as spending nothing. Summing an empty set to
+ * 0 asserts "this work consumed no materials", which for a plumber is close to
+ * never true — and it propagates: 0 cost makes gross profit equal revenue and
+ * the margin exactly 100%, which is the fabrication back in a new costume.
+ */
 function sumMaterialCostForJobs(jobMaterials: JobMaterialsByJob, jobIds: Set<string>): number | null {
   let total = 0;
   let rows = 0;
@@ -166,6 +163,22 @@ function sumOperatingExpenses(expenses: Expense[]): number | null {
   return operating.reduce((s, e) => s + (e.amount || 0), 0);
 }
 
+/**
+ * Material spend recorded as an EXPENSE rather than against a job.
+ *
+ * Used only when no job materials exist for the period. Without this, a
+ * contractor who scans supplier receipts but never attaches materials to a job
+ * — which the receipt-scanner pipeline actively encourages — had their material
+ * spend counted NOWHERE: absent from costOfMaterials because no job rows exist,
+ * and excluded from operating expenses to avoid double counting. The whole P&L
+ * then collapsed to unknown for someone who had recorded everything.
+ */
+function sumMaterialExpenses(expenses: Expense[]): number | null {
+  const material = expenses.filter(e => e.category === 'materiaal');
+  if (material.length === 0) return null;
+  return material.reduce((s, e) => s + (e.amount || 0), 0);
+}
+
 function calculatePeriodFinancials(
   invoices: Invoice[],
   quotes: Quote[],
@@ -178,9 +191,15 @@ function calculatePeriodFinancials(
   // REAL material cost: sum the job materials behind the paid invoices.
   // `jobMaterials` undefined = the caller cannot supply them, which is not the
   // same as "zero" — the whole line goes unknown rather than being guessed.
-  const costOfMaterials = jobMaterials
+  // Job-linked materials are preferred: they are attributable to the work that
+  // was actually invoiced in this period. Receipt-ledger material spend is the
+  // fallback, NOT an addition — a contractor who both logs materials on a job
+  // and scans the supplier receipt has recorded one purchase twice, and summing
+  // both would double-count it.
+  const jobMaterialCost = jobMaterials
     ? sumMaterialCostForJobs(jobMaterials, new Set(paid.map(i => i.jobId).filter(Boolean) as string[]))
     : null;
+  const costOfMaterials = jobMaterialCost ?? (expenses ? sumMaterialExpenses(expenses) : null);
   const grossProfit = costOfMaterials === null ? null : revenue - costOfMaterials;
 
   // REAL operating expenses: recorded via the receipt scanner or entered by
