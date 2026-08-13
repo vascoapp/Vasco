@@ -226,6 +226,20 @@ export const TRADE_CONFIGS: Record<Trade, TradeConfig> = {
   },
 };
 
+/**
+ * Narrow a free-text trade to the Trade union, falling back to `general`.
+ *
+ * Trade arrives as a plain `string` from the user profile, so every trade-keyed
+ * table was indexed with one — and a `Record<string, X>` accepts any key, which
+ * is how those tables silently rotted from 6 trades to 15 without a single
+ * compiler complaint. Narrowing here lets the tables be typed `Record<Trade, X>`
+ * (which the compiler then keeps complete) while keeping the fallback explicit
+ * at the call site rather than hidden in a trailing `?? general`.
+ */
+export function toTrade(raw?: string | null): Trade {
+  return raw && raw in TRADE_CONFIGS ? (raw as Trade) : 'general';
+}
+
 export function getTradeConfig(trade?: string): TradeConfig {
   if (trade && trade in TRADE_CONFIGS) {
     return TRADE_CONFIGS[trade as Trade];

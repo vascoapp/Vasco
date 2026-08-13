@@ -13,6 +13,7 @@
 // =============================================================================
 
 import { formatMoney } from '../i18n/formatting';
+import { toTrade, type Trade } from '../config/tradeFeatures';
 import i18n from '../i18n/i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { haversineDistance } from '../utils/geo';
@@ -311,7 +312,13 @@ const SEASONAL_PATTERNS: Record<string, Record<string, { multiplier: number; rea
 // ─── Trade → Material Mapping ───────────────────────────────────────────────
 // Used for seasonal advice — which baseline materials belong to which trade
 
-const TRADE_MATERIALS: Record<string, string[]> = {
+// Typed `Record<Trade, …>`, not `Record<string, …>`. Every trade-keyed table in
+// this repo that was typed loosely has silently rotted as the trade list grew
+// from 6 to 15 — only the ONE table declared against the Trade union stayed
+// complete, because the compiler refused to let it drift. A missing trade here
+// falls back to `general`, so the failure is invisible: a gas engineer was
+// being offered a general builder's shopping list.
+const TRADE_MATERIALS: Record<Trade, string[]> = {
   roofing: ['dakpannen', 'epdm', 'bitumen', 'dakgoten'],
   tiling: ['tegels', 'tegellijm', 'voegmortel'],
   insulation: ['glaswol', 'pir', 'eps', 'spouwmuur'],
@@ -323,7 +330,12 @@ const TRADE_MATERIALS: Record<string, string[]> = {
   painting: ['verf'],
   plumbing: ['koper buis'],
   electrical: ['kabel'],
+  gas: ['cv-ketel', 'gasleiding', 'radiator', 'expansievat'],
+  carpentry: ['hout', 'plaatmateriaal', 'schroeven', 'houtlijm'],
   general: ['hout', 'verf', 'kabel', 'koper buis'],
+  // "Other" is the trade a contractor picks when none of the above fits, so the
+  // general set is the honest answer rather than an invented one.
+  other: ['hout', 'verf', 'kabel', 'koper buis'],
 };
 
 // ─── Storage Keys ───────────────────────────────────────────────────────────
@@ -649,7 +661,7 @@ export async function presourceJobMaterials(job: {
 /** Infer likely materials from trade type for proactive sourcing */
 function inferMaterialsFromTrade(trade: string): Array<{ name: string; quantity?: number }> {
   const tradeKey = trade.toLowerCase();
-  const materialKeys = TRADE_MATERIALS[tradeKey] ?? TRADE_MATERIALS['general'] ?? [];
+  const materialKeys = TRADE_MATERIALS[toTrade(tradeKey)];
   return materialKeys.slice(0, 3).map(name => ({ name }));
 }
 
@@ -1019,7 +1031,7 @@ export async function getSeasonalAdvice(
   if (!currentPattern || !nextPattern) return null;
 
   // Get relevant materials for this trade
-  const materialKeys = TRADE_MATERIALS[tradeKey] ?? TRADE_MATERIALS['general'] ?? [];
+  const materialKeys = TRADE_MATERIALS[toTrade(tradeKey)];
   if (materialKeys.length === 0) return null;
 
   // Calculate price impact for each material

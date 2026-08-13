@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { toTrade, type Trade } from '../../config/tradeFeatures';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -109,13 +110,26 @@ const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: num
   ],
 } : {};
 
-const TRADE_SUGGESTIONS: Record<string, string[]> = {
+// Small consumables a contractor forgets to put on the quote. Typed against the
+// Trade union so it cannot rot again: it had 6 of 15 trades, so a roofer or a
+// solar installer silently got the GENERAL builder's list (screws and plugs)
+// via the `?? general` fallback below — degraded, and nothing said so.
+const TRADE_SUGGESTIONS: Record<Trade, string[]> = {
   painting: ['Afplakband', 'Grondverf', 'Schuurpapier', 'Primer'],
   plumbing: ['Teflon tape', 'Afdichtingsring', 'Soldeer', 'Koppelingen'],
   electrical: ['Krimpkous', 'Lasklemmen', 'Kabelgoot', 'Zekeringen'],
   gas: ['Gaslekzoeker', 'Afdichtpasta', 'O-ringen', 'Koperen buis'],
   carpentry: ['Schroeven', 'Houtlijm', 'Schuurpapier', 'Beits'],
+  roofing: ['Loodslabben', 'Dakvorsten', 'Nokvorstklemmen', 'Dakleer'],
+  tiling: ['Tegelkruisjes', 'Voegmortel', 'Kitspuit', 'Tegellijm'],
+  plastering: ['Hoekprofielen', 'Wapeningsgaas', 'Voorstrijk', 'Stucnet'],
+  flooring: ['Ondervloer', 'Plinten', 'Overgangsprofielen', 'Kantstroken'],
+  insulation: ['Dampremmende folie', 'Tape', 'Isolatiepluggen', 'Afdichtband'],
+  solar: ['Montagerail', 'Eindklemmen', 'MC4-connectoren', 'Kabelgoot'],
+  glazing: ['Beglazingsrubber', 'Kit', 'Glaslatten', 'Afstandhouders'],
+  landscaping: ['Split', 'Worteldoek', 'Kantopsluiting', 'Voegzand'],
   general: ['Schroeven', 'Pluggen', 'Afdekfolie', 'Siliconenkit'],
+  other: ['Schroeven', 'Pluggen', 'Afdekfolie', 'Siliconenkit'],
 };
 
 const TIER_CONFIG = {
@@ -1112,7 +1126,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
               <View style={s.suggestRow}>
                 <Ionicons name="bulb-outline" size={14} color={SemanticColors.textTertiary} />
                 <Text style={s.suggestLabel}>{t('quotes.forgotten', 'Forgot something?')}</Text>
-                {(TRADE_SUGGESTIONS[trade] ?? TRADE_SUGGESTIONS.general).slice(0, 3).map(item => (
+                {TRADE_SUGGESTIONS[toTrade(trade)].slice(0, 3).map(item => (
                   <View key={item} style={s.suggestChip}>
                     <Text style={s.suggestChipText}>{item}</Text>
                   </View>
