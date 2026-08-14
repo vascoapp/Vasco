@@ -27,6 +27,7 @@ import { EmptyState } from '../../src/components/shared/EmptyState';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
+import { buildPayrollCsv } from '../../src/utils/payrollCsv';
 import { buildPayroll, periodBounds, type PayrollPeriod } from '../../src/services/payrollService';
 import { formatCurrency, formatDecimal1 } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -58,26 +59,25 @@ export default function PayrollScreen() {
 
   const handleExport = async () => {
     const { from, to } = periodBounds(period, new Date());
-    // Semicolon-separated for EU bookkeeping imports. Values stay machine
-    // readable (plain `.` decimals) — the bookkeeper's software parses this,
-    // it is not a document anyone reads as prose.
-    const header = [
-      t('payroll.csvName', 'Name'),
-      t('payroll.csvHours', 'Hours'),
-      t('payroll.csvRate', 'Hourly cost'),
-      t('payroll.csvCost', 'Cost'),
-    ].join(';');
-    const rows = payrollData.lines.map(l =>
-      [
-        l.name,
-        l.hours.toFixed(2),
-        // An unknown rate exports as blank, never 0 — a 0 in a payroll import
-        // is a claim that the person costs nothing.
-        l.hourlyCost === undefined ? '' : l.hourlyCost.toFixed(2),
-        l.cost === undefined ? '' : l.cost.toFixed(2),
-      ].join(';'),
+    // The separator and the decimal mark are ONE decision, and this file used
+    // to split them: `;` (chosen for EU bookkeeping imports) with `.` decimals,
+    // defended in a comment as "machine readable". But `;` is the separator
+    // precisely BECAUSE comma-decimal locales need the comma for numbers — so
+    // German and Dutch Excel opened this file and read every amount as text.
+    // 1.234,56 does not become 1234.56 by wishing; the two conventions come as
+    // a pair, and picking one from each is the only combination that is wrong
+    // in every locale.
+    const csv = buildPayrollCsv(
+      payrollData.lines,
+      {
+        name: t('payroll.csvName', 'Name'),
+        hours: t('payroll.csvHours', 'Hours'),
+        rate: t('payroll.csvRate', 'Hourly cost'),
+        cost: t('payroll.csvCost', 'Cost'),
+      },
+      country,
+      { from, to },
     );
-    const csv = [`# ${from} — ${to}`, header, ...rows].join('\n');
 
     try {
       await Share.share({

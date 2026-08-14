@@ -862,7 +862,8 @@
       "overdue": "Vencida"
     },
     "quoteTemplates": "Plantillas",
-    "pricebook": "Lista de precios"
+    "pricebook": "Lista de precios",
+    "statutoryInterestRate": "{{rate}}% interés legal"
   },
   "expenses": {
     "title": "Gastos",
@@ -5786,5 +5787,8 @@
       "planning": "Acciones de planificación",
       "other": "Otras acciones"
     }
+  },
+  "approvals": {
+    "requestedByFitter": "Técnico"
   }
 }

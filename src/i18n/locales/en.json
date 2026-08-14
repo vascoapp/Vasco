@@ -862,7 +862,8 @@
       "overdue": "Overdue"
     },
     "quoteTemplates": "Templates",
-    "pricebook": "Pricebook"
+    "pricebook": "Pricebook",
+    "statutoryInterestRate": "{{rate}}% statutory interest"
   },
   "expenses": {
     "title": "Expenses",
@@ -5786,5 +5787,8 @@
       "planning": "Planning actions",
       "other": "Other actions"
     }
+  },
+  "approvals": {
+    "requestedByFitter": "Fitter"
   }
 }

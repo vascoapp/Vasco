@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
+import { getCurrentCountry } from '../lib/currentUser';
+import i18n from '../i18n/i18n';
 
 // =============================================================================
 // TYPES
@@ -60,28 +62,54 @@ const mockRules: ApprovalRule[] = [
 // work that does not exist — and approve() only mutates memory, so nothing
 // happened and the state reset on relaunch. Gated to DEMO_MODE; real
 // installs start empty and fill only via requestApproval().
-const DEMO_APPROVALS: QuoteApproval[] = [
-  {
-    id: 'qa-1', quoteId: 'q-100', quoteReference: 'Q-2026-0055', customerName: 'Bakkerij Jansen',
-    amount: 3800, status: 'pending', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_HOUR * 4),
-  },
-  {
-    id: 'qa-2', quoteId: 'q-101', quoteReference: 'Q-2026-0054', customerName: 'Hotel Krasnapolsky',
-    amount: 12500, status: 'pending', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_HOUR * 8),
-  },
-  {
-    id: 'qa-3', quoteId: 'q-99', quoteReference: 'Q-2026-0053', customerName: 'Fam. de Groot',
-    amount: 1200, status: 'auto-approved', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_DAY),
-    notes: 'Onder drempel (€2.500)',
-  },
-  {
-    id: 'qa-4', quoteId: 'q-98', quoteReference: 'Q-2026-0052', customerName: 'Kantoor Zuidas',
-    amount: 5600, status: 'approved', requestedBy: 'Monteur', requestedAt: new Date(Date.now() - MS_PER_DAY * 2),
-    reviewedBy: 'Eigenaar', reviewedAt: new Date(Date.now() - MS_PER_DAY),
-  },
-];
+/**
+ * Country-keyed because these are the DEMO's own customers, and the German
+ * demo was showing "Bakkerij Jansen" and "Hotel Krasnapolsky" — Dutch names on
+ * the surface meant to sell the German market. The panel renders for that
+ * account because DE_BUSINESS_PROFILE is teamSize:'small' and the gate is
+ * `isAannemer || teamSize !== 'solo'`.
+ *
+ * Names mirror the country's seeded customers so the demo reads as one
+ * business, not two. Typed against Country so a new market cannot be added
+ * without a set (learnings #163); NL is the fallback for markets with no demo
+ * account of their own.
+ */
+type DemoApprovalSeed = { reference: string; customer: string; amount: number };
+const DEMO_APPROVAL_CUSTOMERS: Record<string, DemoApprovalSeed[]> = {
+  NL: [
+    { reference: 'Q-2026-0055', customer: 'Bakkerij Jansen', amount: 3800 },
+    { reference: 'Q-2026-0054', customer: 'Hotel Krasnapolsky', amount: 12500 },
+  ],
+  DE: [
+    { reference: 'AN-2026-0055', customer: 'Bäckerei Lindner GmbH', amount: 3800 },
+    { reference: 'AN-2026-0054', customer: 'Hausverwaltung Rheinblick GmbH', amount: 12500 },
+  ],
+  US: [
+    { reference: 'Q-2026-0055', customer: 'Cedar Park HOA', amount: 3800 },
+    { reference: 'Q-2026-0054', customer: 'Lone Star Diner', amount: 12500 },
+  ],
+};
 
-const mockApprovals: QuoteApproval[] = DEMO_MODE ? DEMO_APPROVALS : [];
+function demoApprovals(): QuoteApproval[] {
+  const country = getCurrentCountry() ?? 'NL';
+  const seeds = DEMO_APPROVAL_CUSTOMERS[country] ?? DEMO_APPROVAL_CUSTOMERS.NL;
+  // `requestedBy` is a ROLE, not a name, so it is translated rather than
+  // forked — it read "Monteur" in every language.
+  const requestedBy = i18n.t('approvals.requestedByFitter', { defaultValue: 'Fitter' }) as string;
+  return seeds.map((seed, i) => ({
+    id: `qa-${i + 1}`,
+    quoteId: `q-${100 + i}`,
+    quoteReference: seed.reference,
+    customerName: seed.customer,
+    amount: seed.amount,
+    status: 'pending' as ApprovalStatus,
+    requestedBy,
+    requestedAt: new Date(Date.now() - MS_PER_HOUR * (i === 0 ? 4 : 8)),
+  }));
+}
+
+// Evaluated lazily: getCurrentCountry() is not populated at module import.
+const mockApprovals = (): QuoteApproval[] => (DEMO_MODE ? demoApprovals() : []);
 
 // =============================================================================
 // SERVICE
@@ -92,7 +120,7 @@ type ApprovalListener = () => void;
 class QuoteApprovalService {
   private static instance: QuoteApprovalService;
   private listeners: Set<ApprovalListener> = new Set();
-  private approvals: QuoteApproval[] = [...mockApprovals];
+  private approvals: QuoteApproval[] = mockApprovals();
   private rules: ApprovalRule[] = [...mockRules];
 
   static getInstance(): QuoteApprovalService {
@@ -100,7 +128,7 @@ class QuoteApprovalService {
       QuoteApprovalService.instance = new QuoteApprovalService();
       registerSingletonReset(() => {
         const inst = QuoteApprovalService.instance;
-        inst.approvals = [...mockApprovals];
+        inst.approvals = mockApprovals();
         inst.rules = [...mockRules];
         inst.listeners.forEach((l) => l());
       });

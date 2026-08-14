@@ -846,7 +846,8 @@
       "overdue": "Achterstallig"
     },
     "quoteTemplates": "Sjablonen",
-    "pricebook": "Prijslijst"
+    "pricebook": "Prijslijst",
+    "statutoryInterestRate": "{{rate}}% wettelijke rente"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -5770,5 +5771,8 @@
       "planning": "Planningsacties",
       "other": "Overige acties"
     }
+  },
+  "approvals": {
+    "requestedByFitter": "Monteur"
   }
 }

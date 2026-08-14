@@ -862,7 +862,8 @@
       "overdue": "Scaduta"
     },
     "quoteTemplates": "Modelli",
-    "pricebook": "Listino prezzi"
+    "pricebook": "Listino prezzi",
+    "statutoryInterestRate": "{{rate}}% interessi legali"
   },
   "expenses": {
     "title": "Spese",
@@ -5786,5 +5787,8 @@
       "planning": "Azioni di pianificazione",
       "other": "Altre azioni"
     }
+  },
+  "approvals": {
+    "requestedByFitter": "Tecnico"
   }
 }

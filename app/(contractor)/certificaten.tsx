@@ -39,7 +39,8 @@ import {
   InsurancePolicy,
 } from '../../src/services/complianceService';
 import { useAuditFindings } from '../../src/services/auditorService';
-import { useKvKRegistration, useBtwRegistration, DUTCH_GOVERNMENT_PORTALS } from '../../src/services/dutchComplianceService';
+import { useKvKRegistration, useBtwRegistration } from '../../src/services/dutchComplianceService';
+import { governmentPortalsFor } from '../../src/config/governmentPortals';
 import { useTranslation } from 'react-i18next';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -340,6 +341,7 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
 export default function CertificatenScreen() {
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
+  const portals = governmentPortalsFor(country);
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
@@ -556,7 +558,16 @@ export default function CertificatenScreen() {
             {/* Upcoming Expiries Timeline */}
             <ExpiryTimeline items={upcomingExpiries} />
 
-            {/* KvK & BTW Verification */}
+            {/* KvK & BTW Verification — NL ONLY.
+                Ungated, this asked a German contractor for a KvK number (the
+                DUTCH chamber of commerce) under a heading reading
+                "Registraties", and showed a Dutch BTW status. Germany has a
+                Handelsregisternummer and USt-IdNr — DE_BUSINESS_PROFILE
+                already carries both — but there is no verification lookup for
+                them, and unlike the portals there is no ready sibling to point
+                at. Gated rather than faked: a verification badge that verifies
+                nothing is worse than no badge. */}
+            {country === 'NL' && (
             <View style={styles.verificationSection}>
               <Text style={styles.sectionTitle}>{t('compliance.registrations', 'Registraties')}</Text>
               {/* KvK Row */}
@@ -605,6 +616,7 @@ export default function CertificatenScreen() {
                 </View>
               </View>
             </View>
+            )}
 
             {/* Quick Add Button */}
             <Pressable style={styles.addButton} onPress={() => Alert.alert(t('compliance.addCertificate', 'Add certificate'), t('common.comingSoon', 'Coming soon'))}>
@@ -688,23 +700,21 @@ export default function CertificatenScreen() {
           </>
         )}
 
-        {/* Government Portals — NL ONLY.
-            DUTCH_GOVERNMENT_PORTALS rendered ungated, so a German contractor's
-            compliance screen linked to KVK and the Belastingdienst, with Dutch
-            descriptions ("Handelsregister en bedrijfsgegevens"). Same for FR/
-            ES/IT/UK/US. Caught by the German walk; invisible from inside NL.
-            Gated rather than filled in: the German equivalents (Handwerks-
-            kammer, Handelsregister, ELSTER) are regulatory claims, and a WRONG
-            registry link is worse than no registry link — the same reason
-            tradePermits was left at 6 of 15 trades. */}
-        {country === 'NL' && (
+        {/* Government Portals — per country.
+            DUTCH_GOVERNMENT_PORTALS rendered ungated, so a German contractor
+            was linked to KVK and the Belastingdienst with Dutch descriptions,
+            as were FR/ES/IT/UK/US. I first gated this to NL, reasoning that
+            foreign registry links were claims I should not invent — but all
+            six sets already existed in src/types/*-compliance.ts. Nothing
+            needed inventing, it needed looking for. */}
+        {portals.length > 0 && (
         <View style={styles.portalsSection}>
           <Text style={styles.portalsSectionTitle}>{t('compliance.governmentPortals', 'Overheidsloketten')}</Text>
           <View style={styles.portalsCard}>
-            {Object.values(DUTCH_GOVERNMENT_PORTALS).map((portal, index) => (
+            {portals.map((portal, index) => (
               <Pressable
                 key={portal.name}
-                style={[styles.portalRow, index < Object.values(DUTCH_GOVERNMENT_PORTALS).length - 1 && styles.portalRowBorder]}
+                style={[styles.portalRow, index < portals.length - 1 && styles.portalRowBorder]}
                 onPress={() => Linking.openURL(portal.url)}
               >
                 <View style={styles.portalIcon}>

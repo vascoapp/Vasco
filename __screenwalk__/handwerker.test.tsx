@@ -46,14 +46,12 @@ const DUTCH_MARKERS = [
 const DUTCH_SEED = ['Vloerverwarming', 'Bakkerij Smit', 'Hotel NH', 'de Vries', 'Bouwgroep', 'Van Dijk'];
 
 /**
- * KNOWN, not fixed: quoteApprovalService's DEMO_APPROVALS are hardcoded Dutch
- * ("Bakkerij Jansen", "Hotel Krasnapolsky", rules "Standaard goedkeuring" /
- * "Grote opdrachten", requestedBy "Monteur"). They render for the German demo
- * because DE_BUSINESS_PROFILE is teamSize:'small', and the panel is gated on
- * `isAannemer || teamSize !== 'solo'`. Fixing means forking or localising that
- * fixture set. Listed here so the leak is tracked rather than silently allowed.
+ * Was a tracked leak: quoteApprovalService's DEMO_APPROVALS were hardcoded
+ * Dutch and rendered for the German demo (DE_BUSINESS_PROFILE is
+ * teamSize:'small'; the panel gates on `isAannemer || teamSize !== 'solo'`).
+ * Now country-keyed, so these names must NOT appear in a German session.
  */
-const KNOWN_DUTCH_FIXTURE_LEAKS = ['Bakkerij Jansen', 'Hotel Krasnapolsky'];
+const FIXED_DUTCH_FIXTURES = ['Bakkerij Jansen', 'Hotel Krasnapolsky'];
 
 describe('German contractor surface', () => {
   const report: any[] = [];
@@ -93,9 +91,9 @@ describe('German contractor surface', () => {
     for (const dutch of DUTCH_SEED) {
       expect(all).not.toContain(dutch);
     }
-    // Tracked, not tolerated silently — see KNOWN_DUTCH_FIXTURE_LEAKS.
-    const known = KNOWN_DUTCH_FIXTURE_LEAKS.filter((w) => all.includes(w));
-    expect(known.sort()).toEqual(['Bakkerij Jansen', 'Hotel Krasnapolsky']);
+    for (const dutch of FIXED_DUTCH_FIXTURES) {
+      expect(all).not.toContain(dutch);
+    }
   });
 
   it('does not leak Dutch UI copy into a German session', () => {

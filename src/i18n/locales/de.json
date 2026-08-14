@@ -862,7 +862,8 @@
       "overdue": "Überfällig"
     },
     "quoteTemplates": "Vorlagen",
-    "pricebook": "Preisliste"
+    "pricebook": "Preisliste",
+    "statutoryInterestRate": "{{rate}}% Verzugszinsen"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -5786,5 +5787,8 @@
       "planning": "Planungsaktionen",
       "other": "Sonstige Aktionen"
     }
+  },
+  "approvals": {
+    "requestedByFitter": "Monteur"
   }
 }

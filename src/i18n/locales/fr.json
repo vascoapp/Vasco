@@ -862,7 +862,8 @@
       "overdue": "En retard"
     },
     "quoteTemplates": "Modèles",
-    "pricebook": "Grille tarifaire"
+    "pricebook": "Grille tarifaire",
+    "statutoryInterestRate": "{{rate}}% intérêts légaux"
   },
   "expenses": {
     "title": "Dépenses",
@@ -5786,5 +5787,8 @@
       "planning": "Actions de planning",
       "other": "Autres actions"
     }
+  },
+  "approvals": {
+    "requestedByFitter": "Technicien"
   }
 }

@@ -44,7 +44,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
-import { calculateLatePaymentInterest } from '../../src/services/dutchComplianceService';
+import { computeLateFee, type LateFeeCountry } from '../../src/services/lateFeeService';
 import { useTranslation } from 'react-i18next';
 
 // P3: Collections Agent
@@ -271,11 +271,24 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                 </Text>
                 <Text style={[styles.invoiceStatus, { color: status.color }]}>{status.label}</Text>
                 {invoice.status === 'overdue' && (() => {
+                  // Was calculateLatePaymentInterest from dutchComplianceService,
+                  // which reads DUTCH_LATE_PAYMENT_RATES — so a German, French,
+                  // Spanish, Italian or UK contractor saw the DUTCH statutory
+                  // rate quoted as their own, on a figure they might put in
+                  // front of a customer. computeLateFee has taken a country
+                  // since it was written; the country-blind sibling was simply
+                  // never swapped out here. The rate is now shown rather than
+                  // hardcoded in the label, because it differs per market.
                   const daysOverdue = Math.max(1, Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)));
-                  const interest = calculateLatePaymentInterest(invoice.amount, daysOverdue);
+                  const fee = computeLateFee({
+                    invoiceAmount: invoice.amount,
+                    daysOverdue,
+                    country: country as LateFeeCountry,
+                  });
+                  if (!fee.applicable) return null;
                   return (
                     <Text style={{ fontSize: 10, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError, marginTop: 2 }}>
-                      {t('invoices.lateInterest', 'Interest')}: {formatCurrency(interest.interest, country)} ({t('invoices.commercialInterestRate', '8% commercial interest')})
+                      {t('invoices.lateInterest', 'Interest')}: {formatCurrency(fee.interest, country)} ({t('invoices.statutoryInterestRate', { defaultValue: '{{rate}}% statutory interest', rate: fee.effectiveRatePct })})
                     </Text>
                   );
                 })()}
