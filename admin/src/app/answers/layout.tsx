@@ -7,7 +7,13 @@ export const metadata: Metadata = {
   },
   description:
     "Practical answers for self-employed construction contractors across Europe. Pricing, invoicing, compliance, and job management for 7 trades in 6 countries.",
-  robots: { index: true, follow: true },
+  // No `robots` here on purpose. "index, follow" is what a crawler does with
+  // no directive at all, so asserting it gained nothing — but layout metadata
+  // also applies to the error boundary, so a notFound() slug emitted BOTH
+  // `noindex` (from Next) and `index, follow` (from here). On a site whose
+  // entire purpose is being retrieved by answer engines, a 404 that argues
+  // with itself about indexability is not a risk worth taking for a tag that
+  // was a no-op on the pages we do want indexed.
   openGraph: {
     siteName: "Vasco",
     type: "website",
