@@ -321,6 +321,35 @@ const US_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-us-005', name: 'Lone Star Diner', email: 'ops@lonestardiner.com', phone: '+1 512 555 0356' },
 ];
 
+// Germany is the beachhead, and until now the German demo contractor
+// (Thomas Bergmann, Bergmann Sanitär & Heizung, Köln) inherited the DUTCH seed
+// — "Vloerverwarming check", "Bakkerij Smit", "Hotel NH". The country paths
+// were reachable after DE_BUSINESS_PROFILE landed, but every screenshot for the
+// AEO mandate pages or a store listing showed Dutch job names to a German
+// audience, and the demo could not be shown to a Handwerker without explaining
+// the language away.
+//
+// SHK (Sanitär-Heizung-Klima) work, matching the profile's trade and the
+// Meisterbrief SHK certification. Same status spread as US_SEED_JOBS so every
+// screen has data: lead / scheduled / in-progress / completed / invoiced.
+// j-de-5 is a B2B job for a GmbH — the invoice a German business customer can
+// already demand as XRechnung, which is the whole receive-side wedge.
+const DE_SEED_JOBS: Job[] = [
+  { id: 'j-de-1', customerId: 'cust-de-001', title: 'Heizung fällt aus — Familie Krüger', description: null, status: 'lead', trade: 'plumbing', priority: 'high', quotedAmount: 320, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-de-2', customerId: 'cust-de-002', title: 'Jährliche Heizungswartung — Weber', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '08:30', scheduledEndTime: '10:30', estimatedDuration: 2, quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 4).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-de-3', customerId: 'cust-de-003', title: 'Badsanierung komplett — Hoffmann', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '11:00', scheduledEndTime: '16:30', estimatedDuration: 40, quotedAmount: 9400, agreedAmount: 9400, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 8).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-de-4', customerId: 'cust-de-004', title: 'Thermostatventile tauschen — Hausverwaltung Rheinblick', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 3, quotedAmount: 460, agreedAmount: 460, actualHours: 2.5, actualCost: 145, completedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString() },
+  { id: 'j-de-5', customerId: 'cust-de-005', title: 'Trinkwasserleitung erneuern — Bäckerei Lindner', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 14, quotedAmount: 5200, agreedAmount: 5200, invoiceId: 'inv-de-1', completedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString() },
+];
+
+const DE_SEED_CUSTOMERS: Customer[] = [
+  { id: 'cust-de-001', name: 'Familie Krüger', email: 'm.krueger@web.de', phone: '+49 221 5550188' },
+  { id: 'cust-de-002', name: 'Stefan Weber', email: 'sweber@gmx.de', phone: '+49 221 5550231' },
+  { id: 'cust-de-003', name: 'Anja Hoffmann', email: 'a.hoffmann@t-online.de', phone: '+49 221 5550147' },
+  { id: 'cust-de-004', name: 'Hausverwaltung Rheinblick GmbH', email: 'technik@rheinblick-hv.de', phone: '+49 221 5550390' },
+  { id: 'cust-de-005', name: 'Bäckerei Lindner GmbH', email: 'buchhaltung@baeckerei-lindner.de', phone: '+49 221 5550412' },
+];
+
 export function AppStateProvider({ children }: PropsWithChildren) {
   // R58: was `const aiUserId = getCurrentUserId()` captured at render-time
   // and baked into the useMemo'd action functions. The useMemo deps array
@@ -615,10 +644,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // the German demo contractor fell through every
         // `businessProfile?.country ?? 'NL'` (53 sites) — Dutch currency
         // formatting, and the DE-gated VAT / e-invoice surfaces never rendered
-        // at all. Customers and jobs stay the shared seed: the point is to make
-        // the German COUNTRY paths reachable, not to fork the demo data.
+        // at all. That first pass deliberately left customers and jobs on the
+        // shared Dutch seed — reachability was the point, not forked data. But
+        // it meant the German demo read "Vloerverwarming check" and "Bakkerij
+        // Smit", so it could not be screenshotted for the AEO pages or shown
+        // to a Handwerker without apologising for the language. Now forked, the
+        // same way US_SEED_* already was.
         if (useSeedData && getCurrentCountry() === 'DE') {
           setBusinessProfile(DE_BUSINESS_PROFILE);
+          setCustomers(DE_SEED_CUSTOMERS);
+          setJobs(DE_SEED_JOBS);
         }
         // New user signed in — re-hydrate from BE for the new auth context.
         refreshData();

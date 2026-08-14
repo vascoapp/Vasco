@@ -670,7 +670,7 @@
     "retake": "Opnieuw",
     "vatRate": "btw ({{rate}}%)",
     "unitPriceLabel": "Stukprijs voor {{item}}",
-    "pricebookBadge": "Uit uw prijzenboek"
+    "pricebookBadge": "Uit je prijzenboek"
   },
   "invoices": {
     "title": "Facturen",
@@ -999,13 +999,13 @@
     "paymentMethods": "Betaalmethoden",
     "paymentMethodsDesc": "Kies welke betaalmethoden je klanten kunnen gebruiken.",
     "numbering": "Factuurnummering",
-    "numberingHelp": "Laat leeg voor de standaard. Stapt u halverwege het jaar over op Vasco? Zet hier uw bestaande reeks voort, zodat uw nummering doorloopt.",
+    "numberingHelp": "Laat leeg voor de standaard. Stap je halverwege het jaar over op Vasco? Zet hier je bestaande reeks voort, zodat je nummering doorloopt.",
     "invoicePrefix": "Factuurvoorvoegsel",
     "quotePrefix": "Offertevoorvoegsel",
     "numberingPreview": "Volgende: {{example}}",
     "nextInvoiceNo": "Volgend factuurnummer",
     "counterOneWay": "Dit kan alleen vooruit — al uitgegeven nummers worden nooit hergebruikt.",
-    "counterInvalid": "Vul het nummer in dat uw volgende factuur moet krijgen.",
+    "counterInvalid": "Vul het nummer in dat je volgende factuur moet krijgen.",
     "counterSet": "Nummering bijgewerkt",
     "counterSetBody": "Uw volgende factuur krijgt nummer {{n}}.",
     "counterRefused": "Nummering kan niet terug",
@@ -2498,7 +2498,7 @@
     "selected": "{{count}} geselecteerd",
     "noItems": "Geen items",
     "selectItemsHint": "Selecteer items of wacht op verlopen items om herinneringen te sturen.",
-    "decisionsNeeded": "Keuzes nodig voor uw {{template}}",
+    "decisionsNeeded": "Keuzes nodig voor je {{template}}",
     "noOverdue": "Geen verlopen keuzes",
     "noPending": "Geen wachtende keuzes",
     "noCompleted": "Nog geen keuzes gemaakt",
@@ -3438,7 +3438,7 @@
     "placeholder": "Plak hier de tekst van de bon of factuur…",
     "processing": "Verwerken…",
     "processWithAi": "Verwerk met AI",
-    "infoText": "Prijzen worden automatisch opgeslagen om u betere inkoopadviezen te geven.",
+    "infoText": "Prijzen worden automatisch opgeslagen om je betere inkoopadviezen te geven.",
     "confidence": "{{pct}}% zeker",
     "checkCarefully": "Controleer de gegevens hieronder extra goed",
     "invoiceData": "Factuurgegevens",
@@ -3459,7 +3459,7 @@
     "scanAgain": "Opnieuw scannen",
     "confirm": "Bevestigen",
     "processedTitle": "Bon verwerkt!",
-    "processedDesc": "De prijzen zijn toegevoegd aan uw prijsintelligentie",
+    "processedDesc": "De prijzen zijn toegevoegd aan je prijsintelligentie",
     "pricesSaved": "Prijzen opgeslagen",
     "materialsRecognized": "Materialen herkend",
     "scanAnother": "Nog een bon scannen",
@@ -4524,7 +4524,7 @@
     "quotePdfComingSoon": "{{label}} PDF wordt binnenkort ondersteund.",
     "intro": "Genereer een professionele PDF en deel deze via e-mail, WhatsApp of sla op.",
     "whatHappens": "Wat gebeurt er",
-    "whatHappensBody": "Vasco maakt een merk-PDF aan met uw bedrijfsgegevens, regelitems, BTW-berekening en betalingsinformatie. U kunt de PDF direct delen of opslaan.",
+    "whatHappensBody": "Vasco maakt een merk-PDF aan met je bedrijfsgegevens, regelitems, BTW-berekening en betalingsinformatie. Je kunt de PDF direct delen of opslaan.",
     "generating": "Genereren…",
     "generateLabel": "{{label}} PDF genereren"
   },
@@ -5715,7 +5715,7 @@
     "insightTitle_one": "{{count}} factuur is niet ingediend",
     "insightTitle_other": "{{count}} facturen zijn niet ingediend",
     "insightBody": "De instantie heeft ze geweigerd, dus die facturen zijn nooit uitgegeven. Ze moeten gecorrigeerd en opnieuw verstuurd worden.",
-    "unknownSubject": "Factuur staat niet meer in uw lijst"
+    "unknownSubject": "Factuur staat niet meer in je lijst"
   },
   "accountantAccess": {
     "title": "Toegang accountant",
@@ -5738,8 +5738,8 @@
     "lastOpened": "Laatst geopend {{when}} · {{count}}×",
     "expires": "Verloopt {{when}}",
     "resend": "Link opnieuw sturen",
-    "needsSignIn": "Log in op uw Vasco-account om toegang te publiceren. Bent u al ingelogd? Log uit en weer in en probeer het opnieuw.",
-    "publishFailed": "De toegang kon niet worden gepubliceerd. Controleer uw verbinding en probeer het opnieuw."
+    "needsSignIn": "Log in op je Vasco-account om toegang te publiceren. Ben je al ingelogd? Log uit en weer in en probeer het opnieuw.",
+    "publishFailed": "De toegang kon niet worden gepubliceerd. Controleer je verbinding en probeer het opnieuw."
   },
   "notFound": {
     "title": "Deze pagina is verplaatst",

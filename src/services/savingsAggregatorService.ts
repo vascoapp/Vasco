@@ -82,13 +82,16 @@ export function useSavingsAggregation(): SavingsAggregation {
   return useMemo(() => {
     const t = (key: string, fallback: string, opts?: any) => i18n.t(key, { defaultValue: fallback, ...opts }) as string;
 
-    // 1. Time savings: idle time reduction + travel clustering potential.
-    // R9.4: dropped the 195 fallback — fabricating €195 of "savings" when
-    // a contractor has no labor cost data was a transparent lie. Now zero
-    // until real data exists.
-    const timeSavings = laborCosts.idleTime.idleCost > 0
-      ? Math.round(laborCosts.travelAnalysis.clusteringPotential + laborCosts.idleTime.idleCost * 0.3)
-      : 0;
+    // 1. Time: was `clusteringPotential + idleCost * 0.3`. Both halves are the
+    // same fault as #2 and #6 — `clusteringPotential` is route clustering the
+    // contractor has NOT applied (and route optimisation is behind a kill
+    // switch, so they cannot), and `* 0.3` asserts they would recover 30% of
+    // idle time. Neither is money that moved. R9.4 removed the €195 fallback
+    // here for lying about ABSENT data; the formula lied about present data in
+    // the same breath. Realised time savings need optimizationStatsService's
+    // measured before/after, which only records once a route is actually
+    // applied.
+    const timeSavings = 0;
 
     // 2. Purchasing: was `totalDiscountPotential * 0.4` — a discount the
     // contractor has NOT taken, multiplied by an invented realisation rate and
@@ -97,11 +100,24 @@ export function useSavingsAggregation(): SavingsAggregation {
     // still surfaced as an OPPORTUNITY on Besparen, which is what it is.
     const purchasingSavings = 0;
 
-    // 3. Faster payments: DSO improvement vs industry avg = working capital savings
+    // 3. Faster payments: was
+    //   (industryAverage - currentDSO) * totalOutstanding / 365 * 0.05
+    // Three problems, in increasing order of seriousness:
+    //   - `industryAverage` is a real cohort figure ONLY when get_cohort_dso
+    //     returns; otherwise it falls back to a hardcoded 32 days, so the
+    //     benchmark a contractor is measured against is often invented.
+    //   - 0.05 "cost of capital" is a constant nobody chose for this business.
+    //   - Even with both correct, collecting faster than a cohort median is
+    //     notional financing cost avoided, not money in the contractor's
+    //     account. It cannot be spent, and it was being summed into a figure
+    //     captioned "Vasco saved you €X".
+    // The DSO comparison itself is genuinely useful and still renders on the
+    // collections surfaces — it just is not a saving.
+    const fasterPayments = 0;
+    // Kept only for the row's description, which states the DSO comparison as
+    // a comparison rather than as money. Zero-amount rows are filtered out by
+    // the consumers that render this breakdown.
     const dsoImprovement = collections.dso.industryAverage - collections.dso.currentDSO;
-    const fasterPayments = dsoImprovement > 0
-      ? Math.round(dsoImprovement * collections.summary.totalOutstanding / 365 * 0.05) // 5% cost of capital
-      : 0;
 
     // 4. Conversion: proxy from quick quote follow-up. R285: was hardcoded
     // 2400 — now zero until a real conversion-uplift signal is wired
