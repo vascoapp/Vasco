@@ -2436,7 +2436,9 @@
     "exportFailed": "Export failed",
     "exportFailedDesc": "Could not build your data export. Please try again, or contact privacy@vascobuild.com.",
     "deletionFailed": "Could not submit request",
-    "deletionFailedDesc": "Your request did not reach our servers. Check your internet connection and try again, or contact privacy@vascobuild.com."
+    "deletionFailedDesc": "Your request did not reach our servers. Check your internet connection and try again, or contact privacy@vascobuild.com.",
+    "languageNoticeHeading": "Language",
+    "languageNotice": "These legal texts are provided in English. Any translation is offered for convenience only; in case of discrepancy, the English version prevails."
   },
   "xero": {
     "title": "Connect Xero",

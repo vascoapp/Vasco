@@ -34,7 +34,10 @@ async function resolveAuthUserId(): Promise<string | null> {
 }
 
 const APP_VERSION = '1.0.0';
-const LAST_UPDATED = 'March 2026';
+// Was the literal string 'March 2026', rendered verbatim to German, French,
+// Spanish and Italian readers. Stored as a date and formatted in the ACTIVE
+// language — explicitly, never the device locale (learnings #151).
+const LAST_UPDATED_ISO = '2026-03-01';
 
 type CountryCode = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
 
@@ -327,7 +330,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
 ];
 
 export default function LegalScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
   const { invoices, jobs, customers } = useAppState();
@@ -449,9 +452,31 @@ export default function LegalScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.versionLabel}>{t('legal.appVersion', 'App version')} {APP_VERSION}</Text>
               <Text style={styles.lastUpdated}>
-                {t('legal.lastUpdated', 'Last updated')}: {LAST_UPDATED}
+                {t('legal.lastUpdated', 'Last updated')}: {new Date(LAST_UPDATED_ISO).toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })}
               </Text>
             </View>
+          </View>
+        </View>
+
+        {/* Language notice.
+            35 of the 54 legal.* keys have no translation in any locale, so the
+            privacy policy, GDPR rights, liability limitations and dispute
+            resolution all fall through to their English `contentDefault` —
+            in every language. Translating binding legal text is a decision for
+            counsel, not a code change, so the honest interim is to SAY SO
+            rather than let a Dutch or German reader assume the text they are
+            reading is authoritative in their language.
+            Shown in every language, English included: hiding the clause in the
+            authoritative language is the wrong way round. */}
+        <View style={styles.languageNotice}>
+          <Ionicons name="language" size={16} color={SemanticColors.textSecondary} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.languageNoticeHeading}>
+              {t('legal.languageNoticeHeading', 'Language')}
+            </Text>
+            <Text style={styles.languageNoticeText}>
+              {t('legal.languageNotice', 'These legal texts are provided in English. Any translation is offered for convenience only; in case of discrepancy, the English version prevails.')}
+            </Text>
           </View>
         </View>
 
@@ -564,6 +589,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: GRID.md,
     paddingTop: GRID.lg,
     paddingBottom: SafeArea.bottom + GRID.xl,
+  },
+  languageNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: GRID.sm + 4,
+    backgroundColor: '#14181F',
+    borderRadius: RADIUS.lg,
+    borderLeftWidth: 3,
+    borderLeftColor: Palette.hermesOrange,
+    padding: GRID.md,
+    marginBottom: GRID.lg,
+  },
+  languageNoticeHeading: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    marginBottom: 2,
+  },
+  languageNoticeText: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textSecondary,
+    lineHeight: 18,
   },
   versionCard: {
     backgroundColor: "#14181F",

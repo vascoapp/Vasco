@@ -53,10 +53,12 @@ const POSTURE = process.env.WALK_POSTURE === 'fresh' ? 'fresh' : 'demo';
  * Violations present today, in BOTH postures. Format: `screen :: detector`.
  * Each is a real defect — see the walk write-up. Remove the entry on fix.
  */
-const KNOWN = new Set([
-  // legal.tsx LAST_UPDATED = 'March 2026' — a hardcoded English month.
-  // PARKED BY USER along with the rest of the legal-copy translation job.
-  'contractor/legal :: english-month',
+const KNOWN = new Set<string>([
+  // Empty. `legal.tsx :: english-month` lived here — LAST_UPDATED was the
+  // literal 'March 2026', rendered verbatim to German, French, Spanish and
+  // Italian readers. Now stored as a date and formatted in the ACTIVE language,
+  // so the entry went stale and the check below caught it, which is exactly
+  // what this list is for.
 ]);
 
 /**

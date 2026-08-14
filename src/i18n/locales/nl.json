@@ -2420,7 +2420,9 @@
     "exportFailed": "Export mislukt",
     "exportFailedDesc": "We konden je gegevensexport niet maken. Probeer het opnieuw of neem contact op via privacy@vascobuild.com.",
     "deletionFailed": "Verzoek niet verstuurd",
-    "deletionFailedDesc": "Je verzoek heeft onze servers niet bereikt. Controleer je internetverbinding en probeer het opnieuw, of neem contact op via privacy@vascobuild.com."
+    "deletionFailedDesc": "Je verzoek heeft onze servers niet bereikt. Controleer je internetverbinding en probeer het opnieuw, of neem contact op via privacy@vascobuild.com.",
+    "languageNoticeHeading": "Taal",
+    "languageNotice": "Deze juridische teksten worden in het Engels verstrekt. Een vertaling wordt alleen ter informatie aangeboden; bij verschillen geldt de Engelse versie."
   },
   "xero": {
     "title": "Verbind Xero",

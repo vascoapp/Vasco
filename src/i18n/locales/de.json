@@ -2436,7 +2436,9 @@
     "exportFailed": "Export fehlgeschlagen",
     "exportFailedDesc": "Ihr Datenexport konnte nicht erstellt werden. Bitte versuchen Sie es erneut oder wenden Sie sich an privacy@vascobuild.com.",
     "deletionFailed": "Anfrage nicht gesendet",
-    "deletionFailedDesc": "Ihre Anfrage hat unsere Server nicht erreicht. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut, oder wenden Sie sich an privacy@vascobuild.com."
+    "deletionFailedDesc": "Ihre Anfrage hat unsere Server nicht erreicht. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut, oder wenden Sie sich an privacy@vascobuild.com.",
+    "languageNoticeHeading": "Sprache",
+    "languageNotice": "Diese Rechtstexte werden in englischer Sprache bereitgestellt. Übersetzungen dienen nur der Information; bei Abweichungen ist die englische Fassung maßgeblich."
   },
   "xero": {
     "title": "Xero verbinden",

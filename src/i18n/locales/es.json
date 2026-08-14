@@ -2436,7 +2436,9 @@
     "exportFailed": "Error al exportar",
     "exportFailedDesc": "No se pudo generar la exportación de tus datos. Inténtalo de nuevo o escribe a privacy@vascobuild.com.",
     "deletionFailed": "Solicitud no enviada",
-    "deletionFailedDesc": "Tu solicitud no llegó a nuestros servidores. Comprueba tu conexión a internet e inténtalo de nuevo, o escribe a privacy@vascobuild.com."
+    "deletionFailedDesc": "Tu solicitud no llegó a nuestros servidores. Comprueba tu conexión a internet e inténtalo de nuevo, o escribe a privacy@vascobuild.com.",
+    "languageNoticeHeading": "Idioma",
+    "languageNotice": "Estos textos legales se facilitan en inglés. Cualquier traducción se ofrece únicamente a título informativo; en caso de discrepancia, prevalecerá la versión en inglés."
   },
   "xero": {
     "title": "Conectar Xero",
