@@ -19,33 +19,16 @@ import path from 'path';
 import { walkScreen, teardown } from '../src/test-utils/screenWalk';
 import { APP_DIR, PARAMS, listScreens, routeId } from './screens';
 
+import { DEFECT_SHAPES, RAW_ENUMS } from '../src/test-utils/defectShapes';
+
 interface Violation { screen: string; detector: string; text: string }
 
-const DETECTORS: { name: string; re: RegExp; why: string }[] = [
-  { name: 'ampm-time', re: /\b\d{1,2}:\d{2}\s?[AP]M\b/,
-    why: 'device-locale 12-hour clock; EU markets write 24-hour time' },
-  { name: 'english-month', re: /\b(January|February|March|April|June|July|August|September|October|November|December)\b|\b(Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\b\s*\d/,
-    why: 'device-locale date; use formatDate(date, country)' },
-  { name: 'english-weekday', re: /\b(Monday|Tuesday|Wednesday|Thursday|Thursday|Friday|Saturday|Sunday)\b/,
-    why: 'device-locale date; use formatDate(date, country)' },
-  { name: 'raw-i18n-key', re: /^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9_]+){1,5}$/,
-    why: 'an i18next key rendered verbatim — the lookup missed' },
-  { name: 'i18n-object-error', re: /returned an object instead of string/,
-    why: 't() pointed at a namespace object, not a leaf key' },
-  { name: 'nan-undefined', re: /\b(NaN|undefined|Invalid Date|\[object Object\])\b/,
-    why: 'a value that should never reach a label' },
-  { name: 'snake-enum', re: /^[a-z]+(_[a-z]+)+$/,
-    why: 'a snake_case enum that escaped its label map' },
-  { name: 'dollar-in-eu', re: /\$\s?\d/,
-    why: 'US currency on a EU screen; use formatCurrency(amount, country)' },
-];
-
-/** Domain enums that leak as display text, matched whole or as a ' · ' segment. */
-const ENUMS = new Set([
-  'completed', 'in-progress', 'in_progress', 'accepted', 'overdue', 'draft', 'paid',
-  'sent', 'quoted', 'cancelled', 'canceled', 'rejected', 'expired', 'on-hold',
-  'on_hold', 'approved', 'submitted', 'declined',
-]);
+// The shapes live in src/test-utils/defectShapes.ts so the EU-market walks are
+// held to the SAME bar. They used to be defined here, which meant they only
+// ever ran against Dutch renders — the language in which a device-locale date
+// or a missed i18n lookup is least likely to fire.
+const DETECTORS = DEFECT_SHAPES;
+const ENUMS = RAW_ENUMS;
 
 const POSTURE = process.env.WALK_POSTURE === 'fresh' ? 'fresh' : 'demo';
 

@@ -17,14 +17,29 @@
 import fs from 'fs';
 import path from 'path';
 import { walkScreen } from './screenWalk';
+export { findDefectShapes } from './defectShapes';
 
 const APP = path.join(__dirname, '..', '..', 'app');
 
+// Weighted toward surfaces whose CONTENT is country-specific — VAT, permits,
+// licences, statutory interest, price indexes, payroll exports. Four tabs was
+// too narrow: the German posture found four defects across seven screens, so
+// the yield is in the drill-downs, not the tab bar.
 export const EU_SCREENS = [
   { id: 'vandaag', file: '(contractor)/index.tsx' },
   { id: 'geld', file: '(contractor)/geld.tsx' },
   { id: 'certificaten', file: '(contractor)/certificaten.tsx' },
   { id: 'facturen', file: '(contractor)/facturen.tsx' },
+  { id: 'bedrijf', file: '(contractor)/bedrijf.tsx' },
+  { id: 'vat-prep', file: 'contractor/vat-prep.tsx' },
+  { id: 'vat-and-audit', file: 'contractor/vat-and-audit.tsx' },
+  { id: 'reports', file: 'contractor/reports.tsx' },
+  { id: 'payroll', file: 'contractor/payroll.tsx' },
+  { id: 'expenses', file: 'contractor/expenses.tsx' },
+  { id: 'permits', file: 'contractor/permits.tsx' },
+  { id: 'licenses', file: 'contractor/licenses.tsx' },
+  { id: 'market-prices', file: 'contractor/market-prices.tsx' },
+  { id: 'pricebook', file: 'contractor/pricebook.tsx' },
 ];
 
 /** Dutch registry terms that must never appear outside NL. */

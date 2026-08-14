@@ -17,6 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import { walkScreen, teardown } from '../src/test-utils/screenWalk';
+import { findDefectShapes } from '../src/test-utils/defectShapes';
 
 const APP = path.join(__dirname, '..', 'app');
 
@@ -94,6 +95,13 @@ describe('German contractor surface', () => {
     for (const dutch of FIXED_DUTCH_FIXTURES) {
       expect(all).not.toContain(dutch);
     }
+  });
+
+  it('shows no defect shape in German', () => {
+    // Same regexes detectors.test.tsx runs in Dutch. Germany is the beachhead;
+    // it should be held to at least the bar the home market is.
+    const hits = report.flatMap((r) => findDefectShapes(r.screen, r.texts));
+    expect(hits.map((h) => `${h.screen} :: ${h.detector} :: ${h.text.slice(0, 60)}`)).toEqual([]);
   });
 
   it('does not leak Dutch UI copy into a German session', () => {
