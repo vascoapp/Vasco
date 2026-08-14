@@ -74,8 +74,29 @@ export interface WalkOptions {
    * entire German wedge. It also defaults `language` to 'de' — walking the
    * beachhead in Dutch is how the all-generators-were-Dutch bug survived.
    */
-  as?: 'contractor' | 'aannemer' | 'handwerker';
+  as?: 'contractor' | 'aannemer' | 'handwerker' | 'plombier' | 'fontanero' | 'idraulico';
 }
+
+/**
+ * Each posture is a COUNTRY, not just a language. 44 surfaces read
+ * `businessProfile?.country ?? 'NL'` and 72 read `user?.country`, so signing in
+ * the Dutch account and switching i18n renders foreign chrome over Dutch
+ * country logic — which is how five markets ended up being shown the Dutch tax
+ * office and how the German demo shipped Dutch job names.
+ */
+const POSTURE_EMAIL: Record<string, string> = {
+  contractor: 'contractor@vasco.dev',
+  aannemer: 'aannemer@vasco.dev',
+  handwerker: 'handwerker@vasco.de.dev',
+  plombier: 'plombier@vasco.fr.dev',
+  fontanero: 'fontanero@vasco.es.dev',
+  idraulico: 'idraulico@vasco.it.dev',
+};
+
+/** Language each posture must render in — walking a market in Dutch hides its bugs. */
+const POSTURE_LANGUAGE: Record<string, string> = {
+  handwerker: 'de', plombier: 'fr', fontanero: 'es', idraulico: 'it',
+};
 
 /** Signs a demo account in through the real login path, as the app does. */
 function SignIn({ as, children }: { as: NonNullable<WalkOptions['as']>; children: React.ReactNode }) {
@@ -84,10 +105,7 @@ function SignIn({ as, children }: { as: NonNullable<WalkOptions['as']>; children
   React.useEffect(() => {
     if (done.current) return;
     done.current = true;
-    const email =
-      as === 'aannemer' ? 'aannemer@vasco.dev'
-      : as === 'handwerker' ? 'handwerker@vasco.de.dev'
-      : 'contractor@vasco.dev';
+    const email = POSTURE_EMAIL[as] ?? 'contractor@vasco.dev';
     login(email, 'walk').catch(() => {});
   }, [as, login]);
   return <>{isAuthenticated ? children : null}</>;
@@ -106,7 +124,7 @@ export async function walkScreen(
   const { params = {}, settlePasses = 6, as } = options;
   // The German posture defaults to German. Passing `as:'handwerker'` and then
   // reading Dutch would reproduce the exact blind spot that hid #155.
-  const language = options.language ?? (as === 'handwerker' ? 'de' : 'nl');
+  const language = options.language ?? (as ? POSTURE_LANGUAGE[as] ?? 'nl' : 'nl');
 
   (globalThis as any).__routeParams = params;
   if (i18n.language !== language) {
@@ -155,6 +173,33 @@ export async function walkScreen(
 }
 
 /** Unmount so the next screen starts from a clean tree. */
+/**
+ * Clear the signed-in session between POSTURES.
+ *
+ * Auth state lives in module scope (src/lib/currentUser) and in AsyncStorage,
+ * neither of which a re-render resets. Walking FR then ES in one file left the
+ * FR user in place, so the Spanish screens rendered Spanish chrome over FRENCH
+ * country logic and the compliance screen listed URSSAF and Chorus Pro. That
+ * looked exactly like a real bug — Spain being shown France's tax office — and
+ * was not: run alone, ES passes. A harness that leaks posture manufactures
+ * findings, which is worse than missing them.
+ */
+export async function resetWalkSession(): Promise<void> {
+  const { setCurrentUser } = await import('../lib/currentUser');
+  setCurrentUser(null);
+  const AsyncStorage: any = (await import('@react-native-async-storage/async-storage')).default;
+  // The jest mock implements getAllKeys/multiRemove but NOT clear(), so
+  // calling clear() throws and takes the whole posture down with it.
+  try {
+    if (typeof AsyncStorage.clear === 'function') {
+      await AsyncStorage.clear();
+    } else if (typeof AsyncStorage.getAllKeys === 'function') {
+      const keys = await AsyncStorage.getAllKeys();
+      if (keys?.length) await AsyncStorage.multiRemove(keys);
+    }
+  } catch { /* a stubborn key must not fail the walk */ }
+}
+
 export function teardown(result: WalkResult): void {
   try {
     result.tree?.unmount();

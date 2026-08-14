@@ -85,3 +85,99 @@ export const DE_BUSINESS_PROFILE: BusinessProfile = {
     "Fachbetrieb nach §19l WHG",
   ],
 };
+
+// ─── FR / ES / IT demo profiles ──────────────────────────────────────────────
+// Not markets we sell into yet — these exist so the harness can WALK them.
+// 44 surfaces read `businessProfile?.country ?? 'NL'` and 72 read
+// `user?.country`, so without a profile carrying the country every walk takes
+// the NL branch and every country-gated surface is invisible. That is exactly
+// how five countries ended up being shown the Dutch tax office (learnings #168)
+// and how the German demo shipped Dutch job names.
+//
+// Registration/VAT numbers follow each country's real FORMAT (SIRET 14 digits,
+// CIF letter+8, Partita IVA 11 digits) because format validators run on them —
+// they are not claims about a real company.
+
+export const FR_BUSINESS_PROFILE: BusinessProfile = {
+  isComplete: true,
+  completenessPercent: 100,
+  businessName: "Plomberie Moreau SARL",
+  email: "contact@plomberie-moreau.fr",
+  phone: "+33 1 55 50 14 20",
+  address: "24 Rue des Artisans, 69003 Lyon",
+  city: "Lyon",
+  postcode: "69003",
+  website: "https://plomberie-moreau.fr",
+  country: 'FR',
+  trade: "plumbing",
+  businessType: "sarl",
+  teamSize: 'small',
+  vatScheme: 'standard',
+  registrationNumber: "81234567800019", // SIRET — 14 digits
+  vatNumber: "FR81812345678",
+  invoicePrefix: "FA",
+  quotePrefix: "DE",
+  defaultPaymentTerms: 30,
+  serviceAreaRadius: 30,
+  certifications: [
+    "RGE QualiPAC",
+    "Qualibat 5312",
+    "Assurance décennale",
+  ],
+};
+
+export const ES_BUSINESS_PROFILE: BusinessProfile = {
+  isComplete: true,
+  completenessPercent: 100,
+  businessName: "Fontanería Serrano S.L.",
+  email: "info@fontaneria-serrano.es",
+  phone: "+34 91 555 0142",
+  address: "Calle Mayor 87, 28013 Madrid",
+  city: "Madrid",
+  postcode: "28013",
+  website: "https://fontaneria-serrano.es",
+  country: 'ES',
+  trade: "plumbing",
+  businessType: "sl",
+  teamSize: 'small',
+  vatScheme: 'standard',
+  registrationNumber: "B12345678", // CIF — letter + 8 digits
+  vatNumber: "ESB12345678",
+  invoicePrefix: "FAC",
+  quotePrefix: "PRE",
+  defaultPaymentTerms: 30,
+  serviceAreaRadius: 30,
+  certifications: [
+    "Carné de Instalador de Gas categoría B",
+    "Licencia de Actividad",
+    "Seguro de Responsabilidad Civil",
+  ],
+};
+
+export const IT_BUSINESS_PROFILE: BusinessProfile = {
+  isComplete: true,
+  completenessPercent: 100,
+  businessName: "Idraulica Ferrari S.r.l.",
+  email: "info@idraulicaferrari.it",
+  phone: "+39 02 5550 142",
+  address: "Via Garibaldi 42, 20121 Milano",
+  city: "Milano",
+  postcode: "20121",
+  website: "https://idraulicaferrari.it",
+  country: 'IT',
+  trade: "plumbing",
+  businessType: "srl",
+  teamSize: 'small',
+  vatScheme: 'standard',
+  registrationNumber: "MI-1234567", // REA
+  vatNumber: "IT12345678901", // Partita IVA — 11 digits
+  invoicePrefix: "FT",
+  quotePrefix: "PRV",
+  defaultPaymentTerms: 30,
+  serviceAreaRadius: 30,
+  certifications: [
+    "DM 37/08 Lettera A — Impianti Idraulici",
+    "Iscrizione Camera di Commercio",
+    "Assicurazione RC Professionale",
+  ],
+};

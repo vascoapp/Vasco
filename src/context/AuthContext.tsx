@@ -209,6 +209,46 @@ const MOCK_USERS: Record<string, User> = {
   //
   // SHK (Sanitär-Heizung-Klima) because it is the German trade most exposed to
   // that obligation: it buys heavily from merchants who already send XRechnung.
+  // FR / ES / IT walk accounts. Not target markets — they exist so the harness
+  // can sign in as each country and exercise the `country === 'XX'` branches.
+  // Without an account carrying the country, every walk is NL and every
+  // country-gated surface is invisible to every test.
+  'plombier@vasco.fr.dev': {
+    id: 'user-contractor-fr-001',
+    email: 'plombier@vasco.fr.dev',
+    name: 'Julien Moreau',
+    role: 'contractor',
+    company: 'Plomberie Moreau',
+    projects: [],
+    country: 'FR',
+    language: 'fr',
+    trade: 'plumbing',
+    onboardingComplete: true,
+  },
+  'fontanero@vasco.es.dev': {
+    id: 'user-contractor-es-001',
+    email: 'fontanero@vasco.es.dev',
+    name: 'Carlos Serrano',
+    role: 'contractor',
+    company: 'Fontanería Serrano',
+    projects: [],
+    country: 'ES',
+    language: 'es',
+    trade: 'plumbing',
+    onboardingComplete: true,
+  },
+  'idraulico@vasco.it.dev': {
+    id: 'user-contractor-it-001',
+    email: 'idraulico@vasco.it.dev',
+    name: 'Marco Ferrari',
+    role: 'contractor',
+    company: 'Idraulica Ferrari',
+    projects: [],
+    country: 'IT',
+    language: 'it',
+    trade: 'plumbing',
+    onboardingComplete: true,
+  },
   'handwerker@vasco.de.dev': {
     id: 'user-contractor-de-001',
     email: 'handwerker@vasco.de.dev',

@@ -108,7 +108,7 @@ import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
-import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE } from '../data/mockBusiness';
+import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
@@ -668,6 +668,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           import('../services/aiActionQueueService')
             .then(({ clearQueue }) => clearQueue())
             .catch(() => {});
+        }
+        // FR/ES/IT walk postures. Profile only — customers/jobs stay the
+        // shared seed, because the point is to make each country's GATED
+        // surfaces reachable, not to fork demo data for markets we do not
+        // sell into. (DE forks its data because it IS the beachhead and gets
+        // screenshotted; see DE_SEED_JOBS.)
+        const walkProfiles: Record<string, typeof FR_BUSINESS_PROFILE> = {
+          FR: FR_BUSINESS_PROFILE, ES: ES_BUSINESS_PROFILE, IT: IT_BUSINESS_PROFILE,
+        };
+        const walkProfile = walkProfiles[getCurrentCountry() ?? ''];
+        if (useSeedData && walkProfile) {
+          setBusinessProfile(walkProfile);
         }
         // New user signed in — re-hydrate from BE for the new auth context.
         refreshData();
