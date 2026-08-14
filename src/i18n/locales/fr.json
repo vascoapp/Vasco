@@ -3195,7 +3195,7 @@
       "time": "Gain de temps",
       "timeDesc": "Optimisation des trajets ({{route}}) + moins de temps mort",
       "purchasing": "Achats malins",
-      "purchasingDesc": "Potentiel de remise fournisseur : {{total}} (40% réalisé)",
+      "purchasingDesc": "Potentiel de remise fournisseur : {{total}}",
       "fasterPayments": "Paiements plus rapides",
       "fasterPaymentsDesc": "DSO {{dso}}j vs secteur {{industry}}j — {{delta}}j plus rapide",
       "conversion": "Conversion plus rapide",
@@ -5763,5 +5763,24 @@
     "projectedWeek": "→ semaine {{week}}",
     "waitsFor": "Attend",
     "waitsForHint": "Si celles-ci prennent du retard, ce jalon est signalé comme bloqué et non simplement comme non staffé."
+  },
+  "ledger": {
+    "didThisMonth_one": "Vasco a effectué {{count}} action",
+    "didThisMonth_other": "Vasco a effectué {{count}} actions",
+    "sub": "Ce mois-ci — voir lesquelles",
+    "sectionTitle": "Ce que Vasco a fait",
+    "confirmed_one": "{{count}} client a répondu",
+    "confirmed_other": "{{count}} clients ont répondu",
+    "empty": "Rien d'approuvé ce mois-ci. Les actions que vous approuvez apparaissent ici.",
+    "fam": {
+      "invoicing": "Factures établies",
+      "chasing": "Relances de paiement",
+      "quoting": "Devis relancés",
+      "customer": "Mises à jour client",
+      "purchasing": "Actions d'achat",
+      "compliance": "Actions de conformité",
+      "planning": "Actions de planning",
+      "other": "Autres actions"
+    }
   }
 }

@@ -3195,7 +3195,7 @@
       "time": "Risparmio di tempo",
       "timeDesc": "Ottimizzazione percorsi ({{route}}) + meno tempi morti",
       "purchasing": "Acquisti intelligenti",
-      "purchasingDesc": "Potenziale sconto fornitore: {{total}} (40% realizzato)",
+      "purchasingDesc": "Potenziale sconto fornitore: {{total}}",
       "fasterPayments": "Pagamenti più rapidi",
       "fasterPaymentsDesc": "DSO {{dso}}g vs settore {{industry}}g — {{delta}}g più veloce",
       "conversion": "Conversione più rapida",
@@ -5763,5 +5763,24 @@
     "projectedWeek": "→ settimana {{week}}",
     "waitsFor": "Attende",
     "waitsForHint": "Se questi sono in ritardo, questa milestone viene segnalata come bloccata e non solo senza personale."
+  },
+  "ledger": {
+    "didThisMonth_one": "Vasco ha eseguito {{count}} azione",
+    "didThisMonth_other": "Vasco ha eseguito {{count}} azioni",
+    "sub": "Questo mese — guarda quali",
+    "sectionTitle": "Cosa ha fatto Vasco",
+    "confirmed_one": "{{count}} cliente ha risposto",
+    "confirmed_other": "{{count}} clienti hanno risposto",
+    "empty": "Niente approvato questo mese. Le azioni che approvi compaiono qui.",
+    "fam": {
+      "invoicing": "Fatture create",
+      "chasing": "Solleciti di pagamento",
+      "quoting": "Preventivi ricontattati",
+      "customer": "Aggiornamenti cliente",
+      "purchasing": "Azioni di acquisto",
+      "compliance": "Adempimenti",
+      "planning": "Azioni di pianificazione",
+      "other": "Altre azioni"
+    }
   }
 }

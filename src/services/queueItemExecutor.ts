@@ -66,6 +66,22 @@ export async function executeApprovedQueueItem(
   deps: ExecutorDeps,
   options: { alreadyShared?: boolean } = {},
 ): Promise<ExecutionResult> {
+  const result = await runExecution(item, deps, options);
+  // Tell the action ledger what actually fired. approveItem has already
+  // recorded the approval; this is what makes it COUNTABLE — an approval whose
+  // execution never reported back is deliberately not counted as work done.
+  try {
+    const { attachExecution } = await import('./actionLedgerService');
+    await attachExecution(item.id, { executed: result.executed, via: result.via });
+  } catch { /* never let bookkeeping break the action the contractor asked for */ }
+  return result;
+}
+
+async function runExecution(
+  item: QueueItem,
+  deps: ExecutorDeps,
+  options: { alreadyShared?: boolean } = {},
+): Promise<ExecutionResult> {
   const { router } = deps;
   const data = item.preparedData ?? {};
 

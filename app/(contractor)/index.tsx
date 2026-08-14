@@ -6,7 +6,8 @@
 //   2. Clock-in strip (when active)
 //   3. KPI row (3 stats)
 //   4. Hero AI banner + inline queue items (was VascoCard)
-//   5. Savings banner (was VascoSavedBanner)
+//   5. Action ledger banner (was VascoSavedBanner, then a fabricated
+//      "Vasco saved you €X" — see the block comment at the render site)
 //   6. Schedule (vertical job list)
 // No new sections added. Only visual treatment swapped to DraftKings rhythm.
 // =============================================================================
@@ -28,10 +29,9 @@ import { useAIQueue, type QueueItem } from '../../src/services/aiActionQueueServ
 import { useCombinedNotifications } from '../../src/services/notificationService';
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { evaluateTriggers } from '../../src/services/workflowPackService';
-import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
+import { useActionLedger } from '../../src/services/actionLedgerService';
 import { getExpiringLicenses } from '../../src/services/licenseExpiryService';
 import { useClockIn } from '../../src/services/clockInService';
-import { formatAmount } from '../../src/utils/formatAmount';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { ActivationChecklist } from '../../src/components/contractor/ActivationChecklist';
@@ -66,7 +66,7 @@ export default function VandaagDK() {
   const daySchedule = useDaySchedule(today);
   const clockIn = useClockIn();
   const aiQueue = useAIQueue();
-  const savings = useSavingsAggregation();
+  const ledger = useActionLedger();
 
   // Populate AI queue on mount (was fired by legacy Vandaag's useEffect).
   useEffect(() => {
@@ -368,15 +368,25 @@ export default function VandaagDK() {
           onPress={() => router.push('/contractor/licenses' as any)}
         />
 
-        {/* 5. SAVINGS BANNER ─── was VascoSavedBanner */}
-        {savings && savings.totalSavedThisMonth > 0 ? (
-          <Pressable style={({ pressed }) => [styles.savingsBanner, pressed && { opacity: 0.9 }]} onPress={() => router.push('/hub/savings' as any)}>
+        {/* 5. ACTION LEDGER ─── what VascoCard actually did this month.
+             Was a "Vasco saved you €X" banner whose six categories were route
+             optimisation (kill-switched), supplier discount POTENTIAL × 0.4,
+             quick-wins × 0.5 and a hardcoded zero — not one of them a
+             VascoCard approval. It reported a euro figure the app could not
+             defend, for a mechanism it did not measure. This counts named
+             actions that concretely fired, and claims no money. */}
+        {ledger.total > 0 ? (
+          <Pressable style={({ pressed }) => [styles.savingsBanner, pressed && { opacity: 0.9 }]} onPress={() => router.push('/(contractor)/besparen' as any)}>
             <View style={styles.savingsIcon}>
-              <Ionicons name="trending-up" size={16} color={DK.colors.success} />
+              <Ionicons name="checkmark-done" size={16} color={DK.colors.success} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.savingsTitle}>{t('dk.savings.savedThisMonth', { amount: formatAmount(savings.totalSavedThisMonth), defaultValue: 'Vasco saved you {{amount}}' }).toUpperCase()}</Text>
-              <Text style={styles.savingsSub}>{t('dk.savings.monthSub', 'This month — view breakdown')}</Text>
+              <Text style={styles.savingsTitle}>{t('ledger.didThisMonth', { count: ledger.total, defaultValue: 'Vasco carried out {{count}} actions' }).toUpperCase()}</Text>
+              <Text style={styles.savingsSub} numberOfLines={1}>
+                {ledger.confirmed > 0
+                  ? t('ledger.confirmed', { count: ledger.confirmed, defaultValue: '{{count}} customers replied' })
+                  : t('ledger.sub', 'This month — see what')}
+              </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
           </Pressable>

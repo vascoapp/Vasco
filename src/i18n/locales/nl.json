@@ -3179,7 +3179,7 @@
       "time": "Tijdsbesparing",
       "timeDesc": "Route-optimalisatie ({{route}}) + minder idle-time",
       "purchasing": "Slimmer inkopen",
-      "purchasingDesc": "Leverancierskorting potentieel: {{total}} (40% gerealiseerd)",
+      "purchasingDesc": "Leverancierskorting potentieel: {{total}}",
       "fasterPayments": "Snellere betalingen",
       "fasterPaymentsDesc": "DSO {{dso}}d vs branche {{industry}}d — {{delta}}d sneller",
       "conversion": "Snellere conversie",
@@ -5747,5 +5747,24 @@
     "projectedWeek": "→ week {{week}}",
     "waitsFor": "Wacht op",
     "waitsForHint": "Als deze uitlopen, wordt deze mijlpaal als geblokkeerd gemeld in plaats van alleen onbezet."
+  },
+  "ledger": {
+    "didThisMonth_one": "Vasco voerde {{count}} actie uit",
+    "didThisMonth_other": "Vasco voerde {{count}} acties uit",
+    "sub": "Deze maand — bekijk wat",
+    "sectionTitle": "Wat Vasco deed",
+    "confirmed_one": "{{count}} klant reageerde",
+    "confirmed_other": "{{count}} klanten reageerden",
+    "empty": "Deze maand nog niets goedgekeurd. Acties die je goedkeurt verschijnen hier.",
+    "fam": {
+      "invoicing": "Facturen opgesteld",
+      "chasing": "Betalingsherinneringen",
+      "quoting": "Offertes opgevolgd",
+      "customer": "Klantupdates",
+      "purchasing": "Inkoopacties",
+      "compliance": "Compliance-acties",
+      "planning": "Planningsacties",
+      "other": "Overige acties"
+    }
   }
 }

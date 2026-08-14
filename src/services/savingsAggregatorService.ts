@@ -90,8 +90,12 @@ export function useSavingsAggregation(): SavingsAggregation {
       ? Math.round(laborCosts.travelAnalysis.clusteringPotential + laborCosts.idleTime.idleCost * 0.3)
       : 0;
 
-    // 2. Purchasing savings: supplier discount potential (realized portion ~40%)
-    const purchasingSavings = Math.round(supplierNeg.totalDiscountPotential * 0.4);
+    // 2. Purchasing: was `totalDiscountPotential * 0.4` — a discount the
+    // contractor has NOT taken, multiplied by an invented realisation rate and
+    // then reported as money already saved. Nothing observes whether any of it
+    // was realised, so the honest realised figure is zero; the potential is
+    // still surfaced as an OPPORTUNITY on Besparen, which is what it is.
+    const purchasingSavings = 0;
 
     // 3. Faster payments: DSO improvement vs industry avg = working capital savings
     const dsoImprovement = collections.dso.industryAverage - collections.dso.currentDSO;
@@ -111,10 +115,10 @@ export function useSavingsAggregation(): SavingsAggregation {
       .filter(r => r.amount < 0)
       .reduce((sum, r) => sum + Math.abs(r.amount), 0);
 
-    // 6. Materials: supplier negotiation quick wins (realized ~50%)
-    const materialSavings = Math.round(
-      supplierNeg.quickWins.reduce((sum, qw) => sum + qw.saving, 0) * 0.5
-    );
+    // 6. Materials: same shape as #2 — quick-wins the contractor has not acted
+    // on, halved by a made-up realisation rate. A quick win becomes a saving
+    // when it is TAKEN, and nothing here records that.
+    const materialSavings = 0;
 
     const breakdown: SavingsCategory[] = [
       {

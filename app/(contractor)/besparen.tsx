@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
-import { useSavingsAggregation } from '../../src/services/savingsAggregatorService';
+import { useActionLedger } from '../../src/services/actionLedgerService';
 import { usePredictiveSavings } from '../../src/services/predictiveSavingsService';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
@@ -81,7 +81,7 @@ export default function BesparenScreen() {
   }, []);
 
   // Services
-  const savings = useSavingsAggregation();
+  const ledger = useActionLedger();
   const predictive = usePredictiveSavings();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
@@ -246,9 +246,14 @@ export default function BesparenScreen() {
                   {t('savings.upToPotential', { defaultValue: 'Tot {{amount}} potentieel', amount: formatCurrency0(totalPotential, country) })}
                 </Text>
               )}
-              {savings.totalSavedThisMonth > 0 && (
+              {/* Was `savings.totalSavedThisMonth` — a euro figure built from
+                  supplier discount POTENTIAL × 0.4 and quick-wins × 0.5. A
+                  realisation fraction chosen to make the number look good is
+                  not a measurement. What Vasco did is countable; what it saved
+                  is not, so we state the former. */}
+              {ledger.total > 0 && (
                 <Text style={s.summarySaved}>
-                  {t('savings.savedThisMonth', { defaultValue: '{{amount}} al bespaard deze maand', amount: formatCurrency0(savings.totalSavedThisMonth, country) })}
+                  {t('ledger.didThisMonth', { count: ledger.total, defaultValue: 'Vasco carried out {{count}} actions' })}
                 </Text>
               )}
             </View>
@@ -298,6 +303,31 @@ export default function BesparenScreen() {
               <Text style={s.doneText}>
                 {t('savings.actionsScheduled', { defaultValue: '{{count}} acties ingepland', count: actioned.size })}
               </Text>
+            </View>
+          </FadeIn>
+        )}
+
+        {/* What Vasco did — the breakdown behind the Vandaag banner's count.
+            A flat list, not a stats grid: each row names one kind of concrete
+            work and how many times it fired. The rows sum to the headline, so
+            the claim is auditable by the contractor reading it. */}
+        {ledger.total > 0 && (
+          <FadeIn delay={120}>
+            <View style={s.ledgerCard}>
+              <Text style={s.ledgerTitle}>{t('ledger.sectionTitle', 'What Vasco did')}</Text>
+              {ledger.byFamily.map((f) => (
+                <View key={f.family} style={s.ledgerRow}>
+                  <Text style={s.ledgerRowLabel} numberOfLines={1}>
+                    {t(`ledger.fam.${f.family}`, f.family)}
+                  </Text>
+                  <Text style={s.ledgerRowCount}>{f.count}</Text>
+                </View>
+              ))}
+              {ledger.confirmed > 0 && (
+                <Text style={s.ledgerConfirmed}>
+                  {t('ledger.confirmed', { count: ledger.confirmed, defaultValue: '{{count}} customers replied' })}
+                </Text>
+              )}
             </View>
           </FadeIn>
         )}
@@ -498,6 +528,44 @@ const s = StyleSheet.create({
   },
 
   // Done card
+  ledgerCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+    padding: GRID.md,
+    marginBottom: GRID.md,
+  },
+  ledgerTitle: {
+    fontSize: TYPE.titleSize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+    marginBottom: GRID.sm,
+  },
+  ledgerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: GRID.sm,
+    paddingVertical: 6,
+  },
+  ledgerRowLabel: {
+    flex: 1,
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.textPrimary,
+  },
+  ledgerRowCount: {
+    fontSize: TYPE.bodySize,
+    fontFamily: TYPE.sectionFamily,
+    color: SemanticColors.textPrimary,
+  },
+  ledgerConfirmed: {
+    fontSize: TYPE.captionSize,
+    fontFamily: TYPE.bodyFamily,
+    color: SemanticColors.feedbackSuccess,
+    marginTop: GRID.sm,
+  },
   doneCard: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -3195,7 +3195,7 @@
       "time": "Time savings",
       "timeDesc": "Route optimization ({{route}}) + less idle time",
       "purchasing": "Smart purchasing",
-      "purchasingDesc": "Supplier discount potential: {{total}} (40% realized)",
+      "purchasingDesc": "Supplier discount potential: {{total}}",
       "fasterPayments": "Faster payments",
       "fasterPaymentsDesc": "DSO {{dso}}d vs industry {{industry}}d — {{delta}}d faster",
       "conversion": "Faster conversion",
@@ -5763,5 +5763,24 @@
     "projectedWeek": "→ week {{week}}",
     "waitsFor": "Waits for",
     "waitsForHint": "When these run late, this milestone is reported as blocked instead of just unstaffed."
+  },
+  "ledger": {
+    "didThisMonth_one": "Vasco carried out {{count}} action",
+    "didThisMonth_other": "Vasco carried out {{count}} actions",
+    "sub": "This month — see what",
+    "sectionTitle": "What Vasco did",
+    "confirmed_one": "{{count}} customer replied",
+    "confirmed_other": "{{count}} customers replied",
+    "empty": "Nothing approved yet this month. Actions you approve appear here.",
+    "fam": {
+      "invoicing": "Invoices drafted",
+      "chasing": "Payment reminders",
+      "quoting": "Quotes followed up",
+      "customer": "Customer updates",
+      "purchasing": "Purchasing actions",
+      "compliance": "Compliance actions",
+      "planning": "Planning actions",
+      "other": "Other actions"
+    }
   }
 }

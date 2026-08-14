@@ -21,7 +21,7 @@
  * Exit non-zero on any FATAL.
  */
 
-import { readFileSync, statSync, existsSync } from 'node:fs';
+import { readFileSync, statSync, existsSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -167,22 +167,41 @@ for (const [file, pattern] of Object.entries(reviewFields)) {
 }
 
 // ─── 6. Migrations committed ────────────────────────────────────────
-section('Outstanding migrations committed');
-const expectedMigrations = [
-  '20260520000001_contractor_licenses.sql',
-  '20260520000002_leads.sql',
-  '20260520000003_business_settings_us.sql',
-  '20260520000004_workers.sql',
-];
-for (const m of expectedMigrations) {
-  const mpath = join(repoRoot, 'supabase/migrations', m);
-  if (existsSync(mpath)) {
-    ok(`migration committed: ${m}`);
-  } else {
-    fatal(`migration missing: ${m}`);
+section('Migrations applied to prod');
+// Was a hardcoded list of four May migrations plus an UNCONDITIONAL
+// `warn('...NOT applied to prod')` — it fired on every run regardless of the
+// actual state, and all four had long since been applied. A warning that is
+// always on is a warning nobody reads, which is how a real one gets missed.
+// Ask prod instead (#90: query prod, don't read SQL).
+{
+  const localFiles = existsSync(join(repoRoot, 'supabase/migrations'))
+    ? readdirSync(join(repoRoot, 'supabase/migrations')).filter((f) => f.endsWith('.sql'))
+    : [];
+  ok(`${localFiles.length} migration files committed`);
+  let listed = '';
+  try {
+    listed = execSync('npx --yes supabase migration list --linked', {
+      cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 120_000,
+    });
+  } catch {
+    // Offline, unauthenticated, or the CLI is slow. Say we could not check —
+    // never assert a state we did not observe.
+    warn('could not reach prod to verify migrations — run `npx supabase migration list --linked` by hand');
+  }
+  if (listed) {
+    try {
+      const rows = JSON.parse(listed.slice(listed.indexOf('{'))).migrations ?? [];
+      const unapplied = rows.filter((r) => r.local && !r.remote).map((r) => r.local);
+      if (unapplied.length === 0) {
+        ok(`all ${rows.length} migrations applied to prod`);
+      } else {
+        warn(`NOT applied to prod (${unapplied.length}): ${unapplied.join(', ')} — run \`supabase db push\``);
+      }
+    } catch {
+      warn('could not parse the migration list — check by hand');
+    }
   }
 }
-warn('migrations are committed but NOT applied to prod — run `supabase db push` before testers hit the build');
 
 // ─── 7. Screenshots at expected paths ───────────────────────────────
 section('App Store screenshots staged');

@@ -453,6 +453,13 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
       const { refreshApprovalRateCache } = await import('../intelligence/insightScorer');
       refreshApprovalRateCache().catch(() => {});
     } catch {}
+    // Separate try: sharing the block above meant a throwing emitBusinessEvent
+    // silently cost the ledger entry, so an approved customer reply would not
+    // be counted as work Vasco did.
+    try {
+      const { recordApproval } = await import('./actionLedgerService');
+      await recordApproval({ id: itemId, type: 'customer_question' });
+    } catch {}
     return {
       id: itemId,
       type: 'customer_question',
@@ -473,6 +480,20 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
       item.status = 'approved';
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
       notifyQueueChanged();
+      // Durable record of the approval. This store prunes non-pending items
+      // after 7 days (see getQueue), so without a separate ledger there is no
+      // month-scale evidence that Vasco did any work at all.
+      try {
+        const { recordApproval } = await import('./actionLedgerService');
+        await recordApproval({
+          id: itemId,
+          type: item.type,
+          // A NAME by construction — never fall back to an entity id (#452).
+          label: typeof item.preparedData?.customerName === 'string'
+            ? item.preparedData.customerName
+            : undefined,
+        });
+      } catch { /* the approval itself must not fail because logging did */ }
       // Feedback loop: emit to learning layer so insightScorer approval-rate
       // cache picks up the signal on next refresh + force-refresh now so the
       // next generator tick within this session sees it (not stuck on TTL).
@@ -620,6 +641,12 @@ export async function recordOutcome(
     });
     // Keep last 200 outcomes
     await AsyncStorage.setItem(OUTCOMES_KEY, JSON.stringify(outcomes.slice(-200)));
+    // Mirror onto the action ledger: a customer reply is the only evidence the
+    // approved message actually landed, so it is what "confirmed" counts.
+    try {
+      const { attachOutcome } = await import('./actionLedgerService');
+      await attachOutcome(itemId, outcome);
+    } catch {}
   } catch {}
 }
 

@@ -3195,7 +3195,7 @@
       "time": "Zeitersparnis",
       "timeDesc": "Routenoptimierung ({{route}}) + weniger Leerlauf",
       "purchasing": "Smarter Einkauf",
-      "purchasingDesc": "Lieferantenrabatt-Potenzial: {{total}} (40% realisiert)",
+      "purchasingDesc": "Lieferantenrabatt-Potenzial: {{total}}",
       "fasterPayments": "Schnellere Zahlungen",
       "fasterPaymentsDesc": "DSO {{dso}}d vs Branche {{industry}}d — {{delta}}d schneller",
       "conversion": "Schnellere Konversion",
@@ -5763,5 +5763,24 @@
     "projectedWeek": "→ Woche {{week}}",
     "waitsFor": "Wartet auf",
     "waitsForHint": "Wenn diese sich verzögern, wird dieser Meilenstein als blockiert gemeldet und nicht nur als unbesetzt."
+  },
+  "ledger": {
+    "didThisMonth_one": "Vasco hat {{count}} Aktion ausgeführt",
+    "didThisMonth_other": "Vasco hat {{count}} Aktionen ausgeführt",
+    "sub": "Diesen Monat — ansehen, welche",
+    "sectionTitle": "Was Vasco erledigt hat",
+    "confirmed_one": "{{count}} Kunde hat geantwortet",
+    "confirmed_other": "{{count}} Kunden haben geantwortet",
+    "empty": "Diesen Monat noch nichts freigegeben. Von Ihnen freigegebene Aktionen erscheinen hier.",
+    "fam": {
+      "invoicing": "Rechnungen erstellt",
+      "chasing": "Zahlungserinnerungen",
+      "quoting": "Angebote nachgefasst",
+      "customer": "Kundenupdates",
+      "purchasing": "Einkaufsaktionen",
+      "compliance": "Compliance-Aufgaben",
+      "planning": "Planungsaktionen",
+      "other": "Sonstige Aktionen"
+    }
   }
 }
