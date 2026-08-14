@@ -539,6 +539,24 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
   return null;
 }
 
+/**
+ * Drop every queued card and let the next populate rebuild from current data.
+ *
+ * Needed when the signed-in account's seed data is swapped wholesale (the DE/US
+ * demo branches in AppState). The queue is keyed by entity, and cards persist
+ * the copy they were minted with (learnings #148), so without this the German
+ * demo carried cards built from the DUTCH seed it starts with — "Automatisches
+ * Mahnwesen: Hotel NH", "Terminerinnerung: Fam. de Vries" — German sentences
+ * wrapped around Dutch customers, on the demo that is meant to sell the German
+ * market.
+ */
+export async function clearQueue(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(QUEUE_KEY);
+    notifyQueueChanged();
+  } catch { /* the next populate will simply re-add on top */ }
+}
+
 export async function rejectItem(itemId: string): Promise<void> {
   if (itemId.startsWith('cq:')) {
     const questionId = questionIdFromQueueItemId(itemId);

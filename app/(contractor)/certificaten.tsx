@@ -688,7 +688,16 @@ export default function CertificatenScreen() {
           </>
         )}
 
-        {/* Government Portals */}
+        {/* Government Portals — NL ONLY.
+            DUTCH_GOVERNMENT_PORTALS rendered ungated, so a German contractor's
+            compliance screen linked to KVK and the Belastingdienst, with Dutch
+            descriptions ("Handelsregister en bedrijfsgegevens"). Same for FR/
+            ES/IT/UK/US. Caught by the German walk; invisible from inside NL.
+            Gated rather than filled in: the German equivalents (Handwerks-
+            kammer, Handelsregister, ELSTER) are regulatory claims, and a WRONG
+            registry link is worse than no registry link — the same reason
+            tradePermits was left at 6 of 15 trades. */}
+        {country === 'NL' && (
         <View style={styles.portalsSection}>
           <Text style={styles.portalsSectionTitle}>{t('compliance.governmentPortals', 'Overheidsloketten')}</Text>
           <View style={styles.portalsCard}>
@@ -710,6 +719,7 @@ export default function CertificatenScreen() {
             ))}
           </View>
         </View>
+        )}
 
         <View style={{ height: 140 }} />
       </ScrollView>

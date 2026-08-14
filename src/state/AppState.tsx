@@ -109,7 +109,7 @@ import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
 import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE } from '../data/mockBusiness';
-import { invoices as initialInvoices, quotes as initialQuotes } from '../data/mockDocuments';
+import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
 
@@ -654,6 +654,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           setBusinessProfile(DE_BUSINESS_PROFILE);
           setCustomers(DE_SEED_CUSTOMERS);
           setJobs(DE_SEED_JOBS);
+          // Jobs+customers alone was a half fix: invoices and quotes carry
+          // their own denormalised customer/job strings and are seeded at
+          // state init, so Geld and Facturen kept showing "Vloerverwarming
+          // check — Hotel NH", and the AI queue built German cards around
+          // Dutch job names.
+          setInvoices(deInvoices);
+          setQuotes(deQuotes);
+          // Vandaag fires evaluateTriggers on mount with whatever the state
+          // held at that moment, which is the Dutch seed until this branch
+          // runs. Those cards then persist. Drop them so the queue rebuilds
+          // from the German data.
+          import('../services/aiActionQueueService')
+            .then(({ clearQueue }) => clearQueue())
+            .catch(() => {});
         }
         // New user signed in — re-hydrate from BE for the new auth context.
         refreshData();

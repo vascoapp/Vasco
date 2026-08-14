@@ -64,18 +64,30 @@ export interface WalkOptions {
    * `user?.isAannemer` branch is false and the entire aannemer surface —
    * the projects tab, ProjectSwitcher, multi-site crew — silently renders its
    * solo-contractor variant instead. A walk that never signs in cannot see it.
+   *
+   * `handwerker` signs in the GERMAN demo contractor, which is a different
+   * posture again, not just a different language: ~53 surfaces read
+   * `businessProfile?.country ?? 'NL'`, and the DE-gated ones (VAT card,
+   * XRechnung/ZUGFeRD export) test `country === 'DE'`. Walking in German
+   * WITHOUT signing in as a German account renders German chrome over Dutch
+   * country logic and shows none of the e-invoice surfaces that are the
+   * entire German wedge. It also defaults `language` to 'de' — walking the
+   * beachhead in Dutch is how the all-generators-were-Dutch bug survived.
    */
-  as?: 'contractor' | 'aannemer';
+  as?: 'contractor' | 'aannemer' | 'handwerker';
 }
 
 /** Signs a demo account in through the real login path, as the app does. */
-function SignIn({ as, children }: { as: 'contractor' | 'aannemer'; children: React.ReactNode }) {
+function SignIn({ as, children }: { as: NonNullable<WalkOptions['as']>; children: React.ReactNode }) {
   const { login, isAuthenticated } = useAuth();
   const done = React.useRef(false);
   React.useEffect(() => {
     if (done.current) return;
     done.current = true;
-    const email = as === 'aannemer' ? 'aannemer@vasco.dev' : 'contractor@vasco.dev';
+    const email =
+      as === 'aannemer' ? 'aannemer@vasco.dev'
+      : as === 'handwerker' ? 'handwerker@vasco.de.dev'
+      : 'contractor@vasco.dev';
     login(email, 'walk').catch(() => {});
   }, [as, login]);
   return <>{isAuthenticated ? children : null}</>;
@@ -91,7 +103,10 @@ export async function walkScreen(
   Screen: React.ComponentType<any>,
   options: WalkOptions = {},
 ): Promise<WalkResult> {
-  const { params = {}, language = 'nl', settlePasses = 6, as } = options;
+  const { params = {}, settlePasses = 6, as } = options;
+  // The German posture defaults to German. Passing `as:'handwerker'` and then
+  // reading Dutch would reproduce the exact blind spot that hid #155.
+  const language = options.language ?? (as === 'handwerker' ? 'de' : 'nl');
 
   (globalThis as any).__routeParams = params;
   if (i18n.language !== language) {
