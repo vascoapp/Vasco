@@ -43,7 +43,9 @@ export function routeForIntent(result: AiCommandResult): AiRouteSpec | undefined
     case 'list_overdue':
       return { path: '/(contractor)/geld?aiIntent=list_overdue', label: 'View overdue' };
     case 'query_revenue':
-      return { path: '/hub/savings', label: 'See breakdown' };
+      // Was '/hub/savings': an enterprise screen, and a SAVINGS breakdown in
+      // answer to a REVENUE question. The Money tab is where revenue lives.
+      return { path: '/(contractor)/geld', label: 'Open Money tab' };
     case 'send_reminder':
       return {
         path: `/(contractor)/geld${qs({ aiCustomer: p.customerName, aiIntent: 'send_reminder' })}`,
@@ -65,7 +67,8 @@ export function routeForIntent(result: AiCommandResult): AiRouteSpec | undefined
         label: 'Open Customers',
       };
     case 'weekly_summary':
-      return { path: '/hub/savings', label: 'See breakdown' };
+      // Was '/hub/savings'. The contractor-side P&L is /contractor/reports.
+      return { path: '/contractor/reports', label: 'See breakdown' };
     default:
       return undefined;
   }

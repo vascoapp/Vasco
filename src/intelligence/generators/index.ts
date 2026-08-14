@@ -26,7 +26,6 @@ import { useCrossServiceInsight } from './crossServiceGenerator';
 import { useCashGapInsight } from './cashGapGenerator';
 import { useCashflowInsight } from './cashflowInsightGenerator';
 import { useCapacityInsight } from './capacityGenerator';
-import { useGoalProgressInsight } from './goalProgressGenerator';
 import { useProfitabilityInsight } from './profitabilityGenerator';
 import { useFinancialAuditInsight } from './financialAuditGenerator';
 
@@ -247,7 +246,6 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
   const cashGap = useCashGapInsight(ctx);
   const cashflowInsight = useCashflowInsight(ctx);
   const capacity = useCapacityInsight(ctx);
-  const goalProgress = useGoalProgressInsight(ctx);
   const profitability = useProfitabilityInsight(ctx);
   const financialAudit = useFinancialAuditInsight(ctx);
 
@@ -323,7 +321,6 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
       { id: 'cash-gap', insight: cashGap },
       { id: 'cashflow-insight', insight: cashflowInsight },
       { id: 'capacity', insight: capacity },
-      { id: 'goal-progress', insight: goalProgress },
       { id: 'profitability', insight: profitability },
       { id: 'financial-audit', insight: financialAudit },
       { id: 'margin-root-cause', insight: marginRootCause },
@@ -377,7 +374,7 @@ export function useAllGenerators(ctx: GeneratorContext, dataCounts?: DataCounts)
   }, [
     overdueInvoice, savingsOpp, marginDrift, costVariance, crossSell, complianceAlert, laborEff,
     estimationCal, dsoTrend, certExpiry, supplierPrice, weather,
-    dailyPlanning, crossService, cashGap, cashflowInsight, capacity, goalProgress,
+    dailyPlanning, crossService, cashGap, cashflowInsight, capacity,
     profitability, financialAudit, marginRootCause, customerLifecycle,
     cascadingDelay, estimationVarianceType, supplierPriceAnomaly, staticTip,
     quoteBenchmark, materialSuggestion, customerPaymentHistory,

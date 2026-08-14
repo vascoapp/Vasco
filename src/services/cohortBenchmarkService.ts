@@ -725,8 +725,9 @@ for (const item of MATERIAL_MASTER) {
 }
 
 /**
- * Get pre-populated trade baselines for all 6 trades × 6 countries.
- * Returns meaningful benchmarks immediately, even for brand new users.
+ * Get pre-populated trade baselines for the trades × countries that HAVE one.
+ * Returns [] for a trade or country with no baseline rather than substituting
+ * another trade's or another country's numbers under the caller's label.
  */
 export function getTradeBaselines(trade?: string, country?: string): TradeBenchmark[] {
   const trades = trade ? [trade] : Object.keys(TRADE_BASELINES);
@@ -734,9 +735,19 @@ export function getTradeBaselines(trade?: string, country?: string): TradeBenchm
   const baselines: TradeBenchmark[] = [];
 
   for (const t of trades) {
-    const tradeData = TRADE_BASELINES[t] ?? TRADE_BASELINES['general'];
+    // Both fallbacks here MISLABELLED the result. `?? TRADE_BASELINES.general`
+    // handed a roofer the general builder's hourly rate in an object stamped
+    // `trade: 'roofing'`, and `?? tradeData.NL` handed a German contractor the
+    // DUTCH rate in an object stamped `country: 'DE'`. The figure did not just
+    // degrade — it asserted a provenance it did not have, which is worse than
+    // returning nothing on a benchmark the contractor may price against.
+    // 9 of 15 trades have no baseline; they now yield no row instead of
+    // someone else's number.
+    const tradeData = TRADE_BASELINES[t];
+    if (!tradeData) continue;
     for (const c of countries) {
-      const data = tradeData[c] ?? tradeData['NL'];
+      const data = tradeData[c];
+      if (!data) continue;
       baselines.push({
         trade: t,
         country: c,

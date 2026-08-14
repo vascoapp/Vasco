@@ -17,8 +17,9 @@
 //  2. SHARE — opens the OS Share sheet. Only used when VascoCard hasn't
 //     already done it (Vandaag's InlineQueueRow doesn't render VascoCard).
 //  3. INFORM — purely informational types (low_win_alert,
-//     late_payment_risk_alert, supplier_comparison) — no execution needed,
-//     status='approved' is the entire side-effect.
+//     late_payment_risk_alert) when their producer supplied no id to deep-link
+//     to; status='approved' is then the entire side-effect. NOT
+//     supplier_comparison — its buttons name a screen, so it navigates.
 //
 // Returning {executed: true} only when something concrete fired. Telemetry
 // elsewhere can use this to score generator efficacy.
@@ -303,18 +304,13 @@ async function runExecution(
       return { executed: true, via: 'navigate', detail: 'vat-prep?period=previous' };
     }
     case 'accounting_export': {
-      // R21: pass `format` + `period` if the queued item carried them in
-      // preparedData (today producers don't, but the executor is now
-      // ready when the upstream generator ships them). Was R1 deferral.
-      const format = data.format as string | undefined;
-      const period = data.period as string | undefined;
-      const params: Record<string, string> = {};
-      if (format) params.format = format;
-      if (period) params.period = period;
-      if (Object.keys(params).length > 0) {
-        router.push({ pathname: '/contractor/vat-and-audit', params } as any);
-        return { executed: true, via: 'navigate', detail: `vat-and-audit?${new URLSearchParams(params).toString()}` };
-      }
+      // Was building `format`/`period` params here "ready when the upstream
+      // generator ships them". Nothing has ever sent them, and
+      // vat-and-audit.tsx reads no params at all — so the branch was
+      // scaffolding on both ends, and its presence implied a prefill that
+      // does not exist. Wire the producer AND the reader together if this is
+      // ever wanted; a passed param no screen consumes is not half-done, it
+      // is undone (learnings #83 / the 5-file rule, same shape).
       router.push('/contractor/vat-and-audit' as any);
       return { executed: true, via: 'navigate', detail: 'vat-and-audit' };
     }

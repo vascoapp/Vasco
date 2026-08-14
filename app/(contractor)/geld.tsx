@@ -544,7 +544,12 @@ export default function GeldScreen() {
             <View style={s.cfDivider} />
             <Pressable
               style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.7 }]}
-              onPress={() => router.push('/hub/savings' as any)}
+              // Was '/hub/savings' — wrong twice over. It sent a solo
+              // contractor into the enterprise portfolio surface (which ships
+              // to nobody, so nobody maintains it), and it answered a tap on
+              // PROFIT with a SAVINGS screen. /contractor/reports is the P&L
+              // this figure comes from, and geld already links to it above.
+              onPress={() => router.push('/contractor/reports' as any)}
               accessibilityRole="button"
               accessibilityLabel={t('dk.money.profit', 'Profit')}
             >

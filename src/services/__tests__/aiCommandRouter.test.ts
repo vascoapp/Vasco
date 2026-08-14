@@ -90,8 +90,11 @@ describe('routeForIntent', () => {
   });
 
   it('query_revenue + weekly_summary route to savings hub without params', () => {
-    expect(routeForIntent(make('query_revenue'))?.path).toBe('/hub/savings');
-    expect(routeForIntent(make('weekly_summary'))?.path).toBe('/hub/savings');
+    // Neither may point into app/hub/** — that is the enterprise portfolio
+    // surface, gated off by `enterprise_portfolio: false`, so a contractor
+    // sent there lands on a screen nobody maintains.
+    expect(routeForIntent(make('query_revenue'))?.path).toBe('/(contractor)/geld');
+    expect(routeForIntent(make('weekly_summary'))?.path).toBe('/contractor/reports');
   });
 
   it('returns undefined for unknown intent', () => {

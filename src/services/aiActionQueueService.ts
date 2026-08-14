@@ -12,7 +12,6 @@ import { getCurrentUserId } from '../lib/currentUser';
 import i18n from '../i18n/i18n';
 import { applySavedLanguage } from '../i18n/savedLanguage';
 import { getScanHistory, getFirstScanInsights } from './invoiceScanService';
-import { getTradeBaselines } from './cohortBenchmarkService';
 import { getCustomerIntelligence } from '../intelligence/tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { logWarn } from '../utils/errorHandler';
