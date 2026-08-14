@@ -761,6 +761,7 @@ async function runScheduledTick(
           const { buildLiveActions } = await import('../services/eveLiveActionService');
           const { addToQueue } = await import('../services/aiActionQueueService');
           type QueueItemType = import('../services/aiActionQueueService').QueueItemType;
+          type EveActionType = import('../services/eveAgentService').EveActionType;
           const actions = buildLiveActions({
             jobs: context.jobs ?? [],
             quotes: context.quotes ?? [],
@@ -779,18 +780,69 @@ async function runScheduledTick(
           //     not a valid QueueItemType, fell through executor default
           //     to no-op. Now low_win_alert (informational, also no-op when
           //     no quoteId, but at least classifies correctly).
-          const mapType = (t: string): QueueItemType => {
-            if (t === 'draft_invoice') return 'draft_invoice';
-            if (t === 'compliance_gap') return 'late_payment_risk_alert';
-            if (t === 'pricing_insight') return 'low_win_alert';
-            // R302+R304: shareable trigger types — all map to existing queue
-            // types whose executor branch opens Share with preparedData.template.
-            if (t === 'progress_update') return 'progress_note';
-            if (t === 'draft_followup') return 'draft_followup';
-            if (t === 'job_handover') return 'job_handover';
-            if (t === 'satisfaction_survey') return 'satisfaction_survey';
-            return 'low_win_alert'; // safe informational fallback
+          // Was an if-chain over 7 types with `return 'low_win_alert'` as a
+          // "safe informational fallback". It is not safe: low_win_alert is
+          // INFORMATIONAL, and without a quoteId its executor branch returns
+          // {executed:false} — so any eve type that fell through produced a
+          // card that did nothing when approved. buildLiveActions emits 7 of
+          // EveActionType's 38 members today, so 31 were one emit away from
+          // becoming dead cards, including ones with exact queue equivalents
+          // (material_reorder, batch_invoices, schedule_suggestion, …).
+          //
+          // Now a Record over the full union: a new EveActionType fails to
+          // compile instead of silently degrading (learnings #163).
+          const EVE_TO_QUEUE: Record<EveActionType, QueueItemType> = {
+            // ── Agent (execution) — all have exact queue equivalents
+            draft_invoice: 'draft_invoice',
+            draft_quote: 'draft_quote',
+            draft_reminder: 'draft_reminder',
+            draft_followup: 'draft_followup',
+            schedule_suggestion: 'schedule_suggestion',
+            progress_update: 'progress_note',
+            batch_invoices: 'batch_invoices',
+            maintenance_reminder: 'maintenance_due',
+            material_reorder: 'reorder_materials',
+            job_handover: 'job_handover',
+            satisfaction_survey: 'satisfaction_survey',
+            // ── Auditor (monitoring)
+            cert_expiring: 'cert_renewal',
+            insurance_expiring: 'cert_renewal',
+            permit_required: 'permit_check',
+            permit_renewal: 'permit_renewal',
+            tax_deadline: 'tax_prep',
+            vat_filing_due: 'tax_prep',
+            safety_checklist: 'safety_checklist',
+            // R294, unchanged: NOT draft_reminder. That type is shareable, so
+            // Approve would open the Share sheet on contractor-internal text
+            // ("€450 outstanding — final notice recommended") and send it to
+            // the customer. Deep-links to the invoice instead.
+            compliance_gap: 'late_payment_risk_alert',
+            einvoice_required: 'einvoice_submit',
+            subcontractor_check: 'permit_check',
+            equipment_inspection: 'maintenance_due',
+            // ── Analyst (intelligence). These carry a finding, not a task.
+            // Routed to types whose executor lands somewhere relevant rather
+            // than no-opping: the purchasing//cost family now opens the price
+            // comparison (supplier_comparison stopped being informational).
+            pricing_insight: 'low_win_alert',
+            quote_win_prediction: 'low_win_alert',
+            cashflow_forecast: 'late_payment_risk_alert',
+            payment_prediction: 'late_payment_risk_alert',
+            client_risk_score: 'late_payment_risk_alert',
+            benchmark_alert: 'supplier_comparison',
+            revenue_trend: 'supplier_comparison',
+            cost_optimization: 'supplier_comparison',
+            supplier_comparison: 'supplier_comparison',
+            seasonal_demand: 'supplier_comparison',
+            // ── Purchasing agent (Pro+)
+            purchasing_deal: 'price_alert',
+            price_drop_alert: 'price_alert',
+            bulk_opportunity: 'bulk_purchase',
+            seasonal_stock_up: 'bulk_purchase',
+            supplier_report: 'supplier_comparison',
           };
+          const mapType = (t: string): QueueItemType =>
+            EVE_TO_QUEUE[t as EveActionType] ?? 'supplier_comparison';
           for (const a of actions) {
             const pd = a.preparedData as any;
             // Stable entityKey — MUST NOT fall back to `a.id`. buildLiveActions

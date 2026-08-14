@@ -1903,7 +1903,11 @@
     "speedsUpPayment": "Acelera el pago en ~5 días",
     "quoteFollowUp": "Seguimiento presupuesto {{ref}}",
     "sendFollowUp": "Enviar seguimiento",
-    "increasesAcceptance": "Aumenta la tasa de aceptación en un 20%"
+    "increasesAcceptance": "Aumenta la tasa de aceptación en un 20%",
+    "qualityTitle": "{{title}} — valoración del trabajo",
+    "rateJob": "Valorar trabajo",
+    "qualityDesc": "Registra si este cliente pagó a tiempo, dejó una reseña, te recomendó o volvió a contratarte.",
+    "qualityImpact": "Afina tus previsiones de presupuestos"
   },
   "workflow": {
     "send": "Enviar",

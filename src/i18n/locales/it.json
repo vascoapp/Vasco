@@ -1903,7 +1903,11 @@
     "speedsUpPayment": "Accelera il pagamento di ~5 giorni",
     "quoteFollowUp": "Follow-up preventivo {{ref}}",
     "sendFollowUp": "Invia follow-up",
-    "increasesAcceptance": "Aumenta il tasso di accettazione del 20%"
+    "increasesAcceptance": "Aumenta il tasso di accettazione del 20%",
+    "qualityTitle": "{{title}} — feedback sul lavoro",
+    "rateJob": "Valuta lavoro",
+    "qualityDesc": "Registra se questo cliente ha pagato in tempo, lasciato una recensione, ti ha segnalato o ha riprenotato.",
+    "qualityImpact": "Affina le tue previsioni sui preventivi"
   },
   "workflow": {
     "send": "Invia",

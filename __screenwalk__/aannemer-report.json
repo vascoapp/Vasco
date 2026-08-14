@@ -69,7 +69,7 @@
    "error": null,
    "texts": [
     "VRIJDAG 14 AUG",
-    "Goeiemorgen",
+    "Goedenavond",
     ".",
     "",
     "3",
@@ -108,6 +108,10 @@
     "Blijft compliant",
     "",
     "BEKIJK",
+    "Einde Dag Routine: 17:00",
+    "Bespaart tijd",
+    "",
+    "BEKIJK",
     "Afspraak Herinnering: Fam. de Vries",
     "Bespaart tijd",
     "",
@@ -132,6 +136,7 @@
     "Vasco Analyst",
     "Negeren",
     "Verstuur",
+    "Bekijk",
     "Bekijk",
     "Verstuur",
     "Planning"

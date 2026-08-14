@@ -30,8 +30,10 @@ describe('only work that actually fired is counted', () => {
 
   it('does NOT count an informational alert, which executes nothing', () => {
     // queueItemExecutor returns {executed: false, via: 'inform'} for
-    // low_win_alert / late_payment_risk_alert / supplier_comparison without a
+    // low_win_alert / late_payment_risk_alert when the producer supplied no
     // deep-linkable id. Approving one is a dismissal, not work.
+    // (supplier_comparison used to be in that set and no longer is — it now
+    // opens the comparison screen its own button names.)
     const s = summariseLedger(
       [entry({ id: 'a', type: 'low_win_alert', executed: false, via: 'inform' })],
       AUG,
@@ -195,5 +197,50 @@ describe('an unknown type is bucketed honestly, not mislabelled', () => {
     expect(s.total).toBe(2);
     expect(s.byFamily).toContainEqual({ family: 'other', count: 1 });
     expect(s.byFamily).toContainEqual({ family: 'invoicing', count: 1 });
+  });
+});
+
+describe('concurrent approvals do not lose each other', () => {
+  // Each mutation is read-modify-write on one AsyncStorage key. Unserialised,
+  // B reads before A's write lands and A vanishes — an undercount that is
+  // indistinguishable from "Vasco did less", which is the one thing this
+  // ledger must never get wrong.
+  const { recordApproval, attachExecution, getLedger, __clearLedger } =
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('../actionLedgerService');
+
+  beforeEach(async () => { await __clearLedger(); });
+
+  it('keeps every approval when six are fired without awaiting in turn', async () => {
+    await Promise.all(
+      Array.from({ length: 6 }, (_, i) =>
+        recordApproval({ id: `c-${i}`, type: 'draft_invoice' }),
+      ),
+    );
+    const entries = await getLedger();
+    expect(entries).toHaveLength(6);
+    expect(new Set(entries.map((e: LedgerEntry) => e.id)).size).toBe(6);
+  });
+
+  it('keeps executions attached to the right entries under interleaving', async () => {
+    await Promise.all([
+      recordApproval({ id: 'a', type: 'draft_invoice' }),
+      recordApproval({ id: 'b', type: 'draft_reminder' }),
+    ]);
+    await Promise.all([
+      attachExecution('a', { executed: true, via: 'navigate' }),
+      attachExecution('b', { executed: false, via: 'inform' }),
+    ]);
+    const entries: LedgerEntry[] = await getLedger();
+    expect(entries.find((e) => e.id === 'a')?.executed).toBe(true);
+    expect(entries.find((e) => e.id === 'b')?.executed).toBe(false);
+  });
+
+  it('still does not double-count a re-approval of the same id', async () => {
+    await Promise.all([
+      recordApproval({ id: 'dup', type: 'draft_invoice' }),
+      recordApproval({ id: 'dup', type: 'draft_invoice' }),
+    ]);
+    expect(await getLedger()).toHaveLength(1);
   });
 });

@@ -1903,7 +1903,11 @@
     "speedsUpPayment": "Accélère le paiement de ~5 jours",
     "quoteFollowUp": "Suivi devis {{ref}}",
     "sendFollowUp": "Envoyer le suivi",
-    "increasesAcceptance": "Augmente le taux d'acceptation de 20%"
+    "increasesAcceptance": "Augmente le taux d'acceptation de 20%",
+    "qualityTitle": "{{title}} — retour sur le chantier",
+    "rateJob": "Évaluer le chantier",
+    "qualityDesc": "Notez si ce client a payé à temps, laissé un avis, vous a recommandé ou refait appel à vous.",
+    "qualityImpact": "Affine vos prévisions de devis"
   },
   "workflow": {
     "send": "Envoyer",

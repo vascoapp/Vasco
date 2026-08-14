@@ -44,8 +44,14 @@ const SHAREABLE_TYPES: readonly QueueItemType[] = [
   'satisfaction_survey', 'job_handover', 'decision_reminder', 'reorder_materials',
 ];
 
+// `supplier_comparison` was here and should never have been. Its two producers
+// label the button "Compare" and "View savings" — both promise a destination —
+// while this list routed it to {executed:false, via:'inform'}, so the contractor
+// tapped a button that named a screen and nothing happened. The other two DO
+// deep-link whenever their producer supplies an id, which lateRiskAlertGenerator
+// and lowWinAlertGenerator always do.
 const INFORMATIONAL_TYPES: readonly QueueItemType[] = [
-  'supplier_comparison', 'low_win_alert', 'late_payment_risk_alert',
+  'low_win_alert', 'late_payment_risk_alert',
 ];
 
 export function isShareableQueueType(t: QueueItemType): boolean {
@@ -273,6 +279,19 @@ async function runExecution(
     case 'maintenance_due': {
       router.push('/contractor/recurring' as any);
       return { executed: true, via: 'navigate', detail: 'recurring' };
+    }
+    case 'supplier_comparison': {
+      // Two shapes: a single material found cheaper elsewhere ("Compare"), and
+      // the monthly overpaying-items roll-up ("View savings"). market-prices
+      // does not read a material param today, so the per-material card lands on
+      // the comparison screen unscoped — still the screen its button names,
+      // which is the standing bar here for a destination that lacks prefill.
+      if (data.overpayingItems || data.totalMonthlySavings) {
+        router.push('/(contractor)/besparen' as any);
+        return { executed: true, via: 'navigate', detail: 'besparen' };
+      }
+      router.push('/contractor/market-prices' as any);
+      return { executed: true, via: 'navigate', detail: 'market-prices' };
     }
     case 'tax_prep': {
       // R21: pass `period=previous` — the queue fires in the last 11 days

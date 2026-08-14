@@ -1887,7 +1887,11 @@
     "speedsUpPayment": "Versnelt betaling met ~5 dagen",
     "quoteFollowUp": "Opvolging offerte {{ref}}",
     "sendFollowUp": "Opvolging sturen",
-    "increasesAcceptance": "Verhoogt acceptatiekans met 20%"
+    "increasesAcceptance": "Verhoogt acceptatiekans met 20%",
+    "qualityTitle": "{{title}} — klusfeedback",
+    "rateJob": "Klus beoordelen",
+    "qualityDesc": "Leg vast of deze klant op tijd betaalde, een review achterliet, je aanbeval of opnieuw boekte.",
+    "qualityImpact": "Maakt je offertevoorspellingen scherper"
   },
   "workflow": {
     "send": "Verstuur",

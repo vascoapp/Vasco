@@ -1903,7 +1903,11 @@
     "speedsUpPayment": "Beschleunigt Zahlung um ~5 Tage",
     "quoteFollowUp": "Nachverfolgung Angebot {{ref}}",
     "sendFollowUp": "Nachverfolgung senden",
-    "increasesAcceptance": "Erhöht Annahmequote um 20%"
+    "increasesAcceptance": "Erhöht Annahmequote um 20%",
+    "qualityTitle": "{{title}} — Auftragsfeedback",
+    "rateJob": "Auftrag bewerten",
+    "qualityDesc": "Halten Sie fest, ob dieser Kunde pünktlich gezahlt, bewertet, Sie empfohlen oder erneut gebucht hat.",
+    "qualityImpact": "Schärft Ihre Angebotsprognosen"
   },
   "workflow": {
     "send": "Senden",

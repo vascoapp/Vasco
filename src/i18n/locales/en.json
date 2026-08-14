@@ -1903,7 +1903,11 @@
     "speedsUpPayment": "Speeds up payment by ~5 days",
     "quoteFollowUp": "Follow-up quote {{ref}}",
     "sendFollowUp": "Send follow-up",
-    "increasesAcceptance": "Increases acceptance rate by 20%"
+    "increasesAcceptance": "Increases acceptance rate by 20%",
+    "qualityTitle": "{{title}} — job feedback",
+    "rateJob": "Rate job",
+    "qualityDesc": "Record whether this customer paid on time, left a review, referred you, or rebooked.",
+    "qualityImpact": "Sharpens your quote predictions"
   },
   "workflow": {
     "send": "Send",

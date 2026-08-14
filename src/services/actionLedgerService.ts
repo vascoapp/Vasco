@@ -172,6 +172,23 @@ export async function getLedger(): Promise<LedgerEntry[]> {
   }
 }
 
+/**
+ * Every mutation below is read-modify-write against a single AsyncStorage key.
+ * Approving two cards in quick succession (two components, or a fast double
+ * tap) interleaves them: B reads before A's write lands, and A is silently
+ * dropped. An undercount here is indistinguishable from "Vasco did less",
+ * which is precisely the thing this ledger exists to report accurately — so
+ * mutations are serialised through one promise chain.
+ */
+let mutationChain: Promise<unknown> = Promise.resolve();
+function serialise<T>(op: () => Promise<T>): Promise<T> {
+  const next = mutationChain.then(op, op);
+  // Keep the chain alive after a rejection, or one failure stalls every
+  // subsequent write.
+  mutationChain = next.catch(() => {});
+  return next;
+}
+
 async function writeLedger(entries: LedgerEntry[]): Promise<void> {
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - RETENTION_MONTHS);
@@ -194,17 +211,19 @@ export async function recordApproval(entry: {
   at?: string;
 }): Promise<void> {
   try {
-    const entries = await getLedger();
-    // Re-approving the same item must not double-count it.
-    if (entries.some((e) => e.id === entry.id)) return;
-    entries.push({
-      id: entry.id,
-      type: entry.type,
-      at: entry.at ?? new Date().toISOString(),
-      label: entry.label,
+    await serialise(async () => {
+      const entries = await getLedger();
+      // Re-approving the same item must not double-count it.
+      if (entries.some((e) => e.id === entry.id)) return;
+      entries.push({
+        id: entry.id,
+        type: entry.type,
+        at: entry.at ?? new Date().toISOString(),
+        label: entry.label,
+      });
+      await writeLedger(entries);
+      notifyLedgerChanged();
     });
-    await writeLedger(entries);
-    notifyLedgerChanged();
   } catch (e) {
     logWarn('actionLedger', `recordApproval failed: ${String((e as Error)?.message ?? e)}`);
   }
@@ -216,13 +235,15 @@ export async function attachExecution(
   result: { executed: boolean; via: ExecutionVia },
 ): Promise<void> {
   try {
-    const entries = await getLedger();
-    const entry = entries.find((e) => e.id === id);
-    if (!entry) return;
-    entry.executed = result.executed;
-    entry.via = result.via;
-    await writeLedger(entries);
-    notifyLedgerChanged();
+    await serialise(async () => {
+      const entries = await getLedger();
+      const entry = entries.find((e) => e.id === id);
+      if (!entry) return;
+      entry.executed = result.executed;
+      entry.via = result.via;
+      await writeLedger(entries);
+      notifyLedgerChanged();
+    });
   } catch { /* the approval is already recorded; losing `via` is not fatal */ }
 }
 
@@ -232,12 +253,14 @@ export async function attachOutcome(
   outcome: 'positive' | 'negative' | 'neutral',
 ): Promise<void> {
   try {
-    const entries = await getLedger();
-    const entry = entries.find((e) => e.id === id);
-    if (!entry) return;
-    entry.outcome = outcome;
-    await writeLedger(entries);
-    notifyLedgerChanged();
+    await serialise(async () => {
+      const entries = await getLedger();
+      const entry = entries.find((e) => e.id === id);
+      if (!entry) return;
+      entry.outcome = outcome;
+      await writeLedger(entries);
+      notifyLedgerChanged();
+    });
   } catch { /* non-fatal */ }
 }
 

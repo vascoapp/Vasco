@@ -1,5 +1,6 @@
 // React
 import { formatMoney } from '../i18n/formatting';
+import appI18n from '../i18n/i18n';
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 // Libraries
@@ -1490,11 +1491,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           import('../services/aiActionQueueService').then(({ addToQueue }) =>
             addToQueue({
               type: 'job_quality_feedback',
-              title: `${job.title} — quality feedback`,
-              description: `Capture paid-on-time, review, referral, and rebook signals so quote-win training picks them up.`,
+              // Queue cards PERSIST the copy they were minted with (learnings
+              // #148), so a hardcoded string here is that contractor's card
+              // forever — in a language they may not read. These were English.
+              title: appI18n.t('aiQueue.qualityTitle', { title: job.title, defaultValue: '{{title}} — job feedback' }),
+              description: appI18n.t('aiQueue.qualityDesc', 'Record whether this customer paid on time, left a review, referred you, or rebooked.'),
               preparedData: { jobId: id, customerId: job.customerId },
-              actionLabel: 'Rate job',
-              estimatedImpact: 'Improves model accuracy',
+              actionLabel: appI18n.t('aiQueue.rateJob', 'Rate job'),
+              estimatedImpact: appI18n.t('aiQueue.qualityImpact', 'Sharpens your quote predictions'),
               expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
               entityKey: `job_quality:${id}`,
               sourceGeneratorId: 'job_completion',
@@ -1542,12 +1546,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           import('../services/aiActionQueueService').then(({ addToQueue }) => {
             addToQueue({
               type: 'draft_invoice',
-              title: `Factuur voor ${job.title}`,
-              description: `Klus afgerond · ${formatMoney((estimatedCost))}`,
+              // Was hardcoded Dutch ("Factuur voor …", "Klus afgerond",
+              // "Factuur aanmaken", "omzet") on the job-completion path, so a
+              // German or French contractor finishing a job got a Dutch card
+              // and kept it. populateQueue mints the identical card from these
+              // very keys — they existed in all six locales, unused here.
+              title: appI18n.t('aiQueue.invoiceFor', { title: job.title, defaultValue: 'Invoice for {{title}}' }),
+              description: `${appI18n.t('aiQueue.jobCompleted', 'Job completed')} · ${formatMoney(estimatedCost)}`,
               preparedData: { jobId: id, amount: estimatedCost, customer: job.customerId },
-              actionLabel: 'Factuur aanmaken',
-              estimatedImpact: `${formatMoney((estimatedCost))} omzet`,
+              actionLabel: appI18n.t('aiQueue.createInvoice', 'Create invoice'),
+              estimatedImpact: appI18n.t('aiQueue.revenueAmount', { amount: formatMoney(estimatedCost), defaultValue: '{{amount}} revenue' }),
               expiresAt: new Date(Date.now() + 7 * MS_PER_DAY).toISOString(),
+              // Without this the R269 trust multiplier can never apply, so this
+              // card could not be re-ranked by whether it gets approved.
+              sourceGeneratorId: 'event_job_completed_invoice',
             });
           }).catch(() => {});
         }

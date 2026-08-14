@@ -58,8 +58,10 @@ describe('classification helpers', () => {
   it('informational types are recognised', () => {
     expect(isInformationalQueueType('low_win_alert')).toBe(true);
     expect(isInformationalQueueType('late_payment_risk_alert')).toBe(true);
-    expect(isInformationalQueueType('supplier_comparison')).toBe(true);
     expect(isInformationalQueueType('draft_invoice')).toBe(false);
+    // NOT informational: its producers label the button "Compare" / "View
+    // savings", so it must land somewhere. See the navigate test below.
+    expect(isInformationalQueueType('supplier_comparison')).toBe(false);
   });
 });
 
@@ -188,12 +190,27 @@ describe('informational paths', () => {
     expect(router.push).toHaveBeenCalledWith('/contractor/quote/q-7');
   });
 
-  it('supplier_comparison without ids stays informational', async () => {
+  it('supplier_comparison opens the comparison screen its button names', async () => {
+    // Regression: this used to return {executed:false, via:'inform'} while the
+    // card's actionLabel read "Compare" — a button naming a screen it never
+    // opened.
     const router = makeRouter();
-    const result = await executeApprovedQueueItem(makeItem({ type: 'supplier_comparison' }), { router });
-    expect(result.executed).toBe(false);
-    expect(result.via).toBe('inform');
-    expect(router.push).not.toHaveBeenCalled();
+    const result = await executeApprovedQueueItem(
+      makeItem({ type: 'supplier_comparison', preparedData: { materialName: 'CV-ketel' } }),
+      { router },
+    );
+    expect(result.executed).toBe(true);
+    expect(router.push).toHaveBeenCalledWith('/contractor/market-prices');
+  });
+
+  it('the monthly overpaying-items roll-up goes to Besparen instead', async () => {
+    const router = makeRouter();
+    const result = await executeApprovedQueueItem(
+      makeItem({ type: 'supplier_comparison', preparedData: { totalMonthlySavings: 240, overpayingItems: [] } }),
+      { router },
+    );
+    expect(result.executed).toBe(true);
+    expect(router.push).toHaveBeenCalledWith('/(contractor)/besparen');
   });
 });
 

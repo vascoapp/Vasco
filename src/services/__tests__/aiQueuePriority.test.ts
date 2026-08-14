@@ -108,3 +108,32 @@ describe('R268 priority matrix', () => {
     }
   });
 });
+
+describe('a card that only tells you something must not outrank prepared work', () => {
+  const item = (type: string, over: Record<string, unknown> = {}) => ({
+    id: `x-${type}`, type, status: 'pending', title: '', description: '',
+    preparedData: {}, actionLabel: '', estimatedImpact: '',
+    createdAt: new Date().toISOString(), ...over,
+  }) as never;
+
+  test('a PREDICTED late payment ranks below a reminder already drafted for an overdue one', () => {
+    // late_payment_risk_alert was 95 — the highest base in the table — so it
+    // took the Vandaag hero slot ahead of draft_reminder (85), which carries a
+    // finished message for an invoice that is late right now. The alert only
+    // deep-links to the invoice.
+    expect(scoreQueueItem(item('late_payment_risk_alert')))
+      .toBeLessThan(scoreQueueItem(item('draft_reminder')));
+  });
+
+  test('it also ranks below the confirmed compliance deadlines', () => {
+    for (const t of ['invoice_regenerate', 'cert_renewal', 'permit_renewal', 'permit_check']) {
+      expect(scoreQueueItem(item('late_payment_risk_alert')))
+        .toBeLessThan(scoreQueueItem(item(t)));
+    }
+  });
+
+  test('but still outranks routine drafting — it is a real signal, just not work', () => {
+    expect(scoreQueueItem(item('late_payment_risk_alert')))
+      .toBeGreaterThan(scoreQueueItem(item('draft_invoice')));
+  });
+});

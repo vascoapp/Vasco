@@ -201,7 +201,6 @@ export async function getQueue(): Promise<QueueItem[]> {
 
 const BASE_URGENCY: Record<QueueItemType, number> = {
   // Tier 1 — money/compliance with hard deadlines
-  late_payment_risk_alert: 95,
   customer_question: 90,
   invoice_regenerate: 85,           // 30+ day overdue with late fee
   draft_reminder: 85,               // overdue payment reminder
@@ -216,6 +215,14 @@ const BASE_URGENCY: Record<QueueItemType, number> = {
   draft_followup: 65,
   quote_expiry: 65,
   decision_reminder: 65,
+  // Was 95 — the highest score in this table, so a PREDICTION that an invoice
+  // may pay late outranked draft_reminder (85), the card that has already
+  // written the chase for an invoice which is late RIGHT NOW. It took the hero
+  // slot on Vandaag by construction. A card that only tells you something must
+  // not outrank a card that has already done the work; below the confirmed
+  // obligations, above routine drafting. The defensible ranking comes from the
+  // action ledger's approval data, not from this constant.
+  late_payment_risk_alert: 72,
   low_win_alert: 60,
   // Tier 3 — operations
   job_handover: 55,
@@ -758,6 +765,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       },
       actionLabel: t('aiQueue.createInvoice'),
       estimatedImpact: t('aiQueue.revenueAmount', { amount: amountStr }),
+      sourceGeneratorId: 'automation_draft_invoice',
       expiresAt: new Date(now + 7 * dayMs).toISOString(),
       entityKey: `invoice-for-job:${job.id}`,
     });
@@ -787,6 +795,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       estimatedImpact: t('aiQueue.speedsUpPayment'),
       expiresAt: new Date(now + 3 * dayMs).toISOString(),
       entityKey: `reminder-for-invoice:${inv.id}`,
+      sourceGeneratorId: 'automation_draft_reminder',
     });
     if (id) added++;
   }
@@ -808,6 +817,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       actionLabel: t('aiQueue.sendFollowUp'),
       estimatedImpact: t('aiQueue.increasesAcceptance'),
       expiresAt: new Date(now + 5 * dayMs).toISOString(),
+      sourceGeneratorId: 'automation_draft_followup',
     });
     if (id) added++;
   }
