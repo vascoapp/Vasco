@@ -70,6 +70,10 @@ describe('German contractor surface', () => {
         entry.mounted = !r.error;
         entry.error = r.error ? String(r.error.message) : null;
         entry.texts = r.texts;
+        // Unmount as we go. `texts` is a plain string[] already copied above, so
+        // the later assertions do not need the tree alive — and keeping 20-odd
+        // German screens mounted for the whole file leaks their timers.
+        teardown(r);
       } catch (e) {
         entry.error = String((e as Error)?.message ?? e);
       }
@@ -113,6 +117,8 @@ describe('German contractor surface', () => {
   });
 });
 
-afterAll(async () => {
-  await teardown();
-});
+// NOTE: there is deliberately no afterAll teardown here. There used to be
+// `await teardown()` with no argument — `teardown(result)` then dereferenced
+// `undefined.tree`, threw, and its own try/catch swallowed it. So the file
+// looked cleaned up and unmounted nothing for its entire life. Screens are torn
+// down inside the walk loop instead, where the WalkResult actually exists.

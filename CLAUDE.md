@@ -89,6 +89,12 @@ npm run audit:unmounted                # components no screen reaches; follows t
 # with real providers. ~8s for the whole surface; catches what reading cannot.
 npm run walk                           # seeded demo contractor (what the sim shows)
 npm run walk:fresh                     # day one: backend up, zero rows
+npm run walk:prod                      # DEMO_MODE OFF — the shipping build.
+# `walk` and `walk:fresh` both run with __DEV__ true, so DEMO_MODE is ON and
+# fabricated fixtures are SUPPOSED to render. Only walk:prod answers "does mock
+# data reach a real contractor?". It runs the posture-agnostic suites only —
+# crew/payroll/flow suites are fixture-dependent by design, and the EU market
+# postures need demo accounts. See memory/demo-data-removal.md.
 # A quantity identical in BOTH postures is not computed from the contractor's
 # data. Detectors in __screenwalk__/detectors.test.tsx fail on new instances of
 # known defect shapes; its KNOWN list is the outstanding-findings list.

@@ -94,7 +94,8 @@
       "overrides": {
         "@supabase/realtime-js": {
           "ws": "^8.21.1"
-        }
+        },
+        "nanoid": "^3.3.17"
       }
     }
   }

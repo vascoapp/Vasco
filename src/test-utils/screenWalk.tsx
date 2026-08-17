@@ -105,7 +105,25 @@ function SignIn({ as, children }: { as: NonNullable<WalkOptions['as']>; children
   React.useEffect(() => {
     if (done.current) return;
     done.current = true;
-    const email = POSTURE_EMAIL[as] ?? 'contractor@vasco.dev';
+    // In production posture the demo addresses are rejected by design
+    // (AuthContext blocks every demo account when DEMO_MODE is false), so the
+    // prod walk signs in as an ordinary user through the real Supabase branch.
+    const realAuth = process.env.WALK_REAL_AUTH === '1';
+    if (realAuth && as !== 'contractor') {
+      // Loud on purpose. Production posture has ONE generic user, so a country
+      // posture silently becomes NL/nl — and a market suite would then assert
+      // against a market it is no longer standing in and pass for the wrong
+      // reason. A harness that quietly changes posture manufactures findings;
+      // better to refuse than to answer the wrong question.
+      throw new Error(
+        `screenWalk: posture '${as}' is not available under WALK_REAL_AUTH ` +
+        `(production posture signs in one generic user). Run this suite via ` +
+        `\`npm run walk\`, or teach jest.screens.setup.ts a per-posture real user.`,
+      );
+    }
+    const email = realAuth
+      ? 'walk@vascobuild.test'
+      : (POSTURE_EMAIL[as] ?? 'contractor@vasco.dev');
     login(email, 'walk').catch(() => {});
   }, [as, login]);
   return <>{isAuthenticated ? children : null}</>;

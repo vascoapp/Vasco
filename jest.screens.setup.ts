@@ -256,8 +256,29 @@ jest.mock('./src/lib/supabase', () => {
       from: jest.fn(() => chain),
       rpc: jest.fn(() => answer()),
       auth: {
-        getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
-        getUser: jest.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+        // A signed-in user needs a SESSION too, or AppState.refreshData bails
+        // with "no session" and every screen renders authenticated-but-empty —
+        // which reads as a data bug and is really a harness gap.
+        getSession: jest.fn(() =>
+          Promise.resolve({
+            data: {
+              session: process.env.WALK_REAL_AUTH === '1'
+                ? { access_token: 'walk-token', user: { id: 'walk-prod-user', email: 'walk@vascobuild.test' } }
+                : null,
+            },
+            error: null,
+          }),
+        ),
+        getUser: jest.fn(() =>
+          Promise.resolve({
+            data: {
+              user: process.env.WALK_REAL_AUTH === '1'
+                ? { id: 'walk-prod-user', email: 'walk@vascobuild.test' }
+                : null,
+            },
+            error: null,
+          }),
+        ),
         onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
         // Must FAIL. AuthContext treats `!error` as success and then only
         // calls setUser when `data.user` exists — a null-user "success" leaves
@@ -265,8 +286,30 @@ jest.mock('./src/lib/supabase', () => {
         // every isAannemer branch stays dark. Failing here is also what a real
         // device does without a confirmed Supabase account: login falls through
         // to the DEMO_MODE mock-user path.
-        signInWithPassword: jest.fn(() =>
-          Promise.resolve({ data: { user: null }, error: { message: 'walk: no supabase account' } }),
+        // In PRODUCTION posture (walk:prod) this must SUCCEED. With DEMO_MODE
+        // off, AuthContext rejects every `*@vasco.dev` address outright — which
+        // is correct for a real build, and means the demo path above cannot
+        // sign anyone in. Without a working real path the prod walk renders 79
+        // empty screens and every assertion fails for one uninteresting reason.
+        // So: real user, real auth branch, no demo involvement.
+        signInWithPassword: jest.fn(({ email }: { email?: string } = {}) =>
+          process.env.WALK_REAL_AUTH === '1'
+            ? Promise.resolve({
+                data: {
+                  user: {
+                    id: 'walk-prod-user',
+                    email: email ?? 'walk@vascobuild.test',
+                    user_metadata: {
+                      role: 'contractor',
+                      country: process.env.WALK_COUNTRY ?? 'NL',
+                      language: process.env.WALK_LANGUAGE ?? 'nl',
+                    },
+                  },
+                  session: { access_token: 'walk-token' },
+                },
+                error: null,
+              })
+            : Promise.resolve({ data: { user: null }, error: { message: 'walk: no supabase account' } }),
         ),
         signOut: jest.fn(() => Promise.resolve({ error: null })),
       },

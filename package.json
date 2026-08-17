@@ -36,7 +36,8 @@
     "supabase:reset": "supabase db reset --linked",
     "phrasing:generate": "node scripts/generate-phrasing.mjs",
     "walk": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit",
-    "walk:fresh": "WALK_POSTURE=fresh NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit"
+    "walk:fresh": "WALK_POSTURE=fresh NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit",
+    "walk:prod": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.prod.config.js --forceExit"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
