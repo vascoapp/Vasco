@@ -125,6 +125,14 @@ npm run smoke:customer                 # the CUSTOMER path — anon key, NO sess
                                        # one-line "fix" is a GRANT that leaks
                                        # every quote token on the platform.
 npm run smoke:endpoints                # edge fns + RLS + anon surface + drift
+npm run check:drift                    # database.types.ts vs the LIVE columns,
+                                       # both directions. A Row field that is
+                                       # not a column makes PostgREST reject the
+                                       # WHOLE write (PGRST204); a column with no
+                                       # field is data the FE cannot see.
+                                       # ⚠️ grep "who writes this field" misses
+                                       # edge-function writers — check
+                                       # supabase/functions/** too.
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
 ```
 
