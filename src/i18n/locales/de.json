@@ -3150,7 +3150,8 @@
     "blockedTitle": "Wartet auf Übergabe",
     "blockedLine": "{{project}} · {{milestone}} — wartet auf {{blocker}}",
     "gapMore_one": "+{{count}} weiterer",
-    "gapMore_other": "+{{count}} weitere"
+    "gapMore_other": "+{{count}} weitere",
+    "noFreeSlots": "Heute kein freier Zeitraum lang genug"
   },
   "weekly": {
     "title": "WOCHENÜBERSICHT",

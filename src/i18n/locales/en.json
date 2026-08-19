@@ -3150,7 +3150,8 @@
     "blockedTitle": "Waiting on handover",
     "blockedLine": "{{project}} · {{milestone}} — waiting on {{blocker}}",
     "gapMore_one": "+{{count}} more",
-    "gapMore_other": "+{{count}} more"
+    "gapMore_other": "+{{count}} more",
+    "noFreeSlots": "No free slot long enough today"
   },
   "weekly": {
     "title": "WEEK OVERVIEW",

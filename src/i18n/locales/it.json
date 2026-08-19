@@ -3133,7 +3133,8 @@
     "blockedTitle": "In attesa di consegna",
     "blockedLine": "{{project}} · {{milestone}} — in attesa di {{blocker}}",
     "gapMore_one": "+{{count}} altro",
-    "gapMore_other": "+{{count}} altri"
+    "gapMore_other": "+{{count}} altri",
+    "noFreeSlots": "Oggi non c’è uno slot libero abbastanza lungo"
   },
   "marketInsights": {
     "title": "INSIGHT DI MERCATO",

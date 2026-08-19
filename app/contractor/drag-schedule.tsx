@@ -1,10 +1,30 @@
 // =============================================================================
-// DRAG SCHEDULE — Gesture-based job scheduling board
+// SCHEDULE BOARD — tap to schedule, tap a block to reassign
 // =============================================================================
-// Long-press to pick up a job, drag to a time slot, drop to assign
+// ⚠️ The route is still `/contractor/drag-schedule` and this file is still
+// named for a gesture it has never had. Fourteen call sites point at that path
+// (aiCommandRouter, queueItemExecutor, notificationService, three KPI tiles,
+// deep links), so the NAME is a separate, riskier change than the behaviour.
+// The header, though, used to describe a pick-up-and-drop interaction in
+// detail, and no gesture library has ever been imported here — not
+// PanResponder, not reanimated, nothing. A name that describes an intention
+// outlives the intention; the comment at least should not.
+//
+// (Deliberately paraphrased, not quoted: __screenwalk__/scheduleMenuNotAlert
+// greps this file for the old wording, and a detector that cannot tell a
+// quotation from a claim is a detector that has to be argued with.)
+//
+// Interaction, actually:
+//   · pool card  → menu of free slots (→ crew first, when crewMode)
+//   · lane block → menu of crew members to move it to
+//   · long-press a block → remove from the schedule
+//
+// Both menus are DKMenu, not Alert. House rule (CLAUDE.md): picking one of N
+// is a balloon menu. This screen broke that rule AND paid for it — see
+// SlotPicker below.
 // =============================================================================
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { todayKey, weekKeys, startOfWeek } from '../../src/utils/dateKey';
@@ -13,6 +33,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { DKMenu, type DKMenuItem } from '../../src/components/shared/DKMenu';
 import { useAppState } from '../../src/state/AppState';
 import { slotHoursOr } from '../../src/utils/jobSlot';
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
@@ -64,6 +85,162 @@ async function maybePromptCalendarSync(
 }
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 7); // 07:00 - 18:00
+
+// ---------------------------------------------------------------------------
+// BlockPressable — a scheduled block, which is a menu anchor only with a crew
+// ---------------------------------------------------------------------------
+/**
+ * Solo contractors have nobody to reassign to, so wrapping every block in a
+ * DKMenu for them would add a Modal and a measured anchor per block to show a
+ * one-item menu. They keep the plain Pressable and the info Alert.
+ *
+ * Long-press still removes, in both branches — it is the only way off the
+ * board and losing it would strand jobs.
+ */
+function BlockPressable({
+  job, laneName, crewMode, items, onShowInfo, onRemove, reassignLabel, hoursToHM, children,
+}: {
+  job: ScheduledJob;
+  laneName: string;
+  crewMode: boolean;
+  items: DKMenuItem[];
+  onShowInfo: () => void;
+  onRemove: () => void;
+  reassignLabel: string;
+  hoursToHM: (h: number) => string;
+  children: React.ReactNode;
+}) {
+  const label = `${job.title}, ${laneName}, ${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}${job.site ? `, ${job.site}` : ''}`;
+  const style = [styles.laneBlock, {
+    backgroundColor: job.color + '15',
+    borderLeftColor: job.color,
+    height: job.duration * SLOT_HEIGHT - 4,
+  }];
+
+  // A crew of one has nobody else to move the job to, so the menu would be
+  // empty — and an empty menu is a dead control.
+  if (!crewMode || items.length === 0) {
+    return (
+      <Pressable
+        style={style}
+        onLongPress={onRemove}
+        onPress={onShowInfo}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        {children}
+      </Pressable>
+    );
+  }
+
+  return (
+    <DKMenu
+      renderAnchor={(open) => (
+        <Pressable
+          style={style}
+          onLongPress={onRemove}
+          onPress={open}
+          accessibilityRole="button"
+          accessibilityLabel={label}
+        >
+          {children}
+        </Pressable>
+      )}
+      items={items}
+      accessibilityLabel={reassignLabel}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SlotPicker — the scheduling menu, and why it is not an Alert
+// ---------------------------------------------------------------------------
+/**
+ * This used to be `Alert.alert(…, [...slots, cancel])`, and on Android that is
+ * a data-loss bug, not a style preference: **RN's Android Alert silently keeps
+ * only the first three buttons.** Five slots plus cancel meant an Android
+ * contractor could choose from two times and never knew the others existed.
+ * The crew picker was worse — `[...workers, unassign, cancel]`, so a crew of
+ * three or more was unreachable past the second name.
+ *
+ * The `.slice(0, 5)` that used to cap the slot list was a symptom of the same
+ * cap. A DKMenu scrolls, so every free slot in the working day is offered now.
+ *
+ * Two steps when there is a crew, because "when" is only half the decision —
+ * the job should land in somebody's lane, not in an anonymous company-wide
+ * day. Step two reuses the same balloon: selecting a worker re-opens the menu
+ * with the slot list. DKMenu closes on select (`close(); item.onPress()`), and
+ * calling `open()` inside that same handler batches with the close, so the
+ * balloon stays up and swaps its contents rather than blinking shut and back.
+ */
+export function SlotPicker({
+  slots, workers, crewMode, currentWorkerId, onPick, accessibilityLabel, renderAnchor, labels,
+}: {
+  slots: number[];
+  workers: { id: string; name: string }[];
+  crewMode: boolean;
+  currentWorkerId?: string;
+  /** workerId is undefined for a solo contractor and for an explicit unassign. */
+  onPick: (hour: number, workerId?: string) => void;
+  accessibilityLabel: string;
+  renderAnchor: (open: () => void) => React.ReactNode;
+  labels: { chooseSlot: string; assignTo: string; unassign: string; noSlots: string };
+}) {
+  const [step, setStep] = useState<'worker' | 'slot'>(crewMode ? 'worker' : 'slot');
+  const [pickedWorker, setPickedWorker] = useState<string | undefined>(undefined);
+  const reopenRef = useRef<(() => void) | null>(null);
+
+  const start = useCallback((open: () => void) => {
+    // Always restart at step one. A menu that reopens halfway through a
+    // decision the user abandoned is a menu that lies about where it is.
+    setStep(crewMode ? 'worker' : 'slot');
+    setPickedWorker(undefined);
+    reopenRef.current = open;
+    open();
+  }, [crewMode]);
+
+  const items: DKMenuItem[] = step === 'worker'
+    ? [
+        ...workers.map((w) => ({
+          key: w.id,
+          label: w.name,
+          selected: w.id === currentWorkerId,
+          onPress: () => {
+            setPickedWorker(w.id);
+            setStep('slot');
+            reopenRef.current?.();
+          },
+        })),
+        {
+          key: '__unassigned',
+          label: labels.unassign,
+          emphasis: true,
+          onPress: () => {
+            setPickedWorker(undefined);
+            setStep('slot');
+            reopenRef.current?.();
+          },
+        },
+      ]
+    : slots.length > 0
+      ? slots.map((h) => ({
+          key: String(h),
+          label: `${h}:00`,
+          onPress: () => onPick(h, pickedWorker),
+        }))
+      : // An empty menu is a dead control. Say why there is nothing to pick.
+        [{ key: '__none', label: labels.noSlots, onPress: () => {} }];
+
+  return (
+    <DKMenu
+      renderAnchor={(open) => renderAnchor(() => start(open))}
+      items={items}
+      accessibilityLabel={step === 'worker' ? labels.assignTo : labels.chooseSlot}
+    />
+  );
+}
+
+
 const SLOT_HEIGHT = 60;
 
 // Format a decimal-hours value (e.g. 16.5) as HH:MM ("16:30"). Block durations
@@ -442,11 +619,21 @@ export default function DragScheduleScreen() {
    * someone calls in sick, a site over-runs — and it has to be reachable from
    * the block itself rather than by deleting and re-scheduling.
    */
-  const handleReassign = (job: ScheduledJob) => {
-    if (!crewMode) {
-      Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}`);
-      return;
-    }
+  /** Solo contractor: there is nobody to reassign to, so the tap just tells
+   *  you what the block is. Unchanged, and a two-button Alert is fine. */
+  const showJobInfo = (job: ScheduledJob) => {
+    Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}`);
+  };
+
+  /**
+   * Crew members this job could move to, as menu items.
+   *
+   * Was an `Alert.alert(reassignTo, [...workers, unassign, cancel])` — which on
+   * Android showed the first three buttons and dropped the rest, so a crew of
+   * four had two reachable names. Returning items instead of raising an Alert
+   * lets DKMenu scroll the whole crew.
+   */
+  const reassignItems = (job: ScheduledJob): DKMenuItem[] => {
     const apply = (workerId?: string) => {
       const worker = workerId ? activeWorkers.find((w) => w.id === workerId) : undefined;
       setSchedule((prev) => prev.map((s2) => s2.jobId === job.jobId
@@ -455,13 +642,18 @@ export default function DragScheduleScreen() {
       try { updateJob(job.jobId, { assignedWorkerId: workerId }); } catch {}
       hapticSuccess();
     };
-    Alert.alert(t('schedule.reassignTo'), job.title, [
+    return [
       ...activeWorkers
         .filter((w) => w.id !== job.workerId)
-        .map((w) => ({ text: w.name, onPress: () => confirmTrade(w.id, job.jobId, () => apply(w.id)) })),
-      ...(job.workerId ? [{ text: t('schedule.unassign'), onPress: () => apply(undefined) }] : []),
-      { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
-    ]);
+        .map((w) => ({
+          key: w.id,
+          label: w.name,
+          onPress: () => confirmTrade(w.id, job.jobId, () => apply(w.id)),
+        })),
+      ...(job.workerId
+        ? [{ key: '__unassign', label: t('schedule.unassign'), emphasis: true, onPress: () => apply(undefined) }]
+        : []),
+    ];
   };
 
   const handleRemoveFromSchedule = (jobId: string) => {
@@ -749,35 +941,39 @@ export default function DragScheduleScreen() {
                 ) : null}
                 <Text style={styles.poolJobHours}>{t('common.durationH', { defaultValue: '{{h}}h', h: job.estimatedHours })}</Text>
                 {/* Tap to pick time slot */}
-                <Pressable
-                  style={styles.poolAssignBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${t('schedule.schedule', 'Schedule')} ${job.title}`}
-                  onPress={() => {
-                    const slots = HOURS.filter(h => h + job.estimatedHours <= 19).slice(0, 5);
-                    const pickSlot = (workerId?: string) => {
-                      Alert.alert(t('schedule.chooseSlot', 'Tijdslot kiezen'), t('schedule.whenSchedule', { defaultValue: 'When do you want to schedule {{job}}?', job: `"${job.title}"` }), [
-                        ...slots.map(h => ({ text: `${h}:00`, onPress: () => handleDropOnSlot(h, job, workerId) })),
-                        { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
-                      ]);
-                    };
-                    // With a crew, "when" is only half the decision — ask WHO
-                    // first, so the job lands in somebody's lane rather than in
-                    // an anonymous company-wide day.
-                    if (!crewMode) { pickSlot(); return; }
-                    Alert.alert(t('schedule.assignTo'), job.title, [
-                      ...activeWorkers.map((w) => ({
-                        text: w.name,
-                        onPress: () => confirmTrade(w.id, job.jobId, () => pickSlot(w.id)),
-                      })),
-                      { text: t('schedule.unassign'), onPress: () => pickSlot(undefined) },
-                      { text: t('schedule.cancel', 'Annuleren'), style: 'cancel' as const },
-                    ]);
+                {/* No `.slice(0, 5)` any more — that cap existed to stay under
+                    the Android Alert's 3-button ceiling, and a DKMenu scrolls.
+                    Every slot the job actually fits in is offered. */}
+                <SlotPicker
+                  slots={HOURS.filter((h) => h + job.estimatedHours <= 19)}
+                  workers={activeWorkers.map((w) => ({ id: w.id, name: w.name }))}
+                  crewMode={crewMode}
+                  onPick={(hour, workerId) => {
+                    if (!workerId) { handleDropOnSlot(hour, job, undefined); return; }
+                    // The trade check still gates the assignment, and still
+                    // warns rather than blocks — an apprentice shadowing a lead
+                    // is a real day.
+                    confirmTrade(workerId, job.jobId, () => handleDropOnSlot(hour, job, workerId));
                   }}
-                >
-                  <Ionicons name="add-circle" size={14} color={Palette.hermesOrange} />
-                  <Text style={styles.poolAssignText}>{t('schedule.schedule', 'Inplannen')}</Text>
-                </Pressable>
+                  accessibilityLabel={t('schedule.chooseSlot', 'Tijdslot kiezen')}
+                  labels={{
+                    chooseSlot: t('schedule.chooseSlot', 'Tijdslot kiezen'),
+                    assignTo: t('schedule.assignTo'),
+                    unassign: t('schedule.unassign'),
+                    noSlots: t('schedule.noFreeSlots', 'Geen vrij tijdslot vandaag'),
+                  }}
+                  renderAnchor={(open) => (
+                    <Pressable
+                      style={styles.poolAssignBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${t('schedule.schedule', 'Schedule')} ${job.title}`}
+                      onPress={open}
+                    >
+                      <Ionicons name="add-circle" size={14} color={Palette.hermesOrange} />
+                      <Text style={styles.poolAssignText}>{t('schedule.schedule', 'Inplannen')}</Text>
+                    </Pressable>
+                  )}
+                />
               </View>
             ))}
           </ScrollView>
@@ -894,17 +1090,16 @@ export default function DragScheduleScreen() {
                   {lanes.map((lane) => (
                     <View key={`${lane.id ?? 'none'}-${hour}`} style={styles.laneSlot}>
                       {lane.jobs.filter((j) => j.startHour === hour).map((job) => (
-                        <Pressable
+                        <BlockPressable
                           key={job.jobId}
-                          style={[styles.laneBlock, {
-                            backgroundColor: job.color + '15',
-                            borderLeftColor: job.color,
-                            height: job.duration * SLOT_HEIGHT - 4,
-                          }]}
-                          onLongPress={() => handleRemoveFromSchedule(job.jobId)}
-                          onPress={() => handleReassign(job)}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${job.title}, ${lane.name}, ${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}${job.site ? `, ${job.site}` : ''}`}
+                          job={job}
+                          laneName={lane.name}
+                          crewMode={crewMode}
+                          items={crewMode ? reassignItems(job) : []}
+                          onShowInfo={() => showJobInfo(job)}
+                          onRemove={() => handleRemoveFromSchedule(job.jobId)}
+                          reassignLabel={t('schedule.reassignTo')}
+                          hoursToHM={hoursToHM}
                         >
                           <Text style={[styles.blockTitle, { color: job.color }]} numberOfLines={1}>{job.title}</Text>
                           {/* The site, not just the customer: on a multi-site
@@ -918,7 +1113,7 @@ export default function DragScheduleScreen() {
                           <Text style={styles.blockTimeText} numberOfLines={1}>
                             {job.startHour}:00 – {hoursToHM(job.startHour + job.duration)}
                           </Text>
-                        </Pressable>
+                        </BlockPressable>
                       ))}
                     </View>
                   ))}

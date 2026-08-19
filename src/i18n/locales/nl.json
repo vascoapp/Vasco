@@ -3134,7 +3134,8 @@
     "blockedTitle": "Wacht op oplevering",
     "blockedLine": "{{project}} · {{milestone}} — wacht op {{blocker}}",
     "gapMore_one": "+{{count}} meer",
-    "gapMore_other": "+{{count}} meer"
+    "gapMore_other": "+{{count}} meer",
+    "noFreeSlots": "Geen vrij tijdslot lang genoeg vandaag"
   },
   "weekly": {
     "title": "WEEKOVERZICHT",

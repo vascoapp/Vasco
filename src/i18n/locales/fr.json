@@ -3133,7 +3133,8 @@
     "blockedTitle": "En attente de réception",
     "blockedLine": "{{project}} · {{milestone}} — en attente de {{blocker}}",
     "gapMore_one": "+{{count}} autre",
-    "gapMore_other": "+{{count}} autres"
+    "gapMore_other": "+{{count}} autres",
+    "noFreeSlots": "Aucun créneau libre assez long aujourd’hui"
   },
   "marketInsights": {
     "title": "INSIGHTS DU MARCHÉ",
