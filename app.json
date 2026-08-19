@@ -24,7 +24,7 @@
       "requireFullScreen": true,
       "bundleIdentifier": "com.vascobuild.app",
       "scheme": "vasco",
-      "buildNumber": "48",
+      "buildNumber": "49",
       "associatedDomains": [
         "applinks:vascobuild.com",
         "applinks:pay.vascobuild.com",
