@@ -1,6 +1,7 @@
 # SCHEMA LOCK — VascoApp BE↔FE Contract
 
-**Version:** 1.16 — updated 2026-08-06 (cohort key = canonical + alias)
+**Version:** 1.17 — updated 2026-08-19 (the anon customer surface, which had never worked)
+<!-- v1.17 (migrations 20260819000001-4): THE ANON CUSTOMER SURFACE. `anon` holds ZERO table grants in this project — VERIFIED LIVE, `information_schema.role_table_grants` for grantee 'anon' returns 0 rows — so EVERY anon `.from()` in the app returned 42501 and every unauthenticated customer surface had been dead since it was built: quote acceptance (`quote_acceptance_links`), decision submissions, decision activities, portal events. Migration 20260507000006 wrote two anon RLS POLICIES for acceptance; a policy narrows a granted privilege, it does not grant one. ⚠️ THE OBVIOUS FIX IS THE DANGEROUS ONE: `qal_select_by_token` was `FOR SELECT TO anon USING (true)` under a comment claiming PostgREST forces an eq() filter — it does not, so one GRANT would dump every pending token + customer name + amount on the platform, and `qal_anon_decide`'s WITH CHECK (which its comment says protects amount/quote_id/user_id) checks `status` and nothing else. BOTH POLICIES DROPPED. NEW anon-callable SECURITY DEFINER RPCs, no table grant anywhere: get_acceptance_link_by_token(text), decide_acceptance_link(text,text,text), submit_decision_via_portal(text,uuid,text,text,text[],text,int), log_portal_activity(text,text,uuid,jsonb), record_portal_event(text,text,text,text,int,jsonb). Tenant, owner and actor are resolved SERVER-SIDE from the capability in the URL — the customer's device never names its own tracker_id, contractor_user_id or submitted_by, and item ownership is checked against the tracker. TWO MORE FOUND UNDERNEATH: (1) get_portal_by_access_code selected di.priority and di.is_overdue, columns decision_items has NEVER had, since 11 May through three redefinitions — so no real tracker had ever rendered; it survived because every probe used a junk access code, which returns NULL at the format guard BEFORE touching a table, and a guard's 200 is indistinguishable from a query's 200. Now derived from is_required and due_date; ⚠️ 'critical' priority is lossy on the WRITE side (decisionTrackerService stores `is_required: priority !== 'optional'`) and is NOT recoverable. (2) update_tracker_progress was a PHANTOM — called after every submission, never written anywhere, inside a try/catch marked "Non-critical", so completed_items never moved for anyone; now defined (recounts DISTINCT item_id, clamps to total_items, promotes status to 'completed' only — the CHECK allows active|completed|expired, there is no 'in_progress'). Also NEW list_public_routines() (authenticated-only, names only) so endpoint-health can check client→RPC drift exactly. Prev: -->
 <!-- v1.16 (migrations 20260806000003 + 20260806000004): COHORT KEY REPOINTED. material_price_benchmarks now groups on COALESCE(alias.canonical_key, canonical_name, lower(material_name)) instead of lower(material_name) — the raw spelling WAS the cohort key, so one product written six ways was six sub-k groups showing nothing. View DROPPED and recreated (CREATE OR REPLACE cannot add/reorder columns); new column `cohort_key` is the grouping key and `material_name` is now mode() WITHIN GROUP — the most common RAW spelling, for DISPLAY ONLY. ⚠️ get_material_cohort_stats SEMANTIC CHANGE: p_material_name now matches cohort_key (raw name still accepted as fallback); its only caller passes NULL. Done NOW because material_price_history had ZERO rows — v1.10 deferred this precisely because repointing with data splits every cohort and TS-side canonicalisation cannot be back-filled in SQL. NEW TABLE material_canonical_aliases (variant_key PK → canonical_key, source CHECK(llm|manual|ean), rationale): where LLM-proposed merges land. authenticated READ only; NO write policy and REVOKE from anon — a client-writable alias moves every contractor's benchmark. Written solely by edge fn propose-material-merges (service_role) whose verifier enforces output ⊆ input, no chains, no cross-unit/category. NEW FN get_sub_k_cohort_candidates(int) — service_role ONLY, it lists exactly the below-k groups the benchmark view exists to hide. Prev: -->
 <!-- v1.15 (migration 20260806000002): DOCUMENT NUMBERING. No new columns — business_settings.invoice_prefix/quote_prefix existed since the base schema with a complete 5-file chain and were read by nothing and set by nothing. next_document_number(text) now reads them, falling back to 'I'/'Q' when NULL/blank/>12 chars/outside [A-Za-z0-9/_-]; it DEFAULTS rather than raising because refusing to number an invoice would block a sale over a settings typo. NEW: set_document_counter(text,bigint) — takes the number the NEXT document should carry (the question a contractor can answer) and REFUSES to move backwards with 23505; that refusal is why it is a function and not an UPDATE, since lowering the counter re-mints already-issued numbers and two invoices sharing a number is a compliance event. NEW: peek_document_counter(text) — read-only, so a settings screen does not consume a number by opening. All three SECURITY DEFINER with search_path pinned; anon has EXECUTE on none of them. ⚠️ CREATE OR REPLACE DROPS function SET clauses — the 20260711000004 search_path hardening had to be re-declared, and was verified live (prosecdef true + search_path=public, pg_temp on all three). Prev: -->
 <!-- v1.14 (migration 20260806000001): NEW TABLE accountant_handovers + RPC get_accountant_handover(text) — the adviser seat, phase 2 of the collaboration layer. Columns: user_id, access_code TEXT UNIQUE (128-bit, minted client-side, NEVER returned by the RPC), label, business_name, country, period_start/end, payload JSONB (the whole AccountantHandover from src/services/accountantHandoverService.ts), expires_at DEFAULT now()+180d, revoked_at, last_viewed_at, view_count. Partial UNIQUE (user_id, lower(label)) WHERE revoked_at IS NULL = one live seat per adviser, so republishing refreshes the bookmarked link instead of minting a second one. PUBLISHED SNAPSHOT, NOT A LIVE VIEW, for two reasons: (1) per-invoice filing state lives in AsyncStorage on the device — regulated_submissions exists but nothing writes it — so the server literally cannot assemble it and a join would render the one column that matters as empty; (2) the anon RPC then reads ONE curated row with no join into documents, vs R14/R15 where a broad anon SELECT over a token-bearing table leaked every portal. RLS owner-scoped for authenticated (select/insert/update/delete) + explicit GRANT; anon gets NO table grant — VERIFIED LIVE: direct anon read returns 42501. RPC is SECURITY DEFINER, search_path pinned, format-guarded, returns NULL for not-found and {"expired":true} for BOTH expired and revoked (leaking "your client withdrew this" to a dead-code holder confirms the code was once real), and bumps view_count/last_viewed_at as the audit trail. READ-ONLY BY CONSTRUCTION — no accountant write path exists, deliberately. Prev: -->
@@ -725,6 +726,27 @@ Tables in this tier:
 ## RPCs — LOCKED SIGNATURES
 
 ```
+-- ANON-CALLABLE (the customer has no account; the URL secret is the credential).
+-- The complete list. Anything not here must NOT have anon EXECUTE.
+get_portal_by_access_code(p_access_code text) → jsonb | null | {"expired":true}
+get_acceptance_link_by_token(p_token text) → jsonb | null   -- null for malformed AND absent
+decide_acceptance_link(p_token text, p_decision text, p_reason text DEFAULT NULL)
+  → jsonb | null   -- null = absent, already decided, or expired. pending→accepted|rejected only.
+submit_decision_via_portal(p_access_code text, p_item_id uuid, p_value text,
+  p_notes text DEFAULT NULL, p_photos text[] DEFAULT NULL,
+  p_linked_product_url text DEFAULT NULL, p_time_to_decide_seconds int DEFAULT NULL)
+  → jsonb | null   -- submitted_by/submitted_at server-set; item must belong to the tracker
+log_portal_activity(p_access_code text, p_activity_type text, p_item_id uuid DEFAULT NULL,
+  p_metadata jsonb DEFAULT NULL) → boolean   -- false, never raise: telemetry must not break the screen
+record_portal_event(p_access_code text, p_event_type text, p_decision_id text DEFAULT NULL,
+  p_quote_id text DEFAULT NULL, p_duration_ms int DEFAULT NULL, p_metadata jsonb DEFAULT NULL) → boolean
+write_signature_via_portal(p_access_code, p_signer_name, p_signer_role, p_signature_svg, p_user_agent) → uuid
+get_customer_question_status(...)
+get_accountant_handover(p_access_code text) → jsonb | null | {"expired":true}
+
+-- AUTHENTICATED / SERVICE_ROLE
+update_tracker_progress(p_tracker_id uuid) → void   -- recount, not increment
+list_public_routines() → text[]   -- names only, for endpoint-health drift check
 next_document_number(p_doc_type text) → text
 predict_customer_dso(p_user_id uuid, p_customer_id text)
   → { predicted_dso int, confidence numeric, historical_avg numeric, payment_count int, on_time_rate numeric }
@@ -912,7 +934,14 @@ train-extra-models  (cron, service_role)
 1. **Owner-read** (most personal data): `USING (user_id = auth.uid())`
 2. **Service_role only** (sensitive ops): `USING (auth.role() = 'service_role')`
 3. **Public read, service_role write** (`feature_flags`): `FOR SELECT USING (true); FOR ALL USING (auth.role() = 'service_role')`
-4. **Anon insert, owner read** (portal tables): contractor + anon validated via Edge function
+4. **Capability RPC, no table grant** (every customer-facing portal table):
+   `anon` gets EXECUTE on a SECURITY DEFINER function and **nothing else** — no
+   table GRANT, therefore no anon RLS policy either. The secret in the URL is
+   the credential; the function resolves tenant/owner/actor from it and the
+   caller names none of them. ⚠️ Do **not** "fix" a dead customer surface with
+   `GRANT ... TO anon` — see v1.17. Verify with
+   `select * from information_schema.role_table_grants where grantee='anon'`
+   (must stay empty), and with the anon section of `npm run smoke:endpoints`.
 5. **Authenticated read aggregate** (`cohort_benchmarks`): readable by all authenticated users; aggregates hide PII
 
 **Test invariant:** logging in as user A and querying user B's `pricing_intelligence`, `quote_line_deltas`, `business_settings`, `subscriptions`, or `documents` MUST return zero rows.
