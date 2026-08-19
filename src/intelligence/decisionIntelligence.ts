@@ -513,15 +513,35 @@ class DecisionIntelligenceService {
   }
 
   /**
-   * Flush buffered activities to backend.
-   * R291: "batch send to backend" comment was aspirational. Today we only
-   * emit trackUserAction events — those go to the local intelligence engine,
-   * NOT to a server-side aggregation table. Portal activities never reach
-   * BE for cross-contractor cohort analysis.
+   * Flush buffered activities to the local intelligence engine.
    *
-   * Real fix needed: BE table `customer_portal_events` (already in
-   * SCHEMA_LOCK Tier 3) + bulk insert here. Currently the table exists
-   * but nothing writes to it.
+   * R304 added a bulk insert into `customer_portal_events` here. It was
+   * removed on 2026-08-19 for two reasons, the second worse than the first.
+   *
+   * 1. It could never have worked. The insert ran on the anon client (this
+   *    buffer only ever fills from the customer portal) and `anon` has no
+   *    grant on that table — 42501, every row, silently, because the insert
+   *    was awaited inside a bare `catch {}` and supabase-js resolves with
+   *    `{ error }` rather than throwing.
+   *
+   * 2. It CONTRADICTED the writer that does work. `app/customer/[code].tsx`
+   *    routes the same actions through `recordPortalEvent`, and the two
+   *    disagreed about what they meant:
+   *      · `item_viewed` → 'line_clicked' here, 'quote_viewed' there
+   *      · `portal_accessed` → 'portal_opened' here, and the screen ALSO
+   *        sends 'portal_opened' on load — double-counting every visit
+   *      · `decision_made` → a flat 'accepted', which its own comment called
+   *        "rough approximation — value polarity not surfaced here", while
+   *        the screen computes the real polarity and sends
+   *        accepted / declined / session_ended
+   *
+   * Granting anon and leaving both writers in place would have fed the moat
+   * inflated visit counts and a stream of "accepted" events for decisions the
+   * customer declined. There is nothing here the screen does not already send
+   * with better fidelity, so the honest fix is one writer, not two.
+   *
+   * See [[customer-surface-dead-2026-08]] and migration
+   * 20260819000002_customer_portal_writes.sql.
    */
   private async flushActivityBuffer(): Promise<void> {
     if (this.activityBuffer.length === 0) return;
@@ -530,40 +550,6 @@ class DecisionIntelligenceService {
     this.activityBuffer = [];
 
     logInfo('DecisionIntelligence', `Flushing ${activities.length} activities`);
-
-    // R304: bulk-insert into BE customer_portal_events. Closes R291 deferral
-    // (portal events were SCHEMA_LOCK Tier 3 with no FE writer). The BE
-    // event_type enum is quote-engagement-focused; we map decision-portal
-    // actions where they semantically align, drop those that don't.
-    const ACTION_TO_EVENT_TYPE: Partial<Record<CustomerPortalActivity['action'], string>> = {
-      portal_accessed: 'portal_opened',
-      item_viewed: 'line_clicked',
-      decision_made: 'accepted',          // rough approximation — value polarity not surfaced here
-      photo_uploaded: 'photo_viewed',     // customer interacting with photo content
-    };
-
-    if (isSupabaseConfigured) {
-      const beRows = activities
-        .filter((a) => ACTION_TO_EVENT_TYPE[a.action])
-        .map((a) => ({
-          portal_token: a.trackerId,
-          event_type: ACTION_TO_EVENT_TYPE[a.action],
-          decision_id: a.itemId ?? null,
-          metadata: {
-            customerId: a.customerId,
-            categoryId: a.categoryId,
-            deviceType: a.deviceType,
-            ...(a.metadata ?? {}),
-          },
-        }));
-      if (beRows.length > 0) {
-        try {
-          await (supabase.from('customer_portal_events') as any).insert(beRows);
-        } catch {
-          // Best-effort. Local trackUserAction below remains the audit trail.
-        }
-      }
-    }
 
     // Local intelligence engine — kept for legacy and offline visibility.
     for (const activity of activities) {

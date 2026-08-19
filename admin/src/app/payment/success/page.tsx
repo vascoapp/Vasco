@@ -37,10 +37,10 @@ function pickLanguage(): 'nl' | 'en' | 'de' | 'fr' | 'es' | 'it' {
 const COPY = {
   en: { eyebrow: 'Payment received', title: 'Thank you', body: 'Your payment was received. A receipt has been sent to your contractor.', cta: 'Open Vasco', noApp: 'New to Vasco?', desktopHint: 'You can close this tab.' },
   nl: { eyebrow: 'Betaling ontvangen', title: 'Bedankt', body: 'Je betaling is ontvangen. Je aannemer krijgt een bevestiging.', cta: 'Open Vasco', noApp: 'Nieuw bij Vasco?', desktopHint: 'Je kunt deze tab sluiten.' },
-  de: { eyebrow: 'Zahlung erhalten', title: 'Vielen Dank', body: 'Deine Zahlung ist eingegangen. Dein Handwerker erhält eine Bestätigung.', cta: 'Vasco öffnen', noApp: 'Neu bei Vasco?', desktopHint: 'Du kannst diesen Tab schließen.' },
+  de: { eyebrow: 'Zahlung erhalten', title: 'Vielen Dank', body: 'Ihre Zahlung ist eingegangen. Ihr Handwerksbetrieb erhält eine Bestätigung.', cta: 'Vasco öffnen', noApp: 'Neu bei Vasco?', desktopHint: 'Sie können diesen Tab schließen.' },
   fr: { eyebrow: 'Paiement reçu', title: 'Merci', body: 'Votre paiement a été reçu. Votre artisan recevra une confirmation.', cta: 'Ouvrir Vasco', noApp: 'Nouveau sur Vasco ?', desktopHint: 'Vous pouvez fermer cet onglet.' },
   es: { eyebrow: 'Pago recibido', title: 'Gracias', body: 'Hemos recibido tu pago. Tu contratista recibirá una confirmación.', cta: 'Abrir Vasco', noApp: '¿Nuevo en Vasco?', desktopHint: 'Puedes cerrar esta pestaña.' },
-  it: { eyebrow: 'Pagamento ricevuto', title: 'Grazie', body: 'Il pagamento è stato ricevuto. Il tuo contractor riceverà una conferma.', cta: 'Apri Vasco', noApp: 'Nuovo su Vasco?', desktopHint: 'Puoi chiudere questa scheda.' },
+  it: { eyebrow: 'Pagamento ricevuto', title: 'Grazie', body: 'Il pagamento è stato ricevuto. Il tuo tecnico riceverà una conferma.', cta: 'Apri Vasco', noApp: 'Nuovo su Vasco?', desktopHint: 'Puoi chiudere questa scheda.' },
 } as const;
 
 export default function PaymentSuccessLanding() {
