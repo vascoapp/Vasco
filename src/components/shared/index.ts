@@ -41,3 +41,4 @@ export { Sparkline } from './Sparkline';
 export { Toast } from './Toast';
 export { OfflineBanner } from './OfflineBanner';
 export { default as ErrorBoundary } from './ErrorBoundary';
+export { WideScreenFrame, WIDE_SCREEN_MAX_WIDTH } from './WideScreenFrame';

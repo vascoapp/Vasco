@@ -21,6 +21,7 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": true,
       "bundleIdentifier": "com.vascobuild.app",
       "scheme": "vasco",
       "buildNumber": "48",

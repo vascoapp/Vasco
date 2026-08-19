@@ -16,6 +16,7 @@ import {
   Archivo_900Black,
 } from '@expo-google-fonts/archivo';
 import { ActivityIndicator, Alert, Linking, Platform, View } from 'react-native';
+import { WideScreenFrame } from '../src/components/shared/WideScreenFrame';
 import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { checkForUpdate } from '../src/services/versionCheckService';
@@ -390,28 +391,34 @@ function RootLayoutNav() {
   }, [isAuthenticated, user, segments, isAuthHydrating]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="login" />
-      <Stack.Screen name="forgot-password" />
-      <Stack.Screen name="onboarding" />
-      <Stack.Screen name="reset-onboarding" />
-      <Stack.Screen name="(contractor)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="contractor" />
-      <Stack.Screen name="sitelead" />
-      <Stack.Screen name="customer/[code]" />
-      <Stack.Screen name="worker" />
-      <Stack.Screen name="hub" />
-      <Stack.Screen name="(modals)/ingestion" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/insights" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/pdf" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/mollie" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/moneybird" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/moneybird-auth" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/xero-auth" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/business-settings" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="(modals)/customers" options={{ presentation: 'modal' }} />
-    </Stack>
+    // Wraps the WHOLE Stack, so it reaches every screen AND the tab bars
+    // rendered by the group layouts inside it — on a wide canvas the tab bar
+    // should be under the app, not spread across the full 1194pt. Below the
+    // breakpoint this renders nothing at all, so phones are unchanged.
+    <WideScreenFrame>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="login" />
+        <Stack.Screen name="forgot-password" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="reset-onboarding" />
+        <Stack.Screen name="(contractor)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="contractor" />
+        <Stack.Screen name="sitelead" />
+        <Stack.Screen name="customer/[code]" />
+        <Stack.Screen name="worker" />
+        <Stack.Screen name="hub" />
+        <Stack.Screen name="(modals)/ingestion" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/insights" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/pdf" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/mollie" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/moneybird" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/moneybird-auth" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/xero-auth" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/business-settings" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(modals)/customers" options={{ presentation: 'modal' }} />
+      </Stack>
+    </WideScreenFrame>
   );
 }
 
