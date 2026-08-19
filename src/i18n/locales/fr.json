@@ -864,7 +864,9 @@
     "quoteTemplates": "Modèles",
     "pricebook": "Grille tarifaire",
     "statutoryInterestRate": "{{rate}}% intérêts légaux",
-    "paidVia": "Payé par {{method}}"
+    "paidVia": "Payé par {{method}}",
+    "einvoiceUnavailableTitle": "Pas encore disponible",
+    "einvoiceUnavailableBody": "L'export de facture électronique structurée n'est pas encore prêt pour ce pays. Vous pouvez toujours envoyer le PDF."
   },
   "expenses": {
     "title": "Dépenses",

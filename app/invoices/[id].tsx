@@ -758,11 +758,20 @@ export default function InvoiceDetailScreen() {
     submitFiredRef.current = true;
     const fire = async () => {
       try {
-        if (country === 'ES') return handleExportFacturae();
-        if (country === 'IT') return handleExportFatturaPA();
-        // DE / NL / FR / UK / others default to XRechnung (works for B2G;
-        // consumer can manually pick ZUGFeRD if they want hybrid PDF+XML).
-        return handleExportEInvoice('XRechnung');
+        // ES/IT no longer route here: their handlers build an object shaped
+        // nothing like what the generators take and throw on the first field.
+        // And because the handlers are `async`, that throw was a REJECTED
+        // PROMISE, not a synchronous one — so the catch below never saw it and
+        // an approved queue action failed in total silence.
+        if (country === 'ES' || country === 'IT') {
+          Alert.alert(
+            t('invoices.einvoiceUnavailableTitle', 'Not available yet'),
+            t('invoices.einvoiceUnavailableBody', 'Structured e-invoice export for this country is not ready yet. You can still send the PDF.'),
+          );
+          return;
+        }
+        // DE / NL / FR / UK / others: XRechnung.
+        return await handleExportEInvoice('XRechnung');
       } catch {
         // Silent — surfaced via the in-flow alert/share sheet errors.
       }
@@ -1092,24 +1101,32 @@ export default function InvoiceDetailScreen() {
               border
             />
           )}
-          {/* R302: ES Facturae export — mandatory for B2G + large B2B in Spain. */}
-          {country === 'ES' && (
-            <ActionRow
-              icon="code-slash-outline"
-              label={t('invoices.exportFacturae', 'Export Facturae (XML)')}
-              onPress={handleExportFacturae}
-              border
-            />
-          )}
-          {/* R302: IT FatturaPA export — mandatory for ALL Italian invoices via SDI. */}
-          {country === 'IT' && (
-            <ActionRow
-              icon="code-slash-outline"
-              label={t('invoices.exportFatturaPA', 'Export FatturaPA (XML)')}
-              onPress={handleExportFatturaPA}
-              border
-            />
-          )}
+          {/* 2026-08-19: ES Facturae and IT FatturaPA buttons REMOVED — they
+              threw the moment anyone tapped them.
+
+              Both handlers build `const data: any = { sellerName, …,
+              lineItems }`, which is nothing like the shape the generators take
+              (`cedentePrestatore`, `cessionarioCommittente`, `dettaglioLinee`,
+              `datiTrasmissione` …). The `any` is why tsc never said so.
+              Verified by calling each generator with the exact object the
+              screen builds: both TypeError. The generate call also sits
+              OUTSIDE the try below, so the throw was not even caught.
+
+              The comment above these buttons has said "generators exist but no
+              UI mapper" since R289 — and the buttons shipped anyway. R289 took
+              the Factur-X button out for precisely this reason; this is the
+              same removal, two markets late.
+
+              The generators are kept: FatturaPA in particular is thorough
+              (REA, bollo, cassa previdenziale, DatiRiepilogo grouped by rate).
+              What is missing is the mapper between the invoice screen and
+              them. src/integrations/__tests__/esItExportShape.test.ts is the
+              gate: make it pass and these buttons come back.
+
+              ⚠️ Restoring them needs more than the shape. SDI rejects on
+              value rules — 00400 (Natura absent when AliquotaIVA is 0) and
+              00401 (Natura present when it is not) among them — and in Italy a
+              rejected invoice was never legally issued. */}
           {/* R300: was mislabeled "Send reminder" but onPress fires
               handleMarkSent (marks the invoice as sent, no reminder).
               Real reminder send lives on the facturen list per-row button

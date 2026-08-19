@@ -864,7 +864,9 @@
     "quoteTemplates": "Plantillas",
     "pricebook": "Lista de precios",
     "statutoryInterestRate": "{{rate}}% interés legal",
-    "paidVia": "Pagado con {{method}}"
+    "paidVia": "Pagado con {{method}}",
+    "einvoiceUnavailableTitle": "Aún no disponible",
+    "einvoiceUnavailableBody": "La exportación de factura electrónica estructurada para este país todavía no está lista. Puedes enviar el PDF."
   },
   "expenses": {
     "title": "Gastos",

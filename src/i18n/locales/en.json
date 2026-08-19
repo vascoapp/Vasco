@@ -864,7 +864,9 @@
     "quoteTemplates": "Templates",
     "pricebook": "Pricebook",
     "statutoryInterestRate": "{{rate}}% statutory interest",
-    "paidVia": "Paid via {{method}}"
+    "paidVia": "Paid via {{method}}",
+    "einvoiceUnavailableTitle": "Not available yet",
+    "einvoiceUnavailableBody": "Structured e-invoice export for this country is not ready yet. You can still send the PDF."
   },
   "expenses": {
     "title": "Expenses",

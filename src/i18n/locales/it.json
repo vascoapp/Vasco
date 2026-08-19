@@ -864,7 +864,9 @@
     "quoteTemplates": "Modelli",
     "pricebook": "Listino prezzi",
     "statutoryInterestRate": "{{rate}}% interessi legali",
-    "paidVia": "Pagato con {{method}}"
+    "paidVia": "Pagato con {{method}}",
+    "einvoiceUnavailableTitle": "Non ancora disponibile",
+    "einvoiceUnavailableBody": "L’esportazione della fattura elettronica strutturata per questo paese non è ancora pronta. Puoi comunque inviare il PDF."
   },
   "expenses": {
     "title": "Spese",

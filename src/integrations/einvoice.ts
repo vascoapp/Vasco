@@ -231,9 +231,36 @@ export function generateXRechnungXML(data: EInvoiceData): string {
 // Generate ZUGFeRD XML (embedded in PDF)
 // ---------------------------------------------------------------------------
 
+/**
+ * ⚠️ NOT A ZUGFeRD INVOICE, AND NOT REACHABLE. Read before using.
+ *
+ * Two separate reasons this cannot be shipped as-is:
+ *
+ * 1. **A ZUGFeRD invoice is a PDF/A-3 with the XML embedded.** This returns
+ *    bare XML, and the caller wrote it to a `.xml` file. Even a perfect CII
+ *    payload would not be a ZUGFeRD document — the format IS the hybrid
+ *    container. Nothing here embeds anything in a PDF.
+ *
+ * 2. **The CII is a stub.** It carries no SellerTradeParty, no
+ *    BuyerTradeParty, no IncludedSupplyChainTradeLineItem and no
+ *    ApplicableTradeTax — so no seller, no buyer, no lines and no VAT
+ *    breakdown. `SupplyChainTradeTransaction` also requires
+ *    ApplicableHeaderTradeAgreement and ApplicableHeaderTradeDelivery before
+ *    Settlement; only Settlement is present, so it is not schema-valid CII
+ *    either.
+ *
+ * It is currently unreachable — no UI path produces ZUGFeRD (the only export
+ * button calls generateXRechnungXML), which is the sole reason this has never
+ * hurt anyone. Kept rather than deleted because the format is genuinely wanted
+ * in Germany, and the comment is more useful to whoever picks it up than an
+ * empty space would be.
+ *
+ * 🔴 Do not wire a button to this. Finishing it means the full CII binding AND
+ * PDF/A-3 embedding, and it should be validated the way XRechnung now is —
+ * against the standard, not against our own validator, which explicitly does
+ * not check CII in depth.
+ */
 export function generateZUGFeRDXML(data: EInvoiceData): string {
-  // ZUGFeRD uses Cross Industry Invoice (CII) format
-  // Simplified version — production would use full CII schema
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
   xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"

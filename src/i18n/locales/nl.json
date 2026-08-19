@@ -848,7 +848,9 @@
     "quoteTemplates": "Sjablonen",
     "pricebook": "Prijslijst",
     "statutoryInterestRate": "{{rate}}% wettelijke rente",
-    "paidVia": "Betaald via {{method}}"
+    "paidVia": "Betaald via {{method}}",
+    "einvoiceUnavailableTitle": "Nog niet beschikbaar",
+    "einvoiceUnavailableBody": "Gestructureerde e-facturatie voor dit land is nog niet klaar. Je kunt de pdf wel versturen."
   },
   "expenses": {
     "title": "Uitgaven",

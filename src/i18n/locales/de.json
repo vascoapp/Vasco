@@ -864,7 +864,9 @@
     "quoteTemplates": "Vorlagen",
     "pricebook": "Preisliste",
     "statutoryInterestRate": "{{rate}}% Verzugszinsen",
-    "paidVia": "Bezahlt per {{method}}"
+    "paidVia": "Bezahlt per {{method}}",
+    "einvoiceUnavailableTitle": "Noch nicht verfügbar",
+    "einvoiceUnavailableBody": "Der strukturierte E-Rechnungsexport für dieses Land ist noch nicht fertig. Sie können weiterhin die PDF senden."
   },
   "expenses": {
     "title": "Ausgaben",
