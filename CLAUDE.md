@@ -125,6 +125,13 @@ npm run smoke:customer                 # the CUSTOMER path — anon key, NO sess
                                        # one-line "fix" is a GRANT that leaks
                                        # every quote token on the platform.
 npm run smoke:endpoints                # edge fns + RLS + anon surface + drift
+npm run check:insertable               # can the app actually INSERT into every
+                                       # table it writes to, as an owner under
+                                       # RLS — and does any writer NAME every
+                                       # NOT NULL column that has no default?
+                                       # The second half is the one with teeth:
+                                       # a required column nothing sets is a
+                                       # write that can only ever fail.
 npm run check:drift                    # database.types.ts vs the LIVE columns,
                                        # both directions. A Row field that is
                                        # not a column makes PostgREST reject the

@@ -17,6 +17,7 @@
     "audit:unmounted": "node scripts/audit-unmounted.mjs",
     "check:photo": "node scripts/check-photo-quote.mjs",
     "smoke:endpoints": "node scripts/endpoint-health.mjs",
+    "check:insertable": "node scripts/insertability.mjs",
     "check:drift": "node scripts/schema-drift.mjs",
     "smoke:customer": "node scripts/customer-surface-scan.mjs",
     "render:icons": "node scripts/render-icons.mjs",
