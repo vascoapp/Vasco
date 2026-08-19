@@ -863,7 +863,8 @@
     },
     "quoteTemplates": "Templates",
     "pricebook": "Pricebook",
-    "statutoryInterestRate": "{{rate}}% statutory interest"
+    "statutoryInterestRate": "{{rate}}% statutory interest",
+    "paidVia": "Paid via {{method}}"
   },
   "expenses": {
     "title": "Expenses",

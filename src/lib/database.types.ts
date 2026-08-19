@@ -212,6 +212,12 @@ export type DocumentRow = {
   is_retention_release: boolean;
   created_at: string;
   updated_at: string;
+  // Written by supabase/functions/{mollie,stripe}-webhook on settlement. These
+  // three existed as columns for months with no field here, so every read was
+  // impossible rather than merely undefined.
+  payment_id?: string | null;
+  payment_method?: string | null;
+  payment_provider?: string | null;
 };
 
 export type LineItemRow = {

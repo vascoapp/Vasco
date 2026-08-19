@@ -863,7 +863,8 @@
     },
     "quoteTemplates": "Vorlagen",
     "pricebook": "Preisliste",
-    "statutoryInterestRate": "{{rate}}% Verzugszinsen"
+    "statutoryInterestRate": "{{rate}}% Verzugszinsen",
+    "paidVia": "Bezahlt per {{method}}"
   },
   "expenses": {
     "title": "Ausgaben",

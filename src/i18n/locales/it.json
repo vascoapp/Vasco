@@ -863,7 +863,8 @@
     },
     "quoteTemplates": "Modelli",
     "pricebook": "Listino prezzi",
-    "statutoryInterestRate": "{{rate}}% interessi legali"
+    "statutoryInterestRate": "{{rate}}% interessi legali",
+    "paidVia": "Pagato con {{method}}"
   },
   "expenses": {
     "title": "Spese",

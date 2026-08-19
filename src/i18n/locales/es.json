@@ -863,7 +863,8 @@
     },
     "quoteTemplates": "Plantillas",
     "pricebook": "Lista de precios",
-    "statutoryInterestRate": "{{rate}}% interés legal"
+    "statutoryInterestRate": "{{rate}}% interés legal",
+    "paidVia": "Pagado con {{method}}"
   },
   "expenses": {
     "title": "Gastos",

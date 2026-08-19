@@ -863,7 +863,8 @@
     },
     "quoteTemplates": "Modèles",
     "pricebook": "Grille tarifaire",
-    "statutoryInterestRate": "{{rate}}% intérêts légaux"
+    "statutoryInterestRate": "{{rate}}% intérêts légaux",
+    "paidVia": "Payé par {{method}}"
   },
   "expenses": {
     "title": "Dépenses",

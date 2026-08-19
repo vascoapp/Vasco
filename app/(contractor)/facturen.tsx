@@ -261,6 +261,16 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                 <Text style={styles.invoiceCustomer} numberOfLines={1}>{invoice.customerName}</Text>
                 <Text style={styles.invoiceProject} numberOfLines={1}>{invoice.projectName}</Text>
                 {invoice.status !== 'paid' && <DSOHint customerId={invoice.id} />}
+                {/* How it came in. The webhooks have recorded this on every
+                    settled invoice for months; nothing could read it until the
+                    column was given a field. Only rendered when the provider
+                    actually told us — an invoice marked paid by hand has no
+                    method, and inventing one would be worse than a blank. */}
+                {invoice.status === 'paid' && invoice.paymentMethod ? (
+                  <Text style={styles.invoicePaidVia} numberOfLines={1}>
+                    {t('invoices.paidVia', { defaultValue: 'Paid via {{method}}', method: formatPaymentMethod(invoice.paymentMethod) })}
+                  </Text>
+                ) : null}
               </View>
               <View style={styles.invoiceRight}>
                 <Text style={[
@@ -497,6 +507,29 @@ function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
 // ============================================
 
 type TabView = 'offertes' | 'facturen' | 'incasso';
+
+/**
+ * Mollie and Stripe return their own machine tokens — 'creditcard',
+ * 'banktransfer', 'ideal'. Title-casing them blindly gives "Creditcard" and
+ * "Banktransfer", so the handful a Dutch trade actually sees are spelled
+ * properly and anything unrecognised falls through untouched rather than being
+ * mangled into a fake word.
+ */
+function formatPaymentMethod(raw: string): string {
+  const known: Record<string, string> = {
+    ideal: 'iDEAL',
+    creditcard: 'Creditcard',
+    card: 'Card',
+    bancontact: 'Bancontact',
+    banktransfer: 'Bankoverboeking',
+    sofort: 'SOFORT',
+    paypal: 'PayPal',
+    applepay: 'Apple Pay',
+    directdebit: 'Automatische incasso',
+    sepa_debit: 'SEPA-incasso',
+  };
+  return known[raw.toLowerCase().replace(/[\s_-]/g, '')] ?? raw;
+}
 
 export default function FacturenScreen() {
   const { t } = useTranslation();
@@ -1277,6 +1310,11 @@ const styles = StyleSheet.create({
   invoiceProject: {
     fontSize: 12,
     color: SemanticColors.textTertiary,
+    marginTop: 1,
+  },
+  invoicePaidVia: {
+    fontSize: 12,
+    color: SemanticColors.feedbackSuccess,
     marginTop: 1,
   },
   invoiceRight: {

@@ -847,7 +847,8 @@
     },
     "quoteTemplates": "Sjablonen",
     "pricebook": "Prijslijst",
-    "statutoryInterestRate": "{{rate}}% wettelijke rente"
+    "statutoryInterestRate": "{{rate}}% wettelijke rente",
+    "paidVia": "Betaald via {{method}}"
   },
   "expenses": {
     "title": "Uitgaven",

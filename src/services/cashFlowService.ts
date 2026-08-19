@@ -694,6 +694,11 @@ export function useCashFlow() {
       issueDate: inv.sentAt ?? inv.createdAt ?? new Date().toISOString(),
       dueDate: inv.dueDate ?? new Date(Date.now() + (inv.dueInDays ?? 30) * MS_PER_DAY).toISOString().split('T')[0],
       paidDate: inv.paidAt,
+      // `paymentMethod` has been on this interface since it was written and
+      // only MOCK_INVOICES ever set it — the demo showed "iDEAL" and a real
+      // contractor got nothing. The webhooks have been writing
+      // documents.payment_method all along; it just had no field to land in.
+      paymentMethod: inv.paymentMethod,
       remindersSent: 0,
     })),
     [appInvoices],

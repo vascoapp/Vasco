@@ -56,6 +56,19 @@ export type Invoice = {
   // on documents.delivery_date. PDF render reads from here so the date
   // survives if the linked job is later deleted.
   deliveryDate?: string;
+  // ── How it was paid ───────────────────────────────────────────────────────
+  // Written server-side by the Mollie and Stripe webhooks the moment a payment
+  // settles, and until 2026-08-19 read by nothing: DocumentRow had no field for
+  // any of them, so the contractor could never see whether an invoice came in
+  // by iDEAL, card or bank transfer, and had no provider reference to reconcile
+  // a bank line against. Rule #8, from the read side — and missed by the
+  // earlier sweeps because the WRITER is an edge function, not AppState.
+  /** 'ideal' | 'creditcard' | 'bancontact' | … — the provider's own name for it. */
+  paymentMethod?: string;
+  /** 'mollie' | 'stripe'. */
+  paymentProvider?: string;
+  /** The provider's payment id, for reconciliation against a bank statement. */
+  paymentId?: string;
   // ── Progress billing (termijnfacturen) ────────────────────────────────────
   // Projects already carried `invoiceIds`, but there was no invoice -> project
   // link and progress billing has to walk that direction.

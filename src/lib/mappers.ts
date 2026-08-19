@@ -73,6 +73,12 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     changeOrderId: row.change_order_id ?? undefined,
     retentionAmount: row.retention_amount != null ? Number(row.retention_amount) : undefined,
     isRetentionRelease: row.is_retention_release || undefined,
+    // Rule #8 step 5 again, and the reason this one survived every previous
+    // sweep: the writer is an edge function (mollie-webhook / stripe-webhook),
+    // not AppState, so "who writes this field" came up empty on the client.
+    paymentMethod: row.payment_method ?? undefined,
+    paymentProvider: row.payment_provider ?? undefined,
+    paymentId: row.payment_id ?? undefined,
   };
 }
 
