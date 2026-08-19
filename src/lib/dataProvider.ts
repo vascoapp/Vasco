@@ -168,6 +168,59 @@ export async function listLineItems(documentId: string): Promise<LineItemRow[]> 
   return (data ?? []) as LineItemRow[];
 }
 
+/**
+ * Line items that exist on the device but not in the backend, healed.
+ *
+ * A quote or invoice created OFFLINE queues its `documents` row and cannot
+ * queue its lines — the line FK needs the document's BE id, which does not
+ * exist yet. The code that made that trade-off left a comment promising the
+ * lines "re-upsert next time the user opens the quote online". **They never
+ * did**: all three `upsertLineItems` call sites are at document creation, and
+ * nothing re-sends them.
+ *
+ * So an offline-created quote flushed with a total and NO lines, permanently.
+ * The contractor could not see it — their device still had the lines in local
+ * state — but the customer portal reads lines from the backend and rendered a
+ * quote with an amount and nothing on it, and a reinstall or a second device
+ * lost them outright.
+ *
+ * Returns the number of documents healed. Best-effort by design: this runs on
+ * load and must never be the reason a cold start fails.
+ */
+export async function healOrphanLineItems(
+  byDocumentNumber: Record<string, { description: string; quantity: number; unitPrice: number }[]>,
+): Promise<number> {
+  const numbers = Object.keys(byDocumentNumber);
+  if (!isSupabaseConfigured || numbers.length === 0) return 0;
+  try {
+    // One round-trip for all of them: resolve document_number -> id.
+    const { data, error } = await supabase
+      .from('documents')
+      .select('id, document_number')
+      .in('document_number', numbers);
+    if (error || !data) return 0;
+
+    let healed = 0;
+    for (const row of data as Array<{ id: string; document_number: string }>) {
+      const items = byDocumentNumber[row.document_number];
+      if (!items?.length) continue;
+      try {
+        await upsertLineItems(row.id, items.map((it, idx) => ({
+          description: it.description,
+          quantity: it.quantity,
+          unit_price: it.unitPrice,
+          total_price: it.unitPrice * it.quantity,
+          position: idx,
+        })));
+        healed += 1;
+      } catch { /* one document failing must not stop the rest */ }
+    }
+    return healed;
+  } catch {
+    return 0;
+  }
+}
+
 export async function upsertLineItems(
   documentId: string,
   items: { description: string; quantity?: number; unit_price?: number; total_price?: number; position?: number }[],

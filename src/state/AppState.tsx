@@ -491,7 +491,32 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           .then(m => m.primeCohortIndustryAverage(bp.country as string))
           .catch(() => {});
       }
-      setLineItems(li);
+      // R57 preserved temp-id ROWS on refresh for every other entity, and line
+      // items were still replaced wholesale — so an offline-created quote lost
+      // its lines from state on the next refresh, on top of never having them
+      // in the backend at all (they cannot be queued: the FK needs the
+      // document's BE id).
+      //
+      // Keep any local lines the backend did not return, AND send them, which
+      // is what the comment at the queueing site has always promised and
+      // nothing has ever done.
+      setLineItems((prev) => {
+        const merged = { ...li };
+        const orphans: Record<string, typeof prev[string]> = {};
+        for (const [docNumber, items] of Object.entries(prev)) {
+          if (items.length > 0 && !(merged[docNumber]?.length)) {
+            merged[docNumber] = items;
+            orphans[docNumber] = items;
+          }
+        }
+        if (Object.keys(orphans).length > 0) {
+          import('../lib/dataProvider')
+            .then((m) => m.healOrphanLineItems(orphans))
+            .then((n) => { if (n > 0) logWarn('AppState', `healed line items for ${n} document(s) created offline`); })
+            .catch(() => {});
+        }
+        return merged;
+      });
       // R57: preserve temp-id rows on refresh — was overwriting wholesale
       // which made offline-created entities (customer/job/etc. with
       // `c-{ts}`/`j-{ts}` etc.) disappear from the UI between refresh and
@@ -2030,11 +2055,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `addQuote persist failed, queueing document: ${err}`);
             try {
               const { queueWrite } = await import('../services/offlineWriteQueue');
-              // Queue the document insert. Line items can't queue without the
-              // BE-generated doc_id; the moat signal lives in pricing_intelligence
-              // (per-line) which has its own write path below — no data loss for
-              // training. Customer-facing portal lines re-upsert next time the
-              // user opens the quote online.
+              // Queue the document insert. Line items genuinely cannot queue
+              // here — the line FK needs the document's BE id, which does not
+              // exist until this flushes.
+              //
+              // ⚠️ This comment used to end "Customer-facing portal lines
+              // re-upsert next time the user opens the quote online". That was
+              // never true: all three upsertLineItems call sites are at
+              // document creation and nothing re-sent them, so an
+              // offline-created quote reached the backend with a total and no
+              // lines, permanently — invisible to the contractor, whose device
+              // still had them, and visible to the CUSTOMER as an amount with
+              // nothing on it.
+              //
+              // It is true now: refreshData reconciles local lines against what
+              // the backend returned and calls healOrphanLineItems for the
+              // difference.
               await queueWrite({ table: 'documents', op: 'insert', payload: { ...docPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
@@ -2527,6 +2563,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const newSupplier: Supplier = { ...supplier, id: tempId, createdAt: now, updatedAt: now };
         setSuppliers((prev) => [newSupplier, ...prev]);
 
+        // Rule #7 shape. This used to `return (row as any).id` from inside the
+        // try — harmless while there is no housekeeping after the block, and
+        // exactly how the same bug reached five other mutators: someone adds an
+        // ontology upsert or an embedding below, and it silently never runs for
+        // ONLINE users while offline users keep getting it. Suppliers are
+        // already wired into the idRemapBus, so a side effect keyed on the temp
+        // id here would strand on flush.
+        let finalId = tempId;
         if (isSupabaseConfigured) {
           const payload = {
             name: supplier.name,
@@ -2537,7 +2581,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             setSuppliers((prev) =>
               prev.map((s) => (s.id === tempId ? { ...s, id: (row as any).id } : s)),
             );
-            return (row as any).id as string;
+            finalId = (row as any).id as string;
           } catch (err) {
             logWarn('AppState', `addSupplier persist failed: ${err}`);
             try {
@@ -2546,7 +2590,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             } catch {}
           }
         }
-        return tempId;
+        return finalId;
       },
       removeSupplier: (id) => {
         setSuppliers((prev) => prev.filter((s) => s.id !== id));
