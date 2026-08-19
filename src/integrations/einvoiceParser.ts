@@ -48,14 +48,33 @@ export function detectFormat(xml: string): ParsedEInvoice['format'] {
 // Tiny XML-fragment helpers — avoid pulling a full XML parser dep
 // ---------------------------------------------------------------------------
 
+/**
+ * ⚠️ `(?=[\\s/>])` is the whole point of this pattern.
+ *
+ * Without that boundary the tag name matches a PREFIX of a longer tag, because
+ * `[^>]*` happily eats the rest of the name. `ExchangedDocument` matched
+ * `<rsm:ExchangedDocumentContext>`, and since the CLOSING pattern still
+ * required an exact `</…ExchangedDocument>`, the captured block ran from inside
+ * the Context element all the way to the end of the real one — swallowing the
+ * specification URN. Every inbound ZUGFeRD then imported with the document
+ * number `urn:cen.eu:en16931:2017`: identical for every supplier, so nothing
+ * could be reconciled and duplicates were invisible.
+ *
+ * The same flaw hits any tag that is a prefix of another — `Name` /
+ * `NameSuffix`, `ID` / `IDType`, `Amount` / `AmountCurrency`. It is a general
+ * fault in the matcher, not one bad call site, which is why it is fixed here.
+ */
+function tagPattern(tag: string): string {
+  return `<(?:[a-zA-Z]+:)?${tag}(?=[\\s/>])[^>]*>([\\s\\S]*?)<\\/(?:[a-zA-Z]+:)?${tag}>`;
+}
+
 function firstMatch(xml: string, tag: string): string | null {
-  const re = new RegExp(`<(?:[a-zA-Z]+:)?${tag}[^>]*>([\\s\\S]*?)<\\/(?:[a-zA-Z]+:)?${tag}>`);
-  const m = xml.match(re);
+  const m = xml.match(new RegExp(tagPattern(tag)));
   return m ? m[1].trim() : null;
 }
 
 function allMatches(xml: string, tag: string): string[] {
-  const re = new RegExp(`<(?:[a-zA-Z]+:)?${tag}[^>]*>([\\s\\S]*?)<\\/(?:[a-zA-Z]+:)?${tag}>`, 'g');
+  const re = new RegExp(tagPattern(tag), 'g');
   const out: string[] = [];
   let m;
   while ((m = re.exec(xml)) !== null) out.push(m[1]);
@@ -193,13 +212,31 @@ function parseUbl(xml: string): { invoice: ScannedInvoice; warnings: string[] } 
 
 function parseCii(xml: string): { invoice: ScannedInvoice; warnings: string[] } {
   const warnings: string[] = [];
-  const documentNumber = firstMatch(xml, 'IssuerAssignedID')
-    ?? firstMatch(xml, 'ID')
+  // ⚠️ SCOPED, and it has to be. `firstMatch(xml, 'ID')` over a whole CII
+  // document returns the FIRST <ram:ID>, which is
+  // GuidelineSpecifiedDocumentContextParameter/ID — the specification URN
+  // `urn:cen.eu:en16931:2017`. Every inbound ZUGFeRD from every supplier
+  // therefore imported with the SAME document number, so nothing could be
+  // matched to a supplier statement and duplicates were invisible.
+  //
+  // Same bug shape as the e-invoice validator matching a line's cbc:ID for the
+  // invoice number, and the third time this codebase has been bitten by a
+  // whole-document search for a generic tag name. The invoice number in CII is
+  // ExchangedDocument/ID; IssuerAssignedID belongs to REFERENCED documents (a
+  // buyer order, a despatch advice) and is only a fallback.
+  const documentNumber = nestedValue(xml, 'ExchangedDocument', 'ID')
+    ?? firstMatch(xml, 'IssuerAssignedID')
     ?? '';
   const documentDate = firstMatch(xml, 'IssueDateTime')?.replace(/<[^>]+>|[^\d-]/g, '').slice(0, 10)
     ?? todayKey();
 
-  const supplierName = firstMatch(xml, 'Name') ?? '(unknown)';
+  // Also scoped. In CII the line items come BEFORE the parties, so the first
+  // <ram:Name> in the document is a PRODUCT name — an inbound invoice imported
+  // with its first line item as the supplier. `SpecifiedTradeProduct/Name` and
+  // `SellerTradeParty/Name` are the same tag at different depths, which is
+  // exactly why the search has to say which one it means.
+  const supplierName = nestedValue(xml, 'SellerTradeParty', 'Name')
+    ?? '(unknown)';
   const grandTotal = num(firstMatch(xml, 'GrandTotalAmount'));
   const taxTotal = num(firstMatch(xml, 'TaxTotalAmount'));
   const subtotal = grandTotal - taxTotal;

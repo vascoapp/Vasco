@@ -232,35 +232,104 @@ export function generateXRechnungXML(data: EInvoiceData): string {
 // ---------------------------------------------------------------------------
 
 /**
- * ⚠️ NOT A ZUGFeRD INVOICE, AND NOT REACHABLE. Read before using.
+ * Cross Industry Invoice (CII) — the payload inside ZUGFeRD and Factur-X.
  *
- * Two separate reasons this cannot be shipped as-is:
+ * Rewritten 2026-08-19. The previous version had no SellerTradeParty, no
+ * BuyerTradeParty, no line items and no tax breakdown — so no seller, no
+ * buyer, no lines and no VAT. It also emitted only ApplicableHeaderTradeSettlement,
+ * while SupplyChainTradeTransaction requires Agreement and Delivery before it,
+ * so it was not schema-valid CII either.
  *
- * 1. **A ZUGFeRD invoice is a PDF/A-3 with the XML embedded.** This returns
- *    bare XML, and the caller wrote it to a `.xml` file. Even a perfect CII
- *    payload would not be a ZUGFeRD document — the format IS the hybrid
- *    container. Nothing here embeds anything in a PDF.
+ * ⚠️ THIS IS THE XML, NOT A ZUGFeRD OR FACTUR-X FILE. Both of those are a
+ * PDF/A-3 with this XML embedded as an attachment; the format IS the hybrid
+ * container. Writing this to a `.xml` produces a valid CII invoice and NOT a
+ * ZUGFeRD document. That is still useful on its own — France's PDP channel
+ * accepts CII, and it is what our own importer reads off an inbound ZUGFeRD —
+ * but do not label a button "ZUGFeRD" until something embeds it.
  *
- * 2. **The CII is a stub.** It carries no SellerTradeParty, no
- *    BuyerTradeParty, no IncludedSupplyChainTradeLineItem and no
- *    ApplicableTradeTax — so no seller, no buyer, no lines and no VAT
- *    breakdown. `SupplyChainTradeTransaction` also requires
- *    ApplicableHeaderTradeAgreement and ApplicableHeaderTradeDelivery before
- *    Settlement; only Settlement is present, so it is not schema-valid CII
- *    either.
- *
- * It is currently unreachable — no UI path produces ZUGFeRD (the only export
- * button calls generateXRechnungXML), which is the sole reason this has never
- * hurt anyone. Kept rather than deleted because the format is genuinely wanted
- * in Germany, and the comment is more useful to whoever picks it up than an
- * empty space would be.
- *
- * 🔴 Do not wire a button to this. Finishing it means the full CII binding AND
- * PDF/A-3 embedding, and it should be validated the way XRechnung now is —
- * against the standard, not against our own validator, which explicitly does
- * not check CII in depth.
+ * Element ORDER is load-bearing in CII exactly as in UBL: line items, then
+ * Agreement, then Delivery, then Settlement; inside a party, Name then legal
+ * organisation then contact then address then tax registration. A validator
+ * rejects a correct document in the wrong order.
  */
-export function generateZUGFeRDXML(data: EInvoiceData): string {
+export function generateCIIXML(data: EInvoiceData): string {
+  const cur = data.currency;
+  const sellerCountry = data.sellerCountry ?? 'DE';
+  const buyerCountry = data.buyerCountry ?? sellerCountry;
+  const d = (iso: string) => iso.replace(/-/g, '');
+
+  // Same BG-23 logic as the UBL path: one breakdown per rate, summed from the
+  // lines, because a single stated total cannot be split back out per rate.
+  const byRate = new Map<number, { net: number; vat: number }>();
+  for (const li of data.lineItems) {
+    const acc = byRate.get(li.vatRate) ?? { net: 0, vat: 0 };
+    acc.net += li.lineTotal;
+    acc.vat += li.lineTotal * (li.vatRate / 100);
+    byRate.set(li.vatRate, acc);
+  }
+
+  const lines = data.lineItems.map((li, idx) => `
+    <ram:IncludedSupplyChainTradeLineItem>
+      <ram:AssociatedDocumentLineDocument>
+        <ram:LineID>${idx + 1}</ram:LineID>
+      </ram:AssociatedDocumentLineDocument>
+      <ram:SpecifiedTradeProduct>
+        <ram:Name>${escapeXml(li.description)}</ram:Name>
+      </ram:SpecifiedTradeProduct>
+      <ram:SpecifiedLineTradeAgreement>
+        <ram:NetPriceProductTradePrice>
+          <ram:ChargeAmount>${li.unitPrice.toFixed(2)}</ram:ChargeAmount>
+        </ram:NetPriceProductTradePrice>
+      </ram:SpecifiedLineTradeAgreement>
+      <ram:SpecifiedLineTradeDelivery>
+        <ram:BilledQuantity unitCode="${UNIT_CODES[li.unitCode.toLowerCase()] ?? 'C62'}">${li.quantity}</ram:BilledQuantity>
+      </ram:SpecifiedLineTradeDelivery>
+      <ram:SpecifiedLineTradeSettlement>
+        <ram:ApplicableTradeTax>
+          <ram:TypeCode>VAT</ram:TypeCode>
+          <ram:CategoryCode>S</ram:CategoryCode>
+          <ram:RateApplicablePercent>${li.vatRate}</ram:RateApplicablePercent>
+        </ram:ApplicableTradeTax>
+        <ram:SpecifiedTradeSettlementLineMonetarySummation>
+          <ram:LineTotalAmount>${li.lineTotal.toFixed(2)}</ram:LineTotalAmount>
+        </ram:SpecifiedTradeSettlementLineMonetarySummation>
+      </ram:SpecifiedLineTradeSettlement>
+    </ram:IncludedSupplyChainTradeLineItem>`).join('');
+
+  const tradeTaxes = [...byRate.entries()].map(([rate, a]) => `
+      <ram:ApplicableTradeTax>
+        <ram:CalculatedAmount>${a.vat.toFixed(2)}</ram:CalculatedAmount>
+        <ram:TypeCode>VAT</ram:TypeCode>
+        <ram:BasisAmount>${a.net.toFixed(2)}</ram:BasisAmount>
+        <ram:CategoryCode>S</ram:CategoryCode>
+        <ram:RateApplicablePercent>${rate}</ram:RateApplicablePercent>
+      </ram:ApplicableTradeTax>`).join('');
+
+  const party = (
+    name: string, street: string, city: string | undefined, zip: string | undefined,
+    country: string, vatId?: string, contactName?: string, phone?: string, email?: string,
+  ) => `
+        <ram:Name>${escapeXml(name)}</ram:Name>
+        <ram:SpecifiedLegalOrganization>
+          <ram:TradingBusinessName>${escapeXml(name)}</ram:TradingBusinessName>
+        </ram:SpecifiedLegalOrganization>${contactName || phone || email ? `
+        <ram:DefinedTradeContact>${contactName ? `
+          <ram:PersonName>${escapeXml(contactName)}</ram:PersonName>` : ''}${phone ? `
+          <ram:TelephoneUniversalCommunication><ram:CompleteNumber>${escapeXml(phone)}</ram:CompleteNumber></ram:TelephoneUniversalCommunication>` : ''}${email ? `
+          <ram:EmailURIUniversalCommunication><ram:URIID>${escapeXml(email)}</ram:URIID></ram:EmailURIUniversalCommunication>` : ''}
+        </ram:DefinedTradeContact>` : ''}
+        <ram:PostalTradeAddress>${zip ? `
+          <ram:PostcodeCode>${escapeXml(zip)}</ram:PostcodeCode>` : ''}
+          <ram:LineOne>${escapeXml(street)}</ram:LineOne>${city ? `
+          <ram:CityName>${escapeXml(city)}</ram:CityName>` : ''}
+          <ram:CountryID>${escapeXml(country)}</ram:CountryID>
+        </ram:PostalTradeAddress>${vatId ? `
+        <ram:SpecifiedTaxRegistration>
+          <ram:ID schemeID="VA">${escapeXml(vatId)}</ram:ID>
+        </ram:SpecifiedTaxRegistration>` : ''}`;
+
+  const buyerRef = data.leitwegId ?? data.buyerReference ?? data.invoiceNumber;
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
   xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
@@ -273,20 +342,51 @@ export function generateZUGFeRDXML(data: EInvoiceData): string {
   <rsm:ExchangedDocument>
     <ram:ID>${escapeXml(data.invoiceNumber)}</ram:ID>
     <ram:TypeCode>380</ram:TypeCode>
-    <ram:IssueDateTime><udt:DateTimeString format="102">${data.invoiceDate.replace(/-/g, '')}</udt:DateTimeString></ram:IssueDateTime>
+    <ram:IssueDateTime><udt:DateTimeString format="102">${d(data.invoiceDate)}</udt:DateTimeString></ram:IssueDateTime>
   </rsm:ExchangedDocument>
-  <rsm:SupplyChainTradeTransaction>
+  <rsm:SupplyChainTradeTransaction>${lines}
+    <ram:ApplicableHeaderTradeAgreement>
+      <ram:BuyerReference>${escapeXml(buyerRef)}</ram:BuyerReference>
+      <ram:SellerTradeParty>${party(
+        data.sellerName, data.sellerAddress, data.sellerCity, data.sellerPostalCode,
+        sellerCountry, data.sellerVatId, data.sellerContactName ?? data.sellerName,
+        data.sellerPhone, data.sellerEmail)}
+      </ram:SellerTradeParty>
+      <ram:BuyerTradeParty>${party(
+        data.buyerName, data.buyerAddress, data.buyerCity, data.buyerPostalCode,
+        buyerCountry, data.buyerVatId)}
+      </ram:BuyerTradeParty>
+    </ram:ApplicableHeaderTradeAgreement>
+    <ram:ApplicableHeaderTradeDelivery/>
     <ram:ApplicableHeaderTradeSettlement>
-      <ram:InvoiceCurrencyCode>${data.currency}</ram:InvoiceCurrencyCode>
+      <ram:InvoiceCurrencyCode>${cur}</ram:InvoiceCurrencyCode>${data.iban ? `
+      <ram:SpecifiedTradeSettlementPaymentMeans>
+        <ram:TypeCode>58</ram:TypeCode>
+        <ram:PayeePartyCreditorFinancialAccount><ram:IBANID>${escapeXml(data.iban)}</ram:IBANID></ram:PayeePartyCreditorFinancialAccount>
+      </ram:SpecifiedTradeSettlementPaymentMeans>` : ''}${tradeTaxes}
+      <ram:SpecifiedTradePaymentTerms>
+        <ram:DueDateDateTime><udt:DateTimeString format="102">${d(data.dueDate)}</udt:DateTimeString></ram:DueDateDateTime>
+      </ram:SpecifiedTradePaymentTerms>
       <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
         <ram:LineTotalAmount>${data.totalNet.toFixed(2)}</ram:LineTotalAmount>
-        <ram:TaxTotalAmount currencyID="${data.currency}">${data.totalVat.toFixed(2)}</ram:TaxTotalAmount>
+        <ram:TaxBasisTotalAmount>${data.totalNet.toFixed(2)}</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="${cur}">${data.totalVat.toFixed(2)}</ram:TaxTotalAmount>
         <ram:GrandTotalAmount>${data.totalGross.toFixed(2)}</ram:GrandTotalAmount>
         <ram:DuePayableAmount>${data.totalGross.toFixed(2)}</ram:DuePayableAmount>
       </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
     </ram:ApplicableHeaderTradeSettlement>
   </rsm:SupplyChainTradeTransaction>
 </rsm:CrossIndustryInvoice>`;
+}
+
+/**
+ * @deprecated Kept only so an old import does not break. This never produced a
+ * ZUGFeRD file — that is a PDF/A-3 with the XML embedded — and the XML it did
+ * produce was a stub. Use `generateCIIXML`, and see the note on it about the
+ * PDF container.
+ */
+export function generateZUGFeRDXML(data: EInvoiceData): string {
+  return generateCIIXML(data);
 }
 
 // ---------------------------------------------------------------------------
