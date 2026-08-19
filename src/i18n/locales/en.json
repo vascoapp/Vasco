@@ -1847,7 +1847,10 @@
     "startedQuestions_other": "Started {{count}} questions",
     "aiMatchExact": "Matched “{{words}}” from your description. Your price: {{rate}}.",
     "aiMatchFuzzy": "Close match for “{{words}}”. Your price: {{rate}}.",
-    "aiMatchFallback": "From your pricebook — {{rate}}. Not matched to your description, so check it belongs here."
+    "aiMatchFallback": "From your pricebook — {{rate}}. Not matched to your description, so check it belongs here.",
+    "sendToCustomer": "Send to customer",
+    "pdf": "PDF",
+    "invoice": "Invoice"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -5402,7 +5405,8 @@
     "trendHigh": "High",
     "trendMedium": "Medium",
     "trendLow": "Low",
-    "noSeasonalData": "Not enough history yet for seasonal patterns."
+    "noSeasonalData": "Not enough history yet for seasonal patterns.",
+    "title": "Cash flow"
   },
   "pricebook": {
     "title": "Pricebook",
@@ -5479,7 +5483,9 @@
       "nameRequired": "Give this service a name",
       "priceRequired": "Enter a price of zero or more",
       "unitRequired": "Say what the price is per — “€12” alone is not a price a customer can check"
-    }
+    },
+    "allCategories": "All categories",
+    "filterByCategory": "Filter by category"
   },
   "jobQuality": {
     "title": "Job quality",
@@ -5576,7 +5582,8 @@
     "suggestionsSubtitle": "AI-generated optimisations based on your data",
     "tabChat": "Chat",
     "tabInsights": "Insights",
-    "tabSuggestions": "Suggestions"
+    "tabSuggestions": "Suggestions",
+    "title": "AI assistant"
   },
   "budgetOptimizer": {
     "analysing": "Analysing budget...",

@@ -19,6 +19,7 @@ import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
+import { DKMenu } from '../shared/DKMenu';
 import { useAuth } from '../../context/AuthContext';
 import {
   usePricebook,
@@ -89,6 +90,12 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
   const filteredItems = searchEntries(entries, searchQuery, selectedCategory);
   const categories = categoriesInUse(entries);
 
+  // What the anchor says when closed. A menu whose button does not name the
+  // current choice is worse than the strip it replaced.
+  const activeCategoryLabel = selectedCategory
+    ? t(`pricebook.cat.${selectedCategory}`, (CATEGORY_CONFIG[selectedCategory] ?? FALLBACK_CATEGORY).label)
+    : t('pricebook.allCategories', 'All categories');
+
   const handleSelectVariant = (item: PricebookEntry, variant: PricebookVariantEntry) => {
     onSelectItem?.(item, variant);
   };
@@ -134,51 +141,57 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
         />
       </View>
 
-      {/* Category filters. Hidden entirely when there is nothing to filter: an
-          empty book has no categories, so the row was a lone "All" pill that
-          filtered nothing. */}
+      {/* Category picker. Was a horizontal pill strip — which is the one thing
+          the house rule forbids for a single choice: `selectedCategory` holds
+          exactly one value, and the strip put every category past the right
+          edge out of sight. On a Dutch painter's book that meant
+          "Schilderwerk" was clipped mid-word with nothing to say it was there.
+          A DKMenu shows all of them, says which is active, and takes one line.
+          Hidden entirely when the book is empty — there is nothing to pick. */}
       {categories.length > 0 && (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        // flexGrow:0 is load-bearing. A horizontal ScrollView is still a flex
-        // child of this column, so without it the row expanded to ~440px of
-        // empty space and pushed the list off the bottom of the screen. An
-        // earlier fix set alignItems:'center' on the content container, which
-        // stopped the PILLS stretching but left the BOX tall — it just centred
-        // one pill in a half-screen void. Constrain the box, not the contents.
-        style={styles.categoryFiltersScroll}
-        contentContainerStyle={styles.categoryFilters}
-      >
-        <Pressable
-          style={[styles.categoryPill, !selectedCategory && styles.categoryPillActive]}
-          onPress={() => setSelectedCategory(null)}
-        >
-          <Text style={[styles.categoryPillText, !selectedCategory && styles.categoryPillTextActive]}>
-            {t('pricebook.all', 'All')}
-          </Text>
-        </Pressable>
-        {categories.map((cat) => {
-          const config = CATEGORY_CONFIG[cat] ?? FALLBACK_CATEGORY;
-          const isActive = selectedCategory === cat;
-          return (
-            <Pressable
-              key={cat}
-              style={[styles.categoryPill, isActive && { backgroundColor: config.color + '20', borderColor: config.color + '40' }]}
-              onPress={() => setSelectedCategory(isActive ? null : cat)}
-            >
-              <Ionicons
-                name={config.icon}
-                size={14}
-                color={isActive ? config.color : SemanticColors.textSecondary}
-              />
-              <Text style={[styles.categoryPillText, isActive && { color: config.color }]}>
-                {t(`pricebook.cat.${cat}`, config.label)}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+        <View style={styles.categoryPickerRow}>
+          <DKMenu
+            accessibilityLabel={t('pricebook.filterByCategory', 'Filter by category')}
+            renderAnchor={(openMenu) => (
+              <Pressable
+                style={styles.categoryAnchor}
+                onPress={openMenu}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('pricebook.filterByCategory', 'Filter by category')}: ${activeCategoryLabel}`}
+              >
+                <Ionicons
+                  name={selectedCategory ? (CATEGORY_CONFIG[selectedCategory] ?? FALLBACK_CATEGORY).icon : 'funnel-outline'}
+                  size={16}
+                  color={selectedCategory ? (CATEGORY_CONFIG[selectedCategory] ?? FALLBACK_CATEGORY).color : SemanticColors.textSecondary}
+                />
+                <Text style={styles.categoryAnchorText} numberOfLines={1}>{activeCategoryLabel}</Text>
+                <Ionicons name="chevron-down" size={14} color={SemanticColors.textTertiary} />
+              </Pressable>
+            )}
+            items={[
+              {
+                key: 'all',
+                label: t('pricebook.all', 'All'),
+                detail: t('pricebook.count', { count: entries.filter((e) => e.isActive).length, defaultValue: '{{count}} services' }),
+                selected: !selectedCategory,
+                onPress: () => setSelectedCategory(null),
+              },
+              ...categories.map((cat) => {
+                const config = CATEGORY_CONFIG[cat] ?? FALLBACK_CATEGORY;
+                return {
+                  key: cat,
+                  label: t(`pricebook.cat.${cat}`, config.label),
+                  // The count is why the menu beats the strip: the strip could
+                  // not say how big a category was without another row.
+                  detail: String(entries.filter((e) => e.isActive && e.category === cat).length),
+                  icon: config.icon,
+                  selected: selectedCategory === cat,
+                  onPress: () => setSelectedCategory(cat),
+                };
+              }),
+            ]}
+          />
+        </View>
       )}
 
       {/* Items List */}
@@ -446,42 +459,24 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
     fontSize: TYPE.bodySize,
   },
-  categoryFiltersScroll: {
-    flexGrow: 0,
-    flexShrink: 0,
+  categoryPickerRow: {
+    paddingHorizontal: GRID.md,
+    paddingBottom: GRID.sm,
+    alignItems: 'flex-start',
   },
-  categoryFilters: {
-    paddingHorizontal: Spacing.md,
-    paddingBottom: 10,
-    gap: Spacing.xs,
-    // A horizontal ScrollView's content container defaults to
-    // alignItems:'stretch', so each pill grew to the full height of the
-    // scroll area — the filter row was rendering as six tall boxes taking
-    // roughly half the screen. Size pills to their content instead.
-    alignItems: 'center',
-  },
-  categoryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  categoryAnchor: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.xs,
+    paddingHorizontal: GRID.md, paddingVertical: GRID.sm,
+    borderRadius: RADIUS.full,
     backgroundColor: SemanticColors.surfacePrimary,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    maxWidth: '100%',
   },
-  categoryPillActive: {
-    backgroundColor: SemanticColors.actionPrimary + '15',
-    borderColor: SemanticColors.actionPrimary + '40',
-  },
-  categoryPillText: {
-    color: SemanticColors.textSecondary,
+  categoryAnchorText: {
     fontSize: TYPE.captionSize,
-    fontFamily: TYPE.labelFamily,
-  },
-  categoryPillTextActive: {
-    color: SemanticColors.actionPrimary,
+    fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+    flexShrink: 1,
   },
   list: {
     flex: 1,

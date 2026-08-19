@@ -1831,7 +1831,10 @@
     "startedQuestions_other": "{{count}} vragen gestart",
     "aiMatchExact": "Gevonden op “{{words}}” in je omschrijving. Jouw prijs: {{rate}}.",
     "aiMatchFuzzy": "Vergelijkbaar met “{{words}}”. Jouw prijs: {{rate}}.",
-    "aiMatchFallback": "Uit je prijslijst — {{rate}}. Niet gekoppeld aan je omschrijving, controleer of dit hoort."
+    "aiMatchFallback": "Uit je prijslijst — {{rate}}. Niet gekoppeld aan je omschrijving, controleer of dit hoort.",
+    "sendToCustomer": "Naar klant sturen",
+    "pdf": "Pdf",
+    "invoice": "Factuur"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -5386,7 +5389,8 @@
     "trendHigh": "Hoog",
     "trendMedium": "Middel",
     "trendLow": "Laag",
-    "noSeasonalData": "Nog niet genoeg historie voor seizoenspatronen."
+    "noSeasonalData": "Nog niet genoeg historie voor seizoenspatronen.",
+    "title": "Cashflow"
   },
   "pricebook": {
     "title": "Prijslijst",
@@ -5463,7 +5467,9 @@
       "nameRequired": "Geef deze dienst een naam",
       "priceRequired": "Vul een prijs van nul of hoger in",
       "unitRequired": "Zeg waar de prijs per is — “€12” alleen is geen prijs die een klant kan controleren"
-    }
+    },
+    "allCategories": "Alle categorieën",
+    "filterByCategory": "Filter op categorie"
   },
   "jobQuality": {
     "title": "Kluskwaliteit",
@@ -5560,7 +5566,8 @@
     "suggestionsSubtitle": "AI-gegenereerde optimalisaties gebaseerd op jouw data",
     "tabChat": "Chat",
     "tabInsights": "Inzichten",
-    "tabSuggestions": "Suggesties"
+    "tabSuggestions": "Suggesties",
+    "title": "AI-assistent"
   },
   "budgetOptimizer": {
     "analysing": "Budget analyseren...",

@@ -1847,7 +1847,10 @@
     "startedQuestions_other": "{{count}} questions entamées",
     "aiMatchExact": "Correspondance avec « {{words}} » dans votre description. Votre prix : {{rate}}.",
     "aiMatchFuzzy": "Proche de « {{words}} ». Votre prix : {{rate}}.",
-    "aiMatchFallback": "Depuis votre grille tarifaire — {{rate}}. Sans lien avec votre description, à vérifier."
+    "aiMatchFallback": "Depuis votre grille tarifaire — {{rate}}. Sans lien avec votre description, à vérifier.",
+    "sendToCustomer": "Envoyer au client",
+    "pdf": "PDF",
+    "invoice": "Facture"
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",
@@ -5402,7 +5405,8 @@
     "trendHigh": "Élevé",
     "trendMedium": "Moyen",
     "trendLow": "Faible",
-    "noSeasonalData": "Pas encore assez d'historique pour les tendances saisonnières."
+    "noSeasonalData": "Pas encore assez d'historique pour les tendances saisonnières.",
+    "title": "Trésorerie"
   },
   "pricebook": {
     "title": "Grille tarifaire",
@@ -5479,7 +5483,9 @@
       "nameRequired": "Donnez un nom à cette prestation",
       "priceRequired": "Saisissez un prix égal ou supérieur à zéro",
       "unitRequired": "Indiquez à quoi correspond le prix — « 12 € » seul n'est pas un prix vérifiable par le client"
-    }
+    },
+    "allCategories": "Toutes les catégories",
+    "filterByCategory": "Filtrer par catégorie"
   },
   "jobQuality": {
     "title": "Qualité du chantier",
@@ -5576,7 +5582,8 @@
     "suggestionsSubtitle": "Optimisations générées par IA à partir de vos données",
     "tabChat": "Chat",
     "tabInsights": "Analyses",
-    "tabSuggestions": "Suggestions"
+    "tabSuggestions": "Suggestions",
+    "title": "Assistant IA"
   },
   "budgetOptimizer": {
     "analysing": "Analyse du budget...",

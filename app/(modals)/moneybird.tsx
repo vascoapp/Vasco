@@ -8,6 +8,7 @@ import { Spacing } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useTranslation } from 'react-i18next';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 
 const STORAGE_KEY = '@vasco_moneybird_config';
 
@@ -95,8 +96,11 @@ export default function MoneybirdConnectModal() {
 
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>
+      {/* Reached by router.push from the invoice and quote screens, on a
+          stack with headerShown:false — so this screen opened with no back
+          control of any kind. The title moves here from the body. */}
+      <DKScreenHeader title={t('moneybird.title', 'Moneybird Boekhouding')} />
       <View style={styles.container}>
-        <Text style={styles.title}>{t('moneybird.title', 'Moneybird Boekhouding')}</Text>
         <Text style={styles.subtitle}>
           {t('moneybird.subtitle', 'Exporteer facturen en synchroniseer contacten automatisch')}
         </Text>

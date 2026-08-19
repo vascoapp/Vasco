@@ -6,9 +6,9 @@
 // Functions preserved from prior implementation.
 // =============================================================================
 
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -17,12 +17,13 @@ import { Palette, SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
 import { SafeArea } from '../../src/theme/spacing';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
 import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
-import { ShareQuoteButton } from '../../src/components/contractor/ShareQuoteButton';
+import { signQuoteLink } from '../../src/services/publicQuotePortalService';
 import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/intelligenceCaptureService';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
@@ -49,6 +50,7 @@ export default function QuoteDetailScreen() {
   const quoteLineItems = lineItems[quote?.id ?? ''] ?? [];
   const priceRisk = priceRisks.find((risk) => risk.quoteId === quote?.id);
   const [applied, setApplied] = useState(false);
+  const [sharingLink, setSharingLink] = useState(false);
   const [engagement, setEngagement] = useState<QuoteEngagement | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -63,7 +65,11 @@ export default function QuoteDetailScreen() {
 
   if (!quote) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
+        {/* The dead end needs the back control most: this screen had none, so
+            a quote id that resolves to nothing stranded the contractor on a
+            single line of text. */}
+        <DKScreenHeader title={t('quotes.quote', 'Quote')} />
         <View style={styles.notFoundWrap}>
           <Text style={styles.notFoundText}>{t('quotes.notFound', 'Quote not found')}</Text>
         </View>
@@ -92,6 +98,150 @@ export default function QuoteDetailScreen() {
 
   const validUntilDate = new Date(Date.now() + 30 * MS_PER_DAY);
   const validUntilLabel = fmtDate(validUntilDate, country);
+
+  // ── Actions ────────────────────────────────────────────────────────────
+  // Hoisted out of the JSX so the same handler can be the primary CTA on one
+  // status and a compact tile on another. Previously each was an inline arrow
+  // inside its own full-width button, which is why adding a case meant adding
+  // a banner.
+
+  const sharePdf = async () => {
+    const items = lineItems[quote.id] ?? [];
+    const sub = items.reduce((acc, i) => acc + i.unitPrice * i.quantity, 0);
+    const vrate = getVATRate(country);
+    const vpct = Math.round(vrate * 100);
+    const vamt = Math.round(sub * vrate * 100) / 100;
+    const pdfData: QuotePdfData = {
+      quoteNumber: quote.id,
+      customerName: customerDisplayName ?? t('jobs.client', 'Client'),
+      jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
+      issueDate: fmtDate(new Date(), country),
+      validUntil: validUntilLabel,
+      lineItems: items.map((i) => ({ description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, vatRate: vpct })),
+      subtotal: sub,
+      vatAmount: vamt,
+      total: sub + vamt,
+      // R63 / Package D4: the AI-generated SOW narrative, from documents.scope_text.
+      scopeText: quote.description,
+    };
+    // R66 NL launch: thread vatScheme so KOR / Kleinunternehmer contractors get
+    // 0% VAT + the legal note, matching the invoice PDF (R251).
+    // R66 round 11: Print.printToFileAsync can throw; without a catch the press
+    // did nothing and the quote stayed 'draft'. markQuoteSent only runs on success.
+    try {
+      await generateQuotePdf(
+        pdfData,
+        businessProfile.businessName,
+        businessProfile.address,
+        businessProfile.kvkNumber,
+        businessProfile.vatNumber,
+        { vatScheme: businessProfile.vatScheme },
+      );
+      markQuoteSent(quote.id);
+    } catch (err: any) {
+      Alert.alert(
+        t('quotes.shareFailedTitle', 'Could not share quote'),
+        err?.message ?? t('quotes.shareFailedBody', 'Please retry. If this persists, the PDF could not be generated on this device.'),
+      );
+    }
+  };
+
+  // ONE customer link, not two. The screen used to offer both "Offertelink
+  // delen" (the signed portal, which shows the line items) and
+  // "Goedkeuringslink delen" (accept/decline only, no line items) — two
+  // buttons, two token systems, and no way for the contractor to know which
+  // one the customer should get. verify-quote-token now mints an acceptance
+  // capability for whoever holds a valid portal token, so the portal link is
+  // a strict superset: it shows the quote AND accepts it.
+  //
+  // The acceptance-only link survives as the fallback, because it is minted
+  // locally: in demo mode, and for a quote that never reached the backend,
+  // signQuoteLink has nothing to sign.
+  const shareCustomerLink = async () => {
+    if (sharingLink) return;
+    setSharingLink(true);
+    try {
+      const signed = await signQuoteLink(quote.id);
+      if (signed.ok && signed.url) {
+        const greeting = customerDisplayName ? t('shareQuote.greeting', { name: customerDisplayName }) : '';
+        await Share.share({
+          message: t('shareQuote.message', { greeting, url: signed.url }),
+          url: signed.url,
+          title: t('shareQuote.shareTitle', 'Quote'),
+        });
+        return;
+      }
+      await shareQuoteWithAcceptanceLink({
+        id: quote.id, customer: quote.customer, customerName: customerDisplayName,
+        amount: quote.amount, job: quote.job,
+      });
+      if (isDemoMode) {
+        Alert.alert(
+          t('quotes.demoMode', 'Demo mode'),
+          t('quotes.demoApprovalLink', 'In demo mode, approval links are local only. The link has been shared via your device share sheet.'),
+        );
+      }
+    } catch {
+      Alert.alert(t('common.error', 'Error'), t('quotes.approvalLinkFailed', 'Could not create approval link.'));
+    } finally {
+      setSharingLink(false);
+    }
+  };
+
+  const acceptAndCreateJob = () => {
+    Alert.alert(
+      t('quotes.acceptQuote', 'Accept quote'),
+      t('quotes.acceptQuoteDesc', { defaultValue: 'Accept quote and create job for {{total}}?', total: formatCurrency(total) }),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('quotes.accept', 'Accept'),
+          onPress: async () => {
+            try {
+              const jobId = await convertQuoteToJob(quote.id);
+              if (jobId) {
+                hapticSuccess();
+                Alert.alert(
+                  t('quotes.jobCreated', 'Job created'),
+                  t('quotes.jobCreatedDesc', 'The quote has been accepted and a job has been created.'),
+                  [
+                    { text: t('quotes.viewJob', 'View job'), onPress: () => router.replace(`/contractor/job/${jobId}` as any) },
+                    { text: t('quotes.createInvoice', 'Create invoice'), onPress: () => router.push(`/quotes/${quote.id}/invoice` as any) },
+                    { text: t('common.close', 'Close') },
+                  ],
+                );
+              }
+            } catch (err: any) {
+              Alert.alert(t('common.error', 'Error'), err?.message || t('quotes.conversionFailed', 'Could not convert quote to job.'));
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const createInvoice = () => router.push(`/quotes/${id}/invoice` as any);
+
+  // The one thing to do next, by status. Everything else is a tile — so the
+  // screen has exactly one full-width button whatever the quote's state.
+  type QuoteAction = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void; tint?: string };
+
+  const A: Record<string, QuoteAction> = {
+    link: { key: 'link', label: t('quotes.sendToCustomer', 'Send to customer'), icon: 'paper-plane', onPress: shareCustomerLink },
+    pdf: { key: 'pdf', label: t('quotes.pdf', 'PDF'), icon: 'document-text-outline', onPress: sharePdf },
+    accept: { key: 'accept', label: t('quotes.accept', 'Accept'), icon: 'checkmark-circle', onPress: acceptAndCreateJob, tint: DK.colors.success },
+    invoice: { key: 'invoice', label: t('quotes.invoice', 'Invoice'), icon: 'receipt-outline', onPress: createInvoice },
+  };
+
+  const accepted = quote.status === 'accepted';
+  const primaryAction: QuoteAction = accepted ? A.invoice : quote.status === 'sent' ? A.link : A.pdf;
+  const tileActions: QuoteAction[] = [A.link, A.pdf, A.accept, A.invoice].filter(
+    (a) => a.key !== primaryAction.key
+      // Accepting twice creates a second job from one quote.
+      && !(a.key === 'accept' && accepted)
+      // Nothing to link to before the quote has been sent.
+      && !(a.key === 'link' && quote.status === 'draft'),
+  );
   const statusColors = STATUS_COLORS[quote.status] ?? STATUS_COLORS.draft;
 
   return (
@@ -306,141 +456,60 @@ export default function QuoteDetailScreen() {
           </View>
         )}
 
-        {/* Actions */}
+        {/* Actions — ONE full-width CTA, then a row of compact tiles.
+            This block used to stack up to five full-width banners on a `sent`
+            quote (share link, share PDF, approval link, accept, create
+            invoice). Nothing was ranked, so nothing read as the next step, and
+            the two that mattered least — a flat orange share button that
+            matched no other control on the screen, and a bordered "create
+            invoice" that read as disabled — were the two the eye reached
+            first and last. */}
         <View style={styles.actionsBlock}>
-          {quote.status === 'sent' && (
-            <ShareQuoteButton quoteId={quote.id} customerName={customerDisplayName} />
-          )}
-
           <Pressable
             style={styles.primaryBtn}
-            onPress={async () => {
-              const items = lineItems[quote.id] ?? [];
-              const sub = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-              const vrate = getVATRate(country);
-              const vpct = Math.round(vrate * 100);
-              const vamt = Math.round(sub * vrate * 100) / 100;
-              // R66r44 — gradient backdrop is rendered by the inline View child below.
-              const pdfData: QuotePdfData = {
-                quoteNumber: quote.id,
-                customerName: customerDisplayName ?? t('jobs.client', 'Client'),
-                jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
-                issueDate: fmtDate(new Date(), country),
-                validUntil: validUntilLabel,
-                lineItems: items.map((i) => ({ description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, vatRate: vpct })),
-                subtotal: sub,
-                vatAmount: vamt,
-                total: sub + vamt,
-                // R63 / Package D4: render the AI-generated SOW narrative in
-                // the PDF. Pulled from documents.scope_text via the R63
-                // mapper update; falls back to undefined for older quotes
-                // that pre-date the SOW feature.
-                scopeText: quote.description,
-              };
-              // R66 NL launch: thread vatScheme so KOR / Kleinunternehmer
-              // contractors get 0% VAT + the legal note on the quote PDF
-              // (matches the invoice PDF, R251). Pre-R66 the quote showed
-              // 21% even when the contractor was on KOR — confusing the
-              // customer when the invoice arrived showing 0%.
-              // R66 round 11: wrap in try/catch — Print.printToFileAsync
-              // can throw (file system, permissions). Without a catch,
-              // the contractor saw the button press do nothing and the
-              // quote stayed in 'draft'. markQuoteSent only runs on a
-              // successful share.
-              try {
-                await generateQuotePdf(
-                  pdfData,
-                  businessProfile.businessName,
-                  businessProfile.address,
-                  businessProfile.kvkNumber,
-                  businessProfile.vatNumber,
-                  { vatScheme: businessProfile.vatScheme },
-                );
-                markQuoteSent(quote.id);
-              } catch (err: any) {
-                Alert.alert(
-                  t('quotes.shareFailedTitle', 'Could not share quote'),
-                  err?.message ?? t('quotes.shareFailedBody', 'Please retry. If this persists, the PDF could not be generated on this device.'),
-                );
-              }
-            }}
+            onPress={primaryAction.onPress}
+            disabled={sharingLink && primaryAction.key === 'link'}
             accessibilityRole="button"
-            accessibilityLabel={t('quotes.sharePdf', 'Share quote as PDF')}
+            accessibilityLabel={primaryAction.label}
           >
-            <LinearGradient colors={DK.effects.ctaGradient as unknown as readonly [string, string, ...string[]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-            <Ionicons name="share-outline" size={18} color="#fff" />
-            <Text style={styles.primaryBtnText}>{t('quotes.sharePdf', 'Share quote as PDF').toUpperCase()}</Text>
+            <LinearGradient
+              colors={DK.effects.ctaGradient as unknown as readonly [string, string, ...string[]]}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            {sharingLink && primaryAction.key === 'link' ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name={primaryAction.icon} size={18} color="#fff" />
+            )}
+            <Text style={styles.primaryBtnText}>{primaryAction.label.toUpperCase()}</Text>
           </Pressable>
 
-          {quote.status === 'sent' && (
-            <Pressable
-              style={styles.primaryBtn}
-              onPress={async () => {
-                try {
-                  await shareQuoteWithAcceptanceLink({
-                    id: quote.id, customer: quote.customer, customerName: customerDisplayName,
-                    amount: quote.amount, job: quote.job,
-                  });
-                  if (isDemoMode) {
-                    Alert.alert(t('quotes.demoMode', 'Demo mode'), t('quotes.demoApprovalLink', 'In demo mode, approval links are local only. The link has been shared via your device share sheet.'));
-                  }
-                } catch {
-                  Alert.alert(t('common.error', 'Error'), t('quotes.approvalLinkFailed', 'Could not create approval link.'));
-                }
-              }}
-              accessibilityRole="button"
-            >
-              <LinearGradient colors={DK.effects.ctaGradient as unknown as readonly [string, string, ...string[]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-              <Ionicons name="link" size={18} color="#fff" />
-              <Text style={styles.primaryBtnText}>{t('quotes.shareApprovalLink', 'Share approval link').toUpperCase()}</Text>
-            </Pressable>
-          )}
-
-          <Pressable
-            style={styles.successBtn}
-            onPress={() => {
-              Alert.alert(
-                t('quotes.acceptQuote', 'Accept quote'),
-                t('quotes.acceptQuoteDesc', { defaultValue: 'Accept quote and create job for {{total}}?', total: formatCurrency(total) }),
-                [
-                  { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                  {
-                    text: t('quotes.accept', 'Accept'),
-                    onPress: async () => {
-                      try {
-                        const jobId = await convertQuoteToJob(quote.id);
-                        if (jobId) {
-                          hapticSuccess();
-                          Alert.alert(
-                            t('quotes.jobCreated', 'Job created'),
-                            t('quotes.jobCreatedDesc', 'The quote has been accepted and a job has been created.'),
-                            [
-                              { text: t('quotes.viewJob', 'View job'), onPress: () => router.replace(`/contractor/job/${jobId}` as any) },
-                              { text: t('quotes.createInvoice', 'Create invoice'), onPress: () => router.push(`/quotes/${quote.id}/invoice` as any) },
-                              { text: t('common.close', 'Close') },
-                            ],
-                          );
-                        }
-                      } catch (err: any) {
-                        Alert.alert(t('common.error', 'Error'), err?.message || t('quotes.conversionFailed', 'Could not convert quote to job.'));
-                      }
-                    },
-                  },
-                ],
-              );
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t('quotes.acceptAndCreateJob', 'Accept and create job')}
-          >
-            <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <Text style={styles.primaryBtnText}>{t('quotes.acceptAndCreateJob', 'Accept & create job').toUpperCase()}</Text>
-          </Pressable>
-
-          <Link href={`/quotes/${id}/invoice`} asChild>
-            <Pressable style={styles.secondaryBtn} accessibilityRole="button" accessibilityLabel={t('quotes.createInvoice', 'Create invoice')}>
-              <Text style={styles.secondaryBtnText}>{t('quotes.createInvoice', 'Create invoice').toUpperCase()}</Text>
-            </Pressable>
-          </Link>
+          <View style={styles.actionsTileRow}>
+            {tileActions.map((a) => (
+              <Pressable
+                key={a.key}
+                style={styles.actionTile}
+                onPress={a.onPress}
+                disabled={sharingLink && a.key === 'link'}
+                accessibilityRole="button"
+                accessibilityLabel={a.label}
+              >
+                {sharingLink && a.key === 'link' ? (
+                  <ActivityIndicator size="small" color={Palette.hermesOrange} />
+                ) : (
+                  <Ionicons name={a.icon} size={18} color={a.tint ?? Palette.hermesOrange} />
+                )}
+                {/* The captions are short NOUNS so they survive de/fr, where
+                    "Rechnung erstellen" / "Créer une facture" would not fit a
+                    quarter-width tile. The full action name stays on
+                    accessibilityLabel. */}
+                <Text style={[styles.actionTileText, a.tint ? { color: a.tint } : null]} numberOfLines={2}>
+                  {a.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={{ height: 60 }} />
@@ -598,4 +667,22 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: DK.colors.border,
   },
   secondaryBtnText: { color: DK.colors.text, fontFamily: DK.type.display700, fontSize: 13, letterSpacing: 1.2 },
+  // Compact tiles, same shape the job screen uses for its secondary row, so a
+  // contractor meets one pattern for "the other things I can do here".
+  actionsTileRow: { flexDirection: 'row', gap: GRID.sm },
+  actionTile: {
+    flex: 1,
+    alignItems: 'center', justifyContent: 'center', gap: GRID.xs,
+    paddingVertical: 14, paddingHorizontal: 4,
+    borderRadius: DK.radius.button,
+    backgroundColor: DK.colors.panel2,
+    borderWidth: 1, borderColor: DK.colors.border,
+    minHeight: 64,
+  },
+  actionTileText: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.titleFamily,
+    color: DK.colors.text,
+    textAlign: 'center',
+  },
 });

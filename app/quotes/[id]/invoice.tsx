@@ -14,6 +14,7 @@ import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
 import { formatCurrency, type Country } from '../../../src/i18n/formatting';
 import { logError } from '../../../src/utils/errorHandler';
+import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 
 export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
@@ -80,6 +81,9 @@ export default function InvoiceFromQuoteScreen() {
   if (!quote) {
     return (
       <Screen>
+        {/* The dead end needed the back control most: a quote that cannot be
+            found left the contractor on a one-line screen with no way out. */}
+        <DKScreenHeader title={t('quotes.invoice', 'Invoice')} />
         <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
           <Text style={Typography.muted}>{t('quoteToInvoice.notFound', { id })}</Text>
         </View>
@@ -89,11 +93,14 @@ export default function InvoiceFromQuoteScreen() {
 
   return (
     <Screen>
+      {/* Reached from the quote screen's "Invoice" action. The title sat inside
+          the scroll view and there was no back control, so the only way out of
+          a half-filled invoice was the OS gesture. */}
+      <DKScreenHeader
+        title={t('quoteToInvoice.header', { ref: quote.id })}
+        subtitle={t('quoteToInvoice.autoNumberDue')}
+      />
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Text style={Typography.title}>{t('quoteToInvoice.header', { ref: quote.id })}</Text>
-          <Text style={Typography.muted}>{t('quoteToInvoice.autoNumberDue')}</Text>
-        </View>
 
         {inlineInsight && (
           <InlineInsight

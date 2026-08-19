@@ -11,6 +11,7 @@ import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 
 export default function InvoiceFromQuoteSelect() {
   const { t } = useTranslation();
@@ -29,11 +30,14 @@ export default function InvoiceFromQuoteSelect() {
 
   return (
     <Screen>
+      {/* The title was drawn inside the scroll view, so it scrolled away and
+          there was no back control at any point — this stack runs with
+          headerShown:false. */}
+      <DKScreenHeader
+        title={t('invoiceNew.title', 'Create invoice')}
+        subtitle={t('invoiceNew.subtitle', 'Pick a quote to invoice')}
+      />
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Text style={Typography.title}>{t('invoiceNew.title', 'Create invoice')}</Text>
-          <Text style={Typography.muted}>{t('invoiceNew.subtitle', 'Pick a quote to invoice')}</Text>
-        </View>
 
         {inlineInsight && (
           <InlineInsight

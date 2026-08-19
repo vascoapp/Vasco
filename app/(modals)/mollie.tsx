@@ -13,6 +13,7 @@ import { consentService } from '../../src/services/consentService';
 import { VASCO_FEE_DISCLOSURE } from '../../src/services/paymentMarginService';
 import i18n from '../../src/i18n/i18n';
 import { useTranslation } from 'react-i18next';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 
 type LocaleKey = keyof typeof VASCO_FEE_DISCLOSURE;
 function feeDisclosureForLocale(): string {
@@ -106,8 +107,11 @@ export default function MollieConnectModal() {
 
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>
+      {/* Reached by router.push from the invoice and quote screens, on a
+          stack with headerShown:false — so this screen opened with no back
+          control of any kind. The title moves here from the body. */}
+      <DKScreenHeader title={t('mollie.title', 'Mollie Payments')} />
       <View style={styles.container}>
-        <Text style={styles.title}>{t('mollie.title', 'Mollie Payments')}</Text>
         <Text style={styles.subtitle}>
           {t('mollie.subtitle', 'Receive payments via iDEAL, credit card and more')}
         </Text>

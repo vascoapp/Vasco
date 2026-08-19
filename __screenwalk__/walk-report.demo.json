@@ -618,6 +618,8 @@
    "mounted": true,
    "error": null,
    "texts": [
+    "",
+    "AI-ASSISTENT",
     "",
     "Chat",
     "",
@@ -675,7 +677,9 @@
     "\"",
     ""
    ],
-   "a11y": []
+   "a11y": [
+    "Back"
+   ]
   },
   {
    "screen": "contractor/ai-chat",
@@ -843,6 +847,8 @@
    "mounted": true,
    "error": null,
    "texts": [
+    "",
+    "CASHFLOW",
     "",
     "Overzicht",
     "",
@@ -883,6 +889,7 @@
     "0 facturen"
    ],
    "a11y": [
+    "Back",
     "Stuur herinneringen"
    ]
   },
@@ -1398,9 +1405,9 @@
     "",
     "Fam. Bakker",
     "",
-    "22:38",
+    "23:11",
     "–",
-    "22:38",
+    "23:11",
     "2u",
     "",
     "Contactpersoon toevoegen",
@@ -2939,8 +2946,8 @@
    "mounted": true,
    "error": null,
    "texts": [
-    "Garantiebeheer",
-    "",
+    "",
+    "GARANTIEBEHEER",
     "",
     "Actief",
     "",
@@ -2973,7 +2980,9 @@
     "",
     "Verloopt over 500 dagen"
    ],
-   "a11y": []
+   "a11y": [
+    "Back"
+   ]
   },
   {
    "screen": "contractor/weekly-overview",
@@ -3203,8 +3212,9 @@
    "mounted": true,
    "error": null,
    "texts": [
-    "Factuur aanmaken",
-    "Kies een offerte om te factureren",
+    "",
+    "FACTUUR AANMAKEN",
+    "KIES EEN OFFERTE OM TE FACTUREREN",
     "",
     "Facturen die binnen 24 uur na oplevering worden verstuurd, worden 3 dagen sneller betaald.",
     "Verstuurde offertes",
@@ -3223,7 +3233,9 @@
     "Exterior repaint",
     "Concept"
    ],
-   "a11y": []
+   "a11y": [
+    "Back"
+   ]
   },
   {
    "screen": "login",
@@ -3324,23 +3336,22 @@
     "€ 38,00",
     "Totaal",
     "€ 218,00",
-    "",
-    "Offertelink delen",
-    "",
-    "OFFERTE DELEN ALS PDF",
-    "",
-    "GOEDKEURINGSLINK DELEN",
+    "",
+    "NAAR KLANT STUREN",
+    "",
+    "Pdf",
     "",
-    "ACCEPTEREN EN KLUS AANMAKEN",
-    "FACTUUR AANMAKEN"
+    "Accepteren",
+    "",
+    "Factuur"
    ],
    "a11y": [
     "Terug",
     "Bewerken",
-    "Share signed quote link",
-    "Offerte delen als pdf",
-    "Accepteren en klus aanmaken",
-    "Factuur aanmaken"
+    "Naar klant sturen",
+    "Pdf",
+    "Accepteren",
+    "Factuur"
    ]
   },
   {
@@ -3348,8 +3359,9 @@
    "mounted": true,
    "error": null,
    "texts": [
-    "Factuur van q-seed-1",
-    "Auto-genummerd · 14 dagen betaaltermijn",
+    "",
+    "FACTUUR VAN Q-SEED-1",
+    "AUTO-GENUMMERD · 14 DAGEN BETAALTERMIJN",
     "",
     "Voeg foto's van het eindresultaat toe — klanten betalen sneller met visueel bewijs.",
     "Offertegegevens",
@@ -3373,6 +3385,7 @@
     "Factuur aanmaken"
    ],
    "a11y": [
+    "Back",
     "Factuur aanmaken"
    ]
   },

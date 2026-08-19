@@ -12,6 +12,7 @@ import { invoiceAutomationService } from '../../src/services/invoiceAutomationSe
 import { generateInvoicePdf } from '../../src/services/invoicePdfService';
 import { useAppState } from '../../src/state/AppState';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 
 // R116: full i18n pass. Pre-R116 every label, alert title, alert body,
 // section header, and button caption in this modal was hardcoded Dutch
@@ -99,8 +100,11 @@ export default function PdfModal() {
 
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>
+      {/* Reached by router.push from the invoice and quote screens, on a
+          stack with headerShown:false — so this screen opened with no back
+          control of any kind. The title moves here from the body. */}
+      <DKScreenHeader title={`${label} PDF`} />
       <View style={styles.container}>
-        <Text style={Typography.title}>{label} PDF</Text>
         <Text style={Typography.muted}>
           {t('pdfModal.intro', 'Generate a professional PDF and share it via email, WhatsApp, or save it.')}
         </Text>

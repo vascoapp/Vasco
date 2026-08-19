@@ -448,13 +448,6 @@ export const WarrantyManager: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('warranty.title', 'Warranty management')}</Text>
-        <Pressable style={styles.searchButton}>
-          <Ionicons name="search-outline" size={24} color={SemanticColors.textPrimary} />
-        </Pressable>
-      </View>
-
       <View style={styles.tabs}>
         {[
           { key: 'active', label: t('warranty.statActive', 'Active'), icon: 'shield-checkmark-outline' },

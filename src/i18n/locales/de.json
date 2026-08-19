@@ -1847,7 +1847,10 @@
     "startedQuestions_other": "{{count}} Fragen begonnen",
     "aiMatchExact": "Treffer für „{{words}}“ aus Ihrer Beschreibung. Ihr Preis: {{rate}}.",
     "aiMatchFuzzy": "Ähnlich zu „{{words}}“. Ihr Preis: {{rate}}.",
-    "aiMatchFallback": "Aus Ihrer Preisliste — {{rate}}. Kein Bezug zu Ihrer Beschreibung, bitte prüfen."
+    "aiMatchFallback": "Aus Ihrer Preisliste — {{rate}}. Kein Bezug zu Ihrer Beschreibung, bitte prüfen.",
+    "sendToCustomer": "An Kunden senden",
+    "pdf": "PDF",
+    "invoice": "Rechnung"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -5402,7 +5405,8 @@
     "trendHigh": "Hoch",
     "trendMedium": "Mittel",
     "trendLow": "Niedrig",
-    "noSeasonalData": "Noch nicht genug Historie für saisonale Muster."
+    "noSeasonalData": "Noch nicht genug Historie für saisonale Muster.",
+    "title": "Liquidität"
   },
   "pricebook": {
     "title": "Preisliste",
@@ -5479,7 +5483,9 @@
       "nameRequired": "Geben Sie dieser Leistung einen Namen",
       "priceRequired": "Geben Sie einen Preis von null oder mehr ein",
       "unitRequired": "Geben Sie an, wofür der Preis gilt — „12 €“ allein ist kein für Kunden nachvollziehbarer Preis"
-    }
+    },
+    "allCategories": "Alle Kategorien",
+    "filterByCategory": "Nach Kategorie filtern"
   },
   "jobQuality": {
     "title": "Auftragsqualität",
@@ -5576,7 +5582,8 @@
     "suggestionsSubtitle": "KI-generierte Optimierungen auf Basis Ihrer Daten",
     "tabChat": "Chat",
     "tabInsights": "Erkenntnisse",
-    "tabSuggestions": "Vorschläge"
+    "tabSuggestions": "Vorschläge",
+    "title": "KI-Assistent"
   },
   "budgetOptimizer": {
     "analysing": "Budget wird analysiert...",

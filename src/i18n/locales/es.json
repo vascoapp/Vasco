@@ -1847,7 +1847,10 @@
     "startedQuestions_other": "{{count}} preguntas iniciadas",
     "aiMatchExact": "Coincide con «{{words}}» de tu descripción. Tu precio: {{rate}}.",
     "aiMatchFuzzy": "Parecido a «{{words}}». Tu precio: {{rate}}.",
-    "aiMatchFallback": "De tu lista de precios — {{rate}}. No coincide con tu descripción, compruébalo."
+    "aiMatchFallback": "De tu lista de precios — {{rate}}. No coincide con tu descripción, compruébalo.",
+    "sendToCustomer": "Enviar al cliente",
+    "pdf": "PDF",
+    "invoice": "Factura"
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -5402,7 +5405,8 @@
     "trendHigh": "Alto",
     "trendMedium": "Medio",
     "trendLow": "Bajo",
-    "noSeasonalData": "Aún no hay suficiente historial para ver patrones estacionales."
+    "noSeasonalData": "Aún no hay suficiente historial para ver patrones estacionales.",
+    "title": "Flujo de caja"
   },
   "pricebook": {
     "title": "Lista de precios",
@@ -5479,7 +5483,9 @@
       "nameRequired": "Ponle un nombre a este servicio",
       "priceRequired": "Introduce un precio de cero o más",
       "unitRequired": "Indica a qué corresponde el precio — «12 €» por sí solo no es un precio que el cliente pueda comprobar"
-    }
+    },
+    "allCategories": "Todas las categorías",
+    "filterByCategory": "Filtrar por categoría"
   },
   "jobQuality": {
     "title": "Calidad del trabajo",
@@ -5576,7 +5582,8 @@
     "suggestionsSubtitle": "Optimizaciones generadas por IA a partir de tus datos",
     "tabChat": "Chat",
     "tabInsights": "Ideas",
-    "tabSuggestions": "Sugerencias"
+    "tabSuggestions": "Sugerencias",
+    "title": "Asistente IA"
   },
   "budgetOptimizer": {
     "analysing": "Analizando el presupuesto...",
