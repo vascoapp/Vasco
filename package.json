@@ -38,6 +38,8 @@
     "phrasing:generate": "node scripts/generate-phrasing.mjs",
     "walk": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit",
     "walk:fresh": "WALK_POSTURE=fresh NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit",
+    "walk:ipad": "WALK_VIEWPORT=ipad NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit",
+    "walk:ipad:landscape": "WALK_VIEWPORT=ipad-landscape NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit",
     "walk:prod": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.prod.config.js --forceExit"
   },
   "dependencies": {

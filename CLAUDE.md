@@ -90,6 +90,14 @@ npm run audit:unmounted                # components no screen reaches; follows t
 npm run walk                           # seeded demo contractor (what the sim shows)
 npm run walk:fresh                     # day one: backend up, zero rows
 npm run walk:prod                      # DEMO_MODE OFF — the shipping build.
+npm run walk:ipad                      # same screens at iPad Pro 11" portrait
+npm run walk:ipad:landscape            # ...and landscape. app.json declares
+                                       # supportsTablet, nothing branches on
+                                       # width, and this had never been walked.
+                                       # ⚠️ react-test-renderer does not LAY
+                                       # OUT: a clean run means nothing crashes
+                                       # and no code branches wrongly on width.
+                                       # It cannot see a stretched column.
 # `walk` and `walk:fresh` both run with __DEV__ true, so DEMO_MODE is ON and
 # fabricated fixtures are SUPPOSED to render. Only walk:prod answers "does mock
 # data reach a real contractor?". It runs the posture-agnostic suites only —
@@ -102,6 +110,21 @@ npm run walk:prod                      # DEMO_MODE OFF — the shipping build.
 # `isAannemer` branch renders its solo variant and the multi-site surface is
 # invisible.
 npm run check:photo -- <photo.jpg> plumbing NL   # is photo→quote any good?
+
+# Backend, against LIVE Supabase. Keys come from
+# `npx supabase projects api-keys --project-ref gblhqhorkarocmputhte`, NOT .env.
+npm run smoke:golden                   # the CONTRACTOR path, authenticated
+npm run smoke:customer                 # the CUSTOMER path — anon key, NO session.
+                                       # The other half of the product: quote
+                                       # acceptance + the decision portal. All of
+                                       # it was dead in prod until 2026-08-19
+                                       # because `anon` has ZERO table grants and
+                                       # nothing here had ever sent a request
+                                       # without a session. Also asserts anon
+                                       # still CANNOT read nine tables — the
+                                       # one-line "fix" is a GRANT that leaks
+                                       # every quote token on the platform.
+npm run smoke:endpoints                # edge fns + RLS + anon surface + drift
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
 ```
 

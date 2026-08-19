@@ -96,16 +96,80 @@ jest.mock('expo-linear-gradient', () => {
   return { LinearGradient: View };
 });
 
+/**
+ * A VIEWPORT is a posture too.
+ *
+ * app.json declares `supportsTablet: true`, so the app installs on iPad and
+ * runs at iPad point size — not as a scaled-up phone. Nothing in `src/` or
+ * `app/` reads `Platform.isPad` or branches on width, and the whole surface
+ * had only ever been walked at phone size, so "does it hold at 1024pt" had
+ * never been asked.
+ *
+ * `WALK_VIEWPORT=ipad` walks the same screens at iPad Pro 11" portrait
+ * (834×1194) with the iPad's insets: no notch (top 24), no home indicator
+ * (bottom 20). `WALK_VIEWPORT=ipad-landscape` gives 1194×834, which is how a
+ * contractor actually uses one on a desk or in a keyboard case — and which
+ * app.json's `orientation: 'portrait'` currently forbids.
+ *
+ * ⚠️ What this CAN and CANNOT tell you. react-test-renderer does not lay
+ * anything out: there are no measured widths, no flex resolution, no
+ * overflow. A clean run means nothing CRASHES and no code branches wrongly on
+ * width — it does NOT mean the screen looks right at 1024pt. A full-width
+ * text column on an iPad is a legibility problem this harness is structurally
+ * blind to. Answer that on a real simulator; this is the cheap first pass.
+ */
+const mockViewports = {
+  phone: { width: 402, height: 874, insets: { top: 59, right: 0, bottom: 34, left: 0 } },
+  ipad: { width: 834, height: 1194, insets: { top: 24, right: 0, bottom: 20, left: 0 } },
+  'ipad-landscape': { width: 1194, height: 834, insets: { top: 24, right: 0, bottom: 20, left: 0 } },
+} as const;
+
+const mockViewportName = (process.env.WALK_VIEWPORT ?? 'phone') as keyof typeof mockViewports;
+// The `mock` prefix is load-bearing: jest hoists jest.mock() above these
+// declarations, and its babel plugin statically rejects any out-of-scope
+// reference from a factory unless the name starts with `mock`.
+const mockViewport = mockViewports[mockViewportName];
+if (!mockViewport) {
+  // Loud, not a silent fall back to phone: a viewport suite that quietly
+  // walks at phone size reports a clean iPad run that never happened. Same
+  // rule as the posture guard in screenWalk.tsx.
+  throw new Error(
+    `WALK_VIEWPORT='${process.env.WALK_VIEWPORT}' is not a known viewport. ` +
+    `Use one of: ${Object.keys(mockViewports).join(', ')}.`,
+  );
+}
+
+// react-native's own jest setup answers Dimensions.get('window') with a fixed
+// 750×1334 regardless of anything above — so the five module-level
+// `Dimensions.get('window')` snapshots in this codebase would read a phantom
+// device in every posture. Point them at the viewport under test.
+jest.mock('react-native/Libraries/Utilities/Dimensions', () => {
+  const impl = {
+    get: () => ({ width: mockViewport.width, height: mockViewport.height, scale: 2, fontScale: 1 }),
+    set: () => {},
+    addEventListener: () => ({ remove: () => {} }),
+    removeEventListener: () => {},
+  };
+  // Both shapes on purpose. The module is authored with `export default`, so
+  // babel consumers reach it via `.default`, while parts of react-native still
+  // `require()` it and use the object directly. Returning only the bare object
+  // made `Dimensions.get` undefined and took 78 of 79 screens down with a
+  // TypeError — a harness failure that read exactly like a catastrophic iPad
+  // layout bug.
+  return { __esModule: true, default: impl, ...impl };
+});
+
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
-  const inset = { top: 59, right: 0, bottom: 34, left: 0 };
+  const inset = mockViewport.insets;
+  const frame = { x: 0, y: 0, width: mockViewport.width, height: mockViewport.height };
   return {
     SafeAreaProvider: View,
     SafeAreaView: View,
     SafeAreaInsetsContext: { Consumer: ({ children }: any) => children(inset) },
     useSafeAreaInsets: () => inset,
-    useSafeAreaFrame: () => ({ x: 0, y: 0, width: 402, height: 874 }),
-    initialWindowMetrics: { insets: inset, frame: { x: 0, y: 0, width: 402, height: 874 } },
+    useSafeAreaFrame: () => frame,
+    initialWindowMetrics: { insets: inset, frame },
   };
 });
 
