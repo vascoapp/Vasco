@@ -17,6 +17,7 @@ import {
 } from '@expo-google-fonts/archivo';
 import { ActivityIndicator, Alert, Linking, Platform, View } from 'react-native';
 import { WideScreenFrame } from '../src/components/shared/WideScreenFrame';
+import { installWebAlert } from '../src/utils/webAlertShim';
 import { AppStateProvider } from '../src/state/AppState';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { checkForUpdate } from '../src/services/versionCheckService';
@@ -38,6 +39,10 @@ import { getPushTokenIfGranted, refreshPushTokenIfStale, syncBadgeWithUnread } f
 import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/intelligence/backgroundJobScheduler';
 import { getWeatherForecast } from '../src/services/weatherService';
 import * as Notifications from 'expo-notifications';
+
+// react-native-web's Alert is a no-op, which silently kills every
+// confirmation flow in the browser. Native is untouched.
+installWebAlert();
 
 // Enterprise roles use the (tabs) layout
 const ENTERPRISE_ROLES = ['cfo', 'coo', 'site-lead', 'director'];
