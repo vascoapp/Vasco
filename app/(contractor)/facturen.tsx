@@ -22,7 +22,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, GRID, RADIUS, TYPE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { TieredQuoteBuilder } from '../../src/components/contractor/TieredQuoteBuilder';
 import { useCashFlow, type Invoice } from '../../src/services/cashFlowService';
 import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
 import { LoadingSkeleton } from '../../src/components/shared/LoadingSkeleton';
@@ -537,7 +536,6 @@ export default function FacturenScreen() {
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const [activeTab, setActiveTab] = useState<TabView>('offertes');
-  const [showQuoteBuilder, setShowQuoteBuilder] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [overdueDismissed, setOverdueDismissed] = useState(false);
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
@@ -628,7 +626,15 @@ export default function FacturenScreen() {
         </View>
         <Pressable
           style={styles.addButton}
-          onPress={() => setShowQuoteBuilder(true)}
+          // Both quote entry points on this screen used to open a SECOND copy
+          // of TieredQuoteBuilder in a local Modal, whose onSend threw the
+          // finished quote away and showed a toast saying it had been created
+          // and sent to the customer. /contractor/tiered-quote is the path
+          // that actually persists — validation gate, addQuote, scope_text,
+          // then the quote itself. One builder, one mount.
+          onPress={() => router.push('/contractor/tiered-quote' as any)}
+          accessibilityRole="button"
+          accessibilityLabel={t('invoices.newQuote', 'New quote')}
         >
           <Ionicons name="add" size={22} color={Palette.hermesOrange} />
         </Pressable>
@@ -742,38 +748,21 @@ export default function FacturenScreen() {
             {/* Nieuwe Offerte CTA — front and center */}
             <Pressable
               style={styles.nieuweOfferteCta}
-              onPress={() => setShowQuoteBuilder(true)}
+              onPress={() => router.push('/contractor/tiered-quote' as any)}
+              accessibilityRole="button"
             >
               <Ionicons name="add-circle" size={24} color={Palette.white} />
               <Text style={styles.nieuweOfferteCtaText}>{t('invoices.newQuote', 'Nieuwe offerte')}</Text>
             </Pressable>
 
-            {/* The two libraries a quote is assembled FROM. Templates used to
-                sit beside the CTA and starve it: the chip is content-sized, the
-                CTA was flex:1, and "Nieuwe offerte" is one of the shorter
-                labels in the six locales. Given a row of their own both fit at
-                any language, and grouping them says what they are — reusable
-                content, not actions. */}
-            <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-              <Pressable
-                style={({ pressed }) => [styles.quoteLibraryChip, pressed && { opacity: 0.85 }]}
-                onPress={() => router.push('/contractor/quote-templates' as any)}
-              >
-                <Ionicons name="copy-outline" size={18} color={Palette.hermesOrange} />
-                <Text style={styles.quoteLibraryChipText} numberOfLines={1}>
-                  {t('invoices.quoteTemplates', 'Templates')}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [styles.quoteLibraryChip, pressed && { opacity: 0.85 }]}
-                onPress={() => router.push('/contractor/pricebook' as any)}
-              >
-                <Ionicons name="book-outline" size={18} color={Palette.hermesOrange} />
-                <Text style={styles.quoteLibraryChipText} numberOfLines={1}>
-                  {t('invoices.pricebook', 'Prijslijst')}
-                </Text>
-              </Pressable>
-            </View>
+            {/* The Templates and Pricebook buttons that used to sit here are
+                gone. They are not things a contractor does on the invoices
+                screen; they are the two libraries a quote is assembled FROM,
+                and both are now reachable at the moment they are needed —
+                inside the quote builder, where a template can actually start a
+                quote and a pricebook line can actually be added. Managing the
+                catalogues lives in Profile, with the other set-and-forget
+                settings. See docs/ui-playbook.md and learnings #51. */}
 
             {/* Pending Approvals — aannemer / has-a-team only.
                 A multi-approver quote workflow is an aannemer concept: a solo
@@ -1104,22 +1093,6 @@ export default function FacturenScreen() {
         <View style={{ height: 120 }} />
       </ScrollView>
       )}
-
-      {/* Quote Builder Modal */}
-      <Modal
-        visible={showQuoteBuilder}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowQuoteBuilder(false)}
-      >
-        <TieredQuoteBuilder
-          onSend={(quote) => {
-            setShowQuoteBuilder(false);
-            setToast({ visible: true, message: t('invoices.quoteSentDesc', 'Je offerte is succesvol aangemaakt en verstuurd naar de klant.') });
-          }}
-          onClose={() => setShowQuoteBuilder(false)}
-        />
-      </Modal>
 
       <BottomSheet
         visible={bottomSheet.visible}

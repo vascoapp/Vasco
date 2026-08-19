@@ -141,11 +141,19 @@ const TIER_CONFIG = {
 
 interface TieredQuoteBuilderProps {
   customer?: Customer;
+  /**
+   * Start the quote already loaded from this template. The templates screen
+   * passes it through the route: its own "Use template" button used to call
+   * use(id) and then show an alert saying the template was loaded, which
+   * loaded nothing and went nowhere — the only working apply was the one
+   * inside this builder.
+   */
+  initialTemplateId?: string;
   onSend: (quote: Partial<TieredQuote>) => void;
   onClose: () => void;
 }
 
-export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBuilderProps) {
+export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClose }: TieredQuoteBuilderProps) {
   const { t } = useTranslation();
   // Was a hardcoded Dutch TRADE_LABELS map, so a German contractor's quote
   // builder was headed "Loodgieterswerk" on an otherwise fully German screen —
@@ -561,6 +569,20 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     }
     hapticSuccess();
   };
+
+  // Apply a template chosen on the templates screen. Templates hydrate from
+  // AsyncStorage, so the list is empty on the first render and this has to wait
+  // for it rather than run on mount. The ref keeps it to once — re-running
+  // would wipe edits the contractor made after it loaded.
+  const appliedTemplateRef = useRef(false);
+  useEffect(() => {
+    if (!initialTemplateId || appliedTemplateRef.current) return;
+    const tpl = templates.find((x) => x.id === initialTemplateId);
+    if (!tpl) return;
+    appliedTemplateRef.current = true;
+    loadTemplate(tpl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTemplateId, templates]);
 
   // Levenshtein distance for fuzzy matching misspelled scope words
   const levenshtein = (a: string, b: string): number => {

@@ -72,16 +72,17 @@ export default function QuoteTemplatesScreen() {
 
   const filtered = selectedCategory ? templates.filter(t => t.category === selectedCategory) : templates;
 
+  // Open the quote builder with this template already applied.
+  //
+  // This used to call use(id) — which only bumps usageCount — and then show an
+  // alert reading "Template loaded ... adjust the quote for the customer". No
+  // quote existed to adjust. There was no router.push, no addQuote, no handoff
+  // of any kind: the screen whose entire purpose is applying templates was the
+  // one place in the app that could not. The builder's loadTemplate does the
+  // real work, so this hands off to it rather than growing a second copy.
   const handleUseTemplate = (template: QuoteTemplate) => {
-    use(template.id);
-    const localized = localizeTemplate(template, t);
-    // R66 round 11: was hardcoded Dutch — every non-NL contractor saw
-    // Dutch alerts despite running the app in their language.
-    Alert.alert(
-      t('quoteTemplates.loadedTitle', 'Template loaded'),
-      t('quoteTemplates.loadedBody', '"{{name}}" loaded with {{count}} lines. Adjust the quote for the customer.', { name: localized.displayName, count: template.items.length }),
-      [{ text: t('common.ok', 'OK') }],
-    );
+    hapticSuccess();
+    router.push(`/contractor/tiered-quote?templateId=${encodeURIComponent(template.id)}` as any);
   };
 
   const handleDelete = (template: QuoteTemplate) => {

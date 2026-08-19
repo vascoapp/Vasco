@@ -15,7 +15,7 @@ export default function TieredQuoteScreen() {
   // R300: prefill customer when reached via R286 executor's draft_quote route
   // (e.g. EVE analyst, customer-question handoff). Looks up by customerId
   // param so the builder opens scoped to the right customer.
-  const params = useLocalSearchParams<{ customerId?: string; jobId?: string }>();
+  const params = useLocalSearchParams<{ customerId?: string; jobId?: string; templateId?: string }>();
   const prefillCustomer = useMemo(() => {
     if (!params.customerId) return undefined;
     return customers.find((c: any) => c.id === params.customerId) as any;
@@ -24,6 +24,7 @@ export default function TieredQuoteScreen() {
   return (
     <TieredQuoteBuilder
       customer={prefillCustomer}
+      initialTemplateId={params.templateId}
       onSend={async (quote) => {
         if (sendingRef.current) return;
         sendingRef.current = true;

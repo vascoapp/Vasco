@@ -299,7 +299,9 @@
     "Facturen",
     "Incasso"
    ],
-   "a11y": []
+   "a11y": [
+    "Nieuwe offerte"
+   ]
   },
   {
    "screen": "(contractor)/geld",
@@ -1405,9 +1407,9 @@
     "",
     "Fam. Bakker",
     "",
-    "23:11",
+    "23:27",
     "–",
-    "23:11",
+    "23:27",
     "2u",
     "",
     "Contactpersoon toevoegen",
