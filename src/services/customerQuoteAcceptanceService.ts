@@ -5,11 +5,15 @@
 // job auto-created. No phone calls needed.
 //
 // R66 round 20: BE primary (`quote_acceptance_links` table from R19 migration
-// 20260507000006), AsyncStorage as offline cache for the contractor side. The
-// customer's tap on the URL hits BE via dataProvider.getAcceptanceLinkByToken
-// (anon SELECT under qal_select_by_token RLS). Status flips through the
-// dataProvider.decideAcceptanceLink path (qal_anon_decide RLS, pending →
-// accepted/rejected one-shot forward transition).
+// 20260507000006), AsyncStorage as offline cache for the contractor side.
+//
+// 2026-08-19: the customer's two calls go through SECURITY DEFINER RPCs
+// (`get_acceptance_link_by_token`, `decide_acceptance_link`), not the table.
+// The anon RLS policies R19 wrote were never reachable — `anon` has no table
+// grant — so every customer tap since May returned "invalid link". Verified
+// dead against prod before the fix, and verified working after. See
+// 20260819000001_quote_acceptance_via_rpc.sql for why granting the table
+// instead would have exposed every token on the platform.
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -87,16 +87,26 @@ export async function recordPortalEvent(input: {
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
   try {
-    await (supabase.from as any)('customer_portal_events').insert({
-      portal_token: input.portalToken,
-      contractor_user_id: input.contractorUserId ?? null,
+    // Every caller of this is the CUSTOMER portal, i.e. an anon client, and
+    // `anon` has no grant on customer_portal_events — the direct insert this
+    // used to do returned 42501 for every event since the table was added.
+    // Worse, it was `await ...insert()` inside a try/catch: supabase-js
+    // resolves with `{ error }` rather than throwing, so the catch never ran
+    // and logIntelligenceWriteFailure never fired. The failure was invisible
+    // from both ends. Now: the RPC from 20260819000002, which resolves the
+    // contractor from the access code rather than trusting the caller's word
+    // for whose telemetry this is.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.rpc as any)('record_portal_event', {
+      p_access_code: input.portalToken,
+      p_event_type: input.eventType,
+      p_decision_id: input.decisionId ?? null,
       // R59: nullify temp ids — see helper comment.
-      quote_id: nullifyTempId(input.quoteId),
-      decision_id: input.decisionId ?? null,
-      event_type: input.eventType,
-      duration_ms: input.durationMs ?? null,
-      metadata: input.metadata ?? null,
+      p_quote_id: nullifyTempId(input.quoteId),
+      p_duration_ms: input.durationMs ?? null,
+      p_metadata: input.metadata ?? null,
     });
+    if (error) throw error;
   } catch (err) {
     // Anon write — no contractor uid available, route under contractorUserId
     // when known so we can later slice telemetry by contractor.

@@ -34,7 +34,9 @@ interface MockUpdate { table: string; payload: any; eqColumn: string; eqValue: s
 interface MockInsert { table: string; payload: any }
 const mockUpdates: MockUpdate[] = [];
 const mockInserts: MockInsert[] = [];
+const mockRpcCalls: { fn: string; args: any }[] = [];
 let mockUpdateResponse: any = null;
+let mockRpcResponse: any = null;
 let mockSelectResponse: any = null;
 
 jest.mock('../lib/supabase', () => ({
@@ -97,7 +99,10 @@ jest.mock('../lib/supabase', () => ({
       };
       return builder;
     },
-    rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
+    rpc: jest.fn((fn: string, args: any) => {
+      mockRpcCalls.push({ fn, args });
+      return Promise.resolve({ data: mockRpcResponse, error: null });
+    }),
     channel: () => ({
       on: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }),
     }),
@@ -109,7 +114,7 @@ import { checkInvoiceReadiness } from '../utils/businessProfileValidation';
 import { documentRowToInvoice, lineItemRowToQuoteLineItem } from '../lib/mappers';
 import { isSmallBusinessExempt } from '../domain/business';
 import { isValidVATNumber, isValidKvKNumber, isValidIBAN } from '../utils/validation';
-import { createAcceptanceLink, decideAcceptanceLink } from '../lib/dataProvider';
+import { createAcceptanceLink, decideAcceptanceLink, getAcceptanceLinkByToken } from '../lib/dataProvider';
 import * as appStateSnapshot from '../state/appStateSnapshot';
 import type { DocumentRow, LineItemRow } from '../lib/database.types';
 
@@ -117,7 +122,9 @@ describe('R66 round 49 — contractor critical path E2E', () => {
   beforeEach(() => {
     mockUpdates.length = 0;
     mockInserts.length = 0;
+    mockRpcCalls.length = 0;
     mockUpdateResponse = null;
+    mockRpcResponse = null;
     mockSelectResponse = null;
     mockUserId = 'user-critical-path';
   });
@@ -332,19 +339,46 @@ describe('R66 round 49 — contractor critical path E2E', () => {
       expect(result.status).toBe('pending');
     });
 
-    it('decideAcceptanceLink updates by token with status + responded_at', async () => {
-      mockUpdateResponse = {
+    // 2026-08-19: this used to assert a table UPDATE. The customer is anon and
+    // `anon` has no grant on quote_acceptance_links, so that path returned
+    // 42501 for every customer who ever tapped a link — the test passed against
+    // a mock the database would have refused. It now asserts the capability RPC
+    // that replaced it, and asserts the table is NOT touched, so a revert to
+    // the ungrantable path fails here rather than in production.
+    it('decideAcceptanceLink goes through the capability RPC, not the table', async () => {
+      mockRpcResponse = {
         token: 'a'.repeat(32),
         status: 'accepted',
         responded_at: '2026-04-20T12:00:00Z',
       };
-      await decideAcceptanceLink('a'.repeat(32), 'accepted');
-      const update = mockUpdates.find((m) => m.table === 'quote_acceptance_links');
-      expect(update).toBeTruthy();
-      expect(update!.eqColumn).toBe('token');
-      expect(update!.eqValue).toBe('a'.repeat(32));
-      expect(update!.payload.status).toBe('accepted');
-      expect(update!.payload.responded_at).toBeTruthy();
+      const row = await decideAcceptanceLink('a'.repeat(32), 'accepted');
+
+      const call = mockRpcCalls.find((c) => c.fn === 'decide_acceptance_link');
+      expect(call).toBeTruthy();
+      expect(call!.args.p_token).toBe('a'.repeat(32));
+      expect(call!.args.p_decision).toBe('accepted');
+      expect(row!.status).toBe('accepted');
+      expect(mockUpdates.find((m) => m.table === 'quote_acceptance_links')).toBeUndefined();
+    });
+
+    it('decideAcceptanceLink passes a decline reason only when rejecting', async () => {
+      mockRpcResponse = { token: 'b'.repeat(32), status: 'rejected' };
+      await decideAcceptanceLink('b'.repeat(32), 'rejected', 'Te duur');
+      expect(mockRpcCalls.at(-1)!.args.p_reason).toBe('Te duur');
+
+      mockRpcCalls.length = 0;
+      mockRpcResponse = { token: 'c'.repeat(32), status: 'accepted' };
+      await decideAcceptanceLink('c'.repeat(32), 'accepted', 'ignored');
+      expect(mockRpcCalls.at(-1)!.args.p_reason).toBeNull();
+    });
+
+    it('getAcceptanceLinkByToken reads through the RPC, not the table', async () => {
+      mockRpcResponse = { token: 'd'.repeat(32), quote_id: 'Q-260002', status: 'pending' };
+      const row = await getAcceptanceLinkByToken('d'.repeat(32));
+      const call = mockRpcCalls.find((c) => c.fn === 'get_acceptance_link_by_token');
+      expect(call).toBeTruthy();
+      expect(call!.args.p_token).toBe('d'.repeat(32));
+      expect(row!.quote_id).toBe('Q-260002');
     });
   });
 

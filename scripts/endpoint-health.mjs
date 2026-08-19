@@ -117,6 +117,16 @@ function judge({ status, text = '', scope = 'other', expectStatuses = [200, 201,
     return { ok: false, kind: 'config', note: 'missing secret (handled)' };
   }
   if (status >= 500) return { ok: false, kind: 'fail', note: 'server error' };
+  // The signature of a dead customer surface. 42501 here does not mean the
+  // customer did something wrong — it means the path they are on was never
+  // granted, so it fails identically for all of them. Name it, because
+  // "unexpected 401" reads like an auth problem and this is not one.
+  if (scope === 'anon' && /42501|permission denied/i.test(text)) {
+    return { ok: false, kind: 'fail', note: 'anon has NO grant — customer surface is dead' };
+  }
+  if (scope === 'anon' && /PGRST202|does not exist/i.test(text)) {
+    return { ok: false, kind: 'fail', note: 'no such routine for anon' };
+  }
   if (expectStatuses.includes(status)) return { ok: true, kind: 'ok' };
   return { ok: false, kind: 'fail', note: `unexpected ${status}` };
 }
@@ -134,6 +144,21 @@ async function call(path, { method = 'POST', headers = {}, body } = {}) {
   });
   const text = await res.text().catch(() => '');
   return { status: res.status, text };
+}
+
+/**
+ * The same request WITHOUT a session — i.e. exactly what a customer's browser
+ * sends. Everything above this line runs as an authenticated contractor, which
+ * is why three separate customer-facing surfaces could be dead in production
+ * while this harness reported 19/26 green (2026-08-19).
+ */
+async function callAnon(path, { method = 'POST', body } = {}) {
+  const res = await fetch(`${url}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json', apikey: anon, Authorization: `Bearer ${anon}` },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  return { status: res.status, text: await res.text().catch(() => '') };
 }
 
 // ---------------------------------------------------------------------------
@@ -234,6 +259,84 @@ const RPCS = [
 ];
 
 // ---------------------------------------------------------------------------
+// ANON CUSTOMER SURFACE — the half of the product that has no login
+// ---------------------------------------------------------------------------
+/**
+ * Quote acceptance links, the decision portal, the signature capture: all of
+ * it is used by the contractor's CUSTOMER, who has no account. Those calls go
+ * out with the anon key alone.
+ *
+ * Every one of them was broken on 2026-08-19 and none of it showed here,
+ * because `anon` holds zero table grants in this project and nothing in this
+ * harness had ever sent a request without a session. The failures were
+ * uniform 42501s that the customer's UI reported as "this link is not valid".
+ *
+ * Each probe below is deliberately called with junk arguments — a real access
+ * code would be a fixture to maintain. What we are asserting is that the
+ * surface EXISTS and is REACHABLE by an anon caller: 42501 (no grant), 42883 /
+ * PGRST202 (no such function) and 5xx are failures. A clean NULL or `false` is
+ * a pass — the guard did its job.
+ *
+ * ⚠️ Reachable is not the same as working. `get_portal_by_access_code`
+ * returned a clean 200 here for months while failing on every REAL code
+ * (`column di.priority does not exist`) — the format guard returns NULL before
+ * touching a table, and a guard's 200 looks like a query's 200. Anything this
+ * section says must be confirmed against real data before it is believed.
+ */
+const ANON_SURFACE = [
+  { name: 'get_portal_by_access_code',      body: { p_access_code: 'HEALTHCHK' } },
+  { name: 'get_acceptance_link_by_token',   body: { p_token: 'healthcheck0000' } },
+  { name: 'decide_acceptance_link',         body: { p_token: 'healthcheck0000', p_decision: 'accepted', p_reason: null } },
+  { name: 'submit_decision_via_portal',     body: { p_access_code: 'HEALTHCHK', p_item_id: '00000000-0000-0000-0000-000000000000', p_value: 'x', p_notes: null, p_photos: null, p_linked_product_url: null, p_time_to_decide_seconds: null } },
+  { name: 'log_portal_activity',            body: { p_access_code: 'HEALTHCHK', p_activity_type: 'health_check', p_item_id: null, p_metadata: null } },
+  { name: 'record_portal_event',            body: { p_access_code: 'HEALTHCHK', p_event_type: 'health_check', p_decision_id: null, p_quote_id: null, p_duration_ms: null, p_metadata: null } },
+];
+
+/**
+ * Tables the anon customer paths must NOT be able to read. This is the other
+ * half of the same story: the fix for "the customer can't accept" is one
+ * `GRANT ... TO anon` away, and that grant would expose every quote token on
+ * the platform (the RLS policy that was there read `USING (true)`). If someone
+ * reaches for the grant, this fails.
+ */
+const ANON_MUST_NOT_READ = ['quote_acceptance_links', 'decision_submissions', 'decision_trackers', 'customers', 'documents'];
+
+// ---------------------------------------------------------------------------
+// Client → RPC drift — the same check as functions, for the other call surface
+// ---------------------------------------------------------------------------
+/**
+ * `update_tracker_progress` was called after every decision submission for
+ * months and had never been written — not in prod, not in any migration in
+ * this repo. It sat inside a bare try/catch marked "Non-critical", so
+ * `decision_trackers.completed_items` never moved and every tracker read
+ * "0 of N decided". The function drift check would have caught the same
+ * mistake made against an edge function; RPCs simply had no equivalent.
+ *
+ * Same narrowing as invokedFunctions(): literal single-quoted names only.
+ * A miss is acceptable, a false alarm is not.
+ */
+function invokedRpcs() {
+  const names = new Set();
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        if (!SKIP_DIRS.has(e.name) && !e.name.startsWith('.')) walk(p);
+      } else if (/\.tsx?$/.test(e.name) && !/\.(test|spec)\.tsx?$/.test(e.name)) {
+        const src = fs.readFileSync(p, 'utf8').replace(/^\s*\/\/.*$/gm, '');
+        for (const m of src.matchAll(/\.rpc\s*(?:as any\))?\s*\(\s*['"`]([a-z0-9_]+)['"`]/g)) names.add(m[1]);
+        for (const m of src.matchAll(/\/rest\/v1\/rpc\/([a-z0-9_]+)/g)) names.add(m[1]);
+      }
+    }
+  };
+  for (const d of ['src', 'app']) {
+    const full = path.join(ROOT, d);
+    if (fs.existsSync(full)) walk(full);
+  }
+  return [...names].sort();
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -287,6 +390,60 @@ for (const r of RPCS) {
     () => call(`/rest/v1/rpc/${r.name}`, { body: r.body }),
     r.expect,
   );
+}
+
+console.log('\n── Anon customer surface (no session) ──');
+for (const r of ANON_SURFACE) {
+  await step(
+    `anon rpc/${r.name}`,
+    () => callAnon(`/rest/v1/rpc/${r.name}`, { body: r.body }),
+    [200, 204],
+    'anon',
+  );
+}
+for (const t of ANON_MUST_NOT_READ) {
+  const { status } = await callAnon(`/rest/v1/${t}?select=*&limit=1`, { method: 'GET' });
+  const ok = status === 401 || status === 403;
+  results.push({ label: `anon cannot read ${t}`, status, ok, kind: ok ? 'ok' : 'fail', note: ok ? '' : 'ANON CAN READ THIS TABLE' });
+  console.log(`${ok ? '✓' : '✗'} ${`anon cannot read ${t}`.padEnd(45)} ${status}${ok ? '' : '  ← anon can read this table'}`);
+}
+
+console.log('\n── Client → RPC drift ──');
+{
+  /**
+   * Exact, from the catalog. `list_public_routines()` (migration
+   * 20260819000004) exists for this: PostgREST cannot answer "does this
+   * routine exist" over HTTP — a no-arg call returns PGRST202 for a missing
+   * routine and for a wrong overload alike, and the `hint` field that looks
+   * like a discriminator is a fuzzy-similarity suggestion. Reading it as one
+   * produced 55 phantoms including six RPCs verified working minutes earlier.
+   *
+   * The controls stay: a set that comes back empty, or without a routine we
+   * know is there, means the probe is broken and this check must say so
+   * rather than declare every call site a phantom.
+   */
+  const { status, text } = await call('/rest/v1/rpc/list_public_routines', { body: {} });
+  let live = null;
+  try { live = JSON.parse(text); } catch { /* handled below */ }
+
+  if (!Array.isArray(live) || live.length === 0 || !live.includes('get_portal_by_access_code')) {
+    console.log(`· skipped — could not read the routine list (HTTP ${status})`);
+    results.push({ label: 'rpc drift detector', status, ok: false, kind: 'fail',
+                   note: 'could not read routine list — RPC drift NOT checked this run' });
+  } else {
+    const known = new Set(live);
+    const names = invokedRpcs();
+    const phantomRpcs = names.filter(n => !known.has(n));
+    if (phantomRpcs.length === 0) {
+      console.log(`✓ every RPC the app calls exists in the database (${names.length} checked)`);
+    } else {
+      for (const n of phantomRpcs) {
+        console.log(`✗ ${n.padEnd(45)} PHANTOM — app calls it, no such routine`);
+        results.push({ label: `phantom rpc:${n}`, status: 0, ok: false, kind: 'fail',
+                       note: 'app calls an RPC that does not exist' });
+      }
+    }
+  }
 }
 
 console.log('\n── Client → function drift ──');

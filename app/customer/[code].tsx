@@ -167,7 +167,10 @@ export default function CustomerPortalScreen() {
 
       // Retry any decisions saved on-device but not yet confirmed to the
       // backend (e.g. submitted earlier while offline). Best-effort.
-      flushUnsyncedSubmissions(data.trackerId)
+      // The access code is required: these retries run on the CUSTOMER's
+      // device (anon), and without it pushToBackend goes at the table and
+      // 401s — which is what kept them "pending" in the first place.
+      flushUnsyncedSubmissions(data.trackerId, data.accessToken)
         .then((n) => { if (n > 0 && __DEV__) console.log(`Flushed ${n} pending decisions`); })
         .catch(() => {});
 
@@ -185,7 +188,7 @@ export default function CustomerPortalScreen() {
         totalDecisions: data.totalDecisions,
         completedDecisions: data.completedDecisions,
         overdueDecisions: data.overdueDecisions,
-      }).catch((err) => { if (__DEV__) console.error('Failed to sync portal access:', err); });
+      }, data.accessToken).catch((err) => { if (__DEV__) console.error('Failed to sync portal access:', err); });
 
       // R239: write to customer_portal_events for the moat learning pipeline.
       // Anon insert — no contractor_user_id when we don't have it yet.
@@ -280,7 +283,7 @@ export default function CustomerPortalScreen() {
         linkedProductUrl: submission.linkedProduct?.url,
         timeToDecideSeconds: timeToDecide,
         submittedAt: submission.submittedAt,
-      });
+      }, portalData.accessToken);
     } catch (err) {
       if (__DEV__) console.error('Failed to sync decision:', err);
     }

@@ -934,9 +934,19 @@ export async function deleteExpense(id: string): Promise<void> {
 
 // ── Quote Acceptance Links ──────────────────────────────────
 // R66 round 20: capability-URL helpers backing customerQuoteAcceptanceService.
-// `getAcceptanceLinkByToken` is the only call the customer (anon) makes —
-// the rest are contractor-authenticated. Anon SELECT is enabled by RLS
-// `qal_select_by_token`; the token in the eq() filter is the bearer cred.
+// The customer (anon) makes exactly two of these calls —
+// `getAcceptanceLinkByToken` and `decideAcceptanceLink`; the rest are
+// contractor-authenticated.
+//
+// 2026-08-19: those two go through SECURITY DEFINER RPCs, not the table.
+// They used to be `.from('quote_acceptance_links')` under the anon RLS
+// policies from migration 20260507000006 — but `anon` holds no table grant
+// in this project, so both returned 42501 and the customer was told the
+// link was invalid. Granting the table would have exposed every token on
+// the platform (the policy was `USING (true)`); see
+// 20260819000001_quote_acceptance_via_rpc.sql. The contractor-side helpers
+// below still use `.from()` — `authenticated` is granted and RLS scopes
+// them to auth.uid().
 
 export async function createAcceptanceLink(payload: {
   token: string;
@@ -957,11 +967,10 @@ export async function createAcceptanceLink(payload: {
 }
 
 export async function getAcceptanceLinkByToken(token: string): Promise<QuoteAcceptanceLinkRow | null> {
-  const { data, error } = await supabase
-    .from('quote_acceptance_links')
-    .select('*')
-    .eq('token', token)
-    .maybeSingle();
+  // ANON PATH. The customer tapping the link is not logged in.
+  const { data, error } = await (supabase.rpc as any)('get_acceptance_link_by_token', {
+    p_token: token,
+  });
   if (error) {
     logWarn('dataProvider', `getAcceptanceLinkByToken failed: ${error.message ?? error}`);
     return null;
@@ -988,17 +997,15 @@ export async function decideAcceptanceLink(
   decision: 'accepted' | 'rejected',
   declineReason?: string,
 ): Promise<QuoteAcceptanceLinkRow | null> {
-  const patch: Record<string, unknown> = {
-    status: decision,
-    responded_at: new Date().toISOString(),
-  };
-  if (decision === 'rejected' && declineReason) patch.decline_reason = declineReason;
+  // ANON PATH. `responded_at` is stamped server-side — the customer's device
+  // clock is not evidence of when they answered, and the RPC re-checks
+  // pending + unexpired inside the UPDATE so two taps cannot both win.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('quote_acceptance_links') as any)
-    .update(patch)
-    .eq('token', token)
-    .select()
-    .maybeSingle();
+  const { data, error } = await (supabase.rpc as any)('decide_acceptance_link', {
+    p_token: token,
+    p_decision: decision,
+    p_reason: decision === 'rejected' ? (declineReason ?? null) : null,
+  });
   if (error) {
     logWarn('dataProvider', `decideAcceptanceLink failed: ${error.message ?? error}`);
     return null;

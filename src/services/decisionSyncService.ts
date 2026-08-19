@@ -51,9 +51,44 @@ export interface TrackerStatus {
 // ---------------------------------------------------------------------------
 
 // Internal: push one submission to Supabase. Returns true on confirmed write.
-async function pushToBackend(submission: DecisionSubmission): Promise<boolean> {
+//
+// TWO PATHS, and picking the wrong one is why this never worked from the
+// customer's side. The contractor is authenticated and RLS scopes them to
+// their own trackers, so `.from()` is right for them. The CUSTOMER is anon,
+// and `anon` holds no table grant in this project — every upsert from
+// /customer/[code] returned 42501 and the answer never left their phone.
+// They go through `submit_decision_via_portal`, which resolves the tracker
+// from the access code they hold. See
+// 20260819000002_customer_portal_writes.sql.
+async function pushToBackend(submission: DecisionSubmission, accessCode?: string): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   try {
+    if (accessCode) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('submit_decision_via_portal', {
+        p_access_code: accessCode,
+        p_item_id: submission.itemId,
+        p_value: submission.value ?? null,
+        p_notes: submission.notes ?? null,
+        p_photos: submission.photos ?? null,
+        p_linked_product_url: submission.linkedProductUrl ?? null,
+        p_time_to_decide_seconds: submission.timeToDecideSeconds ?? null,
+      });
+      if (error) {
+        logWarn('decisionSync', `Portal submit failed: ${error.message}`);
+        return false;
+      }
+      // NULL means the code was unknown/expired or the item belongs to a
+      // different tracker. That is not a confirmed write, so the caller must
+      // keep it local rather than tell the customer the contractor has it.
+      if (!data) {
+        logWarn('decisionSync', 'Portal submit rejected: unknown code or item');
+        return false;
+      }
+      // The RPC recounts tracker progress itself, inside the same call.
+      return true;
+    }
+
     const { error } = await (supabase.from as any)('decision_submissions').upsert({
       tracker_id: submission.trackerId,
       item_id: submission.itemId,
@@ -71,12 +106,14 @@ async function pushToBackend(submission: DecisionSubmission): Promise<boolean> {
       return false;
     }
 
-    // Update tracker completed count
-    try {
-      await (supabase.rpc as any)('update_tracker_progress', {
-        p_tracker_id: submission.trackerId,
-      });
-    } catch {} // Non-critical
+    // Update tracker completed count. `update_tracker_progress` was called
+    // here for months without existing anywhere — not in prod, not in any
+    // migration — so completed_items never moved and every tracker read
+    // "0 of N decided". Defined in 20260819000002.
+    const { error: progressErr } = await (supabase.rpc as any)('update_tracker_progress', {
+      p_tracker_id: submission.trackerId,
+    });
+    if (progressErr) logWarn('decisionSync', `Progress recount failed: ${progressErr.message}`);
 
     return true;
   } catch {
@@ -84,7 +121,15 @@ async function pushToBackend(submission: DecisionSubmission): Promise<boolean> {
   }
 }
 
-export async function submitDecision(submission: DecisionSubmission): Promise<SubmitResult> {
+/**
+ * @param accessCode The tracker's access code, when the caller is the CUSTOMER
+ *   portal (an anon client). Omit from the contractor's authenticated app.
+ *   Without it the customer's write hits the table directly and 401s.
+ */
+export async function submitDecision(
+  submission: DecisionSubmission,
+  accessCode?: string,
+): Promise<SubmitResult> {
   // Always save locally first (synced=false until BE confirms).
   await saveLocalSubmission({ ...submission, synced: false });
 
@@ -94,7 +139,7 @@ export async function submitDecision(submission: DecisionSubmission): Promise<Su
     return 'synced';
   }
 
-  const ok = await pushToBackend(submission);
+  const ok = await pushToBackend(submission, accessCode);
   if (ok) {
     await markSynced(submission);
     return 'synced';
@@ -108,14 +153,16 @@ export async function submitDecision(submission: DecisionSubmission): Promise<Su
  * backend (offline / earlier BE error). Called on portal load. Returns the
  * number successfully flushed. Best-effort — silent on failure.
  */
-export async function flushUnsyncedSubmissions(trackerId: string): Promise<number> {
+export async function flushUnsyncedSubmissions(trackerId: string, accessCode?: string): Promise<number> {
   if (!isSupabaseConfigured) return 0;
   try {
     const all = await getLocalSubmissions(trackerId);
     const pending = all.filter((s) => s.synced === false);
     let flushed = 0;
     for (const s of pending) {
-      if (await pushToBackend(s)) {
+      // Same two-path rule as submitDecision: the customer's retries must go
+      // through the portal RPC or they retry into the same 401 forever.
+      if (await pushToBackend(s, accessCode)) {
         await markSynced(s);
         flushed++;
       }
@@ -202,16 +249,38 @@ export async function getTrackerActivities(trackerId: string): Promise<DecisionA
   }
 }
 
-export async function logActivity(trackerId: string, activityType: string, itemId?: string, metadata?: Record<string, any>): Promise<void> {
+/**
+ * @param accessCode Supply from the CUSTOMER portal (anon client) — see
+ *   submitDecision. The contractor's authenticated client omits it.
+ */
+export async function logActivity(
+  trackerId: string,
+  activityType: string,
+  itemId?: string,
+  metadata?: Record<string, any>,
+  accessCode?: string,
+): Promise<void> {
   if (!isSupabaseConfigured) return;
 
   try {
-    await (supabase.from as any)('decision_activities').insert({
-      tracker_id: trackerId,
-      activity_type: activityType,
-      item_id: itemId,
-      metadata: metadata ?? {},
-    });
+    // supabase-js RESOLVES with `{ error }`; it does not throw. The catch
+    // below has therefore never once fired, which is why a table this
+    // customer path could never write to produced no failure log either.
+    const { error } = accessCode
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? await (supabase.rpc as any)('log_portal_activity', {
+          p_access_code: accessCode,
+          p_activity_type: activityType,
+          p_item_id: itemId ?? null,
+          p_metadata: metadata ?? {},
+        })
+      : await (supabase.from as any)('decision_activities').insert({
+          tracker_id: trackerId,
+          activity_type: activityType,
+          item_id: itemId,
+          metadata: metadata ?? {},
+        });
+    if (error) throw error;
   } catch (err) {
     // Non-critical write — but route to eve_telemetry so we can audit
     // RLS / schema drift later. Customer portal callers may have no
