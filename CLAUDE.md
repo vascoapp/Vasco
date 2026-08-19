@@ -170,6 +170,17 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   - `DKMenu` is deliberately a JS popover, not a native `UIMenu`: a native menu
     module would force a native rebuild and take fixes off the OTA channel, and
     `UIMenu` does not exist on Android.
+- **Tablet:** the app is held to one centred column by `WideScreenFrame`
+  (`app/_layout.tsx`, 820pt). Do **not** add per-screen width branching, and do
+  **not** propose a master-detail / sidebar iPad layout — that is a deliberate
+  no until a user asks for it. See `memory/ipad-tablet-support.md`. Any new
+  width read must use `useWindowDimensions`, never a module-level
+  `Dimensions.get` (five of those already go stale on rotation).
+- **Customer-facing web pages** live in `admin/src/app/**` and are read by the
+  contractor's CLIENT, who does not have the app. German is **Sie**, the trade
+  noun is the market's own word (vakman / Handwerksbetrieb / artisan /
+  profesional / tecnico — never "contractor" in Italian), and currency follows
+  the CONTRACTOR's country, not the reader's browser. `docs/ui-playbook.md` §8.
 - Always run `npx tsc --noEmit | grep "^app/"` after changes
 - Always update memory .md files after completing work
 

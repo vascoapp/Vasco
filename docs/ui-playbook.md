@@ -159,3 +159,20 @@ are read by the contractor's **customer**, who does not have the app installed.
   a fallback is a 404 for everyone without the app — which is most people.
 - **Never render a control that isn't wired.** A dead "Accept" button is worse
   than an honest "open in the app to accept" handoff.
+  ⚠️ **But that rule expires the day the endpoint lands.** `/accept/[token]`
+  sat as a pure deep-link bouncer for months after `decide_acceptance_link`
+  existed, because the comment justifying the gap made the page read as
+  deliberate rather than blocked. When you write a comment justifying a
+  limitation, **name the condition that would reverse it** — "no accept
+  endpoint exists" is checkable later, "accepting happens in the app" is not.
+  The tell was copy arguing with the UI beneath it: "No account needed",
+  directly above two app-store buttons.
+- **An irreversible customer action takes two taps**, and the confirm restates
+  the amount. A thumb landing on a CTA in a chat app must not commit someone to
+  several thousand euros.
+- **German is Sie** on these pages too — they address the contractor's own
+  client. The 138-string du→Sie sweep covered the app's i18n JSON and never
+  reached `admin/`, which is how four of these pages kept saying du for months.
+- **Use the market's own trade noun**: vakman / Handwerksbetrieb / artisan /
+  profesional / tecnico. "contractor" is not an Italian word and was sitting in
+  the Italian copy of two pages.
