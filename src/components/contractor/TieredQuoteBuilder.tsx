@@ -9,6 +9,9 @@ import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toTrade, type Trade } from '../../config/tradeFeatures';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { DKMenu } from '../shared/DKMenu';
+import { templateItemToBuilderLine, builderLinesToTemplateItems, type BuilderLine } from '../../services/templateLineMapping';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
@@ -45,7 +48,7 @@ import {
 } from '../../services/seasonalityMoatService';
 import { useTimeOfDayHint, dayPart, classifyNow } from '../../services/timeOfDayAcceptanceService';
 import { getCurrentUserId } from '../../lib/currentUser';
-import { useQuoteTemplates, localizeTemplate, type QuoteTemplate, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
+import { useQuoteTemplates, localizeTemplate, localizeCategory, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
 import { hapticSuccess } from '../../utils/haptics';
 import { useTranslation } from 'react-i18next';
 // R62: SOW (scope-of-work) generator. Three-paragraph narrative
@@ -155,6 +158,7 @@ interface TieredQuoteBuilderProps {
 
 export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClose }: TieredQuoteBuilderProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   // Was a hardcoded Dutch TRADE_LABELS map, so a German contractor's quote
   // builder was headed "Loodgieterswerk" on an otherwise fully German screen —
   // and the same string became the pricebook item `description`, which travels
@@ -205,7 +209,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   const toneExamplesRef = useRef<string[] | null>(null);
   const { businessProfile: bp } = useAppState();
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
-  const { templates, use: useTemplate } = useQuoteTemplates();
+  const { templates, save: saveTemplate, update: updateTemplate, use: useTemplate } = useQuoteTemplates();
   const [priceSuggestion, setPriceSuggestion] = useState<PricePrediction | null>(null);
   const [winPrediction, setWinPrediction] = useState<QuoteWinPrediction | null>(null);
   const [handoffBanner, setHandoffBanner] = useState<string | null>(null);
@@ -472,7 +476,15 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     setShowPricebook(false);
   };
 
-  const removeService = (itemId: string) => setSelectedServices(selectedServices.filter(s => s.item.id !== itemId));
+  const removeService = (itemId: string) => {
+    const next = selectedServices.filter(s => s.item.id !== itemId);
+    setSelectedServices(next);
+    // Emptying the list ends the template's claim on it. Otherwise: open
+    // template A, delete all of A's lines, add unrelated ones, and the save
+    // row comes back reading "Update A" — over lines that share nothing with
+    // it. The reset on send covers the next quote; this covers the same one.
+    if (next.length === 0) setEditingTemplate(null);
+  };
 
   // Editable unit price — a standard pricebook service's price can vary per
   // location/city, so let the contractor override it on the line. Mutates a
@@ -550,17 +562,45 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     }).catch(() => {});
   };
 
+  // R307: tier gate — photo-to-quote is paid-tier, same class as the
+  // ReceiptScanner gate on inkoop. Lifted out of the JSX because the scan is
+  // now one of the three named ways to start a quote rather than a text row
+  // under the scope input.
+  const openPhotoScan = async () => {
+    try {
+      const { loadSubscription, canUseFeature } = await import('../../services/subscriptionService');
+      const gate = canUseFeature(await loadSubscription(), 'hasInvoiceScanning');
+      if (!gate.allowed) {
+        Alert.alert(
+          t('billing.upgradeRequired', 'Upgrade required'),
+          gate.reason ?? t('quotes.aiQuoteUpgradeRequired', 'AI photo-to-quote is part of the paid plan.'),
+        );
+        return;
+      }
+    } catch {}
+    setShowAIQuote(true);
+  };
+
   const loadTemplate = (template: QuoteTemplate) => {
     useTemplate(template.id);
     // R187: surface localized item descriptions in the quote so e.g. a French
     // contractor loading the "boiler maintenance" template gets French line
     // items, not the Dutch seed strings.
     const localized = localizeTemplate(template, t);
-    const mapped = localized.displayItems.map((item, idx) => ({
-      item: { id: `tpl-${template.id}-${idx}`, contractorId: '', name: item.description, description: `${localized.displayName}`, category: item.type === 'labour' ? 'labour' : 'materials', pricingType: 'fixed', basePrice: item.unitPrice, unit: item.unit } as unknown as PricebookItem,
-      quantity: item.quantity, unit: item.unit,
-    }));
+    // `category` carries the template line's own type rather than collapsing it
+    // to labour/materials: collapsing meant an `equipment` or `other` line came
+    // back as `materials` after one load → save, quietly rewriting the
+    // template. `vatRate` rides along for the same reason — the NL 9% reduced
+    // rate on the built-in maintenance templates was being rewritten to the
+    // standard rate by every save. Neither field exists on PricebookItem,
+    // which is why this goes through the cast; linesAsTemplateItems reads them
+    // straight back.
+    const mapped = localized.displayItems.map((item, idx) => {
+      const line = templateItemToBuilderLine(item, `tpl-${template.id}-${idx}`, localized.displayName);
+      return { item: line.item as unknown as PricebookItem, quantity: line.quantity, unit: line.unit };
+    });
     setSelectedServices(mapped);
+    setEditingTemplate(template);
     for (const m of mapped) {
       baselinesRef.current.set(m.item.id, {
         originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
@@ -575,6 +615,15 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // for it rather than run on mount. The ref keeps it to once — re-running
   // would wipe edits the contractor made after it loaded.
   const appliedTemplateRef = useRef(false);
+  // Which template the current lines came from. Set by loadTemplate, cleared
+  // whenever the contractor starts from something else, so "Update template"
+  // can never write one template's lines over another's.
+  const [editingTemplate, setEditingTemplate] = useState<QuoteTemplate | null>(null);
+  // Naming is a Modal, not Alert.prompt: that is iOS-only, and this repo's own
+  // rule is that Alert is not a UI toolkit.
+  const [showTemplateNamer, setShowTemplateNamer] = useState(false);
+  const [templateNameDraft, setTemplateNameDraft] = useState('');
+  const [templateCategoryDraft, setTemplateCategoryDraft] = useState<TemplateCategory>('overig');
   useEffect(() => {
     if (!initialTemplateId || appliedTemplateRef.current) return;
     const tpl = templates.find((x) => x.id === initialTemplateId);
@@ -583,6 +632,70 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     loadTemplate(tpl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTemplateId, templates]);
+
+  const linesAsTemplateItems = (): QuoteTemplateItem[] =>
+    builderLinesToTemplateItems(selectedServices as unknown as BuilderLine[], getStandardVatRate(country));
+
+  // Save the assembled lines as a reusable template. This is the moment a
+  // template is worth making — you have just built something you would build
+  // again. The templates screen could only ever create a ONE-line template
+  // from a form, which is why nobody made a useful one there.
+  //
+  // Opening the namer only sets up the dialog. It deliberately does NOT
+  // snapshot the lines: the ML refinement pass, the photo-handoff cohort tune
+  // and the photo scan all append asynchronously, so a line could land between
+  // the contractor pressing "Save as template" and pressing Save in the
+  // dialog. Captured up front, that line would be on screen and missing from
+  // the template. commitTemplate reads state at commit time instead.
+  const handleSaveAsTemplate = () => {
+    if (selectedServices.length === 0) return;
+    setTemplateNameDraft(
+      editingTemplate
+        ? localizeTemplate(editingTemplate, t).displayName
+        : (scopeText.trim() || customer?.name || tradeLabel(trade)),
+    );
+    setTemplateCategoryDraft(editingTemplate?.category ?? 'overig');
+    setShowTemplateNamer(true);
+  };
+
+  // `asNew` is why the namer has two buttons once a template is loaded.
+  // Without it, a contractor who opened "Badkamer", changed the lines, typed
+  // "Badkamer groot" and pressed save would RENAME Badkamer — the editable
+  // name field made it look like a new template and it was not.
+  const commitTemplate = (asNew: boolean) => {
+    const name = templateNameDraft.trim();
+    if (!name || selectedServices.length === 0) return;
+    const items = linesAsTemplateItems();
+
+    if (editingTemplate && !asNew) {
+      // A built-in resolves its text through i18nId, so `description`,
+      // `defaultPaymentTerms` and `estimatedDuration` on the record are Dutch
+      // SEED strings. updateTemplate drops i18nId, so anything not replaced
+      // here would surface untranslated — a German contractor editing
+      // "Jährliche Heizungswartung" would get "Standaard jaarlijks onderhoud"
+      // back. localizeTemplate is what the contractor is actually reading.
+      const shown = localizeTemplate(editingTemplate, t);
+      const next = updateTemplate(editingTemplate.id, {
+        name,
+        category: templateCategoryDraft,
+        items,
+        description: shown.displayDescription,
+        paymentTerms: shown.displayPaymentTerms,
+        estimatedDuration: shown.displayDuration,
+      });
+      // Overriding a built-in returns a NEW record with a new id, so the
+      // provenance has to follow it or the next update would look for an id
+      // that is no longer in the list.
+      if (next) setEditingTemplate(next);
+    } else {
+      setEditingTemplate(saveTemplate(name, templateCategoryDraft, items));
+    }
+    hapticSuccess();
+    Alert.alert(
+      t('quotes.templateSavedTitle', 'Template saved'),
+      t('quotes.templateSavedBody', '"{{name}}" is ready to reuse from the Template menu.', { name }),
+    );
+  };
 
   // Levenshtein distance for fuzzy matching misspelled scope words
   const levenshtein = (a: string, b: string): number => {
@@ -868,6 +981,11 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
       // customer-attached path reset (Alert dispatched proceed asynchronously).
       setSowText('');
       setSowError(null);
+      // Same bleed as the SOW above, and the same fix. Without this, sending a
+      // quote built from template A and then starting the next one leaves
+      // "Update template" still aimed at A — so the contractor's second quote
+      // silently overwrites the first one's template.
+      setEditingTemplate(null);
     };
 
     if (!customer) {
@@ -933,6 +1051,18 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             </Pressable>
           </View>
           <Text style={s.pbSectionLabel}>{t('quotes.orFromPricebook', 'Or pick from your pricebook')}</Text>
+          {/* The catalogue editor, reachable at the moment a price looks wrong.
+              It used to be a chip on the invoices tab, which is not where you
+              are when you notice. */}
+          <Pressable
+            style={s.managePricesRow}
+            onPress={() => router.push('/contractor/pricebook' as any)}
+            accessibilityRole="button"
+          >
+            <Ionicons name="settings-outline" size={16} color={Palette.hermesOrange} />
+            <Text style={s.managePricesText}>{t('quotes.managePrices', 'Manage prices')}</Text>
+            <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+          </Pressable>
           {tradePricebook.map(item => {
             const isSelected = selectedServices.some(sv => sv.item.id === item.id);
             return (
@@ -1025,6 +1155,86 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             </View>
           )}
 
+          {/* Begin met — the three ways to start a quote, always visible.
+              They existed before but only in fragments: the pricebook behind a
+              small "Add" in the section header, the photo scan as a text row
+              under the scope input, and templates at the very bottom — capped
+              at three, and hidden the moment the first line was added, so the
+              contractor who added one line by hand could no longer reach the
+              template that would have done it for them.
+
+              Picking a template is picking one of N, which is a DKMenu and not
+              a strip (ui-playbook §2). The menu carries every template, says
+              how many lines each has, and ends with the way to manage them —
+              which is also what keeps /contractor/quote-templates reachable. */}
+          <View style={s.startWith}>
+            <Text style={s.startWithLabel}>{t('quotes.startWith', 'Start with')}</Text>
+            <View style={s.startWithRow}>
+              {/* DKMenu wraps renderAnchor in its own unstyled View to measure
+                  it, so `flex: 1` on the anchor applies INSIDE that wrapper
+                  and the wrapper itself sizes to content — Template would size
+                  to its label while Photo and Pricebook split the rest. The
+                  flex has to live on a View outside the menu.
+                  react-test-renderer does not lay out, so no walk can see this. */}
+              <View style={{ flex: 1 }}>
+              <DKMenu
+                accessibilityLabel={t('quotes.startFromTemplate', 'Start from a template')}
+                renderAnchor={(openMenu) => (
+                  <Pressable
+                    style={s.startTile}
+                    onPress={openMenu}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('quotes.startFromTemplate', 'Start from a template')}
+                  >
+                    <Ionicons name="copy-outline" size={20} color={Palette.hermesOrange} />
+                    <Text style={s.startTileText} numberOfLines={2}>{t('quotes.template', 'Template')}</Text>
+                  </Pressable>
+                )}
+                items={[
+                  ...templates.map((tpl) => {
+                    const ltpl = localizeTemplate(tpl, t);
+                    return {
+                      key: tpl.id,
+                      label: ltpl.displayName,
+                      detail: t('quotes.lineCount', '{{count}} lines', { count: tpl.items.length }),
+                      icon: 'copy-outline' as const,
+                      onPress: () => loadTemplate(tpl),
+                    };
+                  }),
+                  {
+                    key: 'manage',
+                    label: templates.length > 0
+                      ? t('quotes.manageTemplates', 'Manage templates')
+                      : t('quotes.createFirstTemplate', 'Create a template'),
+                    icon: 'settings-outline' as const,
+                    emphasis: true,
+                    onPress: () => router.push('/contractor/quote-templates' as any),
+                  },
+                ]}
+              />
+              </View>
+              <Pressable
+                testID="ai-scan-row"
+                style={s.startTile}
+                onPress={openPhotoScan}
+                accessibilityRole="button"
+                accessibilityLabel={t('quotes.orScanPhoto', 'Scan a photo')}
+              >
+                <Ionicons name="camera" size={20} color={Palette.hermesOrange} />
+                <Text style={s.startTileText} numberOfLines={2}>{t('quotes.photo', 'Photo')}</Text>
+              </Pressable>
+              <Pressable
+                style={s.startTile}
+                onPress={() => setShowPricebook(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('quotes.pickFromPricebook', 'Pick services from your pricebook')}
+              >
+                <Ionicons name="book-outline" size={20} color={Palette.hermesOrange} />
+                <Text style={s.startTileText} numberOfLines={2}>{t('quotes.pricebook', 'Pricebook')}</Text>
+              </Pressable>
+            </View>
+          </View>
+
           {/* AI Draft — describe scope → get line items */}
           <View style={s.aiDraftSection}>
             <View style={s.aiDraftInputRow}>
@@ -1047,27 +1257,6 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 </Pressable>
               ) : null}
             </View>
-            <Pressable testID="ai-scan-row" style={s.aiScanRow} onPress={async () => {
-              // R307: tier gate — photo-to-quote AI is paid-tier (same class
-              // as ReceiptScanner R307 gate on inkoop). Was completely ungated.
-              try {
-                const { loadSubscription, canUseFeature } = await import('../../services/subscriptionService');
-                const sub = await loadSubscription();
-                const gate = canUseFeature(sub, 'hasInvoiceScanning');
-                if (!gate.allowed) {
-                  Alert.alert(
-                    t('billing.upgradeRequired', 'Upgrade required'),
-                    gate.reason ?? t('quotes.aiQuoteUpgradeRequired', 'AI photo-to-quote is part of the paid plan.'),
-                  );
-                  return;
-                }
-              } catch {}
-              setShowAIQuote(true);
-            }}>
-              <Ionicons name="camera" size={16} color={Palette.hermesOrange} />
-              <Text style={s.aiScanText}>{t('quotes.orScanPhoto', 'Or scan a photo')}</Text>
-              <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
-            </Pressable>
             <SimilarJobsSuggest query={scopeText} onPickJob={handlePickSimilarJob} />
           </View>
 
@@ -1118,25 +1307,30 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                     </View>
                   </View>
                 ))}
+                {/* Save what you just built. This is where a template is worth
+                    making — the lines are in front of you. */}
+                <Pressable
+                  style={s.saveTemplateRow}
+                  onPress={handleSaveAsTemplate}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="bookmark-outline" size={16} color={Palette.hermesOrange} />
+                  {/* Names the target. "Update template" alone does not say
+                      WHICH, and by this point the lines on screen may share
+                      nothing with the one it would overwrite. */}
+                  <Text style={s.saveTemplateText} numberOfLines={1}>
+                    {editingTemplate
+                      ? t('quotes.updateNamedTemplate', 'Update “{{name}}”', { name: localizeTemplate(editingTemplate, t).displayName })
+                      : t('quotes.saveAsTemplate', 'Save as template')}
+                  </Text>
+                </Pressable>
               </View>
             ) : (
               <>
-                {/* Templates */}
-                {templates.length > 0 && (
-                  <View style={{ gap: 8 }}>
-                    <Text style={s.templateLabel}>{t('quotes.orFromTemplate', 'Or start from template:')}</Text>
-                    {templates.slice(0, 3).map(tpl => {
-                      const ltpl = localizeTemplate(tpl, t);
-                      return (
-                        <Pressable key={tpl.id} style={s.templateRow} onPress={() => loadTemplate(tpl)}>
-                          <Ionicons name="copy-outline" size={16} color={Palette.hermesOrange} />
-                          <Text style={s.templateName}>{ltpl.displayName}</Text>
-                          <Text style={s.templateMeta}>{t('quotes.lineCount', '{{count}} lines', { count: tpl.items.length })}</Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                )}
+                {/* The three-template strip that used to sit here is now the
+                    Template menu at the top of the screen: it carries every
+                    template rather than the first three, and it does not
+                    disappear once a line has been added. */}
                 <Pressable style={s.emptyBox} onPress={() => setShowPricebook(true)}>
                   <Ionicons name="document-text-outline" size={28} color={SemanticColors.textTertiary} />
                   <Text style={s.emptyText}>{t('quotes.pickFromPricebook', 'Pick services from your pricebook')}</Text>
@@ -1170,7 +1364,87 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           </View>
         )}
 
-        {/* AI Quote Modal */}
+        {/* Name (and categorise) the template being saved */}
+        <Modal
+          visible={showTemplateNamer}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowTemplateNamer(false)}
+        >
+          <View style={s.namerScrim}>
+            <View style={s.namerCard}>
+              <Text style={s.namerTitle}>
+                {editingTemplate
+                  ? t('quotes.updateTemplate', 'Update template')
+                  : t('quotes.saveAsTemplate', 'Save as template')}
+              </Text>
+              <TextInput
+                style={s.namerInput}
+                value={templateNameDraft}
+                onChangeText={setTemplateNameDraft}
+                placeholder={t('quotes.templateNamePlaceholder', 'Template name')}
+                placeholderTextColor={SemanticColors.textTertiary}
+                autoFocus
+                selectTextOnFocus
+              />
+              {editingTemplate && (
+                <Pressable
+                  style={[s.namerBtn, s.namerBtnGhost, !templateNameDraft.trim() && { opacity: 0.5 }]}
+                  disabled={!templateNameDraft.trim()}
+                  onPress={() => { setShowTemplateNamer(false); commitTemplate(true); }}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.namerBtnGhostText}>{t('quotes.saveAsNewTemplate', 'Save as a new template')}</Text>
+                </Pressable>
+              )}
+              {/* Removing the one-line create form took the only category
+                  picker with it, so every contractor-authored template would
+                  have landed in "overig" and the filter bar on the templates
+                  screen could never have surfaced one anywhere else. */}
+              <DKMenu
+                accessibilityLabel={t('quoteTemplates.category', 'Category')}
+                renderAnchor={(openMenu) => (
+                  <Pressable style={s.namerCategory} onPress={openMenu} accessibilityRole="button">
+                    <Text style={s.namerCategoryText} numberOfLines={1}>
+                      {localizeCategory(
+                        templateCategoryDraft,
+                        TEMPLATE_CATEGORIES.find((c) => c.id === templateCategoryDraft)?.label ?? templateCategoryDraft,
+                        t,
+                      )}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color={SemanticColors.textTertiary} />
+                  </Pressable>
+                )}
+                items={TEMPLATE_CATEGORIES.map((cat) => ({
+                  key: cat.id,
+                  label: localizeCategory(cat.id, cat.label, t),
+                  selected: templateCategoryDraft === cat.id,
+                  onPress: () => setTemplateCategoryDraft(cat.id),
+                }))}
+              />
+              <View style={s.namerRow}>
+                <Pressable
+                  style={[s.namerBtn, s.namerBtnGhost]}
+                  onPress={() => setShowTemplateNamer(false)}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.namerBtnGhostText}>{t('common.cancel', 'Cancel')}</Text>
+                </Pressable>
+                <Pressable
+                  style={[s.namerBtn, s.namerBtnPrimary, !templateNameDraft.trim() && { opacity: 0.5 }]}
+                  disabled={!templateNameDraft.trim()}
+                  onPress={() => { setShowTemplateNamer(false); commitTemplate(false); }}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.namerBtnPrimaryText}>
+                    {editingTemplate ? t('quotes.updateTemplate', 'Update template') : t('common.save', 'Save')}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         <Modal visible={showAIQuote} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowAIQuote(false)}>
           <AIQuoteFromPhoto
             onCreateQuote={(items) => {
@@ -1681,11 +1955,6 @@ const s = StyleSheet.create({
     flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary,
     paddingVertical: 0,
   },
-  aiScanRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: Palette.hermesOrange + '08', borderRadius: RADIUS.md, padding: 10,
-  },
-  aiScanText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
   aiExplanation: { flexDirection: 'row', alignItems: 'flex-start', gap: 4, marginTop: 4, paddingRight: 8 },
   aiExplanationText: { flex: 1, fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, lineHeight: 14 },
 
@@ -1724,13 +1993,91 @@ const s = StyleSheet.create({
   qtyText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, minWidth: 24, textAlign: 'center' },
 
   // Templates
-  templateLabel: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
-  templateRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, padding: 12,
+  saveTemplateRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: GRID.xs, paddingVertical: GRID.sm, marginTop: GRID.xs,
+    borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
-  templateName: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  templateMeta: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
+  saveTemplateText: {
+    fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily,
+    color: Palette.hermesOrange,
+  },
+  namerScrim: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center', justifyContent: 'center', padding: GRID.lg,
+  },
+  namerCard: {
+    width: '100%', maxWidth: 360, gap: GRID.sm,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: RADIUS.lg, padding: GRID.md,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  namerTitle: {
+    fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary,
+  },
+  namerInput: {
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    borderRadius: RADIUS.md, paddingHorizontal: GRID.sm, paddingVertical: GRID.sm,
+    color: SemanticColors.textPrimary, fontSize: TYPE.bodySize,
+    fontFamily: TYPE.bodyFamily,
+  },
+  namerCategory: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.xs,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    borderRadius: RADIUS.md, paddingHorizontal: GRID.sm, paddingVertical: GRID.sm,
+  },
+  namerCategoryText: {
+    flex: 1, fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary,
+  },
+  namerRow: { flexDirection: 'row', gap: GRID.sm },
+  namerBtn: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingVertical: GRID.sm + 2, borderRadius: RADIUS.md,
+  },
+  namerBtnGhost: { borderWidth: 1, borderColor: SemanticColors.borderDefault },
+  namerBtnGhostText: {
+    fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textSecondary,
+  },
+  namerBtnPrimary: { backgroundColor: Palette.hermesOrange },
+  namerBtnPrimaryText: {
+    fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.white,
+  },
+  startWith: { gap: GRID.xs, marginBottom: GRID.sm },
+  startWithLabel: {
+    fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textSecondary,
+    textTransform: 'uppercase', letterSpacing: 1,
+  },
+  startWithRow: { flexDirection: 'row', gap: GRID.sm },
+  startTile: {
+    flex: 1,
+    alignItems: 'center', justifyContent: 'center', gap: GRID.xs,
+    paddingVertical: 14, paddingHorizontal: 4,
+    borderRadius: RADIUS.lg,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    minHeight: 68,
+  },
+  startTileText: {
+    fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily,
+    color: SemanticColors.textPrimary, textAlign: 'center',
+  },
+  managePricesRow: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    paddingVertical: GRID.sm, paddingHorizontal: GRID.sm,
+    borderRadius: RADIUS.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+    marginBottom: GRID.sm,
+  },
+  managePricesText: {
+    flex: 1, fontSize: TYPE.captionSize,
+    fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary,
+  },
 
   // Empty
   emptyBox: { alignItems: 'center', gap: 8, padding: 32, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: SemanticColors.borderDefault, borderStyle: 'dashed' },

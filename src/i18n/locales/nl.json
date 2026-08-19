@@ -1834,7 +1834,22 @@
     "aiMatchFallback": "Uit je prijslijst — {{rate}}. Niet gekoppeld aan je omschrijving, controleer of dit hoort.",
     "sendToCustomer": "Naar klant sturen",
     "pdf": "Pdf",
-    "invoice": "Factuur"
+    "invoice": "Factuur",
+    "startWith": "Begin met",
+    "template": "Sjabloon",
+    "photo": "Foto",
+    "pricebook": "Prijslijst",
+    "manageTemplates": "Sjablonen beheren",
+    "createFirstTemplate": "Sjabloon aanmaken",
+    "startFromTemplate": "Begin met een sjabloon",
+    "managePrices": "Prijzen beheren",
+    "saveAsTemplate": "Bewaar als sjabloon",
+    "updateTemplate": "Sjabloon bijwerken",
+    "updateNamedTemplate": "“{{name}}” bijwerken",
+    "saveAsNewTemplate": "Bewaar als nieuw sjabloon",
+    "templateSavedTitle": "Sjabloon opgeslagen",
+    "templateSavedBody": "“{{name}}” staat klaar in het sjabloonmenu.",
+    "templateNamePlaceholder": "Naam van het sjabloon"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -4103,7 +4118,8 @@
         "desc": "Vloerverwarming op bestaande vloer met noppenplaat systeem",
         "duration": "2 dagen"
       }
-    }
+    },
+    "editHint": "Open het om te gebruiken of de regels aan te passen."
   },
   "decisions": {
     "title": "Klant Keuzes",

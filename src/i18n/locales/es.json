@@ -1850,7 +1850,22 @@
     "aiMatchFallback": "De tu lista de precios — {{rate}}. No coincide con tu descripción, compruébalo.",
     "sendToCustomer": "Enviar al cliente",
     "pdf": "PDF",
-    "invoice": "Factura"
+    "invoice": "Factura",
+    "startWith": "Empezar con",
+    "template": "Plantilla",
+    "photo": "Foto",
+    "pricebook": "Tarifas",
+    "manageTemplates": "Gestionar plantillas",
+    "createFirstTemplate": "Crear una plantilla",
+    "startFromTemplate": "Empezar con una plantilla",
+    "managePrices": "Gestionar tarifas",
+    "saveAsTemplate": "Guardar como plantilla",
+    "updateTemplate": "Actualizar plantilla",
+    "updateNamedTemplate": "Actualizar «{{name}}»",
+    "saveAsNewTemplate": "Guardar como plantilla nueva",
+    "templateSavedTitle": "Plantilla guardada",
+    "templateSavedBody": "«{{name}}» está lista para reutilizar desde el menú Plantilla.",
+    "templateNamePlaceholder": "Nombre de la plantilla"
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -4119,7 +4134,8 @@
         "desc": "Suelo radiante sobre suelo existente con sistema de tetones",
         "duration": "2 días"
       }
-    }
+    },
+    "editHint": "Ábrela para usarla o ajustar las líneas."
   },
   "decisions": {
     "title": "Decisiones del cliente",

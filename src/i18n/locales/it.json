@@ -1850,7 +1850,22 @@
     "aiMatchFallback": "Dal tuo listino — {{rate}}. Non collegato alla tua descrizione, verifica.",
     "sendToCustomer": "Invia al cliente",
     "pdf": "PDF",
-    "invoice": "Fattura"
+    "invoice": "Fattura",
+    "startWith": "Inizia con",
+    "template": "Modello",
+    "photo": "Foto",
+    "pricebook": "Listino",
+    "manageTemplates": "Gestisci modelli",
+    "createFirstTemplate": "Crea un modello",
+    "startFromTemplate": "Inizia da un modello",
+    "managePrices": "Gestisci prezzi",
+    "saveAsTemplate": "Salva come modello",
+    "updateTemplate": "Aggiorna modello",
+    "updateNamedTemplate": "Aggiorna «{{name}}»",
+    "saveAsNewTemplate": "Salva come nuovo modello",
+    "templateSavedTitle": "Modello salvato",
+    "templateSavedBody": "«{{name}}» è pronto da riutilizzare dal menu Modelli.",
+    "templateNamePlaceholder": "Nome del modello"
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -4119,7 +4134,8 @@
         "desc": "Riscaldamento a pavimento su pavimento esistente con sistema a bugne",
         "duration": "2 giorni"
       }
-    }
+    },
+    "editHint": "Aprilo per usarlo o modificare le voci."
   },
   "decisions": {
     "title": "Decisioni cliente",

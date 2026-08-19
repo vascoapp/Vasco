@@ -1850,7 +1850,22 @@
     "aiMatchFallback": "From your pricebook — {{rate}}. Not matched to your description, so check it belongs here.",
     "sendToCustomer": "Send to customer",
     "pdf": "PDF",
-    "invoice": "Invoice"
+    "invoice": "Invoice",
+    "startWith": "Start with",
+    "template": "Template",
+    "photo": "Photo",
+    "pricebook": "Pricebook",
+    "manageTemplates": "Manage templates",
+    "createFirstTemplate": "Create a template",
+    "startFromTemplate": "Start from a template",
+    "managePrices": "Manage prices",
+    "saveAsTemplate": "Save as template",
+    "updateTemplate": "Update template",
+    "updateNamedTemplate": "Update “{{name}}”",
+    "saveAsNewTemplate": "Save as a new template",
+    "templateSavedTitle": "Template saved",
+    "templateSavedBody": "\"{{name}}\" is ready to reuse from the Template menu.",
+    "templateNamePlaceholder": "Template name"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -4119,7 +4134,8 @@
         "desc": "Underfloor heating on existing floor with nub plate system",
         "duration": "2 days"
       }
-    }
+    },
+    "editHint": "Open it to use or adjust the lines."
   },
   "decisions": {
     "title": "Customer decisions",

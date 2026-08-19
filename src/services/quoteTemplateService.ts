@@ -799,6 +799,77 @@ class QuoteTemplateService {
     return template;
   }
 
+  /**
+   * Update a template in place.
+   *
+   * saveTemplate always mints `qt-${Date.now()}` and unshifts, so "editing"
+   * through it silently produced a duplicate and left the original in the
+   * list. This preserves the identity a template accumulates — its id (which
+   * routes reference), its usageCount and its createdAt.
+   *
+   * Editing a BUILT-IN overrides it: the edit is stored as a user template and
+   * the shipped one is hidden via deletedBuiltinIds, the mechanism that
+   * already exists for exactly this. The alternative — forking, and leaving
+   * both — puts two near-identical entries in a menu whose whole purpose is
+   * picking one quickly. An override is reversible by deleting the user copy,
+   * which restores nothing automatically; that is the cost, and it is why this
+   * returns the NEW template so a caller can tell an override happened.
+   */
+  updateTemplate(
+    id: string,
+    patch: { name?: string; category?: TemplateCategory; items?: QuoteTemplateItem[]; description?: string; paymentTerms?: string; estimatedDuration?: string },
+  ): QuoteTemplate | undefined {
+    const idx = this.templates.findIndex((x) => x.id === id);
+    if (idx === -1) return undefined;
+    const current = this.templates[idx];
+    const isBuiltin = BUILTIN_TEMPLATES.some((b) => b.id === id);
+
+    const items = patch.items ?? current.items;
+    const merged: QuoteTemplate = {
+      ...current,
+      name: patch.name ?? current.name,
+      category: patch.category ?? current.category,
+      items,
+      description: patch.description ?? current.description,
+      defaultPaymentTerms: patch.paymentTerms ?? current.defaultPaymentTerms,
+      estimatedDuration: patch.estimatedDuration ?? current.estimatedDuration,
+      // Always recomputed. A stored total beside the lines it is derived from
+      // is the drift that pricebook.md's design rule 1 exists to prevent.
+      subtotal: items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0),
+    };
+
+    if (isBuiltin) {
+      // A built-in resolves its display text through `i18nId`
+      // (quoteTemplates.builtins.<id>.name / .items[i]), so the stored `name`
+      // and item descriptions are SEED strings — Dutch — not what the
+      // contractor is looking at. Carrying i18nId onto the override would keep
+      // rendering the shipped translations and make the edit invisible;
+      // dropping it without replacing the text would swap a French
+      // contractor's screen to Dutch. So the caller must hand over the
+      // LOCALIZED name and items, which is what localizeTemplate produces and
+      // what the builder already holds.
+      const override: QuoteTemplate = {
+        ...merged,
+        id: `qt-${Date.now()}`,
+        i18nId: undefined,
+        paymentTermsKey: undefined,
+        items: items.map((i) => ({ ...i })),
+        createdAt: new Date(),
+      };
+      this.deletedBuiltinIds.add(id);
+      this.templates.splice(idx, 1);
+      this.templates.unshift(override);
+      this.persist();
+      this.notify();
+      return override;
+    }
+
+    this.templates[idx] = merged;
+    this.persist();
+    this.notify();
+    return merged;
+  }
+
   useTemplate(id: string): QuoteTemplate | undefined {
     const t = this.templates.find(x => x.id === id);
     if (t) {
@@ -898,8 +969,13 @@ export function useQuoteTemplates(category?: TemplateCategory) {
       quoteTemplateService.saveTemplate(name, cat, items, opts),
     [],
   );
+  const update = useCallback(
+    (id: string, patch: Parameters<typeof quoteTemplateService.updateTemplate>[1]) =>
+      quoteTemplateService.updateTemplate(id, patch),
+    [],
+  );
   const use = useCallback((id: string) => quoteTemplateService.useTemplate(id), []);
   const remove = useCallback((id: string) => quoteTemplateService.deleteTemplate(id), []);
 
-  return { templates, loading, save, use, remove };
+  return { templates, loading, save, update, use, remove };
 }

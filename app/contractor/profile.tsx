@@ -691,6 +691,32 @@ export default function ProfileScreen() {
               <Text style={styles.rowValue}>{currentLang.flag} {currentLang.label}</Text>
               <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
             </Pressable>
+            {/* The two catalogues a quote is assembled from. They used to be
+                chips on the invoices tab; using them now happens inside the
+                quote builder, so what is left here is MAINTAINING them — a
+                Sunday-evening job, which is what this drawer is for
+                (learnings #51.3). These are also the only entry points left to
+                either route, so removing one makes it dead code. */}
+            <Pressable
+              style={[styles.row, styles.rowBorder]}
+              onPress={() => router.push('/contractor/quote-templates' as any)}
+            >
+              <View style={styles.rowIcon}>
+                <Ionicons name="copy-outline" size={18} color={Palette.hermesOrange} />
+              </View>
+              <Text style={styles.rowLabel}>{t('invoices.quoteTemplates', 'Quote templates')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
+            <Pressable
+              style={[styles.row, styles.rowBorder]}
+              onPress={() => router.push('/contractor/pricebook' as any)}
+            >
+              <View style={styles.rowIcon}>
+                <Ionicons name="book-outline" size={18} color={Palette.hermesOrange} />
+              </View>
+              <Text style={styles.rowLabel}>{t('invoices.pricebook', 'Pricebook')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+            </Pressable>
             <Pressable
               style={[styles.row, styles.rowBorder]}
               onPress={() => router.push('/contractor/notifications' as any)}

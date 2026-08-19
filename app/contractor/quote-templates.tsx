@@ -2,17 +2,15 @@
 // QUOTE TEMPLATES — Offerte sjablonen
 // =============================================================================
 import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { useQuoteTemplates, TEMPLATE_CATEGORIES, localizeTemplate, localizeCategory, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory } from '../../src/services/quoteTemplateService';
-import { useAppState } from '../../src/state/AppState';
+import { useQuoteTemplates, TEMPLATE_CATEGORIES, localizeTemplate, localizeCategory, type QuoteTemplate, type TemplateCategory } from '../../src/services/quoteTemplateService';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { getVATRate } from '../../src/constants/taxRates';
 import { formatCurrency } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -23,47 +21,11 @@ type IconName = keyof typeof Ionicons.glyphMap;
 export default function QuoteTemplatesScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { templates, save, use, remove } = useQuoteTemplates();
-  const { businessProfile } = useAppState();
+  const { templates, remove } = useQuoteTemplates();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
-  const vatPct = Math.round(getVATRate(businessProfile.country ?? 'NL') * 100);
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newCategory, setNewCategory] = useState<TemplateCategory>('overig');
-  const [newItemDesc, setNewItemDesc] = useState('');
-  const [newItemPrice, setNewItemPrice] = useState('');
-
-  const handleCreate = () => {
-    // R66 round 11: was a silent return — clicking "Save" with empty
-    // fields just dismissed without feedback. Now surfaces the missing
-    // field via localized alert.
-    if (!newName.trim() || !newItemDesc.trim() || !newItemPrice.trim()) {
-      Alert.alert(
-        t('quoteTemplates.missingFieldsTitle', 'Fill in all fields'),
-        t('quoteTemplates.missingFieldsBody', 'Template needs a name, an item description, and a price.'),
-      );
-      return;
-    }
-    const item: QuoteTemplateItem = {
-      description: newItemDesc.trim(),
-      quantity: 1,
-      unit: 'stuk',
-      unitPrice: parseFloat(newItemPrice) || 0,
-      vatRate: vatPct,
-      type: 'labour',
-    };
-    save(newName.trim(), newCategory, [item]);
-    setNewName('');
-    setNewCategory('overig');
-    setNewItemDesc('');
-    setNewItemPrice('');
-    setShowCreate(false);
-    hapticSuccess();
-  };
-
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -121,8 +83,17 @@ export default function QuoteTemplatesScreen() {
           >{t('quoteTemplates.title', 'Quote templates')}</Text>
           <Text style={styles.headerSubtitle}>{t('quoteTemplates.available', '{{count}} templates available', { count: templates.length })}</Text>
         </View>
-        <Pressable onPress={() => setShowCreate(!showCreate)} style={styles.addBtn}>
-          <Ionicons name={showCreate ? 'close' : 'add'} size={24} color={Palette.hermesOrange} />
+        {/* Making a template happens in the quote builder — assemble the
+            lines, then "Save as template". The form that used to live here
+            could only ever create a template with ONE line, which is not a
+            template anybody would apply. */}
+        <Pressable
+          onPress={() => router.push('/contractor/tiered-quote' as any)}
+          style={styles.addBtn}
+          accessibilityRole="button"
+          accessibilityLabel={t('quoteTemplates.newTemplate', 'New template')}
+        >
+          <Ionicons name="add" size={24} color={Palette.hermesOrange} />
         </Pressable>
       </View>
 
@@ -151,59 +122,6 @@ export default function QuoteTemplatesScreen() {
           </Pressable>
         ))}
       </ScrollView>
-
-      {/* Create Form */}
-      {showCreate && (
-        <View style={styles.createCard}>
-          <Text style={styles.createTitle}>{t('quoteTemplates.newTemplate', 'New template')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('quoteTemplates.templateName', 'Template name')}
-            placeholderTextColor={SemanticColors.textTertiary}
-            value={newName}
-            onChangeText={setNewName}
-          />
-          <Text style={styles.inputLabel}>{t('quoteTemplates.category', 'Category')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 36 }}>
-            <View style={styles.catChipRow}>
-              {TEMPLATE_CATEGORIES.map(cat => (
-                <Pressable
-                  key={cat.id}
-                  style={[styles.catChip, newCategory === cat.id && styles.catChipActive]}
-                  onPress={() => setNewCategory(cat.id)}
-                >
-                  <Text style={[styles.catChipText, newCategory === cat.id && styles.catChipTextActive]}>
-                    {localizeCategory(cat.id, cat.label, t)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-          <Text style={styles.inputLabel}>{t('quoteTemplates.firstLine', 'First line')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('quoteTemplates.descriptionPlaceholder', 'Description')}
-            placeholderTextColor={SemanticColors.textTertiary}
-            value={newItemDesc}
-            onChangeText={setNewItemDesc}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder={t('quoteTemplates.pricePlaceholder', 'Price ex. VAT')}
-            placeholderTextColor={SemanticColors.textTertiary}
-            value={newItemPrice}
-            onChangeText={setNewItemPrice}
-            keyboardType="numeric"
-          />
-          <Pressable
-            style={[styles.createBtn, (!newName.trim() || !newItemDesc.trim() || !newItemPrice.trim()) && { opacity: 0.5 }]}
-            onPress={handleCreate}
-          >
-            <Ionicons name="add-circle-outline" size={18} color={Palette.white} />
-            <Text style={styles.createBtnText}>{t('quoteTemplates.add', 'Add')}</Text>
-          </Pressable>
-        </View>
-      )}
 
       {/* Templates List */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}>
@@ -279,6 +197,13 @@ export default function QuoteTemplatesScreen() {
                         <Ionicons name="trash-outline" size={16} color={SemanticColors.feedbackError} />
                       </Pressable>
                     </View>
+                    {/* Not a second button: opening the template in the builder
+                        IS how you change it — adjust the lines, then "Update
+                        template". Two controls leading to the same screen would
+                        read as two different things. */}
+                    <Text style={styles.editHint}>
+                      {t('quoteTemplates.editHint', 'Open it to use or adjust the lines.')}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -305,6 +230,12 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 12, fontFamily: TYPE.sectionFamily, color: SemanticColors.textSecondary },
   categoryTextActive: { color: Palette.white },
   scrollView: { flex: 1, paddingHorizontal: SafeArea.side },
+  editHint: {
+    fontSize: TYPE.tinySize,
+    fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textTertiary,
+    marginTop: 6,
+  },
   emptyState: { alignItems: 'center', paddingVertical: Spacing.xl, gap: Spacing.sm },
   emptyText: { fontSize: 14, color: SemanticColors.textTertiary },
   templateCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: Spacing.sm, marginBottom: 6 },
@@ -328,29 +259,4 @@ const styles = StyleSheet.create({
   useButtonText: { fontSize: 14, fontFamily: TYPE.sectionFamily, color: Palette.white },
   deleteButton: { width: 40, height: 40, borderRadius: 8, backgroundColor: SemanticColors.feedbackError + '10', alignItems: 'center', justifyContent: 'center' },
   addBtn: { padding: 4 },
-  createCard: {
-    backgroundColor: SemanticColors.surfacePrimary, borderRadius: 16, padding: 16,
-    gap: 10, marginHorizontal: SafeArea.side, marginBottom: Spacing.sm,
-    borderWidth: 1, borderColor: Palette.hermesOrange + '30',
-  },
-  createTitle: { fontSize: 16, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
-  inputLabel: { fontSize: 12, fontFamily: TYPE.sectionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
-  input: {
-    backgroundColor: SemanticColors.surfaceBackground, borderRadius: 8, paddingHorizontal: 12,
-    paddingVertical: 10, fontSize: 14, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary,
-    borderWidth: 1, borderColor: SemanticColors.borderDefault,
-  },
-  catChipRow: { flexDirection: 'row', gap: 6 },
-  catChip: {
-    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8,
-    backgroundColor: SemanticColors.surfaceBackground, borderWidth: 1, borderColor: SemanticColors.borderDefault,
-  },
-  catChipActive: { backgroundColor: Palette.hermesOrange, borderColor: Palette.hermesOrange },
-  catChipText: { fontSize: 12, fontFamily: TYPE.sectionFamily, color: SemanticColors.textSecondary },
-  catChipTextActive: { color: Palette.white },
-  createBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: Palette.hermesOrange, borderRadius: 12, paddingVertical: 12, marginTop: 2,
-  },
-  createBtnText: { fontSize: 15, fontFamily: TYPE.sectionFamily, color: Palette.white },
 });

@@ -1850,7 +1850,22 @@
     "aiMatchFallback": "Aus Ihrer Preisliste — {{rate}}. Kein Bezug zu Ihrer Beschreibung, bitte prüfen.",
     "sendToCustomer": "An Kunden senden",
     "pdf": "PDF",
-    "invoice": "Rechnung"
+    "invoice": "Rechnung",
+    "startWith": "Beginnen mit",
+    "template": "Vorlage",
+    "photo": "Foto",
+    "pricebook": "Preisliste",
+    "manageTemplates": "Vorlagen verwalten",
+    "createFirstTemplate": "Vorlage erstellen",
+    "startFromTemplate": "Mit einer Vorlage beginnen",
+    "managePrices": "Preise verwalten",
+    "saveAsTemplate": "Als Vorlage speichern",
+    "updateTemplate": "Vorlage aktualisieren",
+    "updateNamedTemplate": "„{{name}}“ aktualisieren",
+    "saveAsNewTemplate": "Als neue Vorlage speichern",
+    "templateSavedTitle": "Vorlage gespeichert",
+    "templateSavedBody": "„{{name}}“ steht im Vorlagenmenü bereit.",
+    "templateNamePlaceholder": "Name der Vorlage"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -4119,7 +4134,8 @@
         "desc": "Fußbodenheizung auf vorhandenem Boden mit Noppenplattensystem",
         "duration": "2 Tage"
       }
-    }
+    },
+    "editHint": "Öffnen, um sie zu verwenden oder die Positionen anzupassen."
   },
   "decisions": {
     "title": "Kundenentscheidungen",
