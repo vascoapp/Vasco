@@ -78,6 +78,16 @@ export type BusinessProfile = {
   licenses?: ContractorLicense[];
   postcode?: string;
   city?: string;
+  /** IT/ES provincia, 2 letters. Separate from the US `state` field, which has
+   *  different values and validation. */
+  province?: string;
+  /** Country-interpreted. IT: RegimeFiscale RF01–RF19, mandatory in FatturaPA
+   *  — there is no safe default, because RF01 on a forfettario is a fiscally
+   *  wrong invoice that SDI ACCEPTS, so nobody ever finds out. ES: régimen. */
+  fiscalRegime?: string;
+  /** 'F' natural person / 'J' legal person. Facturae requires it explicitly;
+   *  it also decides Nome+Cognome vs Denominazione in FatturaPA. */
+  personType?: 'F' | 'J';
   website?: string;
   invoicePrefix?: string;
   quotePrefix?: string;

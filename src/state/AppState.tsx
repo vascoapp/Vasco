@@ -2405,6 +2405,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.country !== undefined) dbUpdates.country = updates.country || null;
           if (updates.postcode !== undefined) dbUpdates.postcode = updates.postcode || null;
           if (updates.city !== undefined) dbUpdates.city = updates.city || null;
+          // Migration 20260819000011. Same class as the R66r24 and R83 fields
+          // above: written into AppState by settings, silently dropped on the
+          // BE write, gone on the next cold start. FatturaPA cannot be built
+          // without fiscalRegime and Facturae cannot be built without
+          // personType, so losing them means the export gate blocks forever
+          // and the contractor cannot see why.
+          if (updates.province !== undefined) dbUpdates.province = updates.province || null;
+          if (updates.fiscalRegime !== undefined) dbUpdates.fiscal_regime = updates.fiscalRegime || null;
+          if (updates.personType !== undefined) dbUpdates.person_type = updates.personType || null;
           if (updates.website !== undefined) dbUpdates.website = updates.website || null;
           if (updates.invoicePrefix !== undefined) dbUpdates.invoice_prefix = updates.invoicePrefix || null;
           if (updates.quotePrefix !== undefined) dbUpdates.quote_prefix = updates.quotePrefix || null;

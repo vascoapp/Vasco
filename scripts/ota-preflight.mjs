@@ -617,6 +617,14 @@ const SAME_WORD_OK = new Set([
   // Legal forms, tax ids and standards — translating these would be WRONG,
   // not merely lazy: they are the literal registered terms.
   'EIRL', 'SARL', 'S.L.', 'S.A.', 'S.r.l.', 'S.n.c.', 'S-Corp', 'USt-IdNr.',
+  // Tax identifiers named after their own country's scheme. "NIF / CIF" is
+  // Spanish and "Partita IVA" is Italian in EVERY locale — a German reading
+  // the Spanish field wants to see the term Spain actually uses, because that
+  // is what is printed on the document they are looking for. Translating them
+  // would be actively wrong, not lazy.
+  'NIF / CIF', 'Partita IVA',
+  // Genuinely the same word in French as in English.
+  'Province',
   'SIRET', 'Partita IVA', 'Codice Fiscale', 'IBAN', 'BIC / SWIFT', 'RAMS',
   'LTIR', 'GoBD Audit-Trail', 'Vasco GoBD audit trail',
   'KOR — Kleineondernemersregeling', 'Kleinunternehmer (§19 UStG)',

@@ -587,6 +587,77 @@ export default function InvoiceDetailScreen() {
   // (province, NIF, person type, regime fiscal) aren't on the businessProfile
   // today — sensible defaults applied; user can extend businessProfile schema
   // if they want richer XML.
+  /**
+   * The neutral model both country mappers take. Built once so ES and IT
+   * cannot drift apart — which is exactly what happened before: each handler
+   * assembled its own `const data: any` and one of them (IT) did not match the
+   * generator at all, while the other (ES) matched the shape but filled the
+   * buyer's NIF, city, post code and province with empty strings.
+   */
+  const buildEInvoiceSource = (): import('../../src/integrations/einvoiceMapping').EInvoiceSource => ({
+    seller: {
+      name: (businessProfile as any)?.businessName ?? '',
+      vatId: businessProfile?.vatNumber,
+      taxId: (businessProfile as any)?.registrationNumber,
+      address: (businessProfile as any)?.address,
+      city: (businessProfile as any)?.city,
+      postcode: (businessProfile as any)?.postcode,
+      province: (businessProfile as any)?.province,
+      country: country,
+      fiscalRegime: (businessProfile as any)?.fiscalRegime,
+      personType: (businessProfile as any)?.personType,
+      email: (businessProfile as any)?.email,
+      phone: (businessProfile as any)?.phone,
+      iban: (businessProfile as any)?.iban,
+    },
+    buyer: {
+      name: invoice?.customer ?? '',
+      vatId: invoiceCustomer?.vatId,
+      taxId: invoiceCustomer?.taxId,
+      address: invoiceCustomer?.address,
+      city: invoiceCustomer?.city,
+      postcode: invoiceCustomer?.postcode,
+      province: invoiceCustomer?.province,
+      country: invoiceCustomer?.country ?? country,
+      einvoiceRouting: invoiceCustomer?.einvoiceRouting,
+      einvoiceEmail: invoiceCustomer?.einvoiceEmail,
+    },
+    invoiceNumber: (invoice as any)?.reference ?? invoice?.id ?? '',
+    invoiceDate: (invoice?.sentAt ?? invoice?.createdAt ?? invoice?.deliveryDate ?? new Date().toISOString()).slice(0, 10),
+    dueDate: (invoice?.dueDate ?? new Date(Date.now() + ((invoice?.dueInDays ?? 14) * 24 * 60 * 60 * 1000)).toISOString()).slice(0, 10),
+    currency: country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR',
+    lines: localItems.map((li: EditableLineItem) => ({
+      description: li.description,
+      quantity: li.quantity,
+      unitPrice: li.unitPrice,
+      lineTotal: li.quantity * li.unitPrice,
+      vatRate: effectiveRate * 100,
+    })),
+    totalNet: subtotal,
+    totalVat: subtotal * effectiveRate,
+    totalGross: total,
+  });
+
+  /**
+   * One place that turns "we are missing fields" into something a contractor
+   * can act on. The mapper refuses rather than inventing a value; this is what
+   * tells them WHICH field and WHERE, instead of a silent no-op or an invoice
+   * the authority rejects days later.
+   */
+  const reportMissing = (missing: Array<{ key: string; where: 'profile' | 'customer' }>) => {
+    const labels = missing.map((m) => t(m.key, m.key.split('.').pop() ?? m.key)).join('\n• ');
+    Alert.alert(
+      t('invoices.einvoiceMissingTitle', 'Some details are missing'),
+      `${t('invoices.einvoiceMissingBody', 'This format needs a few more details before it can be sent:')}\n\n• ${labels}`,
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        missing.some((m) => m.where === 'profile')
+          ? { text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => router.push('/(modals)/business-settings' as any) }
+          : { text: t('common.ok', 'OK') },
+      ],
+    );
+  };
+
   const handleExportFacturae = async () => {
     try {
       const { loadSubscription } = await import('../../src/services/subscriptionService');
@@ -606,47 +677,16 @@ export default function InvoiceDetailScreen() {
       }
     } catch {}
     const { generateFacturaeXml } = await import('../../src/integrations/einvoice-es');
-    const vatAmount = subtotal * effectiveRate;
+    const { toFacturae } = await import('../../src/integrations/einvoiceMapping');
     const invoiceNumber = (invoice as any).reference ?? invoice.id;
-    const data = {
-      schemaVersion: '3.2.2' as const,
-      sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
-      sellerNif: businessProfile?.vatNumber ?? '',
-      sellerAddress: (businessProfile as any)?.address ?? '',
-      sellerCity: (businessProfile as any)?.city ?? '',
-      sellerPostalCode: (businessProfile as any)?.postcode ?? '',
-      sellerProvince: (businessProfile as any)?.province ?? '',
-      sellerCountry: 'ESP',
-      sellerPersonType: 'J' as const,           // Default to legal entity
-      sellerRegimeFiscal: '01' as const,         // General regime
-      buyerName: invoice.customer ?? '',
-      buyerNif: (invoice as any).customerVatId ?? '',
-      buyerAddress: (invoice as any).customerAddress ?? '',
-      buyerCity: '',
-      buyerPostalCode: '',
-      buyerProvince: '',
-      buyerCountry: 'ESP',
-      buyerPersonType: 'J' as const,
-      invoiceNumber,
-      invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),
-      dueDate: (invoice.dueDate ?? new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString()).slice(0, 10),
-      currency: 'EUR',
-      lineItems: localItems.map((li: EditableLineItem) => ({
-        description: li.description,
-        quantity: li.quantity,
-        unitPrice: li.unitPrice,
-        lineTotal: li.quantity * li.unitPrice,
-        ivaRate: effectiveRate * 100,
-        ivaAmount: li.quantity * li.unitPrice * VAT_RATE,
-      })),
-      totalNet: subtotal,
-      totalVat: vatAmount,
-      totalIrpf: 0,
-      totalGross: total,
-      iban: (businessProfile as any)?.iban,
-      bic: (businessProfile as any)?.bic,
-      paymentMethod: '04', // bank transfer
-    };
+    // The old block built this object by hand and filled the buyer's NIF,
+    // city, post code and province with empty strings, and hardcoded
+    // sellerPersonType 'J'. It did not throw — it produced a Facturae that
+    // looked complete and was missing every mandatory buyer field, which is
+    // the worse failure: nothing to notice until the receiver rejects it.
+    const mapped = toFacturae(buildEInvoiceSource());
+    if (!mapped.ok) { reportMissing(mapped.missing); return; }
+    const data = mapped.document;
     const xml = generateFacturaeXml(data);
     const filename = `${invoiceNumber}-facturae.xml`;
     try {
@@ -695,43 +735,14 @@ export default function InvoiceDetailScreen() {
       }
     } catch {}
     const { generateFatturaPAXml } = await import('../../src/integrations/einvoice-it');
-    const vatAmount = subtotal * effectiveRate;
+    const { toFatturaPA } = await import('../../src/integrations/einvoiceMapping');
     const invoiceNumber = (invoice as any).reference ?? invoice.id;
-    const data: any = {
-      sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
-      sellerVatId: businessProfile?.vatNumber ?? '',
-      sellerCodiceFiscale: businessProfile?.vatNumber ?? '',
-      sellerAddress: (businessProfile as any)?.address ?? '',
-      sellerCity: (businessProfile as any)?.city ?? '',
-      sellerPostalCode: (businessProfile as any)?.postcode ?? '',
-      sellerProvince: (businessProfile as any)?.province ?? '',
-      sellerCountry: 'IT',
-      buyerName: invoice.customer ?? '',
-      buyerVatId: (invoice as any).customerVatId,
-      buyerCodiceFiscale: (invoice as any).customerCodiceFiscale ?? '',
-      buyerAddress: (invoice as any).customerAddress ?? '',
-      buyerCity: '',
-      buyerPostalCode: '',
-      buyerProvince: '',
-      buyerCountry: 'IT',
-      invoiceNumber,
-      invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),
-      dueDate: (invoice.dueDate ?? new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString()).slice(0, 10),
-      currency: 'EUR',
-      lineItems: localItems.map((li: EditableLineItem) => ({
-        description: li.description,
-        quantity: li.quantity,
-        unitPrice: li.unitPrice,
-        lineTotal: li.quantity * li.unitPrice,
-        ivaRate: effectiveRate * 100,
-        ivaAmount: li.quantity * li.unitPrice * VAT_RATE,
-      })),
-      totalNet: subtotal,
-      totalVat: vatAmount,
-      totalGross: total,
-      iban: (businessProfile as any)?.iban,
-      paymentMethod: 'MP05', // SDI code for bank transfer
-    };
+    // The old block passed a flat object with `lineItems`, while the generator
+    // reads `dettaglioLinee` off nested party objects — so this threw
+    // "items is not iterable" on every tap, outside the try below.
+    const mapped = toFatturaPA(buildEInvoiceSource());
+    if (!mapped.ok) { reportMissing(mapped.missing); return; }
+    const data = mapped.document;
     const xml = generateFatturaPAXml(data);
     const filename = `${invoiceNumber}-fatturapa.xml`;
     try {
@@ -779,13 +790,11 @@ export default function InvoiceDetailScreen() {
         // And because the handlers are `async`, that throw was a REJECTED
         // PROMISE, not a synchronous one — so the catch below never saw it and
         // an approved queue action failed in total silence.
-        if (country === 'ES' || country === 'IT') {
-          Alert.alert(
-            t('invoices.einvoiceUnavailableTitle', 'Not available yet'),
-            t('invoices.einvoiceUnavailableBody', 'Structured e-invoice export for this country is not ready yet. You can still send the PDF.'),
-          );
-          return;
-        }
+        // Awaited, all three. Without it a throw inside these async handlers
+        // is a rejected promise the catch below cannot see — which is how the
+        // IT crash reached production silently through this exact path.
+        if (country === 'ES') return await handleExportFacturae();
+        if (country === 'IT') return await handleExportFatturaPA();
         // DE / NL / FR / UK / others: XRechnung.
         return await handleExportEInvoice('XRechnung');
       } catch {
@@ -1117,32 +1126,31 @@ export default function InvoiceDetailScreen() {
               border
             />
           )}
-          {/* 2026-08-19: ES Facturae and IT FatturaPA buttons REMOVED — they
-              threw the moment anyone tapped them.
-
-              Both handlers build `const data: any = { sellerName, …,
-              lineItems }`, which is nothing like the shape the generators take
-              (`cedentePrestatore`, `cessionarioCommittente`, `dettaglioLinee`,
-              `datiTrasmissione` …). The `any` is why tsc never said so.
-              Verified by calling each generator with the exact object the
-              screen builds: both TypeError. The generate call also sits
-              OUTSIDE the try below, so the throw was not even caught.
-
-              The comment above these buttons has said "generators exist but no
-              UI mapper" since R289 — and the buttons shipped anyway. R289 took
-              the Factur-X button out for precisely this reason; this is the
-              same removal, two markets late.
-
-              The generators are kept: FatturaPA in particular is thorough
-              (REA, bollo, cassa previdenziale, DatiRiepilogo grouped by rate).
-              What is missing is the mapper between the invoice screen and
-              them. src/integrations/__tests__/esItExportShape.test.ts is the
-              gate: make it pass and these buttons come back.
-
-              ⚠️ Restoring them needs more than the shape. SDI rejects on
-              value rules — 00400 (Natura absent when AliquotaIVA is 0) and
-              00401 (Natura present when it is not) among them — and in Italy a
-              rejected invoice was never legally issued. */}
+          {/* Restored 2026-08-19 once the mappers existed. They were removed
+              earlier the same day because IT threw "items is not iterable" on
+              every tap and ES silently produced an invoice with an empty buyer
+              NIF, city, post code and province. Both now go through
+              src/integrations/einvoiceMapping.ts, which returns the format's
+              own TYPE — so the compiler carries the shape — and REFUSES with a
+              named list of missing fields rather than inventing a value.
+              That refusal matters: RF01 defaulted for a forfettario is a
+              fiscally wrong invoice SDI accepts, and nobody finds out. */}
+          {country === 'ES' && (
+            <ActionRow
+              icon="code-slash-outline"
+              label={t('invoices.exportFacturae', 'Export Facturae (XML)')}
+              onPress={handleExportFacturae}
+              border
+            />
+          )}
+          {country === 'IT' && (
+            <ActionRow
+              icon="code-slash-outline"
+              label={t('invoices.exportFatturaPA', 'Export FatturaPA (XML)')}
+              onPress={handleExportFatturaPA}
+              border
+            />
+          )}
           {/* R300: was mislabeled "Send reminder" but onPress fires
               handleMarkSent (marks the invoice as sent, no reminder).
               Real reminder send lives on the facturen list per-row button

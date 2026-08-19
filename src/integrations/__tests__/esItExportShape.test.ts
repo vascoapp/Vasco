@@ -52,20 +52,20 @@ const IT_SHAPE: any = {
 /** And for ES. */
 const ES_SHAPE: any = { ...IT_SHAPE, sellerCountry: 'ES', buyerCountry: 'ES', sellerNif: 'B12345678' };
 
-describe('ES / IT e-invoice mappers — the gate for re-enabling the buttons', () => {
-  // These two FAIL today, on purpose, and the buttons are removed because of
-  // it. This is the definition of done for restoring them: write the mapper
-  // from the invoice screen's model to FatturaPA / Facturae, make these pass,
-  // then put the buttons back.
+describe('ES / IT e-invoice mappers — historic shapes, kept as a regression', () => {
+  // These held the buttons closed until src/integrations/einvoiceMapping.ts
+  // existed. They stay `it.failing` because the shapes below are the OLD
+  // hand-built ones — the point is that a flat `{…, lineItems}` object must
+  // never again be handed straight to these generators. If someone makes
+  // either pass, they have widened a generator to swallow the wrong shape,
+  // which is how the crash got in.
   //
-  // `it.failing` rather than a skip: a skipped test is invisible, and this one
-  // should start shouting the moment someone makes it pass — that is the
-  // signal the mapper landed.
-  it.failing('FatturaPA accepts the shape the invoice screen builds', () => {
+  // The real coverage is einvoiceMapping.test.ts.
+  it.failing('FatturaPA must NOT accept a flat hand-built object', () => {
     expect(() => generateFatturaPAXml(IT_SHAPE)).not.toThrow();
   });
 
-  it.failing('Facturae accepts the shape the invoice screen builds', () => {
+  it.failing('Facturae must NOT accept a shape with no buyer NIF', () => {
     expect(() => generateFacturaeXml(ES_SHAPE)).not.toThrow();
   });
 

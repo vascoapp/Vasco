@@ -850,7 +850,10 @@
     "statutoryInterestRate": "{{rate}}% wettelijke rente",
     "paidVia": "Betaald via {{method}}",
     "einvoiceUnavailableTitle": "Nog niet beschikbaar",
-    "einvoiceUnavailableBody": "Gestructureerde e-facturatie voor dit land is nog niet klaar. Je kunt de pdf wel versturen."
+    "einvoiceUnavailableBody": "Gestructureerde e-facturatie voor dit land is nog niet klaar. Je kunt de pdf wel versturen.",
+    "einvoiceMissingTitle": "Er ontbreken gegevens",
+    "einvoiceMissingBody": "Voor dit formaat zijn nog een paar gegevens nodig:",
+    "einvoiceFixProfile": "Bedrijfsprofiel openen"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -2203,7 +2206,14 @@
     "creditsAvailable_one": "{{count}} maand gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
     "creditsAvailable_other": "{{count}} maanden gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
     "exportFailedDesc": "We konden je gegevensexport niet maken. Probeer het opnieuw of neem contact op via privacy@vascobuild.com.",
-    "auditTrailValueGobd": "GoBD-conform"
+    "auditTrailValueGobd": "GoBD-conform",
+    "province": "Provincie",
+    "fiscalRegime": "Belastingregime",
+    "personType": "Rechtsvorm (persoon of bedrijf)",
+    "vatNumberPartitaIva": "Partita IVA",
+    "vatNumberNif": "NIF / CIF",
+    "postcode": "Postcode",
+    "city": "Plaats"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -3270,7 +3280,13 @@
     "spent": "Besteed",
     "jobs": "Klussen",
     "quotes": "Offertes",
-    "invoices": "Facturen"
+    "invoices": "Facturen",
+    "vatOrTaxId": "Btw-nummer of fiscaal nummer",
+    "einvoiceRouting": "E-factuuradres (Codice Destinatario of PEC)",
+    "address": "Adres",
+    "city": "Plaats",
+    "postcode": "Postcode",
+    "province": "Provincie"
   },
   "inbox": {
     "fromCustomer": "Van klant",

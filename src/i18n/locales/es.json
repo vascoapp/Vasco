@@ -866,7 +866,10 @@
     "statutoryInterestRate": "{{rate}}% interés legal",
     "paidVia": "Pagado con {{method}}",
     "einvoiceUnavailableTitle": "Aún no disponible",
-    "einvoiceUnavailableBody": "La exportación de factura electrónica estructurada para este país todavía no está lista. Puedes enviar el PDF."
+    "einvoiceUnavailableBody": "La exportación de factura electrónica estructurada para este país todavía no está lista. Puedes enviar el PDF.",
+    "einvoiceMissingTitle": "Faltan algunos datos",
+    "einvoiceMissingBody": "Este formato necesita algunos datos más antes de poder enviarse:",
+    "einvoiceFixProfile": "Abrir perfil de empresa"
   },
   "expenses": {
     "title": "Gastos",
@@ -2219,7 +2222,14 @@
     "creditsAvailable_one": "{{count}} mes de suscripción gratis disponible — se aplica automáticamente al pagar.",
     "creditsAvailable_other": "{{count}} meses de suscripción gratis disponibles — se aplican automáticamente al pagar.",
     "exportFailedDesc": "No se pudo generar la exportación de tus datos. Inténtalo de nuevo o escribe a privacy@vascobuild.com.",
-    "auditTrailValueGobd": "Conforme a GoBD"
+    "auditTrailValueGobd": "Conforme a GoBD",
+    "province": "Provincia",
+    "fiscalRegime": "Régimen fiscal",
+    "personType": "Tipo de persona (física o jurídica)",
+    "vatNumberPartitaIva": "Partita IVA",
+    "vatNumberNif": "NIF / CIF",
+    "postcode": "Código postal",
+    "city": "Ciudad"
   },
   "search": {
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",
@@ -3286,7 +3296,13 @@
     "spent": "Gastado",
     "jobs": "Trabajos",
     "quotes": "Presupuestos",
-    "invoices": "Facturas"
+    "invoices": "Facturas",
+    "vatOrTaxId": "NIF/CIF o identificador fiscal",
+    "einvoiceRouting": "Dirección de factura electrónica (Codice Destinatario o PEC)",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "postcode": "Código postal",
+    "province": "Provincia"
   },
   "inbox": {
     "fromCustomer": "Del cliente",

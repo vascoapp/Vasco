@@ -866,7 +866,10 @@
     "statutoryInterestRate": "{{rate}}% statutory interest",
     "paidVia": "Paid via {{method}}",
     "einvoiceUnavailableTitle": "Not available yet",
-    "einvoiceUnavailableBody": "Structured e-invoice export for this country is not ready yet. You can still send the PDF."
+    "einvoiceUnavailableBody": "Structured e-invoice export for this country is not ready yet. You can still send the PDF.",
+    "einvoiceMissingTitle": "Some details are missing",
+    "einvoiceMissingBody": "This format needs a few more details before it can be sent:",
+    "einvoiceFixProfile": "Open business profile"
   },
   "expenses": {
     "title": "Expenses",
@@ -2219,7 +2222,14 @@
     "creditsAvailable_one": "{{count}} month of free subscription available — applied automatically at checkout.",
     "creditsAvailable_other": "{{count}} months of free subscription available — applied automatically at checkout.",
     "exportFailedDesc": "Could not build your data export. Please try again, or contact privacy@vascobuild.com.",
-    "auditTrailValueGobd": "GoBD-compliant"
+    "auditTrailValueGobd": "GoBD-compliant",
+    "province": "Province",
+    "fiscalRegime": "Tax regime",
+    "personType": "Person type (individual or company)",
+    "vatNumberPartitaIva": "Partita IVA",
+    "vatNumberNif": "NIF / CIF",
+    "postcode": "Post code",
+    "city": "City"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -3286,7 +3296,13 @@
     "spent": "Spent",
     "jobs": "Jobs",
     "quotes": "Quotes",
-    "invoices": "Invoices"
+    "invoices": "Invoices",
+    "vatOrTaxId": "VAT number or tax ID",
+    "einvoiceRouting": "E-invoice address (Codice Destinatario or PEC)",
+    "address": "Address",
+    "city": "City",
+    "postcode": "Post code",
+    "province": "Province"
   },
   "inbox": {
     "fromCustomer": "From customer",

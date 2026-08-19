@@ -24,6 +24,11 @@ export type BusinessSettingsRow = {
   country: string | null;
   postcode: string | null;
   city: string | null;
+  // Migration 20260819000011 — the seller's fiscal identity. FatturaPA needs
+  // RegimeFiscale and provincia; Facturae needs PersonTypeCode.
+  province: string | null;
+  fiscal_regime: string | null;
+  person_type: string | null;
   website: string | null;
   invoice_prefix: string | null;
   quote_prefix: string | null;

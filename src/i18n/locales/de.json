@@ -866,7 +866,10 @@
     "statutoryInterestRate": "{{rate}}% Verzugszinsen",
     "paidVia": "Bezahlt per {{method}}",
     "einvoiceUnavailableTitle": "Noch nicht verfügbar",
-    "einvoiceUnavailableBody": "Der strukturierte E-Rechnungsexport für dieses Land ist noch nicht fertig. Sie können weiterhin die PDF senden."
+    "einvoiceUnavailableBody": "Der strukturierte E-Rechnungsexport für dieses Land ist noch nicht fertig. Sie können weiterhin die PDF senden.",
+    "einvoiceMissingTitle": "Es fehlen noch Angaben",
+    "einvoiceMissingBody": "Für dieses Format werden noch einige Angaben benötigt:",
+    "einvoiceFixProfile": "Unternehmensprofil öffnen"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -2219,7 +2222,14 @@
     "creditsAvailable_one": "{{count}} Monat Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
     "creditsAvailable_other": "{{count}} Monate Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
     "exportFailedDesc": "Ihr Datenexport konnte nicht erstellt werden. Bitte versuchen Sie es erneut oder wenden Sie sich an privacy@vascobuild.com.",
-    "auditTrailValueGobd": "GoBD-konform"
+    "auditTrailValueGobd": "GoBD-konform",
+    "province": "Provinz",
+    "fiscalRegime": "Steuerregime",
+    "personType": "Rechtsform (Person oder Unternehmen)",
+    "vatNumberPartitaIva": "Partita IVA",
+    "vatNumberNif": "NIF / CIF",
+    "postcode": "PLZ",
+    "city": "Ort"
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
@@ -3286,7 +3296,13 @@
     "spent": "Ausgegeben",
     "jobs": "Aufträge",
     "quotes": "Angebote",
-    "invoices": "Rechnungen"
+    "invoices": "Rechnungen",
+    "vatOrTaxId": "USt-IdNr. oder Steuernummer",
+    "einvoiceRouting": "E-Rechnungsadresse (Codice Destinatario oder PEC)",
+    "address": "Adresse",
+    "city": "Ort",
+    "postcode": "PLZ",
+    "province": "Provinz"
   },
   "inbox": {
     "fromCustomer": "Vom Kunden",
