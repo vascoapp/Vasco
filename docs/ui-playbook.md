@@ -62,6 +62,12 @@ many exist, and reads as a filter rather than a choice.
 Afgerond) — where every option should be visible at once and more than one can
 be on. The test: *is the user choosing one thing?* → menu.
 
+**Giving a `DKMenu` a share of a flex row:** put the `flex` on a `View` around
+the menu, not on the anchor. `DKMenu` wraps `renderAnchor` in its own `View` to
+measure it, so `flex: 1` on the anchor applies inside that wrapper while the
+wrapper itself sizes to content. `npm run walk` cannot catch it —
+`react-test-renderer` does not lay out.
+
 `DKMenu` is deliberately a JS popover, not a native `UIMenu`: a native module
 would force a native rebuild and take fixes off the OTA channel, and `UIMenu`
 does not exist on Android.
@@ -140,6 +146,12 @@ npm run walk:prod                      # DEMO_MODE off — the shipping build
 "where does this go?" is half the work. Group by job-to-be-done, daily tools
 top-level, set-and-forget in settings, and gate locale-specific features at the
 entry point.
+
+**Check what a success message claims.** For every toast or alert saying
+something was created, sent or saved, trace the handler to the mutation. A
+`onSend={(quote) => setToast('sent to the customer')}` that never uses `quote`
+is the whole bug in one line, and every harness here is green on it
+(learnings #197).
 
 **Check who writes the store.** Grep the mutator (`addX`) across `app/` — zero
 call sites means the surface can only ever show fixtures.
