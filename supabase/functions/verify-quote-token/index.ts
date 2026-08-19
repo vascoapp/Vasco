@@ -168,6 +168,60 @@ Deno.serve(async (req) => {
       ? await admin.from('customers').select('name, email').eq('id', quote.customer_id).maybeSingle()
       : { data: null };
 
+    // ── An acceptance capability for the customer holding this link ──────
+    //
+    // The portal used to render the quote and then tell the reader to "open in
+    // Vasco to accept" — an app the contractor's CUSTOMER does not have. That
+    // was the honest handoff while nothing was wired; decide_acceptance_link
+    // exists now, so the seam is just a seam: the richer link (with line items)
+    // could not accept, and the link that could accept showed no line items.
+    //
+    // Look up before creating, so viewing a quote twice does not mint two
+    // bearer tokens. Only the holder of a VALID SIGNED token reaches this line,
+    // so handing them an acceptance token grants nothing they were not already
+    // meant to have — it is the same customer, the same quote.
+    //
+    // A quote already decided returns its token and status anyway: the page
+    // needs to say "already answered" rather than offer a button that will be
+    // refused.
+    let acceptance: { token: string; status: string } | null = null;
+    try {
+      const { data: existing } = await admin
+        .from('quote_acceptance_links')
+        .select('token, status, expires_at')
+        .eq('user_id', quote.user_id)
+        .eq('quote_id', quote.document_number)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        acceptance = { token: existing.token, status: existing.status };
+      } else if (quote.status !== 'paid') {
+        // 32 hex chars = 128 bits, the same floor the app's generator uses for
+        // a capability token.
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const token = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+        const { error: mintErr } = await admin.from('quote_acceptance_links').insert({
+          token,
+          user_id: quote.user_id,
+          quote_id: quote.document_number,
+          customer_id: quote.customer_id,
+          customer_name: customer?.name ?? null,
+          quote_amount: quote.total_amount,
+          // 90 days matches the quote-link validity the portal already tells
+          // the customer about.
+          expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+        if (!mintErr) acceptance = { token, status: 'pending' };
+      }
+    } catch (e) {
+      // The quote must still render. An acceptance token we could not mint
+      // means the page falls back to the app handoff, not an error screen.
+      console.error('verify-quote-token: acceptance link', e);
+    }
+
     return new Response(JSON.stringify({
       ok: true,
       quote: {
@@ -179,6 +233,7 @@ Deno.serve(async (req) => {
         customer,
         business: profile,
       },
+      acceptance,
     }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

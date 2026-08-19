@@ -157,6 +157,19 @@ are read by the contractor's **customer**, who does not have the app installed.
 - Every universal-link path claimed in `.well-known/apple-app-site-association`
   must have both an app route **and** a web fallback page here. A claim without
   a fallback is a 404 for everyone without the app — which is most people.
+- **One link, not two.** The quote portal (`/quote/[id]?t=`) and the acceptance
+  link (`/accept/[token]`) were two capabilities over the same decision: the
+  rich one showed line items and could not accept, the other could accept and
+  showed nothing. The contractor had to know to send the second. Both accept
+  now — `verify-quote-token` hands the holder of a valid signed link an
+  acceptance token, looked up before it is minted so viewing twice does not
+  create two.
+- **A customer decision has to reach the CONTRACTOR.** Accepting wrote to
+  `quote_acceptance_links`, and `getAcceptanceStatus()` — the only thing that
+  reads it from the contractor's side — has zero callers. The decision landed
+  in a table nobody opened. `decide_acceptance_link` now mirrors it onto
+  `documents.status`, which every contractor surface already reads. Adding a
+  read path would have been the second mistake.
 - **Never render a control that isn't wired.** A dead "Accept" button is worse
   than an honest "open in the app to accept" handoff.
   ⚠️ **But that rule expires the day the endpoint lands.** `/accept/[token]`

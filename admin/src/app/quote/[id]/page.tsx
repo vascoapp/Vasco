@@ -24,7 +24,7 @@
 'use client';
 
 import Image from 'next/image';
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
 
 // R191 TODO: shared placeholder with /accept/[token] and /auth/callback.
@@ -59,7 +59,7 @@ interface QuotePayload {
   } | null;
 }
 
-type Phase = 'loading' | 'ready' | 'invalid' | 'expired' | 'notoken' | 'unavailable';
+type Phase = 'loading' | 'ready' | 'confirming' | 'declining' | 'sending' | 'accepted' | 'rejected' | 'alreadyDecided' | 'invalid' | 'expired' | 'notoken' | 'unavailable';
 type Lang = 'nl' | 'en' | 'de' | 'fr' | 'es' | 'it';
 
 function pickLanguage(): Lang {
@@ -93,6 +93,7 @@ const LANG_LOCALE: Record<Lang, string> = {
 // customer. Playbook §5.
 const COPY: Record<Lang, Record<string, string>> = {
   en: {
+    accept: 'Accept quote', confirm: 'Yes — accept', cancel: 'Cancel', decline: 'Decline', declineTitle: 'Decline this quote', reasonLabel: 'Reason (optional)', reasonPlaceholder: 'Lets your contractor know why.', declineConfirm: 'Send decline', sending: 'Sending…', acceptedTitle: 'Accepted', acceptedBody: 'Your contractor has been notified and will be in touch to plan the work.', rejectedTitle: 'Declined', rejectedBody: 'Your contractor has been notified. You can still reach them directly if anything changes.', alreadyTitle: 'Already answered', alreadyBody: 'This quote has already been answered. Contact your contractor if that was not you.', failedTitle: 'That did not go through', failedBody: 'Nothing was sent. Please try again, or contact your contractor directly.', openAppSecondary: 'Open in the Vasco app',
     eyebrow: 'Your quote', quoteRef: 'Quote', total: 'Total',
     lines: 'What is included', qty: 'Qty', openApp: 'Open in Vasco to accept',
     noApp: 'New to Vasco?', loading: 'Loading your quote…',
@@ -103,6 +104,7 @@ const COPY: Record<Lang, Record<string, string>> = {
     privacy: 'Secure link from your contractor. No account needed.', footer: '© Vasco · vascobuild.com',
   },
   nl: {
+    accept: 'Offerte accepteren', confirm: 'Ja — accepteren', cancel: 'Annuleren', decline: 'Afwijzen', declineTitle: 'Deze offerte afwijzen', reasonLabel: 'Reden (optioneel)', reasonPlaceholder: 'Zo weet je vakman waarom.', declineConfirm: 'Afwijzing versturen', sending: 'Versturen…', acceptedTitle: 'Geaccepteerd', acceptedBody: 'Je vakman heeft bericht gekregen en neemt contact op om het werk in te plannen.', rejectedTitle: 'Afgewezen', rejectedBody: 'Je vakman heeft bericht gekregen. Je kunt hem altijd rechtstreeks bereiken als er iets verandert.', alreadyTitle: 'Al beantwoord', alreadyBody: 'Deze offerte is al beantwoord. Neem contact op met je vakman als jij dat niet was.', failedTitle: 'Dat is niet gelukt', failedBody: 'Er is niets verstuurd. Probeer het opnieuw of neem rechtstreeks contact op met je vakman.', openAppSecondary: 'Openen in de Vasco-app',
     eyebrow: 'Je offerte', quoteRef: 'Offerte', total: 'Totaal',
     lines: 'Wat is inbegrepen', qty: 'Aantal', openApp: 'Open in Vasco om te accepteren',
     noApp: 'Nieuw bij Vasco?', loading: 'Je offerte wordt geladen…',
@@ -113,6 +115,7 @@ const COPY: Record<Lang, Record<string, string>> = {
     privacy: 'Veilige link van je vakman. Geen account nodig.', footer: '© Vasco · vascobuild.com',
   },
   de: {
+    accept: 'Angebot annehmen', confirm: 'Ja — annehmen', cancel: 'Abbrechen', decline: 'Ablehnen', declineTitle: 'Dieses Angebot ablehnen', reasonLabel: 'Begründung (optional)', reasonPlaceholder: 'So weiß Ihr Handwerksbetrieb, woran es lag.', declineConfirm: 'Ablehnung senden', sending: 'Wird gesendet…', acceptedTitle: 'Angenommen', acceptedBody: 'Ihr Handwerksbetrieb wurde benachrichtigt und meldet sich zur Terminplanung.', rejectedTitle: 'Abgelehnt', rejectedBody: 'Ihr Handwerksbetrieb wurde benachrichtigt. Sie können ihn jederzeit direkt erreichen.', alreadyTitle: 'Bereits beantwortet', alreadyBody: 'Dieses Angebot wurde bereits beantwortet. Melden Sie sich bei Ihrem Handwerksbetrieb, falls Sie das nicht waren.', failedTitle: 'Das hat nicht geklappt', failedBody: 'Es wurde nichts gesendet. Bitte versuchen Sie es erneut oder wenden Sie sich direkt an Ihren Handwerksbetrieb.', openAppSecondary: 'In der Vasco-App öffnen',
     eyebrow: 'Ihr Angebot', quoteRef: 'Angebot', total: 'Gesamt',
     lines: 'Enthaltene Leistungen', qty: 'Menge', openApp: 'In Vasco öffnen und annehmen',
     noApp: 'Neu bei Vasco?', loading: 'Ihr Angebot wird geladen…',
@@ -123,6 +126,7 @@ const COPY: Record<Lang, Record<string, string>> = {
     privacy: 'Sicherer Link Ihres Handwerksbetriebs. Kein Konto erforderlich.', footer: '© Vasco · vascobuild.com',
   },
   fr: {
+    accept: 'Accepter le devis', confirm: 'Oui — accepter', cancel: 'Annuler', decline: 'Refuser', declineTitle: 'Refuser ce devis', reasonLabel: 'Motif (facultatif)', reasonPlaceholder: 'Votre artisan saura pourquoi.', declineConfirm: 'Envoyer le refus', sending: 'Envoi…', acceptedTitle: 'Accepté', acceptedBody: 'Votre artisan a été prévenu et vous contactera pour planifier les travaux.', rejectedTitle: 'Refusé', rejectedBody: 'Votre artisan a été prévenu. Vous pouvez le joindre directement si les choses changent.', alreadyTitle: 'Déjà répondu', alreadyBody: "Ce devis a déjà reçu une réponse. Contactez votre artisan si ce n'était pas vous.", failedTitle: "Cela n'a pas fonctionné", failedBody: "Rien n'a été envoyé. Réessayez ou contactez directement votre artisan.", openAppSecondary: "Ouvrir dans l'app Vasco",
     eyebrow: 'Votre devis', quoteRef: 'Devis', total: 'Total',
     lines: 'Prestations incluses', qty: 'Qté', openApp: 'Ouvrir dans Vasco pour accepter',
     noApp: 'Nouveau sur Vasco ?', loading: 'Chargement de votre devis…',
@@ -133,6 +137,7 @@ const COPY: Record<Lang, Record<string, string>> = {
     privacy: 'Lien sécurisé de votre artisan. Aucun compte nécessaire.', footer: '© Vasco · vascobuild.com',
   },
   es: {
+    accept: 'Aceptar presupuesto', confirm: 'Sí — aceptar', cancel: 'Cancelar', decline: 'Rechazar', declineTitle: 'Rechazar este presupuesto', reasonLabel: 'Motivo (opcional)', reasonPlaceholder: 'Así tu profesional sabrá por qué.', declineConfirm: 'Enviar rechazo', sending: 'Enviando…', acceptedTitle: 'Aceptado', acceptedBody: 'Tu profesional ha sido avisado y se pondrá en contacto para planificar el trabajo.', rejectedTitle: 'Rechazado', rejectedBody: 'Tu profesional ha sido avisado. Puedes contactarle directamente si algo cambia.', alreadyTitle: 'Ya respondido', alreadyBody: 'Este presupuesto ya tiene respuesta. Contacta con tu profesional si no fuiste tú.', failedTitle: 'No se ha podido enviar', failedBody: 'No se envió nada. Inténtalo de nuevo o contacta directamente con tu profesional.', openAppSecondary: 'Abrir en la app Vasco',
     eyebrow: 'Tu presupuesto', quoteRef: 'Presupuesto', total: 'Total',
     lines: 'Qué incluye', qty: 'Cant.', openApp: 'Abrir en Vasco para aceptar',
     noApp: '¿Nuevo en Vasco?', loading: 'Cargando tu presupuesto…',
@@ -143,6 +148,7 @@ const COPY: Record<Lang, Record<string, string>> = {
     privacy: 'Enlace seguro de tu profesional. No se necesita cuenta.', footer: '© Vasco · vascobuild.com',
   },
   it: {
+    accept: 'Accetta il preventivo', confirm: 'Sì — accetta', cancel: 'Annulla', decline: 'Rifiuta', declineTitle: 'Rifiuta questo preventivo', reasonLabel: 'Motivo (facoltativo)', reasonPlaceholder: 'Così il tuo tecnico sa perché.', declineConfirm: 'Invia il rifiuto', sending: 'Invio…', acceptedTitle: 'Accettato', acceptedBody: 'Il tuo tecnico è stato avvisato e ti contatterà per pianificare i lavori.', rejectedTitle: 'Rifiutato', rejectedBody: 'Il tuo tecnico è stato avvisato. Puoi contattarlo direttamente se qualcosa cambia.', alreadyTitle: 'Già risposto', alreadyBody: 'A questo preventivo è già stata data una risposta. Contatta il tuo tecnico se non sei stato tu.', failedTitle: 'Non è andata a buon fine', failedBody: 'Non è stato inviato nulla. Riprova o contatta direttamente il tuo tecnico.', openAppSecondary: "Apri nell'app Vasco",
     eyebrow: 'Il tuo preventivo', quoteRef: 'Preventivo', total: 'Totale',
     lines: 'Che cosa include', qty: 'Qtà', openApp: 'Apri in Vasco per accettare',
     noApp: 'Nuovo su Vasco?', loading: 'Caricamento del preventivo…',
@@ -159,6 +165,13 @@ export default function PublicQuotePortal({ params }: PageProps) {
   const quoteId = (rawId || '').trim();
 
   const [phase, setPhase] = useState<Phase>('loading');
+  // The acceptance capability minted by verify-quote-token for whoever holds
+  // this signed link. Null when the quote is already paid, or when minting
+  // failed — in which case the page falls back to the app handoff rather than
+  // showing a button that cannot work.
+  const [acceptance, setAcceptance] = useState<{ token: string; status: string } | null>(null);
+  const [reason, setReason] = useState('');
+  const [sendFailed, setSendFailed] = useState(false);
   const [quote, setQuote] = useState<QuotePayload | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [lang, setLang] = useState<Lang>('en');
@@ -215,7 +228,12 @@ export default function PublicQuotePortal({ params }: PageProps) {
           return;
         }
         setQuote(data.quote as QuotePayload);
-        setPhase('ready');
+        const acc = (data as { acceptance?: { token: string; status: string } }).acceptance ?? null;
+        setAcceptance(acc);
+        // Order matters: "already answered" beats the accept buttons, so a
+        // customer who decided last week is told so rather than offered a
+        // control the server will refuse.
+        setPhase(acc && acc.status !== 'pending' ? 'alreadyDecided' : 'ready');
       } catch {
         if (!cancelled) setPhase('unavailable');
       }
@@ -230,6 +248,36 @@ export default function PublicQuotePortal({ params }: PageProps) {
     () => new Intl.NumberFormat(LANG_LOCALE[lang], { style: 'currency', currency }),
     [lang, currency],
   );
+
+  /**
+   * Same two RPCs /accept/[token] uses, so there is one acceptance mechanism
+   * rather than two that can disagree. `decide_acceptance_link` also mirrors
+   * the decision onto documents.status (migration 20260819000012) — without
+   * that the contractor never learns, because nothing reads the link table.
+   */
+  const decide = useCallback(async (decision: 'accepted' | 'rejected') => {
+    if (!acceptance) return;
+    const supabase = getSupabase();
+    if (!supabase) { setPhase('unavailable'); return; }
+    setSendFailed(false);
+    setPhase('sending');
+    try {
+      const { data, error } = await supabase.rpc('decide_acceptance_link', {
+        p_token: acceptance.token,
+        p_decision: decision,
+        p_reason: decision === 'rejected' ? (reason.trim() || null) : null,
+      });
+      if (error) { setSendFailed(true); setPhase('ready'); return; }
+      // NULL means the server refused — answered in the meantime, or expired
+      // between load and tap. A different outcome, not an error, and the
+      // customer is owed the real one.
+      if (!data) { setPhase('alreadyDecided'); return; }
+      setPhase(decision === 'accepted' ? 'accepted' : 'rejected');
+    } catch {
+      setSendFailed(true);
+      setPhase('ready');
+    }
+  }, [acceptance, reason]);
 
   const lines = useMemo(
     () => [...(quote?.lines ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
@@ -288,7 +336,11 @@ export default function PublicQuotePortal({ params }: PageProps) {
             <Problem title={copy[`${phase}Title`]} body={copy[`${phase}Body`]} footer={copy.footer} />
           )}
 
-          {phase === 'ready' && quote && (
+          {phase === 'accepted' && <Problem title={copy.acceptedTitle} body={copy.acceptedBody} footer={copy.footer} />}
+          {phase === 'rejected' && <Problem title={copy.rejectedTitle} body={copy.rejectedBody} footer={copy.footer} />}
+          {phase === 'alreadyDecided' && <Problem title={copy.alreadyTitle} body={copy.alreadyBody} footer={copy.footer} />}
+
+          {(phase === 'ready' || phase === 'confirming' || phase === 'declining' || phase === 'sending') && quote && (
             <>
               <p
                 className="vb-fade vb-fade-2"
@@ -371,13 +423,71 @@ export default function PublicQuotePortal({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Accepting happens in the app. There is deliberately NO accept
-                  button here: this page has no wired accept endpoint, and a
-                  control that looks live and does nothing is worse than an
-                  honest handoff. Playbook §8. */}
+              {/* This block used to be a single "Open in Vasco to accept"
+                  button, correctly, because no accept endpoint existed. One
+                  does now — so the seam it left is gone: the RICH link (with
+                  line items) could not accept, and the link that could accept
+                  showed no line items, and the contractor had to know to send
+                  the second one.
+
+                  Same two-tap confirm as /accept/[token], for the same reason:
+                  a thumb landing on a CTA in a chat app must not commit
+                  someone to several thousand euros. Playbook §8. */}
+              {acceptance && (phase === 'ready' || phase === 'confirming' || phase === 'declining' || phase === 'sending') && (
+                <div className="vb-fade vb-fade-3" style={{ marginBottom: 26 }}>
+                  {sendFailed && (
+                    <div role="alert" style={{ background: '#1C2128', border: '1px solid rgba(239,68,68,0.5)', borderRadius: 14, padding: '14px 16px', marginBottom: 14 }}>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: 14 }}>{copy.failedTitle}</p>
+                      <p style={{ margin: '6px 0 0', color: '#9CA3AF', fontSize: 13, lineHeight: 1.55 }}>{copy.failedBody}</p>
+                    </div>
+                  )}
+
+                  {phase === 'ready' && (
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      <button className="vb-cta" style={ctaStyle} onClick={() => setPhase('confirming')}>{copy.accept}</button>
+                      <button className="vb-ghost" style={ghostStyle} onClick={() => setPhase('declining')}>{copy.decline}</button>
+                    </div>
+                  )}
+
+                  {phase === 'confirming' && (
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      <button className="vb-cta" style={ctaStyle} onClick={() => decide('accepted')}>
+                        {quote.total != null ? `${copy.confirm} · ${money.format(quote.total)}` : copy.confirm}
+                      </button>
+                      <button className="vb-ghost" style={ghostStyle} onClick={() => setPhase('ready')}>{copy.cancel}</button>
+                    </div>
+                  )}
+
+                  {phase === 'declining' && (
+                    <div style={{ display: 'grid', gap: 12, background: '#1C2128', border: '1px solid #2A3038', borderRadius: 18, padding: '18px 20px' }}>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>{copy.declineTitle}</p>
+                      <label style={{ fontSize: 12, color: '#9CA3AF' }}>
+                        {copy.reasonLabel}
+                        <textarea
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          placeholder={copy.reasonPlaceholder}
+                          rows={3}
+                          maxLength={2000}
+                          style={{ display: 'block', width: '100%', marginTop: 8, resize: 'vertical', background: '#0B0E11', color: '#fff', border: '1px solid #2A3038', borderRadius: 10, padding: '11px 12px', fontSize: 15, fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
+                        />
+                      </label>
+                      <button className="vb-cta" style={{ ...ctaStyle, background: '#7F1D1D', boxShadow: 'none' }} onClick={() => decide('rejected')}>{copy.declineConfirm}</button>
+                      <button className="vb-ghost" style={ghostStyle} onClick={() => { setReason(''); setPhase('ready'); }}>{copy.cancel}</button>
+                    </div>
+                  )}
+
+                  {phase === 'sending' && (
+                    <button className="vb-cta" style={ctaStyle} disabled>{copy.sending}</button>
+                  )}
+                </div>
+              )}
+
+              {/* The app stays available as a SECONDARY path — and is the only
+                  one when no acceptance capability could be minted. */}
               <div className="vb-fade vb-fade-3" style={{ textAlign: 'center' }}>
-                <button onClick={() => { window.location.href = deepLink; }} className="vb-cta" style={ctaStyle}>
-                  {copy.openApp}
+                <button onClick={() => { window.location.href = deepLink; }} className={acceptance ? 'vb-ghost' : 'vb-cta'} style={acceptance ? ghostStyle : ctaStyle}>
+                  {acceptance ? copy.openAppSecondary : copy.openApp}
                 </button>
                 <p style={{ fontSize: 12, color: '#6B7280', margin: '20px auto 0', maxWidth: 380, lineHeight: 1.55 }}>
                   {copy.privacy}
@@ -434,6 +544,20 @@ function Problem({ title, body, footer }: { title: string; body: string; footer:
     </div>
   );
 }
+
+const ghostStyle = {
+  display: 'block' as const,
+  width: '100%',
+  cursor: 'pointer' as const,
+  background: 'transparent',
+  border: '1px solid #2A3038',
+  color: '#9CA3AF',
+  fontFamily: 'var(--font-inter), sans-serif',
+  fontWeight: 600 as const,
+  fontSize: 14,
+  padding: '14px 20px',
+  borderRadius: 16,
+};
 
 const ctaStyle = {
   display: 'inline-flex' as const,
