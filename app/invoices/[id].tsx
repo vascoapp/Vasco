@@ -502,8 +502,23 @@ export default function InvoiceDetailScreen() {
       sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
       sellerAddress: (businessProfile as any)?.address ?? '',
       sellerVatId: businessProfile?.vatNumber ?? '',
+      // XRechnung needs all of these and the generator can only emit what it
+      // is given. BR-DE-5/6/7 (contact) and BR-DE-8/9 (address detail) are
+      // rejections at the buyer's gateway, not warnings — see
+      // src/integrations/einvoice.ts. checkInvoiceReadiness now requires them
+      // for DE so the contractor is asked before they export, not after the
+      // invoice bounces.
+      sellerCity: (businessProfile as any)?.city,
+      sellerPostalCode: (businessProfile as any)?.postcode,
+      sellerCountry: country,
+      sellerContactName: (businessProfile as any)?.businessName,
+      sellerPhone: (businessProfile as any)?.phone,
+      sellerEmail: (businessProfile as any)?.email,
       buyerName: invoice.customer ?? '',
       buyerAddress: (invoice as any).customerAddress ?? '',
+      buyerCity: (invoice as any).customerCity,
+      buyerPostalCode: (invoice as any).customerPostcode,
+      buyerCountry: country,
       buyerVatId: (invoice as any).customerVatId,
       invoiceNumber: (invoice as any).reference ?? invoice.id,
       invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),

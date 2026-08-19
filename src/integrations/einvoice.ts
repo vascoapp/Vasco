@@ -17,12 +17,30 @@ export interface EInvoiceData {
   sellerAddress: string;
   sellerVatId: string; // DE123456789
   sellerTaxNumber?: string;
+  /** BT-37/BT-38. XRechnung BR-DE rules make city and post code mandatory. */
+  sellerCity?: string;
+  sellerPostalCode?: string;
+  /** ISO 3166-1 alpha-2. Was hardcoded 'DE' for both parties. */
+  sellerCountry?: string;
+  /** BG-6 seller contact. BR-DE-5/6/7 make all three mandatory in XRechnung. */
+  sellerContactName?: string;
+  sellerPhone?: string;
+  sellerEmail?: string;
 
   // Buyer
   buyerName: string;
   buyerAddress: string;
   buyerVatId?: string;
+  buyerCity?: string;
+  buyerPostalCode?: string;
+  buyerCountry?: string;
   leitwegId?: string; // For B2G (government) invoices
+  /**
+   * BT-10. XRechnung BR-DE-15 makes this mandatory on EVERY invoice, not just
+   * B2G — the Leitweg-ID is simply what a public buyer puts in it. A B2B
+   * invoice without any buyer reference is rejected.
+   */
+  buyerReference?: string;
 
   // Invoice
   invoiceNumber: string;
@@ -78,12 +96,45 @@ export const UNIT_CODES: Record<string, string> = {
 // Generate XRechnung XML (EN 16931 / UBL 2.1)
 // ---------------------------------------------------------------------------
 
+/**
+ * XRechnung 3.0 (UBL 2.1) — the German market's mandatory format.
+ *
+ * Rewritten 2026-08-19 after checking the output against the EN 16931 syntax
+ * binding and the BR-DE rules. The previous version was well-formed XML that a
+ * German buyer's system would reject, in five separate ways. Each is a real
+ * rule with a real error code, so they are listed here rather than fixed
+ * silently — this is the format the German go-to-market rests on:
+ *
+ *  1. BT-27/BT-44 (seller/buyer name) bind to
+ *     `cac:PartyLegalEntity/cbc:RegistrationName`. The old version emitted only
+ *     `cac:PartyName/cbc:Name`, which is BT-28/BT-45 — the OPTIONAL trading
+ *     name. The mandatory legal name was absent from every invoice.
+ *  2. BG-23 (VAT breakdown) was missing entirely: `cac:TaxTotal` carried a bare
+ *     `cbc:TaxAmount` and no `cac:TaxSubtotal`. Every invoice must carry one
+ *     subtotal per (category, rate) pair with its taxable and tax amount.
+ *  3. BR-DE-15: BT-10 BuyerReference is mandatory on EVERY XRechnung. The old
+ *     version emitted it only when a Leitweg-ID was present — i.e. only for
+ *     B2G — so every B2B invoice, which is the entire beachhead, was invalid.
+ *  4. BR-DE-5/6/7: seller contact name, telephone and email are mandatory.
+ *     None were emitted.
+ *  5. The country code was hardcoded `DE` for both parties, so a Dutch
+ *     contractor invoicing a German customer declared itself German.
+ *
+ * ⚠️ Passing our own validator is not conformance. KoSIT's is authoritative;
+ * ours is a partial structural + arithmetic check, and it PASSED all five of
+ * the above (its BR-06 matched the trading name). See
+ * src/integrations/__tests__/xrechnungValidity.test.ts.
+ */
 export function generateXRechnungXML(data: EInvoiceData): string {
+  const cur = data.currency;
+  const sellerCountry = data.sellerCountry ?? 'DE';
+  const buyerCountry = data.buyerCountry ?? sellerCountry;
+
   const lines = data.lineItems.map((li, idx) => `
     <cac:InvoiceLine>
       <cbc:ID>${idx + 1}</cbc:ID>
       <cbc:InvoicedQuantity unitCode="${UNIT_CODES[li.unitCode.toLowerCase()] ?? 'C62'}">${li.quantity}</cbc:InvoicedQuantity>
-      <cbc:LineExtensionAmount currencyID="${data.currency}">${li.lineTotal.toFixed(2)}</cbc:LineExtensionAmount>
+      <cbc:LineExtensionAmount currencyID="${cur}">${li.lineTotal.toFixed(2)}</cbc:LineExtensionAmount>
       <cac:Item>
         <cbc:Name>${escapeXml(li.description)}</cbc:Name>
         <cac:ClassifiedTaxCategory>
@@ -93,9 +144,44 @@ export function generateXRechnungXML(data: EInvoiceData): string {
         </cac:ClassifiedTaxCategory>
       </cac:Item>
       <cac:Price>
-        <cbc:PriceAmount currencyID="${data.currency}">${li.unitPrice.toFixed(2)}</cbc:PriceAmount>
+        <cbc:PriceAmount currencyID="${cur}">${li.unitPrice.toFixed(2)}</cbc:PriceAmount>
       </cac:Price>
     </cac:InvoiceLine>`).join('');
+
+  // BG-23 — one breakdown per distinct VAT rate, since that is what the rule
+  // is keyed on. Summing the lines rather than reusing data.totalVat: a single
+  // stated total cannot be split back out per rate, and an invoice mixing 19%
+  // and 7% (materials vs. some reduced-rate work) is ordinary.
+  const byRate = new Map<number, { net: number; vat: number }>();
+  for (const li of data.lineItems) {
+    const acc = byRate.get(li.vatRate) ?? { net: 0, vat: 0 };
+    acc.net += li.lineTotal;
+    acc.vat += li.lineTotal * (li.vatRate / 100);
+    byRate.set(li.vatRate, acc);
+  }
+  const subtotals = [...byRate.entries()].map(([rate, a]) => `
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="${cur}">${a.net.toFixed(2)}</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="${cur}">${a.vat.toFixed(2)}</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:ID>S</cbc:ID>
+        <cbc:Percent>${rate}</cbc:Percent>
+        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>`).join('');
+
+  // BR-DE-15. A B2B invoice has no Leitweg-ID, and an empty BT-10 is as
+  // invalid as an absent one, so it falls back to the invoice number — a
+  // reference the buyer can actually match, not a placeholder.
+  const buyerRef = data.leitwegId ?? data.buyerReference ?? data.invoiceNumber;
+
+  const addr = (street: string, city: string | undefined, zip: string | undefined, country: string) => `
+        <cac:PostalAddress>
+          <cbc:StreetName>${escapeXml(street)}</cbc:StreetName>${city ? `
+          <cbc:CityName>${escapeXml(city)}</cbc:CityName>` : ''}${zip ? `
+          <cbc:PostalZone>${escapeXml(zip)}</cbc:PostalZone>` : ''}
+          <cac:Country><cbc:IdentificationCode>${escapeXml(country)}</cbc:IdentificationCode></cac:Country>
+        </cac:PostalAddress>`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
@@ -106,30 +192,36 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   <cbc:IssueDate>${data.invoiceDate}</cbc:IssueDate>
   <cbc:DueDate>${data.dueDate}</cbc:DueDate>
   <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
-  <cbc:DocumentCurrencyCode>${data.currency}</cbc:DocumentCurrencyCode>
-  ${data.leitwegId ? `<cbc:BuyerReference>${escapeXml(data.leitwegId)}</cbc:BuyerReference>` : ''}
+  <cbc:DocumentCurrencyCode>${cur}</cbc:DocumentCurrencyCode>
+  <cbc:BuyerReference>${escapeXml(buyerRef)}</cbc:BuyerReference>
   <cac:AccountingSupplierParty>
     <cac:Party>
-      <cac:PartyName><cbc:Name>${escapeXml(data.sellerName)}</cbc:Name></cac:PartyName>
-      <cac:PostalAddress><cbc:StreetName>${escapeXml(data.sellerAddress)}</cbc:StreetName><cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
+      <cac:PartyName><cbc:Name>${escapeXml(data.sellerName)}</cbc:Name></cac:PartyName>${addr(data.sellerAddress, data.sellerCity, data.sellerPostalCode, sellerCountry)}
       <cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(data.sellerVatId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>
+      <cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(data.sellerName)}</cbc:RegistrationName></cac:PartyLegalEntity>
+      <cac:Contact>
+        <cbc:Name>${escapeXml(data.sellerContactName ?? data.sellerName)}</cbc:Name>${data.sellerPhone ? `
+        <cbc:Telephone>${escapeXml(data.sellerPhone)}</cbc:Telephone>` : ''}${data.sellerEmail ? `
+        <cbc:ElectronicMail>${escapeXml(data.sellerEmail)}</cbc:ElectronicMail>` : ''}
+      </cac:Contact>
     </cac:Party>
   </cac:AccountingSupplierParty>
   <cac:AccountingCustomerParty>
     <cac:Party>
-      <cac:PartyName><cbc:Name>${escapeXml(data.buyerName)}</cbc:Name></cac:PartyName>
-      <cac:PostalAddress><cbc:StreetName>${escapeXml(data.buyerAddress)}</cbc:StreetName><cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
+      <cac:PartyName><cbc:Name>${escapeXml(data.buyerName)}</cbc:Name></cac:PartyName>${addr(data.buyerAddress, data.buyerCity, data.buyerPostalCode, buyerCountry)}${data.buyerVatId ? `
+      <cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(data.buyerVatId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>` : ''}
+      <cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(data.buyerName)}</cbc:RegistrationName></cac:PartyLegalEntity>
     </cac:Party>
   </cac:AccountingCustomerParty>
-  ${data.iban ? `<cac:PaymentMeans><cbc:PaymentMeansCode>58</cbc:PaymentMeansCode><cac:PayeeFinancialAccount><cbc:ID>${data.iban}</cbc:ID></cac:PayeeFinancialAccount></cac:PaymentMeans>` : ''}
+  ${data.iban ? `<cac:PaymentMeans><cbc:PaymentMeansCode>58</cbc:PaymentMeansCode><cac:PayeeFinancialAccount><cbc:ID>${escapeXml(data.iban)}</cbc:ID></cac:PayeeFinancialAccount></cac:PaymentMeans>` : ''}
   <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="${data.currency}">${data.totalVat.toFixed(2)}</cbc:TaxAmount>
+    <cbc:TaxAmount currencyID="${cur}">${data.totalVat.toFixed(2)}</cbc:TaxAmount>${subtotals}
   </cac:TaxTotal>
   <cac:LegalMonetaryTotal>
-    <cbc:LineExtensionAmount currencyID="${data.currency}">${data.totalNet.toFixed(2)}</cbc:LineExtensionAmount>
-    <cbc:TaxExclusiveAmount currencyID="${data.currency}">${data.totalNet.toFixed(2)}</cbc:TaxExclusiveAmount>
-    <cbc:TaxInclusiveAmount currencyID="${data.currency}">${data.totalGross.toFixed(2)}</cbc:TaxInclusiveAmount>
-    <cbc:PayableAmount currencyID="${data.currency}">${data.totalGross.toFixed(2)}</cbc:PayableAmount>
+    <cbc:LineExtensionAmount currencyID="${cur}">${data.totalNet.toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="${cur}">${data.totalNet.toFixed(2)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="${cur}">${data.totalGross.toFixed(2)}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="${cur}">${data.totalGross.toFixed(2)}</cbc:PayableAmount>
   </cac:LegalMonetaryTotal>
   ${lines}
 </Invoice>`;

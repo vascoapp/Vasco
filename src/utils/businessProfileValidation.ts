@@ -47,10 +47,24 @@ export function getRequiredFields(country: Country | undefined): Array<{ key: st
         { key: 'profile.vatNumberBtw',    label: 'BTW number',           get: (p) => p.vatNumber },
       ];
     case 'DE':
+      // Phone, email, city and post code are required HERE and not elsewhere
+      // because XRechnung demands them and Germany is the only market where a
+      // structured e-invoice is already the norm: BR-DE-5/6/7 make the seller
+      // contact name, telephone and email mandatory (BT-41/42/43), and
+      // BR-DE-8/9 the address detail.
+      //
+      // Without this gate a German contractor completes their profile, exports
+      // an XRechnung, and it is rejected at the buyer's gateway for a field the
+      // app never asked them for. The rejection arrives days later, from a
+      // system they cannot see, phrased as "BR-DE-6".
       return [
         ...base,
         { key: 'profile.registrationHrb', label: 'HRB number',           get: (p) => p.registrationNumber ?? p.kvkNumber },
         { key: 'profile.vatNumberUst',    label: 'USt-IdNr',             get: (p) => p.vatNumber },
+        { key: 'profile.city',            label: 'City',                 get: (p) => p.city },
+        { key: 'profile.postcode',        label: 'Post code',            get: (p) => p.postcode },
+        { key: 'profile.phone',           label: 'Phone',                get: (p) => p.phone },
+        { key: 'profile.email',           label: 'Email',                get: (p) => p.email },
       ];
     case 'FR':
       return [

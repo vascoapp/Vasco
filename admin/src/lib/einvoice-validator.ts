@@ -168,8 +168,25 @@ export function validateEInvoice(doc: Document): ValidationResult {
   const supplier = all(doc, UBL_CAC, "AccountingSupplierParty")[0];
   const customer = all(doc, UBL_CAC, "AccountingCustomerParty")[0];
 
-  req("BR-06", "Seller name", supplier ? text(supplier, UBL_CBC, "Name") : null);
-  req("BR-07", "Buyer name", customer ? text(customer, UBL_CBC, "Name") : null);
+  // BT-27 / BT-44 bind to cac:PartyLegalEntity/cbc:RegistrationName, NOT to
+  // cac:PartyName/cbc:Name — that is BT-28/BT-45, the OPTIONAL trading name.
+  //
+  // These two used to read `text(supplier, "Name")`, a whole-subtree search
+  // that matches the trading name, so an invoice missing the mandatory legal
+  // name passed. Exactly the `cbc:ID`-matched-a-line's-ID bug this file already
+  // documents above, in a second field — the fix had been applied to
+  // document-level IDs and not to names.
+  //
+  // It was not hypothetical: our own XRechnung generator emitted only
+  // PartyName and this validator passed it, on the format the German
+  // go-to-market depends on.
+  const legalName = (party: Element | undefined) => {
+    if (!party) return null;
+    const entity = all(party, UBL_CAC, "PartyLegalEntity")[0];
+    return entity ? text(entity, UBL_CBC, "RegistrationName") : null;
+  };
+  req("BR-06", "Seller name (PartyLegalEntity/RegistrationName)", legalName(supplier));
+  req("BR-07", "Buyer name (PartyLegalEntity/RegistrationName)", legalName(customer));
 
   const supplierCountry = supplier
     ? all(supplier, UBL_CAC, "Country").map((c) => text(c, UBL_CBC, "IdentificationCode"))[0] ?? null
@@ -179,6 +196,43 @@ export function validateEInvoice(doc: Document): ValidationResult {
     : null;
   req("BR-09", "Seller country code", supplierCountry);
   req("BR-11", "Buyer country code", customerCountry);
+
+  // ── VAT breakdown (BG-23) ───────────────────────────────────────────────
+  // Every invoice needs at least one breakdown, one per (category, rate) pair,
+  // each carrying its taxable amount and tax amount. A bare cac:TaxTotal with
+  // only cbc:TaxAmount states a total nobody can check — and it is what our own
+  // generator produced until 2026-08-19, so this is a rule with a body count.
+  const taxTotalEls = all(doc, UBL_CAC, "TaxTotal");
+  const subtotals = taxTotalEls.flatMap((t) => all(t, UBL_CAC, "TaxSubtotal"));
+  if (subtotals.length === 0) {
+    findings.push({
+      rule: "BR-45", severity: "error",
+      message: "No VAT breakdown (BG-23). TaxTotal states a total but never breaks it down.",
+      hint: "Add a cac:TaxSubtotal per VAT rate, each with cbc:TaxableAmount, cbc:TaxAmount and a cac:TaxCategory (ID, Percent, TaxScheme).",
+    });
+  } else {
+    passed.push(`BR-45 — ${subtotals.length} VAT breakdown${subtotals.length === 1 ? "" : "s"}`);
+    subtotals.forEach((st, i) => {
+      const label = subtotals.length === 1 ? "" : ` (breakdown ${i + 1})`;
+      req(`BR-46${label}`, `VAT category taxable amount${label}`, childText(st, UBL_CBC, "TaxableAmount"));
+      req(`BR-47${label}`, `VAT category tax amount${label}`, childText(st, UBL_CBC, "TaxAmount"));
+      const cat = all(st, UBL_CAC, "TaxCategory")[0];
+      req(`BR-48${label}`, `VAT category code${label}`, cat ? childText(cat, UBL_CBC, "ID") : null);
+    });
+  }
+
+  // ── XRechnung-only rules (BR-DE-*) ──────────────────────────────────────
+  // Only applied when the document declares XRechnung. A plain EN 16931 or
+  // Peppol invoice is not wrong for lacking these, and flagging it would be
+  // the validator inventing a rule — the mirror of inventing compliance.
+  if ((customization ?? "").includes("xrechnung")) {
+    req("BR-DE-15", "Buyer reference (BT-10)", childText(root, UBL_CBC, "BuyerReference"),
+      "XRechnung makes BT-10 mandatory on EVERY invoice, not only B2G. For a public buyer it is the Leitweg-ID; for B2B it is any reference the buyer can match. Missing BT-10 is the single most common XRechnung rejection.");
+    const contact = supplier ? all(supplier, UBL_CAC, "Contact")[0] : undefined;
+    req("BR-DE-5", "Seller contact point (BT-41)", contact ? text(contact, UBL_CBC, "Name") : null);
+    req("BR-DE-6", "Seller contact telephone (BT-42)", contact ? text(contact, UBL_CBC, "Telephone") : null);
+    req("BR-DE-7", "Seller contact email (BT-43)", contact ? text(contact, UBL_CBC, "ElectronicMail") : null);
+  }
 
   // ── Lines ───────────────────────────────────────────────────────────────
   const lines = all(doc, UBL_CAC, "InvoiceLine");
