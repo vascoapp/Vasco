@@ -4566,7 +4566,10 @@
     "addCustomer": "Añadir cliente",
     "missingName": "Falta el nombre",
     "missingNameBody": "Introduce un nombre de cliente.",
-    "saveFailed": "No se pudo guardar el cliente."
+    "saveFailed": "No se pudo guardar el cliente.",
+    "fieldPostcode": "Código postal",
+    "fieldCity": "Ciudad",
+    "fieldVatId": "NIF/CIF (clientes empresa)"
   },
   "aiChat": {
     "welcome": "¡Hola! Soy tu asistente de oficina. Pídeme que facture a un cliente, programe un trabajo o revise tus números.",

@@ -202,7 +202,9 @@ export async function listCustomers() {
   return data ?? [];
 }
 
-export async function createCustomer(customer: { name: string; email?: string; phone?: string; address?: string }) {
+export async function createCustomer(customer: { name: string; email?: string; phone?: string; address?: string;
+    city?: string; postcode?: string; country?: string; province?: string;
+    vat_id?: string; tax_id?: string; einvoice_routing?: string; einvoice_email?: string }) {
   const userId = await getUserId();
   const { data, error } = await supabase
     .from('customers')
@@ -214,7 +216,9 @@ export async function createCustomer(customer: { name: string; email?: string; p
   return data;
 }
 
-export async function updateCustomer(id: string, updates: { name?: string; email?: string; phone?: string; address?: string }) {
+export async function updateCustomer(id: string, updates: { name?: string; email?: string; phone?: string; address?: string;
+    city?: string; postcode?: string; country?: string; province?: string;
+    vat_id?: string; tax_id?: string; einvoice_routing?: string; einvoice_email?: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('customers') as any)
     .update(updates)

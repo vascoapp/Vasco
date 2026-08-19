@@ -4566,7 +4566,10 @@
     "addCustomer": "Aggiungi cliente",
     "missingName": "Nome mancante",
     "missingNameBody": "Inserisci un nome cliente.",
-    "saveFailed": "Impossibile salvare il cliente."
+    "saveFailed": "Impossibile salvare il cliente.",
+    "fieldPostcode": "CAP",
+    "fieldCity": "Città",
+    "fieldVatId": "Partita IVA (clienti business)"
   },
   "aiChat": {
     "welcome": "Ciao! Sono il tuo assistente d'ufficio. Chiedimi di fatturare un cliente, pianificare un lavoro o controllare i tuoi numeri.",

@@ -157,6 +157,34 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
 
 // ── Customers ───────────────────────────────────────────────
 
+/**
+ * camelCase Customer patch -> customers row payload.
+ *
+ * Rule #8 step 4. Before the fiscal-address columns landed every Customer
+ * field happened to be spelled the same in both worlds (name, email, phone,
+ * address), so `updateCustomer` passed the patch straight through and nothing
+ * needed translating. `vatId` and `einvoiceRouting` break that: PostgREST
+ * rejects an unknown column and rejects the WHOLE statement with it, so one
+ * camelCase key would have silently killed every customer edit that touched it.
+ *
+ * Nullish-only (`!== undefined`), so a caller can clear a field with `null`
+ * but an absent key never overwrites. ⚠️ This is the #143 trap in reverse —
+ * check that a field the UI can CLEAR is sent as null, not omitted.
+ */
+export function customerUpdatesToRowPayload(updates: Partial<Customer>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const map: Array<[keyof Customer, string]> = [
+    ['name', 'name'], ['email', 'email'], ['phone', 'phone'], ['address', 'address'],
+    ['city', 'city'], ['postcode', 'postcode'], ['country', 'country'],
+    ['province', 'province'], ['vatId', 'vat_id'], ['taxId', 'tax_id'],
+    ['einvoiceRouting', 'einvoice_routing'], ['einvoiceEmail', 'einvoice_email'],
+  ];
+  for (const [from, to] of map) {
+    if (updates[from] !== undefined) out[to] = updates[from];
+  }
+  return out;
+}
+
 export function customerRowToCustomer(row: CustomerRow): Customer {
   return {
     id: row.id,
@@ -164,6 +192,17 @@ export function customerRowToCustomer(row: CustomerRow): Customer {
     email: row.email ?? undefined,
     phone: row.phone ?? undefined,
     address: row.address ?? undefined,
+    // Rule #8 step 5. Without these the buyer address on every structured
+    // invoice is a street line and nothing else — XRechnung BR-DE-8/9 require
+    // city and post code as separate elements.
+    city: row.city ?? undefined,
+    postcode: row.postcode ?? undefined,
+    country: row.country ?? undefined,
+    province: row.province ?? undefined,
+    vatId: row.vat_id ?? undefined,
+    taxId: row.tax_id ?? undefined,
+    einvoiceRouting: row.einvoice_routing ?? undefined,
+    einvoiceEmail: row.einvoice_email ?? undefined,
   };
 }
 

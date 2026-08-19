@@ -38,6 +38,13 @@ export default function CustomersScreen() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  // Post code and city are separate fields, not part of the address line,
+  // because every structured e-invoice needs them as separate elements —
+  // XRechnung BR-DE-8/9 require both outright, and a free-text line cannot be
+  // split back into them reliably across six markets.
+  const [postcode, setPostcode] = useState('');
+  const [city, setCity] = useState('');
+  const [vatId, setVatId] = useState('');
   const [saving, setSaving] = useState(false);
 
   const emailExample = country === 'US' ? 'info@example.com'
@@ -54,6 +61,26 @@ export default function CustomersScreen() {
     : country === 'ES' ? '+34 600 123 456'
     : country === 'IT' ? '+39 333 1234567'
     : '+31 6 12345678';
+  const postcodeExample = country === 'NL' ? '1012 AB'
+    : country === 'DE' ? '10115'
+    : country === 'FR' ? '75001'
+    : country === 'ES' ? '28001'
+    : country === 'IT' ? '20100'
+    : country === 'UK' ? 'SW1A 1AA'
+    : '78701';
+  const cityExample = country === 'DE' ? 'Berlin'
+    : country === 'FR' ? 'Paris'
+    : country === 'ES' ? 'Madrid'
+    : country === 'IT' ? 'Milano'
+    : country === 'UK' ? 'London'
+    : country === 'US' ? 'Austin'
+    : 'Amsterdam';
+  const vatExample = country === 'DE' ? 'DE123456789'
+    : country === 'FR' ? 'FR12345678901'
+    : country === 'ES' ? 'ESB12345678'
+    : country === 'IT' ? 'IT12345678901'
+    : country === 'UK' ? 'GB123456789'
+    : 'NL123456789B01';
   const addressExample = country === 'US' ? '123 Main St, Austin TX 78701'
     : country === 'UK' ? '10 Downing Street, London'
     : country === 'DE' ? 'Unter den Linden 1, Berlin'
@@ -77,11 +104,19 @@ export default function CustomersScreen() {
         email.trim() || undefined,
         phone.trim() || undefined,
         address.trim() || undefined,
+        {
+          postcode: postcode.trim() || undefined,
+          city: city.trim() || undefined,
+          vatId: vatId.trim() || undefined,
+        },
       );
       setName('');
       setEmail('');
       setPhone('');
       setAddress('');
+      setPostcode('');
+      setCity('');
+      setVatId('');
       setShowForm(false);
     } catch (err) {
       logError('Customers', err);
@@ -92,7 +127,7 @@ export default function CustomersScreen() {
     } finally {
       setSaving(false);
     }
-  }, [name, email, phone, address, addCustomer, t]);
+  }, [name, email, phone, address, postcode, city, vatId, addCustomer, t]);
 
   return (
     <Screen>
@@ -182,6 +217,45 @@ export default function CustomersScreen() {
                   value={address}
                   onChangeText={setAddress}
                   placeholder={addressExample}
+                  placeholderTextColor={SemanticColors.textSecondary}
+                />
+              </View>
+              {/* Post code and city on one row: they are read together and
+                  each is short, so two full-width fields would push the save
+                  button off a phone screen. */}
+              <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={Typography.muted}>{t('customersModal.fieldPostcode', 'Post code')}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={postcode}
+                    onChangeText={setPostcode}
+                    placeholder={postcodeExample}
+                    placeholderTextColor={SemanticColors.textSecondary}
+                  />
+                </View>
+                <View style={{ flex: 2 }}>
+                  <Text style={Typography.muted}>{t('customersModal.fieldCity', 'City')}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={city}
+                    onChangeText={setCity}
+                    placeholder={cityExample}
+                    placeholderTextColor={SemanticColors.textSecondary}
+                  />
+                </View>
+              </View>
+              <View style={styles.fieldColumn}>
+                {/* Only a business customer has one, so it is labelled as
+                    optional rather than looking like a required field a
+                    consumer cannot answer. */}
+                <Text style={Typography.muted}>{t('customersModal.fieldVatId', 'VAT number (business customers)')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={vatId}
+                  onChangeText={setVatId}
+                  autoCapitalize="characters"
+                  placeholder={vatExample}
                   placeholderTextColor={SemanticColors.textSecondary}
                 />
               </View>

@@ -59,7 +59,7 @@ import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
 import { isTempIdFast, isUuid } from '../lib/idShape';
-import { jobUpdatesToRowPayload } from '../lib/mappers';
+import { jobUpdatesToRowPayload, customerUpdatesToRowPayload } from '../lib/mappers';
 import { USE_SEED_DATA } from '../config/demo';
 import {
   loadQuotes,
@@ -146,7 +146,10 @@ type AppState = {
   suppliers: Supplier[];
   jobMaterials: Record<string, JobMaterial[]>;
   priceObservations: Record<string, PriceObservation[]>;
-  addCustomer: (name: string, email?: string, phone?: string, address?: string) => Promise<string>;
+  /** `extra` carries the structured-invoice fields (city, postcode, vatId, …).
+   *  A fifth positional argument for each would be unreadable and easy to pass
+   *  in the wrong order; an object also lets a caller supply only what it has. */
+  addCustomer: (name: string, email?: string, phone?: string, address?: string, extra?: Partial<Customer>) => Promise<string>;
   // R45: customer mutability — was a feature gap (no edit/delete path).
   updateCustomer: (id: string, updates: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
   removeCustomer: (id: string) => Promise<void>;
@@ -863,9 +866,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       suppliers,
       jobMaterials: jobMaterialsMap,
       priceObservations: priceObsMap,
-      addCustomer: async (name, email, phone, address) => {
+      addCustomer: async (name, email, phone, address, extra) => {
         const tempId = `c-${Date.now()}`;
-        const newCustomer: Customer = { id: tempId, name, email, phone, address };
+        const newCustomer: Customer = { id: tempId, name, email, phone, address, ...extra };
         setCustomers((prev) => [newCustomer, ...prev]);
 
         // R52: split BE-persist from post-create housekeeping. Was a real
@@ -877,7 +880,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         let finalId = tempId;
         if (isSupabaseConfigured) {
           try {
-            const row = await withTimeout(dbCreateCustomer({ name, email, phone, address }), 3000, 'addCustomer');
+            const row = await withTimeout(
+              // Same mapper as the update path: `extra` is camelCase and the
+              // columns are snake_case, and PostgREST rejects the whole insert
+              // on one unknown column.
+              dbCreateCustomer({ name, email, phone, address, ...customerUpdatesToRowPayload(extra ?? {}) }),
+              3000, 'addCustomer');
             setCustomers((prev) =>
               prev.map((c) => (c.id === tempId ? { ...c, id: (row as any).id } : c))
             );
@@ -889,7 +897,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({
                 table: 'customers',
                 op: 'insert',
-                payload: { id: tempId, user_id: getCurrentUserId(), name, email, phone, address },
+                payload: {
+                  id: tempId, user_id: getCurrentUserId(), name, email, phone, address,
+                  // The queued insert must carry every field the online insert
+                  // does, or the flush writes a customer with no address.
+                  ...customerUpdatesToRowPayload(extra ?? {}),
+                },
               });
             } catch {}
           }
@@ -922,7 +935,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // update directly; R49's rewriter resolves the rowId on flush.
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('customers', 'update', () => dbUpdateCustomer(id, updates), { rowId: id, payload: updates }),
+            // Both sides go through the same mapper: `updates` is camelCase
+            // and the column is `vat_id`, so passing the patch raw would make
+            // PostgREST reject the whole statement. The queued payload must
+            // match the online one field for field — see
+            // offlineQueuePayloadParity.test.ts.
+            persistOrQueue('customers', 'update',
+              () => dbUpdateCustomer(id, customerUpdatesToRowPayload(updates)),
+              { rowId: id, payload: customerUpdatesToRowPayload(updates) }),
           ).catch((err) => logWarn('AppState', `updateCustomer persist failed: ${err}`));
         }
         // Re-embed on contact-change so semantic-search reflects the edit.

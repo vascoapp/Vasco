@@ -92,10 +92,20 @@ export default function InvoiceDetailScreen() {
     businessProfile,
     lineItems: appLineItems,
     jobs,
+    customers,
     markEInvoiceSubmitted,
   } = useAppState();
   const { user } = useAuth();
   const invoice = invoices.find((item) => item.id === id);
+  // The customer RECORD, not the display string on the invoice. Every
+  // structured e-invoice needs the buyer's city, post code and tax id as
+  // separate elements, and `invoice.customer` is a name. Matched on
+  // customerId, falling back to the name because older invoices carry only
+  // that (`documentRowToInvoice` maps `customer` from customer_id).
+  const invoiceCustomer = invoice
+    ? customers.find((c) => c.id === (invoice as any).customerId)
+      ?? customers.find((c) => c.name === invoice.customer)
+    : undefined;
   const country = user?.country ?? 'NL';
   // Country/scheme-aware VAT rate (honors DE 19%, FR 20%, KOR/Kleinunternehmer
   // 0%, etc.). Falls back to the NL VAT_RATE only when no profile is loaded.
@@ -516,10 +526,16 @@ export default function InvoiceDetailScreen() {
       sellerEmail: (businessProfile as any)?.email,
       buyerName: invoice.customer ?? '',
       buyerAddress: (invoice as any).customerAddress ?? '',
-      buyerCity: (invoice as any).customerCity,
-      buyerPostalCode: (invoice as any).customerPostcode,
-      buyerCountry: country,
-      buyerVatId: (invoice as any).customerVatId,
+      // Was `(invoice as any).customerCity` / `.customerPostcode` — fields
+      // that existed nowhere, so they were undefined on every invoice and the
+      // elements were simply omitted. XRechnung BR-DE-8/9 require both, which
+      // means every German invoice this app has ever produced was invalid on
+      // the buyer address alone. Now read from the customer record
+      // (migration 20260819000010).
+      buyerCity: invoiceCustomer?.city,
+      buyerPostalCode: invoiceCustomer?.postcode,
+      buyerCountry: invoiceCustomer?.country ?? country,
+      buyerVatId: invoiceCustomer?.vatId ?? (invoice as any).customerVatId,
       invoiceNumber: (invoice as any).reference ?? invoice.id,
       invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),
       dueDate: (invoice.dueDate ?? new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString()).slice(0, 10),

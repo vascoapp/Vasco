@@ -4566,7 +4566,10 @@
     "addCustomer": "Kunden hinzufügen",
     "missingName": "Name fehlt",
     "missingNameBody": "Geben Sie einen Kundennamen ein.",
-    "saveFailed": "Kunde konnte nicht gespeichert werden."
+    "saveFailed": "Kunde konnte nicht gespeichert werden.",
+    "fieldPostcode": "PLZ",
+    "fieldCity": "Ort",
+    "fieldVatId": "USt-IdNr. (Geschäftskunden)"
   },
   "aiChat": {
     "welcome": "Hi! Ich bin Ihre Büroassistenz. Bitten Sie mich, eine Rechnung zu erstellen, einen Auftrag zu planen oder Zahlen zu prüfen.",

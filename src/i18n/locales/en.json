@@ -4566,7 +4566,10 @@
     "addCustomer": "Add customer",
     "missingName": "Missing name",
     "missingNameBody": "Enter a customer name.",
-    "saveFailed": "Could not save customer."
+    "saveFailed": "Could not save customer.",
+    "fieldPostcode": "Post code",
+    "fieldCity": "City",
+    "fieldVatId": "VAT number (business customers)"
   },
   "aiChat": {
     "welcome": "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.",

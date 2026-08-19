@@ -4550,7 +4550,10 @@
     "addCustomer": "Klant toevoegen",
     "missingName": "Naam ontbreekt",
     "missingNameBody": "Voer een klantnaam in.",
-    "saveFailed": "Klant kon niet worden opgeslagen."
+    "saveFailed": "Klant kon niet worden opgeslagen.",
+    "fieldPostcode": "Postcode",
+    "fieldCity": "Plaats",
+    "fieldVatId": "Btw-nummer (zakelijke klanten)"
   },
   "aiChat": {
     "welcome": "Hallo! Ik ben je kantoorhulp. Vraag me om een klant te factureren, een klus in te plannen of cijfers te checken.",

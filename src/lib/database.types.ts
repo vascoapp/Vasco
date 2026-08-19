@@ -63,6 +63,16 @@ export type CustomerRow = {
   email: string | null;
   phone: string | null;
   address: string | null;
+  // Migration 20260819000010 — what a structured e-invoice needs and a single
+  // free-text address line cannot provide.
+  city: string | null;
+  postcode: string | null;
+  country: string | null;
+  province: string | null;
+  vat_id: string | null;
+  tax_id: string | null;
+  einvoice_routing: string | null;
+  einvoice_email: string | null;
   created_at: string;
   updated_at: string;
 };

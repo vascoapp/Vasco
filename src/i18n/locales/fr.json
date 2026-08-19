@@ -4566,7 +4566,10 @@
     "addCustomer": "Ajouter un client",
     "missingName": "Nom manquant",
     "missingNameBody": "Entrez le nom du client.",
-    "saveFailed": "Impossible d'enregistrer le client."
+    "saveFailed": "Impossible d'enregistrer le client.",
+    "fieldPostcode": "Code postal",
+    "fieldCity": "Ville",
+    "fieldVatId": "Numéro de TVA (clients professionnels)"
   },
   "aiChat": {
     "welcome": "Bonjour ! Je suis votre assistant bureau. Demandez-moi de facturer un client, planifier un chantier ou vérifier vos chiffres.",
