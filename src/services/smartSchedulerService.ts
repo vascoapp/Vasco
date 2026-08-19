@@ -512,8 +512,8 @@ class SmartSchedulerService {
     // demo-mode consumer) or a neutral default.
     const real = getLastFetchedForecast();
     if (real) {
-      const today = new Date().toISOString().slice(0, 10);
-      const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+      const today = todayKey();
+      const tomorrow = localDateKey(new Date(Date.now() + 86400000));
       let day: DayForecast | null = null;
       if (date === today) day = real.today;
       else if (date === tomorrow) day = real.tomorrow;

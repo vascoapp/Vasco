@@ -14,6 +14,7 @@ import { getMaterialBaselines } from './cohortBenchmarkService';
 import { getCurrentUserId, getCurrentCountry, getCurrentTrade } from '../lib/currentUser';
 import { logWarn } from '../utils/errorHandler';
 import { verifyExtractedInvoice, summariseVerification } from './extractionVerification';
+import { todayKey } from '../utils/dateKey';
 
 const SCAN_HISTORY_KEY = '@vasco_invoice_scans';
 const RATE_LIMIT_KEY = '@vasco_last_invoice_scan';
@@ -94,7 +95,7 @@ export async function scanInvoicePhoto(
           supplierAddress: data.supplierAddress,
           supplierVat: data.supplierVat,
           documentNumber: data.documentNumber,
-          documentDate: data.documentDate ?? new Date().toISOString().split('T')[0],
+          documentDate: data.documentDate ?? todayKey(),
           lineItems: data.lineItems ?? [],
           subtotal: data.subtotal ?? 0,
           vatAmount: data.vatAmount ?? 0,
@@ -502,7 +503,7 @@ function mockScanResult(): ScannedInvoice {
     documentType: 'invoice',
     supplierName: 'Technische Unie',
     documentNumber: 'TU-2026-04521',
-    documentDate: new Date().toISOString().split('T')[0],
+    documentDate: todayKey(),
     lineItems: [
       { description: 'Koperen buis 15mm 3m', articleNumber: 'TU-10234', brand: 'Viega', category: 'plumbing', quantity: 10, unit: 'stuk', unitPrice: 12.50, vatRate: 21, totalPrice: 125.00, confidence: 95 },
       { description: 'Knelkoppeling 15mm', articleNumber: 'TU-10567', brand: 'VSH', category: 'plumbing', quantity: 20, unit: 'stuk', unitPrice: 4.80, vatRate: 21, totalPrice: 96.00, confidence: 92 },

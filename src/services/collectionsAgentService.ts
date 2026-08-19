@@ -309,6 +309,7 @@ class CollectionsAgentService {
 
 import { useAppState } from '../state/AppState';
 import { formatMoney } from '../i18n/formatting';
+import { localDateKey } from '../utils/dateKey';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -371,8 +372,8 @@ function deriveDunningSequences(invoices: any[]): DunningSequence[] {
         const isPast = scheduledMs < now && stepOrder.indexOf(step) <= stepOrder.indexOf(currentStep);
         return {
           step,
-          scheduledDate: new Date(scheduledMs).toISOString().slice(0, 10),
-          ...(isPast ? { sentDate: new Date(scheduledMs).toISOString().slice(0, 10), status: 'sent' as const } : { status: 'pending' as const }),
+          scheduledDate: localDateKey(new Date(scheduledMs)),
+          ...(isPast ? { sentDate: localDateKey(new Date(scheduledMs)), status: 'sent' as const } : { status: 'pending' as const }),
         };
       });
       return {

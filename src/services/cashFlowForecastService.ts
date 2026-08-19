@@ -12,6 +12,7 @@
 import type { Invoice, Quote } from '../domain/documents';
 import type { Job } from '../types/contractor';
 import { predictPaymentTiming } from '../intelligence/mlModels';
+import { localDateKey } from '../utils/dateKey';
 
 export interface ForecastDay {
   date: string;             // YYYY-MM-DD
@@ -48,7 +49,7 @@ interface ForecastInput {
 const DAY = 24 * 60 * 60 * 1000;
 
 function dateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return localDateKey(d);
 }
 
 function addDays(d: Date, n: number): Date {

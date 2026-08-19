@@ -805,6 +805,23 @@ async function checkCurrencyInLocaleValues() {
 // src/i18n/formatting, or the *Auto siblings where `country` is out of reach.
 const DEVICE_LOCALE_RE = /\.toLocale(?:Date|Time)String\s*\(\s*(?:undefined\b|\))/;
 
+/**
+ * `x.toISOString().split('T')[0]` (or `.slice(0, 10)`) is a UTC calendar day.
+ * Every one of the six EU markets is east of Greenwich, so between local
+ * midnight and 01:00/02:00 it returns YESTERDAY — and `new Date(2026, 6, 19)`
+ * at local midnight formats as the 18th, which shifted every bucket in the
+ * weekly planner by a day.
+ *
+ * 52 of these were swept on 2026-08-19; `src/utils/dateKey.ts` has had the
+ * correct helpers (`todayKey`, `localDateKey`) the whole time. This check
+ * exists because the shape is one keystroke away from being reintroduced and
+ * the failure is a silently-wrong date, never an error.
+ *
+ * A real INSTANT — created_at, an API timestamp, a sort key — should keep
+ * `toISOString()` in full. Only the truncation to a calendar day is flagged.
+ */
+const UTC_CALENDAR_DAY_RE = /\.toISOString\(\)\s*\.\s*(?:split\(\s*['"]T['"]\s*\)\s*\[0\]|slice\(\s*0\s*,\s*10\s*\))/;
+
 async function checkDeviceLocaleDates() {
   process.stdout.write('10. dates/times follow the contractor, not the device ... ');
   const hits = [];
@@ -827,6 +844,9 @@ async function checkDeviceLocaleDates() {
         // Comments describing the rule are not violations of it.
         if (code.startsWith('//') || code.startsWith('*')) return;
         if (DEVICE_LOCALE_RE.test(line)) hits.push(`${file}:${i + 1}  ${code.slice(0, 90)}`);
+        if (UTC_CALENDAR_DAY_RE.test(line)) {
+          hits.push(`${file}:${i + 1}  ${code.slice(0, 90)}   ← UTC day; use localDateKey()/todayKey()`);
+        }
       });
     }
   }

@@ -7,6 +7,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { localDateKey } from '../utils/dateKey';
 
 const STORAGE_KEY = '@vasco_eboekhouden_config';
 const API_BASE = 'https://api.e-boekhouden.nl/v1';
@@ -132,7 +133,7 @@ export async function syncPaymentStatus(): Promise<{ paidInvoiceIds: string[] }>
   if (!config) return { paidInvoiceIds: [] };
 
   try {
-    const since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    const since = localDateKey(new Date(Date.now() - 30 * 86400000));
     const res = await fetch(`${API_BASE}/invoice?dateFrom=${since}&onlyPaid=true`, {
       headers: { Authorization: config.accessToken, Accept: 'application/json' },
     });

@@ -33,6 +33,7 @@ import {
   listSeats, publishSeat, revokeSeat, type AccountantSeat,
 } from '../../src/services/accountantSeatService';
 import { formatDateShortAuto } from '../../src/i18n/formatting';
+import { localDateKey } from '../../src/utils/dateKey';
 
 export default function AccountantAccessScreen() {
   const { t } = useTranslation();
@@ -67,7 +68,7 @@ export default function AccountantAccessScreen() {
     const q = Math.floor(now.getMonth() / 3);
     const start = new Date(now.getFullYear(), q * 3, 1);
     const end = new Date(now.getFullYear(), q * 3 + 3, 0);
-    return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+    return { start: localDateKey(start), end: localDateKey(end) };
   }, [periodStart, periodEnd]);
 
   const publish = async () => {

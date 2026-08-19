@@ -7,6 +7,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 // =============================================================================
 // TYPES
@@ -153,7 +154,7 @@ function createDefaultProfile(contractorId: string = 'default'): ContractorLearn
     savingsProfile: { monthlySavings: 0, goalAmount: 500, savingsStreak: 0, topSavingsCategory: '' },
     metricHistory: [],
     insightsShownToday: 0,
-    insightsShownDate: new Date().toISOString().split('T')[0],
+    insightsShownDate: todayKey(),
     lastUpdated: new Date().toISOString(),
   };
 }
@@ -610,7 +611,7 @@ function countConsecutiveSavingsMonths(jobs: JobOutcome[]): number {
 
 export async function incrementInsightsShown(count: number): Promise<void> {
   const profile = await getProfile();
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayKey();
   if (profile.insightsShownDate !== today) {
     profile.insightsShownToday = 0;
     profile.insightsShownDate = today;
@@ -788,7 +789,7 @@ export function getCategoryFatigueToday(
   category: string,
   now: Date,
 ): number {
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = localDateKey(now);
   const todayViews = profile.insightInteractions.filter(i => {
     return i.timestamp.startsWith(todayStr) && i.action === 'viewed'
       && i.category === category;
@@ -804,7 +805,7 @@ export function getScreenVisitCount(profile: ContractorLearningProfile, screen: 
 }
 
 export function getRemainingDailyBudget(profile: ContractorLearningProfile): number {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayKey();
   if (profile.insightsShownDate !== today) return DAILY_INSIGHT_BUDGET;
   return Math.max(0, DAILY_INSIGHT_BUDGET - profile.insightsShownToday);
 }

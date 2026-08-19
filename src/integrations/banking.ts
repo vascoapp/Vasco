@@ -22,6 +22,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { localDateKey } from '../utils/dateKey';
 
 const STORAGE_KEY = '@vasco_tink_config';
 const TINK_API = 'https://api.tink.com/api/v1';
@@ -112,7 +113,7 @@ export async function listAccounts(): Promise<BankAccount[]> {
 export async function listTransactions(opts: { accountId?: string; sinceDays?: number } = {}): Promise<BankTransaction[]> {
   const config = await ensureValidToken();
   if (!config) return [];
-  const since = new Date(Date.now() - (opts.sinceDays ?? 90) * 86400000).toISOString().slice(0, 10);
+  const since = localDateKey(new Date(Date.now() - (opts.sinceDays ?? 90) * 86400000));
   const url = new URL(`${TINK_API}/transactions/list`);
   if (opts.accountId) url.searchParams.set('accountId', opts.accountId);
   url.searchParams.set('startDate', since);

@@ -15,6 +15,7 @@
 // =============================================================================
 
 import { isSmallBusinessExempt } from '../domain/business';
+import { localDateKey } from '../utils/dateKey';
 
 export interface IcpInvoiceLike {
   id: string;
@@ -71,8 +72,8 @@ export function quarterFromDate(d: Date): IcpQuarter {
   const end = new Date(Date.UTC(year, startMonth + 3, 0));
   return {
     year, quarter: q,
-    startDate: start.toISOString().slice(0, 10),
-    endDate: end.toISOString().slice(0, 10),
+    startDate: localDateKey(start),
+    endDate: localDateKey(end),
   };
 }
 

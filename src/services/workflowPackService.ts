@@ -16,6 +16,7 @@ import { getAppStateSnapshot } from '../state/appStateSnapshot';
 import { emitPackQueued } from '../intelligence/dataCollector';
 import type { Country } from '../i18n/formatting';
 import { formatDecimal1 } from '../i18n/formatting';
+import { localDateKey } from '../utils/dateKey';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 const MUTES_KEY = '@vasco_pack_mutes';
@@ -1043,7 +1044,7 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
   // step entirely.
   let dailyAlreadyFired = false;
   try {
-    const today = new Date(now).toISOString().slice(0, 10);
+    const today = localDateKey(new Date(now));
     const last = await AsyncStorage.getItem('@vasco_pack_daily_17_last_fired');
     if (last === today) dailyAlreadyFired = true;
   } catch {}
@@ -1139,7 +1140,7 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
   // einde_dag steps. Cleared on day rollover (next day's slice() differs).
   if (firedDailyThisRun) {
     try {
-      const today = new Date(now).toISOString().slice(0, 10);
+      const today = localDateKey(new Date(now));
       await AsyncStorage.setItem('@vasco_pack_daily_17_last_fired', today);
     } catch {}
   }

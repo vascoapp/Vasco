@@ -1790,6 +1790,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       markInvoiceSent: (id) => {
         const invoice = invoices.find((inv) => inv.id === id);
+        // One timestamp, used by BOTH the online call and the queued payload.
+        // Two `new Date()` calls would drift, and the queued one would be the
+        // one that survived.
+        const sentAt = new Date().toISOString();
         setInvoices((prev) =>
           prev.map((inv) =>
             inv.id === id ? { ...inv, status: 'sent', dueInDays: 14 } : inv
@@ -1800,7 +1804,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // invoice sent saw status flip locally but BE never received it.
           // Now queues for retry via offlineWriteQueue when offline.
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('documents', 'update', () => updateDocument(id, { status: 'sent', sent_at: new Date().toISOString() }), { rowId: id, payload: { status: 'sent' } }),
+            // The payload must carry EVERY field the online call sets. It used
+            // to send `{ status: 'sent' }` alone, so an invoice marked sent
+            // offline flushed with sent_at NULL — and sentAt is what DSO,
+            // ageing and cashflow are computed from. Stamped here, at the
+            // moment of the action, not at flush time: the invoice went out
+            // when the contractor said it did, not when the network returned.
+            // markQuoteSent a hundred lines up already did this correctly.
+            persistOrQueue('documents', 'update', () => updateDocument(id, { status: 'sent', sent_at: sentAt }), { rowId: id, payload: { status: 'sent', sent_at: sentAt } }),
           ).catch((err) =>
             logWarn('AppState', `markInvoiceSent persist failed: ${err}`)
           );
@@ -1862,6 +1873,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       markInvoicePaid: (id) => {
         const paidInv = invoices.find((i) => i.id === id);
+        // See markInvoiceSent: one stamp shared by the online call and the
+        // queued payload, taken when the contractor marked it paid.
+        const paidAt = new Date().toISOString();
         addBreadcrumb({ category: 'user', message: 'invoice_paid', data: { invoiceId: id, amount: paidInv?.amount } });
         // Activation funnel — the value moment. Fires for BOTH manual mark-paid
         // and Mollie/Stripe webhook-driven payments (both route through here).
@@ -1880,7 +1894,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // Mollie/Stripe webhooks fire markInvoicePaid in real-time, but
           // manual mark-paid via the contractor UI was missing the queue path.
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('documents', 'update', () => updateDocument(id, { status: 'paid', paid_at: new Date().toISOString() }), { rowId: id, payload: { status: 'paid' } }),
+            // Same defect, same fix: paid_at was dropped from the queued
+            // payload, so an invoice marked paid offline came back paid with
+            // no payment date — which silently breaks DSO and the customer
+            // ledger rather than failing loudly.
+            persistOrQueue('documents', 'update', () => updateDocument(id, { status: 'paid', paid_at: paidAt }), { rowId: id, payload: { status: 'paid', paid_at: paidAt } }),
           ).catch((err) =>
             logWarn('AppState', `markInvoicePaid persist failed: ${err}`)
           );

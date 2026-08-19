@@ -9,6 +9,7 @@
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentCountry } from '../lib/currentUser';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 export interface ExtractedCertData {
   certName?: string;
@@ -27,8 +28,8 @@ const DEMO_RESULT: ExtractedCertData = {
   certName: 'VCA Basic',
   issuingBody: 'SSVV',
   certificationNumber: '—',
-  issueDate: new Date().toISOString().slice(0, 10),
-  expiryDate: new Date(Date.now() + 3 * 365 * 86400000).toISOString().slice(0, 10),
+  issueDate: todayKey(),
+  expiryDate: localDateKey(new Date(Date.now() + 3 * 365 * 86400000)),
   category: 'safety',
   confidence: 0,
   warnings: ['Demo mode — configure ANTHROPIC_API_KEY for real OCR'],

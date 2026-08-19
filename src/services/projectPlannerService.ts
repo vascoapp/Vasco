@@ -154,13 +154,13 @@ class ProjectPlannerService {
   private findOptimalStartDate(params: { preferredStart?: string }): string {
     const date = new Date();
     date.setDate(date.getDate() + 7); // Default: 1 week from now
-    return date.toISOString().split('T')[0];
+    return localDateKey(date);
   }
 
   private calculateEndDate(startDate: string, duration: number): string {
     const date = new Date(startDate);
     date.setDate(date.getDate() + duration);
-    return date.toISOString().split('T')[0];
+    return localDateKey(date);
   }
 
   predictMaterials(projectType: string, scope: string): MaterialPrediction[] {
@@ -187,7 +187,7 @@ class ProjectPlannerService {
       const dayOfWeek = date.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip weekends
         slots.push({
-          date: date.toISOString().split('T')[0],
+          date: localDateKey(date),
           availability: Math.random() > 0.3 ? 'free' : Math.random() > 0.5 ? 'partial' : 'busy',
           existingProjects: [],
           weatherForecast: i < 7 ? { condition: 'Bewolkt', suitableForOutdoor: true } : undefined,
@@ -280,6 +280,7 @@ export const projectPlannerService = new ProjectPlannerService();
 // ============================================
 
 import { useState, useCallback, useMemo } from 'react';
+import { localDateKey } from '../utils/dateKey';
 
 export function useProjectPlanner() {
   const [prediction, setPrediction] = useState<ProjectPrediction | null>(null);

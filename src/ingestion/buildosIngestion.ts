@@ -16,6 +16,7 @@ import type {
   ExtractionMeta,
 } from './buildosSchema';
 import type { Currency } from '../types/buildos';
+import { todayKey } from '../utils/dateKey';
 
 // ============================================
 // DOCUMENT CLASSIFIER
@@ -264,7 +265,7 @@ function extractSiteReport(text: string, sourceFile: string): CREExtractionResul
 
   const document: ExtractedSiteReport = {
     docType: 'site-report',
-    reportDate: new Date().toISOString().split('T')[0],
+    reportDate: todayKey(),
     project: 'Whitechapel Mixed-Use Development',
     weather: 'Overcast, occasional light rain',
     temperature: 8,

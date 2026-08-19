@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { DEMO_MODE } from '../config/demo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { recordMetricSnapshot } from '../intelligence/learningStorage';
+import { todayKey } from '../utils/dateKey';
 
 // ============================================
 // TYPES
@@ -162,7 +163,7 @@ class SiteLeadDataService {
     const newDefect: Defect = {
       ...defect,
       id: `d-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
+      date: todayKey(),
       status: 'open',
     };
     this.defects = [newDefect, ...this.defects];

@@ -33,6 +33,7 @@ import {
   DEFAULT_FRAGILITY_THRESHOLDS,
   DEFAULT_FRAGILITY_WEIGHTS,
 } from '../types/schedule-fragility';
+import { localDateKey } from '../utils/dateKey';
 
 // ============================================
 // MOCK DATA
@@ -697,7 +698,7 @@ class ScheduleFragilityService {
               activityId: activity.id,
               activityName: activity.name,
               originalEndDate: activity.plannedEndDate,
-              newEndDate: newEndDate.toISOString().split('T')[0],
+              newEndDate: localDateKey(newEndDate),
               delayDays,
             });
 
@@ -714,7 +715,7 @@ class ScheduleFragilityService {
                   milestoneId: milestone.id,
                   milestoneName: milestone.name,
                   originalDate: milestone.plannedEndDate,
-                  newDate: newMilestoneDate.toISOString().split('T')[0],
+                  newDate: localDateKey(newMilestoneDate),
                   delayDays: impactDays,
                 });
               }
@@ -741,7 +742,7 @@ class ScheduleFragilityService {
             activityId: activity.id,
             activityName: activity.name,
             originalEndDate: activity.plannedEndDate,
-            newEndDate: newEndDate.toISOString().split('T')[0],
+            newEndDate: localDateKey(newEndDate),
             delayDays: disruptionDays,
           });
         });
@@ -758,7 +759,7 @@ class ScheduleFragilityService {
     const analysis: ImpactAnalysis = {
       projectDelayDays,
       originalCompletionDate,
-      newCompletionDate: newCompletionDate.toISOString().split('T')[0],
+      newCompletionDate: localDateKey(newCompletionDate),
       criticalPathChange: projectDelayDays > 0,
       estimatedCostImpact: projectDelayDays * 5000,
       currency: 'GBP',

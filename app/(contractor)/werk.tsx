@@ -58,7 +58,7 @@ export default function WerkScreen() {
   const [newJobTitle, setNewJobTitle] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
   const [tab, setTab] = useState<TabKey>('today');
-  // LOCAL date, not UTC. `new Date().toISOString().split('T')[0]` returns the
+  // LOCAL date, not UTC. `todayKey()` returns the
   // UTC day, so between midnight and ~02:00 local (CEST) this screen asked for
   // YESTERDAY while drag-schedule (which uses todayKey()) asked for today —
   // the same jobs showed as scheduled here and as "Niet ingepland" there, with
@@ -339,7 +339,7 @@ export default function WerkScreen() {
                         };
                       }),
                       {
-                        date: new Date().toISOString().slice(0, 10),
+                        date: todayKey(),
                         startPostcode: startPostcode || (allJobs[0]?.address?.postcode ?? ''),
                         startCountry,
                       },

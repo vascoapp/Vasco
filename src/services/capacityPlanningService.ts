@@ -36,6 +36,7 @@ import {
 } from '../types/capacity-planning';
 import { getLastFetchedForecast, type DayForecast } from './weatherService';
 import { registerSingletonReset } from './singletonReset';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 // ============================================
 // SERVICE CONFIGURATION
@@ -374,7 +375,7 @@ class CapacityPlanningService {
   }
 
   private calculateDayCapacity(date: Date): CapacitySlot {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = localDateKey(date);
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
     const dayNum = date.getDay() === 0 ? 7 : date.getDay(); // Convert to 1-7 (Mon-Sun)
 
@@ -384,7 +385,7 @@ class CapacityPlanningService {
 
     // Get jobs for this day
     const dayJobs = this.scheduledJobs.filter((job) => {
-      const jobDate = new Date(job.scheduledStart).toISOString().split('T')[0];
+      const jobDate = localDateKey(new Date(job.scheduledStart));
       return jobDate === dateStr;
     });
 
@@ -496,7 +497,7 @@ class CapacityPlanningService {
     lookAheadDays: number = 30
   ): AvailabilityWindow[] {
     const today = new Date();
-    const capacity = this.getCapacityForecast(today.toISOString().split('T')[0], lookAheadDays);
+    const capacity = this.getCapacityForecast(localDateKey(today), lookAheadDays);
 
     const windows: AvailabilityWindow[] = [];
     let windowStart: CapacitySlot | null = null;
@@ -1110,7 +1111,7 @@ class CapacityPlanningService {
     const delays = this.analyzeDelayRisks(jobType, scope, windows[0]?.startDate || new Date().toISOString());
 
     // Determine earliest and recommended start
-    const earliestStart = windows[0]?.startDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const earliestStart = windows[0]?.startDate || localDateKey(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
     // Find recommended window (best weather, confidence)
     const recommendedWindow = windows.find((w) => w.confidence >= 80) || windows[0];
@@ -1150,7 +1151,7 @@ class CapacityPlanningService {
       earliestStart,
       recommendedStart,
       estimatedDuration: durationStr,
-      estimatedCompletion: completionDate.toISOString().split('T')[0],
+      estimatedCompletion: localDateKey(completionDate),
       confidenceLevel,
       confidenceExplanation,
       knownRisks,
@@ -1297,7 +1298,7 @@ export function useCapacityForecast(startDate?: string, days: number = 14) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const start = startDate || new Date().toISOString().split('T')[0];
+    const start = startDate || todayKey();
     setData(capacityPlanningService.getCapacityForecast(start, days));
     setLoading(false);
 
@@ -1307,7 +1308,7 @@ export function useCapacityForecast(startDate?: string, days: number = 14) {
   }, [startDate, days]);
 
   const refresh = useCallback(() => {
-    const start = startDate || new Date().toISOString().split('T')[0];
+    const start = startDate || todayKey();
     setData(capacityPlanningService.getCapacityForecast(start, days));
   }, [startDate, days]);
 

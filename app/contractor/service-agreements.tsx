@@ -31,6 +31,7 @@ import { formatCurrency, type Country, formatDayMonthAuto } from '../../src/i18n
 import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { localDateKey } from '../../src/utils/dateKey';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -66,7 +67,7 @@ export default function ServiceAgreementsScreen() {
   const [formJobId, setFormJobId] = useState<string | null>(null);
   const [formFrequency, setFormFrequency] = useState<RecurringFrequency>('monthly');
   const [formStartDate, setFormStartDate] = useState(
-    new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+    localDateKey(new Date(Date.now() + 7 * 86400000))
   );
   const [formAutoInvoice, setFormAutoInvoice] = useState(true);
 

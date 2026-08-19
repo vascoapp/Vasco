@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { Toast } from '../../src/components/shared/Toast';
 import { useInspections } from '../../src/services/siteLeadDataService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { todayKey } from '../../src/utils/dateKey';
 
 interface ChecklistItem {
   id: string;
@@ -66,7 +67,7 @@ export default function InspectionScreen() {
 
   const handleComplete = () => {
     addInspection({
-      date: new Date().toISOString().split('T')[0],
+      date: todayKey(),
       location: 'Bouwplaats Amsterdam-Zuid',
       checkedItems: Array.from(checkedItems),
       totalItems: checklistItems.length + customItems.length,

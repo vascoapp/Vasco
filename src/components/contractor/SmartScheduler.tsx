@@ -30,6 +30,7 @@ import { predictDuration, type DurationPrediction } from '../../intelligence/pre
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { formatDayMonthAuto, formatTimeAuto } from '../../i18n/formatting';
+import { localDateKey, todayKey } from '../../utils/dateKey';
 type ViewType = 'day' | 'week' | 'list';
 
 export function SmartScheduler() {
@@ -40,7 +41,7 @@ export function SmartScheduler() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [viewType, setViewType] = useState<ViewType>('week');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(todayKey());
   const [showJobModal, setShowJobModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<ScheduledJob | null>(null);
   const [showOptimizations, setShowOptimizations] = useState(false);
@@ -73,7 +74,7 @@ export function SmartScheduler() {
     for (let i = 0; i < 7; i++) {
       const date = new Date(start);
       date.setDate(start.getDate() + i);
-      dates.push(date.toISOString().split('T')[0]);
+      dates.push(localDateKey(date));
     }
     return dates;
   };
@@ -207,7 +208,7 @@ export function SmartScheduler() {
   };
 
   const renderDayColumn = (dateStr: string, schedule: DaySchedule) => {
-    const isToday = dateStr === new Date().toISOString().split('T')[0];
+    const isToday = dateStr === todayKey();
     const isSelected = dateStr === selectedDate;
     const weatherStyle = getWeatherIcon(schedule.weatherOverview.condition);
     const dayOfWeek = formatDayMonthAuto(new Date(dateStr));
@@ -272,7 +273,7 @@ export function SmartScheduler() {
         <Pressable onPress={() => {
           const prev = new Date(selectedDate);
           prev.setDate(prev.getDate() - 1);
-          setSelectedDate(prev.toISOString().split('T')[0]);
+          setSelectedDate(localDateKey(prev));
         }}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
@@ -293,7 +294,7 @@ export function SmartScheduler() {
         <Pressable onPress={() => {
           const next = new Date(selectedDate);
           next.setDate(next.getDate() + 1);
-          setSelectedDate(next.toISOString().split('T')[0]);
+          setSelectedDate(localDateKey(next));
         }}>
           <Ionicons name="chevron-forward" size={24} color={SemanticColors.textPrimary} />
         </Pressable>

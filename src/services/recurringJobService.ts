@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback } from 'react';
 import type { Job } from '../domain/jobs';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 // =============================================================================
 // TYPES
@@ -105,7 +106,7 @@ function computeNextDate(currentDate: string, frequency: RecurringFrequency): st
       d.setFullYear(d.getFullYear() + 1);
       break;
   }
-  return d.toISOString().split('T')[0];
+  return localDateKey(d);
 }
 
 // =============================================================================
@@ -241,7 +242,7 @@ export async function checkAndGenerateDueJobs(): Promise<{
   generatedJobs: Partial<Job>[];
 }> {
   const agreements = await loadAgreements();
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayKey();
   const dueAgreements: ServiceAgreement[] = [];
   const generatedJobs: Partial<Job>[] = [];
 

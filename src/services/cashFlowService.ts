@@ -446,6 +446,7 @@ export const cashFlowService = new CashFlowService();
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppState } from '../state/AppState';
 import { useExpenses } from './expenseService';
+import { localDateKey } from '../utils/dateKey';
 
 // ---------------------------------------------------------------------------
 // Forecast — pure, so the hook can feed it the contractor's real data
@@ -692,7 +693,7 @@ export function useCashFlow() {
         : inv.status === 'overdue' ? 'overdue' as const
         : 'draft' as const,
       issueDate: inv.sentAt ?? inv.createdAt ?? new Date().toISOString(),
-      dueDate: inv.dueDate ?? new Date(Date.now() + (inv.dueInDays ?? 30) * MS_PER_DAY).toISOString().split('T')[0],
+      dueDate: inv.dueDate ?? localDateKey(new Date(Date.now() + (inv.dueInDays ?? 30) * MS_PER_DAY)),
       paidDate: inv.paidAt,
       // `paymentMethod` has been on this interface since it was written and
       // only MOCK_INVOICES ever set it — the demo showed "iDEAL" and a real
@@ -722,7 +723,7 @@ export function useCashFlow() {
       category: catMap[e.category] ?? 'overig',
       description: e.description,
       amount: e.amount + (e.vatAmount ?? 0),
-      date: (e.date instanceof Date ? e.date : new Date(e.date)).toISOString().slice(0, 10),
+      date: localDateKey((e.date instanceof Date ? e.date : new Date(e.date))),
       projectId: e.jobId,
       receiptUrl: e.receiptUrl,
       recurring: false,

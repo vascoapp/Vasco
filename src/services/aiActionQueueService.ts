@@ -24,6 +24,7 @@ import {
 } from './customerQuestionQueueBridge';
 import { computeLateFee, type LateFeeCountry } from './lateFeeService';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 const QUEUE_KEY = '@vasco_ai_queue';
 
@@ -844,13 +845,13 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   const todaysActiveJobs = (context.allJobs ?? []).filter((j: any) => {
     if (j.status !== 'in-progress' && j.status !== 'bezig') return false;
     const entries = j.timeEntries ?? [];
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayKey();
     return entries.some((e: any) => (e.date || '').startsWith(today));
   });
   for (const job of todaysActiveJobs.slice(0, 2)) {
     if (!job || !job.id) continue;
     const hours = (job.timeEntries ?? [])
-      .filter((e: any) => (e.date || '').startsWith(new Date().toISOString().split('T')[0]))
+      .filter((e: any) => (e.date || '').startsWith(todayKey()))
       .reduce((s: number, e: any) => s + (e.hours ?? 0), 0);
     const cust = (context.customers ?? []).find((c: any) => c.id === job.customerId);
     const message = t('automation.progressNote', {
@@ -1227,7 +1228,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // ─── NEW: Schedule gap suggestion ───
   // If contractor has 0 jobs tomorrow, suggest filling the gap
   const tomorrow = new Date(now + dayMs);
-  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  const tomorrowStr = localDateKey(tomorrow);
   const tomorrowJobs = (context.allJobs ?? []).filter((j: any) => {
     const sched = j.scheduledDate || j.startDate || '';
     return sched.startsWith(tomorrowStr) && j.status !== 'completed' && j.status !== 'gereed';

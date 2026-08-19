@@ -55,6 +55,7 @@ import { useTranslation } from 'react-i18next';
 import { generateScopeOfWork, loadQuoteTonePreset, loadToneExamples } from '../../services/sowGeneratorService';
 import { useAppState } from '../../state/AppState';
 import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate } from '../../domain/business';
+import { localDateKey } from '../../utils/dateKey';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // =============================================================================
@@ -824,7 +825,7 @@ export function TieredQuoteBuilder({ customer, onSend, onClose }: TieredQuoteBui
     const proceed = () => {
       const quote: Partial<TieredQuote> = {
         reference: `TQ-${Date.now()}`, title: 'Offerte', tiers,
-        validUntil: new Date(Date.now() + 30 * MS_PER_DAY).toISOString().split('T')[0],
+        validUntil: localDateKey(new Date(Date.now() + 30 * MS_PER_DAY)),
         paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
         // R62: SOW narrative threaded as the quote description. Parent
         // screen persists this to documents.scope_text on save (R57's

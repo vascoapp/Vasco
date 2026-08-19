@@ -47,6 +47,7 @@ import { recordScreenVisit } from '../../intelligence/learningStorage';
 import { ContractorDashboardHeader } from '../contractor/ContractorDashboardHeader';
 import { VascoCard } from '../shared/VascoCard';
 import { getActionStats } from '../../intelligence/actionExecutor';
+import { todayKey } from '../../utils/dateKey';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 export type SiteLeadTabView = 'overview' | 'dispatch' | 'safety' | 'more';
@@ -302,7 +303,7 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
 
   // Daily reports for today-status
   const { reports: dailyReports } = useDailyReports();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayKey();
   const hasTodayReport = useMemo(
     () => dailyReports.some(r => r.date === todayStr),
     [dailyReports, todayStr]

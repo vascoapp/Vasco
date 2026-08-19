@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { InlineInsight } from '../../src/components/shared/VascoInsightCard';
 import { useInlineInsight } from '../../src/services/vascoGuidanceService';
+import { todayKey } from '../../src/utils/dateKey';
 
 type IncidentType = 'Incident' | 'Bijna-ongeluk' | 'Observatie';
 type Severity = 'Laag' | 'Middel' | 'Hoog' | 'Kritiek';
@@ -69,7 +70,7 @@ export default function IncidentReportScreen() {
     };
     addIncident({
       type: typeMap[selectedType],
-      date: new Date().toISOString().split('T')[0],
+      date: todayKey(),
       location,
       description,
       severity,

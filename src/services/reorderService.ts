@@ -307,7 +307,7 @@ class ReorderService {
     const item = this.inventory.get(inventoryId);
     if (item) {
       item.currentStock = newStock;
-      item.lastUsedDate = new Date().toISOString().split('T')[0];
+      item.lastUsedDate = todayKey();
       this.generateSuggestions();
       this.notifyListeners();
 
@@ -326,7 +326,7 @@ class ReorderService {
     const item = this.inventory.get(inventoryId);
     if (item) {
       item.currentStock += quantity;
-      item.lastOrderDate = new Date().toISOString().split('T')[0];
+      item.lastOrderDate = todayKey();
       item.lastPrice = price;
       this.generateSuggestions();
       this.notifyListeners();
@@ -550,7 +550,7 @@ class ReorderService {
     const daysUntilOrder = Math.max(0, daysUntilStockout - 3);
     const orderDate = new Date();
     orderDate.setDate(orderDate.getDate() + daysUntilOrder);
-    return orderDate.toISOString().split('T')[0];
+    return localDateKey(orderDate);
   }
 
   /**
@@ -703,6 +703,7 @@ export const reorderService = new ReorderService();
 // ============================================
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 export function useInventory(filter?: { category?: string; lowStock?: boolean }) {
   const [inventory, setInventory] = useState<MaterialInventory[]>(() =>

@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 import { registerSingletonReset } from './singletonReset';
+import { todayKey } from '../utils/dateKey';
 
 const PERSIST_KEY = '@vasco_notifications_v2';
 
@@ -268,7 +269,7 @@ export interface DerivableState {
 
 export function deriveLiveNotifications(state: DerivableState): AppNotification[] {
   const out: AppNotification[] = [];
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayKey();
 
   // Overdue invoices → urgent virtual notifications.
   // Skip paid/partial — only unsent/overdue trigger reminders.

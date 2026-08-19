@@ -28,6 +28,7 @@ import {
   DEFAULT_RELIABILITY_THRESHOLDS,
   DEFAULT_METRIC_WEIGHTS,
 } from '../types/supplier-reliability';
+import { localDateKey, todayKey } from '../utils/dateKey';
 
 // ============================================
 // MOCK DATA
@@ -270,7 +271,7 @@ class SupplierReliabilityService {
       id: `del-${Date.now()}`,
       supplierId,
       orderId,
-      orderDate: new Date().toISOString().split('T')[0],
+      orderDate: todayKey(),
       expectedDeliveryDate: delivery.expectedDate,
       actualDeliveryDate: delivery.actualDate,
       status: delivery.wasOnTime ? 'delivered' : 'delayed',
@@ -565,8 +566,8 @@ class SupplierReliabilityService {
       description: `${supplier.name} has experienced a ${Math.abs(Math.round(dropPercentage))}% decline in ${metricName.toLowerCase()} over the past period.`,
       recommendation: this.getRecommendation(severity, driftType),
       detectedAt: new Date().toISOString(),
-      periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      periodEnd: new Date().toISOString().split('T')[0],
+      periodStart: localDateKey(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+      periodEnd: todayKey(),
       status: 'new',
     };
 

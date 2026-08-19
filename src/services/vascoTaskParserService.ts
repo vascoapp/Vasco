@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useMemo, useCallback } from 'react';
+import { localDateKey } from '../utils/dateKey';
 
 // =============================================================================
 // TYPES
@@ -97,7 +98,7 @@ function parseDate(input: string): { date?: string; label?: string } {
     if (lower.includes(keyword)) {
       const resolved = resolver(today);
       return {
-        date: resolved.toISOString().split('T')[0],
+        date: localDateKey(resolved),
         label: keyword.charAt(0).toUpperCase() + keyword.slice(1),
       };
     }

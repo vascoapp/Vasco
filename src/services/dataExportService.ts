@@ -8,6 +8,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share, Platform } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { todayKey } from '../utils/dateKey';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -302,7 +303,7 @@ export async function exportAllData(
     };
 
     let content: string;
-    const title = `vasco-data-export-${new Date().toISOString().slice(0, 10)}`;
+    const title = `vasco-data-export-${todayKey()}`;
 
     if (format === 'json') {
       content = JSON.stringify({ metadata, data }, null, 2);
@@ -362,7 +363,7 @@ export async function exportInvoices(
       content = arrayToCsv(flattened);
     }
 
-    await shareContent(content, `vasco-invoices-${new Date().toISOString().slice(0, 10)}`);
+    await shareContent(content, `vasco-invoices-${todayKey()}`);
     return { success: true, keyCount: invoices.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Export failed';
@@ -392,7 +393,7 @@ export async function exportCustomers(
       content = arrayToCsv(flattened);
     }
 
-    await shareContent(content, `vasco-customers-${new Date().toISOString().slice(0, 10)}`);
+    await shareContent(content, `vasco-customers-${todayKey()}`);
     return { success: true, keyCount: customers.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Export failed';
@@ -422,7 +423,7 @@ export async function exportJobs(
       content = arrayToCsv(flattened);
     }
 
-    await shareContent(content, `vasco-jobs-${new Date().toISOString().slice(0, 10)}`);
+    await shareContent(content, `vasco-jobs-${todayKey()}`);
     return { success: true, keyCount: jobs.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Export failed';
