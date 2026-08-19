@@ -172,6 +172,11 @@ export default function PublicQuotePortal({ params }: PageProps) {
   useEffect(() => {
     setLang(pickLanguage());
     setIsMobile(isMobileUA());
+    // The root layout hardcodes <html lang="en">, so without this a screen
+    // reader announces Dutch copy in an English voice and browser translation
+    // offers to translate Dutch into Dutch. The language is only known here,
+    // after navigator has been read.
+    document.documentElement.lang = pickLanguage();
     setToken(new URLSearchParams(window.location.search).get('t') ?? '');
   }, []);
 

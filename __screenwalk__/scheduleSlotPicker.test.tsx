@@ -31,7 +31,7 @@ const pressable = (tree: any, label: string) =>
 
 describe('SlotPicker', () => {
   it('picks a crew member, then a slot, in one balloon', async () => {
-    const { SlotPicker } = require('../app/contractor/drag-schedule');
+    const { SlotPicker } = require('../app/contractor/schedule');
     const onPick = jest.fn();
 
     const El = () => (

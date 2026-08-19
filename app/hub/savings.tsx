@@ -21,7 +21,7 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 // Each savings category routes to the contractor surface that produces it.
 const CATEGORY_ROUTES: Record<string, Href> = {
-  time: '/contractor/drag-schedule' as Href,
+  time: '/contractor/schedule' as Href,
   purchasing: '/contractor/purchase-orders' as Href,
   'faster-payments': '/(contractor)/geld' as Href,
   conversion: '/(contractor)/geld' as Href, // R66 round 16: was /contractor/quote-list (404)

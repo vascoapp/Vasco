@@ -21,7 +21,7 @@ const SCREENS: { id: string; file: string; params?: Record<string, string> }[] =
   { id: 'projects/[id]', file: 'contractor/projects/[id].tsx', params: { id: 'proj-seed-1' } },
   { id: 'project-billing/[id]', file: 'contractor/project-billing/[id].tsx', params: { id: 'proj-seed-1' } },
   { id: 'crew', file: 'contractor/crew.tsx' },
-  { id: 'drag-schedule', file: 'contractor/drag-schedule.tsx' },
+  { id: 'schedule', file: 'contractor/schedule.tsx' },
   { id: 'timesheet', file: 'contractor/timesheet.tsx' },
   { id: 'weekly-overview', file: 'contractor/weekly-overview.tsx' },
   { id: 'job-forms', file: 'contractor/job-forms.tsx' },

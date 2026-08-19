@@ -270,6 +270,11 @@ export default function QuoteAcceptance({ params }: PageProps) {
   useEffect(() => {
     setLang(pickLanguage());
     setIsMobile(isMobileUA());
+    // The root layout hardcodes <html lang="en">, so without this a screen
+    // reader announces Dutch copy in an English voice and browser translation
+    // offers to translate Dutch into Dutch. The language is only known here,
+    // after navigator has been read.
+    document.documentElement.lang = pickLanguage();
   }, []);
 
   const deepLink = `vasco://accept/${encodeURIComponent(token)}`;

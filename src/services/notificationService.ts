@@ -317,7 +317,7 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
       title: i18n.t('notifications.jobsTodayTitle', { count: todayJobs.length, defaultValue: '{{count}} jobs today' }),
       body: todayJobs.slice(0, 3).map((j) => j.title).filter(Boolean).join(', ') + (todayJobs.length > 3 ? '…' : ''),
       read: false,
-      actionRoute: '/contractor/drag-schedule',
+      actionRoute: '/contractor/schedule',
       createdAt: new Date(Date.now() - MS_PER_HOUR * 1),
     });
   }

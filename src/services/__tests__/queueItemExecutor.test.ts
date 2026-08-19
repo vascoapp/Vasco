@@ -94,10 +94,10 @@ describe('navigate paths', () => {
     expect(router.push).toHaveBeenCalledWith('/contractor/permits');
   });
 
-  it('schedule_suggestion opens drag-schedule', async () => {
+  it('schedule_suggestion opens the schedule board', async () => {
     const router = makeRouter();
     await executeApprovedQueueItem(makeItem({ type: 'schedule_suggestion' }), { router });
-    expect(router.push).toHaveBeenCalledWith('/contractor/drag-schedule');
+    expect(router.push).toHaveBeenCalledWith('/contractor/schedule');
   });
 
   it('tax_prep opens vat-prep with previous-period prefill', async () => {

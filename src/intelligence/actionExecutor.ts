@@ -134,7 +134,7 @@ const handlers: Record<InsightActionType, ActionHandler> = {
         return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: `/contractor/job/${params.jobId}` } };
       } catch {}
     }
-    return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: '/contractor/drag-schedule' } };
+    return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: '/contractor/schedule' } };
   },
 
   adjust_quote: async (params) => {

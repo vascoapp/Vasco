@@ -58,7 +58,7 @@ describe('routeForIntent', () => {
       type: 'schedule_job',
       params: { customerName: 'Sarah', date: '2026-06-01', time: '09:00', title: 'AC repair' },
     }));
-    expect(r?.path).toContain('/contractor/drag-schedule');
+    expect(r?.path).toContain('/contractor/schedule');
     expect(r?.path).toContain('aiCustomer=Sarah');
     expect(r?.path).toContain('aiDate=2026-06-01');
     expect(r?.path).toContain('aiTime=09%3A00');

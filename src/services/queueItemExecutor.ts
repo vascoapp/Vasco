@@ -237,18 +237,18 @@ async function runExecution(
       return { executed: true, via: 'navigate', detail: 'permits' };
     }
     case 'schedule_suggestion': {
-      // R21: pass jobId from preparedData so drag-schedule can highlight the
+      // R21: pass jobId from preparedData so the schedule board can highlight the
       // suggested unassigned job (ring + scroll into view) instead of just
       // dropping the contractor on the board with no orientation. Was R1
       // deferral. Date axis stays today-only — multi-day support is a
       // bigger lift than this round.
       const jobId = data.jobId as string | undefined;
       if (jobId) {
-        router.push({ pathname: '/contractor/drag-schedule', params: { jobId } } as any);
-        return { executed: true, via: 'navigate', detail: `drag-schedule?jobId=${jobId}` };
+        router.push({ pathname: '/contractor/schedule', params: { jobId } } as any);
+        return { executed: true, via: 'navigate', detail: `schedule?jobId=${jobId}` };
       }
-      router.push('/contractor/drag-schedule' as any);
-      return { executed: true, via: 'navigate', detail: 'drag-schedule' };
+      router.push('/contractor/schedule' as any);
+      return { executed: true, via: 'navigate', detail: 'schedule' };
     }
     case 'job_quality_feedback': {
       // R300: queued by AppState.updateJobStatus when status flips to

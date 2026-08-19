@@ -15,7 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const FILE = path.join(__dirname, '..', 'app', 'contractor', 'drag-schedule.tsx');
+const FILE = path.join(__dirname, '..', 'app', 'contractor', 'schedule.tsx');
 const src = fs.readFileSync(FILE, 'utf8');
 
 /** Strip comments so prose describing the old bug does not trip the checks. */

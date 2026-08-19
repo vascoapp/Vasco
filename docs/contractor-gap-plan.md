@@ -240,7 +240,7 @@
 
 | Item | Status | Details |
 |------|--------|---------|
-| 7.1 Drag Schedule | ✅ Done | `app/contractor/drag-schedule.tsx` — day timeline, unassigned pool, slot picker, conflict detection, utilization bar |
+| 7.1 Drag Schedule | ✅ Done | `app/contractor/schedule.tsx` — day timeline, unassigned pool, slot picker, conflict detection, utilization bar |
 | 7.2 Customer Portal | ✅ Done | `app/contractor/customer-view.tsx` — tiered quote view (Goed/Beter/Best), accept flow, change request form |
 | 7.3 Schedule Optimizer | ✅ Done | `app/contractor/schedule-optimizer.tsx` — 4 suggestion types, route comparison, apply all, impact metrics |
 | 7.4 Customer CRM | ✅ Done | `app/contractor/customer-crm.tsx` — lifetime value, payment score, VIP tags, contact actions, metrics grid |

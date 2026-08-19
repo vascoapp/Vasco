@@ -66,6 +66,9 @@ export default function ContractorLayout() {
       <Stack.Screen name="search" />
       <Stack.Screen name="automations" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="schedule" />
+      {/* Legacy path kept alive for push payloads and persisted queue items
+          minted before the 2026-08-19 rename. See drag-schedule.tsx. */}
       <Stack.Screen name="drag-schedule" />
       <Stack.Screen name="customer-view" />
       <Stack.Screen name="customer-crm" />

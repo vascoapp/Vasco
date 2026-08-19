@@ -207,7 +207,7 @@ export default function VandaagDK() {
         {!isFirstTime ? <>
         {/* 3. KPI ROW ─── 2 stats (Earned removed per R267 — duplicate of Geld tab) */}
         <View style={styles.kpiRow}>
-          <KpiTile label={t('dk.pill.appointments', 'Appointments').toUpperCase()} value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/drag-schedule' as any)} />
+          <KpiTile label={t('dk.pill.appointments', 'Appointments').toUpperCase()} value={String(todayJobs.length)} tone={DK.colors.text} onPress={() => router.push('/contractor/schedule' as any)} />
           {/* R66 round 16: was /contractor/quote-list (404) — quotes live on
               the Geld tab alongside invoices since R-2025; route fixed. */}
           <KpiTile label={t('dk.pill.quotes', 'Quotes').toUpperCase()} value={String(activeQuotes)} tone={DK.colors.highlight} onPress={() => router.push('/(contractor)/geld' as any)} />
@@ -394,10 +394,10 @@ export default function VandaagDK() {
 
         {/* 6. SCHEDULE LIST ─── vertical, was Today's Schedule block.
              R269: calendar-settings is now wired via contextual prompt at
-             scheduling time (drag-schedule.tsx) — no header button needed. */}
+             scheduling time (schedule.tsx) — no header button needed. */}
         <View style={styles.sectionHeader}>
           <DKLabel style={styles.sectionTitle}>{t('dk.section.planning', 'Schedule')}</DKLabel>
-          <Pressable onPress={() => router.push('/contractor/drag-schedule' as any)} hitSlop={8}>
+          <Pressable onPress={() => router.push('/contractor/schedule' as any)} hitSlop={8}>
             <Text style={styles.sectionLink}>{t('dk.section.all', 'All').toUpperCase()} →</Text>
           </Pressable>
         </View>
@@ -409,11 +409,11 @@ export default function VandaagDK() {
               {/* R112: fresh contractors with no entities need a path INTO
                   the app, not just a "nothing here" message. When the
                   user has zero jobs across the board, surface a Schedule
-                  CTA that opens drag-schedule. */}
+                  CTA that opens the schedule board. */}
               {jobs.length === 0 ? (
                 <Pressable
                   style={({ pressed }) => [styles.emptyCta, pressed && { opacity: 0.85 }]}
-                  onPress={() => router.push('/contractor/drag-schedule' as any)}
+                  onPress={() => router.push('/contractor/schedule' as any)}
                   accessibilityRole="button"
                 >
                   <Ionicons name="add" size={16} color={DK.colors.bg} />

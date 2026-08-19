@@ -196,7 +196,7 @@ export default function ProfileScreen() {
   const country = user?.country ?? 'NL';
 
   // R9.2: surface device-calendar sync state. Was only reachable via a one-time
-  // prompt in drag-schedule.tsx — users who tapped "later" lost the entry forever.
+  // prompt in schedule.tsx — users who tapped "later" lost the entry forever.
   const [calendarConnected, setCalendarConnected] = useState(false);
   useEffect(() => {
     let active = true;

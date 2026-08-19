@@ -331,7 +331,7 @@
    "a11y": []
   },
   {
-   "screen": "drag-schedule",
+   "screen": "schedule",
    "mounted": true,
    "error": null,
    "texts": [

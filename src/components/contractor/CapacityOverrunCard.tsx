@@ -49,7 +49,7 @@ export function CapacityOverrunCard() {
   return (
     <Pressable
       style={[styles.card, { borderLeftColor: tone }]}
-      onPress={() => router.push('/contractor/drag-schedule' as any)}
+      onPress={() => router.push('/contractor/schedule' as any)}
     >
       <View style={styles.iconWrap}>
         <Ionicons name="warning" size={16} color={tone} />

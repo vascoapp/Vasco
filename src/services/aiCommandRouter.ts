@@ -37,7 +37,7 @@ export function routeForIntent(result: AiCommandResult): AiRouteSpec | undefined
       };
     case 'schedule_job':
       return {
-        path: `/contractor/drag-schedule${qs({ aiCustomer: p.customerName, aiDate: p.date, aiTime: p.time, aiTitle: p.title })}`,
+        path: `/contractor/schedule${qs({ aiCustomer: p.customerName, aiDate: p.date, aiTime: p.time, aiTitle: p.title })}`,
         label: 'Open scheduler',
       };
     case 'list_overdue':

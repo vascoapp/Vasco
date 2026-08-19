@@ -60,7 +60,7 @@ export default function WerkScreen() {
   const [tab, setTab] = useState<TabKey>('today');
   // LOCAL date, not UTC. `todayKey()` returns the
   // UTC day, so between midnight and ~02:00 local (CEST) this screen asked for
-  // YESTERDAY while drag-schedule (which uses todayKey()) asked for today —
+  // YESTERDAY while schedule.tsx (which uses todayKey()) asked for today —
   // the same jobs showed as scheduled here and as "Niet ingepland" there, with
   // an empty planner timeline. Same UTC-shift class as the R317 week bug.
   const today = todayKey();
@@ -176,7 +176,7 @@ export default function WerkScreen() {
   }, [todayJobs, activeJobs]);
 
   const quickLinks: { icon: IconName; label: string; route: string }[] = [
-    { icon: 'calendar-outline', label: t('jobs.calendar', 'Kalender'), route: '/contractor/drag-schedule' },
+    { icon: 'calendar-outline', label: t('jobs.calendar', 'Kalender'), route: '/contractor/schedule' },
     { icon: 'time-outline', label: t('jobs.hours', 'Uren'), route: '/contractor/timesheet' },
     ...(user?.isAannemer ? [{ icon: 'folder-open-outline' as IconName, label: t('jobs.projects', 'Projecten'), route: '/contractor/projects' }] : []),
     { icon: 'people-outline', label: t('jobs.customers', 'Klanten'), route: '/(contractor)/bedrijf' },
@@ -360,7 +360,7 @@ export default function WerkScreen() {
             <TodayContent
               todayJobs={todayJobs}
               onOpenJob={(id) => router.push(`/contractor/job/${id}` as any)}
-              onPlanCta={() => router.push('/contractor/drag-schedule' as any)}
+              onPlanCta={() => router.push('/contractor/schedule' as any)}
               t={t}
               country={country}
             />

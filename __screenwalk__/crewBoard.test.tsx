@@ -60,7 +60,7 @@ async function seed(withCrew: boolean) {
   );
 }
 
-const Screen = () => require('../app/contractor/drag-schedule').default;
+const Screen = () => require('../app/contractor/schedule').default;
 
 // These pin a specific crew + job fixture through AsyncStorage. In the `fresh`
 // posture `refreshData()` legitimately answers "this account has no rows" and

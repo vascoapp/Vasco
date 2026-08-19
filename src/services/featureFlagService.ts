@@ -56,7 +56,7 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   // 1k invoices, so we hold off until contractors are billing actively.
   tax_real_lookup: false,
   // Hidden for launch (user decision, 2026-07-20): route optimisation is not
-  // needed for v1. The engine (optimalSchedulerService) and the drag-schedule
+  // needed for v1. The engine (optimalSchedulerService) and the schedule
   // planning screen stay — only the optimise affordances are gated, so this
   // can be flipped back on remotely without a code change.
   route_optimization: false,
