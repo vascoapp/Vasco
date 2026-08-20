@@ -28,6 +28,7 @@ you have the credentials listed below.
 3. Sign up Sentry → set `EXPO_PUBLIC_SENTRY_DSN` in `.env`
 4. Apple Developer signup → fill `eas.json:submit.production.ios` with `appleId` / `ascAppId` / `appleTeamId`
 5. Play Console signup → drop service-account JSON at `secrets/play-service-account.json`
+   ⚠️ **Verified 2026-08-20: that file does not exist, `android.versionCode` is still 1, and no AAB has ever been built — Android has never shipped.** State + blockers: `memory/android-submission-status.md`. Also drop the unused `RECORD_AUDIO` permission from `app.json` before the data-safety form.
 6. App Store Connect + Play Console listings (icons, screenshots ×6 locales, descriptions ×6 — see `docs/store-listings.md`)
 7. Re-run `supabase/cron.sql` with substituted SUPABASE_URL + SERVICE_ROLE_KEY. **New entry in this round**: `vasco-pack-trigger-tick` (09:00 UTC daily — server-side eval of Incasso + Quote followup + Maintenance + Handover-survey packs)
 8. Run `npx expo prebuild --clean` (regenerates `ios/`/`android/` to pick up the moved privacy manifest + Sentry plugin) **before** the first `eas build`

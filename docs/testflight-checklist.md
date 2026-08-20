@@ -59,7 +59,7 @@ submission** — so fix this before the build if a real icon is ready.
 
 - [ ] `assets/icon.png` — 1024×1024, no transparency, no alpha channel for iOS
 - [ ] `assets/adaptive-icon.png` — 1024×1024, foreground centered in 66% safe-zone (Android)
-- [ ] After replacing, flip `app.json:219 android.adaptiveIcon.backgroundColor` to `#0B0E11` (DK theme)
+- [x] ~~After replacing, flip `android.adaptiveIcon.backgroundColor` to `#0B0E11` (DK theme)~~ — **already `#0B0E11` in `app.json` (verified 2026-08-20)**
 
 If the brand-team assets aren't ready, ship the placeholder for TestFlight
 **internal testing only** (no external testers). Apple won't reject internal
