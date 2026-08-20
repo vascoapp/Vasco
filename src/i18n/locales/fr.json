@@ -4209,7 +4209,22 @@
     "reminderSentBody_other": "{{count}} éléments envoyés via {{channel}}.",
     "pickCustomer": "Quel client ?",
     "pickCustomerDesc": "Associez cette liste à un client pour que les rappels arrivent à la bonne personne.",
-    "newCustomerOption": "Nouveau client — à attribuer plus tard"
+    "newCustomerOption": "Nouveau client — à attribuer plus tard",
+    "upgradesTitle": "Options choisies",
+    "upgradesUnbilled": "{{count}} pas encore facturée(s) · {{total}} HT",
+    "upgradesAllBilled": "Tout ce qui a été choisi est facturé.",
+    "upgradeNeedsWarning": "« {{item}} » ({{amount}}) — consignez que vous avez prévenu le client du supplément",
+    "billUpgrades": "Facturer les options",
+    "billUpgradesTitle": "Facturer les options",
+    "billUpgradesBody": "Crée une facture brouillon pour {{count}} option(s) choisie(s), {{total}} HT.",
+    "billUpgradesFailed": "Impossible de créer la facture",
+    "nothingToBillTitle": "Rien à facturer pour le moment",
+    "allBlockedBody": "Chaque option attend encore la preuve que vous avez prévenu le client du supplément.",
+    "noUpgradesToBill": "Il n’y a pas encore d’options à facturer.",
+    "upgradesNotPositive": "Ces choix aboutissent à zéro ou moins : il n’y a rien à facturer.",
+    "upgradeInvoiceTitle": "{{project}} — options choisies",
+    "recordWarningTitle": "Consigner l’avertissement de prix",
+    "recordWarningBody": "Confirme que vous avez prévenu le client que « {{item}} » entraîne un supplément. Obligatoire avant facturation (art. 7:755 BW)."
   },
   "besparen": {
     "materialFallback": "Matériau {{id}}"

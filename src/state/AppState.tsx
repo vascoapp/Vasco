@@ -219,6 +219,12 @@ type AppState = {
   // Returns the checkout URL. Throws on provider failure (caller shows an error).
   requestTrackerDeposit: (accessCode: string, amount: number) => Promise<string>;
   addInvoiceFromJob: (jobId: string) => Promise<string>;
+  addInvoiceFromDecisionUpgrades: (input: {
+    customerId?: string;
+    customerName?: string;
+    title: string;
+    lines: { description: string; quantity: number; unitPrice: number }[];
+  }) => Promise<string>;
   /** Raise the invoice for one project billing term (termijnfactuur). */
   addTermInvoice: (projectId: string, termId: string) => Promise<string>;
   /** Bill one meerwerk/minderwerk item on its own invoice. */
@@ -3027,6 +3033,107 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             ? { ...j, invoiceId: docNumber, status: 'invoiced', updatedAt: new Date().toISOString() }
             : j,
         ));
+        return docNumber;
+      },
+
+      /**
+       * Bill the upgrades a customer chose in the decision portal.
+       *
+       * Their OWN invoice, like meerwerk: folding them into the job's agreed
+       * price would silently re-price a fixed-price contract (see
+       * `addChangeOrderInvoice` and the same decision recorded for change
+       * orders). The 7:755 warning gate and the double-billing guard live in
+       * `decisionUpgradeBilling` — the caller passes only lines it has already
+       * cleared, and stamps the tracker with the id this returns.
+       */
+      addInvoiceFromDecisionUpgrades: async ({ customerId, customerName, title, lines }) => {
+        if (!lines.length) {
+          throw new Error(appI18n.t('decisions.noUpgradesToBill', 'There are no upgrades to bill yet.'));
+        }
+        const net = Math.round(lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0) * 100) / 100;
+        if (net <= 0) {
+          // A pure credit belongs on a credit note, which this app does not
+          // issue yet — refusing beats raising an invoice for a negative sum.
+          throw new Error(appI18n.t('decisions.upgradesNotPositive', 'These choices come to zero or less, so there is nothing to invoice.'));
+        }
+        const vatRate = getEffectiveVatRate(businessProfile);
+        const amount = Math.round(net * (1 + vatRate / 100) * 100) / 100;
+
+        const docNumber = await nextDocumentNumber('invoice');
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+        const resolvedName = customerName
+          ?? customers.find((c) => c.id === customerId)?.name
+          ?? '';
+
+        const newInvoice: Invoice = {
+          id: docNumber,
+          customer: resolvedName,
+          customerId: customerId || undefined,
+          customerName: resolvedName,
+          job: title,
+          amount,
+          status: 'draft',
+          dueInDays: 14,
+        };
+        setInvoices((prev) => [newInvoice, ...prev]);
+        const itemsWithIds = lines.map((li, idx) => ({
+          id: `li-${docNumber}-${idx}`,
+          description: li.description,
+          quantity: li.quantity,
+          unitPrice: li.unitPrice,
+        }));
+        setLineItems((prev) => ({ ...prev, [docNumber]: itemsWithIds as typeof lineItems[string] }));
+
+        if (isSupabaseConfigured) {
+          const invPayload = {
+            doc_type: 'invoice' as const,
+            status: 'draft' as const,
+            document_number: docNumber,
+            customer_id: isUuid(customerId) ? customerId : null,
+            job_id: null,
+            total_amount: amount,
+            due_date: dueDate.toISOString(),
+          };
+          try {
+            const row = await withTimeout(createDocument(invPayload), 3000, 'addInvoiceFromDecisionUpgrades');
+            await withTimeout(
+              upsertLineItems(
+                row.id,
+                lines.map((li, idx) => ({
+                  description: li.description,
+                  quantity: li.quantity,
+                  unit_price: li.unitPrice,
+                  total_price: li.unitPrice * li.quantity,
+                  position: idx,
+                  vat_rate: vatRate,
+                })),
+              ),
+              3000,
+              'addInvoiceFromDecisionUpgrades.lineItems',
+            );
+          } catch (err) {
+            logWarn('AppState', `addInvoiceFromDecisionUpgrades persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
+            } catch {}
+          }
+        }
+
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({
+            type: 'invoice_created',
+            ref: docNumber,
+            payload: { amount, customer: customerId ?? null, source: 'decision_upgrades', lines: lines.length },
+          }),
+        ).catch(() => {});
+        emitInvoiceSent(getCurrentUserId(), docNumber, {
+          customerId: customerId ?? '',
+          amount,
+          dueDate: dueDate.toISOString(),
+        }).catch(() => {});
+        trackEvent('invoice_created', { invoiceId: docNumber, source: 'decision_upgrades' }).catch(() => {});
         return docNumber;
       },
 

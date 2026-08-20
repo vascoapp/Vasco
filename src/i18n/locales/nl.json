@@ -4193,7 +4193,22 @@
     "reminderSentBody_other": "{{count}} items verstuurd via {{channel}}.",
     "pickCustomer": "Welke klant?",
     "pickCustomerDesc": "Koppel deze checklist aan een klant zodat herinneringen naar de juiste persoon gaan.",
-    "newCustomerOption": "Nieuwe klant — later toewijzen"
+    "newCustomerOption": "Nieuwe klant — later toewijzen",
+    "upgradesTitle": "Gekozen meerwerk",
+    "upgradesUnbilled": "{{count}} nog niet gefactureerd · {{total}} excl. btw",
+    "upgradesAllBilled": "Alles wat gekozen is, is gefactureerd.",
+    "upgradeNeedsWarning": "\"{{item}}\" ({{amount}}) — leg vast dat je de klant hebt gewaarschuwd dat dit meerwerk is",
+    "billUpgrades": "Meerwerk factureren",
+    "billUpgradesTitle": "Meerwerk factureren",
+    "billUpgradesBody": "Maakt een conceptfactuur voor {{count}} gekozen optie(s), {{total}} excl. btw.",
+    "billUpgradesFailed": "Factuur kon niet worden aangemaakt",
+    "nothingToBillTitle": "Nog niets te factureren",
+    "allBlockedBody": "Bij elk meerwerk ontbreekt nog de vastlegging dat je de klant hebt gewaarschuwd.",
+    "noUpgradesToBill": "Er is nog geen meerwerk om te factureren.",
+    "upgradesNotPositive": "Deze keuzes komen op nul of minder uit, er valt niets te factureren.",
+    "upgradeInvoiceTitle": "{{project}} — gekozen meerwerk",
+    "recordWarningTitle": "Waarschuwing vastleggen",
+    "recordWarningBody": "Bevestigt dat je de klant hebt verteld dat \"{{item}}\" meerwerk is. Verplicht voordat je het mag factureren (art. 7:755 BW)."
   },
   "besparen": {
     "materialFallback": "Materiaal {{id}}"

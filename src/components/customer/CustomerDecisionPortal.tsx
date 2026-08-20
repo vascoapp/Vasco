@@ -30,6 +30,7 @@ import { DK } from '../../theme/draftkings';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { hapticSuccess } from '../../utils/haptics';
+import { upgradeTotal as sumChosenUpgrades } from '../../services/decisionUpgradeBilling';
 import { formatCurrency, getCountryConfig } from '../../i18n/formatting';
 import { CustomerLanguageSwitcher } from './CustomerLanguageSwitcher';
 import { CUSTOMER_GLOSSARY } from '../../data/customerGlossary';
@@ -220,17 +221,13 @@ export function CustomerDecisionPortal({
 
   // Running cost summary: sum the price impact of every chosen option across all
   // categories, so the customer sees how their selections add up vs the base quote.
-  const upgradeTotal = useMemo(() => {
-    let total = 0;
-    for (const cat of portalData.categories) {
-      for (const item of cat.items) {
-        if (item.status !== 'decided' || !item.options) continue;
-        const chosen = item.options.find((o) => o.value === item.value);
-        if (chosen?.priceImpact) total += chosen.priceImpact;
-      }
-    }
-    return total;
-  }, [portalData.categories]);
+  // Same definition the CONTRACTOR now sees and bills from
+  // (`decisionUpgradeBilling`). It was computed here and nowhere else, which
+  // is how the customer came to be shown a total nothing could invoice.
+  const upgradeTotal = useMemo(
+    () => sumChosenUpgrades({ categories: portalData.categories } as Parameters<typeof sumChosenUpgrades>[0]),
+    [portalData.categories],
+  );
 
   useEffect(() => {
     onActivityLog?.('portal_accessed');

@@ -4209,7 +4209,22 @@
     "reminderSentBody_other": "{{count}} elementi inviati tramite {{channel}}.",
     "pickCustomer": "Quale cliente?",
     "pickCustomerDesc": "Collega questa checklist a un cliente così i promemoria vanno alla persona giusta.",
-    "newCustomerOption": "Nuovo cliente — assegna dopo"
+    "newCustomerOption": "Nuovo cliente — assegna dopo",
+    "upgradesTitle": "Extra scelti",
+    "upgradesUnbilled": "{{count}} non ancora fatturati · {{total}} IVA esclusa",
+    "upgradesAllBilled": "Tutto ciò che è stato scelto è stato fatturato.",
+    "upgradeNeedsWarning": "\"{{item}}\" ({{amount}}) — registra di aver avvisato il cliente del costo aggiuntivo",
+    "billUpgrades": "Fattura gli extra",
+    "billUpgradesTitle": "Fattura gli extra",
+    "billUpgradesBody": "Crea una bozza di fattura per {{count}} extra scelti, {{total}} IVA esclusa.",
+    "billUpgradesFailed": "Impossibile creare la fattura",
+    "nothingToBillTitle": "Non c’è ancora nulla da fatturare",
+    "allBlockedBody": "Per ogni extra manca ancora la prova di aver avvisato il cliente del costo aggiuntivo.",
+    "noUpgradesToBill": "Non ci sono ancora extra da fatturare.",
+    "upgradesNotPositive": "Queste scelte danno zero o meno: non c’è nulla da fatturare.",
+    "upgradeInvoiceTitle": "{{project}} — extra scelti",
+    "recordWarningTitle": "Registra l’avviso di prezzo",
+    "recordWarningBody": "Conferma di aver detto al cliente che \"{{item}}\" comporta un costo aggiuntivo. Necessario prima di fatturarlo (art. 7:755 BW)."
   },
   "besparen": {
     "materialFallback": "Materiale {{id}}"

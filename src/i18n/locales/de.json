@@ -4209,7 +4209,22 @@
     "reminderSentBody_other": "{{count}} Elemente über {{channel}} gesendet.",
     "pickCustomer": "Welcher Kunde?",
     "pickCustomerDesc": "Verknüpfe diese Checkliste mit einem Kunden, damit Erinnerungen an die richtige Person gehen.",
-    "newCustomerOption": "Neuer Kunde — später zuweisen"
+    "newCustomerOption": "Neuer Kunde — später zuweisen",
+    "upgradesTitle": "Gewählte Extras",
+    "upgradesUnbilled": "{{count}} noch nicht berechnet · {{total}} zzgl. MwSt.",
+    "upgradesAllBilled": "Alles Gewählte wurde berechnet.",
+    "upgradeNeedsWarning": "„{{item}}\" ({{amount}}) — halten Sie fest, dass Sie den Kunden auf die Mehrkosten hingewiesen haben",
+    "billUpgrades": "Extras berechnen",
+    "billUpgradesTitle": "Extras berechnen",
+    "billUpgradesBody": "Erstellt einen Rechnungsentwurf über {{count}} gewählte Extras, {{total}} zzgl. MwSt.",
+    "billUpgradesFailed": "Rechnung konnte nicht erstellt werden",
+    "nothingToBillTitle": "Noch nichts abzurechnen",
+    "allBlockedBody": "Bei jedem Extra fehlt noch der Nachweis, dass Sie den Kunden auf die Mehrkosten hingewiesen haben.",
+    "noUpgradesToBill": "Es gibt noch keine Extras zum Abrechnen.",
+    "upgradesNotPositive": "Diese Auswahl ergibt null oder weniger — es gibt nichts zu berechnen.",
+    "upgradeInvoiceTitle": "{{project}} — gewählte Extras",
+    "recordWarningTitle": "Hinweis auf Mehrkosten festhalten",
+    "recordWarningBody": "Bestätigt, dass Sie dem Kunden gesagt haben, dass „{{item}}\" Mehrkosten verursacht. Vor der Abrechnung erforderlich (§ 7:755 BW / Anspruch auf Mehrvergütung)."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"

@@ -14,6 +14,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Palette, SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { useRouter } from 'expo-router';
+import { formatCurrency, type Country } from '../../src/i18n/formatting';
+import { useAuth } from '../../src/context/AuthContext';
 import { Spacing } from '../../src/theme/spacing';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import {
@@ -42,7 +45,14 @@ import { DecisionActivityPanel } from '../../src/components/contractor/DecisionA
 // follow R52/R54: insert without `id`, capture row uuids, rekey via
 // idRemapBus. For R30 we keep the existing FE id shape and stay
 // AsyncStorage-only — no BE writes that could expose the drift.
-import { recordDecisionOnTracker } from '../../src/services/decisionRecording';
+import { recordDecisionOnTracker, applySubmissionsToTracker } from '../../src/services/decisionRecording';
+import {
+  billableUpgrades,
+  upgradeTotal,
+  upgradeInvoiceLines,
+  markUpgradesBilled,
+  recordPriceWarning,
+} from '../../src/services/decisionUpgradeBilling';
 
 const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
 
@@ -67,7 +77,10 @@ type ViewMode = 'list' | 'detail' | 'template-picker' | 'customer-picker';
 
 export default function KeuzeScreen() {
   const { t } = useTranslation();
-  const { customers } = useAppState();
+  const { customers, addInvoiceFromDecisionUpgrades } = useAppState();
+  const router = useRouter();
+  const { user } = useAuth();
+  const country = (user?.country ?? 'NL') as Country;
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTracker, setSelectedTracker] = useState<CustomerDecisionTracker | null>(null);
   // Template chosen, waiting for the contractor to attach a customer before we
@@ -81,6 +94,21 @@ export default function KeuzeScreen() {
   const { newCount: decisionNewCount, submissions: decisionSubmissions, refresh: refreshDecisions } = useDecisionUpdates(
     selectedTracker?.id ?? null
   );
+
+  // The customer's own answers, folded into the checklist.
+  //
+  // `decision_submissions` rows reached this screen as a photo panel and an
+  // activity timeline and were never applied to the tracker itself, so an item
+  // the customer answered in the portal stayed PENDING on the contractor's
+  // list for ever — and the upgrade price hanging off that choice could never
+  // be billed, because the item never reached `decided`.
+  useEffect(() => {
+    if (!selectedTracker || decisionSubmissions.length === 0) return;
+    const { tracker: merged, applied } = applySubmissionsToTracker(selectedTracker, decisionSubmissions);
+    if (applied === 0) return;
+    setSelectedTracker(merged);
+    persistTrackerLocal(merged);
+  }, [decisionSubmissions, selectedTracker?.id]);
 
   // Screen visit tracking
   useEffect(() => { recordScreenVisit('decisions'); }, []);
@@ -284,6 +312,88 @@ export default function KeuzeScreen() {
     persistTrackerLocal(updatedTracker);
   };
 
+  /**
+   * Bill the upgrades the customer chose.
+   *
+   * Their own invoice, like meerwerk — folding them into the job's agreed
+   * price would re-price a fixed contract. `billableUpgrades` holds back
+   * anything the customer was never told the price of (art. 7:755 BW).
+   */
+  const handleBillUpgrades = async () => {
+    if (!selectedTracker) return;
+    const { billable, blocked, total } = billableUpgrades(selectedTracker);
+    if (billable.length === 0) {
+      Alert.alert(
+        t('decisions.nothingToBillTitle', 'Nothing to bill yet'),
+        blocked.length > 0
+          ? t('decisions.allBlockedBody', 'Every upgrade still needs a record that you told the customer it costs extra.')
+          : t('decisions.noUpgradesToBill', 'There are no upgrades to bill yet.'),
+      );
+      return;
+    }
+    Alert.alert(
+      t('decisions.billUpgradesTitle', 'Invoice the extras'),
+      t('decisions.billUpgradesBody', {
+        defaultValue: 'Creates a draft invoice for {{count}} chosen upgrade(s), {{total}} excl. VAT.',
+        count: billable.length,
+        total: formatCurrency(total, country),
+      }),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('common.confirm', 'Confirm'),
+          onPress: async () => {
+            try {
+              const invoiceId = await addInvoiceFromDecisionUpgrades({
+                customerId: selectedTracker.customerId,
+                customerName: selectedTracker.customerName,
+                title: t('decisions.upgradeInvoiceTitle', '{{project}} — chosen upgrades', {
+                  project: selectedTracker.templateName || selectedTracker.customerName,
+                }),
+                lines: upgradeInvoiceLines(billable),
+              });
+              // Stamp them so the same choice cannot be billed twice.
+              const stamped = markUpgradesBilled(selectedTracker, billable.map((e) => e.itemId), invoiceId);
+              setSelectedTracker(stamped);
+              persistTrackerLocal(stamped);
+              hapticSuccess();
+              router.push(`/invoices/${invoiceId}` as any);
+            } catch (err) {
+              Alert.alert(
+                t('decisions.billUpgradesFailed', 'Could not create the invoice'),
+                err instanceof Error ? err.message : String(err),
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  /** Record that the contractor warned the customer this choice costs extra. */
+  const handleRecordPriceWarning = (itemId: string, itemName: string) => {
+    if (!selectedTracker) return;
+    Alert.alert(
+      t('decisions.recordWarningTitle', 'Record the price warning'),
+      t('decisions.recordWarningBody', {
+        defaultValue: 'Confirms you told the customer that "{{item}}" costs extra. Required before you can bill it (art. 7:755 BW).',
+        item: itemName,
+      }),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('common.confirm', 'Confirm'),
+          onPress: () => {
+            const next = recordPriceWarning(selectedTracker, itemId);
+            setSelectedTracker(next);
+            persistTrackerLocal(next);
+            hapticSuccess();
+          },
+        },
+      ],
+    );
+  };
+
   const handleShareWithCustomer = () => {
     // R66 round 32: ungated for BE-persisted trackers. Pre-R32 (R25 gate)
     // we hard-blocked the share path because the customer portal lookup
@@ -336,6 +446,60 @@ export default function KeuzeScreen() {
         {viewMode === 'detail' && selectedTracker && (
           <>
             <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.md, gap: Spacing.sm }}>
+              {/* The extras the customer picked. The portal has always shown
+                  THEM this total; the contractor could see the per-option
+                  amounts and no total, and had no way to charge any of it. */}
+              {(() => {
+                const chosenTotal = upgradeTotal(selectedTracker);
+                const { billable, blocked, total: billableTotal } = billableUpgrades(selectedTracker);
+                if (chosenTotal === 0 && blocked.length === 0) return null;
+                return (
+                  <View style={styles.upgradeCard}>
+                    <View style={styles.upgradeHeader}>
+                      <Text style={styles.upgradeTitle}>{t('decisions.upgradesTitle', 'Extras chosen')}</Text>
+                      <Text style={styles.upgradeTotal}>
+                        {chosenTotal > 0 ? '+' : ''}{formatCurrency(chosenTotal, country)}
+                      </Text>
+                    </View>
+                    <Text style={styles.upgradeSub}>
+                      {billable.length > 0
+                        ? t('decisions.upgradesUnbilled', {
+                            defaultValue: '{{count}} not yet invoiced · {{total}} excl. VAT',
+                            count: billable.length,
+                            total: formatCurrency(billableTotal, country),
+                          })
+                        : t('decisions.upgradesAllBilled', 'Everything chosen has been invoiced.')}
+                    </Text>
+                    {blocked.map(({ entry }) => (
+                      <Pressable
+                        key={entry.itemId}
+                        style={styles.upgradeBlockedRow}
+                        accessibilityRole="button"
+                        onPress={() => handleRecordPriceWarning(entry.itemId, entry.itemName)}
+                      >
+                        <Text style={styles.upgradeBlockedText}>
+                          {t('decisions.upgradeNeedsWarning', {
+                            defaultValue: '"{{item}}" ({{amount}}) — record that you told the customer it costs extra',
+                            item: entry.itemName,
+                            amount: formatCurrency(entry.amount, country),
+                          })}
+                        </Text>
+                      </Pressable>
+                    ))}
+                    {billable.length > 0 && (
+                      <Pressable
+                        style={styles.upgradeBillBtn}
+                        accessibilityRole="button"
+                        onPress={handleBillUpgrades}
+                      >
+                        <Text style={styles.upgradeBillBtnText}>
+                          {t('decisions.billUpgrades', 'Invoice the extras')}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+                );
+              })()}
               <PhotoSubmissionsPanel
                 submissions={decisionSubmissions}
                 trackerId={selectedTracker.id}
@@ -422,6 +586,25 @@ export default function KeuzeScreen() {
 }
 
 const styles = StyleSheet.create({
+  upgradeCard: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    padding: Spacing.md, gap: 6,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  upgradeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  upgradeTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, flexShrink: 1 },
+  upgradeTotal: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange },
+  upgradeSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  upgradeBlockedRow: {
+    backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm,
+    paddingHorizontal: 10, paddingVertical: 8,
+  },
+  upgradeBlockedText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.feedbackWarning },
+  upgradeBillBtn: {
+    backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.md,
+    paddingVertical: 12, alignItems: 'center', marginTop: 2,
+  },
+  upgradeBillBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
   container: {
     flex: 1,
     backgroundColor: PAGE_BG,

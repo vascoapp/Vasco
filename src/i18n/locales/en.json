@@ -4209,7 +4209,22 @@
     "reminderSentBody_other": "{{count}} items sent via {{channel}}.",
     "pickCustomer": "Which customer?",
     "pickCustomerDesc": "Attach this checklist to a customer so reminders go to the right person.",
-    "newCustomerOption": "New customer — assign later"
+    "newCustomerOption": "New customer — assign later",
+    "upgradesTitle": "Extras chosen",
+    "upgradesUnbilled": "{{count}} not yet invoiced · {{total}} excl. VAT",
+    "upgradesAllBilled": "Everything chosen has been invoiced.",
+    "upgradeNeedsWarning": "\"{{item}}\" ({{amount}}) — record that you told the customer it costs extra",
+    "billUpgrades": "Invoice the extras",
+    "billUpgradesTitle": "Invoice the extras",
+    "billUpgradesBody": "Creates a draft invoice for {{count}} chosen upgrade(s), {{total}} excl. VAT.",
+    "billUpgradesFailed": "Could not create the invoice",
+    "nothingToBillTitle": "Nothing to bill yet",
+    "allBlockedBody": "Every upgrade still needs a record that you told the customer it costs extra.",
+    "noUpgradesToBill": "There are no upgrades to bill yet.",
+    "upgradesNotPositive": "These choices come to zero or less, so there is nothing to invoice.",
+    "upgradeInvoiceTitle": "{{project}} — chosen upgrades",
+    "recordWarningTitle": "Record the price warning",
+    "recordWarningBody": "Confirms you told the customer that \"{{item}}\" costs extra. Required before you can bill it (art. 7:755 BW)."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"

@@ -4209,7 +4209,22 @@
     "reminderSentBody_other": "{{count}} elementos enviados por {{channel}}.",
     "pickCustomer": "¿Qué cliente?",
     "pickCustomerDesc": "Vincula esta lista a un cliente para que los recordatorios lleguen a la persona correcta.",
-    "newCustomerOption": "Nuevo cliente — asignar más tarde"
+    "newCustomerOption": "Nuevo cliente — asignar más tarde",
+    "upgradesTitle": "Extras elegidos",
+    "upgradesUnbilled": "{{count}} sin facturar · {{total}} sin IVA",
+    "upgradesAllBilled": "Todo lo elegido está facturado.",
+    "upgradeNeedsWarning": "\"{{item}}\" ({{amount}}) — deja constancia de que avisaste al cliente del coste extra",
+    "billUpgrades": "Facturar los extras",
+    "billUpgradesTitle": "Facturar los extras",
+    "billUpgradesBody": "Crea un borrador de factura por {{count}} extra(s) elegido(s), {{total}} sin IVA.",
+    "billUpgradesFailed": "No se ha podido crear la factura",
+    "nothingToBillTitle": "Todavía no hay nada que facturar",
+    "allBlockedBody": "A cada extra le falta la constancia de que avisaste al cliente del coste adicional.",
+    "noUpgradesToBill": "Aún no hay extras que facturar.",
+    "upgradesNotPositive": "Estas elecciones suman cero o menos, así que no hay nada que facturar.",
+    "upgradeInvoiceTitle": "{{project}} — extras elegidos",
+    "recordWarningTitle": "Registrar el aviso de precio",
+    "recordWarningBody": "Confirma que avisaste al cliente de que \"{{item}}\" cuesta más. Obligatorio antes de facturarlo (art. 7:755 BW)."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"

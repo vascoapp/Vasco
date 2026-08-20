@@ -229,6 +229,24 @@ export interface CustomerDecisionItem {
   photoUrl?: string;
   decidedAt?: string;
 
+  /**
+   * WHO recorded it. The customer picking an option in the portal saw its
+   * price impact printed next to it; the contractor tapping the same option on
+   * their own screen is not evidence the customer was told anything. That
+   * distinction decides whether an upgrade can be billed under art. 7:755 BW
+   * — see `decisionUpgradeBilling`.
+   */
+  decidedBy?: 'customer' | 'contractor';
+  /**
+   * When the contractor recorded that they warned the customer this choice
+   * carried a price increase. Only needed for contractor-recorded upgrades;
+   * a customer-made choice carries its own evidence.
+   */
+  priceWarningAt?: string;
+  /** Set once the upgrade on this item has been billed, so it cannot be billed twice. */
+  billedInvoiceId?: string;
+  billedAt?: string;
+
   // Timeline
   dueDate: string;
   isOverdue: boolean;
