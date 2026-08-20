@@ -42,6 +42,8 @@ import { DecisionActivityPanel } from '../../src/components/contractor/DecisionA
 // follow R52/R54: insert without `id`, capture row uuids, rekey via
 // idRemapBus. For R30 we keep the existing FE id shape and stay
 // AsyncStorage-only — no BE writes that could expose the drift.
+import { recordDecisionOnTracker } from '../../src/services/decisionRecording';
+
 const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
 
 async function persistTrackerLocal(tracker: CustomerDecisionTracker): Promise<void> {
@@ -264,25 +266,13 @@ export default function KeuzeScreen() {
     value: string | number | boolean
   ) => {
     if (!selectedTracker) return;
-    const updatedCategories = selectedTracker.categories.map(cat => ({
-      ...cat,
-      items: cat.items.map(item =>
-        item.itemId === itemId
-          ? { ...item, status: 'decided' as const, value, decidedAt: new Date().toISOString() }
-          : item
-      ),
-      completedCount: cat.items.filter(item =>
-        item.itemId === itemId ? true : item.status === 'decided'
-      ).length,
-    }));
-    const decidedCount = updatedCategories.reduce((sum, cat) => sum + cat.completedCount, 0);
-    const updatedTracker: CustomerDecisionTracker = {
-      ...selectedTracker,
-      categories: updatedCategories,
-      decidedCount,
-      pendingCount: selectedTracker.totalDecisions - decidedCount,
-      updatedAt: new Date().toISOString(),
-    };
+    // The match used to be `item.itemId === itemId` while DecisionTracker
+    // reports `item.id`. Those are the same string only for trackers this
+    // screen builds from a template; on the seeded tracker (id `dec_4`,
+    // itemId `item_tap_style`) every option tap matched nothing and the
+    // decision was silently dropped. `recordDecisionOnTracker` accepts either
+    // identifier and is unit-tested against both shapes.
+    const { tracker: updatedTracker } = recordDecisionOnTracker(selectedTracker, itemId, value);
     setSelectedTracker(updatedTracker);
     // R66 round 30: persist contractor-recorded decisions so they
     // survive backgrounding. Pre-R30 this lived in React state only —

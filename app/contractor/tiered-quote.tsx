@@ -126,29 +126,21 @@ export default function TieredQuoteScreen() {
           }
         };
 
-        // If there's only one tier with items, send it. Otherwise prompt the user.
-        if (tiers.length === 1) {
-          try {
-            await sendTier(tiers[0]);
-          } finally {
-            sendingRef.current = false;
-          }
-          return;
+        // The package is chosen on the tier cards in the builder and arrives
+        // as `quote.selectedTier`. It used to be asked again here, in an
+        // Alert, on a screen that had just told the contractor "customer sees
+        // three options" — one choice, made twice, and the first description
+        // of it was false: the customer portal renders ONE quote with one set
+        // of lines and never could show three.
+        const chosen =
+          tiers.find((ti: any) => ti.tier === (quote as any).selectedTier)
+          ?? tiers[1]
+          ?? tiers[0];
+        try {
+          await sendTier(chosen);
+        } finally {
+          sendingRef.current = false;
         }
-
-        Alert.alert(
-          t('tieredQuote.pickTierTitle', 'Which package do you want to send?'),
-          t('tieredQuote.pickTierDesc', 'Your customer will see only the package you pick. They can still reply asking to see the others.'),
-          [
-            ...tiers.map((ti: any) => ({
-              text: ti.name ?? t('tieredQuote.quoteLabel'),
-              onPress: async () => {
-                try { await sendTier(ti); } finally { sendingRef.current = false; }
-              },
-            })),
-            { text: t('common.cancel'), style: 'cancel' as const, onPress: () => { sendingRef.current = false; } },
-          ],
-        );
       }}
       onClose={() => router.back()}
     />

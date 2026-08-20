@@ -49,6 +49,7 @@ import {
 import { useTimeOfDayHint, dayPart, classifyNow } from '../../services/timeOfDayAcceptanceService';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useQuoteTemplates, localizeTemplate, localizeCategory, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
+import { useTierPresets, defaultTierPresets, MAX_TIER_FEATURES, TIER_KEYS, type TierKey, type TierPresets } from '../../services/quoteTierPresetService';
 import { hapticSuccess } from '../../utils/haptics';
 import { useTranslation } from 'react-i18next';
 // R62: SOW (scope-of-work) generator. Three-paragraph narrative
@@ -136,10 +137,25 @@ const TRADE_SUGGESTIONS: Record<Trade, string[]> = {
   other: ['Schroeven', 'Pluggen', 'Afdekfolie', 'Siliconenkit'],
 };
 
+// Presentation only. The NAME and the bullet points used to live here as
+// Dutch literals — and the name becomes the quote's title, i.e. the one string
+// on this screen the customer reads. They are the contractor's own commercial
+// offer now: localized defaults, editable, stored per contractor in
+// `quoteTierPresetService`.
 const TIER_CONFIG = {
-  good: { name: 'Basis', tagline: 'Standaard uitvoering', color: SemanticColors.textSecondary, icon: 'checkmark-circle-outline' as const },
-  better: { name: 'Standaard', tagline: 'Meest gekozen', color: Palette.hermesOrange, icon: 'star-outline' as const },
-  best: { name: 'Premium', tagline: 'Beste kwaliteit', color: '#8B5CF6', icon: 'diamond-outline' as const },
+  good: { color: SemanticColors.textSecondary, icon: 'checkmark-circle-outline' as const },
+  better: { color: Palette.hermesOrange, icon: 'star-outline' as const },
+  best: { color: '#8B5CF6', icon: 'diamond-outline' as const },
+};
+
+// The tagline is quote DATA (it lands on QuoteTier.tagline), so it is
+// translated, not editable — nothing renders it on this screen and nothing
+// downstream shows it to the customer either. Kept localized rather than
+// Dutch-literal so the field is honest if anything ever does read it.
+const TIER_TAGLINE_KEY: Record<TierKey, { key: string; fallback: string }> = {
+  good: { key: 'quotes.tierGoodTagline', fallback: 'Straightforward job' },
+  better: { key: 'quotes.tierBetterTagline', fallback: 'Most chosen' },
+  best: { key: 'quotes.tierBestTagline', fallback: 'Best quality' },
 };
 
 interface TieredQuoteBuilderProps {
@@ -178,6 +194,17 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   const reducedRate = getReducedVatRate(country);
   const [useReducedVat, setUseReducedVat] = useState(false);
   const [step, setStep] = useState<'select' | 'preview'>('select');
+  // The contractor's own package names + promises (localized defaults until
+  // they edit them). `tierPresets` feeds calculateTiers below.
+  const { presets: tierPresets, save: saveTierPresets, reset: resetTierPresetsToDefault } = useTierPresets(t);
+  const [showTierEditor, setShowTierEditor] = useState(false);
+  const [tierDraft, setTierDraft] = useState<TierPresets | null>(null);
+  // WHICH package is actually sent. The customer portal renders one quote with
+  // one set of lines — it has never been able to show three — so the screen
+  // used to claim "customer sees three options" and then, on send, ask the
+  // contractor which single one to send. One choice, made twice, described
+  // wrongly the first time. The choice lives on the cards now.
+  const [sendTierKey, setSendTierKey] = useState<TierKey>('better');
   // The contractor's own catalogue. See the tradePricebook memo below for how
   // it takes precedence over the demo starter table.
   const { entries: myPricebook } = usePricebook();
@@ -452,19 +479,20 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         : (useReducedVat && reducedRate !== null ? reducedRate : getStandardVatRate(country));
       const vatAmount = subtotal * (effectiveVatRate / 100);
       return {
-        tier: tierKey, name: TIER_CONFIG[tierKey].name, tagline: TIER_CONFIG[tierKey].tagline,
+        tier: tierKey,
+        name: tierPresets[tierKey].name,
+        tagline: t(TIER_TAGLINE_KEY[tierKey].key, TIER_TAGLINE_KEY[tierKey].fallback),
         lineItems, subtotal, vatRate: effectiveVatRate, vatAmount, total: subtotal + vatAmount,
-        features: features.length > 0 ? features.slice(0, 5) : [
-          tierKey === 'good' ? 'Standaard materiaal' : tierKey === 'better' ? 'Kwaliteitsmateriaal' : 'Premium materiaal',
-          tierKey !== 'good' ? 'Garantie 2 jaar' : 'Garantie 1 jaar',
-          tierKey === 'best' ? 'Gratis nacontrole' : '',
-        ].filter(Boolean),
+        // A pricebook variant that spells out what it includes beats the
+        // contractor's generic package bullets; the presets are the fallback.
+        features: features.length > 0 ? features.slice(0, 5) : tierPresets[tierKey].features,
         isRecommended: tierKey === 'better',
       };
     });
   };
 
   const tiers = calculateTiers();
+  const sendTier = tiers.find(ti => ti.tier === sendTierKey) ?? tiers[1];
 
   const addService = (item: PricebookItem) => {
     const existing = selectedServices.find(s => s.item.id === item.id);
@@ -959,7 +987,15 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     // back out or proceed knowingly.
     const proceed = () => {
       const quote: Partial<TieredQuote> = {
-        reference: `TQ-${Date.now()}`, title: 'Offerte', tiers,
+        reference: `TQ-${Date.now()}`,
+        // The title was the Dutch literal 'Offerte'. The parent screen names
+        // the quote after the package it sends, so this is only a fallback —
+        // but a Dutch one on a German contractor's quote is still wrong.
+        title: t('quotes.quoteTitle', 'Quote'),
+        tiers,
+        // Which package the contractor chose on the cards. Was asked AGAIN in
+        // an Alert after this point; the parent reads it from here now.
+        selectedTier: sendTierKey,
         validUntil: localDateKey(new Date(Date.now() + 30 * MS_PER_DAY)),
         paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
         // R62: SOW narrative threaded as the quote description. Parent
@@ -1730,20 +1766,44 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           </Pressable>
         )}
 
-        {/* Tier preview cards */}
-        <Text style={s.sectionTitle}>{t('quotes.customerSeesOptions', 'Customer sees three options')}</Text>
+        {/* Package picker. Tapping a card chooses what gets sent. */}
+        <View style={s.packageHeaderRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.sectionTitle}>{t('quotes.pickPackageTitle', 'Which package do you send?')}</Text>
+            <Text style={s.packageHeaderDesc}>
+              {t('quotes.pickPackageDesc', 'Your customer receives the package you pick here. They can always reply and ask for another.')}
+            </Text>
+          </View>
+          <Pressable
+            style={s.editPackagesBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('quotes.editPackages', 'Edit packages')}
+            onPress={() => { setTierDraft(tierPresets); setShowTierEditor(true); }}
+          >
+            <Ionicons name="create-outline" size={14} color={Palette.hermesOrange} />
+            <Text style={s.editPackagesText}>{t('quotes.editPackages', 'Edit packages')}</Text>
+          </Pressable>
+        </View>
         <View style={s.tiersRow}>
           {tiers.map(tier => {
             const cfg = TIER_CONFIG[tier.tier];
+            const isSending = tier.tier === sendTierKey;
             return (
-              <View key={tier.tier} style={[s.tierCard, tier.isRecommended && { borderColor: Palette.hermesOrange, borderWidth: 2 }]}>
+              <Pressable
+                key={tier.tier}
+                style={[s.tierCard, isSending && s.tierCardSelected]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSending }}
+                accessibilityLabel={`${tier.name} ${fmt(tier.total)}`}
+                onPress={() => { setSendTierKey(tier.tier); hapticSuccess(); }}
+              >
                 {tier.isRecommended && (
                   <View style={s.recRibbon}>
                     <Text style={s.recRibbonText}>{t('quotes.recommended', 'RECOMMENDED')}</Text>
                   </View>
                 )}
                 <View style={[s.tierIconCircle, { backgroundColor: cfg.color + '15' }]}>
-                  <Ionicons name={cfg.icon} size={20} color={cfg.color} />
+                  <Ionicons name={isSending ? 'radio-button-on' : cfg.icon} size={20} color={isSending ? Palette.hermesOrange : cfg.color} />
                 </View>
                 <Text style={[s.tierName, { color: cfg.color }]}>{tier.name}</Text>
                 <Text style={s.tierPrice}>{fmt(tier.total)}</Text>
@@ -1751,23 +1811,19 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 {tier.features.map((f, i) => (
                   <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, width: '100%' }}>
                     <Ionicons name="checkmark" size={12} color={SemanticColors.feedbackSuccess} />
-                    <Text style={s.tierFeature} numberOfLines={1}>{f}</Text>
+                    <Text style={s.tierFeature} numberOfLines={2}>{f}</Text>
                   </View>
                 ))}
-              </View>
+              </Pressable>
             );
           })}
         </View>
 
-        {/* Upsell stat */}
-        <View style={s.upsellRow}>
-          <Ionicons name="trending-up" size={14} color={SemanticColors.feedbackSuccess} />
-          <Text style={s.upsellText}>{t('quotes.upsellStat', '83% of customers pick Standard or Premium')}</Text>
-        </View>
-
         {/* Line items summary */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>{t('quotes.linesStandard', 'Lines (standard)')}</Text>
+          <Text style={s.sectionTitle}>
+            {t('quotes.linesForPackage', 'Lines ({{name}})', { name: tierPresets[sendTierKey].name })}
+          </Text>
           <View style={s.serviceList}>
             {selectedServices.map(sv => {
               const hintKey = sv.item.name.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 3).join(' ');
@@ -1780,7 +1836,16 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 <View key={sv.item.id} style={s.serviceRowCol}>
                   <View style={s.serviceRow}>
                     <Text style={s.serviceName}>{sv.item.name}</Text>
-                    <Text style={s.servicePrice}>{sv.quantity} × {fmt(sv.item.basePrice * 1.25)}</Text>
+                    {/* Was `basePrice * 1.25` — the middle tier's multiplier,
+                        hardcoded, so the summary contradicted the card
+                        whenever Basic or Premium was the package being sent.
+                        Read the price off the tier itself. */}
+                    <Text style={s.servicePrice}>
+                      {sv.quantity} × {fmt(
+                        sendTier.lineItems.find(li => li.pricebookItemId === sv.item.id)?.unitPrice
+                        ?? sv.item.basePrice,
+                      )}
+                    </Text>
                   </View>
                   {hasHint && (
                     <View style={s.lineHintRow}>
@@ -1907,6 +1972,107 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         </View>
       </ScrollView>
 
+      {/* Edit the contractor's own package names + promises. These were three
+          Dutch literals; the name is what the customer reads as the quote's
+          title, so it has to be theirs and in their language. */}
+      <Modal
+        visible={showTierEditor}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTierEditor(false)}
+      >
+        <View style={s.namerScrim}>
+          <View style={[s.namerCard, { maxWidth: 420, maxHeight: '85%' }]}>
+            <Text style={s.namerTitle}>{t('quotes.editPackagesTitle', 'Your packages')}</Text>
+            <Text style={s.packageHeaderDesc}>
+              {t('quotes.editPackagesDesc', 'Names and promises go out on the quote your customer reads.')}
+            </Text>
+            <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled">
+              {TIER_KEYS.map(key => {
+                const draft = (tierDraft ?? tierPresets)[key];
+                const setDraft = (next: Partial<{ name: string; features: string[] }>) =>
+                  setTierDraft(prev => {
+                    const base = prev ?? tierPresets;
+                    return { ...base, [key]: { ...base[key], ...next } };
+                  });
+                // One empty row past the last filled one, so adding a promise
+                // needs no separate "add" button to find.
+                const rows = Math.min(draft.features.length + 1, MAX_TIER_FEATURES);
+                return (
+                  <View key={key} style={s.tierEditorGroup}>
+                    <Text style={s.tierEditorGroupTitle}>{draft.name}</Text>
+                    <View style={s.tierEditorRow}>
+                      <Text style={s.tierEditorLabel}>{t('quotes.packageName', 'Package name')}</Text>
+                      <TextInput
+                        style={s.tierEditorInput}
+                        value={draft.name}
+                        onChangeText={v => setDraft({ name: v })}
+                        placeholderTextColor={SemanticColors.textTertiary}
+                        accessibilityLabel={t('quotes.packageName', 'Package name')}
+                      />
+                    </View>
+                    {Array.from({ length: rows }).map((_, i) => (
+                      <View key={i} style={s.tierEditorRow}>
+                        <Text style={s.tierEditorLabel}>{t('quotes.packageFeature', 'Promise {{n}}', { n: i + 1 })}</Text>
+                        <TextInput
+                          style={s.tierEditorInput}
+                          value={draft.features[i] ?? ''}
+                          onChangeText={v => {
+                            const next = [...draft.features];
+                            next[i] = v;
+                            setDraft({ features: next });
+                          }}
+                          placeholder={t('quotes.packageFeaturePlaceholder', 'e.g. 2 year warranty')}
+                          placeholderTextColor={SemanticColors.textTertiary}
+                          accessibilityLabel={t('quotes.packageFeature', 'Promise {{n}}', { n: i + 1 })}
+                        />
+                      </View>
+                    ))}
+                  </View>
+                );
+              })}
+            </ScrollView>
+            {/* `namerBtn` carries flex: 1 for the side-by-side pair below. As
+                a lone child of this COLUMN that made it share the card's
+                vertical space with the scroll list, and it collapsed to a
+                blank pill with its label clipped away. Put it in a row. */}
+            <View style={s.namerRow}>
+              <Pressable
+                style={[s.namerBtn, s.namerBtnGhost]}
+                accessibilityRole="button"
+                onPress={async () => {
+                  const restored = await resetTierPresetsToDefault();
+                  setTierDraft(restored);
+                }}
+              >
+                <Text style={s.namerBtnGhostText}>{t('quotes.resetPackages', 'Restore defaults')}</Text>
+              </Pressable>
+            </View>
+            <View style={s.namerRow}>
+              <Pressable
+                style={[s.namerBtn, s.namerBtnGhost]}
+                accessibilityRole="button"
+                onPress={() => { setTierDraft(null); setShowTierEditor(false); }}
+              >
+                <Text style={s.namerBtnGhostText}>{t('common.cancel', 'Cancel')}</Text>
+              </Pressable>
+              <Pressable
+                style={[s.namerBtn, s.namerBtnPrimary]}
+                accessibilityRole="button"
+                onPress={async () => {
+                  if (tierDraft) await saveTierPresets(tierDraft);
+                  setTierDraft(null);
+                  setShowTierEditor(false);
+                  hapticSuccess();
+                }}
+              >
+                <Text style={s.namerBtnPrimaryText}>{t('common.save', 'Save')}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Send — R66r53: canonical DK CTA gradient pill */}
       <View style={s.bottom}>
         <Pressable onPress={handleSend} style={s.sendBtnWrap}>
@@ -1917,7 +2083,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             style={s.sendBtn}
           >
             <Ionicons name="send" size={18} color={Palette.white} />
-            <Text style={s.sendBtnText}>{t('quotes.sendQuote', 'Send quote')}</Text>
+            <Text style={s.sendBtnText}>
+              {t('quotes.sendPackage', 'Send {{name}}', { name: tierPresets[sendTierKey].name })}
+            </Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -2190,7 +2358,14 @@ const s = StyleSheet.create({
   vascoTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   vascoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   vascoText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
-  vascoExplain: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, marginTop: 2 },
+  // `vascoExplain` sits in a `vascoRow` next to a `flex: 1` label. flexShrink
+  // defaults to 0 in Yoga, so a long explanation ("Gute Chance auf Annahme.
+  // Der Preis ist wettbewerbsfaehig.") kept its full intrinsic width and
+  // squeezed the flex-basis-0 label down to one CHARACTER per line — the win
+  // chance rendered as a vertical column of letters. It was always meant to be
+  // the second LINE (hence marginTop), so claim the full row width and let
+  // flexWrap put it there.
+  vascoExplain: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, marginTop: 2, width: '100%' },
   vascoApply: { backgroundColor: Palette.hermesOrange, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 5 },
   vascoApplyText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: Palette.white },
   vascoSkip: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 5 },
@@ -2214,8 +2389,33 @@ const s = StyleSheet.create({
   tierVat: { fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textTertiary },
   tierFeature: { fontSize: TYPE.tinySize - 2, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
 
-  upsellRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SemanticColors.feedbackSuccess + '10', borderRadius: RADIUS.md, padding: 10 },
-  upsellText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.feedbackSuccess },
+  // The "83% of customers pick Standard or Premium" row lived here. Nothing
+  // computed that number — it was a literal in the JSX, shown to the
+  // contractor as fact (learnings #103). Removed with the row.
+  packageHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: GRID.sm },
+  packageHeaderDesc: {
+    fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily,
+    color: SemanticColors.textSecondary, lineHeight: 18, marginTop: 2,
+  },
+  editPackagesBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderWidth: 1, borderColor: SemanticColors.borderMuted,
+    borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 6,
+  },
+  editPackagesText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
+  tierCardSelected: { borderColor: Palette.hermesOrange, borderWidth: 2, backgroundColor: Palette.hermesOrange + '0D' },
+  tierEditorRow: { gap: 6 },
+  tierEditorLabel: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: SemanticColors.textSecondary },
+  tierEditorInput: {
+    backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm,
+    paddingHorizontal: 10, paddingVertical: 10,
+    fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary,
+  },
+  tierEditorGroup: {
+    backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg,
+    padding: GRID.md, gap: GRID.sm, marginBottom: GRID.sm,
+  },
+  tierEditorGroupTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
 
   // R66r59: NL 9% reduced-VAT opt-in row
   vatToggleRow: {
