@@ -527,7 +527,31 @@
     "quickForm": "Form",
     "quickOnMyWay": "On my way",
     "quickDone": "Done",
-    "quickFeedback": "Feedback"
+    "quickFeedback": "Feedback",
+    "invoiceFailedTitle": "Could not create the invoice",
+    "lifecycle": {
+      "lead": "Lead",
+      "offerte": "Quoted",
+      "geaccepteerd": "Accepted",
+      "ingepland": "Scheduled",
+      "bezig": "In progress",
+      "gereed": "Done",
+      "gefactureerd": "Invoiced",
+      "betaald": "Paid",
+      "geannuleerd": "Cancelled"
+    },
+    "lifecycleAction": {
+      "lead": "Create quote",
+      "offerte": "Mark as accepted",
+      "geaccepteerd": "Schedule",
+      "ingepland": "Start job",
+      "bezig": "Mark as done",
+      "gereed": "Create invoice",
+      "gefactureerd": "Mark as paid"
+    },
+    "advanceStatus": "Advance status",
+    "invoiceThisJobDesc": "Creates a draft invoice from this job, with what the job recorded, and marks the job invoiced.",
+    "fromQuoteTitle": "Job from quote {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",
@@ -869,7 +893,13 @@
     "einvoiceUnavailableBody": "Structured e-invoice export for this country is not ready yet. You can still send the PDF.",
     "einvoiceMissingTitle": "Some details are missing",
     "einvoiceMissingBody": "This format needs a few more details before it can be sent:",
-    "einvoiceFixProfile": "Open business profile"
+    "einvoiceFixProfile": "Open business profile",
+    "labourLine": "Labour ({{hours}} h)",
+    "materialLine": "Materials",
+    "nothingToBill": "Nothing to invoice yet for \"{{job}}\": no agreed price, no hours logged and no materials recorded.",
+    "noHourlyRate": "\"{{job}}\" has {{hours}} h logged, but there is no hourly rate to bill them at. Add an hourly item to your price list first.",
+    "workRecordNote": "From the job: {{hours}} h logged, {{materials}} materials used{{completed}}.",
+    "workRecordCompleted": ", completed {{date}}"
   },
   "expenses": {
     "title": "Expenses",

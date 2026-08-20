@@ -527,7 +527,31 @@
     "quickForm": "Formular",
     "quickOnMyWay": "Unterwegs",
     "quickDone": "Fertig",
-    "quickFeedback": "Feedback"
+    "quickFeedback": "Feedback",
+    "invoiceFailedTitle": "Rechnung konnte nicht erstellt werden",
+    "lifecycle": {
+      "lead": "Lead",
+      "offerte": "Angebot",
+      "geaccepteerd": "Angenommen",
+      "ingepland": "Geplant",
+      "bezig": "In Arbeit",
+      "gereed": "Fertig",
+      "gefactureerd": "Berechnet",
+      "betaald": "Bezahlt",
+      "geannuleerd": "Storniert"
+    },
+    "lifecycleAction": {
+      "lead": "Angebot erstellen",
+      "offerte": "Als angenommen markieren",
+      "geaccepteerd": "Einplanen",
+      "ingepland": "Auftrag starten",
+      "bezig": "Als fertig markieren",
+      "gereed": "Rechnung erstellen",
+      "gefactureerd": "Als bezahlt markieren"
+    },
+    "advanceStatus": "Status weiterschalten",
+    "invoiceThisJobDesc": "Erstellt aus diesem Auftrag einen Rechnungsentwurf mit dem, was erfasst wurde, und setzt den Auftrag auf berechnet.",
+    "fromQuoteTitle": "Auftrag aus Angebot {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
@@ -869,7 +893,13 @@
     "einvoiceUnavailableBody": "Der strukturierte E-Rechnungsexport für dieses Land ist noch nicht fertig. Sie können weiterhin die PDF senden.",
     "einvoiceMissingTitle": "Es fehlen noch Angaben",
     "einvoiceMissingBody": "Für dieses Format werden noch einige Angaben benötigt:",
-    "einvoiceFixProfile": "Unternehmensprofil öffnen"
+    "einvoiceFixProfile": "Unternehmensprofil öffnen",
+    "labourLine": "Arbeitsstunden ({{hours}} Std.)",
+    "materialLine": "Material",
+    "nothingToBill": "Für \"{{job}}\" gibt es noch nichts abzurechnen: kein vereinbarter Preis, keine erfassten Stunden und kein Material.",
+    "noHourlyRate": "Für \"{{job}}\" sind {{hours}} Std. erfasst, aber es gibt keinen Stundensatz zur Abrechnung. Legen Sie zuerst eine Stundenposition in Ihrer Preisliste an.",
+    "workRecordNote": "Aus dem Auftrag: {{hours}} Std. erfasst, {{materials}} Materialien verbraucht{{completed}}.",
+    "workRecordCompleted": ", abgeschlossen am {{date}}"
   },
   "expenses": {
     "title": "Ausgaben",

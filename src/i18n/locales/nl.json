@@ -511,7 +511,31 @@
     "quickForm": "Formulier",
     "quickOnMyWay": "Onderweg",
     "quickDone": "Gereed",
-    "quickFeedback": "Feedback"
+    "quickFeedback": "Feedback",
+    "invoiceFailedTitle": "Factuur kon niet worden aangemaakt",
+    "lifecycle": {
+      "lead": "Lead",
+      "offerte": "Offerte",
+      "geaccepteerd": "Geaccepteerd",
+      "ingepland": "Ingepland",
+      "bezig": "Bezig",
+      "gereed": "Gereed",
+      "gefactureerd": "Gefactureerd",
+      "betaald": "Betaald",
+      "geannuleerd": "Geannuleerd"
+    },
+    "lifecycleAction": {
+      "lead": "Offerte maken",
+      "offerte": "Markeer als geaccepteerd",
+      "geaccepteerd": "Inplannen",
+      "ingepland": "Start klus",
+      "bezig": "Markeer als gereed",
+      "gereed": "Factureer",
+      "gefactureerd": "Markeer als betaald"
+    },
+    "advanceStatus": "Status verzetten",
+    "invoiceThisJobDesc": "Maakt een conceptfactuur van deze klus, met wat er is vastgelegd, en zet de klus op gefactureerd.",
+    "fromQuoteTitle": "Klus van offerte {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",
@@ -853,7 +877,13 @@
     "einvoiceUnavailableBody": "Gestructureerde e-facturatie voor dit land is nog niet klaar. Je kunt de pdf wel versturen.",
     "einvoiceMissingTitle": "Er ontbreken gegevens",
     "einvoiceMissingBody": "Voor dit formaat zijn nog een paar gegevens nodig:",
-    "einvoiceFixProfile": "Bedrijfsprofiel openen"
+    "einvoiceFixProfile": "Bedrijfsprofiel openen",
+    "labourLine": "Arbeidsuren ({{hours}} u)",
+    "materialLine": "Materialen",
+    "nothingToBill": "Er valt nog niets te factureren voor \"{{job}}\": geen afgesproken prijs, geen geschreven uren en geen materiaal vastgelegd.",
+    "noHourlyRate": "\"{{job}}\" heeft {{hours}} u geschreven, maar er is geen uurtarief om ze mee te factureren. Zet eerst een uurtarief in je prijslijst.",
+    "workRecordNote": "Vanuit de klus: {{hours}} u geschreven, {{materials}} materialen gebruikt{{completed}}.",
+    "workRecordCompleted": ", afgerond op {{date}}"
   },
   "expenses": {
     "title": "Uitgaven",

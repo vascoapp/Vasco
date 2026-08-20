@@ -1,6 +1,8 @@
 // React
 import { formatMoney } from '../i18n/formatting';
 import appI18n from '../i18n/i18n';
+import { jobBillingBasis } from '../services/jobBillingBasis';
+import { buildJobFromQuote } from '../services/quoteToJob';
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 // Libraries
@@ -2798,10 +2800,77 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const job = jobs.find((j) => j.id === jobId);
         if (!job) throw new Error(`Job ${jobId} not found`);
 
-        const amount = job.agreedAmount ?? job.quotedAmount ?? 0;
-        if (amount <= 0) {
-          throw new Error(`Cannot create invoice: job "${job.title}" has no amount (€0). Set a quoted or agreed amount first.`);
+        // What this job can be billed for. A quoted job bills the quote (that
+        // is the agreement). A job with NOTHING agreed used to throw here —
+        // "has no amount (€0)" — which is how a time-and-materials job, or any
+        // job invoiced straight off the work, became un-invoiceable. It now
+        // bills what the job recorded: hours logged against it and materials
+        // fitted. See `jobBillingBasis`.
+        const jobVatRate = getEffectiveVatRate(businessProfile);
+        let hourlyChargeRate = (businessProfile as { hourlyRate?: number } | undefined)?.hourlyRate;
+        try {
+          const { loadPricebook } = await import('../services/pricebookService');
+          const hourly = (await loadPricebook())
+            .filter(e => e.pricingType === 'hourly' && (e.basePrice ?? 0) > 0)
+            .sort((a, b) => (b.usageCount ?? 0) - (a.usageCount ?? 0))[0];
+          if (hourly) hourlyChargeRate = hourly.basePrice;
+        } catch {
+          // Price list unreadable — fall through to the profile rate.
         }
+        const billing = jobBillingBasis({
+          job,
+          quoteLines: job.quoteId ? (lineItems[job.quoteId] ?? []) : [],
+          jobMaterials: jobMaterialsMap[jobId] ?? [],
+          catalog: materials,
+          // The charge-out rate, in preference order: an hourly item in the
+          // contractor's OWN price list (the only rate they can actually edit
+          // in this app), then the profile's `hourlyRate` — which AppState
+          // elsewhere treats as a COST rate, so it is the fallback, not the
+          // first choice.
+          hourlyRate: hourlyChargeRate,
+          vatRatePercent: jobVatRate,
+          labels: {
+            labour: (hours: number) =>
+              appI18n.t('invoices.labourLine', 'Labour ({{hours}} h)', { hours }),
+            material: appI18n.t('invoices.materialLine', 'Materials'),
+            workRecord: ({ hours, materialCount, completedOn }) =>
+              appI18n.t(
+                'invoices.workRecordNote',
+                'From the job: {{hours}} h logged, {{materials}} materials used{{completed}}.',
+                {
+                  hours,
+                  materials: materialCount,
+                  completed: completedOn
+                    ? appI18n.t('invoices.workRecordCompleted', ', completed {{date}}', {
+                        date: localDateKey(new Date(completedOn)),
+                      })
+                    : '',
+                },
+              ),
+          },
+        });
+        if (billing.source === 'none') {
+          throw new Error(
+            billing.unpricedHours > 0
+              ? appI18n.t(
+                  'invoices.noHourlyRate',
+                  '"{{job}}" has {{hours}} h logged, but there is no hourly rate to bill them at. Add an hourly item to your price list first.',
+                  { job: job.title, hours: billing.unpricedHours },
+                )
+              : appI18n.t(
+                  'invoices.nothingToBill',
+                  'Nothing to invoice yet for "{{job}}": no agreed price, no hours logged and no materials recorded.',
+                  { job: job.title },
+                ),
+          );
+        }
+        // `Invoice.amount` is GROSS everywhere in this app. A quoted job keeps
+        // billing exactly what was agreed; an actuals-billed job grosses its
+        // own lines up at the profile's effective rate (0% for KOR /
+        // Kleinunternehmer, 19% DE, 21% NL — never the NL constant).
+        const amount = billing.source === 'quote'
+          ? billing.agreedAmount
+          : Math.round(billing.netAmount * (1 + jobVatRate / 100) * 100) / 100;
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
@@ -2842,6 +2911,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount,
           status: 'draft',
           dueInDays: 14,
+          // What the job recorded, carried onto the invoice the contractor is
+          // about to send. Editable in the invoice screen like any note.
+          notes: billing.workRecord,
         };
 
         setInvoices((prev) => [newInvoice, ...prev]);
@@ -2849,8 +2921,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // #5: carry the originating quote's line items onto the invoice so the
         // bill is auditable against the estimate (was total-only). Reuses the
         // same document_number-keyed map the quote→invoice + Moneybird-export
-        // paths already read from — no new field, no migration.
-        const jobInvSourceItems = job.quoteId ? (lineItems[job.quoteId] ?? []) : [];
+        // paths already read from — no new field, no migration. When there is
+        // no quote, these are the job's own recorded hours and materials.
+        // The quote branch passes the ORIGINAL line objects through untouched:
+        // they carry a per-line `vatRate` that the persist block below reads,
+        // and remapping them into fresh {description, quantity, unitPrice}
+        // objects would have dropped it back to the profile default.
+        const jobInvSourceItems = billing.source === 'quote'
+          ? (job.quoteId ? (lineItems[job.quoteId] ?? []) : [])
+          : (billing.lineItems.map((li, idx) => ({
+              id: `li-${docNumber}-${idx}`,
+              description: li.description,
+              quantity: li.quantity,
+              unitPrice: li.unitPrice,
+            })) as typeof lineItems[string]);
         if (jobInvSourceItems.length > 0) {
           setLineItems((prev) => ({ ...prev, [docNumber]: jobInvSourceItems }));
         }
@@ -2878,6 +2962,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             total_amount: amount,
             due_date: dueDate.toISOString(),
             delivery_date: deliveryDateIso,
+            notes: billing.workRecord ?? null,
           };
           try {
             const row = await withTimeout(createDocument(invPayload), 3000, 'addInvoiceFromJob');
@@ -2928,6 +3013,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           dueDate: dueDate.toISOString(),
         }).catch(() => {});
         trackEvent('invoice_created', { invoiceId: docNumber }).catch(() => {});
+        // Link the invoice back to the job and move the job on.
+        //
+        // Neither happened before. The job screen had TWO controls for this:
+        // the big lifecycle CTA on a finished job, which advanced the status
+        // to "invoiced" and created NOTHING, and a second button below the
+        // fold, which created an invoice and left the job sitting in "done"
+        // with no `invoiceId`. Whichever the contractor pressed, half the
+        // action was missing — and pressing the first one meant the job
+        // claimed it had been invoiced when no invoice existed.
+        setJobs((prev) => prev.map((j) =>
+          j.id === jobId
+            ? { ...j, invoiceId: docNumber, status: 'invoiced', updatedAt: new Date().toISOString() }
+            : j,
+        ));
         return docNumber;
       },
 
@@ -3292,28 +3391,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
         } catch {}
 
-        const newJob: Job = {
+        // One mapping, shared with the accept-path copy inside updateQuote.
+        // It carries the accepted SCOPE onto the job, which neither copy did.
+        const newJob: Job = buildJobFromQuote({
+          quote,
+          quoteId,
           id: tempId,
-          customerId: quote.customer ?? null,
-          quoteId: quoteId,
-          title: quote.job || `Klus van offerte ${quoteId}`,
-          description: null,
-          status: 'scheduled',
-          quotedAmount: quote.amount,
-          agreedAmount: quote.amount,
+          now,
           // Mirrors the persisted payload below, so the optimistic row and the
           // reloaded row agree. They did not before: the job rendered without a
           // trade and then reloaded without one too, for different reasons.
-          trade: quote.trade ?? getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade ?? undefined,
-          priority: 'normal',
-          photos: [],
-          notes: [],
-          timeEntries: [],
-          materials: [],
+          tradeFallback: getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade ?? undefined,
           scheduledDate,
-          createdAt: now,
-          updatedAt: now,
-        };
+          titleFallback: appI18n.t('jobs.fromQuoteTitle', 'Job from quote {{ref}}', { ref: quoteId }),
+        });
 
         setJobs((prev) => [newJob, ...prev]);
         // Mark quote as accepted
@@ -3375,6 +3466,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // quote→job conversion would silently fail.
           const jobPayload = {
             title: newJob.title,
+            description: newJob.description,
             customer_id: isUuid(quote.customer) ? quote.customer : null,
             quoted_amount: quote.amount,
             agreed_amount: quote.amount,
@@ -3523,24 +3615,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // that replicates the same logic to avoid circular reference issues with useMemo
           const tempId = `j-${Date.now()}`;
           const nowTs = new Date().toISOString();
-          const autoJob: Job = {
-            id: tempId,
-            customerId: quote.customer ?? null,
+          // Same mapping as convertQuoteToJob — literally the same function
+          // now. These two were hand-written copies and had already drifted in
+          // three fields (title fallback, trade fallback, scheduled date), on
+          // top of both dropping the accepted scope.
+          const autoJob: Job = buildJobFromQuote({
+            quote,
             quoteId: id,
-            title: quote.job || (quote as any).description || `Job from quote ${id}`,
-            description: null,
-            status: 'scheduled',
-            trade: (quote as any).trade,
-            quotedAmount: quote.amount,
-            agreedAmount: quote.amount,
-            priority: 'normal',
-            photos: [],
-            notes: [],
-            timeEntries: [],
-            materials: [],
-            createdAt: nowTs,
-            updatedAt: nowTs,
-          };
+            id: tempId,
+            now: nowTs,
+            tradeFallback: getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade ?? undefined,
+            titleFallback: appI18n.t('jobs.fromQuoteTitle', 'Job from quote {{ref}}', { ref: id }),
+          });
           setJobs((prev) => [autoJob, ...prev]);
           const sentAtMsUp = quote.sentAt ? new Date(quote.sentAt).getTime() : null;
           const ttdHoursUp = sentAtMsUp

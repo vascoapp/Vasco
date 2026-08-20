@@ -527,7 +527,31 @@
     "quickForm": "Formulario",
     "quickOnMyWay": "En camino",
     "quickDone": "Hecho",
-    "quickFeedback": "Opinión"
+    "quickFeedback": "Opinión",
+    "invoiceFailedTitle": "No se ha podido crear la factura",
+    "lifecycle": {
+      "lead": "Oportunidad",
+      "offerte": "Presupuesto",
+      "geaccepteerd": "Aceptado",
+      "ingepland": "Planificado",
+      "bezig": "En curso",
+      "gereed": "Terminado",
+      "gefactureerd": "Facturado",
+      "betaald": "Pagado",
+      "geannuleerd": "Cancelado"
+    },
+    "lifecycleAction": {
+      "lead": "Crear presupuesto",
+      "offerte": "Marcar como aceptado",
+      "geaccepteerd": "Planificar",
+      "ingepland": "Empezar el trabajo",
+      "bezig": "Marcar como terminado",
+      "gereed": "Crear factura",
+      "gefactureerd": "Marcar como pagado"
+    },
+    "advanceStatus": "Avanzar el estado",
+    "invoiceThisJobDesc": "Crea un borrador de factura a partir de este trabajo, con lo registrado, y marca el trabajo como facturado.",
+    "fromQuoteTitle": "Trabajo del presupuesto {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Gestionar seguros y siniestros",
@@ -869,7 +893,13 @@
     "einvoiceUnavailableBody": "La exportación de factura electrónica estructurada para este país todavía no está lista. Puedes enviar el PDF.",
     "einvoiceMissingTitle": "Faltan algunos datos",
     "einvoiceMissingBody": "Este formato necesita algunos datos más antes de poder enviarse:",
-    "einvoiceFixProfile": "Abrir perfil de empresa"
+    "einvoiceFixProfile": "Abrir perfil de empresa",
+    "labourLine": "Mano de obra ({{hours}} h)",
+    "materialLine": "Materiales",
+    "nothingToBill": "Todavía no hay nada que facturar en \"{{job}}\": sin precio acordado, sin horas registradas y sin materiales.",
+    "noHourlyRate": "\"{{job}}\" tiene {{hours}} h registradas, pero no hay tarifa por hora para facturarlas. Añade primero una partida por hora a tu lista de precios.",
+    "workRecordNote": "Del trabajo: {{hours}} h registradas, {{materials}} materiales utilizados{{completed}}.",
+    "workRecordCompleted": ", finalizado el {{date}}"
   },
   "expenses": {
     "title": "Gastos",

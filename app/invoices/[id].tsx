@@ -158,12 +158,15 @@ export default function InvoiceDetailScreen() {
           unitPrice: li.unitPrice,
         })));
       } else {
-        // Synthesize a single line item from total
+        // Synthesize a single line item from total. Same NL-constant bug as
+        // handleSaveItems: an invoice whose amount is gross at 19% was split
+        // back out at 21%, so the one line on a German invoice read low and
+        // the totals below it no longer matched the amount.
         setLocalItems([{
           id: 'item-1',
           description: invoice.job || t('invoices.services', 'Services rendered'),
           quantity: 1,
-          unitPrice: invoice.amount / (1 + VAT_RATE),
+          unitPrice: invoice.amount / (1 + effectiveRate),
         }]);
       }
     }
@@ -218,7 +221,12 @@ export default function InvoiceDetailScreen() {
 
   const handleSaveItems = () => {
     const newTotal = localItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const finalTotal = newTotal * (1 + VAT_RATE);
+    // Was the NL constant. Every edit to an invoice's lines re-grossed the
+    // total at 21% — 19% for a German contractor, 0% for a Kleinunternehmer /
+    // KOR contractor who may not charge VAT at all. `effectiveRate` is the
+    // profile's own rate and is what the totals above the button already show,
+    // so the saved amount disagreed with the figure on screen.
+    const finalTotal = newTotal * (1 + effectiveRate);
     updateInvoice(invoice.id, { amount: Math.round(finalTotal * 100) / 100 });
     setEditingItems(false);
     hapticSuccess();
@@ -1011,7 +1019,13 @@ export default function InvoiceDetailScreen() {
             <Text style={styles.totalValue}>{formatCurrency(subtotal, country)}</Text>
           </View>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>{t('invoices.vat', 'VAT')} (21%)</Text>
+            {/* The "(21%)" was literal, next to a figure computed at the
+                profile's real rate: a German invoice showed 19% of the net
+                labelled as 21%, and a Kleinunternehmer's 0 was labelled 21%
+                too. Read the same rate the arithmetic uses. */}
+            <Text style={styles.totalLabel}>
+              {t('invoices.vat', 'VAT')} ({Math.round(effectiveRate * 1000) / 10}%)
+            </Text>
             <Text style={styles.totalValue}>{formatCurrency(vatAmount, country)}</Text>
           </View>
           <View style={[styles.totalRow, styles.totalRowFinal]}>

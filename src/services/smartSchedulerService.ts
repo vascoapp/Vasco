@@ -76,6 +76,18 @@ export function toLifecycleStatus(status: string | null | undefined): JobLifecyc
   return DOMAIN_STATUS_TO_LIFECYCLE[status];
 }
 
+/**
+ * ⚠️ These two maps are DUTCH LITERALS and are only a fallback now.
+ *
+ * They drive the status chip and the primary next-step button on the job
+ * screen — the most-pressed control in the app — so a German contractor's
+ * main CTA read "Factureer" and the step under the timeline read "Gereed",
+ * on an otherwise fully German screen. Render through `lifecycleLabel` /
+ * `lifecycleNextAction` below, which resolve `jobs.lifecycle.*` and
+ * `jobs.lifecycleAction.*` in all six locales.
+ *
+ * The KEYS stay Dutch: they are the lifecycle enum, stored data, not copy.
+ */
 export const LIFECYCLE_LABELS: Record<JobLifecycleStatus, string> = {
   lead: 'Lead',
   offerte: 'Offerte',
@@ -111,6 +123,22 @@ export const LIFECYCLE_NEXT_ACTION: Record<JobLifecycleStatus, string | null> = 
   betaald: null,
   geannuleerd: null,
 };
+
+// Structurally compatible with i18next's TFunction (which is heavily
+// overloaded), so callers can pass `t` straight through.
+type TranslateFn = (key: string, defaultValue: string) => string;
+
+/** Localized status label; falls back to the Dutch literal above. */
+export function lifecycleLabel(status: JobLifecycleStatus, t: TranslateFn): string {
+  return t(`jobs.lifecycle.${status}`, LIFECYCLE_LABELS[status]);
+}
+
+/** Localized next-step label, or null where the lifecycle has no next step. */
+export function lifecycleNextAction(status: JobLifecycleStatus, t: TranslateFn): string | null {
+  const fallback = LIFECYCLE_NEXT_ACTION[status];
+  if (!fallback) return null;
+  return t(`jobs.lifecycleAction.${status}`, fallback);
+}
 
 export interface ScheduledJob {
   id: string;

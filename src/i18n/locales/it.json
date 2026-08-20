@@ -527,7 +527,31 @@
     "quickForm": "Modulo",
     "quickOnMyWay": "In arrivo",
     "quickDone": "Fatto",
-    "quickFeedback": "Feedback"
+    "quickFeedback": "Feedback",
+    "invoiceFailedTitle": "Impossibile creare la fattura",
+    "lifecycle": {
+      "lead": "Lead",
+      "offerte": "Preventivo",
+      "geaccepteerd": "Accettato",
+      "ingepland": "Pianificato",
+      "bezig": "In corso",
+      "gereed": "Completato",
+      "gefactureerd": "Fatturato",
+      "betaald": "Pagato",
+      "geannuleerd": "Annullato"
+    },
+    "lifecycleAction": {
+      "lead": "Crea preventivo",
+      "offerte": "Segna come accettato",
+      "geaccepteerd": "Pianifica",
+      "ingepland": "Avvia il lavoro",
+      "bezig": "Segna come completato",
+      "gereed": "Crea fattura",
+      "gefactureerd": "Segna come pagato"
+    },
+    "advanceStatus": "Avanza lo stato",
+    "invoiceThisJobDesc": "Crea una bozza di fattura da questo lavoro, con quanto registrato, e segna il lavoro come fatturato.",
+    "fromQuoteTitle": "Lavoro dal preventivo {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Gestisci assicurazioni e sinistri",
@@ -869,7 +893,13 @@
     "einvoiceUnavailableBody": "L’esportazione della fattura elettronica strutturata per questo paese non è ancora pronta. Puoi comunque inviare il PDF.",
     "einvoiceMissingTitle": "Mancano alcuni dati",
     "einvoiceMissingBody": "Questo formato richiede ancora alcuni dati:",
-    "einvoiceFixProfile": "Apri profilo azienda"
+    "einvoiceFixProfile": "Apri profilo azienda",
+    "labourLine": "Manodopera ({{hours}} h)",
+    "materialLine": "Materiali",
+    "nothingToBill": "Non c’è ancora nulla da fatturare per \"{{job}}\": nessun prezzo concordato, nessuna ora registrata e nessun materiale.",
+    "noHourlyRate": "\"{{job}}\" ha {{hours}} h registrate, ma non c’è una tariffa oraria per fatturarle. Aggiungi prima una voce oraria al tuo listino.",
+    "workRecordNote": "Dal lavoro: {{hours}} h registrate, {{materials}} materiali utilizzati{{completed}}.",
+    "workRecordCompleted": ", completato il {{date}}"
   },
   "expenses": {
     "title": "Spese",

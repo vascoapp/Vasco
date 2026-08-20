@@ -28,7 +28,7 @@ import { SafeArea } from '../../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { useClockIn } from '../../../src/services/clockInService';
-import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_LABELS, LIFECYCLE_COLORS, LIFECYCLE_NEXT_ACTION, LIFECYCLE_TO_DOMAIN_STATUS, useJobLifecyclePipeline, toLifecycleStatus } from '../../../src/services/smartSchedulerService';
+import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_COLORS, LIFECYCLE_TO_DOMAIN_STATUS, lifecycleLabel, lifecycleNextAction, useJobLifecyclePipeline, toLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
 import { getCohortCostVariance, type CohortCostVariance } from '../../../src/services/costVarianceMoatService';
@@ -172,8 +172,14 @@ export default function JobDetailPage() {
       try {
         await addInvoiceFromJob(id);
         router.replace('/(contractor)/facturen' as any);
-      } catch {
-        // Silent fail — contractor can tap the manual button at line ~926
+      } catch (err) {
+        // Arriving here means the queue card said "draft the invoice" and the
+        // draft could not be made. Staying on the job screen in silence looks
+        // like the tap did nothing; say why, then let them fix it here.
+        Alert.alert(
+          t('jobs.invoiceFailedTitle', 'Could not create the invoice'),
+          err instanceof Error ? err.message : String(err),
+        );
       }
     })();
   }, [action, id, addInvoiceFromJob, router]);
@@ -628,7 +634,7 @@ export default function JobDetailPage() {
             })}
           </View>
           <Text style={[styles.pipelineLabel, { color: LIFECYCLE_COLORS[job.lifecycleStatus as JobLifecycleStatus] }]}>
-            {LIFECYCLE_LABELS[job.lifecycleStatus as JobLifecycleStatus]}
+            {lifecycleLabel(job.lifecycleStatus as JobLifecycleStatus, t)}
           </Text>
 
           {/* Job completion progress */}
@@ -657,15 +663,23 @@ export default function JobDetailPage() {
         </View>
 
         {/* Volgende stap action */}
-        {LIFECYCLE_NEXT_ACTION[job.lifecycleStatus as JobLifecycleStatus] && (
+        {lifecycleNextAction(job.lifecycleStatus as JobLifecycleStatus, t) && (
           <Pressable
             style={styles.nextStepButton}
             accessibilityRole="button"
-            accessibilityLabel={LIFECYCLE_NEXT_ACTION[job.lifecycleStatus as JobLifecycleStatus] || 'Advance status'}
+            accessibilityLabel={lifecycleNextAction(job.lifecycleStatus as JobLifecycleStatus, t) || t('jobs.advanceStatus', 'Advance status')}
             onPress={() => {
+              const invoicingStep = job.lifecycleStatus === 'gereed';
               Alert.alert(
-                t('jobs.updateStatus', 'Update status'),
-                t('jobs.updateStatusDesc', { defaultValue: 'Change status to "{{status}}"?', status: LIFECYCLE_LABELS[LIFECYCLE_ORDER[LIFECYCLE_ORDER.indexOf(job.lifecycleStatus) + 1]] }),
+                invoicingStep
+                  ? t('jobs.invoiceThisJob', 'Invoice this job')
+                  : t('jobs.updateStatus', 'Update status'),
+                invoicingStep
+                  // Say what the button does. It used to ask "change status to
+                  // Invoiced?" and then do exactly that and nothing else — no
+                  // invoice was created by this path at all.
+                  ? t('jobs.invoiceThisJobDesc', 'Creates a draft invoice from this job, with what the job recorded, and marks the job invoiced.')
+                  : t('jobs.updateStatusDesc', { defaultValue: 'Change status to "{{status}}"?', status: lifecycleLabel(LIFECYCLE_ORDER[LIFECYCLE_ORDER.indexOf(job.lifecycleStatus) + 1], t) }),
                 [
                   { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                   { text: t('common.confirm', 'Confirm'), onPress: async () => {
@@ -690,6 +704,24 @@ export default function JobDetailPage() {
                     // This screen renders lifecycleStatus from
                     // toLifecycleStatus(appJob.status), i.e. AppState, so
                     // AppState is the store that has to change.
+                    // A finished job's next step IS the invoice. Create it
+                    // first: addInvoiceFromJob links it to the job and moves
+                    // the job to "invoiced" itself, so advancing the status
+                    // here as well would be a second, unbacked write — and if
+                    // the invoice cannot be made, the job must NOT claim it
+                    // was invoiced.
+                    if (invoicingStep) {
+                      try {
+                        const newInvoiceId = await addInvoiceFromJob(job.id);
+                        router.push(`/invoices/${newInvoiceId}` as any);
+                      } catch (err) {
+                        Alert.alert(
+                          t('jobs.invoiceFailedTitle', 'Could not create the invoice'),
+                          err instanceof Error ? err.message : String(err),
+                        );
+                      }
+                      return;
+                    }
                     const nextDomainStatus = LIFECYCLE_TO_DOMAIN_STATUS[nextStatus];
                     if (nextDomainStatus) {
                       const { warnings } = updateJobStatus(job.id, nextDomainStatus as any);
@@ -700,16 +732,13 @@ export default function JobDetailPage() {
                         );
                       }
                     }
-                    if (job.lifecycleStatus === 'gereed') {
-                      router.push('/(contractor)/facturen' as any);
-                    }
                   }},
                 ]
               );
             }}
           >
             <Ionicons name="arrow-forward-circle" size={18} color="#fff" />
-            <Text style={styles.nextStepText}>{LIFECYCLE_NEXT_ACTION[job.lifecycleStatus as JobLifecycleStatus]}</Text>
+            <Text style={styles.nextStepText}>{lifecycleNextAction(job.lifecycleStatus as JobLifecycleStatus, t)}</Text>
           </Pressable>
         )}
 
@@ -1284,16 +1313,33 @@ export default function JobDetailPage() {
         {/* ============================================ */}
         {/* 7b. FACTUREER BUTTON (gereed jobs)          */}
         {/* ============================================ */}
-        {job.lifecycleStatus === 'gereed' && (
+        {/* The FACTUREER button lived here as a second control with the same
+            condition as the lifecycle CTA above, which now does the whole
+            action (create + link + advance + open the invoice). Two buttons
+            for one job on one screen is how they drifted apart in the first
+            place. Kept as the path from the AI queue's ?action=create-invoice
+            deep link only when the job somehow still has no invoice. */}
+        {job.lifecycleStatus === 'gereed' && !job.invoiceId && (
           <Pressable
             style={styles.factureerButton}
             accessibilityRole="button"
             accessibilityLabel={t('jobs.invoiceThisJob', 'Invoice this job')}
             onPress={async () => {
               hapticSuccess();
+              // Was: catch and navigate anyway. So when addInvoiceFromJob threw
+              // — which it did for every job with no agreed price — the
+              // contractor tapped "invoice this job", arrived at the invoice
+              // list, and found no invoice and no explanation. The throw
+              // carries the reason; show it and stay put.
               try {
                 await addInvoiceFromJob(job.id);
-              } catch (_) { /* ignore if fails */ }
+              } catch (err) {
+                Alert.alert(
+                  t('jobs.invoiceFailedTitle', 'Could not create the invoice'),
+                  err instanceof Error ? err.message : String(err),
+                );
+                return;
+              }
               router.push('/(contractor)/facturen' as any);
             }}
           >

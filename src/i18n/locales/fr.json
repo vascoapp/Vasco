@@ -527,7 +527,31 @@
     "quickForm": "Formulaire",
     "quickOnMyWay": "En route",
     "quickDone": "Terminé",
-    "quickFeedback": "Avis"
+    "quickFeedback": "Avis",
+    "invoiceFailedTitle": "Impossible de créer la facture",
+    "lifecycle": {
+      "lead": "Piste",
+      "offerte": "Devis",
+      "geaccepteerd": "Accepté",
+      "ingepland": "Planifié",
+      "bezig": "En cours",
+      "gereed": "Terminé",
+      "gefactureerd": "Facturé",
+      "betaald": "Payé",
+      "geannuleerd": "Annulé"
+    },
+    "lifecycleAction": {
+      "lead": "Créer le devis",
+      "offerte": "Marquer comme accepté",
+      "geaccepteerd": "Planifier",
+      "ingepland": "Démarrer le chantier",
+      "bezig": "Marquer comme terminé",
+      "gereed": "Créer la facture",
+      "gefactureerd": "Marquer comme payé"
+    },
+    "advanceStatus": "Faire avancer le statut",
+    "invoiceThisJobDesc": "Crée une facture brouillon à partir de ce chantier, avec ce qui a été saisi, et marque le chantier comme facturé.",
+    "fromQuoteTitle": "Chantier issu du devis {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Gérer assurances & sinistres",
@@ -869,7 +893,13 @@
     "einvoiceUnavailableBody": "L'export de facture électronique structurée n'est pas encore prêt pour ce pays. Vous pouvez toujours envoyer le PDF.",
     "einvoiceMissingTitle": "Il manque des informations",
     "einvoiceMissingBody": "Ce format nécessite encore quelques informations :",
-    "einvoiceFixProfile": "Ouvrir le profil"
+    "einvoiceFixProfile": "Ouvrir le profil",
+    "labourLine": "Main-d’œuvre ({{hours}} h)",
+    "materialLine": "Fournitures",
+    "nothingToBill": "Rien à facturer pour « {{job}} » : aucun prix convenu, aucune heure saisie et aucune fourniture enregistrée.",
+    "noHourlyRate": "« {{job}} » comptabilise {{hours}} h, mais aucun taux horaire ne permet de les facturer. Ajoutez d’abord une ligne horaire à votre liste de prix.",
+    "workRecordNote": "D’après le chantier : {{hours}} h saisies, {{materials}} fournitures utilisées{{completed}}.",
+    "workRecordCompleted": ", terminé le {{date}}"
   },
   "expenses": {
     "title": "Dépenses",
