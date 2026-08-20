@@ -6,7 +6,7 @@
 // overflow caused by late decisions.
 // =============================================================================
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -101,6 +101,31 @@ export default function KeuzeScreen() {
     selectedTracker?.id ?? null
   );
 
+  /**
+   * Every write to the open tracker goes through here.
+   *
+   * The handlers below run inside Alert callbacks, so they close over the
+   * tracker as it was when the dialog OPENED. That is the same trap as the
+   * template snapshot in learnings #198 — and here it costs data: customer
+   * submissions merge into the tracker in the background (realtime), so
+   * stamping an invoice with the captured copy would write a tracker that
+   * predates those answers back over them, and persist the loss.
+   */
+  const trackerRef = useRef<CustomerDecisionTracker | null>(null);
+  useEffect(() => { trackerRef.current = selectedTracker; }, [selectedTracker]);
+  const commitTracker = useCallback(
+    (mutate: (current: CustomerDecisionTracker) => CustomerDecisionTracker): CustomerDecisionTracker | null => {
+      const current = trackerRef.current;
+      if (!current) return null;
+      const next = mutate(current);
+      trackerRef.current = next;
+      setSelectedTracker(next);
+      persistTrackerLocal(next);
+      return next;
+    },
+    [],
+  );
+
   // The customer's own answers, folded into the checklist.
   //
   // `decision_submissions` rows reached this screen as a photo panel and an
@@ -110,10 +135,13 @@ export default function KeuzeScreen() {
   // be billed, because the item never reached `decided`.
   useEffect(() => {
     if (!selectedTracker || decisionSubmissions.length === 0) return;
-    const { tracker: merged, applied } = applySubmissionsToTracker(selectedTracker, decisionSubmissions);
-    if (applied === 0) return;
-    setSelectedTracker(merged);
-    persistTrackerLocal(merged);
+    let appliedCount = 0;
+    commitTracker((current) => {
+      const { tracker: merged, applied } = applySubmissionsToTracker(current, decisionSubmissions);
+      appliedCount = applied;
+      return applied > 0 ? merged : current;
+    });
+    if (appliedCount === 0) return;
   }, [decisionSubmissions, selectedTracker?.id]);
 
   // Screen visit tracking
@@ -306,16 +334,14 @@ export default function KeuzeScreen() {
     // itemId `item_tap_style`) every option tap matched nothing and the
     // decision was silently dropped. `recordDecisionOnTracker` accepts either
     // identifier and is unit-tested against both shapes.
-    const { tracker: updatedTracker } = recordDecisionOnTracker(selectedTracker, itemId, value);
-    setSelectedTracker(updatedTracker);
-    // R66 round 30: persist contractor-recorded decisions so they
-    // survive backgrounding. Pre-R30 this lived in React state only —
-    // a contractor recording 5 decisions face-to-face with a customer
-    // could lose all of them by tapping home before navigating away.
+    commitTracker((current) => recordDecisionOnTracker(current, itemId, value).tracker);
+    // R66 round 30: persisted so contractor-recorded decisions survive
+    // backgrounding — a contractor recording five choices face to face with a
+    // customer could lose all of them by tapping home. `commitTracker` does
+    // that write now.
     // BE write deferred to R31 (FE→BE→DB drift: tracker.id and itemId
     // are non-UUID strings here; submitDecision call would fail UUID
     // cast on decision_submissions.tracker_id / .item_id).
-    persistTrackerLocal(updatedTracker);
   };
 
   /**
@@ -358,23 +384,37 @@ export default function KeuzeScreen() {
         {
           text: t('common.confirm', 'Confirm'),
           onPress: async () => {
+            // Recompute: between opening this dialog and confirming it, a
+            // customer submission may have arrived and changed what is
+            // billable.
+            const current = trackerRef.current;
+            if (!current) return;
+            const fresh = billableUpgrades(current).billable;
+            if (fresh.length === 0) {
+              // Say so rather than closing the dialog on nothing — the whole
+              // point of this session's work is that a tap must not look like
+              // it worked when it did nothing.
+              Alert.alert(
+                t('decisions.nothingToBillTitle', 'Nothing to bill yet'),
+                t('decisions.upgradesChangedBody', 'These choices changed while the dialog was open. Check the list and try again.'),
+              );
+              return;
+            }
             try {
               const invoiceId = await addInvoiceFromDecisionUpgrades({
-                customerId: selectedTracker.customerId,
-                customerName: selectedTracker.customerName,
+                customerId: current.customerId,
+                customerName: current.customerName,
                 title: t('decisions.upgradeInvoiceTitle', '{{project}} — chosen upgrades', {
                   project: localizeTemplateName(
-                    selectedTracker.templateId,
-                    selectedTracker.templateName || selectedTracker.customerName,
+                    current.templateId,
+                    current.templateName || current.customerName,
                     t,
                   ),
                 }),
-                lines: upgradeInvoiceLines(billable, labelUpgrade),
+                lines: upgradeInvoiceLines(fresh, labelUpgrade),
               });
               // Stamp them so the same choice cannot be billed twice.
-              const stamped = markUpgradesBilled(selectedTracker, billable.map((e) => e.itemId), invoiceId);
-              setSelectedTracker(stamped);
-              persistTrackerLocal(stamped);
+              commitTracker((t0) => markUpgradesBilled(t0, fresh.map((e) => e.itemId), invoiceId));
               hapticSuccess();
               router.push(`/invoices/${invoiceId}` as any);
             } catch (err) {
@@ -403,9 +443,7 @@ export default function KeuzeScreen() {
         {
           text: t('common.confirm', 'Confirm'),
           onPress: () => {
-            const next = recordPriceWarning(selectedTracker, itemId);
-            setSelectedTracker(next);
-            persistTrackerLocal(next);
+            commitTracker((current) => recordPriceWarning(current, itemId));
             hapticSuccess();
           },
         },

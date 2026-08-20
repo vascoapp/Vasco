@@ -719,7 +719,12 @@ function CategoryProgress({ category }: { category: CustomerDecisionCategory }) 
           {category.isOverdue && (
             <View style={styles.overdueTag}>
               <Ionicons name="alert-circle" size={12} color={SemanticColors.feedbackError} />
-              <Text style={styles.overdueTagText}>{useTranslation().t('dt.overdue')}</Text>
+              {/* Was `useTranslation().t(...)` — a HOOK called inside a
+                  conditional render. The hook order of this component changed
+                  the moment a category flipped overdue, which is exactly the
+                  case this badge exists for. `t` comes from the component's
+                  own hook now. */}
+              <Text style={styles.overdueTagText}>{t('dt.overdue')}</Text>
             </View>
           )}
         </View>

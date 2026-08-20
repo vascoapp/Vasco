@@ -4224,7 +4224,8 @@
     "upgradesNotPositive": "These choices come to zero or less, so there is nothing to invoice.",
     "upgradeInvoiceTitle": "{{project}} — chosen upgrades",
     "recordWarningTitle": "Record the price warning",
-    "recordWarningBody": "Confirms you told the customer that \"{{item}}\" costs extra. Required before you can bill it (art. 7:755 BW)."
+    "recordWarningBody": "Confirms you told the customer that \"{{item}}\" costs extra. Required before you can bill it (art. 7:755 BW).",
+    "upgradesChangedBody": "These choices changed while the dialog was open. Check the list and try again."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"

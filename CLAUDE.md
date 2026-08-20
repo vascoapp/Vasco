@@ -191,6 +191,25 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   no until a user asks for it. See `memory/ipad-tablet-support.md`. Any new
   width read must use `useWindowDimensions`, never a module-level
   `Dimensions.get` (five of those already go stale on rotation).
+- **Catalogue strings are COPY, not data.** The decision checklists in
+  `src/data/mockDecisions.ts` were 567 English literals read by the contractor,
+  by the CUSTOMER in the portal, and (once an upgrade is billed) on an invoice.
+  They resolve through `src/services/decisionCatalogI18n.ts` by their STABLE ids
+  at **render** time — never translate at creation, because a checklist is
+  COPIED into a tracker and would freeze the language of that day. Keys live
+  under `decisionCatalog.*`; DE + NL are complete, FR/ES/IT fall back to
+  English. Anything new in `src/data/` that a human reads needs the same
+  treatment.
+- **Decision upgrades bill as meerwerk**, on their own invoice, never folded
+  into a fixed price — `src/services/decisionUpgradeBilling.ts`. The art. 7:755
+  gate turns on WHO chose: a customer picking an option in the portal saw the
+  price beside it (billable), the contractor recording it for them did not
+  (needs a recorded warning). A negative impact is minderwerk and never blocked.
+- **Invoicing a finished job** goes through `src/services/jobBillingBasis.ts`:
+  an agreed price bills the agreement (materials are already covered by it), no
+  agreed price bills the job's own record — logged hours × the contractor's
+  hourly pricebook rate, plus materials `delivered`/`installed`. It refuses,
+  with the reason, rather than minting a €0 invoice.
 - **Customer-facing web pages** live in `admin/src/app/**` and are read by the
   contractor's CLIENT, who does not have the app. German is **Sie**, the trade
   noun is the market's own word (vakman / Handwerksbetrieb / artisan /

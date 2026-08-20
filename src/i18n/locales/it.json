@@ -4224,7 +4224,8 @@
     "upgradesNotPositive": "Queste scelte danno zero o meno: non c’è nulla da fatturare.",
     "upgradeInvoiceTitle": "{{project}} — extra scelti",
     "recordWarningTitle": "Registra l’avviso di prezzo",
-    "recordWarningBody": "Conferma di aver detto al cliente che \"{{item}}\" comporta un costo aggiuntivo. Necessario prima di fatturarlo (art. 7:755 BW)."
+    "recordWarningBody": "Conferma di aver detto al cliente che \"{{item}}\" comporta un costo aggiuntivo. Necessario prima di fatturarlo (art. 7:755 BW).",
+    "upgradesChangedBody": "Queste scelte sono cambiate mentre la finestra era aperta. Controlla l’elenco e riprova."
   },
   "besparen": {
     "materialFallback": "Materiale {{id}}"

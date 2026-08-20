@@ -4224,7 +4224,8 @@
     "upgradesNotPositive": "Estas elecciones suman cero o menos, así que no hay nada que facturar.",
     "upgradeInvoiceTitle": "{{project}} — extras elegidos",
     "recordWarningTitle": "Registrar el aviso de precio",
-    "recordWarningBody": "Confirma que avisaste al cliente de que \"{{item}}\" cuesta más. Obligatorio antes de facturarlo (art. 7:755 BW)."
+    "recordWarningBody": "Confirma que avisaste al cliente de que \"{{item}}\" cuesta más. Obligatorio antes de facturarlo (art. 7:755 BW).",
+    "upgradesChangedBody": "Estas elecciones han cambiado mientras el diálogo estaba abierto. Revisa la lista e inténtalo de nuevo."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"

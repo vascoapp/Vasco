@@ -4208,7 +4208,8 @@
     "upgradesNotPositive": "Deze keuzes komen op nul of minder uit, er valt niets te factureren.",
     "upgradeInvoiceTitle": "{{project}} — gekozen meerwerk",
     "recordWarningTitle": "Waarschuwing vastleggen",
-    "recordWarningBody": "Bevestigt dat je de klant hebt verteld dat \"{{item}}\" meerwerk is. Verplicht voordat je het mag factureren (art. 7:755 BW)."
+    "recordWarningBody": "Bevestigt dat je de klant hebt verteld dat \"{{item}}\" meerwerk is. Verplicht voordat je het mag factureren (art. 7:755 BW).",
+    "upgradesChangedBody": "Deze keuzes zijn veranderd terwijl dit venster openstond. Controleer de lijst en probeer het opnieuw."
   },
   "besparen": {
     "materialFallback": "Materiaal {{id}}"

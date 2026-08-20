@@ -4224,7 +4224,8 @@
     "upgradesNotPositive": "Diese Auswahl ergibt null oder weniger — es gibt nichts zu berechnen.",
     "upgradeInvoiceTitle": "{{project}} — gewählte Extras",
     "recordWarningTitle": "Hinweis auf Mehrkosten festhalten",
-    "recordWarningBody": "Bestätigt, dass Sie dem Kunden gesagt haben, dass „{{item}}\" Mehrkosten verursacht. Vor der Abrechnung erforderlich (§ 7:755 BW / Anspruch auf Mehrvergütung)."
+    "recordWarningBody": "Bestätigt, dass Sie dem Kunden gesagt haben, dass „{{item}}\" Mehrkosten verursacht. Vor der Abrechnung erforderlich (§ 7:755 BW / Anspruch auf Mehrvergütung).",
+    "upgradesChangedBody": "Diese Auswahl hat sich geändert, während der Dialog offen war. Prüfen Sie die Liste und versuchen Sie es erneut."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"

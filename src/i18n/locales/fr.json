@@ -4224,7 +4224,8 @@
     "upgradesNotPositive": "Ces choix aboutissent à zéro ou moins : il n’y a rien à facturer.",
     "upgradeInvoiceTitle": "{{project}} — options choisies",
     "recordWarningTitle": "Consigner l’avertissement de prix",
-    "recordWarningBody": "Confirme que vous avez prévenu le client que « {{item}} » entraîne un supplément. Obligatoire avant facturation (art. 7:755 BW)."
+    "recordWarningBody": "Confirme que vous avez prévenu le client que « {{item}} » entraîne un supplément. Obligatoire avant facturation (art. 7:755 BW).",
+    "upgradesChangedBody": "Ces choix ont changé pendant que la fenêtre était ouverte. Vérifiez la liste et réessayez."
   },
   "besparen": {
     "materialFallback": "Matériau {{id}}"
