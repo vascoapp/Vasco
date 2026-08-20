@@ -254,13 +254,14 @@ function mapRpcResponseToPortalData(raw: Record<string, unknown>): CustomerPorta
     categories: categoriesRaw.map((cat) => {
       const items = (cat.items ?? []) as Array<Record<string, unknown>>;
       return {
-        id: String(cat.id ?? ''),
+        id: String(cat.categoryId ?? cat.id ?? ''),
         name: String(cat.name ?? ''),
         phase: ((cat.phase as string) ?? 'planning') as CustomerPortalData['currentPhase'],
         dueDate: String(cat.dueDate ?? ''),
         isOverdue: Boolean(cat.isOverdue),
         items: items.map((it) => ({
           id: String(it.id ?? ''),
+          catalogItemId: it.itemId ? String(it.itemId) : undefined,
           name: String(it.name ?? ''),
           description: String(it.description ?? ''),
           inputType: ((it.inputType as string) ?? 'text') as CustomerPortalData['categories'][number]['items'][number]['inputType'],

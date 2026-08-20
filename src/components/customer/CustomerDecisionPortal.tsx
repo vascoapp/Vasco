@@ -31,6 +31,14 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
 import { hapticSuccess } from '../../utils/haptics';
 import { upgradeTotal as sumChosenUpgrades } from '../../services/decisionUpgradeBilling';
+import {
+  localizeCategoryName,
+  localizeItemName,
+  localizeItemDescription,
+  localizeItemHelp,
+  localizeOptionLabel,
+  localizeOptionDescription,
+} from '../../services/decisionCatalogI18n';
 import { formatCurrency, getCountryConfig } from '../../i18n/formatting';
 import { CustomerLanguageSwitcher } from './CustomerLanguageSwitcher';
 import { CUSTOMER_GLOSSARY } from '../../data/customerGlossary';
@@ -963,7 +971,7 @@ function CategoryCard({ category, accentColor, onPress, dateLocale }: CategoryCa
       </View>
       <View style={styles.categoryContent}>
         <View style={styles.categoryHeader}>
-          <Text style={styles.categoryName}>{category.name}</Text>
+          <Text style={styles.categoryName}>{localizeCategoryName(category.id, category.name, t)}</Text>
           {hasOverdue && (
             <View style={styles.overdueBadge}>
               <Text style={styles.overdueBadgeText}>{t('decisionPortal.overdue', 'Overdue')}</Text>
@@ -1102,7 +1110,7 @@ function CategoryDetailView({
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.categoryDetailTitle}>
-          <Text style={styles.categoryDetailName}>{category.name}</Text>
+          <Text style={styles.categoryDetailName}>{localizeCategoryName(category.id, category.name, t)}</Text>
           <Text style={styles.categoryDetailCount}>
             {t('decisionPortal.detailCount', '{{done}} of {{total}} chosen', { done: category.completedCount, total: category.totalCount })}
           </Text>
@@ -1445,14 +1453,14 @@ function DecisionItemCard({
     <View style={[styles.itemCard, item.isOverdue && styles.itemCardOverdue]}>
       <Pressable style={({ pressed }) => [styles.itemHeader, pressed && styles.pressed]} onPress={onToggle} accessibilityRole="button" accessibilityLabel={item.name}>
         <View style={styles.itemTitleRow}>
-          <Text style={styles.itemName}>{item.name}</Text>
+          <Text style={styles.itemName}>{localizeItemName(item.catalogItemId, item.name, t)}</Text>
           <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor() + '15' }]}>
             <Text style={[styles.priorityText, { color: getPriorityColor() }]}>
               {getPriorityLabel()}
             </Text>
           </View>
         </View>
-        <Text style={styles.itemDescription}>{item.description}</Text>
+        <Text style={styles.itemDescription}>{localizeItemDescription(item.catalogItemId, item.description, t)}</Text>
         {item.isOverdue && (
           <View style={styles.overdueWarning}>
             <Ionicons name="alert-circle" size={14} color={SemanticColors.feedbackError} />
@@ -1487,7 +1495,7 @@ function DecisionItemCard({
           {item.helpText && (
             <View style={styles.helpBox}>
               <Ionicons name="information-circle" size={18} color={SemanticColors.feedbackInfo} />
-              <Text style={styles.helpBoxText}>{item.helpText}</Text>
+              <Text style={styles.helpBoxText}>{localizeItemHelp(item.catalogItemId, item.helpText ?? '', t)}</Text>
             </View>
           )}
 
@@ -1521,6 +1529,7 @@ function DecisionItemCard({
                 <OptionButton
                   key={option.value}
                   option={option}
+                  catalogItemId={item.catalogItemId}
                   onSelect={() => onSubmit(option.value, notes)}
                   onViewPhoto={setLightboxUri}
                   accentColor={accentColor}
@@ -1741,13 +1750,15 @@ function DecisionItemCard({
 // ============================================
 
 interface OptionButtonProps {
+  /** Catalogue key of the ITEM these options belong to, for localization. */
+  catalogItemId?: string;
   option: DecisionOption;
   onSelect: () => void;
   accentColor: string;
   onViewPhoto?: (uri: string) => void;
 }
 
-function OptionButton({ option, onSelect, accentColor, onViewPhoto }: OptionButtonProps) {
+function OptionButton({ option, onSelect, accentColor, onViewPhoto, catalogItemId }: OptionButtonProps) {
   const { t } = useTranslation();
   // R66 round 45: surface price context on every option (pre-R45 only
   // priceImpact != 0 rendered, so "standard" options showed nothing →
@@ -1786,7 +1797,7 @@ function OptionButton({ option, onSelect, accentColor, onViewPhoto }: OptionButt
       style={({ pressed }) => [styles.optionButton, pressed && styles.pressed]}
       onPress={onSelect}
       accessibilityRole="button"
-      accessibilityLabel={`${option.label}${option.description ? ', ' + option.description : ''}`}
+      accessibilityLabel={`${localizeOptionLabel(catalogItemId, option.value, option.label, t)}${option.description ? ', ' + localizeOptionDescription(catalogItemId, option.value, option.description, t) : ''}`}
     >
       {option.imageUrl ? (
         // #5: render the real product photo (was a placeholder icon) so
@@ -1809,9 +1820,9 @@ function OptionButton({ option, onSelect, accentColor, onViewPhoto }: OptionButt
         </Pressable>
       ) : null}
       <View style={styles.optionContent}>
-        <Text style={styles.optionLabel}>{option.label}</Text>
+        <Text style={styles.optionLabel}>{localizeOptionLabel(catalogItemId, option.value, option.label, t)}</Text>
         {option.description && (
-          <Text style={styles.optionDescription}>{option.description}</Text>
+          <Text style={styles.optionDescription}>{localizeOptionDescription(catalogItemId, option.value, option.description, t)}</Text>
         )}
         <View style={styles.optionMetaRow}>
           <Text style={[styles.optionPrice, { color: priceColor }]}>{priceLabel}</Text>
@@ -1864,7 +1875,7 @@ function CompletedItemCard({ item, accentColor, onChange, dateLocale }: Complete
         <Ionicons name="checkmark-circle" size={24} color={SemanticColors.feedbackSuccess} />
       </View>
       <View style={styles.completedContent}>
-        <Text style={styles.completedName}>{item.name}</Text>
+        <Text style={styles.completedName}>{localizeItemName(item.catalogItemId, item.name, t)}</Text>
         <Text style={[styles.completedValue, { color: accentColor }]}>{getDisplayValue()}</Text>
         {item.decidedAt && (
           <Text style={styles.completedDate}>

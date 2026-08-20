@@ -106,6 +106,13 @@ export interface CustomerPortalCategory {
 
 export interface CustomerPortalItem {
   id: string;
+  /**
+   * The CATALOGUE key (`item_toilet_style`) when this item came from a
+   * built-in checklist. `id` is the tracker row. Carried so the portal can
+   * render the catalogue in the reader's language — these strings were
+   * English for every customer, in every market.
+   */
+  catalogItemId?: string;
   name: string;
   description: string;
   helpText?: string;

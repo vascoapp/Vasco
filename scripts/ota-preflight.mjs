@@ -690,7 +690,16 @@ const SAME_WORD_OK = new Set([
   // 'Code' is the same word in German and French, and it is the label on an
   // authority's verbatim rejection code (SDI scarto, FACe).
   'Code',
+  // de: the German word for material is 'Material'.
+  'Material',
 ]);
+
+// Catalogue options that NAME a manufacturer or a shop. A brand is spelled the
+// same in every market — a "translated" Daikin is a different product, and
+// IKEA is IKEA in Venlo and in Köln. These keys are exempt from the
+// same-as-English check; the words AROUND them are not (de "Einstieg (Beko,
+// Candy)" is still expected to differ from en "Budget (Beko, Candy)").
+const BRAND_VALUE_KEYS = /^decisionCatalog\.items\.(item_boiler_brand|item_hp_brand|item_smart_home|item_reno_kitchen_supplier|item_reno_appliance_pkg)\.options\./;
 
 // Namespaces whose locale values are DEAD CODE — never rendered, so an English
 // value there is not a bug. workflowPackService.pickTemplateForLocale resolves
@@ -731,6 +740,7 @@ async function checkUntranslatedValues() {
       if (v.length <= 3) continue;
       if (SAME_WORD_OK.has(v)) continue;
       if (DEAD_VALUE_NAMESPACES.has(k.split('.')[0])) continue;
+      if (BRAND_VALUE_KEYS.test(k)) continue;
       if (isFormatOnly(v)) continue;
       hits.push(`${loc} ${k} = ${JSON.stringify(v)}`);
     }

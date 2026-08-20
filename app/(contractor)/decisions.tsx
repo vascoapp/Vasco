@@ -52,7 +52,13 @@ import {
   upgradeInvoiceLines,
   markUpgradesBilled,
   recordPriceWarning,
+  type UpgradeEntry,
 } from '../../src/services/decisionUpgradeBilling';
+import {
+  localizeItemName,
+  localizeOptionLabel,
+  localizeTemplateName,
+} from '../../src/services/decisionCatalogI18n';
 
 const TRACKER_STORAGE_KEY = '@vasco_decision_trackers';
 
@@ -313,6 +319,15 @@ export default function KeuzeScreen() {
   };
 
   /**
+   * The catalogue strings in the contractor's language. They end up on the
+   * invoice, which the CUSTOMER reads, so this is not chrome.
+   */
+  const labelUpgrade = useCallback((e: UpgradeEntry) => ({
+    itemName: localizeItemName(e.catalogItemId, e.itemName, t),
+    optionLabel: localizeOptionLabel(e.catalogItemId, e.optionValue, e.optionLabel, t),
+  }), [t]);
+
+  /**
    * Bill the upgrades the customer chose.
    *
    * Their own invoice, like meerwerk — folding them into the job's agreed
@@ -348,9 +363,13 @@ export default function KeuzeScreen() {
                 customerId: selectedTracker.customerId,
                 customerName: selectedTracker.customerName,
                 title: t('decisions.upgradeInvoiceTitle', '{{project}} — chosen upgrades', {
-                  project: selectedTracker.templateName || selectedTracker.customerName,
+                  project: localizeTemplateName(
+                    selectedTracker.templateId,
+                    selectedTracker.templateName || selectedTracker.customerName,
+                    t,
+                  ),
                 }),
-                lines: upgradeInvoiceLines(billable),
+                lines: upgradeInvoiceLines(billable, labelUpgrade),
               });
               // Stamp them so the same choice cannot be billed twice.
               const stamped = markUpgradesBilled(selectedTracker, billable.map((e) => e.itemId), invoiceId);
@@ -475,12 +494,12 @@ export default function KeuzeScreen() {
                         key={entry.itemId}
                         style={styles.upgradeBlockedRow}
                         accessibilityRole="button"
-                        onPress={() => handleRecordPriceWarning(entry.itemId, entry.itemName)}
+                        onPress={() => handleRecordPriceWarning(entry.itemId, labelUpgrade(entry).itemName)}
                       >
                         <Text style={styles.upgradeBlockedText}>
                           {t('decisions.upgradeNeedsWarning', {
                             defaultValue: '"{{item}}" ({{amount}}) — record that you told the customer it costs extra',
-                            item: entry.itemName,
+                            item: labelUpgrade(entry).itemName,
                             amount: formatCurrency(entry.amount, country),
                           })}
                         </Text>

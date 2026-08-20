@@ -26,9 +26,18 @@ import type { CustomerDecisionTracker, CustomerDecisionItem, DecisionOption } fr
 export interface UpgradeEntry {
   /** The tracker row id (what DecisionTracker reports). */
   itemId: string;
-  /** e.g. "Tap/Faucet Finish" */
+  /**
+   * The CATALOGUE key (`item_tap_style`). Distinct from `itemId` — see the
+   * two-identifier trap in `decisionRecording` — and the key the caller needs
+   * to render the name in the reader's language: these strings end up on the
+   * invoice the CUSTOMER reads.
+   */
+  catalogItemId?: string;
+  /** The chosen option's value, for the same reason. */
+  optionValue: string;
+  /** e.g. "Tap/Faucet Finish" — the stored English seed; localize before display. */
   itemName: string;
-  /** e.g. "Matte Black" */
+  /** e.g. "Matte Black" — same. */
   optionLabel: string;
   /** Signed, ex VAT. Positive = the customer owes more. */
   amount: number;
@@ -57,6 +66,8 @@ export function decidedUpgrades(tracker: CustomerDecisionTracker): UpgradeEntry[
       if (!option || !amount) continue;
       out.push({
         itemId: item.id,
+        catalogItemId: item.itemId,
+        optionValue: option.value,
         itemName: item.name,
         optionLabel: option.label,
         amount,
@@ -133,15 +144,21 @@ export function recordPriceWarning(
   );
 }
 
-/** Invoice lines, one per upgrade, in the contractor's own words. */
+/**
+ * Invoice lines, one per upgrade.
+ *
+ * `label` comes from the caller so the catalogue strings are resolved in the
+ * reader's language — without it a German customer's invoice line read
+ * "Toilet Style — Wall-hung".
+ */
 export function upgradeInvoiceLines(
   entries: UpgradeEntry[],
+  label?: (entry: UpgradeEntry) => { itemName: string; optionLabel: string },
 ): { description: string; quantity: number; unitPrice: number }[] {
-  return entries.map(e => ({
-    description: `${e.itemName} — ${e.optionLabel}`,
-    quantity: 1,
-    unitPrice: e.amount,
-  }));
+  return entries.map(e => {
+    const { itemName, optionLabel } = label?.(e) ?? { itemName: e.itemName, optionLabel: e.optionLabel };
+    return { description: `${itemName} — ${optionLabel}`, quantity: 1, unitPrice: e.amount };
+  });
 }
 
 /** Stamp the billed upgrades so the same choice cannot be charged twice. */

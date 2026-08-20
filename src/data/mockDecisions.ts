@@ -4,6 +4,7 @@
 // Realistic decision templates for common renovation projects
 // =============================================================================
 
+import { DEMO_MODE } from '../config/demo';
 import type {
   DecisionTemplate,
   DecisionCategory,
@@ -1466,7 +1467,7 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
 // MOCK ACTIVE TRACKERS
 // ============================================
 
-export const MOCK_ACTIVE_TRACKERS: CustomerDecisionTracker[] = [
+const DEMO_ACTIVE_TRACKERS: CustomerDecisionTracker[] = [
   {
     id: 'tracker_1',
     jobId: 'job_1',
@@ -1511,13 +1512,17 @@ export const MOCK_ACTIVE_TRACKERS: CustomerDecisionTracker[] = [
             name: 'Toilet Style',
             description: 'Wall-hung or floor-standing toilet',
             inputType: 'select',
+            // Prices mirror the template these items came from (line ~50).
+            // The tracker copies had dropped them, so the seeded customer's
+            // chosen upgrades were worth 0 and the billing card never showed.
             options: [
-              { value: 'wall_hung', label: 'Wall-hung' },
-              { value: 'floor_standing', label: 'Floor-standing' },
+              { value: 'wall_hung', label: 'Wall-hung', priceImpact: 200 },
+              { value: 'floor_standing', label: 'Floor-standing', priceImpact: 0 },
             ],
             priority: 'critical',
             status: 'decided',
             value: 'wall_hung',
+            decidedBy: 'customer',
             decidedAt: '2024-01-22T15:30:00Z',
             dueDate: '2024-02-05',
             isOverdue: false,
@@ -1530,12 +1535,16 @@ export const MOCK_ACTIVE_TRACKERS: CustomerDecisionTracker[] = [
             description: 'Style of bathroom sink',
             inputType: 'select',
             options: [
-              { value: 'pedestal', label: 'Pedestal' },
-              { value: 'vanity_unit', label: 'Vanity unit' },
+              { value: 'pedestal', label: 'Pedestal', priceImpact: 0 },
+              { value: 'vanity_unit', label: 'Vanity unit', priceImpact: 250 },
             ],
             priority: 'critical',
             status: 'decided',
             value: 'vanity_unit',
+            // Recorded by the CONTRACTOR: no evidence the customer was told it
+            // costs extra, so the 7:755 gate holds this one back until the
+            // warning is recorded. The demo shows both sides of that rule.
+            decidedBy: 'contractor',
             decidedAt: '2024-01-22T15:32:00Z',
             dueDate: '2024-02-05',
             isOverdue: false,
@@ -1644,6 +1653,16 @@ export const MOCK_ACTIVE_TRACKERS: CustomerDecisionTracker[] = [
     ],
   },
 ];
+
+/**
+ * Demo fixture — EMPTY in production builds (src/config/demo.ts).
+ *
+ * This was exported ungated and `usePersistedTrackers` not only rendered it
+ * when a contractor had no trackers, it WROTE it into their AsyncStorage on
+ * first open. A real contractor's decisions tab opened onto "Familie van den
+ * Berg — Full Bathroom Renovation", 8 invented choices, and it persisted.
+ */
+export const MOCK_ACTIVE_TRACKERS: CustomerDecisionTracker[] = DEMO_MODE ? DEMO_ACTIVE_TRACKERS : [];
 
 // ============================================
 // HELPER FUNCTIONS

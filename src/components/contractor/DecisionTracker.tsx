@@ -30,6 +30,13 @@ import {
   DECISION_TEMPLATES,
   getTrackerStats,
 } from '../../data/mockDecisions';
+import {
+  localizeCategoryName,
+  localizeItemName,
+  localizeItemDescription,
+  localizeOptionLabel,
+  localizeTemplateName,
+} from '../../services/decisionCatalogI18n';
 import { useAuth } from '../../context/AuthContext';
 import { formatMoney, formatDayMonthAuto } from '../../i18n/formatting';
 
@@ -47,7 +54,14 @@ function usePersistedTrackers(): CustomerDecisionTracker[] {
         setTrackers(valid.length > 0 ? valid : MOCK_ACTIVE_TRACKERS);
       } else {
         setTrackers(MOCK_ACTIVE_TRACKERS);
-        AsyncStorage.setItem(TRACKER_KEY, JSON.stringify(MOCK_ACTIVE_TRACKERS)).catch(() => {});
+        // Only seed storage when there is actually a demo fixture to seed.
+        // In a production build MOCK_ACTIVE_TRACKERS is empty, and writing
+        // `[]` here would just create the key; writing the fixture (as this
+        // did before it was gated) put invented customer decisions into a
+        // real contractor's device permanently.
+        if (MOCK_ACTIVE_TRACKERS.length > 0) {
+          AsyncStorage.setItem(TRACKER_KEY, JSON.stringify(MOCK_ACTIVE_TRACKERS)).catch(() => {});
+        }
       }
     }).catch(() => setTrackers(MOCK_ACTIVE_TRACKERS));
   }, []);
@@ -303,7 +317,7 @@ function TrackerCard({ tracker, onPress }: TrackerCardProps) {
           </View>
           <View style={styles.customerInfo}>
             <Text style={styles.customerName}>{tracker.customerName}</Text>
-            <Text style={styles.projectType}>{tracker.templateName}</Text>
+            <Text style={styles.projectType}>{localizeTemplateName(tracker.templateId, tracker.templateName, t)}</Text>
           </View>
         </View>
         <View style={styles.channelBadge}>
@@ -456,7 +470,7 @@ export function DecisionTrackerDetail({
         </Pressable>
         <View style={styles.headerContent}>
           <Text style={styles.detailTitle}>{tracker.customerName}</Text>
-          <Text style={styles.detailSubtitle}>{tracker.templateName}</Text>
+          <Text style={styles.detailSubtitle}>{localizeTemplateName(tracker.templateId, tracker.templateName, t)}</Text>
         </View>
         <Pressable style={styles.shareButton} onPress={onShareWithCustomer} accessibilityLabel={t('common.share')}>
           <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
@@ -686,6 +700,7 @@ function OverviewTab({
 // ============================================
 
 function CategoryProgress({ category }: { category: CustomerDecisionCategory }) {
+  const { t } = useTranslation();
   const progressPercent = Math.round((category.completedCount / category.totalCount) * 100);
   const barColor = category.isOverdue
     ? SemanticColors.feedbackError
@@ -696,7 +711,7 @@ function CategoryProgress({ category }: { category: CustomerDecisionCategory }) 
   return (
     <View style={styles.categoryProgress}>
       <View style={styles.categoryHeader}>
-        <Text style={styles.categoryName}>{category.name}</Text>
+        <Text style={styles.categoryName}>{localizeCategoryName(category.categoryId ?? category.id, category.name, t)}</Text>
         <View style={styles.categoryStats}>
           <Text style={styles.categoryCount}>
             {category.completedCount}/{category.totalCount}
@@ -720,7 +735,7 @@ function CategoryProgress({ category }: { category: CustomerDecisionCategory }) 
 // GROUP ITEMS BY CATEGORY (for sectioned display)
 // ============================================
 
-type GroupedItems = { categoryName: string; items: CustomerDecisionItem[] }[];
+type GroupedItems = { categoryName: string; categoryId?: string; items: CustomerDecisionItem[] }[];
 
 function groupByCategory(
   tracker: CustomerDecisionTracker,
@@ -734,7 +749,7 @@ function groupByCategory(
       return i.status === 'decided';
     });
     if (items.length > 0) {
-      result.push({ categoryName: cat.name, items });
+      result.push({ categoryName: cat.name, categoryId: cat.categoryId ?? cat.id, items });
     }
   }
   return result;
@@ -763,6 +778,7 @@ function SectionedDecisionItems({
   emptyIcon,
   isOverdue,
 }: SectionedDecisionItemsProps) {
+  const { t } = useTranslation();
   if (grouped.length === 0) {
     return (
       <View style={styles.emptyState}>
@@ -776,7 +792,9 @@ function SectionedDecisionItems({
     <View style={styles.tabContent}>
       {grouped.map((section) => (
         <View key={section.categoryName}>
-          <Text style={styles.categorySectionHeader}>{section.categoryName}</Text>
+          <Text style={styles.categorySectionHeader}>
+            {localizeCategoryName(section.categoryId, section.categoryName, t)}
+          </Text>
           {section.items.map((item) => (
             <DecisionItemCard
               key={item.id}
@@ -843,11 +861,11 @@ function DecisionItemCard({
         </Pressable>
         <View style={styles.itemInfo}>
           <View style={styles.itemTitleRow}>
-            <Text style={styles.itemName}>{item.name}</Text>
+            <Text style={styles.itemName}>{localizeItemName(item.itemId, item.name, t)}</Text>
             <PriorityBadge priority={item.priority} />
           </View>
           <Text style={styles.itemDescription} numberOfLines={isExpanded ? undefined : 1}>
-            {item.description}
+            {localizeItemDescription(item.itemId, item.description, t)}
           </Text>
           {/* Due date with color coding */}
           <View style={styles.itemDueRow}>
@@ -895,7 +913,7 @@ function DecisionItemCard({
                   style={styles.optionBtn}
                   onPress={() => onRecordDecision(option.value)}
                 >
-                  <Text style={styles.optionLabel}>{option.label}</Text>
+                  <Text style={styles.optionLabel}>{localizeOptionLabel(item.itemId, option.value, option.label, t)}</Text>
                   {option.description && (
                     <Text style={styles.optionDesc}>{option.description}</Text>
                   )}
@@ -935,7 +953,7 @@ function DecisionItemCard({
             <View style={styles.textInputContainer}>
               <TextInput
                 style={styles.textInput}
-                placeholder={t('dt.enter', { name: item.name.toLowerCase() })}
+                placeholder={t('dt.enter', { name: localizeItemName(item.itemId, item.name, t).toLowerCase() })}
                 placeholderTextColor={SemanticColors.textTertiary}
                 value={inputValue}
                 onChangeText={setInputValue}
@@ -980,9 +998,24 @@ function CompletedItemsList({ items }: { items: CustomerDecisionItem[] }) {
         <View key={item.id} style={styles.completedItem}>
           <Ionicons name="checkmark-circle" size={20} color={SemanticColors.feedbackSuccess} />
           <View style={styles.completedInfo}>
-            <Text style={styles.completedName}>{item.name}</Text>
+            <Text style={styles.completedName}>{localizeItemName(item.itemId, item.name, t)}</Text>
             <Text style={styles.completedValue}>
-              {typeof item.value === 'boolean' ? (item.value ? t('common.yes') : t('common.no')) : String(item.value)}
+              {/* Was `String(item.value)`, i.e. the raw stored value —
+                  "wall_hung", "bath_shower". The label the customer actually
+                  chose is on the option; fall back to the raw value only when
+                  the item has no options (free text, photo, number). */}
+              {typeof item.value === 'boolean'
+                ? (item.value ? t('common.yes') : t('common.no'))
+                : (() => {
+                    const raw = String(item.value);
+                    const chosen = item.options?.find(o => o.value === item.value);
+                    if (chosen) return localizeOptionLabel(item.itemId, chosen.value, chosen.label, t);
+                    // No options stored on the row (older trackers, and any
+                    // free-text item). The CATALOGUE may still know this value
+                    // — "bath_shower" was rendering raw on screen — and if it
+                    // does not, the raw value is what the customer typed.
+                    return localizeOptionLabel(item.itemId, raw, raw, t);
+                  })()}
             </Text>
             {item.decidedAt && (
               <Text style={styles.completedDate}>
@@ -1022,7 +1055,7 @@ function TemplateCard({ template, onSelect }: { template: DecisionTemplate; onSe
       onPress={() => onSelect(template)}
     >
       <View style={styles.templateHeader}>
-        <Text style={styles.templateName}>{template.name}</Text>
+        <Text style={styles.templateName}>{localizeTemplateName(template.id, template.name, t)}</Text>
         <View style={styles.templateMeta}>
           <Text style={styles.templateDecisions}>
             {t('dt.decisions', { count: template.estimatedTotalDecisions })}

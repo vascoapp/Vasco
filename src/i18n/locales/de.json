@@ -5903,5 +5903,947 @@
   },
   "approvals": {
     "requestedByFitter": "Monteur"
+  },
+  "decisionCatalog": {
+    "templates": {
+      "tmpl_bathroom_full": {
+        "name": "Komplette Badsanierung",
+        "description": "Bad komplett erneuern: Sanitärobjekte, Fliesen und Oberflächen"
+      },
+      "tmpl_kitchen_full": {
+        "name": "Komplette Küchenrenovierung",
+        "description": "Küche komplett erneuern: Schränke, Geräte und Oberflächen"
+      },
+      "tmpl_painting_interior": {
+        "name": "Innenanstrich",
+        "description": "Kompletter Innenanstrich: Wände, Decken und Holzwerk"
+      },
+      "tmpl_electrical_upgrade": {
+        "name": "Elektro-Modernisierung",
+        "description": "Elektroarbeiten: Steckdosen, Schalter und Beleuchtung"
+      },
+      "tmpl_heating_cv": {
+        "name": "Heizungsinstallation",
+        "description": "Zentralheizung mit Kessel, Heizkörpern und Regelung"
+      },
+      "tmpl_heatpump": {
+        "name": "Wärmepumpen-Einbau",
+        "description": "Luft- oder Erdwärmepumpe mit Einbindung und Regelung"
+      },
+      "tmpl_carpentry_woodwork": {
+        "name": "Innenausbau in Holz",
+        "description": "Türen, Einbauschränke, Sockelleisten und Holzoberflächen"
+      },
+      "tmpl_renovation_full": {
+        "name": "Komplettsanierung",
+        "description": "Ganzes Haus: Grundriss, Küche, Bad, Böden sowie Elektro und Sanitär"
+      }
+    },
+    "categories": {
+      "cat_bath_fixtures": {
+        "name": "Sanitärobjekte & Armaturen",
+        "description": "WC, Waschbecken, Dusche/Wanne und Armaturen"
+      },
+      "cat_bath_tiles": {
+        "name": "Fliesen & Oberflächen",
+        "description": "Auswahl der Boden- und Wandfliesen"
+      },
+      "cat_bath_electrical": {
+        "name": "Elektro",
+        "description": "Beleuchtung und Elektroanschlüsse"
+      },
+      "cat_kitchen_cabinets": {
+        "name": "Schränke & Grundriss",
+        "description": "Frontenstil, Farbe und Anordnung"
+      },
+      "cat_kitchen_counters": {
+        "name": "Arbeitsplatten",
+        "description": "Material und Kantenprofil der Arbeitsplatte"
+      },
+      "cat_kitchen_appliances": {
+        "name": "Geräte",
+        "description": "Einbau- und Standgeräte"
+      },
+      "cat_kitchen_electrical": {
+        "name": "Elektro & Licht",
+        "description": "Steckdosen und Leuchtenpositionen"
+      },
+      "cat_paint_colors": {
+        "name": "Farbtöne",
+        "description": "Farbauswahl je Raum"
+      },
+      "cat_paint_finish": {
+        "name": "Glanzgrad & Qualität",
+        "description": "Glanzgrad und Farbqualität"
+      },
+      "cat_paint_prep": {
+        "name": "Vorarbeiten",
+        "description": "Ausbessern und Vorbereiten vor dem Streichen"
+      },
+      "cat_elec_outlets": {
+        "name": "Steckdosen & Schalter",
+        "description": "Positionen und Ausführung von Dosen und Schaltern"
+      },
+      "cat_elec_lighting": {
+        "name": "Beleuchtung",
+        "description": "Deckenleuchten, Spots und Dimmer"
+      },
+      "cat_heat_system": {
+        "name": "Heizsystem",
+        "description": "Kesseltyp, Marke und Bauart der Heizkörper"
+      },
+      "cat_heat_hotwater": {
+        "name": "Warmwasser",
+        "description": "Warmwassersystem und Speichergröße"
+      },
+      "cat_heat_controls": {
+        "name": "Regelung",
+        "description": "Thermostat und Heizkörperventile"
+      },
+      "cat_hp_system": {
+        "name": "Systemwahl",
+        "description": "Bauart, Marke und Leistung der Wärmepumpe"
+      },
+      "cat_hp_integration": {
+        "name": "Einbindung",
+        "description": "Pufferspeicher, Fußbodenheizung und Heizkörper"
+      },
+      "cat_hp_controls": {
+        "name": "Regelung & Monitoring",
+        "description": "Regler, Energiemonitoring und Wartung"
+      },
+      "cat_wood_doors": {
+        "name": "Türen",
+        "description": "Stil, Material und Beschläge der Innentüren"
+      },
+      "cat_wood_storage": {
+        "name": "Einbauschränke",
+        "description": "Schrankart, Regale und Innenaufteilung"
+      },
+      "cat_wood_finishing": {
+        "name": "Abschlussarbeiten",
+        "description": "Sockelleisten, Zargen und Holzoberfläche"
+      },
+      "cat_reno_layout": {
+        "name": "Grundriss & Statik",
+        "description": "Bauliche Änderungen, Wände und Fenster"
+      },
+      "cat_reno_kitchen": {
+        "name": "Küche",
+        "description": "Küchenanbieter, Arbeitsplatten und Geräte"
+      },
+      "cat_reno_bathroom": {
+        "name": "Bad",
+        "description": "Stil, Fliesen und Aufteilung des Bades"
+      },
+      "cat_reno_flooring": {
+        "name": "Böden",
+        "description": "Bodenbeläge je Geschoss"
+      },
+      "cat_reno_mep": {
+        "name": "Elektro & Sanitär",
+        "description": "Elektroplanung, Beleuchtung und Wärmeerzeuger"
+      }
+    },
+    "items": {
+      "item_toilet_style": {
+        "name": "WC-Bauart",
+        "description": "Wand-WC oder Stand-WC",
+        "help": "Wand-WCs lassen sich leichter reinigen, kosten aber mehr. Stand-WC ist die klassische Variante.",
+        "options": {
+          "wall_hung": "Wandhängend",
+          "floor_standing": "Stehend",
+          "back_to_wall": "Vorwandmontage"
+        },
+        "optionDescriptions": {
+          "wall_hung": "Modern, leicht zu reinigen",
+          "floor_standing": "Klassisch, günstiger",
+          "back_to_wall": "Spülkasten verdeckt"
+        },
+        "impact": "Ohne WC-Position kann die Rohinstallation nicht weitergehen"
+      },
+      "item_sink_type": {
+        "name": "Waschbecken-Typ",
+        "description": "Bauform des Waschbeckens",
+        "options": {
+          "pedestal": "Standsäule",
+          "wall_mounted": "Wandmontage",
+          "vanity_unit": "Waschtisch mit Unterschrank",
+          "countertop": "Aufsatzbecken"
+        },
+        "impact": "Waschtische müssen 2–3 Wochen vorher bestellt werden"
+      },
+      "item_shower_or_bath": {
+        "name": "Dusche, Wanne oder beides?",
+        "description": "Wahl des Hauptbadeobjekts",
+        "options": {
+          "shower_only": "Nur Dusche",
+          "bath_only": "Nur Wanne",
+          "bath_shower": "Wanne mit Duschaufsatz",
+          "separate": "Dusche und Wanne getrennt"
+        },
+        "impact": "Bestimmt Grundriss und Leitungsführung im ganzen Bad"
+      },
+      "item_tap_style": {
+        "name": "Oberfläche der Armaturen",
+        "description": "Chrom, gebürstetes Nickel, Schwarz oder Messing",
+        "options": {
+          "chrome": "Chrom",
+          "brushed_nickel": "Nickel gebürstet",
+          "matte_black": "Schwarz matt",
+          "brass": "Messing/Gold"
+        },
+        "impact": "Armaturen haben oft 2–3 Wochen Lieferzeit"
+      },
+      "item_floor_tile": {
+        "name": "Bodenfliesen",
+        "description": "Bodenfliese wählen (Foto oder Link)",
+        "help": "Die Rutschhemmung ist bei Bodenfliesen im Bad wichtig",
+        "impact": "Fliesen haben oft 2–4 Wochen Lieferzeit"
+      },
+      "item_wall_tile": {
+        "name": "Wandfliesen",
+        "description": "Wandfliese wählen (Foto oder Link)",
+        "impact": "Fliesen haben oft 2–4 Wochen Lieferzeit"
+      },
+      "item_tile_height": {
+        "name": "Höhe der Wandfliesen",
+        "description": "Wie hoch sollen die Wandfliesen gehen?",
+        "options": {
+          "splashback": "Nur Spritzschutz (60 cm)",
+          "half_wall": "Halbhoch (120 cm)",
+          "full_height": "Raumhoch (bis zur Decke)"
+        },
+        "impact": "Für die richtige Fliesenmenge nötig"
+      },
+      "item_grout_color": {
+        "name": "Fugenfarbe",
+        "description": "Passend oder als Kontrast zu den Fliesen",
+        "options": {
+          "white": "Weiß",
+          "grey": "Grau",
+          "black": "Schwarz",
+          "match": "Wie die Fliese"
+        },
+        "impact": "Kann während der Verlegung entschieden werden"
+      },
+      "item_mirror_light": {
+        "name": "Spiegelbeleuchtung",
+        "description": "Art der Beleuchtung am Spiegel",
+        "options": {
+          "none": "Keine Spiegelleuchte",
+          "above": "Leuchte über dem Spiegel",
+          "sides": "Leuchten seitlich",
+          "backlit": "Spiegel hinterleuchtet"
+        },
+        "impact": "Wird für die Elektro-Rohinstallation gebraucht"
+      },
+      "item_heated_floor": {
+        "name": "Fußbodenheizung",
+        "description": "Elektrische Fußbodenheizung im Bad",
+        "impact": "Muss vor den Fliesen eingebaut werden"
+      },
+      "item_extractor": {
+        "name": "Position des Lüfters",
+        "description": "Wo soll der Abluftventilator sitzen?",
+        "options": {
+          "ceiling": "In der Decke",
+          "wall": "An der Wand",
+          "window": "Fensterventilator"
+        },
+        "impact": "Bestimmt die Führung der Abluftleitung"
+      },
+      "item_cabinet_style": {
+        "name": "Frontenstil",
+        "description": "Kassette, glatt oder profiliert",
+        "options": {
+          "shaker": "Kassettenfront",
+          "flat": "Glatte Front",
+          "raised": "Profilierte Front"
+        },
+        "optionDescriptions": {
+          "shaker": "Klassisch mit vertiefter Mitte",
+          "flat": "Modern und schlicht",
+          "raised": "Traditionell verziert"
+        },
+        "impact": "Schränke haben 4–6 Wochen Lieferzeit"
+      },
+      "item_cabinet_color": {
+        "name": "Farbe/Oberfläche der Fronten",
+        "description": "Hauptfarbe der Schränke",
+        "help": "Beliebt: Weiß, Grau, Dunkelblau, Naturholz",
+        "impact": "Die Farbe bestimmt Arbeitsplatte und Rückwand mit"
+      },
+      "item_cabinet_hardware": {
+        "name": "Griffe",
+        "description": "Art der Griffe oder Knöpfe",
+        "options": {
+          "none": "Grifflos (Push-to-open)",
+          "bar": "Stangengriffe",
+          "cup": "Muschelgriffe",
+          "knob": "Knöpfe"
+        },
+        "impact": "Kann später ergänzt werden, die Bohrungen müssen aber geplant sein"
+      },
+      "item_counter_material": {
+        "name": "Material der Arbeitsplatte",
+        "description": "Material der Hauptarbeitsfläche",
+        "options": {
+          "laminate": "Laminat",
+          "quartz": "Quarzkomposit",
+          "granite": "Granit",
+          "solid_surface": "Mineralwerkstoff (Corian)",
+          "butcher_block": "Massivholz"
+        },
+        "impact": "Steinplatten brauchen 2–3 Wochen für die Fertigung"
+      },
+      "item_counter_color": {
+        "name": "Farbe/Maserung der Arbeitsplatte",
+        "description": "Konkrete Platte oder Farbe",
+        "help": "Ausstellung besuchen oder Foto der Wunschplatte schicken",
+        "impact": "Beliebte Farben sind nicht immer lieferbar"
+      },
+      "item_backsplash": {
+        "name": "Höhe der Rückwand",
+        "description": "Standard oder raumhohe Rückwand",
+        "options": {
+          "standard": "Standard (10 cm Aufkantung)",
+          "full": "Bis zu den Hängeschränken",
+          "ceiling": "Bis zur Decke (ohne Hängeschränke)"
+        },
+        "impact": "Bestimmt die Fliesenmenge"
+      },
+      "item_hob_type": {
+        "name": "Kochfeld",
+        "description": "Gas, Elektro oder Induktion",
+        "options": {
+          "gas": "Gas",
+          "ceramic": "Ceran (Elektro)",
+          "induction": "Induktion"
+        },
+        "impact": "Bestimmt Strom- und Gasanschluss"
+      },
+      "item_oven_config": {
+        "name": "Backofen",
+        "description": "Einzeln, doppelt oder Standherd",
+        "options": {
+          "single": "Einbaubackofen",
+          "double": "Doppelbackofen",
+          "range": "Standherd"
+        },
+        "impact": "Die Schrankausschnitte hängen davon ab"
+      },
+      "item_fridge_size": {
+        "name": "Kühlschrankgröße",
+        "description": "Maße von Kühl- und Gefrierteil",
+        "options": {
+          "under_counter": "Unterbaugerät",
+          "tall_50_50": "Hoch, 50/50 Kühl-/Gefrierteil",
+          "tall_70_30": "Hoch, 70/30 Kühl-/Gefrierteil",
+          "american": "Side-by-Side"
+        },
+        "impact": "Bestimmt die Schrankaufteilung"
+      },
+      "item_outlet_count": {
+        "name": "Anzahl Steckdosen",
+        "description": "Steckdosen über der Arbeitsplatte",
+        "help": "Für eine moderne Küche mindestens 4–6 empfohlen",
+        "impact": "Muss vor dem Fliesen feststehen"
+      },
+      "item_under_cabinet_lights": {
+        "name": "Unterbaubeleuchtung",
+        "description": "LED-Streifen unter den Hängeschränken",
+        "impact": "Die Leitung muss vor der Schrankmontage liegen"
+      },
+      "item_pendant_lights": {
+        "name": "Pendelleuchten über der Insel",
+        "description": "Anzahl und Position der Pendelleuchten",
+        "help": "Bei einer Standardinsel meist 2–3 Leuchten",
+        "impact": "Die Dosenpositionen werden früh gebraucht"
+      },
+      "item_wall_color_living": {
+        "name": "Wandfarbe Wohnzimmer",
+        "description": "Hauptwandfarbe im Wohnzimmer",
+        "help": "Marke und Farbnummer angeben (z. B. RAL 9010)",
+        "impact": "Die Farbe muss bestellt oder gemischt werden"
+      },
+      "item_wall_color_bedroom": {
+        "name": "Wandfarben Schlafzimmer",
+        "description": "Farbe je Schlafzimmer",
+        "help": "Bitte Raum und Farbe einzeln angeben",
+        "impact": "Die Farbe muss bestellt oder gemischt werden"
+      },
+      "item_ceiling_color": {
+        "name": "Deckenfarbe",
+        "description": "Wie die Wände oder anders?",
+        "options": {
+          "white": "Standardweiß",
+          "match": "Wie die Wandfarbe",
+          "lighter": "Hellerer Ton der Wandfarbe",
+          "custom": "Andere Farbe (bitte angeben)"
+        },
+        "impact": "Gering — lässt sich während der Arbeit ändern"
+      },
+      "item_trim_color": {
+        "name": "Farbe für Holzwerk",
+        "description": "Sockelleisten, Tür- und Fensterzargen",
+        "options": {
+          "white_satin": "Weiß (seidenmatt)",
+          "white_gloss": "Weiß (glänzend)",
+          "match_walls": "Wie die Wände",
+          "contrast": "Kontrastfarbe (bitte angeben)"
+        },
+        "impact": "Gering — lässt sich während der Arbeit ändern"
+      },
+      "item_wall_finish": {
+        "name": "Glanzgrad der Wandfarbe",
+        "description": "Glanzgrad für die Wände",
+        "options": {
+          "flat": "Stumpfmatt",
+          "eggshell": "Seidenmatt",
+          "satin": "Seidenglänzend"
+        },
+        "optionDescriptions": {
+          "flat": "Kaschiert Unebenheiten, nicht abwaschbar",
+          "eggshell": "Leichter Glanz, abwaschbar",
+          "satin": "Mittlerer Glanz, gut abwaschbar"
+        },
+        "impact": "Bestimmt die Farbbestellung"
+      },
+      "item_paint_quality": {
+        "name": "Farbqualität",
+        "description": "Premium oder Standard",
+        "options": {
+          "standard": "Standardqualität",
+          "premium": "Premium (z. B. Farrow & Ball, Little Greene)"
+        },
+        "impact": "Premiumfarben müssen oft bestellt werden"
+      },
+      "item_wall_repairs": {
+        "name": "Auszubessernde Stellen",
+        "description": "Löcher, Risse oder Schäden?",
+        "help": "Bitte die betroffenen Stellen auflisten",
+        "impact": "Kann zusätzliches Material erfordern"
+      },
+      "item_wallpaper_removal": {
+        "name": "Tapete entfernen",
+        "description": "Muss Tapete abgelöst werden?",
+        "impact": "Verändert den Zeitplan deutlich"
+      },
+      "item_outlet_style": {
+        "name": "Ausführung von Dosen und Schaltern",
+        "description": "Modern flach, klassisch oder smart",
+        "options": {
+          "standard": "Standard weiß",
+          "screwless": "Rahmenlos, flach",
+          "chrome": "Chrom/Metall",
+          "smart": "Smarte Schalter"
+        },
+        "impact": "Sonderausführungen müssen bestellt werden"
+      },
+      "item_outlet_height": {
+        "name": "Höhe der Steckdosen",
+        "description": "Standard oder höher gesetzt",
+        "options": {
+          "standard": "Standard (30 cm über dem Boden)",
+          "higher": "Höher (45 cm — leichter erreichbar)",
+          "counter": "Auf Arbeitshöhe (wo sinnvoll)"
+        },
+        "impact": "Muss vor der Rohinstallation feststehen"
+      },
+      "item_usb_outlets": {
+        "name": "USB-Steckdosen",
+        "description": "Steckdosen mit USB-Ladeanschluss",
+        "help": "In Wohnräumen 2–4 empfohlen",
+        "impact": "Gering — kann während der Arbeit getauscht werden"
+      },
+      "item_downlights_count": {
+        "name": "Anzahl Einbauspots je Raum",
+        "description": "Anzahl der Deckeneinbauspots",
+        "help": "Je Raum angeben: Wohnen 6, Küche 8 usw.",
+        "impact": "Die Decke muss vor dem Verputzen ausgeschnitten werden"
+      },
+      "item_dimmer_switches": {
+        "name": "Dimmer",
+        "description": "In welchen Räumen soll gedimmt werden?",
+        "options": {
+          "living": "Wohnzimmer",
+          "dining": "Esszimmer",
+          "bedroom": "Schlafzimmer",
+          "bathroom": "Bad"
+        },
+        "impact": "Dimmer brauchen eine andere Verdrahtung"
+      },
+      "item_light_color": {
+        "name": "Lichtfarbe der LEDs",
+        "description": "Warmweiß, neutralweiß oder tageslichtweiß",
+        "options": {
+          "warm": "Warmweiß (2700 K) — gemütlich",
+          "neutral": "Neutralweiß (4000 K) — ausgewogen",
+          "cool": "Tageslichtweiß (5000 K) — hell/sachlich"
+        },
+        "impact": "Bei LED-Leuchtmitteln später änderbar"
+      },
+      "item_boiler_type": {
+        "name": "Kesseltyp",
+        "description": "Art des Wärmeerzeugers",
+        "help": "Eine Kombitherme erwärmt das Wasser bei Bedarf. Ein Systemkessel arbeitet mit Speicher. Wärmepumpen sind am effizientesten.",
+        "options": {
+          "combi": "Kombitherme",
+          "system": "Systemkessel",
+          "heat_pump": "Wärmepumpe"
+        },
+        "optionDescriptions": {
+          "combi": "Kein Speicher nötig, sofort Warmwasser",
+          "system": "Arbeitet mit Warmwasserspeicher",
+          "heat_pump": "Energetisch am effizientesten"
+        },
+        "impact": "Der Kesseltyp bestimmt Anlagenaufbau und Leitungsführung"
+      },
+      "item_boiler_brand": {
+        "name": "Wunschmarke",
+        "description": "Bevorzugter Hersteller",
+        "options": {
+          "vaillant": "Vaillant",
+          "bosch": "Bosch",
+          "remeha": "Remeha",
+          "nefit": "Nefit"
+        },
+        "impact": "Beliebte Modelle haben 2–3 Wochen Lieferzeit"
+      },
+      "item_radiator_style": {
+        "name": "Bauart der Heizkörper",
+        "description": "Heizkörpertyp im ganzen Objekt",
+        "options": {
+          "panel_11": "Flachheizkörper Typ 11 (einlagig)",
+          "panel_21": "Flachheizkörper Typ 21",
+          "panel_22": "Flachheizkörper Typ 22 (zweilagig)",
+          "designer": "Designheizkörper",
+          "underfloor": "Fußbodenheizung"
+        },
+        "impact": "Die Heizleistung bestimmt Kesselgröße und Leitungsführung"
+      },
+      "item_hotwater_system": {
+        "name": "Warmwassersystem",
+        "description": "Wie das Warmwasser erzeugt und gespeichert wird",
+        "options": {
+          "combi_direct": "Direkt über Kombitherme (ohne Speicher)",
+          "cylinder": "Drucklos belüfteter Speicher",
+          "unvented": "Druckspeicher (Leitungsdruck)"
+        },
+        "impact": "Ein Speicher braucht Platz und verändert die Leitungsführung"
+      },
+      "item_cylinder_size": {
+        "name": "Speichergröße",
+        "description": "Warmwasser-Speichervolumen (falls zutreffend)",
+        "help": "100 l für 1–2 Personen, 150 l für 2–3, 200 l für 3–4, 300 l ab 4",
+        "options": {
+          "100l": "100 Liter",
+          "150l": "150 Liter",
+          "200l": "200 Liter",
+          "300l": "300 Liter"
+        },
+        "impact": "Größere Speicher brauchen mehr Platz — bestimmt die Schrankmaße"
+      },
+      "item_temp_setting": {
+        "name": "Temperatureinstellung",
+        "description": "Standard-Warmwassertemperatur",
+        "help": "Üblich sind 60 °C. Niedriger spart Energie, achten Sie auf die Legionellengefahr.",
+        "impact": "Nach dem Einbau jederzeit einstellbar"
+      },
+      "item_thermostat_type": {
+        "name": "Thermostat",
+        "description": "Zentrale Heizungsregelung",
+        "options": {
+          "basic": "Einfach ein/aus",
+          "programmable": "Programmierbar",
+          "smart": "Smart-Thermostat",
+          "zone": "Einzelraumregelung"
+        },
+        "impact": "Smart- und Zonenregelung brauchen Leitungen in der Rohphase"
+      },
+      "item_smart_home": {
+        "name": "Smart-Home-Anbindung",
+        "description": "Heizung ins Smart Home einbinden",
+        "options": {
+          "none": "Keine",
+          "tado": "Tado",
+          "nest": "Nest",
+          "hive": "Hive"
+        },
+        "impact": "Später nachrüstbar, kann aber neue Leitungen erfordern"
+      },
+      "item_valve_type": {
+        "name": "Heizkörperventile",
+        "description": "Ventilart an den Heizkörpern",
+        "options": {
+          "manual": "Handventil",
+          "trv": "Thermostatventil",
+          "smart_trv": "Smartes Thermostatventil"
+        },
+        "impact": "Thermostatventile sind aus Effizienzgründen empfohlen"
+      },
+      "item_hp_type": {
+        "name": "Bauart der Wärmepumpe",
+        "description": "Art des Wärmepumpensystems",
+        "help": "Luft/Wasser ist am verbreitetsten. Erdwärme ist effizienter, erfordert aber Arbeiten im Garten. Hybrid arbeitet mit dem vorhandenen Kessel zusammen.",
+        "options": {
+          "air_water": "Luft/Wasser",
+          "ground_source": "Erdwärme",
+          "hybrid": "Hybrid (mit Kessel)"
+        },
+        "optionDescriptions": {
+          "air_water": "Am verbreitetsten, mit Außeneinheit",
+          "ground_source": "Erfordert Bohrung oder Flächenkollektor",
+          "hybrid": "Wärmepumpe mit Gas-Backup"
+        },
+        "impact": "Bestimmt Anlagenaufbau, Genehmigungen und Erdarbeiten"
+      },
+      "item_hp_brand": {
+        "name": "Marke",
+        "description": "Bevorzugter Hersteller",
+        "options": {
+          "daikin": "Daikin",
+          "mitsubishi": "Mitsubishi",
+          "samsung": "Samsung",
+          "vaillant": "Vaillant"
+        },
+        "impact": "Lieferzeiten je nach Marke 4–8 Wochen"
+      },
+      "item_hp_capacity": {
+        "name": "Leistung",
+        "description": "Heizleistung in Kilowatt",
+        "help": "Ergibt sich aus der Heizlastberechnung. Überdimensionierung kostet Energie.",
+        "options": {
+          "6kw": "6 kW (kleine Wohnung)",
+          "8kw": "8 kW (mittleres Haus)",
+          "10kw": "10 kW (großes Haus)",
+          "12kw": "12 kW (sehr großes Haus)",
+          "14kw": "14 kW (groß/schlecht gedämmt)"
+        },
+        "impact": "Muss vor der Bestellung feststehen — bestimmt den Stromanschluss"
+      },
+      "item_hp_buffer": {
+        "name": "Pufferspeicher",
+        "description": "Puffer für einen effizienteren Betrieb",
+        "options": {
+          "yes_100l": "Ja — 100 l",
+          "yes_200l": "Ja — 200 l",
+          "no": "Kein Puffer"
+        },
+        "impact": "Der Puffer braucht Platz im Technikraum"
+      },
+      "item_hp_ufh_zones": {
+        "name": "Heizkreise der Fußbodenheizung",
+        "description": "Anzahl separat geregelter Kreise",
+        "options": {
+          "2": "2 Kreise",
+          "3": "3 Kreise",
+          "4": "4 Kreise",
+          "5": "5 Kreise"
+        },
+        "impact": "Die Aufteilung bestimmt Verteilergröße und Leitungswege"
+      },
+      "item_hp_radiator_compat": {
+        "name": "Vorhandene Heizkörper",
+        "description": "Was mit den vorhandenen Heizkörpern geschieht",
+        "help": "Wärmepumpen fahren niedrigere Temperaturen — vorhandene Heizkörper müssen eventuell größer werden.",
+        "options": {
+          "keep": "Behalten (wenn groß genug)",
+          "upgrade": "Wichtige Heizkörper tauschen",
+          "replace": "Alle Heizkörper ersetzen"
+        },
+        "impact": "Die Heizleistung muss zur Vorlauftemperatur passen"
+      },
+      "item_hp_controller": {
+        "name": "Regler",
+        "description": "Wie die Wärmepumpe geregelt wird",
+        "options": {
+          "builtin": "Integrierter Regler",
+          "smart": "Smart-Regler",
+          "app": "Steuerung per App"
+        },
+        "impact": "Smart-Regler brauchen eine Netzwerkanbindung"
+      },
+      "item_hp_monitoring": {
+        "name": "Energiemonitoring",
+        "description": "Leistung und Verbrauch mitverfolgen",
+        "options": {
+          "none": "Keines",
+          "basic": "Einfach (COP-Anzeige)",
+          "detailed": "Ausführlich (Wärmemengen- und Stromzähler)"
+        },
+        "impact": "Der Wärmemengenzähler muss beim Rohrleitungsbau gesetzt werden"
+      },
+      "item_hp_maintenance": {
+        "name": "Wartungsvertrag",
+        "description": "Jährliche Wartung",
+        "options": {
+          "yes_annual": "Ja — jährliche Wartung",
+          "no": "Kein Vertrag"
+        },
+        "impact": "Kann nach dem Einbau entschieden werden"
+      },
+      "item_door_style": {
+        "name": "Türstil",
+        "description": "Gestaltung der Innentüren",
+        "options": {
+          "panel": "Kassettentür",
+          "flush": "Glatte Tür",
+          "glazed": "Tür mit Glasausschnitt",
+          "barn": "Schiebetür"
+        },
+        "optionDescriptions": {
+          "panel": "Klassisch mit Kassetten",
+          "flush": "Flach und modern",
+          "glazed": "Glasfelder für mehr Licht",
+          "barn": "Auf Schiene laufend"
+        },
+        "impact": "Sondermaße haben 3–4 Wochen Lieferzeit"
+      },
+      "item_door_material": {
+        "name": "Material",
+        "description": "Aufbau des Türblatts",
+        "options": {
+          "solid_wood": "Massivholz",
+          "mdf": "MDF",
+          "veneer": "Furnier"
+        },
+        "impact": "Massivholztüren haben eine längere Lieferzeit"
+      },
+      "item_door_hardware_finish": {
+        "name": "Oberfläche der Beschläge",
+        "description": "Oberfläche von Bändern, Griffen und Schlössern",
+        "options": {
+          "chrome": "Chrom",
+          "brushed_nickel": "Nickel gebürstet",
+          "black": "Schwarz matt",
+          "brass": "Messing"
+        },
+        "impact": "Sonderoberflächen müssen bestellt werden"
+      },
+      "item_door_handle_type": {
+        "name": "Griffart",
+        "description": "Form der Türgriffe",
+        "options": {
+          "lever": "Drückergarnitur",
+          "knob": "Türknauf",
+          "pull": "Stoßgriff"
+        },
+        "impact": "Wird zuletzt montiert — nur geringe Auswirkung"
+      },
+      "item_wardrobe_type": {
+        "name": "Schrankart",
+        "description": "Art des Einbauschranks",
+        "options": {
+          "sliding": "Schiebetüren",
+          "hinged": "Drehtüren",
+          "walk_in": "Begehbarer Kleiderschrank"
+        },
+        "impact": "Türsysteme haben 2–3 Wochen Lieferzeit"
+      },
+      "item_shelving_material": {
+        "name": "Material der Regale",
+        "description": "Material für Böden und Korpus",
+        "options": {
+          "mdf": "MDF (lackiert)",
+          "plywood": "Multiplex (natur/gebeizt)",
+          "solid": "Massivholz"
+        },
+        "impact": "Bestimmt Zuschnitt und Materialbestellung"
+      },
+      "item_interior_layout": {
+        "name": "Innenaufteilung",
+        "description": "Wie der Schrank innen aufgeteilt wird",
+        "options": {
+          "shelves_only": "Nur Fachböden",
+          "shelves_hanging": "Fachböden und Kleiderstange",
+          "custom": "Individuell (Schubladen, Schuhregal usw.)"
+        },
+        "impact": "Individuelle Auszüge brauchen vorab eine Zeichnung"
+      },
+      "item_skirting_profile": {
+        "name": "Profil der Sockelleiste",
+        "description": "Form der Fußleiste",
+        "options": {
+          "ogee": "Karniesprofil (klassisch)",
+          "torus": "Rundstabprofil",
+          "square": "Rechteckig (modern)",
+          "pencil_round": "Leicht gerundet"
+        },
+        "impact": "Nicht vorrätige Profile müssen bestellt werden"
+      },
+      "item_architrave_style": {
+        "name": "Zargenprofil",
+        "description": "Profil der Türbekleidung",
+        "options": {
+          "matching": "Wie die Sockelleiste",
+          "contrasting": "Abweichendes Profil"
+        },
+        "impact": "Gering — kann beim Ausbau entschieden werden"
+      },
+      "item_wood_finish": {
+        "name": "Holzoberfläche",
+        "description": "Endbehandlung aller Holzteile",
+        "options": {
+          "paint": "Lack deckend",
+          "stain": "Beize (Maserung sichtbar)",
+          "lacquer": "Klarlack (glänzend/seidenmatt)",
+          "oil": "Öl (natürlich matt)"
+        },
+        "impact": "Bestimmt Schleifaufwand und Anzahl der Anstriche"
+      },
+      "item_reno_wall_removal": {
+        "name": "Wanddurchbrüche",
+        "description": "Sollen Wände entfernt oder geöffnet werden?",
+        "options": {
+          "yes_specify": "Ja — bitte Wände angeben",
+          "no": "Keine Änderungen an Wänden"
+        },
+        "impact": "Statiker nötig — 2–3 Wochen für die Berechnung"
+      },
+      "item_reno_floorplan": {
+        "name": "Änderungen am Grundriss",
+        "description": "Grundsätzliche Aufteilung",
+        "options": {
+          "open_plan": "Offener Grundriss (Trennwände raus)",
+          "keep_existing": "Aufteilung bleibt",
+          "partial": "Teilweise (Durchgänge verbreitern usw.)"
+        },
+        "impact": "Betrifft alle Gewerke — muss zuerst feststehen"
+      },
+      "item_reno_windows": {
+        "name": "Fenstertausch",
+        "description": "Sollen die Fenster ersetzt werden?",
+        "options": {
+          "all": "Alle Fenster ersetzen",
+          "some": "Einzelne Fenster ersetzen",
+          "none": "Fenster bleiben"
+        },
+        "impact": "Fenster haben 4–6 Wochen Lieferzeit"
+      },
+      "item_reno_kitchen_supplier": {
+        "name": "Küchenanbieter",
+        "description": "Woher die Küche kommt",
+        "options": {
+          "ikea": "IKEA",
+          "brugman": "Brugman",
+          "kvik": "Kvik",
+          "custom": "Tischlerküche"
+        },
+        "impact": "Je nach Anbieter 4–8 Wochen Lieferzeit"
+      },
+      "item_reno_worktop": {
+        "name": "Material der Arbeitsplatte",
+        "description": "Oberfläche der Küchenarbeitsplatte",
+        "options": {
+          "laminate": "Laminat",
+          "granite": "Granit",
+          "quartz": "Quarzkomposit",
+          "wood": "Massivholz"
+        },
+        "impact": "Steinplatten werden erst nach der Schrankmontage aufgemessen"
+      },
+      "item_reno_appliance_pkg": {
+        "name": "Gerätepaket",
+        "description": "Qualitätsstufe der Geräte",
+        "options": {
+          "budget": "Einstieg (Beko, Candy)",
+          "mid": "Mittelklasse (Bosch, Siemens)",
+          "premium": "Premium (Miele, Gaggenau)"
+        },
+        "impact": "Premiumgeräte haben oft längere Lieferzeiten"
+      },
+      "item_reno_bath_style": {
+        "name": "Stil des Bades",
+        "description": "Gestalterische Richtung",
+        "options": {
+          "modern": "Modern (klare Linien, reduziert)",
+          "classic": "Klassisch (traditionelle Armaturen)",
+          "industrial": "Industrial (Beton, sichtbare Technik)"
+        },
+        "impact": "Der Stil bestimmt Objekte und Fliesenwahl"
+      },
+      "item_reno_tile_budget": {
+        "name": "Fliesenbudget",
+        "description": "Preisrahmen je Quadratmeter Badfliesen",
+        "options": {
+          "30": "30 €/m² (einfach)",
+          "50": "50 €/m² (Mittelklasse)",
+          "80": "80 €/m² (gehoben)",
+          "120": "120 €/m² (Luxus)"
+        },
+        "impact": "Hochwertige Fliesen kommen oft aus Italien/Spanien"
+      },
+      "item_reno_wetroom": {
+        "name": "Bodengleiche Dusche oder Kabine",
+        "description": "Gestaltung des Duschbereichs",
+        "options": {
+          "wet_room": "Bodengleich, offen",
+          "separate": "Separate Duschkabine"
+        },
+        "impact": "Bodengleich braucht Abdichtung und Gefälle — verändert den Bodenaufbau"
+      },
+      "item_reno_floor_ground": {
+        "name": "Erdgeschoss",
+        "description": "Bodenbelag im Erdgeschoss",
+        "options": {
+          "tiles": "Fliesen",
+          "wood": "Massivholzdiele",
+          "laminate": "Laminat",
+          "vinyl": "Vinyl (LVT)"
+        },
+        "impact": "Der Belag bestimmt die Untergrundvorbereitung"
+      },
+      "item_reno_floor_upper": {
+        "name": "Obergeschoss",
+        "description": "Bodenbelag im Obergeschoss",
+        "options": {
+          "carpet": "Teppich",
+          "wood": "Massivholzdiele",
+          "laminate": "Laminat"
+        },
+        "impact": "Teppich kommt zuletzt; Holz und Laminat müssen akklimatisieren"
+      },
+      "item_reno_ufh": {
+        "name": "Fußbodenheizung",
+        "description": "Fußbodenheizung einbauen?",
+        "options": {
+          "yes": "Ja",
+          "no": "Nein"
+        },
+        "impact": "Muss vor jedem Bodenbelag eingebaut werden — später nicht nachrüstbar"
+      },
+      "item_reno_socket_count": {
+        "name": "Anzahl Steckdosen",
+        "description": "Anzahl der Stromauslässe",
+        "options": {
+          "standard": "Standard (nach Norm)",
+          "extra": "Mehr Dosen (+50 %)",
+          "smart": "Smart-Home-fähig (mehr Dosen + Datenleitungen)"
+        },
+        "impact": "Muss vor der Rohinstallation feststehen — danach sind die Wände zu"
+      },
+      "item_reno_lighting": {
+        "name": "Lichtplanung",
+        "description": "Umfang der Lichtplanung",
+        "options": {
+          "basic": "Einfach (Deckenauslass je Raum)",
+          "designer": "Geplant (Spots, Akzente, Dimmer)",
+          "smart": "Smarte Beleuchtung (Hue, Casambi)"
+        },
+        "impact": "Die Leitungen müssen vor dem Verputzen liegen"
+      },
+      "item_reno_boiler": {
+        "name": "Wärmeerzeuger",
+        "description": "Was mit der Heizung geschieht",
+        "options": {
+          "keep": "Vorhandenen Kessel behalten",
+          "replace": "Neuen Kessel einbauen",
+          "heat_pump": "Auf Wärmepumpe umstellen"
+        },
+        "impact": "Eine Wärmepumpe braucht 6–8 Wochen Vorlauf und eigene Planung"
+      }
+    }
   }
 }

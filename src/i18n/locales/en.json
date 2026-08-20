@@ -5903,5 +5903,947 @@
   },
   "approvals": {
     "requestedByFitter": "Fitter"
+  },
+  "decisionCatalog": {
+    "templates": {
+      "tmpl_bathroom_full": {
+        "name": "Full Bathroom Renovation",
+        "description": "Complete bathroom remodel including fixtures, tiles, and finishes"
+      },
+      "tmpl_carpentry_woodwork": {
+        "name": "Interior Woodwork",
+        "description": "Doors, built-in storage, skirting, and wood finishing"
+      },
+      "tmpl_electrical_upgrade": {
+        "name": "Electrical Upgrade",
+        "description": "Electrical upgrades including outlets, switches, and lighting"
+      },
+      "tmpl_heating_cv": {
+        "name": "CV/Heating Installation",
+        "description": "Central heating system including boiler, radiators, and controls"
+      },
+      "tmpl_heatpump": {
+        "name": "Heat Pump Installation",
+        "description": "Air-source or ground-source heat pump with integration and controls"
+      },
+      "tmpl_kitchen_full": {
+        "name": "Full Kitchen Renovation",
+        "description": "Complete kitchen remodel with cabinets, appliances, and finishes"
+      },
+      "tmpl_painting_interior": {
+        "name": "Interior Painting",
+        "description": "Full interior paint including walls, ceilings, and trim"
+      },
+      "tmpl_renovation_full": {
+        "name": "Full Renovation",
+        "description": "Complete home renovation including layout, kitchen, bathroom, flooring, and MEP"
+      }
+    },
+    "categories": {
+      "cat_bath_electrical": {
+        "name": "Electrical",
+        "description": "Lighting and electrical points"
+      },
+      "cat_bath_fixtures": {
+        "name": "Fixtures & Fittings",
+        "description": "Toilet, sink, shower/bath, and taps"
+      },
+      "cat_bath_tiles": {
+        "name": "Tiles & Surfaces",
+        "description": "Floor and wall tile selections"
+      },
+      "cat_elec_lighting": {
+        "name": "Lighting",
+        "description": "Ceiling lights, spots, and dimmers"
+      },
+      "cat_elec_outlets": {
+        "name": "Outlets & Switches",
+        "description": "Outlet and switch positions and types"
+      },
+      "cat_heat_controls": {
+        "name": "Controls",
+        "description": "Thermostat and radiator valve selections"
+      },
+      "cat_heat_hotwater": {
+        "name": "Hot Water",
+        "description": "Hot water system and cylinder sizing"
+      },
+      "cat_heat_system": {
+        "name": "Heating System",
+        "description": "Boiler type, brand, and radiator style"
+      },
+      "cat_hp_controls": {
+        "name": "Controls & Monitoring",
+        "description": "Controller, energy monitoring, and maintenance"
+      },
+      "cat_hp_integration": {
+        "name": "Integration",
+        "description": "Buffer tank, underfloor heating, and radiator compatibility"
+      },
+      "cat_hp_system": {
+        "name": "System Selection",
+        "description": "Heat pump type, brand, and capacity"
+      },
+      "cat_kitchen_appliances": {
+        "name": "Appliances",
+        "description": "Built-in and freestanding appliances"
+      },
+      "cat_kitchen_cabinets": {
+        "name": "Cabinets & Layout",
+        "description": "Cabinet style, color, and layout decisions"
+      },
+      "cat_kitchen_counters": {
+        "name": "Countertops",
+        "description": "Worktop material and edge profile"
+      },
+      "cat_kitchen_electrical": {
+        "name": "Electrical & Lighting",
+        "description": "Outlets and lighting positions"
+      },
+      "cat_paint_colors": {
+        "name": "Paint Colors",
+        "description": "Color selections for each room"
+      },
+      "cat_paint_finish": {
+        "name": "Paint Finish & Quality",
+        "description": "Sheen level and paint quality"
+      },
+      "cat_paint_prep": {
+        "name": "Preparation Work",
+        "description": "Repairs and prep before painting"
+      },
+      "cat_reno_bathroom": {
+        "name": "Bathroom",
+        "description": "Bathroom style, tiles, and layout"
+      },
+      "cat_reno_flooring": {
+        "name": "Flooring",
+        "description": "Floor materials for each level"
+      },
+      "cat_reno_kitchen": {
+        "name": "Kitchen",
+        "description": "Kitchen supplier, worktops, and appliances"
+      },
+      "cat_reno_layout": {
+        "name": "Layout & Structure",
+        "description": "Structural changes, walls, and windows"
+      },
+      "cat_reno_mep": {
+        "name": "Electrics & Plumbing",
+        "description": "Electrical layout, lighting, and boiler"
+      },
+      "cat_wood_doors": {
+        "name": "Doors",
+        "description": "Internal door style, material, and hardware"
+      },
+      "cat_wood_finishing": {
+        "name": "Finishing",
+        "description": "Skirting, architrave, and wood finish"
+      },
+      "cat_wood_storage": {
+        "name": "Built-in Storage",
+        "description": "Wardrobe type, shelving, and interior layout"
+      }
+    },
+    "items": {
+      "item_architrave_style": {
+        "name": "Architrave Style",
+        "description": "Door frame trim profile",
+        "options": {
+          "matching": "Matching skirting profile",
+          "contrasting": "Contrasting profile"
+        },
+        "impact": "Minor — can be decided during finishing phase"
+      },
+      "item_backsplash": {
+        "name": "Backsplash Height",
+        "description": "Standard or full-height backsplash",
+        "options": {
+          "standard": "Standard (10cm upstand)",
+          "full": "Full height (to cabinets)",
+          "ceiling": "To ceiling (no upper cabinets)"
+        },
+        "impact": "Affects tile ordering"
+      },
+      "item_boiler_brand": {
+        "name": "Brand Preference",
+        "description": "Preferred boiler manufacturer",
+        "options": {
+          "vaillant": "Vaillant",
+          "bosch": "Bosch",
+          "remeha": "Remeha",
+          "nefit": "Nefit"
+        },
+        "impact": "Popular models may have 2-3 week lead time"
+      },
+      "item_boiler_type": {
+        "name": "Boiler Type",
+        "description": "Type of boiler for the property",
+        "help": "Combi heats water on demand. System uses a cylinder. Heat pumps are most efficient.",
+        "options": {
+          "combi": "Combi boiler",
+          "system": "System boiler",
+          "heat_pump": "Heat pump"
+        },
+        "optionDescriptions": {
+          "combi": "No cylinder needed, instant hot water",
+          "system": "Uses hot water cylinder",
+          "heat_pump": "Most energy efficient"
+        },
+        "impact": "Boiler type determines entire system design and pipework"
+      },
+      "item_cabinet_color": {
+        "name": "Cabinet Color/Finish",
+        "description": "Main cabinet color",
+        "help": "Popular choices: White, grey, navy, natural wood",
+        "impact": "Color affects countertop and backsplash choice"
+      },
+      "item_cabinet_hardware": {
+        "name": "Cabinet Hardware",
+        "description": "Handles/knobs style",
+        "options": {
+          "none": "Push-to-open (no handles)",
+          "bar": "Bar pulls",
+          "cup": "Cup pulls",
+          "knob": "Knobs"
+        },
+        "impact": "Can be added later but holes need planning"
+      },
+      "item_cabinet_style": {
+        "name": "Cabinet Door Style",
+        "description": "Shaker, flat/slab, or raised panel",
+        "options": {
+          "shaker": "Shaker",
+          "flat": "Flat/Slab",
+          "raised": "Raised Panel"
+        },
+        "optionDescriptions": {
+          "shaker": "Classic with recessed center",
+          "flat": "Modern minimalist",
+          "raised": "Traditional ornate"
+        },
+        "impact": "Cabinets have 4-6 week lead time"
+      },
+      "item_ceiling_color": {
+        "name": "Ceiling Color",
+        "description": "Same as walls or different?",
+        "options": {
+          "white": "Standard white",
+          "match": "Match wall color",
+          "lighter": "Lighter shade of wall color",
+          "custom": "Different color (specify)"
+        },
+        "impact": "Minor - can adjust during work"
+      },
+      "item_counter_color": {
+        "name": "Countertop Color/Pattern",
+        "description": "Specific slab or color selection",
+        "help": "Visit showroom or send photo of preferred option",
+        "impact": "Popular colors may not be in stock"
+      },
+      "item_counter_material": {
+        "name": "Countertop Material",
+        "description": "Main work surface material",
+        "options": {
+          "laminate": "Laminate",
+          "quartz": "Quartz",
+          "granite": "Granite",
+          "solid_surface": "Solid Surface (Corian)",
+          "butcher_block": "Butcher Block"
+        },
+        "impact": "Stone counters need 2-3 weeks for fabrication"
+      },
+      "item_cylinder_size": {
+        "name": "Cylinder Size",
+        "description": "Hot water storage capacity (if applicable)",
+        "help": "100L for 1-2 people, 150L for 2-3, 200L for 3-4, 300L for 4+",
+        "options": {
+          "100l": "100 litres",
+          "150l": "150 litres",
+          "200l": "200 litres",
+          "300l": "300 litres"
+        },
+        "impact": "Larger cylinders need more space — affects cupboard sizing"
+      },
+      "item_dimmer_switches": {
+        "name": "Dimmer Switches",
+        "description": "Which rooms should have dimmers?",
+        "options": {
+          "living": "Living room",
+          "dining": "Dining room",
+          "bedroom": "Bedrooms",
+          "bathroom": "Bathroom"
+        },
+        "impact": "Wiring differs for dimmers"
+      },
+      "item_door_handle_type": {
+        "name": "Handle Type",
+        "description": "Door handle style",
+        "options": {
+          "lever": "Lever handle",
+          "knob": "Door knob",
+          "pull": "Pull handle"
+        },
+        "impact": "Can be fitted last — minor delay only"
+      },
+      "item_door_hardware_finish": {
+        "name": "Hardware Finish",
+        "description": "Finish for hinges, handles, and locks",
+        "options": {
+          "chrome": "Chrome",
+          "brushed_nickel": "Brushed Nickel",
+          "black": "Matt Black",
+          "brass": "Brass"
+        },
+        "impact": "Non-standard finishes may need ordering"
+      },
+      "item_door_material": {
+        "name": "Material",
+        "description": "Door construction material",
+        "options": {
+          "solid_wood": "Solid wood",
+          "mdf": "MDF",
+          "veneer": "Veneer"
+        },
+        "impact": "Solid wood doors need longer lead time"
+      },
+      "item_door_style": {
+        "name": "Door Style",
+        "description": "Internal door design",
+        "options": {
+          "panel": "Panel door",
+          "flush": "Flush door",
+          "glazed": "Glazed door",
+          "barn": "Barn door"
+        },
+        "optionDescriptions": {
+          "panel": "Traditional with raised/recessed panels",
+          "flush": "Flat modern look",
+          "glazed": "Glass panels for light",
+          "barn": "Sliding track-mounted"
+        },
+        "impact": "Doors have 3-4 week lead time for custom sizes"
+      },
+      "item_downlights_count": {
+        "name": "Downlight Quantity per Room",
+        "description": "Number of recessed spotlights",
+        "help": "List by room: Living 6, Kitchen 8, etc.",
+        "impact": "Ceiling needs cutting before plastering"
+      },
+      "item_extractor": {
+        "name": "Extractor Fan Location",
+        "description": "Where should the extractor fan be?",
+        "options": {
+          "ceiling": "Ceiling mounted",
+          "wall": "Wall mounted",
+          "window": "Window fan"
+        },
+        "impact": "Affects ductwork routing"
+      },
+      "item_floor_tile": {
+        "name": "Floor Tile Selection",
+        "description": "Choose floor tile (provide photo or link)",
+        "help": "Non-slip rating is important for bathroom floors",
+        "impact": "Tiles often have 2-4 week delivery"
+      },
+      "item_fridge_size": {
+        "name": "Refrigerator Size",
+        "description": "Fridge/freezer dimensions",
+        "options": {
+          "under_counter": "Under-counter",
+          "tall_50_50": "Tall 50/50 fridge/freezer",
+          "tall_70_30": "Tall 70/30 fridge/freezer",
+          "american": "American style"
+        },
+        "impact": "Affects cabinet layout"
+      },
+      "item_grout_color": {
+        "name": "Grout Color",
+        "description": "Match or contrast with tiles",
+        "options": {
+          "white": "White",
+          "grey": "Grey",
+          "black": "Black",
+          "match": "Match tile color"
+        },
+        "impact": "Can be decided during installation"
+      },
+      "item_heated_floor": {
+        "name": "Underfloor Heating",
+        "description": "Electric underfloor heating in bathroom",
+        "impact": "Must be installed before tiles"
+      },
+      "item_hob_type": {
+        "name": "Hob/Cooktop Type",
+        "description": "Gas, electric, or induction",
+        "options": {
+          "gas": "Gas",
+          "ceramic": "Ceramic Electric",
+          "induction": "Induction"
+        },
+        "impact": "Affects electrical and gas requirements"
+      },
+      "item_hotwater_system": {
+        "name": "Hot Water System",
+        "description": "How hot water is produced and stored",
+        "options": {
+          "combi_direct": "Combi direct (no storage)",
+          "cylinder": "Vented cylinder",
+          "unvented": "Unvented cylinder (mains pressure)"
+        },
+        "impact": "Cylinder requires space and plumbing layout changes"
+      },
+      "item_hp_brand": {
+        "name": "Brand",
+        "description": "Preferred heat pump manufacturer",
+        "options": {
+          "daikin": "Daikin",
+          "mitsubishi": "Mitsubishi",
+          "samsung": "Samsung",
+          "vaillant": "Vaillant"
+        },
+        "impact": "Lead times vary by brand (4-8 weeks)"
+      },
+      "item_hp_buffer": {
+        "name": "Buffer Tank",
+        "description": "Thermal buffer to improve efficiency",
+        "options": {
+          "yes_100l": "Yes — 100L",
+          "yes_200l": "Yes — 200L",
+          "no": "No buffer tank"
+        },
+        "impact": "Buffer tank needs space allocation in plant room"
+      },
+      "item_hp_capacity": {
+        "name": "Capacity",
+        "description": "Heat pump output in kilowatts",
+        "help": "Based on property heat loss calculation. Oversizing wastes energy.",
+        "options": {
+          "6kw": "6 kW (small flat/apartment)",
+          "8kw": "8 kW (medium house)",
+          "10kw": "10 kW (large house)",
+          "12kw": "12 kW (very large house)",
+          "14kw": "14 kW (large/poorly insulated)"
+        },
+        "impact": "Must be determined before ordering — affects electrical supply"
+      },
+      "item_hp_controller": {
+        "name": "Controller Type",
+        "description": "How the heat pump is controlled",
+        "options": {
+          "builtin": "Built-in controller",
+          "smart": "Smart controller",
+          "app": "App-controlled"
+        },
+        "impact": "Smart controllers need network connectivity setup"
+      },
+      "item_hp_maintenance": {
+        "name": "Maintenance Contract",
+        "description": "Annual maintenance agreement",
+        "options": {
+          "yes_annual": "Yes — annual service",
+          "no": "No contract"
+        },
+        "impact": "Can be decided after installation"
+      },
+      "item_hp_monitoring": {
+        "name": "Energy Monitoring",
+        "description": "Track heat pump performance and energy usage",
+        "options": {
+          "none": "None",
+          "basic": "Basic (COP display)",
+          "detailed": "Detailed (heat meter + electricity)"
+        },
+        "impact": "Heat meter must be installed during pipework phase"
+      },
+      "item_hp_radiator_compat": {
+        "name": "Existing Radiator Compatibility",
+        "description": "What to do with existing radiators",
+        "help": "Heat pumps run at lower temperatures — existing radiators may need upsizing.",
+        "options": {
+          "keep": "Keep existing (if oversized)",
+          "upgrade": "Upgrade key radiators",
+          "replace": "Replace all radiators"
+        },
+        "impact": "Radiator output must match heat pump flow temperature"
+      },
+      "item_hp_type": {
+        "name": "Heat Pump Type",
+        "description": "Type of heat pump system",
+        "help": "Air-water is most common. Ground-source is more efficient but requires garden work. Hybrid pairs with existing boiler.",
+        "options": {
+          "air_water": "Air-to-water",
+          "ground_source": "Ground-source",
+          "hybrid": "Hybrid (with boiler)"
+        },
+        "optionDescriptions": {
+          "air_water": "Most common, outdoor unit",
+          "ground_source": "Requires borehole or ground loop",
+          "hybrid": "Heat pump + gas backup"
+        },
+        "impact": "Determines entire system design, permits, and ground works"
+      },
+      "item_hp_ufh_zones": {
+        "name": "Underfloor Heating Zones",
+        "description": "Number of independently controlled UFH zones",
+        "options": {
+          "2": "2 zones",
+          "3": "3 zones",
+          "4": "4 zones",
+          "5": "5 zones"
+        },
+        "impact": "Zone layout affects manifold sizing and pipe runs"
+      },
+      "item_interior_layout": {
+        "name": "Interior Layout",
+        "description": "How the wardrobe interior is organized",
+        "options": {
+          "shelves_only": "Shelves only",
+          "shelves_hanging": "Shelves + hanging rail",
+          "custom": "Custom layout (drawers, shoe rack, etc.)"
+        },
+        "impact": "Custom internals need detailed drawings before build"
+      },
+      "item_light_color": {
+        "name": "LED Color Temperature",
+        "description": "Warm white, cool white, or daylight",
+        "options": {
+          "warm": "Warm white (2700K) - cozy",
+          "neutral": "Neutral white (4000K) - balanced",
+          "cool": "Cool white (5000K) - bright/clinical"
+        },
+        "impact": "Can be changed after (if using LED bulbs)"
+      },
+      "item_mirror_light": {
+        "name": "Mirror Lighting",
+        "description": "Type of lighting around mirror",
+        "options": {
+          "none": "No mirror light",
+          "above": "Light above mirror",
+          "sides": "Lights on sides",
+          "backlit": "Backlit mirror"
+        },
+        "impact": "Electrical first fix needs this info"
+      },
+      "item_outlet_count": {
+        "name": "Counter Outlet Quantity",
+        "description": "Number of outlets on backsplash",
+        "help": "Recommend minimum 4-6 for modern kitchen",
+        "impact": "Must be done before tiling"
+      },
+      "item_outlet_height": {
+        "name": "Outlet Height",
+        "description": "Standard or higher position",
+        "options": {
+          "standard": "Standard (30cm from floor)",
+          "higher": "Higher (45cm - easier access)",
+          "counter": "Counter height (where applicable)"
+        },
+        "impact": "Must decide before first fix"
+      },
+      "item_outlet_style": {
+        "name": "Outlet/Switch Style",
+        "description": "Modern flat, traditional, or smart",
+        "options": {
+          "standard": "Standard white",
+          "screwless": "Screwless flat plate",
+          "chrome": "Chrome/metal finish",
+          "smart": "Smart switches"
+        },
+        "impact": "Non-standard may need ordering"
+      },
+      "item_oven_config": {
+        "name": "Oven Configuration",
+        "description": "Single, double, or range cooker",
+        "options": {
+          "single": "Single built-in oven",
+          "double": "Double built-in oven",
+          "range": "Range cooker"
+        },
+        "impact": "Cabinet cutouts depend on this"
+      },
+      "item_paint_quality": {
+        "name": "Paint Quality Level",
+        "description": "Premium or standard paint",
+        "options": {
+          "standard": "Standard quality",
+          "premium": "Premium (Farrow & Ball, Little Greene)"
+        },
+        "impact": "Premium paints may need ordering"
+      },
+      "item_pendant_lights": {
+        "name": "Pendant Lights Over Island",
+        "description": "Number and position of pendant lights",
+        "help": "Usually 2-3 pendants for standard island",
+        "impact": "Electrical box positions needed early"
+      },
+      "item_radiator_style": {
+        "name": "Radiator Style",
+        "description": "Type of radiators throughout the property",
+        "options": {
+          "panel_11": "Panel Type 11 (single)",
+          "panel_21": "Panel Type 21 (double/single)",
+          "panel_22": "Panel Type 22 (double)",
+          "designer": "Designer radiator",
+          "underfloor": "Underfloor heating"
+        },
+        "impact": "Radiator output affects boiler sizing and pipe routing"
+      },
+      "item_reno_appliance_pkg": {
+        "name": "Appliance Package",
+        "description": "Appliance quality level",
+        "options": {
+          "budget": "Budget (Beko, Candy)",
+          "mid": "Mid-range (Bosch, Siemens)",
+          "premium": "Premium (Miele, Gaggenau)"
+        },
+        "impact": "Premium appliances may have longer lead times"
+      },
+      "item_reno_bath_style": {
+        "name": "Bathroom Style",
+        "description": "Overall bathroom design direction",
+        "options": {
+          "modern": "Modern (clean lines, minimal)",
+          "classic": "Classic (traditional fittings)",
+          "industrial": "Industrial (exposed elements, concrete)"
+        },
+        "impact": "Style determines fixture and tile selection"
+      },
+      "item_reno_boiler": {
+        "name": "Boiler Upgrade",
+        "description": "What to do with the heating system",
+        "options": {
+          "keep": "Keep existing boiler",
+          "replace": "Replace with new boiler",
+          "heat_pump": "Switch to heat pump"
+        },
+        "impact": "Heat pump needs 6-8 weeks lead time and separate planning"
+      },
+      "item_reno_floor_ground": {
+        "name": "Ground Floor",
+        "description": "Main ground floor material",
+        "options": {
+          "tiles": "Tiles",
+          "wood": "Hardwood",
+          "laminate": "Laminate",
+          "vinyl": "Luxury vinyl (LVT)"
+        },
+        "impact": "Floor choice affects subfloor preparation"
+      },
+      "item_reno_floor_upper": {
+        "name": "Upper Floor",
+        "description": "Upstairs flooring material",
+        "options": {
+          "carpet": "Carpet",
+          "wood": "Hardwood",
+          "laminate": "Laminate"
+        },
+        "impact": "Carpet can be fitted last, but wood/laminate needs acclimatisation"
+      },
+      "item_reno_floorplan": {
+        "name": "Floor Plan Changes",
+        "description": "Overall layout approach",
+        "options": {
+          "open_plan": "Open plan (remove dividing walls)",
+          "keep_existing": "Keep existing layout",
+          "partial": "Partial changes (widen doorways, etc.)"
+        },
+        "impact": "Affects all trades — must be decided first"
+      },
+      "item_reno_kitchen_supplier": {
+        "name": "Kitchen Supplier",
+        "description": "Where to source the kitchen",
+        "options": {
+          "ikea": "IKEA",
+          "brugman": "Brugman",
+          "kvik": "Kvik",
+          "custom": "Custom built"
+        },
+        "impact": "Kitchen order takes 4-8 weeks depending on supplier"
+      },
+      "item_reno_lighting": {
+        "name": "Lighting Plan",
+        "description": "Lighting design level",
+        "options": {
+          "basic": "Basic (central pendants)",
+          "designer": "Designer (spots, accent, dimming)",
+          "smart": "Smart lighting (Hue, Casambi)"
+        },
+        "impact": "Wiring must be in place before plastering"
+      },
+      "item_reno_socket_count": {
+        "name": "Socket Count",
+        "description": "Number of electrical outlets",
+        "options": {
+          "standard": "Standard (per building regs)",
+          "extra": "Extra sockets (+50%)",
+          "smart": "Smart home ready (extra + data)"
+        },
+        "impact": "Must decide before first fix — walls close up after"
+      },
+      "item_reno_tile_budget": {
+        "name": "Tile Budget",
+        "description": "Price range per square metre for bathroom tiles",
+        "options": {
+          "30": "€30/m² (basic)",
+          "50": "€50/m² (mid-range)",
+          "80": "€80/m² (premium)",
+          "120": "€120/m² (luxury)"
+        },
+        "impact": "Higher-end tiles may need ordering from Italy/Spain"
+      },
+      "item_reno_ufh": {
+        "name": "Underfloor Heating",
+        "description": "Install underfloor heating?",
+        "options": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "impact": "Must be installed before any floor finish — no retrofit possible"
+      },
+      "item_reno_wall_removal": {
+        "name": "Wall Removal",
+        "description": "Any walls to be removed or opened up?",
+        "options": {
+          "yes_specify": "Yes — specify walls",
+          "no": "No wall changes"
+        },
+        "impact": "Structural engineer needed — adds 2-3 weeks for calculations"
+      },
+      "item_reno_wetroom": {
+        "name": "Wet Room or Separate Shower",
+        "description": "Shower area design",
+        "options": {
+          "wet_room": "Wet room (open, level access)",
+          "separate": "Separate shower enclosure"
+        },
+        "impact": "Wet rooms need tanking and fall — affects floor build-up"
+      },
+      "item_reno_windows": {
+        "name": "Window Replacement",
+        "description": "Replace existing windows?",
+        "options": {
+          "all": "Replace all windows",
+          "some": "Replace select windows",
+          "none": "Keep existing windows"
+        },
+        "impact": "Windows have 4-6 week lead time"
+      },
+      "item_reno_worktop": {
+        "name": "Worktop Material",
+        "description": "Kitchen countertop surface",
+        "options": {
+          "laminate": "Laminate",
+          "granite": "Granite",
+          "quartz": "Quartz",
+          "wood": "Solid wood"
+        },
+        "impact": "Stone worktops need template after cabinets are fitted"
+      },
+      "item_shelving_material": {
+        "name": "Shelving Material",
+        "description": "Material for shelves and internal structure",
+        "options": {
+          "mdf": "MDF (painted)",
+          "plywood": "Plywood (natural/stained)",
+          "solid": "Solid wood"
+        },
+        "impact": "Affects cutting list and material ordering"
+      },
+      "item_shower_or_bath": {
+        "name": "Shower, Bath, or Both?",
+        "description": "Main bathing fixture choice",
+        "options": {
+          "shower_only": "Shower only",
+          "bath_only": "Bath only",
+          "bath_shower": "Bath with shower over",
+          "separate": "Separate shower and bath"
+        },
+        "impact": "Affects entire bathroom layout and plumbing"
+      },
+      "item_sink_type": {
+        "name": "Sink/Basin Type",
+        "description": "Style of bathroom sink",
+        "options": {
+          "pedestal": "Pedestal",
+          "wall_mounted": "Wall-mounted",
+          "vanity_unit": "Vanity unit with storage",
+          "countertop": "Countertop basin"
+        },
+        "impact": "Vanity units need to be ordered 2-3 weeks ahead"
+      },
+      "item_skirting_profile": {
+        "name": "Skirting Board Profile",
+        "description": "Baseboard moulding style",
+        "options": {
+          "ogee": "Ogee (traditional)",
+          "torus": "Torus (rounded)",
+          "square": "Square (modern)",
+          "pencil_round": "Pencil round (subtle)"
+        },
+        "impact": "Non-stock profiles need ordering"
+      },
+      "item_smart_home": {
+        "name": "Smart Home Integration",
+        "description": "Connect heating to smart home system",
+        "options": {
+          "none": "None",
+          "tado": "Tado",
+          "nest": "Nest",
+          "hive": "Hive"
+        },
+        "impact": "Can be added after but may require rewiring"
+      },
+      "item_tap_style": {
+        "name": "Tap/Faucet Finish",
+        "description": "Chrome, brushed nickel, black, or brass",
+        "options": {
+          "chrome": "Chrome",
+          "brushed_nickel": "Brushed Nickel",
+          "matte_black": "Matte Black",
+          "brass": "Brass/Gold"
+        },
+        "impact": "Taps may have 2-3 week lead time"
+      },
+      "item_temp_setting": {
+        "name": "Temperature Setting",
+        "description": "Default hot water temperature",
+        "help": "Standard is 60°C. Lower saves energy but check Legionella risk.",
+        "impact": "Can be adjusted after installation"
+      },
+      "item_thermostat_type": {
+        "name": "Thermostat Type",
+        "description": "Main heating thermostat",
+        "options": {
+          "basic": "Basic on/off",
+          "programmable": "Programmable",
+          "smart": "Smart thermostat",
+          "zone": "Zone control (multi-room)"
+        },
+        "impact": "Smart/zone systems need wiring during rough-in"
+      },
+      "item_tile_height": {
+        "name": "Wall Tile Height",
+        "description": "How high should wall tiles go?",
+        "options": {
+          "splashback": "Splashback only (60cm)",
+          "half_wall": "Half wall (120cm)",
+          "full_height": "Full height (to ceiling)"
+        },
+        "impact": "Need to order correct tile quantity"
+      },
+      "item_toilet_style": {
+        "name": "Toilet Style",
+        "description": "Wall-hung or floor-standing toilet",
+        "help": "Wall-hung toilets are easier to clean but cost more. Floor-standing is traditional.",
+        "options": {
+          "wall_hung": "Wall-hung",
+          "floor_standing": "Floor-standing",
+          "back_to_wall": "Back-to-wall"
+        },
+        "optionDescriptions": {
+          "wall_hung": "Modern, easy to clean",
+          "floor_standing": "Traditional, lower cost",
+          "back_to_wall": "Concealed cistern"
+        },
+        "impact": "Plumbing rough-in cannot proceed without toilet position"
+      },
+      "item_trim_color": {
+        "name": "Trim/Woodwork Color",
+        "description": "Skirting, door frames, window frames",
+        "options": {
+          "white_satin": "White (satin finish)",
+          "white_gloss": "White (gloss finish)",
+          "match_walls": "Match walls",
+          "contrast": "Contrast color (specify)"
+        },
+        "impact": "Minor - can adjust during work"
+      },
+      "item_under_cabinet_lights": {
+        "name": "Under-Cabinet Lighting",
+        "description": "LED strips under wall cabinets",
+        "impact": "Wiring needed before cabinets go up"
+      },
+      "item_usb_outlets": {
+        "name": "USB Outlets",
+        "description": "Outlets with built-in USB charging",
+        "help": "Recommend 2-4 in common areas",
+        "impact": "Minor - can substitute during work"
+      },
+      "item_valve_type": {
+        "name": "Radiator Valve Type",
+        "description": "Type of valves on each radiator",
+        "options": {
+          "manual": "Manual",
+          "trv": "Thermostatic (TRV)",
+          "smart_trv": "Smart TRV"
+        },
+        "impact": "TRVs recommended for energy efficiency regulations"
+      },
+      "item_wall_color_bedroom": {
+        "name": "Bedroom Wall Colors",
+        "description": "Color for each bedroom",
+        "help": "List room and color for each",
+        "impact": "Paint needs to be ordered/mixed"
+      },
+      "item_wall_color_living": {
+        "name": "Living Room Wall Color",
+        "description": "Main wall color for living room",
+        "help": "Provide brand and color code (e.g., Dulux White Mist)",
+        "impact": "Paint needs to be ordered/mixed"
+      },
+      "item_wall_finish": {
+        "name": "Wall Paint Finish",
+        "description": "Sheen level for walls",
+        "options": {
+          "flat": "Flat/Matte",
+          "eggshell": "Eggshell",
+          "satin": "Satin"
+        },
+        "optionDescriptions": {
+          "flat": "Hides imperfections, not washable",
+          "eggshell": "Slight sheen, washable",
+          "satin": "Medium sheen, very washable"
+        },
+        "impact": "Affects paint ordering"
+      },
+      "item_wall_repairs": {
+        "name": "Wall Repairs Needed",
+        "description": "Any holes, cracks, or damage to repair?",
+        "help": "List any areas needing repair",
+        "impact": "May need extra materials"
+      },
+      "item_wall_tile": {
+        "name": "Wall Tile Selection",
+        "description": "Choose wall tile (provide photo or link)",
+        "impact": "Tiles often have 2-4 week delivery"
+      },
+      "item_wallpaper_removal": {
+        "name": "Wallpaper Removal",
+        "description": "Any wallpaper to be removed?",
+        "impact": "Significantly affects timeline"
+      },
+      "item_wardrobe_type": {
+        "name": "Wardrobe Type",
+        "description": "Type of built-in wardrobe",
+        "options": {
+          "sliding": "Sliding doors",
+          "hinged": "Hinged doors",
+          "walk_in": "Walk-in closet"
+        },
+        "impact": "Door systems have 2-3 week lead time"
+      },
+      "item_wood_finish": {
+        "name": "Wood Finish",
+        "description": "Final surface treatment for all woodwork",
+        "options": {
+          "paint": "Paint (opaque)",
+          "stain": "Stain (shows grain)",
+          "lacquer": "Lacquer (clear gloss/satin)",
+          "oil": "Oil (natural matte)"
+        },
+        "impact": "Affects sanding prep and number of coats"
+      }
+    }
   }
 }

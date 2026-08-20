@@ -5887,5 +5887,947 @@
   },
   "approvals": {
     "requestedByFitter": "Monteur"
+  },
+  "decisionCatalog": {
+    "templates": {
+      "tmpl_bathroom_full": {
+        "name": "Complete badkamerrenovatie",
+        "description": "Badkamer volledig vernieuwen: sanitair, tegels en afwerking"
+      },
+      "tmpl_kitchen_full": {
+        "name": "Complete keukenrenovatie",
+        "description": "Keuken volledig vernieuwen: kasten, apparatuur en afwerking"
+      },
+      "tmpl_painting_interior": {
+        "name": "Binnenschilderwerk",
+        "description": "Compleet binnenschilderwerk: wanden, plafonds en houtwerk"
+      },
+      "tmpl_electrical_upgrade": {
+        "name": "Elektra vernieuwen",
+        "description": "Elektrawerk: stopcontacten, schakelaars en verlichting"
+      },
+      "tmpl_heating_cv": {
+        "name": "CV-installatie",
+        "description": "Centrale verwarming met ketel, radiatoren en regeling"
+      },
+      "tmpl_heatpump": {
+        "name": "Warmtepomp plaatsen",
+        "description": "Lucht- of bodemwarmtepomp met inbedding en regeling"
+      },
+      "tmpl_carpentry_woodwork": {
+        "name": "Binnentimmerwerk",
+        "description": "Deuren, inbouwkasten, plinten en houtafwerking"
+      },
+      "tmpl_renovation_full": {
+        "name": "Complete verbouwing",
+        "description": "Hele woning: indeling, keuken, badkamer, vloeren en installaties"
+      }
+    },
+    "categories": {
+      "cat_bath_fixtures": {
+        "name": "Sanitair & kranen",
+        "description": "Toilet, wastafel, douche/bad en kranen"
+      },
+      "cat_bath_tiles": {
+        "name": "Tegels & afwerking",
+        "description": "Keuze van vloer- en wandtegels"
+      },
+      "cat_bath_electrical": {
+        "name": "Elektra",
+        "description": "Verlichting en elektrapunten"
+      },
+      "cat_kitchen_cabinets": {
+        "name": "Kasten & indeling",
+        "description": "Stijl van de fronten, kleur en indeling"
+      },
+      "cat_kitchen_counters": {
+        "name": "Werkbladen",
+        "description": "Materiaal en randafwerking van het werkblad"
+      },
+      "cat_kitchen_appliances": {
+        "name": "Apparatuur",
+        "description": "Inbouw- en vrijstaande apparatuur"
+      },
+      "cat_kitchen_electrical": {
+        "name": "Elektra & verlichting",
+        "description": "Stopcontacten en plek van de verlichting"
+      },
+      "cat_paint_colors": {
+        "name": "Kleuren",
+        "description": "Kleurkeuze per ruimte"
+      },
+      "cat_paint_finish": {
+        "name": "Glansgraad & kwaliteit",
+        "description": "Glansgraad en kwaliteit van de verf"
+      },
+      "cat_paint_prep": {
+        "name": "Voorbereidend werk",
+        "description": "Herstellen en voorbereiden vóór het schilderen"
+      },
+      "cat_elec_outlets": {
+        "name": "Stopcontacten & schakelaars",
+        "description": "Plek en uitvoering van contactdozen en schakelaars"
+      },
+      "cat_elec_lighting": {
+        "name": "Verlichting",
+        "description": "Plafondlampen, spots en dimmers"
+      },
+      "cat_heat_system": {
+        "name": "Verwarmingssysteem",
+        "description": "Type ketel, merk en soort radiatoren"
+      },
+      "cat_heat_hotwater": {
+        "name": "Warm water",
+        "description": "Warmwatersysteem en boilerinhoud"
+      },
+      "cat_heat_controls": {
+        "name": "Regeling",
+        "description": "Thermostaat en radiatorkranen"
+      },
+      "cat_hp_system": {
+        "name": "Systeemkeuze",
+        "description": "Type warmtepomp, merk en vermogen"
+      },
+      "cat_hp_integration": {
+        "name": "Inbedding",
+        "description": "Buffervat, vloerverwarming en radiatoren"
+      },
+      "cat_hp_controls": {
+        "name": "Regeling & monitoring",
+        "description": "Regelaar, energiemonitoring en onderhoud"
+      },
+      "cat_wood_doors": {
+        "name": "Deuren",
+        "description": "Stijl, materiaal en beslag van de binnendeuren"
+      },
+      "cat_wood_storage": {
+        "name": "Inbouwkasten",
+        "description": "Type kast, planken en indeling"
+      },
+      "cat_wood_finishing": {
+        "name": "Afwerking",
+        "description": "Plinten, deurlijsten en houtafwerking"
+      },
+      "cat_reno_layout": {
+        "name": "Indeling & constructie",
+        "description": "Constructieve wijzigingen, wanden en ramen"
+      },
+      "cat_reno_kitchen": {
+        "name": "Keuken",
+        "description": "Keukenleverancier, werkbladen en apparatuur"
+      },
+      "cat_reno_bathroom": {
+        "name": "Badkamer",
+        "description": "Stijl, tegels en indeling van de badkamer"
+      },
+      "cat_reno_flooring": {
+        "name": "Vloeren",
+        "description": "Vloerafwerking per verdieping"
+      },
+      "cat_reno_mep": {
+        "name": "Elektra & installatie",
+        "description": "Elektraplan, verlichting en ketel"
+      }
+    },
+    "items": {
+      "item_toilet_style": {
+        "name": "Type toilet",
+        "description": "Hangend of staand toilet",
+        "help": "Een hangend toilet maakt schoonmaken makkelijker maar kost meer. Staand is de klassieke keuze.",
+        "options": {
+          "wall_hung": "Hangend",
+          "floor_standing": "Staand",
+          "back_to_wall": "Tegen de wand (inbouwreservoir)"
+        },
+        "optionDescriptions": {
+          "wall_hung": "Modern, makkelijk schoon te maken",
+          "floor_standing": "Klassiek, goedkoper",
+          "back_to_wall": "Reservoir weggewerkt"
+        },
+        "impact": "Zonder de plek van het toilet kan het leidingwerk niet verder"
+      },
+      "item_sink_type": {
+        "name": "Type wastafel",
+        "description": "Uitvoering van de wastafel",
+        "options": {
+          "pedestal": "Op zuil",
+          "wall_mounted": "Aan de wand",
+          "vanity_unit": "Wastafelmeubel met opbergruimte",
+          "countertop": "Opzetkom"
+        },
+        "impact": "Wastafelmeubels moeten 2–3 weken vooraf besteld worden"
+      },
+      "item_shower_or_bath": {
+        "name": "Douche, bad of allebei?",
+        "description": "Keuze van de hoofdvoorziening",
+        "options": {
+          "shower_only": "Alleen douche",
+          "bath_only": "Alleen bad",
+          "bath_shower": "Bad met douche erboven",
+          "separate": "Douche en bad apart"
+        },
+        "impact": "Bepaalt de indeling en het leidingwerk van de hele badkamer"
+      },
+      "item_tap_style": {
+        "name": "Afwerking van de kranen",
+        "description": "Chroom, geborsteld nikkel, zwart of messing",
+        "options": {
+          "chrome": "Chroom",
+          "brushed_nickel": "Geborsteld nikkel",
+          "matte_black": "Mat zwart",
+          "brass": "Messing/goud"
+        },
+        "impact": "Kranen hebben vaak 2–3 weken levertijd"
+      },
+      "item_floor_tile": {
+        "name": "Vloertegel",
+        "description": "Kies de vloertegel (foto of link)",
+        "help": "Let op de antislipwaarde bij een badkamervloer",
+        "impact": "Tegels hebben vaak 2–4 weken levertijd"
+      },
+      "item_wall_tile": {
+        "name": "Wandtegel",
+        "description": "Kies de wandtegel (foto of link)",
+        "impact": "Tegels hebben vaak 2–4 weken levertijd"
+      },
+      "item_tile_height": {
+        "name": "Hoogte wandtegels",
+        "description": "Tot welke hoogte moeten de wandtegels?",
+        "options": {
+          "splashback": "Alleen spatrand (60 cm)",
+          "half_wall": "Halfhoog (120 cm)",
+          "full_height": "Tot het plafond"
+        },
+        "impact": "Nodig om de juiste hoeveelheid tegels te bestellen"
+      },
+      "item_grout_color": {
+        "name": "Voegkleur",
+        "description": "Passend bij of juist contrasterend met de tegel",
+        "options": {
+          "white": "Wit",
+          "grey": "Grijs",
+          "black": "Zwart",
+          "match": "Zelfde kleur als de tegel"
+        },
+        "impact": "Kan tijdens het zetten beslist worden"
+      },
+      "item_mirror_light": {
+        "name": "Spiegelverlichting",
+        "description": "Soort verlichting bij de spiegel",
+        "options": {
+          "none": "Geen spiegelverlichting",
+          "above": "Lamp boven de spiegel",
+          "sides": "Lampen aan de zijkant",
+          "backlit": "Spiegel met verlichting erachter"
+        },
+        "impact": "Nodig voor het aanleggen van de elektra"
+      },
+      "item_heated_floor": {
+        "name": "Vloerverwarming",
+        "description": "Elektrische vloerverwarming in de badkamer",
+        "impact": "Moet vóór het tegelen worden aangelegd"
+      },
+      "item_extractor": {
+        "name": "Plek van de ventilator",
+        "description": "Waar moet de afzuigventilator komen?",
+        "options": {
+          "ceiling": "In het plafond",
+          "wall": "Aan de wand",
+          "window": "In het raam"
+        },
+        "impact": "Bepaalt de route van het afvoerkanaal"
+      },
+      "item_cabinet_style": {
+        "name": "Stijl van de fronten",
+        "description": "Kader, vlak of geprofileerd",
+        "options": {
+          "shaker": "Kaderfront",
+          "flat": "Vlak front",
+          "raised": "Geprofileerd front"
+        },
+        "optionDescriptions": {
+          "shaker": "Klassiek met verdiept midden",
+          "flat": "Modern en strak",
+          "raised": "Traditioneel, met profiel"
+        },
+        "impact": "Kasten hebben 4–6 weken levertijd"
+      },
+      "item_cabinet_color": {
+        "name": "Kleur/afwerking van de kasten",
+        "description": "Hoofdkleur van de kasten",
+        "help": "Populair: wit, grijs, donkerblauw, hout",
+        "impact": "De kleur bepaalt mede het werkblad en de achterwand"
+      },
+      "item_cabinet_hardware": {
+        "name": "Grepen",
+        "description": "Soort grepen of knoppen",
+        "options": {
+          "none": "Greeploos (push-to-open)",
+          "bar": "Staafgrepen",
+          "cup": "Komgrepen",
+          "knob": "Knoppen"
+        },
+        "impact": "Kan later, maar de boorgaten moeten vooraf bepaald zijn"
+      },
+      "item_counter_material": {
+        "name": "Materiaal werkblad",
+        "description": "Materiaal van het hoofdwerkblad",
+        "options": {
+          "laminate": "Laminaat",
+          "quartz": "Composiet",
+          "granite": "Graniet",
+          "solid_surface": "Solid surface (Corian)",
+          "butcher_block": "Massief hout"
+        },
+        "impact": "Steen heeft 2–3 weken nodig voor productie"
+      },
+      "item_counter_color": {
+        "name": "Kleur/dessin werkblad",
+        "description": "Specifieke plaat of kleur",
+        "help": "Kom langs in de showroom of stuur een foto van je voorkeur",
+        "impact": "Populaire kleuren zijn niet altijd op voorraad"
+      },
+      "item_backsplash": {
+        "name": "Hoogte achterwand",
+        "description": "Standaard of doorlopende achterwand",
+        "options": {
+          "standard": "Standaard (10 cm opstand)",
+          "full": "Tot de bovenkasten",
+          "ceiling": "Tot het plafond (geen bovenkasten)"
+        },
+        "impact": "Bepaalt hoeveel tegels er nodig zijn"
+      },
+      "item_hob_type": {
+        "name": "Type kookplaat",
+        "description": "Gas, elektrisch of inductie",
+        "options": {
+          "gas": "Gas",
+          "ceramic": "Keramisch (elektrisch)",
+          "induction": "Inductie"
+        },
+        "impact": "Bepaalt de gas- en elektra-aansluiting"
+      },
+      "item_oven_config": {
+        "name": "Oven",
+        "description": "Enkel, dubbel of fornuis",
+        "options": {
+          "single": "Enkele inbouwoven",
+          "double": "Dubbele inbouwoven",
+          "range": "Fornuis"
+        },
+        "impact": "De uitsparingen in de kasten hangen hiervan af"
+      },
+      "item_fridge_size": {
+        "name": "Formaat koelkast",
+        "description": "Afmetingen koel-/vriescombinatie",
+        "options": {
+          "under_counter": "Onderbouw",
+          "tall_50_50": "Hoog, 50/50 koelen/vriezen",
+          "tall_70_30": "Hoog, 70/30 koelen/vriezen",
+          "american": "Amerikaanse koelkast"
+        },
+        "impact": "Bepaalt de indeling van de kasten"
+      },
+      "item_outlet_count": {
+        "name": "Aantal stopcontacten",
+        "description": "Stopcontacten boven het werkblad",
+        "help": "Voor een moderne keuken minimaal 4–6 aanbevolen",
+        "impact": "Moet vaststaan voordat er getegeld wordt"
+      },
+      "item_under_cabinet_lights": {
+        "name": "Verlichting onder de kasten",
+        "description": "Ledstrips onder de bovenkasten",
+        "impact": "De bedrading moet er liggen vóór de kasten hangen"
+      },
+      "item_pendant_lights": {
+        "name": "Hanglampen boven het eiland",
+        "description": "Aantal en positie van de hanglampen",
+        "help": "Bij een standaard eiland meestal 2–3 lampen",
+        "impact": "De plek van de aansluitdozen is vroeg nodig"
+      },
+      "item_wall_color_living": {
+        "name": "Wandkleur woonkamer",
+        "description": "Hoofdkleur voor de woonkamer",
+        "help": "Geef merk en kleurcode door (bijv. RAL 9010)",
+        "impact": "De verf moet besteld of gemengd worden"
+      },
+      "item_wall_color_bedroom": {
+        "name": "Wandkleuren slaapkamers",
+        "description": "Kleur per slaapkamer",
+        "help": "Geef per kamer de kleur door",
+        "impact": "De verf moet besteld of gemengd worden"
+      },
+      "item_ceiling_color": {
+        "name": "Plafondkleur",
+        "description": "Zelfde als de wanden of anders?",
+        "options": {
+          "white": "Standaard wit",
+          "match": "Zelfde als de wandkleur",
+          "lighter": "Lichtere tint van de wandkleur",
+          "custom": "Andere kleur (graag doorgeven)"
+        },
+        "impact": "Klein — kan tijdens het werk nog"
+      },
+      "item_trim_color": {
+        "name": "Kleur houtwerk",
+        "description": "Plinten, deur- en raamkozijnen",
+        "options": {
+          "white_satin": "Wit (zijdeglans)",
+          "white_gloss": "Wit (hoogglans)",
+          "match_walls": "Zelfde als de wanden",
+          "contrast": "Contrastkleur (graag doorgeven)"
+        },
+        "impact": "Klein — kan tijdens het werk nog"
+      },
+      "item_wall_finish": {
+        "name": "Glansgraad wandverf",
+        "description": "Glansgraad voor de wanden",
+        "options": {
+          "flat": "Mat",
+          "eggshell": "Zijdemat",
+          "satin": "Zijdeglans"
+        },
+        "optionDescriptions": {
+          "flat": "Verbergt oneffenheden, niet afwasbaar",
+          "eggshell": "Lichte glans, afwasbaar",
+          "satin": "Halfglans, goed afwasbaar"
+        },
+        "impact": "Bepaalt wat er besteld wordt"
+      },
+      "item_paint_quality": {
+        "name": "Kwaliteit van de verf",
+        "description": "Premium of standaard",
+        "options": {
+          "standard": "Standaardkwaliteit",
+          "premium": "Premium (bijv. Farrow & Ball, Little Greene)"
+        },
+        "impact": "Premiumverf moet vaak besteld worden"
+      },
+      "item_wall_repairs": {
+        "name": "Herstelwerk aan de wanden",
+        "description": "Gaten, scheuren of schade?",
+        "help": "Geef door welke plekken hersteld moeten worden",
+        "impact": "Kan extra materiaal kosten"
+      },
+      "item_wallpaper_removal": {
+        "name": "Behang verwijderen",
+        "description": "Moet er behang af?",
+        "impact": "Heeft grote invloed op de planning"
+      },
+      "item_outlet_style": {
+        "name": "Uitvoering contactdozen en schakelaars",
+        "description": "Modern vlak, klassiek of slim",
+        "options": {
+          "standard": "Standaard wit",
+          "screwless": "Vlak, zonder schroeven",
+          "chrome": "Chroom/metaal",
+          "smart": "Slimme schakelaars"
+        },
+        "impact": "Afwijkende uitvoeringen moeten besteld worden"
+      },
+      "item_outlet_height": {
+        "name": "Hoogte stopcontacten",
+        "description": "Standaard of hoger geplaatst",
+        "options": {
+          "standard": "Standaard (30 cm boven de vloer)",
+          "higher": "Hoger (45 cm — makkelijker bereikbaar)",
+          "counter": "Op werkbladhoogte (waar van toepassing)"
+        },
+        "impact": "Moet vaststaan vóór het leidingwerk"
+      },
+      "item_usb_outlets": {
+        "name": "USB-stopcontacten",
+        "description": "Stopcontacten met usb-aansluiting",
+        "help": "In woonruimtes 2–4 aanbevolen",
+        "impact": "Klein — kan tijdens het werk gewisseld worden"
+      },
+      "item_downlights_count": {
+        "name": "Aantal inbouwspots per ruimte",
+        "description": "Aantal inbouwspots in het plafond",
+        "help": "Per ruimte doorgeven: woonkamer 6, keuken 8, enz.",
+        "impact": "Het plafond moet vóór het stucwerk uitgezaagd worden"
+      },
+      "item_dimmer_switches": {
+        "name": "Dimmers",
+        "description": "In welke ruimtes wil je dimmen?",
+        "options": {
+          "living": "Woonkamer",
+          "dining": "Eetkamer",
+          "bedroom": "Slaapkamers",
+          "bathroom": "Badkamer"
+        },
+        "impact": "Dimmers vragen andere bedrading"
+      },
+      "item_light_color": {
+        "name": "Lichtkleur van de leds",
+        "description": "Warmwit, neutraalwit of daglicht",
+        "options": {
+          "warm": "Warmwit (2700 K) — sfeervol",
+          "neutral": "Neutraalwit (4000 K) — neutraal",
+          "cool": "Daglichtwit (5000 K) — helder/zakelijk"
+        },
+        "impact": "Bij ledlampen later nog te wijzigen"
+      },
+      "item_boiler_type": {
+        "name": "Type ketel",
+        "description": "Soort warmteopwekker",
+        "help": "Een combiketel maakt warm water op het moment zelf. Een systeemketel werkt met een boiler. Een warmtepomp is het zuinigst.",
+        "options": {
+          "combi": "Combiketel",
+          "system": "Systeemketel",
+          "heat_pump": "Warmtepomp"
+        },
+        "optionDescriptions": {
+          "combi": "Geen boiler nodig, direct warm water",
+          "system": "Werkt met een boilervat",
+          "heat_pump": "Energetisch het zuinigst"
+        },
+        "impact": "Het type ketel bepaalt het hele ontwerp en het leidingwerk"
+      },
+      "item_boiler_brand": {
+        "name": "Voorkeursmerk",
+        "description": "Gewenste fabrikant",
+        "options": {
+          "vaillant": "Vaillant",
+          "bosch": "Bosch",
+          "remeha": "Remeha",
+          "nefit": "Nefit"
+        },
+        "impact": "Populaire modellen hebben 2–3 weken levertijd"
+      },
+      "item_radiator_style": {
+        "name": "Soort radiatoren",
+        "description": "Type radiatoren in de hele woning",
+        "options": {
+          "panel_11": "Paneelradiator type 11 (enkel)",
+          "panel_21": "Paneelradiator type 21",
+          "panel_22": "Paneelradiator type 22 (dubbel)",
+          "designer": "Designradiator",
+          "underfloor": "Vloerverwarming"
+        },
+        "impact": "Het vermogen bepaalt de ketelgrootte en het leidingwerk"
+      },
+      "item_hotwater_system": {
+        "name": "Warmwatersysteem",
+        "description": "Hoe het warme water gemaakt en bewaard wordt",
+        "options": {
+          "combi_direct": "Direct via combiketel (geen opslag)",
+          "cylinder": "Open boilervat",
+          "unvented": "Gesloten boiler (op waterleidingdruk)"
+        },
+        "impact": "Een boiler vraagt ruimte en verandert de leidingindeling"
+      },
+      "item_cylinder_size": {
+        "name": "Boilerinhoud",
+        "description": "Opslagcapaciteit warm water (indien van toepassing)",
+        "help": "100 l voor 1–2 personen, 150 l voor 2–3, 200 l voor 3–4, 300 l vanaf 4",
+        "options": {
+          "100l": "100 liter",
+          "150l": "150 liter",
+          "200l": "200 liter",
+          "300l": "300 liter"
+        },
+        "impact": "Een grotere boiler vraagt meer ruimte — bepaalt de kastmaat"
+      },
+      "item_temp_setting": {
+        "name": "Temperatuurinstelling",
+        "description": "Standaardtemperatuur van het warme water",
+        "help": "Gebruikelijk is 60 °C. Lager scheelt energie, let wel op legionella.",
+        "impact": "Na het plaatsen gewoon in te stellen"
+      },
+      "item_thermostat_type": {
+        "name": "Type thermostaat",
+        "description": "Centrale regeling van de verwarming",
+        "options": {
+          "basic": "Eenvoudig aan/uit",
+          "programmable": "Programmeerbaar",
+          "smart": "Slimme thermostaat",
+          "zone": "Zoneregeling (per ruimte)"
+        },
+        "impact": "Slimme en zoneregelingen vragen bedrading tijdens het ruwe werk"
+      },
+      "item_smart_home": {
+        "name": "Koppeling met smart home",
+        "description": "Verwarming koppelen aan je smarthomesysteem",
+        "options": {
+          "none": "Geen",
+          "tado": "Tado",
+          "nest": "Nest",
+          "hive": "Hive"
+        },
+        "impact": "Later toe te voegen, maar kan nieuwe bedrading vragen"
+      },
+      "item_valve_type": {
+        "name": "Radiatorkranen",
+        "description": "Soort kraan op de radiatoren",
+        "options": {
+          "manual": "Handbediend",
+          "trv": "Thermostatisch (TRV)",
+          "smart_trv": "Slimme thermostaatkraan"
+        },
+        "impact": "Thermostaatkranen worden aanbevolen voor de energie-eisen"
+      },
+      "item_hp_type": {
+        "name": "Type warmtepomp",
+        "description": "Soort warmtepompsysteem",
+        "help": "Lucht/water komt het meest voor. Bodemwarmte is zuiniger maar vraagt werk in de tuin. Hybride werkt samen met de bestaande ketel.",
+        "options": {
+          "air_water": "Lucht/water",
+          "ground_source": "Bodemwarmte",
+          "hybrid": "Hybride (met ketel)"
+        },
+        "optionDescriptions": {
+          "air_water": "Meest voorkomend, met buitenunit",
+          "ground_source": "Vraagt een bron of bodemlus",
+          "hybrid": "Warmtepomp met gasketel als back-up"
+        },
+        "impact": "Bepaalt het hele ontwerp, de vergunningen en het grondwerk"
+      },
+      "item_hp_brand": {
+        "name": "Merk",
+        "description": "Gewenste fabrikant",
+        "options": {
+          "daikin": "Daikin",
+          "mitsubishi": "Mitsubishi",
+          "samsung": "Samsung",
+          "vaillant": "Vaillant"
+        },
+        "impact": "Levertijden verschillen per merk (4–8 weken)"
+      },
+      "item_hp_capacity": {
+        "name": "Vermogen",
+        "description": "Vermogen van de warmtepomp in kilowatt",
+        "help": "Volgt uit de warmteverliesberekening. Te ruim kiezen kost energie.",
+        "options": {
+          "6kw": "6 kW (klein appartement)",
+          "8kw": "8 kW (gemiddelde woning)",
+          "10kw": "10 kW (grote woning)",
+          "12kw": "12 kW (zeer grote woning)",
+          "14kw": "14 kW (groot/slecht geïsoleerd)"
+        },
+        "impact": "Moet vaststaan vóór het bestellen — bepaalt de elektra-aansluiting"
+      },
+      "item_hp_buffer": {
+        "name": "Buffervat",
+        "description": "Buffer voor een efficiëntere werking",
+        "options": {
+          "yes_100l": "Ja — 100 l",
+          "yes_200l": "Ja — 200 l",
+          "no": "Geen buffervat"
+        },
+        "impact": "Het buffervat vraagt ruimte in de technische ruimte"
+      },
+      "item_hp_ufh_zones": {
+        "name": "Groepen vloerverwarming",
+        "description": "Aantal apart geregelde groepen",
+        "options": {
+          "2": "2 groepen",
+          "3": "3 groepen",
+          "4": "4 groepen",
+          "5": "5 groepen"
+        },
+        "impact": "De indeling bepaalt de verdeler en het leidingverloop"
+      },
+      "item_hp_radiator_compat": {
+        "name": "Bestaande radiatoren",
+        "description": "Wat er met de bestaande radiatoren gebeurt",
+        "help": "Een warmtepomp draait op lagere temperaturen — bestaande radiatoren moeten soms groter.",
+        "options": {
+          "keep": "Behouden (als ze groot genoeg zijn)",
+          "upgrade": "Belangrijkste radiatoren vervangen",
+          "replace": "Alle radiatoren vervangen"
+        },
+        "impact": "Het vermogen moet passen bij de aanvoertemperatuur"
+      },
+      "item_hp_controller": {
+        "name": "Type regelaar",
+        "description": "Hoe de warmtepomp geregeld wordt",
+        "options": {
+          "builtin": "Ingebouwde regelaar",
+          "smart": "Slimme regelaar",
+          "app": "Bediening via app"
+        },
+        "impact": "Slimme regelaars hebben een netwerkverbinding nodig"
+      },
+      "item_hp_monitoring": {
+        "name": "Energiemonitoring",
+        "description": "Prestaties en verbruik volgen",
+        "options": {
+          "none": "Geen",
+          "basic": "Eenvoudig (COP-weergave)",
+          "detailed": "Uitgebreid (warmtemeter + elektriciteit)"
+        },
+        "impact": "De warmtemeter moet tijdens het leidingwerk geplaatst worden"
+      },
+      "item_hp_maintenance": {
+        "name": "Onderhoudscontract",
+        "description": "Jaarlijks onderhoud",
+        "options": {
+          "yes_annual": "Ja — jaarlijks onderhoud",
+          "no": "Geen contract"
+        },
+        "impact": "Kan na het plaatsen beslist worden"
+      },
+      "item_door_style": {
+        "name": "Deurstijl",
+        "description": "Uitvoering van de binnendeuren",
+        "options": {
+          "panel": "Paneeldeur",
+          "flush": "Vlakke deur",
+          "glazed": "Deur met glas",
+          "barn": "Schuifdeur"
+        },
+        "optionDescriptions": {
+          "panel": "Klassiek, met panelen",
+          "flush": "Strak en modern",
+          "glazed": "Glasvlakken voor meer licht",
+          "barn": "Op een rail"
+        },
+        "impact": "Maatwerk heeft 3–4 weken levertijd"
+      },
+      "item_door_material": {
+        "name": "Materiaal",
+        "description": "Opbouw van het deurblad",
+        "options": {
+          "solid_wood": "Massief hout",
+          "mdf": "MDF",
+          "veneer": "Fineer"
+        },
+        "impact": "Massief houten deuren hebben een langere levertijd"
+      },
+      "item_door_hardware_finish": {
+        "name": "Afwerking van het beslag",
+        "description": "Afwerking van scharnieren, krukken en sloten",
+        "options": {
+          "chrome": "Chroom",
+          "brushed_nickel": "Geborsteld nikkel",
+          "black": "Mat zwart",
+          "brass": "Messing"
+        },
+        "impact": "Afwijkende afwerking moet besteld worden"
+      },
+      "item_door_handle_type": {
+        "name": "Type kruk",
+        "description": "Vorm van de deurgreep",
+        "options": {
+          "lever": "Deurkruk",
+          "knob": "Deurknop",
+          "pull": "Greep"
+        },
+        "impact": "Wordt als laatste gemonteerd — nauwelijks invloed"
+      },
+      "item_wardrobe_type": {
+        "name": "Type kast",
+        "description": "Soort inbouwkast",
+        "options": {
+          "sliding": "Schuifdeuren",
+          "hinged": "Draaideuren",
+          "walk_in": "Inloopkast"
+        },
+        "impact": "Deursystemen hebben 2–3 weken levertijd"
+      },
+      "item_shelving_material": {
+        "name": "Materiaal van de planken",
+        "description": "Materiaal voor planken en casco",
+        "options": {
+          "mdf": "MDF (gelakt)",
+          "plywood": "Multiplex (naturel/gebeitst)",
+          "solid": "Massief hout"
+        },
+        "impact": "Bepaalt de zaaglijst en de materiaalbestelling"
+      },
+      "item_interior_layout": {
+        "name": "Indeling binnenin",
+        "description": "Hoe de kast van binnen wordt ingedeeld",
+        "options": {
+          "shelves_only": "Alleen planken",
+          "shelves_hanging": "Planken en roede",
+          "custom": "Op maat (lades, schoenenrek, enz.)"
+        },
+        "impact": "Maatwerk vraagt vooraf een tekening"
+      },
+      "item_skirting_profile": {
+        "name": "Profiel van de plint",
+        "description": "Vorm van de plint",
+        "options": {
+          "ogee": "Klassiek profiel",
+          "torus": "Afgerond profiel",
+          "square": "Recht (modern)",
+          "pencil_round": "Licht afgerond"
+        },
+        "impact": "Niet-voorradige profielen moeten besteld worden"
+      },
+      "item_architrave_style": {
+        "name": "Deurlijsten",
+        "description": "Profiel van de deurlijst",
+        "options": {
+          "matching": "Zelfde profiel als de plint",
+          "contrasting": "Afwijkend profiel"
+        },
+        "impact": "Klein — kan tijdens de afbouw beslist worden"
+      },
+      "item_wood_finish": {
+        "name": "Houtafwerking",
+        "description": "Eindafwerking van al het houtwerk",
+        "options": {
+          "paint": "Dekkend geschilderd",
+          "stain": "Beits (nerf blijft zichtbaar)",
+          "lacquer": "Blanke lak (glans/zijdeglans)",
+          "oil": "Olie (natuurlijk mat)"
+        },
+        "impact": "Bepaalt het schuurwerk en het aantal lagen"
+      },
+      "item_reno_wall_removal": {
+        "name": "Wanden verwijderen",
+        "description": "Moeten er wanden weg of open?",
+        "options": {
+          "yes_specify": "Ja — graag aangeven welke",
+          "no": "Geen wijzigingen aan wanden"
+        },
+        "impact": "Constructeur nodig — 2–3 weken extra voor de berekening"
+      },
+      "item_reno_floorplan": {
+        "name": "Wijziging van de indeling",
+        "description": "Aanpak van de plattegrond",
+        "options": {
+          "open_plan": "Open indeling (tussenwanden eruit)",
+          "keep_existing": "Indeling blijft",
+          "partial": "Deels (doorgangen verbreden, enz.)"
+        },
+        "impact": "Raakt alle disciplines — moet als eerste vaststaan"
+      },
+      "item_reno_windows": {
+        "name": "Ramen vervangen",
+        "description": "Worden de ramen vervangen?",
+        "options": {
+          "all": "Alle ramen vervangen",
+          "some": "Sommige ramen vervangen",
+          "none": "Ramen blijven"
+        },
+        "impact": "Ramen hebben 4–6 weken levertijd"
+      },
+      "item_reno_kitchen_supplier": {
+        "name": "Keukenleverancier",
+        "description": "Waar de keuken vandaan komt",
+        "options": {
+          "ikea": "IKEA",
+          "brugman": "Brugman",
+          "kvik": "Kvik",
+          "custom": "Op maat gemaakt"
+        },
+        "impact": "Afhankelijk van de leverancier 4–8 weken levertijd"
+      },
+      "item_reno_worktop": {
+        "name": "Materiaal werkblad",
+        "description": "Oppervlak van het keukenblad",
+        "options": {
+          "laminate": "Laminaat",
+          "granite": "Graniet",
+          "quartz": "Composiet",
+          "wood": "Massief hout"
+        },
+        "impact": "Steen wordt pas ingemeten als de kasten staan"
+      },
+      "item_reno_appliance_pkg": {
+        "name": "Apparatuurpakket",
+        "description": "Kwaliteitsniveau van de apparatuur",
+        "options": {
+          "budget": "Instap (Beko, Candy)",
+          "mid": "Middenklasse (Bosch, Siemens)",
+          "premium": "Premium (Miele, Gaggenau)"
+        },
+        "impact": "Premiumapparatuur heeft vaak langere levertijden"
+      },
+      "item_reno_bath_style": {
+        "name": "Stijl van de badkamer",
+        "description": "Richting van het ontwerp",
+        "options": {
+          "modern": "Modern (strak, minimaal)",
+          "classic": "Klassiek (traditioneel sanitair)",
+          "industrial": "Industrieel (beton, zichtbare techniek)"
+        },
+        "impact": "De stijl bepaalt het sanitair en de tegelkeuze"
+      },
+      "item_reno_tile_budget": {
+        "name": "Tegelbudget",
+        "description": "Prijsklasse per vierkante meter badkamertegel",
+        "options": {
+          "30": "€ 30/m² (basis)",
+          "50": "€ 50/m² (middenklasse)",
+          "80": "€ 80/m² (hoger segment)",
+          "120": "€ 120/m² (luxe)"
+        },
+        "impact": "Duurdere tegels komen vaak uit Italië of Spanje"
+      },
+      "item_reno_wetroom": {
+        "name": "Inloopdouche of cabine",
+        "description": "Opzet van de doucheruimte",
+        "options": {
+          "wet_room": "Inloopdouche (gelijkvloers)",
+          "separate": "Aparte douchecabine"
+        },
+        "impact": "Een inloopdouche vraagt afdichting en afschot — dat verandert de vloeropbouw"
+      },
+      "item_reno_floor_ground": {
+        "name": "Begane grond",
+        "description": "Vloerafwerking beneden",
+        "options": {
+          "tiles": "Tegels",
+          "wood": "Houten vloer",
+          "laminate": "Laminaat",
+          "vinyl": "Vinyl (LVT)"
+        },
+        "impact": "De keuze bepaalt hoe de ondervloer voorbereid wordt"
+      },
+      "item_reno_floor_upper": {
+        "name": "Verdieping",
+        "description": "Vloerafwerking boven",
+        "options": {
+          "carpet": "Tapijt",
+          "wood": "Houten vloer",
+          "laminate": "Laminaat"
+        },
+        "impact": "Tapijt kan als laatste; hout en laminaat moeten acclimatiseren"
+      },
+      "item_reno_ufh": {
+        "name": "Vloerverwarming",
+        "description": "Vloerverwarming aanleggen?",
+        "options": {
+          "yes": "Ja",
+          "no": "Nee"
+        },
+        "impact": "Moet vóór elke vloerafwerking — achteraf kan het niet"
+      },
+      "item_reno_socket_count": {
+        "name": "Aantal stopcontacten",
+        "description": "Aantal elektrapunten",
+        "options": {
+          "standard": "Standaard (volgens bouwbesluit)",
+          "extra": "Extra stopcontacten (+50%)",
+          "smart": "Klaar voor smart home (extra + data)"
+        },
+        "impact": "Moet vaststaan vóór het leidingwerk — daarna gaan de wanden dicht"
+      },
+      "item_reno_lighting": {
+        "name": "Lichtplan",
+        "description": "Niveau van het lichtontwerp",
+        "options": {
+          "basic": "Basis (centrale lichtpunten)",
+          "designer": "Ontworpen (spots, accenten, dimmen)",
+          "smart": "Slimme verlichting (Hue, Casambi)"
+        },
+        "impact": "De bedrading moet er liggen vóór het stucwerk"
+      },
+      "item_reno_boiler": {
+        "name": "Ketel vervangen",
+        "description": "Wat er met de verwarming gebeurt",
+        "options": {
+          "keep": "Bestaande ketel houden",
+          "replace": "Nieuwe ketel plaatsen",
+          "heat_pump": "Overstappen op een warmtepomp"
+        },
+        "impact": "Een warmtepomp vraagt 6–8 weken levertijd en aparte planning"
+      }
+    }
   }
 }
