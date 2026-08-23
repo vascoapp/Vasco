@@ -4616,7 +4616,11 @@
     },
     "lockedTitle": "Las automatizaciones requieren una mejora de plan",
     "lockedDesc": "Tu plan aún no ejecuta los packs de automatización, así que abajo no se activa nada. Mejora el plan y Vasco hará este trabajo por ti.",
-    "lockedSub": "No se ejecuta en tu plan"
+    "lockedSub": "No se ejecuta en tu plan",
+    "roiActions_one": "{{count}} acción",
+    "roiActions_other": "{{count}} acciones",
+    "roiApproved_one": "{{count}} aprobada",
+    "roiApproved_other": "{{count}} aprobadas"
   },
   "market": {
     "noBenchmarksDesc": "Se necesitan más datos para los benchmarks",

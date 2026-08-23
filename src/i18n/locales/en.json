@@ -4616,7 +4616,11 @@
     },
     "lockedTitle": "Automations need an upgrade",
     "lockedDesc": "Your plan does not run automation packs yet, so nothing below is firing. Upgrade and Vasco starts doing this work for you.",
-    "lockedSub": "Not running on your plan"
+    "lockedSub": "Not running on your plan",
+    "roiActions_one": "{{count}} action",
+    "roiActions_other": "{{count}} actions",
+    "roiApproved_one": "{{count}} approved",
+    "roiApproved_other": "{{count}} approved"
   },
   "market": {
     "noBenchmarksDesc": "More data needed for benchmarks",

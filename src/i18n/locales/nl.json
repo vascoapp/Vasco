@@ -4279,7 +4279,11 @@
     },
     "lockedTitle": "Automatiseringen vereisen een upgrade",
     "lockedDesc": "Je abonnement voert automatiseringen nog niet uit, dus hieronder draait er niets. Upgrade en Vasco gaat dit werk voor je doen.",
-    "lockedSub": "Draait niet op jouw abonnement"
+    "lockedSub": "Draait niet op jouw abonnement",
+    "roiActions_one": "{{count}} actie",
+    "roiActions_other": "{{count}} acties",
+    "roiApproved_one": "{{count}} goedgekeurd",
+    "roiApproved_other": "{{count}} goedgekeurd"
   },
   "packDiscovery": {
     "incasso": {

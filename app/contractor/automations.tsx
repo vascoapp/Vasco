@@ -159,8 +159,14 @@ export default function AutomationsScreen() {
 
               {/* ROI stats */}
               {pack.enabled && packROIs[pack.id] && (packROIs[pack.id].actionsTriggered > 0) && (
+                /* Was assembled from fragments — `{n} {t('actions')}` — so it
+                   could never agree: one action read "1 Aktionen", and the
+                   Romance locales carry the agreement on the adjective too
+                   ("1 approuvées"). A count glued to a plural noun is the same
+                   defect as "1 Tage überfällig". Pluralised keys let each
+                   locale decide its own form. */
                 <Text style={s.roiText}>
-                  {packROIs[pack.id].actionsTriggered} {t('automations.actions', 'actions')} · {packROIs[pack.id].actionsApproved} {t('automations.approved', 'approved')}{packROIs[pack.id].estimatedRevenue > 0 ? ` · ${formatCurrency(packROIs[pack.id].estimatedRevenue, country)} ${t('automations.recovered', 'recovered')}` : ''} · {packROIs[pack.id].estimatedTimeSaved} min {t('automations.saved', 'saved')}
+                  {t('automations.roiActions', { count: packROIs[pack.id].actionsTriggered })} · {t('automations.roiApproved', { count: packROIs[pack.id].actionsApproved })}{packROIs[pack.id].estimatedRevenue > 0 ? ` · ${formatCurrency(packROIs[pack.id].estimatedRevenue, country)} ${t('automations.recovered', 'recovered')}` : ''} · {packROIs[pack.id].estimatedTimeSaved} min {t('automations.saved', 'saved')}
                 </Text>
               )}
 

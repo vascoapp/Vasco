@@ -4616,7 +4616,11 @@
     },
     "lockedTitle": "Automatisierungen brauchen ein Upgrade",
     "lockedDesc": "Ihr Tarif führt Automatisierungspakete noch nicht aus — unten läuft also nichts. Mit einem Upgrade übernimmt Vasco diese Arbeit für Sie.",
-    "lockedSub": "Läuft in Ihrem Tarif nicht"
+    "lockedSub": "Läuft in Ihrem Tarif nicht",
+    "roiActions_one": "{{count}} Aktion",
+    "roiActions_other": "{{count}} Aktionen",
+    "roiApproved_one": "{{count}} genehmigt",
+    "roiApproved_other": "{{count}} genehmigt"
   },
   "market": {
     "noBenchmarksDesc": "Mehr Daten für Benchmarks nötig",

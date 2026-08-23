@@ -4616,7 +4616,11 @@
     },
     "lockedTitle": "Le automazioni richiedono un upgrade",
     "lockedDesc": "Il tuo piano non esegue ancora i pacchetti di automazione, quindi qui sotto non parte nulla. Fai l’upgrade e Vasco se ne occupa per te.",
-    "lockedSub": "Non attivo nel tuo piano"
+    "lockedSub": "Non attivo nel tuo piano",
+    "roiActions_one": "{{count}} azione",
+    "roiActions_other": "{{count}} azioni",
+    "roiApproved_one": "{{count}} approvata",
+    "roiApproved_other": "{{count}} approvate"
   },
   "market": {
     "noBenchmarksDesc": "Servono più dati per i benchmark",

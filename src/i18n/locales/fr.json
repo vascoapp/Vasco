@@ -4616,7 +4616,11 @@
     },
     "lockedTitle": "Les automatisations nécessitent une mise à niveau",
     "lockedDesc": "Votre formule n’exécute pas encore les packs d’automatisation : rien ne se déclenche ci-dessous. Passez à une formule supérieure et Vasco s’en charge.",
-    "lockedSub": "Inactif avec votre formule"
+    "lockedSub": "Inactif avec votre formule",
+    "roiActions_one": "{{count}} action",
+    "roiActions_other": "{{count}} actions",
+    "roiApproved_one": "{{count}} approuvée",
+    "roiApproved_other": "{{count}} approuvées"
   },
   "market": {
     "noBenchmarksDesc": "Plus de données nécessaires pour les benchmarks",
