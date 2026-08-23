@@ -101,7 +101,13 @@ export default function PayrollScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('payroll.title', 'Payroll')}</Text>
+          {/* "LOHNABRECHNUNG" broke to "LOHNABRECHNUN / G" — #113 again, after
+              STÜCKPREIS and AUFTRAGSABSCHLUSS. Local 24pt headers are the class
+              (DKScreenHeader is 18pt and already numberOfLines={1}); a German
+              compound is one word, so it has to shrink rather than wrap. */}
+          <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            {t('payroll.title', 'Payroll')}
+          </Text>
           <Text style={styles.headerSubtitle}>
             {periodLabel} · {t('payroll.peopleCount', { count: payrollData.lines.length, defaultValue: '{{count}} people' })}
           </Text>

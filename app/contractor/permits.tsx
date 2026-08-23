@@ -275,7 +275,12 @@ export default function PermitsScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('permits.title', 'Vergunningen')}</Text>
+          {/* Same 24pt local-header class as payroll/closeout (#113). German
+              "GENEHMIGUNGEN" fits today, but IT "AUTORIZZAZIONI" is longer and
+              the guard costs nothing. */}
+          <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            {t('permits.title', 'Vergunningen')}
+          </Text>
           <Text style={styles.headerSubtitle}>
             {t('permits.headerStats', { defaultValue: '{{approved}} approved · {{pending}} under review · {{notSubmitted}} draft', approved, pending, notSubmitted })}
           </Text>
