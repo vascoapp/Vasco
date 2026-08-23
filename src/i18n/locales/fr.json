@@ -1032,6 +1032,7 @@
     "clearScope": "Afficher tous les permis",
     "emptyForJob": "Aucun permis pour ce chantier",
     "emptyForJobDesc": "Appuyez sur \"+ Nouvelle demande\" pour en créer un pour ce chantier.",
+    "requiredTitle": "Requis pour ce chantier ({{country}})",
     "selectJob": "Lier au chantier",
     "emptyTitle": "Aucun permis pour l'instant",
     "emptyDesc": "Touchez « + Nouvelle demande » pour rédiger un permis pour l'un de vos chantiers.",

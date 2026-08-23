@@ -1032,6 +1032,7 @@
     "clearScope": "Alle Genehmigungen anzeigen",
     "emptyForJob": "Keine Genehmigungen für diesen Auftrag",
     "emptyForJobDesc": "Tippen Sie auf \"+ Neuer Antrag\", um einen für diesen Auftrag zu erstellen.",
+    "requiredTitle": "Für diesen Auftrag erforderlich ({{country}})",
     "selectJob": "Mit Auftrag verknüpfen",
     "emptyTitle": "Noch keine Genehmigungen",
     "emptyDesc": "Tippen Sie auf \"+ Neuer Antrag\", um eine Genehmigung für einen Ihrer Aufträge zu entwerfen.",

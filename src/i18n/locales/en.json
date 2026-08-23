@@ -1032,6 +1032,7 @@
     "clearScope": "Show all permits",
     "emptyForJob": "No permits for this job",
     "emptyForJobDesc": "Tap \"+ New request\" to draft one for this job.",
+    "requiredTitle": "Required for this job ({{country}})",
     "selectJob": "Link to job",
     "emptyTitle": "No permits yet",
     "emptyDesc": "Tap \"+ New request\" to draft a permit for one of your jobs.",

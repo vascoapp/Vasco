@@ -5,7 +5,7 @@
 // =============================================================================
 
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,8 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { useAuth } from '../../src/context/AuthContext';
+import { getRequiredPermits } from '../../src/services/aiActionQueueService';
 import type { PermitStatus, PermitType } from '../../src/types/buildos';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 
@@ -88,7 +90,8 @@ interface WizardState {
 export default function PermitsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { jobs } = useAppState();
+  const { jobs, businessProfile } = useAppState();
+  const { user } = useAuth();
   // R20: route param from queueItemExecutor when an AI queue item like
   // permit_check / cert_renewal carried a jobId in preparedData. Used to
   // scope the permits list + auto-expand the matching permit so the
@@ -119,6 +122,25 @@ export default function PermitsScreen() {
     if (!focusJob || expandedId) return;
     if (visiblePermits.length > 0) setExpandedId(visiblePermits[0].id);
   }, [focusJob, visiblePermits, expandedId]);
+  // The queue card that links here says "N permits required (DE)" and computes
+  // that list — name, issuing authority, URL — into preparedData.permits. It
+  // had ZERO readers: the card stated a compliance finding and the CTA landed
+  // on this screen, which lists the contractor's own APPLICATIONS (none yet)
+  // and never showed the requirements. Recomputed from the same function the
+  // card used rather than read out of preparedData, so it survives the queue
+  // item expiring and a reload of this route. It renders ONLY when scoped to a
+  // job (?jobId=) — requirements are per trade+country, and there is no job to
+  // key them on when the screen is opened straight from the nav.
+  // Profile outranks the account (CLAUDE.md), and an unknown country SKIPS:
+  // guessing hands a German plumber the Dutch list, which is the exact shape
+  // the card's own comment refuses to repeat.
+  const permitCountry = businessProfile?.country ?? user?.country;
+  const requiredPermits = useMemo(
+    () => (focusJob && permitCountry
+      ? getRequiredPermits((focusJob as any).trade || 'general', permitCountry)
+      : []),
+    [focusJob, permitCountry],
+  );
 
   // Load on mount
   useEffect(() => {
@@ -270,7 +292,23 @@ export default function PermitsScreen() {
         </Pressable>
         <Pressable
           style={[styles.tab, activeTab === 'nieuw' && styles.tabActive]}
-          onPress={() => { setActiveTab('nieuw'); setWizard(w => ({ ...w, step: 1 })); }}
+          onPress={() => {
+            setActiveTab('nieuw');
+            // Arriving scoped to a job (from the queue card), the empty state
+            // says to tap here to draft one "for THIS job" — but the wizard
+            // opened unlinked and the contractor had to re-pick the job they
+            // had just come from. R20 threaded jobId into the LIST and stopped
+            // there. Seed the same fields the picker sets, and only when the
+            // contractor has not already typed a name.
+            setWizard(w => {
+              if (!focusJob || w.jobTitle) return { ...w, step: 1 };
+              const addr = (focusJob as any).address
+                ? [(focusJob as any).address.street, (focusJob as any).address.city].filter(Boolean).join(', ')
+                : '';
+              return { ...w, step: 1, jobTitle: focusJob.title ?? '', address: addr };
+            });
+            if (focusJob && !selectedJobId) setSelectedJobId(focusJob.id);
+          }}
         >
           <Text style={[styles.tabText, activeTab === 'nieuw' && styles.tabTextActive]}>{t('permits.newRequest', '+ Nieuwe aanvraag')}</Text>
         </Pressable>
@@ -290,6 +328,34 @@ export default function PermitsScreen() {
                 </Text>
                 <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
               </Pressable>
+            )}
+            {/* What the queue card actually found, on the screen it sends you
+                to. Registry data from getRequiredPermits — not invented here
+                (ui-playbook §6); each row opens the issuing authority. */}
+            {requiredPermits.length > 0 && (
+              <View style={styles.requirementsSection}>
+                <Text style={styles.requirementsTitle}>
+                  {t('permits.requiredTitle', { defaultValue: 'Required for this job ({{country}})', country: permitCountry })}
+                </Text>
+                <View style={styles.requirementsCard}>
+                  {requiredPermits.map((req, index) => (
+                    <Pressable
+                      key={req.name}
+                      style={[styles.requirementRow, index < requiredPermits.length - 1 && styles.requirementRowBorder]}
+                      onPress={() => Linking.openURL(req.url)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${req.name} — ${req.authority}`}
+                    >
+                      <Ionicons name="shield-checkmark-outline" size={16} color={Palette.hermesOrange} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.requirementName}>{req.name}</Text>
+                        <Text style={styles.requirementAuthority}>{req.authority}</Text>
+                      </View>
+                      <Ionicons name="open-outline" size={14} color={SemanticColors.textTertiary} />
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
             )}
             {visiblePermits.length === 0 && (
               <View style={styles.emptyState}>
@@ -578,6 +644,40 @@ const styles = StyleSheet.create({
     fontFamily: 'Archivo_700Bold',
     color: SemanticColors.textPrimary,
     maxWidth: 220,
+  },
+  // Requirements surfaced from the queue card's own finding.
+  requirementsSection: { gap: 8, marginTop: 4, marginBottom: 8 },
+  requirementsTitle: {
+    fontSize: 13,
+    fontFamily: 'Archivo_700Bold',
+    color: SemanticColors.textSecondary,
+  },
+  requirementsCard: {
+    backgroundColor: SemanticColors.surfacePrimary,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: SemanticColors.borderDefault,
+  },
+  requirementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+  },
+  requirementRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderMuted,
+  },
+  requirementName: {
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+    color: SemanticColors.textPrimary,
+  },
+  requirementAuthority: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+    color: SemanticColors.textTertiary,
   },
   emptyState: {
     alignItems: 'center',

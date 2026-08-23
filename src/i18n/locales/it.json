@@ -1032,6 +1032,7 @@
     "clearScope": "Mostra tutti i permessi",
     "emptyForJob": "Nessun permesso per questo lavoro",
     "emptyForJobDesc": "Tocca \"+ Nuova richiesta\" per crearne uno per questo lavoro.",
+    "requiredTitle": "Richiesto per questo lavoro ({{country}})",
     "selectJob": "Collega al lavoro",
     "emptyTitle": "Ancora nessun permesso",
     "emptyDesc": "Tocca \"+ Nuova richiesta\" per redigere un permesso per uno dei tuoi lavori.",

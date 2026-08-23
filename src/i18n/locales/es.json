@@ -1032,6 +1032,7 @@
     "clearScope": "Mostrar todos los permisos",
     "emptyForJob": "No hay permisos para este trabajo",
     "emptyForJobDesc": "Toca \"+ Nueva solicitud\" para crear uno para este trabajo.",
+    "requiredTitle": "Obligatorio para este trabajo ({{country}})",
     "selectJob": "Vincular al trabajo",
     "emptyTitle": "Aún no hay permisos",
     "emptyDesc": "Pulsa \"+ Nueva solicitud\" para redactar un permiso para uno de tus trabajos.",

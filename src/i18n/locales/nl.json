@@ -1016,6 +1016,7 @@
     "clearScope": "Toon alle vergunningen",
     "emptyForJob": "Geen vergunningen voor deze klus",
     "emptyForJobDesc": "Tik op \"+ Nieuwe aanvraag\" om er een aan te maken voor deze klus.",
+    "requiredTitle": "Vereist voor deze klus ({{country}})",
     "selectJob": "Koppel aan klus",
     "emptyTitle": "Nog geen vergunningen",
     "emptyDesc": "Tik op \"+ Nieuwe aanvraag\" om een vergunning op te stellen voor een van je klussen.",
