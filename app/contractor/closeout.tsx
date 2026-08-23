@@ -180,7 +180,12 @@ export default function CloseoutScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{t('closeout.title', 'Klus Afsluiting')}</Text>
+          {/* "AUFTRAGSABSCHLUSS" broke to "AUFTRAGSABSCHLUS / S" at 24pt with
+              letterSpacing 1.2 — the long-German-compound class (#113), which
+              wrapping cannot fix because it is one word. Shrink instead. */}
+          <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            {t('closeout.title', 'Klus Afsluiting')}
+          </Text>
           <Text style={styles.headerSubtitle}>{t('closeout.subtitle', { defaultValue: '{{count}} jobs to close out', count: closeoutJobs.length })}</Text>
         </View>
       </View>
