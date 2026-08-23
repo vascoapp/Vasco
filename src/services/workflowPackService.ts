@@ -15,7 +15,7 @@ import { loadSubscription, getTierLimits } from './subscriptionService';
 import { getAppStateSnapshot } from '../state/appStateSnapshot';
 import { emitPackQueued } from '../intelligence/dataCollector';
 import type { Country } from '../i18n/formatting';
-import { formatDecimal1 } from '../i18n/formatting';
+import { formatDecimal1, formatCurrency, formatMoney2 } from '../i18n/formatting';
 import { localDateKey } from '../utils/dateKey';
 
 const PACKS_KEY = '@vasco_workflow_packs';
@@ -207,37 +207,37 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       {
         trigger: 'invoice_sent', delayDays: -3, action: 'send_pre_reminder', channel: 'email',
         i18nKey: 'workflowPacks.incasso.preReminder',
-        template: 'Hi {{customer}}, factuur {{invoice}} ({{currency}}{{amount}}) vervalt over 3 dagen. Alvast bedankt!',
+        template: 'Hi {{customer}}, factuur {{invoice}} ({{amount}}) vervalt over 3 dagen. Alvast bedankt!',
         defaults: {
-          en: 'Hi {{customer}}, invoice {{invoice}} ({{currency}}{{amount}}) is due in 3 days. Thanks!',
-          de: 'Hallo {{customer}}, Rechnung {{invoice}} ({{currency}}{{amount}}) ist in 3 Tagen fällig. Danke!',
-          fr: 'Bonjour {{customer}}, la facture {{invoice}} ({{currency}}{{amount}}) arrive à échéance dans 3 jours. Merci !',
-          es: 'Hola {{customer}}, la factura {{invoice}} ({{currency}}{{amount}}) vence en 3 días. ¡Gracias!',
-          it: 'Ciao {{customer}}, la fattura {{invoice}} ({{currency}}{{amount}}) scade tra 3 giorni. Grazie!',
+          en: 'Hi {{customer}}, invoice {{invoice}} ({{amount}}) is due in 3 days. Thanks!',
+          de: 'Hallo {{customer}}, Rechnung {{invoice}} ({{amount}}) ist in 3 Tagen fällig. Danke!',
+          fr: 'Bonjour {{customer}}, la facture {{invoice}} ({{amount}}) arrive à échéance dans 3 jours. Merci !',
+          es: 'Hola {{customer}}, la factura {{invoice}} ({{amount}}) vence en 3 días. ¡Gracias!',
+          it: 'Ciao {{customer}}, la fattura {{invoice}} ({{amount}}) scade tra 3 giorni. Grazie!',
         },
       },
       {
         trigger: 'invoice_overdue', delayDays: 3, action: 'send_friendly_reminder', channel: 'email',
         i18nKey: 'workflowPacks.incasso.friendlyReminder',
-        template: 'Hi {{customer}}, een vriendelijke herinnering: factuur {{invoice}} ({{currency}}{{amount}}) is 3 dagen over de vervaldatum. Vragen? Laat het weten.',
+        template: 'Hi {{customer}}, een vriendelijke herinnering: factuur {{invoice}} ({{amount}}) is 3 dagen over de vervaldatum. Vragen? Laat het weten.',
         defaults: {
-          en: 'Hi {{customer}}, a friendly reminder: invoice {{invoice}} ({{currency}}{{amount}}) is 3 days overdue. Any questions, let me know.',
-          de: 'Hallo {{customer}}, eine freundliche Erinnerung: Rechnung {{invoice}} ({{currency}}{{amount}}) ist 3 Tage überfällig. Fragen? Melde dich.',
-          fr: 'Bonjour {{customer}}, rappel amical : la facture {{invoice}} ({{currency}}{{amount}}) a 3 jours de retard. Une question ? Faites-moi signe.',
-          es: 'Hola {{customer}}, recordatorio amable: la factura {{invoice}} ({{currency}}{{amount}}) lleva 3 días vencida. ¿Dudas? Avísame.',
-          it: 'Ciao {{customer}}, promemoria amichevole: la fattura {{invoice}} ({{currency}}{{amount}}) è in ritardo di 3 giorni. Domande? Fammi sapere.',
+          en: 'Hi {{customer}}, a friendly reminder: invoice {{invoice}} ({{amount}}) is 3 days overdue. Any questions, let me know.',
+          de: 'Hallo {{customer}}, eine freundliche Erinnerung: Rechnung {{invoice}} ({{amount}}) ist 3 Tage überfällig. Bei Fragen melden Sie sich gerne.',
+          fr: 'Bonjour {{customer}}, rappel amical : la facture {{invoice}} ({{amount}}) a 3 jours de retard. Une question ? Faites-moi signe.',
+          es: 'Hola {{customer}}, recordatorio amable: la factura {{invoice}} ({{amount}}) lleva 3 días vencida. ¿Dudas? Avísame.',
+          it: 'Ciao {{customer}}, promemoria amichevole: la fattura {{invoice}} ({{amount}}) è in ritardo di 3 giorni. Domande? Fammi sapere.',
         },
       },
       {
         trigger: 'invoice_overdue', delayDays: 7, action: 'send_reminder', channel: 'email',
         i18nKey: 'workflowPacks.incasso.reminder',
-        template: 'Hi {{customer}}, factuur {{invoice}} ({{currency}}{{amount}}) staat al 7 dagen open. Mag ik je vragen deze deze week te voldoen?',
+        template: 'Hi {{customer}}, factuur {{invoice}} ({{amount}}) staat al 7 dagen open. Mag ik je vragen deze deze week te voldoen?',
         defaults: {
-          en: 'Hi {{customer}}, invoice {{invoice}} ({{currency}}{{amount}}) has been outstanding for 7 days. Could you settle it this week?',
-          de: 'Hallo {{customer}}, Rechnung {{invoice}} ({{currency}}{{amount}}) ist seit 7 Tagen offen. Kannst du sie diese Woche begleichen?',
-          fr: 'Bonjour {{customer}}, la facture {{invoice}} ({{currency}}{{amount}}) est impayée depuis 7 jours. Pouvez-vous régler cette semaine ?',
-          es: 'Hola {{customer}}, la factura {{invoice}} ({{currency}}{{amount}}) lleva 7 días pendiente. ¿Podrías saldarla esta semana?',
-          it: 'Ciao {{customer}}, la fattura {{invoice}} ({{currency}}{{amount}}) è in sospeso da 7 giorni. Puoi saldarla questa settimana?',
+          en: 'Hi {{customer}}, invoice {{invoice}} ({{amount}}) has been outstanding for 7 days. Could you settle it this week?',
+          de: 'Hallo {{customer}}, Rechnung {{invoice}} ({{amount}}) ist seit 7 Tagen offen. Könnten Sie sie diese Woche begleichen?',
+          fr: 'Bonjour {{customer}}, la facture {{invoice}} ({{amount}}) est impayée depuis 7 jours. Pouvez-vous régler cette semaine ?',
+          es: 'Hola {{customer}}, la factura {{invoice}} ({{amount}}) lleva 7 días pendiente. ¿Podrías saldarla esta semana?',
+          it: 'Ciao {{customer}}, la fattura {{invoice}} ({{amount}}) è in sospeso da 7 giorni. Puoi saldarla questa settimana?',
         },
       },
       {
@@ -246,25 +246,25 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
         // EU Directive 2011/7/EU on combating late payment in commercial transactions:
         // statutory interest + €40 recovery fee accrue automatically once overdue.
         // Including the disclosure makes statutory recovery enforceable in NL/DE.
-        template: 'Herinnering: factuur {{invoice}} ({{currency}}{{amount}}) is 14 dagen achterstallig. Conform EU Richtlijn 2011/7/EU brengen wij vanaf nu wettelijke rente + €40 incassokosten in rekening. Gelieve direct te betalen.',
+        template: 'Herinnering: factuur {{invoice}} ({{amount}}) is 14 dagen achterstallig. Conform EU Richtlijn 2011/7/EU brengen wij vanaf nu wettelijke rente + €40 incassokosten in rekening. Gelieve direct te betalen.',
         defaults: {
-          en: 'Reminder: invoice {{invoice}} ({{currency}}{{amount}}) is 14 days overdue. Under EU Directive 2011/7/EU, statutory interest + €40 recovery fee now apply. Please pay immediately.',
-          de: 'Erinnerung: Rechnung {{invoice}} ({{currency}}{{amount}}) ist 14 Tage überfällig. Gemäß EU-Richtlinie 2011/7/EU fallen ab jetzt gesetzliche Verzugszinsen + 40 € Mahnpauschale an. Bitte umgehend zahlen.',
-          fr: 'Rappel : la facture {{invoice}} ({{currency}}{{amount}}) a 14 jours de retard. Conformément à la Directive UE 2011/7/UE, les intérêts légaux + 40 € de frais de recouvrement s\'appliquent désormais. Paiement immédiat svp.',
-          es: 'Recordatorio: la factura {{invoice}} ({{currency}}{{amount}}) lleva 14 días vencida. Conforme a la Directiva UE 2011/7/UE, ahora aplican intereses legales + €40 de gastos de recuperación. Por favor, pague de inmediato.',
-          it: 'Promemoria: la fattura {{invoice}} ({{currency}}{{amount}}) è in ritardo di 14 giorni. Ai sensi della Direttiva UE 2011/7/UE si applicano ora interessi di mora + €40 di indennizzo. Si prega di pagare subito.',
+          en: 'Reminder: invoice {{invoice}} ({{amount}}) is 14 days overdue. Under EU Directive 2011/7/EU, statutory interest + €40 recovery fee now apply. Please pay immediately.',
+          de: 'Erinnerung: Rechnung {{invoice}} ({{amount}}) ist 14 Tage überfällig. Gemäß EU-Richtlinie 2011/7/EU fallen ab jetzt gesetzliche Verzugszinsen + 40 € Mahnpauschale an. Bitte umgehend zahlen.',
+          fr: 'Rappel : la facture {{invoice}} ({{amount}}) a 14 jours de retard. Conformément à la Directive UE 2011/7/UE, les intérêts légaux + 40 € de frais de recouvrement s\'appliquent désormais. Paiement immédiat svp.',
+          es: 'Recordatorio: la factura {{invoice}} ({{amount}}) lleva 14 días vencida. Conforme a la Directiva UE 2011/7/UE, ahora aplican intereses legales + €40 de gastos de recuperación. Por favor, pague de inmediato.',
+          it: 'Promemoria: la fattura {{invoice}} ({{amount}}) è in ritardo di 14 giorni. Ai sensi della Direttiva UE 2011/7/UE si applicano ora interessi di mora + €40 di indennizzo. Si prega di pagare subito.',
         },
       },
       {
         trigger: 'invoice_overdue', delayDays: 30, action: 'send_final_notice', channel: 'email',
         i18nKey: 'workflowPacks.incasso.finalNotice',
-        template: 'Laatste herinnering: factuur {{invoice}} ({{currency}}{{amount}}) is 30 dagen achterstallig. Conform EU Richtlijn 2011/7/EU rekenen wij wettelijke rente + €40 incassokosten. Zonder betaling binnen 7 dagen geven wij de vordering uit handen aan een incassobureau, met bijkomende kosten voor uw rekening.',
+        template: 'Laatste herinnering: factuur {{invoice}} ({{amount}}) is 30 dagen achterstallig. Conform EU Richtlijn 2011/7/EU rekenen wij wettelijke rente + €40 incassokosten. Zonder betaling binnen 7 dagen geven wij de vordering uit handen aan een incassobureau, met bijkomende kosten voor uw rekening.',
         defaults: {
-          en: 'Final notice: invoice {{invoice}} ({{currency}}{{amount}}) is 30 days overdue. Under EU Directive 2011/7/EU we charge statutory interest + €40 recovery fee. If unpaid in 7 days, we hand the claim to a debt collection agency at your additional cost.',
-          de: 'Letzte Mahnung: Rechnung {{invoice}} ({{currency}}{{amount}}) ist 30 Tage überfällig. Gemäß EU-Richtlinie 2011/7/EU berechnen wir gesetzliche Verzugszinsen + 40 € Mahnpauschale. Ohne Zahlung innerhalb 7 Tagen geben wir die Forderung an ein Inkassobüro ab — Mehrkosten zu Ihren Lasten.',
-          fr: 'Dernière relance : la facture {{invoice}} ({{currency}}{{amount}}) a 30 jours de retard. Conformément à la Directive UE 2011/7/UE, nous appliquons intérêts légaux + 40 € de frais de recouvrement. Sans paiement sous 7 jours, le dossier est transmis à un cabinet de recouvrement, frais supplémentaires à votre charge.',
-          es: 'Aviso final: la factura {{invoice}} ({{currency}}{{amount}}) lleva 30 días vencida. Conforme a la Directiva UE 2011/7/UE aplicamos intereses legales + €40 de gastos. Sin pago en 7 días, traspasamos el cobro a una agencia de recuperación, con costes adicionales a su cargo.',
-          it: 'Avviso finale: la fattura {{invoice}} ({{currency}}{{amount}}) è in ritardo di 30 giorni. Ai sensi della Direttiva UE 2011/7/UE applichiamo interessi di mora + €40 di indennizzo. Senza pagamento entro 7 giorni, trasmettiamo il credito a un\'agenzia di recupero, con costi aggiuntivi a carico vostro.',
+          en: 'Final notice: invoice {{invoice}} ({{amount}}) is 30 days overdue. Under EU Directive 2011/7/EU we charge statutory interest + €40 recovery fee. If unpaid in 7 days, we hand the claim to a debt collection agency at your additional cost.',
+          de: 'Letzte Mahnung: Rechnung {{invoice}} ({{amount}}) ist 30 Tage überfällig. Gemäß EU-Richtlinie 2011/7/EU berechnen wir gesetzliche Verzugszinsen + 40 € Mahnpauschale. Ohne Zahlung innerhalb 7 Tagen geben wir die Forderung an ein Inkassobüro ab — Mehrkosten zu Ihren Lasten.',
+          fr: 'Dernière relance : la facture {{invoice}} ({{amount}}) a 30 jours de retard. Conformément à la Directive UE 2011/7/UE, nous appliquons intérêts légaux + 40 € de frais de recouvrement. Sans paiement sous 7 jours, le dossier est transmis à un cabinet de recouvrement, frais supplémentaires à votre charge.',
+          es: 'Aviso final: la factura {{invoice}} ({{amount}}) lleva 30 días vencida. Conforme a la Directiva UE 2011/7/UE aplicamos intereses legales + €40 de gastos. Sin pago en 7 días, traspasamos el cobro a una agencia de recuperación, con costes adicionales a su cargo.',
+          it: 'Avviso finale: la fattura {{invoice}} ({{amount}}) è in ritardo di 30 giorni. Ai sensi della Direttiva UE 2011/7/UE applichiamo interessi di mora + €40 di indennizzo. Senza pagamento entro 7 giorni, trasmettiamo il credito a un\'agenzia di recupero, con costi aggiuntivi a carico vostro.',
         },
       },
     ],
@@ -321,13 +321,13 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       {
         trigger: 'quote_sent', delayDays: 3, action: 'send_quote_followup', channel: 'email',
         i18nKey: 'workflowPacks.quoteFollowup.day3',
-        template: 'Hi {{customer}}, lukt het om naar de offerte voor {{job}} ({{currency}}{{amount}}) te kijken? Hoor graag van je.',
+        template: 'Hi {{customer}}, lukt het om naar de offerte voor {{job}} ({{amount}}) te kijken? Hoor graag van je.',
         defaults: {
-          en: 'Hi {{customer}}, did you get a chance to look at the quote for {{job}} ({{currency}}{{amount}})? Let me know what you think.',
-          de: 'Hallo {{customer}}, konntest du das Angebot für {{job}} ({{currency}}{{amount}}) schon ansehen? Sag mir Bescheid.',
-          fr: 'Bonjour {{customer}}, avez-vous pu jeter un œil au devis pour {{job}} ({{currency}}{{amount}}) ? Dites-moi.',
-          es: 'Hola {{customer}}, ¿pudiste ver el presupuesto de {{job}} ({{currency}}{{amount}})? Cuéntame.',
-          it: 'Ciao {{customer}}, sei riuscito a dare un\'occhiata al preventivo per {{job}} ({{currency}}{{amount}})? Fammi sapere.',
+          en: 'Hi {{customer}}, did you get a chance to look at the quote for {{job}} ({{amount}})? Let me know what you think.',
+          de: 'Hallo {{customer}}, konnten Sie das Angebot für {{job}} ({{amount}}) schon ansehen? Sagen Sie mir gerne Bescheid.',
+          fr: 'Bonjour {{customer}}, avez-vous pu jeter un œil au devis pour {{job}} ({{amount}}) ? Dites-moi.',
+          es: 'Hola {{customer}}, ¿pudiste ver el presupuesto de {{job}} ({{amount}})? Cuéntame.',
+          it: 'Ciao {{customer}}, sei riuscito a dare un\'occhiata al preventivo per {{job}} ({{amount}})? Fammi sapere.',
         },
       },
       {
@@ -486,7 +486,7 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
         template: 'Hi {{customer}}, er staan nog wat keuzes open voor {{project}}. Vul je ze even in dan gaan we door.',
         defaults: {
           en: 'Hi {{customer}}, you still have a few decisions pending for {{project}}. Fill them in so we can keep going.',
-          de: 'Hallo {{customer}}, du hast noch ein paar offene Entscheidungen für {{project}}. Trag sie ein, dann machen wir weiter.',
+          de: 'Hallo {{customer}}, für {{project}} sind noch ein paar Entscheidungen offen. Tragen Sie sie ein, dann machen wir weiter.',
           fr: 'Bonjour {{customer}}, il reste quelques choix à faire pour {{project}}. Renseignez-les pour qu\'on avance.',
           es: 'Hola {{customer}}, faltan algunas decisiones para {{project}}. Rellénalas y seguimos.',
           it: 'Ciao {{customer}}, restano alcune scelte da fare per {{project}}. Compilale e proseguiamo.',
@@ -498,7 +498,7 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
         template: '{{customer}}, je keuzes voor {{project}} houden ons tegen — kun je vandaag reageren?',
         defaults: {
           en: '{{customer}}, your decisions for {{project}} are blocking us — can you reply today?',
-          de: '{{customer}}, deine Entscheidungen für {{project}} blockieren uns — kannst du heute antworten?',
+          de: '{{customer}}, Ihre Entscheidungen für {{project}} blockieren uns — könnten Sie heute antworten?',
           fr: '{{customer}}, vos choix pour {{project}} nous bloquent — pouvez-vous répondre aujourd\'hui ?',
           es: '{{customer}}, tus decisiones de {{project}} nos están frenando — ¿puedes responder hoy?',
           it: '{{customer}}, le tue scelte per {{project}} ci stanno bloccando — puoi rispondere oggi?',
@@ -524,40 +524,40 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       {
         trigger: 'stock_low', delayDays: 0, action: 'send_reorder_alert', channel: 'push',
         i18nKey: 'workflowPacks.purchasing.stockLow',
-        template: '{{material}} bijna op ({{stock}} over). Bestel bij {{supplier}} voor {{currency}}{{price}}/stuk.',
+        template: '{{material}} bijna op ({{stock}} over). Bestel bij {{supplier}} voor {{price}}/stuk.',
         deprecated: true,
         defaults: {
-          en: '{{material}} running low ({{stock}} left). Order from {{supplier}} at {{currency}}{{price}}/unit.',
-          de: '{{material}} fast leer ({{stock}} übrig). Bestelle bei {{supplier}} für {{currency}}{{price}}/Stück.',
-          fr: '{{material}} bientôt épuisé ({{stock}} restants). Commandez chez {{supplier}} à {{currency}}{{price}}/unité.',
-          es: '{{material}} casi agotado ({{stock}} restantes). Pídelo a {{supplier}} a {{currency}}{{price}}/ud.',
-          it: '{{material}} in esaurimento ({{stock}} rimasti). Ordina da {{supplier}} a {{currency}}{{price}}/pezzo.',
+          en: '{{material}} running low ({{stock}} left). Order from {{supplier}} at {{price}}/unit.',
+          de: '{{material}} fast leer ({{stock}} übrig). Bestelle bei {{supplier}} für {{price}}/Stück.',
+          fr: '{{material}} bientôt épuisé ({{stock}} restants). Commandez chez {{supplier}} à {{price}}/unité.',
+          es: '{{material}} casi agotado ({{stock}} restantes). Pídelo a {{supplier}} a {{price}}/ud.',
+          it: '{{material}} in esaurimento ({{stock}} rimasti). Ordina da {{supplier}} a {{price}}/pezzo.',
         },
       },
       {
         trigger: 'price_drop', delayDays: 0, action: 'send_price_alert', channel: 'in_app',
         i18nKey: 'workflowPacks.purchasing.priceDrop',
-        template: '{{material}} is {{pct}}% goedkoper bij {{supplier}}. Bespaar {{currency}}{{savings}} per bestelling.',
+        template: '{{material}} is {{pct}}% goedkoper bij {{supplier}}. Bespaar {{savings}} per bestelling.',
         deprecated: true,
         defaults: {
-          en: '{{material}} is {{pct}}% cheaper at {{supplier}}. Save {{currency}}{{savings}} per order.',
-          de: '{{material}} ist bei {{supplier}} {{pct}}% günstiger. Spare {{currency}}{{savings}} pro Bestellung.',
-          fr: '{{material}} est {{pct}}% moins cher chez {{supplier}}. Économisez {{currency}}{{savings}} par commande.',
-          es: '{{material}} está {{pct}}% más barato en {{supplier}}. Ahorra {{currency}}{{savings}} por pedido.',
-          it: '{{material}} è {{pct}}% più economico da {{supplier}}. Risparmia {{currency}}{{savings}} per ordine.',
+          en: '{{material}} is {{pct}}% cheaper at {{supplier}}. Save {{savings}} per order.',
+          de: '{{material}} ist bei {{supplier}} {{pct}}% günstiger. Spare {{savings}} pro Bestellung.',
+          fr: '{{material}} est {{pct}}% moins cher chez {{supplier}}. Économisez {{savings}} par commande.',
+          es: '{{material}} está {{pct}}% más barato en {{supplier}}. Ahorra {{savings}} por pedido.',
+          it: '{{material}} è {{pct}}% più economico da {{supplier}}. Risparmia {{savings}} per ordine.',
         },
       },
       {
         trigger: 'bulk_opportunity', delayDays: 0, action: 'send_bulk_alert', channel: 'push',
         i18nKey: 'workflowPacks.purchasing.bulk',
-        template: 'Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar {{currency}}{{savings}} met bulkkorting.',
+        template: 'Combineer bestellingen voor {{material}} over {{jobCount}} klussen — bespaar {{savings}} met bulkkorting.',
         deprecated: true,
         defaults: {
-          en: 'Combine {{material}} orders across {{jobCount}} jobs — save {{currency}}{{savings}} with bulk pricing.',
-          de: 'Bestellungen für {{material}} über {{jobCount}} Aufträge bündeln — spare {{currency}}{{savings}} mit Mengenrabatt.',
-          fr: 'Regroupez les commandes de {{material}} sur {{jobCount}} chantiers — économisez {{currency}}{{savings}} avec le tarif volume.',
-          es: 'Agrupa pedidos de {{material}} en {{jobCount}} trabajos — ahorra {{currency}}{{savings}} con descuento por volumen.',
-          it: 'Raggruppa ordini di {{material}} su {{jobCount}} lavori — risparmia {{currency}}{{savings}} con lo sconto quantità.',
+          en: 'Combine {{material}} orders across {{jobCount}} jobs — save {{savings}} with bulk pricing.',
+          de: 'Bestellungen für {{material}} über {{jobCount}} Aufträge bündeln — spare {{savings}} mit Mengenrabatt.',
+          fr: 'Regroupez les commandes de {{material}} sur {{jobCount}} chantiers — économisez {{savings}} avec le tarif volume.',
+          es: 'Agrupa pedidos de {{material}} en {{jobCount}} trabajos — ahorra {{savings}} con descuento por volumen.',
+          it: 'Raggruppa ordini di {{material}} su {{jobCount}} lavori — risparmia {{savings}} con lo sconto quantità.',
         },
       },
     ],
@@ -616,7 +616,7 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
         template: 'Hi {{customer}}, hoe was je ervaring met {{job}}? Een korte review op Google helpt mij enorm!',
         defaults: {
           en: 'Hi {{customer}}, how was your experience with {{job}}? A quick Google review helps me a ton!',
-          de: 'Hallo {{customer}}, wie war deine Erfahrung mit {{job}}? Eine kurze Google-Bewertung hilft mir enorm!',
+          de: 'Hallo {{customer}}, wie war Ihre Erfahrung mit {{job}}? Eine kurze Google-Bewertung hilft mir enorm!',
           fr: 'Bonjour {{customer}}, comment s\'est passé {{job}} ? Un avis rapide sur Google m\'aide beaucoup !',
           es: 'Hola {{customer}}, ¿qué tal {{job}}? Una reseña rápida en Google me ayudaría mucho.',
           it: 'Ciao {{customer}}, com\'è andato {{job}}? Una recensione veloce su Google mi aiuta tantissimo!',
@@ -1080,6 +1080,9 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
           const resolved = resolveTemplate(baseTemplate, {
             ...match,
             currency,
+            // Money slots format through Intl against the CONTRACTOR's country,
+            // so the symbol sits where that market writes it.
+            country,
             phone: businessPhone,
           });
           // R66r49 #6: WhatsApp deep-link wire. For customer-facing channels
@@ -1439,16 +1442,37 @@ function matchTrigger(
 }
 
 /** Exported for tests — this renders the text customers actually receive. */
+/** Placeholders that hold the contractor's own money, so they render as currency. */
+const MONEY_KEY = /^(amount|price|savings|total)$/i;
+
 export function resolveTemplate(template: string, data: Record<string, any>): string {
-  const filled = template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+  // R66r49 #5 parameterised the SYMBOL (a hardcoded euro became a currency
+  // placeholder) so a UK contractor stopped sending € on £. But it left it
+  // BEFORE the number, which is only correct for en-GB: German, French, Spanish
+  // and Italian all write it after — "5.200,00 €", not "€5.200,00". The German
+  // dunning message said "Rechnung (€5.200,00) … + 40 € Mahnpauschale", using
+  // both conventions in one sentence, and the app's own formatMoney rendered
+  // "5.200 €" correctly on the screen the contractor tapped to send it.
+  //
+  // Intl (via formatCurrency) places symbol AND separators per locale, so the
+  // placeholder no longer needs a symbol beside it. A template a contractor
+  // customised earlier may still carry the old currency placeholder in front
+  // of a money slot, so strip it there rather than render "€5.200,00 €".
+  const deduped = template.replace(/\{\{currency\}\}\s*(?=\{\{(?:amount|price|savings|total)\}\})/gi, '');
+  const filled = deduped.replace(/\{\{(\w+)\}\}/g, (_, key) => {
     const val = data[key];
     if (val === undefined || val === null) return '';
     if (typeof val === 'number') {
-      // R66r49 #5: amounts render with the contractor's locale's grouping
-      // (NL: "2.450,00", UK: "2,450.00"). Pre-fix used `undefined` locale
-      // which gave Node-default formatting — wrong for NL.
+      if (MONEY_KEY.test(key)) {
+        // The contractor's country decides the currency — never the reader's
+        // device, and never a default euro.
+        return data.country
+          ? formatCurrency(val, data.country as Country)
+          : formatMoney2(val);
+      }
+      // Non-money numbers (counts, hours) keep locale grouping, no decimals.
       return val.toLocaleString(i18n.language ?? 'nl-NL', {
-        minimumFractionDigits: key.toLowerCase().includes('amount') || key.toLowerCase().includes('price') || key.toLowerCase().includes('savings') ? 2 : 0,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       });
     }

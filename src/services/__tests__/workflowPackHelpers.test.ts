@@ -377,6 +377,44 @@ describe('resolveTemplate — customer-facing copy', () => {
     expect(out).toMatch(/350[.,]00/);
   });
 
+  // Regression: the German dunning message read "Rechnung (€5.200,00) … + 40 €
+  // Mahnpauschale" — both conventions in one sentence. Parameterising the
+  // symbol fixed the UK's £ but kept it symbol-FIRST, which only en-GB writes.
+  test('the symbol sits where the contractor’s market writes it', () => {
+    const de = resolveTemplate('Rechnung ({{amount}})', { amount: 5200, country: 'DE' });
+    expect(de).toMatch(/5\.200,00\s*€/);      // German: symbol AFTER
+    expect(de).not.toMatch(/€\s*5\.200/);
+
+    const uk = resolveTemplate('Invoice ({{amount}})', { amount: 5200, country: 'UK' });
+    expect(uk).toMatch(/£\s*5,200\.00/);      // UK: symbol BEFORE, and £ not €
+    expect(uk).not.toContain('€');
+  });
+
+  // A contractor who customised a template before this change still has the
+  // old currency placeholder in front of the money slot. It must not double up.
+  test('a stored template with the old currency prefix does not double the symbol', () => {
+    const out = resolveTemplate('Rechnung ({{currency}}{{amount}})', {
+      currency: '€', amount: 5200, country: 'DE',
+    });
+    expect(out).toMatch(/5\.200,00\s*€/);
+    expect(out.match(/€/g) ?? []).toHaveLength(1);
+  });
+
+  // German is Sie to the contractor's customer — including the early dunning
+  // steps, which addressed a debtor as "du" while the 14d/30d steps used Sie.
+  test('no shipped German template addresses the customer informally', () => {
+    const { DEFAULT_PACKS } = require('../workflowPackService');
+    const informal = /\b(du|dich|dir|deine?[mnrs]?)\b/i;
+    const offenders: string[] = [];
+    for (const pack of DEFAULT_PACKS ?? []) {
+      for (const step of pack.steps ?? []) {
+        const de = step.defaults?.de;
+        if (de && informal.test(de)) offenders.push(`${pack.id}/${step.action}: ${de}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   test('no template in the shipped packs interpolates a raw id', () => {
     // Every {{invoice}}/{{quote}} slot must be fed a human reference. Render the
     // real pack templates with id-shaped input and assert we never emit it.
