@@ -5867,7 +5867,7 @@
     "unknownSubject": "Rechnung nicht mehr in Ihrer Liste"
   },
   "accountantAccess": {
-    "title": "Zugang für Steuerberater",
+    "title": "Steuerberater-Zugang",
     "intro": "Ein Zugang gibt Ihrem Steuerberater eine Nur-Lese-Webseite mit den Rechnungen dieses Zeitraums und dem von Ihnen erfassten Meldestatus. Ändern kann er nichts. Wo eine Behörde Meldungen bestätigt, bleibt sein eigenes Portal die maßgebliche Quelle.",
     "newSeat": "Steuerberater Zugang geben",
     "namePlaceholder": "Name des Steuerberaters oder der Kanzlei",
