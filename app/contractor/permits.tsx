@@ -17,6 +17,7 @@ import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import type { PermitStatus, PermitType } from '../../src/types/buildos';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 
 const PERMITS_STORAGE_KEY = '@vasco_contractor_permits';
 
@@ -431,40 +432,51 @@ export default function PermitsScreen() {
                   {PERMIT_TYPES.find(t => t.id === wizard.permitType)?.label}
                 </Text>
 
-                {/* Job picker for auto-fill */}
+                {/* Job picker for auto-fill.
+
+                    Was a horizontal chip strip: picking ONE job out of N, with
+                    every option past the right edge invisible — "Rohrbruch
+                    Küc…" was already clipped with only two jobs on file. That
+                    is the exact case CLAUDE.md reserves for DKMenu; chips are
+                    for multi-select filters where every option should be
+                    visible at once. */}
                 {jobs.length > 0 && (
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>{t('permits.selectJob', 'Koppel aan klus')}</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -2 }}>
-                      <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 2, paddingVertical: 2 }}>
-                        <Pressable
-                          style={[styles.jobPickerChip, !selectedJobId && styles.jobPickerChipActive]}
-                          onPress={() => {
+                    <DKMenu
+                      accessibilityLabel={t('permits.selectJob', 'Link to job')}
+                      items={[
+                        {
+                          key: '__manual__',
+                          label: t('permits.manualEntry', 'Handmatig'),
+                          selected: !selectedJobId,
+                          emphasis: true,
+                          onPress: () => {
                             setSelectedJobId(null);
                             setWizard(w => ({ ...w, jobTitle: '', address: '' }));
-                          }}
-                        >
-                          <Text style={[styles.jobPickerChipText, !selectedJobId && styles.jobPickerChipTextActive]}>
-                            {t('permits.manualEntry', 'Handmatig')}
+                          },
+                        },
+                        ...jobs.map(j => ({
+                          key: j.id,
+                          label: j.title,
+                          selected: selectedJobId === j.id,
+                          onPress: () => {
+                            setSelectedJobId(j.id);
+                            const addr = j.address ? [j.address.street, j.address.city].filter(Boolean).join(', ') : '';
+                            setWizard(w => ({ ...w, jobTitle: j.title, address: addr }));
+                          },
+                        })),
+                      ]}
+                      renderAnchor={(open) => (
+                        <Pressable style={styles.jobPickerAnchor} onPress={open} accessibilityRole="button">
+                          <Text style={styles.jobPickerAnchorText} numberOfLines={1}>
+                            {jobs.find(j => j.id === selectedJobId)?.title
+                              ?? t('permits.manualEntry', 'Handmatig')}
                           </Text>
+                          <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
                         </Pressable>
-                        {jobs.map(j => (
-                          <Pressable
-                            key={j.id}
-                            style={[styles.jobPickerChip, selectedJobId === j.id && styles.jobPickerChipActive]}
-                            onPress={() => {
-                              setSelectedJobId(j.id);
-                              const addr = j.address ? [j.address.street, j.address.city].filter(Boolean).join(', ') : '';
-                              setWizard(w => ({ ...w, jobTitle: j.title, address: addr }));
-                            }}
-                          >
-                            <Text style={[styles.jobPickerChipText, selectedJobId === j.id && styles.jobPickerChipTextActive]} numberOfLines={1}>
-                              {j.title}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    </ScrollView>
+                      )}
+                    />
                   </View>
                 )}
 
@@ -644,20 +656,17 @@ const styles = StyleSheet.create({
     fontSize: 15, color: SemanticColors.textPrimary,
     borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
-  jobPickerChip: {
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12,
+  jobPickerAnchor: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 12, paddingVertical: 12, borderRadius: 12,
     backgroundColor: SemanticColors.surfacePrimary,
     borderWidth: 1, borderColor: SemanticColors.borderDefault,
-    maxWidth: 180,
   },
-  jobPickerChipActive: {
-    borderColor: Palette.hermesOrange, backgroundColor: Palette.hermesOrange + '08',
-  },
-  jobPickerChipText: {
-    fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textSecondary,
-  },
-  jobPickerChipTextActive: {
-    color: Palette.hermesOrange,
+  // flex + minWidth so a long job title shrinks rather than pushing the
+  // chevron out of the row.
+  jobPickerAnchorText: {
+    flex: 1, minWidth: 0,
+    fontSize: 15, color: SemanticColors.textPrimary,
   },
   createButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',

@@ -160,16 +160,26 @@ export default function ProfileScreen() {
     const totalJobs = jobs.length;
     const completedJobs = jobs.filter((j: any) => j.status === 'completed' || j.status === 'gereed').length;
     const completionRate = totalJobs > 0 ? completedJobs / totalJobs : 0;
-    const onTimeJobs = jobs.filter((j: any) => {
-      if (j.status !== 'completed' && j.status !== 'gereed') return false;
-      if (!j.completedAt || !j.endDate) return true;
-      return new Date(j.completedAt) <= new Date(j.endDate);
-    }).length;
+    // A job can only be judged on time against a date it was DUE. `Job` has no
+    // top-level `endDate` — the only one in src/domain/jobs.ts lives inside
+    // `recurringPattern` — so the previous `if (!j.endDate) return true` was
+    // true for every job that has ever existed, and every completed job counted
+    // as on time. That is the same placeholder the comment below removed for
+    // the zero-jobs case, one level down: it handed every contractor with at
+    // least one finished job a flat 100% and 35 of the 100 score points.
+    // `scheduledDate` is the date the job actually carries; jobs with neither
+    // date are not measurable and leave the denominator rather than passing.
+    const datedCompletions = jobs.filter((j: any) =>
+      (j.status === 'completed' || j.status === 'gereed')
+      && j.completedAt
+      && (j.endDate || j.scheduledDate));
+    const onTimeJobs = datedCompletions.filter((j: any) =>
+      new Date(j.completedAt) <= new Date(`${j.endDate ?? j.scheduledDate}T23:59:59`)).length;
     // null, not 1. `: 1` meant "no completed jobs = perfectly on time", and
     // since onTimeRate carries 35 of the 100 score points, a brand-new
     // contractor with zero jobs was shown "Aannemer Score 35/100" and
     // "Op-tijd percentage 100%" — both derived entirely from that placeholder.
-    const onTimeRate = completedJobs > 0 ? onTimeJobs / completedJobs : null;
+    const onTimeRate = datedCompletions.length > 0 ? onTimeJobs / datedCompletions.length : null;
     const customerJobCount = new Map<string, number>();
     jobs.forEach((j: any) => {
       if (j.customerId) customerJobCount.set(j.customerId, (customerJobCount.get(j.customerId) ?? 0) + 1);
@@ -179,8 +189,18 @@ export default function ProfileScreen() {
     const repeatRate = totalCustomersWithJobs > 0 ? repeatCustomers / totalCustomersWithJobs : null;
     // A score needs finished work to describe. With none, there is no
     // performance record yet — the screen says so instead of inventing one.
-    const score = completedJobs > 0
-      ? Math.round(completionRate * 40 + (onTimeRate ?? 0) * 35 + (repeatRate ?? 0) * 25)
+    // Score only the components that are actually measurable, rescaled to 100.
+    // `(x ?? 0) * weight` silently scored an UNKNOWN as a zero, so a contractor
+    // whose jobs carry no dates was marked down for data we never collected —
+    // the mirror of the old bug, which marked them up.
+    const components: { value: number; weight: number }[] = [
+      { value: completionRate, weight: 40 },
+      ...(onTimeRate !== null ? [{ value: onTimeRate, weight: 35 }] : []),
+      ...(repeatRate !== null ? [{ value: repeatRate, weight: 25 }] : []),
+    ];
+    const totalWeight = components.reduce((sum, c) => sum + c.weight, 0);
+    const score = completedJobs > 0 && totalWeight > 0
+      ? Math.round(components.reduce((sum, c) => sum + c.value * c.weight, 0) / totalWeight * 100)
       : null;
     return {
       score: score === null ? null : Math.min(score, 100),
@@ -192,8 +212,18 @@ export default function ProfileScreen() {
 
   const userName = user?.name || 'User';
   const userInitials = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const userTrade = user?.trade ? t(`onboarding.trades.${user.trade}`, user.trade) : t('profile.contractor', 'Contractor');
-  const country = user?.country ?? 'NL';
+  // The BUSINESS PROFILE is what the contractor last told us about their
+  // business; the account is only where they started. This screen mixed both
+  // sources in one card — "Firmenname" from `user.company` sitting directly
+  // above an address, VAT id and legal form from `businessProfile` — so a
+  // contractor trading as Bergmann Sanitär & Heizung GmbH in Köln read
+  // "VDB Painters" and "Maler" here while every other screen said Sanitär.
+  // Profile first, account as the fallback. Same precedence as
+  // `applySavedLanguage`/`applySavedCountry`.
+  const effectiveTrade = businessProfile?.trade || user?.trade;
+  const userTrade = effectiveTrade ? t(`onboarding.trades.${effectiveTrade}`, effectiveTrade) : t('profile.contractor', 'Contractor');
+  const companyName = businessProfile?.businessName || user?.company || '';
+  const country = businessProfile?.country || user?.country || 'NL';
 
   // R9.2: surface device-calendar sync state. Was only reachable via a one-time
   // prompt in schedule.tsx — users who tapped "later" lost the entry forever.
@@ -572,7 +602,7 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <SettingsRow icon="person" label={t('profile.name', 'Name')} value={user?.name ?? ''} />
             <SettingsRow icon="mail" label={t('profile.email', 'Email')} value={user?.email ?? ''} border />
-            <SettingsRow icon="business" label={t('profile.companyName', 'Company')} value={user?.company ?? ''} border />
+            <SettingsRow icon="business" label={t('profile.companyName', 'Company')} value={companyName} border />
             <SettingsRow icon="construct" label={t('profile.trade', 'Trade')} value={userTrade} border />
             <SettingsRow icon="flag" label={t('profile.country', 'Country')} value={country} border />
           </View>

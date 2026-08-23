@@ -15,18 +15,27 @@ import { useAuth } from '../../../src/context/AuthContext';
 import { formatCurrency, type Country } from '../../../src/i18n/formatting';
 import { logError } from '../../../src/utils/errorHandler';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
+import { findDocumentCustomer } from '../../../src/domain/customers';
 
 export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { quotes, lineItems, addInvoice, markInvoiceSent, invoices } = useAppState();
+  const { quotes, lineItems, addInvoice, markInvoiceSent, invoices, customers } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const [creating, setCreating] = useState(false);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
 
   const quote = quotes.find((q) => q.id === id);
+  // `quote.customer` is the display name for every row created after
+  // R2026-08-22, and a raw customer id for the ones created between R13.2 and
+  // it — this screen rendered whichever it got, so it read "c-1787349342347"
+  // where the customer's name belongs. Resolve both shapes.
+  const quoteCustomerName =
+    findDocumentCustomer(customers as { id: string; name: string }[], quote)?.name
+    ?? quote?.customer
+    ?? '';
   const quoteItems = id ? lineItems[id] ?? [] : [];
 
   // AI guidance — context switches based on customer data
@@ -116,7 +125,7 @@ export default function InvoiceFromQuoteScreen() {
           <Text style={Typography.subtitle}>{t('quoteToInvoice.quoteDetails')}</Text>
           <View style={styles.row}>
             <Text style={Typography.muted}>{t('quoteToInvoice.customer')}</Text>
-            <Text style={Typography.body}>{quote.customer}</Text>
+            <Text style={Typography.body}>{quoteCustomerName}</Text>
           </View>
           <View style={styles.row}>
             <Text style={Typography.muted}>{t('quoteToInvoice.job')}</Text>

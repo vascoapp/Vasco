@@ -25,6 +25,7 @@ import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { formatCurrency, formatTime } from '../../src/i18n/formatting';
 import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { todayKey } from '../../src/utils/dateKey';
@@ -53,9 +54,15 @@ export default function WerkScreen() {
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const [refreshing, setRefreshing] = useState(false);
-  const { jobs, addJob, removeJob, projects, isLoading, businessProfile } = useAppState();
+  const { jobs, addJob, removeJob, projects, isLoading, businessProfile, customers } = useAppState();
   const [showNewJob, setShowNewJob] = useState(false);
   const [newJobTitle, setNewJobTitle] = useState('');
+  // This sheet is the ONLY in-app job-creation path, and it passed
+  // customerId: null — so every job a contractor made was permanently
+  // customer-less. The job screen's Kunde card rendered an empty avatar over
+  // three dead call/WhatsApp/mail buttons, the customer's own screen never
+  // counted the job, and invoicing it had nobody to bill. Pick the customer here.
+  const [newJobCustomerId, setNewJobCustomerId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
   const [tab, setTab] = useState<TabKey>('today');
   // LOCAL date, not UTC. `todayKey()` returns the
@@ -83,8 +90,15 @@ export default function WerkScreen() {
     refreshTimerRef.current = setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
 
+  // The submit awaits a subscription read and a dynamic import before it hides
+  // the sheet, so two quick taps both got through and created the job twice.
+  // Same guard the tiered-quote send uses.
+  const creatingJobRef = useRef(false);
+
   const handleCreateJob = async () => {
     if (!newJobTitle.trim()) return;
+    if (creatingJobRef.current) return;
+    creatingJobRef.current = true;
     try {
       const { loadSubscription, canCreateJob } = await import('../../src/services/subscriptionService');
       const sub = await loadSubscription();
@@ -100,6 +114,7 @@ export default function WerkScreen() {
             { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
           ],
         );
+        creatingJobRef.current = false;
         return;
       }
     } catch {}
@@ -117,13 +132,20 @@ export default function WerkScreen() {
     // frequently unset. Reading only the profile silently stamped nothing,
     // which walking the screen exposed: new jobs listed as "Lead" with no trade
     // while seeded ones read "Plumbing · Scheduled".
-    const { getCurrentTrade } = await import('../../src/lib/currentUser');
-    await addJob(newJobTitle.trim(), null, null, {
-      trade: getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade,
-    });
-    hapticSuccess();
-    setNewJobTitle('');
-    setShowNewJob(false);
+    try {
+      const { getCurrentTrade } = await import('../../src/lib/currentUser');
+      await addJob(newJobTitle.trim(), newJobCustomerId, null, {
+        trade: getCurrentTrade() ?? (businessProfile as { trade?: string } | undefined)?.trade,
+      });
+      hapticSuccess();
+      setNewJobTitle('');
+      setNewJobCustomerId(null);
+      setShowNewJob(false);
+    } finally {
+      // finally, not the happy path — a throw here would otherwise leave the
+      // ref latched and the Create button permanently dead.
+      creatingJobRef.current = false;
+    }
   };
 
   const suggestions = useMemo(() => {
@@ -454,6 +476,41 @@ export default function WerkScreen() {
                   ))}
                 </View>
               )}
+              {/* One-of-N, so a balloon menu — never a chip strip (CLAUDE.md).
+                  Optional: a job jotted down before you know whose it is still
+                  has to be creatable. */}
+              <DKMenu
+                accessibilityLabel={t('jobs.selectCustomer', 'Select customer')}
+                items={[
+                  {
+                    key: '__none__',
+                    label: t('jobs.noCustomer', 'No customer'),
+                    selected: newJobCustomerId === null,
+                    emphasis: true,
+                    onPress: () => setNewJobCustomerId(null),
+                  },
+                  ...(customers as { id: string; name: string; phone?: string }[]).map((c) => ({
+                    key: c.id,
+                    label: c.name,
+                    detail: c.phone,
+                    selected: newJobCustomerId === c.id,
+                    onPress: () => setNewJobCustomerId(c.id),
+                  })),
+                ]}
+                renderAnchor={(open) => (
+                  <Pressable style={styles.customerAnchor} onPress={open} accessibilityRole="button">
+                    <Ionicons name="person-outline" size={16} color={DK.colors.textMuted} />
+                    <Text
+                      style={[styles.customerAnchorText, !newJobCustomerId && { color: DK.colors.textMuted }]}
+                      numberOfLines={1}
+                    >
+                      {(customers as { id: string; name: string }[]).find((c) => c.id === newJobCustomerId)?.name
+                        ?? t('jobs.noCustomer', 'No customer')}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={DK.colors.textMuted} />
+                  </Pressable>
+                )}
+              />
               <Pressable
                 style={[styles.modalSubmit, !newJobTitle.trim() && { opacity: 0.5 }]}
                 onPress={handleCreateJob}
@@ -923,6 +980,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 14,
     fontSize: 15, fontFamily: DK.type.body500,
     color: DK.colors.text,
+  },
+  customerAnchor: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: DK.colors.panel2,
+    borderRadius: DK.radius.button,
+    borderWidth: 1, borderColor: DK.colors.border,
+    paddingHorizontal: 14, paddingVertical: 14,
+    marginTop: 10,
+  },
+  // flex: 1 + minWidth: 0 so a long customer name shrinks instead of pushing
+  // the chevron off the row.
+  customerAnchorText: {
+    flex: 1, minWidth: 0,
+    fontSize: 15, fontFamily: DK.type.body500, color: DK.colors.text,
   },
   modalSubmit: {
     borderRadius: DK.radius.button, paddingVertical: 14,

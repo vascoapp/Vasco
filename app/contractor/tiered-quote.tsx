@@ -70,11 +70,27 @@ export default function TieredQuoteScreen() {
               quotes,
             );
             if (!ok) return;
-            const quoteId = await addQuote(
-              customerArg,
-              tier.name || t('tieredQuote.quoteLabel'),
-              lineItems,
-            );
+            // `addQuote`'s second argument is the quote's `job` — the label
+            // every list, the invoice converted from it, and the AI queue read
+            // back. It was the TIER NAME, so every document a contractor made
+            // through this builder was called "Basis" / "Standard" / "Premium":
+            // a customer with three quotes saw the same title three times, the
+            // queue offered "XRechnung: Standard", and the package name says
+            // nothing about the work. The package is not lost — the customer
+            // receives ONE quote whose LINES are the package (see
+            // memory/quote-flow-consolidation.md), and those are stored.
+            // Name the work instead, in the contractor's own wording.
+            const first = lineItems[0]?.description?.trim();
+            const jobLabel = !first
+              ? (tier.name || t('tieredQuote.quoteLabel'))
+              : lineItems.length > 1
+                ? t('tieredQuote.jobLabelMore', {
+                    defaultValue: '{{first}} +{{count}}',
+                    first,
+                    count: lineItems.length - 1,
+                  })
+                : first;
+            const quoteId = await addQuote(customerArg, jobLabel, lineItems);
             // Close the learning loop. Line corrections are captured while the
             // contractor edits — BEFORE a quote exists — so they were written
             // with quote_id = null and could never be joined to whether the

@@ -29,6 +29,7 @@ import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { getVATRate } from '../../src/constants/taxRates';
 import { formatCurrency as fmtCurrency, formatDate as fmtDate } from '../../src/i18n/formatting';
+import { findDocumentCustomer } from '../../src/domain/customers';
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   draft: { bg: SemanticColors.surfaceSecondary, fg: SemanticColors.textSecondary },
@@ -82,12 +83,16 @@ export default function QuoteDetailScreen() {
   // R14.1: quote.customer holds the customer UUID, not the name. Was being
   // rendered directly into the customer card and share-link payload, so the
   // contractor saw "cust-001" instead of "Bakery Jansen". Resolve once.
-  const customerRecord = customers.find((c: any) => c.id === quote.customer);
+  const customerRecord = findDocumentCustomer(customers as { id: string; name: string }[], quote);
   const customerDisplayName = customerRecord?.name ?? quote.customer;
 
   const subtotal = quoteLineItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const vatRate = getVATRate(country);
-  const vatAmount = Math.round(subtotal * vatRate);
+  // Round to CENTS, not to whole euros. `sharePdf` below already does
+  // `Math.round(sub * vrate * 100) / 100`, so the screen and the PDF the
+  // customer receives disagreed: 19% of 106,00 showed as 20,00 / 126,00 here
+  // and 20,14 / 126,14 in the PDF.
+  const vatAmount = Math.round(subtotal * vatRate * 100) / 100;
   const total = subtotal + vatAmount;
 
   const riskItem = priceRisk ? quoteLineItems.find((item) => item.description === priceRisk.lineItem) : undefined;
@@ -394,15 +399,15 @@ export default function QuoteDetailScreen() {
           <View style={styles.lineHeaderRow}>
             <Text style={[styles.lineHeaderText, { flex: 2 }]}>{t('invoices.description', 'Description')}</Text>
             <Text style={[styles.lineHeaderText, { width: 40, textAlign: 'center' }]}>{t('invoices.qty', 'Qty')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 70, textAlign: 'right' }]}>{t('invoices.unitPrice', 'Price')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 70, textAlign: 'right' }]}>{t('invoices.total', 'Total')}</Text>
+            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.unitPrice', 'Price')}</Text>
+            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.total', 'Total')}</Text>
           </View>
           {quoteLineItems.map((item) => (
             <View key={item.id} style={styles.lineItemRow}>
               <Text style={[styles.lineText, { flex: 2 }]} numberOfLines={2}>{item.description}</Text>
               <Text style={[styles.lineTextMuted, { width: 40, textAlign: 'center' }]}>{item.quantity}</Text>
-              <Text style={[styles.lineTextMuted, { width: 70, textAlign: 'right' }]}>{formatCurrency(item.unitPrice)}</Text>
-              <Text style={[styles.lineText, { width: 70, textAlign: 'right' }]}>{formatCurrency(item.unitPrice * item.quantity)}</Text>
+              <Text style={[styles.lineTextMuted, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.unitPrice)}</Text>
+              <Text style={[styles.lineText, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.unitPrice * item.quantity)}</Text>
             </View>
           ))}
 
@@ -616,7 +621,9 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
     marginTop: 4,
   },
-  lineHeaderText: { fontSize: 10, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, letterSpacing: 1, textTransform: 'uppercase' },
+  // letterSpacing 1 pushed German "STÜCKPREIS" past its column and RN broke it
+  // mid-word ("STÜCKPREI / S"). Width, not font size — learnings #113.
+  lineHeaderText: { fontSize: 10, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, letterSpacing: 0.2, textTransform: 'uppercase' },
   lineItemRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingVertical: GRID.xs },
   lineText: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   lineTextMuted: { fontSize: 12, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },

@@ -11,6 +11,7 @@ import { useAppState } from '../state/AppState';
 import type { Invoice, Quote } from '../domain/documents';
 import { useExpenses, type Expense } from './expenseService';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { findDocumentCustomer } from '../domain/customers';
 
 // =============================================================================
 // TYPES
@@ -149,7 +150,21 @@ export function analyzeFinancials(
   quotes: Quote[],
   now: Date = new Date(),
   expenses?: Expense[],
+  /**
+   * The contractor's customers, so an invoice's customer can be resolved to a
+   * NAME. `Invoice.customer` is a name on seeded rows and an id on anything
+   * converted from an R13.2-era quote, and this function both GROUPS on that
+   * value and renders it — so the same real customer could appear twice in
+   * "Top customers", once under their name and once under `c-1787…`, and the
+   * concentration percentages were computed over the split.
+   */
+  customers?: { id: string; name: string }[],
 ): FinancialSummary {
+  const customerLabel = (doc: { customerId?: string | null; customer?: string | null; customerName?: string | null }): string =>
+    (doc.customerName as string | undefined)
+    ?? (customers ? findDocumentCustomer(customers, doc)?.name : undefined)
+    ?? doc.customer
+    ?? '';
   // ---- Revenue from paid invoices ----
   const paidInvoices = invoices.filter(i => i.status === 'paid');
   const totalRevenue = paidInvoices.reduce((s, i) => s + (i.total || i.amount || 0), 0);
@@ -225,7 +240,7 @@ export function analyzeFinancials(
     const daysOverdue = due ? Math.max(0, daysBetween(due, now)) : Math.abs(inv.dueInDays || 0);
     return {
       invoiceId: inv.id,
-      customer: inv.customerName || inv.customer,
+      customer: customerLabel(inv),
       amount: inv.total || inv.amount || 0,
       daysOverdue,
       dueDate: inv.dueDate || '',
@@ -319,7 +334,7 @@ export function analyzeFinancials(
   // ---- Customer concentration ----
   const customerRevMap: Record<string, { revenue: number; count: number; customerId?: string }> = {};
   for (const inv of paidInvoices) {
-    const name = inv.customerName || inv.customer;
+    const name = customerLabel(inv);
     if (!customerRevMap[name]) customerRevMap[name] = { revenue: 0, count: 0, customerId: inv.customerId };
     customerRevMap[name].revenue += (inv.total || inv.amount || 0);
     customerRevMap[name].count++;
@@ -371,12 +386,12 @@ export function analyzeFinancials(
 // =============================================================================
 
 export function useFinancialAnalysis(): FinancialSummary {
-  const { invoices, quotes } = useAppState();
+  const { invoices, quotes, customers } = useAppState();
   // Real recorded expenses — the receipt scanner and manual entry both write
   // here. Subscribed so a newly scanned receipt updates the Geld tab.
   const { expenses } = useExpenses();
   return useMemo(
-    () => analyzeFinancials(invoices, quotes, new Date(), expenses),
-    [invoices, quotes, expenses],
+    () => analyzeFinancials(invoices, quotes, new Date(), expenses, customers as { id: string; name: string }[]),
+    [invoices, quotes, expenses, customers],
   );
 }

@@ -68,3 +68,50 @@ export async function applySavedLanguage(): Promise<string> {
   }
   return i18n.language;
 }
+
+/**
+ * The COUNTRY half of the same race, which had never been closed.
+ *
+ * `formatMoney` / `formatMoney2` resolve the contractor's country from the
+ * module-level `currentUser` ref, which AuthContext seeds from the ACCOUNT
+ * (`user.country ?? 'NL'`) and only corrects once the saved profile has merged
+ * in — asynchronously, after login resolves. `populateQueue` runs inside that
+ * window, and it PERSISTS the strings it formats.
+ *
+ * Net effect for a German contractor whose account, saved profile and business
+ * profile all said DE: a queue card reading "€ 280" (nl-NL puts the symbol
+ * first) sitting directly under one reading "350 € überfällig" and a permit
+ * card reading "(DE)" — three sources, one of them stale, in one list. The
+ * amount is the half a CUSTOMER sees in a payment reminder.
+ *
+ * Same contract as `applySavedLanguage`: callers that author persisted copy
+ * must await this first. Idempotent; returns the country now in effect.
+ */
+export async function applySavedCountry(): Promise<string | undefined> {
+  let saved: string | undefined;
+  try {
+    const raw = await AsyncStorage.getItem(PROFILE_KEY);
+    if (raw) {
+      const profile = JSON.parse(raw) as { country?: unknown };
+      const c = profile?.country;
+      if (typeof c === 'string' && c) saved = c;
+    }
+  } catch {}
+  if (!saved) return undefined;
+
+  try {
+    const { getCurrentUserId, getCurrentCountry, getCurrentTrade, getCurrentVatScheme, setCurrentUser } =
+      await import('../lib/currentUser');
+    if (getCurrentCountry() !== saved) {
+      // Same id, so `setCurrentUser` does NOT fire the user-change listeners
+      // that wipe AppState — this only corrects the presentation context.
+      setCurrentUser({
+        id: getCurrentUserId(),
+        country: saved,
+        trade: getCurrentTrade(),
+        vatScheme: getCurrentVatScheme(),
+      });
+    }
+  } catch {}
+  return saved;
+}

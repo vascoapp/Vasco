@@ -227,7 +227,19 @@ export default function JobDetailPage() {
       // 24-hour job render as "24 min" here while Werk showed "24u".
       duration: (appJob.estimatedDuration || 2) * 60,
       travelTime: 15,
-      status: appJob.status === 'in-progress' ? 'in_progress' as const : appJob.status === 'completed' ? 'completed' as const : 'confirmed' as const,
+      // Everything that was not in-progress or completed collapsed to
+      // 'confirmed', and getStatusLabel's default renders that as "Scheduled" —
+      // so a LEAD was badged GEPLANT while the lifecycle stepper directly below
+      // it correctly read "Lead". Carry the real status; the label maps it.
+      status: appJob.status === 'in-progress' ? 'in_progress' as const
+        : appJob.status === 'completed' ? 'completed' as const
+        : appJob.status === 'cancelled' ? 'cancelled' as const
+        : appJob.status === 'lead' ? 'lead' as const
+        : 'confirmed' as const,
+      // A job with no scheduledDate has no slot. Both startTime and endTime
+      // fell back to `new Date()`, so an unscheduled lead rendered a
+      // zero-length window ("11:39 – 11:39") beside a "3 Std." estimate.
+      isScheduled: Boolean(appJob.scheduledDate),
       priority: appJob.priority || 'normal',
       // Was hardcoded ''. The Notes box below wrote to local state that nothing
       // ever saved, and `jobs` has NO `notes` column — the same shape as the
@@ -332,6 +344,7 @@ export default function JobDetailPage() {
       case 'in_progress': return t('jobs.statusInProgress', 'In progress');
       case 'completed': return t('jobs.statusCompleted', 'Completed');
       case 'cancelled': return t('jobs.statusCancelled', 'Cancelled');
+      case 'lead': return t('jobs.statusLead', 'Lead');
       default: return t('jobs.statusScheduled', 'Scheduled');
     }
   };
@@ -340,6 +353,7 @@ export default function JobDetailPage() {
       case 'in_progress': return SemanticColors.feedbackSuccess;
       case 'completed': return '#3B82F6';
       case 'cancelled': return SemanticColors.feedbackError;
+      case 'lead': return SemanticColors.textSecondary;
       default: return Palette.hermesOrange;
     }
   };
@@ -454,7 +468,11 @@ export default function JobDetailPage() {
               <View style={styles.heroDetailIcon}>
                 <Ionicons name="time" size={14} color={Palette.hermesOrange} />
               </View>
-              <Text style={styles.heroDetailText}>{startTime} – {endTime}</Text>
+              <Text style={styles.heroDetailText}>
+                {(job as { isScheduled?: boolean }).isScheduled
+                  ? `${startTime} – ${endTime}`
+                  : t('jobs.notScheduled', 'Not scheduled')}
+              </Text>
               <View style={styles.durationChip}>
                 {/* Format hours+minutes like the Werk list does, so the same
                     job reads identically on both screens. The Dutch "u" was

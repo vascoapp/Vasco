@@ -182,6 +182,12 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   - Chips ARE still correct for **multi-select filters and toggles** (Alle /
     Lopend / Afgerond), where every option should be visible at once and more
     than one can be on. The test: *is the user choosing one thing?* → menu.
+  - ⚠️ **Neither this rule nor the Alert-as-menu rule has a real detector.**
+    The existing guard (`__screenwalk__/scheduleMenuNotAlert.test.tsx`) names
+    ONE screen, which is why both were still violated in `timesheet.tsx` and
+    `permits.tsx` in 2026-08. An `Alert.alert` whose buttons are spread from a
+    `.map()` is the same defect — Android renders at most THREE. 53 such sites
+    remain; see `memory/drag-schedule-is-not-drag.md`.
   - `DKMenu` is deliberately a JS popover, not a native `UIMenu`: a native menu
     module would force a native rebuild and take fixes off the OTA channel, and
     `UIMenu` does not exist on Android.
@@ -200,6 +206,26 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   under `decisionCatalog.*`; DE + NL are complete, FR/ES/IT fall back to
   English. Anything new in `src/data/` that a human reads needs the same
   treatment.
+  The same rule now covers the quote builder: the DEMO starter pricebook and
+  the "Forgot something?" consumables in `TieredQuoteBuilder.tsx` are stable ids
+  resolved through `quoteCatalog.service.* / .unit.* / .consumable.*` (all six
+  locales complete). ⚠️ **Two adjacent hardcoded tables can differ in whether
+  they ship**: `TRADE_PRICEBOOK` is `DEMO_MODE`-gated, `TRADE_SUGGESTIONS`
+  beside it never was. Check the gate before you decide a Dutch literal is
+  harmless.
+- **A client-side store must be in THREE places or it is not persisted**
+  (`src/state/AppState.tsx`): the `useState` initialiser, a persist `useEffect`,
+  and the hydrate list in the mount effect. `lineItems` was in the first only,
+  so every quote/invoice a contractor created reopened with no lines and
+  recomputed its own total to € 0,00. The hydrate loop walks *array* pairs —
+  a non-array store (`lineItems`, `businessProfile`) needs its own block and is
+  exactly what gets skipped. See `memory/learnings.md` #205.
+- **A prediction may fill a field named `suggested*`. It may not fill a field
+  whose name asserts what happened.** `addJob` stamped `quotedAmount` from
+  `jobPrefillService`'s invented `LABOR_RATE` table, so a job created from a
+  bare title arrived priced at €198 — and `quotedAmount` feeds the margin and
+  cost-variance generators, project P&L, the customer's spend and the invoice
+  prefill. Hours (a scheduling default) stay; the price is gone. #207.
 - **Decision upgrades bill as meerwerk**, on their own invoice, never folded
   into a fixed price — `src/services/decisionUpgradeBilling.ts`. The art. 7:755
   gate turns on WHO chose: a customer picking an option in the portal saw the
@@ -215,6 +241,33 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   noun is the market's own word (vakman / Handwerksbetrieb / artisan /
   profesional / tecnico — never "contractor" in Italian), and currency follows
   the CONTRACTOR's country, not the reader's browser. `docs/ui-playbook.md` §8.
+- **One resolver for a document's customer** — `findDocumentCustomer()` in
+  `src/domain/customers.ts`, FK → id-in-the-name-slot → name, in that order.
+  `Quote`/`Invoice` carry BOTH `customerId` and `customer`; seeded rows put a
+  NAME in `customer` and the R13.2 tiered-quote path put an ID there, so half
+  the corpus matched `c.id === doc.customer` and half matched `c.name === …`.
+  Never write a local lookup: the id leaked into the invoice screen's TITLE, the
+  e-invoice `buyerName`, a reminder EMAIL's greeting and the "Top customers"
+  GROUPING before this existed. See `memory/learnings.md` #214.
+- **The business profile outranks the account.** `businessProfile.*` is what the
+  contractor last entered; `user.*` is only where they started. Language,
+  country, trade, company name — profile first, account as fallback
+  (`applySavedLanguage`, `applySavedCountry`, and the Profil screen). Mixing
+  them put "VDB Painters / Maler" in the same card as a Köln address (#218).
+- **Anything that PERSISTS resolved copy must `await applySavedLanguage()` AND
+  `applySavedCountry()` first** (`src/i18n/savedLanguage.ts`). `populateQueue`
+  bakes both the wording and the currency format into strings it stores; the
+  scheduler runs before the profile merges, so a German contractor got a card
+  reading "€ 280" (nl-NL) beside one reading "350 € überfällig" (#210).
+- **A country-dependent nudge must SKIP when the country is unknown**, never
+  default. `context.country || 'NL'` handed a German plumber the Dutch permit
+  list, and the same default silently withheld the XRechnung reminder — one
+  failing open, one failing closed, from one line.
+- **A job's customer is set at creation** — the `DKMenu` picker in the new-job
+  sheet (`app/(contractor)/werk.tsx`). `addJob` has exactly ONE caller; before
+  R2026-08-22 it passed `customerId: null` and no screen could ever set it, so
+  every job was customer-less while `job.customerId` had readers everywhere.
+  ⚠️ The job DETAIL screen still cannot change it. #208.
 - Always run `npx tsc --noEmit | grep "^app/"` after changes
 - Always update memory .md files after completing work
 

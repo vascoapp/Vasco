@@ -25,3 +25,29 @@ export type Customer = {
   einvoiceRouting?: string;
   einvoiceEmail?: string;
 };
+
+/**
+ * Resolve the Customer a document belongs to.
+ *
+ * `Quote`/`Invoice` carry BOTH `customerId` (the FK) and `customer` (what the
+ * screens render). Seeded rows have always stored a NAME in `customer`; the
+ * R13.2 tiered-quote path stored an ID there instead, so half the corpus
+ * matched `c.id === doc.customer` and half matched `c.name === doc.customer`,
+ * and every call site picked one and silently missed the other half.
+ *
+ * Order matters: the FK is authoritative, the id-in-the-name-slot is the legacy
+ * shape, and the name is the last resort because names are not unique.
+ */
+export function findDocumentCustomer<T extends { id: string; name: string }>(
+  customers: readonly T[],
+  doc: { customerId?: string | null; customer?: string | null } | null | undefined,
+): T | undefined {
+  if (!doc) return undefined;
+  if (doc.customerId) {
+    const byFk = customers.find((c) => c.id === doc.customerId);
+    if (byFk) return byFk;
+  }
+  if (!doc.customer) return undefined;
+  return customers.find((c) => c.id === doc.customer)
+    ?? customers.find((c) => c.name === doc.customer);
+}

@@ -14,6 +14,7 @@ import { MS_PER_DAY } from '../utils/timeConstants';
 
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { findDocumentCustomer } from '../domain/customers';
 
 const LAST_RUN_KEY = '@vasco_automation_last_run';
 const RUN_INTERVAL_MS = 4 * 60 * 60 * 1000; // every 4 hours
@@ -109,7 +110,7 @@ export function checkAutoReminder(ctx: AutomationContext, config: AutomationConf
   );
 
   return overdueInvoices.map(inv => {
-    const customer = ctx.customers.find(c => c.id === inv.customer);
+    const customer = findDocumentCustomer(ctx.customers, inv);
     const daysOverdue = Math.abs(inv.dueInDays);
     return {
       id: `auto_reminder_${inv.id}`,
@@ -131,7 +132,7 @@ export function checkAutoFollowup(ctx: AutomationContext, config: AutomationConf
   });
 
   return staleQuotes.map(q => {
-    const customer = ctx.customers.find(c => c.id === q.customer);
+    const customer = findDocumentCustomer(ctx.customers, q);
     const days = Math.floor((now - new Date(q.lastUpdated).getTime()) / MS_PER_DAY);
     return {
       id: `auto_followup_${q.id}`,

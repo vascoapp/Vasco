@@ -41,6 +41,7 @@ import { getEffectiveVatRate } from '../../src/domain/business';
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
+import { findDocumentCustomer } from '../../src/domain/customers';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -102,10 +103,13 @@ export default function InvoiceDetailScreen() {
   // separate elements, and `invoice.customer` is a name. Matched on
   // customerId, falling back to the name because older invoices carry only
   // that (`documentRowToInvoice` maps `customer` from customer_id).
-  const invoiceCustomer = invoice
-    ? customers.find((c) => c.id === (invoice as any).customerId)
-      ?? customers.find((c) => c.name === invoice.customer)
-    : undefined;
+  const invoiceCustomer = findDocumentCustomer(customers, invoice);
+  // What a HUMAN should read wherever this invoice names its customer. The
+  // `customer` field is a name on seeded rows and on anything created after
+  // R2026-08-22, but an id on invoices converted from R13.2-era quotes — and
+  // both the header title and the customer card rendered it raw, so this
+  // screen was headed "RECHNUNG C-1787349342347".
+  const invoiceCustomerName = invoiceCustomer?.name ?? invoice?.customer ?? '';
   const country = user?.country ?? 'NL';
   // Country/scheme-aware VAT rate (honors DE 19%, FR 20%, KOR/Kleinunternehmer
   // 0%, etc.). Falls back to the NL VAT_RATE only when no profile is loaded.
@@ -279,7 +283,10 @@ export default function InvoiceDetailScreen() {
       t('invoices.paidDesc', {
         defaultValue: '{{amount}} from {{customer}} marked as paid.',
         amount: formatCurrency(invoice.amount, country),
-        customer: invoice.customer,
+        // Not `invoice.customer` — that is an id on anything converted from an
+        // R13.2-era quote, so the confirmation read "106,00 € von
+        // c-1787349342347 als bezahlt markiert."
+        customer: invoiceCustomerName,
       }),
       [
         { text: t('invoices.viewAll', 'View all invoices'), onPress: () => router.push('/(contractor)/geld' as any) },
@@ -305,7 +312,16 @@ export default function InvoiceDetailScreen() {
       return;
     }
 
-    const customerEmail = (invoice as any).customerEmail ?? (invoice as any).customer_email;
+    // `Invoice` has no `customerEmail` field — not in src/domain/documents.ts,
+    // and nothing anywhere writes one — so this read was ALWAYS undefined and
+    // every "mark as sent" fell into the no-email branch below. The address is
+    // on the customer RECORD, which is already resolved above for the
+    // e-invoice buyer party. Familie Schneider has schneider@example.de and the
+    // app told the contractor it had no email for them.
+    const customerEmail =
+      invoiceCustomer?.email
+      ?? (invoice as any).customerEmail
+      ?? (invoice as any).customer_email;
     const language = (user?.language ?? 'nl') as 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
     // Optimistic local update
@@ -328,7 +344,10 @@ export default function InvoiceDetailScreen() {
     let subject: string | undefined;
     let bodyOverride: string | undefined;
     if (daysOverdue >= 3) {
-      const step = await effectiveStep((invoice as any).customer ?? '', daysOverdue);
+      // Key the dunning cadence on a STABLE identity, so the same customer
+      // does not get two independent escalation ladders depending on which
+      // shape their invoices happen to carry.
+      const step = await effectiveStep(invoiceCustomer?.id ?? (invoice as any).customer ?? '', daysOverdue);
       if (step) {
         // EU Directive 2011/7/EU: B2B is entitled to statutory interest +
         // €40 recovery fee. Disclosure required on firm/final steps.
@@ -348,7 +367,10 @@ export default function InvoiceDetailScreen() {
         const rendered = renderReminder({
           step,
           locale: language,
-          customer: invoice.customer,
+          // This string is the greeting in the reminder EMAIL the customer
+          // reads. `invoice.customer` is an id on converted quotes, so this
+          // would have opened "Hallo c-1787349342347".
+          customer: invoiceCustomerName,
           ref: invoice.id,
           amount: formatCurrency(invoice.amount, country),
           days: daysOverdue,
@@ -532,7 +554,9 @@ export default function InvoiceDetailScreen() {
       sellerContactName: (businessProfile as any)?.businessName,
       sellerPhone: (businessProfile as any)?.phone,
       sellerEmail: (businessProfile as any)?.email,
-      buyerName: invoice.customer ?? '',
+      // The buyer's legal name on a structured e-invoice — an id here is a
+      // rejected submission, not a cosmetic slip.
+      buyerName: invoiceCustomerName,
       buyerAddress: (invoice as any).customerAddress ?? '',
       // Was `(invoice as any).customerCity` / `.customerPostcode` — fields
       // that existed nowhere, so they were undefined on every invoice and the
@@ -827,8 +851,8 @@ export default function InvoiceDetailScreen() {
               it was rendering as the screen title. */}
           <Text style={styles.headerTitle}>
             {t('invoices.invoice', 'Invoice')}
-            {(invoice.reference || invoice.customerName || invoice.customer)
-              ? ` ${invoice.reference || invoice.customerName || invoice.customer}`
+            {(invoice.reference || invoice.customerName || invoiceCustomerName)
+              ? ` ${invoice.reference || invoice.customerName || invoiceCustomerName}`
               : ''}
           </Text>
         </View>
@@ -933,7 +957,7 @@ export default function InvoiceDetailScreen() {
             <Ionicons name="person" size={18} color={Palette.hermesOrange} />
             <Text style={styles.cardTitle}>{t('invoices.customer', 'Customer')}</Text>
           </View>
-          <Text style={styles.customerName}>{invoice.customer}</Text>
+          <Text style={styles.customerName}>{invoiceCustomerName}</Text>
           <Text style={styles.customerJob}>{invoice.job}</Text>
         </View>
 
@@ -957,8 +981,8 @@ export default function InvoiceDetailScreen() {
           <View style={styles.lineHeaderRow}>
             <Text style={[styles.lineHeaderText, { flex: 2 }]}>{t('invoices.description', 'Description')}</Text>
             <Text style={[styles.lineHeaderText, { width: 40, textAlign: 'center' }]}>{t('invoices.qty', 'Qty')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 70, textAlign: 'right' }]}>{t('invoices.unitPrice', 'Price')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 70, textAlign: 'right' }]}>{t('invoices.total', 'Total')}</Text>
+            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.unitPrice', 'Price')}</Text>
+            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.total', 'Total')}</Text>
           </View>
 
           {/* Items */}
@@ -980,7 +1004,7 @@ export default function InvoiceDetailScreen() {
                     keyboardType="numeric"
                   />
                   <TextInput
-                    style={[styles.lineInput, { width: 70, textAlign: 'right' }]}
+                    style={[styles.lineInput, { width: 82, textAlign: 'right' }]}
                     value={String(item.unitPrice)}
                     onChangeText={(v) => handleUpdateItem(item.id, 'unitPrice', v)}
                     keyboardType="numeric"
@@ -993,8 +1017,8 @@ export default function InvoiceDetailScreen() {
                 <>
                   <Text style={[styles.lineText, { flex: 2 }]} numberOfLines={2}>{item.description}</Text>
                   <Text style={[styles.lineTextMuted, { width: 40, textAlign: 'center' }]}>{item.quantity}</Text>
-                  <Text style={[styles.lineTextMuted, { width: 70, textAlign: 'right' }]}>{formatCurrency(item.unitPrice, country)}</Text>
-                  <Text style={[styles.lineText, { width: 70, textAlign: 'right' }]}>{formatCurrency(item.quantity * item.unitPrice, country)}</Text>
+                  <Text style={[styles.lineTextMuted, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.unitPrice, country)}</Text>
+                  <Text style={[styles.lineText, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.quantity * item.unitPrice, country)}</Text>
                 </>
               )}
             </View>
@@ -1046,11 +1070,32 @@ export default function InvoiceDetailScreen() {
           ) : null}
         </View>
 
-        {/* Payment Methods */}
+        {/* Payment Methods.
+
+            This card and the "Connect Mollie" row in Actions below were two
+            controls for one thing, and the pair was worse than redundant: the
+            card led with a green shield and closed with "Secure via Mollie ·
+            PCI DSS compliant" while Mollie was NOT connected, so it promised a
+            checkout the customer cannot reach — and then the action list asked
+            for the same setup a screen-length away.
+
+            One place now. Not connected → this card says these are the methods
+            the customer WOULD get and carries the connect button itself, and
+            the Actions row is not rendered. Connected → the card is a factual
+            list and Actions offers "Create payment link", which is a different
+            action. */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackSuccess} />
-            <Text style={styles.cardTitle}>{t('invoices.offeredPaymentMethods', 'Payment methods')}</Text>
+            <Ionicons
+              name={mollieConnected ? 'shield-checkmark' : 'shield-outline'}
+              size={18}
+              color={mollieConnected ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary}
+            />
+            <Text style={styles.cardTitle}>
+              {mollieConnected
+                ? t('invoices.offeredPaymentMethods', 'Payment methods')
+                : t('invoices.paymentMethodsAvailable', 'Payment methods you could offer')}
+            </Text>
           </View>
           <View style={styles.paymentMethodList}>
             {paymentMethods.map((pm) => {
@@ -1096,12 +1141,22 @@ export default function InvoiceDetailScreen() {
               </Text>
             </View>
           )}
-          <View style={styles.securityNote}>
-            <Ionicons name="lock-closed" size={12} color={SemanticColors.textTertiary} />
-            <Text style={styles.securityNoteText}>
-              {t('invoices.secureVia', { defaultValue: 'Secure via {{provider}} · PCI DSS compliant', provider: country === 'UK' ? 'Stripe' : 'Mollie' })}
-            </Text>
-          </View>
+          {mollieConnected ? (
+            <View style={styles.securityNote}>
+              <Ionicons name="lock-closed" size={12} color={SemanticColors.textTertiary} />
+              <Text style={styles.securityNoteText}>
+                {t('invoices.secureVia', { defaultValue: 'Secure via {{provider}} · PCI DSS compliant', provider: country === 'UK' ? 'Stripe' : 'Mollie' })}
+              </Text>
+            </View>
+          ) : (
+            <ActionRow
+              icon="card-outline"
+              label={t('invoices.connectMollie', 'Connect Mollie')}
+              onPress={() => router.push('/(modals)/mollie' as any)}
+              accent
+              border
+            />
+          )}
         </View>
 
         {/* Actions */}
@@ -1115,16 +1170,31 @@ export default function InvoiceDetailScreen() {
             label={t('invoices.viewSharePdf', 'View & share PDF')}
             onPress={handleViewPdf}
           />
-          <ActionRow
-            icon="card-outline"
-            label={mollieConnected ? t('invoices.createPaymentLink', 'Create payment link') : t('invoices.connectMollie', 'Connect Mollie')}
-            onPress={() => mollieConnected ? handleCreatePayment() : router.push('/(modals)/mollie' as any)}
-            border
-          />
+          {/* Only when connected — the un-connected case lives in the payment
+              methods card above, so the contractor is asked once. */}
+          {mollieConnected && (
+            <ActionRow
+              icon="card-outline"
+              label={t('invoices.createPaymentLink', 'Create payment link')}
+              onPress={handleCreatePayment}
+              border
+            />
+          )}
+          {/* Moneybird is DUTCH bookkeeping software. Offering it by name as
+              the only export route sent a German Handwerksbetrieb to a Dutch
+              tool's OAuth screen — the same market leak as the "(NL)" permits.
+              `getProvidersForCountry` already exists and business-settings
+              already renders it, so an unconnected contractor goes there and
+              sees DATEV / lexoffice / sevDesk in DE, Pennylane in FR, and so
+              on. Once they HAVE connected Moneybird, naming it is correct. */}
           <ActionRow
             icon="cloud-upload-outline"
-            label={t('invoices.exportMoneybird', 'Export to Moneybird')}
-            onPress={() => moneybirdConnected ? handleExportMoneybird() : router.push('/(modals)/moneybird' as any)}
+            label={moneybirdConnected
+              ? t('invoices.exportMoneybird', 'Export to Moneybird')
+              : t('invoices.connectAccounting', 'Connect accounting')}
+            onPress={() => moneybirdConnected
+              ? handleExportMoneybird()
+              : router.push('/(modals)/business-settings' as any)}
             border
           />
           {/* R289: FR Factur-X button removed until proper FacturXInvoice
@@ -1561,7 +1631,12 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.tinyFamily,
     color: SemanticColors.textTertiary,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    // German "STÜCKPREIS" is 10 characters; at 0.5 letter-spacing it did not
+    // fit the 70pt money column and RN broke it INSIDE the word
+    // ("STÜCKPREI / S"). learnings #113: fix the width, not the font — a
+    // single word longer than its line box breaks at any font size. Columns
+    // widened to 82 and the spacing trimmed.
+    letterSpacing: 0.2,
   },
   lineItemRow: {
     flexDirection: 'row',

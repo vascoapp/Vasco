@@ -9,8 +9,8 @@ import { PropsWithChildren, createContext, useCallback, useContext, useEffect, u
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Domain types
-import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate } from '../domain/business';
-import { Customer } from '../domain/customers';
+import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, grossFromNet } from '../domain/business';
+import { Customer, findDocumentCustomer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
 import { Invoice, Quote } from '../domain/documents';
@@ -770,6 +770,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               '@vasco_jobs', '@vasco_invoices', '@vasco_quotes',
               '@vasco_customers', '@vasco_projects', '@vasco_decision_trackers',
               '@vasco_business_profile', '@vasco_leads', '@vasco_workers',
+              '@vasco_line_items',
             ]);
             await AsyncStorage.setItem('@vasco_seed_version', SEED_VERSION);
           } else {
@@ -786,6 +787,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed) && parsed.length > 0) setter(parsed);
               }
+            }
+            // Line items are keyed by document number, so they hydrate like
+            // businessProfile (an object) rather than the array pairs above.
+            // They were the ONE document store that was neither persisted nor
+            // hydrated: a quote the contractor created kept its `amount` across
+            // a restart but lost every line, so its Positionen table rendered
+            // empty and the screen recomputed subtotal/VAT/total from those
+            // zero lines — a saved quote reopened as € 0,00.
+            const liRaw = await AsyncStorage.getItem('@vasco_line_items');
+            if (liRaw) {
+              try {
+                const liParsed = JSON.parse(liRaw);
+                if (liParsed && typeof liParsed === 'object' && !Array.isArray(liParsed)
+                    && Object.keys(liParsed).length > 0) {
+                  setLineItems(liParsed);
+                }
+              } catch {}
             }
             // Hydrate business profile (non-array)
             const bpRaw = await AsyncStorage.getItem('@vasco_business_profile');
@@ -824,6 +842,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       AsyncStorage.setItem('@vasco_customers', JSON.stringify(customers)).catch(() => {});
     }
   }, [customers, persistReady]);
+  useEffect(() => {
+    if (useSeedData && persistReady) {
+      AsyncStorage.setItem('@vasco_line_items', JSON.stringify(lineItems)).catch(() => {});
+    }
+  }, [lineItems, persistReady]);
   useEffect(() => {
     if (useSeedData && persistReady) {
       AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
@@ -1442,13 +1465,24 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         // ML prefill: if the caller didn't supply estimated_duration, ask the
         // predictor. Non-blocking so the optimistic row already rendered.
+        //
+        // Duration ONLY. `suggestedPriceLow` used to be stamped into
+        // `quotedAmount`, so a job created from a bare title came out priced —
+        // €198 for "Heizungswartung" that nobody had quoted. quotedAmount means
+        // "what the customer was quoted": it is read by the margin and
+        // cost-variance generators, the "omzet wacht op facturatie" nudge, the
+        // customer's spend, project P&L, and it prefills the invoice amount. A
+        // guess must not enter that chain — and this guess came from
+        // jobPrefillService's own invented LABOR_RATE table, the same thing
+        // TRADE_PRICEBOOK was demo-gated for (learnings #103). Hours are a
+        // scheduling default and stay; the price does not.
         if (!newJob.estimatedDuration && newJob.trade) {
           import('../services/jobPrefillService').then(async (mod) => {
             try {
               const pref = await mod.prefillJob({ trade: newJob.trade as string, title });
               setJobs((prev) => prev.map((j) =>
                 j.id === tempId && !j.estimatedDuration
-                  ? { ...j, estimatedDuration: pref.suggestedHours, quotedAmount: j.quotedAmount ?? pref.suggestedPriceLow }
+                  ? { ...j, estimatedDuration: pref.suggestedHours }
                   : j,
               ));
             } catch {}
@@ -1874,7 +1908,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // markInvoiceSent previously fired only the contractor-side push
         // reminder, no draft for the customer). Approve → opens Share sheet.
         if (invoice) {
-          const customerRow = customers.find((c) => c.id === invoice.customer);
+          const customerRow = findDocumentCustomer(customers, invoice);
           import('../services/aiActionQueueService').then(({ queueInvoiceSentNotice }) =>
             queueInvoiceSentNotice({
               invoiceId: id,
@@ -1987,7 +2021,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // catchup, but firing here gives instant feedback for contractors
         // watching the app when a payment lands.
         if (paidInv) {
-          const customerRow = customers.find((c) => c.id === paidInv.customer);
+          const customerRow = findDocumentCustomer(customers, paidInv);
           import('../services/aiActionQueueService').then(({ queuePaymentReceivedThanks }) =>
             queuePaymentReceivedThanks({
               invoiceId: id,
@@ -2012,9 +2046,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
 
         const docNumber = await nextDocumentNumber('quote');
+        // `customer` arrives as a customer ID whenever the caller knows one
+        // (R13.2, so the quote can be linked back) and as a display string
+        // otherwise. Quote has BOTH fields — `customer` is what every screen
+        // RENDERS, `customerId` is the FK — and stuffing the id into the
+        // display slot put a raw "c-1787349342347" on the quote→invoice
+        // screen where the customer's name belongs. Split them here, once,
+        // so no display site has to know. (`app/quotes/[id].tsx` had already
+        // grown its own private resolver for exactly this — R14.1.)
+        const matchedCustomer = customers.find((c) => c.id === customer);
         const newQuote: Quote = {
           id: docNumber,
-          customer,
+          customer: matchedCustomer?.name ?? customer,
+          customerId: matchedCustomer?.id,
           job,
           amount: total,
           status: 'draft',
@@ -2039,6 +2083,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             doc_type: 'quote' as const,
             status: 'draft' as const,
             document_number: docNumber,
+            // The FK reads the ID we were handed, never the display name.
             customer_id: isUuid(customer) ? customer : null,
             job_id: isUuid(job) ? job : null,
             total_amount: total,
@@ -2128,12 +2173,24 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
 
+        // `Quote.amount` is the NET sum of its line items; `Invoice.amount` is
+        // GROSS everywhere in this app (see addInvoiceFromJob, which grosses up
+        // at the profile rate, and the note in memory/job-to-invoice-handoff).
+        // Copying the quote's number straight across made this — the most
+        // travelled of the three invoice-creating paths — store NET, so an
+        // invoice whose own detail screen read "126,14 €" contributed 106,00 €
+        // to UMSATZ, and a contractor billing from quotes under-reported
+        // revenue by exactly the VAT while one billing from jobs reported
+        // gross. One field, two units, summed together in the same KPI.
+        const quoteVatRate = getEffectiveVatRate(businessProfile);
+        const grossAmount = grossFromNet(sourceQuote.amount, quoteVatRate);
+
         // R287: validator-layer duplicate-invoice protection. Catches "same
         // customer + same amount within 7 days" — a frequent source of
         // double-billing, especially when a contractor accidentally taps
         // "Create invoice" twice on the same quote.
         const invValidation = validateInvoiceBeforeCreate(
-          { customer: sourceQuote.customer, amount: sourceQuote.amount, jobId: sourceQuote.job, dueDate: dueDate.toISOString() },
+          { customer: sourceQuote.customer, amount: grossAmount, jobId: sourceQuote.job, dueDate: dueDate.toISOString() },
           invoices,
           jobs,
         );
@@ -2149,9 +2206,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         const newInvoice: Invoice = {
           id: docNumber,
+          // Both fields carry over — Invoice has the same display/FK pair, and
+          // the Finanzen list renders `.customer` raw.
           customer: sourceQuote.customer,
+          customerId: sourceQuote.customerId,
           job: sourceQuote.job,
-          amount: sourceQuote.amount,
+          amount: grossAmount,
           status: 'draft',
           dueInDays: 14,
         };
@@ -2180,7 +2240,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // .job are FE display strings when the quote was created via the
           // empty-state path. customer_id / job_id are uuid FK columns; the
           // BE rejected and the converted invoice was lost.
-          const safeCustomerId = isUuid(sourceQuote.customer) ? sourceQuote.customer : null;
+          // Prefer the FK field; `customer` is the display name now, so
+          // testing it for a uuid would drop the link on every converted quote.
+          const quoteCustomerRef = sourceQuote.customerId ?? sourceQuote.customer;
+          const safeCustomerId = isUuid(quoteCustomerRef) ? quoteCustomerRef : null;
           const safeJobId = isUuid(sourceQuote.job) ? sourceQuote.job : null;
           try {
             const row = await createDocument({
@@ -2189,7 +2252,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               document_number: docNumber,
               customer_id: safeCustomerId,
               job_id: safeJobId,
-              total_amount: sourceQuote.amount,
+              total_amount: grossAmount,
               due_date: dueDate.toISOString(),
               // documents has `source_document_id` (uuid FK), NOT `source_quote_id`
               // — the wrong name made createDocument throw "column does not exist",
@@ -2231,7 +2294,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   document_number: docNumber,
                   customer_id: safeCustomerId,
                   job_id: safeJobId,
-                  total_amount: sourceQuote.amount,
+                  total_amount: grossAmount,
                   due_date: dueDate.toISOString(),
                   source_document_id: isUuid(sourceQuoteId) ? sourceQuoteId : null,
                 },
@@ -2338,7 +2401,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (updates.status === 'sent' && prev?.status !== 'sent') {
           const current = prev ? { ...prev, ...updates } : null;
           if (current) {
-            const cust = customers.find((c: any) => c.id === current.customer || c.name === current.customer);
+            const cust = findDocumentCustomer(customers, current);
             Promise.all([
               import('../services/lateRiskAlertGenerator'),
               import('../services/aiActionQueueService'),
@@ -2766,7 +2829,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
         } catch {}
         const inv = invoices.find((i) => i.id === invoiceId);
-        const cust = customers.find((c) => c.id === inv?.customer);
+        const cust = findDocumentCustomer(customers, inv);
         const invLineItems = (lineItems[invoiceId] ?? []) as QuoteLineItem[];
         const payload = inv
           ? {
@@ -2876,7 +2939,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // Kleinunternehmer, 19% DE, 21% NL — never the NL constant).
         const amount = billing.source === 'quote'
           ? billing.agreedAmount
-          : Math.round(billing.netAmount * (1 + jobVatRate / 100) * 100) / 100;
+          : grossFromNet(billing.netAmount, jobVatRate);
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
@@ -3699,7 +3762,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // it returns a confident low probability, enqueue an EVE nudge.
           // Fire-and-forget; the queue generator is null-safe on cold-start.
           if (quote) {
-            const cust = customers.find((c: any) => c.id === quote.customer);
+            const cust = findDocumentCustomer(customers, quote);
             Promise.all([
               import('../services/lowWinAlertGenerator'),
               import('../services/aiActionQueueService'),
@@ -3879,7 +3942,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // insert + BE persist via offlineWriteQueue + temp-id remap.
           // Stage 2: skip the auto-create when an existing lead was
           // already flipped above — avoids duplicate pipeline rows.
-          const customer = !sourceLeadReject ? customers.find((c) => c.id === quote.customer) : null;
+          const customer = !sourceLeadReject ? findDocumentCustomer(customers, quote) : null;
           if (customer) {
             const tempId = `lead-rej-${Date.now()}`;
             const now = new Date().toISOString();

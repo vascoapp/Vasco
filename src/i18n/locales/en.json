@@ -551,7 +551,11 @@
     },
     "advanceStatus": "Advance status",
     "invoiceThisJobDesc": "Creates a draft invoice from this job, with what the job recorded, and marks the job invoiced.",
-    "fromQuoteTitle": "Job from quote {{ref}}"
+    "fromQuoteTitle": "Job from quote {{ref}}",
+    "selectCustomer": "Select customer",
+    "noCustomer": "No customer",
+    "statusLead": "Lead",
+    "notScheduled": "Not scheduled"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",
@@ -899,7 +903,9 @@
     "nothingToBill": "Nothing to invoice yet for \"{{job}}\": no agreed price, no hours logged and no materials recorded.",
     "noHourlyRate": "\"{{job}}\" has {{hours}} h logged, but there is no hourly rate to bill them at. Add an hourly item to your price list first.",
     "workRecordNote": "From the job: {{hours}} h logged, {{materials}} materials used{{completed}}.",
-    "workRecordCompleted": ", completed {{date}}"
+    "workRecordCompleted": ", completed {{date}}",
+    "paymentMethodsAvailable": "Payment methods you could offer",
+    "connectAccounting": "Connect accounting"
   },
   "expenses": {
     "title": "Expenses",
@@ -1799,7 +1805,6 @@
     "lineCount": "{{count}} lines",
     "pickFromPricebook": "Pick services from your pricebook",
     "forgotten": "Forgot something?",
-    "bottomSummary": "{{count}} services · {{total}} (standard)",
     "reviewQuote": "Review quote",
     "checkQuote": "Check quote",
     "vascoAdvice": "Vasco advice",
@@ -1917,7 +1922,9 @@
     "resetPackages": "Restore defaults",
     "sendPackage": "Send {{name}}",
     "linesForPackage": "Lines ({{name}})",
-    "quoteTitle": "Quote"
+    "quoteTitle": "Quote",
+    "bottomSummary_one": "{{count}} service · {{total}} (standard)",
+    "bottomSummary_other": "{{count}} services · {{total}} (standard)"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -2011,7 +2018,8 @@
     "noCustomerTitle": "No customer attached",
     "noCustomerBody": "This quote will be saved without a customer link. You can attach one from the customer list later.",
     "sendAnyway": "Send anyway",
-    "zeroAmount": "Quote total must be greater than zero."
+    "zeroAmount": "Quote total must be greater than zero.",
+    "jobLabelMore": "{{first}} +{{count}}"
   },
   "project": {
     "changeStatus": "Change status",
@@ -2188,7 +2196,12 @@
     "createCampaign": "Create campaign",
     "leadGeneration": "Lead generation",
     "leadsAvailable_one": "{{count}} lead available",
-    "leadsAvailable_other": "{{count}} leads available"
+    "leadsAvailable_other": "{{count}} leads available",
+    "einvoiceFormat": "{{format}} format",
+    "pendingDecisionsCount_one": "{{count}} pending decision",
+    "pendingDecisionsCount_other": "{{count}} pending decisions",
+    "daysOverdueCount_one": "{{count}} day overdue",
+    "daysOverdueCount_other": "{{count}} days overdue"
   },
   "profile": {
     "title": "Profile",
@@ -6846,5 +6859,117 @@
         "impact": "Affects sanding prep and number of coats"
       }
     }
+  },
+  "quoteCatalog": {
+    "service": {
+      "plb-1": "Leak repair",
+      "plb-2": "Boiler service",
+      "plb-3": "Radiator installation",
+      "plb-4": "Bathroom fittings",
+      "plb-5": "Drain unblocking",
+      "plb-6": "Water pipe installation",
+      "elc-1": "Consumer unit replacement",
+      "elc-2": "Socket installation",
+      "elc-3": "Cable pulling",
+      "elc-4": "Lighting installation",
+      "elc-5": "Periodic inspection",
+      "elc-6": "EV charger installation",
+      "gas-1": "Gas pipe inspection",
+      "gas-2": "Heating installation",
+      "gas-3": "Heat pump installation",
+      "gas-4": "Underfloor heating",
+      "gas-5": "Gas leak detection",
+      "crp-1": "Window frame fitting",
+      "crp-2": "Dormer construction",
+      "crp-3": "Staircase renovation",
+      "crp-4": "Wood rot repair",
+      "crp-5": "Floor laying",
+      "gen-1": "Renovation — labour",
+      "gen-2": "Demolition",
+      "gen-3": "Plastering",
+      "gen-4": "Tiling",
+      "gen-5": "Transport & disposal"
+    },
+    "unit": {
+      "hour": "hr",
+      "piece": "piece",
+      "metre": "m",
+      "sqm": "m²",
+      "point": "point",
+      "trip": "trip"
+    },
+    "consumable": {
+      "maskingTape": "Masking tape",
+      "undercoat": "Undercoat",
+      "sandpaper": "Sandpaper",
+      "primer": "Primer",
+      "ptfeTape": "PTFE tape",
+      "sealingWasher": "Sealing washer",
+      "solder": "Solder",
+      "couplings": "Couplings",
+      "heatShrink": "Heat-shrink tubing",
+      "wireConnectors": "Wire connectors",
+      "cableTrunking": "Cable trunking",
+      "fuses": "Fuses",
+      "gasLeakDetector": "Gas leak detector",
+      "sealingPaste": "Sealing paste",
+      "oRings": "O-rings",
+      "copperPipe": "Copper pipe",
+      "screws": "Screws",
+      "woodGlue": "Wood glue",
+      "woodStain": "Wood stain",
+      "leadFlashing": "Lead flashing",
+      "ridgeTiles": "Ridge tiles",
+      "ridgeClips": "Ridge clips",
+      "roofingFelt": "Roofing felt",
+      "tileSpacers": "Tile spacers",
+      "grout": "Grout",
+      "caulkingGun": "Caulking gun",
+      "tileAdhesive": "Tile adhesive",
+      "cornerBeads": "Corner beads",
+      "reinforcingMesh": "Reinforcing mesh",
+      "bondingPrimer": "Bonding primer",
+      "plasterMesh": "Plaster mesh",
+      "underlay": "Underlay",
+      "skirting": "Skirting boards",
+      "transitionProfiles": "Transition profiles",
+      "edgeStrips": "Edge strips",
+      "vapourBarrier": "Vapour barrier",
+      "tape": "Tape",
+      "insulationAnchors": "Insulation anchors",
+      "sealingTape": "Sealing tape",
+      "mountingRail": "Mounting rail",
+      "endClamps": "End clamps",
+      "mc4Connectors": "MC4 connectors",
+      "glazingRubber": "Glazing rubber",
+      "sealant": "Sealant",
+      "glazingBeads": "Glazing beads",
+      "spacers": "Spacers",
+      "gravel": "Gravel",
+      "weedMembrane": "Weed membrane",
+      "edging": "Edging",
+      "jointingSand": "Jointing sand",
+      "wallPlugs": "Wall plugs",
+      "dustSheet": "Dust sheet",
+      "siliconeSealant": "Silicone sealant"
+    }
+  },
+  "guidance": {
+    "quotesPipeline": "Draft quotes that go out quickly are accepted more often.",
+    "quoteScope": "A clear scope and materials list make a quote easier to accept.",
+    "quotePricing": "Vasco compares your price with earlier quotes for this type of job.",
+    "quoteCustomer": "Vasco tracks this customer's payment behaviour automatically.",
+    "invoiceFast": "Invoice within 24 hours of handover and you get paid sooner.",
+    "invoicePhotos": "Add photos of the finished work — visual proof helps customers pay.",
+    "invoiceCustomer": "Vasco checks this customer's payment behaviour automatically.",
+    "crewOverview": "Vasco tracks every crew. Crews falling behind show up here first.",
+    "crewBriefing": "A daily briefing keeps crews aligned and cuts rework.",
+    "dailyReport": "Filling in daily reports consistently sharpens Vasco's occupancy and progress forecasts.",
+    "toolboxTalks": "Daily toolbox talks lower incident rates. Schedule one for every crew.",
+    "inspectionPhotos": "Photo documentation at every inspection cuts rework.",
+    "complianceMonitor": "Vasco monitors certificates and permits automatically. Items in red need action now.",
+    "workerCerts": "Workers with current certifications are safer on site. Keep renewals up to date.",
+    "nearMiss": "Every report sharpens the safety picture. Near-misses are the cheapest warning you get.",
+    "closeDefect": "Defects closed early cost less than ones left open."
   }
 }

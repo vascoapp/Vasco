@@ -359,7 +359,8 @@ export default function ProjectDetailScreen() {
                   <View style={[styles.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
                   <View style={{ flex: 1, padding: 12 }}>
                     <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
-                    <Text style={styles.jobMeta}>{jobStatusLabel(job.status)} · {formatCurrency(job.quotedAmount ?? 0, country)}</Text>
+                    {/* Unpriced ≠ €0 — same as the customer screen. */}
+                    <Text style={styles.jobMeta}>{[jobStatusLabel(job.status), job.quotedAmount ? formatCurrency(job.quotedAmount, country) : null].filter(Boolean).join(' · ')}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} style={{ marginRight: 12 }} />
                 </Pressable>

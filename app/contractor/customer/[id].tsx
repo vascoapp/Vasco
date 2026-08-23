@@ -278,7 +278,13 @@ export default function CustomerDetailScreen() {
         {/* Quick actions */}
         <FadeIn delay={50}>
           <View style={s.actions}>
-            <Pressable style={s.actionBtn} onPress={() => router.push('/contractor/tiered-quote' as any)}>
+            {/* Carry the customer through — customer-crm.tsx already does, and
+                tiered-quote reads `customerId`. Without it the quote opened
+                from a customer had no customer on it. */}
+            <Pressable
+              style={s.actionBtn}
+              onPress={() => router.push(`/contractor/tiered-quote?customerId=${encodeURIComponent(customer.id)}&customerName=${encodeURIComponent(customer.name)}` as any)}
+            >
               <Ionicons name="document-text-outline" size={20} color={Palette.hermesOrange} />
               <Text style={s.actionBtnText}>{t('customer.quote', 'Offerte')}</Text>
             </Pressable>
@@ -302,7 +308,10 @@ export default function CustomerDetailScreen() {
                 <View style={[s.accent, { backgroundColor: job.status === 'completed' ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]} />
                 <View style={s.cardContent}>
                   <Text style={s.cardTitle} numberOfLines={1}>{job.title}</Text>
-                  <Text style={s.cardMeta}>{jobStatusLabel(String(job.status))} · {formatCurrency(job.quotedAmount ?? 0, country)}</Text>
+                  {/* An unpriced job is not a €0 job. werk.tsx's own job rows
+                      already omit the amount when there isn't one; this said
+                      "Anfrage · 0,00 €". */}
+                  <Text style={s.cardMeta}>{[jobStatusLabel(String(job.status)), job.quotedAmount ? formatCurrency(job.quotedAmount, country) : null].filter(Boolean).join(' · ')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
@@ -448,7 +457,10 @@ const s = StyleSheet.create({
     maxWidth: 240,
   },
   smartReplyChipText: {
-    flex: 1,
+    // The chip sits in a horizontal ScrollView, so its row has no defined
+    // width — `flex: 1` here collapsed the label to zero and rendered an
+    // icon-only pill. Shrink instead; `maxWidth` on the chip caps the width.
+    flexShrink: 1,
     fontSize: 12,
     fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textPrimary,

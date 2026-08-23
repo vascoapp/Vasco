@@ -32,6 +32,7 @@ import { emitBusinessEvent } from '../../src/intelligence/dataCollector';
 import { recordMetricSnapshot } from '../../src/intelligence/learningStorage';
 import { getCurrentUserId } from '../../src/lib/currentUser';
 import { localDateKey } from '../../src/utils/dateKey';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 
 // =============================================================================
 // TYPES
@@ -133,36 +134,29 @@ export default function TimesheetScreen() {
   const monthEntries = entries.filter(e => new Date(e.date) >= monthStart);
   const monthHours = monthEntries.reduce((sum, e) => sum + e.totalHours, 0);
 
-  const handleClockIn = () => {
-
-    if (activeJobs.length === 0) {
-      timer.clockIn();
-      return;
+  // Was an `Alert.alert` carrying up to SEVEN buttons — five jobs, "without
+  // job", "cancel". Android's Alert supports at most THREE and silently drops
+  // the rest, so an Android contractor with three or more active jobs could not
+  // reach most of them, nor necessarily "cancel". The `.slice(0, 5)` truncated
+  // on iOS too, with nothing on screen saying so. This is the same Alert-as-menu
+  // shape already fixed in drag-schedule; DKMenu is the sanctioned one-of-N
+  // picker (CLAUDE.md) — a JS popover that scrolls, shows every option, and
+  // renders identically on Android.
+  const clockInToJob = async (job: { id: string; title: string }) => {
+    await timer.clockIn(job.id, job.title);
+    // R25: queue on_my_way customer-facing notice (closes R3 deferral).
+    const fullJob: any = jobs.find((j: any) => j.id === job.id);
+    if (fullJob?.customerId) {
+      const cust = customers.find((c: any) => c.id === fullJob.customerId);
+      const { queueOnMyWay } = await import('../../src/services/aiActionQueueService');
+      queueOnMyWay({
+        jobId: job.id,
+        jobTitle: job.title,
+        customerId: fullJob.customerId,
+        customerName: cust?.name,
+        customerPhone: cust?.phone,
+      }).catch(() => {});
     }
-
-    Alert.alert(t('timesheet.chooseJob', 'Klus kiezen'), t('timesheet.whichJob', 'Voor welke klus ga je werken?'), [
-      ...activeJobs.slice(0, 5).map(job => ({
-        text: job.title,
-        onPress: async () => {
-          await timer.clockIn(job.id, job.title);
-          // R25: queue on_my_way customer-facing notice (closes R3 deferral).
-          const fullJob: any = jobs.find((j: any) => j.id === job.id);
-          if (fullJob?.customerId) {
-            const cust = customers.find((c: any) => c.id === fullJob.customerId);
-            const { queueOnMyWay } = await import('../../src/services/aiActionQueueService');
-            queueOnMyWay({
-              jobId: job.id,
-              jobTitle: job.title,
-              customerId: fullJob.customerId,
-              customerName: cust?.name,
-              customerPhone: cust?.phone,
-            }).catch(() => {});
-          }
-        },
-      })),
-      { text: t('timesheet.withoutJob', 'Zonder klus'), onPress: () => { timer.clockIn(); } },
-      { text: t('common.cancel', 'Annuleren'), style: 'cancel' as const },
-    ]);
   };
 
   const handleClockOut = async () => {
@@ -248,23 +242,49 @@ export default function TimesheetScreen() {
       {/* Clock In/Out */}
       <FadeIn delay={0} duration={400}>
       <View style={styles.clockSection}>
-        <Pressable
-          style={[styles.clockButton, clockedIn && styles.clockButtonActive]}
-          onPress={clockedIn ? handleClockOut : handleClockIn}
-        >
-          <Ionicons name={clockedIn ? 'stop-circle' : 'play-circle'} size={28} color={Palette.white} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.clockButtonTitle}>
-              {clockedIn ? t('timesheet.clockOut', 'Uitklokken') : t('timesheet.clockIn', 'Inklokken')}
-            </Text>
-            {clockedIn && clockInTime && (
-              <Text style={styles.clockButtonSub}>
-                {t('timesheet.startedAt', 'Gestart om')} {clockInTime}{clockInJobTitle ? ` · ${clockInJobTitle}` : ''}
-              </Text>
-            )}
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={Palette.white} />
-        </Pressable>
+        {(() => {
+          const button = (onPress: () => void) => (
+            <Pressable
+              style={[styles.clockButton, clockedIn && styles.clockButtonActive]}
+              onPress={onPress}
+            >
+              <Ionicons name={clockedIn ? 'stop-circle' : 'play-circle'} size={28} color={Palette.white} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.clockButtonTitle}>
+                  {clockedIn ? t('timesheet.clockOut', 'Uitklokken') : t('timesheet.clockIn', 'Inklokken')}
+                </Text>
+                {clockedIn && clockInTime && (
+                  <Text style={styles.clockButtonSub}>
+                    {t('timesheet.startedAt', 'Gestart om')} {clockInTime}{clockInJobTitle ? ` · ${clockInJobTitle}` : ''}
+                  </Text>
+                )}
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Palette.white} />
+            </Pressable>
+          );
+          // Clocked in, or nothing to attribute to → the button just acts.
+          if (clockedIn) return button(handleClockOut);
+          if (activeJobs.length === 0) return button(() => { timer.clockIn(); });
+          return (
+            <DKMenu
+              accessibilityLabel={t('timesheet.chooseJob', 'Choose job')}
+              items={[
+                ...activeJobs.map((job) => ({
+                  key: job.id,
+                  label: job.title,
+                  onPress: () => { clockInToJob(job); },
+                })),
+                {
+                  key: '__none__',
+                  label: t('timesheet.withoutJob', 'Without job'),
+                  emphasis: true,
+                  onPress: () => { timer.clockIn(); },
+                },
+              ]}
+              renderAnchor={(open) => button(open)}
+            />
+          );
+        })()}
       </View>
       </FadeIn>
 

@@ -262,7 +262,13 @@ function RootLayoutNav() {
       });
       return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopSignatures(); stopBackgroundJobScheduler(); pushSub.remove(); };
     }
-  }, [isAuthenticated, user?.id]);
+    // `user.country` is in the deps because the saved profile merges into the
+    // user AFTER login resolves (AuthContext) — keyed on id alone, the
+    // scheduler captured the pre-merge country for the whole session and every
+    // country-dependent queue card (permits, e-invoice format, late-fee rules)
+    // was generated for the wrong jurisdiction. Editing the country in the
+    // profile has the same problem.
+  }, [isAuthenticated, user?.id, user?.country]);
 
   // R66 round 49: drop a Sentry breadcrumb on every route change. When a
   // production crash arrives in week 1, the trail shows the contractor's

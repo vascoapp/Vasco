@@ -154,7 +154,7 @@ function ComplianceScoreRing({ score, size = 100 }: { score: number | null; size
     <View style={[styles.scoreRing, { width: size, height: size }]}>
       <View style={[styles.scoreRingInner, { borderColor: getScoreColor() }]}>
         <Text style={[styles.scoreValue, { color: getScoreColor() }]}>{score === null ? '—' : score}</Text>
-        <Text style={styles.scoreLabel}>{getScoreLabel()}</Text>
+        <Text style={styles.scoreLabel} numberOfLines={2}>{getScoreLabel()}</Text>
       </View>
     </View>
   );
@@ -925,6 +925,12 @@ const styles = StyleSheet.create({
   scoreLabel: {
     fontSize: 10,
     color: SemanticColors.textTertiary,
+    // The label sits at the widest point of a CIRCLE, so it has less room than
+    // the card it is in. Unconstrained, German "Noch nichts erfasst" ran past
+    // the ring and was clipped by the border mid-word ("Noch nichts / rfasst").
+    // Cap it inside the chord and let it take a second line.
+    maxWidth: '78%',
+    textAlign: 'center',
   },
 
   // Blocked Banner

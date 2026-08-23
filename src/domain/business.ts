@@ -145,3 +145,23 @@ export function getVatExemptionNote(country: string | undefined, vatScheme: VatS
   }
   return null;
 }
+
+/**
+ * NET → GROSS, rounded to cents.
+ *
+ * `Invoice.amount` is GROSS everywhere in this app while `Quote.amount` is the
+ * NET sum of its line items, so every path that turns one into the other has to
+ * cross that boundary. Two of them did it with the same inline arithmetic and a
+ * third (`addInvoice`, the most travelled) did not do it at all — it copied the
+ * quote's net straight onto the invoice. The result was one field carrying two
+ * units: an invoice whose own detail screen read "126,14 €" contributed
+ * "106,00 €" to UMSATZ, and revenue summed quote-derived nets together with
+ * job-derived grosses.
+ *
+ * One helper so the conversion cannot drift again. A 0% rate (KOR /
+ * Kleinunternehmer) returns the net unchanged, which is correct: there is no
+ * VAT to add.
+ */
+export function grossFromNet(netAmount: number, vatRatePercent: number): number {
+  return Math.round(netAmount * (1 + vatRatePercent / 100) * 100) / 100;
+}

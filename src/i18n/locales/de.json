@@ -551,7 +551,11 @@
     },
     "advanceStatus": "Status weiterschalten",
     "invoiceThisJobDesc": "Erstellt aus diesem Auftrag einen Rechnungsentwurf mit dem, was erfasst wurde, und setzt den Auftrag auf berechnet.",
-    "fromQuoteTitle": "Auftrag aus Angebot {{ref}}"
+    "fromQuoteTitle": "Auftrag aus Angebot {{ref}}",
+    "selectCustomer": "Kunde auswählen",
+    "noCustomer": "Kein Kunde",
+    "statusLead": "Anfrage",
+    "notScheduled": "Nicht geplant"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
@@ -899,7 +903,9 @@
     "nothingToBill": "Für \"{{job}}\" gibt es noch nichts abzurechnen: kein vereinbarter Preis, keine erfassten Stunden und kein Material.",
     "noHourlyRate": "Für \"{{job}}\" sind {{hours}} Std. erfasst, aber es gibt keinen Stundensatz zur Abrechnung. Legen Sie zuerst eine Stundenposition in Ihrer Preisliste an.",
     "workRecordNote": "Aus dem Auftrag: {{hours}} Std. erfasst, {{materials}} Materialien verbraucht{{completed}}.",
-    "workRecordCompleted": ", abgeschlossen am {{date}}"
+    "workRecordCompleted": ", abgeschlossen am {{date}}",
+    "paymentMethodsAvailable": "Zahlungsmethoden, die Sie anbieten könnten",
+    "connectAccounting": "Buchhaltung verbinden"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1799,7 +1805,6 @@
     "lineCount": "{{count}} Positionen",
     "pickFromPricebook": "Leistungen aus Ihrer Preisliste wählen",
     "forgotten": "Etwas vergessen?",
-    "bottomSummary": "{{count}} Leistungen · {{total}} (Standard)",
     "reviewQuote": "Angebot prüfen",
     "checkQuote": "Angebot kontrollieren",
     "vascoAdvice": "Vasco-Empfehlung",
@@ -1917,7 +1922,9 @@
     "resetPackages": "Standard wiederherstellen",
     "sendPackage": "{{name}} senden",
     "linesForPackage": "Positionen ({{name}})",
-    "quoteTitle": "Angebot"
+    "quoteTitle": "Angebot",
+    "bottomSummary_one": "{{count}} Leistung · {{total}} (Standard)",
+    "bottomSummary_other": "{{count}} Leistungen · {{total}} (Standard)"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -2011,7 +2018,8 @@
     "noCustomerTitle": "Kein Kunde verknüpft",
     "noCustomerBody": "Dieses Angebot wird ohne Kundenverknüpfung gespeichert. Sie können später einen Kunden aus der Kundenliste verknüpfen.",
     "sendAnyway": "Trotzdem senden",
-    "zeroAmount": "Die Angebotssumme muss größer als null sein."
+    "zeroAmount": "Die Angebotssumme muss größer als null sein.",
+    "jobLabelMore": "{{first}} +{{count}}"
   },
   "project": {
     "changeStatus": "Status ändern",
@@ -2188,7 +2196,12 @@
     "createCampaign": "Kampagne erstellen",
     "leadGeneration": "Lead-Generierung",
     "leadsAvailable_one": "{{count}} Lead verfügbar",
-    "leadsAvailable_other": "{{count}} Leads verfügbar"
+    "leadsAvailable_other": "{{count}} Leads verfügbar",
+    "einvoiceFormat": "{{format}}-Format",
+    "pendingDecisionsCount_one": "{{count}} ausstehende Entscheidung",
+    "pendingDecisionsCount_other": "{{count}} ausstehende Entscheidungen",
+    "daysOverdueCount_one": "{{count}} Tag überfällig",
+    "daysOverdueCount_other": "{{count}} Tage überfällig"
   },
   "profile": {
     "title": "Profil",
@@ -6846,5 +6859,117 @@
         "impact": "Eine Wärmepumpe braucht 6–8 Wochen Vorlauf und eigene Planung"
       }
     }
+  },
+  "quoteCatalog": {
+    "service": {
+      "plb-1": "Leckage-Reparatur",
+      "plb-2": "Heizkessel-Wartung",
+      "plb-3": "Heizkörper montieren",
+      "plb-4": "Bad-Sanitärinstallation",
+      "plb-5": "Rohrreinigung",
+      "plb-6": "Wasserleitung verlegen",
+      "elc-1": "Verteilerkasten austauschen",
+      "elc-2": "Steckdose setzen",
+      "elc-3": "Kabel verlegen",
+      "elc-4": "Beleuchtungsinstallation",
+      "elc-5": "Wiederkehrende Prüfung",
+      "elc-6": "Wallbox-Installation",
+      "gas-1": "Gasleitungsprüfung",
+      "gas-2": "Heizungsinstallation",
+      "gas-3": "Wärmepumpe einbauen",
+      "gas-4": "Fußbodenheizung",
+      "gas-5": "Gasleckortung",
+      "crp-1": "Fensterrahmen einbauen",
+      "crp-2": "Gaube bauen",
+      "crp-3": "Treppensanierung",
+      "crp-4": "Holzfäule-Reparatur",
+      "crp-5": "Boden verlegen",
+      "gen-1": "Renovierung — Arbeitszeit",
+      "gen-2": "Abbrucharbeiten",
+      "gen-3": "Putzarbeiten",
+      "gen-4": "Fliesenarbeiten",
+      "gen-5": "Transport & Entsorgung"
+    },
+    "unit": {
+      "hour": "Std.",
+      "piece": "Stück",
+      "metre": "m",
+      "sqm": "m²",
+      "point": "Punkt",
+      "trip": "Fahrt"
+    },
+    "consumable": {
+      "maskingTape": "Kreppband",
+      "undercoat": "Grundierfarbe",
+      "sandpaper": "Schleifpapier",
+      "primer": "Primer",
+      "ptfeTape": "Teflonband",
+      "sealingWasher": "Dichtring",
+      "solder": "Lot",
+      "couplings": "Kupplungen",
+      "heatShrink": "Schrumpfschlauch",
+      "wireConnectors": "Verbindungsklemmen",
+      "cableTrunking": "Kabelkanal",
+      "fuses": "Sicherungen",
+      "gasLeakDetector": "Gaslecksuchspray",
+      "sealingPaste": "Dichtpaste",
+      "oRings": "O-Ringe",
+      "copperPipe": "Kupferrohr",
+      "screws": "Schrauben",
+      "woodGlue": "Holzleim",
+      "woodStain": "Beize",
+      "leadFlashing": "Bleianschlüsse",
+      "ridgeTiles": "Firstziegel",
+      "ridgeClips": "Firstklammern",
+      "roofingFelt": "Dachpappe",
+      "tileSpacers": "Fliesenkreuze",
+      "grout": "Fugenmörtel",
+      "caulkingGun": "Kartuschenpistole",
+      "tileAdhesive": "Fliesenkleber",
+      "cornerBeads": "Eckprofile",
+      "reinforcingMesh": "Armierungsgewebe",
+      "bondingPrimer": "Haftgrund",
+      "plasterMesh": "Putzgewebe",
+      "underlay": "Trittschalldämmung",
+      "skirting": "Sockelleisten",
+      "transitionProfiles": "Übergangsprofile",
+      "edgeStrips": "Randdämmstreifen",
+      "vapourBarrier": "Dampfbremsfolie",
+      "tape": "Klebeband",
+      "insulationAnchors": "Dämmstoffdübel",
+      "sealingTape": "Dichtband",
+      "mountingRail": "Montageschiene",
+      "endClamps": "Endklemmen",
+      "mc4Connectors": "MC4-Steckverbinder",
+      "glazingRubber": "Verglasungsgummi",
+      "sealant": "Dichtmasse",
+      "glazingBeads": "Glasleisten",
+      "spacers": "Abstandhalter",
+      "gravel": "Splitt",
+      "weedMembrane": "Unkrautvlies",
+      "edging": "Randbegrenzung",
+      "jointingSand": "Fugensand",
+      "wallPlugs": "Dübel",
+      "dustSheet": "Abdeckfolie",
+      "siliconeSealant": "Silikon"
+    }
+  },
+  "guidance": {
+    "quotesPipeline": "Angebotsentwürfe, die schnell rausgehen, werden häufiger angenommen.",
+    "quoteScope": "Ein klarer Leistungsumfang und eine Materialliste erleichtern die Zusage.",
+    "quotePricing": "Vasco vergleicht Ihren Preis mit früheren Angeboten für diese Art Auftrag.",
+    "quoteCustomer": "Vasco verfolgt das Zahlungsverhalten dieses Kunden automatisch.",
+    "invoiceFast": "Rechnen Sie innerhalb von 24 Stunden nach Übergabe ab — dann wird schneller gezahlt.",
+    "invoicePhotos": "Fügen Sie Fotos des Ergebnisses bei — ein sichtbarer Nachweis erleichtert die Zahlung.",
+    "invoiceCustomer": "Vasco prüft das Zahlungsverhalten dieses Kunden automatisch.",
+    "crewOverview": "Vasco verfolgt alle Kolonnen. Kolonnen im Rückstand erscheinen hier zuerst.",
+    "crewBriefing": "Ein tägliches Briefing hält die Kolonnen abgestimmt und senkt Nacharbeit.",
+    "dailyReport": "Konsequent ausgefüllte Tagesberichte schärfen Vascos Prognosen zu Auslastung und Fortschritt.",
+    "toolboxTalks": "Tägliche Sicherheitsunterweisungen senken die Zahl der Vorfälle. Planen Sie sie für jede Kolonne ein.",
+    "inspectionPhotos": "Fotodokumentation bei jeder Prüfung senkt die Nacharbeit.",
+    "complianceMonitor": "Vasco überwacht Zertifikate und Genehmigungen automatisch. Rot markierte Einträge erfordern sofortiges Handeln.",
+    "workerCerts": "Mitarbeitende mit gültigen Zertifikaten arbeiten sicherer. Halten Sie Verlängerungen aktuell.",
+    "nearMiss": "Jede Meldung schärft das Sicherheitsbild. Beinaheunfälle sind die günstigste Warnung, die Sie bekommen.",
+    "closeDefect": "Früh behobene Mängel kosten weniger als lange offene."
   }
 }

@@ -159,6 +159,13 @@ export function useVascoGuidance(role: UserRole, screen: ScreenContext): ScoredI
 
 interface InlineInsightData {
   icon: string;
+  /**
+   * `guidance.*` key. Present on every entry that a screen actually reaches;
+   * `message` below is the Dutch original, kept as the t() fallback.
+   * These render to CONTRACTORS and SITE LEADS in six markets and were Dutch
+   * literals, so a German Handwerker was being coached in Dutch.
+   */
+  messageKey?: string;
   message: string;
   actionLabel?: string;
   actionRoute?: string;
@@ -195,23 +202,26 @@ const INLINE_INSIGHTS: Record<string, InlineInsightData[]> = {
   ],
   // --- WORKFLOW: Quote creation ---
   'contractor:quote-new:form': [
-    { icon: 'bulb', message: 'Offertes met een duidelijke scope en materiaallijst worden 30% vaker geaccepteerd.' },
+    // The "30% vaker" was never measured — nothing in the app computes an
+    // acceptance rate by scope completeness. The advice stands; the figure goes.
+    { icon: 'bulb', messageKey: 'guidance.quoteScope', message: 'Een duidelijke scope en materiaallijst maken een offerte makkelijker te accepteren.' },
   ],
   'contractor:quote-new:pricing': [
-    { icon: 'analytics', message: 'Vasco vergelijkt je prijs met eerdere offertes voor dit type klus.' },
+    { icon: 'analytics', messageKey: 'guidance.quotePricing', message: 'Vasco vergelijkt je prijs met eerdere offertes voor dit type klus.' },
   ],
   'contractor:quote-new:customer': [
-    { icon: 'person', message: 'Vasco analyseert het betalingsgedrag van deze klant automatisch.' },
+    { icon: 'person', messageKey: 'guidance.quoteCustomer', message: 'Vasco volgt het betaalgedrag van deze klant automatisch.' },
   ],
   // --- WORKFLOW: Invoice creation ---
   'contractor:invoice-new:select': [
-    { icon: 'flash', message: 'Facturen die binnen 24 uur na oplevering worden verstuurd, worden 3 dagen sneller betaald.' },
+    // "3 dagen sneller" is not a measurement either.
+    { icon: 'flash', messageKey: 'guidance.invoiceFast', message: 'Factureer binnen 24 uur na oplevering — dan word je eerder betaald.' },
   ],
   'contractor:invoice-create:total': [
-    { icon: 'camera', message: 'Voeg foto\'s van het eindresultaat toe — klanten betalen sneller met visueel bewijs.' },
+    { icon: 'camera', messageKey: 'guidance.invoicePhotos', message: 'Voeg foto\'s van het eindresultaat toe — visueel bewijs helpt klanten betalen.' },
   ],
   'contractor:invoice-create:customer': [
-    { icon: 'person', message: 'Vasco controleert het betalingsgedrag van deze klant automatisch.' },
+    { icon: 'person', messageKey: 'guidance.invoiceCustomer', message: 'Vasco controleert het betaalgedrag van deze klant automatisch.' },
   ],
   // --- WORKFLOW: Job detail ---
   'contractor:job-detail:overview': [
@@ -229,7 +239,7 @@ const INLINE_INSIGHTS: Record<string, InlineInsightData[]> = {
   ],
   // --- WORKFLOW: Quotes list ---
   'contractor:quotes:pipeline': [
-    { icon: 'document-text', message: 'Conceptoffertes die snel worden verstuurd hebben een hogere acceptatieratio.' },
+    { icon: 'document-text', messageKey: 'guidance.quotesPipeline', message: 'Conceptoffertes die snel worden verstuurd, worden vaker geaccepteerd.' },
   ],
   // --- WORKFLOW: Invoices list ---
   'contractor:invoices:overdue': [
@@ -237,35 +247,42 @@ const INLINE_INSIGHTS: Record<string, InlineInsightData[]> = {
   ],
   // --- SITE LEAD ---
   'sitelead:overview:overview': [
-    { icon: 'people', message: 'Vasco volgt alle werkploegen real-time. Het Loodgieter Team loopt achter op schema \u2014 materiaallevering vertraagd. Overweeg extra personeel in te zetten of de planning aan te passen.' },
+    // Was: "Het Loodgieter Team loopt achter op schema — materiaallevering
+    // vertraagd" — a hardcoded observation about a named crew, rendered
+    // under the claim that Vasco tracks crews in real time. Nothing
+    // computed it; it was the same sentence for every site lead, every
+    // day. Says what the screen actually does instead (learnings #103).
+    { icon: 'people', messageKey: 'guidance.crewOverview', message: 'Vasco volgt alle ploegen. Ploegen die achterlopen verschijnen hier het eerst.' },
   ],
   'sitelead:dispatch:overview': [
-    { icon: 'people', message: 'Teams met een dagelijkse briefing scoren 18% hoger op klanttevredenheid.' },
+    { icon: 'people', messageKey: 'guidance.crewBriefing', message: 'Een dagelijkse briefing houdt ploegen op één lijn en beperkt herstelwerk.' },
   ],
   'sitelead:safety:overview': [
-    { icon: 'shield-checkmark', message: 'Dagelijkse toolboxtalken verlagen incidenten met 35%. Plan ze in voor elke ploeg.' },
+    { icon: 'shield-checkmark', messageKey: 'guidance.toolboxTalks', message: 'Dagelijkse toolboxmeetings verlagen het aantal incidenten. Plan ze in voor elke ploeg.' },
   ],
   'sitelead:quality:overview': [
-    { icon: 'checkmark-done', message: 'Projecten met foto-documentatie bij elke inspectie hebben 40% minder nawerk.' },
+    { icon: 'checkmark-done', messageKey: 'guidance.inspectionPhotos', message: 'Fotodocumentatie bij elke inspectie beperkt herstelwerk.' },
   ],
   'sitelead:issues:overview': [
     { icon: 'chatbubbles', message: 'RFI\'s die binnen 48 uur worden beantwoord voorkomen gemiddeld 3 dagen vertraging.' },
   ],
   // Site lead secondary screens
   'sitelead:daily-report:overview': [
-    { icon: 'analytics', message: 'Consistent dagrapporten invullen verbetert Vasco\'s voorspellingen voor bezetting en voortgang met 40%.' },
+    { icon: 'analytics', messageKey: 'guidance.dailyReport', message: 'Dagrapporten consequent invullen scherpt Vasco\'s voorspellingen voor bezetting en voortgang aan.' },
   ],
   'sitelead:worker-certs:overview': [
-    { icon: 'ribbon', message: 'Medewerkers met actuele certificeringen hebben 60% minder veiligheidsincidenten. Houd vernieuwingen bij.' },
+    { icon: 'ribbon', messageKey: 'guidance.workerCerts', message: 'Medewerkers met actuele certificeringen werken veiliger. Houd vernieuwingen bij.' },
   ],
   'sitelead:compliance:overview': [
-    { icon: 'shield-checkmark', message: 'Vasco monitort automatisch certificaten en vergunningen. Items in rood vereisen directe actie.' },
+    { icon: 'shield-checkmark', messageKey: 'guidance.complianceMonitor', message: 'Vasco bewaakt certificaten en vergunningen automatisch. Items in rood vragen directe actie.' },
   ],
   'sitelead:close-defect:overview': [
-    { icon: 'construct', message: 'Gebreken die binnen 7 dagen worden opgelost kosten gemiddeld 35% minder dan gebreken die langer open staan.' },
+    { icon: 'construct', messageKey: 'guidance.closeDefect', message: 'Gebreken die snel worden opgelost kosten minder dan gebreken die lang open staan.' },
   ],
   'sitelead:incident-report:overview': [
-    { icon: 'warning', message: 'Elke melding verbetert het veiligheidspatroon. Bijna-ongelukken voorkomen 10x meer ernstige incidenten.' },
+    // "10x" was invented, and the claim it dressed up (near-misses are worth
+    // reporting) does not need it.
+    { icon: 'warning', messageKey: 'guidance.nearMiss', message: 'Elke melding scherpt het veiligheidsbeeld aan. Bijna-ongevallen zijn de goedkoopste waarschuwing die je krijgt.' },
   ],
   // --- CFO ---
   'cfo:overview:overview': [
@@ -341,12 +358,20 @@ const INLINE_INSIGHTS: Record<string, InlineInsightData[]> = {
 type InlineRole = 'contractor' | 'sitelead' | 'coo' | 'cfo' | 'director';
 
 export function useInlineInsight(role: InlineRole, screen: string, context: string): InlineInsightData | null {
+  // `appI18n` rather than useTranslation(): this module already imports it, and
+  // the language is read at render so a language change re-resolves.
+  const language = appI18n.language;
   return useMemo(() => {
     const key = `${role}:${screen}:${context}`;
     const insights = INLINE_INSIGHTS[key];
     if (!insights || insights.length === 0) return null;
     // Return a consistent insight (not random) based on day of month
     const dayIndex = new Date().getDate() % insights.length;
-    return insights[dayIndex];
-  }, [role, screen, context]);
+    const picked = insights[dayIndex];
+    // Entries with no `messageKey` are the ones no screen reaches (the
+    // director/CFO/COO sections). They keep their Dutch literal; translating a
+    // table nothing renders would be the workflowPacks mistake again.
+    if (!picked.messageKey) return picked;
+    return { ...picked, message: appI18n.t(picked.messageKey, picked.message) };
+  }, [role, screen, context, language]);
 }

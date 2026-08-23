@@ -535,7 +535,11 @@
     },
     "advanceStatus": "Status verzetten",
     "invoiceThisJobDesc": "Maakt een conceptfactuur van deze klus, met wat er is vastgelegd, en zet de klus op gefactureerd.",
-    "fromQuoteTitle": "Klus van offerte {{ref}}"
+    "fromQuoteTitle": "Klus van offerte {{ref}}",
+    "selectCustomer": "Klant kiezen",
+    "noCustomer": "Geen klant",
+    "statusLead": "Lead",
+    "notScheduled": "Niet ingepland"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",
@@ -883,7 +887,9 @@
     "nothingToBill": "Er valt nog niets te factureren voor \"{{job}}\": geen afgesproken prijs, geen geschreven uren en geen materiaal vastgelegd.",
     "noHourlyRate": "\"{{job}}\" heeft {{hours}} u geschreven, maar er is geen uurtarief om ze mee te factureren. Zet eerst een uurtarief in je prijslijst.",
     "workRecordNote": "Vanuit de klus: {{hours}} u geschreven, {{materials}} materialen gebruikt{{completed}}.",
-    "workRecordCompleted": ", afgerond op {{date}}"
+    "workRecordCompleted": ", afgerond op {{date}}",
+    "paymentMethodsAvailable": "Betaalmethoden die je kunt aanbieden",
+    "connectAccounting": "Boekhouding koppelen"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1783,7 +1789,6 @@
     "lineCount": "{{count}} regels",
     "pickFromPricebook": "Kies diensten uit je prijslijst",
     "forgotten": "Vergeten?",
-    "bottomSummary": "{{count}} diensten · {{total}} (standaard)",
     "reviewQuote": "Bekijk offerte",
     "checkQuote": "Offerte controleren",
     "vascoAdvice": "Vasco advies",
@@ -1901,7 +1906,9 @@
     "resetPackages": "Standaard herstellen",
     "sendPackage": "{{name}} versturen",
     "linesForPackage": "Regels ({{name}})",
-    "quoteTitle": "Offerte"
+    "quoteTitle": "Offerte",
+    "bottomSummary_one": "{{count}} dienst · {{total}} (standaard)",
+    "bottomSummary_other": "{{count}} diensten · {{total}} (standaard)"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -1995,7 +2002,8 @@
     "noCustomerTitle": "Geen klant gekoppeld",
     "noCustomerBody": "Deze offerte wordt opgeslagen zonder klantkoppeling. Je kunt later een klant koppelen vanuit de klantenlijst.",
     "sendAnyway": "Toch verzenden",
-    "zeroAmount": "Het offertetotaal moet groter zijn dan nul."
+    "zeroAmount": "Het offertetotaal moet groter zijn dan nul.",
+    "jobLabelMore": "{{first}} +{{count}}"
   },
   "project": {
     "changeStatus": "Status wijzigen",
@@ -2172,7 +2180,12 @@
     "createCampaign": "Campagne maken",
     "leadGeneration": "Leadgeneratie",
     "leadsAvailable_one": "{{count}} lead beschikbaar",
-    "leadsAvailable_other": "{{count}} leads beschikbaar"
+    "leadsAvailable_other": "{{count}} leads beschikbaar",
+    "einvoiceFormat": "{{format}}-formaat",
+    "pendingDecisionsCount_one": "{{count}} openstaande beslissing",
+    "pendingDecisionsCount_other": "{{count}} openstaande beslissingen",
+    "daysOverdueCount_one": "{{count}} dag achterstallig",
+    "daysOverdueCount_other": "{{count}} dagen achterstallig"
   },
   "profile": {
     "title": "Profiel",
@@ -6830,5 +6843,117 @@
         "impact": "Een warmtepomp vraagt 6–8 weken levertijd en aparte planning"
       }
     }
+  },
+  "quoteCatalog": {
+    "service": {
+      "plb-1": "Lekkage reparatie",
+      "plb-2": "CV-ketel onderhoud",
+      "plb-3": "Radiator plaatsen",
+      "plb-4": "Badkamer sanitair",
+      "plb-5": "Rioolontstopping",
+      "plb-6": "Waterleiding aanleggen",
+      "elc-1": "Groepenkast vervangen",
+      "elc-2": "Stopcontact plaatsen",
+      "elc-3": "Bekabeling trekken",
+      "elc-4": "Verlichting installatie",
+      "elc-5": "Periodieke keuring",
+      "elc-6": "Laadpaal installatie",
+      "gas-1": "Gasleiding keuring",
+      "gas-2": "CV-installatie",
+      "gas-3": "Warmtepomp plaatsen",
+      "gas-4": "Vloerverwarming",
+      "gas-5": "Gaslek detectie",
+      "crp-1": "Kozijn plaatsen",
+      "crp-2": "Dakkapel bouwen",
+      "crp-3": "Trap renovatie",
+      "crp-4": "Houtrot reparatie",
+      "crp-5": "Vloer leggen",
+      "gen-1": "Renovatie — arbeid",
+      "gen-2": "Sloopwerk",
+      "gen-3": "Stucwerk",
+      "gen-4": "Tegelwerk",
+      "gen-5": "Transport & afvoer"
+    },
+    "unit": {
+      "hour": "uur",
+      "piece": "stuk",
+      "metre": "m",
+      "sqm": "m²",
+      "point": "punt",
+      "trip": "rit"
+    },
+    "consumable": {
+      "maskingTape": "Afplakband",
+      "undercoat": "Grondverf",
+      "sandpaper": "Schuurpapier",
+      "primer": "Primer",
+      "ptfeTape": "Teflon tape",
+      "sealingWasher": "Afdichtingsring",
+      "solder": "Soldeer",
+      "couplings": "Koppelingen",
+      "heatShrink": "Krimpkous",
+      "wireConnectors": "Lasklemmen",
+      "cableTrunking": "Kabelgoot",
+      "fuses": "Zekeringen",
+      "gasLeakDetector": "Gaslekzoeker",
+      "sealingPaste": "Afdichtpasta",
+      "oRings": "O-ringen",
+      "copperPipe": "Koperen buis",
+      "screws": "Schroeven",
+      "woodGlue": "Houtlijm",
+      "woodStain": "Beits",
+      "leadFlashing": "Loodslabben",
+      "ridgeTiles": "Dakvorsten",
+      "ridgeClips": "Nokvorstklemmen",
+      "roofingFelt": "Dakleer",
+      "tileSpacers": "Tegelkruisjes",
+      "grout": "Voegmortel",
+      "caulkingGun": "Kitspuit",
+      "tileAdhesive": "Tegellijm",
+      "cornerBeads": "Hoekprofielen",
+      "reinforcingMesh": "Wapeningsgaas",
+      "bondingPrimer": "Voorstrijk",
+      "plasterMesh": "Stucnet",
+      "underlay": "Ondervloer",
+      "skirting": "Plinten",
+      "transitionProfiles": "Overgangsprofielen",
+      "edgeStrips": "Kantstroken",
+      "vapourBarrier": "Dampremmende folie",
+      "tape": "Tape",
+      "insulationAnchors": "Isolatiepluggen",
+      "sealingTape": "Afdichtband",
+      "mountingRail": "Montagerail",
+      "endClamps": "Eindklemmen",
+      "mc4Connectors": "MC4-connectoren",
+      "glazingRubber": "Beglazingsrubber",
+      "sealant": "Kit",
+      "glazingBeads": "Glaslatten",
+      "spacers": "Afstandhouders",
+      "gravel": "Split",
+      "weedMembrane": "Worteldoek",
+      "edging": "Kantopsluiting",
+      "jointingSand": "Voegzand",
+      "wallPlugs": "Pluggen",
+      "dustSheet": "Afdekfolie",
+      "siliconeSealant": "Siliconenkit"
+    }
+  },
+  "guidance": {
+    "quotesPipeline": "Conceptoffertes die snel worden verstuurd, worden vaker geaccepteerd.",
+    "quoteScope": "Een duidelijke scope en materiaallijst maken een offerte makkelijker te accepteren.",
+    "quotePricing": "Vasco vergelijkt je prijs met eerdere offertes voor dit type klus.",
+    "quoteCustomer": "Vasco volgt het betaalgedrag van deze klant automatisch.",
+    "invoiceFast": "Factureer binnen 24 uur na oplevering — dan word je eerder betaald.",
+    "invoicePhotos": "Voeg foto's van het eindresultaat toe — visueel bewijs helpt klanten betalen.",
+    "invoiceCustomer": "Vasco controleert het betaalgedrag van deze klant automatisch.",
+    "crewOverview": "Vasco volgt alle ploegen. Ploegen die achterlopen verschijnen hier het eerst.",
+    "crewBriefing": "Een dagelijkse briefing houdt ploegen op één lijn en beperkt herstelwerk.",
+    "dailyReport": "Dagrapporten consequent invullen scherpt Vasco's voorspellingen voor bezetting en voortgang aan.",
+    "toolboxTalks": "Dagelijkse toolboxmeetings verlagen het aantal incidenten. Plan ze in voor elke ploeg.",
+    "inspectionPhotos": "Fotodocumentatie bij elke inspectie beperkt herstelwerk.",
+    "complianceMonitor": "Vasco bewaakt certificaten en vergunningen automatisch. Items in rood vragen directe actie.",
+    "workerCerts": "Medewerkers met actuele certificeringen werken veiliger. Houd vernieuwingen bij.",
+    "nearMiss": "Elke melding scherpt het veiligheidsbeeld aan. Bijna-ongevallen zijn de goedkoopste waarschuwing die je krijgt.",
+    "closeDefect": "Gebreken die snel worden opgelost kosten minder dan gebreken die lang open staan."
   }
 }

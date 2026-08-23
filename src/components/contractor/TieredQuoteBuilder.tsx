@@ -75,43 +75,49 @@ type IconName = keyof typeof Ionicons.glyphMap;
 // table now only populates the demo accounts, so the walkthrough still has
 // something to show. Gated at the constant per learnings #103.
 // =============================================================================
-const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: number; unit: string }[]> = DEMO_MODE ? {
+// The NAME and the UNIT are read by the contractor and, once the item is added,
+// become the quote LINE the customer reads — so they are copy, not data. They
+// were Dutch literals, so the German demo offered "Lekkage reparatie … /uur".
+// Resolved by stable id through `quoteCatalog.*` at RENDER time (see the
+// tradePricebook memo), never stored translated: once a line is on a quote it
+// is the contractor's own wording and must not change language later.
+const TRADE_PRICEBOOK: Record<string, { id: string; nameKey: string; basePrice: number; unitKey: string }[]> = DEMO_MODE ? {
   plumbing: [
-    { id: 'plb-1', name: 'Lekkage reparatie', basePrice: 85, unit: 'uur' },
-    { id: 'plb-2', name: 'CV-ketel onderhoud', basePrice: 120, unit: 'stuk' },
-    { id: 'plb-3', name: 'Radiator plaatsen', basePrice: 95, unit: 'stuk' },
-    { id: 'plb-4', name: 'Badkamer sanitair', basePrice: 75, unit: 'uur' },
-    { id: 'plb-5', name: 'Rioolontstopping', basePrice: 110, unit: 'stuk' },
-    { id: 'plb-6', name: 'Waterleiding aanleggen', basePrice: 65, unit: 'm' },
+    { id: 'plb-1', nameKey: 'plb-1', basePrice: 85, unitKey: 'hour' },
+    { id: 'plb-2', nameKey: 'plb-2', basePrice: 120, unitKey: 'piece' },
+    { id: 'plb-3', nameKey: 'plb-3', basePrice: 95, unitKey: 'piece' },
+    { id: 'plb-4', nameKey: 'plb-4', basePrice: 75, unitKey: 'hour' },
+    { id: 'plb-5', nameKey: 'plb-5', basePrice: 110, unitKey: 'piece' },
+    { id: 'plb-6', nameKey: 'plb-6', basePrice: 65, unitKey: 'metre' },
   ],
   electrical: [
-    { id: 'elc-1', name: 'Groepenkast vervangen', basePrice: 450, unit: 'stuk' },
-    { id: 'elc-2', name: 'Stopcontact plaatsen', basePrice: 45, unit: 'stuk' },
-    { id: 'elc-3', name: 'Bekabeling trekken', basePrice: 35, unit: 'm' },
-    { id: 'elc-4', name: 'Verlichting installatie', basePrice: 55, unit: 'punt' },
-    { id: 'elc-5', name: 'Periodieke keuring', basePrice: 180, unit: 'stuk' },
-    { id: 'elc-6', name: 'Laadpaal installatie', basePrice: 650, unit: 'stuk' },
+    { id: 'elc-1', nameKey: 'elc-1', basePrice: 450, unitKey: 'piece' },
+    { id: 'elc-2', nameKey: 'elc-2', basePrice: 45, unitKey: 'piece' },
+    { id: 'elc-3', nameKey: 'elc-3', basePrice: 35, unitKey: 'metre' },
+    { id: 'elc-4', nameKey: 'elc-4', basePrice: 55, unitKey: 'point' },
+    { id: 'elc-5', nameKey: 'elc-5', basePrice: 180, unitKey: 'piece' },
+    { id: 'elc-6', nameKey: 'elc-6', basePrice: 650, unitKey: 'piece' },
   ],
   gas: [
-    { id: 'gas-1', name: 'Gasleiding keuring', basePrice: 150, unit: 'stuk' },
-    { id: 'gas-2', name: 'CV-installatie', basePrice: 95, unit: 'uur' },
-    { id: 'gas-3', name: 'Warmtepomp plaatsen', basePrice: 850, unit: 'stuk' },
-    { id: 'gas-4', name: 'Vloerverwarming', basePrice: 45, unit: 'm²' },
-    { id: 'gas-5', name: 'Gaslek detectie', basePrice: 120, unit: 'stuk' },
+    { id: 'gas-1', nameKey: 'gas-1', basePrice: 150, unitKey: 'piece' },
+    { id: 'gas-2', nameKey: 'gas-2', basePrice: 95, unitKey: 'hour' },
+    { id: 'gas-3', nameKey: 'gas-3', basePrice: 850, unitKey: 'piece' },
+    { id: 'gas-4', nameKey: 'gas-4', basePrice: 45, unitKey: 'sqm' },
+    { id: 'gas-5', nameKey: 'gas-5', basePrice: 120, unitKey: 'piece' },
   ],
   carpentry: [
-    { id: 'crp-1', name: 'Kozijn plaatsen', basePrice: 180, unit: 'stuk' },
-    { id: 'crp-2', name: 'Dakkapel bouwen', basePrice: 3500, unit: 'stuk' },
-    { id: 'crp-3', name: 'Trap renovatie', basePrice: 85, unit: 'uur' },
-    { id: 'crp-4', name: 'Houtrot reparatie', basePrice: 65, unit: 'uur' },
-    { id: 'crp-5', name: 'Vloer leggen', basePrice: 35, unit: 'm²' },
+    { id: 'crp-1', nameKey: 'crp-1', basePrice: 180, unitKey: 'piece' },
+    { id: 'crp-2', nameKey: 'crp-2', basePrice: 3500, unitKey: 'piece' },
+    { id: 'crp-3', nameKey: 'crp-3', basePrice: 85, unitKey: 'hour' },
+    { id: 'crp-4', nameKey: 'crp-4', basePrice: 65, unitKey: 'hour' },
+    { id: 'crp-5', nameKey: 'crp-5', basePrice: 35, unitKey: 'sqm' },
   ],
   general: [
-    { id: 'gen-1', name: 'Renovatie — arbeid', basePrice: 55, unit: 'uur' },
-    { id: 'gen-2', name: 'Sloopwerk', basePrice: 45, unit: 'uur' },
-    { id: 'gen-3', name: 'Stucwerk', basePrice: 30, unit: 'm²' },
-    { id: 'gen-4', name: 'Tegelwerk', basePrice: 40, unit: 'm²' },
-    { id: 'gen-5', name: 'Transport & afvoer', basePrice: 150, unit: 'rit' },
+    { id: 'gen-1', nameKey: 'gen-1', basePrice: 55, unitKey: 'hour' },
+    { id: 'gen-2', nameKey: 'gen-2', basePrice: 45, unitKey: 'hour' },
+    { id: 'gen-3', nameKey: 'gen-3', basePrice: 30, unitKey: 'sqm' },
+    { id: 'gen-4', nameKey: 'gen-4', basePrice: 40, unitKey: 'sqm' },
+    { id: 'gen-5', nameKey: 'gen-5', basePrice: 150, unitKey: 'trip' },
   ],
 } : {};
 
@@ -119,22 +125,29 @@ const TRADE_PRICEBOOK: Record<string, { id: string; name: string; basePrice: num
 // Trade union so it cannot rot again: it had 6 of 15 trades, so a roofer or a
 // solar installer silently got the GENERAL builder's list (screws and plugs)
 // via the `?? general` fallback below — degraded, and nothing said so.
+// Consumables a contractor forgets to put on the quote. Typed against the
+// Trade union so it cannot rot again: it had 6 of 15 trades, so a roofer or a
+// solar installer silently got the GENERAL builder's list (screws and plugs)
+// via the `?? general` fallback below — degraded, and nothing said so.
+// These were Dutch literals and — unlike TRADE_PRICEBOOK above — they are NOT
+// demo-gated, so a German contractor really did read "Afdichtingsring" here.
+// Stable `quoteCatalog.consumable.*` ids, resolved at render.
 const TRADE_SUGGESTIONS: Record<Trade, string[]> = {
-  painting: ['Afplakband', 'Grondverf', 'Schuurpapier', 'Primer'],
-  plumbing: ['Teflon tape', 'Afdichtingsring', 'Soldeer', 'Koppelingen'],
-  electrical: ['Krimpkous', 'Lasklemmen', 'Kabelgoot', 'Zekeringen'],
-  gas: ['Gaslekzoeker', 'Afdichtpasta', 'O-ringen', 'Koperen buis'],
-  carpentry: ['Schroeven', 'Houtlijm', 'Schuurpapier', 'Beits'],
-  roofing: ['Loodslabben', 'Dakvorsten', 'Nokvorstklemmen', 'Dakleer'],
-  tiling: ['Tegelkruisjes', 'Voegmortel', 'Kitspuit', 'Tegellijm'],
-  plastering: ['Hoekprofielen', 'Wapeningsgaas', 'Voorstrijk', 'Stucnet'],
-  flooring: ['Ondervloer', 'Plinten', 'Overgangsprofielen', 'Kantstroken'],
-  insulation: ['Dampremmende folie', 'Tape', 'Isolatiepluggen', 'Afdichtband'],
-  solar: ['Montagerail', 'Eindklemmen', 'MC4-connectoren', 'Kabelgoot'],
-  glazing: ['Beglazingsrubber', 'Kit', 'Glaslatten', 'Afstandhouders'],
-  landscaping: ['Split', 'Worteldoek', 'Kantopsluiting', 'Voegzand'],
-  general: ['Schroeven', 'Pluggen', 'Afdekfolie', 'Siliconenkit'],
-  other: ['Schroeven', 'Pluggen', 'Afdekfolie', 'Siliconenkit'],
+  painting: ['maskingTape', 'undercoat', 'sandpaper', 'primer'],
+  plumbing: ['ptfeTape', 'sealingWasher', 'solder', 'couplings'],
+  electrical: ['heatShrink', 'wireConnectors', 'cableTrunking', 'fuses'],
+  gas: ['gasLeakDetector', 'sealingPaste', 'oRings', 'copperPipe'],
+  carpentry: ['screws', 'woodGlue', 'sandpaper', 'woodStain'],
+  roofing: ['leadFlashing', 'ridgeTiles', 'ridgeClips', 'roofingFelt'],
+  tiling: ['tileSpacers', 'grout', 'caulkingGun', 'tileAdhesive'],
+  plastering: ['cornerBeads', 'reinforcingMesh', 'bondingPrimer', 'plasterMesh'],
+  flooring: ['underlay', 'skirting', 'transitionProfiles', 'edgeStrips'],
+  insulation: ['vapourBarrier', 'tape', 'insulationAnchors', 'sealingTape'],
+  solar: ['mountingRail', 'endClamps', 'mc4Connectors', 'cableTrunking'],
+  glazing: ['glazingRubber', 'sealant', 'glazingBeads', 'spacers'],
+  landscaping: ['gravel', 'weedMembrane', 'edging', 'jointingSand'],
+  general: ['screws', 'wallPlugs', 'dustSheet', 'siliconeSealant'],
+  other: ['screws', 'wallPlugs', 'dustSheet', 'siliconeSealant'],
 };
 
 // Presentation only. The NAME and the bullet points used to live here as
@@ -215,7 +228,12 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // instead of being limited to the standard pricebook list.
   const [customName, setCustomName] = useState('');
   const [customPrice, setCustomPrice] = useState('');
-  const [customUnit, setCustomUnit] = useState('stuk');
+  // The unit lands on the quote LINE the customer reads, so it cannot be a
+  // Dutch literal — a German contractor was offering their own service per
+  // "stuk". `quotes.unitPiece` is the key the rest of this file already uses
+  // for exactly this, and it exists in all six locales.
+  const defaultUnit = t('quotes.unitPiece', 'piece');
+  const [customUnit, setCustomUnit] = useState(defaultUnit);
   const [showAIQuote, setShowAIQuote] = useState(false);
   const [calibrationApplied, setCalibrationApplied] = useState(false);
   const [scopeText, setScopeText] = useState('');
@@ -442,14 +460,18 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     if (trade === 'painting' && withVariants.length > 0) return withVariants;
 
     const tradeItems = TRADE_PRICEBOOK[trade] ?? TRADE_PRICEBOOK.general ?? [];
-    return tradeItems.map(item => ({
+    // Resolve the catalogue's stable ids into the reader's language HERE, so
+    // both the picker and the quote line the customer receives are in it.
+    return tradeItems.map(({ nameKey, unitKey, ...item }) => ({
       ...item,
+      name: t(`quoteCatalog.service.${nameKey}`, nameKey),
+      unit: t(`quoteCatalog.unit.${unitKey}`, unitKey),
       contractorId: '',
       description: tradeLabel(trade),
       category: trade,
       pricingType: 'fixed' as const,
     })) as unknown as PricebookItem[];
-  }, [trade, myPricebook]);
+  }, [trade, myPricebook, t]);
 
   const fmt = (n: number) => formatCurrency(n);
 
@@ -542,10 +564,10 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
       category: (trade === 'painting' ? 'painting' : 'repairs') as PricebookItem['category'],
       pricingType: 'per-unit' as const,
       basePrice: price,
-      unit: customUnit.trim() || 'stuk',
+      unit: customUnit.trim() || defaultUnit,
     } as PricebookItem;
     addService(item);
-    setCustomName(''); setCustomPrice(''); setCustomUnit('stuk');
+    setCustomName(''); setCustomPrice(''); setCustomUnit(defaultUnit);
   };
 
   const updateQuantity = (itemId: string, qty: number) => {
@@ -1379,9 +1401,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
               <View style={s.suggestRow}>
                 <Ionicons name="bulb-outline" size={14} color={SemanticColors.textTertiary} />
                 <Text style={s.suggestLabel}>{t('quotes.forgotten', 'Forgot something?')}</Text>
-                {TRADE_SUGGESTIONS[toTrade(trade)].slice(0, 3).map(item => (
-                  <View key={item} style={s.suggestChip}>
-                    <Text style={s.suggestChipText}>{item}</Text>
+                {TRADE_SUGGESTIONS[toTrade(trade)].slice(0, 3).map(key => (
+                  <View key={key} style={s.suggestChip}>
+                    <Text style={s.suggestChipText}>{t(`quoteCatalog.consumable.${key}`, key)}</Text>
                   </View>
                 ))}
               </View>

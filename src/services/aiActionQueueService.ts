@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCurrentUserId } from '../lib/currentUser';
 import i18n from '../i18n/i18n';
-import { applySavedLanguage } from '../i18n/savedLanguage';
+import { applySavedLanguage, applySavedCountry } from '../i18n/savedLanguage';
 import { getScanHistory, getFirstScanInsights } from './invoiceScanService';
 import { getCustomerIntelligence } from '../intelligence/tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
@@ -764,6 +764,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // locale and AuthContext applies the saved preference asynchronously; the
   // scheduler can run inside that gap.
   await applySavedLanguage();
+  // ...and the country, for exactly the same reason: `formatMoney` below reads
+  // the module-level country ref, which AuthContext has not corrected from the
+  // saved profile yet when the scheduler fires on app open.
+  await applySavedCountry();
 
   const t = i18n.t.bind(i18n);
   const now = Date.now();
@@ -1175,9 +1179,15 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const created = new Date(j.createdAt || '').getTime();
     return created && (now - created) < 1 * dayMs && j.status !== 'completed';
   });
-  const country = context.country || 'NL';
-  for (const job of newJobs.slice(0, 2)) {
-    const permits = getRequiredPermits(job.trade || 'general', country);
+  // NO `|| 'NL'`. This card names the permits a job needs and links to the
+  // issuing authority, so guessing the country hands a German plumber the
+  // Dutch list — the home-market-default shape that keeps coming back
+  // (learnings #148/#151/#155/#157). `context.country` is briefly undefined on
+  // a cold start, before the saved profile merges into the user; skipping for
+  // one tick is right, inventing a jurisdiction is not.
+  const country = context.country;
+  for (const job of country ? newJobs.slice(0, 2) : []) {
+    const permits = getRequiredPermits(job.trade || 'general', country as string);
     if (permits.length === 0) continue;
     const id = await addToQueue({
       type: 'permit_check',
@@ -1298,7 +1308,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
         const id = await addToQueue({
           type: 'decision_reminder',
           title: t('automation.decisionReminder', { defaultValue: 'Decision needed: {{customer}}', customer: customerName }),
-          description: `${pendingItems.length} ${t('automation.pendingDecisions', 'pending decisions')} · ${daysOverdue} ${t('automation.daysOverdue', 'days overdue')}`,
+          // Both halves were a bare count glued to a plural noun, so one
+          // outstanding item read "1 ausstehende Entscheidungen · 1 Tage
+          // überfällig". Count-aware keys carry the number themselves.
+          description: `${t('automation.pendingDecisionsCount', { count: pendingItems.length })} · ${t('automation.daysOverdueCount', { count: daysOverdue })}`,
           preparedData: {
             trackerId: tracker.id,
             jobId: tracker.jobId,
@@ -1411,15 +1424,19 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
 
   // ─── NEW: E-invoice submission for countries that require it ───
   const EINVOICE_COUNTRIES: Record<string, string> = { DE: 'XRechnung', FR: 'Factur-X', IT: 'FatturaPA', ES: 'Facturae' };
-  const einvoiceCountry = context.country || 'NL';
-  const einvoiceFormat = EINVOICE_COUNTRIES[einvoiceCountry];
+  // Same rule, opposite failure mode: 'NL' is not in the map, so the old
+  // default silently withheld the XRechnung / Factur-X / FatturaPA reminder
+  // from the very contractors the mandate applies to. Read the real country or
+  // produce nothing — never a default that happens to look like "no mandate".
+  const einvoiceCountry = context.country;
+  const einvoiceFormat = einvoiceCountry ? EINVOICE_COUNTRIES[einvoiceCountry] : undefined;
   if (einvoiceFormat) {
     const sentInvoices = (context.allInvoices ?? []).filter((i: any) => i.status === 'sent' && !i.einvoiceSubmitted);
     for (const inv of sentInvoices.slice(0, 3)) {
       const id = await addToQueue({
         type: 'einvoice_submit',
         title: `${einvoiceFormat}: ${queueEntityLabel(inv, context.customers)}`,
-        description: `${formatMoney((inv.amount ?? 0))} · ${einvoiceFormat} format`,
+        description: `${formatMoney((inv.amount ?? 0))} · ${t('automation.einvoiceFormat', { defaultValue: '{{format}} format', format: einvoiceFormat })}`,
         preparedData: { invoiceId: inv.id, format: einvoiceFormat, country: einvoiceCountry },
         actionLabel: t('automation.submit', 'Submit'),
         estimatedImpact: t('automation.legalCompliance', 'Legal compliance'),
