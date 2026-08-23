@@ -5283,7 +5283,7 @@
     "deleteDesc": "¿Quitar esta licencia de tus registros?",
     "title": "Licencias",
     "empty": "Aún no hay licencias",
-    "emptyBody": "Añade las licencias estatales de contratista que tengas para que Vasco te avise 30 días antes de que caduquen.",
+    "emptyBody": "Añade las licencias y certificaciones que tengas para que Vasco te avise 30 días antes de que caduquen.",
     "expires": "Caduca",
     "add": "Añadir licencia",
     "edit": "Editar licencia",

@@ -5267,7 +5267,7 @@
     "deleteDesc": "Deze vergunning uit je gegevens verwijderen?",
     "title": "Vergunningen",
     "empty": "Nog geen vergunningen",
-    "emptyBody": "Voeg de aannemersvergunningen toe die je hebt, zodat Vasco je 30 dagen voor het verlopen kan waarschuwen.",
+    "emptyBody": "Voeg de vergunningen en certificaten toe die je hebt, zodat Vasco je 30 dagen voor het verlopen kan waarschuwen.",
     "expires": "Verloopt",
     "add": "Vergunning toevoegen",
     "edit": "Vergunning bewerken",

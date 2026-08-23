@@ -5283,7 +5283,7 @@
     "deleteDesc": "Retirer cette licence de vos dossiers ?",
     "title": "Licences",
     "empty": "Aucune licence pour l'instant",
-    "emptyBody": "Ajoutez les licences d'État que vous détenez pour que Vasco vous avertisse 30 jours avant leur expiration.",
+    "emptyBody": "Ajoutez les autorisations et qualifications que vous détenez pour que Vasco vous avertisse 30 jours avant leur expiration.",
     "expires": "Expire le",
     "add": "Ajouter une licence",
     "edit": "Modifier la licence",

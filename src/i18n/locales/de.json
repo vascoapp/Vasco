@@ -5283,7 +5283,7 @@
     "deleteDesc": "Diese Lizenz aus Ihren Unterlagen entfernen?",
     "title": "Lizenzen",
     "empty": "Noch keine Lizenzen",
-    "emptyBody": "Fügen Sie die Bundesstaat-Lizenzen hinzu, die Sie besitzen, damit Vasco Sie 30 Tage vor Ablauf warnen kann.",
+    "emptyBody": "Fügen Sie Ihre Zulassungen und Qualifikationsnachweise hinzu, damit Vasco Sie 30 Tage vor Ablauf warnen kann.",
     "expires": "Läuft ab",
     "add": "Lizenz hinzufügen",
     "edit": "Lizenz bearbeiten",

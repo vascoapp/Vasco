@@ -11,7 +11,18 @@
 //   - Add/edit modal — type dropdown, state, number, expiry date (+ optional
 //     issue date + authority)
 //   - Tap-to-delete with confirmation
-//   - Hidden behind a country gate (renders an "empty state" for non-US)
+//   - NOT US-only. R91 (further down) deliberately opened this to EU
+//     contractors: they get an auto-filled country code instead of the state
+//     picker and can save without one. This comment used to claim the screen
+//     was "hidden behind a country gate ... for non-US", which contradicted
+//     the code beneath it and left the empty-state copy reading "add the STATE
+//     contractor licenses you hold" — rendered to a German Handwerker as
+//     "Bundesstaat-Lizenzen", a thing that does not exist in German
+//     Handwerksrecht (his licensing is the Handwerksrolle / Meisterbrief, which
+//     the permits screen lists correctly). Copy is jurisdiction-neutral now.
+//     ⚠️ LICENSE_TYPES below is still a US taxonomy (Master Plumber, General
+//     Contractor). Changing it touches the persisted ContractorLicenseType
+//     enum, so it is deliberately left alone here.
 //
 // Data path: this writes to BusinessProfile.licenses via updateBusinessProfile.
 // The supabase mapper persists to business_settings.licenses jsonb (migration

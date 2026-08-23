@@ -5283,7 +5283,7 @@
     "deleteDesc": "Remove this license from your records?",
     "title": "Licenses",
     "empty": "No licenses yet",
-    "emptyBody": "Add the state contractor licenses you hold so Vasco can warn you 30 days before they expire.",
+    "emptyBody": "Add the licenses and certifications you hold so Vasco can warn you 30 days before they expire.",
     "expires": "Expires",
     "add": "Add license",
     "edit": "Edit license",
