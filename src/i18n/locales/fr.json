@@ -4649,7 +4649,7 @@
       "insulation": "Isolation",
       "general": "Général"
     },
-    "indexBasis": "Indice ({{country}}) · base 2015=100",
+    "indexBasis": "Indice ({{country}}) · base {{baseYear}}=100",
     "baselineNote": "Chiffres généraux du secteur — trop peu d’artisans dans votre région pour un benchmark propre."
   },
   "pdfModal": {

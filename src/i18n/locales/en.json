@@ -4649,7 +4649,7 @@
       "insulation": "Insulation",
       "general": "General"
     },
-    "indexBasis": "Index ({{country}}) · base 2015=100",
+    "indexBasis": "Index ({{country}}) · base {{baseYear}}=100",
     "baselineNote": "General industry figures — too few tradespeople in your region for your own benchmark yet."
   },
   "pdfModal": {

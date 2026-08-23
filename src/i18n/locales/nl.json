@@ -4633,7 +4633,7 @@
       "insulation": "Isolatie",
       "general": "Algemeen"
     },
-    "indexBasis": "Index ({{country}}) · basis 2015=100",
+    "indexBasis": "Index ({{country}}) · basis {{baseYear}}=100",
     "baselineNote": "Algemene branchecijfers — nog te weinig vakmensen in je regio voor een eigen benchmark."
   },
   "pdfModal": {

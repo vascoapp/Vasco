@@ -123,7 +123,15 @@ export default function MarketPricesScreen() {
                   "140.5" and "+3.5%" where German writes "140,5" / "+3,5". The
                   locale-aware helper already existed. */}
               <Text style={styles.indexValue}>{formatDecimal1(index.overallIndex.currentIndex, country as Country)}</Text>
-              <Text style={styles.indexLabel}>{t('market.indexBasis', { country })}</Text>
+              {/* The base year was baked into the sentence as "2015=100" in all
+                  six locales while the data carries its own per-country base:
+                  Destatis is 2020, INSEE BT01 2010, ISTAT 2021. Three of six
+                  markets read the wrong basis — and the correct one was NL, the
+                  home market, again. An index without its base year says
+                  nothing: 140,5 on 2020=100 is not 140,5 on 2015=100. */}
+              <Text style={styles.indexLabel}>
+                {t('market.indexBasis', { country, baseYear: index.overallIndex.baseYear })}
+              </Text>
               {index.materials && index.materials.length > 0 && (
                 <View style={styles.trendsGrid}>
                   {index.materials.slice(0, 4).map((mt: any) => (

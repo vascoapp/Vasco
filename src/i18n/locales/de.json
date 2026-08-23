@@ -4649,7 +4649,7 @@
       "insulation": "Dämmung",
       "general": "Allgemein"
     },
-    "indexBasis": "Index ({{country}}) · Basis 2015=100",
+    "indexBasis": "Index ({{country}}) · Basis {{baseYear}}=100",
     "baselineNote": "Allgemeine Branchenwerte — noch zu wenige Handwerker in Ihrer Region für einen eigenen Benchmark."
   },
   "pdfModal": {
