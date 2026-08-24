@@ -4,7 +4,7 @@
 // =============================================================================
 
 import { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -359,6 +359,10 @@ export default function CustomerDetailScreen() {
       {/* R271: capture-inbound modal */}
       <Modal visible={inboxModalOpen} transparent animationType="slide" onRequestClose={() => setInboxModalOpen(false)}>
         <Pressable style={s.modalOverlay} onPress={() => setInboxModalOpen(false)}>
+          {/* Verified on the sim: focusing the message field hid this sheet
+              ENTIRELY behind the keyboard — the channel chips, the textarea and
+              Save all gone. Recording what a customer said was impossible. */}
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
           <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>{t('inbox.captureTitle', 'What did the customer say?')}</Text>
@@ -397,6 +401,7 @@ export default function CustomerDetailScreen() {
               <Text style={s.modalSubmitText}>{t('inbox.save', 'Save').toUpperCase()}</Text>
             </Pressable>
           </Pressable>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
     </View>
