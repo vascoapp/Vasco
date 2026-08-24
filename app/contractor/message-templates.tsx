@@ -14,6 +14,8 @@ import {
   Share,
   Modal,
   RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -277,6 +279,12 @@ export default function MessageTemplatesScreen() {
       {/* Editor Modal */}
       <Modal visible={showEditor} animationType="slide" transparent onRequestClose={() => setShowEditor(false)}>
         <View style={styles.modalOverlay}>
+          {/* Verified on the simulator: focusing "Vorlagenname" put the
+              keyboard over the sheet, clipping that field in half and hiding
+              the category chips, the message body, the variable chips and
+              Save. The template could not be written. Same shape and same fix
+              as the Ausgaben sheet. */}
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>
@@ -356,6 +364,7 @@ export default function MessageTemplatesScreen() {
               </Pressable>
             </View>
           </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>
