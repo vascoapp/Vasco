@@ -17,6 +17,8 @@ import {
   Linking,
   RefreshControl,
   LayoutAnimation,
+  KeyboardAvoidingView,
+  Platform,
   Share,
   Modal,
 } from 'react-native';
@@ -1429,6 +1431,10 @@ export default function JobDetailPage() {
         onRequestClose={() => setEditingSite(null)}
       >
         <View style={styles.signatureBackdrop}>
+          {/* Verified on the sim: focusing the name field left only a sliver of
+              this sheet above the keyboard — both inputs and Save/Cancel were
+              hidden. A site contact could not be entered. */}
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
           <View style={styles.signatureSheet}>
             <Text style={styles.signatureTitle}>{t('jobs.siteContact', 'Site contact')}</Text>
             <Text style={styles.signatureSubtitle}>
@@ -1470,6 +1476,7 @@ export default function JobDetailPage() {
               <Text style={styles.signatureCancelText}>{t('common.cancel', 'Cancel')}</Text>
             </Pressable>
           </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -2345,7 +2352,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   signatureSheet: {
-    backgroundColor: Palette.white,
+    // Was Palette.white — a light sheet in a dark app, and `signatureTitle`
+    // uses SemanticColors.textPrimary, which IS white here. Both sheets that
+    // share this style rendered their heading white-on-white: "Ansprechpartner"
+    // and "Kundenunterschrift" were invisible. The keyboard used to hide the
+    // sheet entirely, which is why nobody saw it. SignaturePad brings its own
+    // white canvas (SignaturePad.tsx:102), so signing is unaffected.
+    // ui-playbook §1: a light background is a defect even when it looks fine.
+    backgroundColor: SemanticColors.surfacePrimary,
     borderTopLeftRadius: RADIUS.lg,
     borderTopRightRadius: RADIUS.lg,
     padding: GRID.lg,
