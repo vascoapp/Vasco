@@ -676,6 +676,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Captured before the await so the account's own language survives the
     // profile read regardless of what it returns.
     const accountProfile = {
+      // Whose profile this is. `@vasco_user_profile` is a SINGLE global key and
+      // carried no owner, so signing into a second account on the same device
+      // spread the first account's profile onto the new user. Walking it: after
+      // a cold start as the Dutch aannemer, the app was in German AND showed a
+      // German "Umsatzsteuer-Voranmeldung" instead of a BTW-aangifte — country
+      // leaked too, which drives the VAT rate, the permit list and e-invoice
+      // gating. Storage held {"trade":"plumbing","country":"DE","language":"de"}
+      // from the German plumber. Trade leaked as well: the GC became a plumber.
+      userId: user.id,
       trade: user.trade,
       country: user.country,
       language: user.language,
@@ -689,10 +698,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (raw) {
           const profile = JSON.parse(raw);
           if (profile && typeof profile === 'object') {
-            hadProfile = true;
-            setUser((prev) => prev ? { ...prev, ...profile } : null);
-            const l = (profile as { language?: unknown }).language;
-            if (typeof l === 'string' && l) savedLang = l;
+            const owner = (profile as { userId?: unknown }).userId;
+            // A profile stamped with a DIFFERENT account is not this
+            // contractor's: drop it and let the reseed below write theirs.
+            // An UNSTAMPED profile is pre-upgrade and is adopted, because for
+            // the overwhelmingly common one-account device it genuinely is
+            // theirs and discarding it would silently reset a real
+            // contractor's language, country and trade. It gets stamped on the
+            // way through, so the next switch is caught.
+            const belongsToSomeoneElse = typeof owner === 'string' && owner !== user.id;
+            if (!belongsToSomeoneElse) {
+              hadProfile = true;
+              setUser((prev) => prev ? { ...prev, ...profile, id: prev.id } : null);
+              const l = (profile as { language?: unknown }).language;
+              if (typeof l === 'string' && l) savedLang = l;
+              if (typeof owner !== 'string') {
+                await AsyncStorage.setItem(
+                  '@vasco_user_profile',
+                  JSON.stringify({ ...profile, userId: user.id }),
+                ).catch(() => {});
+              }
+            }
           }
         }
       } catch {}
@@ -984,7 +1010,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!prev) return null;
       const merged = { ...prev, ...updates };
       // Persist user profile updates to AsyncStorage
+      // Stamp the owner: an unstamped profile is adopted by whoever signs in
+      // next, which is how a German plumber's country reached a Dutch GC.
       AsyncStorage.setItem('@vasco_user_profile', JSON.stringify({
+        userId: merged.id,
         trade: merged.trade,
         country: merged.country,
         language: merged.language,

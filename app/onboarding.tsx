@@ -389,7 +389,7 @@ export default function OnboardingScreen() {
         onboardingComplete: true,
       };
       updateUser(userUpdates);
-      await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
+      await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify({ ...userUpdates, userId: user?.id })).catch(() => {});
       AsyncStorage.removeItem('@vasco_onboarding_progress').catch(() => {});
       router.replace('/(contractor)');
     } catch (err) {
@@ -528,7 +528,7 @@ export default function OnboardingScreen() {
         isAannemer,
       };
       updateUser(userUpdates);
-      await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify(userUpdates)).catch(() => {});
+      await AsyncStorage.setItem('@vasco_user_profile', JSON.stringify({ ...userUpdates, userId: user?.id })).catch(() => {});
       AsyncStorage.removeItem('@vasco_onboarding_progress').catch(() => {});
 
       // R108: persist onboarding completion + country/trade/language to
