@@ -932,7 +932,17 @@
     "deleteConfirm": "delete",
     "deduction": "deduction",
     "expensesThisYear_one": "{{count}} expense this year",
-    "expensesThisYear_other": "{{count}} expenses this year"
+    "expensesThisYear_other": "{{count}} expenses this year",
+    "categories": {
+      "materiaal": "Materials",
+      "voertuig": "Vehicle",
+      "gereedschap": "Tools",
+      "kantoor": "Office",
+      "verzekering": "Insurance",
+      "opleiding": "Training",
+      "reis": "Travel",
+      "overig": "Other"
+    }
   },
   "customers": {
     "activeTrackers": "Active trackers",

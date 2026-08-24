@@ -2,7 +2,7 @@
 // EXPENSES — Uitgaven beheer
 // =============================================================================
 import { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -20,6 +20,7 @@ import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -36,6 +37,17 @@ export default function ExpensesScreen() {
   const [newDesc, setNewDesc] = useState('');
   const [newAmount, setNewAmount] = useState('');
   const [newCategory, setNewCategory] = useState<ExpenseCategory>('materiaal');
+
+  // EXPENSE_CATEGORIES ships hardcoded Dutch labels ("Materiaal", "Voertuig",
+  // "Gereedschap", "Kantoor"), so a German contractor was filing tax-relevant
+  // expenses under Dutch category names. The ids are the stable key and stay
+  // Dutch — they are persisted on every Expense row — while the LABEL resolves
+  // at render, the same rule the decision catalogue follows (CLAUDE.md).
+  const categoryLabel = useCallback(
+    (cat?: { id: ExpenseCategory; label: string }) =>
+      cat ? t(`expenses.categories.${cat.id}`, cat.label) : '',
+    [t],
+  );
 
   const handleAddExpense = () => {
     if (!newDesc.trim() || !newAmount.trim()) return;
@@ -89,6 +101,13 @@ export default function ExpensesScreen() {
       <Modal visible={showAddForm} transparent animationType="slide" onRequestClose={() => setShowAddForm(false)}>
         <View style={styles.modalOverlay}>
           <Pressable style={styles.modalDismiss} onPress={() => setShowAddForm(false)} accessibilityLabel={t('common.close', 'Close')} />
+          {/* The sheet sits at flex-end in a plain Modal, so the keyboard
+              covered it COMPLETELY the moment the description field was
+              focused — both inputs, the category picker and "Hinzufügen" all
+              behind it. The expense could not be recorded on a real device at
+              all. Same KeyboardAvoidingView pattern customer-crm.tsx already
+              uses for its bottom sheet. */}
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>{t('expenses.newExpense', 'Nieuwe uitgave')}</Text>
@@ -110,18 +129,37 @@ export default function ExpensesScreen() {
               onChangeText={setNewAmount}
               keyboardType="decimal-pad"
             />
+            {/* Was a chip row over `EXPENSE_CATEGORIES.slice(0, 4)`: an expense
+                has exactly ONE category, so this is the one-of-N case CLAUDE.md
+                reserves for DKMenu — and the slice made it worse than a clipped
+                strip, because Verzekering / Opleiding / Reiskosten / Overig
+                could not be chosen AT ALL. Four of eight categories were
+                unreachable, and "Overig" is the one you need when the other
+                seven do not fit. Same shape as the permit wizard strip (#221). */}
+            {/* flex lives on this wrapper, not on the anchor: DKMenu wraps
+                renderAnchor in its own View to measure it, so flex on the
+                anchor sizes inside a wrapper that has already shrunk to
+                content (ui-playbook §2). */}
             <View style={styles.modalCatRow}>
-              {EXPENSE_CATEGORIES.slice(0, 4).map(cat => (
-                <Pressable
-                  key={cat.id}
-                  style={[styles.modalCatChip, newCategory === cat.id && styles.modalCatChipActive]}
-                  onPress={() => setNewCategory(cat.id)}
-                >
-                  <Text style={[styles.modalCatChipText, newCategory === cat.id && styles.modalCatChipTextActive]}>
-                    {cat.label}
-                  </Text>
-                </Pressable>
-              ))}
+              <View style={{ flex: 1 }}>
+              <DKMenu
+                accessibilityLabel={t('expenses.category', 'Category')}
+                items={EXPENSE_CATEGORIES.map(cat => ({
+                  key: cat.id,
+                  label: categoryLabel(cat),
+                  selected: newCategory === cat.id,
+                  onPress: () => setNewCategory(cat.id),
+                }))}
+                renderAnchor={(open) => (
+                  <Pressable style={styles.modalCatAnchor} onPress={open} accessibilityRole="button">
+                    <Text style={styles.modalCatAnchorText} numberOfLines={1}>
+                      {categoryLabel(EXPENSE_CATEGORIES.find(c => c.id === newCategory))}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={SemanticColors.textSecondary} />
+                  </Pressable>
+                )}
+              />
+              </View>
             </View>
             <Pressable
               style={({ pressed }) => [styles.modalSubmit, pressed && { opacity: 0.9 }]}
@@ -130,6 +168,7 @@ export default function ExpensesScreen() {
               <Text style={styles.modalSubmitText}>{t('expenses.add', 'Toevoegen')}</Text>
             </Pressable>
           </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -177,7 +216,7 @@ export default function ExpensesScreen() {
             >
               <Ionicons name={(config?.icon ?? 'ellipsis-horizontal') as IconName} size={14} color={selectedCategory === cat.category ? Palette.white : SemanticColors.textSecondary} />
               <Text style={[styles.catText, selectedCategory === cat.category && styles.catTextActive]}>
-                {config?.label} ({cat.count})
+                {categoryLabel(config)} ({cat.count})
               </Text>
             </Pressable>
           );
@@ -211,7 +250,7 @@ export default function ExpensesScreen() {
               <View style={styles.expenseInfo}>
                 <Text style={styles.expenseName} numberOfLines={1}>{expense.description}</Text>
                 <Text style={styles.expenseMeta}>
-                  {catConfig?.label}{expense.supplier ? ` · ${expense.supplier}` : ''} · {formatDayMonthAuto(expense.date)}
+                  {categoryLabel(catConfig)}{expense.supplier ? ` · ${expense.supplier}` : ''} · {formatDayMonthAuto(expense.date)}
                 </Text>
                 {expense.jobTitle && (
                   <Text style={styles.expenseJob} numberOfLines={1}>{expense.jobTitle}</Text>
@@ -268,10 +307,23 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
   modalInput: { backgroundColor: SemanticColors.surfaceBackground, borderRadius: 12, borderWidth: 1, borderColor: SemanticColors.borderDefault, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
   modalCatRow: { flexDirection: 'row', gap: 8 },
-  modalCatChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: SemanticColors.surfaceSecondary },
-  modalCatChipActive: { backgroundColor: Palette.hermesOrange },
-  modalCatChipText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textSecondary },
-  modalCatChipTextActive: { color: Palette.white },
+  modalCatAnchor: {
+    // NOT `flex: 1`. DKMenu wraps renderAnchor in its own content-sized View,
+    // so a flexing anchor collapses to zero width inside it and the row renders
+    // as an empty box — which is exactly what it did on first try. The flex
+    // belongs on the wrapper outside DKMenu; the anchor stretches to it.
+    // learnings #199 / quote-flow-consolidation §8.
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: SemanticColors.surfaceSecondary,
+  },
+  modalCatAnchorText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary, flex: 1 },
   modalSubmit: { backgroundColor: Palette.hermesOrange, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 4 },
   modalSubmitText: { fontSize: 16, fontFamily: 'Archivo_800ExtraBold', color: Palette.white },
 });

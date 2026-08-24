@@ -932,7 +932,17 @@
     "deleteConfirm": "elimina",
     "deduction": "detrazione",
     "expensesThisYear_one": "{{count}} spesa quest’anno",
-    "expensesThisYear_other": "{{count}} spese quest’anno"
+    "expensesThisYear_other": "{{count}} spese quest’anno",
+    "categories": {
+      "materiaal": "Materiali",
+      "voertuig": "Veicolo",
+      "gereedschap": "Attrezzature",
+      "kantoor": "Ufficio",
+      "verzekering": "Assicurazione",
+      "opleiding": "Formazione",
+      "reis": "Trasferte",
+      "overig": "Altro"
+    }
   },
   "customers": {
     "activeTrackers": "Tracker attivi",

@@ -916,7 +916,17 @@
     "deleteConfirm": "verwijderen",
     "deduction": "aftrek",
     "expensesThisYear_one": "{{count}} uitgave dit jaar",
-    "expensesThisYear_other": "{{count}} uitgaven dit jaar"
+    "expensesThisYear_other": "{{count}} uitgaven dit jaar",
+    "categories": {
+      "materiaal": "Materiaal",
+      "voertuig": "Voertuig",
+      "gereedschap": "Gereedschap",
+      "kantoor": "Kantoor",
+      "verzekering": "Verzekering",
+      "opleiding": "Opleiding",
+      "reis": "Reiskosten",
+      "overig": "Overig"
+    }
   },
   "customers": {
     "activeTrackers": "Actieve trackers",

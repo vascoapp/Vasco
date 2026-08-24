@@ -932,7 +932,17 @@
     "deleteConfirm": "löschen",
     "deduction": "Abzug",
     "expensesThisYear_one": "{{count}} Ausgabe dieses Jahr",
-    "expensesThisYear_other": "{{count}} Ausgaben dieses Jahr"
+    "expensesThisYear_other": "{{count}} Ausgaben dieses Jahr",
+    "categories": {
+      "materiaal": "Material",
+      "voertuig": "Fahrzeug",
+      "gereedschap": "Werkzeug",
+      "kantoor": "Büro",
+      "verzekering": "Versicherung",
+      "opleiding": "Weiterbildung",
+      "reis": "Reisekosten",
+      "overig": "Sonstiges"
+    }
   },
   "customers": {
     "activeTrackers": "Aktive Tracker",
