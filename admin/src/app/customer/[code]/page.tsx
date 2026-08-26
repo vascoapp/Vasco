@@ -32,6 +32,7 @@ import Image from 'next/image';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { CUSTOMER_GLOSSARY, type GlossaryLang } from '../../../lib/customerGlossary';
+import { moneyFormatter } from '@/lib/money';
 
 const STORE_IOS = 'https://apps.apple.com/app/id0000000000';
 const STORE_ANDROID = 'https://play.google.com/store/apps/details?id=com.vascobuild.app';
@@ -87,8 +88,8 @@ function moneyFmt(country: string | undefined, lang: Lang) {
     UK: { cur: 'GBP', loc: 'en-GB' }, GB: { cur: 'GBP', loc: 'en-GB' }, US: { cur: 'USD', loc: 'en-US' },
   };
   const cfg = map[(country || '').toUpperCase()] || { cur: 'EUR', loc: lang + '-' + lang.toUpperCase() };
-  try { return new Intl.NumberFormat(cfg.loc, { style: 'currency', currency: cfg.cur, maximumFractionDigits: 0, currencyDisplay: 'narrowSymbol' }); }
-  catch { return new Intl.NumberFormat('en', { style: 'currency', currency: cfg.cur, maximumFractionDigits: 0 }); }
+  try { return moneyFormatter(cfg.loc, { style: 'currency', currency: cfg.cur, maximumFractionDigits: 0, currencyDisplay: 'narrowSymbol' }); }
+  catch { return moneyFormatter('en', { style: 'currency', currency: cfg.cur, maximumFractionDigits: 0 }); }
 }
 
 const COPY: Record<Lang, Record<string, string>> = {

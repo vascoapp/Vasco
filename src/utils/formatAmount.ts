@@ -1,5 +1,5 @@
 import { getCurrentCountry } from '../lib/currentUser';
-import { COUNTRY_CONFIG, type Country } from '../i18n/formatting';
+import { COUNTRY_CONFIG, euroLeading, type Country } from '../i18n/formatting';
 
 /**
  * Format currency amounts consistently across the app.
@@ -33,12 +33,12 @@ function intl(country: Country | undefined, fractionDigits: number): Intl.Number
 
 /** Format as currency. Large amounts show no decimals, small amounts show 2. */
 export function formatAmount(amount: number, country?: Country): string {
-  return intl(country, Math.abs(amount) >= 1000 ? 0 : 2).format(amount);
+  return euroLeading(intl(country, Math.abs(amount) >= 1000 ? 0 : 2).format(amount));
 }
 
 /** Format as unit price (always 2 decimals) */
 export function formatUnitPrice(price: number, country?: Country): string {
-  return intl(country, 2).format(price);
+  return euroLeading(intl(country, 2).format(price));
 }
 
 /** Format percentage */

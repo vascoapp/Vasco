@@ -26,6 +26,7 @@
 import Image from 'next/image';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
+import { moneyFormatter } from '@/lib/money';
 
 // R191 TODO: shared placeholder with /accept/[token] and /auth/callback.
 // Replace once the App Store Connect listing exists.
@@ -245,7 +246,7 @@ export default function PublicQuotePortal({ params }: PageProps) {
 
   const currency = COUNTRY_CURRENCY[(quote?.business?.country ?? '').toUpperCase()] ?? 'EUR';
   const money = useMemo(
-    () => new Intl.NumberFormat(LANG_LOCALE[lang], { style: 'currency', currency }),
+    () => moneyFormatter(LANG_LOCALE[lang], { style: 'currency', currency }),
     [lang, currency],
   );
 

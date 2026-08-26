@@ -1,3 +1,4 @@
+import { euroLeading } from '../i18n/formatting';
 // =============================================================================
 // MULTI-CURRENCY UTILITIES (R249)
 // =============================================================================
@@ -53,12 +54,12 @@ export function currencySymbol(code: CurrencyCode): string {
 export function formatMoney(amount: number, currency: CurrencyCode = 'EUR', locale?: string): string {
   const finalLocale = locale ?? CURRENCY_LOCALES[currency] ?? 'en-EU';
   try {
-    return new Intl.NumberFormat(finalLocale, {
+    return euroLeading(new Intl.NumberFormat(finalLocale, {
       style: 'currency',
       currency,
       maximumFractionDigits: 2,
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(amount));
   } catch {
     // Fallback for environments without Intl currency support
     return `${currencySymbol(currency)}${amount.toFixed(2)}`;

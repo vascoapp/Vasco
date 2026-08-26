@@ -11,7 +11,7 @@
 // =============================================================================
 
 import type { GeneratorLanguage } from './generators/types';
-import { getCountryConfig, type Country } from '../i18n/formatting';
+import { getCountryConfig, type Country, euroLeading } from '../i18n/formatting';
 
 type TranslationMap = Record<GeneratorLanguage, string>;
 
@@ -25,15 +25,15 @@ export function gtMoney(amount: number, country: Country = 'NL'): string {
   const { currency, locale } = getCountryConfig(country);
   const rounded = Math.round(amount);
   try {
-    return new Intl.NumberFormat(locale, {
+    return euroLeading(new Intl.NumberFormat(locale, {
       style: 'currency', currency, currencyDisplay: 'narrowSymbol',
       minimumFractionDigits: 0, maximumFractionDigits: 0,
-    }).format(rounded);
+    }).format(rounded));
   } catch {
     // narrowSymbol unsupported on some RN/Hermes Intl builds — fall back.
-    return new Intl.NumberFormat(locale, {
+    return euroLeading(new Intl.NumberFormat(locale, {
       style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0,
-    }).format(rounded);
+    }).format(rounded));
   }
 }
 

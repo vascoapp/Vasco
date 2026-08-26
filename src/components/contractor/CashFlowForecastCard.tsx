@@ -12,7 +12,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { buildForecast, type ForecastSummary } from '../../services/cashFlowForecastService';
-import { getCountryConfig, type Country } from '../../i18n/formatting';
+import { formatCurrency0, type Country } from '../../i18n/formatting';
 import type { Invoice, Quote } from '../../domain/documents';
 import type { Job } from '../../types/contractor';
 
@@ -26,26 +26,12 @@ interface Props {
   onPress?: () => void;
 }
 
-// Whole-currency formatter — keeps the card's existing no-decimal display but
-// emits the right symbol + locale grouping (€1.234 for NL, £1,234 for UK,
-// $1,234 for US). Symbol-only via currencyDisplay:'narrowSymbol'.
-function formatMoney0(amount: number, country: Country): string {
-  const { currency, locale } = getCountryConfig(country);
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency,
-      currencyDisplay: 'narrowSymbol',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  } catch {
-    // narrowSymbol unsupported on some RN/Hermes Intl builds — fall back.
-    return new Intl.NumberFormat(locale, {
-      style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0,
-    }).format(amount);
-  }
-}
+// Was a LOCAL re-implementation of `formatCurrency0` — same Intl options, same
+// narrowSymbol fallback, one file over. That is how this card kept trailing the
+// euro sign after the shared formatter was changed to lead it: "17.848 €" sat
+// directly under "€ 3,2 Tsd." on the same screen. One formatter.
+const formatMoney0 = formatCurrency0;
+
 
 export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, country = 'NL', onPress }: Props) {
   const { t } = useTranslation();

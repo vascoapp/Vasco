@@ -24,6 +24,7 @@
 
 import { use, useCallback, useEffect, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
+import { euroLeading } from '@/lib/money';
 
 interface PageProps {
   params: Promise<{ code: string }>;
@@ -203,9 +204,9 @@ const CURRENCY_BY_COUNTRY: Record<string, string> = {
 function money(amount: number, country: string, lang: Lang): string {
   const currency = CURRENCY_BY_COUNTRY[(country || '').toUpperCase()] ?? 'EUR';
   try {
-    return new Intl.NumberFormat(lang === 'en' ? 'en-GB' : lang, {
+    return euroLeading(new Intl.NumberFormat(lang === 'en' ? 'en-GB' : lang, {
       style: 'currency', currency,
-    }).format(amount);
+    }).format(amount));
   } catch {
     return `${currency} ${amount.toFixed(2)}`;
   }
