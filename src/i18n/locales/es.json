@@ -3135,7 +3135,7 @@
     "a11yPillInactive": "Proyecto {{title}}. Toca para seleccionar, mantén pulsado para abrir.",
     "a11yCreate": "Crear un nuevo proyecto",
     "a11yOpenMenu": "Elegir proyecto activo",
-    "noneSelected": "Ningún proyecto activo"
+    "noneSelected": "Ningún proyecto seleccionado"
   },
   "recurring": {
     "title": "MANTENIMIENTO",

@@ -101,9 +101,15 @@ function ProjectSwitcherImpl() {
                 color={activeProject ? DK.colors.accent : DK.colors.textMuted}
               />
               <Text style={styles.anchorText} numberOfLines={1}>
+                {/* "No project SELECTED", not "no active project": this anchor
+                    sits directly under the header "ACTIVE PROJECTS", and it
+                    only renders at all when there is at least one. The old
+                    copy read as a flat contradiction of the line above it —
+                    "ACTIEVE PROJECTEN / Geen actief project" — on an aannemer
+                    with two running projects. Seen on device 2026-08-26. */}
                 {activeProject
                   ? activeProject.title
-                  : t('projectSwitcher.noneSelected', { defaultValue: 'No active project' })}
+                  : t('projectSwitcher.noneSelected', { defaultValue: 'No project selected' })}
               </Text>
               <Ionicons name="chevron-down" size={16} color={DK.colors.textMuted} />
             </Pressable>

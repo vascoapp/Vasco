@@ -379,14 +379,20 @@ describe('resolveTemplate — customer-facing copy', () => {
 
   // Regression: the German dunning message read "Rechnung (€5.200,00) … + 40 €
   // Mahnpauschale" — both conventions in one sentence. Parameterising the
-  // symbol fixed the UK's £ but kept it symbol-FIRST, which only en-GB writes.
-  test('the symbol sits where the contractor’s market writes it', () => {
+  // symbol fixed the UK's £; the SEPARATORS still follow the market.
+  //
+  // The sign's position no longer does. User decision 2026-08-26: the euro sign
+  // leads the amount everywhere, so the customer's message agrees with the app
+  // that sent it instead of each locale writing it its own way. What this test
+  // protects is unchanged — one symbol, the right currency, the right
+  // separators — only the expected position moved.
+  test('the euro sign leads, and the separators still follow the market', () => {
     const de = resolveTemplate('Rechnung ({{amount}})', { amount: 5200, country: 'DE' });
-    expect(de).toMatch(/5\.200,00\s*€/);      // German: symbol AFTER
-    expect(de).not.toMatch(/€\s*5\.200/);
+    expect(de).toMatch(/€\s*5\.200,00/);      // German separators, leading sign
+    expect(de.match(/€/g) ?? []).toHaveLength(1);
 
     const uk = resolveTemplate('Invoice ({{amount}})', { amount: 5200, country: 'UK' });
-    expect(uk).toMatch(/£\s*5,200\.00/);      // UK: symbol BEFORE, and £ not €
+    expect(uk).toMatch(/£\s*5,200\.00/);      // UK: £ not €
     expect(uk).not.toContain('€');
   });
 
@@ -396,7 +402,7 @@ describe('resolveTemplate — customer-facing copy', () => {
     const out = resolveTemplate('Rechnung ({{currency}}{{amount}})', {
       currency: '€', amount: 5200, country: 'DE',
     });
-    expect(out).toMatch(/5\.200,00\s*€/);
+    expect(out).toMatch(/€\s*5\.200,00/);
     expect(out.match(/€/g) ?? []).toHaveLength(1);
   });
 

@@ -3135,7 +3135,7 @@
     "a11yPillInactive": "Projekt {{title}}. Tippen zum Auswählen, gedrückt halten zum Öffnen.",
     "a11yCreate": "Neues Projekt anlegen",
     "a11yOpenMenu": "Aktives Projekt wählen",
-    "noneSelected": "Kein aktives Projekt"
+    "noneSelected": "Kein Projekt gewählt"
   },
   "vatScheme": {
     "standard": "Standard-USt",

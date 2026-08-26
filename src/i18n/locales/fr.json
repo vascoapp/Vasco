@@ -3135,7 +3135,7 @@
     "a11yPillInactive": "Projet {{title}}. Appuyez pour sélectionner, appui long pour ouvrir.",
     "a11yCreate": "Créer un nouveau projet",
     "a11yOpenMenu": "Choisir le projet actif",
-    "noneSelected": "Aucun projet actif"
+    "noneSelected": "Aucun projet sélectionné"
   },
   "recurring": {
     "title": "ENTRETIEN",

@@ -195,16 +195,29 @@ describe('money formatters follow the signed-in contractor by default', () => {
 
   afterEach(() => setCurrentUser(null));
 
-  it('formats in German convention for a DE contractor with no explicit country', () => {
+  // User decision 2026-08-26: the euro SIGN leads the amount in EVERY market
+  // that uses it. This test used to pin the opposite for DE — `Intl`'s own
+  // per-locale convention, which trails the sign in de/fr/es/it and leads it in
+  // nl, so the same amount rendered two ways depending on who was signed in.
+  // The country still decides the CURRENCY and the separators; only the sign's
+  // position is now uniform.
+  it('leads with the euro sign for a DE contractor with no explicit country', () => {
     setCurrentUser({ id: 'u1', country: 'DE', trade: 'plumbing' });
-    // de-DE puts the symbol AFTER the amount; nl-NL puts it before.
-    expect(formatCurrency0(760)).toMatch(/760\s?€/);
-    expect(formatCurrency0(760).startsWith('€')).toBe(false);
+    expect(formatCurrency0(760).startsWith('€')).toBe(true);
+    // German separators survive: 1.234, not 1,234.
+    expect(formatCurrency0(1234)).toContain('1.234');
   });
 
-  it('formats in Dutch convention for an NL contractor', () => {
+  it('leads with the euro sign for an NL contractor too', () => {
     setCurrentUser({ id: 'u1', country: 'NL', trade: 'plumbing' });
     expect(formatCurrency0(760).startsWith('€')).toBe(true);
+  });
+
+  it('leaves GBP and USD alone — they lead by their own convention', () => {
+    setCurrentUser({ id: 'u1', country: 'UK', trade: 'plumbing' });
+    expect(formatCurrency0(760).startsWith('£')).toBe(true);
+    setCurrentUser({ id: 'u1', country: 'US', trade: 'plumbing' });
+    expect(formatCurrency0(760).startsWith('$')).toBe(true);
   });
 
   it('uses pounds for a UK contractor rather than defaulting to euros', () => {

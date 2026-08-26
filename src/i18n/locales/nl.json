@@ -3119,7 +3119,7 @@
     "a11yPillInactive": "Project {{title}}. Tik om te selecteren, lang ingedrukt om te openen.",
     "a11yCreate": "Nieuw project aanmaken",
     "a11yOpenMenu": "Kies actief project",
-    "noneSelected": "Geen actief project"
+    "noneSelected": "Geen project gekozen"
   },
   "vatScheme": {
     "standard": "Standaard BTW",
