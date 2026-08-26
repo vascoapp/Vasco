@@ -18,7 +18,7 @@
 // =============================================================================
 
 import { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -546,7 +546,17 @@ export default function ProjectBillingScreen() {
         animationType="slide"
         onRequestClose={closeTermForm}
       >
+        {/* KeyboardAvoidingView, or the sheet is unusable on a real device.
+            `modalOverlay` is `justifyContent: 'flex-end'`, so the card sits on
+            the screen bottom and iOS does NOT lift a Modal above the keyboard:
+            focusing any field here covered BOTH inputs and the Save button
+            completely. Verified on the sim 2026-08-27 with the software
+            keyboard on — the whole sheet was behind it. Invisible when the
+            simulator's hardware keyboard is attached, which is why walking the
+            screen never caught it. Same fix expenses.tsx and customer-crm.tsx
+            already carry. */}
         <Pressable style={styles.modalOverlay} onPress={closeTermForm}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>
               {editingTerm
@@ -572,6 +582,7 @@ export default function ProjectBillingScreen() {
               <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
             </Pressable>
           </Pressable>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
 
@@ -583,6 +594,7 @@ export default function ProjectBillingScreen() {
         onRequestClose={() => setShowRetentionForm(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setShowRetentionForm(false)}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>
               {t('projectBilling.editRetention', 'Edit retention %')}
@@ -608,12 +620,14 @@ export default function ProjectBillingScreen() {
               <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
             </Pressable>
           </Pressable>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
 
       {/* Add change order */}
       <Modal visible={showCoForm} transparent animationType="slide" onRequestClose={() => setShowCoForm(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowCoForm(false)}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>{t('projectBilling.addChangeOrder', 'Add change order')}</Text>
             <TextInput
@@ -635,6 +649,7 @@ export default function ProjectBillingScreen() {
               <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
             </Pressable>
           </Pressable>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
     </View>
