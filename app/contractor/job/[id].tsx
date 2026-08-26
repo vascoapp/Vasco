@@ -44,6 +44,8 @@ import { addActivityEntry } from '../../../src/services/jobCommentsService';
 import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist';
 import { listJobPhotos } from '../../../src/services/jobPhotoService';
 import { SignaturePad } from '../../../src/components/shared/SignaturePad';
+import { DKMenu } from '../../../src/components/shared/DKMenu';
+import { DK } from '../../../src/theme/draftkings';
 import { useAuth } from '../../../src/context/AuthContext';
 import { tradeMismatch } from '../../../src/services/crewAssignment';
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
@@ -305,6 +307,49 @@ export default function JobDetailPage() {
   const contact = cust
     ? { name: cust.name, phone: cust.phone || '', email: cust.email || '' }
     : { name: job.customerName || '', phone: '', email: '' };
+  // The one writer this screen never had. `updateJob` already persists
+  // customerId through the standard mapper, so linking is a single field write
+  // — the gap was purely that no control existed to make it.
+  const linkedCustomerId = appJob?.customerId ?? job.customerId ?? null;
+  // R295: the ETA is asked, never assumed — this used to send a hardcoded
+  // "15 min" to the customer regardless of distance (no GPS: expo-location is
+  // not installed). The windows live in one place so the menu and any future
+  // caller cannot drift.
+  const ETA_CHOICES = [
+    { mins: 10, key: 'jobs.eta10' },
+    { mins: 20, key: 'jobs.eta20' },
+    { mins: 30, key: 'jobs.eta30' },
+    { mins: 45, key: 'jobs.eta45' },
+  ];
+  const sendOnMyWay = async (etaLabel: string) => {
+    try {
+      const { renderTemplate } = await import('../../../src/services/whatsappTemplateService');
+      const locale = ((businessProfile as any)?.language ?? 'en') as any;
+      const text = renderTemplate('on_my_way', locale, {
+        customer: contact.name || '',
+        eta: etaLabel,
+        business: (businessProfile as any)?.businessName ?? 'Vasco',
+      });
+      await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
+      hapticSuccess();
+    } catch {}
+  };
+  const customerMenuItems = [
+    {
+      key: '__none__',
+      label: t('jobs.noCustomer', 'No customer'),
+      selected: !linkedCustomerId,
+      emphasis: true,
+      onPress: () => { if (id) updateJob(id, { customerId: null }); },
+    },
+    ...(customers as { id: string; name: string; phone?: string }[]).map((c) => ({
+      key: c.id,
+      label: c.name,
+      detail: c.phone,
+      selected: linkedCustomerId === c.id,
+      onPress: () => { if (id) updateJob(id, { customerId: c.id }); },
+    })),
+  ];
   const upsells = EMPTY_UPSELLS;
   const rawJobMaterials = jobMaterialsMap[id || ''] || [];
   const materials: MaterialPrediction[] = rawJobMaterials.map((jm: any) => {
@@ -562,67 +607,74 @@ export default function JobDetailPage() {
             )}
 
             {/* R94: worker assignment row. Hidden when crew is empty
-                (solo contractors don't see clutter). Tap opens an
-                Alert picker with active workers + "Unassigned".
-                Closes the R86 crew dispatch loop — workers were
-                CRUD-only before this, no way to attach them to jobs
-                from the job-detail UI. */}
+                (solo contractors don't see clutter). Closes the R86 crew
+                dispatch loop — workers were CRUD-only before this.
+
+                This was an `Alert.alert` carrying unassign + every active
+                crew member + cancel. Android's Alert renders THREE buttons
+                and silently drops the rest, so a contractor with three or
+                more people on the books could not reach most of their own
+                crew — the exact defect [[drag-schedule-is-not-drag]] fixed
+                on the schedule board and #219 found again in the timesheet.
+                Picking one of N is a DKMenu. */}
             {workers.filter((w) => w.isActive).length > 0 && (
-              <Pressable
-                style={styles.heroDetailItem}
-                onPress={() => {
-                  const activeCrew = workers.filter((w) => w.isActive);
-                  Alert.alert(
-                    t('jobs.assignTo', 'Assign to'),
-                    job.customer,
-                    [
-                      ...(appJob?.assignedWorkerId
-                        ? [{
-                            text: t('jobs.unassign', 'Unassign'),
-                            style: 'destructive' as const,
-                            onPress: () => updateJob(id as string, { assignedWorkerId: undefined }),
-                          }]
-                        : []),
-                      // Same trade guard as the planner, so the two assignment
-                      // paths cannot disagree about the same person and job.
-                      // A warning, never a block.
-                      ...activeCrew.map((w) => ({
-                        text: w.name,
-                        onPress: () => {
-                          const assign = () => updateJob(id as string, { assignedWorkerId: w.id });
-                          const mismatch = tradeMismatch(w as any, appJob as any, tradeLabel);
-                          if (!mismatch) { assign(); return; }
-                          Alert.alert(
-                            t('schedule.tradeMismatchTitle'),
-                            t('schedule.tradeMismatchBody', {
-                              worker: mismatch.workerName,
-                              workerTrade: mismatch.workerTrade,
-                              jobTrade: mismatch.jobTrade,
-                            }),
-                            [
-                              { text: t('schedule.pickSomeoneElse'), style: 'cancel' as const },
-                              { text: t('schedule.assignAnyway'), onPress: assign },
-                            ],
-                          );
-                        },
-                      })),
-                      { text: t('common.cancel', 'Cancel'), style: 'cancel' as const },
-                    ],
-                  );
-                }}
-                accessibilityRole="button"
+              <DKMenu
                 accessibilityLabel={t('jobs.assignToLabel', 'Assign job to a crew member')}
-              >
-                <View style={styles.heroDetailIcon}>
-                  <Ionicons name="person" size={14} color={Palette.hermesOrange} />
-                </View>
-                <Text style={styles.heroDetailText}>
-                  {appJob?.assignedWorkerId
-                    ? (workers.find((w) => w.id === appJob.assignedWorkerId)?.name ?? t('jobs.unknownWorker', 'Unknown worker'))
-                    : t('jobs.unassigned', 'Unassigned — tap to assign')}
-                </Text>
-                <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
-              </Pressable>
+                items={[
+                  ...(appJob?.assignedWorkerId
+                    ? [{
+                        key: '__unassign__',
+                        label: t('jobs.unassign', 'Unassign'),
+                        emphasis: true,
+                        onPress: () => updateJob(id as string, { assignedWorkerId: undefined }),
+                      }]
+                    : []),
+                  // Same trade guard as the planner, so the two assignment
+                  // paths cannot disagree about the same person and job.
+                  // A warning, never a block.
+                  ...workers.filter((w) => w.isActive).map((w) => ({
+                    key: w.id,
+                    label: w.name,
+                    detail: (w as any).trade ? tradeLabel((w as any).trade) : undefined,
+                    selected: appJob?.assignedWorkerId === w.id,
+                    onPress: () => {
+                      const assign = () => updateJob(id as string, { assignedWorkerId: w.id });
+                      const mismatch = tradeMismatch(w as any, appJob as any, tradeLabel);
+                      if (!mismatch) { assign(); return; }
+                      Alert.alert(
+                        t('schedule.tradeMismatchTitle'),
+                        t('schedule.tradeMismatchBody', {
+                          worker: mismatch.workerName,
+                          workerTrade: mismatch.workerTrade,
+                          jobTrade: mismatch.jobTrade,
+                        }),
+                        [
+                          { text: t('schedule.pickSomeoneElse'), style: 'cancel' as const },
+                          { text: t('schedule.assignAnyway'), onPress: assign },
+                        ],
+                      );
+                    },
+                  })),
+                ]}
+                renderAnchor={(open) => (
+                  <Pressable
+                    style={styles.heroDetailItem}
+                    onPress={open}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('jobs.assignToLabel', 'Assign job to a crew member')}
+                  >
+                    <View style={styles.heroDetailIcon}>
+                      <Ionicons name="person" size={14} color={Palette.hermesOrange} />
+                    </View>
+                    <Text style={styles.heroDetailText}>
+                      {appJob?.assignedWorkerId
+                        ? (workers.find((w) => w.id === appJob.assignedWorkerId)?.name ?? t('jobs.unknownWorker', 'Unknown worker'))
+                        : t('jobs.unassigned', 'Unassigned — tap to assign')}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={14} color={SemanticColors.textTertiary} />
+                  </Pressable>
+                )}
+              />
             )}
           </View>
 
@@ -768,52 +820,107 @@ export default function JobDetailPage() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>{t('jobs.client', 'Client')}</Text>
           <View style={styles.card}>
-            <View style={styles.contactRow}>
-              <View style={styles.contactAvatar}>
-                <Text style={styles.contactAvatarText}>
-                  {contact.name.charAt(0).toUpperCase()}
+            {/* A job whose customer is null used to render an empty avatar over
+                an empty name over three buttons that opened `tel:`, `wa.me/`
+                and `mailto:` with nothing after them. The new-job sheet grew a
+                picker, but jobs made before it — or attached to the wrong
+                customer — had NO way back: `job.customerId` had readers
+                everywhere and the only writer was at creation (#208). Picking
+                one of N is a balloon menu, never a chip strip (CLAUDE.md). */}
+            {cust ? (
+              <>
+                <View style={styles.contactRow}>
+                  <View style={styles.contactAvatar}>
+                    <Text style={styles.contactAvatarText}>
+                      {contact.name.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.contactInfo}>
+                    <Text style={styles.contactName}>{contact.name}</Text>
+                    {!!contact.phone && <Text style={styles.contactDetail}>{contact.phone}</Text>}
+                  </View>
+                  <DKMenu
+                    accessibilityLabel={t('jobs.selectCustomer', 'Select customer')}
+                    items={customerMenuItems}
+                    renderAnchor={(open) => (
+                      <Pressable
+                        onPress={open}
+                        style={styles.contactChange}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('jobs.changeCustomer', 'Change')}
+                      >
+                        <Text style={styles.contactChangeText}>{t('jobs.changeCustomer', 'Change')}</Text>
+                      </Pressable>
+                    )}
+                  />
+                </View>
+                <View style={styles.contactActions}>
+                  {/* Only offer a channel we actually have an address for. An
+                      enabled button that dials an empty `tel:` is #212's shape:
+                      a control claiming a capability the data does not carry. */}
+                  {!!contact.phone && (
+                    <Pressable
+                      style={styles.contactAction}
+                      onPress={() => Linking.openURL(`tel:${contact.phone}`)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${t('jobs.call', 'Call')} ${contact.name}`}
+                    >
+                      <View style={[styles.contactActionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '14' }]}>
+                        <Ionicons name="call" size={16} color={SemanticColors.feedbackSuccess} />
+                      </View>
+                      <Text style={styles.contactActionLabel}>{t('jobs.call', 'Call')}</Text>
+                    </Pressable>
+                  )}
+                  {!!contact.phone && (
+                    <Pressable
+                      style={styles.contactAction}
+                      onPress={() => Linking.openURL(`https://wa.me/${contact.phone.replace(/\s+/g, '').replace('+', '')}`)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`WhatsApp ${contact.name}`}
+                    >
+                      <View style={[styles.contactActionIcon, { backgroundColor: '#25D36614' }]}>
+                        <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
+                      </View>
+                      <Text style={styles.contactActionLabel}>WhatsApp</Text>
+                    </Pressable>
+                  )}
+                  {!!contact.email && (
+                    <Pressable
+                      style={styles.contactAction}
+                      onPress={() => Linking.openURL(`mailto:${contact.email}`)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${t('jobs.email', 'Email')} ${contact.name}`}
+                    >
+                      <View style={[styles.contactActionIcon, { backgroundColor: Palette.hermesOrange + '14' }]}>
+                        <Ionicons name="mail" size={16} color={Palette.hermesOrange} />
+                      </View>
+                      <Text style={styles.contactActionLabel}>{t('jobs.email', 'Email')}</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </>
+            ) : (
+              <View style={styles.contactEmpty}>
+                <Text style={styles.contactEmptyText}>
+                  {t('jobs.noCustomerLinkedDesc', 'This job is not linked to a customer, so it cannot be invoiced and the customer sees nothing about it.')}
                 </Text>
+                <DKMenu
+                  accessibilityLabel={t('jobs.selectCustomer', 'Select customer')}
+                  items={customerMenuItems}
+                  renderAnchor={(open) => (
+                    <Pressable
+                      onPress={open}
+                      style={styles.linkCustomerBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('jobs.linkCustomer', 'Link a customer')}
+                    >
+                      <Ionicons name="person-add-outline" size={16} color={DK.colors.accent} />
+                      <Text style={styles.linkCustomerText}>{t('jobs.linkCustomer', 'Link a customer')}</Text>
+                    </Pressable>
+                  )}
+                />
               </View>
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactName}>{contact.name}</Text>
-                <Text style={styles.contactDetail}>{contact.phone}</Text>
-              </View>
-            </View>
-            <View style={styles.contactActions}>
-              <Pressable
-                style={styles.contactAction}
-                onPress={() => Linking.openURL(`tel:${contact.phone}`)}
-                accessibilityRole="button"
-                accessibilityLabel={`${t('jobs.call', 'Call')} ${contact.name}`}
-              >
-                <View style={[styles.contactActionIcon, { backgroundColor: SemanticColors.feedbackSuccess + '14' }]}>
-                  <Ionicons name="call" size={16} color={SemanticColors.feedbackSuccess} />
-                </View>
-                <Text style={styles.contactActionLabel}>{t('jobs.call', 'Call')}</Text>
-              </Pressable>
-              <Pressable
-                style={styles.contactAction}
-                onPress={() => Linking.openURL(`https://wa.me/${contact.phone.replace(/\s+/g, '').replace('+', '')}`)}
-                accessibilityRole="button"
-                accessibilityLabel={`WhatsApp ${contact.name}`}
-              >
-                <View style={[styles.contactActionIcon, { backgroundColor: '#25D36614' }]}>
-                  <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
-                </View>
-                <Text style={styles.contactActionLabel}>WhatsApp</Text>
-              </Pressable>
-              <Pressable
-                style={styles.contactAction}
-                onPress={() => Linking.openURL(`mailto:${contact.email}`)}
-                accessibilityRole="button"
-                accessibilityLabel={`${t('jobs.email', 'Email')} ${contact.name}`}
-              >
-                <View style={[styles.contactActionIcon, { backgroundColor: Palette.hermesOrange + '14' }]}>
-                  <Ionicons name="mail" size={16} color={Palette.hermesOrange} />
-                </View>
-                <Text style={styles.contactActionLabel}>{t('jobs.email', 'Email')}</Text>
-              </Pressable>
-            </View>
+            )}
           </View>
         </View>
 
@@ -1186,44 +1293,33 @@ export default function JobDetailPage() {
             </Pressable>
           )}
           {!jobCompleted && (contact.phone || contact.email) && (
-            <Pressable
-              style={styles.actionSecondary}
-              accessibilityRole="button"
+            // Four ETA windows + cancel in an `Alert.alert`: Android shows
+            // three, so "45 min" — the one you need when you are actually
+            // late — was unreachable, and so, possibly, was cancel. #219.
+            <DKMenu
               accessibilityLabel={t('jobs.onMyWay', 'Send on-my-way to customer')}
-              onPress={async () => {
-                // R295: was hardcoded "15 min" ETA, sent to customer regardless
-                // of distance. No real GPS available (expo-location not
-                // installed). Prompt contractor for a realistic ETA window
-                // instead of lying.
-                const sendWithEta = async (etaLabel: string) => {
-                  try {
-                    const { renderTemplate } = await import('../../../src/services/whatsappTemplateService');
-                    const locale = ((businessProfile as any)?.language ?? 'en') as any;
-                    const text = renderTemplate('on_my_way', locale, {
-                      customer: contact.name || '',
-                      eta: etaLabel,
-                      business: (businessProfile as any)?.businessName ?? 'Vasco',
-                    });
-                    await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
-                    hapticSuccess();
-                  } catch {}
-                };
-                Alert.alert(
-                  t('jobs.onMyWay', 'On my way'),
-                  t('jobs.etaPrompt', 'When will you arrive?'),
-                  [
-                    { text: t('jobs.eta10', '10 min'), onPress: () => sendWithEta('10 min') },
-                    { text: t('jobs.eta20', '20 min'), onPress: () => sendWithEta('20 min') },
-                    { text: t('jobs.eta30', '30 min'), onPress: () => sendWithEta('30 min') },
-                    { text: t('jobs.eta45', '45 min'), onPress: () => sendWithEta('45 min') },
-                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                  ],
-                );
-              }}
-            >
-              <Ionicons name="navigate" size={18} color={Palette.hermesOrange} />
-              <Text style={styles.actionSecondaryText} numberOfLines={2}>{t('jobs.quickOnMyWay', 'On my way')}</Text>
-            </Pressable>
+              items={ETA_CHOICES.map(({ mins, key }) => ({
+                key: String(mins),
+                // The already-translated eta10/20/30/45 keys — German writes
+                // "10 Min.", and the label must not be re-derived here.
+                label: t(key, `${mins} min`),
+                // The template slot stays untranslated minutes: it is what the
+                // CUSTOMER reads, rendered by whatsappTemplateService in the
+                // customer's own template locale.
+                onPress: () => { void sendOnMyWay(`${mins} min`); },
+              }))}
+              renderAnchor={(open) => (
+                <Pressable
+                  style={styles.actionSecondary}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('jobs.onMyWay', 'Send on-my-way to customer')}
+                  onPress={open}
+                >
+                  <Ionicons name="navigate" size={18} color={Palette.hermesOrange} />
+                  <Text style={styles.actionSecondaryText} numberOfLines={2}>{t('jobs.quickOnMyWay', 'On my way')}</Text>
+                </Pressable>
+              )}
+            />
           )}
           {!jobCompleted ? (
             <Pressable
@@ -1300,19 +1396,40 @@ export default function JobDetailPage() {
                     addActivityEntry(id || '', 'signature_requested', t('jobs.activitySignatureRequested', { defaultValue: 'Sign-off link sent to {{customer}}', customer: customerLabel })).catch(() => {});
                   } catch {}
                 };
+                // Four buttons — cancel, capture, request, complete — when a
+                // sign-off was outstanding. Android renders THREE and drops
+                // the rest, and the one that fell off the end was
+                // **Complete**: the primary action of the button the
+                // contractor had just pressed. Split into two ≤3-button
+                // steps so every path survives on both platforms, and so the
+                // checklist warning stays attached to the confirmation it
+                // belongs to rather than becoming a menu with no message.
+                const askHowToSignOff = () => {
+                  Alert.alert(
+                    t('jobs.customerSignature', 'Customer signature'),
+                    t('jobs.signOffHow', 'How do you want the sign-off?'),
+                    [
+                      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                      {
+                        text: t('jobs.captureSignature', 'Capture signature'),
+                        onPress: () => setSignatureModal({ visible: true, onSigned: doComplete }),
+                      },
+                      {
+                        text: t('jobs.requestSignature', 'Request from customer'),
+                        onPress: requestRemoteSignature,
+                      },
+                    ],
+                  );
+                };
                 Alert.alert(
                   t('jobs.completeJob', 'Complete job'),
                   t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?') + checklistWarning,
                   [
                     { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                     ...(needsSignoff ? [{
-                      text: t('jobs.captureSignature', 'Capture signature'),
-                      onPress: () => setSignatureModal({ visible: true, onSigned: doComplete }),
+                      text: t('jobs.signOffFirst', 'Get sign-off first'),
+                      onPress: askHowToSignOff,
                     }] : []),
-                    {
-                      text: t('jobs.requestSignature', 'Request from customer'),
-                      onPress: requestRemoteSignature,
-                    },
                     { text: t('jobs.complete', 'Complete'), onPress: doComplete },
                   ],
                 );
@@ -1820,6 +1937,19 @@ const styles = StyleSheet.create({
   },
 
   // Contact
+  contactChange: {
+    paddingHorizontal: GRID.sm, paddingVertical: 6,
+    borderRadius: RADIUS.sm, borderWidth: 1, borderColor: DK.colors.border,
+  },
+  contactChangeText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted },
+  contactEmpty: { gap: GRID.sm },
+  contactEmptyText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, lineHeight: 18 },
+  linkCustomerBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: GRID.xs, paddingVertical: GRID.sm, paddingHorizontal: GRID.md,
+    borderRadius: RADIUS.md, borderWidth: 1, borderColor: DK.colors.accent,
+  },
+  linkCustomerText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: DK.colors.accent },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',

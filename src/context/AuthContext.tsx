@@ -646,7 +646,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // started the loops, so business_events sat in AsyncStorage indefinitely.
   useEffect(() => {
     if (user?.id) {
-      const country = user.country ?? 'NL';
+      // NOT `?? 'NL'`. This is the ACCOUNT's country and it is allowed to be
+      // unknown; `setCurrentUser` stores it verbatim and `getCurrentCountry()`
+      // hands it to everyone else. Defaulting here made
+      // `getCurrentCountry() ?? businessProfile.country` in AppState
+      // permanently unreachable — the business profile, which is what the
+      // contractor actually last entered, could never supply the country
+      // (learnings #210: a default upstream turns every fallback downstream
+      // into dead code). Every consumer that genuinely needs a country still
+      // applies its own `?? 'NL'`, so nothing loses a value it used to have;
+      // what changes is that a better source now gets a chance to win first.
+      const country = user.country;
       const trade = (user as any).trade as string | undefined;
       const role = user.role === 'site-lead' ? 'sitelead' : (user.role ?? 'contractor');
       setCurrentUser({ id: user.id, country, trade });
