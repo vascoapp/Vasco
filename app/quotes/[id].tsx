@@ -396,18 +396,23 @@ export default function QuoteDetailScreen() {
             <Ionicons name="list" size={18} color={Palette.hermesOrange} />
             <Text style={styles.cardTitle}>{t('quotes.lineItems', 'Line items')}</Text>
           </View>
-          <View style={styles.lineHeaderRow}>
-            <Text style={[styles.lineHeaderText, { flex: 2 }]}>{t('invoices.description', 'Description')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 40, textAlign: 'center' }]}>{t('invoices.qty', 'Qty')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.unitPrice', 'Price')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.total', 'Total')}</Text>
-          </View>
+          {/* Stacked, not four columns — the same fix `app/invoices/[id].tsx`
+              needed. The description cell got ~130pt of a 402pt screen, and
+              iOS breaks a word wider than its box BETWEEN CHARACTERS, so the
+              Dutch quote rendered "Onderhoudscerti / ficaat" and the header
+              itself split "AANTA / L". A quote is a document the CUSTOMER is
+              asked to accept; a line whose description is cut is not one. */}
           {quoteLineItems.map((item) => (
-            <View key={item.id} style={styles.lineItemRow}>
-              <Text style={[styles.lineText, { flex: 2 }]} numberOfLines={2}>{item.description}</Text>
-              <Text style={[styles.lineTextMuted, { width: 40, textAlign: 'center' }]}>{item.quantity}</Text>
-              <Text style={[styles.lineTextMuted, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.unitPrice)}</Text>
-              <Text style={[styles.lineText, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.unitPrice * item.quantity)}</Text>
+            <View key={item.id} style={styles.lineItemStack}>
+              <Text style={styles.lineText} numberOfLines={3}>{item.description}</Text>
+              <View style={styles.lineNumbers}>
+                <Text style={styles.lineTextMuted} numberOfLines={1}>
+                  {item.quantity} × {formatCurrency(item.unitPrice)}
+                </Text>
+                <Text style={styles.lineText} numberOfLines={1}>
+                  {formatCurrency(item.unitPrice * item.quantity)}
+                </Text>
+              </View>
             </View>
           ))}
 
@@ -625,6 +630,8 @@ const styles = StyleSheet.create({
   // mid-word ("STÜCKPREI / S"). Width, not font size — learnings #113.
   lineHeaderText: { fontSize: 10, fontFamily: TYPE.labelFamily, color: SemanticColors.textTertiary, letterSpacing: 0.2, textTransform: 'uppercase' },
   lineItemRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingVertical: GRID.xs },
+  lineItemStack: { paddingVertical: GRID.sm, gap: 2, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SemanticColors.borderMuted },
+  lineNumbers: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: GRID.sm },
   lineText: { fontSize: 13, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   lineTextMuted: { fontSize: 12, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
 

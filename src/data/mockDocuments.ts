@@ -3,7 +3,7 @@ import { localDateKey } from '../utils/dateKey';
 
 export const quotes: Quote[] = [
   {
-    id: 'q-seed-1',
+    id: 'Q-2026-0031',
     customer: 'Fam. Bakker',
     customerId: 'cust-004',
     job: 'Lekkage inspectie — Fam. Bakker',
@@ -13,7 +13,7 @@ export const quotes: Quote[] = [
     lastUpdated: '1 day ago',
   },
   {
-    id: 'q-seed-2',
+    id: 'Q-2026-0032',
     customer: 'Fam. de Vries',
     customerId: 'cust-001',
     job: 'CV-ketel onderhoud — Fam. de Vries',
@@ -23,7 +23,7 @@ export const quotes: Quote[] = [
     lastUpdated: '3 days ago',
   },
   {
-    id: 'q-seed-3',
+    id: 'Q-2026-0033',
     customer: 'Fam. Jansen',
     customerId: 'cust-002',
     job: 'Badkamer renovatie — Fam. Jansen',
@@ -33,7 +33,7 @@ export const quotes: Quote[] = [
     lastUpdated: '1 week ago',
   },
   {
-    id: 'q-102',
+    id: 'Q-2026-0034',
     customer: 'De Jong',
     job: 'Binnenschilderwerk',
     amount: 2450,
@@ -41,7 +41,7 @@ export const quotes: Quote[] = [
     lastUpdated: '2 days ago',
   },
   {
-    id: 'q-103',
+    id: 'Q-2026-0035',
     customer: 'Van Dijk',
     job: 'Buitenschilderwerk',
     amount: 1120,
@@ -49,7 +49,7 @@ export const quotes: Quote[] = [
     lastUpdated: '1 day ago',
   },
   {
-    id: 'q-104',
+    id: 'Q-2026-0036',
     customer: 'Bouwgroep Atlas',
     job: 'Schutting beitsen',
     amount: 780,
@@ -58,6 +58,15 @@ export const quotes: Quote[] = [
   },
 ];
 
+// Quote ids ARE document numbers here, and invoices carry a `reference`.
+//
+// On a real row `id` is the server-minted `document_number` (#230), so a
+// fixture id shaped `q-seed-2` becomes the number the contractor is shown:
+// `/quotes/[id]` titles the whole screen "OFFERTE Q-SEED-2". Quotes have no
+// `reference` override slot to borrow, so the ids themselves are the numbers.
+// Cross-references live only in this folder (mockLineItems is keyed by quote
+// id, mockInsights carries one) plus the screen-walk fixtures.
+//
 // Every invoice fixture carries a `reference`. Without one, `documentNumber()`
 // falls back to the row id — correctly, because on a real row `id` IS the
 // server-minted document number (#230). Fixture ids are not, so the demo told
@@ -130,12 +139,12 @@ export const invoices: Invoice[] = [
 // quote mix across sent/accepted/draft. j-de-4 is deliberately left uninvoiced
 // so the queue still has a real draft_invoice card to prepare.
 export const deQuotes: Quote[] = [
-  { id: 'q-de-1', customer: 'Familie Krüger', customerId: 'cust-de-001', job: 'Heizungstausch — Krüger', amount: 6800, status: 'sent', trade: 'plumbing', lastUpdated: '1 day ago' },
-  { id: 'q-de-2', customer: 'Stefan Weber', customerId: 'cust-de-002', job: 'Badezimmer Teilsanierung — Weber', amount: 4200, status: 'sent', trade: 'plumbing', lastUpdated: '4 days ago' },
-  { id: 'q-de-3', customer: 'Anja Hoffmann', customerId: 'cust-de-003', job: 'Badsanierung komplett — Hoffmann', amount: 9400, status: 'accepted', trade: 'plumbing', lastUpdated: '8 days ago' },
-  { id: 'q-de-4', customer: 'Hausverwaltung Rheinblick GmbH', customerId: 'cust-de-004', job: 'Strangsanierung Haus 3 — Rheinblick', amount: 18500, status: 'sent', trade: 'plumbing', lastUpdated: '2 days ago' },
-  { id: 'q-de-5', customer: 'Bäckerei Lindner GmbH', customerId: 'cust-de-005', job: 'Fettabscheider Wartung — Lindner', amount: 890, status: 'draft', trade: 'plumbing', lastUpdated: '5 days ago' },
-  { id: 'q-de-6', customer: 'Familie Krüger', customerId: 'cust-de-001', job: 'Entkalkungsanlage — Krüger', amount: 1450, status: 'draft', trade: 'plumbing', lastUpdated: '6 days ago' },
+  { id: 'AN-2026-0041', customer: 'Familie Krüger', customerId: 'cust-de-001', job: 'Heizungstausch — Krüger', amount: 6800, status: 'sent', trade: 'plumbing', lastUpdated: '1 day ago' },
+  { id: 'AN-2026-0042', customer: 'Stefan Weber', customerId: 'cust-de-002', job: 'Badezimmer Teilsanierung — Weber', amount: 4200, status: 'sent', trade: 'plumbing', lastUpdated: '4 days ago' },
+  { id: 'AN-2026-0043', customer: 'Anja Hoffmann', customerId: 'cust-de-003', job: 'Badsanierung komplett — Hoffmann', amount: 9400, status: 'accepted', trade: 'plumbing', lastUpdated: '8 days ago' },
+  { id: 'AN-2026-0044', customer: 'Hausverwaltung Rheinblick GmbH', customerId: 'cust-de-004', job: 'Strangsanierung Haus 3 — Rheinblick', amount: 18500, status: 'sent', trade: 'plumbing', lastUpdated: '2 days ago' },
+  { id: 'AN-2026-0045', customer: 'Bäckerei Lindner GmbH', customerId: 'cust-de-005', job: 'Fettabscheider Wartung — Lindner', amount: 890, status: 'draft', trade: 'plumbing', lastUpdated: '5 days ago' },
+  { id: 'AN-2026-0046', customer: 'Familie Krüger', customerId: 'cust-de-001', job: 'Entkalkungsanlage — Krüger', amount: 1450, status: 'draft', trade: 'plumbing', lastUpdated: '6 days ago' },
 ];
 
 export const deInvoices: Invoice[] = [
