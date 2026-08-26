@@ -217,27 +217,69 @@ export function formatCurrency0(amount: number, countryArg?: Country): string {
  * comma. Values below 1000 stay whole, and the decimal separator follows the
  * country.
  */
-/** Compact "4,5K" variant. Same contractor default as formatCurrency above. */
+/**
+ * [thousands, millions] suffix per market, for the path where the runtime has
+ * no `notation: 'compact'` — which is every iOS build here, Hermes not having
+ * it. "K" is an anglicism a German contractor does not write; "Tsd." is the
+ * abbreviation that belongs on a German KPI tile. Leading space where the
+ * language sets the suffix off as its own word.
+ */
+const COMPACT_SUFFIX: Record<Country, [string, string]> = {
+  NL: ['K', ' mln'],
+  DE: [' Tsd.', ' Mio.'],
+  FR: [' k', ' M'],
+  ES: ['K', ' M'],
+  IT: ['K', ' Mln'],
+  UK: ['K', 'M'],
+  US: ['K', 'M'],
+};
+
+/**
+ * Compact "4,5K" variant. Same contractor default as formatCurrency above.
+ *
+ * 🔴 Do NOT reach for `formatToParts` here. This function used it to pull the
+ * currency symbol out, and Hermes does not implement it — the call threw on
+ * every render, the catch returned the bare number, and the three headline
+ * tiles on the Finanzen tab read "3,2K · 5,4K · 31,8K" with NO CURRENCY AT ALL
+ * on the money screen of a money app. Seen on device 2026-08-26; invisible to
+ * the jest walk, which runs on Node's full ICU where formatToParts works.
+ *
+ * The symbol and its POSITION now come from formatting 0 through the same
+ * formatter and swapping the digit out, so de-DE keeps "… €" after the number
+ * and nl-NL keeps "€ …" before it. The compact suffix is Intl's own where the
+ * runtime supports `notation: 'compact'` (German gets "Tsd."/"Mio.", not the
+ * English "K"); where it does not, the number simply comes back uncompacted,
+ * which is longer but never wrong.
+ */
 export function compactCurrency(amount: number, countryArg?: Country): string {
   const country = countryArg ?? ((getCurrentCountry() as Country) ?? 'NL');
   const abs = Math.abs(amount);
   if (abs < 1_000) return formatCurrency0(amount, country);
   const { currency, locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
-  const divisor = abs >= 1_000_000 ? 1_000_000 : 1_000;
-  const suffix = abs >= 1_000_000 ? 'M' : 'K';
-  const scaled = amount / divisor;
-  const number = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 1, maximumFractionDigits: 1,
-  }).format(scaled);
+
+  let number: string;
   try {
-    const symbol = new Intl.NumberFormat(locale, {
-      style: 'currency', currency, currencyDisplay: 'narrowSymbol',
-      minimumFractionDigits: 0, maximumFractionDigits: 0,
-    }).formatToParts(0).find((p) => p.type === 'currency')?.value ?? '';
-    return `${symbol}${number}${suffix}`;
+    number = new Intl.NumberFormat(locale, {
+      notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 1,
+    } as Intl.NumberFormatOptions).format(amount);
   } catch {
-    return `${number}${suffix}`;
+    number = '';
   }
+  // A runtime that ignores `notation` hands back the full number. Detect that
+  // by length rather than by feature-sniffing, and fall back to the hand-rolled
+  // scale so the tile still fits.
+  if (!number || !/[^\d\s.,-]/.test(number)) {
+    const divisor = abs >= 1_000_000 ? 1_000_000 : 1_000;
+    const [thousand, million] = COMPACT_SUFFIX[country] ?? COMPACT_SUFFIX.NL;
+    number = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 1, maximumFractionDigits: 1,
+    }).format(amount / divisor) + (abs >= 1_000_000 ? million : thousand);
+  }
+
+  // Formatting 0 gives the symbol AND the locale's placement/spacing; swapping
+  // the single digit keeps both without parsing the pattern by hand.
+  const shell = formatCurrency0(0, country);
+  return shell.includes('0') ? shell.replace('0', number) : `${number}`;
 }
 
 

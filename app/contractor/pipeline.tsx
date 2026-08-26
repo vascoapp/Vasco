@@ -468,8 +468,9 @@ function KpiTile({ label, value }: { label: string; value: string }) {
         numberOfLines={2}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
+        accessibilityLabel={label}
       >
-        {label}
+        {label.toUpperCase()}
       </Text>
       <Text style={styles.kpiValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
         {value}
@@ -619,13 +620,19 @@ const styles = StyleSheet.create({
     paddingVertical: GRID.sm,
   },
   kpiLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: TYPE.titleFamily,
     color: SemanticColors.textSecondary,
-    textTransform: 'uppercase',
-    // Was 1. On an 18-character uppercase word that is 18 extra points of
-    // width spent on a label that already did not fit.
-    letterSpacing: 0.4,
+    // NOT textTransform:'uppercase' — iOS measures the original case and
+    // renders the transformed, wider string (DKLabel R106).
+    // Sized off GERMAN, the binding locale: "ABSCHLUSSQUOTE" is 14 uppercase
+    // characters and the tile gives the label ~101pt. At 10/0.4 that word
+    // measured 105pt, and `adjustsFontSizeToFit` does NOT rescue it — iOS
+    // breaks the single over-wide word BETWEEN CHARACTERS, which satisfies
+    // numberOfLines={2}, so the shrink never fires and the tile rendered
+    // "ABSCHLUSSQUOT / E · 90 T." on device. 9/0.2 leaves ~20% headroom so the
+    // wrap lands on the space instead.
+    letterSpacing: 0.2,
   },
   kpiValue: {
     fontSize: 22,

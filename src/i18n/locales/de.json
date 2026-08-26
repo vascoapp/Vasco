@@ -80,7 +80,8 @@
     "select": "Auswählen",
     "noOptions": "Noch nichts zur Auswahl",
     "justNow": "Gerade eben",
-    "tryAgain": "Bitte versuchen Sie es erneut."
+    "tryAgain": "Bitte versuchen Sie es erneut.",
+    "moreOptions": "Weitere Optionen"
   },
   "tabs": {
     "today": "Heute",

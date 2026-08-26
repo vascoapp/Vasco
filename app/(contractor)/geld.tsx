@@ -253,7 +253,7 @@ export default function GeldScreen() {
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.revenue', 'Revenue')}</DKLabel>
             <View style={s.kpiValueRow}>
-              <Text style={[s.kpiValue, { color: DK.colors.success }]}>{compactCurrency(paidTotal, kpiCountry)}</Text>
+              <Text style={[s.kpiValue, { color: DK.colors.success }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55}>{compactCurrency(paidTotal, kpiCountry)}</Text>
               {revenueTrend.icon ? (
                 <Ionicons name={revenueTrend.icon} size={14} color={revenueTrend.color} />
               ) : null}
@@ -261,11 +261,11 @@ export default function GeldScreen() {
           </Pressable>
           <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.outstanding', 'Outstanding')}</DKLabel>
-            <Text style={[s.kpiValue, { color: DK.colors.accent }]}>{compactCurrency(outstandingTotal, kpiCountry)}</Text>
+            <Text style={[s.kpiValue, { color: DK.colors.accent }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55}>{compactCurrency(outstandingTotal, kpiCountry)}</Text>
           </Pressable>
           <Pressable style={s.kpiTile}>
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.pipeline', 'Pipeline')}</DKLabel>
-            <Text style={[s.kpiValue, { color: DK.colors.highlight }]}>{compactCurrency(fin.quotePipeline, kpiCountry)}</Text>
+            <Text style={[s.kpiValue, { color: DK.colors.highlight }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55}>{compactCurrency(fin.quotePipeline, kpiCountry)}</Text>
           </Pressable>
         </View>
 

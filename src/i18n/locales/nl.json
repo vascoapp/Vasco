@@ -80,7 +80,8 @@
     "select": "Kiezen",
     "noOptions": "Nog niets om uit te kiezen",
     "justNow": "Zojuist",
-    "tryAgain": "Probeer het opnieuw."
+    "tryAgain": "Probeer het opnieuw.",
+    "moreOptions": "Meer opties"
   },
   "tabs": {
     "today": "Vandaag",

@@ -674,6 +674,12 @@ const styles = StyleSheet.create({
     color: DK.colors.textMuted,
     letterSpacing: 2,
     marginTop: 8,
+    // `hero` centres its children, so this Text was sized to its own measured
+    // intrinsic width — and letterSpacing is not in that measurement, so the
+    // final glyph was sliced in half ("BUILT FOR THE TRADE|S"). Stretch to the
+    // hero's width and centre the glyphs instead.
+    alignSelf: 'stretch',
+    textAlign: 'center',
   },
 
   // Form

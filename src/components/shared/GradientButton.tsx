@@ -45,12 +45,15 @@ export function GradientButton({ label, onPress, icon, loading, disabled, size =
         ) : (
           <View style={styles.content}>
             {icon && <Ionicons name={icon} size={size === 'md' ? 16 : 18} color={Palette.white} />}
-            {/* 2 lines, and flexShrink so the label can use the width the icon
-                leaves. Without these the row is sized by its content and
-                overflows the gradient: the Dutch "Account aanmaken" rendered as
-                "Account aanmake" on the login screen — the first screen a new
-                user sees — because English "Create account" happens to fit and
-                nothing else was ever checked. Same fix as the AI hero CTA. */}
+            {/* `flex: 1`, NOT `flexShrink: 1`. Shrink leaves the Text at its
+                own MEASURED intrinsic width, and a Text sized to exactly its
+                measurement still ellipsizes on iOS when letterSpacing is set —
+                the trailing spacing is not in the measured advance. Verified on
+                device 2026-08-26: the box was 127.67pt, the string measured
+                127.67pt, and English "Create account" — the shortest of the six
+                — rendered "Create acc…" on the FIRST screen of the app. `flex`
+                gives the Text the whole 296pt the icon leaves, so no locale is
+                a hair short. Same class as DKLabel's R106 note. */}
             <Text
               style={[styles.label, size === 'md' && styles.labelMd]}
               numberOfLines={2}
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Archivo_800ExtraBold',
     letterSpacing: 0.3,
-    flexShrink: 1,
+    flex: 1,
     textAlign: 'center',
   },
   labelMd: {

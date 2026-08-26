@@ -80,7 +80,8 @@
     "select": "Sélectionner",
     "noOptions": "Rien à choisir pour le moment",
     "justNow": "À l’instant",
-    "tryAgain": "Veuillez réessayer."
+    "tryAgain": "Veuillez réessayer.",
+    "moreOptions": "Plus d'options"
   },
   "tabs": {
     "today": "Aujourd'hui",

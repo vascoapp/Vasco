@@ -18,6 +18,7 @@
 
 import { useRef, useState, useCallback, type ReactNode } from 'react';
 import { View, Text, Modal, Pressable, ScrollView, StyleSheet, type LayoutRectangle, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
@@ -46,6 +47,10 @@ interface Props {
 /** Comfortable width for a SMALL anchor. A wide anchor gets its own width. */
 const MENU_MIN_WIDTH = 260;
 const SCREEN_MARGIN = GRID.md;
+/** Tallest the list may ever be, before the room actually available caps it. */
+const MENU_MAX_HEIGHT = 320;
+/** Below an anchor low on the screen there is no usable room — flip instead. */
+const MIN_USABLE_HEIGHT = 120;
 
 export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
   const anchorRef = useRef<View>(null);
@@ -53,7 +58,8 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
   // Live dimensions, not a module-level Dimensions.get(): that snapshot is
   // taken before layout and survives rotation, which is how a previous bottom
   // sheet came to rest 100pt short of the screen edge.
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   // Never narrower than the control that opened it. At a fixed 260 the
   // full-width project anchor produced a balloon that truncated every option
@@ -84,6 +90,29 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
 
   const close = useCallback(() => setFrame(null), []);
 
+  // VERTICAL placement. Only the horizontal axis used to be clamped, so a
+  // balloon opened from an anchor low on the page was drawn at
+  // `anchor.y + anchor.height + 6` and ran straight off the bottom: on the job
+  // screen's Kunde card (anchor at ~580pt of an 874pt screen) the customer
+  // picker showed ONE AND A HALF of six customers, with the rest below the
+  // screen edge. Verified on device 2026-08-26. `maxHeight: 320` capped the
+  // list but never moved it.
+  //
+  // Room is measured on both sides of the anchor; the balloon drops below when
+  // that side can hold a usable list and flips above otherwise, and the list
+  // gets whichever of 320 / the real room is smaller. This is arithmetic on the
+  // anchor frame, not a second measurement pass, so there is no race with the
+  // fallback frame.
+  const topEdge = insets.top + SCREEN_MARGIN;
+  const bottomEdge = screenHeight - insets.bottom - SCREEN_MARGIN;
+  const roomBelow = frame ? bottomEdge - (frame.y + frame.height + 6) : 0;
+  const roomAbove = frame ? frame.y - 6 - topEdge : 0;
+  const dropDown = roomBelow >= Math.min(MENU_MAX_HEIGHT, MIN_USABLE_HEIGHT) || roomBelow >= roomAbove;
+  const maxHeight = Math.max(
+    MIN_USABLE_HEIGHT,
+    Math.min(MENU_MAX_HEIGHT, dropDown ? roomBelow : roomAbove),
+  );
+
   return (
     <>
       <View ref={anchorRef} collapsable={false}>
@@ -99,7 +128,12 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
               style={[
                 styles.balloon,
                 {
-                  top: frame.y + frame.height + 6,
+                  // Clamped so the balloon can never be drawn below the safe
+                  // bottom edge, even when the flip still leaves it short.
+                  top: dropDown
+                    ? Math.min(frame.y + frame.height + 6, bottomEdge - maxHeight)
+                    : Math.max(topEdge, frame.y - 6 - maxHeight),
+                  maxHeight,
                   width: menuWidth,
                   // Right-align to the anchor, then clamp to BOTH screen edges:
                   // an anchor near the right edge would push the balloon off,
@@ -116,7 +150,7 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
               ]}
               onPress={(e) => e.stopPropagation()}
             >
-              <ScrollView bounces={false} style={styles.scroll}>
+              <ScrollView bounces={false} style={{ maxHeight }}>
                 {items.map((item, i) => (
                   <Pressable
                     key={item.key}
@@ -183,9 +217,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 12,
   },
-  // Capped so a contractor with twenty projects gets a scrollable balloon
-  // rather than one running off the bottom of the screen.
-  scroll: { maxHeight: 320 },
   item: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -138,7 +138,7 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers, businessProfile, updateJob, updateJobStatus, workers } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers, businessProfile, updateJob, updateJobStatus, removeJob, workers } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   // Shared enum→label map: trade is stored as a slug on some rows and as a
@@ -418,13 +418,46 @@ export default function JobDetailPage() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{job.projectName}</Text>
-        <Pressable style={styles.moreBtn} accessibilityRole="button" accessibilityLabel="More options">
-          <Ionicons name="ellipsis-horizontal" size={20} color={SemanticColors.textTertiary} />
-        </Pressable>
+        {/* This button had NO onPress at all — a labelled, tappable overflow
+            control in the header of the most-visited screen that did nothing
+            when pressed, in every locale, since it was added. Found by tapping
+            it on the sim 2026-08-26. Deleting a job was also reachable from
+            the Aufträge LIST only, so the menu it now opens carries the one
+            action this screen genuinely lacked. */}
+        <DKMenu
+          accessibilityLabel={t('common.moreOptions', 'More options')}
+          items={[
+            {
+              key: 'delete',
+              label: t('common.delete', 'Delete'),
+              icon: 'trash-outline',
+              emphasis: true,
+              onPress: () => {
+                Alert.alert(
+                  t('jobs.deleteJob', 'Delete job?'),
+                  job.projectName,
+                  [
+                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                    {
+                      text: t('common.delete', 'Delete'),
+                      style: 'destructive',
+                      onPress: () => { removeJob(job.id); router.back(); },
+                    },
+                  ],
+                );
+              },
+            },
+          ]}
+          renderAnchor={(open) => (
+            <Pressable onPress={open} style={styles.moreBtn} accessibilityRole="button" accessibilityLabel={t('common.moreOptions', 'More options')}>
+              <Ionicons name="ellipsis-horizontal" size={20} color={SemanticColors.textTertiary} />
+            </Pressable>
+          )}
+        />
       </View>
 
       {/* Status-colored accent line */}
