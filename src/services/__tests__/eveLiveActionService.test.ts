@@ -4,7 +4,16 @@
 // Two invariants this file guards:
 //   1. No raw entity id ever reaches user- or customer-facing copy. The
 //      preparedData.template strings are shared to customers over WhatsApp, so
-//      a leaked "cust-003" / "inv-seed-1" is a defect the customer sees.
+//      a leaked "cust-003" is a defect the customer sees.
+//
+//      ⚠️ ONE EXCEPTION, and it is not an exception at all: a DOCUMENT's `id`
+//      is its document number. `documentRowToInvoice` sets
+//      `id: row.document_number ?? row.id`, so every invoice off the backend
+//      carries the minted "I0042" there. `inv-seed-9` is what a demo FIXTURE
+//      looks like, and this file used to reason from that fixture to "invoice
+//      ids are meaningless" — which is how the EVE queue ended up telling a
+//      customer "payment received for invoice Bakkerij Smit". See learnings
+//      #230; the customer-id invariant is untouched.
 //   2. Every string is resolved through i18n rather than hardcoded English —
 //      the queue renders inside an otherwise-Dutch UI.
 // =============================================================================
@@ -52,12 +61,38 @@ describe('buildLiveActions — no raw entity ids in user-facing copy', () => {
     expect(strings.join(' ')).not.toContain('inv-seed-1');
   });
 
-  test('an invoice with no reference falls back to the customer NAME, never the id', () => {
+  test('an invoice with no reference uses its document number — which is the id', () => {
+    // `reference` is an override slot with no writer; the number the customer
+    // recognises is minted server-side and lands on `id`. The slot the label
+    // fills reads "invoice {{invoice}}", including in a template sent over
+    // WhatsApp, so filling it with the customer's own name was the bug.
     const actions = buildLiveActions({
       jobs: [],
       quotes: [],
       invoices: [{
-        id: 'inv-seed-9',
+        id: 'I0042',
+        customerId: 'cust-003',
+        amount: 120,
+        status: 'overdue',
+        dueDate: iso(-3 * MS_PER_DAY),
+      }],
+      customers,
+    });
+    const joined = userFacingStrings(actions).join(' ');
+    expect(joined).toContain('I0042');
+    // The customer id invariant is unchanged and is the one that matters here.
+    expect(joined).not.toContain('cust-003');
+  });
+
+  test('an invoice with no number at all still says something a human can read', () => {
+    // Belt and braces: a row with neither a reference nor an id must not
+    // render "invoice " with a hole in it. The customer name is the last
+    // resort, not the default.
+    const actions = buildLiveActions({
+      jobs: [],
+      quotes: [],
+      invoices: [{
+        id: '',
         customerId: 'cust-003',
         amount: 120,
         status: 'overdue',
@@ -67,7 +102,6 @@ describe('buildLiveActions — no raw entity ids in user-facing copy', () => {
     });
     const joined = userFacingStrings(actions).join(' ');
     expect(joined).toContain('Bakkerij Smit');
-    expect(joined).not.toContain('inv-seed-9');
     expect(joined).not.toContain('cust-003');
   });
 

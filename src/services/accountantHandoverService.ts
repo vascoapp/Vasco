@@ -29,6 +29,7 @@
 // =============================================================================
 
 import type { Invoice } from '../domain/documents';
+import { documentNumber } from '../domain/documents';
 import type { Submission } from './submissionLifecycle';
 
 export interface HandoverInvoice {
@@ -93,8 +94,12 @@ export function buildAccountantHandover(input: {
   const invoices: HandoverInvoice[] = input.invoices
     .filter((inv) => inPeriod(inv.sentAt ?? inv.createdAt, periodStart, periodEnd))
     .map((inv) => ({
-      // Never the row id: it means nothing to an accountant and looks like data.
-      reference: inv.reference || inv.customer || '—',
+      // `id` carries the minted document_number (I0042) — see documentNumber().
+      // This used to fall back to the CUSTOMER NAME on the belief that the id
+      // "means nothing to an accountant", which turned a column of invoice
+      // numbers into a column of people and forced the duplicate-collapse in
+      // label() below. Only a seeded fixture has a non-number here.
+      reference: documentNumber(inv) || inv.customer || '—',
       customer: inv.customerName ?? inv.customer ?? '',
       date: (inv.sentAt ?? inv.createdAt)?.slice(0, 10),
       amount: inv.total ?? inv.amount ?? 0,
@@ -131,10 +136,11 @@ export function buildAccountantHandover(input: {
 /**
  * "REF — Customer", collapsed to one when they are the same string.
  *
- * `reference` falls back to the customer name when an invoice has no human
- * reference, so the naive template rendered "Hotel NH — Hotel NH — € 350,00" on
- * every line. The earlier fix was careful never to fall back to the row id; it
- * swapped an id leak for a duplicate.
+ * `reference` now resolves to the minted document number, so the two are
+ * normally different and both are printed. The collapse stays for the one case
+ * that still produces a duplicate: an invoice with no number at all, where
+ * `reference` falls through to the customer name and the naive template
+ * rendered "Hotel NH — Hotel NH — € 350,00".
  */
 function label(i: HandoverInvoice): string {
   const ref = (i.reference || '').trim();

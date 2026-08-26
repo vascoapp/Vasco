@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { formatMoney } from '../i18n/formatting';
+import { documentNumber } from '../domain/documents';
 import { daysOverdue } from '../utils/invoiceDue';
 import i18n from '../i18n/i18n';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -293,7 +294,11 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
         body: i18n.t('notifications.invoiceOverdueBody', {
           defaultValue: '{{customer}}invoice {{ref}} is {{days}} days overdue{{amount}}.',
           customer: inv.customer ? `${inv.customer} — ` : '',
-          ref: (inv as any).reference ?? (inv as any).invoiceNumber ?? '',
+          // `invoiceNumber` is not a field on Invoice and `reference` has no
+          // writer, so this rendered "invoice  is 10 days overdue" — the
+          // document number the contractor is chasing was missing from the
+          // notification about chasing it.
+          ref: documentNumber(inv),
           days,
           amount: inv.amount ? ` (${formatMoney(Math.round(inv.amount))})` : '',
         }).replace(/\s{2,}/g, ' ').replace(/\s+([.,])/g, '$1'),

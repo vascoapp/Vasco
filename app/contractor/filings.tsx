@@ -18,6 +18,7 @@
 // =============================================================================
 
 import { useCallback } from 'react';
+import { documentNumber } from '../../src/domain/documents';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -68,7 +69,14 @@ export default function FilingsScreen() {
    */
   const subjectLabel = (s: Submission) => {
     const inv = invoices.find((i) => i.id === s.subjectId);
-    return inv?.reference || inv?.customer || t('filings.unknownSubject', 'Invoice no longer in your list');
+    if (!inv) return t('filings.unknownSubject', 'Invoice no longer in your list');
+    // The invoice NUMBER is what a filing is chased by — it is the number on
+    // the XRechnung/FatturaPA the authority holds. `reference` has no writer,
+    // so this used to render the customer's name for every filing in the list.
+    const num = documentNumber(inv);
+    const cust = (inv.customerName ?? inv.customer ?? '').trim();
+    if (num && cust) return `${num} — ${cust}`;
+    return num || cust || t('filings.unknownSubject', 'Invoice no longer in your list');
   };
 
   const confirmOutcome = (s: Submission, outcome: 'accepted' | 'rejected') => {

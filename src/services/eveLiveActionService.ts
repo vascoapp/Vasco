@@ -17,6 +17,7 @@
 // =============================================================================
 
 import i18n from '../i18n/i18n';
+import { documentNumber } from '../domain/documents';
 import type { EveAction } from './eveAgentService';
 import { formatMoney2, formatMoney } from '../i18n/formatting';
 import { daysOverdue } from '../utils/invoiceDue';
@@ -111,9 +112,18 @@ export function buildLiveActions(input: Input): EveAction[] {
     const num = (sitePhone ?? record?.phone ?? '').trim();
     return num || undefined;
   };
-  /** Invoice label: human reference ("F-2026-014") if set, else the customer. */
+  /**
+   * Invoice label: the document number.
+   *
+   * Every slot this fills reads "invoice {{invoice}}" — including a
+   * CUSTOMER-FACING WhatsApp ("payment received for invoice …"). `reference`
+   * has no writer, so it always fell through to the customer's own name and
+   * told the customer their payment was received for "invoice Hotel NH".
+   * `documentNumber` reads the minted number off `id`; the customer name stays
+   * as the last resort for a row that has neither.
+   */
   const invoiceLabel = (inv: any): string =>
-    inv?.reference?.trim() || customerName(inv?.customerId, inv?.customerName ?? inv?.customer);
+    documentNumber(inv) || customerName(inv?.customerId, inv?.customerName ?? inv?.customer);
   /** Quote label: the job title reads far better than a quote id. */
   const quoteLabel = (q: any): string =>
     q?.job?.trim() || customerName(q?.customerId, q?.customer) ;

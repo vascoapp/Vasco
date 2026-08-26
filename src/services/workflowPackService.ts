@@ -17,6 +17,8 @@ import { emitPackQueued } from '../intelligence/dataCollector';
 import type { Country } from '../i18n/formatting';
 import { formatDecimal1, formatCurrency, formatMoney2 } from '../i18n/formatting';
 import { localDateKey } from '../utils/dateKey';
+import { truncateAtWord } from '../utils/truncate';
+import { documentNumber } from '../domain/documents';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 const MUTES_KEY = '@vasco_pack_mutes';
@@ -1100,7 +1102,10 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
           const id = await addToQueue({
             type: mapActionToQueueType(step.action),
             title: `${resolvePackName(pack)}: ${match.label || ''}`,
-            description: resolved.slice(0, 100),
+            // Cut at a word: this is a preview of a message the contractor is
+            // about to send, and a mid-word cut reads as a broken draft. The
+            // full text rides along on preparedData.template below.
+            description: truncateAtWord(resolved, 100),
             preparedData: {
               template: resolved,
               channel: step.channel,
@@ -1178,9 +1183,13 @@ function matchTrigger(
             customer: cust?.name || inv.customer || '',
             amount: inv.amount || inv.total || 0,
             // CUSTOMER-FACING: this fills {{invoice}} in a WhatsApp/email body.
-            // Must be the document number a customer can recognise — never the
-            // row id (was sending "factuur inv-seed-1 is 14 dagen achterstallig").
-            invoice: inv.reference || inv.invoiceNumber || '',
+            // `reference` has no writer and `invoiceNumber` is not a field on
+            // Invoice at all, so this resolved to '' for every invoice ever
+            // sent — a Mahnung quoting statutory interest, €40 costs and
+            // collections, naming NO invoice. `documentNumber` returns the
+            // minted document_number the mapper puts on `id` (I0042), which is
+            // precisely the number the customer can recognise.
+            invoice: documentNumber(inv),
           });
         }
       }
@@ -1202,9 +1211,13 @@ function matchTrigger(
             customer: cust?.name || inv.customer || '',
             amount: inv.amount || inv.total || 0,
             // CUSTOMER-FACING: this fills {{invoice}} in a WhatsApp/email body.
-            // Must be the document number a customer can recognise — never the
-            // row id (was sending "factuur inv-seed-1 is 14 dagen achterstallig").
-            invoice: inv.reference || inv.invoiceNumber || '',
+            // `reference` has no writer and `invoiceNumber` is not a field on
+            // Invoice at all, so this resolved to '' for every invoice ever
+            // sent — a Mahnung quoting statutory interest, €40 costs and
+            // collections, naming NO invoice. `documentNumber` returns the
+            // minted document_number the mapper puts on `id` (I0042), which is
+            // precisely the number the customer can recognise.
+            invoice: documentNumber(inv),
           });
         }
       }

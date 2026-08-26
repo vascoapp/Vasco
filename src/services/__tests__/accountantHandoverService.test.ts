@@ -40,13 +40,23 @@ describe('period selection', () => {
     expect(h.totals.count).toBe(1);
   });
 
-  it('never uses the row id as a reference', () => {
-    // "i-1043" means nothing to an accountant and reads like data.
+  it('uses the document number, not the customer name, as the reference', () => {
+    // `id` carries document_number for every row that came from the backend,
+    // so an invoice with no explicit `reference` still has a real number. The
+    // previous behaviour fell back to the customer and handed the accountant a
+    // column of people where the invoice numbers belong.
     const h = buildAccountantHandover({
-      ...base, invoices: [inv({ reference: undefined })], submissions: [],
+      ...base, invoices: [inv({ id: 'I0042', reference: undefined })], submissions: [],
+    });
+    expect(h.invoices[0].reference).toBe('I0042');
+    expect(h.invoices[0].reference).not.toBe('Hotel NH');
+  });
+
+  it('falls back to the customer only when there is no number at all', () => {
+    const h = buildAccountantHandover({
+      ...base, invoices: [inv({ id: '', reference: undefined })], submissions: [],
     });
     expect(h.invoices[0].reference).toBe('Hotel NH');
-    expect(h.invoices[0].reference).not.toBe('i1');
   });
 });
 

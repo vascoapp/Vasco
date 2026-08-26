@@ -2,6 +2,7 @@
 // Quick payment links, reminders, and payment tracking
 
 import React, { useState, useMemo } from 'react';
+import { documentNumber } from '../../domain/documents';
 import { DEMO_MODE } from '../../config/demo';
 import { useAppState } from '../../state/AppState';
 import {
@@ -402,11 +403,11 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
       appInvoices.map((inv) => ({
         ...(inv as unknown as ContractorInvoice),
         id: inv.id,
-        // NOT `?? inv.id`: falling back to the row id printed "inv-seed-1" and
-        // "i-1043" as if they were invoice numbers. An invoice without a
-        // reference has no number to show, and the card falls back to the
-        // customer name instead (learnings #67 — the raw-id leak class).
-        invoiceNumber: inv.reference ?? '',
+        // `id` holds the minted document_number for every backend row, so this
+        // IS the invoice number — the earlier "NOT `?? inv.id`" reasoning came
+        // from seeing seeded fixtures ("inv-seed-1") and generalising from
+        // them, which left every real invoice card numberless.
+        invoiceNumber: documentNumber(inv),
         customerId: inv.customerId ?? '',
         customerName: inv.customerName ?? inv.customer ?? '',
         dueDate: inv.dueDate ?? '',
