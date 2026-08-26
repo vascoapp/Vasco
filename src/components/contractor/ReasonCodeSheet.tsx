@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
+import { Modal, View, Text, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -74,6 +74,11 @@ export function ReasonCodeSheet({ visible, lineLabel, originalQty, newQty, onDis
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onDismiss}>
       <View style={styles.backdrop}>
+        {/* KeyboardAvoidingView — `backdrop` is `justifyContent: 'flex-end'`
+            and iOS does not lift a Modal above the keyboard, so the free-text
+            reason box and the confirm button sat behind it. Fourth site of
+            this class; invisible on the simulator's hardware keyboard. */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.sheet}>
           <View style={styles.handle} />
 
@@ -119,6 +124,7 @@ export function ReasonCodeSheet({ visible, lineLabel, originalQty, newQty, onDis
             <Text style={styles.skipText}>{t('reasonCode.skip', 'Skip')}</Text>
           </Pressable>
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );

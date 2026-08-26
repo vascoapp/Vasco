@@ -3,7 +3,7 @@
 // =============================================================================
 
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -276,7 +276,13 @@ export default function ProjectsScreen() {
 
       {/* Create project modal */}
       <Modal visible={showCreate} transparent animationType="slide" onRequestClose={() => setShowCreate(false)}>
+        {/* KeyboardAvoidingView — the overlay is `justifyContent: 'flex-end'`
+            and iOS does not lift a Modal above the keyboard, so focusing a
+            field here put the form and its button behind it. Fourth site of
+            this class (expenses.tsx, customer-crm.tsx, project-billing).
+            Invisible on the simulator, which attaches a hardware keyboard. */}
         <Pressable style={styles.modalOverlay} onPress={() => setShowCreate(false)}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <Pressable style={styles.modalContent} onPress={() => {}}>
             <Text style={styles.modalTitle}>{t('contractor.projects.newProject', 'New project')}</Text>
             <View style={styles.form}>
@@ -399,6 +405,7 @@ export default function ProjectsScreen() {
               </Pressable>
             </View>
           </Pressable>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
     </View>
