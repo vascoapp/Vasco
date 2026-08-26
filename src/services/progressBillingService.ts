@@ -16,6 +16,20 @@
 // "payable now" is derived from the two. Storing a reduced total instead would
 // under-report VAT and produce an e-invoice total that disagrees with the
 // contract.
+//
+// UNITS: everything in THIS module is CONTRACT money — ex-VAT. `contractValue`
+// derives from totalQuoted/totalBudget, `termAmount` is a percentage of it, and
+// `retentionForTerm` a percentage of that. That is the unit a construction
+// contract is written in, and it is what the billing-schedule screen previews.
+//
+// `Invoice.amount` is the opposite convention: GROSS. The conversion happens
+// ONCE, in AppState at the point a term or change order becomes a document
+// (`grossFromNet`) — not here. Until 2026-08-26 it did not happen at all, so
+// every progress invoice carried the net figure in the gross field and the
+// detail screen, which synthesises a line as `amount / (1 + rate)`, rendered a
+// total equal to the net with a VAT line of zero. `retentionHeld` therefore
+// reads GROSS retentions off the documents, which is what the release invoice
+// bills.
 // =============================================================================
 
 import type { Project, ProjectBillingTerm, ProjectChangeOrder } from '../types/project';
@@ -237,6 +251,14 @@ export function payableNow(
  * percentages: a term may have been invoiced before the retention rate
  * changed, or an invoice adjusted by hand. What was withheld is a historical
  * fact recorded on the document, and re-deriving it would quietly rewrite it.
+ */
+/**
+ * ⚠️ GROSS. Unlike everything else in this module, this reads
+ * `invoice.retentionAmount` off issued DOCUMENTS, and documents are gross. That
+ * is the right unit for the question it answers — retentie is cash the customer
+ * is withholding from a payment, and payments are gross — but it means the
+ * figure must never be added to or compared with `contractValue`, `termAmount`
+ * or `billingProgress.invoiced`, all of which are ex-VAT contract money.
  */
 export function retentionHeld(projectId: string, invoices: Invoice[]): number {
   let held = 0;

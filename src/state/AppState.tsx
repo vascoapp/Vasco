@@ -13,7 +13,7 @@ import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, grossFromN
 import { Customer, findDocumentCustomer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
-import { Invoice, Quote } from '../domain/documents';
+import { Invoice, Quote, documentNumber } from '../domain/documents';
 import { completionStampFor } from '../domain/jobs';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
 import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
@@ -2835,7 +2835,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ? {
               customerEmail: cust?.email,
               customerName: cust?.name ?? inv.customer,
-              reference: (inv as any).reference ?? inv.id,
+              reference: documentNumber(inv),
               dueDate: (inv as any).dueDate,
               lineItems: invLineItems.map((li) => ({
                 description: li.description,
@@ -3232,11 +3232,35 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           throw new Error(`Billing schedule is invalid: ${scheduleErrors[0].message}`);
         }
 
-        const amount = termAmount(project, term);
-        if (amount <= 0) {
+        // ── net (contract) → gross (document) ────────────────────────────
+        // progressBillingService works entirely in CONTRACT money, which is
+        // ex-VAT: `contractValue` comes from totalQuoted/totalBudget,
+        // `termAmount` is a percentage of it, and `retentionForTerm` a
+        // percentage of that. `Invoice.amount` is GROSS — addInvoiceFromJob
+        // says so, and app/invoices/[id].tsx proves it by synthesising a line
+        // as `invoice.amount / (1 + rate)` when the document has none.
+        //
+        // All three project paths stored the NET figure in that gross field, so
+        // the detail screen divided the net back out and re-grossed it to
+        // itself: a €24.000 instalment rendered a total of €24.000 with the
+        // VAT line reading €0 — the aannemer's progress invoices charged no
+        // VAT at all. Same root as #223, which fixed it for the quote→invoice
+        // path and left the project paths recorded as a known deviation.
+        //
+        // Convert ONCE, here at the boundary, so the service stays in the unit
+        // construction contracts are actually written in.
+        const netAmount = termAmount(project, term);
+        if (netAmount <= 0) {
           throw new Error(`Term "${term.title}" bills nothing`);
         }
-        const retention = retentionForTerm(project, term);
+        const projectVatRate = getEffectiveVatRate(businessProfile);
+        const amount = grossFromNet(netAmount, projectVatRate);
+        // Grossed too, and deliberately: `amount - retentionAmount` is what the
+        // customer pays now, and `retentionHeld` sums these into the release
+        // invoice's own `amount`. Leaving it net would mix units inside one
+        // subtraction and put a net figure back into a gross field one document
+        // later.
+        const retention = grossFromNet(retentionForTerm(project, term), projectVatRate);
 
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = new Date();
@@ -3359,7 +3383,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           throw new Error(gate.reason ?? 'This change order cannot be billed');
         }
 
-        const amount = Number(order.amount);
+        // `ProjectChangeOrder.amount` is signed and, per its own doc comment,
+        // "Excluding VAT, like every other amount here". `Invoice.amount` is
+        // gross. See the note in addProjectTermInvoice above.
+        const amount = grossFromNet(Number(order.amount), getEffectiveVatRate(businessProfile));
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
@@ -3485,6 +3512,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           customerId: project.customerId || undefined,
           customerName,
           job: `${project.title} — ${i18nMod.default.t('projectBilling.retentionRelease', 'Retention release')}`,
+          // `held` is the sum of `invoice.retentionAmount` across this
+          // project's invoices, which are now stored GROSS (see the boundary
+          // note in the term path), so this is already in `Invoice.amount`'s
+          // unit and must NOT be grossed again. The customer is paying the
+          // balance of documents already issued — including the VAT that was
+          // charged on them and withheld from payment — so no new VAT arises.
           amount: held,
           status: 'draft',
           dueInDays: 14,

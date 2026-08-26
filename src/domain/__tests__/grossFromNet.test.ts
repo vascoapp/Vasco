@@ -5,7 +5,16 @@
 // everywhere in the app. Three code paths cross that boundary and they did not
 // agree: `addInvoiceFromJob` grossed up at the profile rate, `addInvoice` — the
 // most travelled of the three — copied the quote's net straight across, and
-// `addChangeOrderInvoice` stores net (a known, separately-recorded deviation).
+// the three PROJECT paths (term, change order, retention release) stored net.
+//
+// The project ones were the worst of the set and were recorded as a known
+// deviation rather than fixed. They are not merely a reporting bug:
+// `app/invoices/[id].tsx` synthesises a line as `amount / (1 + rate)` when a
+// document has no line items, and these documents have none — so it divided the
+// net back out and re-grossed it to itself. An aannemer's €24.000 instalment
+// rendered a total of €24.000 with a VAT line of €0. Fixed 2026-08-26; the
+// boundary now lives in AppState and progressBillingService stays in contract
+// (net) money.
 //
 // Walking it on device: invoice I-OFF-02BD5D showed "Gesamt 126,14 €" on its
 // own detail screen while carrying amount = 106, and Finanzen's UMSATZ rose by
@@ -49,6 +58,29 @@ describe('grossFromNet', () => {
     expect(rate).toBe(19);
     expect(grossFromNet(net, rate)).toBe(126.14);
     expect(grossFromNet(net, rate)).toBeGreaterThan(net);
+  });
+
+  it('grosses a progress instalment, so a termijnfactuur charges VAT at all', () => {
+    // 30% of an 80.000 contract, NL. Before the fix this document carried
+    // 24.000 in a field the detail screen treats as gross, so the customer was
+    // billed 24.000 with a VAT line of zero — 5.040 the contractor never
+    // charged, on a single instalment.
+    const netTerm = 80_000 * 0.3;
+    expect(grossFromNet(netTerm, 21)).toBe(29_040);
+  });
+
+  it('grosses the retention withheld from that instalment in the SAME unit', () => {
+    // `amount - retentionAmount` is what the customer pays now, and
+    // `retentionHeld` sums these retentions into the release invoice's own
+    // `amount`. A net retention subtracted from a gross amount would overstate
+    // the payment due AND put a net figure back into a gross field one document
+    // later, so both cross the boundary together.
+    const netTerm = 80_000 * 0.3;
+    const grossTerm = grossFromNet(netTerm, 21);
+    const grossRetention = grossFromNet(netTerm * 0.05, 21);
+    expect(grossRetention).toBe(1452);
+    // Payable now stays a clean 95% of the gross document.
+    expect(grossTerm - grossRetention).toBeCloseTo(grossTerm * 0.95, 2);
   });
 
   it('a Kleinunternehmer profile resolves to 0%, so invoices bill the net', () => {
