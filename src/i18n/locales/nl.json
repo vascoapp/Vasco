@@ -537,9 +537,14 @@
     "invoiceThisJobDesc": "Maakt een conceptfactuur van deze klus, met wat er is vastgelegd, en zet de klus op gefactureerd.",
     "fromQuoteTitle": "Klus van offerte {{ref}}",
     "selectCustomer": "Klant kiezen",
+    "linkCustomer": "Klant koppelen",
+    "noCustomerLinkedDesc": "Deze klus is niet aan een klant gekoppeld, dus je kunt er niet voor factureren en de klant ziet er niets van.",
+    "changeCustomer": "Wijzigen",
     "noCustomer": "Geen klant",
     "statusLead": "Lead",
-    "notScheduled": "Niet ingepland"
+    "notScheduled": "Niet ingepland",
+    "signOffFirst": "Eerst laten aftekenen",
+    "signOffHow": "Hoe wil je de handtekening ophalen?"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",
@@ -1430,7 +1435,10 @@
     "emptyTitle": "Nog geen inkooporders",
     "emptyDesc": "Maak je eerste inkooporder, of laat Vasco materialen voorstellen op basis van je geplande klussen.",
     "teamOnlyTitle": "Voor teams en aannemers",
-    "teamOnlyDesc": "Inkooporders zijn bedoeld voor teams die materiaal vooraf bestellen. Werk je solo? Gebruik Materialen om prijzen te vergelijken."
+    "teamOnlyDesc": "Inkooporders zijn bedoeld voor teams die materiaal vooraf bestellen. Werk je solo? Gebruik Materialen om prijzen te vergelijken.",
+    "materialCount_one": "{{count}} materiaal",
+    "materialCount_other": "{{count}} materialen",
+    "unknownSupplier": "Leverancier nog te kiezen"
   },
   "workerCerts": {
     "title": "Certificaten Medewerkers",
@@ -1652,7 +1660,8 @@
     "estimatedAmount": "Geschat bedrag",
     "addPhotos": "Foto's toevoegen",
     "submitClaim": "Claim indienen",
-    "claimSubmitted": "Claim ingediend"
+    "claimSubmitted": "Claim ingediend",
+    "selectPolicy": "Kies een polis"
   },
   "timesheet": {
     "title": "Urenregistratie",
@@ -1916,6 +1925,7 @@
     "packageFeaturePlaceholder": "bijv. Garantie 2 jaar",
     "resetPackages": "Standaard herstellen",
     "sendPackage": "{{name}} versturen",
+    "createPackage": "Offerte {{name}} aanmaken",
     "linesForPackage": "Regels ({{name}})",
     "quoteTitle": "Offerte",
     "bottomSummary_one": "{{count}} dienst · {{total}} (standaard)",
@@ -2013,6 +2023,7 @@
     "noCustomerTitle": "Geen klant gekoppeld",
     "noCustomerBody": "Deze offerte wordt opgeslagen zonder klantkoppeling. Je kunt later een klant koppelen vanuit de klantenlijst.",
     "sendAnyway": "Toch verzenden",
+    "createAnyway": "Toch aanmaken",
     "zeroAmount": "Het offertetotaal moet groter zijn dan nul.",
     "jobLabelMore": "{{first}} +{{count}}"
   },

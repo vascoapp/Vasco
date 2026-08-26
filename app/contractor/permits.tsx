@@ -4,7 +4,7 @@
 // View, create, and track permits for contractor jobs
 // =============================================================================
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
@@ -108,6 +108,23 @@ export default function PermitsScreen() {
   // list to that job's permits and let the contractor explicitly clear
   // the filter via a dismiss chip.
   const [scopeJobId, setScopeJobId] = useState<string | null>(focusJobId ?? null);
+  // `useState(focusJobId)` reads the route param on FIRST MOUNT ONLY. Expo
+  // Router keeps this screen mounted, so arriving a second time from a
+  // DIFFERENT queue card — a permit check for another job — left the screen
+  // scoped to the first job, silently showing the wrong job's requirements
+  // under the new card's promise. Re-sync when the param itself changes, and
+  // only then: a change to `scopeJobId` alone is the contractor dismissing the
+  // filter by hand, which must stick.
+  const appliedFocusRef = useRef<string | null>(focusJobId ?? null);
+  useEffect(() => {
+    const next = focusJobId ?? null;
+    if (next === appliedFocusRef.current) return;
+    appliedFocusRef.current = next;
+    setScopeJobId(next);
+    // Let the auto-expand below run again for the new job instead of leaving
+    // the previous job's permit open.
+    setExpandedId(null);
+  }, [focusJobId]);
   const focusJob = useMemo(
     () => (scopeJobId ? jobs.find((j: any) => j.id === scopeJobId) : null),
     [scopeJobId, jobs],

@@ -7,6 +7,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { truncateAtWord as truncate } from '../utils/truncate';
 import { getQueue, type QueueItem } from './aiActionQueueService';
 import { sendInstantNotification, isInQuietHours, shouldDeliver } from './pushNotificationService';
 import i18n from '../i18n/i18n';
@@ -65,10 +66,7 @@ export async function notifyNewQueueItems(): Promise<number> {
   }
 }
 
-function truncate(s: string, max: number): string {
-  if (!s) return '';
-  return s.length > max ? s.slice(0, max - 1) + '…' : s;
-}
+
 
 function mapToNotificationType(item: QueueItem): any {
   switch (item.type) {

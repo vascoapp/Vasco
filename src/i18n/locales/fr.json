@@ -553,9 +553,14 @@
     "invoiceThisJobDesc": "Crée une facture brouillon à partir de ce chantier, avec ce qui a été saisi, et marque le chantier comme facturé.",
     "fromQuoteTitle": "Chantier issu du devis {{ref}}",
     "selectCustomer": "Choisir un client",
+    "linkCustomer": "Associer un client",
+    "noCustomerLinkedDesc": "Ce chantier n'est associé à aucun client : il ne peut pas être facturé et le client n'en voit rien.",
+    "changeCustomer": "Modifier",
     "noCustomer": "Aucun client",
     "statusLead": "Piste",
-    "notScheduled": "Non planifié"
+    "notScheduled": "Non planifié",
+    "signOffFirst": "Faire signer d'abord",
+    "signOffHow": "Comment voulez-vous obtenir la signature ?"
   },
   "compliance": {
     "manageInsurance": "Gérer assurances & sinistres",
@@ -1390,7 +1395,8 @@
     "estimatedAmount": "Montant estimé",
     "addPhotos": "Ajouter des photos",
     "submitClaim": "Déclarer le sinistre",
-    "claimSubmitted": "Sinistre déclaré"
+    "claimSubmitted": "Sinistre déclaré",
+    "selectPolicy": "Choisir une police"
   },
   "timesheet": {
     "title": "Suivi du temps",
@@ -1674,7 +1680,10 @@
     "emptyTitle": "Aucune commande pour le moment",
     "emptyDesc": "Créez votre première commande, ou laissez Vasco suggérer des matériaux à partir de vos chantiers planifiés.",
     "teamOnlyTitle": "Pour les équipes et les entrepreneurs",
-    "teamOnlyDesc": "Les bons de commande sont destinés aux équipes qui commandent le matériel à l'avance. Vous travaillez seul ? Utilisez Matériaux pour comparer les prix."
+    "teamOnlyDesc": "Les bons de commande sont destinés aux équipes qui commandent le matériel à l'avance. Vous travaillez seul ? Utilisez Matériaux pour comparer les prix.",
+    "materialCount_one": "{{count}} matériau",
+    "materialCount_other": "{{count}} matériaux",
+    "unknownSupplier": "Fournisseur à choisir"
   },
   "workerCerts": {
     "title": "Certificats des ouvriers",
@@ -1932,6 +1941,7 @@
     "packageFeaturePlaceholder": "ex. Garantie 2 ans",
     "resetPackages": "Rétablir les valeurs par défaut",
     "sendPackage": "Envoyer {{name}}",
+    "createPackage": "Créer le devis {{name}}",
     "linesForPackage": "Lignes ({{name}})",
     "quoteTitle": "Devis",
     "bottomSummary_one": "{{count}} prestation · {{total}} (standard)",
@@ -2029,6 +2039,7 @@
     "noCustomerTitle": "Aucun client associé",
     "noCustomerBody": "Ce devis sera enregistré sans lien client. Vous pourrez en associer un depuis la liste des clients plus tard.",
     "sendAnyway": "Envoyer quand même",
+    "createAnyway": "Créer quand même",
     "zeroAmount": "Le total du devis doit être supérieur à zéro.",
     "jobLabelMore": "{{first}} +{{count}}"
   },

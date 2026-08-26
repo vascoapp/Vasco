@@ -553,9 +553,14 @@
     "invoiceThisJobDesc": "Crea una bozza di fattura da questo lavoro, con quanto registrato, e segna il lavoro come fatturato.",
     "fromQuoteTitle": "Lavoro dal preventivo {{ref}}",
     "selectCustomer": "Scegli cliente",
+    "linkCustomer": "Collega un cliente",
+    "noCustomerLinkedDesc": "Questo lavoro non è collegato a nessun cliente: non può essere fatturato e il cliente non ne vede nulla.",
+    "changeCustomer": "Modifica",
     "noCustomer": "Nessun cliente",
     "statusLead": "Opportunità",
-    "notScheduled": "Non pianificato"
+    "notScheduled": "Non pianificato",
+    "signOffFirst": "Fai firmare prima",
+    "signOffHow": "Come vuoi ottenere la firma?"
   },
   "compliance": {
     "manageInsurance": "Gestisci assicurazioni e sinistri",
@@ -1390,7 +1395,8 @@
     "estimatedAmount": "Importo stimato",
     "addPhotos": "Aggiungi foto",
     "submitClaim": "Invia sinistro",
-    "claimSubmitted": "Sinistro inviato"
+    "claimSubmitted": "Sinistro inviato",
+    "selectPolicy": "Scegli una polizza"
   },
   "timesheet": {
     "title": "Registrazione ore",
@@ -1674,7 +1680,10 @@
     "emptyTitle": "Nessun ordine ancora",
     "emptyDesc": "Crea il tuo primo ordine, o lascia che Vasco suggerisca materiali dai lavori pianificati.",
     "teamOnlyTitle": "Per team e imprese",
-    "teamOnlyDesc": "Gli ordini di acquisto sono pensati per team che ordinano materiale in anticipo. Lavori da solo? Usa Materiali per confrontare i prezzi."
+    "teamOnlyDesc": "Gli ordini di acquisto sono pensati per team che ordinano materiale in anticipo. Lavori da solo? Usa Materiali per confrontare i prezzi.",
+    "materialCount_one": "{{count}} materiale",
+    "materialCount_other": "{{count}} materiali",
+    "unknownSupplier": "Fornitore da scegliere"
   },
   "workerCerts": {
     "title": "Certificati dei lavoratori",
@@ -1932,6 +1941,7 @@
     "packageFeaturePlaceholder": "es. 2 anni di garanzia",
     "resetPackages": "Ripristina i valori predefiniti",
     "sendPackage": "Invia {{name}}",
+    "createPackage": "Crea preventivo {{name}}",
     "linesForPackage": "Voci ({{name}})",
     "quoteTitle": "Preventivo",
     "bottomSummary_one": "{{count}} servizio · {{total}} (standard)",
@@ -2029,6 +2039,7 @@
     "noCustomerTitle": "Nessun cliente collegato",
     "noCustomerBody": "Questo preventivo verrà salvato senza collegamento al cliente. Puoi collegarne uno dall'elenco clienti in seguito.",
     "sendAnyway": "Invia comunque",
+    "createAnyway": "Crea comunque",
     "zeroAmount": "Il totale del preventivo deve essere maggiore di zero.",
     "jobLabelMore": "{{first}} +{{count}}"
   },

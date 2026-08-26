@@ -553,9 +553,14 @@
     "invoiceThisJobDesc": "Erstellt aus diesem Auftrag einen Rechnungsentwurf mit dem, was erfasst wurde, und setzt den Auftrag auf berechnet.",
     "fromQuoteTitle": "Auftrag aus Angebot {{ref}}",
     "selectCustomer": "Kunde auswählen",
+    "linkCustomer": "Kunde verknüpfen",
+    "noCustomerLinkedDesc": "Dieser Auftrag ist keinem Kunden zugeordnet — er lässt sich nicht abrechnen und der Kunde sieht nichts davon.",
+    "changeCustomer": "Ändern",
     "noCustomer": "Kein Kunde",
     "statusLead": "Anfrage",
-    "notScheduled": "Nicht geplant"
+    "notScheduled": "Nicht geplant",
+    "signOffFirst": "Erst abzeichnen lassen",
+    "signOffHow": "Wie soll die Unterschrift eingeholt werden?"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
@@ -1390,7 +1395,8 @@
     "estimatedAmount": "Geschätzter Betrag",
     "addPhotos": "Fotos hinzufügen",
     "submitClaim": "Schaden einreichen",
-    "claimSubmitted": "Schaden eingereicht"
+    "claimSubmitted": "Schaden eingereicht",
+    "selectPolicy": "Police wählen"
   },
   "timesheet": {
     "title": "Zeiterfassung",
@@ -1674,7 +1680,10 @@
     "emptyTitle": "Noch keine Bestellungen",
     "emptyDesc": "Erstellen Sie Ihre erste Bestellung oder lassen Sie Vasco Materialien aus Ihren geplanten Aufträgen vorschlagen.",
     "teamOnlyTitle": "Für Teams und Generalunternehmer",
-    "teamOnlyDesc": "Bestellungen sind für Teams gedacht, die Material im Voraus ordern. Arbeiten Sie allein? Nutzen Sie Materialien zum Preisvergleich."
+    "teamOnlyDesc": "Bestellungen sind für Teams gedacht, die Material im Voraus ordern. Arbeiten Sie allein? Nutzen Sie Materialien zum Preisvergleich.",
+    "materialCount_one": "{{count}} Material",
+    "materialCount_other": "{{count}} Materialien",
+    "unknownSupplier": "Lieferant noch zu wählen"
   },
   "workerCerts": {
     "title": "Mitarbeiterzertifikate",
@@ -1932,6 +1941,7 @@
     "packageFeaturePlaceholder": "z. B. 2 Jahre Gewährleistung",
     "resetPackages": "Standard wiederherstellen",
     "sendPackage": "{{name}} senden",
+    "createPackage": "Angebot {{name}} erstellen",
     "linesForPackage": "Positionen ({{name}})",
     "quoteTitle": "Angebot",
     "bottomSummary_one": "{{count}} Leistung · {{total}} (Standard)",
@@ -2029,6 +2039,7 @@
     "noCustomerTitle": "Kein Kunde verknüpft",
     "noCustomerBody": "Dieses Angebot wird ohne Kundenverknüpfung gespeichert. Sie können später einen Kunden aus der Kundenliste verknüpfen.",
     "sendAnyway": "Trotzdem senden",
+    "createAnyway": "Trotzdem erstellen",
     "zeroAmount": "Die Angebotssumme muss größer als null sein.",
     "jobLabelMore": "{{first}} +{{count}}"
   },

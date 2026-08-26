@@ -553,9 +553,14 @@
     "invoiceThisJobDesc": "Creates a draft invoice from this job, with what the job recorded, and marks the job invoiced.",
     "fromQuoteTitle": "Job from quote {{ref}}",
     "selectCustomer": "Select customer",
+    "linkCustomer": "Link a customer",
+    "noCustomerLinkedDesc": "This job is not linked to a customer, so it cannot be invoiced and the customer sees nothing about it.",
+    "changeCustomer": "Change",
     "noCustomer": "No customer",
     "statusLead": "Lead",
-    "notScheduled": "Not scheduled"
+    "notScheduled": "Not scheduled",
+    "signOffFirst": "Get sign-off first",
+    "signOffHow": "How do you want the sign-off?"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",
@@ -1390,7 +1395,8 @@
     "estimatedAmount": "Estimated amount",
     "addPhotos": "Add photos",
     "submitClaim": "Submit claim",
-    "claimSubmitted": "Claim submitted"
+    "claimSubmitted": "Claim submitted",
+    "selectPolicy": "Choose a policy"
   },
   "timesheet": {
     "title": "Time tracking",
@@ -1674,7 +1680,10 @@
     "emptyTitle": "No purchase orders yet",
     "emptyDesc": "Create your first order, or let Vasco suggest materials from your planned jobs.",
     "teamOnlyTitle": "For teams and contractors",
-    "teamOnlyDesc": "Purchase orders are for teams that order materials in advance. Working solo? Use Materials to compare prices."
+    "teamOnlyDesc": "Purchase orders are for teams that order materials in advance. Working solo? Use Materials to compare prices.",
+    "materialCount_one": "{{count}} material",
+    "materialCount_other": "{{count}} materials",
+    "unknownSupplier": "Supplier to be chosen"
   },
   "workerCerts": {
     "title": "Worker Certificates",
@@ -1932,6 +1941,7 @@
     "packageFeaturePlaceholder": "e.g. 2 year warranty",
     "resetPackages": "Restore defaults",
     "sendPackage": "Send {{name}}",
+    "createPackage": "Create {{name}} quote",
     "linesForPackage": "Lines ({{name}})",
     "quoteTitle": "Quote",
     "bottomSummary_one": "{{count}} service · {{total}} (standard)",
@@ -2029,6 +2039,7 @@
     "noCustomerTitle": "No customer attached",
     "noCustomerBody": "This quote will be saved without a customer link. You can attach one from the customer list later.",
     "sendAnyway": "Send anyway",
+    "createAnyway": "Create anyway",
     "zeroAmount": "Quote total must be greater than zero.",
     "jobLabelMore": "{{first}} +{{count}}"
   },

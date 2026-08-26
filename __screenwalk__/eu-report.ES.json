@@ -4,8 +4,8 @@
     "mounted": true,
     "error": null,
     "texts": [
-      "SÁBADO, 22 AGO",
-      "Buenas tardes",
+      "MIÉRCOLES, 26 AGO",
+      "Buenos días",
       ".",
       "",
       "3",
@@ -16,7 +16,7 @@
       "VASCO ANALYST",
       "",
       "Cobros automáticos: Hotel NH",
-      "Recordatorio: la factura (€350,00) lleva 14 días vencida. Conforme a la Directiva UE 2011/7/UE, ahor",
+      "Recordatorio: la factura inv-seed-1 (350,00 €) lleva 14 días vencida. Conforme a la Directiva UE…",
       "ENVIAR",
       "·",
       "Acelera el pago",
@@ -479,7 +479,7 @@
       "Licencias",
       "",
       "Aún no hay licencias",
-      "Añade las licencias estatales de contratista que tengas para que Vasco te avise 30 días antes de que caduquen.",
+      "Añade las licencias y certificaciones que tengas para que Vasco te avise 30 días antes de que caduquen.",
       "",
       "Añadir licencia"
     ]

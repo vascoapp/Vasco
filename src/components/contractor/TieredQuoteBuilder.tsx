@@ -1019,14 +1019,22 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         // an Alert after this point; the parent reads it from here now.
         selectedTier: sendTierKey,
         validUntil: localDateKey(new Date(Date.now() + 30 * MS_PER_DAY)),
-        paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'sent',
+        // 'sent' was a lie the parent never read: addQuote writes 'draft'.
+        paymentTerms: '30% aanbetaling, 70% bij oplevering', status: 'draft',
         // R62: SOW narrative threaded as the quote description. Parent
         // screen persists this to documents.scope_text on save (R57's
         // updateDocument dual-route handles both uuid + docNumber forms).
         description: sowText.trim() || undefined,
       };
+      // `quote_sent` was fired here, at CREATION. The "Quote to Acceptance"
+      // feedback loop in dataSchema trains on quote_sent → quote_accepted, so
+      // every draft that was never sent entered the moat as a sent quote that
+      // went unanswered — and AppState.sendQuote emits the real one anyway, so
+      // an actually-sent tiered quote was counted twice. What genuinely happens
+      // here is the contractor picking a package, which is its own event type
+      // and feeds the "Tier Selection" loop.
       intelligence.trackEvent({
-        eventType: 'quote_sent', userId: getCurrentUserId(), sessionId: 'current',
+        eventType: 'quote_tier_selected', userId: getCurrentUserId(), sessionId: 'current',
         context: { platform: 'ios', appVersion: '1.0.0', dayOfWeek: new Date().getDay(), hourOfDay: new Date().getHours(), isWeekend: [0, 6].includes(new Date().getDay()), season: 'winter' },
         payload: { quoteReference: quote.reference, tierCount: 3, goodTotal: tiers[0].total, betterTotal: tiers[1].total, bestTotal: tiers[2].total, serviceCount: selectedServices.length, customerId: customer?.id },
         entities: customer ? [{ id: customer.id, type: 'customer', name: customer.name, confidence: 1.0 }] : [],
@@ -1052,7 +1060,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         t('tieredQuote.noCustomerBody', 'This quote will be saved without a customer link. You can attach one from the customer list later.'),
         [
           { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-          { text: t('tieredQuote.sendAnyway', 'Send anyway'), onPress: proceed },
+          { text: t('tieredQuote.createAnyway', 'Create anyway'), onPress: proceed },
         ],
       );
       return;
@@ -2104,9 +2112,15 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             end={{ x: 1, y: 1 }}
             style={s.sendBtn}
           >
-            <Ionicons name="send" size={18} color={Palette.white} />
+            {/* NOT a send icon, and not "senden". This button creates a DRAFT
+                quote: `addQuote` writes `status: 'draft'`, the alert that
+                follows says "wurde gespeichert", and the quote's own detail
+                screen then offers the send action and a next-step card telling
+                the contractor to send it. Only the verb here was wrong — #197's
+                shape, where the label makes a claim the write does not. */}
+            <Ionicons name="document-text" size={18} color={Palette.white} />
             <Text style={s.sendBtnText}>
-              {t('quotes.sendPackage', 'Send {{name}}', { name: tierPresets[sendTierKey].name })}
+              {t('quotes.createPackage', 'Create {{name}} quote', { name: tierPresets[sendTierKey].name })}
             </Text>
           </LinearGradient>
         </Pressable>

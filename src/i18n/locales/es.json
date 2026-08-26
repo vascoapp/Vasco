@@ -553,9 +553,14 @@
     "invoiceThisJobDesc": "Crea un borrador de factura a partir de este trabajo, con lo registrado, y marca el trabajo como facturado.",
     "fromQuoteTitle": "Trabajo del presupuesto {{ref}}",
     "selectCustomer": "Elegir cliente",
+    "linkCustomer": "Vincular un cliente",
+    "noCustomerLinkedDesc": "Este trabajo no está vinculado a ningún cliente, por lo que no se puede facturar y el cliente no ve nada.",
+    "changeCustomer": "Cambiar",
     "noCustomer": "Sin cliente",
     "statusLead": "Oportunidad",
-    "notScheduled": "Sin planificar"
+    "notScheduled": "Sin planificar",
+    "signOffFirst": "Obtener la firma primero",
+    "signOffHow": "¿Cómo quieres obtener la firma?"
   },
   "compliance": {
     "manageInsurance": "Gestionar seguros y siniestros",
@@ -1390,7 +1395,8 @@
     "estimatedAmount": "Importe estimado",
     "addPhotos": "Añadir fotos",
     "submitClaim": "Presentar reclamación",
-    "claimSubmitted": "Reclamación presentada"
+    "claimSubmitted": "Reclamación presentada",
+    "selectPolicy": "Elige una póliza"
   },
   "timesheet": {
     "title": "Control horario",
@@ -1674,7 +1680,10 @@
     "emptyTitle": "Aún no hay pedidos",
     "emptyDesc": "Crea tu primer pedido, o deja que Vasco sugiera materiales a partir de tus trabajos planificados.",
     "teamOnlyTitle": "Para equipos y contratistas",
-    "teamOnlyDesc": "Los pedidos de compra son para equipos que piden material por adelantado. ¿Trabajas solo? Usa Materiales para comparar precios."
+    "teamOnlyDesc": "Los pedidos de compra son para equipos que piden material por adelantado. ¿Trabajas solo? Usa Materiales para comparar precios.",
+    "materialCount_one": "{{count}} material",
+    "materialCount_other": "{{count}} materiales",
+    "unknownSupplier": "Proveedor por elegir"
   },
   "workerCerts": {
     "title": "Certificados de trabajadores",
@@ -1932,6 +1941,7 @@
     "packageFeaturePlaceholder": "p. ej. 2 años de garantía",
     "resetPackages": "Restaurar valores por defecto",
     "sendPackage": "Enviar {{name}}",
+    "createPackage": "Crear presupuesto {{name}}",
     "linesForPackage": "Líneas ({{name}})",
     "quoteTitle": "Presupuesto",
     "bottomSummary_one": "{{count}} servicio · {{total}} (estándar)",
@@ -2029,6 +2039,7 @@
     "noCustomerTitle": "Sin cliente asociado",
     "noCustomerBody": "Este presupuesto se guardará sin vínculo a un cliente. Puedes asociar uno desde la lista de clientes más tarde.",
     "sendAnyway": "Enviar igualmente",
+    "createAnyway": "Crear igualmente",
     "zeroAmount": "El total del presupuesto debe ser mayor que cero.",
     "jobLabelMore": "{{first}} +{{count}}"
   },

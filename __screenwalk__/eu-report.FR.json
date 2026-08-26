@@ -4,8 +4,8 @@
     "mounted": true,
     "error": null,
     "texts": [
-      "SAMEDI 22 AOÛT",
-      "Bon après-midi",
+      "MERCREDI 26 AOÛT",
+      "Bonjour",
       ".",
       "",
       "3",
@@ -16,7 +16,7 @@
       "VASCO ANALYST",
       "",
       "Relances de paiement: Hotel NH",
-      "Rappel: la facture (€350,00) a 14 jours de retard. Conformément à la Directive UE 2011/7/UE, les int",
+      "Rappel: la facture inv-seed-1 (350,00 €) a 14 jours de retard. Conformément à la Directive UE…",
       "ENVOYER",
       "·",
       "Accélère le paiement",
@@ -479,7 +479,7 @@
       "Licences",
       "",
       "Aucune licence pour l'instant",
-      "Ajoutez les licences d'État que vous détenez pour que Vasco vous avertisse 30 jours avant leur expiration.",
+      "Ajoutez les autorisations et qualifications que vous détenez pour que Vasco vous avertisse 30 jours avant leur expiration.",
       "",
       "Ajouter une licence"
     ]

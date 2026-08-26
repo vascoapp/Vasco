@@ -4,8 +4,8 @@
     "mounted": true,
     "error": null,
     "texts": [
-      "SABATO 22 AGO",
-      "Buon pomeriggio",
+      "MERCOLEDÌ 26 AGO",
+      "Buongiorno",
       ".",
       "",
       "3",
@@ -16,7 +16,7 @@
       "VASCO ANALYST",
       "",
       "Solleciti automatici: Hotel NH",
-      "Promemoria: la fattura (€350,00) è in ritardo di 14 giorni. Ai sensi della Direttiva UE 2011/7/UE si",
+      "Promemoria: la fattura inv-seed-1 (350,00 €) è in ritardo di 14 giorni. Ai sensi della Direttiva…",
       "INVIA",
       "·",
       "Accelera il pagamento",
@@ -479,7 +479,7 @@
       "Licenze",
       "",
       "Ancora nessuna licenza",
-      "Aggiungi le licenze statali da appaltatore che possiedi, così Vasco potrà avvisarti 30 giorni prima della scadenza.",
+      "Aggiungi le abilitazioni e certificazioni che possiedi, così Vasco potrà avvisarti 30 giorni prima della scadenza.",
       "",
       "Aggiungi licenza"
     ]
