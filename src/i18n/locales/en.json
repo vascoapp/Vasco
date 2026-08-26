@@ -2892,7 +2892,10 @@
       "purchasing": "Purchasing",
       "purchasingSub": "Receipt scanner, reorders, supplier prices.",
       "sortBy": "SORT BY",
-      "projectedIncomeMonth": "Expected income"
+      "projectedIncomeMonth": "Expected income",
+      "projectBook": "Project book",
+      "projectBookInvoiced": "{{invoiced}} of {{total}} invoiced",
+      "projectBookRemaining": "Still to invoice"
     },
     "ai": {
       "automationsTitle": "Automations",

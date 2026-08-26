@@ -2892,7 +2892,10 @@
       "purchasing": "Achats",
       "purchasingSub": "Scanner reçus, recommandes, prix fournisseurs.",
       "sortBy": "TRIER PAR",
-      "projectedIncomeMonth": "Encaissements prévus"
+      "projectedIncomeMonth": "Encaissements prévus",
+      "projectBook": "Carnet de projets",
+      "projectBookInvoiced": "{{invoiced}} sur {{total}} facturé",
+      "projectBookRemaining": "Reste à facturer"
     },
     "ai": {
       "automationsTitle": "Automatisations",

@@ -2892,7 +2892,10 @@
       "purchasing": "Einkauf",
       "purchasingSub": "Belegscanner, Nachbestellungen, Lieferantenpreise.",
       "sortBy": "SORTIEREN NACH",
-      "projectedIncomeMonth": "Erwarteter Eingang"
+      "projectedIncomeMonth": "Erwarteter Eingang",
+      "projectBook": "Auftragsbestand",
+      "projectBookInvoiced": "{{invoiced}} von {{total}} abgerechnet",
+      "projectBookRemaining": "Noch abzurechnen"
     },
     "ai": {
       "automationsTitle": "Automatisierungen",

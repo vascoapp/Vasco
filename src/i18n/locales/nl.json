@@ -2876,7 +2876,10 @@
       "purchasing": "Inkoop",
       "purchasingSub": "Bon scanner, herbestellen, leveranciersprijzen.",
       "sortBy": "SORTEREN OP",
-      "projectedIncomeMonth": "Verwachte inkomsten"
+      "projectedIncomeMonth": "Verwachte inkomsten",
+      "projectBook": "Projectboek",
+      "projectBookInvoiced": "{{invoiced}} van {{total}} gefactureerd",
+      "projectBookRemaining": "Nog te factureren"
     },
     "ai": {
       "automationsTitle": "Automatiseringen",

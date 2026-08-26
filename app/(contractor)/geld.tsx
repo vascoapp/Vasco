@@ -38,6 +38,8 @@ import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { useAuth } from '../../src/context/AuthContext';
+import { billingProgress } from '../../src/services/progressBillingService';
 
 /**
  * Cashflow chart axis. Was a hardcoded English array, so the Dutch Geld tab
@@ -77,7 +79,8 @@ export default function GeldScreen() {
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const [showInvoiceFilterModal, setShowInvoiceFilterModal] = useState(false);
   const [showQuoteFilterModal, setShowQuoteFilterModal] = useState(false);
-  const { invoices, quotes, markInvoiceSent, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
+  const { invoices, quotes, projects, markInvoiceSent, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
+  const { user } = useAuth();
   const fin = useFinancialAnalysis();
   const aiQueue = useAIQueue();
   const allGuidance = useVascoGuidance('contractor', 'geld');
@@ -197,6 +200,33 @@ export default function GeldScreen() {
     return { color: DK.colors.danger };
   }, [fin.avgDaysToPayment]);
 
+  // MUST stay above the `isLoading` early return below — this was originally
+  // placed after it, which changed the hook count between the loading and
+  // loaded renders and crashed the screen with "Rendered more hooks than
+  // during the previous render". `walk` did not catch it; the FR/ES/IT/DE
+  // market postures did, because they hit the loading branch.
+  //
+  // Aggregated across ACTIVE projects only: a finished project's remaining
+  // balance is not forward work, and including it would overstate the book.
+  // `billingProgress` is the same function the project screen uses, so these
+  // figures reconcile with what the aannemer already sees there.
+  const projectBook = useMemo(() => {
+    if (!user?.isAannemer) return null;
+    const active = (projects ?? []).filter(
+      (p: any) => p.status === 'active' || p.status === 'planning' || p.status === 'in_progress',
+    );
+    if (active.length === 0) return null;
+    let contract = 0, invoiced = 0, remaining = 0;
+    for (const p of active) {
+      const bp = billingProgress(p as any, invoices as any);
+      contract += bp.contractValue;
+      invoiced += bp.invoiced;
+      remaining += bp.remaining;
+    }
+    if (contract <= 0) return null;
+    return { contract, invoiced, remaining, percent: (invoiced / contract) * 100 };
+  }, [user?.isAannemer, projects, invoices]);
+
   if (isLoading) {
     return (
       <View style={s.root}>
@@ -285,6 +315,48 @@ export default function GeldScreen() {
             <Ionicons name="checkmark-circle" size={14} color={collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger} />
             <Text style={s.collectionText}>{t('dk.pill.collectionRate', 'Collection rate').toUpperCase()} · <Text style={{ color: collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger }}>{collectionRate}%</Text></Text>
           </View>
+        )}
+
+        {/* ─── PROJECT BOOK (aannemer only) ───────────────────────────────
+            An aannemer's forward book is mostly CONTRACTED work, not open
+            quotes. On the sim this screen showed "Pipeline € 4,5K" while two
+            live projects carried € 30.500 of contract value with € 3.750
+            invoiced — the largest money fact about the business was on no
+            money screen. Deliberately NOT folded into the Pipeline tile:
+            "Pipeline" means open quotes for both roles, and quietly redefining
+            it for one of them makes the two postures disagree about a word.
+            This is an additional fact, in contract money (ex-VAT), the unit
+            `progressBillingService` works in. Hidden for a solo contractor and
+            for an aannemer with no active project, so nobody gets a card
+            reading zero of zero. */}
+        {projectBook && (
+          <Pressable
+            style={({ pressed }) => [s.projectBookCard, pressed && { opacity: 0.9 }]}
+            onPress={() => router.push('/contractor/projects' as any)}
+            accessibilityRole="button"
+            accessibilityLabel={t('dk.money.projectBook', 'Project book')}
+          >
+            <View style={s.projectBookHead}>
+              <DKLabel style={s.projLabel} numberOfLines={1}>{t('dk.money.projectBook', 'Project book')}</DKLabel>
+              <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
+            </View>
+            <Text style={s.projectBookValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+              {formatCurrency(projectBook.remaining)}
+            </Text>
+            <DKLabel style={s.projLabel} numberOfLines={1}>
+              {t('dk.money.projectBookRemaining', 'Still to invoice')}
+            </DKLabel>
+            <View style={s.projectBookBarTrack}>
+              <View style={[s.projectBookBarFill, { width: `${Math.min(100, Math.max(0, projectBook.percent))}%` }]} />
+            </View>
+            <Text style={s.projectBookSub} numberOfLines={2}>
+              {t('dk.money.projectBookInvoiced', {
+                invoiced: formatCurrency(projectBook.invoiced),
+                total: formatCurrency(projectBook.contract),
+                defaultValue: '{{invoiced}} of {{total}} invoiced',
+              })}
+            </Text>
+          </Pressable>
         )}
 
         {/* ─── NEW OFFERTE (primary creation CTA, elevated) ─── */}
@@ -964,6 +1036,19 @@ const s = StyleSheet.create({
   sparkXAxis: { flexDirection: 'row', justifyContent: 'space-around' },
 
   projRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border },
+  projectBookCard: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: DK.radius.card,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    padding: 14,
+    gap: 6,
+  },
+  projectBookHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  projectBookValue: { fontFamily: DK.type.display900, fontSize: 26, color: DK.colors.highlight, letterSpacing: -0.5 },
+  projectBookBarTrack: { height: 6, borderRadius: 3, backgroundColor: DK.colors.panel2, overflow: 'hidden', marginTop: 4 },
+  projectBookBarFill: { height: '100%', borderRadius: 3, backgroundColor: DK.colors.accent },
+  projectBookSub: { fontFamily: DK.type.body400, fontSize: 13, color: DK.colors.textMuted },
   projIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   projLabel: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1.2 },
   projValue: { fontFamily: DK.type.display900, fontSize: 16, letterSpacing: -0.3 },

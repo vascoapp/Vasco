@@ -2892,7 +2892,10 @@
       "purchasing": "Acquisti",
       "purchasingSub": "Scanner ricevute, riordini, prezzi fornitori.",
       "sortBy": "ORDINA PER",
-      "projectedIncomeMonth": "Incassi previsti"
+      "projectedIncomeMonth": "Incassi previsti",
+      "projectBook": "Portafoglio progetti",
+      "projectBookInvoiced": "{{invoiced}} su {{total}} fatturato",
+      "projectBookRemaining": "Ancora da fatturare"
     },
     "ai": {
       "automationsTitle": "Automazioni",
