@@ -977,17 +977,21 @@ export default function InvoiceDetailScreen() {
             </Pressable>
           </View>
 
-          {/* Column headers */}
-          <View style={styles.lineHeaderRow}>
-            <Text style={[styles.lineHeaderText, { flex: 2 }]}>{t('invoices.description', 'Description')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 40, textAlign: 'center' }]}>{t('invoices.qty', 'Qty')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.unitPrice', 'Price')}</Text>
-            <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.total', 'Total')}</Text>
-          </View>
+          {/* Column headers — only while EDITING, where the row really is four
+              columns. The read view stacks (see below) and a four-column header
+              over a two-line stack just mislabels it. */}
+          {editingItems && (
+            <View style={styles.lineHeaderRow}>
+              <Text style={[styles.lineHeaderText, { flex: 2 }]}>{t('invoices.description', 'Description')}</Text>
+              <Text style={[styles.lineHeaderText, { width: 40, textAlign: 'center' }]}>{t('invoices.qty', 'Qty')}</Text>
+              <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.unitPrice', 'Price')}</Text>
+              <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.total', 'Total')}</Text>
+            </View>
+          )}
 
           {/* Items */}
           {localItems.map((item) => (
-            <View key={item.id} style={styles.lineItemRow}>
+            <View key={item.id} style={editingItems ? styles.lineItemRow : styles.lineItemStack}>
               {editingItems ? (
                 <>
                   <TextInput
@@ -1014,11 +1018,26 @@ export default function InvoiceDetailScreen() {
                   </Pressable>
                 </>
               ) : (
+                /* The description was one cell of a four-column row, so it got
+                   ~130pt of a 402pt screen. iOS breaks a word wider than its
+                   box BETWEEN CHARACTERS, then ellipsizes at two lines — the
+                   German seed rendered "Trinkwasserleitun / g erneuern — B…",
+                   i.e. an invoice line whose contractor cannot read what is
+                   being billed. Seen on device 2026-08-26. Compound nouns are
+                   normal German, so no column width fixes this: the
+                   description takes the full row and the numbers sit under it.
+                   Editing keeps the four-column form, where each cell is a
+                   separate input. */
                 <>
-                  <Text style={[styles.lineText, { flex: 2 }]} numberOfLines={2}>{item.description}</Text>
-                  <Text style={[styles.lineTextMuted, { width: 40, textAlign: 'center' }]}>{item.quantity}</Text>
-                  <Text style={[styles.lineTextMuted, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.unitPrice, country)}</Text>
-                  <Text style={[styles.lineText, { width: 82, textAlign: 'right' }]}>{formatCurrency(item.quantity * item.unitPrice, country)}</Text>
+                  <Text style={styles.lineText} numberOfLines={3}>{item.description}</Text>
+                  <View style={styles.lineNumbers}>
+                    <Text style={styles.lineTextMuted} numberOfLines={1}>
+                      {item.quantity} × {formatCurrency(item.unitPrice, country)}
+                    </Text>
+                    <Text style={styles.lineText} numberOfLines={1}>
+                      {formatCurrency(item.quantity * item.unitPrice, country)}
+                    </Text>
+                  </View>
                 </>
               )}
             </View>
@@ -1637,6 +1656,18 @@ const styles = StyleSheet.create({
     // single word longer than its line box breaks at any font size. Columns
     // widened to 82 and the spacing trimmed.
     letterSpacing: 0.2,
+  },
+  lineItemStack: {
+    paddingVertical: GRID.sm,
+    gap: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: SemanticColors.borderMuted,
+  },
+  lineNumbers: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: GRID.sm,
   },
   lineItemRow: {
     flexDirection: 'row',

@@ -911,7 +911,11 @@
     "workRecordNote": "Aus dem Auftrag: {{hours}} Std. erfasst, {{materials}} Materialien verbraucht{{completed}}.",
     "workRecordCompleted": ", abgeschlossen am {{date}}",
     "paymentMethodsAvailable": "Zahlungsmethoden, die Sie anbieten könnten",
-    "connectAccounting": "Buchhaltung verbinden"
+    "connectAccounting": "Buchhaltung verbinden",
+    "invoiceCount_one": "{{count}} Rechnung",
+    "invoiceCount_other": "{{count}} Rechnungen",
+    "quoteCount_one": "{{count}} Angebot",
+    "quoteCount_other": "{{count}} Angebote"
   },
   "expenses": {
     "title": "Ausgaben",

@@ -911,7 +911,11 @@
     "workRecordNote": "Del trabajo: {{hours}} h registradas, {{materials}} materiales utilizados{{completed}}.",
     "workRecordCompleted": ", finalizado el {{date}}",
     "paymentMethodsAvailable": "Métodos de pago que podrías ofrecer",
-    "connectAccounting": "Conectar contabilidad"
+    "connectAccounting": "Conectar contabilidad",
+    "invoiceCount_one": "{{count}} factura",
+    "invoiceCount_other": "{{count}} facturas",
+    "quoteCount_one": "{{count}} presupuesto",
+    "quoteCount_other": "{{count}} presupuestos"
   },
   "expenses": {
     "title": "Gastos",

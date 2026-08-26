@@ -911,7 +911,11 @@
     "workRecordNote": "Dal lavoro: {{hours}} h registrate, {{materials}} materiali utilizzati{{completed}}.",
     "workRecordCompleted": ", completato il {{date}}",
     "paymentMethodsAvailable": "Metodi di pagamento che potresti offrire",
-    "connectAccounting": "Collega la contabilità"
+    "connectAccounting": "Collega la contabilità",
+    "invoiceCount_one": "{{count}} fattura",
+    "invoiceCount_other": "{{count}} fatture",
+    "quoteCount_one": "{{count}} preventivo",
+    "quoteCount_other": "{{count}} preventivi"
   },
   "expenses": {
     "title": "Spese",

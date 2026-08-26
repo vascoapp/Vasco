@@ -911,7 +911,11 @@
     "workRecordNote": "From the job: {{hours}} h logged, {{materials}} materials used{{completed}}.",
     "workRecordCompleted": ", completed {{date}}",
     "paymentMethodsAvailable": "Payment methods you could offer",
-    "connectAccounting": "Connect accounting"
+    "connectAccounting": "Connect accounting",
+    "invoiceCount_one": "{{count}} invoice",
+    "invoiceCount_other": "{{count}} invoices",
+    "quoteCount_one": "{{count}} quote",
+    "quoteCount_other": "{{count}} quotes"
   },
   "expenses": {
     "title": "Expenses",

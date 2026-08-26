@@ -32,8 +32,17 @@ export function ContractorDashboardHeader({ kpis }: ContractorDashboardHeaderPro
             <View style={[styles.iconCircle, { backgroundColor: accent + '12' }]}>
               <Ionicons name={kpi.icon} size={18} color={accent} />
             </View>
+            {/* Shrink, don't ellipsize. A third-width tile holding a formatted
+                amount truncated "€ 5.380,00" to "€ 5.380,..." on the invoices
+                screen — the number is the whole point of a KPI tile, so it is
+                the last thing that may be cut. */}
             {typeof kpi.value === 'string' ? (
-              <Text style={[styles.kpiValue, { color: accent }]} numberOfLines={1}>
+              <Text
+                style={[styles.kpiValue, { color: accent }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.55}
+              >
                 {kpi.value}
               </Text>
             ) : (

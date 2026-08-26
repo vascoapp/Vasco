@@ -622,7 +622,13 @@ export default function FacturenScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>{t('invoices.title', 'Facturen')}</Text>
-          <Text style={styles.headerSubtitle}>{invoices.length} {t('invoices.invoices', 'facturen')} · {quotes.length} {t('invoices.quotes', 'offertes')}</Text>
+          {/* Was `{n} {t('invoices.invoices')}` — a count glued to a fixed
+              plural noun, so a German contractor with one quote read
+              "1 Angebote". i18next plurals instead, which also gets French
+              right (invariable "devis"). */}
+          <Text style={styles.headerSubtitle}>
+            {t('invoices.invoiceCount', { count: invoices.length })} · {t('invoices.quoteCount', { count: quotes.length })}
+          </Text>
         </View>
         <Pressable
           style={styles.addButton}
@@ -644,7 +650,11 @@ export default function FacturenScreen() {
       <View style={{ paddingHorizontal: Spacing.md }}>
         <ContractorDashboardHeader
           kpis={[
-            { icon: 'receipt', value: formatCurrency(pendingValue, (user?.country ?? 'NL') as Country), label: t('invoices.outstanding', 'Openstaand') },
+            // No country argument: `formatCurrency` resolves the signed-in
+            // contractor itself, and the business profile outranks the account
+            // (#218). `user?.country ?? 'NL'` skipped the profile and pinned
+            // anyone without one to Dutch convention.
+            { icon: 'receipt', value: formatCurrency(pendingValue), label: t('invoices.outstanding', 'Openstaand') },
             { icon: 'timer', value: `${dso.currentDSO}d`, label: 'DSO', color: dso.trend === 'worsening' ? SemanticColors.feedbackError : dso.trend === 'improving' ? SemanticColors.feedbackSuccess : undefined },
             { icon: 'document-text', value: String(quotes.length), label: t('invoices.quotes', 'Offertes'), color: Palette.hermesOrange },
           ]}

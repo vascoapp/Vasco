@@ -895,7 +895,11 @@
     "workRecordNote": "Vanuit de klus: {{hours}} u geschreven, {{materials}} materialen gebruikt{{completed}}.",
     "workRecordCompleted": ", afgerond op {{date}}",
     "paymentMethodsAvailable": "Betaalmethoden die je kunt aanbieden",
-    "connectAccounting": "Boekhouding koppelen"
+    "connectAccounting": "Boekhouding koppelen",
+    "invoiceCount_one": "{{count}} factuur",
+    "invoiceCount_other": "{{count}} facturen",
+    "quoteCount_one": "{{count}} offerte",
+    "quoteCount_other": "{{count}} offertes"
   },
   "expenses": {
     "title": "Uitgaven",
