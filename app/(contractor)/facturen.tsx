@@ -1027,10 +1027,15 @@ export default function FacturenScreen() {
                   <Text style={styles.dsoDetailLabel}>{t('invoices.target', 'Doel')}</Text>
                   <Text style={styles.dsoDetailValue}>{dso.targetDSO}d</Text>
                 </View>
-                <View style={styles.dsoDetailItem}>
-                  <Text style={styles.dsoDetailLabel}>{t('invoices.previous', 'Vorige')}</Text>
-                  <Text style={styles.dsoDetailValue}>{dso.previousDSO}d</Text>
-                </View>
+                {/* Omitted, not repeated. With no paid invoice in the prior
+                    30–90d window there is no previous DSO, and the old
+                    fallback printed the CURRENT one under the label "Vorige". */}
+                {dso.previousDSO !== null && (
+                  <View style={styles.dsoDetailItem}>
+                    <Text style={styles.dsoDetailLabel}>{t('invoices.previous', 'Vorige')}</Text>
+                    <Text style={styles.dsoDetailValue}>{dso.previousDSO}d</Text>
+                  </View>
+                )}
                 <View style={styles.dsoDetailItem}>
                   <Text style={styles.dsoDetailLabel}>{t('invoices.industry', 'Branche')}</Text>
                   <Text style={styles.dsoDetailValue}>{dso.industryAverage}d</Text>

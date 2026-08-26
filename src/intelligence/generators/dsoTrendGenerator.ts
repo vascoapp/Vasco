@@ -64,7 +64,7 @@ export function useDSOTrendInsight(ctx: GeneratorContext): ScoredInsight | null 
     rootCauseTags: ['cashflow', 'dso'],
     rawScore: 0,
     reasoning: {
-      observation: `DSO gestegen naar ${dso.currentDSO} dagen (doel: ${dso.targetDSO}d), was ${dso.previousDSO}d`,
+      observation: `DSO gestegen naar ${dso.currentDSO} dagen (doel: ${dso.targetDSO}d)${dso.previousDSO !== null ? `, was ${dso.previousDSO}d` : ''}`,
       evidence: `Op basis van je factuurhistorie (branche-gemiddelde: ${dso.industryAverage}d)${anomaly.isAnomaly ? ` — anomalie gedetecteerd (${anomaly.zScore.toFixed(1)}σ)` : ''}${(() => { const t = getTrend(ctx.profile, 'dso', 4); return t && t.slope !== 0 ? ` — DSO-trend: ${t.direction}` : ''; })()}`,
       implication: `Langere betaaltermijnen beperken je cashflow en werkkapitaal.${seasonNote}`,
       suggestion: dsoGap > 10

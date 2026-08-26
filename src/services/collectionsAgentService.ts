@@ -16,7 +16,11 @@ export interface DSOMetrics {
   currentDSO: number;       // days
   targetDSO: number;
   trend: 'improving' | 'worsening' | 'stable';
-  previousDSO: number;
+  /** null = no prior 30–90d window to measure. NOT the current DSO repeated:
+   *  it used to fall back to `currentDSO`, which showed the contractor
+   *  "Vorige 15d" beside "15d" as though a previous period had been measured,
+   *  and pinned `trend` to 'stable' by construction. UNKNOWN is a value. */
+  previousDSO: number | null;
   industryAverage: number;
 }
 
@@ -75,7 +79,7 @@ const ZERO_DSO_METRICS: DSOMetrics = {
   currentDSO: 0,
   targetDSO: 30,
   trend: 'stable',
-  previousDSO: 0,
+  previousDSO: null,
   industryAverage: 0,
 };
 
@@ -336,8 +340,12 @@ function deriveDSO(invoices: any[]): DSOMetrics {
     const paidAt = new Date(i.paidAt || i.lastUpdated).getTime();
     return Math.max(0, (paidAt - sent) / DAY_MS);
   });
-  const previousDSO = prevDays.length > 0 ? Math.round(prevDays.reduce((a, b) => a + b, 0) / prevDays.length) : currentDSO;
-  const trend: DSOMetrics['trend'] = currentDSO < previousDSO ? 'improving' : currentDSO > previousDSO ? 'worsening' : 'stable';
+  const previousDSO = prevDays.length > 0 ? Math.round(prevDays.reduce((a, b) => a + b, 0) / prevDays.length) : null;
+  const trend: DSOMetrics['trend'] =
+    previousDSO === null ? 'stable'
+      : currentDSO < previousDSO ? 'improving'
+      : currentDSO > previousDSO ? 'worsening'
+      : 'stable';
   return {
     currentDSO,
     targetDSO: 21,
