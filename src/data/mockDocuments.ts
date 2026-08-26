@@ -35,7 +35,7 @@ export const quotes: Quote[] = [
   {
     id: 'q-102',
     customer: 'De Jong',
-    job: 'Interior repaint',
+    job: 'Binnenschilderwerk',
     amount: 2450,
     status: 'draft',
     lastUpdated: '2 days ago',
@@ -43,7 +43,7 @@ export const quotes: Quote[] = [
   {
     id: 'q-103',
     customer: 'Van Dijk',
-    job: 'Exterior repaint',
+    job: 'Buitenschilderwerk',
     amount: 1120,
     status: 'draft',
     lastUpdated: '1 day ago',
@@ -51,7 +51,7 @@ export const quotes: Quote[] = [
   {
     id: 'q-104',
     customer: 'Bouwgroep Atlas',
-    job: 'Fence staining',
+    job: 'Schutting beitsen',
     amount: 780,
     status: 'sent',
     lastUpdated: 'Today',
@@ -86,7 +86,7 @@ export const invoices: Invoice[] = [
   {
     id: 'i-1043', reference: 'F-2026-0038',
     customer: 'Bouwgroep Atlas',
-    job: 'Exterior repaint',
+    job: 'Buitenschilderwerk',
     amount: 450,
     status: 'overdue',
     dueInDays: -10,
@@ -97,7 +97,7 @@ export const invoices: Invoice[] = [
   {
     id: 'i-1044', reference: 'F-2026-0039',
     customer: 'Van Dijk',
-    job: 'Exterior repaint',
+    job: 'Buitenschilderwerk',
     amount: 760,
     status: 'paid',
     dueInDays: 0,
@@ -108,7 +108,7 @@ export const invoices: Invoice[] = [
   {
     id: 'i-1045', reference: 'F-2026-0040',
     customer: 'De Jong',
-    job: 'Interior repaint',
+    job: 'Binnenschilderwerk',
     amount: 640,
     status: 'draft',
     dueInDays: 30,

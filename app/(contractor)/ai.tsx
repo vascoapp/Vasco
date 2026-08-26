@@ -192,7 +192,16 @@ export default function VascoScreen() {
         title: t('ai.createInvoice', { title: job.title }),
         reason: t('ai.jobNotInvoiced', { amount: jobAmount }),
         actionLabel: t('ai.createInvoiceBtn'), actionType: 'navigate',
-        route: `/(contractor)/facturen`, priority: 'high',
+        // `job/<id>?action=create-invoice`, NOT the invoice LIST. The job
+        // screen has had a one-shot effect for this exact param since R304 —
+        // it calls `addInvoiceFromJob`, and says why if the job cannot be
+        // billed — and `queueItemExecutor` already routes there. This card is
+        // a second, hand-rolled producer of the same "invoice a finished job"
+        // action and it walked past that mechanism: a button labelled "Factuur
+        // aanmaken" dropped the contractor on a list of four OTHER invoices,
+        // created nothing, and forgot which job it was even about. Verified on
+        // the sim 2026-08-26: tapped it, no invoice appeared.
+        route: `/contractor/job/${job.id}?action=create-invoice`, priority: 'high',
       });
     });
 
@@ -881,10 +890,21 @@ const s = StyleSheet.create({
     borderWidth: 1.5, borderColor: DK.colors.accent,
   },
   editBtnText: { fontFamily: DK.type.display900, fontSize: 11, color: DK.colors.accent, letterSpacing: 1.1 },
-  dismissBtn: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: DK.radius.button, backgroundColor: DK.colors.panel2, borderWidth: 1, borderColor: DK.colors.border },
+  dismissBtn: { flexShrink: 0, paddingVertical: 7, paddingHorizontal: 12, borderRadius: DK.radius.button, backgroundColor: DK.colors.panel2, borderWidth: 1, borderColor: DK.colors.border },
   dismissBtnText: { fontFamily: DK.type.display800, fontSize: 10, color: DK.colors.textMuted, letterSpacing: 1 },
-  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: DK.radius.button, backgroundColor: DK.colors.accent },
-  approveBtnText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.bg, letterSpacing: 1.1 },
+  // `minWidth: 0` + `flexShrink` — WITHOUT them a flex child in a row refuses
+  // to shrink below its own content width, the row overflows its card, and the
+  // leading icon is pushed out of the pill: on the Dutch queue the send arrow
+  // of "HERINNERING STUREN" was drawn on top of the LATER chip beside it.
+  // English "SEND REMINDER" fits on one line, which is why it was never seen.
+  // The HERO variant further down this same file already had this fix.
+  approveBtn: { flex: 1, flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, paddingHorizontal: 6, borderRadius: DK.radius.button, backgroundColor: DK.colors.accent },
+  // letterSpacing sized off the longest WORD in the six locales, not off
+  // English. iOS breaks a word wider than its box between characters, and
+  // `adjustsFontSizeToFit` does not rescue that (the break satisfies the line
+  // count, so the shrink never fires) — at 1.1 the Dutch "HERINNERING" needed
+  // ~91pt of an ~89pt cell and rendered "HERINNERIN / G STUREN".
+  approveBtnText: { fontFamily: DK.type.display900, fontSize: 10, color: DK.colors.bg, letterSpacing: 0.4, flexShrink: 1 },
 
   doneRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

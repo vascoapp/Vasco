@@ -41,7 +41,9 @@ import { createPaymentLink as createStripePaymentLink } from '../../src/integrat
 import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
 import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
-import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
+import { formatCurrency, formatMoney, formatDayMonthAuto, formatDecimal1 } from '../../src/i18n/formatting';
+import { documentNumber } from '../../src/domain/documents';
+import { findDocumentCustomer } from '../../src/domain/customers';
 import type { Country } from '../../src/i18n/formatting';
 import { computeLateFee, type LateFeeCountry } from '../../src/services/lateFeeService';
 import { useTranslation } from 'react-i18next';
@@ -71,7 +73,9 @@ interface Quote {
   status: QuoteStatus;
   sentDate?: string;
   total: number;
-  tiers: { good: number; better: number; best: number };
+  /** Optional: `QuoteItem` does not render tiers. Present only where a real
+      tiered quote supplies them — never synthesised. */
+  tiers?: { good: number; better: number; best: number };
   selectedTier?: 'good' | 'better' | 'best';
   viewCount?: number;
 }
@@ -297,7 +301,12 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   if (!fee.applicable) return null;
                   return (
                     <Text style={{ fontSize: 10, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError, marginTop: 2 }}>
-                      {t('invoices.lateInterest', 'Interest')}: {formatCurrency(fee.interest, country)} ({t('invoices.statutoryInterestRate', { defaultValue: '{{rate}}% statutory interest', rate: fee.effectiveRatePct })})
+                      {/* The rate goes through formatDecimal1: interpolating the
+                          raw number gave `String(12.5)` — an English decimal
+                          POINT inside a Dutch sentence, "12.5% wettelijke
+                          rente", sitting next to a correctly comma-formatted
+                          "€ 1,54" in the same line. */}
+                      {t('invoices.lateInterest', 'Interest')}: {formatCurrency(fee.interest, country)} ({t('invoices.statutoryInterestRate', { defaultValue: '{{rate}}% statutory interest', rate: formatDecimal1(fee.effectiveRatePct, country) })})
                     </Text>
                   );
                 })()}
@@ -563,7 +572,7 @@ export default function FacturenScreen() {
   }, []);
 
   // Connect to services
-  const { jobs, addInvoiceFromJob, businessProfile, customers } = useAppState();
+  const { jobs, addInvoiceFromJob, businessProfile, customers, quotes: storedQuotes } = useAppState();
   const { invoices, summary } = useCashFlow();
   const { findings: auditFindings } = useFinancialAuditFindings();
 
@@ -593,25 +602,34 @@ export default function FacturenScreen() {
   const pendingValue = pendingInvoices.reduce((sum, i) => sum + i.amount, 0);
   const overdueValue = overdueInvoices.reduce((sum, i) => sum + i.amount, 0);
 
-  // Transform invoices to quotes
+  // The OFFERTES tab lists the contractor's QUOTES.
+  //
+  // It used to list their INVOICES, relabelled: every invoice in
+  // sent/viewed/draft was mapped into a quote shape with a `Q-` reference
+  // invented from the invoice id and three tier prices synthesised as 75% /
+  // 90% / 100% of the invoice amount. The real quote store — which `addQuote`,
+  // the tiered builder and `/quotes/[id]` all write and read — was never read
+  // by this screen at all. On the sim (2026-08-26) that put the same document
+  // in both tabs with two different statuses: "De Jong € 640,00 · Verstuurd"
+  // under Offertes and "De Jong € 640,00 · Concept" under Facturen. Creating
+  // an invoice from a job made a second phantom "quote" appear.
+  //
+  // `QuoteItem` renders customer / title / total / status only, so the invented
+  // tiers were never drawn — but the row tapped through to `/quotes/<id>` with
+  // an INVOICE id.
   const quotes = useMemo((): Quote[] => {
-    return invoices
-      .filter(inv => ['sent', 'viewed', 'draft'].includes(inv.status))
-      .map((inv): Quote => ({
-        id: inv.id,
-        reference: `Q-${inv.id.replace('inv_', '')}`,
-        customer: inv.customerName,
-        title: inv.projectName,
-        status: inv.status === 'viewed' ? 'viewed' : inv.status === 'draft' ? 'draft' : 'sent',
-        sentDate: formatDayMonthAuto(new Date(inv.issueDate)),
-        total: inv.amount,
-        tiers: {
-          good: Math.round(inv.amount * 0.75),
-          better: Math.round(inv.amount * 0.9),
-          best: inv.amount,
-        },
+    return (storedQuotes ?? [])
+      .filter((q: any) => ['draft', 'sent', 'accepted'].includes(q.status))
+      .map((q: any): Quote => ({
+        id: q.id,
+        reference: documentNumber(q),
+        customer: findDocumentCustomer(customers, q)?.name ?? q.customer ?? '',
+        title: q.job ?? '',
+        status: q.status,
+        sentDate: q.sentAt ? formatDayMonthAuto(new Date(q.sentAt)) : undefined,
+        total: q.amount ?? 0,
       }));
-  }, [invoices]);
+  }, [storedQuotes, customers]);
 
   // Check for audit alerts
   const hasAuditAlert = auditFindings.some(f => f.severity === 'critical' && f.status === 'new');
