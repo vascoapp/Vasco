@@ -29,6 +29,7 @@ import {
   sharePdf as shareVatPdf,
   openDigiD as openDigiDPortal,
 } from '../../src/services/vatPrepExportService';
+import { DKMenu, type DKMenuItem } from '../../src/components/shared/DKMenu';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 
@@ -97,69 +98,85 @@ export default function VatPrepScreen() {
     }
   };
 
-  const handleExport = () => {
+  // SIX options in an `Alert.alert`. Android renders THREE and silently drops
+  // the rest, so on the filing screen of the market this product is aimed at, a
+  // German contractor could reach "Share summary", "Send to accountant" and
+  // "Give accountant ongoing access" — and never **Share PDF** or **Open
+  // ELSTER**, which is the button that actually files the return. Picking one
+  // of N is a DKMenu (CLAUDE.md), and a menu also scrolls, so the list can grow
+  // without anyone having to remember the cap. #219/#221.
+  const exportMenuItems = (): DKMenuItem[] => {
     const businessName = (businessProfile as any)?.businessName ?? 'Vasco';
-    Alert.alert(
-      t('vatPrep.export', 'Export'),
-      t('vatPrep.exportDesc', 'Vasco prepares the return — you submit via DigiD (Belastingdienst) or forward to your bookkeeper. This never auto-files.'),
-      [
-        {
-          text: t('vatPrep.shareSummary', 'Share summary'),
-          onPress: () => {
-            shareVatSummary(draft, businessName).catch((err) => {
-              Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
-            });
-          },
+    return [
+      {
+        key: 'summary',
+        icon: 'share-outline',
+        label: t('vatPrep.shareSummary', 'Share summary'),
+        onPress: () => {
+          shareVatSummary(draft, businessName).catch((err) => {
+            Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
+          });
         },
-        {
-          // The adviser-facing handover. Sits with the other share options
-          // because this is the moment the contractor is already thinking
-          // "send this to my bookkeeper" — and it carries the one thing no
-          // accounting package can tell them: which invoices the authority
-          // actually accepted.
-          text: t('vatPrep.shareAccountant', 'Send to accountant'),
-          onPress: () => { void shareAccountantHandover(businessName); },
+      },
+      {
+        // The adviser-facing handover. Sits with the other share options
+        // because this is the moment the contractor is already thinking
+        // "send this to my bookkeeper" — and it carries the one thing no
+        // accounting package can tell them: which invoices the authority
+        // actually accepted.
+        key: 'accountant',
+        icon: 'person-outline',
+        label: t('vatPrep.shareAccountant', 'Send to accountant'),
+        onPress: () => { void shareAccountantHandover(businessName); },
+      },
+      {
+        // The standing version of the option above. Same moment of intent,
+        // but a seat the adviser can come back to during the filing week
+        // instead of a message they have to find again. Carries the period
+        // bounds so the seat covers the quarter on screen.
+        key: 'seat',
+        icon: 'key-outline',
+        label: t('vatPrep.accountantSeat', 'Give accountant ongoing access'),
+        onPress: () => {
+          router.push({
+            pathname: '/contractor/accountant-access',
+            params: { periodStart: draft.periodStart, periodEnd: draft.periodEnd },
+          } as never);
         },
-        {
-          // The standing version of the option above. Same moment of intent,
-          // but a seat the adviser can come back to during the filing week
-          // instead of a message they have to find again. Carries the period
-          // bounds so the seat covers the quarter on screen.
-          text: t('vatPrep.accountantSeat', 'Give accountant ongoing access'),
-          onPress: () => {
-            router.push({
-              pathname: '/contractor/accountant-access',
-              params: { periodStart: draft.periodStart, periodEnd: draft.periodEnd },
-            } as never);
-          },
+      },
+      {
+        key: 'pdf',
+        icon: 'document-outline',
+        label: t('vatPrep.sharePdf', 'Share PDF'),
+        onPress: () => {
+          shareVatPdf(draft, businessName).catch((err) => {
+            Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
+          });
         },
-        {
-          text: t('vatPrep.sharePdf', 'Share PDF'),
-          onPress: () => {
-            shareVatPdf(draft, businessName).catch((err) => {
-              Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
-            });
-          },
+      },
+      {
+        // R11.2: button label + portal URL are country-aware. NL → DigiD/
+        // Belastingdienst, DE → ELSTER (BMF e-tax portal). Was always NL.
+        key: 'portal',
+        icon: 'open-outline',
+        emphasis: true,
+        label: country === 'DE' ? t('vatPrep.openElster', 'Open ELSTER') : t('vatPrep.openDigiD', 'Open DigiD'),
+        // Vasco prepares; the contractor files. Saying so beside the button
+        // is the whole point of the message the Alert used to carry.
+        detail: t('vatPrep.exportDesc', 'Vasco prepares the return — you submit via DigiD (Belastingdienst) or forward to your bookkeeper. This never auto-files.'),
+        onPress: async () => {
+          const ok = await openDigiDPortal(country);
+          if (!ok) {
+            Alert.alert(
+              t('vatPrep.cannotOpen', 'Cannot open portal'),
+              country === 'DE'
+                ? t('vatPrep.cannotOpenElsterDesc', 'Could not open ELSTER. Open elster.de in your browser.')
+                : t('vatPrep.cannotOpenDesc', 'Could not open the Belastingdienst portal. Open belastingdienst.nl in your browser.'),
+            );
+          }
         },
-        {
-          // R11.2: button label + portal URL now country-aware. NL → DigiD/
-          // Belastingdienst, DE → ELSTER (BMF e-tax portal). Was always NL.
-          text: country === 'DE' ? t('vatPrep.openElster', 'Open ELSTER') : t('vatPrep.openDigiD', 'Open DigiD'),
-          onPress: async () => {
-            const ok = await openDigiDPortal(country);
-            if (!ok) {
-              Alert.alert(
-                t('vatPrep.cannotOpen', 'Cannot open portal'),
-                country === 'DE'
-                  ? t('vatPrep.cannotOpenElsterDesc', 'Could not open ELSTER. Open elster.de in your browser.')
-                  : t('vatPrep.cannotOpenDesc', 'Could not open the Belastingdienst portal. Open belastingdienst.nl in your browser.'),
-              );
-            }
-          },
-        },
-        { text: t('common.close', 'Close'), style: 'cancel' },
-      ],
-    );
+      },
+    ];
   };
 
   return (
@@ -249,10 +266,16 @@ export default function VatPrepScreen() {
           {draft.lines.filter((l) => l.confidence >= 0.75).map((l) => <LineCard key={l.id} line={l} country={country} />)}
         </View>
 
-        <Pressable style={styles.exportBtn} onPress={handleExport}>
-          <Ionicons name="share-outline" size={18} color={Palette.white} />
-          <Text style={styles.exportBtnText}>{t('vatPrep.export', 'Exporteer voor aangifte')}</Text>
-        </Pressable>
+        <DKMenu
+          accessibilityLabel={t('vatPrep.export', 'Exporteer voor aangifte')}
+          items={exportMenuItems()}
+          renderAnchor={(open) => (
+            <Pressable style={styles.exportBtn} onPress={open}>
+              <Ionicons name="share-outline" size={18} color={Palette.white} />
+              <Text style={styles.exportBtnText}>{t('vatPrep.export', 'Exporteer voor aangifte')}</Text>
+            </Pressable>
+          )}
+        />
 
         <View style={{ height: 80 }} />
       </ScrollView>

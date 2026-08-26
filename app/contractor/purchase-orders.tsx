@@ -4,10 +4,11 @@
 // Create, track, and manage purchase orders for jobs
 // =============================================================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
@@ -36,9 +37,17 @@ const STATUS_CONFIG: Record<POStatus, { labelKey: string; fallback: string; colo
 export default function PurchaseOrdersScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { orders, submit, updateStatus } = usePurchaseOrders();
+  const { orders, submit, updateStatus, create } = usePurchaseOrders();
   const stats = usePOStats();
-  const { suppliers, jobs, businessProfile } = useAppState();
+  const { suppliers, jobs, businessProfile, jobMaterials, materials } = useAppState();
+  // Jobs that actually have materials attached, read from the store that holds
+  // them. Not capped: the picker below scrolls.
+  const jobsWithMaterials = useMemo(
+    () => jobs
+      .map((j: any) => ({ job: j, mats: jobMaterials[j.id] ?? [] }))
+      .filter((x) => x.mats.length > 0),
+    [jobs, jobMaterials],
+  );
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -269,45 +278,84 @@ export default function PurchaseOrdersScreen() {
         <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* FAB — new purchase order */}
-      <Pressable
-        style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
-        onPress={() => {
-          const jobsWithMaterials = jobs.filter((j: any) => j.materials && j.materials.length > 0).slice(0, 5);
-          if (jobsWithMaterials.length === 0) {
-            Alert.alert(
-              t('purchaseOrders.newPO', 'New Purchase Order'),
-              t('purchaseOrders.noJobsWithMaterials', 'No jobs with materials found. Add materials to a job first.'),
-            );
-            return;
-          }
-          Alert.alert(
-            t('purchaseOrders.newPO', 'New Purchase Order'),
-            t('purchaseOrders.selectJob', 'Select a job to create a purchase order from its materials list'),
-            [
-              ...jobsWithMaterials.map((j: any) => ({
-                text: j.title,
-                onPress: () => {
-                  hapticSuccess();
-                  const matCount = j.materials?.length ?? 0;
-                  Alert.alert(
-                    t('purchaseOrders.poCreated', 'PO Created'),
-                    t('purchaseOrders.poCreatedDesc', {
-                      defaultValue: 'PO created for "{{title}}" with {{count}} materials',
-                      title: j.title,
-                      count: matCount,
-                    }),
-                  );
-                },
+      {/* FAB — new purchase order.
+
+          Three defects sat on top of each other here.
+
+          1. It filtered on `job.materials`, which is declared `never[]` on the
+             domain type and is ALWAYS empty — a job's materials live in
+             `AppState.jobMaterials`, keyed by job id, exactly as the comment
+             beside that stub field says. So the list was empty for every
+             contractor and the FAB could only ever answer "No jobs with
+             materials found." (#213: a read of a field nothing writes.)
+          2. It then offered the (unreachable) jobs through an `Alert.alert`
+             spread from a `.map()`, capped at `.slice(0, 5)` — the Alert-cap
+             workaround, silently truncating on iOS too. (#219.)
+          3. Picking one raised NO order. It showed "PO Created … with N
+             materials" and called nothing. `usePurchaseOrders().create` existed
+             and this screen did not destructure it. (#197: a confirmation with
+             no write.) */}
+      <DKMenu
+        accessibilityLabel={t('purchaseOrders.selectJob', 'Select a job to create a purchase order from its materials list')}
+        items={jobsWithMaterials.map(({ job: j, mats }) => ({
+          key: j.id,
+          label: j.title,
+          // Plural forms are real keys (materialCount_one/_other) in all six
+          // locales — a bare `{{count}} materials` defaultValue is how
+          // "1 Aktionen" happens (0189af2).
+          detail: t('purchaseOrders.materialCount', { count: mats.length }) as string,
+          onPress: () => {
+            hapticSuccess();
+            // One PO per supplier would be the right model; the store has no
+            // multi-supplier order. Raise it against the supplier most of the
+            // lines name, and say which one on the order.
+            const supplierId = mats.find((m) => m.supplierId)?.supplierId;
+            const supplier = supplierId ? suppliers.find((sp: any) => sp.id === supplierId) : undefined;
+            const order = create(
+              supplier?.id ?? '',
+              supplier?.name ?? t('purchaseOrders.unknownSupplier', 'Supplier to be chosen'),
+              mats.map((m) => ({
+                description: materials.find((mc: any) => mc.id === m.materialId)?.name ?? m.materialId,
+                quantity: m.quantity,
+                unit: m.unit,
+                unitPrice: m.unitPrice ?? 0,
+                materialId: m.materialId,
+                jobId: j.id,
               })),
-              { text: t('purchaseOrders.cancel', 'Cancel'), style: 'cancel' as const },
-            ],
-          );
-        }}
-        accessibilityLabel={t('purchaseOrders.newPO', 'New Purchase Order')}
-      >
-        <Ionicons name="add" size={28} color={Palette.white} />
-      </Pressable>
+              j.id,
+              j.title,
+            );
+            Alert.alert(
+              t('purchaseOrders.poCreated', 'PO Created'),
+              // Name the ORDER, not just the job: the contractor now has a row
+              // in the list above and needs to know which one it is.
+              t('purchaseOrders.poCreatedDesc', {
+                defaultValue: 'PO created for "{{title}}" with {{count}} materials',
+                title: order.poNumber,
+                count: mats.length,
+              }),
+            );
+          },
+        }))}
+        renderAnchor={(open) => (
+          <Pressable
+            style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
+            onPress={() => {
+              if (jobsWithMaterials.length === 0) {
+                Alert.alert(
+                  t('purchaseOrders.newPO', 'New Purchase Order'),
+                  t('purchaseOrders.noJobsWithMaterials', 'No jobs with materials found. Add materials to a job first.'),
+                );
+                return;
+              }
+              open();
+            }}
+            accessibilityLabel={t('purchaseOrders.newPO', 'New Purchase Order')}
+          >
+            <Ionicons name="add" size={28} color={Palette.white} />
+          </Pressable>
+        )}
+      />
     </View>
   );
 }

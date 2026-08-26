@@ -15,6 +15,7 @@ import {
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
@@ -189,24 +190,38 @@ export default function ServiceAgreementsScreen() {
             <View style={s.formCard}>
               <Text style={s.formTitle}>{t('agreements.newAgreement', 'New Service Agreement')}</Text>
 
-              {/* Job selector */}
+              {/* Job selector.
+
+                  Was a horizontal chip strip over every eligible job. This is
+                  the SAME control, on the same kind of form, that #221 found
+                  in the permit wizard: the strip showed two jobs with the
+                  second already clipped, and opening it as a menu revealed
+                  eight. A contractor picking the template job for a recurring
+                  agreement is choosing one of N — a balloon menu, per
+                  CLAUDE.md. */}
               <Text style={s.formLabel}>{t('agreements.templateJob', 'Template job')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.jobPicker}>
-                {eligibleJobs.map(job => {
-                  const selected = job.id === formJobId;
-                  return (
-                    <Pressable
-                      key={job.id}
-                      style={[s.jobChip, selected && s.jobChipSelected]}
-                      onPress={() => setFormJobId(job.id)}
-                    >
-                      <Text style={[s.jobChipText, selected && s.jobChipTextSelected]} numberOfLines={1}>
-                        {job.title}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+              <DKMenu
+                accessibilityLabel={t('agreements.templateJob', 'Template job')}
+                items={eligibleJobs.map((job) => ({
+                  key: job.id,
+                  label: job.title,
+                  selected: job.id === formJobId,
+                  onPress: () => setFormJobId(job.id),
+                }))}
+                renderAnchor={(open) => (
+                  <Pressable
+                    onPress={open}
+                    style={[s.jobChip, s.jobPicker, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+                    accessibilityRole="button"
+                  >
+                    <Text style={s.jobChipText} numberOfLines={1}>
+                      {eligibleJobs.find((j) => j.id === formJobId)?.title
+                        ?? t('agreements.selectJob', 'Choose a job')}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
+                  </Pressable>
+                )}
+              />
 
               {/* Frequency selector */}
               <Text style={s.formLabel}>{t('agreements.frequency', 'Frequency')}</Text>

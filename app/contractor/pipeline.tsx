@@ -47,6 +47,7 @@ import {
 } from '../../src/domain/lead';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency0, currencySymbol, type Country } from '../../src/i18n/formatting';
+import { DKMenu, type DKMenuItem } from '../../src/components/shared/DKMenu';
 import { SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
@@ -160,21 +161,17 @@ export default function PipelineScreen() {
     dragPos.setValue({ x: 0, y: 0 });
   };
 
-  // Fall-back Alert-based picker — fires when a user long-presses but
-  // doesn't drag (or the gesture fails). Same UX as pre-R90.
-  const handleStatusMove = (lead: Lead) => {
-    Alert.alert(
-      t('pipeline.move', 'Move lead'),
-      `${lead.customerName} — ${LEAD_STATUS_LABELS[lead.status]}`,
-      [
-        ...LEAD_STATUS_ORDER.filter((s) => s !== lead.status).map((s) => ({
-          text: LEAD_STATUS_LABELS[s],
-          onPress: () => moveLeadStatus(lead.id, s),
-        })),
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' as const },
-      ],
-    );
-  };
+  // The fall-back picker — fires when a user long-presses but doesn't drag (or
+  // the gesture fails). It was an `Alert.alert` spread from a `.map()`: four
+  // destination columns plus cancel, of which Android renders THREE. So a lead
+  // could not be moved to "Won" or "Lost" — the two that close it — from the
+  // only control that works when the drag does not. #219/#221.
+  const moveItemsFor = (lead: Lead): DKMenuItem[] =>
+    LEAD_STATUS_ORDER.filter((s) => s !== lead.status).map((s) => ({
+      key: s,
+      label: LEAD_STATUS_LABELS[s],
+      onPress: () => { moveLeadStatus(lead.id, s).catch(() => {}); hapticSuccess(); },
+    }));
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -248,7 +245,7 @@ export default function PipelineScreen() {
                         onDragStart={(x, y) => handleDragStart(lead, x, y)}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
-                        onLongPressFallback={() => handleStatusMove(lead)}
+                        moveItems={moveItemsFor(lead)}
                       />
                     ))
                   )}
@@ -350,7 +347,7 @@ function LeadCard({
   onDragStart,
   onDragMove,
   onDragEnd,
-  onLongPressFallback,
+  moveItems,
 }: {
   lead: Lead;
   isDragging: boolean;
@@ -358,13 +355,16 @@ function LeadCard({
   onDragStart: (pageX: number, pageY: number) => void;
   onDragMove: (pageX: number, pageY: number) => void;
   onDragEnd: () => void;
-  onLongPressFallback: () => void;
+  moveItems: DKMenuItem[];
 }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const country = (user?.country as Country) ?? 'NL';
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartedRef = useRef(false);
   const movedRef = useRef(false);
+  // Set by DKMenu's renderAnchor below; called by the long-press fallback.
+  const openMenuRef = useRef<() => void>(() => {});
 
   const panResponder = useRef(
     PanResponder.create({
@@ -415,28 +415,42 @@ function LeadCard({
     })
   ).current;
 
+  // The menu is anchored on the card itself, so the popover lands over the
+  // column the lead is in. `open` only exists inside renderAnchor, and the
+  // long-press that needs it lives in a PanResponder created outside the
+  // render — hence the ref. Writing a ref during render is idempotent and does
+  // not participate in reconciliation.
   return (
-    <Animated.View
-      {...panResponder.panHandlers}
-      style={[styles.card, isDragging && styles.cardSourceDimmed]}
-      accessibilityRole="button"
-      accessibilityLabel={`${lead.customerName}, long-press to drag, tap to edit`}
-      accessibilityActions={[{ name: 'longpress', label: 'Move to another column' }]}
-      onAccessibilityAction={(e) => {
-        if (e.nativeEvent.actionName === 'longpress') onLongPressFallback();
+    <DKMenu
+      accessibilityLabel={`${t('pipeline.move', 'Move lead')} — ${lead.customerName}`}
+      items={moveItems}
+      renderAnchor={(open) => {
+        openMenuRef.current = open;
+        return (
+          <Animated.View
+            {...panResponder.panHandlers}
+            style={[styles.card, isDragging && styles.cardSourceDimmed]}
+            accessibilityRole="button"
+            accessibilityLabel={`${lead.customerName}, long-press to drag, tap to edit`}
+            accessibilityActions={[{ name: 'longpress', label: 'Move to another column' }]}
+            onAccessibilityAction={(e) => {
+              if (e.nativeEvent.actionName === 'longpress') openMenuRef.current();
+            }}
+          >
+            <Text style={styles.cardName}>{lead.customerName}</Text>
+            {lead.jobDescription ? (
+              <Text style={styles.cardDesc} numberOfLines={2}>
+                {lead.jobDescription}
+              </Text>
+            ) : null}
+            <View style={styles.cardFoot}>
+              <Text style={styles.cardValue}>{formatLeadValue(lead.estimatedValue, country)}</Text>
+              <Text style={styles.cardAge}>{daysSince(lead.createdAt)}d</Text>
+            </View>
+          </Animated.View>
+        );
       }}
-    >
-      <Text style={styles.cardName}>{lead.customerName}</Text>
-      {lead.jobDescription ? (
-        <Text style={styles.cardDesc} numberOfLines={2}>
-          {lead.jobDescription}
-        </Text>
-      ) : null}
-      <View style={styles.cardFoot}>
-        <Text style={styles.cardValue}>{formatLeadValue(lead.estimatedValue, country)}</Text>
-        <Text style={styles.cardAge}>{daysSince(lead.createdAt)}d</Text>
-      </View>
-    </Animated.View>
+    />
   );
 }
 

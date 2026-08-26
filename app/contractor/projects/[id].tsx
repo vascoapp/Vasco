@@ -7,6 +7,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, M
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { DKMenu, type DKMenuItem } from '../../../src/components/shared/DKMenu';
 import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
@@ -209,28 +210,35 @@ export default function ProjectDetailScreen() {
     );
   };
 
-  const handleStatusChange = () => {
-    if (!project) return;
-    Alert.alert(t('project.changeStatus'), undefined,
-      STATUS_KEYS.map(opt => ({
-        text: t(opt.i18nKey),
-        onPress: () => { hapticSuccess(); updateProject(project.id, { status: opt.key }); },
-      }))
-    );
-  };
+  // Both of these were `Alert.alert` with the button array passed as a bare
+  // `.map()` expression — four statuses and up to five jobs, of which Android
+  // renders THREE, with no cancel button on either. "Completed" was therefore
+  // unreachable on Android: an aannemer could never close a project from its
+  // own screen. The `.slice(0, 5)` on the job list is the same Alert-cap
+  // workaround found in the timesheet (#219), silently truncating on iOS too.
+  // Picking one of N is a DKMenu, and a menu scrolls. #221.
+  const statusItems: DKMenuItem[] = STATUS_KEYS.map((opt) => ({
+    key: opt.key,
+    icon: opt.icon,
+    label: t(opt.i18nKey),
+    selected: project?.status === opt.key,
+    onPress: () => {
+      if (!project) return;
+      hapticSuccess();
+      updateProject(project.id, { status: opt.key });
+    },
+  }));
 
-  const handleAssignJob = () => {
-    if (!project || unassignedJobs.length === 0) {
-      Alert.alert(t('project.noJobs'), t('project.allJobsAssigned'));
-      return;
-    }
-    Alert.alert(t('project.addJob'), t('project.selectJob'),
-      unassignedJobs.slice(0, 5).map(j => ({
-        text: j.title,
-        onPress: () => { hapticSuccess(); addJobToProject(project.id, j.id); },
-      }))
-    );
-  };
+  // No slice: every unassigned job is offered.
+  const assignJobItems: DKMenuItem[] = unassignedJobs.map((j) => ({
+    key: j.id,
+    label: j.title,
+    onPress: () => {
+      if (!project) return;
+      hapticSuccess();
+      addJobToProject(project.id, j.id);
+    },
+  }));
 
   if (!project) {
     return (
@@ -255,11 +263,17 @@ export default function ProjectDetailScreen() {
           <Text style={styles.headerTitle} numberOfLines={1}>{project.title}</Text>
           <Text style={styles.headerSub}>{customer?.name ?? t('project.noCustomer')}</Text>
         </View>
-        <Pressable onPress={handleStatusChange} style={styles.statusBtn}>
-          <Text style={styles.statusBtnText}>
-            {t(STATUS_KEYS.find(o => o.key === project.status)?.i18nKey ?? '') || project.status}
-          </Text>
-        </Pressable>
+        <DKMenu
+          accessibilityLabel={t('project.changeStatus')}
+          items={statusItems}
+          renderAnchor={(open) => (
+            <Pressable onPress={open} style={styles.statusBtn}>
+              <Text style={styles.statusBtnText}>
+                {t(STATUS_KEYS.find(o => o.key === project.status)?.i18nKey ?? '') || project.status}
+              </Text>
+            </Pressable>
+          )}
+        />
       </View>
 
       <ScrollView
@@ -342,9 +356,28 @@ export default function ProjectDetailScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t('project.jobsCount', { count: projectJobs.length })}</Text>
-              <Pressable onPress={handleAssignJob} hitSlop={8}>
-                <Ionicons name="add-circle" size={24} color={Palette.hermesOrange} />
-              </Pressable>
+              <DKMenu
+                accessibilityLabel={t('project.addJob')}
+                items={assignJobItems}
+                renderAnchor={(open) => (
+                  <Pressable
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('project.addJob')}
+                    onPress={() => {
+                      // Still an Alert when there is nothing to pick: that is a
+                      // message, not a choice.
+                      if (unassignedJobs.length === 0) {
+                        Alert.alert(t('project.noJobs'), t('project.allJobsAssigned'));
+                        return;
+                      }
+                      open();
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={24} color={Palette.hermesOrange} />
+                  </Pressable>
+                )}
+              />
             </View>
 
             {projectJobs.length === 0 ? (

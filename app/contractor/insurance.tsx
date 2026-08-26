@@ -8,6 +8,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, M
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { Palette, SemanticColors } from '../../src/theme/colors';
 import { DK } from '../../src/theme/draftkings';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
@@ -322,23 +323,39 @@ export default function InsuranceScreen() {
               </Pressable>
             </View>
 
-            {/* Policy selector */}
+            {/* Policy selector.
+
+                Was a horizontal chip strip. The contractor is choosing ONE
+                policy — which insurer this claim goes to — so it is a balloon
+                menu (CLAUDE.md): a strip clips everything past the right edge,
+                never says how many policies exist, and reads as a filter. The
+                same rule was found broken in the permit wizard, where a strip
+                showing two jobs turned out to be hiding eight (#221). Naming
+                the wrong insurer on a claim is not a cosmetic error. */}
             <Text style={styles.fieldLabel}>{t('insurance.policyLabel', 'Polis')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 44, marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {policies.map(p => (
-                  <Pressable
-                    key={p.id}
-                    style={[styles.policyChip, claimPolicyId === p.id && styles.policyChipActive]}
-                    onPress={() => setClaimPolicyId(p.id)}
-                  >
-                    <Text style={[styles.policyChipText, claimPolicyId === p.id && styles.policyChipTextActive]}>
-                      {p.name}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </ScrollView>
+            <DKMenu
+              accessibilityLabel={t('insurance.policyLabel', 'Polis')}
+              items={policies.map((p) => ({
+                key: p.id,
+                label: p.name,
+                detail: p.provider,
+                selected: claimPolicyId === p.id,
+                onPress: () => setClaimPolicyId(p.id),
+              }))}
+              renderAnchor={(open) => (
+                <Pressable
+                  onPress={open}
+                  style={[styles.policyChip, { marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.policyChipText} numberOfLines={1}>
+                    {policies.find((p) => p.id === claimPolicyId)?.name
+                      ?? t('insurance.selectPolicy', 'Kies een polis')}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
+                </Pressable>
+              )}
+            />
 
             {/* Description */}
             <Text style={styles.fieldLabel}>{t('insurance.descriptionLabel', 'Omschrijving')}</Text>

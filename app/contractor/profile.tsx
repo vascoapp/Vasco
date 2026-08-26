@@ -15,6 +15,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { DKMenu, type DKMenuItem } from '../../src/components/shared/DKMenu';
 import {
   loadSubscription,
   TIERS,
@@ -263,58 +264,44 @@ export default function ProfileScreen() {
   // (column added in 20260505000001_sow_columns.sql). Saves on each pick;
   // failure-soft so a Supabase miss leaves the local pick visible until
   // next refresh.
-  const handleQuoteToneSwitch = () => {
-    const tones: { value: QuoteTone; label: string; subtitle: string }[] = [
-      {
-        value: 'friendly',
-        label: t('profile.quoteToneFriendly', 'Friendly'),
-        subtitle: t('profile.quoteToneFriendlyDesc', 'Warm, plain language. First-name basis.'),
-      },
-      {
-        value: 'formal',
-        label: t('profile.quoteToneFormal', 'Formal'),
-        subtitle: t('profile.quoteToneFormalDesc', 'Precise, no contractions. Full names.'),
-      },
-      {
-        value: 'detailed',
-        label: t('profile.quoteToneDetailed', 'Detailed'),
-        subtitle: t('profile.quoteToneDetailedDesc', 'Lists every assumption and step.'),
-      },
-      {
-        value: 'concise',
-        label: t('profile.quoteToneConcise', 'Concise'),
-        subtitle: t('profile.quoteToneConciseDesc', 'Tight prose. No filler.'),
-      },
-    ];
-    Alert.alert(
-      t('profile.quoteTone', 'Quote tone'),
-      t('profile.quoteToneDesc', 'How AI-generated scope text should sound.'),
-      [
-        ...tones.map(opt => ({
-          text: `${opt.label} — ${opt.subtitle}`,
-          onPress: () => {
-            setQuoteTone(opt.value);
-            saveQuoteTonePreset(opt.value).catch(() => {});
-          },
-        })),
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' as const },
-      ],
-    );
-  };
+  // Four tones + cancel in an `Alert.alert`: Android shows THREE, so "Concise"
+  // was unreachable and possibly cancel with it. A menu also has room for the
+  // subtitle as a proper second line instead of "Formal — Precise, no
+  // contractions." crammed into a button label. #219/#221.
+  const quoteToneItems: DKMenuItem[] = ([
+    { value: 'friendly', label: t('profile.quoteToneFriendly', 'Friendly'), subtitle: t('profile.quoteToneFriendlyDesc', 'Warm, plain language. First-name basis.') },
+    { value: 'formal', label: t('profile.quoteToneFormal', 'Formal'), subtitle: t('profile.quoteToneFormalDesc', 'Precise, no contractions. Full names.') },
+    { value: 'detailed', label: t('profile.quoteToneDetailed', 'Detailed'), subtitle: t('profile.quoteToneDetailedDesc', 'Lists every assumption and step.') },
+    { value: 'concise', label: t('profile.quoteToneConcise', 'Concise'), subtitle: t('profile.quoteToneConciseDesc', 'Tight prose. No filler.') },
+  ] as { value: QuoteTone; label: string; subtitle: string }[]).map((opt) => ({
+    key: opt.value,
+    label: opt.label,
+    detail: opt.subtitle,
+    selected: quoteTone === opt.value,
+    onPress: () => {
+      setQuoteTone(opt.value);
+      saveQuoteTonePreset(opt.value).catch(() => {});
+    },
+  }));
 
-  const handleLanguageSwitch = () => {
-    Alert.alert(
-      t('profile.language', 'Language'),
-      undefined,
-      LANG_OPTIONS.map(lang => ({
-        text: `${lang.flag} ${lang.label}`,
-        onPress: () => {
-          i18n.changeLanguage(lang.code);
-          updateUser({ language: lang.code as any });
-        },
-      })),
-    );
-  };
+  // SIX languages, handed to `Alert.alert` as a bare `.map()` with no cancel.
+  // Android renders THREE buttons and drops the rest, so this screen offered
+  // Nederlands / English / Deutsch and silently withheld Français, Español and
+  // Italiano — three of the six markets this product ships to could not pick
+  // their own language, on the screen whose whole job is settings. It also had
+  // no way out: with no cancel button, opening it meant changing language.
+  //
+  // Note this one was invisible even to a detector looking for `[...]` button
+  // arrays: the array here is an EXPRESSION, not a literal.
+  const languageItems: DKMenuItem[] = LANG_OPTIONS.map((lang) => ({
+    key: lang.code,
+    label: `${lang.flag}  ${lang.label}`,
+    selected: i18n.language === lang.code,
+    onPress: () => {
+      i18n.changeLanguage(lang.code);
+      updateUser({ language: lang.code as any });
+    },
+  }));
 
   const handleLogout = () => {
     Alert.alert(t('profile.logout', 'Logout'), t('common.confirm', 'Are you sure?'), [
@@ -664,17 +651,23 @@ export default function ProfileScreen() {
               onPress={() => router.push('/contractor/vat-and-audit' as any)}
             />
             {/* R62: quote-tone preset for the SOW generator (Package D). */}
-            <SettingsRow
-              icon="create-outline"
-              label={t('profile.quoteTone', 'Quote tone')}
-              value={
-                quoteTone === 'formal' ? t('profile.quoteToneFormal', 'Formal')
-                : quoteTone === 'detailed' ? t('profile.quoteToneDetailed', 'Detailed')
-                : quoteTone === 'concise' ? t('profile.quoteToneConcise', 'Concise')
-                : t('profile.quoteToneFriendly', 'Friendly')
-              }
-              border
-              onPress={handleQuoteToneSwitch}
+            <DKMenu
+              accessibilityLabel={t('profile.quoteTone', 'Quote tone')}
+              items={quoteToneItems}
+              renderAnchor={(open) => (
+                <SettingsRow
+                  icon="create-outline"
+                  label={t('profile.quoteTone', 'Quote tone')}
+                  value={
+                    quoteTone === 'formal' ? t('profile.quoteToneFormal', 'Formal')
+                    : quoteTone === 'detailed' ? t('profile.quoteToneDetailed', 'Detailed')
+                    : quoteTone === 'concise' ? t('profile.quoteToneConcise', 'Concise')
+                    : t('profile.quoteToneFriendly', 'Friendly')
+                  }
+                  border
+                  onPress={open}
+                />
+              )}
             />
             {/* R267: maintenance contracts moved to Werk tab → New job → "Recurring contract" */}
           </View>
@@ -713,14 +706,20 @@ export default function ProfileScreen() {
         <View style={styles.sectionWrap}>
           <DKLabel style={styles.sectionLabel}>{t('profile.settings', 'SETTINGS')}</DKLabel>
           <View style={styles.card}>
-            <Pressable testID="profile-language-row" style={styles.row} onPress={handleLanguageSwitch}>
-              <View style={styles.rowIcon}>
-                <Ionicons name="language" size={18} color={Palette.hermesOrange} />
-              </View>
-              <Text style={styles.rowLabel}>{t('profile.language', 'Language')}</Text>
-              <Text style={styles.rowValue}>{currentLang.flag} {currentLang.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
-            </Pressable>
+            <DKMenu
+              accessibilityLabel={t('profile.language', 'Language')}
+              items={languageItems}
+              renderAnchor={(open) => (
+                <Pressable testID="profile-language-row" style={styles.row} onPress={open}>
+                  <View style={styles.rowIcon}>
+                    <Ionicons name="language" size={18} color={Palette.hermesOrange} />
+                  </View>
+                  <Text style={styles.rowLabel}>{t('profile.language', 'Language')}</Text>
+                  <Text style={styles.rowValue}>{currentLang.flag} {currentLang.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+                </Pressable>
+              )}
+            />
             {/* The two catalogues a quote is assembled from. They used to be
                 chips on the invoices tab; using them now happens inside the
                 quote builder, so what is left here is MAINTAINING them — a

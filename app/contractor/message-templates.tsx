@@ -20,6 +20,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
@@ -302,27 +303,36 @@ export default function MessageTemplatesScreen() {
               onChangeText={setEditorTitle}
             />
 
-            {/* Category selector */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.catSelectorRow}>
-                {ALL_CATEGORIES.map((cat) => {
-                  const config = CATEGORY_CONFIG[cat];
-                  const isActive = editorCategory === cat;
-                  return (
-                    <Pressable
-                      key={cat}
-                      style={[styles.catChip, isActive && { backgroundColor: config.color + '14' }]}
-                      onPress={() => setEditorCategory(cat)}
-                    >
-                      <Ionicons name={config.icon} size={14} color={isActive ? config.color : SemanticColors.textTertiary} />
-                      <Text style={[styles.catChipText, isActive && { color: config.color }]}>
-                        {t(`templates.cat_${cat}`, config.label)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </ScrollView>
+            {/* Category selector — the template's OWN category, a form field,
+                not the list filter above it. Picking one of N is a balloon
+                menu (CLAUDE.md); the strip clipped the later categories and
+                read like the filter it sits below, which is exactly the
+                confusion the rule exists to prevent. The filter at the top of
+                the screen stays chips: there, every option should be visible
+                at once. */}
+            <DKMenu
+              accessibilityLabel={t('templates.category', 'Category')}
+              items={ALL_CATEGORIES.map((cat) => ({
+                key: cat,
+                icon: CATEGORY_CONFIG[cat].icon,
+                label: t(`templates.cat_${cat}`, CATEGORY_CONFIG[cat].label),
+                selected: editorCategory === cat,
+                onPress: () => setEditorCategory(cat),
+              }))}
+              renderAnchor={(open) => (
+                <Pressable
+                  onPress={open}
+                  style={[styles.catChip, { justifyContent: 'space-between', marginBottom: GRID.sm }]}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name={CATEGORY_CONFIG[editorCategory].icon} size={14} color={CATEGORY_CONFIG[editorCategory].color} />
+                  <Text style={[styles.catChipText, { color: CATEGORY_CONFIG[editorCategory].color }]}>
+                    {t(`templates.cat_${editorCategory}`, CATEGORY_CONFIG[editorCategory].label)}
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color={SemanticColors.textTertiary} />
+                </Pressable>
+              )}
+            />
 
             {/* Body input */}
             <TextInput
