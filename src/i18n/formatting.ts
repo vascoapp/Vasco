@@ -431,14 +431,28 @@ export function compactMoney(amount: number): string {
 export function currencySymbol(country?: Country): string {
   const c = country ?? ((getCurrentCountry() as Country) ?? 'NL');
   const { currency, locale } = COUNTRY_CONFIG[c] ?? COUNTRY_CONFIG.NL;
+  // 🔴 NOT `formatToParts` — Hermes does not implement it, so this threw on
+  // every call ON DEVICE and the catch returned a hardcoded '€'. That is
+  // `currencySymbol()` answering "€" for EVERY country: the quote builder's
+  // own price field asked a UK contractor for "Preis (€)" directly above a
+  // pricebook listing "£55.00/Std.". Seen on device 2026-08-27 on a real UK
+  // account. Same defect as compactCurrency's, in a sibling function that the
+  // first sweep missed — see [[learnings]] #233.
+  //
+  // Formatting 0 and stripping the digits leaves the symbol and nothing else,
+  // using only APIs Hermes actually has.
   try {
-    return new Intl.NumberFormat(locale, {
+    const formatted = new Intl.NumberFormat(locale, {
       style: 'currency', currency, currencyDisplay: 'narrowSymbol',
       minimumFractionDigits: 0, maximumFractionDigits: 0,
-    }).formatToParts(0).find((p) => p.type === 'currency')?.value ?? '€';
+    }).format(0);
+    const symbol = formatted.replace(/[0-9\s\u00A0\u202F.,-]/g, '');
+    if (symbol) return symbol;
   } catch {
-    return '€';
+    // fall through
   }
+  // Last resort: the code itself beats the wrong symbol.
+  return currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'USD' ? '$' : currency;
 }
 
 export function getCountryConfig(country: Country) {

@@ -48,3 +48,30 @@ describe('compactCurrency', () => {
     expect(compactCurrency(-4500)).toMatch(/-/);
   });
 });
+
+describe('currencySymbol', () => {
+  const { currencySymbol } = require('../formatting');
+
+  /**
+   * Regression: this used `formatToParts`, which Hermes does not implement, so
+   * on device it threw and the catch returned a hardcoded '€' for EVERY
+   * country. A UK contractor was asked for "Preis (€)" directly above a
+   * pricebook listing "£55.00/Std.". Node's ICU has formatToParts, which is
+   * exactly why the old version passed its tests.
+   */
+  it('gives each market its own symbol, never a hardcoded euro', () => {
+    expect(currencySymbol('UK')).toBe('£');
+    expect(currencySymbol('US')).toBe('$');
+    for (const c of ['NL', 'DE', 'FR', 'ES', 'IT'] as const) {
+      expect(currencySymbol(c)).toBe('€');
+    }
+  });
+
+  it('returns a symbol, not a number or a blank', () => {
+    for (const c of ['NL', 'DE', 'FR', 'ES', 'IT', 'UK', 'US'] as const) {
+      const s = currencySymbol(c);
+      expect(s.length).toBeGreaterThan(0);
+      expect(s).not.toMatch(/[0-9]/);
+    }
+  });
+});
