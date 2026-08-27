@@ -6063,5 +6063,11 @@
     "workerCerts": "Des salariés aux certifications à jour travaillent plus sûrement. Suivez les renouvellements.",
     "nearMiss": "Chaque signalement affine la vision sécurité. Les presqu'accidents sont l'avertissement le moins coûteux.",
     "closeDefect": "Les défauts traités tôt coûtent moins cher que ceux laissés ouverts."
+  },
+  "einvoice": {
+    "filedTitle": "L'avez-vous déposée ?",
+    "filedBody": "Vasco crée le fichier — il ne l'envoie pas à l'administration. Confirmez seulement après avoir réellement déposé {{format}}.",
+    "filedYes": "Oui, déposée",
+    "filedNotYet": "Pas encore"
   }
 }

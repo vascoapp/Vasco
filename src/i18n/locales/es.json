@@ -6063,5 +6063,11 @@
     "workerCerts": "Los trabajadores con certificaciones vigentes trabajan de forma más segura. Controla las renovaciones.",
     "nearMiss": "Cada aviso afina la imagen de seguridad. Los cuasi accidentes son la advertencia más barata que tendrás.",
     "closeDefect": "Los defectos resueltos pronto cuestan menos que los que quedan abiertos."
+  },
+  "einvoice": {
+    "filedTitle": "¿La ha presentado?",
+    "filedBody": "Vasco crea el archivo — no lo envía a la administración. Confirme solo cuando haya presentado {{format}} realmente.",
+    "filedYes": "Sí, presentada",
+    "filedNotYet": "Todavía no"
   }
 }

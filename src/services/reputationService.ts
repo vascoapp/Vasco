@@ -8,6 +8,7 @@
 import { Linking, Share } from 'react-native';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { renderTemplate, hasConsent, type Locale } from './whatsappTemplateService';
+import { wasShareDismissed } from '../utils/shareOutcome';
 
 // ============================================
 // TYPES
@@ -278,9 +279,15 @@ class ReputationService {
     // 3. Share sheet last resort — contractor picks the channel.
     if (!delivered) {
       try {
-        await Share.share({ message: text, title: `${businessName} — review` });
-        channel = 'share';
-        delivered = true;
+        // A dismissed share sheet is not a delivered review request.
+        // `Share.share` resolves with `dismissedAction` rather than throwing,
+        // so `delivered` used to be set for a request the customer never got —
+        // and `delivered` is what the caller and `trackUserAction` record.
+        const res = await Share.share({ message: text, title: `${businessName} — review` });
+        if (!wasShareDismissed(res)) {
+          channel = 'share';
+          delivered = true;
+        }
       } catch {}
     }
 

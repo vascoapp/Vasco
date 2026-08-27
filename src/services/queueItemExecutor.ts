@@ -28,6 +28,7 @@
 import { Share, Linking } from 'react-native';
 import type { Router } from 'expo-router';
 import type { QueueItem, QueueItemType } from './aiActionQueueService';
+import { wasShareDismissed } from '../utils/shareOutcome';
 
 export interface ExecutorDeps {
   router: Router;
@@ -157,7 +158,17 @@ async function runExecution(
       return { executed: false, via: 'noop', detail: 'no shareable text' };
     }
     try {
-      await Share.share({ message, title: item.title });
+      // `Share.share` RESOLVES with `dismissedAction` — it does not throw — so
+      // `executed: true` used to be returned for a sheet the contractor backed
+      // out of. The caller marks the queue item DONE on that, which is how a
+      // payment chase disappears from the queue without ever being sent.
+      //
+      // This is the same defect that was fixed in `actionExecutor` (R71,
+      // ai.tsx, bedrijf) and never carried across to its twin here.
+      const res = await Share.share({ message, title: item.title });
+      if (wasShareDismissed(res)) {
+        return { executed: false, via: 'share', detail: 'dismissed' };
+      }
       return { executed: true, via: 'share' };
     } catch (e) {
       return { executed: false, via: 'share', detail: String(e) };

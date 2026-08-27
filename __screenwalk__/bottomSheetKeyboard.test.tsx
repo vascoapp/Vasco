@@ -40,12 +40,28 @@ const EXEMPT: Record<string, string> = {};
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP.some((s) => e.name === s)) continue;
+    if (SKIP.some((s) => e.name === s) || e.name.includes('__decoy__')) continue;
     const full = path.join(dir, e.name);
     if (e.isDirectory()) walk(full, out);
     else if (e.name.endsWith('.tsx')) out.push(full);
   }
   return out;
+}
+
+/**
+ * Read a file, or return '' if it vanished underneath us.
+ *
+ * Sibling detectors write a temporary decoy file into `app/` to prove they can
+ * fail, and jest runs suites in parallel — so a plain readFileSync here died
+ * with ENOENT on `app/__chip_decoy__.tsx` mid-run. A detector must not be
+ * coupled to another suite's scratch files.
+ */
+function readOrEmpty(f: string): string {
+  try {
+    return fs.readFileSync(f, 'utf8');
+  } catch {
+    return '';
+  }
 }
 
 const files = ROOTS.flatMap((r) => walk(path.join(ROOT, r)));
@@ -102,7 +118,7 @@ function offends(src: string): boolean {
 
 describe('a bottom sheet with a text field lifts above the keyboard', () => {
   const offenders = files
-    .filter((f) => offends(fs.readFileSync(f, 'utf8')))
+    .filter((f) => offends(readOrEmpty(f)))
     .map((f) => path.relative(ROOT, f));
 
   it('has no unclassified offender', () => {

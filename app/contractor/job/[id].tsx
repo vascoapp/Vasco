@@ -51,6 +51,7 @@ import { tradeMismatch } from '../../../src/services/crewAssignment';
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { formatCurrency, formatCurrency0, formatTime } from '../../../src/i18n/formatting';
 import type { Country } from '../../../src/i18n/formatting';
+import { wasShareDismissed } from '../../../src/utils/shareOutcome';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -330,7 +331,13 @@ export default function JobDetailPage() {
         eta: etaLabel,
         business: (businessProfile as any)?.businessName ?? 'Vasco',
       });
-      await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
+      // `Share.share` RESOLVES with `dismissedAction` — it does not throw — so
+      // backing out of the sheet used to buzz success as though the customer
+      // had been told the contractor is on the way. Nothing is persisted here,
+      // so this was a false signal rather than a false record, but it is the
+      // same class that has bitten this repo three times.
+      const res = await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
+      if (wasShareDismissed(res)) return;
       hapticSuccess();
     } catch {}
   };

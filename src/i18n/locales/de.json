@@ -7005,5 +7005,11 @@
     "workerCerts": "Mitarbeitende mit gültigen Zertifikaten arbeiten sicherer. Halten Sie Verlängerungen aktuell.",
     "nearMiss": "Jede Meldung schärft das Sicherheitsbild. Beinaheunfälle sind die günstigste Warnung, die Sie bekommen.",
     "closeDefect": "Früh behobene Mängel kosten weniger als lange offene."
+  },
+  "einvoice": {
+    "filedTitle": "Haben Sie sie eingereicht?",
+    "filedBody": "Vasco erstellt die Datei — sie wird nicht an die Behörde übermittelt. Bestätigen Sie erst, wenn Sie {{format}} tatsächlich eingereicht haben.",
+    "filedYes": "Ja, eingereicht",
+    "filedNotYet": "Noch nicht"
   }
 }

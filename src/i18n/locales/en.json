@@ -7005,5 +7005,11 @@
     "workerCerts": "Workers with current certifications are safer on site. Keep renewals up to date.",
     "nearMiss": "Every report sharpens the safety picture. Near-misses are the cheapest warning you get.",
     "closeDefect": "Defects closed early cost less than ones left open."
+  },
+  "einvoice": {
+    "filedTitle": "Did you file it?",
+    "filedBody": "Vasco creates the file — it does not send it to the authority. Confirm only once you have actually filed {{format}}.",
+    "filedYes": "Yes, filed",
+    "filedNotYet": "Not yet"
   }
 }

@@ -42,6 +42,7 @@ import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { wasShareDismissed } from '../../src/utils/shareOutcome';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -516,6 +517,74 @@ export default function InvoiceDetailScreen() {
     }).catch(() => {});
   };
 
+
+  /**
+   * Hand the payload off, then find out whether it was actually filed.
+   *
+   * `recordHandover`'s own contract says "by the time we are called the XML has
+   * already left via the share sheet" — and every caller here violated it.
+   * `Sharing.shareAsync` returns `Promise<void>` and CANNOT report
+   * cancellation, `RNShare.share` resolves with `dismissedAction` rather than
+   * throwing, and the result was discarded either way. So cancelling the share
+   * sheet recorded the invoice as submitted, and the `catch` block — reached on
+   * a real filesystem failure — recorded it as submitted too.
+   *
+   * That is not a cosmetic mis-record. `einvoiceSubmitted` is what
+   * `aiActionQueueService` filters on to raise the e-invoice mandate reminder,
+   * so a cancelled export silently switched the reminder off for good; and for
+   * Italy a FatturaPA that never reached SDI is a legal non-event — the invoice
+   * was never issued. [[regulated-submissions-uk-eu]] puts it exactly: "a
+   * contractor who believes they filed and did not is worse off than one who
+   * never tried."
+   *
+   * Vasco has no SDI/FACe/PDP adapter and deliberately never will guess at one,
+   * so the only honest source for "was it filed" is the contractor. Where the
+   * share sheet CAN tell us it was dismissed we record nothing; where it cannot
+   * we ask. Same shape as insurance.tsx, which stopped claiming a claim had
+   * reached an insurer it never contacted.
+   */
+  const shareEInvoiceThenConfirm = async (xml: string, filename: string, format: string) => {
+    let dismissed = false;
+    try {
+      const file = new File(Paths.cache, filename);
+      file.write(xml);
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/xml',
+          dialogTitle: filename,
+          UTI: 'public.xml',
+        });
+      } else {
+        const res = await RNShare.share({ message: xml, title: filename });
+        dismissed = wasShareDismissed(res);
+      }
+    } catch {
+      // Fallback: share the XML as plain text if the filesystem/share fails.
+      try {
+        const res = await RNShare.share({ message: xml, title: filename });
+        dismissed = wasShareDismissed(res);
+      } catch {
+        return; // nothing left the device
+      }
+    }
+    if (dismissed) return;
+    Alert.alert(
+      t('einvoice.filedTitle', 'Did you file it?'),
+      t('einvoice.filedBody', { format, defaultValue: 'Vasco creates the file — it does not send it to the authority. Confirm only once you have actually filed {{format}}.' }),
+      [
+        { text: t('einvoice.filedNotYet', 'Not yet'), style: 'cancel' },
+        {
+          text: t('einvoice.filedYes', 'Yes, filed'),
+          onPress: () => {
+            hapticSuccess();
+            markEInvoiceSubmitted(invoice.id);
+            recordFiling(xml);
+          },
+        },
+      ],
+    );
+  };
+
   const handleExportEInvoice = async (format: 'XRechnung' | 'ZUGFeRD') => {
     // Tier gate: e-invoicing is Contractor-only
     try {
@@ -591,27 +660,7 @@ export default function InvoiceDetailScreen() {
     const xml = format === 'XRechnung' ? generateXRechnungXML(data) : generateZUGFeRDXML(data);
     const filename = `${data.invoiceNumber}-${format.toLowerCase()}.xml`;
 
-    try {
-      const file = new File(Paths.cache, filename);
-      file.write(xml);
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/xml',
-          dialogTitle: filename,
-          UTI: 'public.xml',
-        });
-      } else {
-        await RNShare.share({ message: xml, title: filename });
-      }
-      hapticSuccess();
-      markEInvoiceSubmitted(invoice.id);
-      recordFiling(xml);
-    } catch {
-      // Fallback: share XML as plain text if filesystem/share fails
-      await RNShare.share({ message: xml, title: filename });
-      markEInvoiceSubmitted(invoice.id);
-      recordFiling(xml);
-    }
+    await shareEInvoiceThenConfirm(xml, filename, format);
   };
 
   // R302: ES Facturae 3.2.2 export. Mandatory in Spain for B2G + large B2B.
@@ -721,29 +770,10 @@ export default function InvoiceDetailScreen() {
     const data = mapped.document;
     const xml = generateFacturaeXml(data);
     const filename = `${invoiceNumber}-facturae.xml`;
-    try {
-      const file = new File(Paths.cache, filename);
-      file.write(xml);
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/xml',
-          dialogTitle: filename,
-          UTI: 'public.xml',
-        });
-      } else {
-        await RNShare.share({ message: xml, title: filename });
-      }
-      hapticSuccess();
-      // Recorded here, not on queue approval: approving only deep-links to this
-      // screen and the contractor can still back out, so recording earlier would
-      // mark unfiled invoices as filed.
-      markEInvoiceSubmitted(invoice.id);
-      recordFiling(xml);
-    } catch {
-      await RNShare.share({ message: xml, title: filename });
-      markEInvoiceSubmitted(invoice.id);
-      recordFiling(xml);
-    }
+    // The comment that used to sit here said recording at queue approval "would
+    // mark unfiled invoices as filed" — right, and recording on the share had
+    // the same fault one step later. See shareEInvoiceThenConfirm.
+    await shareEInvoiceThenConfirm(xml, filename, 'Facturae');
   };
 
   // R302: IT FatturaPA via SDI export. MANDATORY for ALL Italian invoices
@@ -777,29 +807,10 @@ export default function InvoiceDetailScreen() {
     const data = mapped.document;
     const xml = generateFatturaPAXml(data);
     const filename = `${invoiceNumber}-fatturapa.xml`;
-    try {
-      const file = new File(Paths.cache, filename);
-      file.write(xml);
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/xml',
-          dialogTitle: filename,
-          UTI: 'public.xml',
-        });
-      } else {
-        await RNShare.share({ message: xml, title: filename });
-      }
-      hapticSuccess();
-      // Recorded here, not on queue approval: approving only deep-links to this
-      // screen and the contractor can still back out, so recording earlier would
-      // mark unfiled invoices as filed.
-      markEInvoiceSubmitted(invoice.id);
-      recordFiling(xml);
-    } catch {
-      await RNShare.share({ message: xml, title: filename });
-      markEInvoiceSubmitted(invoice.id);
-      recordFiling(xml);
-    }
+    // The comment that used to sit here said recording at queue approval "would
+    // mark unfiled invoices as filed" — right, and recording on the share had
+    // the same fault one step later. See shareEInvoiceThenConfirm.
+    await shareEInvoiceThenConfirm(xml, filename, 'FatturaPA');
   };
 
   // R20: when launched from queue executor with `?submit=einvoice`, auto-fire

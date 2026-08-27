@@ -6989,5 +6989,11 @@
     "workerCerts": "Medewerkers met actuele certificeringen werken veiliger. Houd vernieuwingen bij.",
     "nearMiss": "Elke melding scherpt het veiligheidsbeeld aan. Bijna-ongevallen zijn de goedkoopste waarschuwing die je krijgt.",
     "closeDefect": "Gebreken die snel worden opgelost kosten minder dan gebreken die lang open staan."
+  },
+  "einvoice": {
+    "filedTitle": "Heb je hem ingediend?",
+    "filedBody": "Vasco maakt het bestand — het verstuurt niets naar de instantie. Bevestig pas als je {{format}} echt hebt ingediend.",
+    "filedYes": "Ja, ingediend",
+    "filedNotYet": "Nog niet"
   }
 }
