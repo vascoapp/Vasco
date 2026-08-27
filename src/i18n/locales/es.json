@@ -81,7 +81,8 @@
     "noOptions": "Todavía no hay nada que elegir",
     "justNow": "Ahora mismo",
     "tryAgain": "Inténtalo de nuevo.",
-    "moreOptions": "Más opciones"
+    "moreOptions": "Más opciones",
+    "eInvoicing": "Facturación electrónica (Facturae)"
   },
   "tabs": {
     "today": "Hoy",

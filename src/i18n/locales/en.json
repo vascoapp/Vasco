@@ -81,7 +81,8 @@
     "noOptions": "Nothing to choose from yet",
     "justNow": "Just now",
     "tryAgain": "Please try again.",
-    "moreOptions": "More options"
+    "moreOptions": "More options",
+    "eInvoicing": "E-invoicing (XRechnung, Peppol)"
   },
   "tabs": {
     "today": "Today",

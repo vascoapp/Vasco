@@ -223,6 +223,126 @@ export default function WerkScreen() {
   }
 
   // Full-empty overrides everything
+  // Hoisted out of the main return: the zero-jobs branch below returns EARLY,
+  // so anything rendered only in the main tree does not exist there. The
+  // empty-state CTA called setShowNewJob(true) against a Modal that was never
+  // mounted on that branch — the button set state and nothing happened.
+  // Rendered in BOTH returns now.
+  const newJobModal = (
+  <Modal visible={showNewJob} transparent animationType="slide" onRequestClose={() => setShowNewJob(false)}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+      <Pressable style={styles.modalOverlay} onPress={() => setShowNewJob(false)}>
+        <Pressable style={styles.modalSheet} onPress={() => {}}>
+          <View style={styles.modalHandle} />
+          <DKLabel style={styles.modalTitle}>{t('dk.actions.newJob', 'New job')}</DKLabel>
+          <TextInput
+            style={styles.modalInput}
+            placeholder={t('pipeline.jobDescription', 'Omschrijving klus')}
+            placeholderTextColor={DK.colors.textMuted}
+            value={newJobTitle}
+            onChangeText={setNewJobTitle}
+            maxLength={120}
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleCreateJob}
+          />
+          {suggestions.length > 0 && (
+            <View style={styles.suggestionsRow}>
+              <Ionicons name="flash-outline" size={13} color={DK.colors.textMuted} />
+              {suggestions.map((sg: string, i: number) => (
+                <Pressable key={i} style={styles.suggestionChip} onPress={() => setNewJobTitle(sg)}>
+                  <Text style={styles.suggestionText} numberOfLines={1}>{sg}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          {/* One-of-N, so a balloon menu — never a chip strip (CLAUDE.md).
+              Optional: a job jotted down before you know whose it is still
+              has to be creatable. */}
+          <DKMenu
+            accessibilityLabel={t('jobs.selectCustomer', 'Select customer')}
+            items={[
+              {
+                key: '__none__',
+                label: t('jobs.noCustomer', 'No customer'),
+                selected: newJobCustomerId === null,
+                emphasis: true,
+                onPress: () => setNewJobCustomerId(null),
+              },
+              ...(customers as { id: string; name: string; phone?: string }[]).map((c) => ({
+                key: c.id,
+                label: c.name,
+                detail: c.phone,
+                selected: newJobCustomerId === c.id,
+                onPress: () => setNewJobCustomerId(c.id),
+              })),
+            ]}
+            renderAnchor={(open) => (
+              <Pressable style={styles.customerAnchor} onPress={open} accessibilityRole="button">
+                <Ionicons name="person-outline" size={16} color={DK.colors.textMuted} />
+                <Text
+                  style={[styles.customerAnchorText, !newJobCustomerId && { color: DK.colors.textMuted }]}
+                  numberOfLines={1}
+                >
+                  {(customers as { id: string; name: string }[]).find((c) => c.id === newJobCustomerId)?.name
+                    ?? t('jobs.noCustomer', 'No customer')}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={DK.colors.textMuted} />
+              </Pressable>
+            )}
+          />
+          <Pressable
+            style={[styles.modalSubmit, !newJobTitle.trim() && { opacity: 0.5 }]}
+            onPress={handleCreateJob}
+            disabled={!newJobTitle.trim()}
+          >
+            <LinearGradient
+              colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <DKLabel style={styles.modalSubmitText}>{t('dk.actions.createJob', 'Create')}</DKLabel>
+          </Pressable>
+
+          {/* R267/R269: contract-based job ingress — was buried in Profile */}
+          <Pressable
+            style={styles.maintenanceLink}
+            onPress={() => {
+              setShowNewJob(false);
+              router.push('/contractor/recurring/new' as any);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t('dk.actions.maintenanceContract', 'Recurring maintenance contract')}
+          >
+            <Ionicons name="repeat" size={16} color={DK.colors.accent} />
+            <DKLabel style={styles.maintenanceLinkText}>
+              {t('dk.actions.maintenanceContract', 'Recurring maintenance contract')}
+            </DKLabel>
+            <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
+          </Pressable>
+          {/* R269: service-agreements — long-form contracts (was orphaned) */}
+          <Pressable
+            style={styles.maintenanceLink}
+            onPress={() => {
+              setShowNewJob(false);
+              router.push('/contractor/service-agreements' as any);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t('dk.actions.serviceAgreement', 'Service agreement')}
+          >
+            <Ionicons name="document-text-outline" size={16} color={DK.colors.accent} />
+            <DKLabel style={styles.maintenanceLinkText}>
+              {t('dk.actions.serviceAgreement', 'Service agreement')}
+            </DKLabel>
+            <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </KeyboardAvoidingView>
+  </Modal>
+  );
+
   if (jobs.length === 0) {
     return (
       <View style={styles.root}>
@@ -233,11 +353,22 @@ export default function WerkScreen() {
           <Ionicons name="briefcase-outline" size={48} color={DK.colors.textMuted} />
           <DKLabel style={styles.fullEmptyTitle}>{t('dk.empty.noJobs', 'No jobs yet')}</DKLabel>
           <Text style={styles.fullEmptyDesc}>{t('dk.empty.noJobsDesc', 'Create your first job')}</Text>
-          <Pressable style={styles.fullEmptyBtn} onPress={() => router.push('/contractor/tiered-quote' as any)}>
+          {/* Opens the NEW JOB sheet, not the quote builder. The label says
+              "New job", the heading above says "Create your first job", and
+              this used to push to /contractor/tiered-quote — the QUOTE builder.
+              A quote is a priced offer to a customer; a job is scheduled work.
+              The sibling empty state further down already does the right thing
+              (`onCta={() => setShowNewJob(true)}`), so the screen had two
+              buttons with one label and two destinations — and the wrong one is
+              the ONLY one a brand-new contractor can reach, because it renders
+              only while there are zero jobs. Found on a real account,
+              2026-08-27. */}
+          <Pressable style={styles.fullEmptyBtn} onPress={() => setShowNewJob(true)}>
             <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
             <DKLabel style={styles.fullEmptyBtnText}>{t('dk.actions.newJob', 'New job')}</DKLabel>
           </Pressable>
         </View>
+        {newJobModal}
       </View>
     );
   }
@@ -448,119 +579,8 @@ export default function WerkScreen() {
         <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* ─── NEW JOB MODAL ─── */}
-      <Modal visible={showNewJob} transparent animationType="slide" onRequestClose={() => setShowNewJob(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <Pressable style={styles.modalOverlay} onPress={() => setShowNewJob(false)}>
-            <Pressable style={styles.modalSheet} onPress={() => {}}>
-              <View style={styles.modalHandle} />
-              <DKLabel style={styles.modalTitle}>{t('dk.actions.newJob', 'New job')}</DKLabel>
-              <TextInput
-                style={styles.modalInput}
-                placeholder={t('pipeline.jobDescription', 'Omschrijving klus')}
-                placeholderTextColor={DK.colors.textMuted}
-                value={newJobTitle}
-                onChangeText={setNewJobTitle}
-                maxLength={120}
-                autoFocus
-                returnKeyType="done"
-                onSubmitEditing={handleCreateJob}
-              />
-              {suggestions.length > 0 && (
-                <View style={styles.suggestionsRow}>
-                  <Ionicons name="flash-outline" size={13} color={DK.colors.textMuted} />
-                  {suggestions.map((sg: string, i: number) => (
-                    <Pressable key={i} style={styles.suggestionChip} onPress={() => setNewJobTitle(sg)}>
-                      <Text style={styles.suggestionText} numberOfLines={1}>{sg}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-              {/* One-of-N, so a balloon menu — never a chip strip (CLAUDE.md).
-                  Optional: a job jotted down before you know whose it is still
-                  has to be creatable. */}
-              <DKMenu
-                accessibilityLabel={t('jobs.selectCustomer', 'Select customer')}
-                items={[
-                  {
-                    key: '__none__',
-                    label: t('jobs.noCustomer', 'No customer'),
-                    selected: newJobCustomerId === null,
-                    emphasis: true,
-                    onPress: () => setNewJobCustomerId(null),
-                  },
-                  ...(customers as { id: string; name: string; phone?: string }[]).map((c) => ({
-                    key: c.id,
-                    label: c.name,
-                    detail: c.phone,
-                    selected: newJobCustomerId === c.id,
-                    onPress: () => setNewJobCustomerId(c.id),
-                  })),
-                ]}
-                renderAnchor={(open) => (
-                  <Pressable style={styles.customerAnchor} onPress={open} accessibilityRole="button">
-                    <Ionicons name="person-outline" size={16} color={DK.colors.textMuted} />
-                    <Text
-                      style={[styles.customerAnchorText, !newJobCustomerId && { color: DK.colors.textMuted }]}
-                      numberOfLines={1}
-                    >
-                      {(customers as { id: string; name: string }[]).find((c) => c.id === newJobCustomerId)?.name
-                        ?? t('jobs.noCustomer', 'No customer')}
-                    </Text>
-                    <Ionicons name="chevron-down" size={16} color={DK.colors.textMuted} />
-                  </Pressable>
-                )}
-              />
-              <Pressable
-                style={[styles.modalSubmit, !newJobTitle.trim() && { opacity: 0.5 }]}
-                onPress={handleCreateJob}
-                disabled={!newJobTitle.trim()}
-              >
-                <LinearGradient
-                  colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <DKLabel style={styles.modalSubmitText}>{t('dk.actions.createJob', 'Create')}</DKLabel>
-              </Pressable>
+      {newJobModal}
 
-              {/* R267/R269: contract-based job ingress — was buried in Profile */}
-              <Pressable
-                style={styles.maintenanceLink}
-                onPress={() => {
-                  setShowNewJob(false);
-                  router.push('/contractor/recurring/new' as any);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t('dk.actions.maintenanceContract', 'Recurring maintenance contract')}
-              >
-                <Ionicons name="repeat" size={16} color={DK.colors.accent} />
-                <DKLabel style={styles.maintenanceLinkText}>
-                  {t('dk.actions.maintenanceContract', 'Recurring maintenance contract')}
-                </DKLabel>
-                <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
-              </Pressable>
-              {/* R269: service-agreements — long-form contracts (was orphaned) */}
-              <Pressable
-                style={styles.maintenanceLink}
-                onPress={() => {
-                  setShowNewJob(false);
-                  router.push('/contractor/service-agreements' as any);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t('dk.actions.serviceAgreement', 'Service agreement')}
-              >
-                <Ionicons name="document-text-outline" size={16} color={DK.colors.accent} />
-                <DKLabel style={styles.maintenanceLinkText}>
-                  {t('dk.actions.serviceAgreement', 'Service agreement')}
-                </DKLabel>
-                <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
-              </Pressable>
-            </Pressable>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Modal>
 
       {/* ─── FAB ─── */}
       <Pressable

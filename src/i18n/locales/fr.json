@@ -81,7 +81,8 @@
     "noOptions": "Rien à choisir pour le moment",
     "justNow": "À l’instant",
     "tryAgain": "Veuillez réessayer.",
-    "moreOptions": "Plus d'options"
+    "moreOptions": "Plus d'options",
+    "eInvoicing": "Facturation électronique (Factur-X)"
   },
   "tabs": {
     "today": "Aujourd'hui",

@@ -81,7 +81,8 @@
     "noOptions": "Non c’è ancora niente da scegliere",
     "justNow": "Proprio ora",
     "tryAgain": "Riprova.",
-    "moreOptions": "Altre opzioni"
+    "moreOptions": "Altre opzioni",
+    "eInvoicing": "Fatturazione elettronica (FatturaPA)"
   },
   "tabs": {
     "today": "Oggi",

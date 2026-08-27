@@ -81,7 +81,8 @@
     "noOptions": "Nog niets om uit te kiezen",
     "justNow": "Zojuist",
     "tryAgain": "Probeer het opnieuw.",
-    "moreOptions": "Meer opties"
+    "moreOptions": "Meer opties",
+    "eInvoicing": "E-facturatie (Peppol, XRechnung)"
   },
   "tabs": {
     "today": "Vandaag",

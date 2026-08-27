@@ -1189,18 +1189,37 @@ export default function OnboardingScreen() {
           ? t('onboarding.bestForAannemers', 'BEST FOR AANNEMERS')
           : t('onboarding.recommendedForYou', 'RECOMMENDED FOR YOU');
 
-        const plans: { id: SubscriptionTier; name: string; price: number; annualPrice: number; badge?: string; commission: string; features: { text: string; highlight?: boolean }[] }[] = [
+        // No "X% per paid invoice" line on any tier, and no `commission` field.
+        //
+        // The tier commission (Free 3.5% / Pro 2% / Contractor 1%) CANNOT be
+        // charged and must not be advertised. It is structurally impossible
+        // before it is anything else: the payment integration is bring-your-own
+        // API key, the contractor pastes their own Mollie/Stripe secret and
+        // Vasco calls the processor AS them, so the money never touches Vasco.
+        // Taking a cut needs Mollie Connect/OAuth and no OAuth flow exists for
+        // either processor. The fee block in src/integrations/mollie.ts is
+        // commented out, and getCommissionPercent / COMMISSION_BY_TIER /
+        // calculatePaymentFees have zero callers.
+        //
+        // It is also wrong on the merits: iDEAL costs EUR 0.32 FLAT, so 3.5% of
+        // a EUR 2.000 invoice is EUR 70 — about 200x the underlying cost — on
+        // the dominant Dutch method, against a contractor whose alternative is
+        // printing their IBAN. The customer-side version is illegal outright
+        // under PSD2. See memory/payments-monetization-2026-08.md.
+        //
+        // Same reasoning that already removed "API + white-label" from the top
+        // tier below; those four lines were the identical promise and outlived
+        // the fix by sitting three lines away from it.
+        const plans: { id: SubscriptionTier; name: string; price: number; annualPrice: number; badge?: string; features: { text: string; highlight?: boolean }[] }[] = [
           {
             id: 'free',
             name: 'Free',
             price: 0,
             annualPrice: 0,
             badge: recommendedTier === 'free' ? recommendedBadge : undefined,
-            commission: '3.5%',
             features: [
               { text: `${freeTier.limits.maxActiveJobs} ${t('common.jobs', 'jobs')}` },
               { text: `${freeTier.limits.maxQuotesPerMonth} ${t('common.quotesMonth', 'quotes/month')}` },
-              { text: '3.5% ' + t('common.perInvoice', 'per paid invoice') },
             ],
           },
           {
@@ -1209,12 +1228,11 @@ export default function OnboardingScreen() {
             price: proTier.monthlyPrice,
             annualPrice: proTier.annualMonthlyPrice,
             badge: recommendedTier === 'pro' ? recommendedBadge : undefined,
-            commission: '2%',
             features: [
               { text: t('common.unlimited', 'Unlimited') + ' ' + t('common.jobs', 'jobs'), highlight: true },
               { text: t('common.fullAi', 'Full AI suite'), highlight: true },
               { text: t('common.purchasingAgent', 'Purchasing agent'), highlight: true },
-              { text: '2% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
+              { text: t('common.eInvoicing', 'E-invoicing'), highlight: true },
             ],
           },
           {
@@ -1223,13 +1241,11 @@ export default function OnboardingScreen() {
             price: contractorTier.monthlyPrice,
             annualPrice: contractorTier.annualMonthlyPrice,
             badge: recommendedTier === 'contractor' ? recommendedBadge : undefined,
-            commission: '1%',
             features: isAannemerOnboarding
               ? [
                   { text: t('onboarding.featAannemerProjects', 'Multi-trade project boards'), highlight: true },
                   { text: t('onboarding.featAannemerSubs', 'Subcontractor coordination + seats'), highlight: true },
                   { text: t('onboarding.featAannemerQuote', 'Cross-trade quote builder'), highlight: true },
-                  { text: '1% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
                 ]
               : [
                   { text: t('common.teamFeatures', 'Team features'), highlight: true },
@@ -1241,7 +1257,6 @@ export default function OnboardingScreen() {
                   // Dedicated support and onboarding assistance are the two
                   // top-tier promises the operator can actually honour today.
                   { text: t('common.supportOnboarding', 'Dedicated support + onboarding'), highlight: true },
-                  { text: '1% ' + t('common.perInvoice', 'per paid invoice'), highlight: true },
                 ],
           },
         ];
@@ -1354,7 +1369,10 @@ export default function OnboardingScreen() {
             <View style={styles.reviewCard}>
               {reviewItems.map((item, i) => (
                 <View key={item.label} style={[styles.reviewRow, i < reviewItems.length - 1 && styles.reviewRowBorder]}>
-                  <Text style={styles.reviewLabel}>{item.label}</Text>
+                  {/* The LABEL yields, never the value: the value is the
+                      answer the contractor just gave, and clipping it is
+                      clipping their own data back at them. */}
+                  <Text style={styles.reviewLabel} numberOfLines={2}>{item.label}</Text>
                   <Text style={styles.reviewValue} numberOfLines={2}>{item.value}</Text>
                 </View>
               ))}
@@ -2106,6 +2124,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
+    // Without this the label and the value touched: German rendered
+    // "Welche Unternehmensform?Einzelunternehmen" as one word.
+    gap: 12,
   },
   reviewRowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -2115,6 +2136,12 @@ const styles = StyleSheet.create({
     fontSize: TYPE.bodySize,
     fontFamily: TYPE.labelFamily,
     color: SemanticColors.textSecondary,
+    // Had NO flex constraint, so it took its full intrinsic width and left the
+    // value nothing: "Wo ist Ihr Unternehmen ansässig?" pushed "United
+    // Kingdom" clean off the card, clipped to "United King". English fits and
+    // German does not, which is the usual way this surfaces.
+    flexShrink: 1,
+    minWidth: 0,
   },
   reviewValue: {
     fontSize: TYPE.bodySize,
@@ -2122,6 +2149,8 @@ const styles = StyleSheet.create({
     color: SemanticColors.textPrimary,
     textAlign: 'right',
     maxWidth: '55%',
+    // Does not shrink — the label above gives way instead.
+    flexShrink: 0,
   },
   settingsHint: {
     flexDirection: 'row',

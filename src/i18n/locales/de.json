@@ -81,7 +81,8 @@
     "noOptions": "Noch nichts zur Auswahl",
     "justNow": "Gerade eben",
     "tryAgain": "Bitte versuchen Sie es erneut.",
-    "moreOptions": "Weitere Optionen"
+    "moreOptions": "Weitere Optionen",
+    "eInvoicing": "E-Rechnung (XRechnung, ZUGFeRD)"
   },
   "tabs": {
     "today": "Heute",
