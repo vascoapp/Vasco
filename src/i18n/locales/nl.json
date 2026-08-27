@@ -75,7 +75,6 @@
     "purchasingAgent": "Inkoopagent",
     "teamFeatures": "Teamfuncties",
     "seats": "gebruikers",
-    "apiWhiteLabel": "API + white-label",
     "supportOnboarding": "Vaste support + onboarding",
     "select": "Kiezen",
     "noOptions": "Nog niets om uit te kiezen",
@@ -321,7 +320,10 @@
     "vatPresetTitle": "BTW-regeling ingesteld",
     "vatPresetKor": "KOR geselecteerd — wijzig in Instellingen als je omzet boven €20.000 uitkomt.",
     "vatPresetKlein": "Kleinunternehmer geselecteerd — wijzig in Instellingen als omzet boven €22.000 komt.",
-    "perMonth": "/mnd"
+    "perMonth": "/mnd",
+    "aiInsight": {
+      "leads": "Leadscoring"
+    }
   },
   "dashboard": {
     "goodMorning": "Goedemorgen",
@@ -655,12 +657,12 @@
   "photoSubmissions": {
     "title": "Foto's van klant",
     "count_one": "{{count}} foto",
-    "count_other": "{{count}} foto's",
+    "count_other": "{{count}} foto’s",
     "draftQuote": "Offerte opstellen",
     "analyzing": "Analyseren…",
     "failTitle": "Analyse mislukt",
     "failDesc": "Kon geen concept genereren. Probeer het zo opnieuw.",
-    "count": "{{count}} foto's"
+    "count": "{{count}} foto’s"
   },
   "aiQuote": {
     "unavailable": "AI-analyse is momenteel niet beschikbaar. Voeg items handmatig toe of probeer het later opnieuw.",
@@ -742,7 +744,7 @@
     "createFromJob": "Factuur van klus",
     "exportToAccounting": "Exporteer naar boekhouding",
     "shareInvoice": "Factuur delen",
-    "downloadPdf": "Download PDF",
+    "downloadPdf": "PDF downloaden",
     "invoice": "Factuur",
     "todTitle": "Beste verzendmoment",
     "todHintFaster": "{{day}} {{part}} — gemiddeld ~{{days}} dagen sneller betaald",
@@ -1639,7 +1641,7 @@
     "recordClaim": "Claim vastleggen",
     "recordDisclaimer": "Vasco stuurt dit niet naar je verzekeraar. Meld het zelf — wij bewaren het dossier en herinneren je eraan.",
     "photoCount_one": "{{count}} foto",
-    "photoCount_other": "{{count}} foto's",
+    "photoCount_other": "{{count}} foto’s",
     "title": "Verzekeringen",
     "statusActive": "Actief",
     "statusExpiringSoon": "Bijna verlopen",
@@ -3107,7 +3109,6 @@
     "confirmPaid": "BETAALD",
     "reasonExactAmount": "exact bedrag",
     "reasonAmountWithin": "bedrag binnen 2%",
-    "reasonIban": "IBAN match",
     "reasonName": "naam match",
     "reasonDaysAfter": "{{days}}d na versturen",
     "subtitle_one": "Vasco vond {{count}} betaling die overeenkomt met een openstaande factuur.",
@@ -4539,7 +4540,6 @@
       "hasFullEInvoicing": "Alle e-factuurformaten",
       "hasEveAI": "Vasco AI-assistent",
       "hasEveAuditor": "Vasco compliance-monitoring",
-      "hasEveAnalyst": "Vasco business intelligence",
       "hasAutomationPacks": "Automatiseringspakketten",
       "hasMlPredictions": "ML-voorspellingen",
       "hasBenchmarking": "Vakman-benchmarking",
