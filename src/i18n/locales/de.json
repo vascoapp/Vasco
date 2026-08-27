@@ -5029,8 +5029,6 @@
     "coverage": "Abdeckung",
     "fileClaim": "Anspruch einreichen",
     "fileClaimPrompt": "Möchten Sie einen Garantieanspruch für {{equipment}} ({{brand}} {{model}}) von Kunde {{customer}} einreichen?",
-    "claimCreated": "Anspruch erstellt",
-    "claimCreatedMessage": "Für {{equipment}} wurde ein Garantieanspruch erstellt.",
     "statusPending": "Ausstehend",
     "statusApproved": "Genehmigt",
     "statusRejected": "Abgelehnt",

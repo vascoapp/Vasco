@@ -5029,8 +5029,6 @@
     "coverage": "Coverage",
     "fileClaim": "File Claim",
     "fileClaimPrompt": "Do you want to file a warranty claim for {{equipment}} ({{brand}} {{model}}) of customer {{customer}}?",
-    "claimCreated": "Claim Created",
-    "claimCreatedMessage": "A warranty claim has been created for {{equipment}}.",
     "statusPending": "Pending",
     "statusApproved": "Approved",
     "statusRejected": "Rejected",

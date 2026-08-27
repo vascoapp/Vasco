@@ -5016,8 +5016,6 @@
     "coverage": "Dekking",
     "fileClaim": "Claim indienen",
     "fileClaimPrompt": "Wil je een garantieclaim indienen voor {{equipment}} ({{brand}} {{model}}) van klant {{customer}}?",
-    "claimCreated": "Claim aangemaakt",
-    "claimCreatedMessage": "Er is een garantieclaim aangemaakt voor {{equipment}}.",
     "statusPending": "In behandeling",
     "statusApproved": "Goedgekeurd",
     "statusRejected": "Afgewezen",

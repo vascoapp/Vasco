@@ -290,9 +290,14 @@ export const WarrantyManager: React.FC = () => {
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         {
           text: t('warranty.fileClaim', 'File Claim'),
-          onPress: () => {
-            Alert.alert(t('warranty.claimCreated', 'Claim Created'), t('warranty.claimCreatedMessage', 'A warranty claim has been created for {{equipment}}.', { equipment: warranty.equipmentName }));
-          },
+          // This used to do exactly one thing: alert "A warranty claim has been
+          // created". Nothing was created — no service call, no state write, no
+          // persistence. The contractor closed the dialog believing a claim
+          // existed. Same lie insurance.tsx already had removed once, where the
+          // fix was honesty rather than deletion: a claim is a local dossier the
+          // contractor then reports themselves, and that screen records it and
+          // hands off. Send them there instead of inventing a confirmation.
+          onPress: () => router.push('/contractor/insurance' as any),
         },
       ],
     );

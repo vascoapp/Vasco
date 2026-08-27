@@ -5029,8 +5029,6 @@
     "coverage": "Copertura",
     "fileClaim": "Apri richiesta",
     "fileClaimPrompt": "Vuoi aprire una richiesta di garanzia per {{equipment}} ({{brand}} {{model}}) del cliente {{customer}}?",
-    "claimCreated": "Richiesta creata",
-    "claimCreatedMessage": "È stata creata una richiesta di garanzia per {{equipment}}.",
     "statusPending": "In attesa",
     "statusApproved": "Approvata",
     "statusRejected": "Respinta",

@@ -5029,8 +5029,6 @@
     "coverage": "Couverture",
     "fileClaim": "Déclarer un sinistre",
     "fileClaimPrompt": "Voulez-vous déclarer un recours en garantie pour {{equipment}} ({{brand}} {{model}}) du client {{customer}} ?",
-    "claimCreated": "Recours créé",
-    "claimCreatedMessage": "Un recours en garantie a été créé pour {{equipment}}.",
     "statusPending": "En attente",
     "statusApproved": "Approuvé",
     "statusRejected": "Rejeté",
