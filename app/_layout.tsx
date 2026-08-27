@@ -44,8 +44,13 @@ import * as Notifications from 'expo-notifications';
 // confirmation flow in the browser. Native is untouched.
 installWebAlert();
 
-// Enterprise roles use the (tabs) layout
-const ENTERPRISE_ROLES = ['cfo', 'coo', 'site-lead', 'director'];
+// NOTE: there is no role→layout table here on purpose. A dead
+// `ENTERPRISE_ROLES = ['cfo','coo','site-lead','director']` used to sit here
+// under the comment "Enterprise roles use the (tabs) layout" — nothing read it,
+// and since R66 round 47 the comment was the opposite of the truth: every one
+// of those roles is deliberately routed to /(contractor) because their
+// surfaces are half-built, and the redirect below also blocks deep links to
+// them. Removed so the next reader does not trust it.
 
 // Worker role check — workers get redirected to worker/ screens
 function isWorkerRole(user: { role: string; isAannemer?: boolean } | null): boolean {

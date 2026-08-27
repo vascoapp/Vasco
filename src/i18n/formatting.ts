@@ -240,21 +240,46 @@ export function formatCurrency0(amount: number, countryArg?: Country): string {
  * country.
  */
 /**
- * [thousands, millions] suffix per market, for the path where the runtime has
- * no `notation: 'compact'` — which is every iOS build here, Hermes not having
- * it. "K" is an anglicism a German contractor does not write; "Tsd." is the
- * abbreviation that belongs on a German KPI tile. Leading space where the
- * language sets the suffix off as its own word.
+ * [thousands, millions] suffix per LANGUAGE — not per country.
+ *
+ * This was keyed on country when it was added, which is wrong and showed it:
+ * a contractor whose account is German but whose UI is Spanish read
+ * "€ 3,2 Tsd." on a Spanish screen. Separators, decimal comma and symbol
+ * position are currency conventions and DO follow the country. "Tsd." is not
+ * one of those — it is the German WORD for thousand, abbreviated, and a word
+ * belongs to the language the person is reading.
  */
-const COMPACT_SUFFIX: Record<Country, [string, string]> = {
-  NL: ['K', ' mln'],
-  DE: [' Tsd.', ' Mio.'],
-  FR: [' k', ' M'],
-  ES: ['K', ' M'],
-  IT: ['K', ' Mln'],
-  UK: ['K', 'M'],
-  US: ['K', 'M'],
+export type UiLanguage = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
+
+const COMPACT_SUFFIX: Record<UiLanguage, [string, string]> = {
+  en: ['K', 'M'],
+  nl: ['K', ' mln'],
+  de: [' Tsd.', ' Mio.'],
+  fr: [' k', ' M'],
+  es: ['K', ' M'],
+  it: ['K', ' Mln'],
 };
+
+/**
+ * The language the contractor is READING, for the rare formatter that emits a
+ * word rather than a number. Falls back to the country's default language when
+ * i18next has not initialised (a formatter can run before the provider mounts).
+ */
+export function compactSuffixFor(language: UiLanguage): [string, string] {
+  return COMPACT_SUFFIX[language] ?? COMPACT_SUFFIX.en;
+}
+
+function activeLanguage(country: Country): UiLanguage {
+  try {
+    // Required lazily: i18n.ts pulls in every locale JSON, and this module is
+    // imported by services that must not drag that in at module-evaluation time.
+    const lang = String(require('./i18n').default?.language ?? '').slice(0, 2);
+    if (lang in COMPACT_SUFFIX) return lang as UiLanguage;
+  } catch {
+    // i18n not ready — fall through.
+  }
+  return getDefaultLanguage(country);
+}
 
 /**
  * Compact "4,5K" variant. Same contractor default as formatCurrency above.
@@ -273,7 +298,13 @@ const COMPACT_SUFFIX: Record<Country, [string, string]> = {
  * English "K"); where it does not, the number simply comes back uncompacted,
  * which is longer but never wrong.
  */
-export function compactCurrency(amount: number, countryArg?: Country): string {
+export function compactCurrency(
+  amount: number,
+  countryArg?: Country,
+  /** Override the reader's language. Defaults to the active i18n language;
+   *  present so the behaviour is testable without driving the i18n singleton. */
+  languageArg?: UiLanguage,
+): string {
   const country = countryArg ?? ((getCurrentCountry() as Country) ?? 'NL');
   const abs = Math.abs(amount);
   if (abs < 1_000) return formatCurrency0(amount, country);
@@ -292,7 +323,7 @@ export function compactCurrency(amount: number, countryArg?: Country): string {
   // scale so the tile still fits.
   if (!number || !/[^\d\s.,-]/.test(number)) {
     const divisor = abs >= 1_000_000 ? 1_000_000 : 1_000;
-    const [thousand, million] = COMPACT_SUFFIX[country] ?? COMPACT_SUFFIX.NL;
+    const [thousand, million] = compactSuffixFor(languageArg ?? activeLanguage(country));
     number = new Intl.NumberFormat(locale, {
       minimumFractionDigits: 1, maximumFractionDigits: 1,
     }).format(amount / divisor) + (abs >= 1_000_000 ? million : thousand);
