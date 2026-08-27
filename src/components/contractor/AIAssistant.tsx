@@ -98,12 +98,16 @@ export function AIAssistant() {
           <Text style={[styles.messageText, isUser && styles.userMessageText]}>
             {message.content}
           </Text>
-          {message.metadata?.actionable && (
-            <Pressable style={styles.messageAction}>
-              <Text style={styles.messageActionText}>Actie ondernemen</Text>
-              <Ionicons name="arrow-forward" size={14} color={Palette.blue500} />
-            </Pressable>
-          )}
+          {/* A dead "Actie ondernemen" button lived here, and two more below:
+              each carried a label and an arrow and had NO onPress, and the data
+              behind them has no route or action to dispatch, so wiring them
+              would mean inventing behaviour. A labelled affordance that ignores
+              you is worse than none. Two were hardcoded Dutch ("Actie
+              ondernemen", "Implementeer suggestie") shown to a German
+              contractor as well.
+              This screen's only in-app entry point is COODashboard, a portfolio
+              surface that ships to nobody (feedback_contractor_aannemer_only),
+              so they are removed rather than rebuilt. */}
         </View>
       </View>
     );
@@ -220,12 +224,6 @@ export function AIAssistant() {
           <Text style={styles.insightDescription}>{insight.description}</Text>
 
           <View style={styles.insightActions}>
-            {insight.actionLabel && (
-              <Pressable style={styles.insightActionButton}>
-                <Text style={styles.insightActionText}>{insight.actionLabel}</Text>
-                <Ionicons name="arrow-forward" size={14} color={Palette.blue500} />
-              </Pressable>
-            )}
             <Pressable
               style={styles.dismissButton}
               onPress={() => dismissInsight(insight.id, (insight as any).generatorId, 'ai-assistant')}
@@ -297,10 +295,6 @@ export function AIAssistant() {
         ))}
       </View>
 
-      <Pressable style={styles.implementButton}>
-        <Ionicons name="rocket-outline" size={18} color="#fff" />
-        <Text style={styles.implementButtonText}>Implementeer suggestie</Text>
-      </Pressable>
     </View>
   );
 

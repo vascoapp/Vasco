@@ -327,9 +327,10 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
         <Text style={styles.blockedTitle} numberOfLines={1}>{t('compliance.workBlocked', { count: blockedCount, defaultValue: '{{count}} types of work blocked' })}</Text>
         <Text style={styles.blockedSubtitle} numberOfLines={1}>{t('compliance.missingCertificates', 'Door ontbrekende certificaten')}</Text>
       </View>
-      <Pressable style={styles.blockedAction} accessibilityRole="button" accessibilityLabel={t('compliance.view', 'View blocked work')}>
-        <Text style={styles.blockedActionText} numberOfLines={1}>{t('compliance.view', 'Bekijk')}</Text>
-      </Pressable>
+      {/* The "Bekijk" chip had no onPress. Removed rather than wired: the
+          "Acties vereist" list it would show is rendered immediately below
+          this banner on the same screen, so there is nowhere to go. A banner
+          that states a fact beats a button that ignores you. */}
     </View>
   );
 }

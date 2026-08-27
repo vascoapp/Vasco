@@ -4902,7 +4902,7 @@
     "enabledMethods": "Aktivierte Zahlungsarten:",
     "openInvoice": "Rechnung öffnen",
     "title": "Zahlungen",
-    "subtitle": "iDEAL & Mollie",
+    "subtitle": "{{method}} & {{provider}}",
     "createPaymentLink": "Zahlungslink erstellen",
     "paidVia": "Bezahlt über",
     "paymentDate": "Datum",
@@ -4917,7 +4917,8 @@
     "invoiceCount_one": "{{count}} Rechnung",
     "invoiceCount_other": "{{count}} Rechnungen",
     "daysOverdue": "{{count}} T. überfällig",
-    "dueInDays": "Fällig in {{count}} T."
+    "dueInDays": "Fällig in {{count}} T.",
+    "providerTitle": "{{provider}} Zahlungen"
   },
   "leads": {
     "noHotLeads": "Aktuell keine heißen Leads"

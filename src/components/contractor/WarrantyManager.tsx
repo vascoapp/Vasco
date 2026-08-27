@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { formatCurrency, formatMoney, formatDateShortAuto } from '../../i18n/formatting';
@@ -246,6 +247,7 @@ const StatCard: React.FC<{
 
 export const WarrantyManager: React.FC = () => {
   const { t } = useTranslation();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const { warranties, loading } = useWarranties();
   const { claims } = useWarrantyClaims();
@@ -404,7 +406,9 @@ export const WarrantyManager: React.FC = () => {
           <View style={styles.tabContent}>
             <View style={styles.claimsHeader}>
               <Text style={styles.claimsTitle}>{t('warranty.claimsTitle', 'Warranty claims')}</Text>
-              <Pressable style={styles.newClaimButton}>
+              {/* Had no onPress. A claim is filed on the insurance screen,
+                  which records the dossier and hands off to the insurer. */}
+              <Pressable style={styles.newClaimButton} onPress={() => router.push('/contractor/insurance' as any)}>
                 <Ionicons name="add" size={18} color={Palette.white} />
                 <Text style={styles.newClaimButtonText}>{t('warranty.newClaim', 'New claim')}</Text>
               </Pressable>

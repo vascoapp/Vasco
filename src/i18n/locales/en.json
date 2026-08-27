@@ -4902,7 +4902,7 @@
     "enabledMethods": "Enabled payment methods:",
     "openInvoice": "Open invoice",
     "title": "Payments",
-    "subtitle": "iDEAL & Mollie",
+    "subtitle": "{{method}} & {{provider}}",
     "createPaymentLink": "Create payment link",
     "paidVia": "Paid via",
     "paymentDate": "Date",
@@ -4917,7 +4917,8 @@
     "invoiceCount_one": "{{count}} invoice",
     "invoiceCount_other": "{{count}} invoices",
     "daysOverdue": "{{count}}d overdue",
-    "dueInDays": "Due in {{count}}d"
+    "dueInDays": "Due in {{count}}d",
+    "providerTitle": "{{provider}} Payments"
   },
   "leads": {
     "noHotLeads": "No hot leads right now"

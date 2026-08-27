@@ -482,7 +482,10 @@ export function CashFlowDashboard() {
         </View>
 
         {/* Add Expense Button */}
-        <Pressable style={styles.addExpenseButton}>
+        {/* Had no onPress: a full-width "Add expense" button on the money
+            screen that did nothing. `/contractor/expenses` is the real
+            surface and it already exists. */}
+        <Pressable style={styles.addExpenseButton} onPress={() => router.push('/contractor/expenses' as any)}>
           <Ionicons name="add-circle-outline" size={24} color={Palette.hermesOrange} />
           <Text style={styles.addExpenseText}>{t('cashflow.addExpense', 'Add expense')}</Text>
         </Pressable>

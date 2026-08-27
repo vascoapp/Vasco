@@ -4902,7 +4902,7 @@
     "enabledMethods": "Metodi di pagamento attivi:",
     "openInvoice": "Apri fattura",
     "title": "Pagamenti",
-    "subtitle": "iDEAL & Mollie",
+    "subtitle": "{{method}} e {{provider}}",
     "createPaymentLink": "Crea link di pagamento",
     "paidVia": "Pagato con",
     "paymentDate": "Data",
@@ -4917,7 +4917,8 @@
     "invoiceCount_one": "{{count}} fattura",
     "invoiceCount_other": "{{count}} fatture",
     "daysOverdue": "{{count}} g di ritardo",
-    "dueInDays": "Scade tra {{count}} g"
+    "dueInDays": "Scade tra {{count}} g",
+    "providerTitle": "Pagamenti {{provider}}"
   },
   "leads": {
     "noHotLeads": "Nessun lead caldo al momento"

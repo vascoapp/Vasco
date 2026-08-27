@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
@@ -77,6 +78,7 @@ export function HandoverPackBuilder({
   onClose,
 }: HandoverPackBuilderProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<WizardStep>('photos');
   const [evidencePackId, setEvidencePackId] = useState<string | null>(null);
   const [handoverPackageId, setHandoverPackageId] = useState<string | null>(null);
@@ -429,7 +431,8 @@ export function HandoverPackBuilder({
           </View>
         ))}
 
-        <Pressable style={styles.addButton}>
+        {/* Had no onPress. Warranties live on their own screen. */}
+        <Pressable style={styles.addButton} onPress={() => router.push('/contractor/warranty' as any)}>
           <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
           <Text style={styles.addButtonText}>{t('handover.addWarranty')}</Text>
         </Pressable>
@@ -453,7 +456,8 @@ export function HandoverPackBuilder({
           </View>
         ))}
 
-        <Pressable style={styles.addButton}>
+        {/* Had no onPress. Certificates live on the Compliance tab. */}
+        <Pressable style={styles.addButton} onPress={() => router.push('/(contractor)/certificaten' as any)}>
           <Ionicons name="add-circle" size={20} color={SemanticColors.actionPrimary} />
           <Text style={styles.addButtonText}>{t('handover.addCertificate')}</Text>
         </Pressable>

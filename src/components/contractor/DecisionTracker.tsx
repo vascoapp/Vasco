@@ -39,6 +39,7 @@ import {
 } from '../../services/decisionCatalogI18n';
 import { useAuth } from '../../context/AuthContext';
 import { formatMoney, formatDayMonthAuto } from '../../i18n/formatting';
+import { showPhotoPicker } from '../../utils/photoPicker';
 
 const TRACKER_KEY = '@vasco_decision_trackers';
 function usePersistedTrackers(): CustomerDecisionTracker[] {
@@ -971,7 +972,18 @@ function DecisionItemCard({
           )}
 
           {item.inputType === 'photo' && (
-            <Pressable style={styles.photoBtn}>
+            /* Had NO onPress. Text and number items submit through
+               `handleSubmitValue`; a PHOTO item had a camera button that did
+               nothing, so a decision of that type could not be answered at
+               all. Same submit path — the photo's uri is the recorded value. */
+            <Pressable
+              style={styles.photoBtn}
+              onPress={() => showPhotoPicker((photo) => {
+                if (!photo?.uri) return;
+                onRecordDecision(photo.uri);
+                setIsExpanded(false);
+              })}
+            >
               <Ionicons name="camera" size={24} color={Palette.hermesOrange} />
               <Text style={styles.photoBtnText}>{t('dt.requestPhoto')}</Text>
             </Pressable>

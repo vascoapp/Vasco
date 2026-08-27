@@ -293,7 +293,11 @@ export default function GeldScreen() {
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.outstanding', 'Outstanding')}</DKLabel>
             <Text style={[s.kpiValue, { color: DK.colors.accent }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55}>{compactCurrency(outstandingTotal, kpiCountry)}</Text>
           </Pressable>
-          <Pressable style={s.kpiTile}>
+          {/* Both sibling tiles navigate; this one had NO onPress, so a tile
+              styled and sized exactly like a button did nothing when tapped.
+              Pipeline is open QUOTES, and the quotes list is the Offertes tab
+              of the same screen the siblings open. */}
+          <Pressable style={s.kpiTile} onPress={() => router.push('/(contractor)/facturen' as any)}>
             <DKLabel style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t('dk.pill.pipeline', 'Pipeline')}</DKLabel>
             <Text style={[s.kpiValue, { color: DK.colors.highlight }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55}>{compactCurrency(fin.quotePipeline, kpiCountry)}</Text>
           </Pressable>

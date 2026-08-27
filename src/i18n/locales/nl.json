@@ -4886,7 +4886,7 @@
     "enabledMethods": "Ingeschakelde betaalmethoden:",
     "openInvoice": "Factuur openen",
     "title": "Betalingen",
-    "subtitle": "iDEAL & Mollie",
+    "subtitle": "{{method}} & {{provider}}",
     "createPaymentLink": "Betaallink aanmaken",
     "paidVia": "Betaald via",
     "paymentDate": "Datum",
@@ -4901,7 +4901,8 @@
     "invoiceCount_one": "{{count}} factuur",
     "invoiceCount_other": "{{count}} facturen",
     "daysOverdue": "{{count}}d achterstallig",
-    "dueInDays": "Over {{count}}d"
+    "dueInDays": "Over {{count}}d",
+    "providerTitle": "{{provider}} Betalingen"
   },
   "leads": {
     "noHotLeads": "Op dit moment geen hot leads"

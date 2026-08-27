@@ -172,3 +172,12 @@ export function getPaymentDisplayForCountry(country?: Country): PaymentMethodDis
   if (country === 'US') return STRIPE_DISPLAY_US;
   return getMollieMethodsForCountry(country).display;
 }
+
+/**
+ * The payment PROVIDER for a country. Mollie serves the EUR markets, Stripe
+ * serves UK and US — the same split `getPaymentDisplayForCountry` already
+ * makes, named so a screen can say it out loud.
+ */
+export function getPaymentProviderForCountry(country?: string): 'Mollie' | 'Stripe' {
+  return country === 'UK' || country === 'US' ? 'Stripe' : 'Mollie';
+}

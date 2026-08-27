@@ -29,6 +29,7 @@ import { intelligence } from '../../intelligence/intelligenceEngine';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { getPaymentDisplayForCountry, getPaymentProviderForCountry } from '../../config/paymentMethods';
 import { formatCurrency, formatCurrency0, type Country, formatDateShortAuto } from '../../i18n/formatting';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
@@ -141,15 +142,21 @@ interface ConnectionStatusProps {
 
 const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ settings, paymentTermsDays }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  // Same fault as the header subtitle 400 lines below, which was fixed first:
+  // the provider was hardcoded. A UK or US contractor is on STRIPE, and this
+  // card told them "Mollie Payments" over an "M" badge — the provider they are
+  // not on, on the screen where they go to connect one.
+  const provider = getPaymentProviderForCountry(user?.country);
   return (
     <View style={styles.connectionCard}>
       <View style={styles.connectionHeader}>
         <View style={styles.connectionBrand}>
           <View style={[styles.mollieIcon, settings.isConnected && styles.mollieIconConnected]}>
-            <Text style={styles.mollieText}>M</Text>
+            <Text style={styles.mollieText}>{provider.charAt(0)}</Text>
           </View>
           <View>
-            <Text style={styles.connectionTitle}>Mollie Payments</Text>
+            <Text style={styles.connectionTitle}>{t('payments.providerTitle', '{{provider}} Payments', { provider })}</Text>
             <Text style={styles.connectionSubtitle}>
               {settings.isConnected
                 ? (settings.accountId
@@ -548,7 +555,20 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>{t('payments.title')}</Text>
-          <Text style={styles.subtitle}>{t('payments.subtitle')}</Text>
+          {/* Named from the CONTRACTOR'S country, not hardcoded. This said
+              "iDEAL & Mollie" in all six locales — iDEAL is Dutch and does not
+              exist in the UK or the US, and is not the local method in DE/FR/
+              ES/IT either. A UK account on Stripe was told its payment screen
+              was "iDEAL & Mollie". The identical fault was already fixed for
+              the METHOD LIST in R119 (see the comment on STRIPE_DISPLAY_US:
+              US contractors used to see "iDEAL / Bancontact"); the subtitle
+              two lines away kept it. Seen on a real UK account 2026-08-27. */}
+          <Text style={styles.subtitle}>
+            {t('payments.subtitle', {
+              method: getPaymentDisplayForCountry(country)[0]?.name ?? '',
+              provider: getPaymentProviderForCountry(country),
+            })}
+          </Text>
         </View>
         {onClose && (
           <Pressable onPress={onClose} style={styles.closeButton}>
