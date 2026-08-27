@@ -78,6 +78,21 @@ const ACCEPTED_UNSEEN = {
   // Nothing writes it — verified 2026-08-19, zero call sites in src/ or app/.
   // Projects link to jobs the other way, via `project.jobIds`. A `projectId` on
   // Job would be a field only a migration ever filled.
+  //
+  // ⚠️ 2026-08-27: that premise does not hold, and the exemption is kept only
+  // because reversing it is a 5-file job, not because the link is fine.
+  // `project.jobIds` has NO COLUMN either — `projects` in the live database is
+  // (actual_end_date, address, billing_terms, change_orders, created_at,
+  // customer_id, description, id, milestones, name, retention_percent,
+  // start_date, status, target_end_date, total_budget, total_invoiced,
+  // total_paid, total_quoted, updated_at, user_id) and
+  // `projectUpdatesToRowPayload` is an allowlist that never sends jobIds.
+  // So the job↔project link reaches the backend by NEITHER route: it lives in
+  // AsyncStorage on one device, and `getProjectPnL` derives a project's labour
+  // and material costs from `project.jobIds`. Reinstall, or sign in on a second
+  // device, and those jobs are simply not in the project any more.
+  // The fix is to use this column — it already exists — via the 5-file rule:
+  // JobRow, jobRowToJob, the job write mapper, and addJobToProject.
   jobs: new Set(['project_id']),
 };
 
