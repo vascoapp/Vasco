@@ -11,7 +11,7 @@ import {
   Image,
   Modal,
   ScrollView,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -21,8 +21,6 @@ import { SafeArea } from '../../theme/spacing';
 import { hapticSuccess } from '../../utils/haptics';
 import { formatDateAuto, formatDayMonthAuto } from '../../i18n/formatting';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const THUMB_SIZE = (SCREEN_WIDTH - GRID.md * 2 - GRID.sm * 2) / 3;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,6 +47,12 @@ type FilterMode = 'all' | 'before' | 'after';
 
 export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps) {
   const { t } = useTranslation();
+  // Live, not a module-level `Dimensions.get('window')` snapshot: that is read
+  // once at import and never again, so it survives rotation with the portrait
+  // width still in it — CLAUDE.md forbids the pattern for exactly that reason.
+  // The thumbnail grid and the lightbox both size off it.
+  const { width: screenWidth } = useWindowDimensions();
+  const thumbSize = (screenWidth - GRID.md * 2 - GRID.sm * 2) / 3;
   const [filter, setFilter] = useState<FilterMode>('all');
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null);
 
@@ -121,7 +125,7 @@ export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps
         {filteredPhotos.map((photo, idx) => (
           <Pressable
             key={`${photo.uri}-${idx}`}
-            style={({ pressed }) => [styles.gridItem, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [styles.gridItem, { width: thumbSize, height: thumbSize }, pressed && { opacity: 0.85 }]}
             onPress={() => {
               hapticSuccess();
               setSelectedPhoto(photo);
@@ -164,7 +168,7 @@ export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps
         {/* Add photo button */}
         {onAddPhoto && (
           <Pressable
-            style={styles.addPhotoBtn}
+            style={[styles.addPhotoBtn, { width: thumbSize, height: thumbSize }]}
             onPress={() => {
               hapticSuccess();
               onAddPhoto();
@@ -234,7 +238,7 @@ export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps
             >
               <Image
                 source={{ uri: selectedPhoto.uri }}
-                style={styles.fullImage}
+                style={[styles.fullImage, { width: screenWidth, height: screenWidth }]}
                 resizeMode="contain"
               />
             </ScrollView>
@@ -337,8 +341,6 @@ const styles = StyleSheet.create({
     gap: GRID.sm,
   },
   gridItem: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
     position: 'relative',
@@ -395,8 +397,6 @@ const styles = StyleSheet.create({
 
   // Add photo button
   addPhotoBtn: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
     borderRadius: RADIUS.md,
     borderWidth: 2,
     borderColor: Palette.hermesOrange + '30',
@@ -455,10 +455,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fullImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH,
-  },
+  // Sized inline from useWindowDimensions — see the note in the component.
+  fullImage: {},
   modalFooter: {
     position: 'absolute',
     bottom: SafeArea.top + GRID.lg,

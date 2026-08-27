@@ -16,7 +16,6 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -47,7 +46,6 @@ import { GRID, RADIUS, TYPE } from '../src/theme/tabStyles';
 import { TIERS, type SubscriptionTier } from '../src/services/subscriptionService';
 import { emitOnboardingCompleted } from '../src/intelligence/dataCollector';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const TOTAL_STEPS = 14;
 

@@ -6,14 +6,12 @@ import {
   Pressable,
   Modal,
   Animated,
-  Dimensions,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { SafeArea } from '../../theme/spacing';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
