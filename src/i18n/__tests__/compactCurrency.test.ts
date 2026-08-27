@@ -75,3 +75,38 @@ describe('currencySymbol', () => {
     }
   });
 });
+
+/**
+ * Hermes does not implement `Intl.NumberFormat.prototype.formatToParts`. Node
+ * does — which is why every test in this repo passes over a call that throws on
+ * every real device, and why this fault shipped TWICE in one day
+ * (compactCurrency, then currencySymbol twelve lines below it).
+ *
+ * Nothing may call it. Derive a symbol by formatting 0 and stripping digits.
+ */
+describe('formatToParts is never called', () => {
+  it('appears nowhere in src/ or app/ outside comments', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const ROOT = path.join(__dirname, '..', '..', '..');
+    const hits: string[] = [];
+    const walk = (dir: string) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (['node_modules', '__tests__', '.git'].includes(e.name)) continue;
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) { walk(full); continue; }
+        if (!/\.(ts|tsx)$/.test(e.name) || e.name.includes('.test.')) continue;
+        const src: string = fs.readFileSync(full, 'utf8');
+        src.split('\n').forEach((line: string, i: number) => {
+          if (!line.includes('formatToParts')) return;
+          const t = line.trim();
+          // A comment warning about it is the point, not a violation.
+          if (t.startsWith('*') || t.startsWith('//') || t.startsWith('/*')) return;
+          hits.push(`${path.relative(ROOT, full)}:${i + 1}`);
+        });
+      }
+    };
+    for (const d of ['src', 'app']) walk(path.join(ROOT, d));
+    expect(hits).toEqual([]);
+  });
+});
