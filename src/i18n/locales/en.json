@@ -4555,7 +4555,8 @@
     "creating": "Creating…",
     "generatePdf": "Generate PDF",
     "markSent": "Mark sent",
-    "createFailed": "Could not create invoice. Please try again."
+    "createFailed": "Could not create invoice. Please try again.",
+    "inclVat": "incl. VAT"
   },
   "whatsapp": {
     "invoiceReminder": "Hi {{name}},\n\nThis is a friendly reminder about invoice {{ref}} for {{amount}}{{overdue}}.\n\nCould you arrange payment at your earliest convenience?\n\nThank you,\nSent via Vasco",

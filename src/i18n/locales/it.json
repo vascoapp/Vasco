@@ -4555,7 +4555,8 @@
     "creating": "Creazione…",
     "generatePdf": "Genera PDF",
     "markSent": "Segna come inviata",
-    "createFailed": "Impossibile creare la fattura. Riprova."
+    "createFailed": "Impossibile creare la fattura. Riprova.",
+    "inclVat": "IVA incl."
   },
   "whatsapp": {
     "invoiceReminder": "Ciao {{name}},\n\nQuesto è un promemoria cordiale sulla fattura {{ref}} di {{amount}}{{overdue}}.\n\nPotresti organizzare il pagamento al più presto?\n\nGrazie,\nInviato tramite Vasco",

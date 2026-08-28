@@ -4599,7 +4599,8 @@
     "creating": "Aanmaken…",
     "generatePdf": "PDF genereren",
     "markSent": "Markeer als verzonden",
-    "createFailed": "Kan factuur niet aanmaken. Probeer opnieuw."
+    "createFailed": "Kan factuur niet aanmaken. Probeer opnieuw.",
+    "inclVat": "incl. btw"
   },
   "whatsapp": {
     "invoiceReminder": "Hallo {{name}},\n\nEen vriendelijke herinnering aan factuur {{ref}} voor {{amount}}{{overdue}}.\n\nKunt u de betaling op korte termijn regelen?\n\nDank u,\nVerzonden via Vasco",

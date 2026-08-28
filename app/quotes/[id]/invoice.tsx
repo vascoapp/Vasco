@@ -163,10 +163,28 @@ export default function InvoiceFromQuoteScreen() {
         {invoiceId && (
           <View style={[styles.card, { borderColor: SemanticColors.actionPrimary }]}>
             <Text style={[Typography.subtitle, { color: SemanticColors.actionPrimary }]}>{t('quoteToInvoice.invoiceCreated')}</Text>
+            {/* The INVOICE's amount, not the quote's. This showed
+                `quote.amount` next to the invoice's own reference, under copy
+                promising the two "match to avoid payment disputes" — and they
+                do not match in the way a reader assumes: `Quote.amount` is NET
+                and `Invoice.amount` is GROSS, because `addInvoiceFromQuote`
+                grosses it up with `grossFromNet` (the comment there records
+                what conflating the two cost last time). So a €6.800 quote
+                created a €8.092 invoice and this card announced
+                "Rechnung #I-OFF-DC0671 € 6.800,00". Read the created invoice
+                back and show what it actually says. */}
             <View style={styles.row}>
               <Text style={Typography.body}>{t('quoteToInvoice.invoiceRef', { id: invoiceId })}</Text>
               <Text style={Typography.body}>
-                {formatCurrency(quote.amount, country)}
+                {formatCurrency(
+                  invoices.find((i) => i.id === invoiceId)?.amount ?? quote.amount,
+                  country,
+                )}
+                {/* Labelled, because the quote's Betrag sits directly above
+                    this and the two differ by exactly the VAT. Without it the
+                    screen shows two numbers for one job and calls them a
+                    match. */}
+                <Text style={Typography.muted}> {t('quoteToInvoice.inclVat', 'incl. VAT')}</Text>
               </Text>
             </View>
             <Text style={Typography.muted}>
@@ -217,6 +235,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    // A long auto-minted id ("I-OFF-FBFB1D") ran straight into the amount:
+    // "#I-OFF-FBFB1D€ 22.015,00". space-between gives no gap once the two
+    // sides meet.
+    gap: Spacing.sm,
     borderTopWidth: 1,
     borderTopColor: SemanticColors.borderDefault,
     paddingVertical: Spacing.xs,

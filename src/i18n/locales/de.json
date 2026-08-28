@@ -4555,7 +4555,8 @@
     "creating": "Erstellen…",
     "generatePdf": "PDF erstellen",
     "markSent": "Als gesendet markieren",
-    "createFailed": "Rechnung konnte nicht erstellt werden. Bitte erneut versuchen."
+    "createFailed": "Rechnung konnte nicht erstellt werden. Bitte erneut versuchen.",
+    "inclVat": "inkl. USt."
   },
   "whatsapp": {
     "invoiceReminder": "Hallo {{name}},\n\nDies ist eine freundliche Erinnerung an Rechnung {{ref}} über {{amount}}{{overdue}}.\n\nKönnten Sie die Zahlung zeitnah veranlassen?\n\nVielen Dank,\nGesendet über Vasco",
