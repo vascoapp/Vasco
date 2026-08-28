@@ -86,7 +86,29 @@ export default function QuoteDetailScreen() {
   const customerRecord = findDocumentCustomer(customers as { id: string; name: string }[], quote);
   const customerDisplayName = customerRecord?.name ?? quote.customer;
 
-  const subtotal = quoteLineItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+  // A quote with no STORED lines still has an amount, and the screen used to
+  // total only the lines — so a €6.800 quote rendered "GESAMT € 0,00" with a
+  // €0,00 subtotal and €0,00 VAT, while `shareQuoteWithAcceptanceLink` and the
+  // PDF below both send `quote.amount`. The contractor read zero on screen and
+  // the customer received an acceptance link for the real figure.
+  //
+  // `app/invoices/[id].tsx` already synthesises a line for exactly this case —
+  // but it divides by (1 + rate), because `Invoice.amount` is GROSS (#232).
+  // `Quote.amount` is NET: the quote→invoice path grosses it up with
+  // `grossFromNet(sourceQuote.amount, …)`. So the synthesised line here takes
+  // the amount AS IS. Copying the invoice screen's division would quietly
+  // under-quote by the VAT.
+  const displayLineItems = quoteLineItems.length > 0
+    ? quoteLineItems
+    : quote.amount > 0
+      ? [{
+          id: 'quote-amount',
+          description: quote.job || t('quotes.services', 'Services'),
+          quantity: 1,
+          unitPrice: quote.amount,
+        }]
+      : [];
+  const subtotal = displayLineItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const vatRate = getVATRate(country);
   // Round to CENTS, not to whole euros. `sharePdf` below already does
   // `Math.round(sub * vrate * 100) / 100`, so the screen and the PDF the
@@ -402,7 +424,7 @@ export default function QuoteDetailScreen() {
               Dutch quote rendered "Onderhoudscerti / ficaat" and the header
               itself split "AANTA / L". A quote is a document the CUSTOMER is
               asked to accept; a line whose description is cut is not one. */}
-          {quoteLineItems.map((item) => (
+          {displayLineItems.map((item) => (
             <View key={item.id} style={styles.lineItemStack}>
               <Text style={styles.lineText} numberOfLines={3}>{item.description}</Text>
               <View style={styles.lineNumbers}>
