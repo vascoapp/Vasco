@@ -17,6 +17,7 @@ import { generateFacturaeXml } from '../einvoice-es';
 import { getVATRate } from '../../constants/taxRates';
 import { getReducedVatRate, getStandardVatRate, grossFromNet } from '../../domain/business';
 import { getRequiredFields } from '../../utils/businessProfileValidation';
+import { documentVatBreakdown } from '../../domain/business';
 
 // A realistic Italian invoice, built the way the app builds one: the VAT number
 // carries its country prefix, because `isValidVATNumber` requires `IT\d{11}`
@@ -163,5 +164,38 @@ describe('the three markets\' invoice readiness gate', () => {
     expect(keysFor('ES')).toEqual(expect.arrayContaining([
       'profile.businessName', 'profile.address', 'profile.vatNumberNif',
     ]));
+  });
+});
+
+describe('a reduced-rate invoice is FILED at the reduced rate', () => {
+  // The invoice screen stamped `effectiveRate * 100` — the country standard —
+  // onto every line it handed the e-invoice generators, and dropped the stored
+  // per-line rate on hydration. So an Italian ristrutturazione billed at 10%
+  // went to SDI as 22%. SDI accepts that: it is a well-formed invoice stating a
+  // rate the contractor did not charge, which is the expensive kind of wrong.
+  const reduced: EInvoiceSource = {
+    ...IT_SRC,
+    invoiceNumber: 'F-2026-0009',
+    lines: [{ description: 'Ristrutturazione bagno', quantity: 1, unitPrice: 1000, lineTotal: 1000, vatRate: 10, unit: 'pz' }],
+    totalNet: 1000, totalVat: 100, totalGross: 1100,
+  };
+
+  it('AliquotaIVA on the line and in the summary is 10, not 22', () => {
+    const mapped = toFatturaPA(reduced);
+    if (!mapped.ok) throw new Error('should map: ' + JSON.stringify(mapped.missing));
+    const xml = generateFatturaPAXml(mapped.document);
+    expect(xml).toContain('<AliquotaIVA>10.00</AliquotaIVA>');
+    expect(xml).not.toContain('<AliquotaIVA>22.00</AliquotaIVA>');
+    const imposta = Number(xml.match(/<Imposta>([^<]*)</)![1]);
+    expect(imposta).toBeCloseTo(100, 2);   // 10% of 1000, not 220
+  });
+
+  it('the app\'s own rule agrees with what is filed', () => {
+    // The screen, the invoice total and the XML must all say the same thing —
+    // five surfaces used to answer this question independently.
+    const b = documentVatBreakdown(1000, [{ quantity: 1, unitPrice: 1000, vatRate: 10 }], 22);
+    expect(b.ratePct).toBe(10);
+    expect(b.vat).toBeCloseTo(100, 2);
+    expect(b.gross).toBeCloseTo(1100, 2);
   });
 });

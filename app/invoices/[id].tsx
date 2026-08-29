@@ -37,7 +37,7 @@ import { Share as RNShare } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
-import { getEffectiveVatRate } from '../../src/domain/business';
+import { getEffectiveVatRate, documentVatBreakdown } from '../../src/domain/business';
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
@@ -51,6 +51,13 @@ interface EditableLineItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  /**
+   * The rate THIS line was agreed at. Dropped on hydration until 2026-08-29,
+   * so a reduced-rate invoice was re-totalled — and exported — at the
+   * country's standard rate. `addInvoice` copies the quote's rates onto the
+   * invoice's line items, so the value is there; this screen threw it away.
+   */
+  vatRate?: number;
 }
 
 const VAT_RATE = 0.21;
@@ -161,6 +168,7 @@ export default function InvoiceDetailScreen() {
           description: li.description,
           quantity: li.quantity,
           unitPrice: li.unitPrice,
+          vatRate: li.vatRate,
         })));
       } else {
         // Synthesize a single line item from total. Same NL-constant bug as
@@ -196,8 +204,18 @@ export default function InvoiceDetailScreen() {
 
   // Calculations
   const subtotal = localItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const vatAmount = subtotal * effectiveRate;
-  const total = subtotal + vatAmount;
+  // The invoice's OWN agreed rates outrank the country standard — the fifth
+  // and last surface that decided this independently (screen, PDF, invoice
+  // creation, customer acceptance page were the other four). An Italian
+  // ristrutturazione billed at 10% was being re-totalled here at 22%.
+  const vatBreakdown = documentVatBreakdown(
+    subtotal, localItems, Math.round(effectiveRate * 100),
+  );
+  const vatAmount = vatBreakdown.vat;
+  const total = vatBreakdown.gross;
+  // null on a genuinely mixed-rate invoice: the label omits the percentage
+  // rather than printing a blended average that appears on no tax return.
+  const vatRatePct = vatBreakdown.ratePct;
 
   // R66 round 13: handleSaveCustomer removed. The flow wrote the
   // customer's display NAME into the documents.customer_id UUID FK
@@ -231,7 +249,12 @@ export default function InvoiceDetailScreen() {
     // KOR contractor who may not charge VAT at all. `effectiveRate` is the
     // profile's own rate and is what the totals above the button already show,
     // so the saved amount disagreed with the figure on screen.
-    const finalTotal = newTotal * (1 + effectiveRate);
+    // ...and the lines' OWN rates outrank even that, for the same reason: the
+    // totals above this button now use them, so re-grossing at the profile
+    // rate would save a figure the screen never showed.
+    const finalTotal = documentVatBreakdown(
+      newTotal, localItems, Math.round(effectiveRate * 100),
+    ).gross;
     updateInvoice(invoice.id, { amount: Math.round(finalTotal * 100) / 100 });
     setEditingItems(false);
     hapticSuccess();
@@ -606,7 +629,10 @@ export default function InvoiceDetailScreen() {
       }
     } catch {}
     const currency = country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR';
-    const vatAmount = subtotal * effectiveRate;
+    // Per-line rates again — this is the copy that reaches a TAX AUTHORITY.
+    // `effectiveRate * 100` stamped the country standard onto every line, so a
+    // reduced-rate invoice would have been FILED at the standard rate.
+    const vatAmount = vatBreakdown.vat;
     const data: EInvoiceData = {
       sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
       sellerAddress: (businessProfile as any)?.address ?? '',
@@ -646,8 +672,8 @@ export default function InvoiceDetailScreen() {
         quantity: li.quantity,
         unitCode: 'piece',
         unitPrice: li.unitPrice,
-        vatRate: effectiveRate * 100,
-        vatAmount: li.quantity * li.unitPrice * effectiveRate,
+        vatRate: li.vatRate ?? effectiveRate * 100,
+        vatAmount: li.quantity * li.unitPrice * ((li.vatRate ?? effectiveRate * 100) / 100),
         lineTotal: li.quantity * li.unitPrice,
       })),
       totalNet: subtotal,
@@ -707,16 +733,18 @@ export default function InvoiceDetailScreen() {
     invoiceDate: (invoice?.sentAt ?? invoice?.createdAt ?? invoice?.deliveryDate ?? new Date().toISOString()).slice(0, 10),
     dueDate: (invoice?.dueDate ?? new Date(Date.now() + ((invoice?.dueInDays ?? 14) * 24 * 60 * 60 * 1000)).toISOString()).slice(0, 10),
     currency: country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR',
+    // Each line keeps ITS agreed rate. This feeds FatturaPA and Facturae — a
+    // wrong AliquotaIVA here is a wrong rate filed with SDI, which accepts it.
     lines: localItems.map((li: EditableLineItem) => ({
       description: li.description,
       quantity: li.quantity,
       unitPrice: li.unitPrice,
       lineTotal: li.quantity * li.unitPrice,
-      vatRate: effectiveRate * 100,
+      vatRate: li.vatRate ?? effectiveRate * 100,
     })),
     totalNet: subtotal,
-    totalVat: subtotal * effectiveRate,
-    totalGross: total,
+    totalVat: vatBreakdown.vat,
+    totalGross: vatBreakdown.gross,
   });
 
   /**
@@ -1091,7 +1119,7 @@ export default function InvoiceDetailScreen() {
                 labelled as 21%, and a Kleinunternehmer's 0 was labelled 21%
                 too. Read the same rate the arithmetic uses. */}
             <Text style={styles.totalLabel}>
-              {t('invoices.vat', 'VAT')} ({Math.round(effectiveRate * 1000) / 10}%)
+              {t('invoices.vat', 'VAT')}{vatRatePct !== null ? ` (${vatRatePct}%)` : ''}
             </Text>
             <Text style={styles.totalValue}>{formatCurrency(vatAmount, country)}</Text>
           </View>
