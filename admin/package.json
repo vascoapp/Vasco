@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "check:validator": "tsx scripts/check-validator.ts"
+    "check:validator": "tsx scripts/check-validator.ts",
+    "check:portalCatalog": "npx --yes tsx scripts/check-portal-catalog.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",
