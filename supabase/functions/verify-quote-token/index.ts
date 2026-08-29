@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
 
     const { data: lines } = await admin
       .from('line_items')
-      .select('description, quantity, unit_price, total_price, position')
+      .select('description, quantity, unit_price, total_price, position, vat_rate')
       .eq('document_id', quoteId)
       .order('position', { ascending: true });
 
@@ -178,10 +178,49 @@ Deno.serve(async (req) => {
     const VAT_RATES: Record<string, number> = {
       NL: 0.21, DE: 0.19, FR: 0.20, ES: 0.21, IT: 0.22, UK: 0.20,
     };
-    const vatRate = VAT_RATES[profile?.country ?? ''] ?? 0.21;
+    const standardRate = VAT_RATES[profile?.country ?? ''] ?? 0.21;
     const netTotal = Number(quote.total_amount) || 0;
-    const vatAmount = Math.round(netTotal * vatRate * 100) / 100;
+
+    // The quote's OWN agreed rates outrank the country standard — mirrors
+    // `grossFromDocumentLines` in src/domain/business.ts, which the app uses on
+    // the same quote when it turns into an invoice. Without this the customer's
+    // page would show 20% TVA on a renovation quoted at the 10% reduced rate,
+    // and then be invoiced 10%: the page and the invoice disagreeing again, one
+    // step further out than the bug this whole block was added to fix.
+    // Kept in step by hand — an edge function cannot import from `src/`.
+    const rated = (lines ?? []).filter(
+      (l: { vat_rate?: number | null }) => l.vat_rate !== null && l.vat_rate !== undefined && Number.isFinite(Number(l.vat_rate)),
+    );
+    const lineNet = rated.reduce(
+      (sum: number, l: { quantity?: number | null; unit_price?: number | null }) =>
+        sum + (Number(l.quantity) || 0) * (Number(l.unit_price) || 0), 0);
+    let vatAmount: number;
+    if (rated.length > 0 && rated.length === (lines ?? []).length && Math.abs(lineNet - netTotal) <= 0.01) {
+      // Every line rated and reconciling — sum them, so a MIXED-rate quote
+      // (labour at one rate, materials at another) is exact rather than blended.
+      vatAmount = Math.round(rated.reduce(
+        (sum: number, l: { quantity?: number | null; unit_price?: number | null; vat_rate?: number | null }) =>
+          sum + (Number(l.quantity) || 0) * (Number(l.unit_price) || 0) * (Number(l.vat_rate) / 100), 0) * 100) / 100;
+    } else {
+      const rates = Array.from(new Set(rated.map((l: { vat_rate?: number | null }) => Number(l.vat_rate))));
+      const rate = rated.length > 0 && rated.length === (lines ?? []).length && rates.length === 1
+        ? rates[0] / 100
+        : standardRate;
+      vatAmount = Math.round(netTotal * rate * 100) / 100;
+    }
     const grossTotal = Math.round((netTotal + vatAmount) * 100) / 100;
+    // The rate is for the LABEL only ("USt. (19%)"). A mixed-rate quote has no
+    // single rate, so it is reported as null and the page omits the percentage
+    // rather than printing an averaged one — "TVA (13,8%)" is a number that
+    // appears on no invoice and in no tax table.
+    const allRates = Array.from(new Set(
+      (lines ?? []).map((l: { vat_rate?: number | null }) => Number(l.vat_rate)),
+    ));
+    const hasSingleRate = rated.length > 0
+      && rated.length === (lines ?? []).length
+      && allRates.length === 1
+      && Number.isFinite(allRates[0]);
+    const vatRate = hasSingleRate ? allRates[0] / 100 : (rated.length === 0 ? standardRate : null);
 
     // ── An acceptance capability for the customer holding this link ──────
     //

@@ -53,6 +53,18 @@ describe('the customer is shown the gross total', () => {
     expect(fn).toMatch(/vatAmount/);
   });
 
+  it('the edge function follows the QUOTE\'s rates, not just the country default', () => {
+    // Same rule as `grossFromDocumentLines` in the app: a renovation quoted at
+    // the reduced rate must not be shown to the customer grossed at the
+    // standard one, or the page and the invoice disagree again — one step
+    // further out than the bug this file was written for.
+    const fn = read('supabase/functions/verify-quote-token/index.ts');
+    expect(fn).toMatch(/vat_rate/);                 // it must ASK for the rates
+    expect(fn).toMatch(/standardRate/);             // the country rate is the fallback, not the answer
+    // A mixed-rate quote reports no single rate rather than an averaged one.
+    expect(fn).toMatch(/hasSingleRate/);
+  });
+
   it('the edge function VAT table matches the app VAT table', () => {
     // The edge function cannot import from `src/`, so the rates are duplicated.
     // A silent drift here would mis-state the total in exactly one market.
