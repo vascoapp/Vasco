@@ -1840,7 +1840,7 @@
     "winChance": "Probabilidad de ganar:",
     "recommended": "RECOMENDADO",
     "inclVat": "IVA incl.",
-    "reducedVatTitle": "Tipo reducido IVA 9%",
+    "reducedVatTitle": "Tipo reducido IVA {{rate}}%",
     "reducedVatSubtitle": "Reforma/mantenimiento en viviendas >2 años",
     "reducedVatToggle": "Usar tipo reducido para mano de obra de reforma",
     "sendQuote": "Enviar presupuesto",

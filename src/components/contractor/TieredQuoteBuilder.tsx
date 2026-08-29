@@ -1767,16 +1767,24 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           })()}
         </View>
 
-        {/* R66r59: NL reduced VAT (9%) toggle. Visible only when the country
-            has a reduced rate (currently NL only). Affects all three tier
-            totals. Belastingdienst note shown when active. */}
+        {/* R66r59: reduced-VAT opt-in. Visible only when the contractor's
+            country HAS a construction-relevant reduced rate — NL 9%, and
+            FR/IT/ES 10% since `getReducedVatRate` was corrected. Affects all
+            three tier totals.
+            The rate is interpolated, never written into the copy: every one of
+            the six translations used to say "9%" because the control shipped
+            NL-only, so the moment a second country qualified, a French artisan
+            applying 10% would have read "TVA réduite 9 %". */}
         {reducedRate !== null && !isSmallBusinessExempt(bp) && (
           <Pressable
             style={[s.vatToggleRow, useReducedVat && s.vatToggleRowActive]}
             onPress={() => { setUseReducedVat(!useReducedVat); hapticSuccess(); }}
             accessibilityRole="switch"
             accessibilityState={{ checked: useReducedVat }}
-            accessibilityLabel={t('quotes.reducedVatToggle', 'Use 9% reduced VAT for renovation labor on homes >2 years old')}
+            accessibilityLabel={t('quotes.reducedVatToggle', {
+              defaultValue: 'Use the {{rate}}% reduced rate for renovation labor on homes over 2 years old',
+              rate: reducedRate,
+            })}
           >
             <View style={s.vatToggleIcon}>
               <Ionicons
@@ -1787,10 +1795,10 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             </View>
             <View style={{ flex: 1 }}>
               <Text style={s.vatToggleTitle}>
-                {t('quotes.reducedVatTitle', '9% verlaagd BTW-tarief')}
+                {t('quotes.reducedVatTitle', { defaultValue: '{{rate}}% reduced VAT rate', rate: reducedRate })}
               </Text>
               <Text style={s.vatToggleSubtitle}>
-                {t('quotes.reducedVatSubtitle', 'Verbouwing/onderhoud aan woning ouder dan 2 jaar')}
+                {t('quotes.reducedVatSubtitle', 'Renovation/maintenance on homes older than 2 years')}
               </Text>
             </View>
           </Pressable>

@@ -1840,7 +1840,7 @@
     "winChance": "Probabilità di successo:",
     "recommended": "CONSIGLIATO",
     "inclVat": "IVA inclusa",
-    "reducedVatTitle": "Aliquota IVA ridotta 9%",
+    "reducedVatTitle": "Aliquota IVA ridotta {{rate}}%",
     "reducedVatSubtitle": "Ristrutturazione/manutenzione su abitazioni >2 anni",
     "reducedVatToggle": "Usa aliquota ridotta per lavori di ristrutturazione",
     "sendQuote": "Invia preventivo",

@@ -1840,7 +1840,7 @@
     "winChance": "Gewinnchance:",
     "recommended": "EMPFOHLEN",
     "inclVat": "inkl. MwSt.",
-    "reducedVatTitle": "9% ermäßigter MwSt-Satz",
+    "reducedVatTitle": "{{rate}}% ermäßigter MwSt-Satz",
     "reducedVatSubtitle": "Renovierung/Wartung an Wohnungen älter als 2 Jahre",
     "reducedVatToggle": "Ermäßigter MwSt-Satz für Renovierungsarbeit verwenden",
     "sendQuote": "Angebot senden",

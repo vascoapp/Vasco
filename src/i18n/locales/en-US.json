@@ -129,8 +129,8 @@
     "reviewQuote": "Review estimate",
     "checkQuote": "Check estimate",
     "inclVat": "incl. Sales tax",
-    "reducedVatTitle": "9% reduced Sales tax rate",
-    "reducedVatToggle": "Use 9% reduced Sales tax for renovation labor on homes >2 years old",
+    "reducedVatTitle": "{{rate}}% reduced Sales tax rate",
+    "reducedVatToggle": "Use the {{rate}}% reduced rate for renovation labor on homes over 2 years old",
     "sendQuote": "Send estimate",
     "shareFailedTitle": "Could not share estimate",
     "aiQuoteUpgradeRequired": "AI photo-to-estimate is part of the paid plan.",
@@ -148,7 +148,8 @@
     "acceptQuote": "Accept estimate",
     "acceptQuoteDesc": "Accept estimate and create job for {{total}}?",
     "jobCreatedDesc": "The estimate has been accepted and a job has been created.",
-    "conversionFailed": "Could not convert estimate to job."
+    "conversionFailed": "Could not convert estimate to job.",
+    "reducedVatSubtitle": "Renovation/maintenance on homes older than 2 years"
   },
   "activation": {
     "firstQuote": "Send your first estimate"

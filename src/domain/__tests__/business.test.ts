@@ -57,11 +57,20 @@ describe('getReducedVatRate', () => {
   it('returns 9 for NL (renovation labor on homes >2 years old)', () => {
     expect(getReducedVatRate('NL')).toBe(9);
   });
-  it('returns null for DE/FR/ES/IT/UK — no relevant reduced bracket for trade labor', () => {
+  it('returns 10 for FR/IT/ES — construction labor DOES have a reduced bracket there', () => {
+    // These three returned null until 2026-08-29, on the stated grounds that
+    // their reduced rates covered "food/books/energy/transport — not
+    // construction labor". That was wrong, and the toggle in the quote builder
+    // renders only when this is non-null, so a French artisan had no way to
+    // quote a renovation at anything but 20%.
+    expect(getReducedVatRate('FR')).toBe(10); // CGI art. 279-0 bis
+    expect(getReducedVatRate('IT')).toBe(10); // DPR 633/1972 Tab. A III 127-quaterdecies
+    expect(getReducedVatRate('ES')).toBe(10); // Ley 37/1992 art. 91.Uno.2.10º
+  });
+  it('returns null for DE and UK — no general reduced bracket for trade labor', () => {
+    // DE 7% is food/books/transport. UK 5% exists but only for specific
+    // conversions and long-empty dwellings, which needs its own product case.
     expect(getReducedVatRate('DE')).toBeNull();
-    expect(getReducedVatRate('FR')).toBeNull();
-    expect(getReducedVatRate('ES')).toBeNull();
-    expect(getReducedVatRate('IT')).toBeNull();
     expect(getReducedVatRate('UK')).toBeNull();
   });
   it('returns null for undefined country', () => {

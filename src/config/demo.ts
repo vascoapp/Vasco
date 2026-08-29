@@ -40,6 +40,20 @@ export const DEMO_ACCOUNTS: DemoAccount[] = DEMO_MODE
       // be opened or screenshotted. Use to QA de copy, EUR/de-DE formatting,
       // XRechnung/ZUGFeRD and the DE-only GoBD surfaces.
       { email: 'handwerker@vasco.de.dev', role: 'contractor', name: 'Thomas Bergmann (DE)', icon: 'flag-outline' },
+      // FR/ES/IT. These three accounts have existed in `DEMO_USERS` and in the
+      // `npm run walk` postures for a long time, but they were never in THIS
+      // list — and this list is what the login chips render AND what the
+      // `vasco:///login?demo=` deep link checks before it will sign anyone in.
+      // The consequence was that France, Spain and Italy could not be opened on
+      // a device by any route: no chip, no deep link. Every statement about
+      // those markets rested on the headless walk, which cannot see layout,
+      // never presses a button, and runs on Node's full ICU — the exact blind
+      // spot that hid `formatToParts` twice. It is also why the reduced-VAT
+      // control being gated off for FR/IT went unnoticed: the suites are green
+      // because they assert what renders, and the control did not render.
+      { email: 'plombier@vasco.fr.dev', role: 'contractor', name: 'Julien Moreau (FR)', icon: 'flag-outline' },
+      { email: 'fontanero@vasco.es.dev', role: 'contractor', name: 'Carlos Serrano (ES)', icon: 'flag-outline' },
+      { email: 'idraulico@vasco.it.dev', role: 'contractor', name: 'Marco Ferrari (IT)', icon: 'flag-outline' },
     ]
   : [];
 

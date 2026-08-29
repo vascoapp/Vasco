@@ -1840,7 +1840,7 @@
     "winChance": "Chances de succès :",
     "recommended": "RECOMMANDÉ",
     "inclVat": "TTC",
-    "reducedVatTitle": "TVA réduite 9%",
+    "reducedVatTitle": "TVA réduite {{rate}} %",
     "reducedVatSubtitle": "Rénovation/entretien sur logements >2 ans",
     "reducedVatToggle": "Utiliser le taux réduit pour la main-d'œuvre de rénovation",
     "sendQuote": "Envoyer le devis",

@@ -128,11 +128,50 @@ export function getEffectiveVatRate(profile: { country?: BusinessProfile['countr
 //   reconciliation. Source: belastingdienst.nl/wps/wcm/connect/bldcontentnl/
 //   belastingdienst/zakelijk/btw/tarieven_en_vrijstellingen/
 //   diensten_9_btw/diensten_aan_woningen_ouder_dan_2_jaar.
-// Other EU6: reduced rates exist (DE 7%, FR 5.5%/10%, ES 10%, IT 10%,
-//   UK 5%) but apply to food/books/energy/transport — not construction
-//   labor — so we return null for those until a real product case lands.
+// FR 10% — travaux d'amélioration, de transformation, d'aménagement et
+//   d'entretien on dwellings completed more than 2 years ago (CGI art.
+//   279-0 bis). This IS construction labour and it is the ordinary rate a
+//   French artisan charges on residential renovation. `einvoice-fr.ts` has
+//   said so in this repo the whole time: `INTERMEDIAIRE: 10, // Taux
+//   intermédiaire (rénovation logement > 2 ans)`.
+//   NOT covered here: the 5.5% taux réduit for energy-renovation work (CGI
+//   art. 278-0 bis A). One function returning one number cannot express two
+//   brackets; a French contractor doing energy work still has to correct the
+//   rate by hand. Widening the return type is the follow-up.
+// IT 10% — manutenzione ordinaria e straordinaria on residential buildings
+//   (DPR 633/1972, Tabella A parte III n. 127-quaterdecies). Again
+//   construction, and again already written down next door in
+//   `einvoice-it.ts`: `RIDOTTA_10: 10, // Aliquota ridotta (ristrutturazione
+//   edilizia)`. The 4% prima casa bracket is narrower and is not modelled.
+// ES 10% — obras de renovación y reparación on dwellings (Ley 37/1992 art.
+//   91.Uno.2.10º), subject to conditions the contractor asserts: the client
+//   is not acting as a business, the building is over 2 years old, and
+//   supplied materials do not exceed 40% of the taxable base.
+//
+// The previous version of this function returned null for all five non-NL
+// markets, on the stated grounds that their reduced rates "apply to
+// food/books/energy/transport — not construction labor". For FR, IT and ES
+// that premise was simply wrong, and two files in this same repo contradicted
+// it. The consequence was not cosmetic: the opt-in toggle in
+// `TieredQuoteBuilder` renders only when this returns non-null, so a French
+// artisan quoting a bathroom refit had no way to reach 10% and was billed out
+// at 20% — roughly 9% too expensive, or the same amount out of his own margin
+// at the year-end reconciliation. In Italy the gap was 22% vs 10%.
+//
+// Still null, deliberately:
+// DE 7% — covers food, books, transport, cultural admission. German
+//   construction labour has no reduced bracket; 19% is correct.
+// UK 5% — exists for residential conversions and for dwellings empty at
+//   least 2 years (VAT Notice 708), but it is conditional and much narrower
+//   than a general renovation rate, so it needs its own product case rather
+//   than a shared "renovation" toggle.
+//
+// This stays an explicit opt-in per quote: the contractor asserts the work
+// qualifies, exactly as the NL 9% has always worked. Nothing applies a
+// reduced rate on its own.
 export function getReducedVatRate(country: BusinessProfile['country']): number | null {
   if (country === 'NL') return 9;
+  if (country === 'FR' || country === 'IT' || country === 'ES') return 10;
   return null;
 }
 
