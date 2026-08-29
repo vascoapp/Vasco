@@ -152,6 +152,56 @@ function getLabels(lang?: string): DocLabels {
   return LABELS[lang || 'en'] || LABELS.en;
 }
 
+/**
+ * Statutory mentions a country requires ON THE INVOICE ITSELF.
+ *
+ * Deliberately NOT translated, and deliberately not in the `LABELS` table.
+ * These are not UI copy — they are fixed legal formulae belonging to one
+ * jurisdiction, and they cite the article they come from. A French invoice
+ * carries its mentions in French whatever language the contractor runs the app
+ * in; translating them would produce a sentence that satisfies no law.
+ *
+ * Rendered UNCONDITIONALLY for the country, rather than only when the customer
+ * is a business, because the two errors are not symmetrical:
+ *
+ *   · France — L441-9 mentions are required between professionals. Printing
+ *     them on a consumer invoice is harmless; omitting them on a B2B one is
+ *     punishable under L441-16 (up to €75,000 for a natural person, €2m for a
+ *     company).
+ *   · Germany — §14 Abs. 4 Nr. 9 UStG requires the recipient's two-year
+ *     retention notice on work connected to a property supplied to a private
+ *     individual. That is essentially every job this app is for. Printing it
+ *     for a business customer is a harmless note; omitting it for a private
+ *     one is an Ordnungswidrigkeit fined up to €500.
+ *
+ * The app does not reliably know B2B from B2C at PDF time, and given that
+ * asymmetry it does not need to.
+ *
+ * The French penalty rate is stated as the RULE, not as a number: the statutory
+ * default is the ECB refinancing rate plus 10 points and it moves. Freezing
+ * today's figure onto a document that outlives it would be the same mistake as
+ * a hardcoded VAT rate.
+ */
+export function legalMentions(country?: Country): string[] {
+  switch (country) {
+    case 'FR':
+      return [
+        'Pénalités de retard : taux directeur de la BCE majoré de 10 points, exigibles le jour suivant la date de règlement (art. L441-10 du Code de commerce).',
+        'Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 € (art. D441-5 du Code de commerce).',
+        'Escompte pour paiement anticipé : néant.',
+      ];
+    case 'DE':
+      return [
+        'Als Privatperson sind Sie verpflichtet, diese Rechnung zwei Jahre aufzubewahren (§ 14b Abs. 1 Satz 5 UStG).',
+      ];
+    default:
+      // NL, ES, IT, UK and US require no additional mention beyond the invoice
+      // content this template already carries. Italy's legal document is the
+      // FatturaPA sent through SDI; this PDF is the courtesy copy.
+      return [];
+  }
+}
+
 // ── Status colors ────────────────────────────────────────
 
 function statusColor(status: string): string {
@@ -454,6 +504,12 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
     if (kvkNumber) parts.push(`${registrationLabel(country)}: ${kvkNumber}`);
     if (vatNumber) parts.push(`${vatLabel(country, L.vat)}: ${vatNumber}`);
     return parts.length ? `<div style="margin-top:4px;font-size:10px;color:#6B7280">${parts.join(' · ')}</div>` : '';
+  })()}
+  ${(() => {
+    const mentions = legalMentions(country);
+    return mentions.length
+      ? `<div style="margin-top:10px;font-size:9px;color:#6B7280;line-height:1.5;text-align:left">${mentions.map((m) => `<div>${m}</div>`).join('')}</div>`
+      : '';
   })()}
   <div>${showPoweredBy !== false ? `<a href="https://vasco.eu">${L.poweredBy}</a>` : ''}</div>
 </div>
