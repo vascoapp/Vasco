@@ -2342,7 +2342,8 @@
     "postcode": "Post code",
     "city": "City",
     "siretFormatInvalid": "SIRET must be 14 digits (or a 9-digit SIREN) and pass its checksum",
-    "partitaIvaChecksumInvalid": "Partita IVA checksum invalid (check for typos)"
+    "partitaIvaChecksumInvalid": "Partita IVA checksum invalid (check for typos)",
+    "nifControlInvalid": "NIF/CIF control character invalid (check for typos)"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",

@@ -2342,7 +2342,8 @@
     "postcode": "Code postal",
     "city": "Ville",
     "siretFormatInvalid": "Le SIRET doit comporter 14 chiffres (ou un SIREN à 9 chiffres) et respecter sa clé de contrôle",
-    "partitaIvaChecksumInvalid": "Clé de contrôle de la partita IVA invalide (vérifiez les fautes de frappe)"
+    "partitaIvaChecksumInvalid": "Clé de contrôle de la partita IVA invalide (vérifiez les fautes de frappe)",
+    "nifControlInvalid": "Caractère de contrôle du NIF/CIF invalide (vérifiez les fautes de frappe)"
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",

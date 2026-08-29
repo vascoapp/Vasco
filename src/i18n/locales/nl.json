@@ -2329,7 +2329,8 @@
     "postcode": "Postcode",
     "city": "Plaats",
     "siretFormatInvalid": "SIRET moet 14 cijfers zijn (of een SIREN van 9) en de controle doorstaan",
-    "partitaIvaChecksumInvalid": "Controlegetal van de partita IVA klopt niet (check op typefouten)"
+    "partitaIvaChecksumInvalid": "Controlegetal van de partita IVA klopt niet (check op typefouten)",
+    "nifControlInvalid": "Controleteken van de NIF/CIF klopt niet (check op typefouten)"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",

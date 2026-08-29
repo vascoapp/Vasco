@@ -7,7 +7,7 @@
 // =============================================================================
 
 import type { BusinessProfile } from '../domain/business';
-import { isValidVATNumber, isValidKvKNumber, isValidIBAN, isValidSIRET, isValidPartitaIVA } from './validation';
+import { isValidVATNumber, isValidKvKNumber, isValidIBAN, isValidSIRET, isValidPartitaIVA, isValidSpanishTaxId } from './validation';
 import i18n from '../i18n/i18n';
 
 // R74: US widened in. Country-specific validation rules (EIN format, no
@@ -147,6 +147,16 @@ export function checkInvoiceReadiness(profile: BusinessProfile): ProfileReadines
       defaultValue: 'Partita IVA checksum invalid (check for typos)',
     }));
   }
+  // Spain: the shape check accepts any typo that keeps the shape. The control
+  // character is what makes it an identifier rather than nine characters.
+  const nif = profile.vatNumber?.trim();
+  if (nif && profile.country === 'ES' && isValidVATNumber(nif) && !isValidSpanishTaxId(nif)) {
+    invalid.push('profile.nifControlInvalid');
+    invalidLabels.push(i18n.t('profile.nifControlInvalid', {
+      defaultValue: 'NIF/CIF control character invalid (check for typos)',
+    }));
+  }
+
   const iban = profile.iban?.trim();
   if (iban && !isValidIBAN(iban)) {
     invalid.push('profile.ibanFormatInvalid');

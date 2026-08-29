@@ -3,9 +3,10 @@
 // state R66r39 removed for the Dutch BTW after a malformed one reached a
 // customer's accountant. France is the one that mattered: `getRequiredFields`
 // DEMANDS a SIRET and nothing looked at it.
-import { isValidSIRET, isValidPartitaIVA } from '../validation';
+import { isValidSIRET, isValidPartitaIVA, isValidSpanishTaxId } from '../validation';
 import { checkInvoiceReadiness } from '../businessProfileValidation';
 import type { BusinessProfile } from '../../domain/business';
+import { FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE } from '../../data/mockBusiness';
 
 describe('isValidSIRET', () => {
   it('accepts a real 14-digit SIRET and its 9-digit SIREN', () => {
@@ -82,5 +83,48 @@ describe('the readiness gate applies them', () => {
     } as BusinessProfile);
     expect(es.invalid).not.toContain('profile.siretFormatInvalid');
     expect(es.invalid).not.toContain('profile.partitaIvaChecksumInvalid');
+  });
+});
+
+describe('isValidSpanishTaxId', () => {
+  it('accepts a DNI, a NIE and a CIF', () => {
+    expect(isValidSpanishTaxId('12345678Z')).toBe(true);   // DNI
+    expect(isValidSpanishTaxId('X1234567L')).toBe(true);   // NIE
+    expect(isValidSpanishTaxId('A58818501')).toBe(true);   // CIF
+    expect(isValidSpanishTaxId('Q2826000H')).toBe(true);   // the tax agency's own CIF
+    expect(isValidSpanishTaxId('ESA58818501')).toBe(true); // as the app stores it
+  });
+
+  it('rejects a wrong control character', () => {
+    expect(isValidSpanishTaxId('12345678A')).toBe(false);
+    expect(isValidSpanishTaxId('X1234567A')).toBe(false);
+    expect(isValidSpanishTaxId('A58818502')).toBe(false);
+  });
+
+  it('a Spanish profile with a bad control character is NOT ready', () => {
+    const bad = checkInvoiceReadiness({
+      businessName: 'Fontanería García', address: 'Calle Mayor 1',
+      country: 'ES', vatNumber: 'ESA58818502',
+    } as BusinessProfile);
+    expect(bad.ready).toBe(false);
+    expect(bad.invalid).toContain('profile.nifControlInvalid');
+  });
+});
+
+describe('the demo profiles the EU markets are screenshotted from', () => {
+  // These carried identifiers that were merely well-SHAPED: the FR SIRET failed
+  // Luhn, the ES CIF failed its control digit, the IT partita IVA failed its
+  // check digit. Harmless until the checksums above existed — at which point
+  // the demo for all three markets would have been blocked from invoicing.
+  it('FR/ES/IT demo profiles pass their own country checks', () => {
+    expect(isValidSIRET(FR_BUSINESS_PROFILE.registrationNumber ?? '')).toBe(true);
+    expect(isValidSpanishTaxId(ES_BUSINESS_PROFILE.vatNumber ?? '')).toBe(true);
+    expect(isValidPartitaIVA(IT_BUSINESS_PROFILE.vatNumber ?? '')).toBe(true);
+  });
+
+  it('and are therefore invoice-ready', () => {
+    for (const p of [FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE]) {
+      expect(checkInvoiceReadiness(p).invalid).toEqual([]);
+    }
   });
 });

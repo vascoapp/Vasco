@@ -98,6 +98,11 @@ export const DE_BUSINESS_PROFILE: BusinessProfile = {
 // CIF letter+8, Partita IVA 11 digits) because format validators run on them —
 // they are not claims about a real company.
 
+// The identifiers below are checksum-VALID, not merely well-shaped. They were
+// not: the FR SIRET failed Luhn, the ES CIF failed its control digit and the IT
+// partita IVA failed its check digit — all three would now be refused by
+// `checkInvoiceReadiness`, which is the right answer for a real contractor and
+// the wrong one for the demo these markets are screenshotted from.
 export const FR_BUSINESS_PROFILE: BusinessProfile = {
   isComplete: true,
   completenessPercent: 100,
@@ -113,7 +118,7 @@ export const FR_BUSINESS_PROFILE: BusinessProfile = {
   businessType: "sarl",
   teamSize: 'small',
   vatScheme: 'standard',
-  registrationNumber: "81234567800019", // SIRET — 14 digits
+  registrationNumber: "81234567800013", // SIRET — 14 digits, Luhn-valid (…19 was not)
   vatNumber: "FR81812345678",
   invoicePrefix: "FA",
   quotePrefix: "DE",
@@ -141,8 +146,8 @@ export const ES_BUSINESS_PROFILE: BusinessProfile = {
   businessType: "sl",
   teamSize: 'small',
   vatScheme: 'standard',
-  registrationNumber: "B12345678", // CIF — letter + 8 digits
-  vatNumber: "ESB12345678",
+  registrationNumber: "B12345674", // CIF — letter + 7 digits + control (…8 failed it)
+  vatNumber: "ESB12345674",
   invoicePrefix: "FAC",
   quotePrefix: "PRE",
   defaultPaymentTerms: 30,
@@ -170,7 +175,7 @@ export const IT_BUSINESS_PROFILE: BusinessProfile = {
   teamSize: 'small',
   vatScheme: 'standard',
   registrationNumber: "MI-1234567", // REA
-  vatNumber: "IT12345678901", // Partita IVA — 11 digits
+  vatNumber: "IT12345678903", // Partita IVA — 11 digits, check digit valid (…01 was not)
   invoicePrefix: "FT",
   quotePrefix: "PRV",
   defaultPaymentTerms: 30,

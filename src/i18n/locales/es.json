@@ -2342,7 +2342,8 @@
     "postcode": "Código postal",
     "city": "Ciudad",
     "siretFormatInvalid": "El SIRET debe tener 14 dígitos (o un SIREN de 9) y superar su dígito de control",
-    "partitaIvaChecksumInvalid": "Dígito de control de la partita IVA inválido (revisa si hay erratas)"
+    "partitaIvaChecksumInvalid": "Dígito de control de la partita IVA inválido (revisa si hay erratas)",
+    "nifControlInvalid": "Carácter de control del NIF/CIF inválido (revisa si hay erratas)"
   },
   "search": {
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",

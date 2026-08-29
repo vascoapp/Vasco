@@ -2342,7 +2342,8 @@
     "postcode": "PLZ",
     "city": "Ort",
     "siretFormatInvalid": "SIRET muss 14 Ziffern haben (oder eine 9-stellige SIREN) und die Prüfziffer erfüllen",
-    "partitaIvaChecksumInvalid": "Prüfziffer der Partita IVA ungültig (bitte auf Tippfehler prüfen)"
+    "partitaIvaChecksumInvalid": "Prüfziffer der Partita IVA ungültig (bitte auf Tippfehler prüfen)",
+    "nifControlInvalid": "Prüfzeichen der NIF/CIF ungültig (bitte auf Tippfehler prüfen)"
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",

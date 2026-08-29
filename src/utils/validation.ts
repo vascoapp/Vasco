@@ -108,6 +108,53 @@ export function isValidPartitaIVA(value: string): boolean {
   return luhnValid(v);
 }
 
+/**
+ * SPANISH NIF / NIE / CIF control character.
+ *
+ * Spain's required invoicing field is the NIF/CIF and only its SHAPE was
+ * checked (`ES[A-Z0-9]\d{7}[A-Z0-9]`), which accepts any typo that keeps the
+ * shape. Completes the set alongside SIRET and Partita IVA.
+ *
+ *  · DNI  — 8 digits + letter from "TRWAGMYFPDXBNJZSQVHLCKE"[n % 23]
+ *  · NIE  — X/Y/Z + 7 digits + the same letter, with X→0, Y→1, Z→2
+ *  · CIF  — org letter + 7 digits + a control that is a DIGIT for A/B/E/H,
+ *           a LETTER for P/Q/R/S/N/W, and either for the rest. Accepting
+ *           either where the law allows either is deliberate: a validator that
+ *           rejects a valid identifier stops a contractor invoicing.
+ *
+ * Accepts an optional `ES` prefix because that is how the app stores it.
+ */
+export function isValidSpanishTaxId(value: string): boolean {
+  const v = value.trim().toUpperCase().replace(/[\s.-]/g, '').replace(/^ES/, '');
+  const LETTERS = 'TRWAGMYFPDXBNJZSQVHLCKE';
+
+  if (/^\d{8}[A-Z]$/.test(v)) {
+    return v[8] === LETTERS[parseInt(v.slice(0, 8), 10) % 23];
+  }
+  if (/^[XYZ]\d{7}[A-Z]$/.test(v)) {
+    const lead = { X: '0', Y: '1', Z: '2' }[v[0] as 'X' | 'Y' | 'Z'];
+    return v[8] === LETTERS[parseInt(lead + v.slice(1, 8), 10) % 23];
+  }
+  if (/^[A-HJ-NP-SUVW]\d{7}[0-9A-J]$/.test(v)) {
+    let sum = 0;
+    for (let i = 0; i < 7; i += 1) {
+      let d = v.charCodeAt(i + 1) - 48;
+      if (i % 2 === 0) {
+        d *= 2;
+        if (d > 9) d -= 9;
+      }
+      sum += d;
+    }
+    const c = (10 - (sum % 10)) % 10;
+    const org = v[0];
+    const asLetter = 'JABCDEFGHI'[c];
+    if ('PQRSNW'.includes(org)) return v[8] === asLetter;
+    if ('ABEH'.includes(org)) return v[8] === String(c);
+    return v[8] === String(c) || v[8] === asLetter;
+  }
+  return false;
+}
+
 export function isValidVATNumber(vat: string): boolean {
   const cleaned = vat.trim().replace(/\s/g, '').toUpperCase();
   const country = cleaned.slice(0, 2);

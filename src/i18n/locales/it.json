@@ -2342,7 +2342,8 @@
     "postcode": "CAP",
     "city": "Città",
     "siretFormatInvalid": "Il SIRET deve avere 14 cifre (o un SIREN di 9) e superare la cifra di controllo",
-    "partitaIvaChecksumInvalid": "Cifra di controllo della partita IVA non valida (controlla eventuali errori di battitura)"
+    "partitaIvaChecksumInvalid": "Cifra di controllo della partita IVA non valida (controlla eventuali errori di battitura)",
+    "nifControlInvalid": "Carattere di controllo del NIF/CIF non valido (controlla errori di battitura)"
   },
   "search": {
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",
