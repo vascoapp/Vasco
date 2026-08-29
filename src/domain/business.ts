@@ -222,6 +222,37 @@ export function getVatExemptionNote(country: string | undefined, vatScheme: VatS
  *      from `amount` (a discount, a rounding, a hand-edited total);
  *   4. otherwise the profile rate, as before.
  */
+/**
+ * The VAT breakdown a document should DISPLAY, from its own lines.
+ *
+ * Four places decided a quote's VAT independently — the quote screen, the PDF
+ * the customer receives, the invoice the quote becomes, and the acceptance page
+ * the customer confirms on — and every one of them reached for the country's
+ * standard rate. Fixing one moved the disagreement instead of ending it.
+ *
+ * `ratePct` is null when the document genuinely has no single rate (labour at
+ * one, materials at another). A caller must then omit the percentage rather
+ * than print the blended average: "BTW (13,8%)" is a number that appears on no
+ * invoice and in no tax table. The AMOUNT is exact either way.
+ */
+export function documentVatBreakdown(
+  netAmount: number,
+  lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
+  fallbackVatRatePercent: number,
+): { net: number; vat: number; gross: number; ratePct: number | null } {
+  const net = Math.round(netAmount * 100) / 100;
+  const gross = grossFromDocumentLines(netAmount, lines, fallbackVatRatePercent);
+  const vat = Math.round((gross - net) * 100) / 100;
+  const all = lines ?? [];
+  const rated = all.filter((l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate));
+  if (fallbackVatRatePercent === 0) return { net, vat, gross, ratePct: 0 };
+  if (rated.length > 0 && rated.length === all.length) {
+    const rates = Array.from(new Set(rated.map((l) => l.vatRate as number)));
+    return { net, vat, gross, ratePct: rates.length === 1 ? rates[0] : null };
+  }
+  return { net, vat, gross, ratePct: fallbackVatRatePercent };
+}
+
 export function grossFromDocumentLines(
   netAmount: number,
   lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,

@@ -28,6 +28,7 @@ import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/int
 import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { getVATRate } from '../../src/constants/taxRates';
+import { documentVatBreakdown } from '../../src/domain/business';
 import { formatCurrency as fmtCurrency, formatDate as fmtDate } from '../../src/i18n/formatting';
 import { findDocumentCustomer } from '../../src/domain/customers';
 
@@ -109,13 +110,19 @@ export default function QuoteDetailScreen() {
         }]
       : [];
   const subtotal = displayLineItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-  const vatRate = getVATRate(country);
-  // Round to CENTS, not to whole euros. `sharePdf` below already does
-  // `Math.round(sub * vrate * 100) / 100`, so the screen and the PDF the
-  // customer receives disagreed: 19% of 106,00 showed as 20,00 / 126,00 here
-  // and 20,14 / 126,14 in the PDF.
-  const vatAmount = Math.round(subtotal * vatRate * 100) / 100;
-  const total = subtotal + vatAmount;
+  // The quote's OWN agreed rates, not the country default — a renovation quoted
+  // at a reduced bracket must not be totalled at the standard one here while
+  // the invoice made from it uses the reduced one. Rounds to CENTS: `sharePdf`
+  // already did, so the screen and the PDF the customer receives disagreed —
+  // 19% of 106,00 showed as 20,00 / 126,00 here and 20,14 / 126,14 in the PDF.
+  const vatBreakdown = documentVatBreakdown(
+    subtotal, displayLineItems, Math.round(getVATRate(country) * 100),
+  );
+  const vatAmount = vatBreakdown.vat;
+  const total = vatBreakdown.gross;
+  // null on a mixed-rate quote: the label omits the percentage rather than
+  // printing a blended average that appears on no invoice.
+  const vatRatePct = vatBreakdown.ratePct;
 
   const riskItem = priceRisk ? quoteLineItems.find((item) => item.description === priceRisk.lineItem) : undefined;
   const currentUnitPrice = riskItem?.unitPrice ?? 0;
@@ -135,19 +142,26 @@ export default function QuoteDetailScreen() {
   const sharePdf = async () => {
     const items = lineItems[quote.id] ?? [];
     const sub = items.reduce((acc, i) => acc + i.unitPrice * i.quantity, 0);
-    const vrate = getVATRate(country);
-    const vpct = Math.round(vrate * 100);
-    const vamt = Math.round(sub * vrate * 100) / 100;
+    // Same rule as the screen above. This used to stamp the country's standard
+    // rate onto EVERY line of the PDF — overwriting each line's own agreed rate
+    // in the document the customer actually receives.
+    const bd = documentVatBreakdown(sub, items, Math.round(getVATRate(country) * 100));
+    const vpct = bd.ratePct;
+    const vamt = bd.vat;
     const pdfData: QuotePdfData = {
       quoteNumber: quote.id,
       customerName: customerDisplayName ?? t('jobs.client', 'Client'),
       jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
       issueDate: fmtDate(new Date(), country),
       validUntil: validUntilLabel,
-      lineItems: items.map((i) => ({ description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, vatRate: vpct })),
+      // Each line keeps ITS rate; only a line with none falls back.
+      lineItems: items.map((i) => ({
+        description: i.description, quantity: i.quantity, unitPrice: i.unitPrice,
+        vatRate: i.vatRate ?? vpct ?? Math.round(getVATRate(country) * 100),
+      })),
       subtotal: sub,
       vatAmount: vamt,
-      total: sub + vamt,
+      total: bd.gross,
       // R63 / Package D4: the AI-generated SOW narrative, from documents.scope_text.
       scopeText: quote.description,
     };
@@ -451,7 +465,9 @@ export default function QuoteDetailScreen() {
               <Text style={styles.totalValue}>{formatCurrency(subtotal)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{t('quotes.vat', 'VAT')} ({Math.round(vatRate * 100)}%)</Text>
+              <Text style={styles.totalLabel}>
+                {t('quotes.vat', 'VAT')}{vatRatePct !== null ? ` (${vatRatePct}%)` : ''}
+              </Text>
               <Text style={styles.totalValue}>{formatCurrency(vatAmount)}</Text>
             </View>
             <View style={[styles.totalRow, styles.grandTotalRow]}>

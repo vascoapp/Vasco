@@ -61,3 +61,43 @@ describe('grossFromDocumentLines', () => {
     }
   });
 });
+
+// The DISPLAY half of the same rule. Four surfaces decide a quote's VAT — the
+// quote screen, its PDF, the invoice it becomes, and the customer's acceptance
+// page — and all four used to reach for the country's standard rate.
+import { documentVatBreakdown } from '../business';
+
+describe('documentVatBreakdown', () => {
+  it('reports the agreed rate for the label, not the country default', () => {
+    const b = documentVatBreakdown(1000, [line(1000, 10)], 20);
+    expect(b.ratePct).toBe(10);
+    expect(b.vat).toBeCloseTo(100, 2);
+    expect(b.gross).toBeCloseTo(1100, 2);
+  });
+
+  it('reports NO rate for a mixed-rate quote — the amount is still exact', () => {
+    const b = documentVatBreakdown(1000, [line(600, 9), line(400, 21)], 21);
+    expect(b.ratePct).toBeNull();
+    expect(b.vat).toBeCloseTo(600 * 0.09 + 400 * 0.21, 2);
+    expect(b.gross).toBeCloseTo(1000 + b.vat, 2);
+  });
+
+  it('falls back to the country rate when the quote carries none', () => {
+    expect(documentVatBreakdown(1000, [], 20).ratePct).toBe(20);
+    expect(documentVatBreakdown(1000, [line(1000, undefined)], 20).ratePct).toBe(20);
+  });
+
+  it('an exempt contractor shows 0%, never the country rate', () => {
+    const b = documentVatBreakdown(1000, [line(1000, 21)], 0);
+    expect(b.ratePct).toBe(0);
+    expect(b.vat).toBeCloseTo(0, 2);
+    expect(b.gross).toBeCloseTo(1000, 2);
+  });
+
+  it('net + vat always equals gross', () => {
+    for (const lines of [[line(1000, 10)], [line(600, 9), line(400, 21)], [], [line(1000, undefined)]]) {
+      const b = documentVatBreakdown(1000, lines, 21);
+      expect(b.net + b.vat).toBeCloseTo(b.gross, 2);
+    }
+  });
+});
