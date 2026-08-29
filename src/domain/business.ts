@@ -201,6 +201,52 @@ export function getVatExemptionNote(country: string | undefined, vatScheme: VatS
  * Kleinunternehmer) returns the net unchanged, which is correct: there is no
  * VAT to add.
  */
+/**
+ * NET → GROSS for a document that has its own agreed line rates.
+ *
+ * `addInvoice` grossed every quote at `getEffectiveVatRate(businessProfile)` —
+ * the country's STANDARD rate — while copying the quote's line items, rates and
+ * all, onto the invoice. So a quote agreed at a reduced rate produced an
+ * invoice whose lines said 10% and whose `amount` had been grossed at 20%. The
+ * customer is billed the wrong VAT, and the invoice disagrees with itself.
+ *
+ * Latent for NL's 9% since the toggle shipped; reachable in FR/IT/ES from the
+ * moment `getReducedVatRate` started returning a rate for them.
+ *
+ * Precedence, most specific first:
+ *   1. exempt (fallback 0) — KOR / Kleinunternehmer charge no VAT, full stop;
+ *   2. every line has a rate AND the lines add up to the document's net —
+ *      sum the lines, which is the only correct answer for a MIXED-rate quote
+ *      (NL 9% labour + 21% materials is the ordinary case);
+ *   3. every line has the SAME rate — use it, even if the line sum has drifted
+ *      from `amount` (a discount, a rounding, a hand-edited total);
+ *   4. otherwise the profile rate, as before.
+ */
+export function grossFromDocumentLines(
+  netAmount: number,
+  lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
+  fallbackVatRatePercent: number,
+): number {
+  if (fallbackVatRatePercent === 0) return Math.round(netAmount * 100) / 100;
+  const rated = (lines ?? []).filter(
+    (l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate),
+  );
+  if (rated.length === 0 || rated.length !== (lines ?? []).length) {
+    return grossFromNet(netAmount, fallbackVatRatePercent);
+  }
+  const lineNet = rated.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+  if (Math.abs(lineNet - netAmount) <= 0.01) {
+    const gross = rated.reduce(
+      (s, l) => s + l.quantity * l.unitPrice * (1 + (l.vatRate as number) / 100),
+      0,
+    );
+    return Math.round(gross * 100) / 100;
+  }
+  const rates = Array.from(new Set(rated.map((l) => l.vatRate as number)));
+  if (rates.length === 1) return grossFromNet(netAmount, rates[0]);
+  return grossFromNet(netAmount, fallbackVatRatePercent);
+}
+
 export function grossFromNet(netAmount: number, vatRatePercent: number): number {
   return Math.round(netAmount * (1 + vatRatePercent / 100) * 100) / 100;
 }

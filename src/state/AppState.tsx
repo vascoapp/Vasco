@@ -9,7 +9,7 @@ import { PropsWithChildren, createContext, useCallback, useContext, useEffect, u
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Domain types
-import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, grossFromNet } from '../domain/business';
+import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, grossFromNet, grossFromDocumentLines } from '../domain/business';
 import { Customer, findDocumentCustomer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
@@ -2182,8 +2182,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // to UMSATZ, and a contractor billing from quotes under-reported
         // revenue by exactly the VAT while one billing from jobs reported
         // gross. One field, two units, summed together in the same KPI.
+        // The quote's OWN agreed rates win over the country's standard rate.
+        // This used to be `grossFromNet(amount, getEffectiveVatRate(profile))`
+        // while the block below copied the quote's line items — rates and all —
+        // onto the invoice, so a renovation quoted at a reduced rate became an
+        // invoice whose lines said 10% and whose amount had been grossed at 20%.
         const quoteVatRate = getEffectiveVatRate(businessProfile);
-        const grossAmount = grossFromNet(sourceQuote.amount, quoteVatRate);
+        const grossAmount = grossFromDocumentLines(
+          sourceQuote.amount, lineItems[sourceQuoteId], quoteVatRate,
+        );
 
         // R287: validator-layer duplicate-invoice protection. Catches "same
         // customer + same amount within 7 days" — a frequent source of
