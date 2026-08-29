@@ -152,11 +152,33 @@ function mapType(t: unknown): BankAccount['type'] {
 // Reconciliation — match bank transactions to invoices
 // ---------------------------------------------------------------------------
 
+/**
+ * Why a transaction was matched to an invoice — a CODE, not prose.
+ *
+ * These used to be English sentences pushed straight into `reasons`
+ * ('IBAN match', '3d after sent') and rendered verbatim by
+ * `ReconciliationCard`, so a German contractor reconciling a bank payment read
+ * them in English. Translations existed in all six locales the whole time —
+ * `reconciliation.reasonExactAmount` and friends — and nothing referenced them,
+ * which is also why the key set was free to drift: `reasonIban` had been
+ * written only in the en-US override layer, with no base key under `en`.
+ *
+ * A reason is resolved at RENDER time, in the reader's language, for the same
+ * reason the decision catalogue is (CLAUDE.md): the matcher may run in one
+ * language and be read in another.
+ */
+export type ReconciliationReason =
+  | { code: 'exactAmount' }
+  | { code: 'amountWithin' }
+  | { code: 'iban' }
+  | { code: 'name' }
+  | { code: 'daysAfter'; days: number };
+
 export interface ReconciliationMatch {
   transactionId: string;
   invoiceId: string;
   confidence: number;        // 0-1
-  reasons: string[];         // human-readable match reasons
+  reasons: ReconciliationReason[];
 }
 
 /**
@@ -174,17 +196,17 @@ export function matchTransactionsToInvoices(
     let best: ReconciliationMatch | null = null;
 
     for (const inv of invoices) {
-      const reasons: string[] = [];
+      const reasons: ReconciliationReason[] = [];
       let score = 0;
 
       // 1. Amount match (within €0.01 tolerance for rounding)
       const amountDelta = Math.abs(tx.amount - inv.amount);
       if (amountDelta < 0.01) {
         score += 0.5;
-        reasons.push('exact amount match');
+        reasons.push({ code: 'exactAmount' });
       } else if (amountDelta / Math.max(inv.amount, 1) < 0.02) {
         score += 0.3;
-        reasons.push('amount within 2%');
+        reasons.push({ code: 'amountWithin' });
       } else {
         continue;  // amount mismatch — skip
       }
@@ -193,7 +215,7 @@ export function matchTransactionsToInvoices(
       if (tx.counterpartyIban && inv.customerIban &&
           tx.counterpartyIban.replace(/\s/g, '').toUpperCase() === inv.customerIban.replace(/\s/g, '').toUpperCase()) {
         score += 0.3;
-        reasons.push('IBAN match');
+        reasons.push({ code: 'iban' });
       }
 
       // 3. Customer name fuzzy match
@@ -203,7 +225,7 @@ export function matchTransactionsToInvoices(
         const invN = norm(inv.customerName);
         if (txN === invN || txN.includes(invN) || invN.includes(txN)) {
           score += 0.15;
-          reasons.push('name match');
+          reasons.push({ code: 'name' });
         }
       }
 
@@ -214,7 +236,7 @@ export function matchTransactionsToInvoices(
         const days = (paid - sent) / 86400000;
         if (days >= -1 && days <= 90) {
           score += 0.05;
-          reasons.push(`${Math.round(days)}d after sent`);
+          reasons.push({ code: 'daysAfter', days: Math.round(days) });
         }
       }
 

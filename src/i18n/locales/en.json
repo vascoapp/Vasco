@@ -3125,7 +3125,9 @@
     "reasonName": "name match",
     "reasonDaysAfter": "{{days}}d after sent",
     "subtitle_one": "Vasco found {{count}} payment matching an open invoice.",
-    "subtitle_other": "Vasco found {{count}} payments matching open invoices."
+    "subtitle_other": "Vasco found {{count}} payments matching open invoices.",
+    "reasonIban": "IBAN match",
+    "markPaidA11y": "Mark invoice {{id}} as paid"
   },
   "projectSwitcher": {
     "activeProjects": "ACTIVE PROJECTS",

@@ -148,8 +148,7 @@
     "acceptQuote": "Accept estimate",
     "acceptQuoteDesc": "Accept estimate and create job for {{total}}?",
     "jobCreatedDesc": "The estimate has been accepted and a job has been created.",
-    "conversionFailed": "Could not convert estimate to job.",
-    "reducedVatSubtitle": "Renovation/maintenance on homes older than 2 years"
+    "conversionFailed": "Could not convert estimate to job."
   },
   "activation": {
     "firstQuote": "Send your first estimate"

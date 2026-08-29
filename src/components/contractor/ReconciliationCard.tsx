@@ -9,6 +9,7 @@
 // =============================================================================
 
 import { memo, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DK } from '../../theme/draftkings';
@@ -19,10 +20,12 @@ import {
   listTransactions,
   matchTransactionsToInvoices,
   type ReconciliationMatch,
+  type ReconciliationReason,
 } from '../../integrations/banking';
 import { useAppState } from '../../state/AppState';
 
 function ReconciliationCardImpl() {
+  const { t } = useTranslation();
   const { invoices, markInvoicePaid } = useAppState() as any;
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -70,28 +73,53 @@ function ReconciliationCardImpl() {
     setMatches((prev) => prev.filter((m) => m.invoiceId !== match.invoiceId));
   };
 
+  // Resolved at RENDER time, in the reader's language — see the note on
+  // `ReconciliationReason`. The matcher does not know who will read it.
+  const reasonText = (r: ReconciliationReason): string => {
+    switch (r.code) {
+      case 'exactAmount': return t('reconciliation.reasonExactAmount', 'exact amount match');
+      case 'amountWithin': return t('reconciliation.reasonAmountWithin', 'amount within 2%');
+      case 'iban': return t('reconciliation.reasonIban', 'IBAN match');
+      case 'name': return t('reconciliation.reasonName', 'name match');
+      case 'daysAfter': return t('reconciliation.reasonDaysAfter', { defaultValue: '{{days}}d after sent', days: r.days });
+    }
+  };
+
   return (
     <View style={styles.card}>
-      <DKLabel style={styles.title}>BANK MATCHES</DKLabel>
-      <Text style={styles.subtitle}>Vasco vond {matches.length} betaling{matches.length > 1 ? 'en' : ''} die overeenkomen met je openstaande facturen.</Text>
-      {matches.map((m) => (
+      <DKLabel style={styles.title}>{t('reconciliation.title', 'BANK MATCHES')}</DKLabel>
+      <Text style={styles.subtitle}>
+        {t('reconciliation.subtitle', {
+          defaultValue: 'Vasco found {{count}} payments matching open invoices.',
+          count: matches.length,
+        })}
+      </Text>
+      {matches.map((m) => {
+        // The contractor's own document number, never the storage id. Falls
+        // back to the id only when a document genuinely has no reference.
+        const inv = (invoices ?? []).find((i: any) => i.id === m.invoiceId);
+        const ref = inv?.reference || m.invoiceId;
+        return (
         <View key={`${m.transactionId}-${m.invoiceId}`} style={styles.row}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.invoiceId}>Factuur {m.invoiceId}</Text>
-            <Text style={styles.reasons}>{m.reasons.join(' · ')}</Text>
-            <Text style={styles.confidence}>Zekerheid: {Math.round(m.confidence * 100)}%</Text>
+            <Text style={styles.invoiceId}>{t('reconciliation.invoiceLabel', { defaultValue: 'Invoice {{id}}', id: ref })}</Text>
+            <Text style={styles.reasons}>{m.reasons.map(reasonText).join(' · ')}</Text>
+            <Text style={styles.confidence}>
+              {t('reconciliation.confidence', { defaultValue: 'Confidence: {{percent}}%', percent: Math.round(m.confidence * 100) })}
+            </Text>
           </View>
           <Pressable
             style={styles.confirmBtn}
             onPress={() => handleConfirm(m)}
             accessibilityRole="button"
-            accessibilityLabel={`Mark invoice ${m.invoiceId} as paid`}
+            accessibilityLabel={t('reconciliation.markPaidA11y', { defaultValue: 'Mark invoice {{id}} as paid', id: ref })}
           >
             <Ionicons name="checkmark" size={18} color="#000" />
-            <Text style={styles.confirmText}>BETAALD</Text>
+            <Text style={styles.confirmText}>{t('reconciliation.confirmPaid', 'PAID')}</Text>
           </Pressable>
         </View>
-      ))}
+        );
+      })}
     </View>
   );
 }

@@ -3125,7 +3125,9 @@
     "reasonName": "nom concordant",
     "reasonDaysAfter": "{{days}}j après envoi",
     "subtitle_one": "Vasco a trouvé {{count}} paiement correspondant à une facture ouverte.",
-    "subtitle_other": "Vasco a trouvé {{count}} paiements correspondant à des factures ouvertes."
+    "subtitle_other": "Vasco a trouvé {{count}} paiements correspondant à des factures ouvertes.",
+    "reasonIban": "IBAN concordant",
+    "markPaidA11y": "Marquer la facture {{id}} comme payée"
   },
   "projectSwitcher": {
     "activeProjects": "PROJETS ACTIFS",

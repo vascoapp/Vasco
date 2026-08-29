@@ -760,9 +760,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {}
       }
     })();
-    // Only run once when user first becomes non-null
+    // Keyed on the user's ID, not on `!!user`.
+    //
+    // It used to be `[!!user]` — a BOOLEAN, which flips false→true once per app
+    // launch and never again. Switching from one signed-in account to another
+    // without signing out therefore never re-ran this block, so the SECOND
+    // account inherited the FIRST one's language: signing in as the French
+    // plumber after the Italian one gave a screen headed "Certificati e
+    // conformità" listing URSSAF, Impots.gouv and Chorus Pro. The country half
+    // switched correctly because AppState listens on `subscribeUserChange`,
+    // which fires on an id change — this effect was the only one that did not.
+    //
+    // `user.id` is the right key: it changes exactly when the identity does.
+    // The `setUser` merge below deliberately preserves `id: prev.id`, so
+    // applying the profile cannot re-trigger this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [!!user]);
+  }, [user?.id]);
 
   const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);

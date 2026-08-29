@@ -3125,7 +3125,9 @@
     "reasonName": "Name-Übereinstimmung",
     "reasonDaysAfter": "{{days}}T nach Versand",
     "subtitle_one": "Vasco hat {{count}} Zahlung gefunden, die zu einer offenen Rechnung passt.",
-    "subtitle_other": "Vasco hat {{count}} Zahlungen gefunden, die zu offenen Rechnungen passen."
+    "subtitle_other": "Vasco hat {{count}} Zahlungen gefunden, die zu offenen Rechnungen passen.",
+    "reasonIban": "IBAN-Übereinstimmung",
+    "markPaidA11y": "Rechnung {{id}} als bezahlt markieren"
   },
   "projectSwitcher": {
     "activeProjects": "AKTIVE PROJEKTE",

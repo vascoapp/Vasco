@@ -3112,7 +3112,9 @@
     "reasonName": "naam match",
     "reasonDaysAfter": "{{days}}d na versturen",
     "subtitle_one": "Vasco vond {{count}} betaling die overeenkomt met een openstaande factuur.",
-    "subtitle_other": "Vasco vond {{count}} betalingen die overeenkomen met openstaande facturen."
+    "subtitle_other": "Vasco vond {{count}} betalingen die overeenkomen met openstaande facturen.",
+    "reasonIban": "IBAN match",
+    "markPaidA11y": "Factuur {{id}} als betaald markeren"
   },
   "projectSwitcher": {
     "activeProjects": "ACTIEVE PROJECTEN",

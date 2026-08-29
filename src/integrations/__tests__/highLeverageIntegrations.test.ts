@@ -142,7 +142,11 @@ describe('Banking reconciliation', () => {
     expect(matches).toHaveLength(1);
     expect(matches[0].invoiceId).toBe('inv-1');
     expect(matches[0].confidence).toBeGreaterThanOrEqual(0.85);
-    expect(matches[0].reasons).toContain('IBAN match');
+    // Reason CODES, not prose. They used to be English sentences that
+    // `ReconciliationCard` rendered verbatim to every market; the wording is
+    // resolved in the reader's language at render time now.
+    expect(matches[0].reasons.map((r: { code: string }) => r.code)).toContain('iban');
+    expect(matches[0].reasons).toContainEqual({ code: 'daysAfter', days: 6 });
   });
 
   test('skips outflows', async () => {

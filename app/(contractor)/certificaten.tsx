@@ -154,7 +154,12 @@ function ComplianceScoreRing({ score, size = 100 }: { score: number | null; size
     <View style={[styles.scoreRing, { width: size, height: size }]}>
       <View style={[styles.scoreRingInner, { borderColor: getScoreColor() }]}>
         <Text style={[styles.scoreValue, { color: getScoreColor() }]}>{score === null ? '—' : score}</Text>
-        <Text style={styles.scoreLabel} numberOfLines={2}>{getScoreLabel()}</Text>
+        <Text
+          style={styles.scoreLabel}
+          numberOfLines={3}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+        >{getScoreLabel()}</Text>
       </View>
     </View>
   );
@@ -929,8 +934,21 @@ const styles = StyleSheet.create({
     // The label sits at the widest point of a CIRCLE, so it has less room than
     // the card it is in. Unconstrained, German "Noch nichts erfasst" ran past
     // the ring and was clipped by the border mid-word ("Noch nichts / rfasst").
-    // Cap it inside the chord and let it take a second line.
-    maxWidth: '78%',
+    // Cap it inside the chord and let it wrap.
+    //
+    // Two lines was still not enough once the screen could actually be opened
+    // in Italian: "Ancora nulla da monitorare" rendered as "Ancora nulla / da
+    // monitor…". French is longer again ("Rien de suivi pour l'instant"). The
+    // empty state is the FIRST thing a new contractor in either market sees on
+    // this screen. Three lines plus a small shrink covers the longest of the
+    // six; unlike #235 the words here are ordinary, so wrapping happens and
+    // `adjustsFontSizeToFit` does fire.
+    //
+    // 78% was tuned for TWO lines. A third line sits further from the vertical
+    // centre, where the chord is shorter, so at 78% "monitorare" ran onto the
+    // ring stroke. The cap is for the WIDEST line the label can have, not for
+    // the middle of the circle.
+    maxWidth: '68%',
     textAlign: 'center',
   },
 

@@ -3125,7 +3125,9 @@
     "reasonName": "nombre coincide",
     "reasonDaysAfter": "{{days}}d tras envío",
     "subtitle_one": "Vasco encontró {{count}} pago que coincide con una factura abierta.",
-    "subtitle_other": "Vasco encontró {{count}} pagos que coinciden con facturas abiertas."
+    "subtitle_other": "Vasco encontró {{count}} pagos que coinciden con facturas abiertas.",
+    "reasonIban": "IBAN coincide",
+    "markPaidA11y": "Marcar la factura {{id}} como pagada"
   },
   "projectSwitcher": {
     "activeProjects": "PROYECTOS ACTIVOS",
