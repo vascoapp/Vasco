@@ -55,6 +55,59 @@ const VAT_FORMATS: Record<string, RegExp> = {
   AT: /^ATU\d{8}$/,
 };
 
+/**
+ * Luhn, shared by SIRET/SIREN and the Italian partita IVA check digit.
+ * Both are mod-10 with the same doubling rule; only the length differs.
+ */
+function luhnValid(digits: string): boolean {
+  let sum = 0;
+  for (let i = 0; i < digits.length; i += 1) {
+    let d = digits.charCodeAt(digits.length - 1 - i) - 48;
+    if (d < 0 || d > 9) return false;
+    if (i % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+
+/**
+ * FRENCH SIRET — 14 digits, Luhn-checked. SIREN (the first 9) is accepted too:
+ * a sole trader quotes either, and refusing a valid SIREN would block a real
+ * contractor from invoicing.
+ *
+ * `checkInvoiceReadiness` REQUIRES a SIRET for France and, until 2026-08-29,
+ * never looked at it — the format half of that gate ran `isValidKvKNumber`
+ * behind `country === 'NL'`, so every non-Dutch registration number was
+ * accepted as long as it was non-empty. R66r39 added format checking precisely
+ * because "non-empty" let a malformed BTW reach a customer's accountant; the
+ * same reasoning had simply never been applied outside the Netherlands.
+ *
+ * ⚠️ La Poste is the documented exception: SIRET 356 000 000 xxxxx does not
+ * satisfy Luhn. Accepted explicitly rather than failing a real company.
+ */
+export function isValidSIRET(value: string): boolean {
+  const v = value.trim().replace(/[\s.-]/g, '');
+  if (!/^\d+$/.test(v)) return false;
+  if (v.length === 9) return luhnValid(v);
+  if (v.length !== 14) return false;
+  if (v.startsWith('356000000')) return true;
+  return luhnValid(v);
+}
+
+/**
+ * ITALIAN partita IVA — 11 digits, mod-10 check digit (the Luhn rule applied
+ * from the left, which for a fixed 11-digit length is the same computation).
+ * Accepts an optional `IT` prefix because that is how the app stores it.
+ */
+export function isValidPartitaIVA(value: string): boolean {
+  const v = value.trim().toUpperCase().replace(/[\s.-]/g, '').replace(/^IT/, '');
+  if (!/^\d{11}$/.test(v)) return false;
+  return luhnValid(v);
+}
+
 export function isValidVATNumber(vat: string): boolean {
   const cleaned = vat.trim().replace(/\s/g, '').toUpperCase();
   const country = cleaned.slice(0, 2);

@@ -2340,7 +2340,9 @@
     "vatNumberPartitaIva": "Partita IVA",
     "vatNumberNif": "NIF / CIF",
     "postcode": "Code postal",
-    "city": "Ville"
+    "city": "Ville",
+    "siretFormatInvalid": "Le SIRET doit comporter 14 chiffres (ou un SIREN à 9 chiffres) et respecter sa clé de contrôle",
+    "partitaIvaChecksumInvalid": "Clé de contrôle de la partita IVA invalide (vérifiez les fautes de frappe)"
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",

@@ -7,7 +7,7 @@
 // =============================================================================
 
 import type { BusinessProfile } from '../domain/business';
-import { isValidVATNumber, isValidKvKNumber, isValidIBAN } from './validation';
+import { isValidVATNumber, isValidKvKNumber, isValidIBAN, isValidSIRET, isValidPartitaIVA } from './validation';
 import i18n from '../i18n/i18n';
 
 // R74: US widened in. Country-specific validation rules (EIN format, no
@@ -121,10 +121,31 @@ export function checkInvoiceReadiness(profile: BusinessProfile): ProfileReadines
       example: vatFormatExample(profile.country),
     }));
   }
+  // The registration number, per country. This used to run for NL alone, so
+  // every other market's number was accepted on "non-empty" — the exact state
+  // R66r39 removed for the Dutch BTW after a malformed one reached a customer's
+  // accountant. France is the one that mattered: `getRequiredFields` DEMANDS a
+  // SIRET and nothing looked at it.
   const kvkOrReg = (profile.kvkNumber ?? profile.registrationNumber)?.trim();
   if (kvkOrReg && profile.country === 'NL' && !isValidKvKNumber(kvkOrReg)) {
     invalid.push('profile.kvkFormatInvalid');
     invalidLabels.push(i18n.t('profile.kvkFormatInvalid', { defaultValue: 'KvK number must be 8 digits' }));
+  }
+  if (kvkOrReg && profile.country === 'FR' && !isValidSIRET(kvkOrReg)) {
+    invalid.push('profile.siretFormatInvalid');
+    invalidLabels.push(i18n.t('profile.siretFormatInvalid', {
+      defaultValue: 'SIRET must be 14 digits (or a 9-digit SIREN) and pass its checksum',
+    }));
+  }
+  // Italy: the shape check above already enforces IT + 11 digits. This adds the
+  // CHECK DIGIT, which is what separates a typo from a real partita IVA — and a
+  // wrong one goes out on every FatturaPA, where SDI validates it.
+  const piva = profile.vatNumber?.trim();
+  if (piva && profile.country === 'IT' && isValidVATNumber(piva) && !isValidPartitaIVA(piva)) {
+    invalid.push('profile.partitaIvaChecksumInvalid');
+    invalidLabels.push(i18n.t('profile.partitaIvaChecksumInvalid', {
+      defaultValue: 'Partita IVA checksum invalid (check for typos)',
+    }));
   }
   const iban = profile.iban?.trim();
   if (iban && !isValidIBAN(iban)) {

@@ -2340,7 +2340,9 @@
     "vatNumberPartitaIva": "Partita IVA",
     "vatNumberNif": "NIF / CIF",
     "postcode": "CAP",
-    "city": "Città"
+    "city": "Città",
+    "siretFormatInvalid": "Il SIRET deve avere 14 cifre (o un SIREN di 9) e superare la cifra di controllo",
+    "partitaIvaChecksumInvalid": "Cifra di controllo della partita IVA non valida (controlla eventuali errori di battitura)"
   },
   "search": {
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",

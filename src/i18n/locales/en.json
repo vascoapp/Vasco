@@ -2340,7 +2340,9 @@
     "vatNumberPartitaIva": "Partita IVA",
     "vatNumberNif": "NIF / CIF",
     "postcode": "Post code",
-    "city": "City"
+    "city": "City",
+    "siretFormatInvalid": "SIRET must be 14 digits (or a 9-digit SIREN) and pass its checksum",
+    "partitaIvaChecksumInvalid": "Partita IVA checksum invalid (check for typos)"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
