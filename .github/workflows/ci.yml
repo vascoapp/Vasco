@@ -102,6 +102,28 @@ jobs:
       - name: Run tests
         run: npm test -- --ci --passWithNoTests
 
+  edge-tests:
+    name: Deno tests (edge functions)
+    runs-on: ubuntu-latest
+    # These 16 tests existed, passed, and were run by NOTHING: jest's testMatch
+    # only reaches `**/__tests__/**`, and no script or workflow invoked deno.
+    # They only ran if a human typed the command out of a header comment.
+    #
+    # What they guard is not incidental. materialMerge.test.ts is written as
+    # attacks rather than happy paths, against "the training data the whole
+    # cohort moat runs on, and the one table that cannot be un-poisoned";
+    # llm_pii.test.ts covers the tokenizer that keeps customer names, emails,
+    # IBANs and postcodes out of a third-party model.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run edge-function tests
+        run: npm run test:edge
+
   preflight:
     name: Preflight (build-readiness)
     runs-on: ubuntu-latest
