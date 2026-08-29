@@ -48,6 +48,14 @@ interface QuoteLine {
 interface QuotePayload {
   id: string;
   reference: string | null;
+  // NET, VAT and GROSS. The page used to receive only `total` — which was the
+  // quote's NET total — and render it under a bare "Gesamt / Totaal / Total".
+  // The customer then confirmed a price 19-22% below the invoice they were
+  // sent. Older cached responses omit the first three, so they are optional
+  // and the breakdown rows only render when the rate is actually known.
+  subtotal?: number | null;
+  vatRate?: number | null;
+  vatAmount?: number | null;
   total: number | null;
   status: string | null;
   lines: QuoteLine[];
@@ -95,7 +103,7 @@ const LANG_LOCALE: Record<Lang, string> = {
 const COPY: Record<Lang, Record<string, string>> = {
   en: {
     accept: 'Accept quote', confirm: 'Yes — accept', cancel: 'Cancel', decline: 'Decline', declineTitle: 'Decline this quote', reasonLabel: 'Reason (optional)', reasonPlaceholder: 'Lets your contractor know why.', declineConfirm: 'Send decline', sending: 'Sending…', acceptedTitle: 'Accepted', acceptedBody: 'Your contractor has been notified and will be in touch to plan the work.', rejectedTitle: 'Declined', rejectedBody: 'Your contractor has been notified. You can still reach them directly if anything changes.', alreadyTitle: 'Already answered', alreadyBody: 'This quote has already been answered. Contact your contractor if that was not you.', failedTitle: 'That did not go through', failedBody: 'Nothing was sent. Please try again, or contact your contractor directly.', openAppSecondary: 'Open in the Vasco app',
-    eyebrow: 'Your quote', quoteRef: 'Quote', total: 'Total',
+    eyebrow: 'Your quote', quoteRef: 'Quote', total: 'Total', subtotal: 'Subtotal', vat: 'VAT',
     lines: 'What is included', qty: 'Qty', openApp: 'Open in Vasco to accept',
     noApp: 'New to Vasco?', loading: 'Loading your quote…',
     invalidTitle: 'This link is not valid', invalidBody: 'The link may have been mistyped or changed. Ask your contractor to send it again.',
@@ -106,7 +114,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   nl: {
     accept: 'Offerte accepteren', confirm: 'Ja — accepteren', cancel: 'Annuleren', decline: 'Afwijzen', declineTitle: 'Deze offerte afwijzen', reasonLabel: 'Reden (optioneel)', reasonPlaceholder: 'Zo weet je vakman waarom.', declineConfirm: 'Afwijzing versturen', sending: 'Versturen…', acceptedTitle: 'Geaccepteerd', acceptedBody: 'Je vakman heeft bericht gekregen en neemt contact op om het werk in te plannen.', rejectedTitle: 'Afgewezen', rejectedBody: 'Je vakman heeft bericht gekregen. Je kunt hem altijd rechtstreeks bereiken als er iets verandert.', alreadyTitle: 'Al beantwoord', alreadyBody: 'Deze offerte is al beantwoord. Neem contact op met je vakman als jij dat niet was.', failedTitle: 'Dat is niet gelukt', failedBody: 'Er is niets verstuurd. Probeer het opnieuw of neem rechtstreeks contact op met je vakman.', openAppSecondary: 'Openen in de Vasco-app',
-    eyebrow: 'Je offerte', quoteRef: 'Offerte', total: 'Totaal',
+    eyebrow: 'Je offerte', quoteRef: 'Offerte', total: 'Totaal', subtotal: 'Subtotaal', vat: 'Btw',
     lines: 'Wat is inbegrepen', qty: 'Aantal', openApp: 'Open in Vasco om te accepteren',
     noApp: 'Nieuw bij Vasco?', loading: 'Je offerte wordt geladen…',
     invalidTitle: 'Deze link is niet geldig', invalidBody: 'De link is mogelijk verkeerd overgenomen of gewijzigd. Vraag je vakman om hem opnieuw te sturen.',
@@ -117,7 +125,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   de: {
     accept: 'Angebot annehmen', confirm: 'Ja — annehmen', cancel: 'Abbrechen', decline: 'Ablehnen', declineTitle: 'Dieses Angebot ablehnen', reasonLabel: 'Begründung (optional)', reasonPlaceholder: 'So weiß Ihr Handwerksbetrieb, woran es lag.', declineConfirm: 'Ablehnung senden', sending: 'Wird gesendet…', acceptedTitle: 'Angenommen', acceptedBody: 'Ihr Handwerksbetrieb wurde benachrichtigt und meldet sich zur Terminplanung.', rejectedTitle: 'Abgelehnt', rejectedBody: 'Ihr Handwerksbetrieb wurde benachrichtigt. Sie können ihn jederzeit direkt erreichen.', alreadyTitle: 'Bereits beantwortet', alreadyBody: 'Dieses Angebot wurde bereits beantwortet. Melden Sie sich bei Ihrem Handwerksbetrieb, falls Sie das nicht waren.', failedTitle: 'Das hat nicht geklappt', failedBody: 'Es wurde nichts gesendet. Bitte versuchen Sie es erneut oder wenden Sie sich direkt an Ihren Handwerksbetrieb.', openAppSecondary: 'In der Vasco-App öffnen',
-    eyebrow: 'Ihr Angebot', quoteRef: 'Angebot', total: 'Gesamt',
+    eyebrow: 'Ihr Angebot', quoteRef: 'Angebot', total: 'Gesamt', subtotal: 'Zwischensumme', vat: 'USt.',
     lines: 'Enthaltene Leistungen', qty: 'Menge', openApp: 'In Vasco öffnen und annehmen',
     noApp: 'Neu bei Vasco?', loading: 'Ihr Angebot wird geladen…',
     invalidTitle: 'Dieser Link ist ungültig', invalidBody: 'Der Link wurde möglicherweise falsch übernommen oder verändert. Bitten Sie Ihren Handwerksbetrieb, ihn erneut zu senden.',
@@ -128,7 +136,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   fr: {
     accept: 'Accepter le devis', confirm: 'Oui — accepter', cancel: 'Annuler', decline: 'Refuser', declineTitle: 'Refuser ce devis', reasonLabel: 'Motif (facultatif)', reasonPlaceholder: 'Votre artisan saura pourquoi.', declineConfirm: 'Envoyer le refus', sending: 'Envoi…', acceptedTitle: 'Accepté', acceptedBody: 'Votre artisan a été prévenu et vous contactera pour planifier les travaux.', rejectedTitle: 'Refusé', rejectedBody: 'Votre artisan a été prévenu. Vous pouvez le joindre directement si les choses changent.', alreadyTitle: 'Déjà répondu', alreadyBody: "Ce devis a déjà reçu une réponse. Contactez votre artisan si ce n'était pas vous.", failedTitle: "Cela n'a pas fonctionné", failedBody: "Rien n'a été envoyé. Réessayez ou contactez directement votre artisan.", openAppSecondary: "Ouvrir dans l'app Vasco",
-    eyebrow: 'Votre devis', quoteRef: 'Devis', total: 'Total',
+    eyebrow: 'Votre devis', quoteRef: 'Devis', total: 'Total', subtotal: 'Sous-total', vat: 'TVA',
     lines: 'Prestations incluses', qty: 'Qté', openApp: 'Ouvrir dans Vasco pour accepter',
     noApp: 'Nouveau sur Vasco ?', loading: 'Chargement de votre devis…',
     invalidTitle: "Ce lien n'est pas valide", invalidBody: "Le lien a peut-être été mal recopié ou modifié. Demandez à votre artisan de le renvoyer.",
@@ -139,7 +147,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   es: {
     accept: 'Aceptar presupuesto', confirm: 'Sí — aceptar', cancel: 'Cancelar', decline: 'Rechazar', declineTitle: 'Rechazar este presupuesto', reasonLabel: 'Motivo (opcional)', reasonPlaceholder: 'Así tu profesional sabrá por qué.', declineConfirm: 'Enviar rechazo', sending: 'Enviando…', acceptedTitle: 'Aceptado', acceptedBody: 'Tu profesional ha sido avisado y se pondrá en contacto para planificar el trabajo.', rejectedTitle: 'Rechazado', rejectedBody: 'Tu profesional ha sido avisado. Puedes contactarle directamente si algo cambia.', alreadyTitle: 'Ya respondido', alreadyBody: 'Este presupuesto ya tiene respuesta. Contacta con tu profesional si no fuiste tú.', failedTitle: 'No se ha podido enviar', failedBody: 'No se envió nada. Inténtalo de nuevo o contacta directamente con tu profesional.', openAppSecondary: 'Abrir en la app Vasco',
-    eyebrow: 'Tu presupuesto', quoteRef: 'Presupuesto', total: 'Total',
+    eyebrow: 'Tu presupuesto', quoteRef: 'Presupuesto', total: 'Total', subtotal: 'Base imponible', vat: 'IVA',
     lines: 'Qué incluye', qty: 'Cant.', openApp: 'Abrir en Vasco para aceptar',
     noApp: '¿Nuevo en Vasco?', loading: 'Cargando tu presupuesto…',
     invalidTitle: 'Este enlace no es válido', invalidBody: 'Puede que el enlace se haya copiado mal o modificado. Pide a tu profesional que te lo envíe de nuevo.',
@@ -150,7 +158,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   it: {
     accept: 'Accetta il preventivo', confirm: 'Sì — accetta', cancel: 'Annulla', decline: 'Rifiuta', declineTitle: 'Rifiuta questo preventivo', reasonLabel: 'Motivo (facoltativo)', reasonPlaceholder: 'Così il tuo tecnico sa perché.', declineConfirm: 'Invia il rifiuto', sending: 'Invio…', acceptedTitle: 'Accettato', acceptedBody: 'Il tuo tecnico è stato avvisato e ti contatterà per pianificare i lavori.', rejectedTitle: 'Rifiutato', rejectedBody: 'Il tuo tecnico è stato avvisato. Puoi contattarlo direttamente se qualcosa cambia.', alreadyTitle: 'Già risposto', alreadyBody: 'A questo preventivo è già stata data una risposta. Contatta il tuo tecnico se non sei stato tu.', failedTitle: 'Non è andata a buon fine', failedBody: 'Non è stato inviato nulla. Riprova o contatta direttamente il tuo tecnico.', openAppSecondary: "Apri nell'app Vasco",
-    eyebrow: 'Il tuo preventivo', quoteRef: 'Preventivo', total: 'Totale',
+    eyebrow: 'Il tuo preventivo', quoteRef: 'Preventivo', total: 'Totale', subtotal: 'Imponibile', vat: 'IVA',
     lines: 'Che cosa include', qty: 'Qtà', openApp: 'Apri in Vasco per accettare',
     noApp: 'Nuovo su Vasco?', loading: 'Caricamento del preventivo…',
     invalidTitle: 'Questo link non è valido', invalidBody: 'Il link potrebbe essere stato copiato male o modificato. Chiedi al tuo tecnico di inviarlo di nuovo.',
@@ -410,17 +418,32 @@ export default function PublicQuotePortal({ params }: PageProps) {
                 <div
                   className="vb-fade vb-fade-3"
                   style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     background: '#1C2128', border: '1px solid #2A3038', borderRadius: 18,
                     padding: '18px 20px', marginBottom: 26,
                   }}
                 >
-                  <span style={{ fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase', color: '#9CA3AF', fontWeight: 700 }}>
-                    {copy.total}
-                  </span>
-                  <span style={{ fontSize: 24, fontWeight: 900, fontFamily: 'var(--font-archivo), sans-serif' }}>
-                    {money.format(quote.total)}
-                  </span>
+                  {quote.subtotal != null && quote.vatAmount != null && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 8 }}>
+                        <span style={{ fontSize: 13, color: '#9CA3AF' }}>{copy.subtotal}</span>
+                        <span style={{ fontSize: 14, color: '#D1D5DB', whiteSpace: 'nowrap' }}>{money.format(quote.subtotal)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid #2A3038' }}>
+                        <span style={{ fontSize: 13, color: '#9CA3AF' }}>
+                          {copy.vat}{quote.vatRate != null ? ` (${Math.round(quote.vatRate * 100)}%)` : ''}
+                        </span>
+                        <span style={{ fontSize: 14, color: '#D1D5DB', whiteSpace: 'nowrap' }}>{money.format(quote.vatAmount)}</span>
+                      </div>
+                    </>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase', color: '#9CA3AF', fontWeight: 700 }}>
+                      {copy.total}
+                    </span>
+                    <span style={{ fontSize: 24, fontWeight: 900, fontFamily: 'var(--font-archivo), sans-serif', whiteSpace: 'nowrap' }}>
+                      {money.format(quote.total)}
+                    </span>
+                  </div>
                 </div>
               )}
 

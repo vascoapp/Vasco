@@ -168,6 +168,21 @@ Deno.serve(async (req) => {
       ? await admin.from('customers').select('name, email').eq('id', quote.customer_id).maybeSingle()
       : { data: null };
 
+    // `documents.total_amount` is the NET total for a quote — the same unit as
+    // `Quote.amount` in the app, which the quote screen grosses up for display
+    // and `grossFromNet` grosses up again on the way to an invoice. This page
+    // and the acceptance page below both used to render that net figure under
+    // a bare "Gesamt / Totaal / Total", so the customer confirmed a price
+    // 19-22% below the invoice they were then sent. Mirrors
+    // `src/constants/taxRates.ts`; keep the two in step.
+    const VAT_RATES: Record<string, number> = {
+      NL: 0.21, DE: 0.19, FR: 0.20, ES: 0.21, IT: 0.22, UK: 0.20,
+    };
+    const vatRate = VAT_RATES[profile?.country ?? ''] ?? 0.21;
+    const netTotal = Number(quote.total_amount) || 0;
+    const vatAmount = Math.round(netTotal * vatRate * 100) / 100;
+    const grossTotal = Math.round((netTotal + vatAmount) * 100) / 100;
+
     // ── An acceptance capability for the customer holding this link ──────
     //
     // The portal used to render the quote and then tell the reader to "open in
@@ -209,7 +224,7 @@ Deno.serve(async (req) => {
           quote_id: quote.document_number,
           customer_id: quote.customer_id,
           customer_name: customer?.name ?? null,
-          quote_amount: quote.total_amount,
+          quote_amount: grossTotal,
           // 90 days matches the quote-link validity the portal already tells
           // the customer about.
           expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
@@ -227,7 +242,10 @@ Deno.serve(async (req) => {
       quote: {
         id: quote.id,
         reference: quote.document_number,
-        total: quote.total_amount,
+        subtotal: netTotal,
+        vatRate,
+        vatAmount,
+        total: grossTotal,
         status: quote.status,
         lines: lines ?? [],
         customer,

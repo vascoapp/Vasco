@@ -199,8 +199,15 @@ export default function QuoteDetailScreen() {
         return;
       }
       await shareQuoteWithAcceptanceLink({
+        // GROSS, not `quote.amount`. See the unit note above: `Quote.amount` is
+        // NET, and this number is the one the CUSTOMER reads — in the share
+        // message, under "Gesamt/Totaal/Total" on the acceptance page, and on
+        // its confirm button. Sending the net figure meant the customer agreed
+        // to €6.800 while this screen called the same quote €8.092 and the
+        // invoice made from it billed €8.092. A quote page that names a total
+        // must name the total that will be invoiced.
         id: quote.id, customer: quote.customer, customerName: customerDisplayName,
-        amount: quote.amount, job: quote.job,
+        amount: total, job: quote.job,
       });
       if (isDemoMode) {
         Alert.alert(
@@ -357,7 +364,7 @@ export default function QuoteDetailScreen() {
                   { text: t('quotes.shareApprovalLink', 'Share approval link'), onPress: async () => {
                     try {
                       // R14.1: customer arg is the UUID, customerName needs the resolved name.
-                      await shareQuoteWithAcceptanceLink({ id: quote.id, customer: quote.customer, customerName: customerDisplayName, amount: quote.amount, job: quote.job });
+                      await shareQuoteWithAcceptanceLink({ id: quote.id, customer: quote.customer, customerName: customerDisplayName, amount: total, job: quote.job });
                     } catch {}
                   }},
                   { text: t('common.close', 'Close') },
