@@ -17,12 +17,17 @@ const getCurrencySymbol = (country?: Country): string =>
 
 // Country-specific business registration label — must match invoicePdfService
 // so a contractor's quote and invoice show the same id under the same name.
+// R66: Italy is the one that had to change. The REGISTRATION number an Italian
+// business quotes is its REA (Repertorio Economico Amministrativo, e.g.
+// "MI-1234567"); the P.IVA is the separate VAT identifier below. Labelling both
+// "P.IVA" printed the REA under the name of a number it is not — on the header
+// AND the footer of every Italian quote and invoice.
 function registrationLabel(country?: Country): string {
   switch (country) {
     case 'DE': return 'HRB';
     case 'FR': return 'SIRET';
     case 'ES': return 'NIF';
-    case 'IT': return 'P.IVA';
+    case 'IT': return 'REA';
     case 'UK': return 'Co. no.';
     case 'NL':
     default:   return 'KvK';
