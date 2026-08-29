@@ -52,10 +52,22 @@ const must = (label, { error }) => {
 };
 
 const stamp = Date.now();
+// Injective in `seed`. It was `((seed + i * 7) % 16)`, whose output depends
+// ONLY on `seed % 16` — sixteen possible tokens in the whole space. The three
+// fixture links below are hex32(stamp), hex32(stamp+1) and hex32(stamp+2), and
+// the "forged" token further down is hex32(999999), so whenever
+// `Date.now() % 16` landed on 13, 14 or 15 the forged token WAS one of the
+// fixtures: "an unknown quote token returns nothing" failed on 3 runs in 16.
+//
+// A security check that fails 19% of the time is worse than no check — it is
+// the `npm audit` lesson in this repo's own CI history, where a permanently red
+// job taught everyone to ignore CI. Padding to a fixed width keeps it injective
+// for any seed below 16^16, and the second half keeps the tokens from sharing a
+// visible prefix.
 const hex32 = (seed) => {
-  let out = '';
-  for (let i = 0; i < 32; i += 1) out += ((seed + i * 7) % 16).toString(16);
-  return out;
+  const a = BigInt(seed).toString(16).padStart(16, '0').slice(-16);
+  const b = ((BigInt(seed) * 2654435761n) & 0xFFFFFFFFFFFFFFFFn).toString(16).padStart(16, '0').slice(-16);
+  return (a + b).slice(0, 32);
 };
 
 const created = { users: [] };
