@@ -81,7 +81,8 @@
     "justNow": "Proprio ora",
     "tryAgain": "Riprova.",
     "moreOptions": "Altre opzioni",
-    "eInvoicing": "Fatturazione elettronica (FatturaPA)"
+    "eInvoicing": "Fatturazione elettronica (FatturaPA)",
+    "perHour": "{{rate}}/h"
   },
   "tabs": {
     "today": "Oggi",
@@ -5683,7 +5684,6 @@
     "jobsCount_other": "{{count}} lavori",
     "onJobs": "Su lavori",
     "noRate": "Nessun costo orario registrato",
-    "perHour": "{{rate}}/h",
     "inactive": "Non fa più parte della squadra",
     "unpricedNote_one": "Esclude {{count}} persona senza costo orario ({{hours}} h). Aggiungilo in Squadra.",
     "unpricedNote_other": "Esclude {{count}} persone senza costo orario ({{hours}} h). Aggiungilo in Squadra.",

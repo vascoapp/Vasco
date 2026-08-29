@@ -1640,7 +1640,11 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 <Text style={s.vascoText}>
                   {t('quotes.cohortBenchmark', 'Similar {{trade}} jobs in {{country}}:', { trade, country })}{' '}
                   <Text style={{ fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary }}>
-                    {fmt(tb.medianHourlyRate)}/u
+                    {/* "/u" is Dutch (uur). A French plumber read "85,00 €/u"
+                        and a German "/u" instead of "/Std." — on the cohort
+                        benchmark, which only renders once there is peer data,
+                        which is why the earlier sweep of this literal missed it. */}
+                    {t('common.perHour', '{{rate}}/h', { rate: fmt(tb.medianHourlyRate) })}
                   </Text>
                   {tb.avgQuoteAcceptanceRate > 0 && (
                     <Text style={s.vascoText}>

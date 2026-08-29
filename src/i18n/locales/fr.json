@@ -81,7 +81,8 @@
     "justNow": "À l’instant",
     "tryAgain": "Veuillez réessayer.",
     "moreOptions": "Plus d'options",
-    "eInvoicing": "Facturation électronique (Factur-X)"
+    "eInvoicing": "Facturation électronique (Factur-X)",
+    "perHour": "{{rate}}/h"
   },
   "tabs": {
     "today": "Aujourd'hui",
@@ -5683,7 +5684,6 @@
     "jobsCount_other": "{{count}} chantiers",
     "onJobs": "Sur chantiers",
     "noRate": "Aucun coût horaire enregistré",
-    "perHour": "{{rate}}/h",
     "inactive": "Ne fait plus partie de l'équipe",
     "unpricedNote_one": "Hors {{count}} personne sans coût horaire ({{hours}} h). À compléter dans Équipe.",
     "unpricedNote_other": "Hors {{count}} personnes sans coût horaire ({{hours}} h). À compléter dans Équipe.",

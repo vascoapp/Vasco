@@ -81,7 +81,8 @@
     "justNow": "Just now",
     "tryAgain": "Please try again.",
     "moreOptions": "More options",
-    "eInvoicing": "E-invoicing (XRechnung, Peppol)"
+    "eInvoicing": "E-invoicing (XRechnung, Peppol)",
+    "perHour": "{{rate}}/h"
   },
   "tabs": {
     "today": "Today",
@@ -410,7 +411,7 @@
     "customerSignatureDesc": "Ask the customer to sign below to confirm the work is completed.",
     "signaturesSectionLabel": "Signatures",
     "qualityFeedback": "Feedback",
-    "postcodeCohort": "Postcode area: {{price}}/u median · {{accept}}% accept · {{n}} quotes",
+    "postcodeCohort": "Postcode area: {{price}}/h median · {{accept}}% accept · {{n}} quotes",
     "requestSignature": "Request from customer",
     "signatureRequestTitle": "Sign-off request",
     "signatureRequestBody": "Hi {{customer}}, please sign off on the completed work for \"{{job}}\": vascobuild.com/sign/{{ref}}",
@@ -5683,7 +5684,6 @@
     "jobsCount_other": "{{count}} jobs",
     "onJobs": "On jobs",
     "noRate": "No hourly cost recorded",
-    "perHour": "{{rate}}/h",
     "inactive": "No longer on the crew",
     "unpricedNote_one": "Excludes {{count}} person with no hourly cost recorded ({{hours}}h). Add it under Team.",
     "unpricedNote_other": "Excludes {{count}} people with no hourly cost recorded ({{hours}}h). Add it under Team.",

@@ -61,6 +61,7 @@ interface WorkerCardProps {
 }
 
 function WorkerCard({ worker, isSelected, onSelect, assignedJob }: WorkerCardProps) {
+  const { t } = useTranslation();
   const statusConfig = WORKER_STATUS_CONFIG[worker.status];
 
   return (
@@ -101,7 +102,7 @@ function WorkerCard({ worker, isSelected, onSelect, assignedJob }: WorkerCardPro
           <Ionicons name="briefcase-outline" size={12} color={SemanticColors.textSecondary} />
           <Text style={styles.workerStatText}>{worker.jobsCompleted}</Text>
         </View>
-        <Text style={styles.workerRate}>{formatMoney(worker.hourlyRate)}/u</Text>
+        <Text style={styles.workerRate}>{t('common.perHour', '{{rate}}/h', { rate: formatMoney(worker.hourlyRate) })}</Text>
       </View>
     </Pressable>
   );

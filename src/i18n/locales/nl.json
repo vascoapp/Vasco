@@ -81,7 +81,8 @@
     "justNow": "Zojuist",
     "tryAgain": "Probeer het opnieuw.",
     "moreOptions": "Meer opties",
-    "eInvoicing": "E-facturatie (Peppol, XRechnung)"
+    "eInvoicing": "E-facturatie (Peppol, XRechnung)",
+    "perHour": "{{rate}}/u"
   },
   "tabs": {
     "today": "Vandaag",
@@ -5670,7 +5671,6 @@
     "jobsCount_other": "{{count}} klussen",
     "onJobs": "Op klussen",
     "noRate": "Geen uurtarief vastgelegd",
-    "perHour": "{{rate}}/u",
     "inactive": "Niet meer in dienst",
     "unpricedNote_one": "Exclusief {{count}} persoon zonder uurtarief ({{hours}}u). Vul dit aan bij Team.",
     "unpricedNote_other": "Exclusief {{count}} personen zonder uurtarief ({{hours}}u). Vul dit aan bij Team.",

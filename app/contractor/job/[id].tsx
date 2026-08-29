@@ -1130,7 +1130,7 @@ export default function JobDetailPage() {
                   color: SemanticColors.textSecondary,
                   marginTop: GRID.xs,
                 }}>
-                  {t('jobs.postcodeCohort', 'Postcode area: {{price}}/u median · {{accept}}% accept · {{n}} quotes', {
+                  {t('jobs.postcodeCohort', 'Postcode area: {{price}}/h median · {{accept}}% accept · {{n}} quotes', {
                     price: formatCurrency0(postcodeCohort.medianUnitPrice, country),
                     accept: Math.round((postcodeCohort.acceptanceRate ?? 0) * 100),
                     n: postcodeCohort.sampleSize,

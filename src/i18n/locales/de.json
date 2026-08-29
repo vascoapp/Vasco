@@ -81,7 +81,8 @@
     "justNow": "Gerade eben",
     "tryAgain": "Bitte versuchen Sie es erneut.",
     "moreOptions": "Weitere Optionen",
-    "eInvoicing": "E-Rechnung (XRechnung, ZUGFeRD)"
+    "eInvoicing": "E-Rechnung (XRechnung, ZUGFeRD)",
+    "perHour": "{{rate}}/Std."
   },
   "tabs": {
     "today": "Heute",
@@ -5683,7 +5684,6 @@
     "jobsCount_other": "{{count}} Aufträge",
     "onJobs": "Auf Aufträgen",
     "noRate": "Kein Stundensatz hinterlegt",
-    "perHour": "{{rate}}/Std.",
     "inactive": "Nicht mehr im Team",
     "unpricedNote_one": "Ohne {{count}} Person ohne hinterlegten Stundensatz ({{hours}} Std.). Bitte unter Team ergänzen.",
     "unpricedNote_other": "Ohne {{count}} Personen ohne hinterlegten Stundensatz ({{hours}} Std.). Bitte unter Team ergänzen.",

@@ -81,7 +81,8 @@
     "justNow": "Ahora mismo",
     "tryAgain": "Inténtalo de nuevo.",
     "moreOptions": "Más opciones",
-    "eInvoicing": "Facturación electrónica (Facturae)"
+    "eInvoicing": "Facturación electrónica (Facturae)",
+    "perHour": "{{rate}}/h"
   },
   "tabs": {
     "today": "Hoy",
@@ -5683,7 +5684,6 @@
     "jobsCount_other": "{{count}} trabajos",
     "onJobs": "En trabajos",
     "noRate": "Sin coste por hora registrado",
-    "perHour": "{{rate}}/h",
     "inactive": "Ya no está en el equipo",
     "unpricedNote_one": "Excluye {{count}} persona sin coste por hora ({{hours}} h). Añádelo en Equipo.",
     "unpricedNote_other": "Excluye {{count}} personas sin coste por hora ({{hours}} h). Añádelo en Equipo.",

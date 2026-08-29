@@ -190,7 +190,7 @@ export default function PayrollScreen() {
                 <Text style={styles.memberRole} numberOfLines={1}>
                   {line.hourlyCost === undefined
                     ? t('payroll.noRate', 'No hourly cost recorded')
-                    : t('payroll.perHour', '{{rate}}/h', { rate: fmt(line.hourlyCost) })}
+                    : t('common.perHour', '{{rate}}/h', { rate: fmt(line.hourlyCost) })}
                   {line.isInactive ? ` · ${t('payroll.inactive', 'No longer on the crew')}` : ''}
                 </Text>
               </View>
