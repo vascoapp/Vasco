@@ -6074,5 +6074,947 @@
     "filedBody": "Vasco crea il file — non lo invia all'ente. Conferma solo dopo aver realmente trasmesso {{format}}.",
     "filedYes": "Sì, trasmessa",
     "filedNotYet": "Non ancora"
+  },
+  "decisionCatalog": {
+    "categories": {
+      "cat_bath_electrical": {
+        "description": "Illuminazione e punti elettrici",
+        "name": "Impianto elettrico"
+      },
+      "cat_bath_fixtures": {
+        "description": "WC, lavabo, doccia/vasca e rubinetteria",
+        "name": "Sanitari e rubinetteria"
+      },
+      "cat_bath_tiles": {
+        "description": "Scelta delle piastrelle per pavimento e rivestimento",
+        "name": "Piastrelle e superfici"
+      },
+      "cat_elec_lighting": {
+        "description": "Plafoniere, faretti e dimmer",
+        "name": "Illuminazione"
+      },
+      "cat_elec_outlets": {
+        "description": "Posizione e tipo di prese e interruttori",
+        "name": "Prese e interruttori"
+      },
+      "cat_heat_controls": {
+        "description": "Scelta del termostato e delle valvole dei radiatori",
+        "name": "Regolazione"
+      },
+      "cat_heat_hotwater": {
+        "description": "Sistema di acqua calda e dimensionamento del bollitore",
+        "name": "Acqua calda"
+      },
+      "cat_heat_system": {
+        "description": "Tipo e marca della caldaia e stile dei radiatori",
+        "name": "Impianto di riscaldamento"
+      },
+      "cat_hp_controls": {
+        "description": "Regolatore, monitoraggio dei consumi e manutenzione",
+        "name": "Regolazione e monitoraggio"
+      },
+      "cat_hp_integration": {
+        "description": "Serbatoio inerziale, riscaldamento a pavimento e compatibilità dei radiatori",
+        "name": "Integrazione"
+      },
+      "cat_hp_system": {
+        "description": "Tipo, marca e potenza della pompa di calore",
+        "name": "Scelta dell'impianto"
+      },
+      "cat_kitchen_appliances": {
+        "description": "Elettrodomestici da incasso e a libera installazione",
+        "name": "Elettrodomestici"
+      },
+      "cat_kitchen_cabinets": {
+        "description": "Stile, colore e disposizione dei mobili",
+        "name": "Mobili e disposizione"
+      },
+      "cat_kitchen_counters": {
+        "description": "Materiale del piano di lavoro e profilo del bordo",
+        "name": "Piani di lavoro"
+      },
+      "cat_kitchen_electrical": {
+        "description": "Posizione delle prese e dell'illuminazione",
+        "name": "Elettrico e illuminazione"
+      },
+      "cat_paint_colors": {
+        "description": "Scelta dei colori per ogni ambiente",
+        "name": "Colori della tinteggiatura"
+      },
+      "cat_paint_finish": {
+        "description": "Grado di lucidità e qualità della pittura",
+        "name": "Finitura e qualità della pittura"
+      },
+      "cat_paint_prep": {
+        "description": "Riparazioni e preparazione prima della tinteggiatura",
+        "name": "Lavori di preparazione"
+      },
+      "cat_reno_bathroom": {
+        "description": "Stile, piastrelle e disposizione del bagno",
+        "name": "Bagno"
+      },
+      "cat_reno_flooring": {
+        "description": "Materiali di pavimentazione per ogni piano",
+        "name": "Pavimenti"
+      },
+      "cat_reno_kitchen": {
+        "description": "Fornitore della cucina, piani di lavoro ed elettrodomestici",
+        "name": "Cucina"
+      },
+      "cat_reno_layout": {
+        "description": "Modifiche strutturali, pareti e finestre",
+        "name": "Distribuzione e struttura"
+      },
+      "cat_reno_mep": {
+        "description": "Schema elettrico, illuminazione e caldaia",
+        "name": "Impianti elettrico e idraulico"
+      },
+      "cat_wood_doors": {
+        "description": "Stile, materiale e ferramenta delle porte interne",
+        "name": "Porte"
+      },
+      "cat_wood_finishing": {
+        "description": "Battiscopa, cornici e finitura del legno",
+        "name": "Finiture"
+      },
+      "cat_wood_storage": {
+        "description": "Tipo di armadio, ripiani e disposizione interna",
+        "name": "Armadiature su misura"
+      }
+    },
+    "items": {
+      "item_architrave_style": {
+        "description": "Profilo della cornice della porta",
+        "impact": "Minore — si può decidere in fase di finitura",
+        "name": "Stile della cornice",
+        "options": {
+          "contrasting": "Profilo a contrasto",
+          "matching": "Profilo abbinato al battiscopa"
+        }
+      },
+      "item_backsplash": {
+        "description": "Paraschizzi standard o a tutta altezza",
+        "impact": "Incide sull'ordine delle piastrelle",
+        "name": "Altezza del paraschizzi",
+        "options": {
+          "ceiling": "Fino al soffitto (senza pensili)",
+          "full": "Tutta altezza (fino ai pensili)",
+          "standard": "Standard (alzatina da 10 cm)"
+        }
+      },
+      "item_boiler_brand": {
+        "description": "Produttore di caldaie preferito",
+        "impact": "I modelli più diffusi possono richiedere 2-3 settimane",
+        "name": "Marca preferita",
+        "options": {
+          "bosch": "Bosch",
+          "nefit": "Nefit",
+          "remeha": "Remeha",
+          "vaillant": "Vaillant"
+        }
+      },
+      "item_boiler_type": {
+        "description": "Tipo di caldaia per l'abitazione",
+        "help": "La caldaia istantanea produce acqua calda su richiesta. Quella ad accumulo usa un bollitore. Le pompe di calore sono le più efficienti.",
+        "impact": "Il tipo di caldaia determina tutto il progetto dell'impianto e le tubazioni",
+        "name": "Tipo di caldaia",
+        "optionDescriptions": {
+          "combi": "Senza bollitore, acqua calda istantanea",
+          "heat_pump": "La più efficiente dal punto di vista energetico",
+          "system": "Utilizza un bollitore per l'acqua calda"
+        },
+        "options": {
+          "combi": "Caldaia istantanea",
+          "heat_pump": "Pompa di calore",
+          "system": "Caldaia ad accumulo"
+        }
+      },
+      "item_cabinet_color": {
+        "description": "Colore principale dei mobili",
+        "help": "Scelte comuni: bianco, grigio, blu notte, legno naturale",
+        "impact": "Il colore condiziona la scelta del piano e del paraschizzi",
+        "name": "Colore/finitura dei mobili"
+      },
+      "item_cabinet_hardware": {
+        "description": "Stile di maniglie o pomelli",
+        "impact": "Si possono aggiungere dopo, ma le forature vanno previste",
+        "name": "Maniglie dei mobili",
+        "options": {
+          "bar": "Maniglie a barra",
+          "cup": "Maniglie a conchiglia",
+          "knob": "Pomelli",
+          "none": "Apertura a pressione (senza maniglia)"
+        }
+      },
+      "item_cabinet_style": {
+        "description": "Shaker, liscia o con pannello in rilievo",
+        "impact": "I mobili richiedono 4-6 settimane",
+        "name": "Stile dell'anta",
+        "optionDescriptions": {
+          "flat": "Minimalista e moderna",
+          "raised": "Tradizionale e lavorata",
+          "shaker": "Classica, con pannello incassato"
+        },
+        "options": {
+          "flat": "Liscia",
+          "raised": "Pannello in rilievo",
+          "shaker": "Shaker"
+        }
+      },
+      "item_ceiling_color": {
+        "description": "Uguale alle pareti o diverso?",
+        "impact": "Minore — modificabile durante i lavori",
+        "name": "Colore del soffitto",
+        "options": {
+          "custom": "Altro colore (da specificare)",
+          "lighter": "Tonalità più chiara delle pareti",
+          "match": "Abbinato al colore delle pareti",
+          "white": "Bianco standard"
+        }
+      },
+      "item_counter_color": {
+        "description": "Scelta della lastra o del colore",
+        "help": "Visita lo showroom o invia una foto dell'opzione preferita",
+        "impact": "I colori più richiesti possono non essere disponibili",
+        "name": "Colore/venatura del piano"
+      },
+      "item_counter_material": {
+        "description": "Materiale della superficie di lavoro principale",
+        "impact": "I piani in pietra richiedono 2-3 settimane di lavorazione",
+        "name": "Materiale del piano di lavoro",
+        "options": {
+          "butcher_block": "Legno massello",
+          "granite": "Granito",
+          "laminate": "Laminato",
+          "quartz": "Quarzo",
+          "solid_surface": "Superficie solida (Corian)"
+        }
+      },
+      "item_cylinder_size": {
+        "description": "Capacità di accumulo dell'acqua calda (se prevista)",
+        "help": "100 L per 1-2 persone, 150 L per 2-3, 200 L per 3-4, 300 L per 4 o più",
+        "impact": "Un bollitore più grande occupa più spazio — incide sul dimensionamento del vano",
+        "name": "Capacità del bollitore",
+        "options": {
+          "100l": "100 litri",
+          "150l": "150 litri",
+          "200l": "200 litri",
+          "300l": "300 litri"
+        }
+      },
+      "item_dimmer_switches": {
+        "description": "In quali ambienti servono i dimmer?",
+        "impact": "Il cablaggio dei dimmer è diverso",
+        "name": "Dimmer",
+        "options": {
+          "bathroom": "Bagno",
+          "bedroom": "Camere",
+          "dining": "Sala da pranzo",
+          "living": "Soggiorno"
+        }
+      },
+      "item_door_handle_type": {
+        "description": "Stile della maniglia della porta",
+        "impact": "Si monta per ultima — solo un ritardo minimo",
+        "name": "Tipo di maniglia",
+        "options": {
+          "knob": "Pomolo",
+          "lever": "Maniglia a leva",
+          "pull": "Maniglione"
+        }
+      },
+      "item_door_hardware_finish": {
+        "description": "Finitura di cerniere, maniglie e serrature",
+        "impact": "Le finiture non standard possono richiedere un ordine",
+        "name": "Finitura della ferramenta",
+        "options": {
+          "black": "Nero opaco",
+          "brass": "Ottone",
+          "brushed_nickel": "Nichel spazzolato",
+          "chrome": "Cromo"
+        }
+      },
+      "item_door_material": {
+        "description": "Materiale di costruzione della porta",
+        "impact": "Le porte in massello hanno tempi di consegna più lunghi",
+        "name": "Materiale",
+        "options": {
+          "mdf": "MDF",
+          "solid_wood": "Legno massello",
+          "veneer": "Impiallacciatura"
+        }
+      },
+      "item_door_style": {
+        "description": "Design delle porte interne",
+        "impact": "3-4 settimane di consegna per misure su ordinazione",
+        "name": "Stile della porta",
+        "optionDescriptions": {
+          "barn": "Scorrevole su binario",
+          "flush": "Aspetto piatto e moderno",
+          "glazed": "Pannelli in vetro per la luce",
+          "panel": "Tradizionale, con pannelli in rilievo o incassati"
+        },
+        "options": {
+          "barn": "Porta scorrevole esterno muro",
+          "flush": "Porta liscia",
+          "glazed": "Porta a vetri",
+          "panel": "Porta a pannelli"
+        }
+      },
+      "item_downlights_count": {
+        "description": "Numero di faretti a incasso",
+        "help": "Indicare per ambiente: soggiorno 6, cucina 8, ecc.",
+        "impact": "Il soffitto va forato prima dell'intonaco",
+        "name": "Numero di faretti per ambiente"
+      },
+      "item_extractor": {
+        "description": "Dove va installato l'aspiratore?",
+        "impact": "Incide sul percorso delle canalizzazioni",
+        "name": "Posizione dell'aspiratore",
+        "options": {
+          "ceiling": "A soffitto",
+          "wall": "A parete",
+          "window": "Aspiratore da finestra"
+        }
+      },
+      "item_floor_tile": {
+        "description": "Scegli la piastrella per pavimento (foto o link)",
+        "help": "Il grado antiscivolo è importante per i pavimenti del bagno",
+        "impact": "Le piastrelle richiedono spesso 2-4 settimane di consegna",
+        "name": "Scelta della piastrella per pavimento"
+      },
+      "item_fridge_size": {
+        "description": "Dimensioni di frigorifero/congelatore",
+        "impact": "Incide sulla disposizione dei mobili",
+        "name": "Dimensioni del frigorifero",
+        "options": {
+          "american": "Tipo americano",
+          "tall_50_50": "Combinato 50/50",
+          "tall_70_30": "Combinato 70/30",
+          "under_counter": "Sottopiano"
+        }
+      },
+      "item_grout_color": {
+        "description": "Abbinato o a contrasto con le piastrelle",
+        "impact": "Si può decidere durante la posa",
+        "name": "Colore della fuga",
+        "options": {
+          "black": "Nero",
+          "grey": "Grigio",
+          "match": "Abbinato alla piastrella",
+          "white": "Bianco"
+        }
+      },
+      "item_heated_floor": {
+        "description": "Riscaldamento elettrico a pavimento in bagno",
+        "impact": "Va posato prima delle piastrelle",
+        "name": "Riscaldamento a pavimento"
+      },
+      "item_hob_type": {
+        "description": "Gas, elettrico o a induzione",
+        "impact": "Incide sui requisiti elettrici e del gas",
+        "name": "Tipo di piano cottura",
+        "options": {
+          "ceramic": "Vetroceramica",
+          "gas": "Gas",
+          "induction": "Induzione"
+        }
+      },
+      "item_hotwater_system": {
+        "description": "Come viene prodotta e accumulata l'acqua calda",
+        "impact": "Il bollitore richiede spazio e modifiche al percorso idraulico",
+        "name": "Sistema di acqua calda",
+        "options": {
+          "combi_direct": "Produzione istantanea (senza accumulo)",
+          "cylinder": "Bollitore a sfiato libero",
+          "unvented": "Bollitore in pressione (pressione di rete)"
+        }
+      },
+      "item_hp_brand": {
+        "description": "Produttore di pompe di calore preferito",
+        "impact": "I tempi di consegna variano per marca (4-8 settimane)",
+        "name": "Marca",
+        "options": {
+          "daikin": "Daikin",
+          "mitsubishi": "Mitsubishi",
+          "samsung": "Samsung",
+          "vaillant": "Vaillant"
+        }
+      },
+      "item_hp_buffer": {
+        "description": "Serbatoio inerziale per migliorare il rendimento",
+        "impact": "Il serbatoio inerziale richiede spazio nel locale tecnico",
+        "name": "Serbatoio inerziale",
+        "options": {
+          "no": "Senza serbatoio inerziale",
+          "yes_100l": "Sì — 100 L",
+          "yes_200l": "Sì — 200 L"
+        }
+      },
+      "item_hp_capacity": {
+        "description": "Potenza della pompa di calore in kilowatt",
+        "help": "Determinata dal calcolo delle dispersioni dell'immobile. Sovradimensionare spreca energia.",
+        "impact": "Va definita prima dell'ordine — incide sull'allacciamento elettrico",
+        "name": "Potenza",
+        "options": {
+          "10kw": "10 kW (casa grande)",
+          "12kw": "12 kW (casa molto grande)",
+          "14kw": "14 kW (grande o poco isolata)",
+          "6kw": "6 kW (appartamento piccolo)",
+          "8kw": "8 kW (casa media)"
+        }
+      },
+      "item_hp_controller": {
+        "description": "Come viene comandata la pompa di calore",
+        "impact": "I regolatori smart richiedono la configurazione di rete",
+        "name": "Tipo di regolatore",
+        "options": {
+          "app": "Comando da app",
+          "builtin": "Regolatore integrato",
+          "smart": "Regolatore smart"
+        }
+      },
+      "item_hp_maintenance": {
+        "description": "Contratto di manutenzione annuale",
+        "impact": "Si può decidere dopo l'installazione",
+        "name": "Contratto di manutenzione",
+        "options": {
+          "no": "Senza contratto",
+          "yes_annual": "Sì — manutenzione annuale"
+        }
+      },
+      "item_hp_monitoring": {
+        "description": "Monitoraggio delle prestazioni e dei consumi della pompa di calore",
+        "impact": "Il contatore di energia va installato durante la fase delle tubazioni",
+        "name": "Monitoraggio dei consumi",
+        "options": {
+          "basic": "Base (indicazione del COP)",
+          "detailed": "Dettagliato (contatore di energia + elettricità)",
+          "none": "Nessuno"
+        }
+      },
+      "item_hp_radiator_compat": {
+        "description": "Cosa fare dei radiatori esistenti",
+        "help": "Le pompe di calore lavorano a temperature più basse — i radiatori esistenti potrebbero dover essere maggiorati.",
+        "impact": "La resa dei radiatori deve corrispondere alla temperatura di mandata",
+        "name": "Compatibilità dei radiatori esistenti",
+        "options": {
+          "keep": "Mantenere gli esistenti (se sovradimensionati)",
+          "replace": "Sostituire tutti i radiatori",
+          "upgrade": "Sostituire i radiatori principali"
+        }
+      },
+      "item_hp_type": {
+        "description": "Tipo di impianto a pompa di calore",
+        "help": "L'aria-acqua è la più diffusa. La geotermica è più efficiente ma richiede opere sul terreno. L'ibrida si abbina alla caldaia esistente.",
+        "impact": "Determina l'intero progetto, i permessi e le opere di scavo",
+        "name": "Tipo di pompa di calore",
+        "optionDescriptions": {
+          "air_water": "La più diffusa, con unità esterna",
+          "ground_source": "Richiede sonda o captazione interrata",
+          "hybrid": "Pompa di calore + integrazione a gas"
+        },
+        "options": {
+          "air_water": "Aria-acqua",
+          "ground_source": "Geotermica",
+          "hybrid": "Ibrida (con caldaia)"
+        }
+      },
+      "item_hp_ufh_zones": {
+        "description": "Numero di zone a pavimento con regolazione indipendente",
+        "impact": "La suddivisione in zone incide sul collettore e sui percorsi delle tubazioni",
+        "name": "Zone di riscaldamento a pavimento",
+        "options": {
+          "2": "2 zone",
+          "3": "3 zone",
+          "4": "4 zone",
+          "5": "5 zone"
+        }
+      },
+      "item_interior_layout": {
+        "description": "Come è organizzato l'interno dell'armadio",
+        "impact": "L'interno su misura richiede disegni dettagliati prima della produzione",
+        "name": "Disposizione interna",
+        "options": {
+          "custom": "Disposizione su misura (cassetti, scarpiera, ecc.)",
+          "shelves_hanging": "Ripiani + barra appendiabiti",
+          "shelves_only": "Solo ripiani"
+        }
+      },
+      "item_light_color": {
+        "description": "Bianco caldo, neutro o luce diurna",
+        "impact": "Modificabile in seguito (con lampadine LED)",
+        "name": "Temperatura di colore dei LED",
+        "options": {
+          "cool": "Bianco freddo (5000 K) — molto luminoso",
+          "neutral": "Bianco neutro (4000 K) — equilibrato",
+          "warm": "Bianco caldo (2700 K) — accogliente"
+        }
+      },
+      "item_mirror_light": {
+        "description": "Tipo di illuminazione attorno allo specchio",
+        "impact": "Serve per la prima fase dell'impianto elettrico",
+        "name": "Illuminazione dello specchio",
+        "options": {
+          "above": "Luce sopra lo specchio",
+          "backlit": "Specchio retroilluminato",
+          "none": "Nessuna luce sullo specchio",
+          "sides": "Luci laterali"
+        }
+      },
+      "item_outlet_count": {
+        "description": "Numero di prese sul paraschizzi",
+        "help": "Se ne consigliano almeno 4-6 in una cucina moderna",
+        "impact": "Va fatto prima della posa delle piastrelle",
+        "name": "Numero di prese sul piano"
+      },
+      "item_outlet_height": {
+        "description": "Posizione standard o più alta",
+        "impact": "Va deciso prima della prima fase impiantistica",
+        "name": "Altezza delle prese",
+        "options": {
+          "counter": "All'altezza del piano (dove previsto)",
+          "higher": "Più alta (45 cm — accesso più comodo)",
+          "standard": "Standard (30 cm da terra)"
+        }
+      },
+      "item_outlet_style": {
+        "description": "Piatto moderno, tradizionale o smart",
+        "impact": "I modelli non standard possono richiedere un ordine",
+        "name": "Stile di prese e interruttori",
+        "options": {
+          "chrome": "Finitura cromo/metallo",
+          "screwless": "Placca piatta senza viti",
+          "smart": "Interruttori smart",
+          "standard": "Bianco standard"
+        }
+      },
+      "item_oven_config": {
+        "description": "Singolo, doppio o cucina monoblocco",
+        "impact": "I vani dei mobili dipendono da questo",
+        "name": "Configurazione del forno",
+        "options": {
+          "double": "Forno da incasso doppio",
+          "range": "Cucina monoblocco",
+          "single": "Forno da incasso singolo"
+        }
+      },
+      "item_paint_quality": {
+        "description": "Pittura premium o standard",
+        "impact": "Le pitture premium possono richiedere un ordine",
+        "name": "Livello di qualità della pittura",
+        "options": {
+          "premium": "Premium (Farrow & Ball, Little Greene)",
+          "standard": "Qualità standard"
+        }
+      },
+      "item_pendant_lights": {
+        "description": "Numero e posizione delle sospensioni",
+        "help": "Di norma 2-3 sospensioni per un'isola standard",
+        "impact": "Le posizioni delle scatole elettriche servono presto",
+        "name": "Sospensioni sopra l'isola"
+      },
+      "item_radiator_style": {
+        "description": "Tipo di radiatori in tutta l'abitazione",
+        "impact": "La resa dei radiatori incide sul dimensionamento della caldaia e sui percorsi delle tubazioni",
+        "name": "Tipo di radiatori",
+        "options": {
+          "designer": "Radiatore di design",
+          "panel_11": "Piastra tipo 11 (singola)",
+          "panel_21": "Piastra tipo 21 (doppia/singola)",
+          "panel_22": "Piastra tipo 22 (doppia)",
+          "underfloor": "Riscaldamento a pavimento"
+        }
+      },
+      "item_reno_appliance_pkg": {
+        "description": "Livello di gamma degli elettrodomestici",
+        "impact": "Gli elettrodomestici premium possono avere tempi più lunghi",
+        "name": "Gamma di elettrodomestici",
+        "options": {
+          "budget": "Economica (Beko, Candy)",
+          "mid": "Fascia media (Bosch, Siemens)",
+          "premium": "Premium (Miele, Gaggenau)"
+        }
+      },
+      "item_reno_bath_style": {
+        "description": "Impostazione generale del design del bagno",
+        "impact": "Lo stile determina la scelta di sanitari e piastrelle",
+        "name": "Stile del bagno",
+        "options": {
+          "classic": "Classico (sanitari tradizionali)",
+          "industrial": "Industriale (elementi a vista, cemento)",
+          "modern": "Moderno (linee pulite, minimale)"
+        }
+      },
+      "item_reno_boiler": {
+        "description": "Cosa fare dell'impianto di riscaldamento",
+        "impact": "La pompa di calore richiede 6-8 settimane e una progettazione a parte",
+        "name": "Sostituzione della caldaia",
+        "options": {
+          "heat_pump": "Passare alla pompa di calore",
+          "keep": "Mantenere la caldaia esistente",
+          "replace": "Sostituire con una caldaia nuova"
+        }
+      },
+      "item_reno_floor_ground": {
+        "description": "Materiale principale del pavimento del piano terra",
+        "impact": "La scelta del pavimento incide sulla preparazione del sottofondo",
+        "name": "Piano terra",
+        "options": {
+          "laminate": "Laminato",
+          "tiles": "Piastrelle",
+          "vinyl": "Vinilico di alta gamma (LVT)",
+          "wood": "Legno massello"
+        }
+      },
+      "item_reno_floor_upper": {
+        "description": "Materiale del pavimento al piano superiore",
+        "impact": "La moquette si posa per ultima, ma legno e laminato richiedono acclimatazione",
+        "name": "Piano superiore",
+        "options": {
+          "carpet": "Moquette",
+          "laminate": "Laminato",
+          "wood": "Legno massello"
+        }
+      },
+      "item_reno_floorplan": {
+        "description": "Impostazione generale della distribuzione",
+        "impact": "Riguarda tutte le lavorazioni — va deciso per primo",
+        "name": "Modifiche alla planimetria",
+        "options": {
+          "keep_existing": "Mantenere la distribuzione esistente",
+          "open_plan": "Open space (rimozione dei tramezzi)",
+          "partial": "Modifiche parziali (allargare i passaggi, ecc.)"
+        }
+      },
+      "item_reno_kitchen_supplier": {
+        "description": "Dove acquistare la cucina",
+        "impact": "L'ordine della cucina richiede 4-8 settimane secondo il fornitore",
+        "name": "Fornitore della cucina",
+        "options": {
+          "brugman": "Brugman",
+          "custom": "Su misura",
+          "ikea": "IKEA",
+          "kvik": "Kvik"
+        }
+      },
+      "item_reno_lighting": {
+        "description": "Livello di progettazione dell'illuminazione",
+        "impact": "Il cablaggio deve essere posato prima dell'intonaco",
+        "name": "Progetto illuminotecnico",
+        "options": {
+          "basic": "Base (sospensioni centrali)",
+          "designer": "Curato (faretti, luce d'accento, dimmer)",
+          "smart": "Illuminazione smart (Hue, Casambi)"
+        }
+      },
+      "item_reno_socket_count": {
+        "description": "Numero di prese elettriche",
+        "impact": "Va deciso prima della prima fase — poi le pareti vengono chiuse",
+        "name": "Numero di prese",
+        "options": {
+          "extra": "Prese aggiuntive (+50 %)",
+          "smart": "Predisposto per la domotica (aggiuntive + dati)",
+          "standard": "Standard (secondo normativa)"
+        }
+      },
+      "item_reno_tile_budget": {
+        "description": "Fascia di prezzo al metro quadro per le piastrelle del bagno",
+        "impact": "Le piastrelle di fascia alta possono dover essere ordinate dall'Italia o dalla Spagna",
+        "name": "Budget per le piastrelle",
+        "options": {
+          "120": "120 €/m² (lusso)",
+          "30": "30 €/m² (base)",
+          "50": "50 €/m² (fascia media)",
+          "80": "80 €/m² (premium)"
+        }
+      },
+      "item_reno_ufh": {
+        "description": "Installare il riscaldamento a pavimento?",
+        "impact": "Va posato prima di qualsiasi finitura del pavimento — non è possibile aggiungerlo dopo",
+        "name": "Riscaldamento a pavimento",
+        "options": {
+          "no": "No",
+          "yes": "Sì"
+        }
+      },
+      "item_reno_wall_removal": {
+        "description": "Ci sono pareti da demolire o da aprire?",
+        "impact": "Serve un ingegnere strutturista — 2-3 settimane in più per i calcoli",
+        "name": "Demolizione di pareti",
+        "options": {
+          "no": "Nessuna modifica alle pareti",
+          "yes_specify": "Sì — specificare quali"
+        }
+      },
+      "item_reno_wetroom": {
+        "description": "Progettazione della zona doccia",
+        "impact": "La doccia a filo richiede impermeabilizzazione e pendenza — incide sullo spessore del pacchetto",
+        "name": "Doccia a filo pavimento o cabina",
+        "options": {
+          "separate": "Cabina doccia separata",
+          "wet_room": "Doccia a filo pavimento (aperta, senza gradino)"
+        }
+      },
+      "item_reno_windows": {
+        "description": "Sostituire le finestre esistenti?",
+        "impact": "Le finestre richiedono 4-6 settimane",
+        "name": "Sostituzione delle finestre",
+        "options": {
+          "all": "Sostituire tutte le finestre",
+          "none": "Mantenere le finestre esistenti",
+          "some": "Sostituire alcune finestre"
+        }
+      },
+      "item_reno_worktop": {
+        "description": "Superficie del piano di lavoro della cucina",
+        "impact": "I piani in pietra richiedono il rilievo dopo il montaggio dei mobili",
+        "name": "Materiale del piano di lavoro",
+        "options": {
+          "granite": "Granito",
+          "laminate": "Laminato",
+          "quartz": "Quarzo",
+          "wood": "Legno massello"
+        }
+      },
+      "item_shelving_material": {
+        "description": "Materiale dei ripiani e della struttura interna",
+        "impact": "Incide sulla distinta di taglio e sull'ordine dei materiali",
+        "name": "Materiale dei ripiani",
+        "options": {
+          "mdf": "MDF (verniciato)",
+          "plywood": "Compensato (naturale o tinto)",
+          "solid": "Legno massello"
+        }
+      },
+      "item_shower_or_bath": {
+        "description": "Scelta dell'elemento principale del bagno",
+        "impact": "Incide su tutta la disposizione del bagno e sull'impianto idraulico",
+        "name": "Doccia, vasca o entrambe?",
+        "options": {
+          "bath_only": "Solo vasca",
+          "bath_shower": "Vasca con doccia integrata",
+          "separate": "Doccia e vasca separate",
+          "shower_only": "Solo doccia"
+        }
+      },
+      "item_sink_type": {
+        "description": "Stile del lavabo del bagno",
+        "impact": "I mobili bagno vanno ordinati con 2-3 settimane di anticipo",
+        "name": "Tipo di lavabo",
+        "options": {
+          "countertop": "Lavabo da appoggio",
+          "pedestal": "A colonna",
+          "vanity_unit": "Mobile con lavabo e contenitore",
+          "wall_mounted": "Sospeso"
+        }
+      },
+      "item_skirting_profile": {
+        "description": "Stile della modanatura del battiscopa",
+        "impact": "I profili non a magazzino vanno ordinati",
+        "name": "Profilo del battiscopa",
+        "options": {
+          "ogee": "Gola (tradizionale)",
+          "pencil_round": "Spigolo arrotondato (discreto)",
+          "square": "Squadrato (moderno)",
+          "torus": "Toro (arrotondato)"
+        }
+      },
+      "item_smart_home": {
+        "description": "Collegare il riscaldamento a un sistema domotico",
+        "impact": "Si può aggiungere dopo, ma può richiedere un nuovo cablaggio",
+        "name": "Integrazione domotica",
+        "options": {
+          "hive": "Hive",
+          "nest": "Nest",
+          "none": "Nessuna",
+          "tado": "Tado"
+        }
+      },
+      "item_tap_style": {
+        "description": "Cromo, nichel spazzolato, nero od ottone",
+        "impact": "La rubinetteria può richiedere 2-3 settimane",
+        "name": "Finitura della rubinetteria",
+        "options": {
+          "brass": "Ottone/oro",
+          "brushed_nickel": "Nichel spazzolato",
+          "chrome": "Cromo",
+          "matte_black": "Nero opaco"
+        }
+      },
+      "item_temp_setting": {
+        "description": "Temperatura predefinita dell'acqua calda",
+        "help": "Lo standard è 60 °C. Abbassarla fa risparmiare energia, ma attenzione al rischio legionella.",
+        "impact": "Regolabile dopo l'installazione",
+        "name": "Impostazione della temperatura"
+      },
+      "item_thermostat_type": {
+        "description": "Termostato principale del riscaldamento",
+        "impact": "I sistemi smart o per zone richiedono cablaggio nella prima fase",
+        "name": "Tipo di termostato",
+        "options": {
+          "basic": "Base acceso/spento",
+          "programmable": "Programmabile",
+          "smart": "Termostato smart",
+          "zone": "Regolazione per zone (più ambienti)"
+        }
+      },
+      "item_tile_height": {
+        "description": "Fino a che altezza deve arrivare il rivestimento?",
+        "impact": "Serve per ordinare la quantità corretta di piastrelle",
+        "name": "Altezza del rivestimento",
+        "options": {
+          "full_height": "Tutta altezza (fino al soffitto)",
+          "half_wall": "Mezza altezza (120 cm)",
+          "splashback": "Solo paraschizzi (60 cm)"
+        }
+      },
+      "item_toilet_style": {
+        "description": "WC sospeso o a pavimento",
+        "help": "I WC sospesi sono più facili da pulire ma costano di più. Quello a pavimento è il tradizionale.",
+        "impact": "La prima fase idraulica non può procedere senza la posizione del WC",
+        "name": "Tipo di WC",
+        "optionDescriptions": {
+          "back_to_wall": "Cassetta incassata",
+          "floor_standing": "Tradizionale, più economico",
+          "wall_hung": "Moderno, facile da pulire"
+        },
+        "options": {
+          "back_to_wall": "Filo muro",
+          "floor_standing": "A pavimento",
+          "wall_hung": "Sospeso"
+        }
+      },
+      "item_trim_color": {
+        "description": "Battiscopa, cornici delle porte e delle finestre",
+        "impact": "Minore — modificabile durante i lavori",
+        "name": "Colore dei serramenti",
+        "options": {
+          "contrast": "Colore a contrasto (da specificare)",
+          "match_walls": "Abbinato alle pareti",
+          "white_gloss": "Bianco (finitura lucida)",
+          "white_satin": "Bianco (finitura satinata)"
+        }
+      },
+      "item_under_cabinet_lights": {
+        "description": "Strisce LED sotto i pensili",
+        "impact": "Il cablaggio va fatto prima di montare i pensili",
+        "name": "Illuminazione sottopensile"
+      },
+      "item_usb_outlets": {
+        "description": "Prese con ricarica USB integrata",
+        "help": "Se ne consigliano 2-4 negli ambienti comuni",
+        "impact": "Minore — sostituibile durante i lavori",
+        "name": "Prese USB"
+      },
+      "item_valve_type": {
+        "description": "Tipo di valvole su ogni radiatore",
+        "impact": "Le termostatiche sono raccomandate dalla normativa sull'efficienza energetica",
+        "name": "Tipo di valvole dei radiatori",
+        "options": {
+          "manual": "Manuali",
+          "smart_trv": "Termostatiche smart",
+          "trv": "Termostatiche"
+        }
+      },
+      "item_wall_color_bedroom": {
+        "description": "Colore di ogni camera",
+        "help": "Indica ambiente e colore per ciascuna",
+        "impact": "La pittura va ordinata o miscelata",
+        "name": "Colori delle camere"
+      },
+      "item_wall_color_living": {
+        "description": "Colore principale delle pareti del soggiorno",
+        "help": "Indica marca e codice colore (es. Dulux White Mist)",
+        "impact": "La pittura va ordinata o miscelata",
+        "name": "Colore delle pareti del soggiorno"
+      },
+      "item_wall_finish": {
+        "description": "Grado di lucidità delle pareti",
+        "impact": "Incide sull'ordine della pittura",
+        "name": "Finitura della pittura murale",
+        "optionDescriptions": {
+          "eggshell": "Leggermente satinata, lavabile",
+          "flat": "Nasconde le imperfezioni, non lavabile",
+          "satin": "Lucidità media, molto lavabile"
+        },
+        "options": {
+          "eggshell": "Guscio d'uovo",
+          "flat": "Opaca",
+          "satin": "Satinata"
+        }
+      },
+      "item_wall_repairs": {
+        "description": "Ci sono buchi, crepe o danni da riparare?",
+        "help": "Indica le zone da riparare",
+        "impact": "Può richiedere materiale aggiuntivo",
+        "name": "Riparazioni murarie necessarie"
+      },
+      "item_wall_tile": {
+        "description": "Scegli la piastrella da rivestimento (foto o link)",
+        "impact": "Le piastrelle richiedono spesso 2-4 settimane di consegna",
+        "name": "Scelta del rivestimento"
+      },
+      "item_wallpaper_removal": {
+        "description": "C'è carta da parati da rimuovere?",
+        "impact": "Incide molto sui tempi",
+        "name": "Rimozione della carta da parati"
+      },
+      "item_wardrobe_type": {
+        "description": "Tipo di armadio a muro",
+        "impact": "I sistemi di ante richiedono 2-3 settimane",
+        "name": "Tipo di armadio",
+        "options": {
+          "hinged": "Ante a battente",
+          "sliding": "Ante scorrevoli",
+          "walk_in": "Cabina armadio"
+        }
+      },
+      "item_wood_finish": {
+        "description": "Trattamento finale delle superfici di tutte le opere in legno",
+        "impact": "Incide sulla carteggiatura e sul numero di mani",
+        "name": "Finitura del legno",
+        "options": {
+          "lacquer": "Vernice trasparente (lucida o satinata)",
+          "oil": "Olio (opaco naturale)",
+          "paint": "Vernice coprente",
+          "stain": "Mordente (lascia vedere la venatura)"
+        }
+      }
+    },
+    "templates": {
+      "tmpl_bathroom_full": {
+        "description": "Rifacimento integrale del bagno: sanitari, piastrelle e finiture",
+        "name": "Ristrutturazione completa del bagno"
+      },
+      "tmpl_carpentry_woodwork": {
+        "description": "Porte, armadiature su misura, battiscopa e finitura del legno",
+        "name": "Falegnameria interna"
+      },
+      "tmpl_electrical_upgrade": {
+        "description": "Interventi elettrici: prese, interruttori e illuminazione",
+        "name": "Adeguamento impianto elettrico"
+      },
+      "tmpl_heating_cv": {
+        "description": "Impianto di riscaldamento centralizzato: caldaia, radiatori e regolazione",
+        "name": "Installazione impianto di riscaldamento"
+      },
+      "tmpl_heatpump": {
+        "description": "Pompa di calore aerotermica o geotermica, con integrazione e regolazione",
+        "name": "Installazione pompa di calore"
+      },
+      "tmpl_kitchen_full": {
+        "description": "Rifacimento integrale della cucina: mobili, elettrodomestici e finiture",
+        "name": "Ristrutturazione completa della cucina"
+      },
+      "tmpl_painting_interior": {
+        "description": "Tinteggiatura interna completa: pareti, soffitti e serramenti",
+        "name": "Tinteggiatura interna"
+      },
+      "tmpl_renovation_full": {
+        "description": "Ristrutturazione completa dell'abitazione: distribuzione, cucina, bagno, pavimenti, elettrico e idraulico",
+        "name": "Ristrutturazione completa"
+      }
+    }
   }
 }

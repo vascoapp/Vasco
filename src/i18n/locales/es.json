@@ -6074,5 +6074,947 @@
     "filedBody": "Vasco crea el archivo — no lo envía a la administración. Confirme solo cuando haya presentado {{format}} realmente.",
     "filedYes": "Sí, presentada",
     "filedNotYet": "Todavía no"
+  },
+  "decisionCatalog": {
+    "categories": {
+      "cat_bath_electrical": {
+        "description": "Iluminación y puntos eléctricos",
+        "name": "Electricidad"
+      },
+      "cat_bath_fixtures": {
+        "description": "Inodoro, lavabo, ducha/bañera y grifería",
+        "name": "Sanitarios y grifería"
+      },
+      "cat_bath_tiles": {
+        "description": "Elección de azulejos de suelo y pared",
+        "name": "Azulejos y superficies"
+      },
+      "cat_elec_lighting": {
+        "description": "Plafones, focos y reguladores",
+        "name": "Iluminación"
+      },
+      "cat_elec_outlets": {
+        "description": "Posición y tipo de enchufes e interruptores",
+        "name": "Enchufes e interruptores"
+      },
+      "cat_heat_controls": {
+        "description": "Elección del termostato y de las llaves de radiador",
+        "name": "Control"
+      },
+      "cat_heat_hotwater": {
+        "description": "Sistema de agua caliente y dimensionado del acumulador",
+        "name": "Agua caliente"
+      },
+      "cat_heat_system": {
+        "description": "Tipo y marca de caldera, y estilo de radiador",
+        "name": "Sistema de calefacción"
+      },
+      "cat_hp_controls": {
+        "description": "Regulador, seguimiento del consumo y mantenimiento",
+        "name": "Control y monitorización"
+      },
+      "cat_hp_integration": {
+        "description": "Depósito de inercia, suelo radiante y compatibilidad de radiadores",
+        "name": "Integración"
+      },
+      "cat_hp_system": {
+        "description": "Tipo, marca y potencia de la bomba de calor",
+        "name": "Elección del sistema"
+      },
+      "cat_kitchen_appliances": {
+        "description": "Electrodomésticos integrados y de libre instalación",
+        "name": "Electrodomésticos"
+      },
+      "cat_kitchen_cabinets": {
+        "description": "Estilo, color y distribución de los muebles",
+        "name": "Muebles y distribución"
+      },
+      "cat_kitchen_counters": {
+        "description": "Material de la encimera y perfil del canto",
+        "name": "Encimeras"
+      },
+      "cat_kitchen_electrical": {
+        "description": "Posición de enchufes e iluminación",
+        "name": "Electricidad e iluminación"
+      },
+      "cat_paint_colors": {
+        "description": "Elección de color para cada estancia",
+        "name": "Colores de pintura"
+      },
+      "cat_paint_finish": {
+        "description": "Nivel de brillo y calidad de la pintura",
+        "name": "Acabado y calidad de la pintura"
+      },
+      "cat_paint_prep": {
+        "description": "Reparaciones y preparación antes de pintar",
+        "name": "Trabajos de preparación"
+      },
+      "cat_reno_bathroom": {
+        "description": "Estilo, azulejos y distribución del baño",
+        "name": "Baño"
+      },
+      "cat_reno_flooring": {
+        "description": "Materiales de suelo para cada planta",
+        "name": "Suelos"
+      },
+      "cat_reno_kitchen": {
+        "description": "Proveedor de cocina, encimeras y electrodomésticos",
+        "name": "Cocina"
+      },
+      "cat_reno_layout": {
+        "description": "Cambios estructurales, tabiques y ventanas",
+        "name": "Distribución y estructura"
+      },
+      "cat_reno_mep": {
+        "description": "Esquema eléctrico, iluminación y caldera",
+        "name": "Electricidad y fontanería"
+      },
+      "cat_wood_doors": {
+        "description": "Estilo, material y herrajes de las puertas interiores",
+        "name": "Puertas"
+      },
+      "cat_wood_finishing": {
+        "description": "Rodapiés, molduras y acabado de la madera",
+        "name": "Acabados"
+      },
+      "cat_wood_storage": {
+        "description": "Tipo de armario, baldas y distribución interior",
+        "name": "Armarios empotrados"
+      }
+    },
+    "items": {
+      "item_architrave_style": {
+        "description": "Perfil del cerco de la puerta",
+        "impact": "Menor — puede decidirse durante la fase de acabados",
+        "name": "Estilo de moldura de puerta",
+        "options": {
+          "contrasting": "Perfil en contraste",
+          "matching": "Perfil a juego con el rodapié"
+        }
+      },
+      "item_backsplash": {
+        "description": "Salpicadero estándar o de altura completa",
+        "impact": "Afecta al pedido de azulejos",
+        "name": "Altura del salpicadero",
+        "options": {
+          "ceiling": "Hasta el techo (sin muebles altos)",
+          "full": "Altura completa (hasta los muebles)",
+          "standard": "Estándar (zócalo de 10 cm)"
+        }
+      },
+      "item_boiler_brand": {
+        "description": "Fabricante de caldera preferido",
+        "impact": "Los modelos más habituales pueden tardar de 2 a 3 semanas",
+        "name": "Marca preferida",
+        "options": {
+          "bosch": "Bosch",
+          "nefit": "Nefit",
+          "remeha": "Remeha",
+          "vaillant": "Vaillant"
+        }
+      },
+      "item_boiler_type": {
+        "description": "Tipo de caldera para la vivienda",
+        "help": "La caldera mixta calienta el agua al momento. La de acumulación usa un depósito. Las bombas de calor son las más eficientes.",
+        "impact": "El tipo de caldera determina todo el diseño del sistema y las tuberías",
+        "name": "Tipo de caldera",
+        "optionDescriptions": {
+          "combi": "Sin depósito, agua caliente instantánea",
+          "heat_pump": "La más eficiente energéticamente",
+          "system": "Usa un acumulador de agua caliente"
+        },
+        "options": {
+          "combi": "Caldera mixta",
+          "heat_pump": "Bomba de calor",
+          "system": "Caldera de acumulación"
+        }
+      },
+      "item_cabinet_color": {
+        "description": "Color principal de los muebles",
+        "help": "Opciones habituales: blanco, gris, azul marino, madera natural",
+        "impact": "El color condiciona la elección de encimera y salpicadero",
+        "name": "Color/acabado de los muebles"
+      },
+      "item_cabinet_hardware": {
+        "description": "Estilo de tiradores o pomos",
+        "impact": "Se pueden añadir después, pero hay que prever las perforaciones",
+        "name": "Tiradores de los muebles",
+        "options": {
+          "bar": "Tiradores de barra",
+          "cup": "Tiradores de concha",
+          "knob": "Pomos",
+          "none": "Apertura por presión (sin tirador)"
+        }
+      },
+      "item_cabinet_style": {
+        "description": "Shaker, liso o con panel resaltado",
+        "impact": "Los muebles tardan de 4 a 6 semanas",
+        "name": "Estilo de frente",
+        "optionDescriptions": {
+          "flat": "Minimalista y moderno",
+          "raised": "Tradicional y trabajado",
+          "shaker": "Clásico, con panel rehundido"
+        },
+        "options": {
+          "flat": "Liso",
+          "raised": "Panel resaltado",
+          "shaker": "Shaker"
+        }
+      },
+      "item_ceiling_color": {
+        "description": "¿Igual que las paredes o distinto?",
+        "impact": "Menor — ajustable durante la obra",
+        "name": "Color del techo",
+        "options": {
+          "custom": "Otro color (especificar)",
+          "lighter": "Tono más claro que las paredes",
+          "match": "A juego con el color de las paredes",
+          "white": "Blanco estándar"
+        }
+      },
+      "item_counter_color": {
+        "description": "Elección de tabla o color",
+        "help": "Visita el expositor o envía una foto de la opción preferida",
+        "impact": "Los colores más habituales pueden estar sin stock",
+        "name": "Color/veta de la encimera"
+      },
+      "item_counter_material": {
+        "description": "Material de la superficie de trabajo principal",
+        "impact": "Las encimeras de piedra requieren de 2 a 3 semanas de elaboración",
+        "name": "Material de la encimera",
+        "options": {
+          "butcher_block": "Madera maciza",
+          "granite": "Granito",
+          "laminate": "Laminado",
+          "quartz": "Cuarzo",
+          "solid_surface": "Superficie sólida (Corian)"
+        }
+      },
+      "item_cylinder_size": {
+        "description": "Capacidad de acumulación de agua caliente (si procede)",
+        "help": "100 L para 1-2 personas, 150 L para 2-3, 200 L para 3-4, 300 L para 4 o más",
+        "impact": "Un acumulador mayor ocupa más espacio — afecta al dimensionado del armario",
+        "name": "Capacidad del acumulador",
+        "options": {
+          "100l": "100 litros",
+          "150l": "150 litros",
+          "200l": "200 litros",
+          "300l": "300 litros"
+        }
+      },
+      "item_dimmer_switches": {
+        "description": "¿En qué estancias quieres reguladores?",
+        "impact": "El cableado es distinto para los reguladores",
+        "name": "Reguladores de intensidad",
+        "options": {
+          "bathroom": "Baño",
+          "bedroom": "Dormitorios",
+          "dining": "Comedor",
+          "living": "Salón"
+        }
+      },
+      "item_door_handle_type": {
+        "description": "Estilo de manilla de puerta",
+        "impact": "Se coloca al final — solo un retraso menor",
+        "name": "Tipo de manilla",
+        "options": {
+          "knob": "Pomo",
+          "lever": "Manilla de palanca",
+          "pull": "Tirador"
+        }
+      },
+      "item_door_hardware_finish": {
+        "description": "Acabado de bisagras, manillas y cerraduras",
+        "impact": "Los acabados no estándar pueden requerir pedido",
+        "name": "Acabado de los herrajes",
+        "options": {
+          "black": "Negro mate",
+          "brass": "Latón",
+          "brushed_nickel": "Níquel cepillado",
+          "chrome": "Cromo"
+        }
+      },
+      "item_door_material": {
+        "description": "Material de fabricación de la puerta",
+        "impact": "Las puertas de madera maciza tardan más en servirse",
+        "name": "Material",
+        "options": {
+          "mdf": "MDF",
+          "solid_wood": "Madera maciza",
+          "veneer": "Chapado"
+        }
+      },
+      "item_door_style": {
+        "description": "Diseño de las puertas interiores",
+        "impact": "De 3 a 4 semanas de plazo para medidas a medida",
+        "name": "Estilo de puerta",
+        "optionDescriptions": {
+          "barn": "Corredera sobre guía",
+          "flush": "Aspecto liso y moderno",
+          "glazed": "Paneles de vidrio para dar luz",
+          "panel": "Tradicional, con paneles resaltados o rehundidos"
+        },
+        "options": {
+          "barn": "Puerta corredera vista",
+          "flush": "Puerta lisa",
+          "glazed": "Puerta acristalada",
+          "panel": "Puerta de paneles"
+        }
+      },
+      "item_downlights_count": {
+        "description": "Número de focos empotrados",
+        "help": "Indícalo por estancia: salón 6, cocina 8, etc.",
+        "impact": "Hay que perforar el techo antes de enlucir",
+        "name": "Número de focos por estancia"
+      },
+      "item_extractor": {
+        "description": "¿Dónde debe ir el extractor?",
+        "impact": "Afecta al trazado de los conductos",
+        "name": "Ubicación del extractor",
+        "options": {
+          "ceiling": "En el techo",
+          "wall": "En la pared",
+          "window": "Extractor de ventana"
+        }
+      },
+      "item_floor_tile": {
+        "description": "Elige el azulejo de suelo (aporta foto o enlace)",
+        "help": "El índice antideslizante es importante en suelos de baño",
+        "impact": "Los azulejos suelen tardar de 2 a 4 semanas",
+        "name": "Elección del azulejo de suelo"
+      },
+      "item_fridge_size": {
+        "description": "Dimensiones del frigorífico/congelador",
+        "impact": "Afecta a la distribución de los muebles",
+        "name": "Tamaño del frigorífico",
+        "options": {
+          "american": "Tipo americano",
+          "tall_50_50": "Combi 50/50",
+          "tall_70_30": "Combi 70/30",
+          "under_counter": "Bajo encimera"
+        }
+      },
+      "item_grout_color": {
+        "description": "A juego o en contraste con los azulejos",
+        "impact": "Puede decidirse durante la colocación",
+        "name": "Color de la lechada",
+        "options": {
+          "black": "Negro",
+          "grey": "Gris",
+          "match": "A juego con el azulejo",
+          "white": "Blanco"
+        }
+      },
+      "item_heated_floor": {
+        "description": "Suelo radiante eléctrico en el baño",
+        "impact": "Debe instalarse antes de los azulejos",
+        "name": "Suelo radiante"
+      },
+      "item_hob_type": {
+        "description": "Gas, eléctrica o inducción",
+        "impact": "Afecta a los requisitos eléctricos y de gas",
+        "name": "Tipo de placa de cocción",
+        "options": {
+          "ceramic": "Vitrocerámica",
+          "gas": "Gas",
+          "induction": "Inducción"
+        }
+      },
+      "item_hotwater_system": {
+        "description": "Cómo se produce y acumula el agua caliente",
+        "impact": "El acumulador requiere espacio y cambios en el trazado de fontanería",
+        "name": "Sistema de agua caliente",
+        "options": {
+          "combi_direct": "Producción instantánea (sin acumulación)",
+          "cylinder": "Acumulador atmosférico",
+          "unvented": "Acumulador presurizado (presión de red)"
+        }
+      },
+      "item_hp_brand": {
+        "description": "Fabricante de bomba de calor preferido",
+        "impact": "Los plazos varían según la marca (de 4 a 8 semanas)",
+        "name": "Marca",
+        "options": {
+          "daikin": "Daikin",
+          "mitsubishi": "Mitsubishi",
+          "samsung": "Samsung",
+          "vaillant": "Vaillant"
+        }
+      },
+      "item_hp_buffer": {
+        "description": "Depósito de inercia para mejorar el rendimiento",
+        "impact": "El depósito de inercia necesita espacio en el cuarto técnico",
+        "name": "Depósito de inercia",
+        "options": {
+          "no": "Sin depósito de inercia",
+          "yes_100l": "Sí — 100 L",
+          "yes_200l": "Sí — 200 L"
+        }
+      },
+      "item_hp_capacity": {
+        "description": "Potencia de la bomba de calor en kilovatios",
+        "help": "Se determina con el cálculo de cargas de la vivienda. Sobredimensionar desperdicia energía.",
+        "impact": "Debe fijarse antes del pedido — afecta a la acometida eléctrica",
+        "name": "Potencia",
+        "options": {
+          "10kw": "10 kW (vivienda grande)",
+          "12kw": "12 kW (vivienda muy grande)",
+          "14kw": "14 kW (grande o mal aislada)",
+          "6kw": "6 kW (piso pequeño)",
+          "8kw": "8 kW (vivienda media)"
+        }
+      },
+      "item_hp_controller": {
+        "description": "Cómo se controla la bomba de calor",
+        "impact": "Los reguladores inteligentes requieren configuración de red",
+        "name": "Tipo de regulador",
+        "options": {
+          "app": "Control por aplicación",
+          "builtin": "Regulador integrado",
+          "smart": "Regulador inteligente"
+        }
+      },
+      "item_hp_maintenance": {
+        "description": "Contrato de mantenimiento anual",
+        "impact": "Puede decidirse después de la instalación",
+        "name": "Contrato de mantenimiento",
+        "options": {
+          "no": "Sin contrato",
+          "yes_annual": "Sí — revisión anual"
+        }
+      },
+      "item_hp_monitoring": {
+        "description": "Seguimiento del rendimiento y consumo de la bomba de calor",
+        "impact": "El contador de energía debe instalarse durante la fase de tuberías",
+        "name": "Monitorización del consumo",
+        "options": {
+          "basic": "Básica (indicación de COP)",
+          "detailed": "Detallada (contador de energía + electricidad)",
+          "none": "Ninguna"
+        }
+      },
+      "item_hp_radiator_compat": {
+        "description": "Qué hacer con los radiadores existentes",
+        "help": "Las bombas de calor trabajan a menor temperatura — los radiadores existentes pueden necesitar mayor tamaño.",
+        "impact": "La potencia de los radiadores debe ajustarse a la temperatura de impulsión",
+        "name": "Compatibilidad de los radiadores existentes",
+        "options": {
+          "keep": "Conservar los existentes (si están sobredimensionados)",
+          "replace": "Sustituir todos los radiadores",
+          "upgrade": "Sustituir los radiadores principales"
+        }
+      },
+      "item_hp_type": {
+        "description": "Tipo de sistema de bomba de calor",
+        "help": "La aerotermia es la más habitual. La geotermia es más eficiente pero exige obra en el terreno. La híbrida se combina con la caldera existente.",
+        "impact": "Determina todo el diseño, los permisos y la obra de terreno",
+        "name": "Tipo de bomba de calor",
+        "optionDescriptions": {
+          "air_water": "La más habitual, con unidad exterior",
+          "ground_source": "Requiere sondeo o captación enterrada",
+          "hybrid": "Bomba de calor + apoyo de gas"
+        },
+        "options": {
+          "air_water": "Aerotérmica (aire-agua)",
+          "ground_source": "Geotérmica",
+          "hybrid": "Híbrida (con caldera)"
+        }
+      },
+      "item_hp_ufh_zones": {
+        "description": "Número de zonas de suelo radiante con control independiente",
+        "impact": "El reparto de zonas afecta al colector y al trazado de tuberías",
+        "name": "Zonas de suelo radiante",
+        "options": {
+          "2": "2 zonas",
+          "3": "3 zonas",
+          "4": "4 zonas",
+          "5": "5 zonas"
+        }
+      },
+      "item_interior_layout": {
+        "description": "Cómo se organiza el interior del armario",
+        "impact": "El interior a medida exige planos detallados antes de fabricar",
+        "name": "Distribución interior",
+        "options": {
+          "custom": "Distribución a medida (cajones, zapatero, etc.)",
+          "shelves_hanging": "Baldas + barra de colgar",
+          "shelves_only": "Solo baldas"
+        }
+      },
+      "item_light_color": {
+        "description": "Blanco cálido, neutro o luz día",
+        "impact": "Se puede cambiar después (con bombillas LED)",
+        "name": "Temperatura de color del LED",
+        "options": {
+          "cool": "Blanco frío (5000 K) — muy luminoso",
+          "neutral": "Blanco neutro (4000 K) — equilibrado",
+          "warm": "Blanco cálido (2700 K) — acogedor"
+        }
+      },
+      "item_mirror_light": {
+        "description": "Tipo de iluminación alrededor del espejo",
+        "impact": "El primer tendido eléctrico necesita este dato",
+        "name": "Iluminación del espejo",
+        "options": {
+          "above": "Luz sobre el espejo",
+          "backlit": "Espejo retroiluminado",
+          "none": "Sin luz en el espejo",
+          "sides": "Luces laterales"
+        }
+      },
+      "item_outlet_count": {
+        "description": "Número de enchufes en el salpicadero",
+        "help": "Se recomiendan al menos 4-6 en una cocina moderna",
+        "impact": "Debe hacerse antes de alicatar",
+        "name": "Número de enchufes en la encimera"
+      },
+      "item_outlet_height": {
+        "description": "Posición estándar o más elevada",
+        "impact": "Hay que decidirlo antes del primer tendido",
+        "name": "Altura de los enchufes",
+        "options": {
+          "counter": "A la altura de la encimera (si procede)",
+          "higher": "Elevada (45 cm — acceso más cómodo)",
+          "standard": "Estándar (30 cm del suelo)"
+        }
+      },
+      "item_outlet_style": {
+        "description": "Plano moderno, tradicional o inteligente",
+        "impact": "Los no estándar pueden requerir pedido",
+        "name": "Estilo de enchufes e interruptores",
+        "options": {
+          "chrome": "Acabado cromo/metal",
+          "screwless": "Placa lisa sin tornillos",
+          "smart": "Interruptores inteligentes",
+          "standard": "Blanco estándar"
+        }
+      },
+      "item_oven_config": {
+        "description": "Individual, doble o cocina de bloque",
+        "impact": "Los huecos de los muebles dependen de esto",
+        "name": "Configuración del horno",
+        "options": {
+          "double": "Horno integrado doble",
+          "range": "Cocina de bloque",
+          "single": "Horno integrado individual"
+        }
+      },
+      "item_paint_quality": {
+        "description": "Pintura premium o estándar",
+        "impact": "Las pinturas premium pueden requerir pedido",
+        "name": "Nivel de calidad de la pintura",
+        "options": {
+          "premium": "Premium (Farrow & Ball, Little Greene)",
+          "standard": "Calidad estándar"
+        }
+      },
+      "item_pendant_lights": {
+        "description": "Número y posición de las lámparas colgantes",
+        "help": "Normalmente 2 o 3 colgantes para una isla estándar",
+        "impact": "Hacen falta pronto las posiciones de las cajas eléctricas",
+        "name": "Lámparas colgantes sobre la isla"
+      },
+      "item_radiator_style": {
+        "description": "Tipo de radiadores en toda la vivienda",
+        "impact": "La potencia de los radiadores afecta al dimensionado de la caldera y al trazado de tuberías",
+        "name": "Tipo de radiadores",
+        "options": {
+          "designer": "Radiador de diseño",
+          "panel_11": "Panel tipo 11 (simple)",
+          "panel_21": "Panel tipo 21 (doble/simple)",
+          "panel_22": "Panel tipo 22 (doble)",
+          "underfloor": "Suelo radiante"
+        }
+      },
+      "item_reno_appliance_pkg": {
+        "description": "Nivel de gama de los electrodomésticos",
+        "impact": "Los electrodomésticos premium pueden tardar más",
+        "name": "Gama de electrodomésticos",
+        "options": {
+          "budget": "Económica (Beko, Candy)",
+          "mid": "Gama media (Bosch, Siemens)",
+          "premium": "Premium (Miele, Gaggenau)"
+        }
+      },
+      "item_reno_bath_style": {
+        "description": "Orientación general del diseño del baño",
+        "impact": "El estilo determina la elección de sanitarios y azulejos",
+        "name": "Estilo de baño",
+        "options": {
+          "classic": "Clásico (sanitarios tradicionales)",
+          "industrial": "Industrial (elementos vistos, hormigón)",
+          "modern": "Moderno (líneas limpias, minimalista)"
+        }
+      },
+      "item_reno_boiler": {
+        "description": "Qué hacer con el sistema de calefacción",
+        "impact": "La bomba de calor necesita de 6 a 8 semanas y un estudio aparte",
+        "name": "Sustitución de la caldera",
+        "options": {
+          "heat_pump": "Cambiar a bomba de calor",
+          "keep": "Conservar la caldera actual",
+          "replace": "Sustituir por una caldera nueva"
+        }
+      },
+      "item_reno_floor_ground": {
+        "description": "Material principal del suelo de la planta baja",
+        "impact": "La elección del suelo afecta a la preparación del soporte",
+        "name": "Planta baja",
+        "options": {
+          "laminate": "Laminado",
+          "tiles": "Baldosas",
+          "vinyl": "Vinílico de alta gama (LVT)",
+          "wood": "Madera maciza"
+        }
+      },
+      "item_reno_floor_upper": {
+        "description": "Material del suelo de la planta superior",
+        "impact": "La moqueta se coloca al final, pero la madera y el laminado necesitan aclimatación",
+        "name": "Planta superior",
+        "options": {
+          "carpet": "Moqueta",
+          "laminate": "Laminado",
+          "wood": "Madera maciza"
+        }
+      },
+      "item_reno_floorplan": {
+        "description": "Enfoque general de la distribución",
+        "impact": "Afecta a todos los gremios — hay que decidirlo primero",
+        "name": "Cambios de distribución",
+        "options": {
+          "keep_existing": "Mantener la distribución actual",
+          "open_plan": "Espacio abierto (derribar tabiques)",
+          "partial": "Cambios parciales (ampliar huecos de paso, etc.)"
+        }
+      },
+      "item_reno_kitchen_supplier": {
+        "description": "Dónde comprar la cocina",
+        "impact": "El pedido de cocina tarda de 4 a 8 semanas según el proveedor",
+        "name": "Proveedor de cocina",
+        "options": {
+          "brugman": "Brugman",
+          "custom": "A medida",
+          "ikea": "IKEA",
+          "kvik": "Kvik"
+        }
+      },
+      "item_reno_lighting": {
+        "description": "Nivel de diseño de la iluminación",
+        "impact": "El cableado debe estar puesto antes de enlucir",
+        "name": "Plan de iluminación",
+        "options": {
+          "basic": "Básico (lámparas centrales)",
+          "designer": "Cuidado (focos, luz de acento, regulación)",
+          "smart": "Iluminación inteligente (Hue, Casambi)"
+        }
+      },
+      "item_reno_socket_count": {
+        "description": "Número de tomas eléctricas",
+        "impact": "Hay que decidirlo antes del primer tendido — después se cierran las paredes",
+        "name": "Número de enchufes",
+        "options": {
+          "extra": "Enchufes adicionales (+50 %)",
+          "smart": "Preparado para domótica (adicionales + datos)",
+          "standard": "Estándar (según normativa)"
+        }
+      },
+      "item_reno_tile_budget": {
+        "description": "Rango de precio por metro cuadrado para los azulejos del baño",
+        "impact": "Los azulejos de gama alta pueden tener que pedirse a Italia o España",
+        "name": "Presupuesto de azulejos",
+        "options": {
+          "120": "120 €/m² (lujo)",
+          "30": "30 €/m² (básico)",
+          "50": "50 €/m² (gama media)",
+          "80": "80 €/m² (premium)"
+        }
+      },
+      "item_reno_ufh": {
+        "description": "¿Instalar suelo radiante?",
+        "impact": "Debe instalarse antes de cualquier acabado de suelo — no se puede añadir después",
+        "name": "Suelo radiante",
+        "options": {
+          "no": "No",
+          "yes": "Sí"
+        }
+      },
+      "item_reno_wall_removal": {
+        "description": "¿Hay tabiques que derribar o abrir?",
+        "impact": "Hace falta un estudio de estructura — añade de 2 a 3 semanas de cálculos",
+        "name": "Derribo de tabiques",
+        "options": {
+          "no": "Sin cambios en tabiques",
+          "yes_specify": "Sí — indicar cuáles"
+        }
+      },
+      "item_reno_wetroom": {
+        "description": "Diseño de la zona de ducha",
+        "impact": "La ducha a ras de suelo exige impermeabilización y pendiente — afecta al recrecido",
+        "name": "Ducha a ras de suelo o cabina",
+        "options": {
+          "separate": "Cabina de ducha independiente",
+          "wet_room": "Ducha a ras de suelo (abierta, sin escalón)"
+        }
+      },
+      "item_reno_windows": {
+        "description": "¿Sustituir las ventanas actuales?",
+        "impact": "Las ventanas tardan de 4 a 6 semanas",
+        "name": "Sustitución de ventanas",
+        "options": {
+          "all": "Sustituir todas las ventanas",
+          "none": "Mantener las ventanas actuales",
+          "some": "Sustituir algunas ventanas"
+        }
+      },
+      "item_reno_worktop": {
+        "description": "Superficie de la encimera de cocina",
+        "impact": "Las encimeras de piedra exigen plantilla tras montar los muebles",
+        "name": "Material de la encimera",
+        "options": {
+          "granite": "Granito",
+          "laminate": "Laminado",
+          "quartz": "Cuarzo",
+          "wood": "Madera maciza"
+        }
+      },
+      "item_shelving_material": {
+        "description": "Material de las baldas y de la estructura interior",
+        "impact": "Afecta al despiece y al pedido de material",
+        "name": "Material de las baldas",
+        "options": {
+          "mdf": "MDF (pintado)",
+          "plywood": "Contrachapado (natural o teñido)",
+          "solid": "Madera maciza"
+        }
+      },
+      "item_shower_or_bath": {
+        "description": "Elección del elemento de baño principal",
+        "impact": "Afecta a toda la distribución del baño y a la fontanería",
+        "name": "¿Ducha, bañera o ambas?",
+        "options": {
+          "bath_only": "Solo bañera",
+          "bath_shower": "Bañera con ducha incorporada",
+          "separate": "Ducha y bañera separadas",
+          "shower_only": "Solo ducha"
+        }
+      },
+      "item_sink_type": {
+        "description": "Estilo de lavabo de baño",
+        "impact": "Los muebles de lavabo deben pedirse con 2-3 semanas de antelación",
+        "name": "Tipo de lavabo",
+        "options": {
+          "countertop": "Lavabo sobre encimera",
+          "pedestal": "Con pedestal",
+          "vanity_unit": "Mueble con lavabo y almacenaje",
+          "wall_mounted": "Suspendido"
+        }
+      },
+      "item_skirting_profile": {
+        "description": "Estilo de moldura del rodapié",
+        "impact": "Los perfiles fuera de stock deben pedirse",
+        "name": "Perfil del rodapié",
+        "options": {
+          "ogee": "Gola (tradicional)",
+          "pencil_round": "Canto redondeado (discreto)",
+          "square": "Recto (moderno)",
+          "torus": "Toro (redondeado)"
+        }
+      },
+      "item_smart_home": {
+        "description": "Conectar la calefacción a un sistema domótico",
+        "impact": "Se puede añadir después, pero puede exigir recablear",
+        "name": "Integración domótica",
+        "options": {
+          "hive": "Hive",
+          "nest": "Nest",
+          "none": "Ninguna",
+          "tado": "Tado"
+        }
+      },
+      "item_tap_style": {
+        "description": "Cromo, níquel cepillado, negro o latón",
+        "impact": "La grifería puede tardar de 2 a 3 semanas",
+        "name": "Acabado de la grifería",
+        "options": {
+          "brass": "Latón/dorado",
+          "brushed_nickel": "Níquel cepillado",
+          "chrome": "Cromo",
+          "matte_black": "Negro mate"
+        }
+      },
+      "item_temp_setting": {
+        "description": "Temperatura del agua caliente por defecto",
+        "help": "Lo estándar son 60 °C. Bajarla ahorra energía, pero atención al riesgo de legionela.",
+        "impact": "Ajustable después de la instalación",
+        "name": "Ajuste de temperatura"
+      },
+      "item_thermostat_type": {
+        "description": "Termostato principal de la calefacción",
+        "impact": "Los sistemas inteligentes o por zonas exigen cableado en el primer tendido",
+        "name": "Tipo de termostato",
+        "options": {
+          "basic": "Básico de encendido/apagado",
+          "programmable": "Programable",
+          "smart": "Termostato inteligente",
+          "zone": "Control por zonas (varias estancias)"
+        }
+      },
+      "item_tile_height": {
+        "description": "¿Hasta qué altura debe llegar el alicatado?",
+        "impact": "Necesario para pedir la cantidad correcta de azulejo",
+        "name": "Altura del alicatado",
+        "options": {
+          "full_height": "Altura completa (hasta el techo)",
+          "half_wall": "Media altura (120 cm)",
+          "splashback": "Solo salpicadero (60 cm)"
+        }
+      },
+      "item_toilet_style": {
+        "description": "Inodoro suspendido o de pie",
+        "help": "Los suspendidos son más fáciles de limpiar pero cuestan más. El de pie es el tradicional.",
+        "impact": "El primer tendido de fontanería no puede avanzar sin la posición del inodoro",
+        "name": "Tipo de inodoro",
+        "optionDescriptions": {
+          "back_to_wall": "Cisterna empotrada",
+          "floor_standing": "Tradicional, más económico",
+          "wall_hung": "Moderno, fácil de limpiar"
+        },
+        "options": {
+          "back_to_wall": "Adosado a la pared",
+          "floor_standing": "De pie",
+          "wall_hung": "Suspendido"
+        }
+      },
+      "item_trim_color": {
+        "description": "Rodapiés, cercos de puerta y de ventana",
+        "impact": "Menor — ajustable durante la obra",
+        "name": "Color de la carpintería",
+        "options": {
+          "contrast": "Color en contraste (especificar)",
+          "match_walls": "A juego con las paredes",
+          "white_gloss": "Blanco (acabado brillante)",
+          "white_satin": "Blanco (acabado satinado)"
+        }
+      },
+      "item_under_cabinet_lights": {
+        "description": "Tiras LED bajo los muebles altos",
+        "impact": "El cableado debe hacerse antes de montar los muebles",
+        "name": "Iluminación bajo muebles"
+      },
+      "item_usb_outlets": {
+        "description": "Enchufes con carga USB integrada",
+        "help": "Se recomiendan de 2 a 4 en las zonas comunes",
+        "impact": "Menor — se puede sustituir durante la obra",
+        "name": "Enchufes con USB"
+      },
+      "item_valve_type": {
+        "description": "Tipo de llaves en cada radiador",
+        "impact": "Las termostáticas son recomendables por la normativa de eficiencia energética",
+        "name": "Tipo de llaves de radiador",
+        "options": {
+          "manual": "Manuales",
+          "smart_trv": "Termostáticas inteligentes",
+          "trv": "Termostáticas"
+        }
+      },
+      "item_wall_color_bedroom": {
+        "description": "Color de cada dormitorio",
+        "help": "Indica la estancia y el color de cada una",
+        "impact": "La pintura debe pedirse o mezclarse",
+        "name": "Colores de los dormitorios"
+      },
+      "item_wall_color_living": {
+        "description": "Color principal de las paredes del salón",
+        "help": "Indica la marca y la referencia (p. ej. Dulux White Mist)",
+        "impact": "La pintura debe pedirse o mezclarse",
+        "name": "Color de las paredes del salón"
+      },
+      "item_wall_finish": {
+        "description": "Nivel de brillo de las paredes",
+        "impact": "Afecta al pedido de pintura",
+        "name": "Acabado de la pintura mural",
+        "optionDescriptions": {
+          "eggshell": "Brillo ligero, lavable",
+          "flat": "Disimula imperfecciones, no lavable",
+          "satin": "Brillo medio, muy lavable"
+        },
+        "options": {
+          "eggshell": "Cáscara de huevo",
+          "flat": "Mate",
+          "satin": "Satinado"
+        }
+      },
+      "item_wall_repairs": {
+        "description": "¿Hay agujeros, grietas o desperfectos que reparar?",
+        "help": "Indica las zonas que necesitan reparación",
+        "impact": "Puede requerir material adicional",
+        "name": "Reparaciones de pared necesarias"
+      },
+      "item_wall_tile": {
+        "description": "Elige el azulejo de pared (aporta foto o enlace)",
+        "impact": "Los azulejos suelen tardar de 2 a 4 semanas",
+        "name": "Elección del azulejo de pared"
+      },
+      "item_wallpaper_removal": {
+        "description": "¿Hay papel pintado que retirar?",
+        "impact": "Afecta notablemente al plazo",
+        "name": "Retirada de papel pintado"
+      },
+      "item_wardrobe_type": {
+        "description": "Tipo de armario empotrado",
+        "impact": "Los sistemas de puertas tardan de 2 a 3 semanas",
+        "name": "Tipo de armario",
+        "options": {
+          "hinged": "Puertas abatibles",
+          "sliding": "Puertas correderas",
+          "walk_in": "Vestidor"
+        }
+      },
+      "item_wood_finish": {
+        "description": "Tratamiento final de superficie de toda la carpintería",
+        "impact": "Afecta al lijado previo y al número de manos",
+        "name": "Acabado de la madera",
+        "options": {
+          "lacquer": "Laca (brillante o satinada)",
+          "oil": "Aceite (mate natural)",
+          "paint": "Pintura (opaca)",
+          "stain": "Tinte (deja ver la veta)"
+        }
+      }
+    },
+    "templates": {
+      "tmpl_bathroom_full": {
+        "description": "Reforma completa del baño: sanitarios, azulejos y acabados",
+        "name": "Reforma integral de baño"
+      },
+      "tmpl_carpentry_woodwork": {
+        "description": "Puertas, armarios empotrados, rodapiés y acabado de la madera",
+        "name": "Carpintería interior"
+      },
+      "tmpl_electrical_upgrade": {
+        "description": "Trabajos eléctricos: enchufes, interruptores e iluminación",
+        "name": "Mejora de la instalación eléctrica"
+      },
+      "tmpl_heating_cv": {
+        "description": "Sistema de calefacción central: caldera, radiadores y control",
+        "name": "Instalación de calefacción central"
+      },
+      "tmpl_heatpump": {
+        "description": "Bomba de calor aerotérmica o geotérmica, con integración y control",
+        "name": "Instalación de bomba de calor"
+      },
+      "tmpl_kitchen_full": {
+        "description": "Reforma completa de la cocina: muebles, electrodomésticos y acabados",
+        "name": "Reforma integral de cocina"
+      },
+      "tmpl_painting_interior": {
+        "description": "Pintura interior completa: paredes, techos y carpintería",
+        "name": "Pintura interior"
+      },
+      "tmpl_renovation_full": {
+        "description": "Reforma completa de la vivienda: distribución, cocina, baño, suelos, electricidad y fontanería",
+        "name": "Reforma integral"
+      }
+    }
   }
 }
