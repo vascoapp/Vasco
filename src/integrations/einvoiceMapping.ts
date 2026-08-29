@@ -110,6 +110,30 @@ function naturaFor(vatRate: number): FatturaPALineItem['natura'] {
   return vatRate === 0 ? 'N2.2' : undefined;
 }
 
+/**
+ * FatturaPA splits a fiscal identity in two: `IdPaese` (the ISO country) and
+ * `IdCodice` (the number ALONE). The app stores the VAT number the way its own
+ * validator demands it — `IT\d{11}`, prefix included, because that is what a
+ * contractor reads off their own paperwork — so passing `vatNumber` straight
+ * through emitted
+ *
+ *     <IdPaese>IT</IdPaese><IdCodice>IT12345678901</IdCodice>
+ *
+ * for the transmitter, the seller AND the buyer. That is not an 11-digit
+ * partita IVA, so SDI rejects the file on formal validation and the contractor
+ * never learns why from anything the app showed them.
+ *
+ * Only strips when the prefix matches the country actually being emitted, so a
+ * cross-border buyer keeps their own identifier intact.
+ */
+function bareFiscalCode(value: string | undefined, country: string | undefined): string | undefined {
+  if (!value) return value;
+  const v = value.trim().toUpperCase().replace(/\s/g, '');
+  const iso = (country ?? '').trim().toUpperCase();
+  if (iso.length === 2 && v.startsWith(iso)) return v.slice(2);
+  return v;
+}
+
 export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
   const missing: MissingField[] = [];
 
@@ -162,7 +186,7 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
       codiceDestinatario: routing || '0000000',
       cedentePrestatore: {
         denominazione: src.seller.name,
-        partitaIva: sellerVat as string,
+        partitaIva: bareFiscalCode(sellerVat, src.seller.country ?? 'IT') as string,
         codiceFiscale: src.seller.taxId,
         regimeFiscale: src.seller.fiscalRegime as RegimeFiscale,
         indirizzo: src.seller.address as string,
@@ -173,7 +197,7 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
       },
       cessionarioCommittente: {
         denominazione: src.buyer.name,
-        partitaIva: src.buyer.vatId,
+        partitaIva: bareFiscalCode(src.buyer.vatId, src.buyer.country ?? 'IT'),
         codiceFiscale: src.buyer.taxId,
         indirizzo: src.buyer.address as string,
         cap: src.buyer.postcode as string,

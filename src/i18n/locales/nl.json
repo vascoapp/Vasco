@@ -902,7 +902,9 @@
     "invoiceCount_one": "{{count}} factuur",
     "invoiceCount_other": "{{count}} facturen",
     "quoteCount_one": "{{count}} offerte",
-    "quoteCount_other": "{{count}} offertes"
+    "quoteCount_other": "{{count}} offertes",
+    "einvoiceNoFormatTitle": "Nog geen e-factuurformaat",
+    "einvoiceNoFormatBody": "Vasco maakt nog geen e-factuur voor jouw land. Stuur de pdf — die is nog steeds een geldige factuur."
   },
   "expenses": {
     "title": "Uitgaven",

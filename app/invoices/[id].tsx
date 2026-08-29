@@ -838,8 +838,21 @@ export default function InvoiceDetailScreen() {
         // IT crash reached production silently through this exact path.
         if (country === 'ES') return await handleExportFacturae();
         if (country === 'IT') return await handleExportFatturaPA();
-        // DE / NL / FR / UK / others: XRechnung.
-        return await handleExportEInvoice('XRechnung');
+        if (country === 'DE') return await handleExportEInvoice('XRechnung');
+        // Everyone else exports NOTHING, and says so.
+        //
+        // This used to fall through to XRechnung for "DE / NL / FR / UK /
+        // others" under a comment claiming it matched the buttons below. It did
+        // not: those render for DE, ES and IT only. R289 removed the French
+        // button precisely because Factur-X was being produced by the German
+        // generator — "legally wrong German XML for French B2G/B2B" — and this
+        // path kept doing exactly that whenever an approved queue action
+        // arrived with `?submit=einvoice`. A French contractor got a .xml that
+        // Chorus Pro cannot accept, from a button they never pressed.
+        Alert.alert(
+          t('invoices.einvoiceNoFormatTitle', 'No e-invoice format yet'),
+          t('invoices.einvoiceNoFormatBody', 'Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice.'),
+        );
       } catch {
         // Silent — surfaced via the in-flow alert/share sheet errors.
       }

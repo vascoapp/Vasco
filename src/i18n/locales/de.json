@@ -915,7 +915,9 @@
     "invoiceCount_one": "{{count}} Rechnung",
     "invoiceCount_other": "{{count}} Rechnungen",
     "quoteCount_one": "{{count}} Angebot",
-    "quoteCount_other": "{{count}} Angebote"
+    "quoteCount_other": "{{count}} Angebote",
+    "einvoiceNoFormatTitle": "Noch kein E-Rechnungsformat",
+    "einvoiceNoFormatBody": "Vasco erzeugt für Ihr Land noch keine E-Rechnung. Senden Sie stattdessen das PDF — es ist weiterhin eine gültige Rechnung."
   },
   "expenses": {
     "title": "Ausgaben",

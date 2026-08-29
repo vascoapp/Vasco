@@ -915,7 +915,9 @@
     "invoiceCount_one": "{{count}} factura",
     "invoiceCount_other": "{{count}} facturas",
     "quoteCount_one": "{{count}} presupuesto",
-    "quoteCount_other": "{{count}} presupuestos"
+    "quoteCount_other": "{{count}} presupuestos",
+    "einvoiceNoFormatTitle": "Aún no hay formato de factura electrónica",
+    "einvoiceNoFormatBody": "Vasco todavía no genera factura electrónica para tu país. Envía el PDF — sigue siendo una factura válida."
   },
   "expenses": {
     "title": "Gastos",

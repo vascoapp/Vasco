@@ -915,7 +915,9 @@
     "invoiceCount_one": "{{count}} invoice",
     "invoiceCount_other": "{{count}} invoices",
     "quoteCount_one": "{{count}} quote",
-    "quoteCount_other": "{{count}} quotes"
+    "quoteCount_other": "{{count}} quotes",
+    "einvoiceNoFormatTitle": "No e-invoice format yet",
+    "einvoiceNoFormatBody": "Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice."
   },
   "expenses": {
     "title": "Expenses",
