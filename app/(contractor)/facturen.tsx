@@ -976,15 +976,33 @@ export default function FacturenScreen() {
                               // as the per-row button — short, polite, no per-invoice
                               // payment link (skipped for speed; contractor can re-share
                               // individually for a fresh link).
-                              const text = autoInv
-                                ? renderPaymentReminderForTag(bulkLocale, {
+                              // One template for both sources. The fallback used
+                              // to be `` `Reminder for invoice ${inv.id}` `` — a
+                              // hardcoded ENGLISH sentence naming the storage id,
+                              // sent to the customer. It fires whenever
+                              // `invoiceAutomationService` is not tracking that
+                              // invoice, which is any invoice created outside that
+                              // path. So a German customer chased for RE-2026-0087
+                              // received "Reminder for invoice inv-de-1": the wrong
+                              // language, and a number that appears on no document
+                              // they hold. Same pair of defects as the Mahnung that
+                              // named no invoice (#230).
+                              const text = renderPaymentReminderForTag(bulkLocale, autoInv
+                                ? {
                                     customer: autoInv.customerName ?? '',
                                     ref: autoInv.invoiceNumber,
                                     amount: formatCurrency(autoInv.total, (user?.country ?? 'NL') as Country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
-                                  }, tag)
-                                : `Reminder for invoice ${inv.id}`;
+                                  }
+                                : {
+                                    customer: findDocumentCustomer(customers as any, inv as any)?.name
+                                      ?? (inv as any).customer ?? '',
+                                    ref: (inv as any).reference ?? inv.id,
+                                    amount: formatCurrency(inv.amount, (user?.country ?? 'NL') as Country),
+                                    link: '',
+                                    business: businessProfile.businessName ?? '',
+                                  }, tag);
                               await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') });
                               sent++;
                             } catch {
