@@ -23,8 +23,16 @@ describe('reduced-VAT copy carries no hardcoded rate', () => {
     expect(title.replace('{{rate}}', '')).not.toMatch(/\b9\b/);
   });
 
-  it.each(LOCALES)('%s has a subtitle describing the qualifying work', (locale) => {
-    expect(quotes(locale).reducedVatSubtitle).toBeTruthy();
+  it.each(LOCALES)('%s resolves a subtitle describing the qualifying work', (locale) => {
+    // en-US is an OVERRIDE layer over en, not a full locale: it carries only
+    // what genuinely differs in US English ("Sales tax" for VAT). The subtitle
+    // has nothing US-specific in it, so it correctly lives in `en` alone and
+    // en-US inherits it — asserting a key IN the file would push dead weight
+    // back into the override layer that `currencySymbolInStrings` exists to
+    // keep empty.
+    const own = quotes(locale).reducedVatSubtitle;
+    const resolved = own ?? (locale === 'en-US' ? quotes('en').reducedVatSubtitle : undefined);
+    expect(resolved).toBeTruthy();
   });
 
   it('every country the toggle renders for has a rate to interpolate', () => {
