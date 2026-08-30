@@ -232,15 +232,90 @@ const DESTRUCTIVE = /uitlog|log\s?out|logout|afmelden|abmelden|d\u00e9connex|cer
  * this list is the finding list, not a silencer.
  */
 const KNOWN_INERT = new Set<string>([
-  // Each of these is the tab or filter that is ALREADY selected when the screen
-  // mounts. Pressing the tab you are on is correctly a no-op — there is nothing
-  // for it to change. Verified individually: each has a live `onPress` that
-  // sets the same value the screen already holds.
+  // Pressing the tab/filter/segment that is ALREADY selected on mount. Verified
+  // individually: each sets the value the screen already holds (e.g.
+  // `viewMode` defaults to `'list'`, `severity` to `'Laag'`, `period` to
+  // `'week'`). No signature can tell this from a dead control.
   '(contractor)/ai :: WACHTRIJ#1',        // queue tab, the default
   '(contractor)/bedrijf :: OVERZICHT#1',  // overview tab, the default
-  '(contractor)/certificaten :: TabButton#1', // "Resumen"/"Overzicht", the default
+  '(contractor)/certificaten :: Overzicht#1',
   '(contractor)/decisions :: Actief#1',   // "Active" filter, the default
   '(contractor)/werk :: VANDAAG#1',       // "Today" filter, the default
+  'contractor/ai-assistant :: Chat#1',
+  'contractor/cashflow :: Overzicht#1',
+  'contractor/expenses :: Alle#1',
+  'contractor/material-search :: Alles#1',
+  'contractor/message-templates :: Alle#1',
+  'contractor/notifications :: Inbox#1',
+  'contractor/payments :: Openstaand#1',
+  'contractor/payroll :: Week#1',
+  'contractor/permits :: Overzicht#1',
+  'contractor/projects :: Alle#1',
+  'contractor/quote-templates :: Alle#1',
+  'contractor/reports :: Maandelijks#1',
+  'contractor/timesheet :: Vandaag#1',
+  'contractor/vat-and-audit :: Standaard BTW#1',
+  'contractor/vat-prep :: Afgelopen kwartaal#1',
+  'contractor/warranty :: Actief#1',
+  'sitelead/close-defect :: Alle#1',
+  'sitelead/daily-report :: Zonnig#1',
+  'sitelead/dispatch :: icon:list#1',
+  'sitelead/incident-report :: Incident#1',
+  'sitelead/incident-report :: Laag#1',
+  'sitelead/log-defect :: Gebrek#1',
+  'sitelead/reports :: Deze Week#1',
+  'sitelead/worker-certs :: Alle#1',
+
+  // `expo-document-picker` / `expo-image-picker` are mocked to resolve
+  // `{canceled:true}`, so the handler returns early and nothing changes. Real
+  // in the app. ⚠️ Check the early return happens BEFORE any loading flag is
+  // set, or resets it in a `finally` — otherwise cancelling really does wedge
+  // the button, and that IS a bug.
+  '(modals)/ingestion :: Bestand kiezen#1',
+  '(modals)/ingestion :: PDF uploaden#1',
+  'contractor/inkoop :: DATANORM#1',
+  'contractor/inkoop :: E-factuur inlezen#1',
+  'contractor/job/[id]/photos :: Gebrek-foto toevoegen#1',
+  'contractor/job/[id]/photos :: Na-foto toevoegen#1',
+  'contractor/job/[id]/photos :: Oplevering-foto toevoegen#1',
+  'contractor/job/[id]/photos :: Tijdens-foto toevoegen#1',
+  'contractor/job/[id]/photos :: Voor-foto toevoegen#1',
+
+  // A SECOND entry point to a modal the harness already opened. The header `+`
+  // is pressed before the empty-state CTA, so `setShowAdd(true)` is idempotent
+  // by the time the CTA runs. A direct probe showed the crew CTA is fine:
+  // controls 3->10, signature 241->634. READ THE PRESS TRAIL before believing
+  // any inert verdict — order is everything.
+  'contractor/crew :: Eerste teamlid toevoegen#1',
+  'contractor/inkoop :: Bon scanner#2',
+  'contractor/pipeline :: Lead toevoegen#1',
+
+  // `HandoverPackBuilder`'s step indicator navigates only
+  // `if (isCompleted || index === currentStepIndex)`. On mount you are on step
+  // 0, so step 0 re-selects itself and steps 1-4 are forward skips the wizard
+  // blocks by design.
+  'contractor/handover/[jobId] :: Certificaat#1',
+  'contractor/handover/[jobId] :: Checklist#1',
+  'contractor/handover/[jobId] :: Documenten#1',
+  'contractor/handover/[jobId] :: Foto\'s#1',
+  'contractor/handover/[jobId] :: Voorbeeld#1',
+
+  // Guarded by an empty input or an empty collection — the harness types
+  // nothing and adds nothing, so the guard correctly refuses.
+  // `if (newItemText.trim())` and `if (cart.length > 0)`.
+  'contractor/material-search :: Winkelwagen#1',
+  'sitelead/inspection :: Toevoegen#1',
+
+  // A hidden multi-tap affordance: the logo opens the auth event log only on
+  // the FIFTH tap (`if (next >= 5)`). One press correctly shows nothing.
+  'login :: VascoBuild#1',
+
+  // The SAME control pressed twice under two names. Its label is derived from
+  // state: pressing `icon:star-outline#1` sets the rating to 1, so that star
+  // re-renders as `icon:star`, which is then treated as a new key and pressed
+  // again — setting 1 to 1. `label#ordinal` is stable across re-renders only
+  // while the LABEL is.
+  'contractor/job-quality/[id] :: icon:star#1',
 ]);
 
 /**
@@ -253,7 +328,13 @@ const KNOWN_INERT = new Set<string>([
  * scans `app/` itself and excludes only what is genuinely out of scope.
  *
  * `hub/` is excluded by a standing product decision (memory:
- * feedback_contractor_aannemer_only) — the portfolio roles ship to nobody.
+ * feedback_contractor_aannemer_only) — the portfolio roles ship to nobody. The
+ * CFO/director screens under `(tabs)/` are the same decision wearing a
+ * different path: `enterprise_portfolio` is false, so they ship to nobody
+ * either. They are excluded rather than listed in KNOWN_INERT because
+ * recording them as known-GOOD would be a claim — `cfo-returns` selects a
+ * project into state its own view may never read — and that is a claim about
+ * code nobody is allowed to fix.
  */
 function listPressableScreens(): string[] {
   const shared = new Set(listScreens());
@@ -266,6 +347,7 @@ function listPressableScreens(): string[] {
       if (e.name === '_layout.tsx' || e.name.startsWith('+') || e.name === 'error.tsx') continue;
       const rel = full.slice(APP_DIR.length + 1);
       if (rel.startsWith('hub/') || rel.includes('/hub/')) continue;
+      if (/^\(tabs\)\/(cfo-|dir-|buildos)/.test(rel)) continue;
       out.push(rel);
     }
   };

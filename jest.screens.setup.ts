@@ -265,7 +265,14 @@ jest.mock('expo-font', () => ({
 
 jest.mock('react-native-gesture-handler', () => {
   const { View, ScrollView, TouchableOpacity } = require('react-native');
-  return {
+  // Proxy-fallback, same as the react-native-svg mock below. An export this
+  // mock did not name came back `undefined`, and React then threw "Element
+  // type is invalid" for the WHOLE screen. `Swipeable` was missing, so
+  // `(tabs)/invoices` and `(tabs)/quotes` failed to mount and were silently
+  // skipped by the wiring sweep — 2 of 129 screens never pressed, and the run
+  // reported "127 screens" without saying which two were absent.
+  const mod: any = {
+    __esModule: true,
     GestureHandlerRootView: View,
     PanGestureHandler: View,
     TapGestureHandler: View,
@@ -276,6 +283,7 @@ jest.mock('react-native-gesture-handler', () => {
     GestureDetector: View,
     State: {},
   };
+  return new Proxy(mod, { get: (t: any, k) => (k in t ? t[k] : View) });
 });
 
 jest.mock('react-native-svg', () => {
