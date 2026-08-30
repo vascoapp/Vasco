@@ -259,7 +259,7 @@ const KNOWN_INERT = new Set<string>([
   'contractor/warranty :: Actief#1',
   'sitelead/close-defect :: Alle#1',
   'sitelead/daily-report :: Zonnig#1',
-  'sitelead/dispatch :: icon:list#1',
+  'sitelead/dispatch :: Lijstweergave#1',
   'sitelead/incident-report :: Incident#1',
   'sitelead/incident-report :: Laag#1',
   'sitelead/log-defect :: Gebrek#1',
@@ -483,15 +483,21 @@ describe('every control does something', () => {
     expect(screensCovered).toBeGreaterThanOrEqual(minScreens);
     expect(pressed).toBeGreaterThanOrEqual(minPressed);
 
-    // A RATCHET, not a target. An icon-only control with no accessibilityLabel,
+    // ZERO, and it stays zero. An icon-only control with no accessibilityLabel,
     // no testID and no text is an unlabelled button to a screen-reader user —
-    // "button" is all VoiceOver can say. This started at 111 and comes down as
-    // the classes are fixed (back 42, close 15, CRM contact actions 24 so far).
-    // Lower the number when you fix more; never raise it.
+    // "button" is all VoiceOver can say. This started at 111 and is now clear:
+    // back, close, add, edit, delete, share, send, search, the CRM contact row,
+    // the rating stars and both invoice edit toggles.
+    //
+    // ⚠️ A label on a control that ALREADY renders text OVERRIDES that text for
+    // a screen reader, so it is worse than no label. 520 such controls were
+    // deliberately left alone — a first, blunter pass labelled 43 of them and
+    // had to be reverted. Only label a control whose body is an icon and
+    // nothing else.
     //
     // Scoped to the surface this harness presses, so it cannot be gamed by
     // adding a labelled control elsewhere.
-    const UNLABELLED_BASELINE = 34;
+    const UNLABELLED_BASELINE = 0;
     if (unlabelled.size > UNLABELLED_BASELINE) {
       throw new Error(
         `${unlabelled.size} controls have no accessible name, up from ${UNLABELLED_BASELINE}. ` +

@@ -421,7 +421,7 @@ export const LeadGeneration: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Lead Generatie</Text>
-        <Pressable style={styles.addButton}>
+        <Pressable style={styles.addButton} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
           <Ionicons name="add" size={24} color={Palette.white} />
         </Pressable>
       </View>

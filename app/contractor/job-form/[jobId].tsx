@@ -222,7 +222,7 @@ export default function JobFormScreen() {
                       <Pressable
                         style={[styles.checkBtn, a.checked === true && styles.checkBtnYes]}
                         onPress={() => patch(a.fieldId, { checked: true })}
-                      >
+                       accessibilityRole="button" accessibilityLabel={t('common.confirm', 'Confirm')}>
                         <Ionicons
                           name="checkmark"
                           size={18}

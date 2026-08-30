@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { SafeArea, Spacing } from '../../theme/spacing';
 
@@ -16,6 +17,7 @@ interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({ title, showBack = true, onBack, rightAction }: ScreenHeaderProps) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const handleBack = () => {
@@ -34,7 +36,7 @@ export function ScreenHeader({ title, showBack = true, onBack, rightAction }: Sc
             onPress={handleBack}
             style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
             hitSlop={8}
-          >
+           accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
         ) : (

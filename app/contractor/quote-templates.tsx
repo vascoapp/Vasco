@@ -193,7 +193,7 @@ export default function QuoteTemplatesScreen() {
                         <Ionicons name="copy-outline" size={16} color={Palette.white} />
                         <Text style={styles.useButtonText}>{t('quoteTemplates.useTemplate', 'Use template')}</Text>
                       </Pressable>
-                      <Pressable style={styles.deleteButton} onPress={() => handleDelete(template)}>
+                      <Pressable style={styles.deleteButton} onPress={() => handleDelete(template)} accessibilityRole="button" accessibilityLabel={t('common.delete', 'Delete')}>
                         <Ionicons name="trash-outline" size={16} color={SemanticColors.feedbackError} />
                       </Pressable>
                     </View>

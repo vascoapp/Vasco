@@ -109,7 +109,7 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + GRID.sm }]}>
         {onClose && (
-          <Pressable onPress={onClose} style={styles.backButton}>
+          <Pressable onPress={onClose} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
         )}

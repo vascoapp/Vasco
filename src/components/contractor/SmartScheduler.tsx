@@ -274,7 +274,7 @@ export function SmartScheduler() {
           const prev = new Date(selectedDate);
           prev.setDate(prev.getDate() - 1);
           setSelectedDate(localDateKey(prev));
-        }}>
+        }} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.dayViewTitle}>
@@ -295,7 +295,7 @@ export function SmartScheduler() {
           const next = new Date(selectedDate);
           next.setDate(next.getDate() + 1);
           setSelectedDate(localDateKey(next));
-        }}>
+        }} accessibilityRole="button" accessibilityLabel={t('common.next', 'Next')}>
           <Ionicons name="chevron-forward" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
       </View>
@@ -542,7 +542,7 @@ export function SmartScheduler() {
       {viewType === 'list' && renderListView()}
 
       {/* Add Button */}
-      <Pressable style={styles.addButton}>
+      <Pressable style={styles.addButton} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
         <Ionicons name="add" size={28} color="#fff" />
       </Pressable>
 

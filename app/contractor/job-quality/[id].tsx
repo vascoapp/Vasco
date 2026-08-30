@@ -77,7 +77,14 @@ export default function JobQualityScreen() {
         <DKLabel style={styles.section}>{t('jobQuality.customerReview', 'Customer review')}</DKLabel>
         <View style={styles.row}>
           {[1, 2, 3, 4, 5].map((n) => (
-            <TouchableOpacity key={n} onPress={() => setReviewScore(n)} style={styles.star}>
+            <TouchableOpacity
+              key={n}
+              onPress={() => setReviewScore(n)}
+              style={styles.star}
+              accessibilityRole="button"
+              accessibilityState={{ selected: reviewScore !== null && n <= reviewScore }}
+              accessibilityLabel={t('a11y.rateStars', 'Rate {{n}} of 5', { n })}
+            >
               <Ionicons
                 name={reviewScore !== null && n <= reviewScore ? 'star' : 'star-outline'}
                 size={32}

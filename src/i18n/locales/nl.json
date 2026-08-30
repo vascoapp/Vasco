@@ -84,7 +84,10 @@
     "eInvoicing": "E-facturatie (Peppol, XRechnung)",
     "perHour": "{{rate}}/u",
     "call": "Bellen",
-    "email": "E-mailen"
+    "email": "E-mailen",
+    "previous": "Vorige",
+    "share": "Delen",
+    "options": "Opties"
   },
   "tabs": {
     "today": "Vandaag",
@@ -5094,7 +5097,10 @@
     "shareQuoteLink": "Link naar getekende offerte delen",
     "sendViaWhatsApp": "Versturen via WhatsApp",
     "removePhoto": "Foto verwijderen",
-    "jobCardHint": "Tik voor details, lang indrukken om te verwijderen"
+    "jobCardHint": "Tik voor details, lang indrukken om te verwijderen",
+    "rateStars": "Beoordeel {{n}} van 5",
+    "calendarView": "Agendaweergave",
+    "listView": "Lijstweergave"
   },
   "action": {
     "reminderBody": "Beste {{customer}},\n\nDit is een vriendelijke herinnering voor factuur {{invoice}} van {{amount}}.\n\nMet vriendelijke groet",

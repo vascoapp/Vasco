@@ -385,7 +385,7 @@ export default function WerkScreen() {
                 <Text style={styles.sortChipText}>{sortBy === 'date' ? `${t('dk.actions.byDate','Date').toUpperCase()} ↓` : `${t('dk.actions.byStatus','Status').toUpperCase()} ↓`}</Text>
               </Pressable>
             )}
-            <Pressable style={styles.iconBtn} onPress={() => router.push('/contractor/search' as any)} hitSlop={8}>
+            <Pressable style={styles.iconBtn} onPress={() => router.push('/contractor/search' as any)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.search', 'Search')}>
               <Ionicons name="search" size={20} color={DK.colors.text} />
             </Pressable>
           </View>
@@ -587,7 +587,7 @@ export default function WerkScreen() {
         testID="new-quote-fab"
         style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] }]}
         onPress={() => { hapticSuccess(); router.push('/contractor/tiered-quote' as any); }}
-      >
+       accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
         <LinearGradient
           colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]}
           start={{ x: 0, y: 0 }}

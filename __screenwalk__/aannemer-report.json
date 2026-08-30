@@ -54,13 +54,15 @@
    ],
    "a11y": [
     "Werk",
+    "Zoeken",
     "Tijd",
     "Open klus",
     "NIEUWE KLUS",
     "Kalender",
     "Uren",
     "Projecten",
-    "Klanten"
+    "Klanten",
+    "Toevoegen"
    ]
   },
   {
@@ -195,7 +197,8 @@
     "Marge"
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Toevoegen"
    ]
   },
   {
@@ -323,7 +326,9 @@
    ],
    "a11y": [
     "Terug",
-    "Retentie % aanpassen"
+    "Retentie % aanpassen",
+    "Toevoegen",
+    "Toevoegen"
    ]
   },
   {
@@ -341,7 +346,8 @@
     "Eerste teamlid toevoegen"
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Toevoegen"
    ]
   },
   {
@@ -508,7 +514,8 @@
    ],
    "a11y": [
     "Terug",
-    "Terug"
+    "Terug",
+    "Volgende"
    ]
   },
   {
@@ -526,7 +533,8 @@
     "Nieuw formulier"
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Toevoegen"
    ]
   },
   {
@@ -702,6 +710,7 @@
    ],
    "a11y": [
     "Terug",
+    "Toevoegen",
     "Bellen",
     "E-mailen",
     "Nieuwe offerte",

@@ -90,7 +90,7 @@ export default function SiteAssetsScreen() {
             <Text style={styles.assetName}>{asset.name}</Text>
             <Text style={styles.assetSite}>{asset.siteLabel}</Text>
           </View>
-          <Pressable onPress={() => confirmDelete(asset)} hitSlop={8}>
+          <Pressable onPress={() => confirmDelete(asset)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.delete', 'Delete')}>
             <Ionicons name="trash-outline" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
         </View>

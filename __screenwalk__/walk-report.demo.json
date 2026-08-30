@@ -437,7 +437,10 @@
     "Cashflow — komende 30 dagen",
     "Vasco Finance",
     "facturen",
+    "Opties",
+    "Verstuur",
     "Offertes",
+    "Opties",
     "Financiële rapporten",
     "Financiële rapporten",
     "Inkoop",
@@ -580,12 +583,14 @@
    ],
    "a11y": [
     "Werk",
+    "Zoeken",
     "Tijd",
     "Open klus",
     "NIEUWE KLUS",
     "Kalender",
     "Uren",
-    "Klanten"
+    "Klanten",
+    "Toevoegen"
    ]
   },
   {
@@ -685,7 +690,8 @@
     ""
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Verstuur"
    ]
   },
   {
@@ -944,7 +950,8 @@
     "Eerste teamlid toevoegen"
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Toevoegen"
    ]
   },
   {
@@ -1015,6 +1022,7 @@
    ],
    "a11y": [
     "Terug",
+    "Toevoegen",
     "Bellen",
     "E-mailen",
     "Nieuwe offerte",
@@ -1373,7 +1381,8 @@
     "Geen verzekeringen gevonden"
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Toevoegen"
    ]
   },
   {
@@ -1406,7 +1415,8 @@
     "Nieuw formulier"
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Toevoegen"
    ]
   },
   {
@@ -1437,6 +1447,11 @@
     "Terug",
     "Op tijd betaald?",
     "Klantbeoordeling",
+    "Beoordeel 1 van 5",
+    "Beoordeel 2 van 5",
+    "Beoordeel 3 van 5",
+    "Beoordeel 4 van 5",
+    "Beoordeel 5 van 5",
     "Doorverwijzing opgeleverd?",
     "Verwacht je binnen 6 maanden een vervolgklus?"
    ]
@@ -1952,7 +1967,8 @@
     "Registreer uren op een klus en ze verschijnen hier, klaar om te exporteren voor je boekhouder."
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Delen"
    ]
   },
   {
@@ -1995,6 +2011,7 @@
    ],
    "a11y": [
     "Terug",
+    "Toevoegen",
     "Openstaande leads",
     "Geschatte waarde",
     "Conversie · 90d"
@@ -2017,6 +2034,7 @@
     "Voeg je eerste dienst toe"
    ],
    "a11y": [
+    "Terug",
     "Dienst toevoegen"
    ]
   },
@@ -2188,7 +2206,9 @@
    ],
    "a11y": [
     "Terug",
-    "Retentie % aanpassen"
+    "Retentie % aanpassen",
+    "Toevoegen",
+    "Toevoegen"
    ]
   },
   {
@@ -2240,7 +2260,8 @@
     "Marge"
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Toevoegen"
    ]
   },
   {
@@ -3131,7 +3152,8 @@
    ],
    "a11y": [
     "Terug",
-    "Terug"
+    "Terug",
+    "Volgende"
    ]
   },
   {
@@ -3289,7 +3311,9 @@
     "Nog geen notities. Tik op het potlood om er een toe te voegen."
    ],
    "a11y": [
-    "Terug"
+    "Terug",
+    "Bewerken",
+    "Bewerken"
    ]
   },
   {

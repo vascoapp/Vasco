@@ -193,7 +193,7 @@ export function AIAssistant() {
           style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
           onPress={handleSend}
           disabled={!inputText.trim()}
-        >
+         accessibilityRole="button" accessibilityLabel={t('common.send', 'Send')}>
           <Ionicons
             name="send"
             size={20}

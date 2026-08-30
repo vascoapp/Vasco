@@ -431,7 +431,7 @@ export default function GeldScreen() {
             <DKLabel style={s.sectionTitle}>{t('invoices.invoices', 'Facturen')}</DKLabel>
             <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{invoices.length}</Text></View>
           </View>
-          <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8}>
+          <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.options', 'Options')}>
             <Ionicons name="options-outline" size={20} color={invoiceStatusFilter !== 'all' ? DK.colors.accent : DK.colors.textMuted} />
           </Pressable>
         </View>
@@ -462,7 +462,7 @@ export default function GeldScreen() {
                       finally { setSendingInvoiceId(null); }
                     }}
                     hitSlop={6}
-                  >
+                   accessibilityRole="button" accessibilityLabel={t('common.send', 'Send')}>
                     <Ionicons name="send" size={12} color="#FFFFFF" />
                   </Pressable>
                 )}
@@ -485,7 +485,7 @@ export default function GeldScreen() {
             <DKLabel style={s.sectionTitle}>{t('quotes.quotes', 'Offertes')}</DKLabel>
             <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{quotes.length}</Text></View>
           </View>
-          <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8}>
+          <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.options', 'Options')}>
             <Ionicons name="options-outline" size={20} color={quoteStatusFilter !== 'all' ? DK.colors.accent : DK.colors.textMuted} />
           </Pressable>
         </View>

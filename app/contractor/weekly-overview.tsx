@@ -142,7 +142,7 @@ export default function WeeklyOverviewScreen() {
             <Ionicons name="chevron-back" size={20} color={DK.colors.text} />
           </Pressable>
           <Text style={styles.weekLabel}>{weekLabel}</Text>
-          <Pressable onPress={() => setWeekOffset((w) => w + 1)} style={styles.navBtn} hitSlop={8}>
+          <Pressable onPress={() => setWeekOffset((w) => w + 1)} style={styles.navBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.next', 'Next')}>
             <Ionicons name="chevron-forward" size={20} color={DK.colors.text} />
           </Pressable>
           {weekOffset !== 0 && (

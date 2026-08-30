@@ -688,11 +688,11 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
             </View>
             <View style={styles.itemRight}>
               <View style={styles.qtyRow}>
-                <Pressable onPress={() => updateQuantity(item.id, -0.5)} style={styles.qtyBtn}>
+                <Pressable onPress={() => updateQuantity(item.id, -0.5)} style={styles.qtyBtn} accessibilityRole="button" accessibilityLabel={t('common.remove', 'Remove')}>
                   <Ionicons name="remove" size={14} color={SemanticColors.textPrimary} />
                 </Pressable>
                 <Text style={styles.qtyText}>{item.suggestedQuantity} {item.unit}</Text>
-                <Pressable onPress={() => updateQuantity(item.id, 0.5)} style={styles.qtyBtn}>
+                <Pressable onPress={() => updateQuantity(item.id, 0.5)} style={styles.qtyBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
                   <Ionicons name="add" size={14} color={SemanticColors.textPrimary} />
                 </Pressable>
               </View>

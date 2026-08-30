@@ -657,14 +657,14 @@ export default function MaterialSearchScreen() {
                       <Text style={styles.cartItemPrice}>{formatCurrency(item.unitPrice, cc.symbol)} / {item.unit}</Text>
                     </View>
                     <View style={styles.cartItemQty}>
-                      <Pressable onPress={() => updateQuantity(item.idx, -1)} hitSlop={6} style={styles.qtyBtn}>
+                      <Pressable onPress={() => updateQuantity(item.idx, -1)} hitSlop={6} style={styles.qtyBtn} accessibilityRole="button" accessibilityLabel={t('common.remove', 'Remove')}>
                         <Ionicons name="remove" size={14} color={SemanticColors.textSecondary} />
                       </Pressable>
                       <Text style={styles.qtyText}>{item.quantity}</Text>
-                      <Pressable onPress={() => updateQuantity(item.idx, 1)} hitSlop={6} style={styles.qtyBtn}>
+                      <Pressable onPress={() => updateQuantity(item.idx, 1)} hitSlop={6} style={styles.qtyBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
                         <Ionicons name="add" size={14} color={SemanticColors.textSecondary} />
                       </Pressable>
-                      <Pressable onPress={() => removeFromCart(item.idx)} hitSlop={6} style={styles.removeBtn}>
+                      <Pressable onPress={() => removeFromCart(item.idx)} hitSlop={6} style={styles.removeBtn} accessibilityRole="button" accessibilityLabel={t('common.delete', 'Delete')}>
                         <Ionicons name="trash-outline" size={14} color={SemanticColors.feedbackError} />
                       </Pressable>
                     </View>

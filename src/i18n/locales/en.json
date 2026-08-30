@@ -84,7 +84,10 @@
     "eInvoicing": "E-invoicing (XRechnung, Peppol)",
     "perHour": "{{rate}}/h",
     "call": "Call",
-    "email": "Email"
+    "email": "Email",
+    "previous": "Previous",
+    "share": "Share",
+    "options": "Options"
   },
   "tabs": {
     "today": "Today",
@@ -5107,7 +5110,10 @@
     "shareQuoteLink": "Share signed quote link",
     "sendViaWhatsApp": "Send via WhatsApp",
     "removePhoto": "Remove photo",
-    "jobCardHint": "Tap for details, long press to remove"
+    "jobCardHint": "Tap for details, long press to remove",
+    "rateStars": "Rate {{n}} of 5",
+    "calendarView": "Calendar view",
+    "listView": "List view"
   },
   "action": {
     "reminderBody": "Dear {{customer}},\n\nThis is a friendly reminder for invoice {{invoice}} of {{amount}}.\n\nKind regards",

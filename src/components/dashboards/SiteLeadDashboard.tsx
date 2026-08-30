@@ -966,7 +966,7 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
 
             {/* Date navigation */}
             <View style={pStyles.dateNav}>
-              <Pressable style={pStyles.dateChevron} onPress={() => setSelectedDate(navigateDay(selectedDate, -1))}>
+              <Pressable style={pStyles.dateChevron} onPress={() => setSelectedDate(navigateDay(selectedDate, -1))} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
                 <Ionicons name="chevron-back" size={18} color={SemanticColors.textPrimary} />
               </Pressable>
               <View style={pStyles.dateCenterCol}>
@@ -994,7 +994,7 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
                   })}
                 </View>
               </View>
-              <Pressable style={pStyles.dateChevron} onPress={() => setSelectedDate(navigateDay(selectedDate, 1))}>
+              <Pressable style={pStyles.dateChevron} onPress={() => setSelectedDate(navigateDay(selectedDate, 1))} accessibilityRole="button" accessibilityLabel={t('common.next', 'Next')}>
                 <Ionicons name="chevron-forward" size={18} color={SemanticColors.textPrimary} />
               </Pressable>
             </View>

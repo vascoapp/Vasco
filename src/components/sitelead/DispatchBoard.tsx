@@ -256,13 +256,13 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
           <Pressable
             style={[styles.viewToggle, viewMode === 'list' && styles.viewToggleActive]}
             onPress={() => setViewMode('list')}
-          >
+           accessibilityRole="button" accessibilityLabel={t('a11y.listView', 'List view')}>
             <Ionicons name="list" size={18} color={viewMode === 'list' ? '#fff' : SemanticColors.textSecondary} />
           </Pressable>
           <Pressable
             style={[styles.viewToggle, viewMode === 'timeline' && styles.viewToggleActive]}
             onPress={() => setViewMode('timeline')}
-          >
+           accessibilityRole="button" accessibilityLabel={t('a11y.calendarView', 'Calendar view')}>
             <Ionicons name="calendar" size={18} color={viewMode === 'timeline' ? '#fff' : SemanticColors.textSecondary} />
           </Pressable>
           {onClose && (
@@ -366,7 +366,7 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
       <Pressable
         style={styles.fab}
         onPress={() => Alert.alert(t('sitelead.dispatchNewJob', 'Nieuwe klus'), t('sitelead.dispatchNewJobDesc', 'Nieuwe dispatch klus aanmaken'))}
-      >
+       accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
         <Ionicons name="add" size={24} color="#fff" />
       </Pressable>
     </View>

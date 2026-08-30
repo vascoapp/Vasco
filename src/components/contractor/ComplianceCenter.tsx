@@ -271,7 +271,7 @@ export function ComplianceCenter() {
             <Pressable
               style={styles.alertAction}
               onPress={() => acknowledge(alert.id)}
-            >
+             accessibilityRole="button" accessibilityLabel={t('common.confirm', 'Confirm')}>
               <Ionicons name="checkmark" size={20} color={SemanticColors.actionPrimary} />
             </Pressable>
           )}

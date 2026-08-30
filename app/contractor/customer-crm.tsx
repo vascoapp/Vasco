@@ -170,7 +170,7 @@ export default function CustomerPhonebookScreen() {
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>{t('contractor.customers.title', 'Customers')}</Text>
-        <Pressable onPress={() => setShowAdd(true)} style={s.addBtn}>
+        <Pressable onPress={() => setShowAdd(true)} style={s.addBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
           <Ionicons name="add" size={22} color={Palette.white} />
         </Pressable>
       </View>

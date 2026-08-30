@@ -1024,6 +1024,8 @@ export default function InvoiceDetailScreen() {
                 else setEditingItems(true);
               }}
               style={styles.editBtn}
+              accessibilityRole="button"
+              accessibilityLabel={editingItems ? t('common.save', 'Save') : t('common.edit', 'Edit')}
             >
               <Ionicons name={editingItems ? 'checkmark' : 'pencil'} size={14} color={Palette.hermesOrange} />
             </Pressable>
@@ -1455,7 +1457,9 @@ export default function InvoiceDetailScreen() {
             <Pressable onPress={() => {
               if (editingNotes) handleSaveNotes();
               else setEditingNotes(true);
-            }} style={styles.editBtn}>
+            }} style={styles.editBtn}
+              accessibilityRole="button"
+              accessibilityLabel={editingNotes ? t('common.save', 'Save') : t('common.edit', 'Edit')}>
               <Ionicons name={editingNotes ? 'checkmark' : 'pencil'} size={14} color={Palette.hermesOrange} />
             </Pressable>
           </View>

@@ -84,7 +84,10 @@
     "eInvoicing": "E-Rechnung (XRechnung, ZUGFeRD)",
     "perHour": "{{rate}}/Std.",
     "call": "Anrufen",
-    "email": "E-Mail senden"
+    "email": "E-Mail senden",
+    "previous": "Zurück",
+    "share": "Teilen",
+    "options": "Optionen"
   },
   "tabs": {
     "today": "Heute",
@@ -5107,7 +5110,10 @@
     "shareQuoteLink": "Link zum signierten Angebot teilen",
     "sendViaWhatsApp": "Per WhatsApp senden",
     "removePhoto": "Foto entfernen",
-    "jobCardHint": "Tippen für Details, lange drücken zum Entfernen"
+    "jobCardHint": "Tippen für Details, lange drücken zum Entfernen",
+    "rateStars": "{{n}} von 5 bewerten",
+    "calendarView": "Kalenderansicht",
+    "listView": "Listenansicht"
   },
   "action": {
     "reminderBody": "Sehr geehrte/r {{customer}},\n\ndies ist eine freundliche Erinnerung an die Rechnung {{invoice}} über {{amount}}.\n\nMit freundlichen Grüßen",

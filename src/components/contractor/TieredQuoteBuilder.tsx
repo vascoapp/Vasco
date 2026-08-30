@@ -1075,7 +1075,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     return (
       <View style={s.container}>
         <View style={s.header}>
-          <Pressable onPress={() => setShowPricebook(false)} style={s.closeBtn}>
+          <Pressable onPress={() => setShowPricebook(false)} style={s.closeBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
@@ -1363,11 +1363,11 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                       )}
                     </View>
                     <View style={s.qtyRow}>
-                      <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity - 1)}>
+                      <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity - 1)} accessibilityRole="button" accessibilityLabel={t('common.remove', 'Remove')}>
                         <Ionicons name="remove" size={14} color={SemanticColors.textPrimary} />
                       </Pressable>
                       <Text style={s.qtyText}>{sv.quantity}</Text>
-                      <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity + 1)}>
+                      <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity + 1)} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
                         <Ionicons name="add" size={14} color={SemanticColors.textPrimary} />
                       </Pressable>
                     </View>
@@ -1555,7 +1555,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <Pressable onPress={() => setStep('select')} style={s.closeBtn}>
+        <Pressable onPress={() => setStep('select')} style={s.closeBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>

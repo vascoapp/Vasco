@@ -362,7 +362,7 @@ export default function ProjectBillingScreen() {
         {/* ── Instalments ─────────────────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('projectBilling.terms', 'Instalments')}</Text>
-          <Pressable onPress={() => setShowTermForm(true)} hitSlop={8}>
+          <Pressable onPress={() => setShowTermForm(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
             <Ionicons name="add-circle-outline" size={22} color={Palette.hermesOrange} />
           </Pressable>
         </View>
@@ -431,7 +431,7 @@ export default function ProjectBillingScreen() {
                           color={index === terms.length - 1 ? SemanticColors.textTertiary : SemanticColors.textSecondary}
                         />
                       </Pressable>
-                      <Pressable style={styles.termControlBtn} hitSlop={8} onPress={() => deleteTerm(term)}>
+                      <Pressable style={styles.termControlBtn} hitSlop={8} onPress={() => deleteTerm(term)} accessibilityRole="button" accessibilityLabel={t('common.delete', 'Delete')}>
                         <Ionicons name="trash-outline" size={16} color={SemanticColors.feedbackError} />
                       </Pressable>
                     </View>
@@ -453,7 +453,7 @@ export default function ProjectBillingScreen() {
         {/* ── Change orders ───────────────────────────────────────────────── */}
         <View style={[styles.sectionHeader, { marginTop: GRID.lg }]}>
           <Text style={styles.sectionTitle}>{t('projectBilling.changeOrders', 'Change orders')}</Text>
-          <Pressable onPress={() => setShowCoForm(true)} hitSlop={8}>
+          <Pressable onPress={() => setShowCoForm(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
             <Ionicons name="add-circle-outline" size={22} color={Palette.hermesOrange} />
           </Pressable>
         </View>

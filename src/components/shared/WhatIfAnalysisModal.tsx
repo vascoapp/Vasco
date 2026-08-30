@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   Pressable,
@@ -74,6 +75,7 @@ export function WhatIfAnalysisModal({
   onClose,
   onAnalysisComplete,
 }: WhatIfAnalysisModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<'select' | 'configure' | 'results'>('select');
   const [selectedScenario, setSelectedScenario] = useState<ScenarioTemplate | null>(null);
   const [delayDays, setDelayDays] = useState('5');
@@ -175,7 +177,7 @@ export function WhatIfAnalysisModal({
   const renderConfiguration = () => (
     <View style={styles.content}>
       <View style={styles.configHeader}>
-        <Pressable onPress={() => setStep('select')} style={styles.backButton}>
+        <Pressable onPress={() => setStep('select')} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={20} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.configTitle}>{selectedScenario?.name}</Text>
@@ -187,7 +189,7 @@ export function WhatIfAnalysisModal({
           <Pressable
             style={styles.inputButton}
             onPress={() => setDelayDays(String(Math.max(1, parseInt(delayDays) - 1)))}
-          >
+           accessibilityRole="button" accessibilityLabel={t('common.remove', 'Remove')}>
             <Ionicons name="remove" size={20} color={SemanticColors.textPrimary} />
           </Pressable>
           <TextInput
@@ -199,7 +201,7 @@ export function WhatIfAnalysisModal({
           <Pressable
             style={styles.inputButton}
             onPress={() => setDelayDays(String(parseInt(delayDays) + 1))}
-          >
+           accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
             <Ionicons name="add" size={20} color={SemanticColors.textPrimary} />
           </Pressable>
         </View>

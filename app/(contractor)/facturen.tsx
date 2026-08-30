@@ -837,7 +837,7 @@ export default function FacturenScreen() {
                           approveQuote(approval.id, 'Eigenaar');
                           hapticSuccess();
                         }}
-                      >
+                       accessibilityRole="button" accessibilityLabel={t('common.confirm', 'Confirm')}>
                         <Ionicons name="checkmark" size={16} color={SemanticColors.feedbackSuccess} />
                       </Pressable>
                     </View>

@@ -84,7 +84,10 @@
     "eInvoicing": "Facturación electrónica (Facturae)",
     "perHour": "{{rate}}/h",
     "call": "Llamar",
-    "email": "Enviar correo"
+    "email": "Enviar correo",
+    "previous": "Anterior",
+    "share": "Compartir",
+    "options": "Opciones"
   },
   "tabs": {
     "today": "Hoy",
@@ -5107,7 +5110,10 @@
     "shareQuoteLink": "Compartir enlace del presupuesto firmado",
     "sendViaWhatsApp": "Enviar por WhatsApp",
     "removePhoto": "Eliminar foto",
-    "jobCardHint": "Toque para ver detalles, mantenga pulsado para eliminar"
+    "jobCardHint": "Toque para ver detalles, mantenga pulsado para eliminar",
+    "rateStars": "Valorar {{n}} de 5",
+    "calendarView": "Vista de calendario",
+    "listView": "Vista de lista"
   },
   "action": {
     "reminderBody": "Estimado/a {{customer}}:\n\nEste es un recordatorio amistoso de la factura {{invoice}} por importe de {{amount}}.\n\nUn cordial saludo",

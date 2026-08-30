@@ -169,7 +169,7 @@ export default function InsuranceScreen() {
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <Text style={styles.headerTitle}>{t('insurance.title', 'Verzekeringen')}</Text>
-        <Pressable onPress={() => openClaimForm()} style={styles.backBtn}>
+        <Pressable onPress={() => openClaimForm()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
           <Ionicons name="add-circle-outline" size={24} color={Palette.hermesOrange} />
         </Pressable>
       </View>

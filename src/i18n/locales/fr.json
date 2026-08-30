@@ -84,7 +84,10 @@
     "eInvoicing": "Facturation électronique (Factur-X)",
     "perHour": "{{rate}}/h",
     "call": "Appeler",
-    "email": "Envoyer un e-mail"
+    "email": "Envoyer un e-mail",
+    "previous": "Précédent",
+    "share": "Partager",
+    "options": "Options"
   },
   "tabs": {
     "today": "Aujourd'hui",
@@ -5107,7 +5110,10 @@
     "shareQuoteLink": "Partager le lien du devis signé",
     "sendViaWhatsApp": "Envoyer via WhatsApp",
     "removePhoto": "Supprimer la photo",
-    "jobCardHint": "Appuyez pour les détails, appui long pour supprimer"
+    "jobCardHint": "Appuyez pour les détails, appui long pour supprimer",
+    "rateStars": "Noter {{n}} sur 5",
+    "calendarView": "Vue calendrier",
+    "listView": "Vue liste"
   },
   "action": {
     "reminderBody": "Cher {{customer}},\n\nCeci est un rappel amical concernant la facture {{invoice}} d'un montant de {{amount}}.\n\nCordialement",

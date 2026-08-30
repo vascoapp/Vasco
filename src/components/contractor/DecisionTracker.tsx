@@ -965,7 +965,7 @@ function DecisionItemCard({
                 onChangeText={setInputValue}
                 keyboardType={item.inputType === 'number' ? 'numeric' : 'default'}
               />
-              <Pressable style={styles.submitBtn} onPress={handleSubmitValue}>
+              <Pressable style={styles.submitBtn} onPress={handleSubmitValue} accessibilityRole="button" accessibilityLabel={t('common.confirm', 'Confirm')}>
                 <Ionicons name="checkmark" size={20} color="#fff" />
               </Pressable>
             </View>

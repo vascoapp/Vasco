@@ -212,7 +212,7 @@ export default function ProjectsScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('contractor.projects.title', 'Projects')}</Text>
-        <Pressable onPress={() => setShowCreate(true)} hitSlop={8}>
+        <Pressable onPress={() => setShowCreate(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
           <Ionicons name="add-circle" size={28} color={Palette.hermesOrange} />
         </Pressable>
       </View>

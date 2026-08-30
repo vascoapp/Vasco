@@ -130,7 +130,7 @@ export default function JobFormsScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('jobForms.title', 'Job forms')}</Text>
-        <Pressable onPress={startNew} hitSlop={8}>
+        <Pressable onPress={startNew} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
           <Ionicons name="add-circle-outline" size={22} color={Palette.hermesOrange} />
         </Pressable>
       </View>
@@ -160,7 +160,7 @@ export default function JobFormsScreen() {
                     {t('jobForms.fieldCount', { count: tpl.fields.length })}
                   </Text>
                 </View>
-                <Pressable hitSlop={8} onPress={() => confirmDelete(tpl)} style={styles.rowDelete}>
+                <Pressable hitSlop={8} onPress={() => confirmDelete(tpl)} style={styles.rowDelete} accessibilityRole="button" accessibilityLabel={t('common.delete', 'Delete')}>
                   <Ionicons name="trash-outline" size={16} color={SemanticColors.feedbackError} />
                 </Pressable>
                 <Ionicons name="chevron-forward" size={18} color={SemanticColors.textSecondary} />
@@ -198,7 +198,7 @@ export default function JobFormsScreen() {
 
             <View style={styles.fieldsHeader}>
               <Text style={styles.label}>{t('jobForms.fields', 'Items')}</Text>
-              <Pressable onPress={addField} hitSlop={8}>
+              <Pressable onPress={addField} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
                 <Ionicons name="add-circle-outline" size={20} color={Palette.hermesOrange} />
               </Pressable>
             </View>

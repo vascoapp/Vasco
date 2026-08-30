@@ -234,7 +234,7 @@ function Card({ inst, onTogglePause, onRemove, onEdit }: CardProps) {
             color={DK.colors.accent}
           />
         </Pressable>
-        <Pressable hitSlop={8} onPress={() => onRemove(inst.template.id)}>
+        <Pressable hitSlop={8} onPress={() => onRemove(inst.template.id)} accessibilityRole="button" accessibilityLabel={t('common.delete', 'Delete')}>
           <Ionicons name="trash-outline" size={20} color={DK.colors.textMuted} />
         </Pressable>
       </View>

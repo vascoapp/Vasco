@@ -129,7 +129,7 @@ export default function CrewScreen() {
           <Ionicons name="chevron-back" size={26} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('crew.title', 'Crew')}</Text>
-        <Pressable onPress={() => setShowAdd(true)} style={styles.backBtn}>
+        <Pressable onPress={() => setShowAdd(true)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
           <Ionicons name="add" size={26} color={DK.colors.accent} />
         </Pressable>
       </View>

@@ -3,6 +3,7 @@
 // =============================================================================
 
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TextInput, StyleSheet, Pressable, Keyboard } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../theme/colors';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function VascoTaskBar({ onSubmit, placeholder = 'Bijv. "Inspectie ketel om 14:00 morgen"' }: Props) {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<ParsedTask | null>(null);
   const { parse, categoryIcon, categoryLabel } = useTaskParser();
@@ -57,7 +59,7 @@ export function VascoTaskBar({ onSubmit, placeholder = 'Bijv. "Inspectie ketel o
           onSubmitEditing={handleSubmit}
         />
         {input.length > 0 && (
-          <Pressable onPress={handleSubmit} style={styles.submitBtn}>
+          <Pressable onPress={handleSubmit} style={styles.submitBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
             <Ionicons name="add-circle" size={24} color={Palette.hermesOrange} />
           </Pressable>
         )}

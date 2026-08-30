@@ -112,7 +112,7 @@ export default function PayrollScreen() {
             {periodLabel} · {t('payroll.peopleCount', { count: payrollData.lines.length, defaultValue: '{{count}} people' })}
           </Text>
         </View>
-        <Pressable style={styles.exportButton} onPress={handleExport}>
+        <Pressable style={styles.exportButton} onPress={handleExport} accessibilityRole="button" accessibilityLabel={t('common.share', 'Share')}>
           <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
         </Pressable>
       </View>

@@ -215,7 +215,7 @@ export default function BesparenScreen() {
         </Pressable>
         <Text style={s.headerTitle}>{t('savings.title', 'Besparen')}</Text>
         {visibleActions.length > 0 ? (
-          <Pressable onPress={handleShare} hitSlop={12} style={s.backBtn}>
+          <Pressable onPress={handleShare} hitSlop={12} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.share', 'Share')}>
             <Ionicons name="share-outline" size={20} color={SemanticColors.textPrimary} />
           </Pressable>
         ) : (
