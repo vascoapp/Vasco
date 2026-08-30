@@ -166,7 +166,7 @@ export function ScheduleBlockBoard({ blocks, unassigned, workers, onReassign }: 
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Hertoewijzen</Text>
-              <Pressable onPress={() => { setShowWorkerModal(false); setSelectedBlock(null); }}>
+              <Pressable onPress={() => { setShowWorkerModal(false); setSelectedBlock(null); }} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                 <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
               </Pressable>
             </View>

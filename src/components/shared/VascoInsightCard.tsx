@@ -268,12 +268,12 @@ export function VascoInsightCard({
             <Pressable onPress={() => handleOutcome('negative')} hitSlop={8} style={styles.outcomeButton}>
               <Ionicons name="thumbs-down-outline" size={14} color={SemanticColors.textTertiary} />
             </Pressable>
-            <Pressable onPress={handleDismiss} hitSlop={8}>
+            <Pressable onPress={handleDismiss} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
             </Pressable>
           </View>
         ) : (
-          <Pressable onPress={handleDismiss} hitSlop={8}>
+          <Pressable onPress={handleDismiss} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={16} color={SemanticColors.textTertiary} />
           </Pressable>
         )}
@@ -301,7 +301,7 @@ export function VascoInsightCard({
           <Text style={styles.compactMessage} numberOfLines={expanded ? undefined : 1}>{insight.message}</Text>
         </View>
         {onDismiss && (
-          <Pressable onPress={handleDismiss} hitSlop={8} style={styles.compactDismiss}>
+          <Pressable onPress={handleDismiss} hitSlop={8} style={styles.compactDismiss} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
           </Pressable>
         )}
@@ -343,7 +343,7 @@ export function VascoInsightCard({
           </View>
         </View>
         {onDismiss && (
-          <Pressable onPress={handleDismiss} hitSlop={8}>
+          <Pressable onPress={handleDismiss} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={18} color={SemanticColors.textTertiary} />
           </Pressable>
         )}
@@ -575,6 +575,7 @@ export function InlineInsight({
   onDismiss,
 }: InlineInsightProps) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.inlineContainer}>
@@ -591,7 +592,7 @@ export function InlineInsight({
         </Pressable>
       )}
       {onDismiss && (
-        <Pressable onPress={onDismiss} hitSlop={8}>
+        <Pressable onPress={onDismiss} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
           <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
         </Pressable>
       )}

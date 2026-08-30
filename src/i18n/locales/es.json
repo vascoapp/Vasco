@@ -82,7 +82,9 @@
     "tryAgain": "Inténtalo de nuevo.",
     "moreOptions": "Más opciones",
     "eInvoicing": "Facturación electrónica (Facturae)",
-    "perHour": "{{rate}}/h"
+    "perHour": "{{rate}}/h",
+    "call": "Llamar",
+    "email": "Enviar correo"
   },
   "tabs": {
     "today": "Hoy",

@@ -371,7 +371,7 @@ export function SmartScheduler() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Pressable onPress={() => setShowOptimizations(false)}>
+          <Pressable onPress={() => setShowOptimizations(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.modalTitle}>Optimalisaties</Text>
@@ -415,7 +415,7 @@ export function SmartScheduler() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Pressable onPress={() => setShowJobModal(false)}>
+          <Pressable onPress={() => setShowJobModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.modalTitle}>Afspraak details</Text>

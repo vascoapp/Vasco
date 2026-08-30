@@ -118,7 +118,7 @@ export default function XeroAuthScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
           <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
       </View>

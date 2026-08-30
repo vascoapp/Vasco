@@ -286,6 +286,21 @@ jest.mock('react-native-gesture-handler', () => {
   return new Proxy(mod, { get: (t: any, k) => (k in t ? t[k] : View) });
 });
 
+// FadeIn schedules its entrance animation on a setTimeout. The component
+// clears it on unmount and is correct, but a walk that mounts 122 screens can
+// still have one in flight when Jest tears the environment down — and the
+// timer then reads `Animated` off a dismantled react-native, throwing
+// "Cannot read properties of undefined (reading 'parallel')" and killing the
+// PROCESS. That crash lands after the run has printed its counts but before
+// jest reports pass/fail, which silently destroys the exit code — a failing
+// suite exited looking like a crash, not a failure.
+//
+// The animation is invisible to a headless walk, so render the children.
+jest.mock('./src/components/shared/FadeIn', () => ({
+  __esModule: true,
+  FadeIn: ({ children }: any) => children,
+}));
+
 jest.mock('react-native-svg', () => {
   const { View } = require('react-native');
   return new Proxy({ __esModule: true, default: View }, { get: (t: any, k) => t[k] ?? View });

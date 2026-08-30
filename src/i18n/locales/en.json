@@ -82,7 +82,9 @@
     "tryAgain": "Please try again.",
     "moreOptions": "More options",
     "eInvoicing": "E-invoicing (XRechnung, Peppol)",
-    "perHour": "{{rate}}/h"
+    "perHour": "{{rate}}/h",
+    "call": "Call",
+    "email": "Email"
   },
   "tabs": {
     "today": "Today",

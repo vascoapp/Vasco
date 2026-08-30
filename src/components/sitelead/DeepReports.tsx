@@ -148,7 +148,7 @@ export function DeepReports({ onClose }: DeepReportsProps) {
           <Text style={styles.subtitle}>Gedetailleerde Analyses & Inzichten</Text>
         </View>
         {onClose && (
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={24} color={SemanticColors.textSecondary} />
           </Pressable>
         )}

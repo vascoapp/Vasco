@@ -403,7 +403,7 @@ export default function GeldScreen() {
                   <Text style={s.vascoQueueImpact}>{item.estimatedImpact}</Text>
                 </View>
                 <View style={s.vascoQueueActions}>
-                <Pressable hitSlop={6} onPress={() => aiQueue.reject(item.id)} style={s.vascoQueueReject}>
+                <Pressable hitSlop={6} onPress={() => aiQueue.reject(item.id)} style={s.vascoQueueReject} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                   <Ionicons name="close" size={12} color={DK.colors.textMuted} />
                 </Pressable>
                 <Pressable

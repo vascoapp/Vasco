@@ -240,7 +240,7 @@ export default function ApprovalsScreen() {
 
           {/* Actions */}
           <View style={styles.actionRow}>
-            <Pressable style={styles.rejectButton} onPress={() => handleReject(approval.id)}>
+            <Pressable style={styles.rejectButton} onPress={() => handleReject(approval.id)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={16} color={SemanticColors.feedbackError} />
               <Text style={styles.rejectText}>Afwijzen</Text>
             </Pressable>

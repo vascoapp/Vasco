@@ -155,7 +155,7 @@ export function IntelligenceDashboard({ onClose }: IntelligenceDashboardProps) {
       {/* Header */}
       <View style={styles.header}>
         {onClose && (
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
         )}

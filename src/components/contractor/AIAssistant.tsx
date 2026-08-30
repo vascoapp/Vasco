@@ -227,7 +227,7 @@ export function AIAssistant() {
             <Pressable
               style={styles.dismissButton}
               onPress={() => dismissInsight(insight.id, (insight as any).generatorId, 'ai-assistant')}
-            >
+             accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={18} color={SemanticColors.textSecondary} />
             </Pressable>
           </View>

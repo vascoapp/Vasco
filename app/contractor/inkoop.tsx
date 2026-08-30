@@ -194,7 +194,7 @@ export default function InkoopScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <Text style={styles.headerTitle}>{t('inkoop.title', 'Purchasing')}</Text>

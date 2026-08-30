@@ -108,6 +108,10 @@
     "Blijft compliant",
     "",
     "BEKIJK",
+    "Einde Dag Routine: 17:00",
+    "Bespaart tijd",
+    "",
+    "BEKIJK",
     "Afspraak Herinnering: Fam. de Vries",
     "Bespaart tijd",
     "",
@@ -126,13 +130,18 @@
    ],
    "a11y": [
     "AAN DE SLAG",
+    "Sluiten",
     "ACTIEVE PROJECTEN",
     "Alle projecten bekijken",
     "Kies actief project",
     "Vasco Analyst",
     "Negeren",
     "Verstuur",
+    "Sluiten",
     "Bekijk",
+    "Sluiten",
+    "Bekijk",
+    "Sluiten",
     "Verstuur",
     "Planning"
    ]
@@ -185,7 +194,9 @@
     "—",
     "Marge"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "projects/[id]",
@@ -273,6 +284,7 @@
     "4"
    ],
    "a11y": [
+    "Terug",
     "Klus toevoegen",
     "Mijlpaal toevoegen",
     "Opleverdatum vastleggen",
@@ -310,6 +322,7 @@
     "Nog geen meerwerk"
    ],
    "a11y": [
+    "Terug",
     "Retentie % aanpassen"
    ]
   },
@@ -327,7 +340,9 @@
     "",
     "Eerste teamlid toevoegen"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "schedule",
@@ -492,7 +507,8 @@
     "Badkamer renovatie — Fam. Jansen"
    ],
    "a11y": [
-    "Back"
+    "Terug",
+    "Terug"
    ]
   },
   {
@@ -509,7 +525,9 @@
     "Een loodgieter en een schilder controleren niet dezelfde dingen. Maak per vak je eigen lijst.",
     "Nieuw formulier"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "purchase-orders",
@@ -551,6 +569,7 @@
     ""
    ],
    "a11y": [
+    "Terug",
     "Materialen zoeken",
     "Nieuwe inkooporder"
    ]
@@ -574,7 +593,9 @@
     "%",
     "0/8 stappen afgerond"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "handover/[jobId]",
@@ -609,7 +630,9 @@
     "Volgende",
     ""
    ],
-   "a11y": []
+   "a11y": [
+    "Sluiten"
+   ]
   },
   {
    "screen": "customer-crm",
@@ -677,7 +700,33 @@
     "",
     ""
    ],
-   "a11y": []
+   "a11y": [
+    "Terug",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte"
+   ]
   }
  ]
 }

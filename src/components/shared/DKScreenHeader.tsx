@@ -5,6 +5,7 @@ import { Pressable, Text, View, StyleSheet, type StyleProp, type ViewStyle } fro
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { DK } from '../../theme/draftkings';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -26,11 +27,12 @@ interface Props {
 
 export function DKScreenHeader({ title, subtitle, onBack, actions, containerStyle }: Props) {
   const router = useRouter();
+  const { t } = useTranslation();
   const handleBack = onBack ?? (() => router.back());
   return (
     <SafeAreaView edges={['top']} style={[{ backgroundColor: DK.colors.bg }, containerStyle]}>
       <View style={styles.bar}>
-        <Pressable onPress={handleBack} hitSlop={8} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Back">
+        <Pressable onPress={handleBack} hitSlop={8} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={DK.colors.text} />
         </Pressable>
         <View style={{ flex: 1 }}>

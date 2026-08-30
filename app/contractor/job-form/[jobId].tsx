@@ -140,7 +140,7 @@ export default function JobFormScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
@@ -232,7 +232,7 @@ export default function JobFormScreen() {
                       <Pressable
                         style={[styles.checkBtn, a.checked === false && styles.checkBtnNo]}
                         onPress={() => patch(a.fieldId, { checked: false })}
-                      >
+                       accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                         <Ionicons
                           name="close"
                           size={18}

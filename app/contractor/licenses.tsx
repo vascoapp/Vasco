@@ -128,7 +128,7 @@ export default function LicensesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button">
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={26} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>
@@ -246,7 +246,7 @@ function LicenseModal({ visible, original, onClose, onSave, onDelete, isUs, defa
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <Pressable onPress={onClose} style={styles.backBtn}>
+          <Pressable onPress={onClose} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={26} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>

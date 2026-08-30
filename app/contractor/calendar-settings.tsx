@@ -76,7 +76,7 @@ export default function CalendarSettingsScreen() {
     return (
       <View style={s.container}>
         <View style={s.header}>
-          <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={s.headerTitle}>{t('calendar.settings', 'Calendar Settings')}</Text>
@@ -93,7 +93,7 @@ export default function CalendarSettingsScreen() {
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>{t('calendar.settings', 'Calendar Settings')}</Text>

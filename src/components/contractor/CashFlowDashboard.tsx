@@ -541,7 +541,7 @@ export function CashFlowDashboard() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setShowInvoiceModal(false)}>
+            <Pressable onPress={() => setShowInvoiceModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </Pressable>
             <Text style={styles.modalTitle}>{t('cashflow.invoiceDetails', 'Invoice details')}</Text>

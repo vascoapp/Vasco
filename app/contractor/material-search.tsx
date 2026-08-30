@@ -632,7 +632,7 @@ export default function MaterialSearchScreen() {
         <View style={styles.cartPanel}>
           <View style={styles.cartPanelHeader}>
             <Text style={styles.cartPanelTitle}>{t('materialSearch.orderReview', 'Order review')}</Text>
-            <Pressable onPress={() => setShowCart(false)} hitSlop={8}>
+            <Pressable onPress={() => setShowCart(false)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={20} color={SemanticColors.textSecondary} />
             </Pressable>
           </View>

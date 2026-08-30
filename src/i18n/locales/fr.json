@@ -82,7 +82,9 @@
     "tryAgain": "Veuillez réessayer.",
     "moreOptions": "Plus d'options",
     "eInvoicing": "Facturation électronique (Factur-X)",
-    "perHour": "{{rate}}/h"
+    "perHour": "{{rate}}/h",
+    "call": "Appeler",
+    "email": "Envoyer un e-mail"
   },
   "tabs": {
     "today": "Aujourd'hui",

@@ -266,7 +266,7 @@ export function DispatchBoard({ onClose }: DispatchBoardProps) {
             <Ionicons name="calendar" size={18} color={viewMode === 'timeline' ? '#fff' : SemanticColors.textSecondary} />
           </Pressable>
           {onClose && (
-            <Pressable onPress={onClose} style={styles.closeButton}>
+            <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={24} color={SemanticColors.textSecondary} />
             </Pressable>
           )}

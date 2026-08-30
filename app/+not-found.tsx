@@ -66,7 +66,7 @@ export default function NotFoundScreen() {
               style={styles.secondary}
               onPress={() => router.back()}
               accessibilityRole="button"
-            >
+             accessibilityLabel={t('common.back', 'Back')}>
               <Ionicons name="chevron-back" size={16} color={DK.colors.textMuted} />
               <Text style={styles.secondaryText}>{t('common.back', 'Back')}</Text>
             </Pressable>

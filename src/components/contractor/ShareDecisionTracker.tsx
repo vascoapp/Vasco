@@ -174,7 +174,7 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={onClose} style={styles.closeButton}>
+        <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
           <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.title}>{t('share.shareWithCustomer', 'Share with customer')}</Text>

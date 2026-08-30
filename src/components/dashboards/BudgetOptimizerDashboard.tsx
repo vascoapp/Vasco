@@ -947,7 +947,7 @@ export default function BudgetOptimizerDashboard({
                   {detailLine.costCode} — {detailLine.category}
                 </Text>
               </View>
-              <Pressable onPress={() => setDetailLine(null)}>
+              <Pressable onPress={() => setDetailLine(null)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                 <Ionicons
                   name="close"
                   size={24}

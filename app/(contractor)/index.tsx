@@ -463,6 +463,7 @@ function eveAgentBadge(item: QueueItem): { letter: string; color: string } | nul
 }
 
 function InlineQueueRow({ item, onApprove, onReject }: { item: QueueItem; onApprove: () => void; onReject: () => void }) {
+  const { t } = useTranslation();
   const eve = eveAgentBadge(item);
   return (
     // Stacked, not side-by-side: the action label ("HERINNERING VERSTUREN")
@@ -483,7 +484,7 @@ function InlineQueueRow({ item, onApprove, onReject }: { item: QueueItem; onAppr
         </View>
       </View>
       <View style={inlineStyles.actionsRow}>
-        <Pressable onPress={onReject} hitSlop={6} style={inlineStyles.rejectBtn}>
+        <Pressable onPress={onReject} hitSlop={6} style={inlineStyles.rejectBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
           <Ionicons name="close" size={14} color={DK.colors.textMuted} />
         </Pressable>
         <Pressable onPress={onApprove} style={({ pressed }) => [inlineStyles.approveBtn, pressed && { opacity: 0.85 }]}>

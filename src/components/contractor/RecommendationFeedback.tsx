@@ -198,7 +198,7 @@ export function RecommendationFeedbackCard({
             </Text>
           </View>
           {!compact && (
-            <Pressable onPress={handleQuickDismiss} hitSlop={8}>
+            <Pressable onPress={handleQuickDismiss} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={20} color={SemanticColors.textTertiary} />
             </Pressable>
           )}
@@ -249,7 +249,7 @@ export function RecommendationFeedbackCard({
         <View style={styles.modalContainer}>
           {/* Modal Header */}
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setShowFeedbackModal(false)} style={styles.modalClose}>
+            <Pressable onPress={() => setShowFeedbackModal(false)} style={styles.modalClose} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </Pressable>
             <Text style={styles.modalTitle}>

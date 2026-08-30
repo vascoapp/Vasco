@@ -125,7 +125,7 @@ export default function CrewScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={26} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('crew.title', 'Crew')}</Text>
@@ -264,7 +264,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <Pressable onPress={onClose} style={styles.backBtn}>
+          <Pressable onPress={onClose} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={26} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>

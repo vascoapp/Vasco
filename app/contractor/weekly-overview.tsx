@@ -138,7 +138,7 @@ export default function WeeklyOverviewScreen() {
 
         {/* Week navigator */}
         <View style={styles.weekNav}>
-          <Pressable onPress={() => setWeekOffset((w) => w - 1)} style={styles.navBtn} hitSlop={8}>
+          <Pressable onPress={() => setWeekOffset((w) => w - 1)} style={styles.navBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={20} color={DK.colors.text} />
           </Pressable>
           <Text style={styles.weekLabel}>{weekLabel}</Text>

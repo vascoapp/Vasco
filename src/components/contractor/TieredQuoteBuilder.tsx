@@ -1150,7 +1150,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     return (
       <View style={s.container}>
         <View style={s.header}>
-          <Pressable onPress={onClose} style={s.closeBtn}>
+          <Pressable onPress={onClose} style={s.closeBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
@@ -1165,7 +1165,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.xs, backgroundColor: Palette.hermesOrange + '10', borderRadius: RADIUS.md, padding: GRID.sm, marginBottom: GRID.sm }}>
               <Ionicons name="sparkles" size={14} color={Palette.hermesOrange} />
               <Text style={{ flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange }}>{handoffBanner}</Text>
-              <Pressable onPress={() => setHandoffBanner(null)} hitSlop={8}>
+              <Pressable onPress={() => setHandoffBanner(null)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                 <Ionicons name="close" size={14} color={Palette.hermesOrange} />
               </Pressable>
             </View>
@@ -1183,7 +1183,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                   contractors: cohortTuneSummary.totalCohortContractors,
                 })}
               </Text>
-              <Pressable onPress={() => setCohortTuneSummary(null)} hitSlop={8}>
+              <Pressable onPress={() => setCohortTuneSummary(null)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                 <Ionicons name="close" size={14} color={SemanticColors.feedbackSuccess} />
               </Pressable>
             </View>

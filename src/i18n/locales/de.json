@@ -82,7 +82,9 @@
     "tryAgain": "Bitte versuchen Sie es erneut.",
     "moreOptions": "Weitere Optionen",
     "eInvoicing": "E-Rechnung (XRechnung, ZUGFeRD)",
-    "perHour": "{{rate}}/Std."
+    "perHour": "{{rate}}/Std.",
+    "call": "Anrufen",
+    "email": "E-Mail senden"
   },
   "tabs": {
     "today": "Heute",

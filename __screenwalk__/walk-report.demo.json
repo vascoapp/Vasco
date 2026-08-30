@@ -147,7 +147,9 @@
     "leveranciers vergeleken",
     "Scan je eerste leveranciersfactuur om prijsintelligentie te starten."
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "(contractor)/certificaten",
@@ -298,7 +300,8 @@
     "Incasso"
    ],
    "a11y": [
-    "Nieuwe offerte"
+    "Nieuwe offerte",
+    "Sluiten"
    ]
   },
   {
@@ -493,6 +496,10 @@
     "Blijft compliant",
     "",
     "BEKIJK",
+    "Einde Dag Routine: 17:00",
+    "Bespaart tijd",
+    "",
+    "BEKIJK",
     "Afspraak Herinnering: Fam. de Vries",
     "Bespaart tijd",
     "",
@@ -511,10 +518,15 @@
    ],
    "a11y": [
     "AAN DE SLAG",
+    "Sluiten",
     "Vasco Analyst",
     "Negeren",
     "Verstuur",
+    "Sluiten",
     "Bekijk",
+    "Sluiten",
+    "Bekijk",
+    "Sluiten",
     "Verstuur",
     "Planning"
    ]
@@ -605,7 +617,7 @@
     "Niemand heeft toegang. Publiceer hierboven om je accountant toegang te geven."
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -673,7 +685,7 @@
     ""
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -690,7 +702,9 @@
     "Status van actieve klussen",
     ""
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/automations",
@@ -817,7 +831,9 @@
     "Vergunningen controleren",
     "In de app"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/calendar-settings",
@@ -835,7 +851,9 @@
     "Hoe het werkt",
     "Wanneer je een klus aanmaakt of bijwerkt met een ingeplande datum, maakt of wijzigt Vasco automatisch een agenda-afspraak op je apparaat. Geannuleerde klussen worden uit je agenda verwijderd."
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/cashflow",
@@ -884,7 +902,7 @@
     "0 facturen"
    ],
    "a11y": [
-    "Back",
+    "Terug",
     "Stuur herinneringen"
    ]
   },
@@ -907,7 +925,9 @@
     "%",
     "0/8 stappen afgerond"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/crew",
@@ -923,7 +943,9 @@
     "",
     "Eerste teamlid toevoegen"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/customer-crm",
@@ -991,7 +1013,33 @@
     "",
     ""
    ],
-   "a11y": []
+   "a11y": [
+    "Terug",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte",
+    "Bellen",
+    "E-mailen",
+    "Nieuwe offerte"
+   ]
   },
   {
    "screen": "contractor/customer-view",
@@ -1072,7 +1120,9 @@
     "·",
     "info@vdbinstallaties.nl"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/customer/[id]",
@@ -1129,6 +1179,7 @@
     ""
    ],
    "a11y": [
+    "Terug",
     "Vastleggen",
     "Aanpassen",
     "Ik ben zo onderweg voor CV-ketel onderhoud — Fam. de Vries."
@@ -1171,6 +1222,7 @@
     "Verbindt patronen uit je hele bedrijf tot inzichten: vergelijk je tarieven met andere EU-vakmensen, voorspel welke offertes worden gewonnen, prognosticeer de cashflow 90 dagen vooruit en ontdek welke soorten klussen de beste marges opleveren."
    ],
    "a11y": [
+    "Terug",
     "JOUW AI-TEAM",
     "Vasco Agent, 0 pending actions",
     "Vasco Auditor, 0 pending actions",
@@ -1203,7 +1255,7 @@
     "Voeg je eerste uitgave toe via de + knop"
    ],
    "a11y": [
-    "Back",
+    "Terug",
     "Nieuwe uitgave"
    ]
   },
@@ -1220,7 +1272,7 @@
     "Als je een structurele e-factuur exporteert, wordt die hier vastgelegd zodat je kunt volgen wat de instantie heeft geaccepteerd."
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -1256,7 +1308,9 @@
     "Volgende",
     ""
    ],
-   "a11y": []
+   "a11y": [
+    "Sluiten"
+   ]
   },
   {
    "screen": "contractor/inkoop",
@@ -1294,7 +1348,9 @@
     "Scan een bon om kosten te verwerken",
     ""
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/insurance",
@@ -1316,7 +1372,9 @@
     "",
     "Geen verzekeringen gevonden"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/job-form/[jobId]",
@@ -1329,7 +1387,9 @@
     "Een loodgieter en een schilder controleren niet dezelfde dingen. Maak per vak je eigen lijst.",
     "Nieuw formulier"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/job-forms",
@@ -1345,7 +1405,9 @@
     "Een loodgieter en een schilder controleren niet dezelfde dingen. Maak per vak je eigen lijst.",
     "Nieuw formulier"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/job-quality/[id]",
@@ -1372,7 +1434,7 @@
     "FEEDBACK OPSLAAN"
    ],
    "a11y": [
-    "Back",
+    "Terug",
     "Op tijd betaald?",
     "Klantbeoordeling",
     "Doorverwijzing opgeleverd?",
@@ -1565,7 +1627,9 @@
     "",
     "Vergunning toevoegen"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/market-insights",
@@ -1580,7 +1644,7 @@
     "Cohort-data gebruikt k-anonimiteit (≥5 aannemers per cel). Jouw individuele cijfers worden nooit aan anderen getoond."
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -1668,7 +1732,9 @@
     "d",
     "DSO"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/material-search",
@@ -1858,6 +1924,7 @@
     ""
    ],
    "a11y": [
+    "Sluiten",
     "Nieuwe offerte"
    ]
   },
@@ -1884,7 +1951,9 @@
     "Geen uren geregistreerd in deze periode",
     "Registreer uren op een klus en ze verschijnen hier, klaar om te exporteren voor je boekhouder."
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/permits",
@@ -1925,6 +1994,7 @@
     "Lead toevoegen"
    ],
    "a11y": [
+    "Terug",
     "Openstaande leads",
     "Geschatte waarde",
     "Conversie · 90d"
@@ -2082,6 +2152,7 @@
     "Bewaartermijnen: Facturen 7 jaar · Contracten 7 jaar · Klantgegevens 2 jaar · Personeelsgegevens 5 jaar"
    ],
    "a11y": [
+    "Terug",
     "Prestaties",
     "ABONNEMENT",
     "Account",
@@ -2116,6 +2187,7 @@
     "Nog geen meerwerk"
    ],
    "a11y": [
+    "Terug",
     "Retentie % aanpassen"
    ]
   },
@@ -2167,7 +2239,9 @@
     "—",
     "Marge"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/projects/[id]",
@@ -2255,6 +2329,7 @@
     "4"
    ],
    "a11y": [
+    "Terug",
     "Klus toevoegen",
     "Mijlpaal toevoegen",
     "Opleverdatum vastleggen",
@@ -2278,7 +2353,9 @@
     "Voor teams en aannemers",
     "Inkooporders zijn bedoeld voor teams die materiaal vooraf bestellen. Werk je solo? Gebruik Materialen om prijzen te vergelijken."
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/quote-templates",
@@ -2584,6 +2661,7 @@
     ""
    ],
    "a11y": [
+    "Terug",
     "Nieuw sjabloon"
    ]
   },
@@ -2596,7 +2674,7 @@
     "LADEN"
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -2612,7 +2690,7 @@
     "NIEUW ONDERHOUDSCONTRACT"
    ],
    "a11y": [
-    "Back",
+    "Terug",
     "NIEUW ONDERHOUDSCONTRACT"
    ]
   },
@@ -2639,7 +2717,7 @@
     "Beloning wordt automatisch toegekend zodra een uitgenodigde vakman de eerste factuur stuurt. Geen vervaldatum."
    ],
    "a11y": [
-    "Back",
+    "Terug",
     "DEEL VASCO, BESPAAR SAMEN"
    ]
   },
@@ -2656,7 +2734,7 @@
     "Een klant verschijnt hier zodra je 3 bezoeken hebt afgerond en het volgende binnen ongeveer twee maanden valt."
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -2701,6 +2779,7 @@
     "CSV delen"
    ],
    "a11y": [
+    "Terug",
     "PDF delen",
     "CSV delen"
    ]
@@ -2810,6 +2889,7 @@
     "Maak terugkerende klusovereenkomsten aan voor onderhoudscontracten, periodieke inspecties en meer."
    ],
    "a11y": [
+    "Terug",
     "Nieuw contract"
    ]
   },
@@ -2826,7 +2906,7 @@
     "Zodra je twee keer werk hebt afgerond op hetzelfde adres, verschijnt het hier om vast te leggen."
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -2851,6 +2931,7 @@
     "Kies diensten uit je prijslijst"
    ],
    "a11y": [
+    "Sluiten",
     "Begin met een sjabloon",
     "Of scan een foto",
     "Kies diensten uit je prijslijst"
@@ -2912,7 +2993,7 @@
     "De hash-keten bewijst dat geen enkele boeking achteraf is gewijzigd. Bewaar deze export bij je administratie gedurende de wettelijke bewaartermijn in jouw land."
    ],
    "a11y": [
-    "Back",
+    "Terug",
     "BTW-regeling",
     "Audit-spoor"
    ]
@@ -2943,7 +3024,9 @@
     "",
     "Exporteer voor aangifte"
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "contractor/warranty",
@@ -2985,7 +3068,7 @@
     "Verloopt over 500 dagen"
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -3047,7 +3130,8 @@
     "Badkamer renovatie — Fam. Jansen"
    ],
    "a11y": [
-    "Back"
+    "Terug",
+    "Terug"
    ]
   },
   {
@@ -3204,7 +3288,9 @@
     "",
     "Nog geen notities. Tik op het potlood om er een toe te voegen."
    ],
-   "a11y": []
+   "a11y": [
+    "Terug"
+   ]
   },
   {
    "screen": "invoices/new",
@@ -3233,7 +3319,7 @@
     "Concept"
    ],
    "a11y": [
-    "Back"
+    "Terug"
    ]
   },
   {
@@ -3380,7 +3466,7 @@
     "Factuur aanmaken"
    ],
    "a11y": [
-    "Back",
+    "Terug",
     "Factuur aanmaken"
    ]
   },

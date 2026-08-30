@@ -948,7 +948,7 @@ function DecisionItemCard({
               <Pressable
                 style={[styles.booleanBtn, styles.booleanNo]}
                 onPress={() => onRecordDecision(false)}
-              >
+               accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                 <Ionicons name="close" size={20} color={SemanticColors.feedbackError} />
                 <Text style={[styles.booleanText, { color: SemanticColors.feedbackError }]}>{t('common.no')}</Text>
               </Pressable>

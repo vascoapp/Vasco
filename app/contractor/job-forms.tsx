@@ -126,7 +126,7 @@ export default function JobFormsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('jobForms.title', 'Job forms')}</Text>
@@ -175,7 +175,7 @@ export default function JobFormsScreen() {
       <Modal visible={editing !== null} animationType="slide" onRequestClose={() => setEditing(null)}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Pressable onPress={() => setEditing(null)} hitSlop={8}>
+            <Pressable onPress={() => setEditing(null)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </Pressable>
             <Text style={styles.headerTitle}>

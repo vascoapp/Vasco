@@ -721,7 +721,7 @@ export default function FacturenScreen() {
             >
               <Text style={styles.stickyOverdueAction}>{t('invoices.view', 'Bekijk')}</Text>
             </Pressable>
-            <Pressable onPress={() => setOverdueDismissed(true)}>
+            <Pressable onPress={() => setOverdueDismissed(true)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={16} color={SemanticColors.feedbackError} />
             </Pressable>
           </View>

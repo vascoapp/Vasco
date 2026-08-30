@@ -166,7 +166,7 @@ export default function CustomerPhonebookScreen() {
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>{t('contractor.customers.title', 'Customers')}</Text>
@@ -249,7 +249,7 @@ export default function CustomerPhonebookScreen() {
                       style={s.actionIcon}
                       onPress={(e) => { e.stopPropagation?.(); Linking.openURL(`tel:${contact.phone}`); }}
                       hitSlop={6}
-                    >
+                     accessibilityRole="button" accessibilityLabel={t('common.call', 'Call')}>
                       <Ionicons name="call" size={16} color={SemanticColors.feedbackSuccess} />
                     </Pressable>
                   )}
@@ -258,7 +258,7 @@ export default function CustomerPhonebookScreen() {
                       style={s.actionIcon}
                       onPress={(e) => { e.stopPropagation?.(); Linking.openURL(`mailto:${contact.email}`); }}
                       hitSlop={6}
-                    >
+                     accessibilityRole="button" accessibilityLabel={t('common.email', 'Email')}>
                       <Ionicons name="mail" size={16} color={SemanticColors.feedbackInfo} />
                     </Pressable>
                   )}
@@ -270,6 +270,8 @@ export default function CustomerPhonebookScreen() {
                       router.push(`/contractor/tiered-quote?customerId=${contact.id}&customerName=${encodeURIComponent(contact.name)}` as any);
                     }}
                     hitSlop={6}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('quotes.newQuote', 'New quote')}
                   >
                     <Ionicons name="document-text" size={16} color={Palette.hermesOrange} />
                   </Pressable>

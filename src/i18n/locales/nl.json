@@ -82,7 +82,9 @@
     "tryAgain": "Probeer het opnieuw.",
     "moreOptions": "Meer opties",
     "eInvoicing": "E-facturatie (Peppol, XRechnung)",
-    "perHour": "{{rate}}/u"
+    "perHour": "{{rate}}/u",
+    "call": "Bellen",
+    "email": "E-mailen"
   },
   "tabs": {
     "today": "Vandaag",

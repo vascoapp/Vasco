@@ -380,6 +380,14 @@ describe('every control does something', () => {
 
   it('fires every onPress and reports the ones that do nothing at all', async () => {
     const inert: string[] = [];
+    // Controls with NO accessible name at all. A label of `icon:<name>` means
+    // the harness found no accessibilityLabel, no testID and no text under the
+    // control — it fell back to naming the Ionicons glyph. That is precisely
+    // what a screen-reader user gets: an unlabelled button.
+    //
+    // This is observed from a real render, not grepped, so it cannot be fooled
+    // by a label that is present in source but never reaches the tree.
+    const unlabelled = new Set<string>();
     let pressed = 0;
     let screensCovered = 0;
 
@@ -423,6 +431,7 @@ describe('every control does something', () => {
         pressedKeys.add(next.key);
 
         const key = `${id} :: ${next.key}`;
+        if (next.label.startsWith('icon:')) unlabelled.add(key);
         if (KNOWN_INERT.has(key) || DESTRUCTIVE.test(next.label)) continue;
 
         if (_prog) fs.appendFileSync(_prog, `${new Date().toISOString()}   press ${key}\n`);
@@ -457,6 +466,9 @@ describe('every control does something', () => {
     console.log(`[wiring] ${screensCovered} screens, ${pressed} controls pressed, ${inert.length} inert`);
     // eslint-disable-next-line no-console
     console.log(`[wiring] press trail: ${PROGRESS}`);
+    // eslint-disable-next-line no-console
+    console.log(`[wiring] ${unlabelled.size} controls have no accessible name`);
+
     // Persist the findings SYNCHRONOUSLY, before any assertion can throw.
     // A stray timer firing after Jest tears the environment down crashes the
     // process outright (`FadeIn` scheduling past teardown did exactly this),
@@ -464,11 +476,28 @@ describe('every control does something', () => {
     // its entire findings list. Same lesson as the press trail: get it to disk.
     try {
       fs.appendFileSync(PROGRESS, '\n=== INERT (' + inert.length + ') ===\n' + inert.join('\n') + '\n');
+      fs.appendFileSync(PROGRESS, '\n=== UNLABELLED (' + unlabelled.size + ') ===\n' + [...unlabelled].join('\n') + '\n');
     } catch { /* best-effort */ }
     const minScreens = scope ? 1 : 40;
     const minPressed = scope ? 5 : 150;
     expect(screensCovered).toBeGreaterThanOrEqual(minScreens);
     expect(pressed).toBeGreaterThanOrEqual(minPressed);
+
+    // A RATCHET, not a target. An icon-only control with no accessibilityLabel,
+    // no testID and no text is an unlabelled button to a screen-reader user —
+    // "button" is all VoiceOver can say. This started at 111 and comes down as
+    // the classes are fixed (back 42, close 15, CRM contact actions 24 so far).
+    // Lower the number when you fix more; never raise it.
+    //
+    // Scoped to the surface this harness presses, so it cannot be gamed by
+    // adding a labelled control elsewhere.
+    const UNLABELLED_BASELINE = 34;
+    if (unlabelled.size > UNLABELLED_BASELINE) {
+      throw new Error(
+        `${unlabelled.size} controls have no accessible name, up from ${UNLABELLED_BASELINE}. ` +
+        `New unlabelled icon-only controls:\n  ` + [...unlabelled].join('\n  '),
+      );
+    }
 
     if (inert.length) {
       throw new Error(

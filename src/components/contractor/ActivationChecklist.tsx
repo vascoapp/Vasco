@@ -48,7 +48,7 @@ export function ActivationChecklist() {
             {t('activation.progress', '{{done}} of {{total}} · first win fast', { done: completedCount, total: totalCount })}
           </Text>
         </View>
-        <Pressable onPress={dismiss} hitSlop={10}>
+        <Pressable onPress={dismiss} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
           <Ionicons name="close" size={16} color={DK.colors.textMuted} />
         </Pressable>
       </View>

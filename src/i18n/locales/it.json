@@ -82,7 +82,9 @@
     "tryAgain": "Riprova.",
     "moreOptions": "Altre opzioni",
     "eInvoicing": "Fatturazione elettronica (FatturaPA)",
-    "perHour": "{{rate}}/h"
+    "perHour": "{{rate}}/h",
+    "call": "Chiamare",
+    "email": "Invia email"
   },
   "tabs": {
     "today": "Oggi",

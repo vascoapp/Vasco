@@ -751,7 +751,7 @@ export default function CertificatenScreen() {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{selectedItem.name}</Text>
-              <Pressable onPress={() => setSelectedItem(null)}>
+              <Pressable onPress={() => setSelectedItem(null)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
                 <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
               </Pressable>
             </View>

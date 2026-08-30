@@ -571,7 +571,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
           </Text>
         </View>
         {onClose && (
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={24} color={Colors.textSecondary} />
           </Pressable>
         )}

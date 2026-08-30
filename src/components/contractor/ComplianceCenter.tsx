@@ -735,7 +735,7 @@ export function ComplianceCenter() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Pressable onPress={() => setShowLicenseModal(false)}>
+          <Pressable onPress={() => setShowLicenseModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.modalTitle}>Licentie Details</Text>
@@ -836,7 +836,7 @@ export function ComplianceCenter() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Pressable onPress={() => setShowUpdateModal(false)}>
+          <Pressable onPress={() => setShowUpdateModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.modalTitle}>Update Details</Text>

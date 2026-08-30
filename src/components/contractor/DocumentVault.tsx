@@ -374,7 +374,7 @@ export function DocumentVault() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setShowDocumentModal(false)}>
+            <Pressable onPress={() => setShowDocumentModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </Pressable>
             <Text style={styles.modalTitle}>Document</Text>

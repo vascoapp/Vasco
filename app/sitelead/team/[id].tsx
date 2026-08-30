@@ -9,6 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { Spacing, SafeArea } from '../../../src/theme/spacing';
@@ -169,6 +170,7 @@ function getMemberStatus(
 export default function TeamPlanningScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const team = TEAMS[id || 'wt-1'];
 
@@ -196,6 +198,8 @@ export default function TeamPlanningScreen() {
           <Pressable
             onPress={() => router.back()}
             style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back', 'Back')}
           >
             <Ionicons name="chevron-back" size={24} color={SL_COLORS.charcoal} />
           </Pressable>
