@@ -64,7 +64,10 @@ export default function InkoopScreen() {
         return;
       }
     } catch {}
-    openReceiptScanner();
+    // NOT openReceiptScanner() — that is THIS callback, and calling it here
+    // recursed forever, so the modal never opened for anyone who passed the
+    // gate. Open the modal the gate is guarding.
+    setShowReceiptScanner(true);
   }, [t, router]);
 
   // -------------------------------------------------------

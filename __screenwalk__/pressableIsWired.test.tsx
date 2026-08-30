@@ -152,14 +152,29 @@ function instanceText(node: any): string {
   const walk = (n: any) => {
     if (found.length) return;
     if (typeof n === 'string') {
-      const t = n.trim();
+      // Strip icon glyphs HERE, not downstream: an Ionicons glyph is a non-empty
+      // string, so collecting it ended the search and the later icon-name
+      // fallback could never run.
+      const t = n.replace(/[\uE000-\uF8FF]/g, '').trim();
       if (t) found.push(t);
       return;
     }
     (n?.children ?? []).forEach(walk);
   };
   try { walk(node); } catch { /* unreadable subtree */ }
-  return found[0]?.slice(0, 40) ?? '';
+  if (found.length) return found[0].slice(0, 40);
+  // Icon-only controls render an Ionicons private-use glyph, which the label
+  // stripper removes, leaving `Pressable#7` — unidentifiable in a findings
+  // list. The icon NAME is the only human-readable thing such a button has.
+  const icons: string[] = [];
+  const walkIcon = (n: any) => {
+    if (icons.length || typeof n === 'string') return;
+    const nm = n?.props?.name;
+    if (typeof nm === 'string' && nm) { icons.push(nm); return; }
+    (n?.children ?? []).forEach(walkIcon);
+  };
+  try { walkIcon(node); } catch { /* unreadable subtree */ }
+  return icons.length ? `icon:${icons[0]}`.slice(0, 40) : '';
 }
 
 /**
@@ -259,6 +274,19 @@ function listPressableScreens(): string[] {
   return out.sort((a, b) => Number(shared.has(b)) - Number(shared.has(a)) || a.localeCompare(b));
 }
 
+// Where the press trail is written. ALWAYS on, and synchronous.
+//
+// A press that starves the microtask queue (a handler that recurses into
+// itself) cannot be bounded in-process: Promise.race and jest's own timeout
+// both need a timer, and a starved loop never yields to one. Verified by
+// decoy on `contractor/inkoop`. So the harness does not try to survive a
+// hang — it makes one DIAGNOSABLE. appendFileSync has already hit disk when
+// the process is killed, so the last line names the exact control.
+// Without this, a hang cost an hour and produced no output at all.
+const PROGRESS = process.env.WIRING_PROGRESS
+  || require('path').join(require('os').tmpdir(), 'vasco-wiring-progress.log');
+try { fs.writeFileSync(PROGRESS, ''); } catch { /* trail is best-effort */ }
+
 describe('every control does something', () => {
   // WIRING_SCOPE=<substring> narrows the run while developing the harness — a
   // full pass mounts 79 screens and fires hundreds of handlers, which is too
@@ -275,6 +303,8 @@ describe('every control does something', () => {
 
     for (const rel of screens) {
       const id = routeId(rel);
+      const _prog = PROGRESS;
+      if (_prog) fs.appendFileSync(_prog, `${new Date().toISOString()} START ${id}\n`);
       let Screen: any;
       try {
         Screen = require(path.join(APP_DIR, rel)).default;
@@ -313,6 +343,7 @@ describe('every control does something', () => {
         const key = `${id} :: ${next.key}`;
         if (KNOWN_INERT.has(key) || DESTRUCTIVE.test(next.label)) continue;
 
+        if (_prog) fs.appendFileSync(_prog, `${new Date().toISOString()}   press ${key}\n`);
         const probes = installProbes();
         const beforeSig = screenSignature((r.tree as any).toJSON());
         let threw = false;
@@ -332,6 +363,7 @@ describe('every control does something', () => {
         probes.linkSpy.mockRestore();
         if (!threw && observed.length === 0 && !changed) inert.push(key);
       }
+      if (_prog) fs.appendFileSync(_prog, `${new Date().toISOString()} DONE  ${id} (${pressedKeys.size} pressed)\n`);
       teardown(r);
     }
 
@@ -341,6 +373,8 @@ describe('every control does something', () => {
     // a clean sweep. These two lines are what caught that.
     // eslint-disable-next-line no-console
     console.log(`[wiring] ${screensCovered} screens, ${pressed} controls pressed, ${inert.length} inert`);
+    // eslint-disable-next-line no-console
+    console.log(`[wiring] press trail: ${PROGRESS}`);
     const minScreens = scope ? 1 : 40;
     const minPressed = scope ? 5 : 150;
     expect(screensCovered).toBeGreaterThanOrEqual(minScreens);
