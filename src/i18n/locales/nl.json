@@ -2687,7 +2687,8 @@
     "cat_follow-up": "Opvolging",
     "cat_confirmation": "Bevestiging",
     "cat_thank-you": "Bedankt",
-    "cat_custom": "Eigen"
+    "cat_custom": "Eigen",
+    "category": "Categorie"
   },
   "dk": {
     "tabs": {

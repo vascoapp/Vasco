@@ -2700,7 +2700,8 @@
     "cat_follow-up": "Seguimiento",
     "cat_confirmation": "Confirmación",
     "cat_thank-you": "Agradecimiento",
-    "cat_custom": "Personalizada"
+    "cat_custom": "Personalizada",
+    "category": "Categoría"
   },
   "dk": {
     "tabs": {

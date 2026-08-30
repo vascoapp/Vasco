@@ -647,6 +647,24 @@ const SAME_WORD_OK = new Set([
   'Personal', 'PLAN', 'Notifications', 'Signatures', 'Timer', 'Feedback',
   'Follow-up', 'Start', 'Benchmarking', 'Stock', 'Cashflow', 'Compliance',
   'En route', 'Auto-entrepreneur', 'Simple', 'Actions', 'actions', 'photos',
+  // ── Trade catalogue words that are genuinely the same in the target
+  //    language. Verified against the SURROUNDING namespace, not by eye: every
+  //    other German consumable is real German (Kreppband, Klebeband,
+  //    Grundierfarbe, Haftgrund), which is exactly how "Primer" was caught as
+  //    a real miss there and fixed to "Grundierung". nl keeps "Primer" because
+  //    it already uses Grondverf/Voorstrijk for the neighbouring terms, and it
+  //    keeps "Primer" in Italian because it.json's own bondingPrimer is
+  //    "Primer aggrappante".
+  'Primer', 'Tape', 'point',
+  // Material, finish and style names identical in fr/es/it. "Shaker" is a
+  // furniture style (a proper noun); the rest are true cognates.
+  'Shaker', 'Quartz', 'Chrome', 'Induction', 'Programmable',
+  'Premium (Farrow & Ball, Little Greene)',
+  // Quantity strings whose only word is already correct: French uses "litres"
+  // and "zones", Spanish "material", French "action(s)".
+  '100 litres', '150 litres', '200 litres', '300 litres',
+  '2 zones', '3 zones', '4 zones', '5 zones',
+  '{{count}} action', '{{count}} actions', '{{count}} material',
   'Name', 'Name *', 'Contacts', 'Pipeline', 'Leads', 'Live', 'Normal',
   'Planning', 'Incidents (total)', 'Articles ({{count}})', 'Password',
   // interpolated strings whose only word is already correct in the target

@@ -2700,7 +2700,8 @@
     "cat_follow-up": "Nachfassen",
     "cat_confirmation": "Bestätigung",
     "cat_thank-you": "Dankeschön",
-    "cat_custom": "Eigene"
+    "cat_custom": "Eigene",
+    "category": "Kategorie"
   },
   "dk": {
     "tabs": {
@@ -6941,7 +6942,7 @@
       "maskingTape": "Kreppband",
       "undercoat": "Grundierfarbe",
       "sandpaper": "Schleifpapier",
-      "primer": "Primer",
+      "primer": "Grundierung",
       "ptfeTape": "Teflonband",
       "sealingWasher": "Dichtring",
       "solder": "Lot",
