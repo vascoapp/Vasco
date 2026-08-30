@@ -695,14 +695,21 @@ export function startBackgroundJobScheduler(
 async function runScheduledTick(
   getContext: () => { invoices: any[]; quotes: any[]; jobs: any[]; customers?: any[]; country?: string },
 ): Promise<void> {
+    // Cadence state is hoisted and written in a `finally`. It used to be
+    // declared here and saved as the LAST statement of the try, which meant one
+    // unguarded job failure skipped the write entirely — losing the timestamps
+    // that blocks EARLIER in the same tick had already set, so the next tick
+    // replayed the same failing work. Forever, and silently: the outer catch
+    // swallows it and nothing logs.
+    let state: SchedulerState = {
+      lastHourlyRun: '',
+      lastSixHourlyRun: '',
+      lastDailyRun: '',
+      totalAuditsRun: 0,
+    };
     try {
       const raw = await AsyncStorage.getItem(SCHEDULER_KEY);
-      const state: SchedulerState = raw ? JSON.parse(raw) : {
-        lastHourlyRun: '',
-        lastSixHourlyRun: '',
-        lastDailyRun: '',
-        totalAuditsRun: 0,
-      };
+      if (raw) state = JSON.parse(raw);
 
       const now = new Date();
       const hourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
@@ -724,6 +731,9 @@ async function runScheduledTick(
       // 6-hourly: quote audit + action queue + trigger evaluation
       if (!state.lastSixHourlyRun || state.lastSixHourlyRun < sixHoursAgo) {
         auditQuotes(context.quotes);
+        // .catch: a throw here used to abort the whole tick before the state
+        // write. Losing this block's work is survivable; wedging the scheduler
+        // is not.
         await populateQueue({
           completedJobs: context.jobs.filter((j: any) => j.status === 'completed'),
           overdueInvoices: context.invoices.filter((i: any) => i.status === 'overdue'),
@@ -734,7 +744,7 @@ async function runScheduledTick(
           allQuotes: context.quotes,
           customers: context.customers,
           country: context.country,
-        });
+        }).catch(() => {});
         // Evaluate workflow pack triggers against real data
         await evaluateTriggers({
           invoices: context.invoices,
@@ -751,7 +761,7 @@ async function runScheduledTick(
       // been a full 24h, so users opening the app mid-afternoon could see
       // overnight-stale data.
       if (!state.lastDailyRun || state.lastDailyRun < halfDayAgo) {
-        await generateMorningBriefing(context);
+        await generateMorningBriefing(context).catch(() => {});
         // EVE three-agent workforce status — run once per daily block so
         // the Analyst can surface cross-cutting insights (churn, margin drift).
         try {
@@ -984,8 +994,11 @@ async function runScheduledTick(
         state.totalAuditsRun++;
       }
 
-      await AsyncStorage.setItem(SCHEDULER_KEY, JSON.stringify(state));
-    } catch {}
+    } catch {
+      // fall through — whatever ran already is still recorded below
+    } finally {
+      await AsyncStorage.setItem(SCHEDULER_KEY, JSON.stringify(state)).catch(() => {});
+    }
 }
 
 export function stopBackgroundJobScheduler(): void {
