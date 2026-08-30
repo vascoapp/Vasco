@@ -375,6 +375,14 @@ describe('every control does something', () => {
     console.log(`[wiring] ${screensCovered} screens, ${pressed} controls pressed, ${inert.length} inert`);
     // eslint-disable-next-line no-console
     console.log(`[wiring] press trail: ${PROGRESS}`);
+    // Persist the findings SYNCHRONOUSLY, before any assertion can throw.
+    // A stray timer firing after Jest tears the environment down crashes the
+    // process outright (`FadeIn` scheduling past teardown did exactly this),
+    // and a 127-screen run that took minutes then reported its counts and lost
+    // its entire findings list. Same lesson as the press trail: get it to disk.
+    try {
+      fs.appendFileSync(PROGRESS, '\n=== INERT (' + inert.length + ') ===\n' + inert.join('\n') + '\n');
+    } catch { /* best-effort */ }
     const minScreens = scope ? 1 : 40;
     const minPressed = scope ? 5 : 150;
     expect(screensCovered).toBeGreaterThanOrEqual(minScreens);

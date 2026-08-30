@@ -291,8 +291,14 @@ export function VascoInsightCard({
           <Ionicons name={insight.icon} size={14} color={priorityColor} />
         </View>
         <View style={styles.compactContent}>
-          <Text style={styles.compactTitle} numberOfLines={1}>{insight.title}</Text>
-          <Text style={styles.compactMessage} numberOfLines={1}>{insight.message}</Text>
+          {/* The compact card returns BEFORE every `expanded &&` block below, so
+              toggleExpand used to flip a state nothing here read: the tap was
+              dead, while the chevron-down promised it expanded. Both lines are
+              also clipped to one line, so a title like "Vergelijkbaar: Lekkage
+              reparatie — Bakke…" was cut mid-word with no way to read it.
+              Expanding un-clips them, which is what the chevron already says. */}
+          <Text style={styles.compactTitle} numberOfLines={expanded ? undefined : 1}>{insight.title}</Text>
+          <Text style={styles.compactMessage} numberOfLines={expanded ? undefined : 1}>{insight.message}</Text>
         </View>
         {onDismiss && (
           <Pressable onPress={handleDismiss} hitSlop={8} style={styles.compactDismiss}>
@@ -300,7 +306,7 @@ export function VascoInsightCard({
           </Pressable>
         )}
         <Ionicons
-          name={insight.actionRoute ? 'chevron-forward' : 'chevron-down'}
+          name={insight.actionRoute ? 'chevron-forward' : expanded ? 'chevron-up' : 'chevron-down'}
           size={14}
           color={SemanticColors.textTertiary}
         />
