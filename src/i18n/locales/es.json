@@ -5098,7 +5098,16 @@
     "opensRecommendation": "Abre los detalles de la recomendación",
     "editMessage": "Editar mensaje",
     "approveAction": "Aprobar acción",
-    "rejectAction": "Rechazar acción"
+    "rejectAction": "Rechazar acción",
+    "clearSearch": "Borrar búsqueda",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "clearSignature": "Borrar firma",
+    "saveSignature": "Guardar firma",
+    "shareQuoteLink": "Compartir enlace del presupuesto firmado",
+    "sendViaWhatsApp": "Enviar por WhatsApp",
+    "removePhoto": "Eliminar foto",
+    "jobCardHint": "Toque para ver detalles, mantenga pulsado para eliminar"
   },
   "action": {
     "reminderBody": "Estimado/a {{customer}}:\n\nEste es un recordatorio amistoso de la factura {{invoice}} por importe de {{amount}}.\n\nUn cordial saludo",

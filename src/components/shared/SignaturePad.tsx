@@ -8,6 +8,7 @@
 
 import { useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
 import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
@@ -23,6 +24,7 @@ interface Props {
 const PAD_HEIGHT = 180;
 
 export function SignaturePad({ onSave, onClear, label }: Props) {
+  const { t } = useTranslation();
   const [paths, setPaths] = useState<string[]>([]);
   const currentPath = useRef<string>('');
 
@@ -77,7 +79,7 @@ export function SignaturePad({ onSave, onClear, label }: Props) {
         </PanGestureHandler>
       </GestureHandlerRootView>
       <View style={styles.row}>
-        <Pressable onPress={clear} style={styles.clearBtn} accessibilityRole="button" accessibilityLabel="Clear signature">
+        <Pressable onPress={clear} style={styles.clearBtn} accessibilityRole="button" accessibilityLabel={t('a11y.clearSignature', 'Clear signature')}>
           <Text style={styles.clearText}>Clear</Text>
         </Pressable>
         <Pressable
@@ -85,7 +87,7 @@ export function SignaturePad({ onSave, onClear, label }: Props) {
           disabled={isEmpty}
           style={[styles.saveBtn, isEmpty && { opacity: 0.4 }]}
           accessibilityRole="button"
-          accessibilityLabel="Save signature"
+          accessibilityLabel={t('a11y.saveSignature', 'Save signature')}
         >
           <Text style={styles.saveText}>Save signature</Text>
         </Pressable>

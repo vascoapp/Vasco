@@ -462,7 +462,7 @@
    "error": null,
    "texts": [
     "ZONDAG 30 AUG",
-    "Goedemiddag",
+    "Goedenavond",
     ".",
     "",
     "3",
@@ -1827,8 +1827,8 @@
     ""
    ],
    "a11y": [
-    "Go back",
-    "New template",
+    "Terug",
+    "Nieuw sjabloon",
     "Herinnering factuur",
     "Sjabloon gebruiken",
     "Opvolging offerte",
@@ -1877,7 +1877,7 @@
     ""
    ],
    "a11y": [
-    "Go back",
+    "Terug",
     "2 klussen vandaag, CV-ketel onderhoud — Fam. de Vries, Badkamer renovatie — Fam. Jansen, unread",
     "Bekijken 2 klussen vandaag",
     "Factuur achterstallig, Bouwgroep Atlas — factuur F-2026-0038 is 10 dagen achterstallig (€ 450)., unread",
@@ -2848,7 +2848,7 @@
     ":00"
    ],
    "a11y": [
-    "Go back",
+    "Terug",
     "Exporteer",
     "Inplannen Lekkage inspectie — Fam. Bakker",
     "CV-ketel onderhoud — Fam. de Vries, Fam. de Vries, 9:00 to 12:00",
@@ -2866,7 +2866,7 @@
     "Zoek in klussen, offertes, facturen en klanten"
    ],
    "a11y": [
-    "Go back"
+    "Terug"
    ]
   },
   {
@@ -3175,7 +3175,7 @@
    ],
    "a11y": [
     "Terug",
-    "Language",
+    "Taal",
     "EN",
     "NL",
     "DE",

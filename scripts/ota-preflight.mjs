@@ -895,6 +895,47 @@ async function checkDeviceLocaleDates() {
   }
 }
 
+// Proper nouns that are the SAME in every market. A brand or a protocol name
+// is not copy — translating "WhatsApp" would be wrong, not lazy.
+const A11Y_LITERAL_OK = new Set(['VascoBuild', 'WhatsApp', 'SMS', 'iDEAL', 'PDF', 'Vasco']);
+
+// 11. accessibilityLabel / accessibilityHint must go through t().
+//
+// These strings are READ ALOUD and are the copy least likely to be reviewed,
+// because nobody sees them. No other check can catch them: check 3 scans t()
+// call sites for keys missing from en.json and check 8 compares locale VALUES
+// against English — a hardcoded literal in a JSX prop is neither, so it passes
+// both forever. `DKScreenHeader` said "Back" to all six markets for as long as
+// it existed, and the customer decision portal said "Foto verwijderen" to
+// German and French clients.
+async function checkA11yLiterals() {
+  process.stdout.write('11. accessibility labels go through t() ... ');
+  const hits = [];
+  // Same scope rule as check 10: hub / sitelead / (tabs) / the portfolio
+  // dashboards are the director-CFO surface that `enterprise_portfolio: false`
+  // ships to nobody. `app/worker` IS in scope — that is the aannemer's crew.
+  const SKIP = /\/(hub|sitelead)\/|\/\(tabs\)\/|components\/dashboards\//;
+  for (const root of ['app', 'src/components']) {
+    for await (const file of walkFiles(root)) {
+      if (!file.endsWith('.tsx') || file.includes('__tests__')) continue;
+      if (SKIP.test(file)) continue;
+      const src = await readFile(file, 'utf8');
+      for (const m of src.matchAll(/accessibility(?:Label|Hint)="([^"]+)"/g)) {
+        if (A11Y_LITERAL_OK.has(m[1])) continue;
+        const line = src.slice(0, m.index).split('\n').length;
+        hits.push(`${relative(ROOT, file)}:${line}  "${m[1]}"`);
+      }
+    }
+  }
+  if (hits.length === 0) {
+    console.log('✓');
+  } else {
+    console.log(`✗ (${hits.length})`);
+    for (const h of hits.slice(0, 15)) err(`Hardcoded accessibility label: ${h}`);
+    if (hits.length > 15) err(`...and ${hits.length - 15} more`);
+  }
+}
+
 async function main() {
   console.log('OTA-update preflight\n');
   const t0 = Date.now();
@@ -908,6 +949,7 @@ async function main() {
   await checkUntranslatedValues();
   await checkCurrencyInLocaleValues();
   await checkDeviceLocaleDates();
+  await checkA11yLiterals();
   const dt = ((Date.now() - t0) / 1000).toFixed(1);
 
   console.log('');

@@ -5098,7 +5098,16 @@
     "opensRecommendation": "Apre i dettagli del suggerimento",
     "editMessage": "Modifica messaggio",
     "approveAction": "Approva azione",
-    "rejectAction": "Rifiuta azione"
+    "rejectAction": "Rifiuta azione",
+    "clearSearch": "Cancella ricerca",
+    "previousWeek": "Settimana precedente",
+    "nextWeek": "Settimana successiva",
+    "clearSignature": "Cancella firma",
+    "saveSignature": "Salva firma",
+    "shareQuoteLink": "Condividi link del preventivo firmato",
+    "sendViaWhatsApp": "Invia via WhatsApp",
+    "removePhoto": "Rimuovi foto",
+    "jobCardHint": "Tocca per i dettagli, tieni premuto per rimuovere"
   },
   "action": {
     "reminderBody": "Gentile {{customer}},\n\nÈ un cortese promemoria per la fattura {{invoice}} di {{amount}}.\n\nCordiali saluti",

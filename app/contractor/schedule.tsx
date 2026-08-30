@@ -684,7 +684,7 @@ export default function DragScheduleScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
+        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -1144,7 +1144,7 @@ export default function DragScheduleScreen() {
                     onPress={() => Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}\n${t('schedule.longPressToRemove', 'Houd ingedrukt om te verwijderen')}`)}
                     accessibilityRole="button"
                     accessibilityLabel={`${job.title}, ${job.customerName}, ${job.startHour}:00 to ${hoursToHM(job.startHour + job.duration)}`}
-                    accessibilityHint="Tap for details, long press to remove"
+                    accessibilityHint={t('a11y.jobCardHint', 'Tap for details, long press to remove')}
                   >
                     <View style={styles.blockHeader}>
                       <Text style={[styles.blockTitle, { color: job.color }]} numberOfLines={1}>{job.title}</Text>

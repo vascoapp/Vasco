@@ -5098,7 +5098,16 @@
     "opensRecommendation": "Opens recommendation details",
     "editMessage": "Edit message",
     "approveAction": "Approve action",
-    "rejectAction": "Reject action"
+    "rejectAction": "Reject action",
+    "clearSearch": "Clear search",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "clearSignature": "Clear signature",
+    "saveSignature": "Save signature",
+    "shareQuoteLink": "Share signed quote link",
+    "sendViaWhatsApp": "Send via WhatsApp",
+    "removePhoto": "Remove photo",
+    "jobCardHint": "Tap for details, long press to remove"
   },
   "action": {
     "reminderBody": "Dear {{customer}},\n\nThis is a friendly reminder for invoice {{invoice}} of {{amount}}.\n\nKind regards",

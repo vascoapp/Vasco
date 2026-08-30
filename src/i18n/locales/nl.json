@@ -5085,7 +5085,16 @@
     "opensRecommendation": "Opent aanbevelingsdetails",
     "editMessage": "Bericht bewerken",
     "approveAction": "Actie goedkeuren",
-    "rejectAction": "Actie afwijzen"
+    "rejectAction": "Actie afwijzen",
+    "clearSearch": "Zoekopdracht wissen",
+    "previousWeek": "Vorige week",
+    "nextWeek": "Volgende week",
+    "clearSignature": "Handtekening wissen",
+    "saveSignature": "Handtekening opslaan",
+    "shareQuoteLink": "Link naar getekende offerte delen",
+    "sendViaWhatsApp": "Versturen via WhatsApp",
+    "removePhoto": "Foto verwijderen",
+    "jobCardHint": "Tik voor details, lang indrukken om te verwijderen"
   },
   "action": {
     "reminderBody": "Beste {{customer}},\n\nDit is een vriendelijke herinnering voor factuur {{invoice}} van {{amount}}.\n\nMet vriendelijke groet",

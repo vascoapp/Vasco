@@ -5098,7 +5098,16 @@
     "opensRecommendation": "Öffnet Empfehlungsdetails",
     "editMessage": "Nachricht bearbeiten",
     "approveAction": "Aktion genehmigen",
-    "rejectAction": "Aktion ablehnen"
+    "rejectAction": "Aktion ablehnen",
+    "clearSearch": "Suche löschen",
+    "previousWeek": "Vorherige Woche",
+    "nextWeek": "Nächste Woche",
+    "clearSignature": "Unterschrift löschen",
+    "saveSignature": "Unterschrift speichern",
+    "shareQuoteLink": "Link zum signierten Angebot teilen",
+    "sendViaWhatsApp": "Per WhatsApp senden",
+    "removePhoto": "Foto entfernen",
+    "jobCardHint": "Tippen für Details, lange drücken zum Entfernen"
   },
   "action": {
     "reminderBody": "Sehr geehrte/r {{customer}},\n\ndies ist eine freundliche Erinnerung an die Rechnung {{invoice}} über {{amount}}.\n\nMit freundlichen Grüßen",

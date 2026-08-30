@@ -170,7 +170,7 @@ export default function MyTimesheetsScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('worker.timesheets', 'Timesheets')}</Text>
@@ -179,7 +179,7 @@ export default function MyTimesheetsScreen() {
 
       {/* Week navigator */}
       <View style={styles.weekNav}>
-        <Pressable onPress={() => setWeekOffset(prev => prev - 1)} style={styles.weekNavBtn} accessibilityRole="button" accessibilityLabel="Previous week">
+        <Pressable onPress={() => setWeekOffset(prev => prev - 1)} style={styles.weekNavBtn} accessibilityRole="button" accessibilityLabel={t('a11y.previousWeek', 'Previous week')}>
           <Ionicons name="chevron-back" size={20} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.weekNavCenter}>
@@ -195,7 +195,7 @@ export default function MyTimesheetsScreen() {
           style={[styles.weekNavBtn, weekOffset >= 0 && { opacity: 0.3 }]}
           disabled={weekOffset >= 0}
           accessibilityRole="button"
-          accessibilityLabel="Next week"
+          accessibilityLabel={t('a11y.nextWeek', 'Next week')}
         >
           <Ionicons name="chevron-forward" size={20} color={SemanticColors.textPrimary} />
         </Pressable>

@@ -25,6 +25,7 @@ interface Props {
 }
 
 export function CustomerLanguageSwitcher({ compact }: Props) {
+  const { t } = useTranslation();
   const { i18n } = useTranslation();
   const active = (i18n.language || 'en').slice(0, 2).toLowerCase();
 
@@ -34,7 +35,7 @@ export function CustomerLanguageSwitcher({ compact }: Props) {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={[s.row, compact && { gap: 4 }]}
       accessibilityRole="radiogroup"
-      accessibilityLabel="Language"
+      accessibilityLabel={t('settings.language', 'Language')}
     >
       {LANGS.map((l) => {
         const isActive = active === l.code;

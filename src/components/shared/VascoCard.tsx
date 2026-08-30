@@ -503,7 +503,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
           <Pressable
             style={s.whatsappBtn}
             accessibilityRole="button"
-            accessibilityLabel="Send via WhatsApp"
+            accessibilityLabel={t('a11y.sendViaWhatsApp', 'Send via WhatsApp')}
             onPress={async () => {
               const { sendWhatsApp } = await import('../../services/whatsappService');
               await sendWhatsApp(item.preparedData!.customerPhone as string, editText || (item.preparedData?.template as string) || item.description);

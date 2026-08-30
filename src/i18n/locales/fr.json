@@ -5098,7 +5098,16 @@
     "opensRecommendation": "Ouvre les détails de la recommandation",
     "editMessage": "Modifier le message",
     "approveAction": "Approuver l'action",
-    "rejectAction": "Rejeter l'action"
+    "rejectAction": "Rejeter l'action",
+    "clearSearch": "Effacer la recherche",
+    "previousWeek": "Semaine précédente",
+    "nextWeek": "Semaine suivante",
+    "clearSignature": "Effacer la signature",
+    "saveSignature": "Enregistrer la signature",
+    "shareQuoteLink": "Partager le lien du devis signé",
+    "sendViaWhatsApp": "Envoyer via WhatsApp",
+    "removePhoto": "Supprimer la photo",
+    "jobCardHint": "Appuyez pour les détails, appui long pour supprimer"
   },
   "action": {
     "reminderBody": "Cher {{customer}},\n\nCeci est un rappel amical concernant la facture {{invoice}} d'un montant de {{amount}}.\n\nCordialement",

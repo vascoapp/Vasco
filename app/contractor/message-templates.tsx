@@ -180,11 +180,11 @@ export default function MessageTemplatesScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('templates.title', 'Message Templates')}</Text>
-        <Pressable onPress={handleNew} style={styles.addBtn} accessibilityRole="button" accessibilityLabel="New template">
+        <Pressable onPress={handleNew} style={styles.addBtn} accessibilityRole="button" accessibilityLabel={t('templates.new', 'New template')}>
           <Ionicons name="add" size={24} color={Palette.hermesOrange} />
         </Pressable>
       </View>

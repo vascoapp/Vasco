@@ -289,7 +289,7 @@ export default function JobDetailPage() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('jobs.notFound', 'Job not found')}</Text>

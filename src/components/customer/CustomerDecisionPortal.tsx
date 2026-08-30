@@ -1618,7 +1618,7 @@ function DecisionItemCard({
                         onPress={() => removeCustomerPhoto(i)}
                         style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' }}
                         accessibilityRole="button"
-                        accessibilityLabel="Foto verwijderen"
+                        accessibilityLabel={t('a11y.removePhoto', 'Remove photo')}
                       >
                         <Ionicons name="close" size={14} color="#fff" />
                       </Pressable>

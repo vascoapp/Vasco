@@ -502,7 +502,7 @@ export function DecisionTrackerDetail({
         <Pressable
           style={styles.reminderBtn}
           onPress={() => handleSendReminder('email')}
-          accessibilityLabel="Email"
+          accessibilityLabel={t('common.email', 'Email')}
         >
           <Ionicons name="mail" size={18} color={SemanticColors.textSecondary} />
           <Text style={styles.reminderBtnText}>Email</Text>

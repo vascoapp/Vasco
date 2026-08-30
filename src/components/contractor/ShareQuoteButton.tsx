@@ -46,7 +46,7 @@ export function ShareQuoteButton({ quoteId, customerName, label }: Props) {
       disabled={busy}
       style={({ pressed }) => [styles.btn, pressed && { opacity: 0.85 }, busy && { opacity: 0.6 }]}
       accessibilityRole="button"
-      accessibilityLabel="Share signed quote link"
+      accessibilityLabel={t('a11y.shareQuoteLink', 'Share signed quote link')}
     >
       {busy ? (
         <ActivityIndicator size="small" color={Palette.white} />

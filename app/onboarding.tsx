@@ -1399,7 +1399,7 @@ export default function OnboardingScreen() {
     <View style={styles.screen}>
       {step > 1 && (
         <View style={styles.header}>
-          <Pressable onPress={handleBack} hitSlop={8} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+          <Pressable onPress={handleBack} hitSlop={8} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.stepText}>
