@@ -252,6 +252,24 @@ export function generateXRechnungXML(data: EInvoiceData): string {
  * organisation then contact then address then tax registration. A validator
  * rejects a correct document in the wrong order.
  */
+/**
+ * Factur-X (FR) and ZUGFeRD (DE) are the same CII syntax, but they are NOT the
+ * same document: a validator reads
+ * `GuidelineSpecifiedDocumentContextParameter/ID` to decide which standard the
+ * file claims to be. The bare `urn:cen.eu:en16931:2017` is neither profile, so
+ * a French invoice carrying it fails Factur-X validation outright.
+ */
+export const GUIDELINE_URNS = {
+  /** ZUGFeRD 2.x / EN 16931 comfort — the German default. */
+  en16931: 'urn:cen.eu:en16931:2017',
+  /** Factur-X 1.0 EN 16931 profile — REQUIRED for the French mandate. */
+  facturx: 'urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:en16931',
+} as const;
+
+export function guidelineUrnForCountry(country?: string): string {
+  return country === 'FR' ? GUIDELINE_URNS.facturx : GUIDELINE_URNS.en16931;
+}
+
 export function generateCIIXML(data: EInvoiceData): string {
   const cur = data.currency;
   const sellerCountry = data.sellerCountry ?? 'DE';
@@ -336,7 +354,7 @@ export function generateCIIXML(data: EInvoiceData): string {
   xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
   <rsm:ExchangedDocumentContext>
     <ram:GuidelineSpecifiedDocumentContextParameter>
-      <ram:ID>urn:cen.eu:en16931:2017</ram:ID>
+      <ram:ID>${guidelineUrnForCountry(sellerCountry)}</ram:ID>
     </ram:GuidelineSpecifiedDocumentContextParameter>
   </rsm:ExchangedDocumentContext>
   <rsm:ExchangedDocument>
@@ -387,6 +405,17 @@ export function generateCIIXML(data: EInvoiceData): string {
  */
 export function generateZUGFeRDXML(data: EInvoiceData): string {
   return generateCIIXML(data);
+}
+
+/**
+ * Factur-X — the SAME CII payload, carrying the French profile URN.
+ *
+ * ⚠️ This is the XML half only. A complete Factur-X invoice is a PDF/A-3 with
+ * this file embedded as `factur-x.xml` (AFRelationship /Alternative). We do
+ * not produce that container yet — see the note in einvoice-fr.ts.
+ */
+export function generateFacturXXML(data: EInvoiceData): string {
+  return generateCIIXML({ ...data, sellerCountry: 'FR' });
 }
 
 // ---------------------------------------------------------------------------

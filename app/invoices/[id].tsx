@@ -28,7 +28,7 @@ import {
 import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceService';
 import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
 import { computeLateFee, disclosureLineLocalized, type LateFeeCountry } from '../../src/services/lateFeeService';
-import { generateXRechnungXML, generateZUGFeRDXML, type EInvoiceData } from '../../src/integrations/einvoice';
+import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML, type EInvoiceData } from '../../src/integrations/einvoice';
 import { Share as RNShare } from 'react-native';
 // react-native's Share ignores `url` on Android (message/title only), so the
 // e-invoice XML exports below silently shared nothing there — and because it
@@ -683,10 +683,20 @@ export default function InvoiceDetailScreen() {
       bic: (businessProfile as any)?.bic,
       paymentReference: (invoice as any).reference ?? invoice.id,
     };
-    const xml = format === 'XRechnung' ? generateXRechnungXML(data) : generateZUGFeRDXML(data);
-    const filename = `${data.invoiceNumber}-${format.toLowerCase()}.xml`;
+    // The gate above already resolves FR to `facturx`, but the generator did
+    // not: a French contractor got `generateZUGFeRDXML`, whose guideline URN is
+    // the bare `urn:cen.eu:en16931:2017`. A Factur-X validator reads exactly
+    // that element, so the file France was handed was not a Factur-X invoice.
+    const isFacturX = format !== 'XRechnung' && country === 'FR';
+    const xml = format === 'XRechnung'
+      ? generateXRechnungXML(data)
+      : isFacturX
+        ? generateFacturXXML(data)
+        : generateZUGFeRDXML(data);
+    const effectiveFormat = isFacturX ? 'Factur-X' : format;
+    const filename = `${data.invoiceNumber}-${effectiveFormat.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.xml`;
 
-    await shareEInvoiceThenConfirm(xml, filename, format);
+    await shareEInvoiceThenConfirm(xml, filename, effectiveFormat);
   };
 
   // R302: ES Facturae 3.2.2 export. Mandatory in Spain for B2G + large B2B.

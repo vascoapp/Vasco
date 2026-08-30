@@ -164,7 +164,7 @@ Upload in one shot: `bundle exec fastlane ios metadata` (after `brew install fas
       payment,trades,plumber,electrician,carpenter,aannemer,factuur,offerte`
       — a reasonable starting set, not a researched one.
 - [ ] **Real reviewer phone number** in `fastlane/metadata/review_information/phone_number.txt`
-      — placeholder `+31000000000` today. Apple sometimes calls; use a
+      — placeholder `+31655135577` today. Apple sometimes calls; use a
       number you actually answer.
 
 ---
@@ -302,7 +302,7 @@ then `eas submit --profile preview --platform ios`.
 
 **To get on TestFlight External or App Store Production:**
 1. Capture screenshots (`npm run capture:screenshots`, ~15 min)
-2. Replace `+31000000000` placeholder phone with real number
+2. Replace `+31655135577` placeholder phone with real number
 3. Set Sentry DSN (`eas secret:create --name EXPO_PUBLIC_SENTRY_DSN ...`)
 4. Verify Mollie/Stripe/Resend live keys + cron registered with the
    operator (or run `npm run check:endpoints` against prod)

@@ -61,7 +61,7 @@ Specifically draft:
 - ❓ All `promotional_text.txt` (one-liner pitches)
 - ❓ All `release_notes.txt` (what's-new for v1.0)
 - ❓ All `keywords.txt` (ASO research not done)
-- ❓ `review_information/phone_number.txt` (placeholder +31000000000)
+- ✅ `review_information/phone_number.txt` (+31655135577)
 - ❓ `review_information/first_name.txt` + `last_name.txt` (operator name)
 
 EN-US copy is the canonical "source" — translations are mechanical.

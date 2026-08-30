@@ -185,7 +185,7 @@ Config/manifest/metadata/URLs are **ready**. Remaining:
    ```
    (Or regenerate the ASC key in App Store Connect → Users and Access →
    Integrations, update the 3 `eas.json` values, then `eas submit` works again.)
-3. **Reviewer phone** — replace placeholder `+31000000000` in
+3. **Reviewer phone** — replace placeholder `+31655135577` in
    `fastlane/metadata/review_information/phone_number.txt` with a real number.
 4. Upload metadata + screenshots: `bundle exec fastlane ios metadata` /
    `... screenshots` (or manually in App Store Connect).

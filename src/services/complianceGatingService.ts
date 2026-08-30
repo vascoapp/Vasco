@@ -41,7 +41,7 @@ export interface EInvoiceFormatConfig {
 export const E_INVOICE_FORMATS: EInvoiceFormatConfig[] = [
   { id: 'xrechnung', name: 'XRechnung', country: 'DE', mandatory: true, mandatoryFor: 'B2G invoices', description: 'German government e-invoicing standard (EN 16931)', requiredTier: 'contractor', autoSubmission: true },
   { id: 'zugferd', name: 'ZUGFeRD', country: 'DE', mandatory: false, mandatoryFor: 'Recommended for B2B', description: 'Structured PDF with embedded XML — readable by humans and machines', requiredTier: 'contractor', autoSubmission: false },
-  { id: 'facturx', name: 'Factur-X', country: 'FR', mandatory: true, mandatoryFor: 'All B2B (from 2026)', description: 'French hybrid e-invoice standard — PDF/A-3 with XML', requiredTier: 'contractor', autoSubmission: true },
+  { id: 'facturx', name: 'Factur-X', country: 'FR', mandatory: true, mandatoryFor: 'All B2B (from 2026)', description: 'French e-invoice standard (CII XML). PDF/A-3 container not generated yet — see einvoice-fr.ts', requiredTier: 'contractor', autoSubmission: true },
   { id: 'facturae', name: 'Facturae', country: 'ES', mandatory: true, mandatoryFor: 'B2G + large B2B', description: 'Spanish structured e-invoice format with SII reporting', requiredTier: 'contractor', autoSubmission: true },
   { id: 'fatturapa', name: 'FatturaPA / SDI', country: 'IT', mandatory: true, mandatoryFor: 'All invoices (B2B + B2C)', description: 'Italian mandatory e-invoicing via Sistema di Interscambio', requiredTier: 'contractor', autoSubmission: true },
 ];
