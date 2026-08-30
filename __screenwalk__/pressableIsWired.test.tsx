@@ -388,6 +388,13 @@ describe('every control does something', () => {
     // This is observed from a real render, not grepped, so it cannot be fooled
     // by a label that is present in source but never reaches the tree.
     const unlabelled = new Set<string>();
+    // Controls whose LABEL promises a persisting action but whose press
+    // reached nothing: no backend call, no navigation, no storage write, not
+    // even a confirmation dialog. "The tree changed" is NOT evidence here —
+    // a spinner appearing satisfies that, and so does a chevron flipping
+    // (#269). A button that says Opslaan and only re-renders is the exact
+    // shape this harness exists to find.
+    const unwired: string[] = [];
     let pressed = 0;
     let screensCovered = 0;
 
@@ -432,6 +439,10 @@ describe('every control does something', () => {
 
         const key = `${id} :: ${next.key}`;
         if (next.label.startsWith('icon:')) unlabelled.add(key);
+        // Dutch first: the harness runs in nl. English included because some
+        // labels fall back.
+        const PROMISES_WRITE = /^(opslaan|bewaren|verstuur|versturen|verzend|verzenden|verwijder|verwijderen|bevestig|bevestigen|betalen|factureren|exporteren|save|send|delete|confirm|pay|invoice|export)\b/i;
+        const promisesWrite = PROMISES_WRITE.test(next.label.trim());
         if (KNOWN_INERT.has(key) || DESTRUCTIVE.test(next.label)) continue;
 
         if (_prog) fs.appendFileSync(_prog, `${new Date().toISOString()}   press ${key}\n`);
@@ -453,6 +464,11 @@ describe('every control does something', () => {
         probes.alertSpy.mockRestore();
         probes.linkSpy.mockRestore();
         if (!threw && observed.length === 0 && !changed) inert.push(key);
+        // Tree-change deliberately does NOT count as being wired.
+        const REACHED = new Set(['navigate', 'alert', 'openURL', 'share', 'supabase.from', 'supabase.rpc', 'edge fn', 'storage write']);
+        if (!threw && promisesWrite && !observed.some((o) => REACHED.has(o.kind))) {
+          unwired.push(`${key}${changed ? '  (tree changed only)' : ''}`);
+        }
       }
       if (_prog) fs.appendFileSync(_prog, `${new Date().toISOString()} DONE  ${id} (${pressedKeys.size} pressed)\n`);
       teardown(r);
@@ -468,6 +484,8 @@ describe('every control does something', () => {
     console.log(`[wiring] press trail: ${PROGRESS}`);
     // eslint-disable-next-line no-console
     console.log(`[wiring] ${unlabelled.size} controls have no accessible name`);
+    // eslint-disable-next-line no-console
+    console.log(`[wiring] ${unwired.length} action-labelled controls reached nothing`);
 
     // Persist the findings SYNCHRONOUSLY, before any assertion can throw.
     // A stray timer firing after Jest tears the environment down crashes the
@@ -477,6 +495,7 @@ describe('every control does something', () => {
     try {
       fs.appendFileSync(PROGRESS, '\n=== INERT (' + inert.length + ') ===\n' + inert.join('\n') + '\n');
       fs.appendFileSync(PROGRESS, '\n=== UNLABELLED (' + unlabelled.size + ') ===\n' + [...unlabelled].join('\n') + '\n');
+      fs.appendFileSync(PROGRESS, '\n=== UNWIRED (' + unwired.length + ') ===\n' + unwired.join('\n') + '\n');
     } catch { /* best-effort */ }
     const minScreens = scope ? 1 : 40;
     const minPressed = scope ? 5 : 150;
@@ -502,6 +521,17 @@ describe('every control does something', () => {
       throw new Error(
         `${unlabelled.size} controls have no accessible name, up from ${UNLABELLED_BASELINE}. ` +
         `New unlabelled icon-only controls:\n  ` + [...unlabelled].join('\n  '),
+      );
+    }
+
+    // Distinct from the inert check, and it catches what that one cannot: a
+    // control that DOES change the tree — a spinner, a disabled state, a
+    // chevron flipping — while reaching no service at all. #269 showed a
+    // cosmetic change satisfies "did something" completely.
+    if (unwired.length) {
+      throw new Error(
+        `${unwired.length} control(s) promise a write in their label and reached nothing — ` +
+        `no backend call, navigation, storage write, share or dialog:\n  ` + unwired.join('\n  '),
       );
     }
 
