@@ -49,19 +49,27 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 // sets before render (screens like job/[id] read an id from the route).
 // ---------------------------------------------------------------------------
 (globalThis as any).__routeParams = {};
+// STABLE navigation spies, shared by `useRouter()` and `router`.
+//
+// These used to be `jest.fn()` created inside `useRouter()`, so every call
+// handed the screen a BRAND NEW mock and nothing outside could ever see that a
+// press had navigated. That made "did this control do anything?" unanswerable —
+// see `__screenwalk__/pressableIsWired.test.tsx`, which needs exactly that.
+// The `mock` prefix is load-bearing: jest hoists `jest.mock()` above consts.
+const mockNav = {
+  push: jest.fn(),
+  replace: jest.fn(),
+  back: jest.fn(),
+  navigate: jest.fn(),
+  setParams: jest.fn(),
+  dismissAll: jest.fn(),
+};
+(globalThis as any).__navSpies = mockNav;
 jest.mock('expo-router', () => {
   const React = require('react');
   return {
-    useRouter: () => ({
-      push: jest.fn(),
-      replace: jest.fn(),
-      back: jest.fn(),
-      navigate: jest.fn(),
-      setParams: jest.fn(),
-      canGoBack: () => true,
-      dismissAll: jest.fn(),
-    }),
-    router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
+    useRouter: () => ({ ...mockNav, canGoBack: () => true }),
+    router: mockNav,
     useLocalSearchParams: () => (globalThis as any).__routeParams ?? {},
     useSearchParams: () => (globalThis as any).__routeParams ?? {},
     useSegments: () => [],
