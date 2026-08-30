@@ -95,9 +95,17 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'Success', Warning: 'Warning', Error: 'Error' },
 }));
 
-jest.mock('react-native/Libraries/Share/Share', () => ({
-  share: jest.fn(() => Promise.resolve({ action: 'sharedAction' })),
-}));
+// `react-native`'s index does `require('./Libraries/Share/Share').default`, so
+// a mock with only a named `share` made `Share` UNDEFINED for every screen in
+// every walk suite — `Share.share(...)` threw a TypeError that the calling
+// screens catch and swallow. Harmless while the walk only rendered; fatal once
+// `pressableIsWired` started pressing buttons, because a share that throws
+// looks exactly like a button that does nothing.
+jest.mock('react-native/Libraries/Share/Share', () => {
+  const share = jest.fn(() => Promise.resolve({ action: 'sharedAction' }));
+  const mod = { share, sharedAction: 'sharedAction', dismissedAction: 'dismissedAction' };
+  return { __esModule: true, default: mod, ...mod };
+});
 
 jest.mock('expo-linear-gradient', () => {
   const { View } = require('react-native');
