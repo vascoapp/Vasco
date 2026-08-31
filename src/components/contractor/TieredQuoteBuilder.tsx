@@ -58,7 +58,7 @@ import { useTranslation } from 'react-i18next';
 // contractors review the prose before tapping Send.
 import { generateScopeOfWork, loadQuoteTonePreset, loadToneExamples } from '../../services/sowGeneratorService';
 import { useAppState } from '../../state/AppState';
-import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate } from '../../domain/business';
+import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate, getSelectableVatRates, getEnergyRenovationVatRate } from '../../domain/business';
 import { localDateKey } from '../../utils/dateKey';
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -205,7 +205,25 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // for non-NL contractors (other EU6 countries don't have a relevant
   // reduced bracket for construction labor).
   const reducedRate = getReducedVatRate(country);
-  const [useReducedVat, setUseReducedVat] = useState(false);
+  const selectableVatRates = getSelectableVatRates(country);
+  // The rate is INTERPOLATED, never written into the copy. Every one of the six
+  // translations used to hardcode "9%" because the control shipped NL-only, so
+  // the moment a second country qualified a French artisan read "TVA 9 %".
+  const vatRateLabel = (rate: number): string => {
+    if (rate === getStandardVatRate(country)) {
+      return t('quotes.vatStandard', { defaultValue: '{{rate}}% — standard rate', rate });
+    }
+    if (rate === getEnergyRenovationVatRate(country)) {
+      return t('quotes.vatEnergy', { defaultValue: '{{rate}}% — energy renovation', rate });
+    }
+    return t('quotes.vatReduced', { defaultValue: '{{rate}}% — renovation, home over 2 years old', rate });
+  };
+  // A chosen RATE, not a boolean. France has THREE brackets a contractor picks
+  // between — 20 standard, 10 renovation, 5.5 energy renovation (CGI 278-0
+  // bis A) — and a checkbox can only ever express two, so 5.5% was unreachable
+  // and an energy-renovation devis was overcharged by 4.5 points of VAT.
+  // null = the standard rate.
+  const [chosenVatRate, setChosenVatRate] = useState<number | null>(null);
   const [step, setStep] = useState<'select' | 'preview'>('select');
   // The contractor's own package names + promises (localized defaults until
   // they edit them). `tierPresets` feeds calculateTiers below.
@@ -498,7 +516,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
       const exempt = isSmallBusinessExempt(bp);
       const effectiveVatRate = exempt
         ? 0
-        : (useReducedVat && reducedRate !== null ? reducedRate : getStandardVatRate(country));
+        : (chosenVatRate ?? getStandardVatRate(country));
       const vatAmount = subtotal * (effectiveVatRate / 100);
       return {
         tier: tierKey,
@@ -1779,33 +1797,33 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             the six translations used to say "9%" because the control shipped
             NL-only, so the moment a second country qualified, a French artisan
             applying 10% would have read "TVA réduite 9 %". */}
-        {reducedRate !== null && !isSmallBusinessExempt(bp) && (
-          <Pressable
-            style={[s.vatToggleRow, useReducedVat && s.vatToggleRowActive]}
-            onPress={() => { setUseReducedVat(!useReducedVat); hapticSuccess(); }}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: useReducedVat }}
-            accessibilityLabel={t('quotes.reducedVatToggle', {
-              defaultValue: 'Use the {{rate}}% reduced rate for renovation labor on homes over 2 years old',
-              rate: reducedRate,
-            })}
-          >
-            <View style={s.vatToggleIcon}>
-              <Ionicons
-                name={useReducedVat ? 'checkbox' : 'square-outline'}
-                size={20}
-                color={useReducedVat ? Palette.hermesOrange : SemanticColors.textTertiary}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.vatToggleTitle}>
-                {t('quotes.reducedVatTitle', { defaultValue: '{{rate}}% reduced VAT rate', rate: reducedRate })}
-              </Text>
-              <Text style={s.vatToggleSubtitle}>
-                {t('quotes.reducedVatSubtitle', 'Renovation/maintenance on homes older than 2 years')}
-              </Text>
-            </View>
-          </Pressable>
+        {selectableVatRates.length > 1 && !isSmallBusinessExempt(bp) && (
+          <DKMenu
+            accessibilityLabel={t('quotes.vatRateLabel', 'VAT rate')}
+            items={selectableVatRates.map((rate) => ({
+              key: String(rate),
+              label: vatRateLabel(rate),
+              selected: (chosenVatRate ?? getStandardVatRate(country)) === rate,
+              onPress: () => {
+                setChosenVatRate(rate === getStandardVatRate(country) ? null : rate);
+                hapticSuccess();
+              },
+            }))}
+            renderAnchor={(open) => (
+              <Pressable style={s.vatToggleRow} onPress={open} accessibilityRole="button">
+                <View style={s.vatToggleIcon}>
+                  <Ionicons name="receipt-outline" size={20} color={Palette.hermesOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.vatToggleTitle}>{t('quotes.vatRateLabel', 'VAT rate')}</Text>
+                  <Text style={s.vatToggleSubtitle}>
+                    {vatRateLabel(chosenVatRate ?? getStandardVatRate(country))}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+              </Pressable>
+            )}
+          />
         )}
 
         {/* Package picker. Tapping a card chooses what gets sent. */}

@@ -1958,7 +1958,11 @@
     "linesForPackage": "Positionen ({{name}})",
     "quoteTitle": "Angebot",
     "bottomSummary_one": "{{count}} Leistung · {{total}} (Standard)",
-    "bottomSummary_other": "{{count}} Leistungen · {{total}} (Standard)"
+    "bottomSummary_other": "{{count}} Leistungen · {{total}} (Standard)",
+    "vatRateLabel": "USt-Satz",
+    "vatStandard": "{{rate}}% — Regelsatz",
+    "vatReduced": "{{rate}}% — Renovierung, Wohnung älter als 2 Jahre",
+    "vatEnergy": "{{rate}}% — energetische Sanierung"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",

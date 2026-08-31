@@ -219,12 +219,20 @@ for slot in $SLOTS; do
     # Move Maestro's output PNGs into the structured tree.
     # Maestro writes to ~/.maestro/tests/<runId>/screenshots/${name}.png
     # — we glob the most-recent runId's screenshots/ dir.
-    latest_run=$(ls -td ~/.maestro/tests/*/ 2>/dev/null | head -1)
-    if [[ -d "${latest_run}screenshots" ]]; then
-      dest="$OUTPUT_DIR/$slot/$locale"
-      mkdir -p "$dest"
-      cp "${latest_run}screenshots/"*.png "$dest/"
-      echo "  ✓ moved $(ls "$dest" | wc -l | xargs) screenshots → $dest"
+    # maestro writes screenshots relative to the CWD, NOT to
+    # ~/.maestro/tests/<runId>/screenshots/ as this script used to assume — so
+    # the move silently found nothing and every run reported "no screenshots"
+    # even when all five were captured.
+    dest="$OUTPUT_DIR/$slot/$locale"
+    mkdir -p "$dest"
+    moved=0
+    for f in "${slot}_${locale}_"*.png; do
+      [[ -e "$f" ]] || continue
+      mv "$f" "$dest/"
+      moved=$((moved + 1))
+    done
+    if [[ "$moved" -gt 0 ]]; then
+      echo "  ✓ moved $moved screenshots → $dest"
     else
       echo "  ⚠ no screenshots found for $slot/$locale — flow may have crashed"
     fi

@@ -1958,7 +1958,11 @@
     "linesForPackage": "Lignes ({{name}})",
     "quoteTitle": "Devis",
     "bottomSummary_one": "{{count}} prestation · {{total}} (standard)",
-    "bottomSummary_other": "{{count}} prestations · {{total}} (standard)"
+    "bottomSummary_other": "{{count}} prestations · {{total}} (standard)",
+    "vatRateLabel": "Taux de TVA",
+    "vatStandard": "{{rate}} % — taux normal",
+    "vatReduced": "{{rate}} % — rénovation, logement de plus de 2 ans",
+    "vatEnergy": "{{rate}} % — rénovation énergétique"
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",

@@ -1958,7 +1958,11 @@
     "linesForPackage": "Líneas ({{name}})",
     "quoteTitle": "Presupuesto",
     "bottomSummary_one": "{{count}} servicio · {{total}} (estándar)",
-    "bottomSummary_other": "{{count}} servicios · {{total}} (estándar)"
+    "bottomSummary_other": "{{count}} servicios · {{total}} (estándar)",
+    "vatRateLabel": "Tipo de IVA",
+    "vatStandard": "{{rate}}% — tipo general",
+    "vatReduced": "{{rate}}% — reforma, vivienda de más de 2 años",
+    "vatEnergy": "{{rate}}% — reforma energética"
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",

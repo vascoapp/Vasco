@@ -1945,7 +1945,11 @@
     "linesForPackage": "Regels ({{name}})",
     "quoteTitle": "Offerte",
     "bottomSummary_one": "{{count}} dienst · {{total}} (standaard)",
-    "bottomSummary_other": "{{count}} diensten · {{total}} (standaard)"
+    "bottomSummary_other": "{{count}} diensten · {{total}} (standaard)",
+    "vatRateLabel": "Btw-tarief",
+    "vatStandard": "{{rate}}% — standaardtarief",
+    "vatReduced": "{{rate}}% — renovatie, woning ouder dan 2 jaar",
+    "vatEnergy": "{{rate}}% — energierenovatie"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",

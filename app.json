@@ -24,7 +24,7 @@
       "requireFullScreen": true,
       "bundleIdentifier": "com.vascobuild.app",
       "scheme": "vasco",
-      "buildNumber": "50",
+      "buildNumber": "51",
       "associatedDomains": [
         "applinks:vascobuild.com",
         "applinks:pay.vascobuild.com",
@@ -233,7 +233,8 @@
           "cameraPermission": "Vasco needs access to your camera to scan invoices and document work on site."
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "expo-font"
     ],
     "extra": {
       "eas": {

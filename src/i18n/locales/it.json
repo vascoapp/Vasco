@@ -1958,7 +1958,11 @@
     "linesForPackage": "Voci ({{name}})",
     "quoteTitle": "Preventivo",
     "bottomSummary_one": "{{count}} servizio · {{total}} (standard)",
-    "bottomSummary_other": "{{count}} servizi · {{total}} (standard)"
+    "bottomSummary_other": "{{count}} servizi · {{total}} (standard)",
+    "vatRateLabel": "Aliquota IVA",
+    "vatStandard": "{{rate}}% — aliquota ordinaria",
+    "vatReduced": "{{rate}}% — ristrutturazione, immobile di oltre 2 anni",
+    "vatEnergy": "{{rate}}% — riqualificazione energetica"
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",

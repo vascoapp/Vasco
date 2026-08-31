@@ -2,17 +2,21 @@ appId: com.vascobuild.app
 name: Capture App Store screenshots (5 hero × 1 locale)
 tags:
   - screenshots
-env:
-  # Override at invocation: maestro test -e LOCALE=nl -e VARIANT=6_9inch ...
-  LOCALE: en
-  VARIANT: 6_9inch
+# NO `env:` defaults for LOCALE/VARIANT.
+#
+# A declared default WINS over `-e` in this maestro version: with `LOCALE: en`
+# here, `-e LOCALE=de` was ignored and a German run wrote files named
+# `6_9inch_en_*`. Across six locales every file would collide on the same name
+# and the sweep would silently yield 5 screenshots instead of 90 — while every
+# step reported COMPLETED. (`DEMO_ACCOUNT` worked only because it is NOT
+# declared here.) capture-screenshots.sh always passes all three.
 ---
 
 # R66r67: app-store screenshots for one locale × one device variant.
 # Run via scripts/capture-screenshots.sh which loops 6 locales × N variants.
 #
 # Naming: ${VARIANT}_${LOCALE}_${n}_${slug}.png
-# Output: maestro saves to ~/.maestro/tests/<runId>/screenshots/
+# Output: maestro saves screenshots relative to the CWD (repo root).
 # scripts/capture-screenshots.sh moves them into ./screenshots/ named for ASC.
 #
 # Each screenshot maps to App Store Connect's required slots:
@@ -161,6 +165,12 @@ env:
 # UI locale, so it shows in every language run for the NL demo contractor) and
 # routes to /contractor/vat-prep. Old flow tapped localized text that never
 # matched the real label ("Prepare VAT return").
+# Line 523 of a 1155-line screen — below the fold, and tapOn does not scroll.
+- scrollUntilVisible:
+    element:
+      id: "vat-prep-card"
+    direction: DOWN
+    timeout: 30000
 - tapOn:
     id: "vat-prep-card"
 - waitForAnimationToEnd:

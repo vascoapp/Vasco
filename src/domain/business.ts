@@ -175,6 +175,26 @@ export function getReducedVatRate(country: BusinessProfile['country']): number |
   return null;
 }
 
+/**
+ * France's SECOND reduced rate: 5.5% for energy-renovation work
+ * (CGI art. 278-0 bis A) — insulation, heat pumps, and the rest of the
+ * énergétique list, as against the 10% general renovation rate.
+ *
+ * Vasco does NOT judge eligibility. The contractor picks the rate, exactly as
+ * they already pick 10% vs 20%; deciding whether a given job qualifies (and
+ * holding the client's attestation) is their job, not ours. Stating otherwise
+ * would make us a source of tax advice we cannot keep current.
+ */
+export function getEnergyRenovationVatRate(country: BusinessProfile['country']): number | null {
+  return country === 'FR' ? 5.5 : null;
+}
+
+/** Every VAT rate a contractor in this country may legitimately pick, high to low. */
+export function getSelectableVatRates(country: BusinessProfile['country']): number[] {
+  const rates = [getStandardVatRate(country), getReducedVatRate(country), getEnergyRenovationVatRate(country)];
+  return rates.filter((r): r is number => r !== null && r > 0);
+}
+
 export function getVatExemptionNote(country: string | undefined, vatScheme: VatScheme | undefined): string | null {
   if (vatScheme === 'small_business_NL_KOR') {
     return 'BTW niet van toepassing — kleineondernemersregeling (KOR).';

@@ -1958,7 +1958,11 @@
     "linesForPackage": "Lines ({{name}})",
     "quoteTitle": "Quote",
     "bottomSummary_one": "{{count}} service · {{total}} (standard)",
-    "bottomSummary_other": "{{count}} services · {{total}} (standard)"
+    "bottomSummary_other": "{{count}} services · {{total}} (standard)",
+    "vatRateLabel": "VAT rate",
+    "vatStandard": "{{rate}}% — standard rate",
+    "vatReduced": "{{rate}}% — renovation, home over 2 years old",
+    "vatEnergy": "{{rate}}% — energy renovation"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
