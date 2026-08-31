@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform, StatusBar } from 'react-native';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
-import { DEMO_MODE } from '../../config/demo';
+import { DEMO_MODE, SCREENSHOT_MODE } from '../../config/demo';
 import { Palette } from '../../theme/colors';
 import { DK } from '../../theme/draftkings';
 
@@ -41,7 +41,9 @@ const BANNER_HEIGHT = 17;
 const BANNER_TOP = Math.max(TOP_INSET - BANNER_HEIGHT, 0);
 
 export function DemoBanner() {
-  if (!DEMO_MODE) return null;
+  // SCREENSHOT_MODE keeps the fixtures and drops the strip — see the note on
+  // the flag. It is never set in a shipping profile.
+  if (!DEMO_MODE || SCREENSHOT_MODE) return null;
 
   return (
     // OVERLAY, not a layout row. As a flex child this banner occupied

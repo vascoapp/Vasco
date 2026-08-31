@@ -13,6 +13,21 @@ import type { UserRole } from '../context/AuthContext';
 export const DEMO_MODE: boolean =
   __DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
 
+/**
+ * Store-screenshot capture: demo DATA on, demo BANNER off.
+ *
+ * The banner exists so a real person cannot mistake fixtures for their own
+ * books. A screenshot has no such person — but it does end up on the App Store
+ * product page, where an orange "Demo Mode" strip across every image reads as
+ * an unfinished app.
+ *
+ * Deliberately a SEPARATE flag rather than widening DEMO_MODE: nothing that
+ * hides the warning may also be able to turn the fixtures on. This is set only
+ * by scripts/capture-screenshots.sh and is absent from every build profile.
+ */
+export const SCREENSHOT_MODE: boolean =
+  process.env.EXPO_PUBLIC_SCREENSHOT_MODE === 'true';
+
 // ── Demo accounts (only exposed when DEMO_MODE is true) ─────
 export interface DemoAccount {
   email: string;

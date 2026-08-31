@@ -13,6 +13,18 @@
 #   3. The Vasco **preview** build installed on those simulators
 #      (a simulator build, or `xcrun simctl install <udid> Vasco.app`). The
 #      script verifies com.vascobuild.app is present and skips the slot if not.
+#
+#      Build it FREE and locally — no EAS credit — with BOTH flags:
+#        EXPO_PUBLIC_DEMO_MODE=true EXPO_PUBLIC_SCREENSHOT_MODE=true \
+#          npx expo run:ios --configuration Release --device <udid>
+#
+#      DEMO_MODE alone is not enough and DEMO_MODE alone is wrong:
+#        - without it the app renders EMPTY (no fixtures) and every shot is a
+#          blank state;
+#        - with it and nothing else, an orange "Demo Mode" strip sits across the
+#          top of all 90 images, on the App Store product page.
+#      SCREENSHOT_MODE keeps the fixtures and drops the strip. Release matters
+#      too: a Debug build embeds no JS bundle and needs Metro running.
 #   4. macOS with simctl (Xcode Command Line Tools).
 #
 # Usage:
