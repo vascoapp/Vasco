@@ -1053,6 +1053,14 @@ export async function decideAcceptanceLink(
   token: string,
   decision: 'accepted' | 'rejected',
   declineReason?: string,
+  /**
+   * The customer confirmed they were shown the 14-day withdrawal notice
+   * (FR, Code de la consommation L221-5/L221-9). The RPC RAISES
+   * `withdrawal_ack_required` for a French contractor's acceptance without it —
+   * the guarantee is the database's, so a caller that forgets fails loudly
+   * instead of quietly accepting on a customer's behalf.
+   */
+  withdrawalAck = false,
 ): Promise<QuoteAcceptanceLinkRow | null> {
   // ANON PATH. `responded_at` is stamped server-side — the customer's device
   // clock is not evidence of when they answered, and the RPC re-checks
@@ -1062,6 +1070,7 @@ export async function decideAcceptanceLink(
     p_token: token,
     p_decision: decision,
     p_reason: decision === 'rejected' ? (declineReason ?? null) : null,
+    p_withdrawal_ack: withdrawalAck,
   });
   if (error) {
     logWarn('dataProvider', `decideAcceptanceLink failed: ${error.message ?? error}`);

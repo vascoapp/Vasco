@@ -104,6 +104,10 @@ const LANG_LOCALE: Record<Lang, string> = {
 // not an Italian word and was sitting in the Italian copy.
 const COPY: Record<Lang, Record<string, string>> = {
   en: {
+    withdrawalTitle: 'Your 14-day right to withdraw',
+    withdrawalBody: 'This quote is signed away from business premises, so you may cancel within 14 days of acceptance without giving a reason (French Consumer Code, art. L221-18 et seq.).',
+    withdrawalCheck: 'I have read and understood my right to withdraw',
+    withdrawalRequired: 'Please confirm you have read the withdrawal notice.',
     eyebrow: 'Quote for approval', sentYou: 'sent you a quote', ref: 'Quote', total: 'Total',
     validUntil: 'Valid until', accept: 'Accept quote', confirm: 'Yes — accept',
     cancel: 'Cancel', decline: 'Decline', declineTitle: 'Decline this quote',
@@ -121,6 +125,10 @@ const COPY: Record<Lang, Record<string, string>> = {
     loading: 'Loading your quote…',
   },
   nl: {
+    withdrawalTitle: 'Uw herroepingsrecht van 14 dagen',
+    withdrawalBody: 'Deze offerte wordt buiten de verkoopruimte gesloten. U kunt de overeenkomst binnen 14 dagen na acceptatie zonder opgaaf van reden herroepen (Franse consumentenwet, art. L221-18 e.v.).',
+    withdrawalCheck: 'Ik heb mijn herroepingsrecht gelezen en begrepen',
+    withdrawalRequired: 'Bevestig dat u de herroepingsinformatie hebt gelezen.',
     eyebrow: 'Offerte ter goedkeuring', sentYou: 'heeft je een offerte gestuurd', ref: 'Offerte', total: 'Totaal',
     validUntil: 'Geldig tot', accept: 'Offerte accepteren', confirm: 'Ja — accepteren',
     cancel: 'Annuleren', decline: 'Afwijzen', declineTitle: 'Deze offerte afwijzen',
@@ -138,6 +146,10 @@ const COPY: Record<Lang, Record<string, string>> = {
     loading: 'Je offerte wordt geladen…',
   },
   de: {
+    withdrawalTitle: 'Ihr 14-tägiges Widerrufsrecht',
+    withdrawalBody: 'Dieses Angebot wird außerhalb von Geschäftsräumen geschlossen. Sie können den Vertrag innerhalb von 14 Tagen nach Annahme ohne Angabe von Gründen widerrufen (französisches Verbrauchergesetzbuch, Art. L221-18 ff.).',
+    withdrawalCheck: 'Ich habe mein Widerrufsrecht gelesen und verstanden',
+    withdrawalRequired: 'Bitte bestätigen Sie, dass Sie die Widerrufsbelehrung gelesen haben.',
     eyebrow: 'Angebot zur Freigabe', sentYou: 'hat Ihnen ein Angebot gesendet', ref: 'Angebot', total: 'Gesamt',
     validUntil: 'Gültig bis', accept: 'Angebot annehmen', confirm: 'Ja — annehmen',
     cancel: 'Abbrechen', decline: 'Ablehnen', declineTitle: 'Dieses Angebot ablehnen',
@@ -155,6 +167,10 @@ const COPY: Record<Lang, Record<string, string>> = {
     loading: 'Ihr Angebot wird geladen…',
   },
   fr: {
+    withdrawalTitle: 'Votre droit de rétractation de 14 jours',
+    withdrawalBody: 'Ce devis est conclu hors établissement. Vous disposez de 14 jours à compter de l’acceptation pour vous rétracter sans avoir à motiver votre décision (Code de la consommation, art. L221-18 et suivants).',
+    withdrawalCheck: 'J’ai lu et compris mon droit de rétractation',
+    withdrawalRequired: 'Veuillez confirmer avoir lu les informations sur la rétractation.',
     eyebrow: 'Devis à approuver', sentYou: 'vous a envoyé un devis', ref: 'Devis', total: 'Total',
     validUntil: "Valable jusqu'au", accept: 'Accepter le devis', confirm: 'Oui — accepter',
     cancel: 'Annuler', decline: 'Refuser', declineTitle: 'Refuser ce devis',
@@ -172,6 +188,10 @@ const COPY: Record<Lang, Record<string, string>> = {
     loading: 'Chargement de votre devis…',
   },
   es: {
+    withdrawalTitle: 'Su derecho de desistimiento de 14 días',
+    withdrawalBody: 'Este presupuesto se celebra fuera del establecimiento. Puede desistir en un plazo de 14 días desde la aceptación sin necesidad de justificación (Código de Consumo francés, art. L221-18 y ss.).',
+    withdrawalCheck: 'He leído y entendido mi derecho de desistimiento',
+    withdrawalRequired: 'Confirme que ha leído la información sobre el desistimiento.',
     eyebrow: 'Presupuesto para aprobar', sentYou: 'te ha enviado un presupuesto', ref: 'Presupuesto', total: 'Total',
     validUntil: 'Válido hasta', accept: 'Aceptar presupuesto', confirm: 'Sí — aceptar',
     cancel: 'Cancelar', decline: 'Rechazar', declineTitle: 'Rechazar este presupuesto',
@@ -189,6 +209,10 @@ const COPY: Record<Lang, Record<string, string>> = {
     loading: 'Cargando tu presupuesto…',
   },
   it: {
+    withdrawalTitle: 'Il suo diritto di recesso di 14 giorni',
+    withdrawalBody: 'Questo preventivo è concluso fuori dei locali commerciali. Può recedere entro 14 giorni dall’accettazione senza doverne indicare il motivo (Codice del consumo francese, art. L221-18 e segg.).',
+    withdrawalCheck: 'Ho letto e compreso il mio diritto di recesso',
+    withdrawalRequired: 'Confermi di aver letto le informazioni sul recesso.',
     eyebrow: 'Preventivo da approvare', sentYou: 'ti ha inviato un preventivo', ref: 'Preventivo', total: 'Totale',
     validUntil: 'Valido fino al', accept: 'Accetta il preventivo', confirm: 'Sì — accetta',
     cancel: 'Annulla', decline: 'Rifiuta', declineTitle: 'Rifiuta questo preventivo',
@@ -261,6 +285,9 @@ export default function QuoteAcceptance({ params }: PageProps) {
   const [link, setLink] = useState<AcceptanceLink | null>(null);
   const [reason, setReason] = useState('');
   const [sendFailed, setSendFailed] = useState(false);
+  // FR only: the acknowledgement the RPC enforces. Kept in state rather than
+  // read off the DOM so the disabled CTA and the value sent cannot disagree.
+  const [withdrawalAck, setWithdrawalAck] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [lang, setLang] = useState<Lang>('en');
   const copy = COPY[lang];
@@ -318,6 +345,10 @@ export default function QuoteAcceptance({ params }: PageProps) {
   }, [token]);
 
   const currency = COUNTRY_CURRENCY[(link?.contractor_country ?? '').toUpperCase()] ?? 'EUR';
+  // The right attaches to the CONTRACTOR's establishment, not the reader's
+  // browser — a Belgian customer of a French artisan still gets 14 days. Same
+  // rule as the currency directly above.
+  const needsWithdrawalNotice = (link?.contractor_country ?? '').toUpperCase() === 'FR';
   const money = useMemo(
     () => moneyFormatter(LANG_LOCALE[lang], { style: 'currency', currency }),
     [lang, currency],
@@ -337,6 +368,7 @@ export default function QuoteAcceptance({ params }: PageProps) {
         p_token: token,
         p_decision: decision,
         p_reason: decision === 'rejected' ? (reason.trim() || null) : null,
+        p_withdrawal_ack: withdrawalAck,
       });
       if (error) { setSendFailed(true); setPhase('ready'); return; }
       // NULL means the server refused: someone answered in the meantime, or it
@@ -495,7 +527,28 @@ export default function QuoteAcceptance({ params }: PageProps) {
 
               {phase === 'confirming' && (
                 <div className="vb-fade" style={{ display: 'grid', gap: 10 }}>
-                  <button className="vb-cta" style={CTA} onClick={() => decide('accepted')}>
+                  {needsWithdrawalNotice && (
+                    <div style={{ border: '1px solid #2A3038', borderRadius: 10, padding: 14, display: 'grid', gap: 8, textAlign: 'left' }}>
+                      <strong style={{ fontSize: 15 }}>{copy.withdrawalTitle}</strong>
+                      <span style={{ fontSize: 13, lineHeight: 1.5, opacity: 0.85 }}>{copy.withdrawalBody}</span>
+                      <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={withdrawalAck}
+                          onChange={(e) => setWithdrawalAck(e.target.checked)}
+                          style={{ marginTop: 3 }}
+                        />
+                        <span>{copy.withdrawalCheck}</span>
+                      </label>
+                    </div>
+                  )}
+                  <button
+                    className="vb-cta"
+                    style={{ ...CTA, ...(needsWithdrawalNotice && !withdrawalAck ? { opacity: 0.5, cursor: 'not-allowed' } : null) }}
+                    disabled={needsWithdrawalNotice && !withdrawalAck}
+                    title={needsWithdrawalNotice && !withdrawalAck ? copy.withdrawalRequired : undefined}
+                    onClick={() => decide('accepted')}
+                  >
                     {amount != null ? `${copy.confirm} · ${money.format(amount)}` : copy.confirm}
                   </button>
                   <button className="vb-ghost" style={GHOST} onClick={() => setPhase('ready')}>

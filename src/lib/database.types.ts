@@ -385,6 +385,15 @@ export type QuoteAcceptanceLinkRow = {
   created_at: string;
   responded_at: string | null;
   expires_at: string;
+  /**
+   * FR statutory withdrawal right (Code de la consommation L221-5/L221-9).
+   * Stamped by `decide_acceptance_link` when the customer acknowledged the
+   * 14-day notice before accepting. NULL where the right does not apply.
+   * Deliberately no IP column: PostgREST reaches Postgres through a pooler, so
+   * the DB cannot see the customer's address and storing one would be a
+   * fabricated audit trail.
+   */
+  withdrawal_ack_at: string | null;
 };
 
 // R66 round 15: gobd_audit_log table — append-only hash-chained audit
