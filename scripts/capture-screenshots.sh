@@ -49,6 +49,38 @@ set -euo pipefail
 LOCALES="${LOCALES:-en nl de fr es it}"
 OUTPUT_DIR="${OUTPUT_DIR:-./screenshots}"
 
+# Locale -> the demo account that OWNS that market. Each carries language and
+# country in AuthContext, so this drives copy, currency and VAT format together.
+# en maps to the US contractor because it is the only English-speaking demo
+# profile with real data (new@vasco.dev is en/NL but is the empty onboarding
+# account, which would screenshot as a blank app).
+demo_account_for() {
+  case "$1" in
+    nl) echo "contractor@vasco.dev" ;;
+    de) echo "handwerker@vasco.de.dev" ;;
+    fr) echo "plombier@vasco.fr.dev" ;;
+    es) echo "fontanero@vasco.es.dev" ;;
+    it) echo "idraulico@vasco.it.dev" ;;
+    en) echo "contractor@vasco.us.dev" ;;
+    *)  echo "contractor@vasco.dev" ;;
+  esac
+}
+
+# Region for AppleLocale (language_REGION). The language alone is enough for
+# i18next, but a wrong/absent region gives the wrong date and currency FORMAT,
+# which is exactly what these screenshots are meant to show off.
+locale_region() {
+  case "$1" in
+    en) echo "GB" ;;
+    nl) echo "NL" ;;
+    de) echo "DE" ;;
+    fr) echo "FR" ;;
+    es) echo "ES" ;;
+    it) echo "IT" ;;
+    *)  echo "GB" ;;
+  esac
+}
+
 # Locale → display name in the in-app language picker.
 # Must match the labels in app/contractor/profile.tsx → Language section.
 # NOTE: plain `case` (not `declare -A`) — macOS ships bash 3.2, which has no
@@ -164,8 +196,23 @@ for slot in $SLOTS; do
     echo "── $locale ($display) ──"
 
     # Run the Maestro flow against THIS specific device (never "whatever's booted").
+    # Set the language on the SIMULATOR, not in the app.
+    #
+    # The in-app picker is a React Native <Modal> (DKMenu) and maestro's iOS
+    # driver cannot traverse into it — with the menu open and "English" visible
+    # on screen, a hierarchy dump contains the anchor row and nothing else. The
+    # flow used to burn five steps there and could never have passed.
+    #
+    # The app has no saved profile under clearState, so applySavedLanguage falls
+    # through to the device locale. Verified: the whole UI renders German.
+    region="$(locale_region "$locale")"
+    xcrun simctl spawn "$udid" defaults write .GlobalPreferences AppleLanguages -array "$locale" >/dev/null 2>&1 || true
+    xcrun simctl spawn "$udid" defaults write .GlobalPreferences AppleLocale -string "${locale}_${region}" >/dev/null 2>&1 || true
+    xcrun simctl terminate "$udid" com.vascobuild.app >/dev/null 2>&1 || true
+
     maestro --device "$udid" test .maestro/screenshots.yaml \
       -e LOCALE="$locale" \
+      -e DEMO_ACCOUNT="$(demo_account_for "$locale")" \
       -e LOCALE_DISPLAY="$display" \
       -e VARIANT="$slot"
 

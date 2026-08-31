@@ -69,3 +69,10 @@ video/.remotion-cache/
 
 # Supabase CLI local state (linked project ref, CLI version) — machine-specific
 supabase/.temp/
+screenshots/
+# stray maestro capture output when the script is interrupted mid-run
+*_1_vandaag.png
+*_2_quote_builder.png
+*_3_geld.png
+*_4_photo_to_quote.png
+*_5_compliance.png

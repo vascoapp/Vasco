@@ -30,6 +30,16 @@ env:
 - launchApp:
     clearState: true
 
+# A Release bundle with clearState re-hydrates from scratch, and first paint on
+# a cold simulator has been measured at up to ~2 MINUTES on this machine.
+# maestro's default element wait is ~15s, so every run failed with
+# "Element not found: login-toggle-signin" against a screen that renders it
+# perfectly — the flow was racing the splash, not missing a testID.
+- extendedWaitUntil:
+    visible:
+      id: "login-toggle-signin"
+    timeout: 180000
+
 # 2. Welcome-first login → one-tap demo login.
 # The login screen defaults to the welcome view (Create Account CTA); the demo
 # cards live in the sign-in view and render ONLY in DEMO_MODE builds. DEMO_MODE
@@ -39,31 +49,53 @@ env:
 # with no password, so no text entry is needed.
 - tapOn:
     id: "login-toggle-signin"
+# Same race one level down: the sign-in view fades in and the DEMO cards mount
+# after it. Verified the id IS in the hierarchy
+# (`demo-account-contractor@vasco.dev`) — the flow was simply tapping before it
+# existed.
+# Per-LOCALE demo account, injected by capture-screenshots.sh.
+#
+# The account carries language AND country (handwerker@vasco.de.dev is
+# de/DE), so this is what makes a German screenshot show German COPY and
+# German currency/VAT formatting. Device locale alone only reaches the login
+# screen — after login the account profile wins, which is why every shot came
+# out Dutch when only AppleLanguages was set.
+- extendedWaitUntil:
+    visible:
+      id: "demo-account-contractor@vasco.dev"
+    timeout: 60000
+# The EU market accounts (handwerker/plombier/fontanero/idraulico) sit BELOW
+# the fold — the visible cards are the NL/role ones. tapOn does not scroll.
+- scrollUntilVisible:
+    element:
+      id: "demo-account-${DEMO_ACCOUNT}"
+    direction: DOWN
+    timeout: 30000
 - tapOn:
-    id: "demo-account-contractor@vasco.dev"
+    id: "demo-account-${DEMO_ACCOUNT}"
 - waitForAnimationToEnd:
     timeout: 3000
 
-# 3. Switch language to ${LOCALE} via Vasco hub (tab-ai) → Profile gear
-# (open-profile) → Language row (profile-language-row) → pick locale.
-# All testID-anchored so the path is locale-independent. The language picker is
-# a native Alert whose buttons read "🇳🇱 Nederlands", so ${LOCALE_DISPLAY}
-# (e.g. "Nederlands") matches as a substring. For LOCALE=en (device default)
-# this re-selects English — a harmless no-op. Profile is a pushed stack screen
-# (no tab bar), so one Back returns to the hub before the screenshot sweep.
-- tapOn:
-    id: "tab-ai"
-- tapOn:
-    id: "open-profile"
-- waitForAnimationToEnd:
-    timeout: 1500
-- tapOn:
-    id: "profile-language-row"
-- tapOn:
-    text: "${LOCALE_DISPLAY}"
-- pressKey: Back
+# 3. Language is set on the DEVICE, not in the app.
+#
+# The in-app path (tab-ai -> open-profile -> profile-language-row -> pick) was
+# five fragile steps and the last one is IMPOSSIBLE for maestro: DKMenu is a
+# React Native <Modal>, and maestro's iOS driver does not traverse into it. A
+# hierarchy dump with the menu open and "English" plainly on screen contains the
+# anchor row ("Taal") and NOTHING from the menu — so no matcher works, by id or
+# by text.
+#
+# capture-screenshots.sh now sets AppleLanguages/AppleLocale on the simulator
+# before each locale's run. With clearState there is no saved profile, so
+# `applySavedLanguage` falls through to the device locale. Verified on the
+# simulator: the whole UI renders German ("Konto erstellen", "FÜR DAS HANDWERK
+# GEBAUT") with no in-app interaction at all.
 
 # 4. Screenshot 1 — Vandaag
+- extendedWaitUntil:
+    visible:
+      id: "tab-index"
+    timeout: 30000
 - tapOn:
     id: "tab-index"
     optional: true
@@ -76,6 +108,10 @@ env:
 # The old flow tapped text "Nieuwe offerte", which only exists as an EMPTY-STATE
 # CTA — in a seed-data build werk has content so it never renders. new-quote-fab
 # is the persistent FAB → /contractor/tiered-quote.
+- extendedWaitUntil:
+    visible:
+      id: "tab-werk"
+    timeout: 30000
 - tapOn:
     id: "tab-werk"
 - tapOn:
@@ -95,10 +131,25 @@ env:
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: "${VARIANT}_${LOCALE}_4_photo_to_quote"
-- pressKey: Back
-- pressKey: Back
+# `pressKey: Back` is an ANDROID concept. iOS has no hardware back button, so
+# these two did nothing and the flow sat on the AI-quote photo MODAL forever —
+# every later `tab-*` then failed because the tab bar was covered. Close the
+# modal by its own control instead.
+- tapOn:
+    id: "ai-quote-close"
+- waitForAnimationToEnd:
+    timeout: 2000
+# ...and the quote BUILDER underneath it, which the second Back was for.
+- tapOn:
+    id: "quote-builder-close"
+- waitForAnimationToEnd:
+    timeout: 2000
 
 # 7. Screenshot 3 — Geld (outstanding invoices)
+- extendedWaitUntil:
+    visible:
+      id: "tab-geld"
+    timeout: 30000
 - tapOn:
     id: "tab-geld"
 - waitForAnimationToEnd:

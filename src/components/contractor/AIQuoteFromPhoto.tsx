@@ -448,7 +448,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t('aiQuote.title', 'AI quote')}</Text>
           {onClose && (
-            <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
+            <Pressable testID="ai-quote-close" onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
               <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
             </Pressable>
           )}

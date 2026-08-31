@@ -1150,7 +1150,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     return (
       <View style={s.container}>
         <View style={s.header}>
-          <Pressable onPress={onClose} style={s.closeBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
+          <Pressable testID="quote-builder-close" onPress={onClose} style={s.closeBtn} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
             <Ionicons name="close" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
