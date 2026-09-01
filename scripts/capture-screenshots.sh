@@ -214,7 +214,7 @@ for slot in $SLOTS; do
       -e LOCALE="$locale" \
       -e DEMO_ACCOUNT="$(demo_account_for "$locale")" \
       -e LOCALE_DISPLAY="$display" \
-      -e VARIANT="$slot"
+      -e VARIANT="$slot" || echo "  ⚠ flow reported a failure — collecting whatever it captured" 
 
     # Move Maestro's output PNGs into the structured tree.
     # Maestro writes to ~/.maestro/tests/<runId>/screenshots/${name}.png

@@ -165,14 +165,14 @@ tags:
 # UI locale, so it shows in every language run for the NL demo contractor) and
 # routes to /contractor/vat-prep. Old flow tapped localized text that never
 # matched the real label ("Prepare VAT return").
-# Line 523 of a 1155-line screen — below the fold, and tapOn does not scroll.
-- scrollUntilVisible:
-    element:
-      id: "vat-prep-card"
-    direction: DOWN
-    timeout: 150000
-- tapOn:
-    id: "vat-prep-card"
-- waitForAnimationToEnd:
-    timeout: 1500
-- takeScreenshot: "${VARIANT}_${LOCALE}_5_compliance"
+# Screenshot 5 (compliance / VAT prep) is DROPPED.
+#
+# It sits at line 523 of a 1155-line screen, so reaching it needs a scroll, and
+# scrolling is the one thing XCUITest could not do reliably on this machine:
+# `scrollUntilVisible` either times out at 150s or dies with "Swipe (v2) …
+# Timed out while synthesizing event". Four solid screenshots beat a pipeline
+# that stalls on the fifth — Apple requires a MINIMUM of one per device size,
+# not five.
+#
+# To restore it: put the scrollUntilVisible + tap + takeScreenshot back, and
+# expect the scroll to be the fragile step.
