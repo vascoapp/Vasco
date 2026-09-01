@@ -111,7 +111,7 @@ import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
 import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE } from '../data/mockBusiness';
-import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes } from '../data/mockDocuments';
+import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
 
@@ -359,6 +359,67 @@ const DE_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-de-003', name: 'Anja Hoffmann', email: 'a.hoffmann@t-online.de', phone: '+49 221 5550147' },
   { id: 'cust-de-004', name: 'Hausverwaltung Rheinblick GmbH', email: 'technik@rheinblick-hv.de', phone: '+49 221 5550390' },
   { id: 'cust-de-005', name: 'Bäckerei Lindner GmbH', email: 'buchhaltung@baeckerei-lindner.de', phone: '+49 221 5550412' },
+];
+
+// FR / ES / IT seed data.
+//
+// These three used to inherit the DUTCH seed on purpose: the comment below the
+// walkProfiles branch said forking was only worth it for the beachhead,
+// "markets we do not sell into" did not get screenshotted, and reachability of
+// the GATED surfaces was the point.
+//
+// That premise expired the moment the store listing went to six locales. The
+// French capture read "Facture pour Lekkage reparatie — Bakkerij Smit" — Dutch
+// customer names on a French App Store page, which is exactly the complaint
+// DE_SEED_JOBS was created to fix. Same status spread as DE so every screen has
+// data: lead / scheduled / in-progress / completed / invoiced.
+
+const FR_SEED_JOBS: Job[] = [
+  { id: 'j-fr-1', customerId: 'cust-fr-001', title: 'Panne de chaudière — Famille Bernard', description: null, status: 'lead', trade: 'plumbing', priority: 'high', quotedAmount: 320, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-fr-2', customerId: 'cust-fr-002', title: 'Entretien annuel chaudière — Petit', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '08:30', scheduledEndTime: '10:30', estimatedDuration: 2, quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 4).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-fr-3', customerId: 'cust-fr-003', title: 'Rénovation salle de bains — Lefèvre', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '11:00', scheduledEndTime: '16:30', estimatedDuration: 40, quotedAmount: 9400, agreedAmount: 9400, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 8).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-fr-4', customerId: 'cust-fr-004', title: 'Remplacement robinets thermostatiques — Syndic Bellecour', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 3, quotedAmount: 460, agreedAmount: 460, actualHours: 2.5, actualCost: 145, completedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString() },
+  { id: 'j-fr-5', customerId: 'cust-fr-005', title: 'Rénovation réseau eau potable — Boulangerie Lefort', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 14, quotedAmount: 5200, agreedAmount: 5200, invoiceId: 'inv-fr-1', completedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString() },
+];
+
+const FR_SEED_CUSTOMERS: Customer[] = [
+  { id: 'cust-fr-001', name: 'Famille Bernard', email: 'm.bernard@orange.fr', phone: '+33 4 72550188' },
+  { id: 'cust-fr-002', name: 'Julien Petit', email: 'j.petit@free.fr', phone: '+33 4 72550231' },
+  { id: 'cust-fr-003', name: 'Camille Lefèvre', email: 'c.lefevre@wanadoo.fr', phone: '+33 4 72550147' },
+  { id: 'cust-fr-004', name: 'Syndic Bellecour SAS', email: 'technique@syndic-bellecour.fr', phone: '+33 4 72550390' },
+  { id: 'cust-fr-005', name: 'Boulangerie Lefort SARL', email: 'compta@boulangerie-lefort.fr', phone: '+33 4 72550412' },
+];
+
+const ES_SEED_JOBS: Job[] = [
+  { id: 'j-es-1', customerId: 'cust-es-001', title: 'Avería de caldera — Familia García', description: null, status: 'lead', trade: 'plumbing', priority: 'high', quotedAmount: 320, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-es-2', customerId: 'cust-es-002', title: 'Mantenimiento anual de caldera — Ruiz', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '08:30', scheduledEndTime: '10:30', estimatedDuration: 2, quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 4).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-es-3', customerId: 'cust-es-003', title: 'Reforma integral de baño — Navarro', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '11:00', scheduledEndTime: '16:30', estimatedDuration: 40, quotedAmount: 9400, agreedAmount: 9400, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 8).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-es-4', customerId: 'cust-es-004', title: 'Cambio de válvulas termostáticas — Administración Retiro', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 3, quotedAmount: 460, agreedAmount: 460, actualHours: 2.5, actualCost: 145, completedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString() },
+  { id: 'j-es-5', customerId: 'cust-es-005', title: 'Renovación de red de agua potable — Panadería Molina', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 14, quotedAmount: 5200, agreedAmount: 5200, invoiceId: 'inv-es-1', completedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString() },
+];
+
+const ES_SEED_CUSTOMERS: Customer[] = [
+  { id: 'cust-es-001', name: 'Familia García', email: 'm.garcia@telefonica.es', phone: '+34 91 5550188' },
+  { id: 'cust-es-002', name: 'Javier Ruiz', email: 'j.ruiz@gmail.com', phone: '+34 91 5550231' },
+  { id: 'cust-es-003', name: 'Lucía Navarro', email: 'l.navarro@hotmail.es', phone: '+34 91 5550147' },
+  { id: 'cust-es-004', name: 'Administración Retiro S.L.', email: 'tecnico@admretiro.es', phone: '+34 91 5550390' },
+  { id: 'cust-es-005', name: 'Panadería Molina S.L.', email: 'contabilidad@panaderiamolina.es', phone: '+34 91 5550412' },
+];
+
+const IT_SEED_JOBS: Job[] = [
+  { id: 'j-it-1', customerId: 'cust-it-001', title: 'Guasto alla caldaia — Famiglia Rossi', description: null, status: 'lead', trade: 'plumbing', priority: 'high', quotedAmount: 320, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-it-2', customerId: 'cust-it-002', title: 'Manutenzione annuale caldaia — Conti', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '08:30', scheduledEndTime: '10:30', estimatedDuration: 2, quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 4).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-it-3', customerId: 'cust-it-003', title: 'Ristrutturazione completa bagno — Greco', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '11:00', scheduledEndTime: '16:30', estimatedDuration: 40, quotedAmount: 9400, agreedAmount: 9400, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 8).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-it-4', customerId: 'cust-it-004', title: 'Sostituzione valvole termostatiche — Amministrazione Navigli', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 3, quotedAmount: 460, agreedAmount: 460, actualHours: 2.5, actualCost: 145, completedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString() },
+  { id: 'j-it-5', customerId: 'cust-it-005', title: 'Rifacimento rete acqua potabile — Panificio Bruno', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 14, quotedAmount: 5200, agreedAmount: 5200, invoiceId: 'inv-it-1', completedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString() },
+];
+
+const IT_SEED_CUSTOMERS: Customer[] = [
+  { id: 'cust-it-001', name: 'Famiglia Rossi', email: 'm.rossi@libero.it', phone: '+39 02 5550188' },
+  { id: 'cust-it-002', name: 'Marco Conti', email: 'm.conti@virgilio.it', phone: '+39 02 5550231' },
+  { id: 'cust-it-003', name: 'Giulia Greco', email: 'g.greco@alice.it', phone: '+39 02 5550147' },
+  { id: 'cust-it-004', name: 'Amministrazione Navigli S.r.l.', email: 'tecnico@ammnavigli.it', phone: '+39 02 5550390' },
+  { id: 'cust-it-005', name: 'Panificio Bruno S.r.l.', email: 'contabilita@panificiobruno.it', phone: '+39 02 5550412' },
 ];
 
 export function AppStateProvider({ children }: PropsWithChildren) {
@@ -705,17 +766,43 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             .then(({ clearQueue }) => clearQueue())
             .catch(() => {});
         }
-        // FR/ES/IT walk postures. Profile only — customers/jobs stay the
-        // shared seed, because the point is to make each country's GATED
-        // surfaces reachable, not to fork demo data for markets we do not
-        // sell into. (DE forks its data because it IS the beachhead and gets
-        // screenshotted; see DE_SEED_JOBS.)
-        const walkProfiles: Record<string, typeof FR_BUSINESS_PROFILE> = {
-          FR: FR_BUSINESS_PROFILE, ES: ES_BUSINESS_PROFILE, IT: IT_BUSINESS_PROFILE,
+        // FR/ES/IT. This used to set the PROFILE only and leave customers,
+        // jobs, invoices and quotes on the shared Dutch seed — deliberately,
+        // because the point was reachability of each country's GATED surfaces,
+        // and "markets we do not sell into" were not screenshotted.
+        //
+        // The store listing went to six locales and that premise expired: the
+        // French capture read "Facture pour Lekkage reparatie — Bakkerij Smit",
+        // Dutch names on a French App Store page. Which is precisely what
+        // DE_SEED_JOBS was created to fix, for German, and nobody carried the
+        // fix across. Forked now, the same way DE and US already were.
+        const walkSeeds: Record<string, {
+          profile: typeof FR_BUSINESS_PROFILE;
+          customers: Customer[];
+          jobs: Job[];
+          invoices: Invoice[];
+          quotes: Quote[];
+        }> = {
+          FR: { profile: FR_BUSINESS_PROFILE, customers: FR_SEED_CUSTOMERS, jobs: FR_SEED_JOBS, invoices: frInvoices, quotes: frQuotes },
+          ES: { profile: ES_BUSINESS_PROFILE, customers: ES_SEED_CUSTOMERS, jobs: ES_SEED_JOBS, invoices: esInvoices, quotes: esQuotes },
+          IT: { profile: IT_BUSINESS_PROFILE, customers: IT_SEED_CUSTOMERS, jobs: IT_SEED_JOBS, invoices: itInvoices, quotes: itQuotes },
         };
-        const walkProfile = walkProfiles[getCurrentCountry() ?? ''];
-        if (useSeedData && walkProfile) {
-          setBusinessProfile(walkProfile);
+        const walkSeed = walkSeeds[getCurrentCountry() ?? ''];
+        if (useSeedData && walkSeed) {
+          setBusinessProfile(walkSeed.profile);
+          setCustomers(walkSeed.customers);
+          setJobs(walkSeed.jobs);
+          // Documents carry their own denormalised customer/job strings, so
+          // jobs+customers alone leaves Geld and Facturen in Dutch. Same half
+          // fix the DE branch above calls out.
+          setInvoices(walkSeed.invoices);
+          setQuotes(walkSeed.quotes);
+          // Vandaag fires evaluateTriggers on mount against whatever state
+          // existed then — the Dutch seed — and those cards persist. Drop them
+          // so the queue rebuilds from this market's data.
+          import('../services/aiActionQueueService')
+            .then(({ clearQueue }) => clearQueue())
+            .catch(() => {});
         }
         // New user signed in — re-hydrate from BE for the new auth context.
         refreshData();
