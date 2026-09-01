@@ -74,7 +74,7 @@ tags:
     element:
       id: "demo-account-${DEMO_ACCOUNT}"
     direction: DOWN
-    timeout: 30000
+    timeout: 150000
 - tapOn:
     id: "demo-account-${DEMO_ACCOUNT}"
 - waitForAnimationToEnd:
@@ -99,7 +99,7 @@ tags:
 - extendedWaitUntil:
     visible:
       id: "tab-index"
-    timeout: 30000
+    timeout: 150000
 - tapOn:
     id: "tab-index"
     optional: true
@@ -115,7 +115,7 @@ tags:
 - extendedWaitUntil:
     visible:
       id: "tab-werk"
-    timeout: 30000
+    timeout: 150000
 - tapOn:
     id: "tab-werk"
 - tapOn:
@@ -153,7 +153,7 @@ tags:
 - extendedWaitUntil:
     visible:
       id: "tab-geld"
-    timeout: 30000
+    timeout: 150000
 - tapOn:
     id: "tab-geld"
 - waitForAnimationToEnd:
@@ -170,7 +170,7 @@ tags:
     element:
       id: "vat-prep-card"
     direction: DOWN
-    timeout: 30000
+    timeout: 150000
 - tapOn:
     id: "vat-prep-card"
 - waitForAnimationToEnd:
