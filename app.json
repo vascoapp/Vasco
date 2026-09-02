@@ -24,7 +24,7 @@
       "requireFullScreen": true,
       "bundleIdentifier": "com.vascobuild.app",
       "scheme": "vasco",
-      "buildNumber": "54",
+      "buildNumber": "55",
       "associatedDomains": [
         "applinks:vascobuild.com",
         "applinks:pay.vascobuild.com",
@@ -230,7 +230,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Vasco needs access to your photos to attach images to jobs, quotes, and invoices.",
-          "cameraPermission": "Vasco needs access to your camera to scan invoices and document work on site."
+          "cameraPermission": "Vasco needs access to your camera to scan invoices and document work on site.",
+          "microphonePermission": false
         }
       ],
       "@sentry/react-native",
