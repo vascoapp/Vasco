@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Embed the lead-capture widget — Vasco",
+  title: "Embed the lead-capture widget",
   description:
     "Drop-in HTML snippet you paste on your website. Leads flow straight into your Vasco pipeline.",
   alternates: { canonical: "https://vascobuild.com/widget" },

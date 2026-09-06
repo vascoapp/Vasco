@@ -23,11 +23,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   if (!VALID_SLUGS.includes(slug as LegalSlug)) {
-    return { title: "Vasco — Legal" };
+    return { title: "Legal" };
   }
   const title = legalTitle(slug as LegalSlug);
   return {
-    title: `${title} — Vasco`,
+    // Root layout applies template "%s — Vasco" — do not repeat the suffix.
+    title,
     robots: { index: true, follow: true },
   };
 }

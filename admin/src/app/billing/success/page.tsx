@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BillingHeader, BillingFooter, BRAND } from "../../../components/BillingChrome";
 
 export const metadata: Metadata = {
-  title: "Subscription activated — Vasco",
+  title: "Subscription activated",
   robots: { index: false, follow: false },
 };
 
