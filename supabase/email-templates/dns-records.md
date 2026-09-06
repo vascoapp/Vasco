@@ -14,8 +14,14 @@ There are exactly three moving parts. Two are DNS (your registrar), one is Supab
 
 Use **Resend** (least setup) — or Postmark / Amazon SES; the shape is identical.
 
-1. Create the account, **Add Domain** → enter **`vascobuild.com`** (or, to protect the
-   root domain's reputation, a subdomain like `mail.vascobuild.com` — recommended).
+1. Create the account, **Add Domain** → enter **`mail.vascobuild.com`**.
+   **DECIDED 2026-09-05 — use the subdomain, not the root.** The root already
+   carries `v=spf1 include:simplelogin.co ~all` for live SimpleLogin forwarding,
+   and a domain may have only ONE SPF record, so verifying the root would mean
+   hand-merging includes. The subdomain sidesteps that and protects root
+   reputation. All five senders were moved onto it for the same reason — Resend
+   403s a From on an unverified domain, so a stray `@vascobuild.com` sender would
+   silently kill that function. See `memory/resend-email-golive.md`.
 2. Resend shows you a set of DNS records to add. They are **account-specific** (the DKIM
    selector + public key are generated per account) — copy them verbatim. They look like:
 
@@ -40,9 +46,25 @@ DMARC is not provider-specific. Add this TXT record at your registrar:
 |------|---------------------------|-----------------------------------------------------------------------|
 | TXT  | `_dmarc.vascobuild.com`   | `v=DMARC1; p=none; rua=mailto:dmarc@vascobuild.com; fo=1; adkim=s; aspf=s` |
 
-- Start at **`p=none`** (monitor only — won't block anything). Watch the `rua` reports
-  for ~1–2 weeks, confirm all legit mail passes, then tighten to `p=quarantine` and
-  finally `p=reject`.
+> ⚠️ **Checked live 2026-09-05: `vascobuild.com` is ALREADY at `p=quarantine`**, so
+> the "start at p=none and tighten later" advice below no longer applies — there is
+> no monitoring grace period and misaligned mail is quarantined from the first send.
+> The record in place is `v=DMARC1; p=quarantine; pct=100; adkim=s; aspf=s`. Two
+> problems with it:
+>   * **no `rua=`** — enforcing with zero visibility into what fails;
+>   * **`aspf=s` can never pass for Resend.** Its bounce domain is
+>     `send.mail.vascobuild.com`, not an exact match for the From domain, so strict
+>     SPF alignment always fails. Mail still passes DMARC on DKIM alone, but with no
+>     SPF fallback. Relax it.
+>
+> Replace with:
+> ```
+> v=DMARC1; p=quarantine; pct=100; adkim=s; aspf=r; fo=1; rua=mailto:dmarc@vascobuild.com
+> ```
+> `adkim=s` stays — Resend signs `d=mail.vascobuild.com`, an exact match.
+
+- If you were starting from scratch you would begin at **`p=none`** (monitor only),
+  watch `rua` for 1–2 weeks, then tighten. That ship has sailed here.
 - Make sure `dmarc@vascobuild.com` is a real, readable mailbox (or point `rua` to one).
 
 ---

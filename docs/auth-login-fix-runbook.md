@@ -38,21 +38,50 @@ Also set URL config (Option B step 4) so links resolve when you re-enable confir
 
 ## OPTION B — Full deliverability (launch-grade). 3 credential steps are yours; the apply is mine.
 
+> ✅ **Steps 1 and 2 were COMPLETED 2026-09-05.** Resend account `vasco.app.eu@gmail.com`,
+> domain `mail.vascobuild.com`, region Ireland (eu-west-1). DKIM/SPF/MX are live and
+> verified against `braelyn.ns.cloudflare.com`. What remains is the API key, the SMTP
+> apply (step 4) and the DMARC correction noted below. See
+> `memory/resend-email-golive.md` for the full picture.
+
 ### Step 1 — Resend (you, ~5 min)
-1. Create account at resend.com → **Add Domain** → `mail.vascobuild.com` (subdomain protects root reputation).
-2. Copy the account-specific DKIM/SPF records Resend shows. **Paste them to me** — I'll return the
-   complete registrar record set including the exact DMARC record below.
+1. Create account at resend.com → **Add Domain** → `mail.vascobuild.com`.
+   The subdomain is not merely "nicer" — the root already carries
+   `v=spf1 include:simplelogin.co ~all` for live SimpleLogin forwarding, and a domain may
+   have only ONE SPF record, so the root would need a hand-merge.
+2. Copy the account-specific DKIM/SPF/MX records Resend shows.
+   ⚠️ **Resend already writes the names relative to the ZONE** (`send.mail`,
+   `resend._domainkey.mail`) — do NOT append `.mail` or `.vascobuild.com` yourself.
+   ⚠️ **Every value cell in Resend's table IS a copy button** — click the text, don't
+   retype. The DKIM value is 216 base64 characters and one wrong character fails silently.
+   ⚠️ **Ignore the "Enable Receiving" MX** (`mail` → `inbound-smtp.…amazonaws.com`).
+   Vasco only sends. The MX you want is under *Enable Sending*: `send.mail` →
+   `feedback-smtp.<region>.amazonses.com`.
+   ⚠️ Resend's **Auto configure** button did nothing when tried on 2026-09-05 — it is a
+   plain form submit that failed silently. Budget for adding the records by hand.
 3. Resend → SMTP tab → grab `SMTP_USER=resend` + `SMTP_PASS=re_...` (API key).
 
-### Step 2 — DNS at registrar (you)
-Add Resend's DKIM/SPF/MX records **+ this exact DMARC record** (not provider-specific):
+### Step 2 — DNS at Cloudflare (you)
+Add Resend's DKIM/SPF/MX records, **and correct the DMARC record that already exists**.
+
+> 🔴 **`vascobuild.com` is ALREADY at `p=quarantine`.** The "start at p=none and tighten
+> later" advice that used to be here was wrong — there is no monitoring grace period, and
+> the record in place has two faults: no `rua=` (enforcing blind) and `aspf=s`, which
+> Resend can **never** satisfy because its bounce domain is `send.mail.vascobuild.com`,
+> not an exact match for the From domain. Mail still passes DMARC on DKIM alone, but with
+> no SPF fallback.
 
 | Type | Host | Value |
 |---|---|---|
-| TXT | `_dmarc.vascobuild.com` | `v=DMARC1; p=none; rua=mailto:dmarc@vascobuild.com; fo=1; adkim=s; aspf=s` |
+| TXT | `_dmarc.vascobuild.com` | `v=DMARC1; p=quarantine; pct=100; adkim=s; aspf=r; fo=1; rua=mailto:dmarc@vascobuild.com` |
 
-Start at `p=none`; after ~1–2 weeks of clean `rua` reports, tighten to `quarantine` → `reject`.
-Wait for Resend to show the domain **Verified** (minutes–hours).
+`adkim=s` stays — Resend signs `d=mail.vascobuild.com`, an exact match.
+If the record refuses to save, check **Email → DMARC Management** in the Cloudflare
+sidebar: when that feature is on it owns `_dmarc` and makes it read-only in DNS Records.
+
+DMARC is **not** required for Resend to verify — it checks DKIM/SPF/MX only. Don't stall
+on it. Wait for Resend to show the domain **Verified** (minutes–hours), and confirm
+independently with `npm run check:email`.
 
 ### Step 3 — Supabase access token (you)
 Generate at https://supabase.com/dashboard/account/tokens → paste to me.

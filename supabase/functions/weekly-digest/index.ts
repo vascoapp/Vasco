@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const resendKey = Deno.env.get('RESEND_API_KEY');
-  const fromAddress = Deno.env.get('DIGEST_FROM_EMAIL') ?? 'digest@vascobuild.com';
+  const fromAddress = Deno.env.get('DIGEST_FROM_EMAIL') ?? 'digest@mail.vascobuild.com';
   if (!serviceKey || !supabaseUrl || !resendKey) {
     return new Response(JSON.stringify({ ok: false, error: 'Server misconfigured' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

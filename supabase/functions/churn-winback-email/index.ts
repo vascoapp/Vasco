@@ -81,13 +81,18 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// Every sender must sit on the ONE domain verified in Resend
+// (mail.vascobuild.com). Resend rejects a From on an unverified domain with a
+// 403, so a stray root-domain address here would silently kill the whole run.
+const WINBACK_FROM = Deno.env.get('WINBACK_FROM_EMAIL') ?? 'Vasco <hello@mail.vascobuild.com>';
+
 async function sendResend(apiKey: string, to: string, subject: string, textBody: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Vasco <hello@vascobuild.com>',
+        from: WINBACK_FROM,
         to,
         subject,
         text: textBody,

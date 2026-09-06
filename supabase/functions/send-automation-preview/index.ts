@@ -283,7 +283,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const fromAddress = Deno.env.get('SEND_INVOICE_FROM') ?? 'Vasco <onboarding@resend.dev>';
+    const fromAddress = Deno.env.get('AUTOMATION_PREVIEW_FROM') ?? Deno.env.get('SEND_INVOICE_FROM') ?? 'Vasco <noreply@mail.vascobuild.com>';
     const targetSteps: { pack: Pack; step: PackStep; idx: number }[] = [];
 
     if (body.sendAll) {

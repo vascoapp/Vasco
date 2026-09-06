@@ -44,7 +44,8 @@
     "walk:ipad:landscape": "WALK_VIEWPORT=ipad-landscape NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit",
     "walk:prod": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.prod.config.js --forceExit",
     "test:edge": "deno test --allow-env --allow-net supabase/functions/",
-    "walk:wiring": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit --testPathIgnorePatterns=/node_modules/ --testPathPattern=pressableIsWired"
+    "walk:wiring": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit --testPathIgnorePatterns=/node_modules/ --testPathPattern=pressableIsWired",
+    "check:email": "node scripts/check-email-config.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
