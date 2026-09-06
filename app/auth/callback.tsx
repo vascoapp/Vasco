@@ -11,13 +11,16 @@
 // =============================================================================
 
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as Linking from 'expo-linking';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { supabase } from '../../src/lib/supabase';
+
+/** How long to wait for the deep link before treating the screen as stuck. */
+const LINK_WAIT_MS = 8000;
 
 interface AuthHashParams {
   access_token?: string;
@@ -108,6 +111,46 @@ export default function AuthCallbackScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedUrl]);
 
+  // ---------------------------------------------------------------------------
+  // Escape hatch. The effect above returns early when no URL is available yet,
+  // waiting for `linkedUrl` to update — but if that update never comes, nothing
+  // re-triggers it and this screen spins on "Confirming your sign-in…" forever,
+  // with no error and no way out. That is a dead end, not a slow path.
+  //
+  // It happens on a WARM start: the OS delivers the deep link as a 'url' event
+  // BEFORE this screen mounts, so Linking.useURL() never sees it, and
+  // getInitialURL() only ever reports the COLD-launch URL. The token is gone by
+  // the time we look.
+  //
+  // So after a grace period, ask the only question that actually matters — is
+  // there a session? — and if not, fail visibly with a route out.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (handledRef.current) return;
+      handledRef.current = true;
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          setStatus('done');
+          router.replace('/');
+          return;
+        }
+      } catch {
+        // fall through to the error state
+      }
+      setStatus('error');
+      setMessage(
+        t(
+          'auth.confirmTimeout',
+          'We could not read this link. Open it again from the email, or sign in with your password.',
+        ),
+      );
+    }, LINK_WAIT_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -120,6 +163,16 @@ export default function AuthCallbackScreen() {
               : t('auth.confirmFailed', 'We could not confirm this link.')}
         </Text>
         {message ? <Text style={styles.error}>{message}</Text> : null}
+        {status === 'error' && (
+          <Pressable
+            onPress={() => router.replace('/login')}
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.backToLogin', 'Back to sign in')}
+            style={styles.cta}
+          >
+            <Text style={styles.ctaText}>{t('auth.backToLogin', 'Back to sign in')}</Text>
+          </Pressable>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -130,4 +183,12 @@ const styles = StyleSheet.create({
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
   title: { fontSize: 16, color: SemanticColors.textPrimary, textAlign: 'center' },
   error: { fontSize: 13, color: SemanticColors.feedbackError, textAlign: 'center' },
+  cta: {
+    marginTop: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    backgroundColor: Palette.hermesOrange,
+  },
+  ctaText: { fontSize: 15, fontWeight: '700', color: '#0B0E11' },
 });

@@ -2424,7 +2424,8 @@
     "signInAs": "Se connecter en tant que",
     "resetConfirm": "Cela effacera toutes les données locales. Vous devrez vous reconnecter pour obtenir de nouvelles données de démo.",
     "reset": "Réinitialiser",
-    "legalNotice": "En continuant, vous acceptez nos"
+    "legalNotice": "En continuant, vous acceptez nos",
+    "confirmTimeout": "Nous n'avons pas pu lire ce lien. Ouvrez-le à nouveau depuis l'e-mail, ou connectez-vous avec votre mot de passe."
   },
   "resetPassword": {
     "title": "Nouveau mot de passe",

@@ -2424,7 +2424,8 @@
     "signInAs": "Anmelden als",
     "resetConfirm": "Dadurch werden alle lokalen Daten gelöscht. Sie müssen sich erneut anmelden, um neue Demo-Daten zu erhalten.",
     "reset": "Zurücksetzen",
-    "legalNotice": "Indem Sie fortfahren, stimmen Sie unseren"
+    "legalNotice": "Indem Sie fortfahren, stimmen Sie unseren",
+    "confirmTimeout": "Wir konnten diesen Link nicht lesen. Öffnen Sie ihn erneut aus der E-Mail, oder melden Sie sich mit Ihrem Passwort an."
   },
   "resetPassword": {
     "title": "Neues Passwort festlegen",

@@ -2424,7 +2424,8 @@
     "signInAs": "Accedi come",
     "resetConfirm": "Questo cancellerà tutti i dati locali. Dovrai accedere di nuovo per ottenere dati demo aggiornati.",
     "reset": "Reimposta",
-    "legalNotice": "Continuando accetti i nostri"
+    "legalNotice": "Continuando accetti i nostri",
+    "confirmTimeout": "Non siamo riusciti a leggere questo link. Aprilo di nuovo dall’email, oppure accedi con la tua password."
   },
   "resetPassword": {
     "title": "Imposta una nuova password",

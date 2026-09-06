@@ -2424,7 +2424,8 @@
     "signInAs": "Iniciar sesión como",
     "resetConfirm": "Esto borrará todos los datos locales. Tendrás que volver a iniciar sesión para obtener datos demo nuevos.",
     "reset": "Restablecer",
-    "legalNotice": "Al continuar, aceptas nuestros"
+    "legalNotice": "Al continuar, aceptas nuestros",
+    "confirmTimeout": "No hemos podido leer este enlace. Ábrelo de nuevo desde el correo, o inicia sesión con tu contraseña."
   },
   "resetPassword": {
     "title": "Establece una nueva contraseña",

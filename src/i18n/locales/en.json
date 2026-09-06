@@ -2424,7 +2424,8 @@
     "signInAs": "Sign in as",
     "resetConfirm": "This will clear all local data. You will need to log in again for fresh demo data.",
     "reset": "Reset",
-    "legalNotice": "By continuing you agree to our"
+    "legalNotice": "By continuing you agree to our",
+    "confirmTimeout": "We could not read this link. Open it again from the email, or sign in with your password."
   },
   "resetPassword": {
     "title": "Set a new password",

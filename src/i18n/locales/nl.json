@@ -2411,7 +2411,8 @@
     "signInAs": "Aanmelden als",
     "resetConfirm": "Hiermee worden alle lokale gegevens gewist. Je moet opnieuw inloggen voor verse demogegevens.",
     "reset": "Resetten",
-    "legalNotice": "Door verder te gaan ga je akkoord met onze"
+    "legalNotice": "Door verder te gaan ga je akkoord met onze",
+    "confirmTimeout": "We konden deze link niet lezen. Open hem opnieuw vanuit de e-mail, of log in met je wachtwoord."
   },
   "resetPassword": {
     "title": "Kies een nieuw wachtwoord",
