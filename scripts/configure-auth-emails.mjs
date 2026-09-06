@@ -46,12 +46,12 @@ const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'gblhqhorkarocmputhte';
 
 // dashboard template -> { file, subject, api field stem }
 const TEMPLATES = [
-  { file: 'confirm-signup.html',   stem: 'confirmation',    subject: 'Bevestig je e-mailadres · Vasco' },
-  { file: 'reset-password.html',   stem: 'recovery',        subject: 'Wachtwoord opnieuw instellen · Vasco' },
-  { file: 'magic-link.html',       stem: 'magic_link',      subject: 'Je inloglink · Vasco' },
-  { file: 'email-change.html',     stem: 'email_change',    subject: 'Bevestig je nieuwe e-mailadres · Vasco' },
-  { file: 'invite.html',           stem: 'invite',          subject: 'Je bent uitgenodigd voor Vasco' },
-  { file: 'reauthentication.html', stem: 'reauthentication', subject: 'Je verificatiecode · Vasco' },
+  { file: 'confirm-signup.html',   stem: 'confirmation',    subject: 'Vasco: Bevestig je e-mailadres' },
+  { file: 'reset-password.html',   stem: 'recovery',        subject: 'Vasco: Wachtwoord opnieuw instellen' },
+  { file: 'magic-link.html',       stem: 'magic_link',      subject: 'Vasco: Je inloglink' },
+  { file: 'email-change.html',     stem: 'email_change',    subject: 'Vasco: Bevestig je nieuwe e-mailadres' },
+  { file: 'invite.html',           stem: 'invite',          subject: 'Vasco: Je bent uitgenodigd' },
+  { file: 'reauthentication.html', stem: 'reauthentication', subject: 'Vasco: Je verificatiecode' },
 ];
 
 function buildPayload() {

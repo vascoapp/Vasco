@@ -85,7 +85,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       codeIntro: 'Use this code to confirm your identity in Vasco:',
     },
     confirmation: {
-      subject: 'Confirm your email · Vasco',
+      subject: 'Vasco: Confirm your email',
       preheader: 'One tap and your Vasco account is live.',
       heading: 'Confirm your email',
       body: 'Welcome to Vasco! Tap the button below to confirm your email address and activate your account. Then you can get straight to quotes, invoices and your schedule.',
@@ -94,7 +94,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: "You're receiving this email because this address was used to create a Vasco account.",
     },
     recovery: {
-      subject: 'Reset your password · Vasco',
+      subject: 'Vasco: Reset your password',
       preheader: 'Choose a new password for your Vasco account.',
       heading: 'Reset your password',
       body: 'We received a request to reset the password for your Vasco account. Tap the button below to choose a new password.',
@@ -103,7 +103,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: "You're receiving this email because a password reset was requested for this address.",
     },
     magic_link: {
-      subject: 'Your sign-in link · Vasco',
+      subject: 'Vasco: Your sign-in link',
       preheader: 'Sign in to Vasco instantly — no password needed.',
       heading: 'Your sign-in link',
       body: 'Tap the button below to sign in to Vasco instantly. No password needed.',
@@ -112,7 +112,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: "You're receiving this email because a sign-in link was requested for this address.",
     },
     email_change: {
-      subject: 'Confirm your new email · Vasco',
+      subject: 'Vasco: Confirm your new email',
       preheader: 'Confirm your Vasco account email change.',
       heading: 'Confirm your new email',
       body: 'You requested to change your Vasco account email from <strong style="color:#FFFFFF;">{email}</strong> to <strong style="color:#FFFFFF;">{newEmail}</strong>. Tap the button below to confirm.',
@@ -121,7 +121,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: "You're receiving this email because an email change was requested for your Vasco account.",
     },
     invite: {
-      subject: "You're invited to Vasco",
+      subject: "Vasco: You're invited",
       preheader: 'Create your account and get started right away.',
       heading: "You're invited",
       body: "You've been invited to join Vasco — the smart admin app for trade professionals. Quotes, invoices, scheduling and compliance in one place. Tap the button to create your account.",
@@ -130,7 +130,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: "You're receiving this email because someone invited you to Vasco at this address.",
     },
     reauthentication: {
-      subject: 'Your verification code · Vasco',
+      subject: 'Vasco: Your verification code',
       preheader: 'Your Vasco verification code.',
       heading: 'Your verification code',
       body: 'Use this code to confirm your identity in Vasco:',
@@ -146,7 +146,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       codeIntro: 'Gebruik deze code om je identiteit te bevestigen in Vasco:',
     },
     confirmation: {
-      subject: 'Bevestig je e-mailadres · Vasco',
+      subject: 'Vasco: Bevestig je e-mailadres',
       preheader: 'Eén tik en je Vasco-account is actief.',
       heading: 'Bevestig je e‑mailadres',
       body: 'Welkom bij Vasco! Tik op de knop hieronder om je e-mailadres te bevestigen en je account te activeren. Daarna kun je direct aan de slag met offertes, facturen en je planning.',
@@ -155,7 +155,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Je ontvangt deze e-mail omdat dit adres is gebruikt om een Vasco-account aan te maken.',
     },
     recovery: {
-      subject: 'Wachtwoord opnieuw instellen · Vasco',
+      subject: 'Vasco: Wachtwoord opnieuw instellen',
       preheader: 'Kies binnen 1 uur een nieuw wachtwoord voor je Vasco-account.',
       heading: 'Wachtwoord opnieuw instellen',
       body: 'We ontvingen een verzoek om het wachtwoord van je Vasco-account opnieuw in te stellen. Tik op de knop hieronder om een nieuw wachtwoord te kiezen.',
@@ -164,7 +164,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Je ontvangt deze e-mail omdat er een wachtwoordherstel is aangevraagd voor dit adres.',
     },
     magic_link: {
-      subject: 'Je inloglink · Vasco',
+      subject: 'Vasco: Je inloglink',
       preheader: 'Log direct in bij Vasco — geen wachtwoord nodig.',
       heading: 'Je inloglink',
       body: 'Tik op de knop hieronder om direct in te loggen bij Vasco. Geen wachtwoord nodig.',
@@ -173,7 +173,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Je ontvangt deze e-mail omdat er een inloglink is aangevraagd voor dit adres.',
     },
     email_change: {
-      subject: 'Bevestig je nieuwe e-mailadres · Vasco',
+      subject: 'Vasco: Bevestig je nieuwe e-mailadres',
       preheader: 'Bevestig de wijziging van het e-mailadres van je Vasco-account.',
       heading: 'Bevestig je nieuwe e‑mailadres',
       body: 'Je hebt gevraagd het e-mailadres van je Vasco-account te wijzigen van <strong style="color:#FFFFFF;">{email}</strong> naar <strong style="color:#FFFFFF;">{newEmail}</strong>. Tik op de knop hieronder om de wijziging te bevestigen.',
@@ -182,7 +182,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Je ontvangt deze e-mail omdat er een e-mailwijziging is aangevraagd voor je Vasco-account.',
     },
     invite: {
-      subject: 'Je bent uitgenodigd voor Vasco',
+      subject: 'Vasco: Je bent uitgenodigd',
       preheader: 'Maak je account aan en ga direct aan de slag.',
       heading: 'Je bent uitgenodigd',
       body: 'Je bent uitgenodigd om mee te werken in Vasco — de slimme administratie-app voor vakmensen. Offertes, facturen, planning en compliance op één plek. Tik op de knop om je account aan te maken.',
@@ -191,7 +191,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Je ontvangt deze e-mail omdat iemand je heeft uitgenodigd voor Vasco op dit adres.',
     },
     reauthentication: {
-      subject: 'Je verificatiecode · Vasco',
+      subject: 'Vasco: Je verificatiecode',
       preheader: 'Je Vasco-verificatiecode — verloopt na enkele minuten.',
       heading: 'Je verificatiecode',
       body: 'Gebruik deze code om je identiteit te bevestigen in Vasco:',
@@ -207,7 +207,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       codeIntro: 'Verwenden Sie diesen Code, um Ihre Identität in Vasco zu bestätigen:',
     },
     confirmation: {
-      subject: 'Bestätigen Sie Ihre E-Mail-Adresse · Vasco',
+      subject: 'Vasco: Bestätigen Sie Ihre E-Mail-Adresse',
       preheader: 'Ein Tipp und Ihr Vasco-Konto ist aktiv.',
       heading: 'E-Mail bestätigen',
       body: 'Willkommen bei Vasco! Tippen Sie auf die Schaltfläche unten, um Ihre E-Mail-Adresse zu bestätigen und Ihr Konto zu aktivieren. Danach können Sie direkt mit Angeboten, Rechnungen und Ihrer Planung loslegen.',
@@ -216,7 +216,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Sie erhalten diese E-Mail, weil mit dieser Adresse ein Vasco-Konto erstellt wurde.',
     },
     recovery: {
-      subject: 'Passwort zurücksetzen · Vasco',
+      subject: 'Vasco: Passwort zurücksetzen',
       preheader: 'Wählen Sie ein neues Passwort für Ihr Vasco-Konto.',
       heading: 'Passwort zurücksetzen',
       body: 'Wir haben eine Anfrage erhalten, das Passwort Ihres Vasco-Kontos zurückzusetzen. Tippen Sie auf die Schaltfläche unten, um ein neues Passwort zu wählen.',
@@ -225,7 +225,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Sie erhalten diese E-Mail, weil für diese Adresse ein Passwort-Reset angefordert wurde.',
     },
     magic_link: {
-      subject: 'Ihr Anmeldelink · Vasco',
+      subject: 'Vasco: Ihr Anmeldelink',
       preheader: 'Melden Sie sich sofort bei Vasco an — ohne Passwort.',
       heading: 'Ihr Anmeldelink',
       body: 'Tippen Sie auf die Schaltfläche unten, um sich sofort bei Vasco anzumelden. Kein Passwort nötig.',
@@ -234,7 +234,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Sie erhalten diese E-Mail, weil für diese Adresse ein Anmeldelink angefordert wurde.',
     },
     email_change: {
-      subject: 'Bestätigen Sie Ihre neue E-Mail-Adresse · Vasco',
+      subject: 'Vasco: Bestätigen Sie Ihre neue E-Mail-Adresse',
       preheader: 'Bestätigen Sie die Änderung der E-Mail-Adresse Ihres Vasco-Kontos.',
       heading: 'Neue E-Mail bestätigen',
       body: 'Sie haben beantragt, die E-Mail-Adresse Ihres Vasco-Kontos von <strong style="color:#FFFFFF;">{email}</strong> auf <strong style="color:#FFFFFF;">{newEmail}</strong> zu ändern. Tippen Sie auf die Schaltfläche unten, um die Änderung zu bestätigen.',
@@ -243,7 +243,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Sie erhalten diese E-Mail, weil für Ihr Vasco-Konto eine E-Mail-Änderung angefordert wurde.',
     },
     invite: {
-      subject: 'Sie sind zu Vasco eingeladen',
+      subject: 'Vasco: Sie sind eingeladen',
       preheader: 'Erstellen Sie Ihr Konto und legen Sie direkt los.',
       heading: 'Sie sind eingeladen',
       body: 'Sie wurden eingeladen, bei Vasco mitzumachen — der cleveren Verwaltungs-App für Handwerker. Angebote, Rechnungen, Planung und Compliance an einem Ort. Tippen Sie auf die Schaltfläche, um Ihr Konto zu erstellen.',
@@ -252,7 +252,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Sie erhalten diese E-Mail, weil Sie jemand unter dieser Adresse zu Vasco eingeladen hat.',
     },
     reauthentication: {
-      subject: 'Ihr Bestätigungscode · Vasco',
+      subject: 'Vasco: Ihr Bestätigungscode',
       preheader: 'Ihr Vasco-Bestätigungscode — läuft in wenigen Minuten ab.',
       heading: 'Ihr Bestätigungscode',
       body: 'Verwenden Sie diesen Code, um Ihre Identität in Vasco zu bestätigen:',
@@ -268,7 +268,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       codeIntro: 'Utilisez ce code pour confirmer votre identité dans Vasco :',
     },
     confirmation: {
-      subject: 'Confirmez votre adresse e-mail · Vasco',
+      subject: 'Vasco: Confirmez votre adresse e-mail',
       preheader: 'Un tap et votre compte Vasco est actif.',
       heading: 'Confirmez votre e-mail',
       body: 'Bienvenue sur Vasco ! Appuyez sur le bouton ci-dessous pour confirmer votre adresse e-mail et activer votre compte. Vous pourrez ensuite passer directement aux devis, factures et à votre planning.',
@@ -277,7 +277,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Vous recevez cet e-mail car cette adresse a été utilisée pour créer un compte Vasco.',
     },
     recovery: {
-      subject: 'Réinitialisez votre mot de passe · Vasco',
+      subject: 'Vasco: Réinitialisez votre mot de passe',
       preheader: 'Choisissez un nouveau mot de passe pour votre compte Vasco.',
       heading: 'Réinitialisez votre mot de passe',
       body: 'Nous avons reçu une demande de réinitialisation du mot de passe de votre compte Vasco. Appuyez sur le bouton ci-dessous pour choisir un nouveau mot de passe.',
@@ -286,7 +286,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Vous recevez cet e-mail car une réinitialisation de mot de passe a été demandée pour cette adresse.',
     },
     magic_link: {
-      subject: 'Votre lien de connexion · Vasco',
+      subject: 'Vasco: Votre lien de connexion',
       preheader: 'Connectez-vous à Vasco instantanément — sans mot de passe.',
       heading: 'Votre lien de connexion',
       body: 'Appuyez sur le bouton ci-dessous pour vous connecter instantanément à Vasco. Aucun mot de passe nécessaire.',
@@ -295,7 +295,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Vous recevez cet e-mail car un lien de connexion a été demandé pour cette adresse.',
     },
     email_change: {
-      subject: 'Confirmez votre nouvelle adresse e-mail · Vasco',
+      subject: 'Vasco: Confirmez votre nouvelle adresse e-mail',
       preheader: "Confirmez le changement d'adresse e-mail de votre compte Vasco.",
       heading: 'Confirmez votre nouvelle adresse',
       body: "Vous avez demandé à changer l'adresse e-mail de votre compte Vasco de <strong style=\"color:#FFFFFF;\">{email}</strong> vers <strong style=\"color:#FFFFFF;\">{newEmail}</strong>. Appuyez sur le bouton ci-dessous pour confirmer.",
@@ -304,7 +304,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: "Vous recevez cet e-mail car un changement d'adresse a été demandé pour votre compte Vasco.",
     },
     invite: {
-      subject: 'Vous êtes invité sur Vasco',
+      subject: 'Vasco: Vous êtes invité',
       preheader: 'Créez votre compte et commencez tout de suite.',
       heading: 'Vous êtes invité',
       body: "Vous avez été invité à rejoindre Vasco — l'app de gestion intelligente pour les artisans. Devis, factures, planning et conformité au même endroit. Appuyez sur le bouton pour créer votre compte.",
@@ -313,7 +313,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: "Vous recevez cet e-mail car quelqu'un vous a invité sur Vasco à cette adresse.",
     },
     reauthentication: {
-      subject: 'Votre code de vérification · Vasco',
+      subject: 'Vasco: Votre code de vérification',
       preheader: 'Votre code de vérification Vasco — expire dans quelques minutes.',
       heading: 'Votre code de vérification',
       body: 'Utilisez ce code pour confirmer votre identité dans Vasco :',
@@ -329,7 +329,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       codeIntro: 'Usa este código para confirmar tu identidad en Vasco:',
     },
     confirmation: {
-      subject: 'Confirma tu correo · Vasco',
+      subject: 'Vasco: Confirma tu correo',
       preheader: 'Un toque y tu cuenta de Vasco estará activa.',
       heading: 'Confirma tu correo',
       body: '¡Bienvenido a Vasco! Toca el botón de abajo para confirmar tu correo y activar tu cuenta. Después podrás empezar directamente con presupuestos, facturas y tu agenda.',
@@ -338,7 +338,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Recibes este correo porque esta dirección se usó para crear una cuenta de Vasco.',
     },
     recovery: {
-      subject: 'Restablece tu contraseña · Vasco',
+      subject: 'Vasco: Restablece tu contraseña',
       preheader: 'Elige una nueva contraseña para tu cuenta de Vasco.',
       heading: 'Restablece tu contraseña',
       body: 'Recibimos una solicitud para restablecer la contraseña de tu cuenta de Vasco. Toca el botón de abajo para elegir una nueva contraseña.',
@@ -347,7 +347,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Recibes este correo porque se solicitó restablecer la contraseña de esta dirección.',
     },
     magic_link: {
-      subject: 'Tu enlace de acceso · Vasco',
+      subject: 'Vasco: Tu enlace de acceso',
       preheader: 'Accede a Vasco al instante — sin contraseña.',
       heading: 'Tu enlace de acceso',
       body: 'Toca el botón de abajo para acceder a Vasco al instante. No necesitas contraseña.',
@@ -356,7 +356,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Recibes este correo porque se solicitó un enlace de acceso para esta dirección.',
     },
     email_change: {
-      subject: 'Confirma tu nuevo correo · Vasco',
+      subject: 'Vasco: Confirma tu nuevo correo',
       preheader: 'Confirma el cambio de correo de tu cuenta de Vasco.',
       heading: 'Confirma tu nuevo correo',
       body: 'Solicitaste cambiar el correo de tu cuenta de Vasco de <strong style="color:#FFFFFF;">{email}</strong> a <strong style="color:#FFFFFF;">{newEmail}</strong>. Toca el botón de abajo para confirmar.',
@@ -365,7 +365,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Recibes este correo porque se solicitó un cambio de correo en tu cuenta de Vasco.',
     },
     invite: {
-      subject: 'Te han invitado a Vasco',
+      subject: 'Vasco: Te han invitado',
       preheader: 'Crea tu cuenta y empieza ahora mismo.',
       heading: 'Te han invitado',
       body: 'Te han invitado a unirte a Vasco — la app de gestión inteligente para profesionales. Presupuestos, facturas, agenda y cumplimiento en un solo lugar. Toca el botón para crear tu cuenta.',
@@ -374,7 +374,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Recibes este correo porque alguien te invitó a Vasco en esta dirección.',
     },
     reauthentication: {
-      subject: 'Tu código de verificación · Vasco',
+      subject: 'Vasco: Tu código de verificación',
       preheader: 'Tu código de verificación de Vasco — caduca en unos minutos.',
       heading: 'Tu código de verificación',
       body: 'Usa este código para confirmar tu identidad en Vasco:',
@@ -390,7 +390,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       codeIntro: 'Usa questo codice per confermare la tua identità in Vasco:',
     },
     confirmation: {
-      subject: 'Conferma la tua email · Vasco',
+      subject: 'Vasco: Conferma la tua email',
       preheader: 'Un tocco e il tuo account Vasco è attivo.',
       heading: 'Conferma la tua email',
       body: 'Benvenuto in Vasco! Tocca il pulsante qui sotto per confermare la tua email e attivare il tuo account. Poi potrai iniziare subito con preventivi, fatture e la tua agenda.',
@@ -399,7 +399,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Ricevi questa email perché questo indirizzo è stato usato per creare un account Vasco.',
     },
     recovery: {
-      subject: 'Reimposta la password · Vasco',
+      subject: 'Vasco: Reimposta la password',
       preheader: 'Scegli una nuova password per il tuo account Vasco.',
       heading: 'Reimposta la password',
       body: 'Abbiamo ricevuto una richiesta di reimpostazione della password del tuo account Vasco. Tocca il pulsante qui sotto per scegliere una nuova password.',
@@ -408,7 +408,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Ricevi questa email perché è stato richiesto un ripristino password per questo indirizzo.',
     },
     magic_link: {
-      subject: 'Il tuo link di accesso · Vasco',
+      subject: 'Vasco: Il tuo link di accesso',
       preheader: 'Accedi a Vasco all’istante — senza password.',
       heading: 'Il tuo link di accesso',
       body: 'Tocca il pulsante qui sotto per accedere a Vasco all’istante. Nessuna password necessaria.',
@@ -417,7 +417,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Ricevi questa email perché è stato richiesto un link di accesso per questo indirizzo.',
     },
     email_change: {
-      subject: 'Conferma la tua nuova email · Vasco',
+      subject: 'Vasco: Conferma la tua nuova email',
       preheader: 'Conferma la modifica dell’email del tuo account Vasco.',
       heading: 'Conferma la tua nuova email',
       body: 'Hai richiesto di cambiare l’email del tuo account Vasco da <strong style="color:#FFFFFF;">{email}</strong> a <strong style="color:#FFFFFF;">{newEmail}</strong>. Tocca il pulsante qui sotto per confermare.',
@@ -426,7 +426,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Ricevi questa email perché è stata richiesta una modifica email per il tuo account Vasco.',
     },
     invite: {
-      subject: 'Sei stato invitato su Vasco',
+      subject: 'Vasco: Sei stato invitato',
       preheader: 'Crea il tuo account e inizia subito.',
       heading: 'Sei stato invitato',
       body: 'Sei stato invitato a unirti a Vasco — l’app di gestione intelligente per artigiani. Preventivi, fatture, agenda e conformità in un unico posto. Tocca il pulsante per creare il tuo account.',
@@ -435,7 +435,7 @@ const STRINGS: Record<EmailLocale, LocaleBlock> = {
       reason: 'Ricevi questa email perché qualcuno ti ha invitato su Vasco a questo indirizzo.',
     },
     reauthentication: {
-      subject: 'Il tuo codice di verifica · Vasco',
+      subject: 'Vasco: Il tuo codice di verifica',
       preheader: 'Il tuo codice di verifica Vasco — scade tra pochi minuti.',
       heading: 'Il tuo codice di verifica',
       body: 'Usa questo codice per confermare la tua identità in Vasco:',
