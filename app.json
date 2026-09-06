@@ -154,7 +154,7 @@
     "android": {
       "package": "com.vascobuild.app",
       "scheme": "vasco",
-      "versionCode": 1,
+      "versionCode": 4,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -206,7 +206,8 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "READ_CONTACTS",
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "SYSTEM_ALERT_WINDOW"
       ]
     },
     "web": {
