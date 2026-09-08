@@ -102,6 +102,13 @@ jobs:
       - name: Run tests
         run: npm test -- --ci --passWithNoTests
 
+      # Pure node, no deps — the nightly watchdog's gate. It is here because the
+      # previous version lived inlined in a workflow heredoc, could not be run
+      # by any test, and shipped inert: the workflow had no checkout, so the
+      # acks file it read was never on disk.
+      - name: Watchdog gate self-test
+        run: npm run check:watchdog
+
   edge-tests:
     name: Deno tests (edge functions)
     runs-on: ubuntu-latest

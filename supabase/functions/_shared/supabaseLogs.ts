@@ -160,6 +160,34 @@ group by sev, msg
 order by n desc
 limit 10`;
 
+/**
+ * `function_edge_logs.metadata.function_id` is a UUID, not a name. A digest
+ * reading "df09b830-0c16-4339-a9b6-b99e03876a07 → 500 × 1" cannot be acted on:
+ * the reader has to go and look the id up, and on the free plan the logs behind
+ * it are gone within a day. The Management API's function list carries id →
+ * slug, so one extra call turns every id in the digest into a name.
+ *
+ * Best-effort by design: if the lookup fails the ids are left as they are and
+ * the digest still ships. A missing NAME must never cost us the FINDING.
+ */
+async function fetchFunctionSlugs(cfg: LogsConfig): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  try {
+    const res = await fetch(`${API_BASE}/${cfg.projectRef}/functions`, {
+      headers: { Authorization: `Bearer ${cfg.token}` },
+    });
+    if (!res.ok) return map;
+    const json = await res.json();
+    if (!Array.isArray(json)) return map;
+    for (const f of json) {
+      if (f?.id && f?.slug) map.set(String(f.id), String(f.slug));
+    }
+  } catch {
+    // ignore — see the doc comment
+  }
+  return map;
+}
+
 export interface PlatformLogs {
   available: boolean;
   reason?: string;
@@ -189,6 +217,12 @@ export async function collectPlatformLogs(
   const fnErr = await query<{ level: string; fn: string; msg: string }>(cfg, Q_FN_ERRORS, since, until);
   const authErr = await query<{ level: string; status: string; path: string; n: number }>(cfg, Q_AUTH_ERRORS, since, until);
   const pgErr = await query<{ sev: string; msg: string; n: number }>(cfg, Q_PG_ERRORS, since, until);
+
+  // Resolve function ids to slugs for every section that carries one.
+  const slugs = await fetchFunctionSlugs(cfg);
+  const name = (id: string) => slugs.get(id) ?? id;
+  for (const r of fnInv.rows) r.fn = name(r.fn);
+  for (const r of fnErr.rows) r.fn = name(r.fn);
 
   const errors = [
     totals.error && `api_totals: ${totals.error}`,

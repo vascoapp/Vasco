@@ -51,6 +51,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # REQUIRED. Without it the workspace is empty, `.github/watchdog-acks.json`
+      # is absent, and every acknowledgement is silently ignored — which is
+      # exactly how the ack mechanism shipped disarmed on 2026-09-08 and the
+      # nightly check stayed red. scripts/watchdog-gate.mjs now treats a missing
+      # acks file as fatal, so this can never fail quietly again.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Read watchdog severity
         env:
           URL: ${{ secrets.SUPABASE_URL }}
@@ -75,73 +86,12 @@ jobs:
             exit 1
           fi
 
-          # Every issue goes into the run log so the failure email carries the
-          # actual findings, not just a red tick. Criticals are then matched
-          # against .github/watchdog-acks.json: an acknowledged finding is still
-          # PRINTED but does not fail the build.
-          #
-          # Why: the "No LLM provider key set" critical fired every single night
-          # for a standing configuration gap. A check that is red every morning
-          # stops being read, and then a genuinely new failure goes unnoticed.
-          # Acks carry an expiry so this cannot quietly become permanent.
-          python3 - <<'PY'
-          import json, os, sys, datetime
-
-          d = json.load(open('/tmp/wd.json'))
-          issues = d.get('issues') or []
-
-          try:
-              acks = json.load(open('.github/watchdog-acks.json')).get('acks', [])
-          except FileNotFoundError:
-              acks = []
-
-          today = datetime.date.today()
-          live, expired = [], []
-          for a in acks:
-              try:
-                  exp = datetime.date.fromisoformat(a.get('expires', ''))
-              except ValueError:
-                  # No usable expiry: refuse to honour it. An ack that never
-                  # ends is how a real problem gets forgotten.
-                  print(f"::warning::ack for {a.get('match')!r} has no valid `expires` — ignoring it")
-                  continue
-              (live if exp >= today else expired).append((a, exp))
-
-          for a, exp in expired:
-              print(f"::warning::ack for {a.get('match')!r} EXPIRED on {exp} — re-ack it or fix it")
-
-          def acked(text):
-              t = (text or '').lower()
-              for a, _ in live:
-                  if a.get('match', '').lower() in t:
-                      return a
-              return None
-
-          unacked = []
-          if not issues:
-              print('No issues reported.')
-          for i in issues:
-              sev = (i.get('severity') or '?').lower()
-              text = i.get('text', '')
-              a = acked(text) if sev == 'critical' else None
-              if a:
-                  print(f"[CRITICAL·ACKED] {text}")
-                  print(f"                 └─ {a['reason']} (ack expires {a['expires']})")
-              else:
-                  print(f"[{sev.upper()}] {text}")
-                  if sev == 'critical':
-                      unacked.append(text)
-
-          if unacked:
-              print()
-              for t in unacked:
-                  print(f"::error::{t}")
-              print(f"::error::{len(unacked)} unacknowledged CRITICAL issue(s) in production.")
-              sys.exit(1)
-
-          if any((i.get('severity') or '').lower() == 'warn' for i in issues):
-              print("::warning::Production has warnings — not failing the run.")
-          else:
-              print("Healthy.")
-          PY
-
+      # Every issue goes into the run log, so the GitHub failure email carries
+      # the actual findings rather than just a red tick. Criticals are matched
+      # against .github/watchdog-acks.json: an acknowledged finding is still
+      # PRINTED, tagged CRITICAL·ACKED with its reason, but does not fail the
+      # build. Acks carry a mandatory expiry so this cannot become permanent.
+      # The logic lives in a script because logic inside a YAML heredoc cannot
+      # be tested, and the untested version shipped inert.
+      - name: Gate on unacknowledged criticals
+        run: node scripts/watchdog-gate.mjs --digest /tmp/wd.json

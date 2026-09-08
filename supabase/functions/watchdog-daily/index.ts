@@ -512,6 +512,13 @@ function detectIssues(
     if (ageH > MISSED_RUN_THRESHOLD_H) {
       add('warn', `Watchdog missed a run — previous was ${Math.round(ageH)}h ago`);
     }
+    // Non-delivery was only ever reported on a line INSIDE the digest, i.e.
+    // inside the very message that was not delivered — perfectly circular and
+    // therefore invisible. As an issue it reaches the GitHub run log, which is
+    // a channel that does not depend on the one that is broken.
+    if (prev.delivered === false) {
+      add('warn', `Previous digest was not delivered${prev.error ? ` (${String(prev.error).slice(0, 120)})` : ''}`);
+    }
   }
 
   if (snapshotError) add('critical', `Backend snapshot failed: ${snapshotError}`);
@@ -709,7 +716,18 @@ Deno.serve(async (req) => {
       delivered, deliveryError, durationMs: Date.now() - started,
     }),
     {
-      status: delivered ? 200 : 500,
+      // 200 whenever the digest was COMPUTED. It used to be
+      // `delivered ? 200 : 500`, and Telegram is deliberately unconfigured, so
+      // the real 09:00 run returned 500 every single day. That 500 landed in
+      // function_edge_logs, and the NEXT morning's watchdog read it back as
+      // "1 edge-function invocation(s) returned 5xx" — a CRITICAL, which failed
+      // the nightly GitHub check. The watchdog was alarming on itself, in a
+      // loop, and the alert named a UUID so nobody could see that it was.
+      //
+      // An undeliverable message is not a server error. Delivery is reported in
+      // the body (`delivered` / `deliveryError`), recorded in watchdog_runs, and
+      // raised as a warn issue on the next run.
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     },
   );
