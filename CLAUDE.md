@@ -141,6 +141,34 @@ npm run check:drift                    # database.types.ts vs the LIVE columns,
                                        # edge-function writers — check
                                        # supabase/functions/** too.
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
+
+# Store + ops gates.
+npm run check:listing                  # Play listing copy AND phone screenshots.
+                                       # Gates length, formal register, and that
+                                       # nothing advertises a feature that is
+                                       # DARK in production. ⚠️ It used to read
+                                       # the COPY only and was green while a
+                                       # screenshot titled "KI-Angebot" pitched
+                                       # photo→AI quoting that throws (LLM keys
+                                       # unset). A claim is a claim in any
+                                       # artefact — copy, screenshot, graphic.
+./scripts/make-play-screenshots.sh     # 2 per locale at 1512×2688 (9:16), by
+                                       # reframing the 6.9" App Store captures.
+                                       # It OWNS the output dir — fastlane
+                                       # uploads whatever it finds, so anything
+                                       # not in SHOTS is deleted every run.
+                                       # ⚠️ `sips` crop fails SILENTLY: origin +
+                                       # height must be strictly < the source,
+                                       # and --cropOffset is a top-left ORIGIN,
+                                       # not a shift. Assert output dimensions.
+npm run check:watchdog                 # self-test for the nightly watchdog gate
+                                       # (scripts/watchdog-gate.mjs). Acked
+                                       # criticals live in
+                                       # .github/watchdog-acks.json with a
+                                       # MANDATORY expiry. ⚠️ A missing acks file
+                                       # is FATAL, not an empty list — the
+                                       # workflow once had no actions/checkout,
+                                       # so suppression was silently a no-op.
 ```
 
 ## Architecture
