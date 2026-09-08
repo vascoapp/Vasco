@@ -14,7 +14,7 @@
 // blind spot that let the auth emails ship in `du` for six weeks (learning #287).
 // =============================================================================
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -95,9 +95,69 @@ claims.length === 0
   ? ok('no AI / photo-scanning claims — matches the unset LLM keys')
   : bad(`copy advertises features that throw in production:\n      ${claims.join('\n      ')}`);
 
+// ---------------------------------------------------------------------------
+// PHONE SCREENSHOTS
+// ---------------------------------------------------------------------------
+// The DARK check above reads the listing COPY only. A screenshot makes exactly
+// the same claim to exactly the same reviewer, and nothing was looking at them:
+// 4_photo_to_quote.png is titled "KI-Angebot" and pitches photo→AI quoting, and
+// it would have shipped past a green run of this script.
+console.log('\n\x1b[1mPhone screenshots\x1b[0m');
+
+const PLAY_LOCALES = { en: 'en-US', nl: 'nl-NL', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
+// Names whose SCREEN advertises something dark in production. Filename-based on
+// purpose: the capture pipeline names by screen, so this is stable and cheap.
+const FORBIDDEN_SHOTS = /(photo[_-]?to[_-]?quote|ki[_-]?angebot|ai[_-]?quote)/i;
+
+/** PNG dimensions straight from the IHDR chunk — no image library needed. */
+function pngSize(file) {
+  const b = readFileSync(file);
+  if (b.length < 24 || b.readUInt32BE(0) !== 0x89504e47) return null;
+  return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+}
+
+const RATIOS = [9 / 16, 16 / 9];
+for (const [loc, play] of Object.entries(PLAY_LOCALES)) {
+  const dir = join(ROOT, 'fastlane/metadata/android', play, 'images/phoneScreenshots');
+  let files = [];
+  try {
+    files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.png')).sort();
+  } catch {
+    bad(`${loc}: ${play}/images/phoneScreenshots is missing`);
+    continue;
+  }
+
+  if (files.length < 2 || files.length > 8) {
+    bad(`${loc}: ${files.length} screenshot(s) — Play requires 2–8`);
+    continue;
+  }
+
+  const problems = [];
+  for (const f of files) {
+    if (FORBIDDEN_SHOTS.test(f)) {
+      problems.push(`${f} advertises a feature that is dark in production`);
+      continue;
+    }
+    const size = pngSize(join(dir, f));
+    if (!size) { problems.push(`${f} is not a readable PNG`); continue; }
+    const { w, h } = size;
+    const r = w / h;
+    if (!RATIOS.some((want) => Math.abs(r - want) < 0.01)) {
+      problems.push(`${f} is ${w}×${h} (${r.toFixed(3)}) — Play needs 16:9 or 9:16`);
+    }
+    if (Math.min(w, h) < 320 || Math.max(w, h) > 3840) {
+      problems.push(`${f} is ${w}×${h} — each side must be 320–3840px`);
+    }
+  }
+
+  problems.length === 0
+    ? ok(`${loc}: ${files.length} screenshot(s), 9:16, nothing dark advertised`)
+    : bad(`${loc}:\n      ${problems.join('\n      ')}`);
+}
+
 console.log(`\n${'─'.repeat(58)}`);
 if (fail) {
-  console.log(`  \x1b[31m${fail} problem(s)\x1b[0m — fix docs/play-store-listing.md\n`);
+  console.log(`  \x1b[31m${fail} problem(s)\x1b[0m — fix docs/play-store-listing.md or the screenshots\n`);
   process.exit(1);
 }
 console.log('  \x1b[32mListing copy is within every limit.\x1b[0m\n');

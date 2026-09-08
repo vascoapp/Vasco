@@ -188,10 +188,38 @@ are informal, matching the app (`src/i18n/__tests__/formalRegister.test.ts`).
 Each market gets its own trade noun — Handwerksbetrieb, artisan, profesional,
 tecnico — never a translated "contractor".
 
-## Graphics still needed
+## Graphics
 
 | Asset | Spec | Status |
 |---|---|---|
 | App icon | 512×512 PNG, 32-bit | re-export the existing VascoBuild lockup |
-| Feature graphic | 1024×500 | **must be created** — no iOS equivalent exists |
-| Phone screenshots | 2–8, 16:9 or 9:16 | the 24 iOS captures are the wrong ratio; same content, needs re-shooting |
+| Feature graphic | 1024×500 | ✅ `assets/feature-graphic.png`, verified 1024×500, all 6 locales |
+| Phone screenshots | 2–8, 16:9 or 9:16 | ✅ 2 per locale at 1512×2688 — `./scripts/make-play-screenshots.sh` |
+
+### Screenshots
+
+`scripts/make-play-screenshots.sh` reframes the 6.9" App Store captures rather
+than re-shooting: it crops the iOS status bar and pads to an exact 9:16 canvas
+in the app's own background colour, so the padding is invisible. The script owns
+the output directory — fastlane uploads whatever it finds there, so anything not
+declared in `SHOTS` is deleted on every run.
+
+Two of the four captures are deliberately **not** shipped:
+
+- **`4_photo_to_quote`** — 🔴 policy, not taste. The screen is titled
+  "KI-Angebot" and pitches photo→AI quote generation. This listing claims no AI
+  because `ANTHROPIC_API_KEY` / `MOONSHOT_API_KEY` are unset in production and
+  that flow throws; a screenshot makes the same claim to the same reviewer as
+  the copy does. It ships when a provider key is funded.
+- **`2_quote_builder`** — an empty-state capture. A new quote has no line items,
+  so ~60% of the frame is blank and it reads as an unfinished app. Re-shoot with
+  items added and it is a good screenshot.
+
+`npm run check:listing` enforces all of this: 2–8 per locale, 16:9 or 9:16,
+320–3840px per side, and no filename matching a feature that is dark in
+production. Decoy-proven against all three.
+
+**Known cosmetic defect in the shipped Italian capture:** the VASCO ANALYST card
+reads `€ 5200`, where it-IT convention (and the German capture) is `€ 5.200`.
+`it-IT` is configured in `src/i18n/formatting.ts`, so some path is interpolating
+a raw number instead of using the formatter. Fixing it requires a re-shoot.
