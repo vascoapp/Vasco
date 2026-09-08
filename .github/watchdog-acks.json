@@ -1,0 +1,25 @@
+{
+  "_README": [
+    "Known production findings that are ACCEPTED, so the nightly watchdog does not",
+    "fail on them every morning. They are still printed in the run log — this",
+    "suppresses the build failure, never the finding.",
+    "",
+    "Why this exists: the LLM-key critical fired every night for a standing",
+    "configuration gap. A nightly alert that is red every night is not an alert,",
+    "it is wallpaper — and the moment something genuinely new breaks, nobody",
+    "looks. This keeps the red tick meaningful.",
+    "",
+    "Every entry MUST have an `expires`. An acknowledgement with no end date is",
+    "how a real problem gets forgotten. On expiry the check goes red again and",
+    "you either fix it or consciously re-ack it.",
+    "",
+    "`match` is a case-insensitive substring of the issue text."
+  ],
+  "acks": [
+    {
+      "match": "No LLM provider key set",
+      "reason": "Known and accepted: ANTHROPIC_API_KEY / MOONSHOT_API_KEY are deliberately unset in production, so photo-to-quote, SOW drafting and the AI queue are dark. Tracked; the Play store listing deliberately claims no AI features because of it. Not an incident — a funding decision.",
+      "expires": "2026-12-01"
+    }
+  ]
+}

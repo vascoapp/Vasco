@@ -75,33 +75,73 @@ jobs:
             exit 1
           fi
 
-          severity=$(python3 -c "import json;print(json.load(open('/tmp/wd.json')).get('severity','unknown'))")
-          echo "severity=$severity"
-
-          # Print every issue into the run log so the failure email has the
-          # actual findings in it, not just a red tick.
+          # Every issue goes into the run log so the failure email carries the
+          # actual findings, not just a red tick. Criticals are then matched
+          # against .github/watchdog-acks.json: an acknowledged finding is still
+          # PRINTED but does not fail the build.
+          #
+          # Why: the "No LLM provider key set" critical fired every single night
+          # for a standing configuration gap. A check that is red every morning
+          # stops being read, and then a genuinely new failure goes unnoticed.
+          # Acks carry an expiry so this cannot quietly become permanent.
           python3 - <<'PY'
-          import json
+          import json, os, sys, datetime
+
           d = json.load(open('/tmp/wd.json'))
           issues = d.get('issues') or []
+
+          try:
+              acks = json.load(open('.github/watchdog-acks.json')).get('acks', [])
+          except FileNotFoundError:
+              acks = []
+
+          today = datetime.date.today()
+          live, expired = [], []
+          for a in acks:
+              try:
+                  exp = datetime.date.fromisoformat(a.get('expires', ''))
+              except ValueError:
+                  # No usable expiry: refuse to honour it. An ack that never
+                  # ends is how a real problem gets forgotten.
+                  print(f"::warning::ack for {a.get('match')!r} has no valid `expires` — ignoring it")
+                  continue
+              (live if exp >= today else expired).append((a, exp))
+
+          for a, exp in expired:
+              print(f"::warning::ack for {a.get('match')!r} EXPIRED on {exp} — re-ack it or fix it")
+
+          def acked(text):
+              t = (text or '').lower()
+              for a, _ in live:
+                  if a.get('match', '').lower() in t:
+                      return a
+              return None
+
+          unacked = []
           if not issues:
               print('No issues reported.')
           for i in issues:
-              sev = i.get('severity', '?')
-              print(f"[{sev.upper()}] {i.get('text','')}")
+              sev = (i.get('severity') or '?').lower()
+              text = i.get('text', '')
+              a = acked(text) if sev == 'critical' else None
+              if a:
+                  print(f"[CRITICAL·ACKED] {text}")
+                  print(f"                 └─ {a['reason']} (ack expires {a['expires']})")
+              else:
+                  print(f"[{sev.upper()}] {text}")
+                  if sev == 'critical':
+                      unacked.append(text)
+
+          if unacked:
+              print()
+              for t in unacked:
+                  print(f"::error::{t}")
+              print(f"::error::{len(unacked)} unacknowledged CRITICAL issue(s) in production.")
+              sys.exit(1)
+
+          if any((i.get('severity') or '').lower() == 'warn' for i in issues):
+              print("::warning::Production has warnings — not failing the run.")
+          else:
+              print("Healthy.")
           PY
 
-          case "$severity" in
-            critical)
-              echo "::error::Production has CRITICAL issues — see the list above."
-              exit 1
-              ;;
-            warn)
-              # A warning is not worth an email every morning; it is visible in
-              # the run log and in the digest. Only critical breaks the build.
-              echo "::warning::Production has warnings — not failing the run."
-              ;;
-            *)
-              echo "Healthy."
-              ;;
-          esac

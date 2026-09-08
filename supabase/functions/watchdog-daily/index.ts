@@ -422,10 +422,21 @@ function detectIssues(
   if (logs.fnErrors.length > 0) {
     add('warn', `${logs.fnErrors.length} edge-function error log(s)`);
   }
-  const fnFailed = logs.fnInvocations
-    .filter((f) => num(f.code) >= 500)
-    .reduce((a, b) => a + num(b.n), 0);
-  if (fnFailed > 0) add('critical', `${fnFailed} edge-function invocation(s) returned 5xx`);
+  // NAME the functions, do not just count them. Supabase's free tier keeps
+  // roughly ONE DAY of logs, so by the time the morning alert email is read the
+  // evidence behind a bare "1 invocation returned 5xx" is already gone and the
+  // finding cannot be diagnosed at all. The HTML digest below already prints
+  // fn → code × n; the issue text is what lands in the failure email, and it
+  // is the only part that survives, so it needs the same detail.
+  const failing = logs.fnInvocations.filter((f) => num(f.code) >= 500);
+  const fnFailed = failing.reduce((a, b) => a + num(b.n), 0);
+  if (fnFailed > 0) {
+    const detail = failing
+      .slice(0, 5)
+      .map((f) => `${f.fn} → ${f.code} × ${num(f.n)}`)
+      .join(', ');
+    add('critical', `${fnFailed} edge-function invocation(s) returned 5xx: ${detail}`);
+  }
   if (logs.authErrors.length > 0) {
     const n = logs.authErrors.reduce((a, b) => a + num(b.n), 0);
     add('warn', `${n} auth error/warning event(s) — check signup and login`);
