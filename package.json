@@ -47,7 +47,8 @@
     "walk:wiring": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.screens.config.js --forceExit --testPathIgnorePatterns=/node_modules/ --testPathPattern=pressableIsWired",
     "check:email": "node scripts/check-email-config.mjs",
     "check:listing": "node scripts/check-store-listing.mjs",
-    "check:watchdog": "node scripts/watchdog-gate.mjs --self-test"
+    "check:watchdog": "node scripts/watchdog-gate.mjs --self-test",
+    "check:strip": "STRIP_SCAN=1 jest src/utils/__tests__/stripComments.test.ts"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",

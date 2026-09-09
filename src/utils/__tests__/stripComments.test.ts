@@ -13,13 +13,27 @@
  *   2. `/^https:\/\//` — a regex literal whose closing `\/` + `/` reads as a
  *      line comment, taking the rest of the line (`);` included) with it.
  *
- * The last test is the one with real teeth: it asks the TypeScript compiler
- * whether stripping changed the program, for every file in `app/` and `src/`.
+ * The test with real teeth asks the TypeScript compiler whether stripping
+ * changed the program, for every file in `app/` and `src/`. It costs ~60-90s,
+ * so it runs in CI and under `npm run check:strip`, not on every local run —
+ * see the gate below. The fast tests still cover both shapes that shipped.
  */
 import fs from 'fs';
 import path from 'path';
 import ts from 'typescript';
 import { stripComments } from '../stripComments';
+
+/**
+ * The whole-repo compiler check costs ~60-90s, which is too much to pay on
+ * every local `npm test`. It still has to RUN somewhere or it rots, so it is
+ * skipped locally and enforced in CI, plus `npm run check:strip` on demand.
+ *
+ * Deliberately opt-OUT in CI rather than opt-in: a guard that only runs when
+ * someone remembers a flag is a guard that never runs. Everything above this
+ * line is fast and always runs, including the two shapes that actually shipped.
+ */
+const FULL_SCAN = process.env.CI === 'true' || process.env.STRIP_SCAN === '1';
+const itFullScan = FULL_SCAN ? it : it.skip;
 
 describe('stripComments', () => {
   it('removes line and block comments', () => {
@@ -75,7 +89,7 @@ describe('stripComments', () => {
    * the stripper removed something that was not a comment — and every detector
    * built on it is scanning a file that does not exist.
    */
-  it('changes no program in app/ or src/, as judged by the compiler', () => {
+  itFullScan('changes no program in app/ or src/, as judged by the compiler', () => {
     const repo = path.join(__dirname, '..', '..', '..');
     const files: string[] = [];
     const walk = (dir: string) => {
