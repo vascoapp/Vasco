@@ -149,7 +149,13 @@ function findingsIn(file: string): Finding[] {
         }
         // `...(cond ? [ … ] : [])` adds at most the length of its literal
         // branch, so it is bounded and can simply be counted.
-        const ternary = rest.match(/^\.\.\.\(\s*[^?]{0,160}\?\s*\[([\s\S]{0,800}?)\]\s*:\s*\[\s*\]\s*\)/);
+        // The condition may itself contain `?.` — `...(appJob?.workerId ? …`
+        // is the shape in job/[id].tsx — so the scan for the ternary's own `?`
+        // has to step over optional chaining rather than stop at the first
+        // question mark, which would drop the spread on the floor unexamined.
+        const ternary = rest.match(
+          /^\.\.\.\(\s*(?:[^?]|\?\.){0,200}?\?\s*\[([\s\S]{0,800}?)\]\s*:\s*\[\s*\]\s*\)/,
+        );
         if (ternary) {
           count += (ternary[1].match(/\{\s*text\s*:/g) ?? []).length;
           continue;

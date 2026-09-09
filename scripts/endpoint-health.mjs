@@ -41,6 +41,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Only LINE comments were stripped here, so an invoke()/rpc() name sitting in a
+// BLOCK comment would have counted as a live caller.
+import { stripComments } from './lib/strip-comments.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -218,7 +221,7 @@ function invokedFunctions() {
       if (e.isDirectory()) {
         if (!SKIP_DIRS.has(e.name) && !e.name.startsWith('.')) walk(p);
       } else if (/\.tsx?$/.test(e.name) && !/\.(test|spec)\.tsx?$/.test(e.name)) {
-        const src = fs.readFileSync(p, 'utf8').replace(/^\s*\/\/.*$/gm, '');
+        const src = stripComments(fs.readFileSync(p, 'utf8'));
         for (const m of src.matchAll(/functions\.invoke\(\s*['"`]([a-z0-9-]+)['"`]/g)) names.add(m[1]);
         for (const m of src.matchAll(/\/functions\/v1\/([a-z0-9-]+)/g)) names.add(m[1]);
       }
@@ -323,7 +326,7 @@ function invokedRpcs() {
       if (e.isDirectory()) {
         if (!SKIP_DIRS.has(e.name) && !e.name.startsWith('.')) walk(p);
       } else if (/\.tsx?$/.test(e.name) && !/\.(test|spec)\.tsx?$/.test(e.name)) {
-        const src = fs.readFileSync(p, 'utf8').replace(/^\s*\/\/.*$/gm, '');
+        const src = stripComments(fs.readFileSync(p, 'utf8'));
         for (const m of src.matchAll(/\.rpc\s*(?:as any\))?\s*\(\s*['"`]([a-z0-9_]+)['"`]/g)) names.add(m[1]);
         for (const m of src.matchAll(/\/rest\/v1\/rpc\/([a-z0-9_]+)/g)) names.add(m[1]);
       }

@@ -40,23 +40,111 @@ function warn(file, msg) { warns.push(`${file}: ${msg}`); }
 // Check 1 — dollar-quoted body balance
 // ---------------------------------------------------------------------------
 function checkDollarQuotes(file, sql) {
-  // Default body marker is $$ — count occurrences. Should be even.
-  const matches = sql.match(/\$\$/g) ?? [];
-  if (matches.length % 2 !== 0) {
-    err(file, `unbalanced $$ delimiters (${matches.length} found, must be even)`);
+  // Was `sql.match(/\$\$/g).length % 2` — a raw count, so a `$$` inside a
+  // string literal or a comment shifted the parity and reported a balanced
+  // file as broken (or hid a genuinely unterminated body behind a second stray
+  // marker). It also knew nothing about tagged bodies: `$func$ … $func$` is
+  // the form two migrations here actually use.
+  //
+  // The scanner already has to find the end of every body in order to skip it,
+  // so ask it. An unterminated body is precisely a body whose closing tag it
+  // could not find.
+  const { unterminated } = scanSql(sql);
+  if (unterminated) {
+    err(file, `unterminated dollar-quoted body opened with ${unterminated}`);
   }
 }
 
 // ---------------------------------------------------------------------------
 // Check 2 — paren balance
 // ---------------------------------------------------------------------------
+/**
+ * Remove everything that is not executable SQL: comments, string literals,
+ * quoted identifiers and dollar-quoted bodies.
+ *
+ * This used to be four chained `.replace()` calls, and had three bugs that all
+ * fail the same way — by hiding real code from the check that follows:
+ *
+ *   1. WRONG ORDER. Comments were stripped BEFORE strings, so `'--'` or
+ *      `'/*'` inside a string literal opened a phantom comment. The TS side of
+ *      this repo lost 3,284 characters of live code to exactly that shape (a
+ *      MIME wildcard in permits.tsx), which blinded six static guards.
+ *   2. POSTGRES BLOCK COMMENTS NEST. `/* a /* b *​/ c *​/` is one comment;
+ *      a non-greedy `/\/\*[\s\S]*?\*\//` ends it at the FIRST close marker and
+ *      leaves ` c *​/` behind as "code".
+ *   3. Only `$$` was handled, not tagged bodies like `$func$ … $func$`.
+ *
+ * So: one left-to-right scan, deciding at each position what it is looking at.
+ */
+// Sticky, so the dollar-quote probe can run at a position without slicing.
+// `sql.slice(i)` inside the loop copies the rest of the file on EVERY
+// character — quadratic, and invisible until a migration gets long.
+const DOLLAR_TAG = /\$([A-Za-z_]\w*)?\$/y;
+
+function scanSql(sql) {
+  let out = '';
+  let i = 0;
+  let unterminated = null;
+  while (i < sql.length) {
+    // Dollar-quoted body: $$ … $$ or $tag$ … $tag$. Everything inside is
+    // opaque — it is a function body in another language as often as not.
+    DOLLAR_TAG.lastIndex = i;
+    const dollar = sql[i] === '$' ? DOLLAR_TAG.exec(sql) : null;
+    if (dollar) {
+      const tag = dollar[0];
+      const end = sql.indexOf(tag, i + tag.length);
+      if (end === -1) unterminated = unterminated ?? tag;
+      i = end === -1 ? sql.length : end + tag.length;
+      out += ' ';
+      continue;
+    }
+    const c = sql[i];
+    // String literal, with '' as the escape for a single quote.
+    if (c === "'") {
+      i += 1;
+      while (i < sql.length) {
+        if (sql[i] === "'" && sql[i + 1] === "'") { i += 2; continue; }
+        if (sql[i] === "'") { i += 1; break; }
+        i += 1;
+      }
+      out += ' ';
+      continue;
+    }
+    // Quoted identifier, with "" as the escape.
+    if (c === '"') {
+      i += 1;
+      while (i < sql.length) {
+        if (sql[i] === '"' && sql[i + 1] === '"') { i += 2; continue; }
+        if (sql[i] === '"') { i += 1; break; }
+        i += 1;
+      }
+      out += ' ';
+      continue;
+    }
+    if (c === '-' && sql[i + 1] === '-') {
+      const end = sql.indexOf('\n', i);
+      i = end === -1 ? sql.length : end;
+      continue;
+    }
+    if (c === '/' && sql[i + 1] === '*') {
+      let depth = 1;
+      i += 2;
+      while (i < sql.length && depth > 0) {
+        if (sql[i] === '/' && sql[i + 1] === '*') { depth += 1; i += 2; continue; }
+        if (sql[i] === '*' && sql[i + 1] === '/') { depth -= 1; i += 2; continue; }
+        i += 1;
+      }
+      out += ' ';
+      continue;
+    }
+    out += c;
+    i += 1;
+  }
+  return { stripped: out, unterminated };
+}
+
 function checkParens(file, sql) {
-  // Strip strings + line comments + block comments first.
-  const stripped = sql
-    .replace(/--[^\n]*/g, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/'(?:[^']|'')*'/g, "''")
-    .replace(/\$\$[\s\S]*?\$\$/g, '$$$$'); // collapse function bodies
+  const { stripped } = scanSql(sql);
   let depth = 0;
   for (const ch of stripped) {
     if (ch === '(') depth++;

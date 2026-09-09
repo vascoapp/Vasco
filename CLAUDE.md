@@ -210,12 +210,21 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   - Chips ARE still correct for **multi-select filters and toggles** (Alle /
     Lopend / Afgerond), where every option should be visible at once and more
     than one can be on. The test: *is the user choosing one thing?* → menu.
-  - ⚠️ **Neither this rule nor the Alert-as-menu rule has a real detector.**
-    The existing guard (`__screenwalk__/scheduleMenuNotAlert.test.tsx`) names
-    ONE screen, which is why both were still violated in `timesheet.tsx` and
-    `permits.tsx` in 2026-08. An `Alert.alert` whose buttons are spread from a
-    `.map()` is the same defect — Android renders at most THREE. 53 such sites
-    remain; see `memory/drag-schedule-is-not-drag.md`.
+  - ✅ **The Alert-as-menu rule now HAS a repo-wide detector** —
+    `__screenwalk__/alertIsNotAMenu.test.tsx`. Android renders at most THREE
+    Alert buttons and drops the rest silently, so it fails on a fourth literal
+    button, on a `.map()` expression, and (since 2026-09-09) on a spread of a
+    **named** array — `[...baseOptions, ...muteOption, cancel]` counted as one
+    button and hid VascoCard's own Cancel on Android. `...(cond ? [x] : [])` is
+    bounded and counted, not flagged.
+    - ⚠️ **The chip-strip rule is the one still without real coverage.**
+      `chipStripIsNotAMenu.test.tsx` exists but is narrow.
+    - ⚠️ Every static guard here strips comments first, and **must** use
+      `src/utils/stripComments.ts` (scripts: `scripts/lib/strip-comments.mjs`).
+      The obvious `replace(/\/\*[\s\S]*?\*\//g,'')` cannot tell a comment from a
+      string: `'image/*'` in `permits.tsx` opened a phantom comment that hid
+      8,932 chars of `AppState.tsx` and 11 `Alert.alert` calls from the guards,
+      which stayed green. See learnings #298.
   - `DKMenu` is deliberately a JS popover, not a native `UIMenu`: a native menu
     module would force a native rebuild and take fixes off the OTA channel, and
     `UIMenu` does not exist on Android.
