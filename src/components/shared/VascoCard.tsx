@@ -19,6 +19,7 @@ import type { QueueItem } from '../../services/aiActionQueueService';
 import { snoozeQueueItem, recordOutcome } from '../../services/aiActionQueueService';
 import type { ScoredInsight } from '../../intelligence/generators/types';
 import { formatAmount } from '../../utils/formatAmount';
+import { DKMenu, type DKMenuItem } from './DKMenu';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -345,35 +346,46 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
   const customerId = (item.preparedData as any)?.customerId as string | undefined;
   const isPackSourced = Boolean(packId && customerId);
 
-  const handleSnooze = () => {
-    const baseOptions = [
-      { text: t('vasco.snooze1h', '1 hour'), onPress: () => onSnooze(1) },
-      { text: t('vasco.snoozeTomorrow', 'Tomorrow'), onPress: () => onSnooze(24) },
-      { text: t('vasco.snooze3d', '3 days'), onPress: () => onSnooze(72) },
+  /**
+   * "Remind later" options.
+   *
+   * Was an `Alert.alert` with `[...baseOptions, ...muteOption, cancel]` — four
+   * entries, five when the item is pack-sourced. **RN's Android Alert keeps
+   * only the first THREE buttons**, so on Android "3 days" was the last thing a
+   * contractor could reach: the per-customer mute was invisible, and so was
+   * Cancel — leaving the hardware back button as the only way out of a sheet
+   * that had just asked a question. DKMenu scrolls the whole list on both
+   * platforms, which is also what the chip/menu rule in CLAUDE.md requires of
+   * any "pick one of N".
+   */
+  const snoozeItems = (): DKMenuItem[] => {
+    const base: DKMenuItem[] = [
+      { key: '1h', label: t('vasco.snooze1h', '1 hour'), icon: 'time-outline', onPress: () => onSnooze(1) },
+      { key: '24h', label: t('vasco.snoozeTomorrow', 'Tomorrow'), icon: 'today-outline', onPress: () => onSnooze(24) },
+      { key: '72h', label: t('vasco.snooze3d', '3 days'), icon: 'calendar-outline', onPress: () => onSnooze(72) },
     ];
-    const muteOption = isPackSourced
-      ? [{
-          text: t('vasco.muteCustomer', 'Stop reminding this customer'),
-          onPress: async () => {
-            try {
-              const { muteCustomerForPack } = await import('../../services/workflowPackService');
-              await muteCustomerForPack(packId!, customerId!);
-            } catch {}
-            // Reject the current item too — the next evaluation tick
-            // will skip this customer-pack pair for 90 days.
-            onReject();
-          },
-        }]
-      : [];
-    Alert.alert(
-      t('vasco.snooze', 'Remind later'),
-      t('vasco.snoozeWhen', 'When should we remind you?'),
-      [
-        ...baseOptions,
-        ...muteOption,
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-      ]
-    );
+    if (!isPackSourced) return base;
+    // R66r49 #7 — the escape valve that keeps a contractor from disabling the
+    // whole pack after one annoying repeat. Mute is 90 days, per customer and
+    // per pack, never global.
+    return [
+      ...base,
+      {
+        key: 'mute',
+        label: t('vasco.muteCustomer', 'Stop reminding this customer'),
+        icon: 'notifications-off-outline',
+        emphasis: true,
+        onPress: async () => {
+          try {
+            const { muteCustomerForPack } = await import('../../services/workflowPackService');
+            await muteCustomerForPack(packId!, customerId!);
+          } catch {}
+          // Reject the current item too — the next evaluation tick
+          // will skip this customer-pack pair for 90 days.
+          onReject();
+        },
+      },
+    ];
   };
 
   const handleApprove = async () => {
@@ -522,9 +534,15 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
           )}
           <Text style={s.approveBtnText}>{isCustomerQuestion ? t('vasco.cqSendReply', 'Send reply') : item.actionLabel}</Text>
         </Pressable>
-        <Pressable style={s.snoozeBtn} onPress={handleSnooze} accessibilityRole="button" accessibilityLabel={t('vasco.snooze', 'Remind later')}>
-          <Ionicons name="time-outline" size={14} color={SemanticColors.textTertiary} />
-        </Pressable>
+        <DKMenu
+          renderAnchor={(open) => (
+            <Pressable style={s.snoozeBtn} onPress={open} accessibilityRole="button" accessibilityLabel={t('vasco.snooze', 'Remind later')}>
+              <Ionicons name="time-outline" size={14} color={SemanticColors.textTertiary} />
+            </Pressable>
+          )}
+          items={snoozeItems()}
+          accessibilityLabel={t('vasco.snoozeWhen', 'When should we remind you?')}
+        />
         <Pressable style={s.rejectBtn} onPress={onReject} accessibilityRole="button" accessibilityLabel={t('a11y.rejectAction', 'Reject action')}>
           <Ionicons name="close" size={14} color={SemanticColors.textTertiary} />
         </Pressable>
