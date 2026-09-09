@@ -11,6 +11,8 @@
 // as the Mahnung that named no invoice (learnings #230).
 import fs from 'fs';
 import path from 'path';
+// Shared, string-aware: a naive block-comment regex ate real code here.
+import { stripComments } from '../../utils/stripComments';
 
 const ROOT = path.resolve(__dirname, '../../..');
 
@@ -24,11 +26,7 @@ function read(rel: string): string {
 
 /** Strip // and /* *\/ comments so a fixed defect quoted in a comment does not
  *  re-trigger its own detector. */
-function stripComments(src: string): string {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '');
-}
+
 
 const SHARE_SCREENS = [
   'app/(contractor)/facturen.tsx',

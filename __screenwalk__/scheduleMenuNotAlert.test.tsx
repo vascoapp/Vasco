@@ -14,14 +14,14 @@
  */
 import fs from 'fs';
 import path from 'path';
+// Shared, string-aware: a naive block-comment regex ate real code here.
+import { stripComments } from '../src/utils/stripComments';
 
 const FILE = path.join(__dirname, '..', 'app', 'contractor', 'schedule.tsx');
 const src = fs.readFileSync(FILE, 'utf8');
 
 /** Strip comments so prose describing the old bug does not trip the checks. */
-const code = src
-  .replace(/\/\*[\s\S]*?\*\//g, '')
-  .replace(/^\s*\/\/.*$/gm, '');
+const code = stripComments(src);
 
 describe('schedule board — picking one of N is a menu, never an Alert', () => {
   it('builds no Alert button list by spreading a collection', () => {

@@ -27,6 +27,8 @@
  */
 import fs from 'fs';
 import path from 'path';
+// Shared, string-aware: a naive block-comment regex ate real code here.
+import { stripComments } from '../src/utils/stripComments';
 
 const ROOT = path.join(__dirname, '..');
 const ROOTS = ['app', 'src/components'];
@@ -83,8 +85,7 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const stripComments = (s: string) =>
-  s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 
 /** Each `<ScrollView …> … </ScrollView>` region, nesting-aware. */
 function scrollViewBlocks(code: string): string[] {

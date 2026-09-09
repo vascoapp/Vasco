@@ -60,8 +60,12 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const stripComments = (s: string) =>
-  s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+// Was the naive `replace(/\/\*[\s\S]*?\*\//g, '')`. A MIME wildcard in a
+// STRING (`'image/*'` in permits.tsx) opened a phantom block comment that ate
+// 3,284 characters of real code — and with them all four of that file's
+// Alert.alert calls. Across the repo the naive version hid 11 alerts (7 more in
+// ReceiptScanner.tsx) from THIS detector, which reported green throughout.
+import { stripComments } from '../src/utils/stripComments';
 
 /** `i` points at an opening bracket; returns the index of its match. */
 function matchBracket(code: string, i: number): number {
@@ -128,6 +132,7 @@ function findingsIn(file: string): Finding[] {
     let depth = 0;
     let count = 0;
     let mapped = false;
+    let spread: string | null = null;
     for (let j = 0; j < buttons.length; j += 1) {
       const c = buttons[j];
       if (c === '(' || c === '[' || c === '{') {
@@ -137,10 +142,31 @@ function findingsIn(file: string): Finding[] {
       } else if (c === ')' || c === ']' || c === '}') {
         depth -= 1;
       } else if (depth === 1 && buttons.startsWith('...', j)) {
-        if (/^\.\.\.[\s\S]{0,120}?\.map\(/.test(buttons.slice(j, j + 160))) mapped = true;
+        const rest = buttons.slice(j);
+        if (/^\.\.\.[\s\S]{0,120}?\.map\(/.test(rest.slice(0, 160))) {
+          mapped = true;
+          continue;
+        }
+        // `...(cond ? [ … ] : [])` adds at most the length of its literal
+        // branch, so it is bounded and can simply be counted.
+        const ternary = rest.match(/^\.\.\.\(\s*[^?]{0,160}\?\s*\[([\s\S]{0,800}?)\]\s*:\s*\[\s*\]\s*\)/);
+        if (ternary) {
+          count += (ternary[1].match(/\{\s*text\s*:/g) ?? []).length;
+          continue;
+        }
+        // A bare `...name`. VascoCard's snooze sheet was exactly this —
+        // `[...baseOptions, ...muteOption, cancel]`, four buttons and five when
+        // the item was pack-sourced — and it read here as ONE literal button,
+        // because only `.map(` spreads were treated as unbounded. On Android
+        // that sheet hid its own Cancel. The length of a named array is not
+        // knowable from this file, so it is unbounded by the same argument that
+        // already condemns a mapped one.
+        const named = rest.match(/^\.\.\.\s*([A-Za-z_$][\w$]*)/);
+        if (named) spread = named[1];
       }
     }
     if (mapped) found.push({ file: rel, line, why: 'spreads a mapped collection into the button array (unbounded)' });
+    else if (spread) found.push({ file: rel, line, why: `spreads \`${spread}\` into the button array (unbounded)` });
     else if (count > ANDROID_BUTTON_CAP) found.push({ file: rel, line, why: `${count} buttons; Android shows ${ANDROID_BUTTON_CAP}` });
   }
   return found;
@@ -178,17 +204,30 @@ describe('Alert.alert is a confirmation, never a menu', () => {
         'Alert.alert("t2", undefined, opts.map((o) => ({ text: String(o) })));',
         'Alert.alert("t3", "m", [ { text: "ok", onPress: () => Alert.alert("n", "m", [',
         '  { text: "1" }, { text: "2" }, { text: "3" } ]) }, { text: "cancel" } ]);',
+        // The VascoCard shape: a spread of a NAMED array, which read as one
+        // button until this was fixed.
+        'Alert.alert("t4", "m", [...baseOptions, { text: "cancel" }]);',
+        // Bounded conditional spread — adds at most one, must NOT be reported.
+        'Alert.alert("t5", "m", [{ text: "a" }, ...(phone ? [{ text: "call" }] : []), { text: "c" }]);',
+        // The string that broke the old comment stripper. Everything below it
+        // was invisible; the alert that follows proves it no longer is.
+        'const pick = { type: ["application/pdf", "image/*"] };',
+        'Alert.alert("t6", "m", [ { text: "a" }, { text: "b" }, { text: "c" }, { text: "d" } ]);',
       ].join('\n'),
       'utf8',
     );
     try {
       const found = findingsIn(decoy);
-      // Two findings: the 4-button literal and the mapped expression. The
-      // third Alert is a 2-button confirmation whose onPress opens a legal
-      // 3-button one — it must NOT be reported.
-      expect(found).toHaveLength(2);
-      expect(found[0].why).toContain('4 buttons');
-      expect(found[1].why).toContain('mapped expression');
+      // The 4-button literal, the mapped expression, the named spread, and the
+      // 4-button literal sitting AFTER a MIME wildcard. The third Alert is a
+      // 2-button confirmation whose onPress opens a legal 3-button one, and the
+      // fifth is bounded — neither may be reported.
+      expect(found.map((f) => f.why)).toEqual([
+        `4 buttons; Android shows ${ANDROID_BUTTON_CAP}`,
+        'button array is a mapped expression (unbounded)',
+        'spreads `baseOptions` into the button array (unbounded)',
+        `4 buttons; Android shows ${ANDROID_BUTTON_CAP}`,
+      ]);
     } finally {
       fs.unlinkSync(decoy);
     }

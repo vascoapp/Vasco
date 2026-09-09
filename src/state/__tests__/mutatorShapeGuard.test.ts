@@ -22,9 +22,11 @@
  */
 import fs from 'fs';
 import path from 'path';
+// Shared, string-aware: a naive block-comment regex ate real code here.
+import { stripComments } from '../../utils/stripComments';
 
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'AppState.tsx'), 'utf8');
-const CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+const CODE = stripComments(SRC);
 
 describe('AppState mutator shape (rule #7)', () => {
   it('never returns a BE row id from inside the try block', () => {
