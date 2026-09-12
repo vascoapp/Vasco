@@ -2355,7 +2355,17 @@
     "nifControlInvalid": "Caractère de contrôle du NIF/CIF invalide (vérifiez les fautes de frappe)",
     "planTrialBadge": "ESSAI",
     "trialDaysLeft_one": "Encore {{count}} jour d'essai",
-    "trialDaysLeft_other": "Encore {{count}} jours d'essai"
+    "trialDaysLeft_other": "Encore {{count}} jours d'essai",
+    "retentionTitle": "Durées de conservation",
+    "retentionLabels": {
+      "invoices": "Factures",
+      "contracts": "Contrats",
+      "customerData": "Données clients",
+      "personnel": "Données personnel",
+      "businessLetters": "Correspondance commerciale",
+      "years_one": "{{count}} an",
+      "years_other": "{{count}} ans"
+    }
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",

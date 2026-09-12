@@ -2342,7 +2342,17 @@
     "nifControlInvalid": "Controleteken van de NIF/CIF klopt niet (check op typefouten)",
     "planTrialBadge": "PROEF",
     "trialDaysLeft_one": "Nog {{count}} dag in je proefperiode",
-    "trialDaysLeft_other": "Nog {{count}} dagen in je proefperiode"
+    "trialDaysLeft_other": "Nog {{count}} dagen in je proefperiode",
+    "retentionTitle": "Bewaartermijnen",
+    "retentionLabels": {
+      "invoices": "Facturen",
+      "contracts": "Contracten",
+      "customerData": "Klantgegevens",
+      "personnel": "Personeelsgegevens",
+      "businessLetters": "Handelsbrieven",
+      "years_one": "{{count}} jaar",
+      "years_other": "{{count}} jaar"
+    }
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",

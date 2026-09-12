@@ -34,6 +34,7 @@ import {
   type QuoteTone,
 } from '../../src/services/sowGeneratorService';
 import { businessTypeLabel } from '../../src/data/businessTypes';
+import { retentionPeriodsFor } from '../../src/data/retentionPeriods';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -848,13 +849,25 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* GDPR Retention Notice */}
-        <View style={styles.retentionNotice}>
-          <Ionicons name="shield-checkmark-outline" size={14} color={SemanticColors.textTertiary} />
-          <Text style={styles.retentionText}>
-            {t('profile.retentionNotice', 'Retention: Invoices 7 years · Contracts 7 years · Customer data 2 years · Personnel data 5 years')}
-          </Text>
-        </View>
+        {/* Statutory retention periods, PER MARKET.
+            This was one hardcoded sentence — "Invoices 7 years · Contracts 7
+            years · …" — translated into all six languages. Those are the DUTCH
+            figures, so a German contractor was told 7 years when §14b UStG says
+            TEN, and France and Italy likewise (10) and Spain (6). The correct
+            numbers already sat in src/types/*-compliance.ts; this notice never
+            read them. Markets with no statutory figures in this codebase render
+            nothing rather than borrowing another country's. */}
+        {retentionPeriodsFor(businessProfile.country ?? country).length > 0 && (
+          <View style={styles.retentionNotice}>
+            <Ionicons name="shield-checkmark-outline" size={14} color={SemanticColors.textTertiary} />
+            <Text style={styles.retentionText}>
+              {t('profile.retentionTitle', 'Retention periods')}:{' '}
+              {retentionPeriodsFor(businessProfile.country ?? country)
+                .map((r) => `${t(`profile.retentionLabels.${r.labelKey}`)} ${t('profile.retentionLabels.years', { count: r.years })}`)
+                .join(' · ')}
+            </Text>
+          </View>
+        )}
 
         <View style={{ height: 140 }} />
       </ScrollView>

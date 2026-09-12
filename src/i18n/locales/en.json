@@ -2355,7 +2355,17 @@
     "nifControlInvalid": "NIF/CIF control character invalid (check for typos)",
     "planTrialBadge": "TRIAL",
     "trialDaysLeft_one": "{{count}} day left in your trial",
-    "trialDaysLeft_other": "{{count}} days left in your trial"
+    "trialDaysLeft_other": "{{count}} days left in your trial",
+    "retentionTitle": "Retention periods",
+    "retentionLabels": {
+      "invoices": "Invoices",
+      "contracts": "Contracts",
+      "customerData": "Customer data",
+      "personnel": "Personnel data",
+      "businessLetters": "Business letters",
+      "years_one": "{{count}} year",
+      "years_other": "{{count}} years"
+    }
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",

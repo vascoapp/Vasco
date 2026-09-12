@@ -2355,7 +2355,17 @@
     "nifControlInvalid": "Prüfzeichen der NIF/CIF ungültig (bitte auf Tippfehler prüfen)",
     "planTrialBadge": "TESTPHASE",
     "trialDaysLeft_one": "Noch {{count}} Tag in Ihrer Testphase",
-    "trialDaysLeft_other": "Noch {{count}} Tage in Ihrer Testphase"
+    "trialDaysLeft_other": "Noch {{count}} Tage in Ihrer Testphase",
+    "retentionTitle": "Aufbewahrungsfristen",
+    "retentionLabels": {
+      "invoices": "Rechnungen",
+      "contracts": "Verträge",
+      "customerData": "Kundendaten",
+      "personnel": "Lohnunterlagen",
+      "businessLetters": "Geschäftsbriefe",
+      "years_one": "{{count}} Jahr",
+      "years_other": "{{count}} Jahre"
+    }
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
