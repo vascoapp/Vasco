@@ -587,7 +587,15 @@ export default function ProfileScreen() {
                             <Text style={styles.tierCtaText}>
                               {checkoutLoading === t2
                                 ? t('profile.opening', 'Opening checkout…')
-                                : t('profile.upgradeTo', 'Upgrade to {{name}}', { name: cfg.name })}
+                                : t('profile.upgradeTo', 'Upgrade to {{name}}', {
+                                    // The LOCALIZED tier name, not TIERS[].name.
+                                    // `cfg.name` is the English label from the
+                                    // TIERS table, so a German contractor read a
+                                    // card headed "Handwerker" whose button said
+                                    // "Upgrade auf Contractor" — two names for one
+                                    // tier, on the paywall, in the beachhead market.
+                                    name: t(TIER_NAME_KEY[t2] ?? '', cfg.name),
+                                  })}
                             </Text>
                             <Ionicons name="arrow-forward" size={16} color={Palette.white} />
                           </View>

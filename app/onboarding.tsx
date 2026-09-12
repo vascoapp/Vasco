@@ -270,6 +270,13 @@ function getDemoInsights(trade: string, goals: string[], t: any): { icon: string
   return insights.slice(0, 4);
 }
 
+/** Tier id -> its localized display name. The TIERS table carries English. */
+const PLAN_NAME_KEY: Record<string, string> = {
+  free: 'onboarding.planFree',
+  pro: 'onboarding.planPro',
+  contractor: 'onboarding.planContractor',
+};
+
 export default function OnboardingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -1357,7 +1364,18 @@ export default function OnboardingScreen() {
           { label: t('onboarding.serviceArea', 'Service area'), value: postcode ? `${postcode} (${radius} ${country === 'US' ? t('common.miles', 'mi') : t('common.km', 'km')})` : '-' },
           { label: t('onboarding.certifications', 'Certifications'), value: selectedCerts.length > 0 ? selectedCerts.join(', ') : '-' },
           { label: t('onboarding.language', 'Language'), value: langLabel ? `${langLabel.flag} ${langLabel.label}` : '-' },
-          { label: t('onboarding.choosePlan', 'Plan'), value: selectedPlan === 'free' ? 'Free' : `${TIERS[selectedPlan].name} (${country === 'US' ? '$' : country === 'UK' ? '£' : '€'}${billingCycle === 'annual' ? TIERS[selectedPlan].annualMonthlyPrice : TIERS[selectedPlan].monthlyPrice}${t('onboarding.perMonth', '/mo')})` },
+          // The tier name has to be LOCALIZED here. `TIERS[].name` is the
+          // English label from the subscription table, and the literal 'Free'
+          // was never translated at all — so the last screen of German
+          // onboarding summarised the plan as "Contractor" or "Free" while
+          // every card the contractor had just tapped said "Handwerker" /
+          // "Kostenlos". Same defect as profile's upgrade CTA.
+          {
+            label: t('onboarding.choosePlan', 'Plan'),
+            value: selectedPlan === 'free'
+              ? t('onboarding.planFree', 'Free')
+              : `${t(PLAN_NAME_KEY[selectedPlan] ?? '', TIERS[selectedPlan].name)} (${country === 'US' ? '$' : country === 'UK' ? '£' : '€'}${billingCycle === 'annual' ? TIERS[selectedPlan].annualMonthlyPrice : TIERS[selectedPlan].monthlyPrice}${t('onboarding.perMonth', '/mo')})`,
+          },
         ];
         return (
           <View style={styles.stepContent}>
