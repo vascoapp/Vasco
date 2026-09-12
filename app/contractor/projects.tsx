@@ -282,7 +282,7 @@ export default function ProjectsScreen() {
             this class (expenses.tsx, customer-crm.tsx, project-billing).
             Invisible on the simulator, which attaches a hardware keyboard. */}
         <Pressable style={styles.modalOverlay} onPress={() => setShowCreate(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <Pressable style={styles.modalContent} onPress={() => {}}>
             <Text style={styles.modalTitle}>{t('contractor.projects.newProject', 'New project')}</Text>
             <View style={styles.form}>

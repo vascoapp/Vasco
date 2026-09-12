@@ -45,9 +45,6 @@ const FILTERS_AND_TABS: Record<string, string> = {
   'app/contractor/message-templates.tsx :: setSelectedCategory': 'Same: the list filter. The editor\'s category picker below it is a DKMenu.',
   'app/contractor/expenses.tsx :: setSelectedCategory': 'Filters the expense list. The expense FORM\'s category is a DKMenu (fixed 2026-08-24).',
   'app/contractor/reports.tsx :: setSelectedMonth': 'A month scrubber over a report. Reads as a range control, and the months are self-ordering.',
-  'app/(contractor)/bedrijf.tsx :: setTab': 'Tab bar.',
-  'app/(contractor)/ai.tsx :: setTab': 'Tab bar.',
-  'app/(contractor)/werk.tsx :: setTab': 'Tab bar.',
   'src/components/contractor/DocumentVault.tsx :: setSelectedType': 'Filters the document list.',
   'src/components/contractor/PriceComparison.tsx :: setSelectedCategory': 'Filters the price list.',
   'src/components/contractor/ComplianceCenter.tsx :: setActiveTab': 'Tab bar.',
@@ -58,7 +55,6 @@ const FILTERS_AND_TABS: Record<string, string> = {
 
 /** Not a choice among options at all — the setter just happens to match. */
 const NOT_A_PICKER: Record<string, string> = {
-  'app/(contractor)/werk.tsx :: setShowNewJob': 'Opens the new-job sheet. One button, not a set of options.',
   'src/components/customer/CustomerDecisionPortal.tsx :: setLightboxUri': 'Opens a photo full-screen. A gallery, not a picker.',
 };
 
@@ -73,6 +69,13 @@ const UNREACHABLE: Record<string, string> = {
   'app/hub/materials.tsx :: setSelectedCategory': 'A filter over the material list, and `app/hub/**` is the portfolio surface that ships to nobody either way.',
 };
 
+// 2026-09-12: ai's, bedrijf's and werk's tab strips, plus werk's quick-action row,
+// were removed from the lists above because they are no longer horizontal
+// ScrollViews at all — they WRAP now. On a device in de-DE the third chip was
+// clipped mid-word ("STUN…", "KONT…") and a fourth was entirely off-screen with
+// `showsHorizontalScrollIndicator={false}`, i.e. exactly the thing this file
+// objects to: options past the right edge, with nothing saying they exist.
+// Wrapping costs one row of height in the longest locale and can never hide one.
 const CLASSIFIED = { ...FILTERS_AND_TABS, ...NOT_A_PICKER, ...UNREACHABLE };
 
 function walk(dir: string, out: string[] = []): string[] {

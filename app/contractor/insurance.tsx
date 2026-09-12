@@ -311,7 +311,7 @@ export default function InsuranceScreen() {
 
       {/* Claim modal */}
       <Modal visible={showClaimModal} animationType="slide" transparent onRequestClose={() => setShowClaimModal(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               {/* "Record", not "file" — the modal writes a local dossier and

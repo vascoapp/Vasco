@@ -35,6 +35,7 @@ import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerSer
 import { useJobCostVariance } from '../../../src/services/jobCostTrackingService';
 import { getCohortCostVariance, type CohortCostVariance } from '../../../src/services/costVarianceMoatService';
 import { usePostcodeCohort } from '../../../src/services/cohortBenchmarkService';
+import { useKeyboardInset } from '../../../src/hooks/useKeyboardInset';
 import { useAppState } from '../../../src/state/AppState';
 import { openDirections, formatDestination } from '../../../src/utils/directions';
 import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor/PhotoGallery';
@@ -106,6 +107,9 @@ export default function JobDetailPage() {
   const [notes, setNotes] = useState('');
   /** Site contact being edited; null = picker closed. */
   const [editingSite, setEditingSite] = useState<{ contact: string; phone: string } | null>(null);
+  // Android: a Modal is its own window and never gets `adjustResize`, so
+  // KeyboardAvoidingView cannot move this sheet. Pad it by the real height.
+  const kbInset = useKeyboardInset();
   const timer = useClockIn();
   const clockedIn = timer.active && timer.jobId === id;
   // R304: when reached via R286 executor's draft_invoice route with
@@ -1590,9 +1594,16 @@ export default function JobDetailPage() {
         <View style={styles.signatureBackdrop}>
           {/* Verified on the sim: focusing the name field left only a sliver of
               this sheet above the keyboard — both inputs and Save/Cancel were
-              hidden. A site contact could not be entered. */}
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
-          <View style={styles.signatureSheet}>
+              hidden. A site contact could not be entered.
+              ⚠️ That fix was iOS-ONLY: `behavior` was `undefined` on Android,
+              which makes KeyboardAvoidingView a no-op, so the defect the comment
+              describes was still live on Android — reproduced on a device
+              2026-09-12. An RN <Modal> is its own window and does not get the
+              activity's `adjustResize`, so inside a Modal Android needs an
+              explicit behavior. 'height' is what the auth screens already use
+              and what is verified working on the device. */}
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <View style={[styles.signatureSheet, { paddingBottom: kbInset ? kbInset + GRID.md : undefined }]}>
             <Text style={styles.signatureTitle}>{t('jobs.siteContact', 'Site contact')}</Text>
             <Text style={styles.signatureSubtitle}>
               {t('jobs.siteContactDesc', 'Who is on site and the number to reach them on. Used instead of the customer number when Vasco contacts the job.')}

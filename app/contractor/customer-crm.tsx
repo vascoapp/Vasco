@@ -314,7 +314,7 @@ export default function CustomerPhonebookScreen() {
       {/* Add customer modal — simple: name + phone + email */}
       <Modal visible={showAdd} transparent animationType="slide" onRequestClose={() => setShowAdd(false)}>
         <Pressable style={s.overlay} onPress={() => setShowAdd(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
             <Pressable style={s.sheet} onPress={() => {}}>
               <View style={s.handle} />
               <Text style={s.sheetTitle}>{t('contractor.customers.newCustomer', 'New customer')}</Text>

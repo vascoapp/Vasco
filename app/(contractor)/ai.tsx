@@ -386,7 +386,7 @@ export default function VascoScreen() {
         )}
 
         {/* ─── TAB STRIP ─── */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabStrip}>
+        <View style={s.tabStrip}>
           {tabs.map((tb) => {
             const active = tb.key === tab;
             return (
@@ -404,7 +404,7 @@ export default function VascoScreen() {
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View>
 
         {/* ─── TAB CONTENT ─── */}
         {tab === 'queue' && (
@@ -825,7 +825,7 @@ const s = StyleSheet.create({
   iconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: DK.colors.panel, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: DK.colors.border },
 
   // Tab strip
-  tabStrip: { gap: 6, paddingRight: 20 },
+  tabStrip: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingRight: 20 },
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 10, paddingHorizontal: 14,

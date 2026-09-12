@@ -362,7 +362,7 @@ export default function CustomerDetailScreen() {
           {/* Verified on the sim: focusing the message field hid this sheet
               ENTIRELY behind the keyboard — the channel chips, the textarea and
               Save all gone. Recording what a customer said was impossible. */}
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ justifyContent: 'flex-end' }}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>{t('inbox.captureTitle', 'What did the customer say?')}</Text>

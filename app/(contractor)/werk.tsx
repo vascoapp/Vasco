@@ -402,7 +402,16 @@ export default function WerkScreen() {
         {heroJob ? <HeroJobCard heroJob={heroJob} country={country} onPress={() => router.push(`/contractor/job/${heroJob.job.id}` as any)} /> : null}
 
         {/* ─── QUICK LINK CHIPS ─── */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+        {/* WRAPS, deliberately — it used to be a horizontal ScrollView with
+            `showsHorizontalScrollIndicator={false}`. In German the labels are
+            long enough that "STUNDEN" was clipped mid-word and "KUNDEN" sat
+            entirely off-screen, with no scrollbar and no other cue that two
+            actions existed. Verified on a device in the de-DE posture.
+            CLAUDE.md's objection to chip strips is exactly this: it "hides
+            every option past the right edge, never says how many exist".
+            Wrapping costs one row of height in the longest locale and cannot
+            hide an action in any language. */}
+        <View style={styles.chipRow}>
           {/* NEW JOB leads the row, and is not part of quickLinks because it
               opens a modal rather than navigating.
 
@@ -435,10 +444,10 @@ export default function WerkScreen() {
               <DKLabel style={styles.chipText}>{q.label}</DKLabel>
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
 
         {/* ─── SEGMENTED TAB STRIP ─── */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabStrip}>
+        <View style={styles.tabStrip}>
           {tabs.map((tb) => {
             const active = tb.key === tab;
             return (
@@ -454,7 +463,7 @@ export default function WerkScreen() {
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View>
 
         {/* ─── TAB CONTENT ─── */}
         {tab === 'today' && (
@@ -808,7 +817,7 @@ const styles = StyleSheet.create({
   sortChipText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.accent, letterSpacing: 1.1 },
 
   // Quick chip row
-  chipRow: { gap: 8, paddingRight: 20 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingRight: 20 },
   chipPrimary: { borderColor: DK.colors.accent + '66' },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -825,7 +834,7 @@ const styles = StyleSheet.create({
   },
 
   // Tab strip
-  tabStrip: { gap: 6, paddingRight: 20 },
+  tabStrip: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingRight: 20 },
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 10, paddingHorizontal: 14,

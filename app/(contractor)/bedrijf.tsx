@@ -276,7 +276,7 @@ export default function BedrijfScreen() {
         ) : null}
 
         {/* ─── TAB STRIP ─── */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabStrip}>
+        <View style={s.tabStrip}>
           {tabs.map((tb) => {
             const active = tb.key === tab;
             return (
@@ -297,7 +297,7 @@ export default function BedrijfScreen() {
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View>
 
         {/* ─── TAB CONTENT ─── */}
         {tab === 'overview' && (
@@ -656,7 +656,7 @@ const s = StyleSheet.create({
   },
 
   // Tab strip
-  tabStrip: { gap: 6, paddingRight: 20 },
+  tabStrip: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingRight: 20 },
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 10, paddingHorizontal: 14,

@@ -820,7 +820,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog, onToast }: Pay
         onRequestClose={() => setSignModalOpen(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.signModalRoot}
         >
           <View style={styles.signModalCard}>
