@@ -33,6 +33,7 @@ import {
   saveQuoteTonePreset,
   type QuoteTone,
 } from '../../src/services/sowGeneratorService';
+import { businessTypeLabel } from '../../src/data/businessTypes';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -647,7 +648,11 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="briefcase"
               label={t('profile.businessType', 'Business type')}
-              value={businessProfile.businessType || t('profile.notSet', 'Not set')}
+              // The LABEL, not the stored key. This rendered the raw key, so a
+              // German contractor's own profile read "gmbh" instead of "GmbH",
+              // and every other market got "sarl" / "bv" / "soleTrader".
+              value={businessTypeLabel(businessProfile.country ?? country, businessProfile.businessType)
+                ?? t('profile.notSet', 'Not set')}
               border
               onPress={() => router.push('/(modals)/business-settings' as any)}
             />

@@ -45,6 +45,7 @@ import { isValidKvKNumber, isValidVATNumber } from '../src/utils/validation';
 import { GRID, RADIUS, TYPE } from '../src/theme/tabStyles';
 import { TIERS, type SubscriptionTier } from '../src/services/subscriptionService';
 import { emitOnboardingCompleted } from '../src/intelligence/dataCollector';
+import { BUSINESS_TYPES } from '../src/data/businessTypes';
 
 
 const TOTAL_STEPS = 14;
@@ -95,45 +96,6 @@ const recommendedTierForTeam = (
   return 'pro';
 };
 
-const BUSINESS_TYPES: Record<Country, { key: string; label: string }[]> = {
-  NL: [
-    { key: 'eenmanszaak', label: 'Eenmanszaak' },
-    { key: 'vof', label: 'VOF' },
-    { key: 'bv', label: 'BV' },
-  ],
-  UK: [
-    { key: 'soleTrader', label: 'Sole Trader' },
-    { key: 'partnership', label: 'Partnership' },
-    { key: 'limited', label: 'Ltd' },
-  ],
-  DE: [
-    { key: 'einzelunternehmen', label: 'Einzelunternehmen' },
-    { key: 'gbr', label: 'GbR' },
-    { key: 'gmbh', label: 'GmbH' },
-  ],
-  FR: [
-    { key: 'autoEntrepreneur', label: 'Auto-entrepreneur' },
-    { key: 'eirl', label: 'EIRL' },
-    { key: 'sarl', label: 'SARL' },
-  ],
-  ES: [
-    { key: 'autonomo', label: 'Autónomo' },
-    { key: 'sl', label: 'S.L.' },
-    { key: 'sa', label: 'S.A.' },
-  ],
-  IT: [
-    { key: 'dittaIndividuale', label: 'Ditta individuale' },
-    { key: 'srl', label: 'S.r.l.' },
-    { key: 'snc', label: 'S.n.c.' },
-  ],
-  // R74 US foundation: most US trades operate as sole proprietorships
-  // (no incorporation) or LLCs. S-corps are common for >$60k operators.
-  US: [
-    { key: 'soleProprietor', label: 'Sole Proprietor' },
-    { key: 'llc', label: 'LLC' },
-    { key: 'sCorp', label: 'S-Corp' },
-  ],
-};
 
 // R66 round 43: per-field input-time validators. Closes the deferred half
 // of R39 — pre-R43 onboarding accepted any string (`123.456.789.B.01` for
