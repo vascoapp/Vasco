@@ -249,6 +249,10 @@ export interface SubscriptionState {
   trialEndsAt: string | null;        // 14-day trial of Pro
 }
 
+/** Length of the Pro trial. The signup subtitle says "14" in all six
+ *  locales, so this constant and that copy have to move together. */
+export const TRIAL_DAYS = 14;
+
 const STORAGE_KEY = '@vasco_subscription';
 const USAGE_KEY = '@vasco_usage_month';
 
@@ -294,6 +298,16 @@ export async function loadSubscription(): Promise<SubscriptionState> {
         state.quotesUsedThisMonth = 0;
         state.invoicesUsedThisMonth = 0;
         await AsyncStorage.setItem(USAGE_KEY, currentMonth);
+        await saveSubscription(state);
+      }
+      // An expired trial has to STOP granting Pro, and this is the only place
+      // every consumer already passes through — `getTierLimits(sub.tier)` is
+      // called from dozens of screens and none of them should have to know
+      // about trials. Wiring `startTrial` without this would have handed out
+      // Pro permanently, which is a worse bug than the missing trial was.
+      if (state.trialEndsAt && isTrialExpired(state)) {
+        state.tier = 'free';
+        state.trialEndsAt = null;
         await saveSubscription(state);
       }
       return state;
@@ -485,18 +499,46 @@ export async function upgradeTo(
   tier: SubscriptionTier,
   cycle: BillingCycle,
 ): Promise<SubscriptionState> {
-  const updated = { ...state, tier, billingCycle: cycle, startedAt: new Date().toISOString() };
+  // Clearing `trialEndsAt` is what makes the field mean exactly one thing:
+  // "this Pro access is a trial, and it ends". `loadSubscription` downgrades on
+  // an expired trial, so leaving it set on a PAYING customer would drop them to
+  // Free fourteen days after they subscribed. An explicit tier change — in
+  // either direction — ends the trial, because the contractor has now chosen.
+  const updated = {
+    ...state,
+    tier,
+    billingCycle: cycle,
+    startedAt: new Date().toISOString(),
+    trialEndsAt: null,
+  };
   await saveSubscription(updated);
   return updated;
 }
 
+/**
+ * Start the 14-day Pro trial the signup screen promises.
+ *
+ * Until 2026-09-12 this function had **zero call sites**, and `trialEndsAt`,
+ * `isTrialActive` and `daysLeftInTrial` had zero readers — while the signup
+ * subtitle promised the trial in all six languages. Every contractor who ever
+ * signed up landed on Free, where `hasAutomationPacks`, `hasEveAI` and
+ * `hasEInvoicing` are all false. In Germany that is the whole pitch: they were
+ * sold the e-invoice obligation and handed a build that cannot issue one.
+ *
+ * Returns a NEW state rather than mutating the argument — the old version
+ * assigned into the caller's object, so a caller that kept the pre-call value
+ * saw it change underneath them.
+ */
 export async function startTrial(state: SubscriptionState): Promise<SubscriptionState> {
   const trialEnd = new Date();
-  trialEnd.setDate(trialEnd.getDate() + 14);
-  state.tier = 'pro';
-  state.trialEndsAt = trialEnd.toISOString();
-  await saveSubscription(state);
-  return state;
+  trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
+  const updated: SubscriptionState = {
+    ...state,
+    tier: 'pro',
+    trialEndsAt: trialEnd.toISOString(),
+  };
+  await saveSubscription(updated);
+  return updated;
 }
 
 export function isTrialActive(state: SubscriptionState): boolean {

@@ -980,6 +980,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Activation funnel — top of funnel. `confirmed` = signed in immediately
     // (email-confirmation OFF) vs pending email verification.
     trackEvent('signup', { confirmed: !!data.session }).catch(() => {});
+    // Start the 14-day Pro trial the signup screen promises in all six
+    // languages. `startTrial` existed with ZERO call sites, so every contractor
+    // who ever signed up landed on Free — no automation packs, no EVE AI and,
+    // in the beachhead market, no e-invoicing: the one thing the German pitch
+    // is about. Guarded so a second signup on the same device cannot re-grant
+    // a used trial, and cannot clobber a tier someone is paying for.
+    // Awaited, not fire-and-forget: signup routes straight to onboarding, which
+    // reads the tier to decide what to offer. A detached write races that read
+    // and the contractor would see the Free surface for the first seconds of a
+    // trial they were just promised. It is one local AsyncStorage write.
+    try {
+      const sub = await import('../services/subscriptionService');
+      const state = await sub.loadSubscription();
+      if (!state.trialEndsAt && state.tier === 'free') await sub.startTrial(state);
+    } catch {
+      // Never block account creation on the trial write — the contractor is
+      // mid-signup and a failed local write is not their problem.
+    }
     // `session` is non-null only when email confirmation is DISABLED in the
     // Supabase project (Auth → Providers → Email → "Confirm email" = OFF).
     // In that case the user is already logged in and signup.tsx routes straight

@@ -22,6 +22,8 @@ import {
   type SubscriptionState,
   type SubscriptionTier,
   type BillingCycle,
+  isTrialActive,
+  daysLeftInTrial,
 } from '../../src/services/subscriptionService';
 import { startBillingPortal, startSubscriptionCheckout } from '../../src/services/billingService';
 import { exportAllData } from '../../src/services/dataExportService';
@@ -448,11 +450,26 @@ export default function ProfileScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowLabel}>{t(TIER_NAME_KEY[subscription.tier] ?? '', TIERS[subscription.tier].name)}</Text>
-                  <Text style={styles.planTagline}>{t(TIER_DESC_KEY[subscription.tier] ?? '', TIERS[subscription.tier].tagline)}</Text>
+                  <Text style={styles.planTagline}>
+                    {isTrialActive(subscription)
+                      ? t('profile.trialDaysLeft', {
+                          defaultValue: '{{count}} days left in your trial',
+                          count: daysLeftInTrial(subscription),
+                        })
+                      : t(TIER_DESC_KEY[subscription.tier] ?? '', TIERS[subscription.tier].tagline)}
+                  </Text>
                 </View>
+                {/* A trial nobody can see expires without warning. The badge
+                    says TRIAL rather than ACTIVE so the plan does not read as
+                    something already paid for, and the countdown gives the
+                    contractor a reason to decide before it lapses. */}
                 {subscription.tier === 'free' ? (
                   <View style={styles.freeBadge}>
                     <Text style={styles.freeBadgeText}>{t('profile.planFreeBadge', 'FREE')}</Text>
+                  </View>
+                ) : isTrialActive(subscription) ? (
+                  <View style={styles.freeBadge}>
+                    <Text style={styles.freeBadgeText}>{t('profile.planTrialBadge', 'TRIAL')}</Text>
                   </View>
                 ) : (
                   <View style={styles.activeBadge}>
