@@ -63,6 +63,7 @@ const TABLES = {
   DecisionItemRow: 'decision_items',
   DecisionSubmissionRow: 'decision_submissions',
   ProjectRow: 'projects',
+  SubscriptionRow: 'subscriptions',
 };
 
 // Columns the DB owns and the FE has no business reading. Absence from a Row

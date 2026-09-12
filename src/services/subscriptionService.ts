@@ -11,6 +11,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Country } from '../context/AuthContext';
 import i18n from '../i18n/i18n';
 import { DEMO_MODE } from '../config/demo';
+// Static, like the other 58 services that touch the backend. It was a dynamic
+// `await import()` first, which throws in jest without --experimental-vm-modules
+// — and the surrounding try/catch swallowed that, so every sync silently
+// returned null while the tests reported the local fallback as correct.
+// `src/lib/supabase` imports only the client, env and types, so there is no
+// cycle back to this file.
+import { supabase } from '../lib/supabase';
+import type { SubscriptionRow } from '../lib/database.types';
 
 // ─── Tier Definitions ──────────────────────────────────────────────────────
 
@@ -281,6 +289,19 @@ function defaultState(): SubscriptionState {
 
 // ─── Persistence ───────────────────────────────────────────────────────────
 
+/**
+ * Drop an expired trial back to Free. Returns the SAME object when nothing
+ * changed, so callers can cheaply tell whether a write is needed.
+ *
+ * Factored out because the rule now has two callers — the local load and the
+ * server sync — and two copies of "when does a trial end" is how they drift
+ * into disagreeing about whether someone is entitled to e-invoicing.
+ */
+function applyTrialExpiry(state: SubscriptionState): SubscriptionState {
+  if (!state.trialEndsAt || !isTrialExpired(state)) return state;
+  return { ...state, tier: 'free', trialEndsAt: null };
+}
+
 export async function loadSubscription(): Promise<SubscriptionState> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -305,10 +326,10 @@ export async function loadSubscription(): Promise<SubscriptionState> {
       // called from dozens of screens and none of them should have to know
       // about trials. Wiring `startTrial` without this would have handed out
       // Pro permanently, which is a worse bug than the missing trial was.
-      if (state.trialEndsAt && isTrialExpired(state)) {
-        state.tier = 'free';
-        state.trialEndsAt = null;
-        await saveSubscription(state);
+      const expired = applyTrialExpiry(state);
+      if (expired !== state) {
+        await saveSubscription(expired);
+        return expired;
       }
       return state;
     }
@@ -512,6 +533,10 @@ export async function upgradeTo(
     trialEndsAt: null,
   };
   await saveSubscription(updated);
+  // A tier change is an entitlement change, so it belongs on the account too —
+  // otherwise a contractor who upgrades on their phone opens the tablet and is
+  // still on the old tier.
+  await pushSubscription(updated);
   return updated;
 }
 
@@ -529,6 +554,122 @@ export async function upgradeTo(
  * assigned into the caller's object, so a caller that kept the pre-call value
  * saw it change underneath them.
  */
+// ─── Server sync — the entitlement lives with the ACCOUNT, not the device ───
+
+/** Exactly the columns this service reads back. */
+type SubscriptionServerRow = Pick<
+  SubscriptionRow,
+  'tier' | 'billing_cycle' | 'status' | 'trial_ends_at'
+>;
+
+/** Exactly the columns this service writes. */
+type SubscriptionUpsert = Pick<SubscriptionRow, 'user_id' | 'trial_ends_at'> & {
+  tier: SubscriptionTier;
+  billing_cycle: SubscriptionRow['billing_cycle'];
+  status: SubscriptionRow['status'];
+};
+
+/**
+ * `public.subscriptions.tier` allows `'advanced'`, which this app's three-tier
+ * model has no member for. Read it as `pro` — the nearest paid tier. Mapping it
+ * to `free` would strip a paying contractor of everything they bought.
+ */
+function tierFromServer(tier: string): SubscriptionTier {
+  if (tier === 'pro' || tier === 'contractor' || tier === 'free') return tier;
+  if (tier === 'advanced') return 'pro';
+  return 'free';
+}
+
+function statusForState(state: SubscriptionState): 'trialing' | 'active' {
+  return state.trialEndsAt && isTrialActive(state) ? 'trialing' : 'active';
+}
+
+/**
+ * Write the local entitlement up to the account.
+ *
+ * Best-effort by design: a contractor mid-signup on a train must not be blocked
+ * because the upsert failed. The local copy stays authoritative until the next
+ * successful pull.
+ */
+export async function pushSubscription(state: SubscriptionState): Promise<boolean> {
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth?.user?.id;
+    if (!userId) return false;
+    // `supabase.from(...)` resolves to `never` against this project's
+    // hand-maintained Database interface, so the query builder is cast — the
+    // same workaround accountantSeatService and friends already use. The row
+    // shape is kept honest by typing it here instead, against the declaration
+    // in database.types.ts that `npm run check:drift` compares to the live
+    // catalog.
+    const row: SubscriptionUpsert = {
+      user_id: userId,
+      tier: state.tier,
+      billing_cycle: state.billingCycle === 'annual' ? 'yearly' : 'monthly',
+      status: statusForState(state),
+      trial_ends_at: state.trialEndsAt,
+    };
+    const { error } = await (supabase.from('subscriptions') as any).upsert(row, {
+      onConflict: 'user_id',
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Pull the account's entitlement and let it win over the device.
+ *
+ * This is what stops the 14-day trial being device-local. Before it, state
+ * lived only in AsyncStorage, so **a reinstall granted a fresh trial** and the
+ * trial did not follow the contractor to a second device.
+ *
+ * Rules:
+ *  - a server row WINS for tier and trial end. It is the account's entitlement;
+ *    the device's copy is a cache.
+ *  - no server row means this account has never been synced, so the local state
+ *    is pushed up rather than wiped — otherwise upgrading the app would reset
+ *    an existing contractor to Free.
+ *  - any failure (offline, RLS, cold start before session) leaves local state
+ *    untouched. Never lock someone out of what they paid for because a request
+ *    failed.
+ */
+export async function syncSubscriptionFromServer(): Promise<SubscriptionState | null> {
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth?.user?.id;
+    if (!userId) return null;
+
+    const { data, error } = (await (supabase.from('subscriptions') as any)
+      .select('tier, billing_cycle, status, trial_ends_at')
+      .eq('user_id', userId)
+      .maybeSingle()) as { data: SubscriptionServerRow | null; error: unknown };
+    if (error) return null;
+
+    const local = await loadSubscription();
+
+    if (!data) {
+      await pushSubscription(local);
+      return local;
+    }
+
+    const merged = applyTrialExpiry({
+      ...local,
+      tier: tierFromServer(data.tier),
+      billingCycle: data.billing_cycle === 'yearly' ? 'annual' : 'monthly',
+      trialEndsAt: data.trial_ends_at,
+    });
+    await saveSubscription(merged);
+    // If the pull expired the trial, tell the server too, so the next device
+    // does not read a lapsed trial as live.
+    if (merged.trialEndsAt !== data.trial_ends_at) await pushSubscription(merged);
+    return merged;
+  } catch {
+    return null;
+  }
+}
+
 export async function startTrial(state: SubscriptionState): Promise<SubscriptionState> {
   const trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
@@ -538,6 +679,9 @@ export async function startTrial(state: SubscriptionState): Promise<Subscription
     trialEndsAt: trialEnd.toISOString(),
   };
   await saveSubscription(updated);
+  // Publish the grant so it belongs to the ACCOUNT. Without this the trial is
+  // device-local: reinstalling would hand out a fresh fourteen days.
+  await pushSubscription(updated);
   return updated;
 }
 

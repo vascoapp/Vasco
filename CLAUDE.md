@@ -36,7 +36,13 @@ src/
     invoiceScanService.ts     # Photo → pricing moat pipeline
     cohortBenchmarkService.ts # Cross-contractor benchmarks
     priceIndexService.ts      # EU6 construction cost indexes
-    subscriptionService.ts    # Freemium tiers (Gratis/Contractor), feature gating, usage limits
+    subscriptionService.ts    # Freemium tiers (Gratis/Contractor), feature gating, usage limits.
+                              # 14-day Pro trial: started in `AuthContext.signUp`,
+                              # EXPIRED in `loadSubscription` (the one choke point
+                              # every consumer passes through) and cleared by
+                              # `upgradeTo` so a payer is never read as a lapsed
+                              # trial. All three move together — see learnings #300,
+                              # where each fix in the chain created the next bug.
     paymentMarginService.ts   # FEE DISCLOSURE WIRED (R66r49 #14) / COLLECTION PENDING — 1% flat disclosure surfaces in Mollie connect modal in 6 locales. Actual fee collection (Stripe Connect / Mollie Partner config) is operator-side, not a code bug.
     supplierBacklinkService.ts # 16 EU suppliers, affiliate links, commission tracking
     complianceGatingService.ts # E-invoice format gating, 6 country compliance packs

@@ -22,6 +22,16 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(async (k: string) => { mockStorage.delete(k); }),
 }));
 
+// startTrial and upgradeTo now publish to the account, so the client is stubbed
+// here to keep this suite hermetic. The sync behaviour itself is covered by
+// trialFollowsTheAccount.test.ts.
+jest.mock('../../lib/supabase', () => ({
+  supabase: {
+    auth: { getUser: jest.fn(async () => ({ data: { user: null } })) },
+    from: jest.fn(() => ({ upsert: jest.fn(async () => ({ error: null })) })),
+  },
+}));
+
 import fs from 'fs';
 import path from 'path';
 import {

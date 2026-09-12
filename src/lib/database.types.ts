@@ -501,11 +501,45 @@ export type ProjectRow = {
   updated_at: string;
 };
 
+/**
+ * `public.subscriptions` — the entitlement row, one per user.
+ *
+ * The table has existed since `20260415000010_subscriptions.sql` and this file
+ * never declared it, so the client could not see it and subscription state
+ * lived only in AsyncStorage. That made the 14-day trial **device-local**: a
+ * reinstall granted a fresh one and the trial did not follow the account to a
+ * second device.
+ *
+ * ⚠️ `tier` allows `'advanced'` in the CHECK constraint, which the app's
+ * three-tier model (free | pro | contractor) has no member for. Read it as
+ * `pro` — the nearest paid tier — rather than dropping a paying user to free.
+ */
+export type SubscriptionRow = {
+  user_id: string;
+  tier: 'free' | 'advanced' | 'pro' | 'contractor';
+  billing_cycle: 'monthly' | 'yearly';
+  status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired';
+  trial_ends_at: string | null;
+  current_period_ends_at: string | null;
+  external_id: string | null;
+  external_provider: 'mollie' | 'stripe' | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // ── Database interface (for Supabase client generic) ─────────
 
 export interface Database {
   public: {
     Tables: {
+      subscriptions: {
+        Row: SubscriptionRow;
+        Insert: Partial<SubscriptionRow> & {
+          user_id: string;
+          tier: SubscriptionRow['tier'];
+        };
+        Update: Partial<Omit<SubscriptionRow, 'user_id' | 'created_at'>>;
+      };
       business_settings: {
         Row: BusinessSettingsRow;
         Insert: Partial<BusinessSettingsRow> & {

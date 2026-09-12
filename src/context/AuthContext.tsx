@@ -623,6 +623,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           import('../services/referralAttributionService')
             .then((mod) => mod.applyPendingReferral(s.user.id))
             .catch(() => {});
+          // Entitlement belongs to the ACCOUNT, not the device. Without this
+          // pull, subscription state lived only in AsyncStorage: reinstalling
+          // handed out a fresh 14-day trial, and the trial did not follow the
+          // contractor to a second device. Best-effort — a failure leaves the
+          // local copy in charge rather than locking anyone out.
+          import('../services/subscriptionService')
+            .then((mod) => mod.syncSubscriptionFromServer())
+            .catch(() => {});
         }
       } else if (event === 'SIGNED_OUT') {
         // R102: ONLY clear user on the explicit SIGNED_OUT event. Other
