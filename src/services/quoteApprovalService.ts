@@ -9,6 +9,7 @@ import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 import { DEMO_MODE } from '../config/demo';
 import { registerSingletonReset } from './singletonReset';
 import { getCurrentCountry } from '../lib/currentUser';
+import type { Country } from '../i18n/formatting';
 import i18n from '../i18n/i18n';
 
 // =============================================================================
@@ -70,12 +71,16 @@ const mockRules: ApprovalRule[] = [
  * `isAannemer || teamSize !== 'solo'`.
  *
  * Names mirror the country's seeded customers so the demo reads as one
- * business, not two. Typed against Country so a new market cannot be added
- * without a set (learnings #163); NL is the fallback for markets with no demo
- * account of their own.
+ * business, not two, and references use that demo profile's quotePrefix.
+ *
+ * ⚠️ The comment here used to say "typed against Country so a new market cannot
+ * be added without a set" — while the type was Record<string, …> with an NL
+ * fallback. FR/ES/IT had no set, so the Italian demo asked a plumber to approve
+ * "Bakkerij Jansen Q-2026-0055" (seen on a device). Now it IS Record<Country>,
+ * and there is no fallback to fall into.
  */
 type DemoApprovalSeed = { reference: string; customer: string; amount: number };
-const DEMO_APPROVAL_CUSTOMERS: Record<string, DemoApprovalSeed[]> = {
+const DEMO_APPROVAL_CUSTOMERS: Record<Country, DemoApprovalSeed[]> = {
   NL: [
     { reference: 'Q-2026-0055', customer: 'Bakkerij Jansen', amount: 3800 },
     { reference: 'Q-2026-0054', customer: 'Hotel Krasnapolsky', amount: 12500 },
@@ -84,15 +89,32 @@ const DEMO_APPROVAL_CUSTOMERS: Record<string, DemoApprovalSeed[]> = {
     { reference: 'AN-2026-0055', customer: 'Bäckerei Lindner GmbH', amount: 3800 },
     { reference: 'AN-2026-0054', customer: 'Hausverwaltung Rheinblick GmbH', amount: 12500 },
   ],
+  FR: [
+    { reference: 'DE-2026-0055', customer: 'Boulangerie Lefort SARL', amount: 3800 },
+    { reference: 'DE-2026-0054', customer: 'Syndic Bellecour SAS', amount: 12500 },
+  ],
+  ES: [
+    { reference: 'PRE-2026-0055', customer: 'Panadería Molina S.L.', amount: 3800 },
+    { reference: 'PRE-2026-0054', customer: 'Administración Retiro S.L.', amount: 12500 },
+  ],
+  IT: [
+    { reference: 'PRV-2026-0055', customer: 'Panificio Bruno S.r.l.', amount: 3800 },
+    { reference: 'PRV-2026-0054', customer: 'Amministrazione Navigli S.r.l.', amount: 12500 },
+  ],
+  // No UK demo account exists; fictional names so a UK walk does not read Dutch.
+  UK: [
+    { reference: 'Q-2026-0055', customer: 'Kingsway Bakery Ltd', amount: 3800 },
+    { reference: 'Q-2026-0054', customer: 'Harbourside Lettings Ltd', amount: 12500 },
+  ],
   US: [
-    { reference: 'Q-2026-0055', customer: 'Cedar Park HOA', amount: 3800 },
-    { reference: 'Q-2026-0054', customer: 'Lone Star Diner', amount: 12500 },
+    { reference: 'EST-2026-0055', customer: 'Cedar Park HOA', amount: 3800 },
+    { reference: 'EST-2026-0054', customer: 'Lone Star Diner', amount: 12500 },
   ],
 };
 
 function demoApprovals(): QuoteApproval[] {
-  const country = getCurrentCountry() ?? 'NL';
-  const seeds = DEMO_APPROVAL_CUSTOMERS[country] ?? DEMO_APPROVAL_CUSTOMERS.NL;
+  const country = (getCurrentCountry() ?? 'NL') as Country;
+  const seeds = DEMO_APPROVAL_CUSTOMERS[country] ?? [];
   // `requestedBy` is a ROLE, not a name, so it is translated rather than
   // forked — it read "Monteur" in every language.
   const requestedBy = i18n.t('approvals.requestedByFitter', { defaultValue: 'Fitter' }) as string;

@@ -45,6 +45,14 @@ export const EU_SCREENS = [
 /** Dutch registry terms that must never appear outside NL. */
 export const DUTCH_REGISTRY = ['KVK', 'Belastingdienst', 'Handelsregister en bedrijfsgegevens'];
 
+/**
+ * The Dutch demo's own customers and documents. The Italian device showed
+ * "Bakkerij Jansen · Q-2026-0055" in its approvals panel — and the committed
+ * eu-report.FR/ES/IT.json had recorded "Hotel Krasnapolsky" all along, because
+ * only the GERMAN walk asserted on these names.
+ */
+export const DUTCH_DEMO_NAMES = ['Bakkerij Jansen', 'Hotel Krasnapolsky', 'Bakkerij Smit', 'Hotel NH', 'Bouwgroep Atlas', 'Fam. de Vries'];
+
 export type EuPosture = 'plombier' | 'fontanero' | 'idraulico';
 
 export async function walkCountry(as: EuPosture, country: string) {

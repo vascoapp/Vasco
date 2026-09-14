@@ -1929,9 +1929,17 @@ export function queueTargetExists(item: Pick<QueueItem, 'preparedData'>, entitie
   const d = (item.preparedData ?? {}) as Record<string, unknown>;
   const missing = (id: unknown, list?: ReadonlyArray<{ id: string }>) =>
     typeof id === 'string' && id !== '' && !!list && !list.some((x) => x.id === id);
+  // Pack cards name their record as entityId + entityKind (workflowPackService):
+  // "Promemoria appuntamento: Fam. de Vries" — a Dutch seed JOB — survived in the
+  // Italian queue because only the explicit id fields were checked.
+  const kindList = d.entityKind === 'job' ? entities.jobs
+    : d.entityKind === 'invoice' ? entities.invoices
+    : d.entityKind === 'quote' ? entities.quotes
+    : undefined;
   return !(missing(d.invoiceId, entities.invoices)
     || missing(d.jobId, entities.jobs)
-    || missing(d.quoteId, entities.quotes));
+    || missing(d.quoteId, entities.quotes)
+    || (kindList !== undefined && missing(d.entityId, kindList)));
 }
 
 // Ids change after the fact — a temp job id becomes the backend uuid, an

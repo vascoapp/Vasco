@@ -1,7 +1,7 @@
 /**
  * ES, walked as a ES contractor. One country per file — see euWalk.tsx for why.
  */
-import { walkCountry, DUTCH_REGISTRY, findDefectShapes } from '../src/test-utils/euWalk';
+import { walkCountry, DUTCH_REGISTRY, DUTCH_DEMO_NAMES, findDefectShapes } from '../src/test-utils/euWalk';
 
 describe('ES contractor surface', () => {
   let report: any[] = [];
@@ -14,6 +14,11 @@ describe('ES contractor surface', () => {
   it('is never shown a Dutch registry', () => {
     const all = report.flatMap((r) => r.texts).join(' | ');
     for (const term of DUTCH_REGISTRY) expect(all).not.toContain(term);
+  });
+
+  it("is never shown the Dutch demo's customers", () => {
+    const all = report.flatMap((r) => r.texts).join(' | ');
+    expect(DUTCH_DEMO_NAMES.filter((n) => all.includes(n))).toEqual([]);
   });
 
   it('shows no defect shape in this language', () => {

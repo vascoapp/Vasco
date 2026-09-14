@@ -643,3 +643,18 @@ describe('rekeyQueueTargets — a card follows its entity through an id change',
     expect(q.some((i) => i.preparedData.jobId === 'j-1700' || i.preparedData.invoiceId === 'I-OFF-9')).toBe(false);
   });
 });
+
+describe('queueTargetExists — pack cards name their record by kind', () => {
+  const { queueTargetExists } = require('../aiActionQueueService');
+  const entities = { jobs: [{ id: 'j-it-1' }], invoices: [{ id: 'FT-2026-0087' }], quotes: [] };
+
+  test('an appointment reminder for a job this contractor does not have is hidden', () => {
+    // "Promemoria appuntamento: Fam. de Vries" — a Dutch seed job — in the Italian queue.
+    expect(queueTargetExists({ preparedData: { packId: 'afspraak_herinnering', entityId: 'j-seed-1', entityKind: 'job' } }, entities)).toBe(false);
+    expect(queueTargetExists({ preparedData: { packId: 'afspraak_herinnering', entityId: 'j-it-1', entityKind: 'job' } }, entities)).toBe(true);
+  });
+
+  test('a card naming a record the queue has no list for (a decision tracker) is shown', () => {
+    expect(queueTargetExists({ preparedData: { packId: 'klant_beslissingen', entityId: 'tracker-9' } }, entities)).toBe(true);
+  });
+});

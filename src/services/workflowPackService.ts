@@ -1127,6 +1127,14 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
               // (aiActionQueueService.collectionsInvoiceOf). Only for invoice
               // triggers: a jobId would change what Approve does on job cards.
               ...(step.trigger.startsWith('invoice_') && match.entityId ? { invoiceId: match.entityId } : {}),
+              // Which kind of record entityId names, so the queue can hide a card
+              // whose record is gone (queueTargetExists). Not `jobId`: on job
+              // cards the executor reads jobId as "create the invoice", and this
+              // must not change what Approve does. decision_pending names a
+              // tracker, which the queue has no list for, so it gets no kind.
+              ...(match.entityId && /^(invoice|quote|job)_/.test(step.trigger)
+                ? { entityKind: step.trigger.split('_')[0] }
+                : {}),
               packId: pack.id,
               ...(affiliateUrl ? { affiliateUrl } : {}),
             },
