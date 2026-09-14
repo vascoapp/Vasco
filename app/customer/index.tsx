@@ -23,7 +23,11 @@ export default function CustomerLandingScreen() {
   const [error, setError] = useState('');
 
   const handleSubmit = () => {
-    const trimmed = accessCode.trim().toUpperCase();
+    // Not upper-cased: real codes are 32 lowercase hex characters
+    // (decisionTrackerService) and get_portal_by_access_code matches exactly,
+    // so upper-casing made every real code "not found". Only the 6-character
+    // demo code matched, and the demo lookup ignores case anyway.
+    const trimmed = accessCode.trim();
     if (trimmed.length < 4) {
       setError(t('customerPortal.invalidCode', 'Voer een geldige toegangscode in.'));
       return;
@@ -78,12 +82,14 @@ export default function CustomerLandingScreen() {
           <TextInput
             style={[s.codeInput, error ? s.codeInputError : null]}
             value={accessCode}
-            onChangeText={(text) => { setAccessCode(text.toUpperCase()); if (error) setError(''); }}
-            placeholder={t('customerPortal.codePlaceholder', 'bijv. ABC123')}
+            onChangeText={(text) => { setAccessCode(text); if (error) setError(''); }}
+            placeholder={t('customerPortal.codePlaceholder', 'Paste the code from your message')}
             placeholderTextColor={DK.colors.textMuted}
-            autoCapitalize="characters"
+            autoCapitalize="none"
             autoCorrect={false}
-            maxLength={8}
+            // Was 8, which could not hold a real 32-character code. 64 is the
+            // portal's own format bound (ACCESS_CODE_REGEX, the RPC guard).
+            maxLength={64}
             returnKeyType="go"
             onSubmitEditing={handleSubmit}
           />

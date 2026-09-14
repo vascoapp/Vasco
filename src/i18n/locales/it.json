@@ -3098,7 +3098,7 @@
     "welcome": "Benvenuto",
     "intro": "Il tuo artigiano ha preparato delle scelte per te. Inserisci il codice di accesso ricevuto.",
     "code": "Codice di accesso",
-    "codePlaceholder": "es. ABC123",
+    "codePlaceholder": "Incolla il codice dal tuo messaggio",
     "submit": "Vedi le mie scelte",
     "demo": "Modalità demo",
     "privacy": "Non serve un account. Le tue scelte sono salvate in sicurezza e inviate direttamente al tuo artigiano.",
@@ -3106,7 +3106,7 @@
     "codeInvalidOrExpired": "Il codice non è valido o è scaduto. Chiedi un nuovo codice al tuo artigiano.",
     "rateLimited": "Troppi tentativi. Riprova tra un minuto.",
     "projectNotFound": "Progetto non trovato. Controlla il codice e riprova.",
-    "linkExpired": "Questo link è scaduto. Chiedi al tuo appaltatore un nuovo link.",
+    "linkExpired": "Questo link è scaduto. Chiedi un nuovo link al tuo artigiano.",
     "regional": {
       "title": "Cosa hanno scelto altri nella tua zona",
       "basedOn": "Basato su {{count}} decisioni simili"
@@ -4792,7 +4792,7 @@
     "accessCodeTitle": "Codice di accesso",
     "copy": "Copia",
     "copied": "Copiato",
-    "codeHelp": "Il tuo cliente può inserire questo codice su admin.vascobuild.com/customer",
+    "codeHelp": "Il tuo cliente può anche inserire questo codice nell’app Vasco, alla voce «Ho un codice di accesso».",
     "orShareLink": "O condividi il link",
     "linkTitle": "Condividi link",
     "sendVia": "Invia tramite",

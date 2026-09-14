@@ -3085,7 +3085,7 @@
     "welcome": "Welkom",
     "intro": "Uw aannemer heeft keuzes voor u klaargezet. Voer de toegangscode in die u heeft ontvangen.",
     "code": "Toegangscode",
-    "codePlaceholder": "bijv. ABC123",
+    "codePlaceholder": "Plak de code uit uw bericht",
     "submit": "Bekijk mijn keuzes",
     "demo": "Demo modus",
     "privacy": "Geen account nodig. Uw keuzes worden veilig opgeslagen en direct doorgegeven aan uw aannemer.",
@@ -3098,7 +3098,7 @@
       "title": "Wat anderen in jouw regio kozen",
       "basedOn": "Gebaseerd op {{count}} vergelijkbare keuzes"
     },
-    "networkError": "Kan de server niet bereiken. Controleer je internetverbinding en probeer het opnieuw."
+    "networkError": "Kan de server niet bereiken. Controleer uw internetverbinding en probeer het opnieuw."
   },
   "accept": {
     "processing": "Je goedkeuring wordt verwerkt...",
@@ -4779,7 +4779,7 @@
     "accessCodeTitle": "Toegangscode",
     "copy": "Kopieer",
     "copied": "Gekopieerd",
-    "codeHelp": "De klant kan deze code invullen op admin.vascobuild.com/customer",
+    "codeHelp": "De klant kan deze code ook invullen in de Vasco-app, onder ‘Ik heb een toegangscode’.",
     "orShareLink": "Of deel de link",
     "linkTitle": "Deel link",
     "sendVia": "Verstuur via",

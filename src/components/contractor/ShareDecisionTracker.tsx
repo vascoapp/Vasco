@@ -216,7 +216,10 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
           </Pressable>
         </View>
         <Text style={styles.codeHelp}>
-          {t('share.codeHelp', 'Your customer can enter this code at admin.vascobuild.com/customer')}
+          {/* Said "enter this code at admin.vascobuild.com/customer" — that path
+              has no page (only /customer/[code] does). The code is entered in
+              the app's customer screen; the link below needs no code. */}
+          {t('share.codeHelp', 'Your customer can also enter this code in the Vasco app, under “I have an access code”.')}
         </Text>
       </View>
 
