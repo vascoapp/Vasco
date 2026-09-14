@@ -11,6 +11,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
+import { useKeyboardInset } from '../../hooks/useKeyboardInset';
 import { REASON_CODES, type ReasonCode, getChipOrder } from '../../services/reasonCodeService';
 
 interface Props {
@@ -24,6 +25,9 @@ interface Props {
 
 export function ReasonCodeSheet({ visible, lineLabel, originalQty, newQty, onDismiss, onPick }: Props) {
   const { t } = useTranslation();
+  // Keyboard height for the sheets below (a Modal is its own window, so
+  // KeyboardAvoidingView cannot lift them on Android — see useKeyboardInset).
+  const kbInset = useKeyboardInset();
   const [order, setOrder] = useState<ReasonCode[]>(REASON_CODES);
   const [picked, setPicked] = useState<ReasonCode | null>(null);
   const [freeText, setFreeText] = useState('');
@@ -78,8 +82,8 @@ export function ReasonCodeSheet({ visible, lineLabel, originalQty, newQty, onDis
             and iOS does not lift a Modal above the keyboard, so the free-text
             reason box and the confirm button sat behind it. Fourth site of
             this class; invisible on the simulator's hardware keyboard. */}
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <View style={styles.sheet}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <View style={[styles.sheet, kbInset ? { paddingBottom: kbInset + GRID.md } : null]}>
           <View style={styles.handle} />
 
           <Text style={styles.title}>{t('reasonCode.title', 'Why did you change this?')}</Text>

@@ -9,6 +9,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
@@ -41,6 +42,9 @@ type FilterStatus = 'all' | 'active' | 'completed';
 
 export default function ProjectsScreen() {
   const { t } = useTranslation();
+  // Keyboard height for the sheets below (a Modal is its own window, so
+  // KeyboardAvoidingView cannot lift them on Android — see useKeyboardInset).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   const STATUS_CONFIG = useMemo(() => getStatusConfig(t), [t]);
   const { projects, addProject, jobs, customers, getProjectPnL } = useAppState();
@@ -282,8 +286,8 @@ export default function ProjectsScreen() {
             this class (expenses.tsx, customer-crm.tsx, project-billing).
             Invisible on the simulator, which attaches a hardware keyboard. */}
         <Pressable style={styles.modalOverlay} onPress={() => setShowCreate(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-          <Pressable style={styles.modalContent} onPress={() => {}}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={[styles.modalContent, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={() => {}}>
             <Text style={styles.modalTitle}>{t('contractor.projects.newProject', 'New project')}</Text>
             <View style={styles.form}>
               <TextInput

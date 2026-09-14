@@ -24,6 +24,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
+import { useKeyboardInset } from '../../../src/hooks/useKeyboardInset';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
@@ -64,6 +65,9 @@ const CO_STATUS_KEY: Record<ProjectChangeOrder['status'], string> = {
 
 export default function ProjectBillingScreen() {
   const { t } = useTranslation();
+  // Keyboard height for the sheets below (a Modal is its own window, so
+  // KeyboardAvoidingView cannot lift them on Android — see useKeyboardInset).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
@@ -556,8 +560,8 @@ export default function ProjectBillingScreen() {
             screen never caught it. Same fix expenses.tsx and customer-crm.tsx
             already carry. */}
         <Pressable style={styles.modalOverlay} onPress={closeTermForm}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={[styles.modalCard, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>
               {editingTerm
                 ? t('projectBilling.editTerm', 'Edit instalment')
@@ -594,8 +598,8 @@ export default function ProjectBillingScreen() {
         onRequestClose={() => setShowRetentionForm(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setShowRetentionForm(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={[styles.modalCard, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>
               {t('projectBilling.editRetention', 'Edit retention %')}
             </Text>
@@ -627,8 +631,8 @@ export default function ProjectBillingScreen() {
       {/* Add change order */}
       <Modal visible={showCoForm} transparent animationType="slide" onRequestClose={() => setShowCoForm(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowCoForm(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={[styles.modalCard, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>{t('projectBilling.addChangeOrder', 'Add change order')}</Text>
             <TextInput
               style={styles.input}

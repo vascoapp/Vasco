@@ -52,11 +52,8 @@ const AWAITING_DEVICE_PASS = [
   'app/contractor/job-forms.tsx',
   'app/contractor/licenses.tsx',
   'app/contractor/message-templates.tsx',
-  'app/contractor/project-billing/[id].tsx',
-  'app/contractor/projects.tsx',
   'app/contractor/projects/[id].tsx',
   'src/components/contractor/AddJobMaterialModal.tsx',
-  'src/components/contractor/ReasonCodeSheet.tsx',
   'src/components/contractor/RecommendationFeedback.tsx',
   'src/components/contractor/TieredQuoteBuilder.tsx',
   'src/components/customer/CustomerDecisionPortal.tsx',
@@ -117,6 +114,28 @@ describe('a text sheet inside a Modal moves for the Android keyboard', () => {
     });
     const unexpected = unfixed.filter((f) => !AWAITING_DEVICE_PASS.includes(f));
     expect(unexpected).toEqual([]);
+  });
+
+  // The #303 "fix" wrapped five bottom sheets in
+  // <KeyboardAvoidingView style={{ flex: 1 }}> inside an overlay that pins its
+  // child to the bottom with `justifyContent: 'flex-end'`. The wrapper fills the
+  // overlay and lays out from the TOP, so on a device the project-billing and
+  // new-project sheets rendered at the top of the screen with their titles
+  // under the status bar. A flex-1 wrapper in a Modal must carry flex-end itself.
+  it('a flex-1 keyboard wrapper inside a Modal keeps the sheet at the bottom', () => {
+    const misplaced: string[] = [];
+    for (const file of sourceFiles()) {
+      const code = stripComments(fs.readFileSync(file, 'utf8'));
+      const re = /<KeyboardAvoidingView\b[^>]*style=\{\{\s*flex:\s*1\s*\}\}[^>]*>/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(code))) {
+        const before = code.slice(0, m.index);
+        const opens = (before.match(/<Modal[\s>]/g) ?? []).length;
+        const closes = (before.match(/<\/Modal>/g) ?? []).length;
+        if (opens > closes) misplaced.push(`${path.relative(REPO, file)}:${before.split('\n').length}`);
+      }
+    }
+    expect(misplaced).toEqual([]);
   });
 
   it('the outstanding list stays honest — no entry that is already fixed', () => {
