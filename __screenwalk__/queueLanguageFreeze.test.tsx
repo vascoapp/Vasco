@@ -26,7 +26,7 @@ describe('AI queue copy vs. the language the contractor reads in', () => {
   it('keeps the generation-time language after the contractor switches language', async () => {
     await i18n.changeLanguage('nl');
     const dutch = i18n.t('aiQueue.speedsUpPayment');
-    expect(dutch).toBe('Versnelt betaling met ~5 dagen');
+    expect(dutch).toBe('Versnelt betaling');
 
     // A card generated while the app was Dutch, persisted exactly as the
     // service writes it.
@@ -55,10 +55,10 @@ describe('AI queue copy vs. the language the contractor reads in', () => {
       JSON.stringify({ trade: 'plumbing', country: 'NL', language: 'nl' }),
     );
 
-    expect(i18n.t('aiQueue.speedsUpPayment')).toBe('Speeds up payment by ~5 days');
+    expect(i18n.t('aiQueue.speedsUpPayment')).toBe('Speeds up payment');
     await applySavedLanguage();
     // Anything persisting copy after this point stores Dutch, as it should.
-    expect(i18n.t('aiQueue.speedsUpPayment')).toBe('Versnelt betaling met ~5 dagen');
+    expect(i18n.t('aiQueue.speedsUpPayment')).toBe('Versnelt betaling');
   });
 
   it('applySavedLanguage leaves the device language when no profile is saved', async () => {
