@@ -235,7 +235,11 @@ export default function JobDetailPage() {
       // Job.estimatedDuration is HOURS. Assigning hours straight in made a
       // 24-hour job render as "24 min" here while Werk showed "24u".
       duration: (appJob.estimatedDuration || 2) * 60,
-      travelTime: 15,
+      // No travelTime. It was a literal `15`, so every job in every market
+      // read "15 Min. Fahrt" (German device walk, 2026-09-14) — a figure
+      // identical for a job next door and one 80 km away, from an app that
+      // collects no location. The row below renders only when a real value
+      // exists.
       // Everything that was not in-progress or completed collapsed to
       // 'confirmed', and getStatusLabel's default renders that as "Scheduled" —
       // so a LEAD was badged GEPLANT while the lifecycle stepper directly below
@@ -326,14 +330,15 @@ export default function JobDetailPage() {
     { mins: 30, key: 'jobs.eta30' },
     { mins: 45, key: 'jobs.eta45' },
   ];
-  const sendOnMyWay = async (etaLabel: string) => {
+  const sendOnMyWay = async (minutes: number) => {
     try {
-      const { renderTemplate } = await import('../../../src/services/whatsappTemplateService');
-      const locale = ((businessProfile as any)?.language ?? 'en') as any;
-      const text = renderTemplate('on_my_way', locale, {
+      const { renderTemplate, messageLocale } = await import('../../../src/services/whatsappTemplateService');
+      const text = renderTemplate('on_my_way', messageLocale(), {
         customer: contact.name || '',
-        eta: etaLabel,
-        business: (businessProfile as any)?.businessName ?? 'Vasco',
+        minutes: String(minutes),
+        // Profile first, account second (#218) — never the app's own name as
+        // the sender of a message from this contractor's phone.
+        business: businessProfile?.businessName || user?.company || '',
       });
       // `Share.share` RESOLVES with `dismissedAction` — it does not throw — so
       // backing out of the sheet used to buzz success as though the customer
@@ -1352,10 +1357,9 @@ export default function JobDetailPage() {
                 // The already-translated eta10/20/30/45 keys — German writes
                 // "10 Min.", and the label must not be re-derived here.
                 label: t(key, `${mins} min`),
-                // The template slot stays untranslated minutes: it is what the
-                // CUSTOMER reads, rendered by whatsappTemplateService in the
-                // customer's own template locale.
-                onPress: () => { void sendOnMyWay(`${mins} min`); },
+                // The template takes the bare number; its sentence carries the
+                // unit in the message language.
+                onPress: () => { void sendOnMyWay(mins); },
               }))}
               renderAnchor={(open) => (
                 <Pressable

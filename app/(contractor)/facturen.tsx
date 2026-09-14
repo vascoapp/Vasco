@@ -45,6 +45,7 @@ import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/
 import { documentNumber } from '../../src/domain/documents';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { overdueReminderMessage } from '../../src/services/overdueReminderMessage';
+import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { daysOverdue } from '../../src/utils/invoiceDue';
 import { PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import type { Country } from '../../src/i18n/formatting';
@@ -380,7 +381,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       }
                       hapticSuccess();
                       const { renderPaymentReminderForTag } = await import('../../src/services/whatsappTemplateService');
-                      const locale = ((businessProfile as any)?.language ?? 'en') as any;
+                      const locale = messageLocale();
                       const text = renderPaymentReminderForTag(locale, {
                         customer: autoInv.customerName ?? '',
                         ref: autoInv.invoiceNumber,
@@ -1016,7 +1017,7 @@ export default function FacturenScreen() {
                           let skipped = 0;
                           // R302: import once outside the loop.
                           const { renderPaymentReminderForTag } = await import('../../src/services/whatsappTemplateService');
-                          const bulkLocale = ((businessProfile as any)?.language ?? 'en') as any;
+                          const bulkLocale = messageLocale();
                           for (const inv of overdueInvoices) {
                             const autoInv = invoiceAutomationService.getInvoice(inv.id);
                             const tag = customerTagFor((inv as any).customer);

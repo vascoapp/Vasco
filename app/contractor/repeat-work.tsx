@@ -24,7 +24,7 @@ import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { formatCurrency } from '../../src/i18n/formatting';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
-import { renderTemplate, type Locale } from '../../src/services/whatsappTemplateService';
+import { renderTemplate, messageLocale } from '../../src/services/whatsappTemplateService';
 import {
   useMaintenanceOpportunities,
   MIN_VISITS_FOR_RHYTHM,
@@ -60,7 +60,9 @@ export default function RepeatWorkScreen() {
    * codebase has just spent a day removing from the payments screen.
    */
   const offerNextVisit = async (o: MaintenanceOpportunity) => {
-    const locale = ((businessProfile as { language?: string } | undefined)?.language ?? 'en') as Locale;
+    // The app's active language — the `since` phrase below is resolved in it,
+    // so the sentence must be too (#330).
+    const locale = messageLocale();
     const months = Math.max(1, Math.round(o.intervalDays / 30.44));
     const text = renderTemplate('maintenance_due', locale, {
       customer: o.customerName,
@@ -69,7 +71,7 @@ export default function RepeatWorkScreen() {
       // Falls back to a generic noun rather than printing an empty gap in the
       // middle of a sentence sent to a customer.
       job: o.trade || t('repeatWork.theWork', 'the work'),
-      business: businessProfile?.businessName ?? '',
+      business: businessProfile?.businessName || user?.company || '',
     });
 
     try {

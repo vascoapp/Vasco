@@ -8,6 +8,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking } from 'react-native';
+import i18n from '../i18n/i18n';
 
 export type TemplateId =
   | 'appointment_reminder'
@@ -20,6 +21,24 @@ export type TemplateId =
 
 export type Locale = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
+const LOCALES: readonly Locale[] = ['en', 'nl', 'de', 'fr', 'es', 'it'];
+
+/**
+ * The language a message to the contractor's customer is rendered in: the
+ * app's ACTIVE language, which `applySavedLanguage` resolves profile-first,
+ * account second (CLAUDE.md, #218).
+ *
+ * Four screens read `(businessProfile as any)?.language ?? 'en'` instead.
+ * `BusinessProfile` has no `language` field — the `as any` is the tell — so a
+ * German plumber's "on my way" reached the customer as "Hi Anja Hoffmann, I'm
+ * on my way — ETA 20 min." (device walk, 2026-09-14), and the maintenance
+ * offer mixed a German "etwa 7 Monate" into an English sentence.
+ */
+export function messageLocale(): Locale {
+  const lang = String(i18n.language ?? '').slice(0, 2).toLowerCase() as Locale;
+  return LOCALES.includes(lang) ? lang : 'en';
+}
+
 const TEMPLATES: Record<TemplateId, Record<Locale, string>> = {
   appointment_reminder: {
     en: `Hi {{customer}}, just a reminder of our appointment tomorrow at {{time}} for {{job}}. Reply if you need to reschedule. — {{business}}`,
@@ -29,13 +48,16 @@ const TEMPLATES: Record<TemplateId, Record<Locale, string>> = {
     es: `Hola {{customer}}, recordatorio de nuestra cita mañana a las {{time}} para {{job}}. Avísame si quieres cambiarla. — {{business}}`,
     it: `Ciao {{customer}}, promemoria dell'appuntamento domani alle {{time}} per {{job}}. Scrivimi se vuoi spostarlo. — {{business}}`,
   },
+  // `{{minutes}}` is a bare number: the unit belongs to the sentence. The slot
+  // used to be `{{eta}}`, filled by the caller with `${mins} min` — an English
+  // unit inside every language, after the English acronym "ETA".
   on_my_way: {
-    en: `Hi {{customer}}, I'm on my way — ETA {{eta}}. — {{business}}`,
-    nl: `Hoi {{customer}}, ik ben onderweg — ETA {{eta}}. — {{business}}`,
-    de: `Hallo {{customer}}, ich bin unterwegs — ETA {{eta}}. — {{business}}`,
-    fr: `Bonjour {{customer}}, je suis en route — arrivée estimée {{eta}}. — {{business}}`,
-    es: `Hola {{customer}}, estoy de camino — ETA {{eta}}. — {{business}}`,
-    it: `Ciao {{customer}}, sto arrivando — ETA {{eta}}. — {{business}}`,
+    en: `Hi {{customer}}, I'm on my way and should be with you in about {{minutes}} minutes. — {{business}}`,
+    nl: `Beste {{customer}}, ik ben onderweg en ben over ongeveer {{minutes}} minuten bij u. — {{business}}`,
+    de: `Hallo {{customer}}, ich bin unterwegs und in etwa {{minutes}} Minuten bei Ihnen. — {{business}}`,
+    fr: `Bonjour {{customer}}, je suis en route et serai chez vous dans environ {{minutes}} minutes. — {{business}}`,
+    es: `Hola {{customer}}, voy de camino y llegaré en unos {{minutes}} minutos. — {{business}}`,
+    it: `Buongiorno {{customer}}, sono in viaggio e sarò da Lei tra circa {{minutes}} minuti. — {{business}}`,
   },
   quote_sent: {
     en: `Hi {{customer}}, I've just sent you quote {{ref}}. Check your email or tap: {{link}} — {{business}}`,
