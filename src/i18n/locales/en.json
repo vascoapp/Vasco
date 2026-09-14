@@ -926,7 +926,9 @@
     "quoteCount_other": "{{count}} quotes",
     "einvoiceNoFormatTitle": "No e-invoice format yet",
     "einvoiceNoFormatBody": "Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice.",
-    "probabilityWithin30d": "{{pct}}% within 30 days"
+    "probabilityWithin30d": "{{pct}}% within 30 days",
+    "einvoiceMissingYourBusiness": "Your business",
+    "einvoiceFixCustomer": "Open customer details"
   },
   "expenses": {
     "title": "Expenses",
@@ -3449,7 +3451,8 @@
     "address": "Address",
     "city": "City",
     "postcode": "Post code",
-    "province": "Province"
+    "province": "Province",
+    "editDetails": "Edit details"
   },
   "inbox": {
     "fromCustomer": "From customer",
@@ -4753,7 +4756,13 @@
     "saveFailed": "Could not save customer.",
     "fieldPostcode": "Post code",
     "fieldCity": "City",
-    "fieldVatId": "VAT number (business customers)"
+    "fieldVatId": "VAT number (business customers)",
+    "editCustomer": "Edit customer",
+    "notFound": "This customer could not be found.",
+    "fieldProvince": "Province",
+    "fieldTaxIdIt": "Codice fiscale (Italy)",
+    "fieldSdiCode": "SDI recipient code (Italy)",
+    "fieldPec": "PEC address (Italy)"
   },
   "aiChat": {
     "welcome": "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.",

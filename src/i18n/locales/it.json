@@ -926,7 +926,9 @@
     "quoteCount_other": "{{count}} preventivi",
     "einvoiceNoFormatTitle": "Nessun formato di fattura elettronica",
     "einvoiceNoFormatBody": "Vasco non genera ancora una fattura elettronica per il tuo paese. Invia il PDF — resta una fattura valida.",
-    "probabilityWithin30d": "{{pct}}% entro 30 giorni"
+    "probabilityWithin30d": "{{pct}}% entro 30 giorni",
+    "einvoiceMissingYourBusiness": "La tua azienda",
+    "einvoiceFixCustomer": "Apri dati cliente"
   },
   "expenses": {
     "title": "Spese",
@@ -3449,7 +3451,8 @@
     "address": "Indirizzo",
     "city": "Città",
     "postcode": "CAP",
-    "province": "Provincia"
+    "province": "Provincia",
+    "editDetails": "Modifica dati"
   },
   "inbox": {
     "fromCustomer": "Dal cliente",
@@ -4753,7 +4756,13 @@
     "saveFailed": "Impossibile salvare il cliente.",
     "fieldPostcode": "CAP",
     "fieldCity": "Città",
-    "fieldVatId": "Partita IVA (clienti business)"
+    "fieldVatId": "Partita IVA (clienti business)",
+    "editCustomer": "Modifica cliente",
+    "notFound": "Cliente non trovato.",
+    "fieldProvince": "Provincia (sigla)",
+    "fieldTaxIdIt": "Codice fiscale",
+    "fieldSdiCode": "Codice destinatario SDI",
+    "fieldPec": "Indirizzo PEC"
   },
   "aiChat": {
     "welcome": "Ciao! Sono il tuo assistente d'ufficio. Chiedimi di fatturare un cliente, pianificare un lavoro o controllare i tuoi numeri.",

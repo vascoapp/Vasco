@@ -926,7 +926,9 @@
     "quoteCount_other": "{{count}} presupuestos",
     "einvoiceNoFormatTitle": "Aún no hay formato de factura electrónica",
     "einvoiceNoFormatBody": "Vasco todavía no genera factura electrónica para tu país. Envía el PDF — sigue siendo una factura válida.",
-    "probabilityWithin30d": "{{pct}}% en 30 días"
+    "probabilityWithin30d": "{{pct}}% en 30 días",
+    "einvoiceMissingYourBusiness": "Tu empresa",
+    "einvoiceFixCustomer": "Abrir datos del cliente"
   },
   "expenses": {
     "title": "Gastos",
@@ -3449,7 +3451,8 @@
     "address": "Dirección",
     "city": "Ciudad",
     "postcode": "Código postal",
-    "province": "Provincia"
+    "province": "Provincia",
+    "editDetails": "Editar datos"
   },
   "inbox": {
     "fromCustomer": "Del cliente",
@@ -4753,7 +4756,13 @@
     "saveFailed": "No se pudo guardar el cliente.",
     "fieldPostcode": "Código postal",
     "fieldCity": "Ciudad",
-    "fieldVatId": "NIF/CIF (clientes empresa)"
+    "fieldVatId": "NIF/CIF (clientes empresa)",
+    "editCustomer": "Editar cliente",
+    "notFound": "No se ha encontrado este cliente.",
+    "fieldProvince": "Provincia",
+    "fieldTaxIdIt": "Codice fiscale (Italia)",
+    "fieldSdiCode": "Código destinatario SDI (Italia)",
+    "fieldPec": "Dirección PEC (Italia)"
   },
   "aiChat": {
     "welcome": "¡Hola! Soy tu asistente de oficina. Pídeme que facture a un cliente, programe un trabajo o revise tus números.",

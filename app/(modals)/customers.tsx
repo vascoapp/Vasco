@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useState, useCallback } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -30,10 +30,17 @@ import { Typography } from '../../src/theme/typography';
 export default function CustomersScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = user?.country ?? 'NL';
   const router = useRouter();
-  const { customers, addCustomer } = useAppState();
-  const [showForm, setShowForm] = useState(false);
+  const { customers, addCustomer, updateCustomer, businessProfile } = useAppState();
+  // The business profile outranks the account (CLAUDE.md).
+  const country = businessProfile?.country ?? user?.country ?? 'NL';
+  // `?id=` opens this form on an EXISTING customer. There was no edit path at
+  // all: updateCustomer had zero callers, so a customer created without a post
+  // code, province or tax id could never be given one, and every e-invoice
+  // export for them refused with "some details are missing" and no way out.
+  const { id: editId } = useLocalSearchParams<{ id?: string }>();
+  const editing = editId ? customers.find((c) => c.id === editId) : undefined;
+  const [showForm, setShowForm] = useState(!!editId);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -45,7 +52,34 @@ export default function CustomersScreen() {
   const [postcode, setPostcode] = useState('');
   const [city, setCity] = useState('');
   const [vatId, setVatId] = useState('');
+  // Market-specific fields the structured formats REQUIRE of the buyer:
+  // province for Facturae (ES) and FatturaPA (IT); for Italy also the codice
+  // fiscale and the SDI routing — a 7-character code, or a PEC address.
+  const [province, setProvince] = useState('');
+  const [taxId, setTaxId] = useState('');
+  const [sdiCode, setSdiCode] = useState('');
+  const [pec, setPec] = useState('');
   const [saving, setSaving] = useState(false);
+  const needsProvince = country === 'ES' || country === 'IT';
+  const isItaly = country === 'IT';
+
+  // Prefill once when editing. Keyed on the id, not the customer object, so a
+  // background refresh does not overwrite what the contractor is typing.
+  useEffect(() => {
+    if (!editing) return;
+    setName(editing.name ?? '');
+    setEmail(editing.email ?? '');
+    setPhone(editing.phone ?? '');
+    setAddress(editing.address ?? '');
+    setPostcode(editing.postcode ?? '');
+    setCity(editing.city ?? '');
+    setVatId(editing.vatId ?? '');
+    setProvince(editing.province ?? '');
+    setTaxId(editing.taxId ?? '');
+    setSdiCode(editing.einvoiceRouting ?? '');
+    setPec(editing.einvoiceEmail ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing?.id]);
 
   const emailExample = country === 'US' ? 'info@example.com'
     : country === 'UK' ? 'info@example.co.uk'
@@ -97,18 +131,39 @@ export default function CustomersScreen() {
       );
       return;
     }
+    // An `?id=` that does not resolve must never fall through to CREATING a
+    // customer — that would silently duplicate the one being edited.
+    if (editId && !editing) return;
     setSaving(true);
     try {
+      const structured = {
+        postcode: postcode.trim(),
+        city: city.trim(),
+        vatId: vatId.trim().toUpperCase(),
+        ...(needsProvince ? { province: province.trim() } : {}),
+        ...(isItaly ? { taxId: taxId.trim().toUpperCase(), einvoiceRouting: sdiCode.trim().toUpperCase(), einvoiceEmail: pec.trim() } : {}),
+      };
+      if (editing) {
+        // Edit sends every shown field, blanks included: clearing a wrong post
+        // code must actually clear it.
+        await updateCustomer(editing.id, {
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
+          ...structured,
+        });
+        router.back();
+        return;
+      }
+      const orUndefined = (o: Record<string, string>) =>
+        Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v || undefined]));
       await addCustomer(
         name.trim(),
         email.trim() || undefined,
         phone.trim() || undefined,
         address.trim() || undefined,
-        {
-          postcode: postcode.trim() || undefined,
-          city: city.trim() || undefined,
-          vatId: vatId.trim() || undefined,
-        },
+        orUndefined(structured),
       );
       setName('');
       setEmail('');
@@ -127,7 +182,7 @@ export default function CustomersScreen() {
     } finally {
       setSaving(false);
     }
-  }, [name, email, phone, address, postcode, city, vatId, addCustomer, t]);
+  }, [name, email, phone, address, postcode, city, vatId, province, taxId, sdiCode, pec, needsProvince, isItaly, editId, editing, addCustomer, updateCustomer, router, t]);
 
   return (
     <Screen>
@@ -137,12 +192,22 @@ export default function CustomersScreen() {
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Text style={Typography.title}>{t('customersModal.title', 'Customers')}</Text>
-            <Text style={Typography.muted}>{t('customersModal.count', '{{count}} customers', { count: customers.length })}</Text>
+            <Text style={Typography.title}>
+              {editing ? t('customersModal.editCustomer', 'Edit customer') : t('customersModal.title', 'Customers')}
+            </Text>
+            {!editing && (
+              <Text style={Typography.muted}>{t('customersModal.count', '{{count}} customers', { count: customers.length })}</Text>
+            )}
           </View>
 
-          {/* Customer List */}
-          {customers.length > 0 ? (
+          {editId && !editing ? (
+            <View style={styles.card}>
+              <Text style={Typography.muted}>{t('customersModal.notFound', 'This customer could not be found.')}</Text>
+            </View>
+          ) : null}
+
+          {/* Customer List — not while editing one customer */}
+          {editId ? null : customers.length > 0 ? (
             <View style={styles.card}>
               {customers.map((customer, index) => (
                 <View
@@ -172,10 +237,10 @@ export default function CustomersScreen() {
             </View>
           )}
 
-          {/* Add Customer Form */}
-          {showForm ? (
+          {/* Add / edit form */}
+          {editId && !editing ? null : showForm ? (
             <View style={[styles.card, { borderColor: SemanticColors.actionPrimary }]}>
-              <Text style={Typography.subtitle}>{t('customersModal.newCustomer', 'New customer')}</Text>
+              {!editing && <Text style={Typography.subtitle}>{t('customersModal.newCustomer', 'New customer')}</Text>}
               <View style={styles.fieldColumn}>
                 <Text style={Typography.muted}>{t('customersModal.fieldName', 'Name *')}</Text>
                 <TextInput
@@ -184,7 +249,7 @@ export default function CustomersScreen() {
                   onChangeText={setName}
                   placeholder={t('customersModal.namePlaceholder', 'e.g. De Jong')}
                   placeholderTextColor={SemanticColors.textSecondary}
-                  autoFocus
+                  autoFocus={!editing}
                 />
               </View>
               <View style={styles.fieldColumn}>
@@ -259,6 +324,38 @@ export default function CustomersScreen() {
                   placeholderTextColor={SemanticColors.textSecondary}
                 />
               </View>
+              {needsProvince && (
+                <View style={styles.fieldColumn}>
+                  <Text style={Typography.muted}>{t('customersModal.fieldProvince', 'Province')}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={province}
+                    onChangeText={setProvince}
+                    autoCapitalize={isItaly ? 'characters' : 'words'}
+                    placeholder={isItaly ? 'MI' : 'Madrid'}
+                    placeholderTextColor={SemanticColors.textSecondary}
+                  />
+                </View>
+              )}
+              {isItaly && (
+                <>
+                  <View style={styles.fieldColumn}>
+                    <Text style={Typography.muted}>{t('customersModal.fieldTaxIdIt', 'Codice fiscale (Italy)')}</Text>
+                    <TextInput style={styles.input} value={taxId} onChangeText={setTaxId} autoCapitalize="characters"
+                      placeholder="RSSMRA80A01F205X" placeholderTextColor={SemanticColors.textSecondary} />
+                  </View>
+                  <View style={styles.fieldColumn}>
+                    <Text style={Typography.muted}>{t('customersModal.fieldSdiCode', 'SDI recipient code (Italy)')}</Text>
+                    <TextInput style={styles.input} value={sdiCode} onChangeText={setSdiCode} autoCapitalize="characters"
+                      maxLength={7} placeholder="0000000" placeholderTextColor={SemanticColors.textSecondary} />
+                  </View>
+                  <View style={styles.fieldColumn}>
+                    <Text style={Typography.muted}>{t('customersModal.fieldPec', 'PEC address (Italy)')}</Text>
+                    <TextInput style={styles.input} value={pec} onChangeText={setPec} autoCapitalize="none"
+                      keyboardType="email-address" placeholder="nome@pec.it" placeholderTextColor={SemanticColors.textSecondary} />
+                  </View>
+                </>
+              )}
               <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
                 <View style={{ flex: 1 }}>
                   <PrimaryButton
@@ -269,7 +366,7 @@ export default function CustomersScreen() {
                   />
                 </View>
                 <Pressable
-                  onPress={() => setShowForm(false)}
+                  onPress={() => (editing ? router.back() : setShowForm(false))}
                   style={styles.cancelBtn}
                 >
                   <Text style={{ color: SemanticColors.textSecondary }}>{t('common.cancel', 'Cancel')}</Text>

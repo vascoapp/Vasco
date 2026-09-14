@@ -153,7 +153,12 @@ type AppState = {
    *  in the wrong order; an object also lets a caller supply only what it has. */
   addCustomer: (name: string, email?: string, phone?: string, address?: string, extra?: Partial<Customer>) => Promise<string>;
   // R45: customer mutability — was a feature gap (no edit/delete path).
-  updateCustomer: (id: string, updates: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
+  // Every stored field, not just the contact line. The structured-invoice
+  // fields (city, postcode, province, vatId, taxId, SDI routing) could only be
+  // set at creation, so an existing customer missing one made Facturae /
+  // FatturaPA / XRechnung refuse with no way to fix it. The mapper and the
+  // backend already accepted them (customerUpdatesToRowPayload).
+  updateCustomer: (id: string, updates: Partial<Omit<Customer, 'id'>>) => Promise<void>;
   removeCustomer: (id: string) => Promise<void>;
   // R81 US Phase 4: lead CRUD. Demo-mode persists to AsyncStorage only;
   // production writes to the `leads` table (migration 20260520000002).

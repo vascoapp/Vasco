@@ -926,7 +926,9 @@
     "quoteCount_other": "{{count}} Angebote",
     "einvoiceNoFormatTitle": "Noch kein E-Rechnungsformat",
     "einvoiceNoFormatBody": "Vasco erzeugt für Ihr Land noch keine E-Rechnung. Senden Sie stattdessen das PDF — es ist weiterhin eine gültige Rechnung.",
-    "probabilityWithin30d": "{{pct}}% innerhalb von 30 Tagen"
+    "probabilityWithin30d": "{{pct}}% innerhalb von 30 Tagen",
+    "einvoiceMissingYourBusiness": "Ihr Unternehmen",
+    "einvoiceFixCustomer": "Kundendaten öffnen"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -3449,7 +3451,8 @@
     "address": "Adresse",
     "city": "Ort",
     "postcode": "PLZ",
-    "province": "Provinz"
+    "province": "Provinz",
+    "editDetails": "Daten bearbeiten"
   },
   "inbox": {
     "fromCustomer": "Vom Kunden",
@@ -4753,7 +4756,13 @@
     "saveFailed": "Kunde konnte nicht gespeichert werden.",
     "fieldPostcode": "PLZ",
     "fieldCity": "Ort",
-    "fieldVatId": "USt-IdNr. (Geschäftskunden)"
+    "fieldVatId": "USt-IdNr. (Geschäftskunden)",
+    "editCustomer": "Kunde bearbeiten",
+    "notFound": "Dieser Kunde wurde nicht gefunden.",
+    "fieldProvince": "Provinz",
+    "fieldTaxIdIt": "Codice fiscale (Italien)",
+    "fieldSdiCode": "SDI-Empfängercode (Italien)",
+    "fieldPec": "PEC-Adresse (Italien)"
   },
   "aiChat": {
     "welcome": "Hi! Ich bin Ihre Büroassistenz. Bitten Sie mich, eine Rechnung zu erstellen, einen Auftrag zu planen oder Zahlen zu prüfen.",

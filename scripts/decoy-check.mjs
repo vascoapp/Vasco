@@ -68,6 +68,31 @@ if (mutated === original) {
   process.exit(2);
 }
 
+// Screen-walk tests only run under their own config. Under the default one a
+// __screenwalk__ target finds no tests, jest exits non-zero, and a decoy
+// "bit" without the test ever executing — the exact false positive this script
+// exists to prevent, arriving through the one door it did not check.
+const isScreenWalk = target.includes('__screenwalk__');
+const jestCmd = isScreenWalk
+  ? `npx jest --config jest.screens.config.js --forceExit ${JSON.stringify(target)} --silent`
+  : `npx jest ${JSON.stringify(target)} --silent`;
+const jestEnv = isScreenWalk
+  ? { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --experimental-vm-modules`.trim() }
+  : process.env;
+const runTarget = () => {
+  try { execSync(jestCmd, { stdio: 'pipe', env: jestEnv }); return true; } catch { return false; }
+};
+
+// BASELINE: the target must PASS on the untouched file. Otherwise a failure
+// under the decoy proves nothing — a missing test, a wrong config, or a suite
+// already red all fail for reasons unrelated to the defect.
+if (!runTarget()) {
+  console.error(`✕ ${target} does not pass on the ORIGINAL file (no tests found, wrong config, or already failing).`);
+  console.error('  Nothing was mutated. A failing decoy would prove nothing.');
+  process.exit(2);
+}
+console.log(`✓ ${target} passes on the original`);
+
 let restored = false;
 const restore = () => {
   if (restored) return;
@@ -87,12 +112,7 @@ try {
   if (!all && onDisk.includes(needle) && onDisk === original) throw new Error('mutation did not take');
   console.log(`✓ decoy applied to ${file}`);
 
-  let failed = false;
-  try {
-    execSync(`npx jest ${JSON.stringify(target)} --silent`, { stdio: 'pipe' });
-  } catch {
-    failed = true;
-  }
+  const failed = !runTarget();
 
   if (failed) {
     console.log(`✓ ${target} FAILED with the defect reintroduced — the guard bites.`);

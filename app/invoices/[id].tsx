@@ -769,15 +769,30 @@ export default function InvoiceDetailScreen() {
    * the authority rejects days later.
    */
   const reportMissing = (missing: Array<{ key: string; where: 'profile' | 'customer' }>) => {
-    const labels = missing.map((m) => t(m.key, m.key.split('.').pop() ?? m.key)).join('\n• ');
+    // Grouped by WHOSE detail is missing. A flat list read "• Provincia …
+    // • Provincia" on a Spanish device — the contractor's own province and the
+    // customer's, indistinguishable — above a single "Open business profile"
+    // button that could fix only half of it.
+    const label = (m: { key: string }) => t(m.key, m.key.split('.').pop() ?? m.key);
+    const group = (title: string, items: typeof missing) =>
+      items.length ? `${title}\n• ${items.map(label).join('\n• ')}` : '';
+    const ours = missing.filter((m) => m.where === 'profile');
+    const theirs = missing.filter((m) => m.where === 'customer');
+    const body = [
+      group(t('invoices.einvoiceMissingYourBusiness', 'Your business'), ours),
+      group(invoiceCustomerName || t('common.customer', 'Customer'), theirs),
+    ].filter(Boolean).join('\n\n');
     Alert.alert(
       t('invoices.einvoiceMissingTitle', 'Some details are missing'),
-      `${t('invoices.einvoiceMissingBody', 'This format needs a few more details before it can be sent:')}\n\n• ${labels}`,
+      `${t('invoices.einvoiceMissingBody', 'This format needs a few more details before it can be sent:')}\n\n${body}`,
       [
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-        missing.some((m) => m.where === 'profile')
-          ? { text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => router.push('/(modals)/business-settings' as any) }
-          : { text: t('common.ok', 'OK') },
+        ...(ours.length
+          ? [{ text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => router.push('/(modals)/business-settings' as any) }]
+          : []),
+        ...(theirs.length && invoiceCustomer
+          ? [{ text: t('invoices.einvoiceFixCustomer', 'Open customer details'), onPress: () => router.push({ pathname: '/(modals)/customers', params: { id: invoiceCustomer.id } } as any) }]
+          : []),
       ],
     );
   };

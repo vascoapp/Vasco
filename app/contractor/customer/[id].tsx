@@ -145,6 +145,16 @@ export default function CustomerDetailScreen() {
           <Text style={s.headerTitle}>{customer.name}</Text>
           <Text style={s.headerSub}>{[customer.email, customer.phone].filter(Boolean).join(' · ')}</Text>
         </View>
+        {/* The only way to edit a customer. There was none — not the name, not
+            the post code or tax id an e-invoice export refuses without. */}
+        <Pressable
+          onPress={() => router.push({ pathname: '/(modals)/customers', params: { id: customer.id } } as any)}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('customer.editDetails', 'Edit details')}
+        >
+          <Ionicons name="create-outline" size={22} color={SemanticColors.textPrimary} />
+        </Pressable>
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>

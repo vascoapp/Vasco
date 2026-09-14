@@ -913,7 +913,9 @@
     "quoteCount_other": "{{count}} offertes",
     "einvoiceNoFormatTitle": "Nog geen e-factuurformaat",
     "einvoiceNoFormatBody": "Vasco maakt nog geen e-factuur voor jouw land. Stuur de pdf — die is nog steeds een geldige factuur.",
-    "probabilityWithin30d": "{{pct}}% binnen 30 dagen"
+    "probabilityWithin30d": "{{pct}}% binnen 30 dagen",
+    "einvoiceMissingYourBusiness": "Je bedrijf",
+    "einvoiceFixCustomer": "Klantgegevens openen"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -3436,7 +3438,8 @@
     "address": "Adres",
     "city": "Plaats",
     "postcode": "Postcode",
-    "province": "Provincie"
+    "province": "Provincie",
+    "editDetails": "Gegevens wijzigen"
   },
   "inbox": {
     "fromCustomer": "Van klant",
@@ -4740,7 +4743,13 @@
     "saveFailed": "Klant kon niet worden opgeslagen.",
     "fieldPostcode": "Postcode",
     "fieldCity": "Plaats",
-    "fieldVatId": "Btw-nummer (zakelijke klanten)"
+    "fieldVatId": "Btw-nummer (zakelijke klanten)",
+    "editCustomer": "Klant wijzigen",
+    "notFound": "Deze klant is niet gevonden.",
+    "fieldProvince": "Provincie",
+    "fieldTaxIdIt": "Codice fiscale (Italië)",
+    "fieldSdiCode": "SDI-ontvangercode (Italië)",
+    "fieldPec": "PEC-adres (Italië)"
   },
   "aiChat": {
     "welcome": "Hallo! Ik ben je kantoorhulp. Vraag me om een klant te factureren, een klus in te plannen of cijfers te checken.",
