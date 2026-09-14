@@ -10,6 +10,8 @@
 import { formatMoney } from '../i18n/formatting';
 import type { Customer, Job } from '../types/contractor';
 import type { Invoice } from '../domain/documents';
+import { isJobFinished } from '../domain/jobs';
+import { findDocumentCustomer } from '../domain/customers';
 
 export type CustomerTag = 'vip' | 'loyal' | 'new' | 'risky' | 'inactive';
 
@@ -36,9 +38,13 @@ const DAY = 24 * 60 * 60 * 1000;
 export function scoreCustomer(ctx: Context): CustomerProfile {
   const now = (ctx.now ?? new Date()).getTime();
   const myJobs = ctx.jobs.filter((j) => j.customerId === ctx.customer.id);
-  const myInvoices = ctx.invoices.filter((i) => i.customer === ctx.customer.id);
+  // The shared resolver (FK first, then id or name in the `customer` slot):
+  // `i.customer === id` missed every invoice that carries its customer only
+  // as `customerId`, so their paid value never reached the tag (#214).
+  const myInvoices = ctx.invoices.filter((i) => findDocumentCustomer([ctx.customer], i) !== undefined);
 
-  const jobsCompleted = myJobs.filter((j) => j.status === 'completed').length;
+  // Invoiced and paid jobs are finished jobs too (#334).
+  const jobsCompleted = myJobs.filter((j) => isJobFinished(j.status)).length;
   const lifetimeValue = myInvoices
     .filter((i) => i.status === 'paid')
     .reduce((s, i) => s + (i.amount ?? 0), 0);

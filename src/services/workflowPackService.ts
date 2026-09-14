@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback } from 'react';
 import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { isJobFinished } from '../domain/jobs';
 import { addToQueue, getQueueHistory, getRequiredPermits } from './aiActionQueueService';
 import { getCurrentCountry, getCurrentUserId } from '../lib/currentUser';
 import { loadSubscription, getTierLimits } from './subscriptionService';
@@ -1288,7 +1289,9 @@ function matchTrigger(
         if (!job?.scheduledDate) continue;
         // Only work that is still going to happen. A cancelled or already
         // finished job must never trigger "see you tomorrow".
-        if (job.status === 'cancelled' || job.status === 'completed') continue;
+        // isJobFinished, not `=== 'completed'`: an invoiced or paid job is
+        // finished too, and was still eligible for "see you tomorrow" (#334).
+        if (job.status === 'cancelled' || isJobFinished(job.status)) continue;
         if (job.scheduledDate.slice(0, 10) !== wanted) continue;
 
         const cust = (ctx.customers ?? []).find((c: any) => c.id === job.customerId);

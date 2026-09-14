@@ -429,6 +429,12 @@ describe('workflowPackService', () => {
       expect(await queuedTitles([job({ status: 'completed' })])).toHaveLength(0);
     });
 
+    it.each(['invoiced', 'paid'])('does not remind about work already %s', async (status) => {
+      // A finished job moves on to invoiced and paid; only `completed` was
+      // skipped, so billed work could still get "see you tomorrow" (#334).
+      expect(await queuedTitles([job({ status })])).toHaveLength(0);
+    });
+
     it('ignores a visit that is not on the target day', async () => {
       expect(await queuedTitles([job({ scheduledDate: dayKey(5) })])).toHaveLength(0);
     });

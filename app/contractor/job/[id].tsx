@@ -37,6 +37,7 @@ import { getCohortCostVariance, type CohortCostVariance } from '../../../src/ser
 import { usePostcodeCohort } from '../../../src/services/cohortBenchmarkService';
 import { useKeyboardInset } from '../../../src/hooks/useKeyboardInset';
 import { useAppState } from '../../../src/state/AppState';
+import { isJobFinished } from '../../../src/domain/jobs';
 import { openDirections, formatDestination } from '../../../src/utils/directions';
 import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor/PhotoGallery';
 import { showPhotoPicker } from '../../../src/utils/photoPicker';
@@ -245,7 +246,9 @@ export default function JobDetailPage() {
       // so a LEAD was badged GEPLANT while the lifecycle stepper directly below
       // it correctly read "Lead". Carry the real status; the label maps it.
       status: appJob.status === 'in-progress' ? 'in_progress' as const
-        : appJob.status === 'completed' ? 'completed' as const
+        // Invoiced and paid work is finished work: it fell to 'confirmed' and
+        // a paid job was badged as scheduled (#334).
+        : isJobFinished(appJob.status) ? 'completed' as const
         : appJob.status === 'cancelled' ? 'cancelled' as const
         : appJob.status === 'lead' ? 'lead' as const
         : 'confirmed' as const,
