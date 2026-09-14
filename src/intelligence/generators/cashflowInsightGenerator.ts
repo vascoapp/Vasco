@@ -181,7 +181,7 @@ export function useCashflowInsight(ctx: GeneratorContext): ScoredInsight | null 
       rawScore: 0.85,
       reasoning: {
         observation: `Next month projected cashflow is negative: ${formatMoney(fin.projectedCashflow)}`,
-        evidence: `Based on 3-month trailing average and pipeline conversion rate.`,
+        evidence: `Based on the 3-month trailing average.`,
         implication: `Working capital shortfall may require financing or payment acceleration.`,
         suggestion: `Invoice completed work immediately. Send reminders for overdue invoices.`,
       },

@@ -93,3 +93,46 @@ describe('the projection says whether it is net or gross', () => {
     expect(net.projectedCashflow).toBeLessThan(gross.projectedCashflow);
   });
 });
+
+// 2026-09-14, German device: "ERWARTETER EINGANG € 10.619" was 90% a typed-in
+// "30% likely next month" × a win rate computed from ONE decided quote, and
+// "Hohe Konzentration" warned a contractor with ONE paid invoice.
+const quote = (id: string, amount: number, status: string) =>
+  ({ id, customer: 'c', job: 'j', amount, status } as never);
+
+describe('projections and rates stand on recorded outcomes', () => {
+  it('the projection does not add a fraction of the open pipeline', () => {
+    const invoices = [paid('i1', 3000, '2026-08-05T10:00:00')] as never;
+    const without = analyzeFinancials(invoices, [], NOW);
+    // Five decided quotes, so the win rate is REAL (100%) — with fewer it is 0
+    // and the old pipeline term would vanish on its own, proving nothing.
+    const withPipeline = analyzeFinancials(invoices, [
+      quote('q1', 30000, 'sent'),
+      ...['a', 'b', 'c', 'd', 'e'].map((id) => quote(id, 9000, 'accepted')),
+    ], NOW);
+    expect(withPipeline.quotePipeline).toBe(30000);
+    expect(withPipeline.quoteWinRate).toBe(100);
+    expect(withPipeline.projectedCashflow).toBe(without.projectedCashflow);
+  });
+
+  it('reports no win rate from fewer than five decided quotes', () => {
+    const four = analyzeFinancials([] as never, [
+      quote('a', 1, 'accepted'), quote('b', 1, 'rejected'), quote('c', 1, 'rejected'), quote('d', 1, 'expired'),
+    ], NOW);
+    expect(four.quoteWinRate).toBe(0);
+    const five = analyzeFinancials([] as never, [
+      quote('a', 1, 'accepted'), quote('b', 1, 'rejected'), quote('c', 1, 'rejected'), quote('d', 1, 'expired'), quote('e', 1, 'accepted'),
+    ], NOW);
+    expect(five.quoteWinRate).toBe(40);
+  });
+
+  it('does not call one paid invoice a concentration risk', () => {
+    const one = analyzeFinancials([paid('i1', 3200, '2026-08-05T10:00:00')] as never, [], NOW);
+    expect(one.topCustomers[0].percentage).toBe(100);
+    expect(one.concentrationRisk).toBe(false);
+    const five = analyzeFinancials(
+      ['1', '2', '3', '4', '5'].map((n) => paid(`i${n}`, 1000, `2026-08-0${n}T10:00:00`)) as never, [], NOW,
+    );
+    expect(five.concentrationRisk).toBe(true);
+  });
+});

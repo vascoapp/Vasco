@@ -1732,7 +1732,8 @@
     "profit": "Profitto",
     "reminderCopied": "Promemoria copiato negli appunti",
     "paymentReminder": "Promemoria di pagamento",
-    "reminderMessage": "Ciao {{customer}}, un promemoria gentile: la tua fattura di {{amount}} è in ritardo di {{days}} giorni. Potresti procedere al pagamento? Grazie!",
+    "reminderMessage_one": "Gentile {{customer}},\n\nle ricordiamo cortesemente che la fattura {{number}} di {{amount}} è in ritardo di {{count}} giorno. Potrebbe procedere al pagamento?\n\nGrazie,\n{{business}}",
+    "reminderMessage_other": "Gentile {{customer}},\n\nle ricordiamo cortesemente che la fattura {{number}} di {{amount}} è in ritardo di {{count}} giorni. Potrebbe procedere al pagamento?\n\nGrazie,\n{{business}}",
     "reminderTemplate_one": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fattura in sospeso.\n\nCordiali saluti",
     "reminderTemplate_other": "Gentile cliente,\n\nLe ricordiamo cortesemente {{count}} fatture in sospeso.\n\nCordiali saluti"
   },

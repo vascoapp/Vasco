@@ -26,6 +26,8 @@ import { useFinancialAnalysis } from '../../src/services/financialAnalysisServic
 import { MoatInsightsCard } from '../../src/components/contractor/MoatInsightsCard';
 import { ReconciliationCard } from '../../src/components/contractor/ReconciliationCard';
 import { formatCurrency, compactCurrency, type Country } from '../../src/i18n/formatting';
+import { documentNumber } from '../../src/domain/documents';
+import { overdueReminderMessage } from '../../src/services/overdueReminderMessage';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { Sparkline } from '../../src/components/shared/Sparkline';
@@ -376,7 +378,7 @@ export default function GeldScreen() {
         {/* ─── CASHFLOW FORECAST (embedded self-styled component) ─── */}
         {/* R300: ML cashflow-gap prediction banner — hidden when low confidence or small gap */}
         <CashflowGapPredictionCard />
-        <CashFlowForecastCard invoices={invoices as any} quotes={quotes as any} jobs={[] as any} country={(businessProfile?.country as any) ?? 'NL'} />
+        <CashFlowForecastCard invoices={invoices as any} country={(businessProfile?.country as any) ?? 'NL'} />
 
         {/* ─── FINANCIAL AI QUEUE (was VascoCard) ─── */}
         {(financialQueue.length > 0 || topInsight) && (
@@ -737,7 +739,17 @@ export default function GeldScreen() {
                     hitSlop={6}
                     onPress={(e) => {
                       e.stopPropagation?.();
-                      Share.share({ message: t('money.reminderMessage', { defaultValue: 'Hi {{customer}}, a friendly reminder that your invoice of {{amount}} is now {{days}} days overdue. Could you arrange payment? Thanks!', customer: od.customer, amount: formatCurrency(od.amount), days: od.daysOverdue }) });
+                      const inv = invoices.find((i) => i.id === od.invoiceId);
+                      Share.share({
+                        message: overdueReminderMessage(t, {
+                          customer: od.customer,
+                          number: documentNumber(inv ?? { id: od.invoiceId }),
+                          amount: formatCurrency(od.amount, kpiCountry),
+                          days: od.daysOverdue,
+                          // Profile first, account as fallback (#218).
+                          business: businessProfile?.businessName || user?.company || '',
+                        }),
+                      });
                     }}
                   >
                     <DKLabel style={s.remindBtnText}>{t('dk.actions.remind', 'Remind')}</DKLabel>

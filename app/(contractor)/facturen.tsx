@@ -44,6 +44,7 @@ import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber } from '../../src/domain/documents';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { overdueReminderMessage, daysPastDue } from '../../src/services/overdueReminderMessage';
 import { PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import type { Country } from '../../src/i18n/formatting';
 import { computeLateFee, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
@@ -393,15 +394,17 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       // record still has a customer, an amount and a due date,
                       // so open the share sheet with a real reminder instead of
                       // claiming one went out.
-                      const daysLate = Math.max(
-                        0,
-                        Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
-                      );
-                      const msg = t('money.reminderMessage', {
-                        defaultValue: 'Hi {{customer}}, a friendly reminder that your invoice of {{amount}} is now {{days}} days overdue. Could you arrange payment? Thanks!',
-                        customer: (invoice as any).customer ?? (invoice as any).customerName ?? '',
+                      // One builder with Geld's Erinnern (number, sender, register).
+                      // The customer resolves through findDocumentCustomer: a raw
+                      // `invoice.customer` is an ID on half the corpus (#214), and
+                      // a missing due date made `new Date(undefined)` → "NaN days".
+                      const msg = overdueReminderMessage(t, {
+                        customer: findDocumentCustomer(customers, invoice)?.name ?? (invoice as any).customerName ?? '',
+                        number: documentNumber(invoice),
                         amount: formatCurrency(invoice.amount, country),
-                        days: daysLate,
+                        days: daysPastDue(invoice),
+                        // Profile first, account as fallback (#218).
+                        business: businessProfile?.businessName || user?.company || '',
                       });
                       const res = await Share.share({ message: msg, title: t('invoices.sendReminder', 'Herinnering') });
                       if (res.action !== Share.dismissedAction) hapticSuccess();

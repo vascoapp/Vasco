@@ -13,6 +13,11 @@ import { useExpenses, type Expense } from './expenseService';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { findDocumentCustomer } from '../domain/customers';
 
+/** Decided quotes (accepted/rejected/expired) before a win rate means anything. */
+export const MIN_DECIDED_QUOTES = 5;
+/** Paid invoices before customer concentration is a finding rather than arithmetic. */
+export const MIN_PAID_INVOICES_FOR_CONCENTRATION = 5;
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -268,7 +273,11 @@ export function analyzeFinancials(
     q.status === 'accepted' || q.status === 'rejected' || q.status === 'expired'
   );
   const acceptedQuotes = quotes.filter(q => q.status === 'accepted');
-  const quoteWinRate = decidedQuotes.length > 0
+  // Below MIN_DECIDED_QUOTES a rate is noise: one accepted quote read as a
+  // 100% win rate, and the projection below multiplied the whole pipeline by
+  // it. 0 = unknown; every reader already gates on `> 0`. Same threshold as
+  // eveLiveActionService's win-rate card (#311).
+  const quoteWinRate = decidedQuotes.length >= MIN_DECIDED_QUOTES
     ? Math.round((acceptedQuotes.length / decidedQuotes.length) * 100)
     : 0;
 
@@ -291,16 +300,21 @@ export function analyzeFinancials(
   const monthlyOutflows = last6.map(mk => monthMap[mk]?.expenses || 0);
   const netCashflow = monthlyInflows.map((inflow, i) => inflow - monthlyOutflows[i]);
 
-  // Projected cashflow = trailing 3-month average net + outstanding pipeline
-  // probability. With no recorded expenses the "net" is just inflow, so this
-  // is an INCOME projection — `projectedIsNet` tells the UI which word to use
-  // rather than letting the figure imply the stronger claim.
+  // Projected cashflow = trailing 3-month average net. With no recorded
+  // expenses the "net" is just inflow, so this is an INCOME projection —
+  // `projectedIsNet` tells the UI which word to use rather than letting the
+  // figure imply the stronger claim.
+  //
+  // It USED to add `quotePipeline × winRate × 0.3 // 30% likely next month`.
+  // On the German demo that was 31.840 × 100% (one decided quote) × 0.3 =
+  // € 9.552 of a € 10.619 "Erwarteter Eingang" — 90% of the figure from a
+  // typed-in 30% and a one-sample rate, directly under a 30-day forecast
+  // saying € 5.380 (2026-09-14, learnings #327). Pipeline is its own KPI.
   const recentNet = netCashflow.slice(-3);
   const avgRecentNet = recentNet.length > 0
     ? recentNet.reduce((s, v) => s + v, 0) / recentNet.length
     : 0;
-  const pipelineConversion = quotePipeline * (quoteWinRate / 100) * 0.3; // 30% likely next month
-  const projectedCashflow = Math.round(avgRecentNet + pipelineConversion);
+  const projectedCashflow = Math.round(avgRecentNet);
 
   // ---- Best / worst month ----
   let bestMonth: { month: string; amount: number } | null = null;
@@ -350,7 +364,10 @@ export function analyzeFinancials(
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5);
 
-  const concentrationRisk = topCustomers.length > 0 && topCustomers[0].percentage > 50;
+  // One paid invoice is 100% "concentration" by construction; the warning
+  // told a contractor with a single paid job to diversify (2026-09-14).
+  const concentrationRisk = paidInvoices.length >= MIN_PAID_INVOICES_FOR_CONCENTRATION
+    && topCustomers.length > 0 && topCustomers[0].percentage > 50;
 
   return {
     totalRevenue,

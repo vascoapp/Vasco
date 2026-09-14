@@ -1,8 +1,10 @@
 // =============================================================================
 // CASH-FLOW FORECAST CARD
 // =============================================================================
-// Sits on Vandaag / Geld. Shows the 30-day net cash change + the worst day
-// so the contractor knows if they should chase payment or delay a PO.
+// Mounted on Geld. Shows what open invoices bring in over 30 days. The signed
+// net change, the in/out split and the low-cash warning appear ONLY when an
+// outflow source is passed — without one, "Ausgang € 0" was a claim nothing
+// had measured (2026-09-14, see cashFlowForecastService).
 // =============================================================================
 
 import { useEffect, useMemo, useState } from 'react';
@@ -13,13 +15,12 @@ import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { buildForecast, type ForecastSummary } from '../../services/cashFlowForecastService';
 import { formatCurrency0, type Country } from '../../i18n/formatting';
-import type { Invoice, Quote } from '../../domain/documents';
-import type { Job } from '../../types/contractor';
+import type { Invoice } from '../../domain/documents';
 
 interface Props {
+  /** Open invoices are the only inflow counted — see cashFlowForecastService
+   *  for why quotes and jobs were removed. */
   invoices: Invoice[];
-  quotes: Quote[];
-  jobs: Job[];
   startingBalance?: number;
   /** Drives currency symbol + grouping. Defaults to NL (EUR). UK→£, US→$. */
   country?: Country;
@@ -33,27 +34,30 @@ interface Props {
 const formatMoney0 = formatCurrency0;
 
 
-export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, country = 'NL', onPress }: Props) {
+export function CashFlowForecastCard({ invoices, startingBalance, country = 'NL', onPress }: Props) {
   const { t } = useTranslation();
   const [forecast, setForecast] = useState<ForecastSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    buildForecast({ invoices, quotes, jobs, startingBalance }).then((f) => {
+    buildForecast({ invoices, startingBalance }).then((f) => {
       if (!cancelled) setForecast(f);
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [invoices, quotes, jobs, startingBalance]);
+  }, [invoices, startingBalance]);
 
   const headline = useMemo(() => {
     if (!forecast) return null;
+    // Without an outflow source the only honest figure is what is owed —
+    // a signed "net change" would present money in as the whole picture.
+    if (!forecast.outflowKnown) return formatMoney0(Math.round(forecast.totalInflow), country);
     const net = forecast.netChange;
     const sign = net >= 0 ? '+' : '−';
     return `${sign}${formatMoney0(Math.abs(Math.round(net)), country)}`;
   }, [forecast, country]);
 
   if (!forecast) return null;
-  const isNegative = forecast.minCashDay.cumulative < 0;
+  const isNegative = forecast.outflowKnown && forecast.minCashDay.cumulative < 0;
 
   return (
     <Pressable
@@ -67,14 +71,19 @@ export function CashFlowForecastCard({ invoices, quotes, jobs, startingBalance, 
         <Text style={s.title}>{t('cashflow.forecastTitle', 'Cash flow — next 30 days')}</Text>
       </View>
 
+      {!forecast.outflowKnown ? (
+        <Text style={s.metaLabel}>{t('cashflow.toReceive', 'To receive')}</Text>
+      ) : null}
       <Text style={[s.amount, { color: forecast.netChange >= 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError }]}>
         {headline}
       </Text>
 
-      <View style={s.row}>
-        <Meta label={t('cashflow.inflow', 'Inflow')} value={formatMoney0(Math.round(forecast.totalInflow), country)} color={SemanticColors.feedbackSuccess} />
-        <Meta label={t('cashflow.outflow', 'Outflow')} value={formatMoney0(Math.round(forecast.totalOutflow), country)} color={SemanticColors.feedbackError} />
-      </View>
+      {forecast.outflowKnown ? (
+        <View style={s.row}>
+          <Meta label={t('cashflow.inflow', 'Inflow')} value={formatMoney0(Math.round(forecast.totalInflow), country)} color={SemanticColors.feedbackSuccess} />
+          <Meta label={t('cashflow.outflow', 'Outflow')} value={formatMoney0(Math.round(forecast.totalOutflow), country)} color={SemanticColors.feedbackError} />
+        </View>
+      ) : null}
 
       {isNegative ? (
         <View style={s.warning}>

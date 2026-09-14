@@ -1732,7 +1732,8 @@
     "profit": "Profit",
     "reminderCopied": "Reminder copied to clipboard",
     "paymentReminder": "Payment reminder",
-    "reminderMessage": "Hi {{customer}}, a friendly reminder that your invoice of {{amount}} is now {{days}} days overdue. Could you arrange payment? Thanks!",
+    "reminderMessage_one": "Hello {{customer}},\n\nA friendly reminder that invoice {{number}} for {{amount}} is now {{count}} day overdue. Could you arrange payment?\n\nThank you,\n{{business}}",
+    "reminderMessage_other": "Hello {{customer}},\n\nA friendly reminder that invoice {{number}} for {{amount}} is now {{count}} days overdue. Could you arrange payment?\n\nThank you,\n{{business}}",
     "reminderTemplate_one": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoice.\n\nKind regards",
     "reminderTemplate_other": "Dear customer,\n\nThis is a friendly reminder for {{count}} outstanding invoices.\n\nKind regards"
   },

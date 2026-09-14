@@ -1719,7 +1719,8 @@
     "profit": "Winst",
     "reminderCopied": "Herinnering gekopieerd naar klembord",
     "paymentReminder": "Betaalherinnering",
-    "reminderMessage": "Hoi {{customer}}, een vriendelijke herinnering dat je factuur van {{amount}} inmiddels {{days}} dagen openstaat. Zou je de betaling kunnen regelen? Alvast bedankt!",
+    "reminderMessage_one": "Beste {{customer}},\n\nEen vriendelijke herinnering: factuur {{number}} van {{amount}} is inmiddels {{count}} dag over de vervaldatum. Wilt u de betaling regelen?\n\nAlvast bedankt,\n{{business}}",
+    "reminderMessage_other": "Beste {{customer}},\n\nEen vriendelijke herinnering: factuur {{number}} van {{amount}} is inmiddels {{count}} dagen over de vervaldatum. Wilt u de betaling regelen?\n\nAlvast bedankt,\n{{business}}",
     "reminderTemplate_one": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande factuur.\n\nMet vriendelijke groet",
     "reminderTemplate_other": "Beste klant,\n\nDit is een vriendelijke herinnering voor {{count}} openstaande facturen.\n\nMet vriendelijke groet"
   },

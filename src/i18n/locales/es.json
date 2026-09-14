@@ -1732,7 +1732,8 @@
     "profit": "Beneficio",
     "reminderCopied": "Recordatorio copiado al portapapeles",
     "paymentReminder": "Recordatorio de pago",
-    "reminderMessage": "Hola {{customer}}, un recordatorio amable: tu factura de {{amount}} lleva {{days}} días vencida. ¿Podrías gestionar el pago? ¡Gracias!",
+    "reminderMessage_one": "Hola {{customer}}:\n\nLe recordamos amablemente que la factura {{number}} de {{amount}} lleva {{count}} día vencida. ¿Podría gestionar el pago?\n\nGracias,\n{{business}}",
+    "reminderMessage_other": "Hola {{customer}}:\n\nLe recordamos amablemente que la factura {{number}} de {{amount}} lleva {{count}} días vencida. ¿Podría gestionar el pago?\n\nGracias,\n{{business}}",
     "reminderTemplate_one": "Estimado cliente,\n\nLe recordamos amablemente {{count}} factura pendiente.\n\nAtentamente",
     "reminderTemplate_other": "Estimado cliente,\n\nLe recordamos amablemente {{count}} facturas pendientes.\n\nAtentamente"
   },

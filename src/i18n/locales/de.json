@@ -1732,7 +1732,8 @@
     "profit": "Gewinn",
     "reminderCopied": "Erinnerung in Zwischenablage kopiert",
     "paymentReminder": "Zahlungserinnerung",
-    "reminderMessage": "Hallo {{customer}}, eine freundliche Erinnerung: Ihre Rechnung über {{amount}} ist seit {{days}} Tagen überfällig. Könnten Sie die Zahlung veranlassen? Vielen Dank!",
+    "reminderMessage_one": "Hallo {{customer}},\n\neine freundliche Erinnerung: Rechnung {{number}} über {{amount}} ist seit {{count}} Tag überfällig. Könnten Sie die Zahlung veranlassen?\n\nVielen Dank\n{{business}}",
+    "reminderMessage_other": "Hallo {{customer}},\n\neine freundliche Erinnerung: Rechnung {{number}} über {{amount}} ist seit {{count}} Tagen überfällig. Könnten Sie die Zahlung veranlassen?\n\nVielen Dank\n{{business}}",
     "reminderTemplate_one": "Sehr geehrter Kunde,\n\nHiermit erinnern wir freundlich an {{count}} ausstehende Rechnung.\n\nMit freundlichen Grüßen",
     "reminderTemplate_other": "Sehr geehrter Kunde,\n\nHiermit erinnern wir freundlich an {{count}} ausstehende Rechnungen.\n\nMit freundlichen Grüßen"
   },

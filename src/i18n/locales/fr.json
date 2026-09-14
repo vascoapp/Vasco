@@ -1732,7 +1732,8 @@
     "profit": "Bénéfice",
     "reminderCopied": "Rappel copié dans le presse-papiers",
     "paymentReminder": "Rappel de paiement",
-    "reminderMessage": "Bonjour {{customer}}, un rappel amical : votre facture de {{amount}} est en retard de {{days}} jours. Pourriez-vous procéder au paiement ? Merci !",
+    "reminderMessage_one": "Bonjour {{customer}},\n\nUn rappel amical : la facture {{number}} de {{amount}} est en retard de {{count}} jour. Pourriez-vous procéder au paiement ?\n\nMerci,\n{{business}}",
+    "reminderMessage_other": "Bonjour {{customer}},\n\nUn rappel amical : la facture {{number}} de {{amount}} est en retard de {{count}} jours. Pourriez-vous procéder au paiement ?\n\nMerci,\n{{business}}",
     "reminderTemplate_one": "Cher client,\n\nCeci est un rappel amical pour {{count}} facture en attente.\n\nCordialement",
     "reminderTemplate_other": "Cher client,\n\nCeci est un rappel amical pour {{count}} factures en attente.\n\nCordialement"
   },
