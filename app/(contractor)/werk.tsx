@@ -30,6 +30,7 @@ import { formatCurrency, formatTime } from '../../src/i18n/formatting';
 import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { todayKey } from '../../src/utils/dateKey';
 import type { Country } from '../../src/i18n/formatting';
+import { contractValue } from '../../src/services/progressBillingService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -574,7 +575,11 @@ export default function WerkScreen() {
                 <JobRow
                   key={project.id}
                   title={project.title}
-                  meta={`${t('dk.pill.jobsCount', { count: project.jobIds.length })} · ${formatCurrency(project.totalBudget, (user?.country ?? 'NL') as Country)}`}
+                  // The CONTRACT value (agreed price, budget only as fallback) —
+                  // the figure Geld's Projectboek and the project screen use.
+                  // This showed the raw budget, so two projects listed here as
+                  // 12.500 + 18.000 while Projectboek said 29.000 (16.500 quoted).
+                  meta={`${t('dk.pill.jobsCount', { count: project.jobIds.length })} · ${formatCurrency(contractValue(project), (user?.country ?? 'NL') as Country)}`}
                   accent={project.status === 'active' ? DK.colors.accent : DK.colors.textMuted}
                   onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
                 />
