@@ -12,6 +12,7 @@ import type { Invoice, Quote } from '../domain/documents';
 import { useExpenses, type Expense } from './expenseService';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { findDocumentCustomer } from '../domain/customers';
+import { daysOverdue as invoiceDaysOverdue } from '../utils/invoiceDue';
 
 /** Decided quotes (accepted/rejected/expired) before a win rate means anything. */
 export const MIN_DECIDED_QUOTES = 5;
@@ -241,8 +242,11 @@ export function analyzeFinancials(
   const overdueCount = overdueInvoices.length;
 
   const overdueDetails: OverdueDetail[] = overdueInvoices.map(inv => {
-    const due = parseDate(inv.dueDate);
-    const daysOverdue = due ? Math.max(0, daysBetween(due, now)) : Math.abs(inv.dueInDays || 0);
+    // The shared calendar-day answer (utils/invoiceDue). This screen had its
+    // own `Math.round(ms)` over a UTC-parsed key, so it read 15 in the German
+    // afternoon and 14 in the morning, beside a queue card saying 14 (device
+    // walk, 2026-09-14).
+    const daysOverdue = invoiceDaysOverdue(inv, now) ?? 0;
     return {
       invoiceId: inv.id,
       customer: customerLabel(inv),

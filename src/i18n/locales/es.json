@@ -2808,6 +2808,7 @@
       "overdueCount_other": "{{count}} vencidos",
       "decided": "Decidido",
       "overdue": "Vencido",
+      "decisionsOverdue": "Decisiones vencidas",
       "revenue": "Ingresos",
       "time": "Hora",
       "location": "Lugar",

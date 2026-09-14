@@ -25,7 +25,7 @@
 
 import type { Invoice } from '../domain/documents';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../intelligence/mlModels';
-import { localDateKey, parseLocalDateKey } from '../utils/dateKey';
+import { localDateKey, parseCalendarDay, calendarDaysBetween } from '../utils/dateKey';
 
 export interface ForecastDay {
   date: string;             // YYYY-MM-DD
@@ -65,26 +65,6 @@ function addDays(d: Date, n: number): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 
-/** A stored due/expected date → local calendar day. Two shapes exist: a
- *  `YYYY-MM-DD` key (fixtures, the DB column) and a full ISO instant (every
- *  in-app writer uses `toISOString()`). Reading an instant by its prefix is
- *  the UTC day, one day early for anything due between 22:00 and midnight
- *  in CEST — so an instant is parsed as the instant it is. */
-function parseDay(value: string | null | undefined): Date | null {
-  if (!value) return null;
-  if (value.includes('T')) {
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  }
-  return parseLocalDateKey(value);
-}
-
-function daysBetween(from: Date, to: Date): number {
-  const a = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
-  const b = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
-  return Math.round((b - a) / 86_400_000);
-}
-
 /** Days from today until an open invoice is expected in, or null when there
  *  is nothing honest to place it by (no due date, no confident prediction). */
 async function expectedInvoiceOffset(inv: Invoice, today: Date): Promise<number | null> {
@@ -97,14 +77,14 @@ async function expectedInvoiceOffset(inv: Invoice, today: Date): Promise<number 
         dayOfWeek: sent.getDay(),
       });
       if (pred.confidence >= PREDICTION_MIN_DISPLAY_CONFIDENCE && Number.isFinite(pred.predictedDays)) {
-        return Math.max(0, daysBetween(today, addDays(sent, Math.round(pred.predictedDays))));
+        return Math.max(0, calendarDaysBetween(today, addDays(sent, Math.round(pred.predictedDays))));
       }
     } catch {
       // fall through to the due date
     }
   }
-  const due = parseDay(inv.dueDate);
-  if (due) return Math.max(0, daysBetween(today, due));
+  const due = parseCalendarDay(inv.dueDate);
+  if (due) return Math.max(0, calendarDaysBetween(today, due));
   // `dueInDays` is the type's required field and what every list reads when a
   // row has no stored due date; dropping such an invoice would under-report
   // money genuinely owed.
@@ -141,8 +121,8 @@ export async function buildForecast(input: ForecastInput): Promise<ForecastSumma
   for (const po of input.purchaseOrders ?? []) {
     const amt = po.amount ?? 0;
     if (amt <= 0) continue;
-    const target = parseDay(po.expectedDate) ?? addDays(today, 7);
-    const offset = Math.max(0, daysBetween(today, target));
+    const target = parseCalendarDay(po.expectedDate) ?? addDays(today, 7);
+    const offset = Math.max(0, calendarDaysBetween(today, target));
     if (offset >= horizon) continue;
     days[offset].outflow += amt;
     byCategory.purchaseOrders += amt;

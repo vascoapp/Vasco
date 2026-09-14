@@ -19,7 +19,7 @@
 // whenever it exists and fall back to the stored value only when it does not.
 // =============================================================================
 
-const MS_PER_DAY = 86_400_000;
+import { parseCalendarDay, calendarDaysBetween } from './dateKey';
 
 /** Shape shared by the several invoice representations in the app. */
 export interface DueLike {
@@ -40,15 +40,12 @@ export interface DueLike {
 export function daysUntilDue(inv: DueLike | null | undefined, now: Date = new Date()): number | null {
   if (!inv) return null;
 
-  const raw = inv.dueDate;
-  if (raw) {
-    const due = new Date(raw);
-    if (!Number.isNaN(due.getTime())) {
-      const dueMid = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
-      const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      return Math.round((dueMid - nowMid) / MS_PER_DAY);
-    }
-  }
+  // `new Date('2026-08-31')` is UTC midnight — the PREVIOUS local day anywhere
+  // west of UTC (the US market), so a key must be read as a local day.
+  // parseCalendarDay reads a key as a local day and an ISO instant as the
+  // instant it is.
+  const due = parseCalendarDay(inv.dueDate);
+  if (due) return calendarDaysBetween(now, due);
 
   return typeof inv.dueInDays === 'number' ? inv.dueInDays : null;
 }

@@ -44,7 +44,8 @@ import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber } from '../../src/domain/documents';
 import { findDocumentCustomer } from '../../src/domain/customers';
-import { overdueReminderMessage, daysPastDue } from '../../src/services/overdueReminderMessage';
+import { overdueReminderMessage } from '../../src/services/overdueReminderMessage';
+import { daysOverdue } from '../../src/utils/invoiceDue';
 import { PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import type { Country } from '../../src/i18n/formatting';
 import { computeLateFee, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
@@ -317,14 +318,17 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   // since it was written; the country-blind sibling was simply
                   // never swapped out here. The rate is now shown rather than
                   // hardcoded in the label, because it differs per market.
-                  const daysOverdue = Math.max(1, Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)));
+                  // Shared calendar-day count (utils/invoiceDue). The inline
+                  // `floor(ms)` over a UTC-parsed key was a day out west of UTC
+                  // and gave NaN interest for an invoice with no due date.
+                  const lateDays = Math.max(1, daysOverdue(invoice) ?? 0);
                   // A bare cast to LateFeeCountry let a US contractor through to a
                   // rate table with no US row: NaN interest. No regime, no line.
                   const feeCountry = lateFeeCountry(country);
                   if (!feeCountry) return null;
                   const fee = computeLateFee({
                     invoiceAmount: invoice.amount,
-                    daysOverdue,
+                    daysOverdue: lateDays,
                     country: feeCountry,
                     customerType: lateFeeCustomerType(findDocumentCustomer(customers, invoice), feeCountry),
                   });
@@ -402,7 +406,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         customer: findDocumentCustomer(customers, invoice)?.name ?? (invoice as any).customerName ?? '',
                         number: documentNumber(invoice),
                         amount: formatCurrency(invoice.amount, country),
-                        days: daysPastDue(invoice),
+                        days: daysOverdue(invoice) ?? 0,
                         // Profile first, account as fallback (#218).
                         business: businessProfile?.businessName || user?.company || '',
                       });

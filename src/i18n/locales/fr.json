@@ -2808,6 +2808,7 @@
       "overdueCount_other": "{{count}} en retard",
       "decided": "Décidé",
       "overdue": "En retard",
+      "decisionsOverdue": "Décisions en retard",
       "revenue": "Revenus",
       "time": "Heure",
       "location": "Lieu",

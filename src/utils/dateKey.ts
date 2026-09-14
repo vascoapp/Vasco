@@ -46,6 +46,39 @@ export function parseLocalDateKey(key: string | null | undefined): Date | null {
 }
 
 /**
+ * A stored calendar DAY → local midnight, whichever of the two shapes this
+ * codebase stores it in: a `YYYY-MM-DD` key (fixtures, date columns) or a full
+ * ISO instant (every in-app writer that uses `toISOString()`).
+ *
+ * `parseLocalDateKey` alone reads an instant by its prefix, which is the UTC
+ * day — one early for anything stamped between 22:00 and midnight in CEST.
+ * `new Date(key)` alone reads a key as UTC midnight. This takes each shape as
+ * what it is.
+ */
+export function parseCalendarDay(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  if (value.includes('T')) {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  return parseLocalDateKey(value);
+}
+
+/**
+ * Whole calendar days from `from` to `to` in LOCAL time (negative if `to` is
+ * earlier). Time of day is ignored and a DST change cannot shift it.
+ *
+ * Replaces `Math.round((b - a) / 86_400_000)` over a UTC-parsed due date: at
+ * 17:00 in Germany, an invoice due 31 Aug read "15 Tage überfällig" on
+ * Finanzen and 14 in the queue beside it, and flipped back in the morning.
+ */
+export function calendarDaysBetween(from: Date, to: Date): number {
+  const a = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
+  const b = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.round((b - a) / 86_400_000);
+}
+
+/**
  * `YYYY-MM-DD` for today, local time. Call this at render/handler time —
  * never hoist the result to module scope, where it freezes at bundle load
  * and the app reports a stale "today" for the rest of the session.

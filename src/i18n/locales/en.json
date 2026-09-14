@@ -2808,6 +2808,7 @@
       "overdueCount_other": "{{count}} overdue",
       "decided": "Decided",
       "overdue": "Overdue",
+      "decisionsOverdue": "Overdue decisions",
       "revenue": "Revenue",
       "time": "Time",
       "location": "Location",

@@ -322,7 +322,10 @@ export default function BedrijfScreen() {
             <View style={s.kpiRow}>
               <KpiTile label={t('dk.tabs.contacts', 'Contacts').toUpperCase()} value={customers.length} tone={DK.colors.accent} />
               <KpiTile label={t('dk.tabs.decisions', 'Decisions').toUpperCase()} value={activeTrackers.length} tone={DK.colors.highlight} />
-              <KpiTile label={t('dk.pill.overdue', 'Overdue').toUpperCase()} value={totalOverdue} tone={totalOverdue > 0 ? DK.colors.danger : DK.colors.textMuted} />
+              {/* Counts overdue DECISION items, not invoices. Labelled bare
+                  "Überfällig" it read 0 on a device beside two overdue
+                  invoices (DE/FR/IT walks, 2026-09-14). */}
+              <KpiTile label={t('dk.pill.decisionsOverdue', 'Overdue decisions').toUpperCase()} value={totalOverdue} tone={totalOverdue > 0 ? DK.colors.danger : DK.colors.textMuted} lines={2} />
             </View>
 
             {/* Top 3 customers by revenue.
@@ -621,12 +624,14 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
   );
 }
 
-function KpiTile({ label, value, tone }: { label: string; value: number; tone: string }) {
+function KpiTile({ label, value, tone, lines = 1 }: { label: string; value: number; tone: string; lines?: 1 | 2 }) {
   return (
     <View style={s.kpiTile}>
       {/* Long labels ("BESLISSINGEN") were wrapping mid-word to "BESLISSING /
-          EN" in these narrow tiles. Shrink to fit on one line instead. */}
-      <Text style={s.kpiLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          EN" in these narrow tiles. Shrink to fit on one line instead. Only a
+          label with a space in it may take two lines (`lines={2}`), where it
+          breaks between words. */}
+      <Text style={s.kpiLabel} numberOfLines={lines} adjustsFontSizeToFit minimumFontScale={0.7}>
         {label}
       </Text>
       <Text style={[s.kpiValue, { color: tone }]}>{value}</Text>

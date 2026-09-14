@@ -2795,6 +2795,7 @@
       "overdueCount_other": "{{count}} te laat",
       "decided": "Beslist",
       "overdue": "Te laat",
+      "decisionsOverdue": "Beslissingen te laat",
       "revenue": "Omzet",
       "time": "Tijd",
       "location": "Locatie",

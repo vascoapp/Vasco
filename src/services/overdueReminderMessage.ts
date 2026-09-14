@@ -40,13 +40,3 @@ export function overdueReminderMessage(t: TFunction, input: OverdueReminderInput
   // An empty business name leaves the sign-off line dangling.
   return text.replace(/[ \t]+$/gm, '').trimEnd();
 }
-
-/** Whole days an invoice is past due, from its stored due date or, failing
- *  that, `dueInDays` (negative when overdue). Never NaN. */
-export function daysPastDue(inv: { dueDate?: string; dueInDays?: number }, now: Date = new Date()): number {
-  const due = inv.dueDate ? new Date(inv.dueDate) : null;
-  if (due && !Number.isNaN(due.getTime())) {
-    return Math.max(0, Math.floor((now.getTime() - due.getTime()) / 86_400_000));
-  }
-  return Number.isFinite(inv.dueInDays) ? Math.max(0, -Math.round(inv.dueInDays as number)) : 0;
-}

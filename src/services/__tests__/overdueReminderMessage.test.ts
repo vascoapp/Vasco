@@ -12,7 +12,7 @@ import de from '../../i18n/locales/de.json';
 import fr from '../../i18n/locales/fr.json';
 import es from '../../i18n/locales/es.json';
 import it_ from '../../i18n/locales/it.json';
-import { overdueReminderMessage, daysPastDue } from '../overdueReminderMessage';
+import { overdueReminderMessage } from '../overdueReminderMessage';
 
 const i18n = i18next.createInstance();
 beforeAll(async () => {
@@ -80,19 +80,5 @@ describe('overdueReminderMessage', () => {
     const msg = overdueReminderMessage(i18n.t.bind(i18n), { ...input, business: '' });
     expect(msg).toBe(msg.trimEnd());
     expect(msg.endsWith('Vielen Dank')).toBe(true);
-  });
-});
-
-describe('daysPastDue', () => {
-  const now = new Date('2026-09-14T12:00:00Z');
-  it('counts from the stored due date', () => {
-    expect(daysPastDue({ dueDate: '2026-08-30T12:00:00Z' }, now)).toBe(15);
-  });
-  it('never returns NaN without a due date', () => {
-    expect(daysPastDue({ dueInDays: -12 }, now)).toBe(12);
-    expect(daysPastDue({}, now)).toBe(0);
-  });
-  it('is zero for an invoice not yet due', () => {
-    expect(daysPastDue({ dueDate: '2026-09-20' }, now)).toBe(0);
   });
 });
