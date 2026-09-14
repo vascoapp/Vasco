@@ -5470,7 +5470,8 @@
     },
     "plShort": "Résultat",
     "grossProfit": "Marge brute",
-    "grossMargin": "Taux de marge brute"
+    "grossMargin": "Taux de marge brute",
+    "chooseMonth": "Choisir le mois"
   },
   "agreements": {
     "selectJob": "Sélectionner un chantier",

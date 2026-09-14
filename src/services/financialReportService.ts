@@ -11,6 +11,7 @@ import { analyzeFinancials, type FinancialSummary, type MonthlyBucket } from './
 import type { Invoice, Quote } from '../domain/documents';
 import type { JobMaterial } from '../domain/materials';
 import type { Expense } from './expenseService';
+import { daysOverdue } from '../utils/invoiceDue';
 
 // =============================================================================
 // TYPES
@@ -80,6 +81,43 @@ const MONTH_NAMES = [
 
 function getMonthKey(month: number, year: number): string {
   return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+/**
+ * What was overdue and outstanding at the END of a period (or now, if the
+ * period has not ended) — a BALANCE, not a sum over the period's invoices.
+ *
+ * The P&L figures below are per-period flows, and overdue/outstanding were
+ * computed the same way: from invoices CREATED in the selected month. On a
+ * German device the September report read "Überfällig € 0,00" while Finanzen
+ * showed € 5.380 overdue — the invoices were issued in August (2026-09-14).
+ * An invoice counts if it was issued by the as-of day, was not paid by then,
+ * and (for overdue) its due date had passed.
+ */
+export function balancesAsOf(
+  invoices: Invoice[],
+  periodEnd: Date,
+  now: Date = new Date(),
+): { overdueAmount: number; outstandingAmount: number } {
+  const asOf = periodEnd.getTime() < now.getTime() ? periodEnd : now;
+  let overdueAmount = 0;
+  let outstandingAmount = 0;
+  for (const inv of invoices) {
+    if (inv.status === 'draft') continue;
+    const issuedStr = inv.sentAt || inv.createdAt;
+    const issued = issuedStr ? new Date(issuedStr) : null;
+    if (!issued || Number.isNaN(issued.getTime()) || issued.getTime() > asOf.getTime()) continue;
+    const paid = inv.paidAt ? new Date(inv.paidAt) : null;
+    const unpaidAtAsOf = inv.status !== 'paid' || (paid !== null && paid.getTime() > asOf.getTime());
+    if (!unpaidAtAsOf) continue;
+    const amount = inv.total || inv.amount || 0;
+    outstandingAmount += amount;
+    const late = inv.dueDate
+      ? (daysOverdue({ dueDate: inv.dueDate }, asOf) ?? 0) > 0
+      : inv.status === 'overdue' && asOf === now;
+    if (late) overdueAmount += amount;
+  }
+  return { overdueAmount, outstandingAmount };
 }
 
 function filterInvoicesByMonth(invoices: Invoice[], month: number, year: number): Invoice[] {
@@ -315,9 +353,12 @@ export function generateMonthlyReport(
   labels: ReportLabels = DEFAULT_LABELS,
   jobMaterials?: JobMaterialsByJob,
   expenses?: Expense[],
+  now: Date = new Date(),
 ): FinancialReport {
   const currentInvoices = filterInvoicesByMonth(invoices, month, year);
   const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials, expenses && filterExpensesByMonth(expenses, month, year));
+  // Balances at the end of the month, across ALL invoices (see balancesAsOf).
+  const balances = balancesAsOf(invoices, new Date(year, month, 0, 23, 59, 59), now);
 
   // Previous month for comparison
   const prevMonth = month === 1 ? 12 : month - 1;
@@ -356,8 +397,8 @@ export function generateMonthlyReport(
     lineItems,
     invoiceCount: current.invoiceCount,
     paidInvoiceCount: current.paidCount,
-    overdueAmount: current.overdueAmount,
-    outstandingAmount: current.outstandingAmount,
+    overdueAmount: balances.overdueAmount,
+    outstandingAmount: balances.outstandingAmount,
   };
 }
 
@@ -369,9 +410,11 @@ export function generateQuarterlyReport(
   labels: ReportLabels = DEFAULT_LABELS,
   jobMaterials?: JobMaterialsByJob,
   expenses?: Expense[],
+  now: Date = new Date(),
 ): FinancialReport {
   const currentInvoices = filterInvoicesByQuarter(invoices, quarter, year);
   const current = calculatePeriodFinancials(currentInvoices, quotes, jobMaterials, expenses && filterExpensesByQuarter(expenses, quarter, year));
+  const balances = balancesAsOf(invoices, new Date(year, quarter * 3, 0, 23, 59, 59), now);
 
   // Previous quarter for comparison
   const prevQuarter = quarter === 1 ? 4 : quarter - 1;
@@ -413,8 +456,8 @@ export function generateQuarterlyReport(
     lineItems,
     invoiceCount: current.invoiceCount,
     paidInvoiceCount: current.paidCount,
-    overdueAmount: current.overdueAmount,
-    outstandingAmount: current.outstandingAmount,
+    overdueAmount: balances.overdueAmount,
+    outstandingAmount: balances.outstandingAmount,
   };
 }
 

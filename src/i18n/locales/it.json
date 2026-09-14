@@ -5470,7 +5470,8 @@
     },
     "plShort": "CE",
     "grossProfit": "Utile lordo",
-    "grossMargin": "Margine lordo"
+    "grossMargin": "Margine lordo",
+    "chooseMonth": "Scegli il mese"
   },
   "agreements": {
     "selectJob": "Seleziona un lavoro",

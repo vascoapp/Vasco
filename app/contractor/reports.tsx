@@ -23,26 +23,19 @@ import {
   type ReportLabels,
 } from '../../src/services/financialReportService';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { hapticSuccess } from '../../src/utils/haptics';
 
 type PeriodMode = 'monthly' | 'quarterly';
 
-// Locale-derived: hardcoded English abbreviations rendered "Mar"/"May"/"Oct"
-// on a Dutch screen where the correct forms are "mrt"/"mei"/"okt".
-function monthLabels(locale: string): string[] {
-  return Array.from({ length: 12 }, (_, i) =>
-    new Date(2000, i, 1).toLocaleDateString(locale, { month: 'short' }),
-  );
-}
 
 export default function ReportsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { invoices, quotes, jobMaterials } = useAppState();
+  const { invoices, quotes, jobMaterials, businessProfile } = useAppState();
   // Real recorded expenses (receipt scanner + manual entry).
   const { expenses } = useExpenses();
   const { user } = useAuth();
-  const MONTH_LABELS = useMemo(() => monthLabels(i18n.language), [i18n.language]);
 
   // Localised P&L row labels + full month names → the report (screen AND the
   // CSV/PDF export) render in the app locale instead of hardcoded English.
@@ -73,7 +66,8 @@ export default function ReportsScreen() {
 
   // Thread the user's country — formatCurrency defaults to 'NL', which
   // silently mis-formats every DE/FR/ES/IT contractor's report.
-  const country = (user?.country ?? 'NL') as any;
+  // Profile first, account as fallback (#218).
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as any;
   const fmt = useCallback((amount: number) => formatCurrency(amount, country), [country]);
 
   const handleShareCSV = useCallback(async () => {
@@ -147,19 +141,30 @@ export default function ReportsScreen() {
 
         {/* Period selector */}
         {mode === 'monthly' ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.periodScroll}>
-            {MONTH_LABELS.map((label, i) => (
+          // One of twelve is a MENU (CLAUDE.md). The horizontal strip showed
+          // Jan–Jul and hid the selected month — September opened off-screen
+          // on a German phone, with nothing saying more months existed.
+          <DKMenu
+            accessibilityLabel={t('reports.chooseMonth', 'Choose month')}
+            items={reportLabels.monthNames.map((name, i) => ({
+              key: String(i + 1),
+              label: `${name} ${selectedYear}`,
+              selected: selectedMonth === i + 1,
+              onPress: () => setSelectedMonth(i + 1),
+            }))}
+            renderAnchor={(open) => (
               <Pressable
-                key={label}
-                style={[s.periodChip, selectedMonth === i + 1 && s.periodChipActive]}
-                onPress={() => setSelectedMonth(i + 1)}
+                style={s.monthAnchor}
+                onPress={open}
+                accessibilityRole="button"
+                accessibilityLabel={t('reports.chooseMonth', 'Choose month')}
               >
-                <Text style={[s.periodChipText, selectedMonth === i + 1 && s.periodChipTextActive]}>
-                  {label}
-                </Text>
+                <Ionicons name="calendar-outline" size={16} color={Palette.hermesOrange} />
+                <Text style={s.monthAnchorText}>{`${reportLabels.monthNames[selectedMonth - 1]} ${selectedYear}`}</Text>
+                <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
               </Pressable>
-            ))}
-          </ScrollView>
+            )}
+          />
         ) : (
           <View style={s.quarterRow}>
             {[1, 2, 3, 4].map(q => (
@@ -320,7 +325,12 @@ const s = StyleSheet.create({
   modeBtnTextActive: { color: '#fff' },
 
   // Period selector
-  periodScroll: { gap: GRID.sm, paddingVertical: GRID.xs },
+  monthAnchor: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    paddingHorizontal: GRID.md, paddingVertical: GRID.sm, borderRadius: RADIUS.md,
+    backgroundColor: SemanticColors.surfacePrimary,
+  },
+  monthAnchorText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   periodChip: {
     paddingHorizontal: GRID.md, paddingVertical: GRID.sm, borderRadius: RADIUS.md,
     backgroundColor: SemanticColors.surfacePrimary,

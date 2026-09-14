@@ -273,3 +273,43 @@ describe('receipt-only contractors are not left with an empty P&L', () => {
     expect(r.netIncome).toBeNull();
   });
 });
+
+// 2026-09-14, German device: the September report read "Überfällig € 0,00"
+// while € 5.380 was overdue — only invoices CREATED in September were looked
+// at. Overdue and outstanding are balances at the end of the period.
+describe('overdue and outstanding are balances, not flows', () => {
+  const inv = (over: Record<string, unknown>) => ({
+    id: 'RE-1', customer: 'Bäckerei Lindner', job: 'j', amount: 5200, dueInDays: -14,
+    status: 'overdue', sentAt: '2026-08-01T09:00:00.000Z', dueDate: '2026-08-31', ...over,
+  });
+  const SEP = 9;
+  const NOW = new Date(2026, 8, 14, 17, 0, 0);
+
+  it('an August invoice unpaid in September is overdue in the September report', () => {
+    const r = generateMonthlyReport(SEP, YEAR, [inv({})] as never, [], undefined, undefined, undefined, NOW);
+    expect(r.overdueAmount).toBe(5200);
+    expect(r.outstandingAmount).toBe(5200);
+  });
+
+  it('a past month counts what was unpaid THEN, even if it is paid now', () => {
+    const paidLater = inv({ status: 'paid', paidAt: '2026-09-10T10:00:00.000Z', dueDate: '2026-08-15' });
+    const aug = generateMonthlyReport(AUG, YEAR, [paidLater] as never, [], undefined, undefined, undefined, NOW);
+    expect(aug.overdueAmount).toBe(5200);
+    const sep = generateMonthlyReport(SEP, YEAR, [paidLater] as never, [], undefined, undefined, undefined, NOW);
+    expect(sep.overdueAmount).toBe(0);
+  });
+
+  it('an invoice not yet due is outstanding but not overdue', () => {
+    const r = generateMonthlyReport(SEP, YEAR, [inv({ status: 'sent', dueDate: '2026-09-30' })] as never, [], undefined, undefined, undefined, NOW);
+    expect(r.outstandingAmount).toBe(5200);
+    expect(r.overdueAmount).toBe(0);
+  });
+
+  it('ignores drafts and invoices issued after the period', () => {
+    const r = generateMonthlyReport(AUG, YEAR, [
+      inv({ status: 'draft' }),
+      inv({ id: 'RE-2', sentAt: '2026-09-02T09:00:00.000Z' }),
+    ] as never, [], undefined, undefined, undefined, NOW);
+    expect(r.outstandingAmount).toBe(0);
+  });
+});

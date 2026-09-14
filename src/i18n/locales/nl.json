@@ -5457,7 +5457,8 @@
     },
     "plShort": "W&V",
     "grossProfit": "Brutowinst",
-    "grossMargin": "Brutomarge"
+    "grossMargin": "Brutomarge",
+    "chooseMonth": "Maand kiezen"
   },
   "agreements": {
     "selectJob": "Kies een klus",

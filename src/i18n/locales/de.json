@@ -5470,7 +5470,8 @@
     },
     "plShort": "GuV",
     "grossProfit": "Bruttogewinn",
-    "grossMargin": "Bruttomarge"
+    "grossMargin": "Bruttomarge",
+    "chooseMonth": "Monat wählen"
   },
   "agreements": {
     "selectJob": "Auftrag auswählen",

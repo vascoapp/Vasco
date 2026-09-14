@@ -5470,7 +5470,8 @@
     },
     "plShort": "PyG",
     "grossProfit": "Beneficio bruto",
-    "grossMargin": "Margen bruto"
+    "grossMargin": "Margen bruto",
+    "chooseMonth": "Elegir mes"
   },
   "agreements": {
     "selectJob": "Selecciona una obra",

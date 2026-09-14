@@ -5470,7 +5470,8 @@
     },
     "plShort": "P&L",
     "grossProfit": "Gross profit",
-    "grossMargin": "Gross margin"
+    "grossMargin": "Gross margin",
+    "chooseMonth": "Choose month"
   },
   "agreements": {
     "selectJob": "Select a job",
