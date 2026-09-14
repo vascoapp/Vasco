@@ -2447,7 +2447,8 @@
     "resetConfirm": "Dadurch werden alle lokalen Daten gelöscht. Sie müssen sich erneut anmelden, um neue Demo-Daten zu erhalten.",
     "reset": "Zurücksetzen",
     "legalNotice": "Indem Sie fortfahren, akzeptieren Sie unsere",
-    "confirmTimeout": "Wir konnten diesen Link nicht lesen. Öffnen Sie ihn erneut aus der E-Mail, oder melden Sie sich mit Ihrem Passwort an."
+    "confirmTimeout": "Wir konnten diesen Link nicht lesen. Öffnen Sie ihn erneut aus der E-Mail, oder melden Sie sich mit Ihrem Passwort an.",
+    "consentSentence": "Indem Sie fortfahren, akzeptieren Sie unsere {{terms}} und unsere {{privacy}}."
   },
   "resetPassword": {
     "title": "Neues Passwort festlegen",
@@ -2481,7 +2482,8 @@
     "emailExistsTitle": "Sie haben bereits ein Konto",
     "emailExistsBody": "{{email}} ist bereits registriert. Melden Sie sich an oder setzen Sie Ihr Passwort zurück, falls Sie es vergessen haben.",
     "signInInstead": "Anmelden",
-    "resetPasswordCta": "Passwort zurücksetzen"
+    "resetPasswordCta": "Passwort zurücksetzen",
+    "acceptSentence": "Ich akzeptiere die {{terms}} und die {{privacy}}"
   },
   "moneybird": {
     "title": "Moneybird verbinden",

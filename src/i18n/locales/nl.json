@@ -2434,7 +2434,8 @@
     "resetConfirm": "Hiermee worden alle lokale gegevens gewist. Je moet opnieuw inloggen voor verse demogegevens.",
     "reset": "Resetten",
     "legalNotice": "Door verder te gaan ga je akkoord met onze",
-    "confirmTimeout": "We konden deze link niet lezen. Open hem opnieuw vanuit de e-mail, of log in met je wachtwoord."
+    "confirmTimeout": "We konden deze link niet lezen. Open hem opnieuw vanuit de e-mail, of log in met je wachtwoord.",
+    "consentSentence": "Door verder te gaan ga je akkoord met onze {{terms}} en ons {{privacy}}."
   },
   "resetPassword": {
     "title": "Kies een nieuw wachtwoord",
@@ -2468,7 +2469,8 @@
     "emailExistsTitle": "Je hebt al een account",
     "emailExistsBody": "{{email}} is al geregistreerd. Log in, of reset je wachtwoord als je het vergeten bent.",
     "signInInstead": "Inloggen",
-    "resetPasswordCta": "Wachtwoord resetten"
+    "resetPasswordCta": "Wachtwoord resetten",
+    "acceptSentence": "Ik ga akkoord met de {{terms}} en het {{privacy}}"
   },
   "moneybird": {
     "title": "Moneybird koppelen",

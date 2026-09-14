@@ -6,6 +6,7 @@
 // route to /onboarding for the 14-step Cal-AI-style setup.
 // =============================================================================
 
+import { LinkedSentence, slot } from '../src/components/shared/LinkedSentence';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator, Image, KeyboardAvoidingView, Linking, Platform,
@@ -225,15 +226,25 @@ export default function SignupScreen() {
                 <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
                   {accepted && <Ionicons name="checkmark" size={14} color="#fff" />}
                 </View>
-                <Text style={styles.termsText}>
-                  {t('signup.acceptLine', 'I accept the')}{' '}
-                  <Text style={styles.termsLink} onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms')}>
-                    {t('legal.termsOfService', 'Terms')}
-                  </Text>{' '}{t('common.and', 'and')}{' '}
-                  <Text style={styles.termsLink} onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy')}>
-                    {t('legal.privacyPolicy', 'Privacy Policy')}
-                  </Text>
-                </Text>
+                <LinkedSentence
+                  style={styles.termsText}
+                  linkStyle={styles.termsLink}
+                  sentence={t('signup.acceptSentence', {
+                    defaultValue: 'I accept the {{terms}} and the {{privacy}}',
+                    terms: slot('terms'),
+                    privacy: slot('privacy'),
+                  })}
+                  links={{
+                    terms: {
+                      label: t('legal.termsOfService', 'Terms'),
+                      onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms'),
+                    },
+                    privacy: {
+                      label: t('legal.privacyPolicy', 'Privacy Policy'),
+                      onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy'),
+                    },
+                  }}
+                />
               </Pressable>
 
               {emailExists ? (

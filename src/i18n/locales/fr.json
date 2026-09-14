@@ -2447,7 +2447,8 @@
     "resetConfirm": "Cela effacera toutes les données locales. Vous devrez vous reconnecter pour obtenir de nouvelles données de démo.",
     "reset": "Réinitialiser",
     "legalNotice": "En continuant, vous acceptez nos",
-    "confirmTimeout": "Nous n'avons pas pu lire ce lien. Ouvrez-le à nouveau depuis l'e-mail, ou connectez-vous avec votre mot de passe."
+    "confirmTimeout": "Nous n'avons pas pu lire ce lien. Ouvrez-le à nouveau depuis l'e-mail, ou connectez-vous avec votre mot de passe.",
+    "consentSentence": "En continuant, vous acceptez nos {{terms}} et notre {{privacy}}."
   },
   "resetPassword": {
     "title": "Nouveau mot de passe",
@@ -2481,7 +2482,8 @@
     "emailExistsTitle": "Vous avez déjà un compte",
     "emailExistsBody": "{{email}} est déjà enregistrée. Connectez-vous, ou réinitialisez votre mot de passe si vous l'avez oublié.",
     "signInInstead": "Se connecter",
-    "resetPasswordCta": "Réinitialiser le mot de passe"
+    "resetPasswordCta": "Réinitialiser le mot de passe",
+    "acceptSentence": "J'accepte les {{terms}} et la {{privacy}}"
   },
   "moneybird": {
     "title": "Connecter Moneybird",

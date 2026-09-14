@@ -1,3 +1,4 @@
+import { LinkedSentence, slot } from '../src/components/shared/LinkedSentence';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -472,27 +473,28 @@ export default function LoginScreen() {
           <View style={{ height: 24 }} />
 
           <View style={styles.legalFooter}>
-            <Text style={styles.legalFooterText}>
-              {t('auth.legalNotice', 'By continuing you agree to our')}{' '}
-              <Text
-                style={styles.legalLink}
-                accessibilityRole="link"
-                accessibilityLabel={t('legal.termsOfService', 'Terms')}
-                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms')}
-              >
-                {t('legal.termsOfService', 'Terms')}
-              </Text>
-              {' '}&{' '}
-              <Text
-                style={styles.legalLink}
-                accessibilityRole="link"
-                accessibilityLabel={t('legal.privacyPolicy', 'Privacy Policy')}
-                onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy')}
-              >
-                {t('legal.privacyPolicy', 'Privacy Policy')}
-              </Text>
-              .
-            </Text>
+            {/* One sentence per locale, links in its slots. The fragments
+                "…agree to our" + Terms + " & " + Privacy read "accetti i nostri
+                Termini & Informativa sulla privacy" on an Italian device. */}
+            <LinkedSentence
+              style={styles.legalFooterText}
+              linkStyle={styles.legalLink}
+              sentence={t('auth.consentSentence', {
+                defaultValue: 'By continuing you agree to our {{terms}} and {{privacy}}.',
+                terms: slot('terms'),
+                privacy: slot('privacy'),
+              })}
+              links={{
+                terms: {
+                  label: t('legal.termsOfService', 'Terms'),
+                  onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms'),
+                },
+                privacy: {
+                  label: t('legal.privacyPolicy', 'Privacy Policy'),
+                  onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy'),
+                },
+              }}
+            />
           </View>
 
           <View style={{ height: 16 }} />

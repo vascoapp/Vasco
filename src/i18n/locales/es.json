@@ -2447,7 +2447,8 @@
     "resetConfirm": "Esto borrará todos los datos locales. Tendrás que volver a iniciar sesión para obtener datos demo nuevos.",
     "reset": "Restablecer",
     "legalNotice": "Al continuar, aceptas nuestros",
-    "confirmTimeout": "No hemos podido leer este enlace. Ábrelo de nuevo desde el correo, o inicia sesión con tu contraseña."
+    "confirmTimeout": "No hemos podido leer este enlace. Ábrelo de nuevo desde el correo, o inicia sesión con tu contraseña.",
+    "consentSentence": "Al continuar, aceptas nuestros {{terms}} y nuestra {{privacy}}."
   },
   "resetPassword": {
     "title": "Establece una nueva contraseña",
@@ -2481,7 +2482,8 @@
     "emailExistsTitle": "Ya tienes una cuenta",
     "emailExistsBody": "{{email}} ya está registrada. Inicia sesión, o restablece tu contraseña si la has olvidado.",
     "signInInstead": "Iniciar sesión",
-    "resetPasswordCta": "Restablecer contraseña"
+    "resetPasswordCta": "Restablecer contraseña",
+    "acceptSentence": "Acepto los {{terms}} y la {{privacy}}"
   },
   "moneybird": {
     "title": "Conectar Moneybird",

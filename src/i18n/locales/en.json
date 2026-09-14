@@ -2447,7 +2447,8 @@
     "resetConfirm": "This will clear all local data. You will need to log in again for fresh demo data.",
     "reset": "Reset",
     "legalNotice": "By continuing you agree to our",
-    "confirmTimeout": "We could not read this link. Open it again from the email, or sign in with your password."
+    "confirmTimeout": "We could not read this link. Open it again from the email, or sign in with your password.",
+    "consentSentence": "By continuing you agree to our {{terms}} and {{privacy}}."
   },
   "resetPassword": {
     "title": "Set a new password",
@@ -2481,7 +2482,8 @@
     "emailExistsTitle": "You already have an account",
     "emailExistsBody": "{{email}} is already registered. Sign in instead, or reset your password if you forgot it.",
     "signInInstead": "Sign in",
-    "resetPasswordCta": "Reset password"
+    "resetPasswordCta": "Reset password",
+    "acceptSentence": "I accept the {{terms}} and the {{privacy}}"
   },
   "moneybird": {
     "title": "Connect Moneybird",
