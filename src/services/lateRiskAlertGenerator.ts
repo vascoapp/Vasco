@@ -10,7 +10,7 @@
 // contractors with no personal history benefit from cohort priors.
 // =============================================================================
 
-import { predictPaymentTiming } from '../intelligence/mlModels';
+import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../intelligence/mlModels';
 import i18n from '../i18n/i18n';
 import type { QueueItem } from './aiActionQueueService';
 import { formatMoney } from '../i18n/formatting';
@@ -48,6 +48,8 @@ export async function generateLateRiskAlert(
   if (!prediction) return null;
   if (prediction.predictedDays <= DAYS_THRESHOLD) return null;
   if (prediction.risk !== 'high') return null;
+  // A cold-start default is not a risk signal (see mlModels).
+  if (prediction.confidence < PREDICTION_MIN_DISPLAY_CONFIDENCE) return null;
 
   const t = i18n.t.bind(i18n);
   const customer = input.customerName ?? t('common.customer', 'Customer');

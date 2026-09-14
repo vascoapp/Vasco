@@ -44,6 +44,7 @@ import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber } from '../../src/domain/documents';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import type { Country } from '../../src/i18n/formatting';
 import { computeLateFee, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
 import { useTranslation } from 'react-i18next';
@@ -84,11 +85,12 @@ interface Quote {
 // COMPONENTS
 // ============================================
 
-function DSOHint({ customerId, amount }: { customerId: string; amount?: number }) {
+function DSOHint({ customerId, amount }: { customerId?: string; amount?: number }) {
   const { t } = useTranslation();
-  const [dsoData, setDsoData] = useState<{ predictedDSO: number } | null>(null);
-  const [mlPrediction, setMlPrediction] = useState<{ predictedDays: number; risk: string; probability30d: number } | null>(null);
+  const [dsoData, setDsoData] = useState<{ predictedDSO: number; paymentCount: number } | null>(null);
+  const [mlPrediction, setMlPrediction] = useState<{ predictedDays: number; risk: string; probability30d: number; confidence: number } | null>(null);
   useEffect(() => {
+    if (!customerId) return;
     let cancelled = false;
     predictCustomerDSO(customerId).then((result) => {
       if (!cancelled) setDsoData(result);
@@ -101,13 +103,19 @@ function DSOHint({ customerId, amount }: { customerId: string; amount?: number }
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [customerId, amount]);
-  if (!dsoData && !mlPrediction) return null;
-  const days = mlPrediction?.predictedDays ?? dsoData?.predictedDSO ?? 21;
-  const riskColor = mlPrediction?.risk === 'low' ? SemanticColors.feedbackSuccess : mlPrediction?.risk === 'high' ? SemanticColors.feedbackError : Palette.hermesOrange;
+  // Only figures with something behind them. With no history both sources are
+  // constants — predictCustomerDSO returns 14 days at confidence 0, and the ML
+  // model a 21-day default at 0.3 — so every row read "~14 dagen" or "~22
+  // dagen · 70% binnen 30d" (that last part hardcoded Dutch in every market).
+  const measuredDso = dsoData && dsoData.paymentCount > 0 ? dsoData.predictedDSO : null;
+  const ml = mlPrediction && mlPrediction.confidence >= PREDICTION_MIN_DISPLAY_CONFIDENCE ? mlPrediction : null;
+  const days = ml?.predictedDays ?? measuredDso;
+  if (days == null) return null;
+  const riskColor = ml?.risk === 'low' ? SemanticColors.feedbackSuccess : ml?.risk === 'high' ? SemanticColors.feedbackError : Palette.hermesOrange;
   return (
     <Text style={{ fontSize: 11, fontFamily: TYPE.bodyFamily, color: riskColor, marginTop: 2 }}>
       {t('invoices.expectedPayment', 'Verwachte betaling')}: ~{days} {t('invoices.days', 'dagen')}
-      {mlPrediction ? ` · ${Math.round(mlPrediction.probability30d * 100)}% binnen 30d` : ''}
+      {ml ? ` · ${t('invoices.probabilityWithin30d', { defaultValue: '{{pct}}% within 30 days', pct: Math.round(ml.probability30d * 100) })}` : ''}
     </Text>
   );
 }
@@ -263,7 +271,9 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
               <View style={styles.invoiceInfo}>
                 <Text style={styles.invoiceCustomer} numberOfLines={1}>{invoice.customerName}</Text>
                 <Text style={styles.invoiceProject} numberOfLines={1}>{invoice.projectName}</Text>
-                {invoice.status !== 'paid' && <DSOHint customerId={invoice.id} />}
+                {/* The CUSTOMER's id — this passed invoice.id, so the per-customer
+                    history lookup could never match anything. */}
+                {invoice.status !== 'paid' && <DSOHint customerId={invoice.customerId ?? undefined} amount={invoice.amount} />}
                 {/* How it came in. The webhooks have recorded this on every
                     settled invoice for months; nothing could read it until the
                     column was given a field. Only rendered when the provider

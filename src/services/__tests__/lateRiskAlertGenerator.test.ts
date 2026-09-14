@@ -12,6 +12,8 @@ let mockPrediction: {
 
 jest.mock('../../intelligence/mlModels', () => ({
   predictPaymentTiming: jest.fn(async () => mockPrediction),
+  // Mocked wholesale: an export missing here reads as undefined (learnings #312).
+  PREDICTION_MIN_DISPLAY_CONFIDENCE: 0.6,
 }));
 
 jest.mock('../../i18n/i18n', () => ({
@@ -71,5 +73,15 @@ describe('generateLateRiskAlert', () => {
 
   test('days threshold is 30', () => {
     expect(__internal.DAYS_THRESHOLD).toBe(30);
+  });
+});
+
+describe('generateLateRiskAlert — cold start', () => {
+  // With no payment history predictPaymentTiming is a 21-day default × factors
+  // at confidence 0.3. A large invoice could clear the 30-day bar on that alone
+  // and be flagged "high risk" with nothing measured behind it.
+  test('a high-risk prediction at cold-start confidence raises no alert', async () => {
+    mockPrediction = { predictedDays: 40, confidence: 0.3, probability30d: 0.4, probability60d: 0.7, risk: 'high' };
+    expect(await generateLateRiskAlert(baseInput)).toBeNull();
   });
 });

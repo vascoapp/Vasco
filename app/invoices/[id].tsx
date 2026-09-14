@@ -39,7 +39,7 @@ import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
 import { getEffectiveVatRate, documentVatBreakdown } from '../../src/domain/business';
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
-import { predictPaymentTiming } from '../../src/intelligence/mlModels';
+import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
@@ -140,7 +140,10 @@ export default function InvoiceDetailScreen() {
       country: businessProfile?.country ?? country,
       customerId: invoice.customerId,
     }).then(p => {
-      if (!cancelled && p) setPaymentPrediction({ days: p.predictedDays, confidence: p.confidence });
+      // Only a prediction with something behind it — cold start is a constant.
+      if (!cancelled && p && p.confidence >= PREDICTION_MIN_DISPLAY_CONFIDENCE) {
+        setPaymentPrediction({ days: p.predictedDays, confidence: p.confidence });
+      }
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [invoice?.id, invoice?.amount, invoice?.status, businessProfile?.country, country]);
@@ -1353,9 +1356,11 @@ export default function InvoiceDetailScreen() {
               icon="add-circle-outline"
               color={SemanticColors.textTertiary}
               label={t('invoices.created', 'Invoice created')}
-              date={invoice.lastUpdated
-                ? formatDateShort(new Date(invoice.lastUpdated), country as Country)
-                : t('invoices.recently', 'Recently')}
+              // The recorded creation time. This read `lastUpdated` — the last
+              // EDIT — and otherwise said "Recently" of a 44-day-old invoice.
+              date={invoice.createdAt
+                ? formatDateShort(new Date(invoice.createdAt), country as Country)
+                : ''}
               showLine
             />
             {/* Sent */}
@@ -1364,8 +1369,11 @@ export default function InvoiceDetailScreen() {
                 icon="send"
                 color={SemanticColors.feedbackInfo}
                 label={t('invoices.sentToCustomer', 'Sent to customer')}
-                date={invoice.dueDate
-                  ? formatDayMonth(new Date(new Date(invoice.dueDate).getTime() - 14 * 86400000), country as Country)
+                // When it was actually sent. This was `dueDate − 14 days` — an
+                // assumed payment term presented as a recorded event: a Spanish
+                // invoice on 30-day terms, sent 31 Jul, read "sent 17 ago".
+                date={invoice.sentAt
+                  ? formatDayMonth(new Date(invoice.sentAt), country as Country)
                   : ''}
                 showLine
               />

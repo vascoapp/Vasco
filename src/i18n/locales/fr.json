@@ -925,7 +925,8 @@
     "quoteCount_one": "{{count}} devis",
     "quoteCount_other": "{{count}} devis",
     "einvoiceNoFormatTitle": "Pas encore de format de facture électronique",
-    "einvoiceNoFormatBody": "Vasco ne génère pas encore de facture électronique pour votre pays. Envoyez le PDF — il reste une facture valable."
+    "einvoiceNoFormatBody": "Vasco ne génère pas encore de facture électronique pour votre pays. Envoyez le PDF — il reste une facture valable.",
+    "probabilityWithin30d": "{{pct}} % sous 30 jours"
   },
   "expenses": {
     "title": "Dépenses",

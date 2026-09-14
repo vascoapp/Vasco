@@ -925,7 +925,8 @@
     "quoteCount_one": "{{count}} quote",
     "quoteCount_other": "{{count}} quotes",
     "einvoiceNoFormatTitle": "No e-invoice format yet",
-    "einvoiceNoFormatBody": "Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice."
+    "einvoiceNoFormatBody": "Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice.",
+    "probabilityWithin30d": "{{pct}}% within 30 days"
   },
   "expenses": {
     "title": "Expenses",

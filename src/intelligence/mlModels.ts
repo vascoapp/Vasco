@@ -91,7 +91,8 @@ export interface PaymentPrediction {
  * alert already refused anything under 0.6 as cold-start noise; the builder
  * never applied the same rule.
  */
-export const QUOTE_WIN_MIN_DISPLAY_CONFIDENCE = 0.6;
+export const PREDICTION_MIN_DISPLAY_CONFIDENCE = 0.6;
+export const QUOTE_WIN_MIN_DISPLAY_CONFIDENCE = PREDICTION_MIN_DISPLAY_CONFIDENCE;
 
 export async function predictQuoteWin(params: {
   amount: number;
@@ -297,6 +298,10 @@ export async function predictJobDuration(params: {
 // Model 3: Payment Timing Predictor
 // ---------------------------------------------------------------------------
 
+// Same rule for payment timing (PREDICTION_MIN_DISPLAY_CONFIDENCE): with no
+// history the base is a hardcoded 21 days × amount/weekday/season factors, at
+// confidence 0.3 — the invoice screen said "Predicted: ~22d" of an invoice
+// already 14 days late, and the Finances list showed it for every row.
 export async function predictPaymentTiming(params: {
   customerId?: string;
   amount: number;

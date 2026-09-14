@@ -912,7 +912,8 @@
     "quoteCount_one": "{{count}} offerte",
     "quoteCount_other": "{{count}} offertes",
     "einvoiceNoFormatTitle": "Nog geen e-factuurformaat",
-    "einvoiceNoFormatBody": "Vasco maakt nog geen e-factuur voor jouw land. Stuur de pdf — die is nog steeds een geldige factuur."
+    "einvoiceNoFormatBody": "Vasco maakt nog geen e-factuur voor jouw land. Stuur de pdf — die is nog steeds een geldige factuur.",
+    "probabilityWithin30d": "{{pct}}% binnen 30 dagen"
   },
   "expenses": {
     "title": "Uitgaven",

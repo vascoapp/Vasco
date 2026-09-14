@@ -925,7 +925,8 @@
     "quoteCount_one": "{{count}} presupuesto",
     "quoteCount_other": "{{count}} presupuestos",
     "einvoiceNoFormatTitle": "Aún no hay formato de factura electrónica",
-    "einvoiceNoFormatBody": "Vasco todavía no genera factura electrónica para tu país. Envía el PDF — sigue siendo una factura válida."
+    "einvoiceNoFormatBody": "Vasco todavía no genera factura electrónica para tu país. Envía el PDF — sigue siendo una factura válida.",
+    "probabilityWithin30d": "{{pct}}% en 30 días"
   },
   "expenses": {
     "title": "Gastos",

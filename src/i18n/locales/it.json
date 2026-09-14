@@ -925,7 +925,8 @@
     "quoteCount_one": "{{count}} preventivo",
     "quoteCount_other": "{{count}} preventivi",
     "einvoiceNoFormatTitle": "Nessun formato di fattura elettronica",
-    "einvoiceNoFormatBody": "Vasco non genera ancora una fattura elettronica per il tuo paese. Invia il PDF — resta una fattura valida."
+    "einvoiceNoFormatBody": "Vasco non genera ancora una fattura elettronica per il tuo paese. Invia il PDF — resta una fattura valida.",
+    "probabilityWithin30d": "{{pct}}% entro 30 giorni"
   },
   "expenses": {
     "title": "Spese",
