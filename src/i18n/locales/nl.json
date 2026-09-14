@@ -4955,7 +4955,10 @@
     "methodCreditCard": "Creditcard",
     "methodBankTransfer": "Bankoverschrijving",
     "methodA11y": "Betaalmethode {{name}}",
-    "methodA11yActive": "Betaalmethode {{name}}, actief"
+    "methodA11yActive": "Betaalmethode {{name}}, actief",
+    "enableMethod": "{{name}} inschakelen",
+    "disableMethod": "{{name}} uitschakelen",
+    "poweredBy": "Via {{provider}} · PCI DSS-conform"
   },
   "leads": {
     "noHotLeads": "Op dit moment geen hot leads"

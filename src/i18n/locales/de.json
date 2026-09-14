@@ -4968,7 +4968,10 @@
     "methodCreditCard": "Kreditkarte",
     "methodBankTransfer": "Banküberweisung",
     "methodA11y": "Zahlungsmethode {{name}}",
-    "methodA11yActive": "Zahlungsmethode {{name}}, aktiv"
+    "methodA11yActive": "Zahlungsmethode {{name}}, aktiv",
+    "enableMethod": "{{name}} aktivieren",
+    "disableMethod": "{{name}} deaktivieren",
+    "poweredBy": "Über {{provider}} · PCI-DSS-konform"
   },
   "leads": {
     "noHotLeads": "Aktuell keine heißen Leads"

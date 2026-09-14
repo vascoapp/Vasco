@@ -4968,7 +4968,10 @@
     "methodCreditCard": "Carta di credito",
     "methodBankTransfer": "Bonifico bancario",
     "methodA11y": "Metodo di pagamento {{name}}",
-    "methodA11yActive": "Metodo di pagamento {{name}}, attivo"
+    "methodA11yActive": "Metodo di pagamento {{name}}, attivo",
+    "enableMethod": "Attiva {{name}}",
+    "disableMethod": "Disattiva {{name}}",
+    "poweredBy": "Tramite {{provider}} · conforme PCI DSS"
   },
   "leads": {
     "noHotLeads": "Nessun lead caldo al momento"

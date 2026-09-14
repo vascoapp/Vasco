@@ -1182,7 +1182,9 @@ export default function OnboardingScreen() {
         const plans: { id: SubscriptionTier; name: string; price: number; annualPrice: number; badge?: string; features: { text: string; highlight?: boolean }[] }[] = [
           {
             id: 'free',
-            name: 'Free',
+            // Localized, like the summary step (#305) — the cards themselves
+            // still said Free / Contractor in every market.
+            name: t(PLAN_NAME_KEY.free, 'Free'),
             price: 0,
             annualPrice: 0,
             badge: recommendedTier === 'free' ? recommendedBadge : undefined,
@@ -1193,7 +1195,7 @@ export default function OnboardingScreen() {
           },
           {
             id: 'pro',
-            name: 'Pro',
+            name: t(PLAN_NAME_KEY.pro, 'Pro'),
             price: proTier.monthlyPrice,
             annualPrice: proTier.annualMonthlyPrice,
             badge: recommendedTier === 'pro' ? recommendedBadge : undefined,
@@ -1209,7 +1211,7 @@ export default function OnboardingScreen() {
           },
           {
             id: 'contractor',
-            name: isAannemerOnboarding ? t('onboarding.contractorTierAannemer', 'Aannemer') : 'Contractor',
+            name: isAannemerOnboarding ? t('onboarding.contractorTierAannemer', 'Aannemer') : t(PLAN_NAME_KEY.contractor, 'Contractor'),
             price: contractorTier.monthlyPrice,
             annualPrice: contractorTier.annualMonthlyPrice,
             badge: recommendedTier === 'contractor' ? recommendedBadge : undefined,

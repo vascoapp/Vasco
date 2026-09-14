@@ -4968,7 +4968,10 @@
     "methodCreditCard": "Tarjeta de crédito",
     "methodBankTransfer": "Transferencia bancaria",
     "methodA11y": "Método de pago {{name}}",
-    "methodA11yActive": "Método de pago {{name}}, activo"
+    "methodA11yActive": "Método de pago {{name}}, activo",
+    "enableMethod": "Activar {{name}}",
+    "disableMethod": "Desactivar {{name}}",
+    "poweredBy": "Con tecnología de {{provider}} · cumple PCI DSS"
   },
   "leads": {
     "noHotLeads": "No hay clientes potenciales calientes ahora mismo"

@@ -25,7 +25,7 @@ import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { isValidEmail, isValidPhone, isValidKvKNumber, isValidVATNumber, isValidIBAN, sanitizeInput } from '../../src/utils/validation';
-import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
+import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel, getPaymentProviderForCountry } from '../../src/config/paymentMethods';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { STRIPE_METHODS_UK, STRIPE_METHODS_US } from '../../src/config/paymentMethods';
 import { DKMenu } from '../../src/components/shared/DKMenu';
@@ -466,11 +466,17 @@ export default function BusinessSettingsScreen() {
                 autoCapitalize="characters"
                 maxLength={12}
               />
-              <Text style={Typography.muted}>
-                {t('settings.numberingPreview', 'Next: {{example}}', {
-                  example: `${invoicePrefix || 'I'}${String(nextInvoiceNo || '1').padStart(4, '0')}`,
-                })}
-              </Text>
+              {/* Only when the counter is known. With it unknown this printed
+                  "Next: FT0001" — a number presented as fact — beside a "88"
+                  placeholder, on the screen a contractor uses to CONTINUE an
+                  existing series. */}
+              {nextInvoiceNo ? (
+                <Text style={Typography.muted}>
+                  {t('settings.numberingPreview', 'Next: {{example}}', {
+                    example: `${invoicePrefix || 'I'}${String(nextInvoiceNo).padStart(4, '0')}`,
+                  })}
+                </Text>
+              ) : null}
             </View>
 
             <View style={styles.fieldColumn}>
@@ -552,6 +558,8 @@ export default function BusinessSettingsScreen() {
             {allPaymentMethods.map((method, idx) => {
               const display = paymentDisplay[idx];
               const methodName = display?.name ?? method;
+              // The stable name keys the brand colour; people read the label.
+              const methodLabel = paymentMethodLabel(methodName, t);
               const brandColor = getPaymentBrandColor(methodName);
               const isEnabled = enabledPaymentMethods.includes(method);
               return (
@@ -561,12 +569,14 @@ export default function BusinessSettingsScreen() {
                     styles.paymentMethodRow,
                     idx === allPaymentMethods.length - 1 && { borderBottomWidth: 0 },
                   ]}
-                  accessibilityLabel={`${isEnabled ? 'Disable' : 'Enable'} ${methodName}`}
+                  accessibilityLabel={isEnabled
+                    ? t('payments.disableMethod', { defaultValue: 'Disable {{name}}', name: methodLabel })
+                    : t('payments.enableMethod', { defaultValue: 'Enable {{name}}', name: methodLabel })}
                 >
                   <View style={[styles.paymentMethodIcon, { backgroundColor: (isEnabled ? brandColor : SemanticColors.textTertiary) + '12' }]}>
                     <View style={[styles.paymentMethodDot, { backgroundColor: isEnabled ? brandColor : SemanticColors.textTertiary }]} />
                   </View>
-                  <Text style={[Typography.body, { flex: 1, color: isEnabled ? SemanticColors.textPrimary : SemanticColors.textTertiary }]}>{methodName}</Text>
+                  <Text style={[Typography.body, { flex: 1, color: isEnabled ? SemanticColors.textPrimary : SemanticColors.textTertiary }]}>{methodLabel}</Text>
                   <Switch
                     value={isEnabled}
                     onValueChange={(val) => {
@@ -576,7 +586,7 @@ export default function BusinessSettingsScreen() {
                     }}
                     trackColor={{ false: SemanticColors.borderDefault, true: brandColor + '50' }}
                     thumbColor={isEnabled ? brandColor : SemanticColors.surfacePrimary}
-                    accessibilityLabel={`Toggle ${methodName}`}
+                    accessibilityLabel={t('payments.methodA11y', { defaultValue: '{{name}} payment method', name: methodLabel })}
                   />
                 </View>
               );
@@ -584,7 +594,9 @@ export default function BusinessSettingsScreen() {
             <View style={styles.paymentSecurityFooter}>
               <Ionicons name="lock-closed" size={12} color={SemanticColors.textTertiary} />
               <Text style={styles.paymentSecurityText}>
-                {country === 'UK' ? 'Powered by Stripe' : 'Powered by Mollie'} · PCI DSS compliant
+                {/* Was `country === 'UK' ? Stripe : Mollie`, so a US contractor —
+                    who pays through Stripe — read "Powered by Mollie". */}
+                {t('payments.poweredBy', { defaultValue: 'Powered by {{provider}} · PCI DSS compliant', provider: getPaymentProviderForCountry(country) })}
               </Text>
             </View>
           </View>
