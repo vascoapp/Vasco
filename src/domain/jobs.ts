@@ -144,6 +144,16 @@ export function isWorkOnDay(
 ): boolean {
   const date = (job.scheduledDate || job.startDate || '').slice(0, 10);
   if (date !== dayKey) return false;
-  const done = ['cancelled', 'completed', 'gereed', 'invoiced', 'paid'];
-  return !done.includes(job.status ?? '');
+  return job.status !== 'cancelled' && !isJobFinished(job.status);
+}
+
+/**
+ * The work is done — whatever happened to the money since. A finished job moves
+ * on to invoiced and then paid; a reader that only accepted `completed` treated
+ * every invoiced or paid job as NOT done, and the Profil "Abschlussrate" (and
+ * the score built on it) fell as the contractor billed their work. Accepts the
+ * legacy Dutch lifecycle spellings too.
+ */
+export function isJobFinished(status: string | null | undefined): boolean {
+  return ['completed', 'gereed', 'invoiced', 'gefactureerd', 'paid', 'betaald'].includes(status ?? '');
 }

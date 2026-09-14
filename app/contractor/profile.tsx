@@ -14,6 +14,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useAuth } from '../../src/context/AuthContext';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
+import { computeContractorScore } from '../../src/domain/contractorScore';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { DKMenu, type DKMenuItem } from '../../src/components/shared/DKMenu';
 import {
@@ -174,60 +175,11 @@ export default function ProfileScreen() {
     }
   };
 
-  // Contractor Score
-  const contractorScore = useMemo(() => {
-    const totalJobs = jobs.length;
-    const completedJobs = jobs.filter((j: any) => j.status === 'completed' || j.status === 'gereed').length;
-    const completionRate = totalJobs > 0 ? completedJobs / totalJobs : 0;
-    // A job can only be judged on time against a date it was DUE. `Job` has no
-    // top-level `endDate` — the only one in src/domain/jobs.ts lives inside
-    // `recurringPattern` — so the previous `if (!j.endDate) return true` was
-    // true for every job that has ever existed, and every completed job counted
-    // as on time. That is the same placeholder the comment below removed for
-    // the zero-jobs case, one level down: it handed every contractor with at
-    // least one finished job a flat 100% and 35 of the 100 score points.
-    // `scheduledDate` is the date the job actually carries; jobs with neither
-    // date are not measurable and leave the denominator rather than passing.
-    const datedCompletions = jobs.filter((j: any) =>
-      (j.status === 'completed' || j.status === 'gereed')
-      && j.completedAt
-      && (j.endDate || j.scheduledDate));
-    const onTimeJobs = datedCompletions.filter((j: any) =>
-      new Date(j.completedAt) <= new Date(`${j.endDate ?? j.scheduledDate}T23:59:59`)).length;
-    // null, not 1. `: 1` meant "no completed jobs = perfectly on time", and
-    // since onTimeRate carries 35 of the 100 score points, a brand-new
-    // contractor with zero jobs was shown "Aannemer Score 35/100" and
-    // "Op-tijd percentage 100%" — both derived entirely from that placeholder.
-    const onTimeRate = datedCompletions.length > 0 ? onTimeJobs / datedCompletions.length : null;
-    const customerJobCount = new Map<string, number>();
-    jobs.forEach((j: any) => {
-      if (j.customerId) customerJobCount.set(j.customerId, (customerJobCount.get(j.customerId) ?? 0) + 1);
-    });
-    const repeatCustomers = Array.from(customerJobCount.values()).filter(c => c >= 2).length;
-    const totalCustomersWithJobs = customerJobCount.size;
-    const repeatRate = totalCustomersWithJobs > 0 ? repeatCustomers / totalCustomersWithJobs : null;
-    // A score needs finished work to describe. With none, there is no
-    // performance record yet — the screen says so instead of inventing one.
-    // Score only the components that are actually measurable, rescaled to 100.
-    // `(x ?? 0) * weight` silently scored an UNKNOWN as a zero, so a contractor
-    // whose jobs carry no dates was marked down for data we never collected —
-    // the mirror of the old bug, which marked them up.
-    const components: { value: number; weight: number }[] = [
-      { value: completionRate, weight: 40 },
-      ...(onTimeRate !== null ? [{ value: onTimeRate, weight: 35 }] : []),
-      ...(repeatRate !== null ? [{ value: repeatRate, weight: 25 }] : []),
-    ];
-    const totalWeight = components.reduce((sum, c) => sum + c.weight, 0);
-    const score = completedJobs > 0 && totalWeight > 0
-      ? Math.round(components.reduce((sum, c) => sum + c.value * c.weight, 0) / totalWeight * 100)
-      : null;
-    return {
-      score: score === null ? null : Math.min(score, 100),
-      completionRate: totalJobs > 0 ? Math.round(completionRate * 100) : null,
-      onTimeRate: onTimeRate === null ? null : Math.round(onTimeRate * 100),
-      repeatRate: repeatRate === null ? null : Math.round(repeatRate * 100),
-    };
-  }, [jobs]);
+  // Contractor Score — src/domain/contractorScore.ts (tested there). The
+  // inline version counted only `completed` as done, so invoiced and paid jobs
+  // dragged "Abschlussrate" down, with leads and future bookings in the
+  // denominator (German device walk, 2026-09-14).
+  const contractorScore = useMemo(() => computeContractorScore(jobs as any), [jobs]);
 
   const userName = user?.name || 'User';
   const userInitials = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
