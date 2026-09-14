@@ -51,6 +51,8 @@ const SCREEN_MARGIN = GRID.md;
 const MENU_MAX_HEIGHT = 320;
 /** Below an anchor low on the screen there is no usable room — flip instead. */
 const MIN_USABLE_HEIGHT = 120;
+/** Tick glyph size; the empty slot for unselected rows matches it. */
+const TICK_SIZE = GRID.md;
 
 export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
   const anchorRef = useRef<View>(null);
@@ -184,13 +186,17 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
                         <Text style={styles.itemDetail} numberOfLines={1}>{item.detail}</Text>
                       ) : null}
                     </View>
-                    {/* The tick stays in the layout when absent so labels do
-                        not shift as the selection moves. */}
-                    <Ionicons
-                      name="checkmark"
-                      size={16}
-                      color={item.selected ? DK.colors.accent : 'transparent'}
-                    />
+                    {/* The tick's slot stays in the layout when absent so labels
+                        do not shift as the selection moves. It is a SPACER, not
+                        a glyph coloured 'transparent': on Android that glyph
+                        rendered BLACK, so every row of every menu showed a
+                        tick beside the one really selected (device walk,
+                        2026-09-14). */}
+                    {item.selected ? (
+                      <Ionicons name="checkmark" size={TICK_SIZE} color={DK.colors.accent} />
+                    ) : (
+                      <View style={styles.tickSlot} />
+                    )}
                   </Pressable>
                 ))}
               </ScrollView>
@@ -225,6 +231,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   itemBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border },
+  tickSlot: { width: TICK_SIZE, height: TICK_SIZE },
   itemEmphasis: { backgroundColor: DK.colors.panel },
   // flex:1 so a long project name truncates inside the row instead of pushing
   // the tick off the balloon.
