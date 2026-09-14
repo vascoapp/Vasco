@@ -71,7 +71,6 @@
     "quotesMonth": "Angebote/Monat",
     "perInvoice": "pro bezahlter Rechnung",
     "unlimited": "Unbegrenzt",
-    "fullAi": "Komplette KI-Suite",
     "purchasingAgent": "Einkaufsagent",
     "teamFeatures": "Team-Funktionen",
     "seats": "Plätze",
@@ -87,7 +86,8 @@
     "email": "E-Mail senden",
     "previous": "Zurück",
     "share": "Teilen",
-    "options": "Optionen"
+    "options": "Optionen",
+    "automatedFollowUps": "Automatische Erinnerungen und Nachfassen"
   },
   "tabs": {
     "today": "Heute",
@@ -289,7 +289,7 @@
     "planAdvanced": "Erweitert",
     "planAdvancedDesc": "Mehr Kapazität, intelligentere Tools",
     "planPro": "Pro",
-    "planProDesc": "Volle KI-Power — Vasco zahlt sich selbst",
+    "planProDesc": "Unbegrenzt Angebote und Rechnungen, E-Rechnung und Automatisierungen",
     "planContractor": "Handwerker",
     "planContractorDesc": "Teamfunktionen + persönlicher Support",
     "popular": "BELIEBTESTE",

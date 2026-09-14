@@ -7,13 +7,15 @@
 
 import { formatMoney, formatMoney2, formatDateShortAuto } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getCurrentUserId } from '../lib/currentUser';
 import i18n from '../i18n/i18n';
 import { applySavedLanguage, applySavedCountry } from '../i18n/savedLanguage';
 import { getScanHistory, getFirstScanInsights } from './invoiceScanService';
 import { getCustomerIntelligence } from '../intelligence/tradeContext';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { subscribeIdRemap } from './idRemapBus';
+import { subscribeDocNumberRemap } from './docNumberRemapBus';
 import { logWarn } from '../utils/errorHandler';
 import { loadOnboardingPreferences, type OnboardingPreferences, wantsPaymentFocus, wantsQuotingHelp, wantsComplianceFocus, wantsAutomationFocus, wantsGrowthFocus } from './onboardingPreferencesService';
 import {
@@ -99,6 +101,9 @@ export interface QueueItem {
    * be active when it was written.
    */
   titleBase?: string;
+  /** When the contractor approved (or rejected) it. Lets the queue tell "just
+   *  chased" apart from "never chased" for the same invoice. */
+  resolvedAt?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -325,6 +330,29 @@ const SINGLE_ACTION_PER_ENTITY_TYPES: readonly QueueItemType[] = [
   'satisfaction_survey', 'invoice_regenerate', 'quote_expiry',
 ];
 
+/** Queue types that chase payment of an invoice. */
+const COLLECTIONS_TYPES: readonly QueueItemType[] = [
+  'draft_reminder', 'late_payment_risk_alert', 'invoice_regenerate',
+];
+
+/** The invoice a collections card is about, or undefined for any other card. */
+function collectionsInvoiceOf(q: Pick<QueueItem, 'type' | 'preparedData'>): string | undefined {
+  if (!COLLECTIONS_TYPES.includes(q.type)) return undefined;
+  const id = (q.preparedData as any)?.invoiceId;
+  return typeof id === 'string' && id ? id : undefined;
+}
+
+/**
+ * Which card to keep when several chase one invoice. A message the contractor
+ * can send on the market's dunning cadence beats a generic reminder, which
+ * beats an alert that only says "review".
+ */
+function collectionsRank(q: Pick<QueueItem, 'type' | 'sourceGeneratorId'>): number {
+  if (q.type === 'draft_reminder') return q.sourceGeneratorId?.startsWith('workflow_') ? 3 : 2;
+  if (q.type === 'invoice_regenerate') return 2;
+  return 1; // late_payment_risk_alert
+}
+
 export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'createdAt'>): Promise<string> {
   const t = i18n.t.bind(i18n);
   const id = `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -348,6 +376,41 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
         && (q.entityKey === item.entityKey || q.mergedKeys?.includes(item.entityKey!)),
       );
       if (match) return ''; // same event, skip
+    }
+
+    // ONE collections card per invoice. Three producers each chase an overdue
+    // invoice under a different type — the EVE auditor (a review-only
+    // late_payment_risk_alert), populateQueue (a generic draft_reminder) and the
+    // incasso pack (a cadence message, also draft_reminder) — so a Dutch device
+    // showed "14d te laat — laatste aanmaning aanbevolen", "Herinnering voor
+    // F-2026-0041" and "Incasso Automatisch: Hotel NH" for the same €350. Type
+    // equality below cannot see that. The most actionable card wins; a weaker
+    // one arriving later is dropped, a stronger one replaces the weaker.
+    const collectionsInvoice = collectionsInvoiceOf(item);
+    if (collectionsInvoice) {
+      const rank = collectionsRank(item);
+      // An invoice the contractor chased in the last three days is covered:
+      // right after sending the incasso message, the next scheduler run must
+      // not bring back "final notice recommended" for it. The cadence steps are
+      // days 3 / 7 / 14, so the next one still arrives on time.
+      const justChasedCutoff = new Date(Date.now() - 3 * MS_PER_DAY).toISOString();
+      if (existing.some(q =>
+        q.status === 'approved'
+        && collectionsInvoiceOf(q) === collectionsInvoice
+        && (q.resolvedAt ?? '') > justChasedCutoff,
+      )) return '';
+      const rivals = existing.filter(q =>
+        q.status === 'pending' && collectionsInvoiceOf(q) === collectionsInvoice);
+      if (rivals.some(q => collectionsRank(q) >= rank)) return '';
+      // Only single-invoice cards are replaced. A legacy card that already
+      // folded other invoices into "+N" still speaks for them; deleting it
+      // would silently drop their reminders.
+      const replaceable = new Set(rivals.filter(q => (q.count ?? 1) <= 1).map(q => q.id));
+      if (replaceable.size > 0) {
+        for (let i = existing.length - 1; i >= 0; i--) {
+          if (replaceable.has(existing[i].id)) existing.splice(i, 1);
+        }
+      }
     }
 
     // Cross-producer dedup on the TARGET ENTITY. Two generators can propose the
@@ -385,7 +448,11 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     // The `!!q.entityKey` clause also fixes a wrong-variable slip: it read
     // `!!item.entityKey` — a term constant w.r.t. `q`, so the predicate matched
     // the first pending item of that type whether or not IT was entity-keyed.
-    const siblingIdx = existing.findIndex(q =>
+    //
+    // Collections cards are never folded across invoices: each one names ONE
+    // invoice and its amount, and the one-card-per-invoice rule above needs to
+    // be able to replace it without dropping someone else's reminder.
+    const siblingIdx = collectionsInvoice ? -1 : existing.findIndex(q =>
       q.status === 'pending'
       && q.type === item.type
       && !!q.entityKey
@@ -487,6 +554,7 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
     const item = items.find(i => i.id === itemId);
     if (item) {
       item.status = 'approved';
+      item.resolvedAt = new Date().toISOString();
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
       notifyQueueChanged();
       // Durable record of the approval. This store prunes non-pending items
@@ -1839,8 +1907,72 @@ export function getRequiredPermits(trade: string, country: string): { name: stri
 // React hook
 // ---------------------------------------------------------------------------
 
-export function useAIQueue() {
-  const [items, setItems] = useState<QueueItem[]>([]);
+// ---------------------------------------------------------------------------
+// A card is only shown while the thing it acts on exists
+// ---------------------------------------------------------------------------
+// Queue items outlive their targets: a deleted job, an invoice from a demo
+// seed that a market swap replaced. The French demo showed "Rappel pour
+// F-2026-0041" and "Suivi devis Lekkage inspectie — Fam. Bakker" — Dutch seed
+// entities — because the DE/FR/ES/IT branch clears the queue fire-and-forget
+// while Vandaag populates it from the pre-swap state. Ordering that race fixes
+// one race; this invariant fixes the class: no card for an entity the
+// contractor does not have.
+
+export interface QueueEntities {
+  jobs?: ReadonlyArray<{ id: string }>;
+  invoices?: ReadonlyArray<{ id: string }>;
+  quotes?: ReadonlyArray<{ id: string }>;
+}
+
+/** False when the card names a job/invoice/quote that is not in `entities`. */
+export function queueTargetExists(item: Pick<QueueItem, 'preparedData'>, entities: QueueEntities): boolean {
+  const d = (item.preparedData ?? {}) as Record<string, unknown>;
+  const missing = (id: unknown, list?: ReadonlyArray<{ id: string }>) =>
+    typeof id === 'string' && id !== '' && !!list && !list.some((x) => x.id === id);
+  return !(missing(d.invoiceId, entities.invoices)
+    || missing(d.jobId, entities.jobs)
+    || missing(d.quoteId, entities.quotes));
+}
+
+// Ids change after the fact — a temp job id becomes the backend uuid, an
+// offline "I-OFF-…" placeholder becomes the minted document number. The queue
+// held the old one, so its cards pointed at nothing (and, with the invariant
+// above, would vanish). Follow the rename like every other side-effect store.
+const TARGET_FIELDS = ['invoiceId', 'jobId', 'quoteId', 'entityId'] as const;
+export async function rekeyQueueTargets(oldId: string, newId: string): Promise<void> {
+  if (!oldId || !newId || oldId === newId) return;
+  try {
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    if (!raw) return;
+    const items: QueueItem[] = JSON.parse(raw);
+    let changed = false;
+    for (const it of items) {
+      const d = it.preparedData as Record<string, unknown> | undefined;
+      if (!d) continue;
+      for (const f of TARGET_FIELDS) {
+        if (d[f] === oldId) { d[f] = newId; changed = true; }
+      }
+    }
+    if (changed) {
+      await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      notifyQueueChanged();
+    }
+  } catch { /* a failed rekey leaves the card hidden, never wrong */ }
+}
+subscribeIdRemap((e) => { void rekeyQueueTargets(e.tempId, e.realId); });
+subscribeDocNumberRemap((e) => { void rekeyQueueTargets(e.placeholderNumber, e.realNumber); });
+
+/**
+ * @param entities the screen's own jobs/invoices/quotes. When given, cards whose
+ *   target is not among them are not returned (see queueTargetExists), and
+ *   `count` agrees with what is shown.
+ */
+export function useAIQueue(entities?: QueueEntities) {
+  const [allItems, setItems] = useState<QueueItem[]>([]);
+  const items = useMemo(
+    () => (entities ? allItems.filter((i) => queueTargetExists(i, entities)) : allItems),
+    [allItems, entities?.jobs, entities?.invoices, entities?.quotes],
+  );
   const [loading, setLoading] = useState(true);
   const processingRef = useRef(new Set<string>());
 

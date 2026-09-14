@@ -71,7 +71,6 @@
     "quotesMonth": "offertes/maand",
     "perInvoice": "per betaalde factuur",
     "unlimited": "Onbeperkt",
-    "fullAi": "Volledige AI-suite",
     "purchasingAgent": "Inkoopagent",
     "teamFeatures": "Teamfuncties",
     "seats": "gebruikers",
@@ -87,7 +86,8 @@
     "email": "E-mailen",
     "previous": "Vorige",
     "share": "Delen",
-    "options": "Opties"
+    "options": "Opties",
+    "automatedFollowUps": "Automatische herinneringen en opvolging"
   },
   "tabs": {
     "today": "Vandaag",
@@ -289,7 +289,7 @@
     "planAdvanced": "Geavanceerd",
     "planAdvancedDesc": "Meer capaciteit, slimmere tools",
     "planPro": "Pro",
-    "planProDesc": "Volledige AI — Vasco verdient zichzelf terug",
+    "planProDesc": "Onbeperkt offertes en facturen, e-facturatie en automatiseringen",
     "planContractor": "Contractor",
     "planContractorDesc": "Teamfuncties + persoonlijke ondersteuning",
     "popular": "POPULAIRST",

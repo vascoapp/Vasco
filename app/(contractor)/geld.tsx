@@ -79,10 +79,10 @@ export default function GeldScreen() {
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const [showInvoiceFilterModal, setShowInvoiceFilterModal] = useState(false);
   const [showQuoteFilterModal, setShowQuoteFilterModal] = useState(false);
-  const { invoices, quotes, projects, markInvoiceSent, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
+  const { invoices, quotes, jobs, projects, markInvoiceSent, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
   const { user } = useAuth();
   const fin = useFinancialAnalysis();
-  const aiQueue = useAIQueue();
+  const aiQueue = useAIQueue({ jobs, invoices, quotes });
   const allGuidance = useVascoGuidance('contractor', 'geld');
   const topInsight = allGuidance.filter(g => g.priority === 'critical' || g.priority === 'high')[0] ?? null;
 

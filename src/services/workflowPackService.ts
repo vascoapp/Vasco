@@ -1122,6 +1122,11 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
               channel: step.channel,
               customerId: match.customerId,
               entityId: match.entityId,
+              // Name the invoice the way every other producer does, so the
+              // queue can keep ONE collections card per invoice
+              // (aiActionQueueService.collectionsInvoiceOf). Only for invoice
+              // triggers: a jobId would change what Approve does on job cards.
+              ...(step.trigger.startsWith('invoice_') && match.entityId ? { invoiceId: match.entityId } : {}),
               packId: pack.id,
               ...(affiliateUrl ? { affiliateUrl } : {}),
             },

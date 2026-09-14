@@ -491,3 +491,155 @@ describe('queue change notification', () => {
     expect(good).toBe(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// One collections card per invoice
+// ---------------------------------------------------------------------------
+// A Dutch device showed three cards for one overdue €350 invoice, each with its
+// own advice: the EVE auditor's "laatste aanmaning aanbevolen" (review), the
+// generic "Herinnering voor F-2026-0041", and "Incasso Automatisch: Hotel NH".
+describe('addToQueue — one collections card per invoice', () => {
+  beforeEach(() => clearStorage());
+
+  const eveAlert = (invoiceId: string) => ({
+    type: 'late_payment_risk_alert' as const, title: `Factuur ${invoiceId} 14d te laat`, description: 'laatste aanmaning aanbevolen',
+    preparedData: { invoiceId, daysOverdue: 14 }, actionLabel: 'Bekijken', estimatedImpact: '€350',
+    entityKey: `eve-compliance_gap-${invoiceId}`, sourceGeneratorId: 'eve-auditor',
+  });
+  const reminder = (invoiceId: string) => ({
+    type: 'draft_reminder' as const, title: `Herinnering voor ${invoiceId}`, description: '€350 achterstallig',
+    preparedData: { invoiceId }, actionLabel: 'Herinnering versturen', estimatedImpact: 'x',
+    entityKey: `reminder-for-invoice:${invoiceId}`, sourceGeneratorId: 'automation_draft_reminder',
+  });
+  const packStep = (invoiceId: string) => ({
+    type: 'draft_reminder' as const, title: 'Incasso Automatisch: Hotel NH', description: 'Beste Hotel NH, …',
+    preparedData: { invoiceId, entityId: invoiceId, template: 'Beste Hotel NH, …', packId: 'incasso' }, actionLabel: 'Verstuur', estimatedImpact: 'x',
+    sourceGeneratorId: 'workflow_incasso',
+  });
+
+  test('three producers, one invoice → one card, and it is the one you can send', async () => {
+    await addToQueue(reminder('inv-1'));
+    await addToQueue(eveAlert('inv-1'));
+    await addToQueue(packStep('inv-1'));
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].sourceGeneratorId).toBe('workflow_incasso');
+  });
+
+  test('order does not matter', async () => {
+    await addToQueue(packStep('inv-1'));
+    await addToQueue(reminder('inv-1'));
+    await addToQueue(eveAlert('inv-1'));
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].sourceGeneratorId).toBe('workflow_incasso');
+  });
+
+  test('a reminder replaces a review-only alert for the same invoice', async () => {
+    await addToQueue(eveAlert('inv-1'));
+    await addToQueue(reminder('inv-1'));
+    const q = await getQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].type).toBe('draft_reminder');
+  });
+
+  test('two overdue invoices keep a card each — never folded into "+1"', async () => {
+    await addToQueue(reminder('inv-1'));
+    await addToQueue(reminder('inv-2'));
+    const q = await getQueue();
+    expect(q).toHaveLength(2);
+    expect(q.every((i) => (i.count ?? 1) === 1)).toBe(true);
+  });
+
+  test('a legacy card that already speaks for other invoices is not deleted', async () => {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    await AsyncStorage.setItem('@vasco_ai_queue', JSON.stringify([{
+      ...reminder('inv-1'), id: 'q-legacy', status: 'pending', createdAt: new Date().toISOString(),
+      count: 2, mergedKeys: ['reminder-for-invoice:inv-2'],
+    }]));
+    await addToQueue(packStep('inv-1'));
+    const q = await getQueue();
+    expect(q.some((i) => i.id === 'q-legacy')).toBe(true);
+  });
+
+  test('cards about other things are untouched', async () => {
+    await addToQueue(packStep('inv-1'));
+    await addToQueue({
+      type: 'draft_invoice', title: 'Factuur voor Lekkage', description: 'd', preparedData: { jobId: 'j-4' },
+      actionLabel: 'Maak', estimatedImpact: '€280', entityKey: 'invoice-for-job:j-4',
+    });
+    expect(await getQueue()).toHaveLength(2);
+  });
+});
+
+describe('addToQueue — an invoice chased moments ago is covered', () => {
+  beforeEach(() => clearStorage());
+
+  test('approving the incasso card keeps the "final notice" alert from coming straight back', async () => {
+    const { approveItem } = require('../aiActionQueueService');
+    const id = await addToQueue({
+      type: 'draft_reminder', title: 'Incasso Automatisch: Hotel NH', description: 'x',
+      preparedData: { invoiceId: 'inv-1', template: 'x' }, actionLabel: 'Verstuur', estimatedImpact: 'x',
+      sourceGeneratorId: 'workflow_incasso',
+    });
+    await approveItem(id);
+    await addToQueue({
+      type: 'late_payment_risk_alert', title: 'Factuur 14d te laat', description: 'laatste aanmaning aanbevolen',
+      preparedData: { invoiceId: 'inv-1' }, actionLabel: 'Bekijken', estimatedImpact: 'x',
+      entityKey: 'eve-compliance_gap-inv-1', sourceGeneratorId: 'eve-auditor',
+    });
+    const pending = await getQueue();
+    expect(pending.filter((q: any) => q.preparedData?.invoiceId === 'inv-1')).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A card is only shown while its target exists
+// ---------------------------------------------------------------------------
+// The French demo queue showed Dutch seed invoices ("Rappel pour F-2026-0041").
+describe('queueTargetExists', () => {
+  const { queueTargetExists } = require('../aiActionQueueService');
+  const entities = {
+    jobs: [{ id: 'j-fr-1' }],
+    invoices: [{ id: 'FA-2026-0087' }],
+    quotes: [{ id: 'DE-2026-0012' }],
+  };
+
+  test('a card for an invoice this contractor does not have is hidden', () => {
+    expect(queueTargetExists({ preparedData: { invoiceId: 'F-2026-0041' } }, entities)).toBe(false);
+    expect(queueTargetExists({ preparedData: { jobId: 'j-seed-4' } }, entities)).toBe(false);
+    expect(queueTargetExists({ preparedData: { quoteId: 'q-seed-1' } }, entities)).toBe(false);
+  });
+
+  test('a card for an entity they do have is shown', () => {
+    expect(queueTargetExists({ preparedData: { invoiceId: 'FA-2026-0087' } }, entities)).toBe(true);
+    expect(queueTargetExists({ preparedData: { jobId: 'j-fr-1', quoteId: 'DE-2026-0012' } }, entities)).toBe(true);
+  });
+
+  test('a card that names no entity is shown', () => {
+    expect(queueTargetExists({ preparedData: { template: 'x' } }, entities)).toBe(true);
+    expect(queueTargetExists({ preparedData: undefined }, entities)).toBe(true);
+  });
+});
+
+describe('rekeyQueueTargets — a card follows its entity through an id change', () => {
+  beforeEach(() => clearStorage());
+
+  test('temp job id and offline invoice number are both rewritten', async () => {
+    const { rekeyQueueTargets } = require('../aiActionQueueService');
+    await addToQueue({
+      type: 'draft_invoice', title: 'Factuur', description: 'd', preparedData: { jobId: 'j-1700' },
+      actionLabel: 'Maak', estimatedImpact: 'x', entityKey: 'invoice-for-job:j-1700',
+    });
+    await addToQueue({
+      type: 'draft_reminder', title: 'Herinnering', description: 'd', preparedData: { invoiceId: 'I-OFF-9' },
+      actionLabel: 'Stuur', estimatedImpact: 'x', entityKey: 'reminder-for-invoice:I-OFF-9',
+    });
+    await rekeyQueueTargets('j-1700', 'b8c1-uuid');
+    await rekeyQueueTargets('I-OFF-9', 'I0042');
+    const q = await getQueue();
+    expect(q.some((i) => i.preparedData.jobId === 'b8c1-uuid')).toBe(true);
+    expect(q.some((i) => i.preparedData.invoiceId === 'I0042')).toBe(true);
+    expect(q.some((i) => i.preparedData.jobId === 'j-1700' || i.preparedData.invoiceId === 'I-OFF-9')).toBe(false);
+  });
+});

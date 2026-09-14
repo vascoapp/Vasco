@@ -71,7 +71,6 @@
     "quotesMonth": "devis/mois",
     "perInvoice": "par facture payée",
     "unlimited": "Illimité",
-    "fullAi": "Suite IA complète",
     "purchasingAgent": "Agent d'achat",
     "teamFeatures": "Fonctions équipe",
     "seats": "postes",
@@ -87,7 +86,8 @@
     "email": "Envoyer un e-mail",
     "previous": "Précédent",
     "share": "Partager",
-    "options": "Options"
+    "options": "Options",
+    "automatedFollowUps": "Relances et suivis automatiques"
   },
   "tabs": {
     "today": "Aujourd'hui",
@@ -289,7 +289,7 @@
     "planAdvanced": "Avancé",
     "planAdvancedDesc": "Plus de capacité, outils plus intelligents",
     "planPro": "Pro",
-    "planProDesc": "Pleine puissance IA — Vasco se rembourse",
+    "planProDesc": "Devis et factures illimités, facturation électronique et automatisations",
     "planContractor": "Artisan",
     "planContractorDesc": "Fonctions équipe + support dédié",
     "popular": "LE PLUS POPULAIRE",

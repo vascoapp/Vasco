@@ -92,7 +92,8 @@ export default function VascoScreen() {
   // Rejected or failed filings. An unissued invoice is the loudest thing this
   // screen can have on it.
   const { attention: filingsNeedingAttention } = useSubmissions();
-  const aiQueue = useAIQueue();
+  // Pass our own entities: a card for a job/invoice/quote we do not have is not shown.
+  const aiQueue = useAIQueue({ jobs, invoices, quotes });
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);

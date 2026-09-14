@@ -71,7 +71,6 @@
     "quotesMonth": "preventivi/mese",
     "perInvoice": "per fattura pagata",
     "unlimited": "Illimitato",
-    "fullAi": "Suite IA completa",
     "purchasingAgent": "Agente acquisti",
     "teamFeatures": "Funzioni team",
     "seats": "postazioni",
@@ -87,7 +86,8 @@
     "email": "Invia email",
     "previous": "Precedente",
     "share": "Condividi",
-    "options": "Opzioni"
+    "options": "Opzioni",
+    "automatedFollowUps": "Promemoria e solleciti automatici"
   },
   "tabs": {
     "today": "Oggi",
@@ -289,7 +289,7 @@
     "planAdvanced": "Avanzato",
     "planAdvancedDesc": "Più capacità, strumenti più intelligenti",
     "planPro": "Pro",
-    "planProDesc": "Piena potenza IA — Vasco si ripaga da solo",
+    "planProDesc": "Preventivi e fatture illimitati, fatturazione elettronica e automazioni",
     "planContractor": "Professionista",
     "planContractorDesc": "Funzioni team + supporto dedicato",
     "popular": "PIÙ POPOLARE",

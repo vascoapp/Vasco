@@ -143,7 +143,10 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    tagline: 'Full AI power — Vasco pays for itself',
+    // Not "Full AI power — Vasco pays for itself": no LLM key is configured in
+    // production (verified 2026-09-14), and "pays for itself" is a claim
+    // nothing measures. What Pro actually unlocks over Free, stated plainly.
+    tagline: 'Unlimited quotes & invoices, e-invoicing and automations',
     monthlyPrice: 39,
     annualMonthlyPrice: 29,
     annualPrice: 348,

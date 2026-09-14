@@ -554,7 +554,7 @@ export default function FacturenScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [overdueDismissed, setOverdueDismissed] = useState(false);
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+
   const [bottomSheet, setBottomSheet] = useState<{ visible: boolean; title: string; actions: BottomSheetAction[] }>({ visible: false, title: '', actions: [] });
   const closeBottomSheet = useCallback(() => setBottomSheet(prev => ({ ...prev, visible: false })), []);
   const [toast, setToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
@@ -563,11 +563,6 @@ export default function FacturenScreen() {
   // Screen visit tracking
   useEffect(() => { recordScreenVisit('invoices'); }, []);
 
-  // Brief loading state with 300ms minimum to prevent flicker
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 300);
-    return () => clearTimeout(timer);
-  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -578,7 +573,13 @@ export default function FacturenScreen() {
   }, []);
 
   // Connect to services
-  const { jobs, addInvoiceFromJob, businessProfile, customers, quotes: storedQuotes } = useAppState();
+  const { jobs, addInvoiceFromJob, businessProfile, customers, quotes: storedQuotes, isLoading } = useAppState();
+  // Skeleton only while the data is genuinely loading. This was a fixed 300ms
+  // skeleton on every mount "to prevent flicker" — over data already in memory,
+  // so it CAUSED a flash each time the tab opened. It also made the headless
+  // walk record the skeleton (no text) on a fast machine and the list on a slow
+  // one: the report depended on host speed, not on the screen.
+  const loading = isLoading;
   const { invoices, summary } = useCashFlow();
   const { findings: auditFindings } = useFinancialAuditFindings();
 

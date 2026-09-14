@@ -71,7 +71,6 @@
     "quotesMonth": "quotes/month",
     "perInvoice": "per paid invoice",
     "unlimited": "Unlimited",
-    "fullAi": "Full AI suite",
     "purchasingAgent": "Purchasing agent",
     "teamFeatures": "Team features",
     "seats": "seats",
@@ -87,7 +86,8 @@
     "email": "Email",
     "previous": "Previous",
     "share": "Share",
-    "options": "Options"
+    "options": "Options",
+    "automatedFollowUps": "Automated reminders & follow-ups"
   },
   "tabs": {
     "today": "Today",
@@ -289,7 +289,7 @@
     "planAdvanced": "Advanced",
     "planAdvancedDesc": "More capacity, smarter tools",
     "planPro": "Pro",
-    "planProDesc": "Full AI power — Vasco pays for itself",
+    "planProDesc": "Unlimited quotes & invoices, e-invoicing and automations",
     "planContractor": "Contractor",
     "planContractorDesc": "Team features + dedicated support",
     "popular": "MOST POPULAR",

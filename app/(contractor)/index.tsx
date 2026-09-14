@@ -65,7 +65,7 @@ export default function VandaagDK() {
 
   const daySchedule = useDaySchedule(today);
   const clockIn = useClockIn();
-  const aiQueue = useAIQueue();
+  const aiQueue = useAIQueue({ jobs, invoices, quotes });
   const ledger = useActionLedger();
 
   // Populate AI queue on mount (was fired by legacy Vandaag's useEffect).

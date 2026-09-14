@@ -16,6 +16,7 @@ import { DK } from '../../src/theme/draftkings';
 import { SafeArea } from '../../src/theme/spacing';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { useAIQueue, type QueueItem } from '../../src/services/aiActionQueueService';
+import { useAppState } from '../../src/state/AppState';
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { EVE_AGENTS, type EveAgentType } from '../../src/services/eveAgentService';
 
@@ -31,7 +32,8 @@ function parseEveAgent(sourceGeneratorId?: string): EveAgentType | null {
 export default function EveDashboardScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const aiQueue = useAIQueue();
+  const { jobs, invoices, quotes } = useAppState();
+  const aiQueue = useAIQueue({ jobs, invoices, quotes });
   const [selectedAgent, setSelectedAgent] = useState<EveAgentType | null>(null);
 
   // Bucket queue items by EVE agent attribution. Items without `eve-*` source

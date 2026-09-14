@@ -1199,7 +1199,10 @@ export default function OnboardingScreen() {
             badge: recommendedTier === 'pro' ? recommendedBadge : undefined,
             features: [
               { text: t('common.unlimited', 'Unlimited') + ' ' + t('common.jobs', 'jobs'), highlight: true },
-              { text: t('common.fullAi', 'Full AI suite'), highlight: true },
+              // Was "Full AI suite". The LLM layer has no provider key in
+              // production, so photo→quote and generated scope text throw; the
+              // plan must not be sold on them. These automations run today.
+              { text: t('common.automatedFollowUps', 'Automated reminders & follow-ups'), highlight: true },
               { text: t('common.purchasingAgent', 'Purchasing agent'), highlight: true },
               { text: t('common.eInvoicing', 'E-invoicing'), highlight: true },
             ],
