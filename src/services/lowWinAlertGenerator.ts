@@ -12,7 +12,7 @@
 // stays quiet during normal operation.
 // =============================================================================
 
-import { predictQuoteWin } from '../intelligence/mlModels';
+import { predictQuoteWin, QUOTE_WIN_MIN_DISPLAY_CONFIDENCE } from '../intelligence/mlModels';
 import i18n from '../i18n/i18n';
 import type { QueueItem } from './aiActionQueueService';
 import { formatMoney } from '../i18n/formatting';
@@ -32,7 +32,7 @@ export interface LowWinAlertInput {
 // <35% win probability AND ≥60% confidence filters out cold-start noise
 // where the model hasn't been trained yet or has too thin a sample.
 const WIN_PROB_THRESHOLD = 0.35;
-const MIN_CONFIDENCE = 0.6;
+const MIN_CONFIDENCE = QUOTE_WIN_MIN_DISPLAY_CONFIDENCE;
 
 export async function generateLowWinAlert(
   input: LowWinAlertInput,

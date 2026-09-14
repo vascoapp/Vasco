@@ -40,6 +40,7 @@ import {
   recordModelPrediction,
   getModelAccuracies,
   calibrateModels,
+  QUOTE_WIN_MIN_DISPLAY_CONFIDENCE,
 } from '../mlModels';
 
 import { loadProfile } from '../learningStorage';
@@ -70,6 +71,24 @@ describe('mlModels', () => {
 
       // With 0 trade jobs, confidence = min(0.95, 0.3 + 0 * 0.05) = 0.3
       expect(result.confidence).toBe(0.3);
+    });
+
+    // The quote builder showed "Win-kans: 72%" to every contractor with no
+    // history — a constant. Cold start must sit below the display threshold,
+    // and a contractor with a real track record must clear it.
+    it('cold start is never confident enough to show; a track record is', async () => {
+      const cold = await predictQuoteWin({ amount: 1000, trade: 'plumbing' });
+      expect(cold.confidence).toBeLessThan(QUOTE_WIN_MIN_DISPLAY_CONFIDENCE);
+
+      (loadProfile as jest.Mock).mockResolvedValueOnce({
+        schemaVersion: 2, contractorId: 'c', insightInteractions: [], serviceUsageStats: {},
+        dismissedPatterns: [], actionedPatterns: [],
+        jobCompletionHistory: Array.from({ length: 8 }, (_, i) => ({
+          jobType: 'plumbing', estimatedCost: 1000, marginPercent: i % 4 === 0 ? -5 : 20,
+        })),
+      });
+      const seasoned = await predictQuoteWin({ amount: 1000, trade: 'plumbing' });
+      expect(seasoned.confidence).toBeGreaterThanOrEqual(QUOTE_WIN_MIN_DISPLAY_CONFIDENCE);
     });
 
     it('should include suggested price range', async () => {

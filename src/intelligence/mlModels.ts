@@ -81,6 +81,18 @@ export interface PaymentPrediction {
 // Model 1: Quote Win Predictor
 // ---------------------------------------------------------------------------
 
+/**
+ * Below this confidence a quote-win probability is not shown to anyone.
+ *
+ * With no history the heuristic below is a constant — 0.65 base × 1.1 (the
+ * quote compared with ITSELF as the "average") × the month factor — so every
+ * contractor with no data read "Win-kans: 72%" in the quote builder, a figure
+ * identical with data and without. Its own confidence is 0.3. The low-win
+ * alert already refused anything under 0.6 as cold-start noise; the builder
+ * never applied the same rule.
+ */
+export const QUOTE_WIN_MIN_DISPLAY_CONFIDENCE = 0.6;
+
 export async function predictQuoteWin(params: {
   amount: number;
   trade: string;

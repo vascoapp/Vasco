@@ -28,7 +28,7 @@ import { SimilarJobsSuggest } from '../shared/SimilarJobsSuggest';
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { useQuoteCalibration } from '../../services/estimationFeedbackService';
 import { predictPrice, type PricePrediction } from '../../intelligence/predictions';
-import { predictQuoteWin, type QuoteWinPrediction } from '../../intelligence/mlModels';
+import { predictQuoteWin, QUOTE_WIN_MIN_DISPLAY_CONFIDENCE, type QuoteWinPrediction } from '../../intelligence/mlModels';
 import { useAuth } from '../../context/AuthContext';
 import { searchCatalog, type CatalogItem } from '../../integrations/suppliers';
 import { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
@@ -1636,8 +1636,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             </View>
           )}
 
-          {/* Win probability + explanation */}
-          {winPrediction && (
+          {/* Win probability + explanation — only when the model has enough
+              behind it. Cold start is a constant 72% (see mlModels). */}
+          {winPrediction && winPrediction.confidence >= QUOTE_WIN_MIN_DISPLAY_CONFIDENCE && (
             <View style={s.vascoRow}>
               <Text style={s.vascoText}>
                 {t('quotes.winChance', 'Win chance:')}{' '}

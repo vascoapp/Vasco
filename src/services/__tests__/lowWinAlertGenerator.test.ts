@@ -11,6 +11,9 @@ let mockPrediction: {
 
 jest.mock('../../intelligence/mlModels', () => ({
   predictQuoteWin: jest.fn(async () => mockPrediction),
+  // The threshold moved into mlModels so the quote builder shares it. A mock
+  // without it made every confidence check compare against undefined.
+  QUOTE_WIN_MIN_DISPLAY_CONFIDENCE: 0.6,
 }));
 
 jest.mock('../../i18n/i18n', () => ({
