@@ -795,6 +795,17 @@ export default function JobDetailPage() {
             accessibilityRole="button"
             accessibilityLabel={lifecycleNextAction(job.lifecycleStatus as JobLifecycleStatus, t) || t('jobs.advanceStatus', 'Advance status')}
             onPress={() => {
+              // A lead's next step IS the quote. The button says "Angebot
+              // erstellen"; it used to confirm "Status auf „Angebot“ ändern?"
+              // and change the status with no quote behind it — the sibling of
+              // the invoicing step below, fixed there and not here. Open the
+              // builder for this job; the job becomes "quoted" only once a
+              // quote is saved (tiered-quote.tsx).
+              if (job.lifecycleStatus === 'lead') {
+                const customerParam = linkedCustomerId ? `&customerId=${encodeURIComponent(linkedCustomerId)}` : '';
+                router.push(`/contractor/tiered-quote?jobId=${encodeURIComponent(job.id)}${customerParam}` as any);
+                return;
+              }
               const invoicingStep = job.lifecycleStatus === 'gereed';
               Alert.alert(
                 invoicingStep

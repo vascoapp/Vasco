@@ -23,6 +23,7 @@ import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useAppState } from '../../src/state/AppState';
 import { localDateKey, startOfWeek } from '../../src/utils/dateKey';
 import { bookedHours } from '../../src/utils/jobSlot';
+import { formatHoursDuration } from '../../src/i18n/formatDuration';
 
 interface DayBucket {
   date: string;                  // YYYY-MM-DD
@@ -73,13 +74,7 @@ export default function WeeklyOverviewScreen() {
   // The suffix was a hardcoded "h", so a Dutch contractor read "27h" where the
   // rest of the app says "27u". `common.durationH`/`durationHm` already exist
   // for exactly this (added when the same literal was found in werk.tsx).
-  const formatHours = (h: number) => {
-    const whole = Math.floor(h);
-    const mins = Math.round((h - whole) * 60);
-    return mins === 0
-      ? t('common.durationH', { h: whole, defaultValue: '{{h}}h' })
-      : t('common.durationHm', { h: whole, m: String(mins).padStart(2, '0'), defaultValue: '{{h}}h{{m}}' });
-  };
+  const formatHours = (h: number) => formatHoursDuration(t as any, h);
 
   const weekLabel = useMemo(() => {
     const start = buckets[0]?.date;

@@ -21,6 +21,13 @@ export interface ConflictIssue {
   message: string;
   /** When relevant, the job that conflicts. */
   conflictingJobId?: string;
+  /** Title of the conflicting job, for a localized reason. */
+  conflictingTitle?: string;
+  /** The window the reason names, in decimal hours (overlap: the other job;
+   *  outside_working_hours: the working day). Screens format these — the
+   *  English `message` is for logs and tests. */
+  windowStart?: number;
+  windowEnd?: number;
 }
 
 export interface ConflictReport {
@@ -31,7 +38,7 @@ export interface ConflictReport {
 }
 
 export interface SlotCandidate {
-  /** 0-23 integer hour. */
+  /** Decimal hour of day: 8.5 = 08:30. */
   startHour: number;
   /** Duration in hours. */
   durationHours: number;
@@ -53,6 +60,12 @@ export interface WorkingHours {
 
 const DEFAULT_WORKING_HOURS: WorkingHours = { start: 7, end: 19 };
 const TRAVEL_BUFFER_HOURS = 0.5;
+
+/** 8.5 → "08:30". `${String(h).padStart(2,'0')}:00` printed "8.5:00". */
+function hm(h: number): string {
+  const total = Math.round(h * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
 
 function rangesOverlap(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
   return aStart < bEnd && bStart < aEnd;
@@ -84,7 +97,9 @@ export function detectConflicts(
     issues.push({
       kind: 'outside_working_hours',
       severity: 'hard',
-      message: `Outside working hours (${String(workingHours.start).padStart(2, '0')}:00–${String(workingHours.end).padStart(2, '0')}:00)`,
+      message: `Outside working hours (${hm(workingHours.start)}–${hm(workingHours.end)})`,
+      windowStart: workingHours.start,
+      windowEnd: workingHours.end,
     });
   }
 
@@ -98,9 +113,12 @@ export function detectConflicts(
         kind: 'overlap',
         severity: 'hard',
         message: e.title
-          ? `Overlaps "${e.title}" (${String(eStart).padStart(2, '0')}:00–${String(eEnd).padStart(2, '0')}:00)`
-          : `Overlaps an existing job (${String(eStart).padStart(2, '0')}:00–${String(eEnd).padStart(2, '0')}:00)`,
+          ? `Overlaps "${e.title}" (${hm(eStart)}–${hm(eEnd)})`
+          : `Overlaps an existing job (${hm(eStart)}–${hm(eEnd)})`,
         conflictingJobId: e.jobId,
+        conflictingTitle: e.title,
+        windowStart: eStart,
+        windowEnd: eEnd,
       });
       continue; // overlap implies no buffer too — don't double-flag
     }
@@ -118,6 +136,7 @@ export function detectConflicts(
           ? `Less than 30 min before/after "${e.title}" — no travel buffer`
           : `Less than 30 min before/after another job — no travel buffer`,
         conflictingJobId: e.jobId,
+        conflictingTitle: e.title,
       });
     }
   }

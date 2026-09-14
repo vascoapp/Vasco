@@ -8,7 +8,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 
 export default function TieredQuoteScreen() {
   const router = useRouter();
-  const { addQuote, updateQuote, customers, quotes } = useAppState();
+  const { addQuote, updateQuote, updateJobStatus, customers, quotes, jobs } = useAppState();
   const { t } = useTranslation();
   const sendingRef = useRef(false);
 
@@ -16,10 +16,19 @@ export default function TieredQuoteScreen() {
   // (e.g. EVE analyst, customer-question handoff). Looks up by customerId
   // param so the builder opens scoped to the right customer.
   const params = useLocalSearchParams<{ customerId?: string; jobId?: string; templateId?: string }>();
+  // `jobId` was declared and never read: the job screen's "Angebot erstellen"
+  // could not hand its job over, so it flipped the job to "Angebot" and made
+  // no quote at all (German device walk, 2026-09-14). The job now supplies the
+  // customer when the caller did not, and names the quote.
+  const linkedJob = useMemo(
+    () => (params.jobId ? jobs.find((j) => j.id === params.jobId) : undefined),
+    [params.jobId, jobs],
+  );
   const prefillCustomer = useMemo(() => {
-    if (!params.customerId) return undefined;
-    return customers.find((c: any) => c.id === params.customerId) as any;
-  }, [params.customerId, customers]);
+    const id = params.customerId ?? linkedJob?.customerId ?? undefined;
+    if (!id) return undefined;
+    return customers.find((c: any) => c.id === id) as any;
+  }, [params.customerId, linkedJob?.customerId, customers]);
 
   return (
     <TieredQuoteBuilder
@@ -81,7 +90,7 @@ export default function TieredQuoteScreen() {
             // memory/quote-flow-consolidation.md), and those are stored.
             // Name the work instead, in the contractor's own wording.
             const first = lineItems[0]?.description?.trim();
-            const jobLabel = !first
+            const jobLabel = linkedJob?.title?.trim() ? linkedJob.title.trim() : !first
               ? (tier.name || t('tieredQuote.quoteLabel'))
               : lineItems.length > 1
                 ? t('tieredQuote.jobLabelMore', {
@@ -91,6 +100,12 @@ export default function TieredQuoteScreen() {
                   })
                 : first;
             const quoteId = await addQuote(customerArg, jobLabel, lineItems);
+            // The job reaches "quoted" because a quote now EXISTS — never on a
+            // button press. Only a lead moves: a job further along keeps its
+            // stage when a second quote is drafted for it.
+            if (linkedJob && linkedJob.status === 'lead') {
+              updateJobStatus(linkedJob.id, 'quoted');
+            }
             // Close the learning loop. Line corrections are captured while the
             // contractor edits — BEFORE a quote exists — so they were written
             // with quote_id = null and could never be joined to whether the

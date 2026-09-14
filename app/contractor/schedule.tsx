@@ -42,7 +42,7 @@ import { useTranslation } from 'react-i18next';
 import { useFeatureFlag } from '../../src/services/featureFlagService';
 import { shareAllScheduledJobs } from '../../src/services/calendarExportService';
 import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/calendarSyncService';
-import { detectConflicts } from '../../src/services/scheduleConflictService';
+import { detectConflicts, type ConflictIssue } from '../../src/services/scheduleConflictService';
 import type { Job } from '../../src/domain/jobs';
 import type { Worker } from '../../src/domain/worker';
 import { staffingGapsForWeek, crewWeekLoad } from '../../src/services/crewWeekService';
@@ -51,6 +51,7 @@ import { tradeMismatch } from '../../src/services/crewAssignment';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatWeekdayDayMonth, formatDayMonth, formatWeekdayShort } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
+import { formatHoursDuration, hmToHours } from '../../src/i18n/formatDuration';
 
 const CAL_PROMPT_DISMISSED_KEY = '@vasco_calendar_prompt_dismissed';
 
@@ -110,11 +111,14 @@ function BlockPressable({
   hoursToHM: (h: number) => string;
   children: React.ReactNode;
 }) {
-  const label = `${job.title}, ${laneName}, ${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}${job.site ? `, ${job.site}` : ''}`;
+  const label = `${job.title}, ${laneName}, ${hoursToHM(job.startHour)} – ${hoursToHM(job.startHour + job.duration)}${job.site ? `, ${job.site}` : ''}`;
   const style = [styles.laneBlock, {
     backgroundColor: job.color + '15',
     borderLeftColor: job.color,
     height: job.duration * SLOT_HEIGHT - 4,
+    // Sits in its hour row; the minutes push it down so an 08:30 block is
+    // drawn from 08:30, not over the half hour before it.
+    marginTop: (job.startHour - Math.floor(job.startHour)) * SLOT_HEIGHT,
   }];
 
   // A crew of one has nobody else to move the job to, so the menu would be
@@ -321,7 +325,11 @@ export default function DragScheduleScreen() {
   const initialSchedule: ScheduledJob[] = jobs
     .filter((j: any) => j.scheduledDate === todayStr && (j.status === 'scheduled' || j.status === 'in-progress' || j.status === 'ingepland' || j.status === 'bezig'))
     .map((j: any, idx: number) => {
-      const startHour = j.scheduledStartTime ? parseInt(j.scheduledStartTime.split(':')[0], 10) : 9;
+      // Hours AND minutes. `parseInt("08:30")` kept only the 8, so an 08:30
+      // job read "8:00 – 10:00" here beside "08:30 – 10:30" on Aufträge, and
+      // the calendar export wrote 08:00 into the contractor's calendar
+      // (device walk, 2026-09-14). Blocks still sit in their hour row.
+      const startHour = hmToHours(j.scheduledStartTime) ?? 9;
       const cust = customers.find((c: any) => c.id === j.customerId);
       // Block length is TODAY'S SLOT, not j.estimatedDuration (the WHOLE job's
       // estimate — a 24h Badkamer renovatie rendered 13:00 to 37:00 and pushed
@@ -333,7 +341,7 @@ export default function DragScheduleScreen() {
         // Never fall back to the raw customerId — it renders on the planner
         // card as "cust-003". Blank is better than an internal id.
         customerName: cust?.name || '',
-        startHour: isNaN(startHour) ? 9 : startHour,
+        startHour,
         duration: slotHoursOr(j, 2),
         // In crew mode the colour identifies the PERSON, so the same worker
         // reads the same everywhere; otherwise keep the per-job palette.
@@ -534,9 +542,30 @@ export default function DragScheduleScreen() {
       scheduleJobReminder({ jobId: job.jobId, jobTitle: job.title, scheduledTime }).catch(() => {});
     };
 
+    // Localized reasons from the structured issue. `i.message` is the
+    // service's English log line — it reached a German planner verbatim.
+    const reasonText = (i: ConflictIssue): string => {
+      const from = i.windowStart !== undefined ? hoursToHM(i.windowStart) : '';
+      const to = i.windowEnd !== undefined ? hoursToHM(i.windowEnd) : '';
+      switch (i.kind) {
+        case 'overlap':
+          return i.conflictingTitle
+            ? t('schedule.conflictOverlap', { title: i.conflictingTitle, from, to })
+            : t('schedule.conflictOverlapUntitled', { from, to });
+        case 'outside_working_hours':
+          return t('schedule.conflictOutsideHours', { from, to });
+        case 'no_travel_buffer':
+          return i.conflictingTitle
+            ? t('schedule.conflictNoBuffer', { title: i.conflictingTitle })
+            : t('schedule.conflictNoBufferUntitled');
+        default:
+          return i.message;
+      }
+    };
+
     if (report.hardConflict) {
       hapticWarning();
-      const reasons = report.issues.filter((i) => i.severity === 'hard').map((i) => `• ${i.message}`).join('\n');
+      const reasons = report.issues.filter((i) => i.severity === 'hard').map((i) => `• ${reasonText(i)}`).join('\n');
       Alert.alert(t('schedule.conflict', 'Conflict'), reasons);
       setDraggedJob(null);
       setDropTargetHour(null);
@@ -545,7 +574,7 @@ export default function DragScheduleScreen() {
 
     if (report.softConflict) {
       hapticWarning();
-      const reasons = report.issues.filter((i) => i.severity === 'soft').map((i) => `• ${i.message}`).join('\n');
+      const reasons = report.issues.filter((i) => i.severity === 'soft').map((i) => `• ${reasonText(i)}`).join('\n');
       Alert.alert(
         t('schedule.softConflictTitle', 'Heads up'),
         reasons,
@@ -575,7 +604,7 @@ export default function DragScheduleScreen() {
       // created between midnight and 02:00 CEST was filed under YESTERDAY and
       // vanished from the planner it was just dragged onto.
       scheduledDate: todayKey(),
-      scheduledStartTime: `${s.startHour.toString().padStart(2, '0')}:00`,
+      scheduledStartTime: hoursToHM(s.startHour),
       scheduledEndTime: hoursToHM(s.startHour + s.duration),
     } as any));
     try {
@@ -622,7 +651,7 @@ export default function DragScheduleScreen() {
   /** Solo contractor: there is nobody to reassign to, so the tap just tells
    *  you what the block is. Unchanged, and a two-button Alert is fine. */
   const showJobInfo = (job: ScheduledJob) => {
-    Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}`);
+    Alert.alert(job.title, `${job.customerName}\n${hoursToHM(job.startHour)} – ${hoursToHM(job.startHour + job.duration)}`);
   };
 
   /**
@@ -729,7 +758,7 @@ export default function DragScheduleScreen() {
                 jobId: stop.job.id,
                 title: stop.job.title ?? '',
                 customerName: schedule.find((s) => s.jobId === stop.job.id)?.customerName ?? '',
-                startHour: parseInt(stop.arrivalAt.split(':')[0], 10),
+                startHour: hmToHours(stop.arrivalAt) ?? 9,
                 duration: stop.job.estimatedHours,
                 color: COLORS[idx % COLORS.length],
               }));
@@ -909,9 +938,9 @@ export default function DragScheduleScreen() {
         <View style={styles.utilInfo}>
           <Text style={styles.utilLabel}>{t('schedule.utilization', 'Bezetting')}</Text>
           <Text style={styles.utilValue}>
-            {t('common.durationH', { defaultValue: '{{h}}h', h: totalScheduledHours })}
+            {formatHoursDuration(t, totalScheduledHours)}
             {' / '}
-            {t('common.durationH', { defaultValue: '{{h}}h', h: dayCapacity })}
+            {formatHoursDuration(t, dayCapacity)}
             {` (${utilizationPct}%)`}
           </Text>
         </View>
@@ -939,7 +968,7 @@ export default function DragScheduleScreen() {
                     <Text style={styles.poolJobCustomer} numberOfLines={1}>{job.site}</Text>
                   </View>
                 ) : null}
-                <Text style={styles.poolJobHours}>{t('common.durationH', { defaultValue: '{{h}}h', h: job.estimatedHours })}</Text>
+                <Text style={styles.poolJobHours}>{formatHoursDuration(t, job.estimatedHours)}</Text>
                 {/* Tap to pick time slot */}
                 {/* No `.slice(0, 5)` any more — that cap existed to stay under
                     the Android Alert's 3-button ceiling, and a DKMenu scrolls.
@@ -1067,8 +1096,8 @@ export default function DragScheduleScreen() {
                       <Text style={styles.laneMeta} numberOfLines={1}>
                         {booked > 0
                           ? t('schedule.crewUtil', {
-                              booked: t('common.durationH', { defaultValue: '{{h}}h', h: booked }),
-                              capacity: t('common.durationH', { defaultValue: '{{h}}h', h: WORKDAY_HOURS }),
+                              booked: formatHoursDuration(t, booked),
+                              capacity: formatHoursDuration(t, WORKDAY_HOURS),
                             })
                           : t('schedule.laneFree')}
                       </Text>
@@ -1089,7 +1118,7 @@ export default function DragScheduleScreen() {
                   <Text style={styles.hourLabel}>{hour}:00</Text>
                   {lanes.map((lane) => (
                     <View key={`${lane.id ?? 'none'}-${hour}`} style={styles.laneSlot}>
-                      {lane.jobs.filter((j) => j.startHour === hour).map((job) => (
+                      {lane.jobs.filter((j) => Math.floor(j.startHour) === hour).map((job) => (
                         <BlockPressable
                           key={job.jobId}
                           job={job}
@@ -1111,7 +1140,7 @@ export default function DragScheduleScreen() {
                             </View>
                           ) : null}
                           <Text style={styles.blockTimeText} numberOfLines={1}>
-                            {job.startHour}:00 – {hoursToHM(job.startHour + job.duration)}
+                            {hoursToHM(job.startHour)} – {hoursToHM(job.startHour + job.duration)}
                           </Text>
                         </BlockPressable>
                       ))}
@@ -1132,28 +1161,31 @@ export default function DragScheduleScreen() {
               <Text style={styles.hourLabel}>{hour}:00</Text>
               <View style={styles.hourSlot}>
                 {/* Render scheduled jobs that start at this hour */}
-                {schedule.filter(j => j.startHour === hour).map(job => (
+                {schedule.filter(j => Math.floor(j.startHour) === hour).map(job => (
                   <Pressable
                     key={job.jobId}
                     style={[styles.scheduledBlock, {
                       backgroundColor: job.color + '15',
                       borderLeftColor: job.color,
                       height: job.duration * SLOT_HEIGHT - 4,
+                      // Absolutely positioned: move `top` by the minutes so an
+                      // 08:30 block starts at 08:30 (base offset 2 as styled).
+                      top: 2 + (job.startHour - Math.floor(job.startHour)) * SLOT_HEIGHT,
                     }]}
                     onLongPress={() => handleRemoveFromSchedule(job.jobId)}
-                    onPress={() => Alert.alert(job.title, `${job.customerName}\n${job.startHour}:00 – ${hoursToHM(job.startHour + job.duration)}\n${t('schedule.longPressToRemove', 'Houd ingedrukt om te verwijderen')}`)}
+                    onPress={() => Alert.alert(job.title, `${job.customerName}\n${hoursToHM(job.startHour)} – ${hoursToHM(job.startHour + job.duration)}\n${t('schedule.longPressToRemove', 'Houd ingedrukt om te verwijderen')}`)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${job.title}, ${job.customerName}, ${job.startHour}:00 to ${hoursToHM(job.startHour + job.duration)}`}
+                    accessibilityLabel={`${job.title}, ${job.customerName}, ${hoursToHM(job.startHour)} – ${hoursToHM(job.startHour + job.duration)}`}
                     accessibilityHint={t('a11y.jobCardHint', 'Tap for details, long press to remove')}
                   >
                     <View style={styles.blockHeader}>
                       <Text style={[styles.blockTitle, { color: job.color }]} numberOfLines={1}>{job.title}</Text>
-                      <Text style={styles.blockDuration}>{t('common.durationH', { defaultValue: '{{h}}h', h: job.duration })}</Text>
+                      <Text style={styles.blockDuration}>{formatHoursDuration(t, job.duration)}</Text>
                     </View>
                     <Text style={styles.blockCustomer} numberOfLines={1}>{job.customerName}</Text>
                     <View style={styles.blockTime}>
                       <Ionicons name="time-outline" size={12} color={SemanticColors.textTertiary} />
-                      <Text style={styles.blockTimeText}>{job.startHour}:00 – {hoursToHM(job.startHour + job.duration)}</Text>
+                      <Text style={styles.blockTimeText}>{hoursToHM(job.startHour)} – {hoursToHM(job.startHour + job.duration)}</Text>
                     </View>
                   </Pressable>
                 ))}

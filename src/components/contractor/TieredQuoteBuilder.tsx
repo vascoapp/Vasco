@@ -57,6 +57,7 @@ import { useTranslation } from 'react-i18next';
 // via the generate-sow edge fn. Lives in the preview/send step so
 // contractors review the prose before tapping Send.
 import { generateScopeOfWork, loadQuoteTonePreset, loadToneExamples } from '../../services/sowGeneratorService';
+import { LLM_GENERATION_ENABLED } from '../../config/ai';
 import { useAppState } from '../../state/AppState';
 import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate, getSelectableVatRates, getEnergyRenovationVatRate } from '../../domain/business';
 import { localDateKey } from '../../utils/dateKey';
@@ -1297,16 +1298,20 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 ]}
               />
               </View>
-              <Pressable
-                testID="ai-scan-row"
-                style={s.startTile}
-                onPress={openPhotoScan}
-                accessibilityRole="button"
-                accessibilityLabel={t('quotes.orScanPhoto', 'Scan a photo')}
-              >
-                <Ionicons name="camera" size={20} color={Palette.hermesOrange} />
-                <Text style={s.startTileText} numberOfLines={2}>{t('quotes.photo', 'Photo')}</Text>
-              </Pressable>
+              {/* Photo → quote needs the LLM edge function; with no key it
+                  500s (config/ai.ts). Not offered until it can answer. */}
+              {LLM_GENERATION_ENABLED ? (
+                <Pressable
+                  testID="ai-scan-row"
+                  style={s.startTile}
+                  onPress={openPhotoScan}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('quotes.orScanPhoto', 'Scan a photo')}
+                >
+                  <Ionicons name="camera" size={20} color={Palette.hermesOrange} />
+                  <Text style={s.startTileText} numberOfLines={2}>{t('quotes.photo', 'Photo')}</Text>
+                </Pressable>
+              ) : null}
               <Pressable
                 style={s.startTile}
                 onPress={() => setShowPricebook(true)}
@@ -1952,7 +1957,24 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             keystroke. */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>{t('quotes.scopeTitle', 'Scope of work')}</Text>
-          {!sowText && !sowLoading && (
+          {/* Without a live LLM the scope is the contractor's own text — the
+              same field the generated draft lands in, minus any claim that
+              Vasco writes it (config/ai.ts). */}
+          {!LLM_GENERATION_ENABLED && (
+            <View style={s.sowResultBox}>
+              <TextInput
+                value={sowText}
+                onChangeText={setSowText}
+                multiline
+                style={s.sowTextInput}
+                placeholder={t('quotes.scopeManualPlaceholder', 'What is included, what is not, warranty terms…')}
+                placeholderTextColor={SemanticColors.textTertiary}
+                textAlignVertical="top"
+                accessibilityLabel={t('quotes.scopeTitle', 'Scope of work')}
+              />
+            </View>
+          )}
+          {LLM_GENERATION_ENABLED && !sowText && !sowLoading && (
             <>
               {/* R64 (audit fix #9): explainer subtitle so contractors who
                   don't know what an SOW is can see what tapping does. */}
@@ -2001,7 +2023,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
               </Text>
             </Pressable>
           )}
-          {sowText && !sowLoading && (
+          {LLM_GENERATION_ENABLED && sowText && !sowLoading && (
             <View style={s.sowResultBox}>
               <TextInput
                 value={sowText}

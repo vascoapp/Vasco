@@ -492,7 +492,7 @@
    "error": null,
    "texts": [
     "MAANDAG 14 SEP",
-    "Goedemiddag",
+    "Goedenavond",
     ".",
     "",
     "3",
@@ -2841,7 +2841,7 @@
     "",
     "Exporteer",
     "Bezetting",
-    "6.5u",
+    "6u30",
     "/",
     "10u",
     "(65%)",
@@ -2864,8 +2864,8 @@
     "3u",
     "Fam. de Vries",
     "",
-    "9",
-    ":00 –",
+    "09:00",
+    "–",
     "12:00",
     "10",
     ":00",
@@ -2876,12 +2876,12 @@
     "13",
     ":00",
     "Badkamer renovatie — Fam. Jansen",
-    "3.5u",
+    "3u30",
     "Fam. Jansen",
     "",
-    "13",
-    ":00 –",
-    "16:30",
+    "13:30",
+    "–",
+    "17:00",
     "14",
     ":00",
     "15",
@@ -2897,8 +2897,8 @@
     "Terug",
     "Exporteer",
     "Inplannen Lekkage inspectie — Fam. Bakker",
-    "CV-ketel onderhoud — Fam. de Vries, Fam. de Vries, 9:00 to 12:00",
-    "Badkamer renovatie — Fam. Jansen, Fam. Jansen, 13:00 to 16:30"
+    "CV-ketel onderhoud — Fam. de Vries, Fam. de Vries, 09:00 – 12:00",
+    "Badkamer renovatie — Fam. Jansen, Fam. Jansen, 13:30 – 17:00"
    ]
   },
   {
@@ -2965,8 +2965,6 @@
     "Begin met",
     "",
     "Sjabloon",
-    "",
-    "Foto",
     "",
     "Prijslijst",
     "",
@@ -2979,7 +2977,6 @@
    "a11y": [
     "Sluiten",
     "Begin met een sjabloon",
-    "Of scan een foto",
     "Kies diensten uit je prijslijst"
    ]
   },
