@@ -765,9 +765,14 @@ export default function JobDetailPage() {
             return (
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
-                  <Text style={styles.progressLabel}>{t('jobs.progress', 'Progress')}</Text>
+                  {/* This is the job's place in the LIFECYCLE (lead → … →
+                      paid), not how much of the work is done. It read
+                      "Voortgang 57%" on a job started that afternoon — a
+                      measured-looking figure for something nobody measured.
+                      State the stage instead. */}
+                  <Text style={styles.progressLabel}>{t('jobs.lifecycleStageLabel', 'Stage')}</Text>
                   <Text style={[styles.progressPct, { color: progressPct >= 100 ? SemanticColors.feedbackSuccess : Palette.hermesOrange }]}>
-                    {progressPct}%
+                    {t('jobs.stageOf', { defaultValue: '{{step}} of {{total}}', step: Math.max(0, currentIdx) + 1, total: totalSteps })}
                   </Text>
                 </View>
                 <View style={styles.progressTrack}>

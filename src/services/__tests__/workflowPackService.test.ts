@@ -442,4 +442,72 @@ describe('workflowPackService', () => {
       expect(await queuedTitles([job({ scheduledDate: undefined })])).toHaveLength(0);
     });
   });
+
+  // ─── Maintenance follow-up: the contractor's phone number ─────────────────
+  // The template asks the CUSTOMER to "call or message me at {{phone}}". The
+  // phone was read from an app-state snapshot field nothing ever wrote, so
+  // every such message read "call or message me at to book".
+  describe('maintenance follow-up phone', () => {
+    async function followups(phone: string | undefined) {
+      const { setAppStateSnapshot } = require('../../state/appStateSnapshot');
+      setAppStateSnapshot({ jobs: [], quotes: [], invoices: [], customers: [], businessProfile: { phone } });
+      const pack = DEFAULT_PACKS.find((p) => p.id === 'onderhoud_herinnering')!;
+      await saveWorkflowPacks([{ ...pack, enabled: true }]);
+      mockAddToQueue.mockClear();
+      await evaluateTriggers({
+        invoices: [], quotes: [],
+        customers: [{ id: 'c1', name: 'Familie de Vries', phone: '+31612345678' }],
+        jobs: [{
+          id: 'j1', title: 'CV-ketel', customerId: 'c1', status: 'completed',
+          completedAt: new Date(Date.now() - 365.5 * 24 * 60 * 60 * 1000).toISOString(),
+        }],
+      } as any);
+      return mockAddToQueue.mock.calls
+        .map((c: any[]) => String(c[0].preparedData?.template ?? ''))
+        .filter((x) => x.length > 0);
+    }
+
+    it("puts the contractor's number in the message", async () => {
+      const texts = await followups('+31 20 555 0142');
+      expect(texts.some((x) => x.includes('+31 20 555 0142'))).toBe(true);
+    });
+
+    it('does not draft the message at all when there is no number', async () => {
+      const texts = await followups(undefined);
+      expect(texts.some((x) => /\{\{phone\}\}|\bat to\b|\bop voor\b/.test(x))).toBe(false);
+      expect(texts).toHaveLength(0);
+    });
+  });
+
+  // ─── End of day: "jobs scheduled for tomorrow" ────────────────────────────
+  // This counted every job in 'scheduled' status whatever its date, so a
+  // French device read "1 chantiers planifiés" for tomorrow in the same queue
+  // as "no jobs tomorrow". Only work dated tomorrow, and not called off.
+  describe('end-of-day tomorrow count', () => {
+    const keyFor = (d: Date) => {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+
+    it('counts only work dated tomorrow that is still going ahead', async () => {
+      jest.setSystemTime(new Date(2026, 4, 10, 18, 0, 0)); // local 18:00
+      const tomorrow = keyFor(new Date(2026, 4, 11, 12));
+      const later = keyFor(new Date(2026, 4, 15, 12));
+      const pack = DEFAULT_PACKS.find((p) => p.id === 'einde_dag')!;
+      await saveWorkflowPacks([{ ...pack, enabled: true }]);
+      mockAddToQueue.mockClear();
+      await evaluateTriggers({
+        invoices: [], quotes: [], customers: [],
+        jobs: [
+          { id: 'j1', title: 'Badkamer', status: 'scheduled', scheduledDate: tomorrow },
+          { id: 'j2', title: 'Keuken', status: 'cancelled', scheduledDate: tomorrow },
+          { id: 'j3', title: 'Dak', status: 'scheduled', scheduledDate: later },
+        ],
+      } as any);
+      const texts = mockAddToQueue.mock.calls.map((c: any[]) => String(c[0].preparedData?.template ?? ''));
+      const prep = texts.find((x) => /morgen|tomorrow|demain|mañana|domani/i.test(x));
+      expect(prep).toBeDefined();
+      expect(prep).toMatch(/:\s*1$/);
+    });
+  });
 });

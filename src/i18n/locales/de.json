@@ -567,7 +567,9 @@
     "statusLead": "Anfrage",
     "notScheduled": "Nicht geplant",
     "signOffFirst": "Erst abzeichnen lassen",
-    "signOffHow": "Wie soll die Unterschrift eingeholt werden?"
+    "signOffHow": "Wie soll die Unterschrift eingeholt werden?",
+    "lifecycleStageLabel": "Phase",
+    "stageOf": "{{step}} von {{total}}"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
@@ -2299,7 +2301,7 @@
     "planFreeBadge": "KOSTENLOS",
     "planActive": "AKTIV",
     "billingMonthly": "Monatlich",
-    "billingAnnualSave": "Jährlich · 25% sparen",
+    "billingAnnualSave": "Jährlich · bis zu {{pct}}% sparen",
     "perMonth": "Mo.",
     "popular": "BELIEBTESTE",
     "upgradeTo": "Upgrade auf {{name}}",
@@ -2365,7 +2367,9 @@
       "businessLetters": "Geschäftsbriefe",
       "years_one": "{{count}} Jahr",
       "years_other": "{{count}} Jahre"
-    }
+    },
+    "billedYearly": "{{price}} jährlich abgerechnet",
+    "retentionLine": "{{title}}: {{periods}}"
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
@@ -4948,7 +4952,11 @@
     "invoiceCount_other": "{{count}} Rechnungen",
     "daysOverdue": "{{count}} T. überfällig",
     "dueInDays": "Fällig in {{count}} T.",
-    "providerTitle": "{{provider}} Zahlungen"
+    "providerTitle": "{{provider}} Zahlungen",
+    "methodCreditCard": "Kreditkarte",
+    "methodBankTransfer": "Banküberweisung",
+    "methodA11y": "Zahlungsmethode {{name}}",
+    "methodA11yActive": "Zahlungsmethode {{name}}, aktiv"
   },
   "leads": {
     "noHotLeads": "Aktuell keine heißen Leads"
@@ -5282,8 +5290,8 @@
       },
       "winRate": {
         "title": "Erfolgsquote bei {{pct}}%",
-        "description": "Unter dem Branchenwert von 45%. Prüfen Sie die letzten 5 verlorenen Angebote — Preis, Paketwahl oder Nachfasszeitpunkt sind die üblichen Ursachen.",
-        "impact": "10-15% Umsatz rückgewinnbar",
+        "description": "Angenommen: {{won}} von {{decided}} entschiedenen Angeboten. Preis, Paketwahl oder Nachfasszeitpunkt sind die üblichen Gründe für ein verlorenes Angebot.",
+        "impact": "Verlorene Angebote: {{lost}}",
         "action": "Verlorene Angebote prüfen"
       },
       "appointment": {

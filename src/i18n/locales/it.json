@@ -567,7 +567,9 @@
     "statusLead": "Opportunità",
     "notScheduled": "Non pianificato",
     "signOffFirst": "Fai firmare prima",
-    "signOffHow": "Come vuoi ottenere la firma?"
+    "signOffHow": "Come vuoi ottenere la firma?",
+    "lifecycleStageLabel": "Fase",
+    "stageOf": "{{step}} di {{total}}"
   },
   "compliance": {
     "manageInsurance": "Gestisci assicurazioni e sinistri",
@@ -2299,7 +2301,7 @@
     "planFreeBadge": "GRATIS",
     "planActive": "ATTIVO",
     "billingMonthly": "Mensile",
-    "billingAnnualSave": "Annuale · risparmia 25%",
+    "billingAnnualSave": "Annuale · risparmia fino al {{pct}}%",
     "perMonth": "mese",
     "popular": "PIÙ POPOLARE",
     "upgradeTo": "Passa a {{name}}",
@@ -2365,7 +2367,9 @@
       "businessLetters": "Corrispondenza commerciale",
       "years_one": "{{count}} anno",
       "years_other": "{{count}} anni"
-    }
+    },
+    "billedYearly": "{{price}} fatturati annualmente",
+    "retentionLine": "{{title}}: {{periods}}"
   },
   "search": {
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",
@@ -4948,7 +4952,11 @@
     "invoiceCount_other": "{{count}} fatture",
     "daysOverdue": "{{count}} g di ritardo",
     "dueInDays": "Scade tra {{count}} g",
-    "providerTitle": "Pagamenti {{provider}}"
+    "providerTitle": "Pagamenti {{provider}}",
+    "methodCreditCard": "Carta di credito",
+    "methodBankTransfer": "Bonifico bancario",
+    "methodA11y": "Metodo di pagamento {{name}}",
+    "methodA11yActive": "Metodo di pagamento {{name}}, attivo"
   },
   "leads": {
     "noHotLeads": "Nessun lead caldo al momento"
@@ -5282,8 +5290,8 @@
       },
       "winRate": {
         "title": "Tasso di successo al {{pct}}%",
-        "description": "Sotto il riferimento di settore del 45%. Rivedi gli ultimi 5 preventivi persi — prezzo, mix di livelli o tempistica del follow-up sono le cause tipiche.",
-        "impact": "Recuperabile 10-15% di fatturato",
+        "description": "Accettati: {{won}} su {{decided}} preventivi decisi. Prezzo, mix di livelli o tempistica del follow-up spiegano di solito un preventivo perso.",
+        "impact": "Preventivi persi: {{lost}}",
         "action": "Vedi preventivi persi"
       },
       "appointment": {

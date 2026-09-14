@@ -19,6 +19,7 @@ import { formatDecimal1, formatCurrency, formatMoney2 } from '../i18n/formatting
 import { localDateKey } from '../utils/dateKey';
 import { truncateAtWord } from '../utils/truncate';
 import { documentNumber } from '../domain/documents';
+import { isWorkOnDay } from '../domain/jobs';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 const MUTES_KEY = '@vasco_pack_mutes';
@@ -373,7 +374,8 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
         template: 'Reminder: tijd voor het jaarlijkse onderhoud. Bel of app me op {{phone}} voor een afspraak.',
         defaults: {
           en: 'Reminder: time for your annual maintenance. Call or message me at {{phone}} to book.',
-          de: 'Erinnerung: Zeit für die Jahreswartung. Ruf an oder schreib mir unter {{phone}} für einen Termin.',
+          // Sie, not du: this is the contractor's CUSTOMER (docs/ui-playbook.md §5).
+          de: 'Erinnerung: Es ist Zeit für die jährliche Wartung. Rufen Sie mich an oder schreiben Sie mir unter {{phone}}, um einen Termin zu vereinbaren.',
           fr: 'Rappel : c\'est le moment de l\'entretien annuel. Appelez ou écrivez au {{phone}} pour fixer un rendez-vous.',
           es: 'Recordatorio: toca el mantenimiento anual. Llámame o escríbeme al {{phone}} para reservar.',
           it: 'Promemoria: tempo della manutenzione annuale. Chiama o scrivimi al {{phone}} per prenotare.',
@@ -393,13 +395,18 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       {
         trigger: 'daily_17:00', delayDays: 0, action: 'auto_log_hours', channel: 'in_app',
         i18nKey: 'workflowPacks.endOfDay.logHours',
-        template: 'Uren vandaag: {{hours}}u gewerkt op {{jobCount}} klussen.',
+        // Counts after a colon — see flag_incomplete_jobs below. This step and
+        // prep_tomorrow still put the number before the noun (prep_tomorrow
+        // printed "1 chantiers" on a device), twelve lines from the step that
+        // had already been fixed for exactly that.
+        template: 'Uren vandaag: {{hours}}u · klussen: {{jobCount}}',
         defaults: {
-          en: 'Hours today: {{hours}}h on {{jobCount}} jobs.',
-          de: 'Stunden heute: {{hours}}h auf {{jobCount}} Aufträgen.',
-          fr: 'Heures aujourd\'hui : {{hours}}h sur {{jobCount}} chantiers.',
-          es: 'Horas hoy: {{hours}}h en {{jobCount}} trabajos.',
-          it: 'Ore oggi: {{hours}}h su {{jobCount}} lavori.',
+          en: 'Hours today: {{hours}}h · jobs: {{jobCount}}',
+          nl: 'Uren vandaag: {{hours}}u · klussen: {{jobCount}}',
+          de: 'Stunden heute: {{hours}} h · Aufträge: {{jobCount}}',
+          fr: "Heures aujourd'hui : {{hours}} h · chantiers : {{jobCount}}",
+          es: 'Horas hoy: {{hours}} h · trabajos: {{jobCount}}',
+          it: 'Ore oggi: {{hours}} h · lavori: {{jobCount}}',
         },
       },
       {
@@ -423,13 +430,14 @@ export const DEFAULT_PACKS: WorkflowPack[] = [
       {
         trigger: 'daily_17:00', delayDays: 0, action: 'prep_tomorrow', channel: 'in_app',
         i18nKey: 'workflowPacks.endOfDay.prepTomorrow',
-        template: 'Morgen: {{tomorrowJobs}} klussen gepland.',
+        template: 'Klussen gepland voor morgen: {{tomorrowJobs}}',
         defaults: {
-          en: 'Tomorrow: {{tomorrowJobs}} jobs scheduled.',
-          de: 'Morgen: {{tomorrowJobs}} Aufträge geplant.',
-          fr: 'Demain : {{tomorrowJobs}} chantiers planifiés.',
-          es: 'Mañana: {{tomorrowJobs}} trabajos programados.',
-          it: 'Domani: {{tomorrowJobs}} lavori in programma.',
+          en: 'Jobs scheduled for tomorrow: {{tomorrowJobs}}',
+          nl: 'Klussen gepland voor morgen: {{tomorrowJobs}}',
+          de: 'Für morgen geplante Aufträge: {{tomorrowJobs}}',
+          fr: 'Chantiers planifiés demain : {{tomorrowJobs}}',
+          es: 'Trabajos programados para mañana: {{tomorrowJobs}}',
+          it: 'Lavori in programma domani: {{tomorrowJobs}}',
         },
       },
     ],
@@ -1005,7 +1013,7 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
   let businessPhone = '';
   try {
     const snap = getAppStateSnapshot();
-    businessPhone = (snap as any)?.businessProfile?.phone ?? '';
+    businessPhone = snap.businessProfile?.phone?.trim() ?? '';
   } catch {}
 
   // R66r49 #5: hydrate decision_pending matches before the loop so the sync
@@ -1079,6 +1087,9 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
         if (isMatchMuted(mutes, pack.id, match.customerId, match.entityId)) continue;
         try {
           const baseTemplate = pickTemplateForLocale(step, locale);
+          // A message that asks the customer to call a number we do not have
+          // is worse than no message: "call or message me at to book".
+          if (baseTemplate.includes('{{phone}}') && !businessPhone) continue;
           const resolved = resolveTemplate(baseTemplate, {
             ...match,
             currency,
@@ -1086,7 +1097,7 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
             // so the symbol sits where that market writes it.
             country,
             phone: businessPhone,
-          });
+          }, locale);
           // R66r49 #6: WhatsApp deep-link wire. For customer-facing channels
           // (email/sms), if we have customer.phone, build a wa.me URL and
           // attach it as preparedData.affiliateUrl. queueItemExecutor's
@@ -1395,7 +1406,12 @@ function matchTrigger(
         const t = new Date(j.completedAt || '').getTime();
         return Number.isFinite(t) && now - t < dayMs;
       }).length;
-      const tomorrow = ctx.jobs.filter((j) => j.status === 'scheduled' || j.status === 'gepland').length;
+      // Jobs scheduled FOR TOMORROW. This counted every job in 'scheduled'
+      // status, whatever its date — a French device showed "Demain: 1
+      // chantiers planifiés." in the same queue as "Aucun chantier demain".
+      // Same rule as that card now (isWorkOnDay).
+      const tomorrowKey = localDateKey(new Date(now + dayMs));
+      const tomorrow = ctx.jobs.filter((j) => isWorkOnDay(j, tomorrowKey)).length;
       const hoursToday = ctx.jobs.reduce((sum, j) => {
         const worked = typeof j.actualHours === 'number' ? j.actualHours : 0;
         if (!worked) return sum;
@@ -1458,7 +1474,7 @@ function matchTrigger(
 /** Placeholders that hold the contractor's own money, so they render as currency. */
 const MONEY_KEY = /^(amount|price|savings|total)$/i;
 
-export function resolveTemplate(template: string, data: Record<string, any>): string {
+export function resolveTemplate(template: string, data: Record<string, any>, locale?: string): string {
   // R66r49 #5 parameterised the SYMBOL (a hardcoded euro became a currency
   // placeholder) so a UK contractor stopped sending € on £. But it left it
   // BEFORE the number, which is only correct for en-GB: German, French, Spanish
@@ -1494,10 +1510,17 @@ export function resolveTemplate(template: string, data: Record<string, any>): st
   // A placeholder that resolves to '' (e.g. an invoice with no reference) would
   // otherwise leave "factuur  (€350,00)" or a space before punctuation in a
   // message sent to a customer. Tidy the seams rather than ship sloppy copy.
+  //
+  // ⚠️ Except where the space IS the typography. French puts a space before
+  // : ; ! ? — and stripping it turned every French pack message, dunning
+  // emails included, into "Rappel: la facture …" (seen on a device). `\s` also
+  // matches the no-break spaces French uses there, so correctly typed copy was
+  // flattened too. In French only doubled spaces collapse before those four.
+  const beforePunctuation = locale === 'fr' ? /\s+([,.)])/g : /\s+([,.!?;:)])/g;
   return filled
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\(\s+/g, '(')
-    .replace(/\s+([,.!?;:)])/g, '$1')
+    .replace(beforePunctuation, '$1')
     .trim();
 }
 

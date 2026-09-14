@@ -262,7 +262,9 @@ function RootLayoutNav() {
           quotes: snap.quotes,
           jobs: snap.jobs,
           customers: snap.customers,
-          country: user.country ?? snap.country,
+          // Profile first, account as fallback (CLAUDE.md). `snap.country` was
+          // read here but never written, so this was only ever user.country.
+          country: snap.businessProfile?.country ?? user.country,
         };
       });
       return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopSignatures(); stopBackgroundJobScheduler(); pushSub.remove(); };

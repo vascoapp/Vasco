@@ -554,7 +554,9 @@
     "statusLead": "Lead",
     "notScheduled": "Niet ingepland",
     "signOffFirst": "Eerst laten aftekenen",
-    "signOffHow": "Hoe wil je de handtekening ophalen?"
+    "signOffHow": "Hoe wil je de handtekening ophalen?",
+    "lifecycleStageLabel": "Fase",
+    "stageOf": "{{step}} van {{total}}"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",
@@ -1963,7 +1965,7 @@
   },
   "activation": {
     "title": "Aan de slag",
-    "progress": "{{done}} van {{total}} · snel eerste winst",
+    "progress": "{{done}} van {{total}} · snel een eerste succes",
     "profile": "Maak je bedrijfsprofiel af",
     "firstCustomer": "Voeg je eerste klant toe",
     "firstQuote": "Stuur je eerste offerte",
@@ -2286,7 +2288,7 @@
     "planFreeBadge": "GRATIS",
     "planActive": "ACTIEF",
     "billingMonthly": "Maandelijks",
-    "billingAnnualSave": "Jaarlijks · 25% korting",
+    "billingAnnualSave": "Jaarlijks · tot {{pct}}% korting",
     "perMonth": "mnd",
     "popular": "MEEST GEKOZEN",
     "upgradeTo": "Upgrade naar {{name}}",
@@ -2352,7 +2354,9 @@
       "businessLetters": "Handelsbrieven",
       "years_one": "{{count}} jaar",
       "years_other": "{{count}} jaar"
-    }
+    },
+    "billedYearly": "{{price}} per jaar gefactureerd",
+    "retentionLine": "{{title}}: {{periods}}"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -4935,7 +4939,11 @@
     "invoiceCount_other": "{{count}} facturen",
     "daysOverdue": "{{count}}d achterstallig",
     "dueInDays": "Over {{count}}d",
-    "providerTitle": "{{provider}} Betalingen"
+    "providerTitle": "{{provider}} Betalingen",
+    "methodCreditCard": "Creditcard",
+    "methodBankTransfer": "Bankoverschrijving",
+    "methodA11y": "Betaalmethode {{name}}",
+    "methodA11yActive": "Betaalmethode {{name}}, actief"
   },
   "leads": {
     "noHotLeads": "Op dit moment geen hot leads"
@@ -5269,8 +5277,8 @@
       },
       "winRate": {
         "title": "Slagingspercentage op {{pct}}%",
-        "description": "Onder de branchenorm van 45%. Bekijk je laatste 5 verloren offertes — prijs, pakketkeuze of opvolgtiming zijn meestal de oorzaak.",
-        "impact": "Kan 10-15% omzet terugwinnen",
+        "description": "Geaccepteerd: {{won}} van {{decided}} besliste offertes. Prijs, pakketkeuze of opvolgtiming zijn meestal de oorzaak van een verloren offerte.",
+        "impact": "Verloren offertes: {{lost}}",
         "action": "Verloren offertes bekijken"
       },
       "appointment": {

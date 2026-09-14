@@ -372,6 +372,26 @@ describe('resolveTemplate — customer-facing copy', () => {
     expect(out).toContain('Hotel NH');
   });
 
+  // The seam tidy stripped the space French REQUIRES before : ; ! ? — every
+  // French pack message, dunning emails included, read "Rappel: la facture".
+  test('French keeps its space before : ; ! ? while still tidying seams', () => {
+    const out = resolveTemplate(
+      'Rappel : la facture {{invoice}} ({{currency}}{{amount}}) est en retard. Pouvez-vous régler ? Merci !',
+      { invoice: '', currency: '€', amount: 350, country: 'FR' },
+      'fr',
+    );
+    expect(out).toContain('Rappel : la facture');
+    expect(out).toContain('régler ?');
+    expect(out).toContain('Merci !');
+    expect(out).not.toMatch(/ {2,}/);
+    expect(out).not.toMatch(/\s[,.)]/);
+  });
+
+  test('other languages still drop a stray space before a colon', () => {
+    const out = resolveTemplate('Invoice {{invoice}}: overdue', { invoice: '' }, 'en');
+    expect(out).toBe('Invoice: overdue');
+  });
+
   test('amounts keep locale formatting with 2 decimals', () => {
     const out = resolveTemplate('{{currency}}{{amount}}', { currency: '€', amount: 350 });
     expect(out).toMatch(/350[.,]00/);

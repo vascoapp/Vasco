@@ -550,8 +550,11 @@ const CURRENCY_EXEMPT_PATHS = [
   // explicitly dollar-denominated, not a missed locale.
   'app/contractor/pipeline',
   'src/services/aiCommandService',
-  // Already locale-aware via its own `cur` symbol resolved per locale.
-  'src/services/lateFeeService',
+  // (lateFeeService USED to be exempt as "already locale-aware via its own
+  // `cur` symbol". It was not — `cur` was '€'/'£' glued to toFixed, which put
+  // "€64.93" into a French reminder. It uses formatCurrency now and is
+  // scanned like everything else. #80/#82 also filed it as a FILING FORMAT;
+  // it is a reminder-email sentence, and nothing parses its shape.)
   // Demo/aannemer-gated approval notes (see quote-approval gating).
   'src/services/quoteApprovalService',
   // VASCO'S OWN subscription pricing, not the contractor's money. The tier

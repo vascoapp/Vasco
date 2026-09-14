@@ -35,6 +35,8 @@ import {
 } from '../../src/services/sowGeneratorService';
 import { businessTypeLabel } from '../../src/data/businessTypes';
 import { retentionPeriodsFor } from '../../src/data/retentionPeriods';
+import { getProvidersForCountry } from '../../src/integrations/accounting';
+import { getPaymentProviderForCountry } from '../../src/config/paymentMethods';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -85,12 +87,24 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, updateUser, logout } = useAuth();
-  const { jobs, customers, invoices, businessProfile, moneybirdConnected, mollieConnected } = useAppState();
+  const { jobs, customers, invoices, businessProfile, moneybirdConnected, mollieConnected, stripeConnected } = useAppState();
   const currentLang = LANG_OPTIONS.find(l => l.code === i18n.language) ?? LANG_OPTIONS[0];
 
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
   const [checkoutLoading, setCheckoutLoading] = useState<SubscriptionTier | null>(null);
+  // The largest annual saving among the tier cards this account is offered —
+  // the same filter the cards use. Floored, so the claim is never rounded UP
+  // past a card's real saving (Contractor 49 vs 69 is 28.99%).
+  const annualSavingPct = (() => {
+    const order: SubscriptionTier[] = ['free', 'pro', 'contractor'];
+    const current = subscription?.tier ?? 'free';
+    const offered = (['pro', 'contractor'] as SubscriptionTier[])
+      .filter((t2) => order.indexOf(t2) > order.indexOf(current));
+    const pcts = offered.map((t2) =>
+      Math.floor((1 - TIERS[t2].annualMonthlyPrice / TIERS[t2].monthlyPrice) * 100));
+    return pcts.length ? Math.max(...pcts) : 0;
+  })();
   // R62: tone preset for quote SOW generator. Cold-start is 'friendly'
   // until the contractor picks otherwise; persisted on business_settings.
   const [quoteTone, setQuoteTone] = useState<QuoteTone>('friendly');
@@ -249,18 +263,29 @@ export default function ProfileScreen() {
   // Moneybird is NL/DE only. US contractors see QuickBooks + Stripe;
   // EU contractors keep Mollie + Moneybird + Xero.
   const isUS = country === 'US';
+  // Every non-US market got the same list, so a French plumber was offered
+  // Moneybird (NL/DE only) and a UK contractor Mollie, whose payments run on
+  // Stripe. The market maps already existed — `getPaymentProviderForCountry`
+  // and accounting's PROVIDER_COUNTRIES — and this screen read neither.
+  const accountingHere = new Set(getProvidersForCountry(country).map((p) => p.id));
+  const paysViaStripe = getPaymentProviderForCountry(country) === 'Stripe';
   const integrations: IntegrationItem[] = isUS
     ? [
-        { id: 'stripe', name: 'Stripe', icon: 'card', connected: false },
+        { id: 'stripe', name: 'Stripe', icon: 'card', connected: stripeConnected, route: '/(modals)/stripe' },
         { id: 'quickbooks', name: 'QuickBooks', icon: 'calculator', connected: false },
         { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
         { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
       ]
     : [
-        { id: 'mollie', name: 'Mollie', icon: 'card', connected: mollieConnected, route: '/(modals)/mollie' },
-        { id: 'moneybird', name: 'Moneybird', icon: 'calculator', connected: moneybirdConnected, route: '/(modals)/moneybird' },
-        { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
-        { id: 'stripe', name: 'Stripe', icon: 'card-outline', connected: false },
+        paysViaStripe
+          ? { id: 'stripe', name: 'Stripe', icon: 'card-outline' as const, connected: stripeConnected, route: '/(modals)/stripe' }
+          : { id: 'mollie', name: 'Mollie', icon: 'card' as const, connected: mollieConnected, route: '/(modals)/mollie' },
+        ...(accountingHere.has('moneybird')
+          ? [{ id: 'moneybird', name: 'Moneybird', icon: 'calculator' as const, connected: moneybirdConnected, route: '/(modals)/moneybird' }]
+          : []),
+        ...(accountingHere.has('xero')
+          ? [{ id: 'xero', name: 'Xero', icon: 'cloud' as const, connected: false }]
+          : []),
         { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
       ];
 
@@ -550,7 +575,11 @@ export default function ProfileScreen() {
                       onPress={() => setBillingCycle('annual')}
                     >
                       <Text style={[styles.cycleOptionText, billingCycle === 'annual' && styles.cycleOptionTextActive]}>
-                        {t('profile.billingAnnualSave', 'Annual · save')}
+                        {/* Computed from the prices on the cards below. It was a
+                            literal "25%" in six locales — true for Pro (29 vs 39)
+                            and wrong for Contractor (49 vs 69 = 29%), which on a
+                            Pro account is the ONLY card shown. */}
+                        {t('profile.billingAnnualSave', { defaultValue: 'Annual · save up to {{pct}}%', pct: annualSavingPct })}
                       </Text>
                     </Pressable>
                   </View>
@@ -584,6 +613,13 @@ export default function ProfileScreen() {
                               <Text style={styles.tierPriceUnit}>/{t('profile.perMonth', 'mo')}</Text>
                             </Text>
                           </View>
+                          {billingCycle === 'annual' && (
+                            // "€49/mo" on an annual plan is charged as €588 up
+                            // front. Say so beside the price, not at checkout.
+                            <Text style={styles.tierTagline}>
+                              {t('profile.billedYearly', { defaultValue: '{{price}} billed yearly', price: `€${cfg.annualPrice}` })}
+                            </Text>
+                          )}
                           <Text style={styles.tierTagline}>{t(TIER_DESC_KEY[t2] ?? '', cfg.tagline)}</Text>
                           <View style={styles.tierCta}>
                             <Text style={styles.tierCtaText}>
@@ -861,10 +897,14 @@ export default function ProfileScreen() {
           <View style={styles.retentionNotice}>
             <Ionicons name="shield-checkmark-outline" size={14} color={SemanticColors.textTertiary} />
             <Text style={styles.retentionText}>
-              {t('profile.retentionTitle', 'Retention periods')}:{' '}
-              {retentionPeriodsFor(businessProfile.country ?? country)
-                .map((r) => `${t(`profile.retentionLabels.${r.labelKey}`)} ${t('profile.retentionLabels.years', { count: r.years })}`)
-                .join(' · ')}
+              {/* The separator is copy: French writes "Durées de conservation :" */}
+              {t('profile.retentionLine', {
+                defaultValue: '{{title}}: {{periods}}',
+                title: t('profile.retentionTitle', 'Retention periods'),
+                periods: retentionPeriodsFor(businessProfile.country ?? country)
+                  .map((r) => `${t(`profile.retentionLabels.${r.labelKey}`)} ${t('profile.retentionLabels.years', { count: r.years })}`)
+                  .join(' · '),
+              })}
             </Text>
           </View>
         )}

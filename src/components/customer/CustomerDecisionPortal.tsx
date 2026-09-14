@@ -52,7 +52,7 @@ import type {
   CustomerDecisionSubmission,
 } from '../../types/customerPortal';
 import type { DecisionOption } from '../../types/decisions';
-import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../config/paymentMethods';
+import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../../config/paymentMethods';
 import { RegionalPreferencePanel } from './RegionalPreferencePanel';
 import type { Country } from '../../context/AuthContext';
 
@@ -908,10 +908,10 @@ function PaymentSection({ portalData, accentColor, onActivityLog, onToast }: Pay
                     styles.paymentMethodChip,
                     { borderColor: brandColor + '30' },
                   ]}
-                  accessibilityLabel={`${method.name} payment method`}
+                  accessibilityLabel={t('payments.methodA11y', { defaultValue: '{{name}} payment method', name: paymentMethodLabel(method.name, t) })}
                 >
                   <View style={[styles.paymentMethodDot, { backgroundColor: brandColor }]} />
-                  <Text style={styles.paymentMethodText}>{method.name}</Text>
+                  <Text style={styles.paymentMethodText}>{paymentMethodLabel(method.name, t)}</Text>
                 </View>
               );
             })}

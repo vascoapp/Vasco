@@ -192,12 +192,22 @@ export function buildLiveActions(input: Input): EveAction[] {
   }
 
   // ── Analyst: low win rate → pricing insight ──────────────────────
-  const quotesSent = (input.quotes ?? []).filter((q) => q.status === 'sent');
-  const quotesAccepted = (input.quotes ?? []).filter((q) => q.status === 'accepted');
-  const winRate = quotesSent.length + quotesAccepted.length > 0
-    ? quotesAccepted.length / (quotesSent.length + quotesAccepted.length)
-    : 0;
-  if (winRate > 0 && winRate < 0.35) {
+  // Win rate over DECIDED quotes only. This divided accepted by accepted +
+  // SENT — so a quote still awaiting an answer counted as a loss, and a French
+  // demo with one accepted quote, three open ones and none lost was told
+  // "25% — review your lost quotes". A minimum sample keeps one early refusal
+  // from reading as a pricing problem.
+  //
+  // The copy also claimed "below the 45% trade baseline" and "could recover
+  // 10-15% revenue". Neither is measured anywhere — both were literals (the
+  // #103 shape). It now states only what was counted.
+  const MIN_DECIDED_QUOTES = 5;
+  const decidedQuotes = (input.quotes ?? []).filter((q) =>
+    q.status === 'accepted' || q.status === 'rejected' || q.status === 'expired');
+  const won = decidedQuotes.filter((q) => q.status === 'accepted').length;
+  const lost = decidedQuotes.length - won;
+  const winRate = decidedQuotes.length > 0 ? won / decidedQuotes.length : 0;
+  if (decidedQuotes.length >= MIN_DECIDED_QUOTES && winRate < 0.35) {
     out.push({
       id: mkId('eve-ana'),
       agentType: 'analyst',
@@ -205,12 +215,13 @@ export function buildLiveActions(input: Input): EveAction[] {
       title: t('eve.live.winRate.title', 'Win rate at {{pct}}%', { pct: Math.round(winRate * 100) }),
       description: t(
         'eve.live.winRate.description',
-        'Below the 45% trade baseline. Review the last 5 lost quotes — pricing, tier mix, or follow-up timing are the usual culprits.',
+        'Accepted: {{won}} of {{decided}} decided quotes. Pricing, tier mix or follow-up timing are the usual causes of a lost quote.',
+        { won, decided: decidedQuotes.length },
       ),
-      impact: t('eve.live.winRate.impact', 'Could recover 10-15% revenue'),
+      impact: t('eve.live.winRate.impact', 'Lost quotes: {{lost}}', { lost }),
       priority: 'medium',
       status: 'pending',
-      preparedData: { winRate },
+      preparedData: { winRate, won, lost, decided: decidedQuotes.length },
       actionLabel: t('eve.live.winRate.action', 'Review lost quotes'),
       requiresApproval: false,
       createdAt: now.toISOString(),

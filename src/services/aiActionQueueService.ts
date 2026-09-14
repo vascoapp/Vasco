@@ -22,7 +22,9 @@ import {
   rejectCustomerQuestionReply,
   questionIdFromQueueItemId,
 } from './customerQuestionQueueBridge';
-import { computeLateFee, type LateFeeCountry } from './lateFeeService';
+import { computeLateFee, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from './lateFeeService';
+import { findDocumentCustomer } from '../domain/customers';
+import { isWorkOnDay } from '../domain/jobs';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
 import { localDateKey, todayKey } from '../utils/dateKey';
 
@@ -713,7 +715,7 @@ interface PopulateQueueContext {
   allJobs?: Array<Record<string, any>>;
   allInvoices?: Array<Record<string, any>>;
   allQuotes?: Array<Record<string, any>>;
-  customers?: Array<{ id: string; name?: string }>;
+  customers?: Array<{ id: string; name?: string; vatId?: string }>;
   certs?: Array<Record<string, any>>;
   country?: string;
   trade?: string;
@@ -886,22 +888,25 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const due = new Date(inv.dueDate || '').getTime();
     return due && (now - due) > 30 * dayMs;
   });
-  const supportedFeeCountries: LateFeeCountry[] = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
-  const feeCountry: LateFeeCountry = supportedFeeCountries.includes((context.country ?? 'NL') as LateFeeCountry)
-    ? ((context.country ?? 'NL') as LateFeeCountry)
-    : 'NL';
-  for (const inv of severelyOverdue.slice(0, 2)) {
+  // No regime for this market (US, or country not loaded yet) → no card. This
+  // fell back to 'NL' and offered a US contractor an EU statutory late fee.
+  const feeCountry = lateFeeCountry(context.country);
+  // Without customers (the morning-briefing call passes none) no customer can
+  // be evidenced as a business, so this produces nothing — by design.
+  const feeCustomers = (context.customers ?? []).map((c) => ({ ...c, name: c.name ?? '' }));
+  for (const inv of feeCountry ? severelyOverdue.slice(0, 2) : []) {
     const daysOverdue = Math.ceil((now - new Date(inv.dueDate || '').getTime()) / dayMs);
     // EU Directive 2011/7/EU: statutory interest + €40 (or UK tiered) recovery
-    // fee. Assumes B2B — we only auto-populate for overdue invoices on a
-    // customer record, which for most trades is business-to-business work.
-    // Contractor can strip the interest line if the end customer is a consumer.
+    // fee — B2B only. This assumed every customer was a business ("the
+    // contractor can strip the line"); now it needs evidence, and a card whose
+    // whole point is the fee is not offered when there is no fee to claim.
     const feeBreakdown = computeLateFee({
       invoiceAmount: inv.amount || 0,
       daysOverdue,
-      country: feeCountry,
-      customerType: 'business',
+      country: feeCountry!,
+      customerType: lateFeeCustomerType(findDocumentCustomer(feeCustomers, inv), feeCountry!),
     });
+    if (!feeBreakdown.applicable) continue;
     const interest = feeBreakdown.interest;
     const recoveryFee = feeBreakdown.recoveryFee;
     const lateFee = Math.round((interest + recoveryFee) * 100) / 100;
@@ -924,7 +929,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
         disclosureLine: feeBreakdown.disclosureLine,
         newTotal: (inv.amount || 0) + lateFee,
         customer: inv.customer,
-        reasoning: `${daysOverdue} days overdue. EU Directive 2011/7/EU entitles you to ${feeBreakdown.effectiveRatePct.toFixed(2)}% statutory interest (${formatMoney2(interest)}) + ${formatMoney(recoveryFee)} fixed recovery fee.`,
+        reasoning: `${daysOverdue} days overdue. EU Directive 2011/7/EU entitles you to ${formatLateFeeRate(feeBreakdown.effectiveRatePct, feeCountry!)}% statutory interest (${formatMoney2(interest)}) + ${formatMoney(recoveryFee)} fixed recovery fee.`,
       },
       actionLabel: t('automation.regenerate', 'Regenerate'),
       estimatedImpact: formatMoney2((inv.amount || 0) + lateFee),
@@ -1239,10 +1244,9 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // If contractor has 0 jobs tomorrow, suggest filling the gap
   const tomorrow = new Date(now + dayMs);
   const tomorrowStr = localDateKey(tomorrow);
-  const tomorrowJobs = (context.allJobs ?? []).filter((j: any) => {
-    const sched = j.scheduledDate || j.startDate || '';
-    return sched.startsWith(tomorrowStr) && j.status !== 'completed' && j.status !== 'gereed';
-  });
+  // Shared with the end-of-day pack's tomorrow count, so the two cannot
+  // disagree again. A cancelled visit is not a job tomorrow.
+  const tomorrowJobs = (context.allJobs ?? []).filter((j: any) => isWorkOnDay(j, tomorrowStr));
   if (tomorrowJobs.length === 0) {
     const leadJobs = (context.allJobs ?? []).filter((j: any) => j.status === 'lead' || j.status === 'accepted');
     if (leadJobs.length > 0) {

@@ -567,7 +567,9 @@
     "statusLead": "Lead",
     "notScheduled": "Not scheduled",
     "signOffFirst": "Get sign-off first",
-    "signOffHow": "How do you want the sign-off?"
+    "signOffHow": "How do you want the sign-off?",
+    "lifecycleStageLabel": "Stage",
+    "stageOf": "{{step}} of {{total}}"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",
@@ -2299,7 +2301,7 @@
     "planFreeBadge": "FREE",
     "planActive": "ACTIVE",
     "billingMonthly": "Monthly",
-    "billingAnnualSave": "Annual · save 25%",
+    "billingAnnualSave": "Annual · save up to {{pct}}%",
     "perMonth": "mo",
     "popular": "MOST POPULAR",
     "upgradeTo": "Upgrade to {{name}}",
@@ -2365,7 +2367,9 @@
       "businessLetters": "Business letters",
       "years_one": "{{count}} year",
       "years_other": "{{count}} years"
-    }
+    },
+    "billedYearly": "{{price}} billed yearly",
+    "retentionLine": "{{title}}: {{periods}}"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -4948,7 +4952,11 @@
     "invoiceCount_other": "{{count}} invoices",
     "daysOverdue": "{{count}}d overdue",
     "dueInDays": "Due in {{count}}d",
-    "providerTitle": "{{provider}} Payments"
+    "providerTitle": "{{provider}} Payments",
+    "methodCreditCard": "Credit card",
+    "methodBankTransfer": "Bank transfer",
+    "methodA11y": "{{name}} payment method",
+    "methodA11yActive": "{{name}} payment method, active"
   },
   "leads": {
     "noHotLeads": "No hot leads right now"
@@ -5282,8 +5290,8 @@
       },
       "winRate": {
         "title": "Win rate at {{pct}}%",
-        "description": "Below the 45% trade baseline. Review the last 5 lost quotes — pricing, tier mix, or follow-up timing are the usual culprits.",
-        "impact": "Could recover 10-15% revenue",
+        "description": "Accepted: {{won}} of {{decided}} decided quotes. Pricing, tier mix or follow-up timing are the usual causes of a lost quote.",
+        "impact": "Lost quotes: {{lost}}",
         "action": "Review lost quotes"
       },
       "appointment": {

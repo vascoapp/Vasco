@@ -67,15 +67,19 @@ function parseEveAgent(sourceGeneratorId?: string): ProactiveAction['eveAgent'] 
  * a space before punctuation. Matters most for shareText, which is sent to a
  * customer verbatim.
  */
-function tidyCopy(text: string): string {
+function tidyCopy(text: string, language?: string): string {
+  // French writes a space before : ; ! ? — stripping it is a typography error
+  // in a message a French customer reads (same fix as resolveTemplate in
+  // workflowPackService). There, only doubled spaces collapse.
+  const beforePunctuation = language?.startsWith('fr') ? /[ \t]+([,.])/g : /[ \t]+([,.!?;:])/g;
   return text
     .replace(/[ \t]{2,}/g, ' ')
-    .replace(/[ \t]+([,.!?;:])/g, '$1')
+    .replace(beforePunctuation, '$1')
     .trim();
 }
 
 export default function VascoScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
   // US-only surfaces (Leads CRM pipeline) — see the gate at the Sales chip.
@@ -176,9 +180,9 @@ export default function VascoScreen() {
       actions.push({
         id: `overdue-${inv.id}`, icon: 'cash-outline', iconColor: DK.colors.danger,
         title: t('ai.paymentReminder', { customer: customerName }),
-        reason: tidyCopy(t('ai.invoiceOverdue', { reference: invRef, days: Math.abs(inv.dueInDays || 7), amount: invAmount })),
+        reason: tidyCopy(t('ai.invoiceOverdue', { reference: invRef, days: Math.abs(inv.dueInDays || 7), amount: invAmount }), i18n.language),
         actionLabel: t('ai.sendReminder'), actionType: 'share',
-        shareText: tidyCopy(t('ai.reminderMessage', { customer: customerName, reference: invRef, amount: invAmount })),
+        shareText: tidyCopy(t('ai.reminderMessage', { customer: customerName, reference: invRef, amount: invAmount }), i18n.language),
         priority: 'high',
       });
     });

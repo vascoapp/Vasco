@@ -110,7 +110,7 @@ import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
-import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE } from '../data/mockBusiness';
+import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE, DEMO_CUSTOMER_VAT_IDS } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
@@ -271,17 +271,17 @@ const SEED_JOBS: Job[] = [
 const SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-001', name: 'Fam. de Vries', email: 'devries@gmail.com', phone: '+31 6 12345678' },
   { id: 'cust-002', name: 'Fam. Jansen', email: 'jansen@hotmail.com', phone: '+31 6 87654321' },
-  { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567' },
+  { id: 'cust-003', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '+31 20 1234567', vatId: DEMO_CUSTOMER_VAT_IDS['cust-003'] },
   { id: 'cust-004', name: 'Fam. Bakker', email: 'bakker@gmail.com', phone: '+31 6 55512345' },
-  { id: 'cust-005', name: 'Hotel NH', email: 'facilitair@nh-hotels.nl', phone: '+31 20 5551234' },
+  { id: 'cust-005', name: 'Hotel NH', email: 'facilitair@nh-hotels.nl', phone: '+31 20 5551234', vatId: DEMO_CUSTOMER_VAT_IDS['cust-005'] },
   // The seeded invoices/quotes in mockDocuments bill these three, but they
   // were never seeded as contacts — so the demo invoiced customers who did
   // not exist. Visible effect: Klanten reported "No revenue yet · €0,00"
   // while Geld showed €760 paid, because the paid invoice (i-1044, Van Dijk)
   // could not be attributed to any contact. Demo-gated data (useSeedData).
-  { id: 'cust-006', name: 'Van Dijk', email: 'info@vandijkbv.nl', phone: '+31 6 44556677' },
+  { id: 'cust-006', name: 'Van Dijk', email: 'info@vandijkbv.nl', phone: '+31 6 44556677', vatId: DEMO_CUSTOMER_VAT_IDS['cust-006'] },
   { id: 'cust-007', name: 'De Jong', email: 'dejong@ziggo.nl', phone: '+31 6 33221100' },
-  { id: 'cust-008', name: 'Bouwgroep Atlas', email: 'projecten@bouwgroepatlas.nl', phone: '+31 30 7654321' },
+  { id: 'cust-008', name: 'Bouwgroep Atlas', email: 'projecten@bouwgroepatlas.nl', phone: '+31 30 7654321', vatId: DEMO_CUSTOMER_VAT_IDS['cust-008'] },
 ];
 
 // Demo material catalog + suppliers. The catalog resolves jobMaterial.materialId
@@ -357,8 +357,8 @@ const DE_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-de-001', name: 'Familie Krüger', email: 'm.krueger@web.de', phone: '+49 221 5550188' },
   { id: 'cust-de-002', name: 'Stefan Weber', email: 'sweber@gmx.de', phone: '+49 221 5550231' },
   { id: 'cust-de-003', name: 'Anja Hoffmann', email: 'a.hoffmann@t-online.de', phone: '+49 221 5550147' },
-  { id: 'cust-de-004', name: 'Hausverwaltung Rheinblick GmbH', email: 'technik@rheinblick-hv.de', phone: '+49 221 5550390' },
-  { id: 'cust-de-005', name: 'Bäckerei Lindner GmbH', email: 'buchhaltung@baeckerei-lindner.de', phone: '+49 221 5550412' },
+  { id: 'cust-de-004', name: 'Hausverwaltung Rheinblick GmbH', email: 'technik@rheinblick-hv.de', phone: '+49 221 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-de-004'] },
+  { id: 'cust-de-005', name: 'Bäckerei Lindner GmbH', email: 'buchhaltung@baeckerei-lindner.de', phone: '+49 221 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-de-005'] },
 ];
 
 // FR / ES / IT seed data.
@@ -386,8 +386,8 @@ const FR_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-fr-001', name: 'Famille Bernard', email: 'm.bernard@orange.fr', phone: '+33 4 72550188' },
   { id: 'cust-fr-002', name: 'Julien Petit', email: 'j.petit@free.fr', phone: '+33 4 72550231' },
   { id: 'cust-fr-003', name: 'Camille Lefèvre', email: 'c.lefevre@wanadoo.fr', phone: '+33 4 72550147' },
-  { id: 'cust-fr-004', name: 'Syndic Bellecour SAS', email: 'technique@syndic-bellecour.fr', phone: '+33 4 72550390' },
-  { id: 'cust-fr-005', name: 'Boulangerie Lefort SARL', email: 'compta@boulangerie-lefort.fr', phone: '+33 4 72550412' },
+  { id: 'cust-fr-004', name: 'Syndic Bellecour SAS', email: 'technique@syndic-bellecour.fr', phone: '+33 4 72550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-fr-004'] },
+  { id: 'cust-fr-005', name: 'Boulangerie Lefort SARL', email: 'compta@boulangerie-lefort.fr', phone: '+33 4 72550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-fr-005'] },
 ];
 
 const ES_SEED_JOBS: Job[] = [
@@ -402,8 +402,8 @@ const ES_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-es-001', name: 'Familia García', email: 'm.garcia@telefonica.es', phone: '+34 91 5550188' },
   { id: 'cust-es-002', name: 'Javier Ruiz', email: 'j.ruiz@gmail.com', phone: '+34 91 5550231' },
   { id: 'cust-es-003', name: 'Lucía Navarro', email: 'l.navarro@hotmail.es', phone: '+34 91 5550147' },
-  { id: 'cust-es-004', name: 'Administración Retiro S.L.', email: 'tecnico@admretiro.es', phone: '+34 91 5550390' },
-  { id: 'cust-es-005', name: 'Panadería Molina S.L.', email: 'contabilidad@panaderiamolina.es', phone: '+34 91 5550412' },
+  { id: 'cust-es-004', name: 'Administración Retiro S.L.', email: 'tecnico@admretiro.es', phone: '+34 91 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-es-004'] },
+  { id: 'cust-es-005', name: 'Panadería Molina S.L.', email: 'contabilidad@panaderiamolina.es', phone: '+34 91 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-es-005'] },
 ];
 
 const IT_SEED_JOBS: Job[] = [
@@ -418,8 +418,8 @@ const IT_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-it-001', name: 'Famiglia Rossi', email: 'm.rossi@libero.it', phone: '+39 02 5550188' },
   { id: 'cust-it-002', name: 'Marco Conti', email: 'm.conti@virgilio.it', phone: '+39 02 5550231' },
   { id: 'cust-it-003', name: 'Giulia Greco', email: 'g.greco@alice.it', phone: '+39 02 5550147' },
-  { id: 'cust-it-004', name: 'Amministrazione Navigli S.r.l.', email: 'tecnico@ammnavigli.it', phone: '+39 02 5550390' },
-  { id: 'cust-it-005', name: 'Panificio Bruno S.r.l.', email: 'contabilita@panificiobruno.it', phone: '+39 02 5550412' },
+  { id: 'cust-it-004', name: 'Amministrazione Navigli S.r.l.', email: 'tecnico@ammnavigli.it', phone: '+39 02 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-004'] },
+  { id: 'cust-it-005', name: 'Panificio Bruno S.r.l.', email: 'contabilita@panificiobruno.it', phone: '+39 02 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-005'] },
 ];
 
 export function AppStateProvider({ children }: PropsWithChildren) {
@@ -4559,9 +4559,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // populator, eveAgentService.getWorkforceStatus) always see fresh state.
   useEffect(() => {
     import('./appStateSnapshot').then((mod) => {
-      mod.setAppStateSnapshot({ jobs, quotes, invoices, customers });
+      mod.setAppStateSnapshot({
+        jobs, quotes, invoices, customers,
+        businessProfile: {
+          phone: businessProfile?.phone,
+          trade: businessProfile?.trade,
+          country: businessProfile?.country,
+          postcode: businessProfile?.postcode,
+        },
+      });
     }).catch(() => {});
-  }, [jobs, quotes, invoices, customers]);
+  }, [jobs, quotes, invoices, customers, businessProfile]);
 
   // R66 round 37: expose the imperative mutators non-hook consumers need
   // (realtime watchers in app/_layout.tsx) so webhook → BE update → realtime

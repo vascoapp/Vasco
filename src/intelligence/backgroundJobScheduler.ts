@@ -892,15 +892,25 @@ async function runScheduledTick(
         try {
           const sub = await loadSubscription();
           const limits = getTierLimits(sub.tier);
-          if (limits.hasPurchasingAgent) {
-            const prefs = await loadOnboardingPreferences();
-            const trade = prefs.trades[0] ?? 'general';
-            const country = prefs.country ?? 'NL';
+          // The business profile outranks onboarding (CLAUDE.md), and a
+          // country-dependent run SKIPS when the country is unknown. This read
+          // onboarding prefs only, defaulting to 'general', 'NL' and Amsterdam's
+          // '1012' — so a French plumber who never saw onboarding (every demo
+          // account) was advised on "Bâtiment général" materials, with supplier
+          // distances measured from Amsterdam (POSTCODE_REGIONS is shared across
+          // countries, so FR prefix "10" hit the NL row).
+          const prefs = await loadOnboardingPreferences();
+          const { getAppStateSnapshot } = await import('../state/appStateSnapshot');
+          const profile = getAppStateSnapshot().businessProfile;
+          const trade = profile?.trade || prefs.trades[0] || 'general';
+          const country = (context.country || profile?.country || prefs.country) as typeof prefs.country;
+          if (limits.hasPurchasingAgent && country) {
             const { runScheduledPurchasingAgent } = await import('../services/purchasingAgentService');
             const purchasingResults = await runScheduledPurchasingAgent({
               trade,
               country,
-              postcode: prefs.postcode || '1012',
+              // Empty → the country's centre, which is honest; a Dutch postcode is not.
+              postcode: profile?.postcode || prefs.postcode || '',
               upcomingJobs: context.jobs
                 .filter((j: any) => j.status === 'scheduled' || j.status === 'accepted')
                 .slice(0, 10)

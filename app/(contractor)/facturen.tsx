@@ -41,11 +41,11 @@ import { createPaymentLink as createStripePaymentLink } from '../../src/integrat
 import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
 import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
-import { formatCurrency, formatMoney, formatDayMonthAuto, formatDecimal1 } from '../../src/i18n/formatting';
+import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber } from '../../src/domain/documents';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import type { Country } from '../../src/i18n/formatting';
-import { computeLateFee, type LateFeeCountry } from '../../src/services/lateFeeService';
+import { computeLateFee, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
 import { useTranslation } from 'react-i18next';
 
 // P3: Collections Agent
@@ -293,20 +293,26 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   // never swapped out here. The rate is now shown rather than
                   // hardcoded in the label, because it differs per market.
                   const daysOverdue = Math.max(1, Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)));
+                  // A bare cast to LateFeeCountry let a US contractor through to a
+                  // rate table with no US row: NaN interest. No regime, no line.
+                  const feeCountry = lateFeeCountry(country);
+                  if (!feeCountry) return null;
                   const fee = computeLateFee({
                     invoiceAmount: invoice.amount,
                     daysOverdue,
-                    country: country as LateFeeCountry,
+                    country: feeCountry,
+                    customerType: lateFeeCustomerType(findDocumentCustomer(customers, invoice), feeCountry),
                   });
                   if (!fee.applicable) return null;
                   return (
                     <Text style={{ fontSize: 10, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError, marginTop: 2 }}>
-                      {/* The rate goes through formatDecimal1: interpolating the
-                          raw number gave `String(12.5)` — an English decimal
-                          POINT inside a Dutch sentence, "12.5% wettelijke
-                          rente", sitting next to a correctly comma-formatted
-                          "€ 1,54" in the same line. */}
-                      {t('invoices.lateInterest', 'Interest')}: {formatCurrency(fee.interest, country)} ({t('invoices.statutoryInterestRate', { defaultValue: '{{rate}}% statutory interest', rate: formatDecimal1(fee.effectiveRatePct, country) })})
+                      {/* The rate is locale-formatted: interpolating the raw
+                          number gave `String(12.5)` — an English decimal POINT
+                          inside a Dutch sentence, "12.5% wettelijke rente",
+                          beside a correctly comma-formatted "€ 1,54". It was
+                          then formatDecimal1, which rounds a two-decimal
+                          statutory rate (DE 10,52 → 10,5). */}
+                      {t('invoices.lateInterest', 'Interest')}: {formatCurrency(fee.interest, country)} ({t('invoices.statutoryInterestRate', { defaultValue: '{{rate}}% statutory interest', rate: formatLateFeeRate(fee.effectiveRatePct, feeCountry) })})
                     </Text>
                   );
                 })()}

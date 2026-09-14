@@ -8,7 +8,7 @@ import { useAppState } from '../../src/state/AppState';
 import { saveMollieConfig, isConnected as checkMollieConnected, listPayments } from '../../src/integrations/mollie';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useAuth } from '../../src/context/AuthContext';
-import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
+import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../../src/config/paymentMethods';
 import { consentService } from '../../src/services/consentService';
 import { VASCO_FEE_DISCLOSURE } from '../../src/services/paymentMarginService';
 import i18n from '../../src/i18n/i18n';
@@ -194,10 +194,12 @@ export default function MollieConnectModal() {
                     styles.methodChip,
                     isActive && { borderColor: brandColor + '25', borderWidth: 1 },
                   ]}
-                  accessibilityLabel={`${m.name} payment method${isActive ? ', active' : ''}`}
+                  accessibilityLabel={isActive
+                    ? t('payments.methodA11yActive', { defaultValue: '{{name}} payment method, active', name: paymentMethodLabel(m.name, t) })
+                    : t('payments.methodA11y', { defaultValue: '{{name}} payment method', name: paymentMethodLabel(m.name, t) })}
                 >
                   <View style={[styles.methodDot, { backgroundColor: isActive ? brandColor : SemanticColors.textTertiary }]} />
-                  <Text style={[styles.methodText, isActive && { color: SemanticColors.textPrimary }]}>{m.name}</Text>
+                  <Text style={[styles.methodText, isActive && { color: SemanticColors.textPrimary }]}>{paymentMethodLabel(m.name, t)}</Text>
                 </View>
               );
             })}

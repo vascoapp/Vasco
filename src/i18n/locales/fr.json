@@ -567,7 +567,9 @@
     "statusLead": "Piste",
     "notScheduled": "Non planifié",
     "signOffFirst": "Faire signer d'abord",
-    "signOffHow": "Comment voulez-vous obtenir la signature ?"
+    "signOffHow": "Comment voulez-vous obtenir la signature ?",
+    "lifecycleStageLabel": "Étape",
+    "stageOf": "{{step}} sur {{total}}"
   },
   "compliance": {
     "manageInsurance": "Gérer assurances & sinistres",
@@ -2299,7 +2301,7 @@
     "planFreeBadge": "GRATUIT",
     "planActive": "ACTIF",
     "billingMonthly": "Mensuel",
-    "billingAnnualSave": "Annuel · 25% d'économie",
+    "billingAnnualSave": "Annuel · jusqu'à {{pct}} % d'économie",
     "perMonth": "mois",
     "popular": "PLUS POPULAIRE",
     "upgradeTo": "Passer à {{name}}",
@@ -2361,11 +2363,13 @@
       "invoices": "Factures",
       "contracts": "Contrats",
       "customerData": "Données clients",
-      "personnel": "Données personnel",
+      "personnel": "Données du personnel",
       "businessLetters": "Correspondance commerciale",
       "years_one": "{{count}} an",
       "years_other": "{{count}} ans"
-    }
+    },
+    "billedYearly": "{{price}} facturés par an",
+    "retentionLine": "{{title}} : {{periods}}"
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",
@@ -4948,7 +4952,11 @@
     "invoiceCount_other": "{{count}} factures",
     "daysOverdue": "{{count}} j de retard",
     "dueInDays": "Échéance dans {{count}} j",
-    "providerTitle": "Paiements {{provider}}"
+    "providerTitle": "Paiements {{provider}}",
+    "methodCreditCard": "Carte de crédit",
+    "methodBankTransfer": "Virement bancaire",
+    "methodA11y": "Moyen de paiement {{name}}",
+    "methodA11yActive": "Moyen de paiement {{name}}, actif"
   },
   "leads": {
     "noHotLeads": "Aucun prospect chaud pour l'instant"
@@ -5273,7 +5281,7 @@
       },
       "overdue": {
         "title": "Facture {{invoice}} en retard de {{days}}j",
-        "description": "{{amount}} en attente — {{tone}} recommandé.",
+        "description": "{{amount}} en attente — action recommandée : {{tone}}.",
         "impact": "{{amount}} de risque d'impayé",
         "action": "Examiner",
         "toneFinal": "mise en demeure",
@@ -5282,8 +5290,8 @@
       },
       "winRate": {
         "title": "Taux de conversion à {{pct}}%",
-        "description": "Sous la référence métier de 45%. Revoyez les 5 derniers devis perdus — prix, choix de formule ou moment de relance sont les causes habituelles.",
-        "impact": "10-15% de CA récupérable",
+        "description": "Acceptés : {{won}} sur {{decided}} devis tranchés. Le prix, le choix de formule ou le moment de relance expliquent le plus souvent un devis perdu.",
+        "impact": "Devis perdus : {{lost}}",
         "action": "Voir les devis perdus"
       },
       "appointment": {

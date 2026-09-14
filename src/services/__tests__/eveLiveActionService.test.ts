@@ -283,3 +283,39 @@ describe('buildLiveActions — i18n', () => {
     expect(joined).toContain('15');
   });
 });
+
+describe('buildLiveActions — win rate is measured, not asserted', () => {
+  const q = (id: string, status: string) => ({ id, customerId: 'cust-003', customer: 'Bakkerij Smit', job: 'Keuken', amount: 800, status });
+
+  // A French device showed "25% — review your lost quotes" for one accepted
+  // quote and three still awaiting an answer. None had been lost.
+  test('an open quote is not a lost quote', () => {
+    const actions = buildLiveActions({
+      jobs: [], invoices: [], customers,
+      quotes: [q('q1', 'accepted'), q('q2', 'sent'), q('q3', 'sent'), q('q4', 'sent'), q('q5', 'sent'), q('q6', 'sent')],
+    } as any);
+    expect(actions.find((a) => a.type === 'pricing_insight')).toBeUndefined();
+  });
+
+  test('too few decided quotes is not a pricing problem', () => {
+    const actions = buildLiveActions({
+      jobs: [], invoices: [], customers,
+      quotes: [q('q1', 'rejected'), q('q2', 'rejected'), q('q3', 'rejected'), q('q4', 'accepted')],
+    } as any);
+    expect(actions.find((a) => a.type === 'pricing_insight')).toBeUndefined();
+  });
+
+  test('a real low win rate states the counts and no invented benchmark', () => {
+    const actions = buildLiveActions({
+      jobs: [], invoices: [], customers,
+      quotes: [q('q1', 'accepted'), q('q2', 'rejected'), q('q3', 'rejected'), q('q4', 'expired'), q('q5', 'rejected'), q('q6', 'rejected')],
+    } as any);
+    const card = actions.find((a) => a.type === 'pricing_insight');
+    expect(card).toBeDefined();
+    const copy = userFacingStrings([card]).join(' | ');
+    expect(copy).toContain('17%');   // 1 of 6
+    expect(copy).toMatch(/\b1\b[^|]*\b6\b/);
+    expect(copy).toMatch(/\b5\b/);   // lost
+    expect(copy).not.toMatch(/45|10-15/);
+  });
+});

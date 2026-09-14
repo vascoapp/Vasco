@@ -567,7 +567,9 @@
     "statusLead": "Oportunidad",
     "notScheduled": "Sin planificar",
     "signOffFirst": "Obtener la firma primero",
-    "signOffHow": "¿Cómo quieres obtener la firma?"
+    "signOffHow": "¿Cómo quieres obtener la firma?",
+    "lifecycleStageLabel": "Fase",
+    "stageOf": "{{step}} de {{total}}"
   },
   "compliance": {
     "manageInsurance": "Gestionar seguros y siniestros",
@@ -2299,7 +2301,7 @@
     "planFreeBadge": "GRATIS",
     "planActive": "ACTIVO",
     "billingMonthly": "Mensual",
-    "billingAnnualSave": "Anual · ahorra 25%",
+    "billingAnnualSave": "Anual · ahorra hasta un {{pct}}%",
     "perMonth": "mes",
     "popular": "MÁS POPULAR",
     "upgradeTo": "Actualizar a {{name}}",
@@ -2365,7 +2367,9 @@
       "businessLetters": "Correspondencia comercial",
       "years_one": "{{count}} año",
       "years_other": "{{count}} años"
-    }
+    },
+    "billedYearly": "{{price}} facturados al año",
+    "retentionLine": "{{title}}: {{periods}}"
   },
   "search": {
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",
@@ -4948,7 +4952,11 @@
     "invoiceCount_other": "{{count}} facturas",
     "daysOverdue": "{{count}} d de retraso",
     "dueInDays": "Vence en {{count}} d",
-    "providerTitle": "Pagos {{provider}}"
+    "providerTitle": "Pagos {{provider}}",
+    "methodCreditCard": "Tarjeta de crédito",
+    "methodBankTransfer": "Transferencia bancaria",
+    "methodA11y": "Método de pago {{name}}",
+    "methodA11yActive": "Método de pago {{name}}, activo"
   },
   "leads": {
     "noHotLeads": "No hay clientes potenciales calientes ahora mismo"
@@ -5282,8 +5290,8 @@
       },
       "winRate": {
         "title": "Tasa de éxito en {{pct}}%",
-        "description": "Por debajo del 45% de referencia del sector. Revisa los últimos 5 presupuestos perdidos — precio, combinación de niveles o momento del seguimiento suelen ser la causa.",
-        "impact": "Puede recuperar 10-15% de ingresos",
+        "description": "Aceptados: {{won}} de {{decided}} presupuestos decididos. El precio, la combinación de niveles o el momento del seguimiento suelen explicar un presupuesto perdido.",
+        "impact": "Presupuestos perdidos: {{lost}}",
         "action": "Ver presupuestos perdidos"
       },
       "appointment": {

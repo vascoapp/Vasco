@@ -32,7 +32,7 @@ import { SemanticColors, Palette } from '../src/theme/colors';
 import { DK } from '../src/theme/draftkings';
 import { SafeArea, Spacing } from '../src/theme/spacing';
 import { getDefaultLanguage } from '../src/i18n/formatting';
-import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../src/config/paymentMethods';
+import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../src/config/paymentMethods';
 import { listUsStates } from '../src/data/usSalesTax';
 
 // R74 US foundation: state picker options for onboarding step 9. Alphabetical
@@ -782,7 +782,7 @@ export default function OnboardingScreen() {
                     return (
                       <View key={pm.name} style={[styles.paymentBadge, { borderColor: brandColor + '25' }]}>
                         <View style={[styles.paymentDot, { backgroundColor: brandColor }]} />
-                        <Text style={styles.paymentBadgeText}>{pm.name}</Text>
+                        <Text style={styles.paymentBadgeText}>{paymentMethodLabel(pm.name, t)}</Text>
                       </View>
                     );
                   })}

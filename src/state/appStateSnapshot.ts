@@ -17,8 +17,17 @@ export interface AppStateSnapshot {
   quotes: Quote[];
   invoices: Invoice[];
   customers: Customer[];
-  country?: string;
-  trade?: string;
+  /**
+   * What the contractor last entered — which outranks the account (CLAUDE.md).
+   *
+   * Readers existed with no writer: workflowPackService read
+   * `businessProfile.phone` for the {{phone}} in the maintenance reminder a
+   * CUSTOMER receives, so it always resolved to '' and the message read "call
+   * or message me at to book". The `country`/`trade` fields that used to sit
+   * here were never written either. The purchasing agent fell back to
+   * `'general'`, `'NL'` and Amsterdam's postcode instead.
+   */
+  businessProfile?: { phone?: string; trade?: string; country?: string; postcode?: string };
   updatedAt: number;
 }
 

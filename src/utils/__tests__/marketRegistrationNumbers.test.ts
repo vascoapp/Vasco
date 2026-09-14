@@ -3,10 +3,17 @@
 // state R66r39 removed for the Dutch BTW after a malformed one reached a
 // customer's accountant. France is the one that mattered: `getRequiredFields`
 // DEMANDS a SIRET and nothing looked at it.
-import { isValidSIRET, isValidPartitaIVA, isValidSpanishTaxId } from '../validation';
+import { isValidSIRET, isValidPartitaIVA, isValidSpanishTaxId, isValidVATNumber } from '../validation';
 import { checkInvoiceReadiness } from '../businessProfileValidation';
 import type { BusinessProfile } from '../../domain/business';
-import { FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE } from '../../data/mockBusiness';
+import {
+  DE_BUSINESS_PROFILE,
+  FR_BUSINESS_PROFILE,
+  ES_BUSINESS_PROFILE,
+  IT_BUSINESS_PROFILE,
+  DEMO_CUSTOMER_VAT_IDS,
+} from '../../data/mockBusiness';
+import { lateFeeCountry, lateFeeCustomerType } from '../../services/lateFeeService';
 
 describe('isValidSIRET', () => {
   it('accepts a real 14-digit SIRET and its 9-digit SIREN', () => {
@@ -125,6 +132,85 @@ describe('the demo profiles the EU markets are screenshotted from', () => {
   it('and are therefore invoice-ready', () => {
     for (const p of [FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE]) {
       expect(checkInvoiceReadiness(p).invalid).toEqual([]);
+    }
+  });
+});
+
+// The app only SHAPE-checks NL/DE/FR VAT numbers, so these reference
+// implementations live here to hold the fixtures to the real algorithms. Each
+// is first proven against published identifiers, so a fixture failing below is
+// the fixture, not the checker.
+const nlElfproef = (v: string) => {
+  const n = v.slice(2, 11);
+  let s = 0;
+  for (let i = 0; i < 8; i++) s += Number(n[i]) * (9 - i);
+  return /^NL\d{9}B\d{2}$/.test(v) && s % 11 === Number(n[8]);
+};
+const deMod1110 = (v: string) => {
+  if (!/^DE\d{9}$/.test(v)) return false;
+  let p = 10;
+  for (const ch of v.slice(2, 10)) {
+    let s = (Number(ch) + p) % 10;
+    if (s === 0) s = 10;
+    p = (2 * s) % 11;
+  }
+  const c = (11 - p) % 10;
+  return c === Number(v[10]);
+};
+const frKeyValid = (v: string) =>
+  /^FR\d{11}$/.test(v)
+  && isValidSIRET(v.slice(4)) // a 9-digit SIREN, Luhn
+  && String((12 + 3 * (Number(v.slice(4)) % 97)) % 97).padStart(2, '0') === v.slice(2, 4);
+
+describe('reference VAT checksums', () => {
+  it('accept published identifiers', () => {
+    for (const v of ['DE136695976', 'DE123475223', 'DE811569869']) expect(deMod1110(v)).toBe(true);
+    for (const v of ['FR40303265045', 'FR59542051180', 'FR83404833048']) expect(frKeyValid(v)).toBe(true);
+    expect(nlElfproef('NL004495445B01')).toBe(true);
+  });
+  it('reject a single mistyped digit', () => {
+    expect(deMod1110('DE136695977')).toBe(false);
+    expect(frKeyValid('FR41303265045')).toBe(false);
+    expect(nlElfproef('NL004495446B01')).toBe(false);
+  });
+});
+
+describe('demo VAT ids pass the real algorithms', () => {
+  it('DE and FR seller profiles (FR VAT agrees with its own SIRET)', () => {
+    expect(deMod1110(DE_BUSINESS_PROFILE.vatNumber ?? '')).toBe(true);
+    expect(frKeyValid(FR_BUSINESS_PROFILE.vatNumber ?? '')).toBe(true);
+    expect((FR_BUSINESS_PROFILE.registrationNumber ?? '').slice(0, 9))
+      .toBe((FR_BUSINESS_PROFILE.vatNumber ?? '').slice(4));
+  });
+
+  it('every demo business customer, in its own market', () => {
+    const checks: Record<string, (v: string) => boolean> = {
+      NL: nlElfproef,
+      DE: deMod1110,
+      FR: frKeyValid,
+      ES: (v) => /^ESB/.test(v) && isValidSpanishTaxId(v),
+      IT: (v) => /^IT\d{11}$/.test(v) && isValidPartitaIVA(v),
+    };
+    const entries = Object.entries(DEMO_CUSTOMER_VAT_IDS);
+    expect(entries.length).toBe(12);
+    for (const [, vat] of entries) {
+      const check = checks[vat.slice(0, 2)];
+      expect({ vat, valid: !!check && check(vat) }).toEqual({ vat, valid: true });
+      expect(isValidVATNumber(vat)).toBe(true);
+    }
+    expect(new Set(entries.map(([, v]) => v)).size).toBe(entries.length);
+  });
+
+  // The point of these ids: they are what makes a demo business customer
+  // eligible for the B2B late fee — and no demo seller shares one.
+  it('are read as businesses by the late-fee rule, and never reuse a seller id', () => {
+    const sellers = [DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE]
+      .map((p) => p.vatNumber);
+    for (const vat of Object.values(DEMO_CUSTOMER_VAT_IDS)) {
+      const country = lateFeeCountry(vat.slice(0, 2));
+      expect(country).not.toBeNull();
+      expect(lateFeeCustomerType({ vatId: vat }, country!)).toBe('business');
+      expect(sellers).not.toContain(vat);
     }
   });
 });

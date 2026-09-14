@@ -29,7 +29,7 @@ import { intelligence } from '../../intelligence/intelligenceEngine';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { getPaymentDisplayForCountry, getPaymentProviderForCountry } from '../../config/paymentMethods';
+import { getPaymentDisplayForCountry, getPaymentProviderForCountry, paymentMethodLabel } from '../../config/paymentMethods';
 import { formatCurrency, formatCurrency0, type Country, formatDateShortAuto } from '../../i18n/formatting';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
@@ -120,6 +120,7 @@ interface PaymentMethodBadgeProps {
 }
 
 const PaymentMethodBadge: React.FC<PaymentMethodBadgeProps> = ({ method, size = 'small' }) => {
+  const { t } = useTranslation();
   const info = PAYMENT_METHOD_INFO[method];
   const iconSize = size === 'small' ? 16 : 20;
 
@@ -127,7 +128,7 @@ const PaymentMethodBadge: React.FC<PaymentMethodBadgeProps> = ({ method, size = 
     <View style={[styles.methodBadge, { backgroundColor: info.color + '20' }]}>
       <Ionicons name={info.icon as any} size={iconSize} color={info.color} />
       {size === 'medium' && (
-        <Text style={[styles.methodBadgeText, { color: info.color }]}>{info.name}</Text>
+        <Text style={[styles.methodBadgeText, { color: info.color }]}>{paymentMethodLabel(info.name, t)}</Text>
       )}
     </View>
   );
@@ -748,7 +749,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
                         color={isEnabled ? info.color : Colors.textMuted}
                       />
                       <Text style={[styles.methodCardText, isEnabled && { color: Colors.textPrimary }]}>
-                        {info.name}
+                        {paymentMethodLabel(info.name, t)}
                       </Text>
                       {isEnabled && (
                         <Ionicons

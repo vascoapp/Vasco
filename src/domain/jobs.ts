@@ -126,3 +126,24 @@ export function completionStampFor(
   if (status !== 'completed') return undefined;
   return existing ?? now();
 }
+
+/**
+ * Whether a job dated `date` is work the contractor will actually do that day.
+ *
+ * Two queue cards answered "what is on tomorrow?" with different rules — one
+ * counted every job in `scheduled` status regardless of date, the other every
+ * dated job that was not completed (cancelled included) — and a French device
+ * showed "Demain: 1 chantiers planifiés" beside "Aucun chantier demain". One
+ * rule, used by both: dated that day, and not cancelled or already finished.
+ * Takes a loose status string because both callers also see the legacy Dutch
+ * values ('gereed').
+ */
+export function isWorkOnDay(
+  job: { status?: string; scheduledDate?: string; startDate?: string },
+  dayKey: string,
+): boolean {
+  const date = (job.scheduledDate || job.startDate || '').slice(0, 10);
+  if (date !== dayKey) return false;
+  const done = ['cancelled', 'completed', 'gereed', 'invoiced', 'paid'];
+  return !done.includes(job.status ?? '');
+}

@@ -32,6 +32,29 @@ export function getPaymentBrandColor(methodName: string): string {
   return PAYMENT_BRAND_COLORS[methodName] ?? '#666660';
 }
 
+/**
+ * What a HUMAN reads for a payment method.
+ *
+ * `name` in these tables is also the brand-colour key and the React key, so it
+ * stays a stable English identifier. Most are brand names that do not
+ * translate (iDEAL, PayPal, Carte Bancaire, Klarna). Two are plain nouns, and
+ * those rendered raw: a French invoice listed "Carte Bancaire" and then
+ * "Credit Card" in English beneath it — also on the portal the contractor's
+ * CUSTOMER reads. Resolve at render, per the catalogue-strings rule.
+ */
+const PAYMENT_METHOD_LABEL_KEYS: Record<string, { key: string; en: string }> = {
+  'Credit Card': { key: 'payments.methodCreditCard', en: 'Credit card' },
+  'Bank Transfer': { key: 'payments.methodBankTransfer', en: 'Bank transfer' },
+};
+
+export function paymentMethodLabel(
+  methodName: string,
+  t: (key: string, defaultValue: string) => string,
+): string {
+  const entry = PAYMENT_METHOD_LABEL_KEYS[methodName];
+  return entry ? t(entry.key, entry.en) : methodName;
+}
+
 // ---------------------------------------------------------------------------
 // Mollie method types
 // ---------------------------------------------------------------------------

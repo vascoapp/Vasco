@@ -74,7 +74,7 @@ export const DE_BUSINESS_PROFILE: BusinessProfile = {
   // Handelsregisternummer + USt-IdNr. (DE + 9 digits) — the formats
   // business-settings validates against for DE.
   registrationNumber: "HRB 84521",
-  vatNumber: "DE812345678",
+  vatNumber: "DE812345673", // ISO 7064 MOD 11,10 check digit valid (…78 was not)
   invoicePrefix: "RE",
   quotePrefix: "AN",
   defaultPaymentTerms: 14,
@@ -118,8 +118,11 @@ export const FR_BUSINESS_PROFILE: BusinessProfile = {
   businessType: "sarl",
   teamSize: 'small',
   vatScheme: 'standard',
-  registrationNumber: "81234567800013", // SIRET — 14 digits, Luhn-valid (…19 was not)
-  vatNumber: "FR81812345678",
+  // One company, three consistent numbers. The SIRET passed Luhn as a whole but
+  // its SIREN (first 9) did not, and the VAT number's SIREN matched neither it
+  // nor its own key — FR81812345678 was three unrelated identifiers.
+  registrationNumber: "81234567600017", // SIRET = SIREN 812345676 (Luhn) + NIC 00017, Luhn-valid
+  vatNumber: "FR19812345676", // key (12 + 3 × (SIREN mod 97)) mod 97 = 19
   invoicePrefix: "FA",
   quotePrefix: "DE",
   defaultPaymentTerms: 30,
@@ -185,4 +188,32 @@ export const IT_BUSINESS_PROFILE: BusinessProfile = {
     "Iscrizione Camera di Commercio",
     "Assicurazione RC Professionale",
   ],
+};
+
+// ─── Demo CUSTOMER VAT ids ───────────────────────────────────────────────────
+// Only the legal-entity customers (GmbH / SARL / SAS / S.L. / S.r.l. / BV,
+// bakeries, hotels, contractors). Families and private individuals carry none,
+// and must not: `lateFeeCustomerType` treats a VAT id as the evidence that a
+// customer is a business, which is what entitles the contractor to the B2B
+// statutory late fee. Without these, every demo overdue invoice — including one
+// owed by a SARL — showed no late-fee claim at all.
+//
+// Checksum-VALID in each market's own algorithm (NL elfproef on the RSIN,
+// DE ISO 7064 MOD 11,10, FR key over a Luhn SIREN, ES CIF control, IT Luhn),
+// built on ascending-digit stems so they read as placeholders — see learnings
+// #255: a merely well-shaped fixture is the first thing a new checksum breaks.
+// Pinned by marketRegistrationNumbers.test.ts.
+export const DEMO_CUSTOMER_VAT_IDS: Readonly<Record<string, string>> = {
+  'cust-003': 'NL234567892B01',   // Bakkerij Smit
+  'cust-005': 'NL345678904B01',   // Hotel NH
+  'cust-006': 'NL456789017B01',   // Van Dijk BV
+  'cust-008': 'NL567890120B01',   // Bouwgroep Atlas
+  'cust-de-004': 'DE234567894',   // Hausverwaltung Rheinblick GmbH
+  'cust-de-005': 'DE345678906',   // Bäckerei Lindner GmbH
+  'cust-fr-004': 'FR40234567899', // Syndic Bellecour SAS
+  'cust-fr-005': 'FR36345678908', // Boulangerie Lefort SARL
+  'cust-es-004': 'ESB23456783',   // Administración Retiro S.L.
+  'cust-es-005': 'ESB34567891',   // Panadería Molina S.L.
+  'cust-it-004': 'IT23456789017', // Amministrazione Navigli S.r.l.
+  'cust-it-005': 'IT34567890123', // Panificio Bruno S.r.l.
 };

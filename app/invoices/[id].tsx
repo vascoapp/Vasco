@@ -18,7 +18,7 @@ import { recordHandover, channelForCountry } from '../../src/services/submission
 import { hapticError, hapticSuccess } from '../../src/utils/haptics';
 import { generateInvoicePdf, buildInvoicePdfBase64 } from '../../src/services/invoicePdfService';
 import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
-import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
+import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../../src/config/paymentMethods';
 import { formatCurrency, formatDate, formatDateShort, formatDayMonth } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import {
@@ -27,7 +27,7 @@ import {
 } from '../../src/services/customerPaymentPreferenceService';
 import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceService';
 import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
-import { computeLateFee, disclosureLineLocalized, type LateFeeCountry } from '../../src/services/lateFeeService';
+import { computeLateFee, disclosureLineLocalized, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
 import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML, type EInvoiceData } from '../../src/integrations/einvoice';
 import { Share as RNShare } from 'react-native';
 // react-native's Share ignores `url` on Android (message/title only), so the
@@ -375,17 +375,19 @@ export default function InvoiceDetailScreen() {
       if (step) {
         // EU Directive 2011/7/EU: B2B is entitled to statutory interest +
         // €40 recovery fee. Disclosure required on firm/final steps.
-        const supportedCountries: LateFeeCountry[] = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
-        const feeCountry: LateFeeCountry = supportedCountries.includes(country as LateFeeCountry)
-          ? (country as LateFeeCountry)
-          : 'NL';
-        const feeBreakdown = computeLateFee({
-          invoiceAmount: invoice.amount,
-          daysOverdue,
-          country: feeCountry,
-          customerType: 'business',
-        });
-        const disclosure = feeBreakdown.applicable
+        // This disclosure goes into the EMAIL the customer reads, so it is only
+        // made where the market has a regime (no 'NL' fallback) and the
+        // customer is evidenced as a business — see lateFeeCustomerType.
+        const feeCountry = lateFeeCountry(country);
+        const feeBreakdown = feeCountry
+          ? computeLateFee({
+              invoiceAmount: invoice.amount,
+              daysOverdue,
+              country: feeCountry,
+              customerType: lateFeeCustomerType(invoiceCustomer, feeCountry),
+            })
+          : null;
+        const disclosure = feeBreakdown?.applicable
           ? disclosureLineLocalized(feeBreakdown, language)
           : undefined;
         const rendered = renderReminder({
@@ -1204,7 +1206,7 @@ export default function InvoiceDetailScreen() {
                       isPreferred && { fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
                     ]}
                   >
-                    {pm.name}
+                    {paymentMethodLabel(pm.name, t)}
                   </Text>
                   {isPreferred && (
                     <View style={[styles.preferredBadge, { backgroundColor: brandColor + '15' }]}>
@@ -1383,32 +1385,38 @@ export default function InvoiceDetailScreen() {
             )}
             {/* EU Directive 2011/7/EU — statutory interest + €40 recovery fee */}
             {invoice.status === 'overdue' && (() => {
-              const supportedCountries: LateFeeCountry[] = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'];
-              const feeCountry: LateFeeCountry = supportedCountries.includes(country as LateFeeCountry)
-                ? (country as LateFeeCountry)
-                : 'NL';
+              // A market the directive does not cover gets NO claim. This used
+              // to fall back to 'NL', telling a US contractor they were owed
+              // EU statutory interest plus a €40 fee (CLAUDE.md: a
+              // country-dependent nudge must skip when the country is unknown).
+              const feeCountry = lateFeeCountry(country);
+              if (!feeCountry) return null;
               const fee = computeLateFee({
                 invoiceAmount: invoice.amount,
                 daysOverdue: Math.abs(invoice.dueInDays),
                 country: feeCountry,
-                customerType: 'business',
+                customerType: lateFeeCustomerType(invoiceCustomer, feeCountry),
               });
               if (!fee.applicable || fee.interest + fee.recoveryFee < 1) return null;
-              const cur = fee.currency === 'GBP' ? '£' : '€';
+              // Seen on an Android device in French: `€${x.toFixed(2)}` rendered
+              // "Dû : €64.93 … 12.50 % d'intérêts (€24.93)" beneath a correctly
+              // formatted "TVA (20%) € 866,67". Amounts via formatCurrency; the
+              // rate via formatLateFeeRate, which keeps two decimals where a
+              // statutory rate has them (DE 10,52) instead of rounding.
               return (
                 <TimelineEntry
                   icon="warning-outline"
                   color={SemanticColors.feedbackWarning}
                   label={t('invoices.lateFeeEntitled', {
                     defaultValue: 'Entitled: {{fee}} late-fee + recovery',
-                    fee: `${cur}${(fee.interest + fee.recoveryFee).toFixed(2)}`,
+                    fee: formatCurrency(fee.interest + fee.recoveryFee, country),
                   })}
                   labelColor={SemanticColors.textPrimary}
                   date={t('invoices.lateFeeBreakdown', {
                     defaultValue: '{{rate}}% interest ({{interest}}) + {{recovery}} fee',
-                    rate: fee.effectiveRatePct.toFixed(2),
-                    interest: `${cur}${fee.interest.toFixed(2)}`,
-                    recovery: `${cur}${fee.recoveryFee.toFixed(0)}`,
+                    rate: formatLateFeeRate(fee.effectiveRatePct, feeCountry),
+                    interest: formatCurrency(fee.interest, country),
+                    recovery: formatCurrency(fee.recoveryFee, country),
                   })}
                   showLine
                 />
