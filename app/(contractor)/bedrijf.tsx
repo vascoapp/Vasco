@@ -270,7 +270,12 @@ export default function BedrijfScreen() {
         {heroFeature ? (
           <HeroFeatureCard
             feature={heroFeature}
-            onPress={() => router.push('/(contractor)/decisions' as any)}
+            // "Open customer" on the top-revenue card went to the decisions
+            // list, and every named customer row below went to the whole
+            // contact list — none of them opened the customer they named.
+            onPress={() => router.push((heroFeature.type === 'topRevenue'
+              ? `/contractor/customer/${heroFeature.customer.id}`
+              : '/(contractor)/decisions') as any)}
             onRemind={(id) => handleSendReminder(id)}
           />
         ) : null}
@@ -342,7 +347,7 @@ export default function BedrijfScreen() {
                           key={c.id}
                           name={c.name}
                           meta={`${t('dk.pill.jobsCount', { defaultValue: '{{count}} jobs', count: customerJobs[c.id] || 0 }).toUpperCase()} · ${formatAmount(rev)}`}
-                          onPress={() => router.push('/contractor/customer-crm' as any)}
+                          onPress={() => router.push(`/contractor/customer/${c.id}` as any)}
                         />
                       );
                     })}
@@ -477,15 +482,16 @@ export default function BedrijfScreen() {
                       key={customer.id}
                       name={customer.name}
                       meta={`${t('dk.pill.jobsCount', { defaultValue: '{{count}} jobs', count: customerJobs[customer.id] || 0 }).toUpperCase()}${(customerRevenue[customer.id] || 0) > 0 ? ` · ${formatAmount(customerRevenue[customer.id])}` : ''}`}
-                      onPress={() => router.push('/contractor/customer-crm' as any)}
+                      onPress={() => router.push(`/contractor/customer/${customer.id}` as any)}
                       borderBottom={idx < Math.min(customers.length, 10) - 1}
                       inCard
                     />
                   )}
                 />
               </View>
+              {/* One sentence, not "View all" + "Contacts": Italian read "Vedi tutto contatti". */}
               <Pressable style={s.manageLink} onPress={() => router.push('/contractor/customer-crm' as any)}>
-                <Text style={s.manageLinkText}>{t('dk.section.viewAll', 'View all').toUpperCase()} {t('dk.tabs.contacts', 'Contacts').toUpperCase()}</Text>
+                <Text style={s.manageLinkText}>{t('dk.section.viewAllContacts', 'View all contacts').toUpperCase()}</Text>
                 <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
               </Pressable>
             </>
@@ -626,6 +632,8 @@ function CustomerRow({ name, meta, onPress, borderBottom, inCard }: { name: stri
         pressed && { backgroundColor: DK.colors.panel2 },
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={name}
     >
       <View style={s.customerAvatar}>
         <DKLabel style={s.customerAvatarText}>{name.charAt(0)}</DKLabel>
