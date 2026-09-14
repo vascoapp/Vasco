@@ -202,13 +202,14 @@ export default function CustomerPhonebookScreen() {
               <Pressable
                 key={contact.id}
                 style={({ pressed }) => [s.contactRow, pressed && { opacity: 0.9 }]}
-                // R15.1: was routing to /contractor/customer-view?id=X but
-                // that's the customer-portal screen — it ignored ?id= and fell
-                // through to a hardcoded DEMO_QUOTE ("Familie de Groot —
-                // Warmtepomp €4340"). Now routes to global search pre-filled
-                // with the customer's name, surfacing all their real quotes/
-                // jobs/invoices via R9.3's name-resolution lookup.
-                onPress={() => router.push(`/contractor/search?q=${encodeURIComponent(contact.name)}` as any)}
+                // R15.1 sent this to global search pre-filled with the name
+                // (customer-view is the customer PORTAL and ignored ?id=). The
+                // customer detail screen — history, quotes, invoices, and the
+                // edit button — is the customer; search matched any job, quote
+                // or customer whose text merely contained the name.
+                onPress={() => router.push(`/contractor/customer/${contact.id}` as any)}
+                accessibilityRole="button"
+                accessibilityLabel={contact.name}
               >
                 {/* Avatar */}
                 <View style={[s.avatar, contact.hasActive && s.avatarActive]}>

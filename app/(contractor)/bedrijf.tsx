@@ -45,6 +45,8 @@ interface TrackerData {
   decided: number;
   overdue: number;
   lastActivity: string;
+  /** The customer's portal code — `admin.vascobuild.com/customer/<code>`. */
+  accessCode?: string;
 }
 
 /**
@@ -64,6 +66,7 @@ function toTrackerData(raw: any): TrackerData {
     decided,
     overdue: Number(raw?.overdueCount ?? raw?.overdue) || 0,
     lastActivity: raw?.lastReminderSent ?? raw?.lastActivity ?? '',
+    accessCode: typeof raw?.accessCode === 'string' && raw.accessCode ? raw.accessCode : undefined,
   };
 }
 
@@ -153,7 +156,15 @@ export default function BedrijfScreen() {
 
   const handleSendReminder = useCallback(async (trackerId: string) => {
     try {
-      const result = await Share.share({ message: t('customers.reminderMessage', 'Hi, could you review the pending decisions for your project? This helps us stay on schedule.') });
+      // The reminder linked every customer to the bare
+      // `admin.vascobuild.com/customer`, which has no page — only
+      // `/customer/[code]` does. It now carries this tracker's own code, and
+      // says nothing about a link when there is no code to send.
+      const code = trackers.find(tr => tr.id === trackerId)?.accessCode;
+      const message = code
+        ? t('customers.reminderMessage', { defaultValue: 'Hello, there are still open choices for your project. You can view them here: {{link}}', link: `https://admin.vascobuild.com/customer/${code}` })
+        : t('customers.reminderMessageNoLink', 'Hello, there are still open choices for your project.');
+      const result = await Share.share({ message });
       // Cancelling the share sheet must NOT record a reminder as sent — the
       // customer never received anything, and the row would then claim it did.
       // Same guard as ai.tsx:254; this was the third unguarded Share in the app.
@@ -164,7 +175,7 @@ export default function BedrijfScreen() {
         ? { ...tr, lastActivity: t('common.justNow', 'Just now') } : tr));
       hapticSuccess();
     } catch {}
-  }, [t]);
+  }, [t, trackers]);
 
   const customerRevenue = useMemo(() => {
     // Resolve by customerId when present, else fall back to matching the

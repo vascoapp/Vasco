@@ -14,6 +14,8 @@ import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
+import { findDocumentCustomer } from '../../src/domain/customers';
+import { documentNumber } from '../../src/domain/documents';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { trackEvent } from '../../src/services/eventTrackingService';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -51,9 +53,9 @@ const JOB_STATUS_KEY: Record<string, string> = {
 export default function SearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { jobs, quotes, invoices, customers } = useAppState();
+  const { jobs, quotes, invoices, customers, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   // R15.1: accept ?q= initial query so the CRM customer-tap can route here
   // pre-filled with the customer's name. Was previously hardcoded to '' and
   // CRM was navigating to /contractor/customer-view which served the
@@ -106,7 +108,8 @@ export default function SearchScreen() {
     // Search quotes
     for (const quote of quotes) {
       const amt = formatCurrency(quote.amount ?? 0, country);
-      const custName = resolveCustomerName(quote.customer);
+      // FK first (#214): a quote carrying only customerId matched nothing.
+      const custName = findDocumentCustomer(customers, quote)?.name ?? resolveCustomerName(quote.customer);
       if (
         quote.id?.toLowerCase().includes(q) ||
         custName.toLowerCase().includes(q) ||
@@ -130,15 +133,16 @@ export default function SearchScreen() {
     for (const inv of invoices) {
       const invAny = inv as any;
       const amt = formatCurrency(invAny.amount ?? invAny.total ?? 0, country);
-      const custName = resolveCustomerName(invAny.customer);
+      const custName = findDocumentCustomer(customers, invAny)?.name ?? resolveCustomerName(invAny.customer);
+      const number = documentNumber(invAny);
       if (
-        invAny.id?.toLowerCase().includes(q) ||
+        number.toLowerCase().includes(q) ||
         custName.toLowerCase().includes(q)
       ) {
         r.push({
           id: invAny.id,
           type: 'invoice',
-          title: `${invAny.id}`,
+          title: number,
           subtitle: `${t(`invoices.status.${invAny.status}`, invAny.status)} · ${amt}${custName ? ` · ${custName}` : ''}`,
           icon: 'receipt',
           color: SemanticColors.feedbackSuccess,
@@ -163,7 +167,7 @@ export default function SearchScreen() {
     }
 
     return r.slice(0, 20);
-  }, [query, jobs, quotes, invoices, customers]);
+  }, [query, jobs, quotes, invoices, customers, country, t]);
 
   // Track search events (debounced — fires 500ms after user stops typing)
   const trackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

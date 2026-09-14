@@ -13,6 +13,8 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../../src/theme/tabStyles';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
+import { findDocumentCustomer } from '../../../src/domain/customers';
+import { documentNumber } from '../../../src/domain/documents';
 import { formatCurrency, type Country, formatDayMonthAuto } from '../../../src/i18n/formatting';
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
@@ -27,9 +29,9 @@ export default function CustomerDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { customers, jobs, quotes, invoices } = useAppState();
+  const { customers, jobs, quotes, invoices, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
 
   // Status enums must render in the app locale, not as raw English
   // ('completed', 'accepted', 'overdue' leaked straight onto the cards).
@@ -39,8 +41,10 @@ export default function CustomerDetailScreen() {
 
   const customer = useMemo(() => customers.find(c => c.id === id), [customers, id]);
   const customerJobs = useMemo(() => jobs.filter((j: any) => j.customerId === id), [jobs, id]);
-  const customerQuotes = useMemo(() => quotes.filter((q: any) => q.customer === id || q.customer === customer?.name), [quotes, id, customer]);
-  const customerInvoices = useMemo(() => invoices.filter((i: any) => i.customer === id || i.customer === customer?.name), [invoices, id, customer]);
+  // One resolver, FK first (#214). Matching `customer` against id-or-name
+  // missed every document that carries only `customerId`.
+  const customerQuotes = useMemo(() => quotes.filter((q) => findDocumentCustomer(customers, q)?.id === id), [quotes, customers, id]);
+  const customerInvoices = useMemo(() => invoices.filter((i) => findDocumentCustomer(customers, i)?.id === id), [invoices, customers, id]);
 
   const totalSpent = useMemo(() =>
     customerInvoices.filter((i: any) => i.status === 'paid').reduce((s: number, i: any) => s + (i.amount ?? 0), 0),
@@ -354,7 +358,7 @@ export default function CustomerDetailScreen() {
               <Pressable key={inv.id} style={s.card} onPress={() => router.push(`/invoices/${inv.id}` as any)}>
                 <View style={[s.accent, { backgroundColor: inv.status === 'paid' ? SemanticColors.feedbackSuccess : inv.status === 'overdue' ? SemanticColors.feedbackError : Palette.hermesOrange }]} />
                 <View style={s.cardContent}>
-                  <Text style={s.cardTitle} numberOfLines={1}>{inv.id}</Text>
+                  <Text style={s.cardTitle} numberOfLines={1}>{documentNumber(inv)}</Text>
                   <Text style={s.cardMeta}>{invoiceStatusLabel(String(inv.status))} · {formatCurrency(inv.amount ?? 0, country)}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
