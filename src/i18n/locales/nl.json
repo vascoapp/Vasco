@@ -1089,7 +1089,9 @@
     "counterSet": "Nummering bijgewerkt",
     "counterSetBody": "Uw volgende factuur krijgt nummer {{n}}.",
     "counterRefused": "Nummering kan niet terug",
-    "counterNeedsNumber": "Welk nummer?"
+    "counterNeedsNumber": "Welk nummer?",
+    "personNatural": "Natuurlijk persoon (eenmanszaak)",
+    "personLegal": "Rechtspersoon (bv of vergelijkbaar)"
   },
   "financials": {
     "revenue": "Omzet",

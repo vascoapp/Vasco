@@ -110,7 +110,7 @@ import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
-import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE, DEMO_CUSTOMER_VAT_IDS } from '../data/mockBusiness';
+import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE, DEMO_CUSTOMER_VAT_IDS, DEMO_CUSTOMER_EINVOICE_DETAILS } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
@@ -407,8 +407,8 @@ const ES_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-es-001', name: 'Familia García', email: 'm.garcia@telefonica.es', phone: '+34 91 5550188' },
   { id: 'cust-es-002', name: 'Javier Ruiz', email: 'j.ruiz@gmail.com', phone: '+34 91 5550231' },
   { id: 'cust-es-003', name: 'Lucía Navarro', email: 'l.navarro@hotmail.es', phone: '+34 91 5550147' },
-  { id: 'cust-es-004', name: 'Administración Retiro S.L.', email: 'tecnico@admretiro.es', phone: '+34 91 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-es-004'] },
-  { id: 'cust-es-005', name: 'Panadería Molina S.L.', email: 'contabilidad@panaderiamolina.es', phone: '+34 91 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-es-005'] },
+  { id: 'cust-es-004', name: 'Administración Retiro S.L.', email: 'tecnico@admretiro.es', phone: '+34 91 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-es-004'], ...DEMO_CUSTOMER_EINVOICE_DETAILS['cust-es-004'] },
+  { id: 'cust-es-005', name: 'Panadería Molina S.L.', email: 'contabilidad@panaderiamolina.es', phone: '+34 91 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-es-005'], ...DEMO_CUSTOMER_EINVOICE_DETAILS['cust-es-005'] },
 ];
 
 const IT_SEED_JOBS: Job[] = [
@@ -423,8 +423,8 @@ const IT_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-it-001', name: 'Famiglia Rossi', email: 'm.rossi@libero.it', phone: '+39 02 5550188' },
   { id: 'cust-it-002', name: 'Marco Conti', email: 'm.conti@virgilio.it', phone: '+39 02 5550231' },
   { id: 'cust-it-003', name: 'Giulia Greco', email: 'g.greco@alice.it', phone: '+39 02 5550147' },
-  { id: 'cust-it-004', name: 'Amministrazione Navigli S.r.l.', email: 'tecnico@ammnavigli.it', phone: '+39 02 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-004'] },
-  { id: 'cust-it-005', name: 'Panificio Bruno S.r.l.', email: 'contabilita@panificiobruno.it', phone: '+39 02 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-005'] },
+  { id: 'cust-it-004', name: 'Amministrazione Navigli S.r.l.', email: 'tecnico@ammnavigli.it', phone: '+39 02 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-004'], ...DEMO_CUSTOMER_EINVOICE_DETAILS['cust-it-004'] },
+  { id: 'cust-it-005', name: 'Panificio Bruno S.r.l.', email: 'contabilita@panificiobruno.it', phone: '+39 02 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-005'], ...DEMO_CUSTOMER_EINVOICE_DETAILS['cust-it-005'] },
 ];
 
 export function AppStateProvider({ children }: PropsWithChildren) {

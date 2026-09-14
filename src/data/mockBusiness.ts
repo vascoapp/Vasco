@@ -151,6 +151,10 @@ export const ES_BUSINESS_PROFILE: BusinessProfile = {
   vatScheme: 'standard',
   registrationNumber: "B12345674", // CIF — letter + 7 digits + control (…8 failed it)
   vatNumber: "ESB12345674",
+  // Facturae refuses without these (seller province + F/J). The demo could
+  // never produce a Facturae file, so the export could not be shown or walked.
+  province: "Madrid",
+  personType: 'J', // an S.L. is a legal entity
   invoicePrefix: "FAC",
   quotePrefix: "PRE",
   defaultPaymentTerms: 30,
@@ -179,6 +183,12 @@ export const IT_BUSINESS_PROFILE: BusinessProfile = {
   vatScheme: 'standard',
   registrationNumber: "MI-1234567", // REA
   vatNumber: "IT12345678903", // Partita IVA — 11 digits, check digit valid (…01 was not)
+  // FatturaPA refuses without province and RegimeFiscale. RF01 (ordinario) is
+  // right for an S.r.l.; it is NOT a safe default for a real contractor, which
+  // is why settings has no default — this is a fixture, not a fallback.
+  province: "MI",
+  fiscalRegime: "RF01",
+  personType: 'J',
   invoicePrefix: "FT",
   quotePrefix: "PRV",
   defaultPaymentTerms: 30,
@@ -216,4 +226,22 @@ export const DEMO_CUSTOMER_VAT_IDS: Readonly<Record<string, string>> = {
   'cust-es-005': 'ESB34567891',   // Panadería Molina S.L.
   'cust-it-004': 'IT23456789017', // Amministrazione Navigli S.r.l.
   'cust-it-005': 'IT34567890123', // Panificio Bruno S.r.l.
+};
+
+// ─── Demo CUSTOMER addresses for structured invoices (ES / IT) ────────────────
+// Facturae and FatturaPA need the buyer's address, city, post code and province
+// as separate elements, and FatturaPA also an SDI route (a 7-char code, or
+// '0000000' plus a PEC address). The legal-entity demo customers carried a name
+// and an email only, so both exports refused for every demo invoice. Addresses
+// are fictional; the PEC domains are not real mailboxes.
+export const DEMO_CUSTOMER_EINVOICE_DETAILS: Readonly<Record<string, {
+  address: string; city: string; postcode: string; province: string;
+  einvoiceRouting?: string; einvoiceEmail?: string;
+}>> = {
+  'cust-es-004': { address: 'Calle de Alcalá 120', city: 'Madrid', postcode: '28009', province: 'Madrid' },
+  'cust-es-005': { address: 'Calle de Toledo 45', city: 'Madrid', postcode: '28005', province: 'Madrid' },
+  'cust-it-004': { address: 'Via Tortona 18', city: 'Milano', postcode: '20144', province: 'MI',
+    einvoiceRouting: '0000000', einvoiceEmail: 'amministrazione@pec.ammnavigli-demo.it' },
+  'cust-it-005': { address: 'Corso di Porta Ticinese 60', city: 'Milano', postcode: '20123', province: 'MI',
+    einvoiceRouting: '0000000', einvoiceEmail: 'contabilita@pec.panificiobruno-demo.it' },
 };

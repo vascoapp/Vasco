@@ -1102,7 +1102,9 @@
     "counterSet": "Numeración actualizada",
     "counterSetBody": "Su próxima factura llevará el número {{n}}.",
     "counterRefused": "No se puede retroceder la numeración",
-    "counterNeedsNumber": "¿Qué número?"
+    "counterNeedsNumber": "¿Qué número?",
+    "personNatural": "Persona física (autónomo)",
+    "personLegal": "Persona jurídica (sociedad)"
   },
   "financials": {
     "revenue": "Facturación",

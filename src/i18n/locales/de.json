@@ -1102,7 +1102,9 @@
     "counterSet": "Nummerierung aktualisiert",
     "counterSetBody": "Ihre nächste Rechnung erhält die Nummer {{n}}.",
     "counterRefused": "Nummerierung kann nicht zurückgesetzt werden",
-    "counterNeedsNumber": "Welche Nummer?"
+    "counterNeedsNumber": "Welche Nummer?",
+    "personNatural": "Natürliche Person (Einzelunternehmen)",
+    "personLegal": "Juristische Person (GmbH o. ä.)"
   },
   "financials": {
     "revenue": "Umsatz",

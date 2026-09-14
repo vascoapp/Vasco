@@ -28,6 +28,8 @@ import { isValidEmail, isValidPhone, isValidKvKNumber, isValidVATNumber, isValid
 import { getPaymentDisplayForCountry, getPaymentBrandColor } from '../../src/config/paymentMethods';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { STRIPE_METHODS_UK, STRIPE_METHODS_US } from '../../src/config/paymentMethods';
+import { DKMenu } from '../../src/components/shared/DKMenu';
+import { REGIMI_FISCALI } from '../../src/data/fiscalRegimes';
 
 type FieldDef = {
   label: string;
@@ -55,7 +57,8 @@ export default function BusinessSettingsScreen() {
   const router = useRouter();
   const { businessProfile, updateBusinessProfile } = useAppState();
   const { user } = useAuth();
-  const country = user?.country ?? 'NL';
+  // The business profile outranks the account (CLAUDE.md).
+  const country = businessProfile.country ?? user?.country ?? 'NL';
 
   const [businessName, setBusinessName] = useState(businessProfile.businessName ?? '');
   const [kvkNumber, setKvkNumber] = useState(businessProfile.kvkNumber ?? '');
@@ -71,6 +74,22 @@ export default function BusinessSettingsScreen() {
   const [nextInvoiceNo, setNextInvoiceNo] = useState('');
   const [counterBusy, setCounterBusy] = useState(false);
   const [address, setAddress] = useState(businessProfile.address ?? '');
+  // The seller identity every structured e-invoice needs as SEPARATE elements.
+  // All five persistence layers carried these (migration
+  // 20260819000011_seller_fiscal_identity, both mappers, updateBusinessProfile)
+  // and AppState's comment said "written into AppState by settings" — but no
+  // screen wrote ANY of them (onboarding writes the address line only). So no
+  // Italian contractor could ever produce a FatturaPA (mandatory for EVERY
+  // Italian invoice), no Spanish one a Facturae — the export refused "Provincia
+  // · Regime fiscale" with nowhere to enter them — and a real (non-demo) German
+  // account's XRechnung had no seller city or post code, which BR-DE requires.
+  const [postcode, setPostcode] = useState(businessProfile.postcode ?? '');
+  const [city, setCity] = useState(businessProfile.city ?? '');
+  const [province, setProvince] = useState(businessProfile.province ?? '');
+  const [personType, setPersonType] = useState<'F' | 'J' | undefined>(businessProfile.personType);
+  const [fiscalRegime, setFiscalRegime] = useState(businessProfile.fiscalRegime ?? '');
+  const needsProvince = country === 'ES' || country === 'IT';
+  const selectedRegime = REGIMI_FISCALI.find((r) => r.code === fiscalRegime);
   const [email, setEmail] = useState(businessProfile.email ?? '');
   const [phone, setPhone] = useState(businessProfile.phone ?? '');
   // R66 NL launch: payment fields. Without IBAN every NL invoice goes
@@ -164,6 +183,11 @@ export default function BusinessSettingsScreen() {
       'info@bedrijf.nl';
     const contactFields: FieldDef[] = [
       { label: t('settings.address', 'Address'), value: address, onChange: setAddress, placeholder: addressPlaceholder, multiline: true },
+      { label: t('profile.postcode', 'Post code'), value: postcode, onChange: setPostcode, placeholder: country === 'DE' ? '10115' : country === 'FR' ? '75001' : country === 'ES' ? '28013' : country === 'IT' ? '20121' : country === 'UK' ? 'SW1A 1AA' : country === 'US' ? '78701' : '1012 AB' },
+      { label: t('profile.city', 'City'), value: city, onChange: setCity, placeholder: country === 'DE' ? 'Berlin' : country === 'FR' ? 'Paris' : country === 'ES' ? 'Madrid' : country === 'IT' ? 'Milano' : country === 'UK' ? 'London' : country === 'US' ? 'Austin' : 'Amsterdam' },
+      ...(needsProvince
+        ? [{ label: t('profile.province', 'Province'), value: province, onChange: setProvince, placeholder: country === 'IT' ? 'MI' : 'Madrid' }]
+        : []),
       { label: t('settings.email', 'Email'), value: email, onChange: setEmail, placeholder: emailPlaceholder, keyboardType: 'email-address' as const },
       { label: t('settings.phone', 'Phone'), value: phone, onChange: setPhone, placeholder: country === 'UK' ? '+44 20 1234 5678' : country === 'DE' ? '+49 30 1234567' : country === 'FR' ? '+33 1 23 45 67 89' : country === 'ES' ? '+34 612 345 678' : country === 'IT' ? '+39 06 1234 5678' : '+31 6 12345678', keyboardType: 'phone-pad' as const },
     ];
@@ -193,7 +217,7 @@ export default function BusinessSettingsScreen() {
         ];
 
     return [...common, ...countryFields, ...contactFields, ...paymentFields];
-  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, routingNumber, bankAccountNumber, t]);
+  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, t]);
 
   // Show where the series actually stands. Uses the read-only peek RPC: a
   // settings screen must not consume an invoice number just by being opened.
@@ -284,6 +308,10 @@ export default function BusinessSettingsScreen() {
         vatNumber: cleanVat.trim(),
         registrationNumber: sanitizeInput(registrationNumber).trim(),
         address: sanitizeInput(address).trim(),
+        postcode: sanitizeInput(postcode).trim(),
+        city: sanitizeInput(city).trim(),
+        ...(needsProvince ? { province: sanitizeInput(province).trim(), personType } : {}),
+        ...(country === 'IT' ? { fiscalRegime } : {}),
         email: cleanEmail.trim(),
         phone: cleanPhone.trim(),
         // R66 NL launch: persist IBAN + BIC so the invoice PDF can render
@@ -310,7 +338,7 @@ export default function BusinessSettingsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, invoicePrefix, quotePrefix, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, personType, fiscalRegime, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, invoicePrefix, quotePrefix, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);
@@ -366,6 +394,56 @@ export default function BusinessSettingsScreen() {
                 />
               </View>
             ))}
+
+            {/* Person type (ES/IT) and fiscal regime (IT): each is one choice
+                from a closed list, so a menu, not free text. No default for
+                either — see REGIMI_FISCALI. */}
+            {needsProvince && (
+              <View style={styles.fieldColumn}>
+                <Text style={Typography.muted}>{t('profile.personType', 'Person type (individual or company)')}</Text>
+                <DKMenu
+                  accessibilityLabel={t('profile.personType', 'Person type (individual or company)')}
+                  items={(['F', 'J'] as const).map((pt) => ({
+                    key: pt,
+                    label: pt === 'F'
+                      ? t('settings.personNatural', 'Individual (sole trader)')
+                      : t('settings.personLegal', 'Company (legal entity)'),
+                    selected: personType === pt,
+                    onPress: () => setPersonType(pt),
+                  }))}
+                  renderAnchor={(open) => (
+                    <Pressable onPress={open} style={styles.input} accessibilityRole="button">
+                      <Text style={{ color: personType ? SemanticColors.textPrimary : SemanticColors.textSecondary }}>
+                        {personType === 'F' ? t('settings.personNatural', 'Individual (sole trader)')
+                          : personType === 'J' ? t('settings.personLegal', 'Company (legal entity)')
+                          : t('common.select', 'Select')}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+              </View>
+            )}
+            {country === 'IT' && (
+              <View style={styles.fieldColumn}>
+                <Text style={Typography.muted}>{t('profile.fiscalRegime', 'Tax regime')}</Text>
+                <DKMenu
+                  accessibilityLabel={t('profile.fiscalRegime', 'Tax regime')}
+                  items={REGIMI_FISCALI.map((r) => ({
+                    key: r.code,
+                    label: `${r.code} — ${r.label}`,
+                    selected: fiscalRegime === r.code,
+                    onPress: () => setFiscalRegime(r.code),
+                  }))}
+                  renderAnchor={(open) => (
+                    <Pressable onPress={open} style={styles.input} accessibilityRole="button">
+                      <Text style={{ color: fiscalRegime ? SemanticColors.textPrimary : SemanticColors.textSecondary }}>
+                        {selectedRegime ? `${selectedRegime.code} — ${selectedRegime.label}` : t('common.select', 'Select')}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+              </View>
+            )}
           </View>
 
           {/* Document numbering */}

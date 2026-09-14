@@ -1102,7 +1102,9 @@
     "counterSet": "Numbering updated",
     "counterSetBody": "Your next invoice will be number {{n}}.",
     "counterRefused": "Cannot move numbering backwards",
-    "counterNeedsNumber": "Which number?"
+    "counterNeedsNumber": "Which number?",
+    "personNatural": "Individual (sole trader)",
+    "personLegal": "Company (legal entity)"
   },
   "financials": {
     "revenue": "Revenue",
