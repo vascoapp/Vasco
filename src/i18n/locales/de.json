@@ -928,7 +928,9 @@
     "einvoiceNoFormatBody": "Vasco erzeugt für Ihr Land noch keine E-Rechnung. Senden Sie stattdessen das PDF — es ist weiterhin eine gültige Rechnung.",
     "probabilityWithin30d": "{{pct}}% innerhalb von 30 Tagen",
     "einvoiceMissingYourBusiness": "Ihr Unternehmen",
-    "einvoiceFixCustomer": "Kundendaten öffnen"
+    "einvoiceFixCustomer": "Kundendaten öffnen",
+    "openInvoice": "Rechnung für {{customer}} öffnen",
+    "showActions": "Aktionen für {{customer}}"
   },
   "expenses": {
     "title": "Ausgaben",

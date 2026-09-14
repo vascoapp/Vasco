@@ -915,7 +915,9 @@
     "einvoiceNoFormatBody": "Vasco maakt nog geen e-factuur voor jouw land. Stuur de pdf — die is nog steeds een geldige factuur.",
     "probabilityWithin30d": "{{pct}}% binnen 30 dagen",
     "einvoiceMissingYourBusiness": "Je bedrijf",
-    "einvoiceFixCustomer": "Klantgegevens openen"
+    "einvoiceFixCustomer": "Klantgegevens openen",
+    "openInvoice": "Factuur openen voor {{customer}}",
+    "showActions": "Acties voor {{customer}}"
   },
   "expenses": {
     "title": "Uitgaven",

@@ -928,7 +928,9 @@
     "einvoiceNoFormatBody": "Vasco todavía no genera factura electrónica para tu país. Envía el PDF — sigue siendo una factura válida.",
     "probabilityWithin30d": "{{pct}}% en 30 días",
     "einvoiceMissingYourBusiness": "Tu empresa",
-    "einvoiceFixCustomer": "Abrir datos del cliente"
+    "einvoiceFixCustomer": "Abrir datos del cliente",
+    "openInvoice": "Abrir factura de {{customer}}",
+    "showActions": "Acciones para {{customer}}"
   },
   "expenses": {
     "title": "Gastos",

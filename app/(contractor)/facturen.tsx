@@ -124,7 +124,8 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
   const { t } = useTranslation();
   const { businessProfile, customers, jobs } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (CLAUDE.md, #218).
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const router = useRouter();
   // R300: customer tag drives gateReminderSend behavior — VIP gets a softer
   // confirm, INACTIVE gets a "are you sure?" prompt, others fall through.
@@ -167,7 +168,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
       // If subscription read fails, fall through to existing behavior — don't
       // hard-fail the payment link path.
     }
-    const country = user?.country ?? 'NL';
+    const country = businessProfile?.country ?? user?.country ?? 'NL';
     const enabledMethods = businessProfile?.enabledPaymentMethods;
     const preferredMethod = request.customerPreferredMethod;
 
@@ -198,7 +199,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
       }
     }
     return createMolliePaymentLink({ ...request, method: methods });
-  }, [user?.country, businessProfile?.enabledPaymentMethods]);
+  }, [user?.country, businessProfile?.country, businessProfile?.enabledPaymentMethods]);
   const getStatusConfig = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':
@@ -261,10 +262,23 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
           <View key={invoice.id}>
             <Pressable
               style={styles.invoiceCard}
+              // A row with quick actions expands; a row without (draft, paid)
+              // opens the invoice. Every row used to only toggle an expansion
+              // that draft and paid rows do not have, so tapping them did
+              // nothing — the draft "Crea fattura" had just created could not
+              // be opened from the list it landed on (Italian device).
               onPress={() => {
+                if (!showActions) {
+                  router.push(`/invoices/${invoice.id}` as any);
+                  return;
+                }
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                 onToggleExpand(isExpanded ? '' : invoice.id);
               }}
+              accessibilityRole="button"
+              accessibilityLabel={showActions
+                ? t('invoices.showActions', { defaultValue: 'Actions for {{customer}}', customer: invoice.customerName })
+                : t('invoices.openInvoice', { defaultValue: 'Open invoice for {{customer}}', customer: invoice.customerName })}
             >
               <View style={[styles.invoiceCardAccent, { backgroundColor: status.color }]} />
               <Ionicons name={status.icon} size={20} color={status.color} style={{ marginLeft: Spacing.sm }} />
@@ -315,7 +329,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   });
                   if (!fee.applicable) return null;
                   return (
-                    <Text style={{ fontSize: 10, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError, marginTop: 2 }}>
+                    <Text style={{ fontSize: 10, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackError, marginTop: 2, textAlign: 'right' }}>
                       {/* The rate is locale-formatted: interpolating the raw
                           number gave `String(12.5)` — an English decimal POINT
                           inside a Dutch sentence, "12.5% wettelijke rente",
@@ -365,7 +379,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       const text = renderPaymentReminderForTag(locale, {
                         customer: autoInv.customerName ?? '',
                         ref: autoInv.invoiceNumber,
-                        amount: formatCurrency(autoInv.total, (user?.country ?? 'NL') as Country),
+                        amount: formatCurrency(autoInv.total, country),
                         link: link.url,
                         business: businessProfile.businessName ?? '',
                       }, tag);
@@ -473,7 +487,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         t('invoices.paymentLinkCreated', 'Payment link created'),
                         `${t('invoices.paymentLinkReady', 'Payment link is ready to share')}:\n${link.url}`,
                       );
-                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: ${formatCurrency(invoice.amount, (user?.country ?? 'NL') as Country)}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
+                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: ${formatCurrency(invoice.amount, country)}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
                     } else {
                       Alert.alert(t('invoices.error', 'Fout'), t('invoices.paymentLinkFailed', 'Betaallink kon niet worden aangemaakt.'));
                     }
@@ -481,6 +495,18 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                 >
                   <Ionicons name="link-outline" size={16} color={Palette.hermesOrange} />
                   <Text style={styles.invoiceActionText}>{t('invoices.paymentLink', 'Betaallink')}</Text>
+                </Pressable>
+                {/* The full invoice — lines, VAT, e-invoice export — was not
+                    reachable from this list for any status. Icon-only: a fourth
+                    labelled flex:1 button squeezes "Link di pagamento" and
+                    "Condividi PDF" beside it. */}
+                <Pressable
+                  style={[styles.invoiceActionBtn, styles.invoiceActionBtnIcon]}
+                  onPress={() => router.push(`/invoices/${invoice.id}` as any)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('invoices.openInvoice', { defaultValue: 'Open invoice for {{customer}}', customer: invoice.customerName })}
+                >
+                  <Ionicons name="open-outline" size={16} color={Palette.hermesOrange} />
                 </Pressable>
               </View>
             )}
@@ -494,7 +520,8 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
 function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { businessProfile } = useAppState();
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const getStatusConfig = (status: QuoteStatus) => {
     switch (status) {
       case 'viewed':
@@ -559,7 +586,8 @@ export default function FacturenScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { jobs, addInvoiceFromJob, businessProfile, customers, quotes: storedQuotes, isLoading } = useAppState();
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const [activeTab, setActiveTab] = useState<TabView>('offertes');
   const [refreshing, setRefreshing] = useState(false);
   const [overdueDismissed, setOverdueDismissed] = useState(false);
@@ -582,8 +610,7 @@ export default function FacturenScreen() {
     }, 800);
   }, []);
 
-  // Connect to services
-  const { jobs, addInvoiceFromJob, businessProfile, customers, quotes: storedQuotes, isLoading } = useAppState();
+  // Connect to services (useAppState is read above, where country needs the profile)
   // Skeleton only while the data is genuinely loading. This was a fixed 300ms
   // skeleton on every mount "to prevent flicker" — over data already in memory,
   // so it CAUSED a flash each time the tab opened. It also made the headless
@@ -1008,7 +1035,7 @@ export default function FacturenScreen() {
                                 ? {
                                     customer: autoInv.customerName ?? '',
                                     ref: autoInv.invoiceNumber,
-                                    amount: formatCurrency(autoInv.total, (user?.country ?? 'NL') as Country),
+                                    amount: formatCurrency(autoInv.total, country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
                                   }
@@ -1016,7 +1043,7 @@ export default function FacturenScreen() {
                                     customer: findDocumentCustomer(customers as any, inv as any)?.name
                                       ?? (inv as any).customer ?? '',
                                     ref: (inv as any).reference ?? inv.id,
-                                    amount: formatCurrency(inv.amount, (user?.country ?? 'NL') as Country),
+                                    amount: formatCurrency(inv.amount, country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
                                   }, tag);
@@ -1249,9 +1276,11 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     paddingVertical: 8,
+    paddingHorizontal: 4,
     borderRadius: 10,
     backgroundColor: SemanticColors.surfacePrimary,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   tabActive: {
     backgroundColor: Palette.hermesOrange,
@@ -1260,6 +1289,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.textTertiary,
+    // Three equal tabs: "Recupero crediti" clipped at both edges. Wrap to a
+    // second line instead (#304); the row stretches every tab to match.
+    textAlign: 'center',
   },
   tabTextActive: {
     color: Palette.white,
@@ -1360,6 +1392,11 @@ const styles = StyleSheet.create({
   },
   invoiceRight: {
     alignItems: 'flex-end',
+    // The overdue interest line is long ("Interessi: € 24,93 (12,5% interessi
+    // legali)") and had no cap, so it took the row and cut the customer's
+    // name to "Panificio …". It wraps inside this column now.
+    maxWidth: '45%',
+    marginLeft: Spacing.sm,
   },
   invoiceAmount: {
     fontSize: 14,
@@ -1727,6 +1764,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stickyOverdueText: {
+    // Without a shrink the text keeps its natural width and runs under the
+    // link beside it: "€ 5.380,00Visualizza" on an Italian device.
+    flexShrink: 1,
     fontSize: 13,
     fontFamily: TYPE.sectionFamily,
     color: SemanticColors.feedbackError,
@@ -1736,6 +1776,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    marginLeft: Spacing.sm,
   },
   stickyOverdueAction: {
     fontSize: 13,
@@ -1760,6 +1801,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: Palette.hermesOrange + '0A',
     borderRadius: 8,
+  },
+  invoiceActionBtnIcon: {
+    flex: 0,
+    paddingHorizontal: Spacing.md,
   },
   invoiceActionText: {
     fontSize: 11,

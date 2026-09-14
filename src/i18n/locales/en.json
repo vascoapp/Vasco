@@ -928,7 +928,9 @@
     "einvoiceNoFormatBody": "Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice.",
     "probabilityWithin30d": "{{pct}}% within 30 days",
     "einvoiceMissingYourBusiness": "Your business",
-    "einvoiceFixCustomer": "Open customer details"
+    "einvoiceFixCustomer": "Open customer details",
+    "openInvoice": "Open invoice for {{customer}}",
+    "showActions": "Actions for {{customer}}"
   },
   "expenses": {
     "title": "Expenses",
