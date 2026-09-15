@@ -1139,6 +1139,7 @@ export default function InvoiceDetailScreen() {
                     value={item.quantity}
                     onChangeValue={(n) => handleUpdateItem(item.id, 'quantity', n)}
                     country={country as Country}
+                    maxDecimals={3}
                     accessibilityLabel={t('invoices.qty', 'Qty')}
                   />
                   <DecimalInput
@@ -1146,6 +1147,7 @@ export default function InvoiceDetailScreen() {
                     value={item.unitPrice}
                     onChangeValue={(n) => handleUpdateItem(item.id, 'unitPrice', n)}
                     country={country as Country}
+                    money
                     accessibilityLabel={t('invoices.unitPrice', 'Unit price')}
                   />
                   <Pressable onPress={() => handleRemoveItem(item.id)} style={styles.removeItemBtn}>

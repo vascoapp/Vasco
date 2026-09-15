@@ -35,7 +35,11 @@ run('invoice line editing', () => {
       { id: 'RE-T-2', customer: 'Bäckerei Lindner', job: 'Wartung', amount: 121, status: 'sent', dueInDays: 14 },
     ]));
     await AsyncStorage.setItem('@vasco_line_items', JSON.stringify({
-      'RE-T-1': [{ id: 'l1', description: 'Wartung', quantity: 1, unitPrice: 100 }],
+      // l3 is priced 0 so it moves no total; it exists for its QUANTITY field.
+      'RE-T-1': [
+        { id: 'l1', description: 'Wartung', quantity: 1, unitPrice: 100 },
+        { id: 'l3', description: 'Kupferrohr', quantity: 0.125, unitPrice: 0 },
+      ],
       'RE-T-2': [{ id: 'l2', description: 'Wartung', quantity: 1, unitPrice: 100 }],
     }));
 
@@ -72,6 +76,13 @@ run('invoice line editing', () => {
     }
     expect(lineSave).not.toBeNull();
 
+    // A quantity keeps three decimals; capped at two it rendered "0,13" and
+    // any edit saved 0.13.
+    const qtyField = decimalInputs().find((n: any) => n.props.value === 0.125);
+    expect(qtyField).toBeDefined();
+    const qtyText = qtyField.findAll((n: any) => typeof n.props?.onChangeText === 'function', { deep: true })[0];
+    expect(qtyText.props.value).toMatch(/^0[,.]125$/);
+
     const priceField = decimalInputs().find((n: any) => n.props.value === 100);
     expect(priceField).toBeDefined();
     const text = () => priceField.findAll((n: any) => typeof n.props?.onChangeText === 'function', { deep: true })[0];
@@ -81,6 +92,9 @@ run('invoice line editing', () => {
     expect(text().props.value).toBe('85,'); // the separator survives the keystroke
     await act(async () => { text().props.onChangeText('85,5'); });
     expect(text().props.value).toBe('85,5');
+    // Leaving the field shows it as money: cents, not "85,5".
+    await act(async () => { text().props.onBlur?.({}); });
+    expect(text().props.value).toMatch(/^85[,.]50$/);
 
     // Save through the same button (now a tick).
     const saveBtn = root.findAll(
@@ -92,7 +106,7 @@ run('invoice line editing', () => {
     await settle();
 
     const lines = JSON.parse((await AsyncStorage.getItem('@vasco_line_items')) ?? '{}');
-    expect(lines['RE-T-1']).toHaveLength(1);
+    expect(lines['RE-T-1']).toHaveLength(2);
     expect(lines['RE-T-1'][0].unitPrice).toBe(85.5);   // the LINE is stored, with its cents
     expect(lines['RE-T-2'][0].unitPrice).toBe(100);    // and only on that invoice
 

@@ -72,6 +72,18 @@ describe('formatDecimalInput', () => {
     expect(formatDecimalInput(undefined, 'DE')).toBe('');
   });
 
+  it('shows cents on a fractional amount (the builder showed "185,5")', () => {
+    expect(formatDecimalInput(185.5, 'DE', 2, true)).toBe('185,50');
+    expect(formatDecimalInput(185.5, 'UK', 2, true)).toBe('185.50');
+    expect(formatDecimalInput(85, 'DE', 2, true)).toBe('85');
+    expect(formatDecimalInput(4369.747899159664, 'DE', 2, true)).toBe('4369,75');
+  });
+
+  it('does not round a 3-decimal quantity to 2 (0,125 m showed "0,13")', () => {
+    expect(formatDecimalInput(0.125, 'DE', 3)).toBe('0,125');
+    expect(parseDecimalInput(formatDecimalInput(0.125, 'DE', 3), 'DE')).toBe(0.125);
+  });
+
   it('round-trips through the parser in every market', () => {
     for (const c of ['NL', 'DE', 'FR', 'ES', 'IT', 'UK', 'US'] as const) {
       for (const n of [0, 1.5, 85.5, 1234.56, 12500]) {

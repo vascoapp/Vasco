@@ -65,17 +65,30 @@ export function parseDecimalInput(text: string | null | undefined, country?: Cou
  * separator, no grouping (a grouped "4.369,75" would be re-read as typed), at
  * most `maxDecimals` decimals, none when whole. `String(4369.747899)` put
  * "4369.747899159664" — with a POINT — in a German invoice line.
+ *
+ * `money`: a fractional amount always shows cents — "185,50", not "185,5"
+ * (seen in the German quote builder, 2026-09-15). A whole amount stays "85".
+ * Quantities pass their own `maxDecimals` (3): capping them at 2 displayed
+ * 0,125 m as "0,13", and any edit to the field then saved 0.13.
  */
-export function formatDecimalInput(n: number | null | undefined, country: Country = 'NL', maxDecimals = 2): string {
+export function formatDecimalInput(
+  n: number | null | undefined,
+  country: Country = 'NL',
+  maxDecimals = 2,
+  money = false,
+): string {
   if (n == null || !Number.isFinite(n)) return '';
   const cfg = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  const rounded = Math.round(n * 10 ** maxDecimals) / 10 ** maxDecimals;
+  const minimumFractionDigits = money && !Number.isInteger(rounded) ? Math.min(2, maxDecimals) : 0;
   try {
     return new Intl.NumberFormat(cfg.locale, {
       useGrouping: false,
-      minimumFractionDigits: 0,
+      minimumFractionDigits,
       maximumFractionDigits: maxDecimals,
     }).format(n);
   } catch {
-    return String(Math.round(n * 10 ** maxDecimals) / 10 ** maxDecimals);
+    const s = minimumFractionDigits ? rounded.toFixed(minimumFractionDigits) : String(rounded);
+    return decimalMarkFor(country) === ',' ? s.replace('.', ',') : s;
   }
 }

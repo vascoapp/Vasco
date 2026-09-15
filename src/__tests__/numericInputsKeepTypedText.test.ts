@@ -62,6 +62,25 @@ describe('typed numbers keep what was typed', () => {
     expect(hits).toEqual([]);
   });
 
+  it('a DecimalInput bound to a price or amount passes `money` (it showed "185,5")', () => {
+    const hits: string[] = [];
+    let seen = 0;
+    for (const { rel, src } of files) {
+      let i = src.indexOf('<DecimalInput');
+      while (i >= 0) {
+        const end = src.indexOf('/>', i);
+        const tag = src.slice(i, end < 0 ? undefined : end);
+        if (/\bvalue=\{[^}]*(price|Price|amount|Amount)/.test(tag)) {
+          seen += 1;
+          if (!/\smoney(\s|=\{true\})/.test(tag)) hits.push(`${rel}:${src.slice(0, i).split('\n').length}`);
+        }
+        i = src.indexOf('<DecimalInput', i + 1);
+      }
+    }
+    expect(seen).toBeGreaterThanOrEqual(2); // invoice line price + quote builder price
+    expect(hits).toEqual([]);
+  });
+
   it('no parseFloat, and no hand-rolled comma replace, on typed text', () => {
     const hits: string[] = [];
     for (const { rel, src } of files) {

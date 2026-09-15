@@ -1377,6 +1377,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                           style={s.priceInput}
                           value={sv.item.basePrice}
                           onChangeValue={(n) => updatePrice(sv.item.id, n)}
+                          money
                           selectTextOnFocus
                           accessibilityLabel={t('quotes.editPrice', 'Edit price')}
                         />
