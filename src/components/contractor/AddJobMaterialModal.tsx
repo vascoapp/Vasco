@@ -22,6 +22,7 @@ import { useAppState } from '../../state/AppState';
 import type { Material } from '../../domain/materials';
 import { findSimilarMaterials } from '../../services/embeddingService';
 import { getCurrentTrade } from '../../lib/currentUser';
+import { parseDecimalInput } from '../../utils/decimalInput';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -116,7 +117,9 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
   const handleSave = async () => {
     if (!selectedMaterial) return;
 
-    const qty = parseFloat(quantity);
+    // A German "2,5" m was parseFloat'ed to 2 — while the price field beside
+    // it already accepted a comma.
+    const qty = parseDecimalInput(quantity) ?? NaN;
     if (isNaN(qty) || qty <= 0) {
       Alert.alert(t('common.invalid', 'Invalid'), t('materials.enterValidQuantity', 'Enter a valid quantity.'));
       return;
@@ -128,7 +131,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
       // amount) over the cached bestPrice observation. Falls back to
       // bestPrice when the field is left empty (rare — most reflect a
       // just-paid receipt).
-      const typedPrice = priceInput.trim() ? parseFloat(priceInput.replace(',', '.')) : NaN;
+      const typedPrice = priceInput.trim() ? (parseDecimalInput(priceInput) ?? NaN) : NaN;
       const unitPrice = !Number.isNaN(typedPrice) && typedPrice > 0 ? typedPrice : bestPrice?.price;
       await addJobMaterial({
         jobId,
@@ -367,7 +370,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
               <View style={s.costPreview}>
                 <Text style={s.costLabel}>{t('materials.estimatedCost', 'Estimated cost')}</Text>
                 <Text style={s.costValue}>
-                  {formatCurrency(bestPrice.price * (parseFloat(quantity) || 0))}
+                  {formatCurrency(bestPrice.price * (parseDecimalInput(quantity) ?? 0))}
                 </Text>
               </View>
             )}

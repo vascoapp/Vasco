@@ -54,6 +54,23 @@ export default function PurchaseOrdersScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600); }, []);
 
+  // AI Procurement Agent — analyze pending orders for savings.
+  // Above the team gate: it is a hook, and the gate below turns on
+  // `businessProfile.teamSize`, which arrives with hydrate. Below the gate, a
+  // team contractor rendered the gated view first and the full screen next —
+  // one more hook — and React threw "Rendered more hooks than during the
+  // previous render".
+  const pendingMaterials: MaterialNeed[] = orders
+    .filter(o => o.status === 'draft')
+    .flatMap(o => (o.items || []).map((item: any) => ({
+      name: item.description || item.name || 'Materiaal',
+      quantity: item.quantity || 1,
+      unit: item.unit || 'stuk',
+      jobId: o.jobId,
+      urgency: 'normal' as const,
+    })));
+  const procurement = useProcurementAgent(pendingMaterials);
+
   // Purchase orders are a team / aannemer workflow: a solo contractor buys
   // materials at the counter, they do not raise a PO document. The screen is
   // also not persisted yet (createOrder is in-memory only), so letting a solo
@@ -84,18 +101,6 @@ export default function PurchaseOrdersScreen() {
       </View>
     );
   }
-
-  // AI Procurement Agent — analyze pending orders for savings
-  const pendingMaterials: MaterialNeed[] = orders
-    .filter(o => o.status === 'draft')
-    .flatMap(o => (o.items || []).map((item: any) => ({
-      name: item.description || item.name || 'Materiaal',
-      quantity: item.quantity || 1,
-      unit: item.unit || 'stuk',
-      jobId: o.jobId,
-      urgency: 'normal' as const,
-    })));
-  const procurement = useProcurementAgent(pendingMaterials);
 
   const sortedOrders = [...orders].sort((a, b) => {
     const priority: Record<POStatus, number> = { draft: 0, submitted: 1, confirmed: 2, shipped: 3, delivered: 4, invoiced: 5, cancelled: 6 };

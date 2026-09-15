@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
+import { parseDecimalInput } from '../../../src/utils/decimalInput';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -251,9 +252,9 @@ export default function JobFormScreen() {
                       value={numberText[a.fieldId] ?? (a.number !== undefined ? String(a.number) : '')}
                       onChangeText={(v) => {
                         setNumberText((prev) => ({ ...prev, [a.fieldId]: v }));
-                        const n = Number(v.replace(',', '.'));
+                        const n = parseDecimalInput(v);
                         patch(a.fieldId, {
-                          number: v.trim() === '' || !Number.isFinite(n) ? undefined : n,
+                          number: n,
                         });
                       }}
                       placeholderTextColor={SemanticColors.textTertiary}

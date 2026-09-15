@@ -29,6 +29,7 @@ import {
 } from '../../../src/services/recurringJobsService';
 import { hapticSuccess, hapticWarning } from '../../../src/utils/haptics';
 import { currencySymbol, formatCurrency, type Country, formatDateShortAuto } from '../../../src/i18n/formatting';
+import { parseDecimalInput } from '../../../src/utils/decimalInput';
 
 const CADENCES: { value: RecurrenceCadence; labelKey: string; fallback: string }[] = [
   { value: 'monthly', labelKey: 'recurring.monthly', fallback: 'Monthly' },
@@ -123,8 +124,9 @@ export default function RecurringEditScreen() {
       customIntervalDays: cadence === 'custom' ? Math.max(7, Math.min(parseInt(customDays, 10) || 90, 365)) : undefined,
       startDate: new Date().toISOString(),
       reminderDaysBeforeDue: parseInt(reminderDays, 10) || 7,
-      estimatedAmount: estimatedAmount ? parseFloat(estimatedAmount) : undefined,
-      estimatedDurationHours: estimatedDuration ? parseFloat(estimatedDuration) : undefined,
+      // parseFloat read a German "85,50" as 85 and "1,5" hours as 1.
+      estimatedAmount: parseDecimalInput(estimatedAmount),
+      estimatedDurationHours: parseDecimalInput(estimatedDuration),
     };
     if (isNew) await createRecurring(payload);
     else await updateRecurring(id, payload);

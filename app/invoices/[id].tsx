@@ -43,6 +43,7 @@ import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../s
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
+import { DecimalInput } from '../../src/components/shared/DecimalInput';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -100,6 +101,7 @@ export default function InvoiceDetailScreen() {
     lastMolliePayment,
     businessProfile,
     lineItems: appLineItems,
+    replaceInvoiceLines,
     jobs,
     customers,
     markEInvoiceSubmitted,
@@ -118,7 +120,8 @@ export default function InvoiceDetailScreen() {
   // both the header title and the customer card rendered it raw, so this
   // screen was headed "RECHNUNG C-1787349342347".
   const invoiceCustomerName = invoiceCustomer?.name ?? invoice?.customer ?? '';
-  const country = user?.country ?? 'NL';
+  // Profile first, account as fallback (#218).
+  const country = businessProfile?.country ?? user?.country ?? 'NL';
   // Country/scheme-aware VAT rate (honors DE 19%, FR 20%, KOR/Kleinunternehmer
   // 0%, etc.). Falls back to the NL VAT_RATE only when no profile is loaded.
   // Was hardcoded 21% everywhere — wrong tax on every non-NL invoice + export.
@@ -151,6 +154,9 @@ export default function InvoiceDetailScreen() {
   // Editable state — R66 round 13: editingCustomer/customerName removed
   // along with the broken inline rename feature.
   const [editingItems, setEditingItems] = useState(false);
+  // A save is delete-then-insert in the backend; two taps in flight would
+  // interleave into two copies of every line.
+  const [savingItems, setSavingItems] = useState(false);
   const [localItems, setLocalItems] = useState<EditableLineItem[]>([]);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState('');
@@ -187,6 +193,34 @@ export default function InvoiceDetailScreen() {
       }
     }
   }, [invoice?.id]);
+
+  // Lines are editable on a draft only (see the pencil below). If the invoice
+  // is sent while the editor is open, its save button disappears with the
+  // pencil — close the editor rather than strand it.
+  useEffect(() => {
+    if (invoice && invoice.status !== 'draft') setEditingItems(false);
+  }, [invoice?.status]);
+
+  // R20: when launched from the queue executor with `?submit=einvoice`,
+  // auto-fire the country-default e-invoice export, once.
+  //
+  // These two hooks sat BELOW `if (!invoice) return`, so any mount before the
+  // invoice was in state — the queue executor or a link on a cold start, a
+  // real account whose invoices load after mount — rendered N hooks, then N+2,
+  // and React threw "Rendered more hooks than during the previous render".
+  // The export handlers are defined below that return (they need a non-null
+  // invoice), so the effect calls them through a ref assigned there.
+  const submitFiredRef = useRef(false);
+  const fireSubmitRef = useRef<(() => Promise<void>) | null>(null);
+  useEffect(() => {
+    if (submitFiredRef.current) return;
+    if (submit !== 'einvoice') return;
+    if (!invoice) return;
+    submitFiredRef.current = true;
+    // Defer one tick so the screen is mounted + scroll-positioned first.
+    const timer = setTimeout(() => { void fireSubmitRef.current?.(); }, 120);
+    return () => clearTimeout(timer);
+  }, [submit, invoice?.id, country]);
 
   if (!invoice) {
     return (
@@ -226,13 +260,11 @@ export default function InvoiceDetailScreen() {
   // retained a phantom field that reverted on next refresh. Renaming
   // a customer belongs on the customer record, not on each invoice.
 
-  const handleUpdateItem = (itemId: string, field: keyof EditableLineItem, value: string) => {
-    setLocalItems(prev => prev.map(item => {
-      if (item.id !== itemId) return item;
-      if (field === 'description') return { ...item, description: value };
-      const numVal = parseFloat(value) || 0;
-      return { ...item, [field]: numVal };
-    }));
+  // Numbers arrive already parsed from DecimalInput. This took the raw string
+  // and ran parseFloat on every keystroke into a `String(number)` field, so
+  // "85," and "85." both snapped back to "85" — no line could carry cents.
+  const handleUpdateItem = <K extends 'description' | 'quantity' | 'unitPrice'>(itemId: string, field: K, value: EditableLineItem[K]) => {
+    setLocalItems(prev => prev.map(item => (item.id === itemId ? { ...item, [field]: value } : item)));
   };
 
   const handleAddItem = () => {
@@ -245,7 +277,28 @@ export default function InvoiceDetailScreen() {
     setLocalItems(prev => prev.filter(i => i.id !== itemId));
   };
 
-  const handleSaveItems = () => {
+  const handleSaveItems = async () => {
+    if (savingItems) return;
+    // The lines themselves, not just the total they add up to. This handler
+    // used to write only `amount`, so the edit vanished on reopen and left an
+    // invoice whose lines and total disagreed. Nothing changes unless the
+    // lines were stored.
+    setSavingItems(true);
+    const stored = await replaceInvoiceLines(invoice.id, localItems.map(li => ({
+      id: li.id,
+      description: li.description,
+      quantity: li.quantity,
+      unitPrice: li.unitPrice,
+      ...(li.vatRate != null ? { vatRate: li.vatRate } : {}),
+    }))).finally(() => setSavingItems(false));
+    if (!stored) {
+      hapticError();
+      Alert.alert(
+        t('invoices.linesNotSavedTitle', 'Lines not saved'),
+        t('invoices.linesNotSavedBody', 'The invoice lines could not be saved. Check your connection and try again — nothing was changed.'),
+      );
+      return;
+    }
     const newTotal = localItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     // Was the NL constant. Every edit to an invoice's lines re-grossed the
     // total at 21% — 19% for a German contractor, 0% for a Kleinunternehmer /
@@ -871,54 +924,41 @@ export default function InvoiceDetailScreen() {
     await shareEInvoiceThenConfirm(xml, filename, 'FatturaPA');
   };
 
-  // R20: when launched from queue executor with `?submit=einvoice`, auto-fire
-  // the country-default e-invoice export. Was R1 deferral — destination
-  // didn't read prefill, so the contractor approved the queue item then had
-  // to find and tap the export button themselves. Country-routing matches
-  // the explicit buttons rendered later in the screen (XRechnung/ZUGFeRD
-  // for DE+others, Facturae for ES, FatturaPA for IT). One-shot via ref so
-  // re-renders don't re-fire.
-  const submitFiredRef = useRef(false);
-  useEffect(() => {
-    if (submitFiredRef.current) return;
-    if (submit !== 'einvoice') return;
-    if (!invoice) return;
-    submitFiredRef.current = true;
-    const fire = async () => {
-      try {
-        // ES/IT no longer route here: their handlers build an object shaped
-        // nothing like what the generators take and throw on the first field.
-        // And because the handlers are `async`, that throw was a REJECTED
-        // PROMISE, not a synchronous one — so the catch below never saw it and
-        // an approved queue action failed in total silence.
-        // Awaited, all three. Without it a throw inside these async handlers
-        // is a rejected promise the catch below cannot see — which is how the
-        // IT crash reached production silently through this exact path.
-        if (country === 'ES') return await handleExportFacturae();
-        if (country === 'IT') return await handleExportFatturaPA();
-        if (country === 'DE') return await handleExportEInvoice('XRechnung');
-        // Everyone else exports NOTHING, and says so.
-        //
-        // This used to fall through to XRechnung for "DE / NL / FR / UK /
-        // others" under a comment claiming it matched the buttons below. It did
-        // not: those render for DE, ES and IT only. R289 removed the French
-        // button precisely because Factur-X was being produced by the German
-        // generator — "legally wrong German XML for French B2G/B2B" — and this
-        // path kept doing exactly that whenever an approved queue action
-        // arrived with `?submit=einvoice`. A French contractor got a .xml that
-        // Chorus Pro cannot accept, from a button they never pressed.
-        Alert.alert(
-          t('invoices.einvoiceNoFormatTitle', 'No e-invoice format yet'),
-          t('invoices.einvoiceNoFormatBody', 'Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice.'),
-        );
-      } catch {
-        // Silent — surfaced via the in-flow alert/share sheet errors.
-      }
-    };
-    // Defer one tick so the screen is mounted + scroll-positioned first.
-    const timer = setTimeout(fire, 120);
-    return () => clearTimeout(timer);
-  }, [submit, invoice?.id, country]);
+  // What the R20 `?submit=einvoice` effect (above the early return, beside
+  // submitFiredRef) runs: the country-default export, so a contractor who
+  // approved the queue item does not have to find the button. Assigned on
+  // every render — a plain assignment, NOT a hook.
+  fireSubmitRef.current = async () => {
+    try {
+      // ES/IT no longer route here: their handlers build an object shaped
+      // nothing like what the generators take and throw on the first field.
+      // And because the handlers are `async`, that throw was a REJECTED
+      // PROMISE, not a synchronous one — so the catch below never saw it and
+      // an approved queue action failed in total silence.
+      // Awaited, all three. Without it a throw inside these async handlers
+      // is a rejected promise the catch below cannot see — which is how the
+      // IT crash reached production silently through this exact path.
+      if (country === 'ES') return await handleExportFacturae();
+      if (country === 'IT') return await handleExportFatturaPA();
+      if (country === 'DE') return await handleExportEInvoice('XRechnung');
+      // Everyone else exports NOTHING, and says so.
+      //
+      // This used to fall through to XRechnung for "DE / NL / FR / UK /
+      // others" under a comment claiming it matched the buttons below. It did
+      // not: those render for DE, ES and IT only. R289 removed the French
+      // button precisely because Factur-X was being produced by the German
+      // generator — "legally wrong German XML for French B2G/B2B" — and this
+      // path kept doing exactly that whenever an approved queue action
+      // arrived with `?submit=einvoice`. A French contractor got a .xml that
+      // Chorus Pro cannot accept, from a button they never pressed.
+      Alert.alert(
+        t('invoices.einvoiceNoFormatTitle', 'No e-invoice format yet'),
+        t('invoices.einvoiceNoFormatBody', 'Vasco does not yet generate an e-invoice for your country. Send the PDF instead — it is still a valid invoice.'),
+      );
+    } catch {
+      // Silent — surfaced via the in-flow alert/share sheet errors.
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -1048,17 +1088,26 @@ export default function InvoiceDetailScreen() {
           <View style={styles.cardHeader}>
             <Ionicons name="list" size={18} color={Palette.hermesOrange} />
             <Text style={styles.cardTitle}>{t('invoices.lineItems', 'Line items')}</Text>
+            {/* Draft only. The pencil was on sent, overdue and PAID invoices:
+                changing what an issued invoice bills rewrites a document the
+                customer already holds (and may have paid) — §14 UStG / GoBD
+                correct that with a correction or credit invoice, which this
+                app does not have yet. */}
+            {invoice.status === 'draft' && (
             <Pressable
               onPress={() => {
                 if (editingItems) handleSaveItems();
                 else setEditingItems(true);
               }}
               style={styles.editBtn}
+              disabled={savingItems}
               accessibilityRole="button"
+              accessibilityState={{ busy: savingItems }}
               accessibilityLabel={editingItems ? t('common.save', 'Save') : t('common.edit', 'Edit')}
             >
               <Ionicons name={editingItems ? 'checkmark' : 'pencil'} size={14} color={Palette.hermesOrange} />
             </Pressable>
+            )}
           </View>
 
           {/* Column headers — only while EDITING, where the row really is four
@@ -1085,17 +1134,19 @@ export default function InvoiceDetailScreen() {
                     placeholder={t('invoices.itemDescription', 'Description')}
                     placeholderTextColor={SemanticColors.textTertiary}
                   />
-                  <TextInput
+                  <DecimalInput
                     style={[styles.lineInput, { width: 40, textAlign: 'center' }]}
-                    value={String(item.quantity)}
-                    onChangeText={(v) => handleUpdateItem(item.id, 'quantity', v)}
-                    keyboardType="numeric"
+                    value={item.quantity}
+                    onChangeValue={(n) => handleUpdateItem(item.id, 'quantity', n)}
+                    country={country as Country}
+                    accessibilityLabel={t('invoices.qty', 'Qty')}
                   />
-                  <TextInput
+                  <DecimalInput
                     style={[styles.lineInput, { width: 82, textAlign: 'right' }]}
-                    value={String(item.unitPrice)}
-                    onChangeText={(v) => handleUpdateItem(item.id, 'unitPrice', v)}
-                    keyboardType="numeric"
+                    value={item.unitPrice}
+                    onChangeValue={(n) => handleUpdateItem(item.id, 'unitPrice', n)}
+                    country={country as Country}
+                    accessibilityLabel={t('invoices.unitPrice', 'Unit price')}
                   />
                   <Pressable onPress={() => handleRemoveItem(item.id)} style={styles.removeItemBtn}>
                     <Ionicons name="close-circle" size={18} color={SemanticColors.feedbackError} />

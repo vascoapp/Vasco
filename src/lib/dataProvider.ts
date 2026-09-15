@@ -241,6 +241,44 @@ export async function upsertLineItems(
   return (data ?? []) as LineItemRow[];
 }
 
+/**
+ * Replace a document's lines. `upsertLineItems` sends rows without ids, so a
+ * second call INSERTS a second set — it is only correct at creation. Editing
+ * lines has to delete the old set first.
+ *
+ * Order matters for failure: delete, then insert. If the insert fails the
+ * document has no lines in the backend, which is exactly the orphan shape
+ * `healOrphanLineItems` re-sends from the device on the next load. The other
+ * order would leave BOTH sets on a failure, and nothing heals a duplicate.
+ *
+ * `'no-document'` and `'no-session'` are not failures. The document is not in
+ * the backend yet (created offline and still queued), or nobody is signed in
+ * to the backend at all (a demo account). The caller keeps the lines locally;
+ * the healer sends them once the document exists. A real error throws.
+ */
+export async function replaceLineItems(
+  idOrNumber: string,
+  docType: 'quote' | 'invoice',
+  items: { description: string; quantity: number; unit_price: number; total_price: number; position: number; vat_rate?: number }[],
+): Promise<'replaced' | 'no-document' | 'no-session'> {
+  const { data: auth } = await supabase.auth.getSession();
+  if (!auth?.session) return 'no-session';
+  const col = documentMatchColumn(idOrNumber);
+  const { data: doc, error: lookupError } = await supabase
+    .from('documents')
+    .select('id')
+    .eq(col, idOrNumber)
+    .eq('doc_type', docType)
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+  const documentId = (doc as { id?: string } | null)?.id;
+  if (!documentId) return 'no-document';
+  const { error: deleteError } = await supabase.from('line_items').delete().eq('document_id', documentId);
+  if (deleteError) throw deleteError;
+  if (items.length > 0) await upsertLineItems(documentId, items);
+  return 'replaced';
+}
+
 // ── Customers ────────────────────────────────────────────────
 
 export async function listCustomers() {
@@ -623,6 +661,10 @@ export async function loadLineItems(): Promise<Record<string, QuoteLineItem[]>> 
       description: row.description,
       quantity: Number(row.quantity),
       unitPrice: Number(row.unit_price),
+      // Written at every create since migration 20260508000001 and never read
+      // back, so a mixed-rate quote (9% labour + 21% materials) came back from
+      // a cold start with no per-line rates and was re-taxed at the profile's.
+      ...(row.vat_rate != null ? { vatRate: Number(row.vat_rate) } : {}),
     });
   }
   return grouped;

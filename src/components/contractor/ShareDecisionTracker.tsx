@@ -27,6 +27,7 @@ import type { CustomerDecisionTracker } from '../../types/decisions';
 import { generateAccessCode } from '../../data/mockCustomerPortal';
 import { useAppState } from '../../state/AppState';
 import { logInfo } from '../../utils/errorHandler';
+import { parseDecimalInput } from '../../utils/decimalInput';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -54,7 +55,7 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
   const [createdLink, setCreatedLink] = useState<string | null>(tracker.paymentLink ?? null);
 
   const handleRequestDeposit = useCallback(async () => {
-    const amount = parseFloat(depositInput.replace(',', '.'));
+    const amount = (parseDecimalInput(depositInput) ?? NaN);
     if (!amount || amount <= 0) {
       Alert.alert(
         t('share.invalidAmount', 'Enter a valid amount'),

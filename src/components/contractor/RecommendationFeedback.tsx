@@ -24,6 +24,7 @@ import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import { pricingAgent } from '../../intelligence/pricingAgent';
 import { trackUserAction } from '../../intelligence/intelligenceEngine';
+import { parseDecimalInput } from '../../utils/decimalInput';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // ============================================
@@ -134,7 +135,7 @@ export function RecommendationFeedbackCard({
 
   const handleSubmitFeedback = useCallback(() => {
     if (feedbackType === 'accept') {
-      const price = actualPrice ? parseFloat(actualPrice.replace(',', '.')) : undefined;
+      const price = actualPrice ? parseDecimalInput(actualPrice) : undefined;
       onAccept?.(recommendation.id, selectedReason || undefined, price);
 
       // Track acceptance for intelligence

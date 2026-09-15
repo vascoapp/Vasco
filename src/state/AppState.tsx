@@ -204,6 +204,8 @@ type AppState = {
   removeQuote: (id: string) => void;
   removeInvoice: (id: string) => void;
   updateInvoice: (id: string, updates: Partial<Invoice>) => void;
+  /** Replace an invoice's lines, backend first. `false` = nothing was changed. */
+  replaceInvoiceLines: (id: string, items: QuoteLineItem[]) => Promise<boolean>;
   updateBusinessProfile: (updates: Partial<BusinessProfile>) => Promise<void>;
   connectMoneybird: () => void;
   exportInvoice: (invoiceId: string) => Promise<void>;
@@ -2516,6 +2518,46 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             }).catch(() => {});
           }
         }
+      },
+      replaceInvoiceLines: async (id, items) => {
+        // The invoice screen's line editor saved only the new TOTAL: the lines
+        // themselves were never written, so on reopen the invoice showed its
+        // old lines under its new amount — and the PDF / e-invoice built from
+        // those lines disagreed with the total the customer was billed.
+        //
+        // Backend FIRST, local only on success. Line items cannot be queued
+        // (the FK needs the document's BE id), and an amount that persisted
+        // without its lines is the mismatch this exists to prevent.
+        // An invoice the backend does not have YET (offline-created, or a demo
+        // fixture) is saved locally: `healOrphanLineItems` sends its lines
+        // once the document exists. Only a real backend error refuses.
+        const withIds = items.map((li, idx) => ({ ...li, id: li.id || `${id}-li-${idx}` }));
+        if (isSupabaseConfigured) {
+          try {
+            const { replaceLineItems } = await import('../lib/dataProvider');
+            const fallbackRate = getEffectiveVatRate(businessProfile);
+            await withTimeout(
+              replaceLineItems(id, 'invoice', withIds.map((li, idx) => ({
+                description: li.description,
+                quantity: li.quantity,
+                unit_price: li.unitPrice,
+                total_price: li.unitPrice * li.quantity,
+                position: idx,
+                vat_rate: li.vatRate ?? fallbackRate,
+              }))),
+              5000,
+              'replaceInvoiceLines',
+            );
+          } catch (err) {
+            logWarn('AppState', `replaceInvoiceLines failed: ${err}`);
+            return false;
+          }
+        }
+        setLineItems((prev) => ({ ...prev, [id]: withIds }));
+        import('../services/gobdAuditTrailService').then((m) =>
+          m.appendAudit({ type: 'invoice_modified', ref: id, payload: { lineItems: withIds.length } }),
+        ).catch(() => {});
+        return true;
       },
       updateBusinessProfile: async (updates) => {
         // Snapshot the previous licenses array BEFORE the optimistic update

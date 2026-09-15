@@ -930,7 +930,9 @@
     "einvoiceMissingYourBusiness": "La tua azienda",
     "einvoiceFixCustomer": "Apri dati cliente",
     "openInvoice": "Apri fattura di {{customer}}",
-    "showActions": "Azioni per {{customer}}"
+    "showActions": "Azioni per {{customer}}",
+    "linesNotSavedTitle": "Righe non salvate",
+    "linesNotSavedBody": "Non è stato possibile salvare le righe della fattura. Verifichi la connessione e riprovi: non è stato modificato nulla."
   },
   "expenses": {
     "title": "Spese",
@@ -6797,10 +6799,10 @@
         "impact": "Le piastrelle di fascia alta possono dover essere ordinate dall'Italia o dalla Spagna",
         "name": "Budget per le piastrelle",
         "options": {
-          "120": "120 €/m² (lusso)",
           "30": "30 €/m² (base)",
           "50": "50 €/m² (fascia media)",
-          "80": "80 €/m² (premium)"
+          "80": "80 €/m² (premium)",
+          "120": "120 €/m² (lusso)"
         }
       },
       "item_reno_ufh": {

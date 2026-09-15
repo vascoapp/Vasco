@@ -29,6 +29,7 @@ import { withTimeout } from '../../utils/withTimeout';
 import { repriceQuoteLinesFromMoat } from '../../services/quoteMoatRepricing';
 import { recordDelta, type DeltaSource } from '../../services/reasonCodeService';
 import { normalizeComplexity } from '../../utils/complexity';
+import { parseDecimalInput } from '../../utils/decimalInput';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -418,7 +419,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
   const commitPrice = (id: string, raw: string) => {
     const current = items.find((i) => i.id === id);
     if (!current) return;
-    const parsed = Number(raw.replace(',', '.').replace(/[^0-9.]/g, ''));
+    const parsed = (parseDecimalInput(raw.replace(/[^0-9.,]/g, '')) ?? NaN);
     setPriceDraft((d) => { const n = { ...d }; delete n[id]; return n; });
     if (!Number.isFinite(parsed) || parsed <= 0) return;          // ignore junk
     if (Math.abs(parsed - current.suggestedPrice) < 0.01) return;  // no-op

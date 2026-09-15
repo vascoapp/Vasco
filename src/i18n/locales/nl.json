@@ -917,7 +917,9 @@
     "einvoiceMissingYourBusiness": "Je bedrijf",
     "einvoiceFixCustomer": "Klantgegevens openen",
     "openInvoice": "Factuur openen voor {{customer}}",
-    "showActions": "Acties voor {{customer}}"
+    "showActions": "Acties voor {{customer}}",
+    "linesNotSavedTitle": "Regels niet opgeslagen",
+    "linesNotSavedBody": "De factuurregels konden niet worden opgeslagen. Controleer de verbinding en probeer het opnieuw — er is niets gewijzigd."
   },
   "expenses": {
     "title": "Uitgaven",

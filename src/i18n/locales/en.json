@@ -930,7 +930,9 @@
     "einvoiceMissingYourBusiness": "Your business",
     "einvoiceFixCustomer": "Open customer details",
     "openInvoice": "Open invoice for {{customer}}",
-    "showActions": "Actions for {{customer}}"
+    "showActions": "Actions for {{customer}}",
+    "linesNotSavedTitle": "Lines not saved",
+    "linesNotSavedBody": "The invoice lines could not be saved. Check your connection and try again — nothing was changed."
   },
   "expenses": {
     "title": "Expenses",

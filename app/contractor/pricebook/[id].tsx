@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Switch } from 'react-native';
+import { parseDecimalInput } from '../../../src/utils/decimalInput';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -100,12 +101,7 @@ export default function PricebookEditorScreen() {
 
   // Accepts both separators: a Dutch keyboard gives a comma and parseFloat
   // would silently read "12,50" as 12.
-  const num = (text: string): number | undefined => {
-    const cleaned = text.replace(',', '.').trim();
-    if (!cleaned) return undefined;
-    const n = parseFloat(cleaned);
-    return Number.isFinite(n) ? n : undefined;
-  };
+  const num = (text: string): number | undefined => parseDecimalInput(text);
 
   const patch = (p: Partial<PricebookEntry>) => setDraft({ ...draft, ...p });
 

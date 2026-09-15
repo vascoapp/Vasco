@@ -21,6 +21,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
 import { DKMenu } from '../../src/components/shared/DKMenu';
+import { parseDecimalInput } from '../../src/utils/decimalInput';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -30,7 +31,8 @@ export default function ExpensesScreen() {
   const { expenses, remove, add } = useExpenses();
   const { businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218) — VAT below already read the profile.
+  const country = (businessProfile.country ?? user?.country ?? 'NL') as Country;
   const vatRate = getVATRate(businessProfile.country ?? 'NL');
   const vatPct = Math.round(vatRate * 100);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -51,7 +53,9 @@ export default function ExpensesScreen() {
 
   const handleAddExpense = () => {
     if (!newDesc.trim() || !newAmount.trim()) return;
-    const amt = parseFloat(newAmount) || 0;
+    // parseFloat("12,50") is 12: the German/Dutch decimal key is a comma.
+    const amt = parseDecimalInput(newAmount, country) ?? 0;
+    if (amt <= 0) return;
     const catDef = EXPENSE_CATEGORIES.find(c => c.id === newCategory);
     add({
       description: newDesc.trim(),

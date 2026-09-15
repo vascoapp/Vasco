@@ -45,6 +45,7 @@ import {
   validateChangeOrders,
 } from '../../../src/services/progressBillingService';
 import type { ProjectBillingTerm, ProjectChangeOrder } from '../../../src/types/project';
+import { parseDecimalInput } from '../../../src/utils/decimalInput';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -125,7 +126,7 @@ export default function ProjectBillingScreen() {
   const changeOrders = [...(project.changeOrders ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
 
   const saveTerm = () => {
-    const pct = Number(termPercent.replace(',', '.'));
+    const pct = (parseDecimalInput(termPercent) ?? NaN);
     if (!termTitle.trim() || !Number.isFinite(pct) || pct <= 0) return;
     const next: ProjectBillingTerm = {
       id: `bt-${Date.now()}`,
@@ -165,7 +166,7 @@ export default function ProjectBillingScreen() {
   const hasInvoicedTerms = terms.some(tm => tm.status === 'invoiced' || tm.status === 'paid');
 
   const saveChangeOrder = () => {
-    const amt = Number(coAmount.replace(',', '.'));
+    const amt = (parseDecimalInput(coAmount) ?? NaN);
     if (!coTitle.trim() || !Number.isFinite(amt) || amt === 0) return;
     const next: ProjectChangeOrder = {
       id: `co-${Date.now()}`,
@@ -234,7 +235,7 @@ export default function ProjectBillingScreen() {
 
   const saveEditedTerm = () => {
     if (!editingTerm) return;
-    const pct = Number(termPercent.replace(',', '.'));
+    const pct = (parseDecimalInput(termPercent) ?? NaN);
     if (!termTitle.trim() || !Number.isFinite(pct) || pct <= 0) return;
     persistTerms(
       terms.map((x) => (x.id === editingTerm.id ? { ...x, title: termTitle.trim(), percent: pct } : x)),

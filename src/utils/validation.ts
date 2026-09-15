@@ -5,6 +5,8 @@
 // All functions are pure and side-effect free.
 // =============================================================================
 
+import { parseDecimalInput } from './decimalInput';
+
 export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
@@ -22,12 +24,9 @@ export function isValidAmount(amount: string): boolean {
 }
 
 export function parseAmount(amount: string): number {
-  // Handle EU format (1.234,56) and US format (1,234.56)
-  const hasCommaDecimal = /,\d{1,2}$/.test(amount);
-  if (hasCommaDecimal) {
-    return parseFloat(amount.replace(/\./g, '').replace(',', '.'));
-  }
-  return parseFloat(amount.replace(/,/g, ''));
+  // One rule for typed numbers — see utils/decimalInput. This copy read
+  // "0,125" as 125.
+  return parseDecimalInput(amount) ?? NaN;
 }
 
 export function sanitizeInput(input: string): string {

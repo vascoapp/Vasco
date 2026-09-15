@@ -930,7 +930,9 @@
     "einvoiceMissingYourBusiness": "Votre entreprise",
     "einvoiceFixCustomer": "Ouvrir la fiche client",
     "openInvoice": "Ouvrir la facture de {{customer}}",
-    "showActions": "Actions pour {{customer}}"
+    "showActions": "Actions pour {{customer}}",
+    "linesNotSavedTitle": "Lignes non enregistrées",
+    "linesNotSavedBody": "Les lignes de la facture n’ont pas pu être enregistrées. Vérifiez la connexion et réessayez — rien n’a été modifié."
   },
   "expenses": {
     "title": "Dépenses",
@@ -6797,10 +6799,10 @@
         "impact": "Le carrelage haut de gamme peut devoir être commandé en Italie ou en Espagne",
         "name": "Budget carrelage",
         "options": {
-          "120": "120 €/m² (luxe)",
           "30": "30 €/m² (basique)",
           "50": "50 €/m² (milieu de gamme)",
-          "80": "80 €/m² (premium)"
+          "80": "80 €/m² (premium)",
+          "120": "120 €/m² (luxe)"
         }
       },
       "item_reno_ufh": {

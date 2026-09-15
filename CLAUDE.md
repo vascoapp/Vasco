@@ -311,6 +311,18 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   R2026-08-22 it passed `customerId: null` and no screen could ever set it, so
   every job was customer-less while `job.customerId` had readers everywhere.
   ⚠️ The job DETAIL screen still cannot change it. #208.
+- **A number the contractor TYPES goes through `parseDecimalInput`**
+  (`src/utils/decimalInput.ts`), and an editable numeric field is a
+  `DecimalInput` (`src/components/shared`), never `value={String(n)}`.
+  `parseFloat("12,50")` is 12 on every EU keypad, and re-parsing per keystroke
+  eats the separator in every locale — no invoice line or quote price could
+  carry cents (#337). Guard: `numericInputsKeepTypedText.test.ts`.
+- **No hook below an early `return`.** The repo has NO ESLint, so the rules of
+  hooks have never been enforced; the invoice screen crashed on any mount
+  before hydrate from May to 2026-09-15 (#338). Guard (body-level only):
+  `noHookAfterEarlyReturn.test.ts`.
+- **Never `Intl.NumberFormat#formatToParts`** — Hermes lacks it; it passes in
+  node and throws on device (`compactCurrency.test.ts`).
 - Always run `npx tsc --noEmit | grep "^app/"` after changes
 - Always update memory .md files after completing work
 

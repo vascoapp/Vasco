@@ -930,7 +930,9 @@
     "einvoiceMissingYourBusiness": "Tu empresa",
     "einvoiceFixCustomer": "Abrir datos del cliente",
     "openInvoice": "Abrir factura de {{customer}}",
-    "showActions": "Acciones para {{customer}}"
+    "showActions": "Acciones para {{customer}}",
+    "linesNotSavedTitle": "Líneas no guardadas",
+    "linesNotSavedBody": "No se han podido guardar las líneas de la factura. Compruebe la conexión y vuelva a intentarlo; no se ha modificado nada."
   },
   "expenses": {
     "title": "Gastos",
@@ -6797,10 +6799,10 @@
         "impact": "Los azulejos de gama alta pueden tener que pedirse a Italia o España",
         "name": "Presupuesto de azulejos",
         "options": {
-          "120": "120 €/m² (lujo)",
           "30": "30 €/m² (básico)",
           "50": "50 €/m² (gama media)",
-          "80": "80 €/m² (premium)"
+          "80": "80 €/m² (premium)",
+          "120": "120 €/m² (lujo)"
         }
       },
       "item_reno_ufh": {

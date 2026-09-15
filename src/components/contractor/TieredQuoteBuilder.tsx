@@ -61,6 +61,8 @@ import { LLM_GENERATION_ENABLED } from '../../config/ai';
 import { useAppState } from '../../state/AppState';
 import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate, getSelectableVatRates, getEnergyRenovationVatRate } from '../../domain/business';
 import { localDateKey } from '../../utils/dateKey';
+import { parseDecimalInput } from '../../utils/decimalInput';
+import { DecimalInput } from '../shared/DecimalInput';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // =============================================================================
@@ -567,7 +569,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // pricebook. Reuses addService so quantity/edit/remove all work the same.
   const addCustomService = () => {
     const name = customName.trim();
-    const price = parseFloat(customPrice.replace(',', '.'));
+    const price = parseDecimalInput(customPrice) ?? 0;
     if (!name || !price || price <= 0) {
       Alert.alert(
         t('quotes.customServiceInvalidTitle', 'Add a name and price'),
@@ -1368,11 +1370,13 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                       {/* Editable unit price — tap to adjust for this quote */}
                       <View style={s.priceEditRow}>
                         <Text style={s.servicePrice}>€</Text>
-                        <TextInput
+                        {/* DecimalInput, not String(price) re-parsed per key:
+                            "85," snapped back to "85", so no price with cents
+                            could be typed here. */}
+                        <DecimalInput
                           style={s.priceInput}
-                          value={String(sv.item.basePrice)}
-                          onChangeText={(txt) => updatePrice(sv.item.id, parseFloat(txt.replace(',', '.')) || 0)}
-                          keyboardType="decimal-pad"
+                          value={sv.item.basePrice}
+                          onChangeValue={(n) => updatePrice(sv.item.id, n)}
                           selectTextOnFocus
                           accessibilityLabel={t('quotes.editPrice', 'Edit price')}
                         />

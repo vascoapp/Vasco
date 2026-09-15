@@ -930,7 +930,9 @@
     "einvoiceMissingYourBusiness": "Ihr Unternehmen",
     "einvoiceFixCustomer": "Kundendaten öffnen",
     "openInvoice": "Rechnung für {{customer}} öffnen",
-    "showActions": "Aktionen für {{customer}}"
+    "showActions": "Aktionen für {{customer}}",
+    "linesNotSavedTitle": "Positionen nicht gespeichert",
+    "linesNotSavedBody": "Die Rechnungspositionen konnten nicht gespeichert werden. Bitte Verbindung prüfen und erneut versuchen – es wurde nichts geändert."
   },
   "expenses": {
     "title": "Ausgaben",
