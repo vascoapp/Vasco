@@ -195,7 +195,7 @@ export default function InkoopScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
-          <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('inkoop.title', 'Purchasing')}</Text>
         <View style={{ width: 40, alignItems: 'flex-end' }}>
@@ -219,7 +219,10 @@ export default function InkoopScreen() {
         {/* ============================================ */}
         {/* 0. QUICK ACTIONS                            */}
         {/* ============================================ */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickActions}>
+        {/* Wraps instead of scrolling sideways: in German the third action was cut
+            at the screen edge and the fourth (suppliers) was entirely off-screen,
+            with the scroll indicator hidden (device walk, 2026-09-14; #304). */}
+        <View style={styles.quickActions}>
           <Pressable style={styles.quickChip} onPress={() => openReceiptScanner()}>
             <Ionicons name="scan" size={16} color={Palette.hermesOrange} />
             <Text style={styles.quickChipText}>{t('inkoop.receiptScanner', 'Receipt scanner')}</Text>
@@ -279,7 +282,7 @@ export default function InkoopScreen() {
             <Ionicons name="search" size={16} color={Palette.hermesOrange} />
             <Text style={styles.quickChipText}>{t('inkoop.searchMaterial', 'Search material')}</Text>
           </Pressable>
-        </ScrollView>
+        </View>
 
         {/* ============================================ */}
         {/* 1. HERO STATS                               */}
@@ -580,6 +583,8 @@ const styles = StyleSheet.create({
 
   // Quick Actions
   quickActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     paddingVertical: 2,
   },

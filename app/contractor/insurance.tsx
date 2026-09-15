@@ -166,7 +166,7 @@ export default function InsuranceScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
-          <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
+          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('insurance.title', 'Verzekeringen')}</Text>
         <Pressable onPress={() => openClaimForm()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
@@ -319,7 +319,7 @@ export default function InsuranceScreen() {
                   the insurer. A "Claim indienen" title contradicted that. */}
               <Text style={styles.modalTitle}>{t('insurance.recordClaim', 'Claim vastleggen')}</Text>
               <Pressable onPress={() => setShowClaimModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
-                <Ionicons name="close" size={24} color="#1A1A1A" />
+                <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
               </Pressable>
             </View>
 
