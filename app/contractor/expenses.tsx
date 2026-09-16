@@ -22,12 +22,17 @@ import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { parseDecimalInput } from '../../src/utils/decimalInput';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export default function ExpensesScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  // Android: a Modal is its own window and never gets the activity's
+  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
+  // keyboard height has to pad it directly (useKeyboardInset, #339).
+  const kbInset = useKeyboardInset();
   const { expenses, remove, add } = useExpenses();
   const { businessProfile } = useAppState();
   const { user } = useAuth();
@@ -112,7 +117,7 @@ export default function ExpensesScreen() {
               all. Same KeyboardAvoidingView pattern customer-crm.tsx already
               uses for its bottom sheet. */}
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { paddingBottom: kbInset ? kbInset + Spacing.md : undefined }]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>{t('expenses.newExpense', 'Nieuwe uitgave')}</Text>
             <TextInput

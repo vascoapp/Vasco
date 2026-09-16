@@ -31,6 +31,7 @@ import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import { todayKey } from '../../src/utils/dateKey';
 import type { Country } from '../../src/i18n/formatting';
 import { contractValue } from '../../src/services/progressBillingService';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -51,6 +52,10 @@ function parseTime(value: string | undefined | null): Date | null {
 
 export default function WerkScreen() {
   const { t } = useTranslation();
+  // Android: a Modal is its own window and never gets the activity's
+  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
+  // keyboard height has to pad it directly (useKeyboardInset, #339).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
@@ -233,7 +238,7 @@ export default function WerkScreen() {
   <Modal visible={showNewJob} transparent animationType="slide" onRequestClose={() => setShowNewJob(false)}>
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
       <Pressable style={styles.modalOverlay} onPress={() => setShowNewJob(false)}>
-        <Pressable style={styles.modalSheet} onPress={() => {}}>
+        <Pressable style={[styles.modalSheet, { paddingBottom: kbInset ? kbInset + 16 : undefined }]} onPress={() => {}}>
           <View style={styles.modalHandle} />
           <DKLabel style={styles.modalTitle}>{t('dk.actions.newJob', 'New job')}</DKLabel>
           <TextInput

@@ -49,6 +49,7 @@ import {
 import { useTimeOfDayHint, dayPart, classifyNow } from '../../services/timeOfDayAcceptanceService';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useQuoteTemplates, localizeTemplate, localizeCategory, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
+import { useKeyboardInset } from '../../hooks/useKeyboardInset';
 import { useTierPresets, defaultTierPresets, MAX_TIER_FEATURES, TIER_KEYS, tierUnitPrice, type TierKey, type TierPresets } from '../../services/quoteTierPresetService';
 import { hapticSuccess } from '../../utils/haptics';
 import { useTranslation } from 'react-i18next';
@@ -190,6 +191,9 @@ interface TieredQuoteBuilderProps {
 
 export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClose }: TieredQuoteBuilderProps) {
   const { t } = useTranslation();
+  // Android: a Modal gets no adjustResize, so these centred cards sit under
+  // the keyboard. Lift them by its height (#339).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   // Was a hardcoded Dutch TRADE_LABELS map, so a German contractor's quote
   // builder was headed "Loodgieterswerk" on an otherwise fully German screen —
@@ -1466,7 +1470,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           onRequestClose={() => setShowTemplateNamer(false)}
         >
           <View style={s.namerScrim}>
-            <View style={s.namerCard}>
+            <View style={[s.namerCard, { marginBottom: kbInset || undefined }]}>
               <Text style={s.namerTitle}>
                 {editingTemplate
                   ? t('quotes.updateTemplate', 'Update template')
@@ -2070,7 +2074,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         onRequestClose={() => setShowTierEditor(false)}
       >
         <View style={s.namerScrim}>
-          <View style={[s.namerCard, { maxWidth: 420, maxHeight: '85%' }]}>
+          <View style={[s.namerCard, { maxWidth: 420, maxHeight: '85%', marginBottom: kbInset || undefined }]}>
             <Text style={s.namerTitle}>{t('quotes.editPackagesTitle', 'Your packages')}</Text>
             <Text style={s.packageHeaderDesc}>
               {t('quotes.editPackagesDesc', 'Names and promises go out on the quote your customer reads.')}

@@ -27,6 +27,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { useAuth } from '../../src/context/AuthContext';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 import {
   getAllTemplates,
   createTemplate,
@@ -60,6 +61,10 @@ const ALL_CATEGORIES: TemplateCategory[] = ['reminder', 'follow-up', 'confirmati
 
 export default function MessageTemplatesScreen() {
   const { t } = useTranslation();
+  // Android: a Modal is its own window and never gets the activity's
+  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
+  // keyboard height has to pad it directly (useKeyboardInset, #339).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   const { user } = useAuth();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
@@ -286,7 +291,7 @@ export default function MessageTemplatesScreen() {
               Save. The template could not be written. Same shape and same fix
               as the Ausgaben sheet. */}
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { paddingBottom: kbInset ? kbInset + GRID.md : undefined }]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>
               {editingTemplate

@@ -23,6 +23,7 @@ import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DKLabel } from '../../src/components/shared/DKLabel';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
 // R113 versioned this to `_v2` to escape a poisoned v1 cache that held
 // auto-seeded fake trackers. But NOTHING EVER WROTE `_v2` — every writer
@@ -86,6 +87,10 @@ const SEED_TRACKERS: TrackerData[] = [];
 
 export default function BedrijfScreen() {
   const { t } = useTranslation();
+  // Android: a Modal is its own window and never gets the activity's
+  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
+  // keyboard height has to pad it directly (useKeyboardInset, #339).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -522,7 +527,7 @@ export default function BedrijfScreen() {
       <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
-            <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
+            <Pressable style={[s.modalSheet, { paddingBottom: kbInset ? kbInset + 16 : undefined }]} onPress={(e) => e.stopPropagation()}>
               <View style={s.modalHandle} />
               <DKLabel style={s.modalTitle}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
               <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />

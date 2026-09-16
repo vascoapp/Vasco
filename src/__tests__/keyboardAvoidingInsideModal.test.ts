@@ -41,24 +41,19 @@ const REPO = path.join(__dirname, '..', '..');
  *
  * ⚠️ Shrink this list. Never grow it.
  */
+// Nine entries left on 2026-09-16 when those sheets were given the
+// device-verified pattern (useKeyboardInset → paddingBottom), which
+// `bottomSheetKeyboardInset.test.ts` now enforces per modal block. What
+// remains here is full-screen/pageSheet modals and out-of-scope surfaces.
 const AWAITING_DEVICE_PASS = [
-  'app/(contractor)/bedrijf.tsx',
-  'app/(contractor)/werk.tsx',
   'app/contractor/crew.tsx',
-  'app/contractor/customer-crm.tsx',
-  'app/contractor/customer/[id].tsx',
-  'app/contractor/expenses.tsx',
-  'app/contractor/insurance.tsx',
   'app/contractor/job-forms.tsx',
   'app/contractor/licenses.tsx',
-  'app/contractor/message-templates.tsx',
   'app/contractor/projects/[id].tsx',
   'src/components/contractor/AddJobMaterialModal.tsx',
   'src/components/contractor/RecommendationFeedback.tsx',
-  'src/components/contractor/TieredQuoteBuilder.tsx',
   'src/components/customer/CustomerDecisionPortal.tsx',
   'src/components/dashboards/CFODashboard.tsx',
-  'src/components/shared/DKSelect.tsx',
 ];
 
 function sourceFiles(): string[] {

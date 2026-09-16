@@ -26,12 +26,17 @@ import { CustomerTagBadge } from '../../src/components/contractor/CustomerTagBad
 import { scoreAllCustomers } from '../../src/services/customerTaggingService';
 import { findDuplicates } from '../../src/services/customerDedupService';
 import { formatMoney } from '../../src/i18n/formatting';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export default function CustomerPhonebookScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  // Android: a Modal is its own window and never gets the activity's
+  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
+  // keyboard height has to pad it directly (useKeyboardInset, #339).
+  const kbInset = useKeyboardInset();
   const { customers, jobs, invoices, addCustomer } = useAppState();
   // R98 — `q` query param seeds the search filter so the AI bot's
   // find_customer intent lands here with the right list already
@@ -316,7 +321,7 @@ export default function CustomerPhonebookScreen() {
       <Modal visible={showAdd} transparent animationType="slide" onRequestClose={() => setShowAdd(false)}>
         <Pressable style={s.overlay} onPress={() => setShowAdd(false)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-            <Pressable style={s.sheet} onPress={() => {}}>
+            <Pressable style={[s.sheet, { paddingBottom: kbInset ? kbInset + GRID.md : undefined }]} onPress={() => {}}>
               <View style={s.handle} />
               <Text style={s.sheetTitle}>{t('contractor.customers.newCustomer', 'New customer')}</Text>
 

@@ -22,11 +22,16 @@ import { generateSmartReplies, type SmartReply } from '../../../src/services/cus
 import { useCustomerInbox, type InboundChannel } from '../../../src/services/customerInboxService';
 import { recordImpression, recordTap, primeCache as primeReplyCache } from '../../../src/services/smartReplyLearningService';
 import { hapticSuccess } from '../../../src/utils/haptics';
+import { useKeyboardInset } from '../../../src/hooks/useKeyboardInset';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export default function CustomerDetailScreen() {
   const { t } = useTranslation();
+  // Android: a Modal is its own window and never gets the activity's
+  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
+  // keyboard height has to pad it directly (useKeyboardInset, #339).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { customers, jobs, quotes, invoices, businessProfile } = useAppState();
@@ -377,7 +382,7 @@ export default function CustomerDetailScreen() {
               ENTIRELY behind the keyboard — the channel chips, the textarea and
               Save all gone. Recording what a customer said was impossible. */}
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <Pressable style={s.modalSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={[s.modalSheet, { paddingBottom: kbInset ? kbInset + GRID.md : undefined }]} onPress={(e) => e.stopPropagation()}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>{t('inbox.captureTitle', 'What did the customer say?')}</Text>
             <View style={s.channelChips}>

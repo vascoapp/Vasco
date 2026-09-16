@@ -20,6 +20,7 @@ import { Toast } from '../../src/components/shared/Toast';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { showPhotoPicker } from '../../src/utils/photoPicker';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -66,6 +67,10 @@ function getInsuranceStatusConfig(status: string, t: (key: string, defaultValue:
 
 export default function InsuranceScreen() {
   const { t } = useTranslation();
+  // Android: a Modal is its own window and never gets the activity's
+  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
+  // keyboard height has to pad it directly (useKeyboardInset, #339).
+  const kbInset = useKeyboardInset();
   const router = useRouter();
   const { policies, loading } = useInsurancePolicies();
   const { user } = useAuth();
@@ -312,7 +317,7 @@ export default function InsuranceScreen() {
       {/* Claim modal */}
       <Modal visible={showClaimModal} animationType="slide" transparent onRequestClose={() => setShowClaimModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { paddingBottom: kbInset ? kbInset + Spacing.md : undefined }]}>
             <View style={styles.modalHeader}>
               {/* "Record", not "file" — the modal writes a local dossier and
                   the disclaimer + button below say Vasco does not send it to

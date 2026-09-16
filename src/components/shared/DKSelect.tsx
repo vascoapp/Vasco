@@ -30,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { DK } from '../../theme/draftkings';
 import { TYPE, GRID, RADIUS } from '../../theme/tabStyles';
 import { hapticSelection } from '../../utils/haptics';
+import { useKeyboardInset } from '../../hooks/useKeyboardInset';
 
 /** Show the search box only once scanning the list by eye stops being viable. */
 const SEARCH_THRESHOLD = 8;
@@ -72,7 +73,11 @@ export function DKSelect({
 
   // Clamped, not trusted: useSafeAreaInsets reads the provider OUTSIDE the
   // Modal, and no device has a bottom inset over 34pt.
-  const bottomPad = Math.min(Math.max(insets.bottom, GRID.md), 34);
+  // Android: a Modal never gets the activity's adjustResize, so the search
+  // field's own list is what the keyboard covers. The keyboard height pads the
+  // sheet directly (#339); iOS returns 0 and keeps its safe-area pad.
+  const kbInset = useKeyboardInset();
+  const bottomPad = Math.min(Math.max(insets.bottom, GRID.md), 34) + kbInset;
 
   const selected = options.find((o) => o.value === value);
   const showSearch = options.length >= SEARCH_THRESHOLD;
