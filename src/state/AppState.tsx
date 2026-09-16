@@ -2986,7 +2986,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 // Kleinunternehmer contractors must export at 0% VAT —
                 // hardcoded 21% would corrupt their bookkeeping the moment
                 // they exported their first invoice.
-                vatRate: getEffectiveVatRate(businessProfile),
+                // #339: each line keeps the rate it was AGREED at; the profile
+                // rate is only the fallback. Stamping it over every line
+                // exported an NL 9% labour line into the books at 21%.
+                vatRate: (li as { vatRate?: number }).vatRate ?? getEffectiveVatRate(businessProfile),
               })),
             }
           : undefined;

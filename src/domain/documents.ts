@@ -134,3 +134,19 @@ export function documentNumber(
   if (ref) return ref;
   return (doc.id ?? '').trim();
 }
+
+/**
+ * What the customer actually owes on this invoice right now.
+ *
+ * A progress invoice is issued for the FULL term amount (VAT is charged on all
+ * of it) while `retentionAmount` is withheld from the PAYMENT until oplevering
+ * — so the retention is not late, and statutory interest must not be charged
+ * on it. Every late-fee caller passed `invoice.amount`, over-claiming interest
+ * in the reminder the customer reads (#339).
+ */
+export function amountPayableNow(
+  invoice: { amount: number; retentionAmount?: number | null },
+): number {
+  const held = invoice.retentionAmount ?? 0;
+  return Math.round(Math.max(0, invoice.amount - held) * 100) / 100;
+}

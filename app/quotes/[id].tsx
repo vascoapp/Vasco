@@ -27,8 +27,7 @@ import { signQuoteLink } from '../../src/services/publicQuotePortalService';
 import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/intelligenceCaptureService';
 import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
-import { getVATRate } from '../../src/constants/taxRates';
-import { documentVatBreakdown } from '../../src/domain/business';
+import { documentVatBreakdown, getEffectiveVatRate } from '../../src/domain/business';
 import { formatCurrency as fmtCurrency, formatDate as fmtDate } from '../../src/i18n/formatting';
 import { findDocumentCustomer } from '../../src/domain/customers';
 
@@ -115,9 +114,11 @@ export default function QuoteDetailScreen() {
   // the invoice made from it uses the reduced one. Rounds to CENTS: `sharePdf`
   // already did, so the screen and the PDF the customer receives disagreed —
   // 19% of 106,00 showed as 20,00 / 126,00 here and 20,14 / 126,14 in the PDF.
-  const vatBreakdown = documentVatBreakdown(
-    subtotal, displayLineItems, Math.round(getVATRate(country) * 100),
-  );
+  // The fallback is the contractor's EFFECTIVE rate, not the country standard:
+  // `getVATRate` charges a Kleinunternehmer / KOR contractor VAT they may not
+  // charge, on the screen AND on the acceptance link the customer confirms.
+  const fallbackVatPct = getEffectiveVatRate(businessProfile);
+  const vatBreakdown = documentVatBreakdown(subtotal, displayLineItems, fallbackVatPct);
   const vatAmount = vatBreakdown.vat;
   const total = vatBreakdown.gross;
   // null on a mixed-rate quote: the label omits the percentage rather than
@@ -145,7 +146,7 @@ export default function QuoteDetailScreen() {
     // Same rule as the screen above. This used to stamp the country's standard
     // rate onto EVERY line of the PDF — overwriting each line's own agreed rate
     // in the document the customer actually receives.
-    const bd = documentVatBreakdown(sub, items, Math.round(getVATRate(country) * 100));
+    const bd = documentVatBreakdown(sub, items, fallbackVatPct);
     const vpct = bd.ratePct;
     const vamt = bd.vat;
     const pdfData: QuotePdfData = {
@@ -157,7 +158,7 @@ export default function QuoteDetailScreen() {
       // Each line keeps ITS rate; only a line with none falls back.
       lineItems: items.map((i) => ({
         description: i.description, quantity: i.quantity, unitPrice: i.unitPrice,
-        vatRate: i.vatRate ?? vpct ?? Math.round(getVATRate(country) * 100),
+        vatRate: i.vatRate ?? vpct ?? fallbackVatPct,
       })),
       subtotal: sub,
       vatAmount: vamt,

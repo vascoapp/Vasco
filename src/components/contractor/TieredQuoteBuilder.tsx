@@ -49,7 +49,7 @@ import {
 import { useTimeOfDayHint, dayPart, classifyNow } from '../../services/timeOfDayAcceptanceService';
 import { getCurrentUserId } from '../../lib/currentUser';
 import { useQuoteTemplates, localizeTemplate, localizeCategory, type QuoteTemplate, type QuoteTemplateItem, type TemplateCategory, TEMPLATE_CATEGORIES } from '../../services/quoteTemplateService';
-import { useTierPresets, defaultTierPresets, MAX_TIER_FEATURES, TIER_KEYS, type TierKey, type TierPresets } from '../../services/quoteTierPresetService';
+import { useTierPresets, defaultTierPresets, MAX_TIER_FEATURES, TIER_KEYS, tierUnitPrice, type TierKey, type TierPresets } from '../../services/quoteTierPresetService';
 import { hapticSuccess } from '../../utils/haptics';
 import { useTranslation } from 'react-i18next';
 // R62: SOW (scope-of-work) generator. Three-paragraph narrative
@@ -498,12 +498,12 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
 
   const calculateTiers = (): QuoteTier[] => {
     return (['good', 'better', 'best'] as const).map(tierKey => {
-      const multiplier = tierKey === 'good' ? 1 : tierKey === 'better' ? 1.25 : 1.55;
+
       let subtotal = 0;
       const features: string[] = [];
       const lineItems = selectedServices.map(service => {
         const variant = service.item.variants?.find(v => v.tier === tierKey);
-        const price = variant ? variant.price : Math.round(service.item.basePrice * multiplier);
+        const price = tierUnitPrice(service.item.basePrice, tierKey, variant?.price);
         const total = price * service.quantity;
         subtotal += total;
         if (variant) variant.features.forEach(f => { if (!features.includes(f)) features.push(f); });

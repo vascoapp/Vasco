@@ -32,6 +32,27 @@ export const TIER_KEYS: TierKey[] = ['good', 'better', 'best'];
 /** How many bullets a package can carry. The tier card shows them in full. */
 export const MAX_TIER_FEATURES = 4;
 
+/**
+ * What each package multiplies the contractor's own price by.
+ * ⚠️ The MARKUP itself is a commercial decision (open with the user): the
+ * default package sends the contractor's price +25%.
+ */
+export const TIER_MULTIPLIER: Record<TierKey, number> = { good: 1, better: 1.25, best: 1.55 };
+
+/**
+ * The unit price a package quotes for one pricebook service.
+ *
+ * A pricebook VARIANT for that tier wins; otherwise the base price times the
+ * tier multiplier, **rounded to cents**. It used to round to whole euros
+ * (`Math.round(basePrice * multiplier)`), which threw away the cents the
+ * contractor typed even on Basis, where the multiplier is 1: €185,50 was
+ * quoted, saved, exported and invoiced as €186 (#339).
+ */
+export function tierUnitPrice(basePrice: number, tier: TierKey, variantPrice?: number): number {
+  if (typeof variantPrice === 'number') return variantPrice;
+  return Math.round(basePrice * TIER_MULTIPLIER[tier] * 100) / 100;
+}
+
 const STORAGE_KEY = '@vasco_quote_tier_presets';
 
 /**

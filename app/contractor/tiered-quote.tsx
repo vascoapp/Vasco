@@ -51,6 +51,13 @@ export default function TieredQuoteScreen() {
             description: item.description || item.name || 'Item',
             quantity: item.quantity || 1,
             unitPrice: item.unitPrice || item.price || 0,
+            // The rate the tier was PRICED at — the builder resolves it
+            // (exempt / reduced opt-in / country standard) and showed the
+            // customer a total computed with it. This map used to drop it, so
+            // `addQuote` re-rated every line at the profile's standard rate: a
+            // Dutch 9% quote was saved, exported and invoiced at 21% (#253's
+            // shape, one screen further along).
+            vatRate: item.vatRate ?? tier.vatRate,
           }));
           if (lineItems.length === 0) {
             Alert.alert(t('tieredQuote.error'), t('tieredQuote.noItems'));

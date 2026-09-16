@@ -3,6 +3,7 @@ import {
   defaultTierPresets,
   mergeTierPresets,
   MAX_TIER_FEATURES,
+  tierUnitPrice,
 } from '../quoteTierPresetService';
 import de from '../../i18n/locales/de.json';
 import nl from '../../i18n/locales/nl.json';
@@ -88,5 +89,54 @@ describe('quote tier presets', () => {
     expect(mergeTierPresets(null, defaults)).toEqual(defaults);
     expect(mergeTierPresets({ good: 'nonsense' }, defaults).good).toEqual(defaults.good);
     expect(mergeTierPresets({ best: { name: 5, features: [1, 2] } }, defaults).best).toEqual(defaults.best);
+  });
+});
+
+describe('tierUnitPrice — the cents the contractor typed', () => {
+  it('keeps cents on the basic package, where the multiplier is 1', () => {
+    // Was Math.round(185.5 * 1) = 186, on the quote, the PDF and the invoice.
+    expect(tierUnitPrice(185.5, 'good')).toBe(185.5);
+  });
+
+  it('rounds a marked-up price to cents, not to whole euros', () => {
+    expect(tierUnitPrice(185.5, 'better')).toBe(231.88); // was 232
+    expect(tierUnitPrice(185.5, 'best')).toBe(287.53);   // was 288
+    expect(tierUnitPrice(100, 'better')).toBe(125);
+  });
+
+  it('lets a pricebook variant price win untouched', () => {
+    expect(tierUnitPrice(185.5, 'best', 249.99)).toBe(249.99);
+    expect(tierUnitPrice(185.5, 'good', 0)).toBe(0);
+  });
+});
+
+describe('the package rate reaches the saved quote', () => {
+  // The builder resolves the VAT rate per tier (exempt / reduced opt-in /
+  // country standard) and shows the customer a total computed with it. The
+  // map that turns tier lines into quote lines dropped `vatRate`, so addQuote
+  // re-rated every line at the profile's standard rate — a Dutch 9% quote was
+  // saved, exported and invoiced at 21% (#253's shape, one screen on).
+  it('the builder prices tier lines through tierUnitPrice, not its own rounding', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const { stripComments } = require('../../utils/stripComments');
+    const src: string = stripComments(
+      fs.readFileSync(path.join(__dirname, '../../components/contractor/TieredQuoteBuilder.tsx'), 'utf8'),
+    );
+    expect(src).toMatch(/tierUnitPrice\(/);
+    // No hand-rolled multiplier/rounding on a pricebook price.
+    expect(src).not.toMatch(/Math\.round\([^)\n]*basePrice/);
+    expect(src).not.toMatch(/basePrice\s*\*\s*(1\.25|1\.55)/);
+  });
+
+  it('tiered-quote passes each line a vatRate', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const { stripComments } = require('../../utils/stripComments');
+    const src: string = stripComments(
+      fs.readFileSync(path.join(__dirname, '../../../app/contractor/tiered-quote.tsx'), 'utf8'),
+    );
+    const map = src.slice(src.indexOf('const lineItems = ('), src.indexOf('}));', src.indexOf('const lineItems = (')));
+    expect(map).toMatch(/vatRate:/);
   });
 });

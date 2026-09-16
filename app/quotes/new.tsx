@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '../../src/components/PrimaryButton';
+import { parseDecimalInput } from '../../src/utils/decimalInput';
+import { DecimalInput } from '../../src/components/shared/DecimalInput';
 import { Screen } from '../../src/components/Screen';
 import { InlineInsight, VascoInsightCard } from '../../src/components/shared/VascoInsightCard';
 import { useAppState } from '../../src/state/AppState';
@@ -57,15 +59,17 @@ export default function NewQuoteScreen() {
 
   const total = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
 
-  const updateItem = useCallback((index: number, field: keyof QuoteLineItem, value: string) => {
+  const updateItem = useCallback((index: number, field: keyof QuoteLineItem, value: string | number) => {
     setItems((prev) => {
       const updated = [...prev];
       if (field === 'description') {
-        updated[index] = { ...updated[index], description: value };
+        updated[index] = { ...updated[index], description: String(value) };
       } else if (field === 'quantity') {
-        updated[index] = { ...updated[index], quantity: Math.max(1, parseInt(value, 10) || 1) };
+        // Numbers arrive parsed from DecimalInput; a string still parses the
+        // locale way (parseInt dropped 0,5 h to 1; parseFloat read "185,50" as 185).
+        updated[index] = { ...updated[index], quantity: typeof value === 'number' ? value : (parseDecimalInput(value) ?? 0) };
       } else if (field === 'unitPrice') {
-        updated[index] = { ...updated[index], unitPrice: parseFloat(value) || 0 };
+        updated[index] = { ...updated[index], unitPrice: typeof value === 'number' ? value : (parseDecimalInput(value) ?? 0) };
       }
       return updated;
     });
@@ -276,23 +280,25 @@ export default function NewQuoteScreen() {
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>
                     <Text style={[Typography.muted, { fontSize: 12 }]}>{t('quoteNew.qty', 'Qty')}</Text>
-                    <TextInput
+                    {/* Same shape as the invoice line editor: a controlled
+                        `String(number)` re-parsed per keystroke ate the
+                        separator, and parseInt rounded 0,5 h up to 1. */}
+                    <DecimalInput
                       style={styles.input}
-                      value={String(item.quantity)}
-                      onChangeText={(v) => updateItem(index, 'quantity', v)}
-                      keyboardType="number-pad"
-                      placeholderTextColor={SemanticColors.textSecondary}
+                      value={item.quantity}
+                      onChangeValue={(n) => updateItem(index, 'quantity', n)}
+                      maxDecimals={3}
+                      accessibilityLabel={t('quoteNew.qty', 'Qty')}
                     />
                   </View>
                   <View style={{ flex: 1, marginLeft: Spacing.sm }}>
                     <Text style={[Typography.muted, { fontSize: 12 }]}>{t('quoteNew.unitPrice', 'Unit price')}</Text>
-                    <TextInput
+                    <DecimalInput
                       style={styles.input}
-                      value={item.unitPrice ? String(item.unitPrice) : ''}
-                      onChangeText={(v) => updateItem(index, 'unitPrice', v)}
-                      keyboardType="decimal-pad"
-                      placeholder="0.00"
-                      placeholderTextColor={SemanticColors.textSecondary}
+                      value={item.unitPrice}
+                      onChangeValue={(n) => updateItem(index, 'unitPrice', n)}
+                      money
+                      accessibilityLabel={t('quoteNew.unitPrice', 'Unit price')}
                     />
                   </View>
                 </View>

@@ -56,6 +56,13 @@ export interface EInvoiceData {
   totalVat: number;
   totalGross: number;
 
+  /**
+   * Why no VAT is charged when the rate is 0 (BT-120). A Kleinunternehmer
+   * (§19 UStG) / KOR invoice is EXEMPT — category E — not "standard rate at
+   * 0%", which is rejected on BR-S-05.
+   */
+  taxExemptionReason?: string;
+
   // Payment
   iban?: string;
   bic?: string;
@@ -125,12 +132,33 @@ export const UNIT_CODES: Record<string, string> = {
  * the above (its BR-06 matched the trading name). See
  * src/integrations/__tests__/xrechnungValidity.test.ts.
  */
+/** Cents. Line and header amounts must agree to the cent (BR-CO-10). */
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Tax category for a rate. `S` is "standard rated" and a receiver rejects it at
+ * 0% (BR-S-05 requires a rate > 0); an exempt invoice — Kleinunternehmer §19
+ * UStG, KOR — is `E`, and BR-E-10 requires a reason with it.
+ */
+export function taxCategoryFor(vatRate: number): 'S' | 'E' {
+  return vatRate > 0 ? 'S' : 'E';
+}
+
+export const DEFAULT_EXEMPTION_REASON = 'Steuerbefreiter Kleinunternehmer gemäß § 19 UStG';
+
 export function generateXRechnungXML(data: EInvoiceData): string {
   const cur = data.currency;
   const sellerCountry = data.sellerCountry ?? 'DE';
   const buyerCountry = data.buyerCountry ?? sellerCountry;
 
-  const lines = data.lineItems.map((li, idx) => `
+  // Round each line FIRST, then derive the header totals from the rounded
+  // lines: `li.lineTotal.toFixed(2)` per line against a header summed from the
+  // UNROUNDED values differs by a cent on ordinary invoices (2 × 0,5 × 10,01),
+  // and that is a hard rejection (BR-CO-10, #339).
+  const roundedLines = data.lineItems.map((li) => ({ ...li, lineTotal: round2(li.lineTotal) }));
+  const exemptionReason = data.taxExemptionReason ?? DEFAULT_EXEMPTION_REASON;
+
+  const lines = roundedLines.map((li, idx) => `
     <cac:InvoiceLine>
       <cbc:ID>${idx + 1}</cbc:ID>
       <cbc:InvoicedQuantity unitCode="${UNIT_CODES[li.unitCode.toLowerCase()] ?? 'C62'}">${li.quantity}</cbc:InvoicedQuantity>
@@ -138,7 +166,7 @@ export function generateXRechnungXML(data: EInvoiceData): string {
       <cac:Item>
         <cbc:Name>${escapeXml(li.description)}</cbc:Name>
         <cac:ClassifiedTaxCategory>
-          <cbc:ID>S</cbc:ID>
+          <cbc:ID>${taxCategoryFor(li.vatRate)}</cbc:ID>
           <cbc:Percent>${li.vatRate}</cbc:Percent>
           <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
         </cac:ClassifiedTaxCategory>
@@ -153,19 +181,26 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   // stated total cannot be split back out per rate, and an invoice mixing 19%
   // and 7% (materials vs. some reduced-rate work) is ordinary.
   const byRate = new Map<number, { net: number; vat: number }>();
-  for (const li of data.lineItems) {
+  for (const li of roundedLines) {
     const acc = byRate.get(li.vatRate) ?? { net: 0, vat: 0 };
-    acc.net += li.lineTotal;
-    acc.vat += li.lineTotal * (li.vatRate / 100);
+    acc.net = round2(acc.net + li.lineTotal);
+    acc.vat = round2(acc.vat + li.lineTotal * (li.vatRate / 100));
     byRate.set(li.vatRate, acc);
   }
+  // The totals the document STATES, from the same rounded lines the receiver
+  // re-adds. `data.total*` is what the screen computed; if the two ever
+  // disagree the invoice is rejected, so the lines win.
+  const totalNet = round2([...byRate.values()].reduce((s, a) => s + a.net, 0));
+  const totalVat = round2([...byRate.values()].reduce((s, a) => s + a.vat, 0));
+  const totalGross = round2(totalNet + totalVat);
   const subtotals = [...byRate.entries()].map(([rate, a]) => `
     <cac:TaxSubtotal>
       <cbc:TaxableAmount currencyID="${cur}">${a.net.toFixed(2)}</cbc:TaxableAmount>
       <cbc:TaxAmount currencyID="${cur}">${a.vat.toFixed(2)}</cbc:TaxAmount>
       <cac:TaxCategory>
-        <cbc:ID>S</cbc:ID>
-        <cbc:Percent>${rate}</cbc:Percent>
+        <cbc:ID>${taxCategoryFor(rate)}</cbc:ID>
+        <cbc:Percent>${rate}</cbc:Percent>${rate > 0 ? '' : `
+        <cbc:TaxExemptionReason>${escapeXml(exemptionReason)}</cbc:TaxExemptionReason>`}
         <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
       </cac:TaxCategory>
     </cac:TaxSubtotal>`).join('');
@@ -215,13 +250,13 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   </cac:AccountingCustomerParty>
   ${data.iban ? `<cac:PaymentMeans><cbc:PaymentMeansCode>58</cbc:PaymentMeansCode><cac:PayeeFinancialAccount><cbc:ID>${escapeXml(data.iban)}</cbc:ID></cac:PayeeFinancialAccount></cac:PaymentMeans>` : ''}
   <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="${cur}">${data.totalVat.toFixed(2)}</cbc:TaxAmount>${subtotals}
+    <cbc:TaxAmount currencyID="${cur}">${totalVat.toFixed(2)}</cbc:TaxAmount>${subtotals}
   </cac:TaxTotal>
   <cac:LegalMonetaryTotal>
-    <cbc:LineExtensionAmount currencyID="${cur}">${data.totalNet.toFixed(2)}</cbc:LineExtensionAmount>
-    <cbc:TaxExclusiveAmount currencyID="${cur}">${data.totalNet.toFixed(2)}</cbc:TaxExclusiveAmount>
-    <cbc:TaxInclusiveAmount currencyID="${cur}">${data.totalGross.toFixed(2)}</cbc:TaxInclusiveAmount>
-    <cbc:PayableAmount currencyID="${cur}">${data.totalGross.toFixed(2)}</cbc:PayableAmount>
+    <cbc:LineExtensionAmount currencyID="${cur}">${totalNet.toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="${cur}">${totalNet.toFixed(2)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="${cur}">${totalGross.toFixed(2)}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="${cur}">${totalGross.toFixed(2)}</cbc:PayableAmount>
   </cac:LegalMonetaryTotal>
   ${lines}
 </Invoice>`;

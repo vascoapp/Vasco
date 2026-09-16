@@ -141,3 +141,69 @@ describe('generated XRechnung against our own published validator', () => {
     expect(nl).toContain('<cbc:IdentificationCode>DE</cbc:IdentificationCode>');
   });
 });
+
+describe('the totals the receiver re-adds (BR-CO-10/13/15)', () => {
+  // Rounding each line for display while summing the header from the
+  // UNROUNDED values differs by a cent on an ordinary invoice, and a cent is a
+  // hard rejection. Found by the 2026-09-16 money sweep (#339).
+  const CENTS: EInvoiceData = {
+    ...B2B,
+    lineItems: [
+      { description: 'Montage', quantity: 0.5, unitCode: 'HUR', unitPrice: 10.01, vatRate: 19, lineTotal: 5.005 },
+      { description: 'Montage 2', quantity: 0.5, unitCode: 'HUR', unitPrice: 10.01, vatRate: 19, lineTotal: 5.005 },
+    ],
+    // What the screen computed — deliberately the unrounded sum.
+    totalNet: 10.01,
+    totalVat: 1.9019,
+    totalGross: 11.91,
+  } as EInvoiceData;
+
+  const num = (xml: string, tag: string) => {
+    const doc = parse(xml);
+    const el = doc.getElementsByTagName(tag)[0];
+    return Number(el?.textContent);
+  };
+
+  it('sums the ROUNDED lines into LineExtensionAmount', () => {
+    const xml = generateXRechnungXML(CENTS);
+    const lineTotals = [...xml.matchAll(/<cbc:LineExtensionAmount currencyID="EUR">([\d.]+)<\/cbc:LineExtensionAmount>/g)]
+      .map((m) => Number(m[1]));
+    // [header, line, line] — the header equals the sum of the lines.
+    const [header, ...lines] = lineTotals;
+    expect(lines).toEqual([5.01, 5.01]);
+    expect(header).toBe(10.02);
+    expect(num(xml, 'cbc:TaxExclusiveAmount')).toBe(10.02);
+    expect(num(xml, 'cbc:TaxInclusiveAmount')).toBe(round2(10.02 + num(xml, 'cbc:TaxAmount')));
+  });
+
+  it('raises no validator errors for that invoice', () => {
+    expect(report(validateXmlString(generateXRechnungXML(CENTS), parse))).toEqual([]);
+  });
+});
+
+describe('a Kleinunternehmer invoice is EXEMPT, not 0% standard-rated', () => {
+  const KLEIN: EInvoiceData = {
+    ...B2B,
+    lineItems: [{ description: 'Wartung', quantity: 1, unitCode: 'stuk', unitPrice: 185.5, vatRate: 0, lineTotal: 185.5 }],
+    totalNet: 185.5, totalVat: 0, totalGross: 185.5,
+  } as EInvoiceData;
+
+  it('uses category E with a reason (BR-S-05 rejects S at 0%, BR-E-10 wants the reason)', () => {
+    const xml = generateXRechnungXML(KLEIN);
+    expect(xml).not.toMatch(/<cbc:ID>S<\/cbc:ID>/);
+    expect(xml).toMatch(/<cbc:ID>E<\/cbc:ID>/);
+    expect(xml).toMatch(/<cbc:TaxExemptionReason>[^<]*§ 19 UStG<\/cbc:TaxExemptionReason>/);
+  });
+
+  it('still charges nothing and raises no validator errors', () => {
+    const xml = generateXRechnungXML(KLEIN);
+    expect(xml).toMatch(/<cbc:TaxAmount currencyID="EUR">0\.00<\/cbc:TaxAmount>/);
+    expect(report(validateXmlString(xml, parse))).toEqual([]);
+  });
+
+  it('keeps category S on a rated invoice', () => {
+    expect(generateXRechnungXML(B2B)).toMatch(/<cbc:ID>S<\/cbc:ID>/);
+  });
+});
+
+const round2 = (n: number) => Math.round(n * 100) / 100;

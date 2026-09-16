@@ -31,6 +31,7 @@ import {
 import { hapticSuccess, hapticWarning } from '../../src/utils/haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { parseDecimalInput } from '../../src/utils/decimalInput';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useAppState } from '../../src/state/AppState';
@@ -507,7 +508,8 @@ function LeadModal({ visible, original, onClose, onSave, onDelete }: LeadModalPr
       customerPhone: customerPhone || undefined,
       customerEmail: customerEmail || undefined,
       jobDescription: jobDescription || undefined,
-      estimatedValue: estimatedValue ? Number(estimatedValue) : undefined,
+      // `Number("385,50")` is NaN — the lead's value silently vanished.
+      estimatedValue: parseDecimalInput(estimatedValue),
       notes: notes || undefined,
     }, original);
   };

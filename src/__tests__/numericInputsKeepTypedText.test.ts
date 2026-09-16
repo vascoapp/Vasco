@@ -20,7 +20,7 @@ import path from 'path';
 import { stripComments } from '../utils/stripComments';
 
 const ROOT = path.resolve(__dirname, '../..');
-const DIRS = ['app/contractor', 'app/(contractor)', 'app/(modals)', 'app/invoices', 'src/components/contractor', 'src/components/shared'];
+const DIRS = ['app/contractor', 'app/(contractor)', 'app/(modals)', 'app/invoices', 'app/quotes', 'src/components/contractor', 'src/components/shared'];
 
 // Not typed input: each parses text the app itself produced.
 const PARSE_ALLOWED: Record<string, string> = {
@@ -48,15 +48,19 @@ describe('typed numbers keep what was typed', () => {
     expect(files.some((f) => f.rel.endsWith('TieredQuoteBuilder.tsx'))).toBe(true);
   });
 
-  it('no <TextInput> binds value={String(...)}', () => {
+  it('no text/decimal input binds value={String(...)}', () => {
+    // DecimalInput is checked too: `value={String(qty)}` on it is the same
+    // snap-back defect wearing the fixed component's name.
     const hits: string[] = [];
     for (const { rel, src } of files) {
-      let i = src.indexOf('<TextInput');
-      while (i >= 0) {
-        const end = src.indexOf('/>', i);
-        const tag = src.slice(i, end < 0 ? undefined : end);
-        if (/\bvalue=\{\s*String\(/.test(tag)) hits.push(`${rel}:${src.slice(0, i).split('\n').length}`);
-        i = src.indexOf('<TextInput', i + 1);
+      for (const tagName of ['<TextInput', '<DecimalInput']) {
+        let i = src.indexOf(tagName);
+        while (i >= 0) {
+          const end = src.indexOf('/>', i);
+          const tag = src.slice(i, end < 0 ? undefined : end);
+          if (/\bvalue=\{\s*String\(/.test(tag)) hits.push(`${rel}:${src.slice(0, i).split('\n').length}`);
+          i = src.indexOf(tagName, i + 1);
+        }
       }
     }
     expect(hits).toEqual([]);
@@ -86,7 +90,19 @@ describe('typed numbers keep what was typed', () => {
     for (const { rel, src } of files) {
       if (PARSE_ALLOWED[rel]) continue;
       src.split('\n').forEach((line, idx) => {
-        if (/\bparseFloat\(/.test(line) || /\breplace\(\s*(['"]),\1\s*,\s*(['"])\.\2\s*\)/.test(line)) {
+        // `parseFloat` / a hand-rolled comma replace, and the two shapes that
+        // slipped past the first version of this guard: `parseInt` on a typed
+        // quantity (0,5 h became 1) and `Number(newBudget)` ("85.000" → 85).
+        const typedName = String.raw`(?:new[A-Z]\w*|\w*(?:Text|Input|Amount|Price|Budget|Qty|Quantity|Rate|Percent|Hours|Value))`;
+        if (
+          /\bparseFloat\(/.test(line)
+          || /\breplace\(\s*(['"]),\1\s*,\s*(['"])\.\2\s*\)/.test(line)
+          || new RegExp(String.raw`\bNumber\(\s*${typedName}\s*[),]`).test(line)
+          || new RegExp(String.raw`\bparseInt\(\s*(?:${typedName}|value|v|txt|text)\b`).test(line)
+          // ...but a whole-DAY field is an integer by nature (interval, reminder
+          // lead time), so `parseInt(customDays)` is correct, not a lost decimal.
+          && !/Days\b/.test(line)
+        ) {
           hits.push(`${rel}:${idx + 1}: ${line.trim()}`);
         }
       });

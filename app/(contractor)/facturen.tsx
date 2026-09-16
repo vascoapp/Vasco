@@ -42,7 +42,7 @@ import { SUPPORTED_METHODS } from '../../src/integrations/stripe';
 import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
-import { documentNumber } from '../../src/domain/documents';
+import { documentNumber, amountPayableNow } from '../../src/domain/documents';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 import { getEffectiveVatRate } from '../../src/domain/business';
@@ -330,7 +330,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   const feeCountry = lateFeeCountry(country);
                   if (!feeCountry) return null;
                   const fee = computeLateFee({
-                    invoiceAmount: invoice.amount,
+                    invoiceAmount: amountPayableNow(invoice),
                     daysOverdue: lateDays,
                     country: feeCountry,
                     customerType: lateFeeCustomerType(findDocumentCustomer(customers, invoice), feeCountry),

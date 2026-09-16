@@ -21,6 +21,7 @@ import { projectProgress } from '../../src/utils/projectProgress';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { Modal } from 'react-native';
+import { parseDecimalInput } from '../../src/utils/decimalInput';
 import type { Project, ProjectStatus } from '../../src/types/project';
 import {
   PROJECT_TEMPLATES,
@@ -88,7 +89,9 @@ export default function ProjectsScreen() {
       // (which sets it) exercised the sequencer; every real project created
       // in the app had a dead one. Local, not UTC — matches SEED_PROJECTS.
       startDate: localDateKey(new Date()),
-      totalBudget: Number(newBudget) || 0,
+      // `Number("85.000")` is 85, and the budget is what percentage billing
+      // terms are computed FROM — a 30% instalment then billed € 25,50 (#339).
+      totalBudget: parseDecimalInput(newBudget) ?? 0,
       totalQuoted: 0,
       milestones: template
         ? buildMilestonesFromTemplate({

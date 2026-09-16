@@ -41,6 +41,7 @@ import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { amountPayableNow } from '../../src/domain/documents';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { DecimalInput } from '../../src/components/shared/DecimalInput';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
@@ -447,7 +448,9 @@ export default function InvoiceDetailScreen() {
         const feeCountry = lateFeeCountry(country);
         const feeBreakdown = feeCountry
           ? computeLateFee({
-              invoiceAmount: invoice.amount,
+              // Not `invoice.amount`: retention withheld from this instalment
+              // is not due yet, so no interest accrues on it.
+              invoiceAmount: amountPayableNow(invoice),
               daysOverdue,
               country: feeCountry,
               customerType: lateFeeCustomerType(invoiceCustomer, feeCountry),
