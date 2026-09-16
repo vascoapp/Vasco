@@ -169,7 +169,15 @@ export default function VandaagDK() {
             </Text>
             <Text style={styles.greeting}>{getGreeting(t)}.</Text>
           </View>
-          <Pressable style={styles.bellBtn} onPress={() => router.push('/contractor/notifications' as any)} hitSlop={8}>
+          {/* An icon-only control needs its own name: the walk reported this
+              bell as one of six unlabelled controls (#339). */}
+          <Pressable
+            style={styles.bellBtn}
+            onPress={() => router.push('/contractor/notifications' as any)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('notifications.title', 'Notifications')}
+          >
             <Ionicons name="notifications-outline" size={20} color={DK.colors.text} />
             {inboxNotifications.length > 0 ? (
               <View style={styles.bellBadge}>

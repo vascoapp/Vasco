@@ -2555,7 +2555,9 @@
       "limitReached": "Has alcanzado el límite de clientes de este plan.",
       "jobs_one": "{{count}} trabajo",
       "jobs_other": "{{count}} trabajos",
-      "addressPlaceholder": "Dirección"
+      "addressPlaceholder": "Dirección",
+      "postcodePlaceholder": "Código postal",
+      "cityPlaceholder": "Ciudad"
     },
     "projects": {
       "title": "Proyectos",

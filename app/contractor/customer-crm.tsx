@@ -50,6 +50,12 @@ export default function CustomerPhonebookScreen() {
   // See bedrijf.tsx: neither contractor path captured an address, so the app
   // held no location for any customer a contractor created.
   const [newAddress, setNewAddress] = useState('');
+  // A German e-invoice is invalid without the buyer's post code and city
+  // (BR-DE-8/9), and the Spanish and Italian formats need them too. The sheet
+  // collected one free-text address line, which cannot be split reliably
+  // ("Marktplatz 3, 10178 Berlin" vs "Via Roma 1 — 20100 Milano (MI)") (#339).
+  const [newPostcode, setNewPostcode] = useState('');
+  const [newCity, setNewCity] = useState('');
 
   // Build contact list with job count + auto-tags
   const contacts = useMemo(() => {
@@ -144,12 +150,17 @@ export default function CustomerPhonebookScreen() {
       customers as any,
     );
     const commit = async () => {
-      await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined, cleanAddress || undefined);
+      await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined, cleanAddress || undefined, {
+        postcode: sanitizeInput(newPostcode) || undefined,
+        city: sanitizeInput(newCity) || undefined,
+      });
       hapticSuccess();
       setNewName('');
       setNewPhone('');
       setNewEmail('');
       setNewAddress('');
+      setNewPostcode('');
+      setNewCity('');
       setShowAdd(false);
     };
     if (dupes.length > 0) {
@@ -357,6 +368,22 @@ export default function CustomerPhonebookScreen() {
                 value={newAddress}
                 onChangeText={setNewAddress}
               />
+              <View style={{ flexDirection: 'row', gap: GRID.sm }}>
+                <TextInput
+                  style={[s.input, { flex: 1 }]}
+                  placeholder={t('contractor.customers.postcodePlaceholder', 'Post code')}
+                  placeholderTextColor={SemanticColors.textTertiary}
+                  value={newPostcode}
+                  onChangeText={setNewPostcode}
+                />
+                <TextInput
+                  style={[s.input, { flex: 2 }]}
+                  placeholder={t('contractor.customers.cityPlaceholder', 'City')}
+                  placeholderTextColor={SemanticColors.textTertiary}
+                  value={newCity}
+                  onChangeText={setNewCity}
+                />
+              </View>
 
               <Pressable
                 style={[s.submitBtn, !newName.trim() && { opacity: 0.5 }]}

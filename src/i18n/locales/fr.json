@@ -2555,7 +2555,9 @@
       "limitReached": "Vous avez atteint la limite de clients de ce forfait.",
       "jobs_one": "{{count}} mission",
       "jobs_other": "{{count}} missions",
-      "addressPlaceholder": "Adresse"
+      "addressPlaceholder": "Adresse",
+      "postcodePlaceholder": "Code postal",
+      "cityPlaceholder": "Ville"
     },
     "projects": {
       "title": "Projets",

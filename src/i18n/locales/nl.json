@@ -2548,7 +2548,9 @@
       "limitReached": "Je hebt de klantlimiet van dit abonnement bereikt.",
       "jobs_one": "{{count}} klus",
       "jobs_other": "{{count}} klussen",
-      "addressPlaceholder": "Adres"
+      "addressPlaceholder": "Adres",
+      "postcodePlaceholder": "Postcode",
+      "cityPlaceholder": "Plaats"
     },
     "projects": {
       "title": "Projecten",

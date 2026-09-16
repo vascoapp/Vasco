@@ -2555,7 +2555,9 @@
       "limitReached": "Sie haben das Kundenlimit dieses Tarifs erreicht.",
       "jobs_one": "{{count}} Auftrag",
       "jobs_other": "{{count}} Aufträge",
-      "addressPlaceholder": "Adresse"
+      "addressPlaceholder": "Adresse",
+      "postcodePlaceholder": "PLZ",
+      "cityPlaceholder": "Ort"
     },
     "projects": {
       "title": "Projekte",

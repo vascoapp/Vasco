@@ -102,6 +102,10 @@ export default function BedrijfScreen() {
   // for anyone a contractor adds, which quietly disables directions-to-job and
   // any per-site history.
   const [newAddress, setNewAddress] = useState('');
+  // Post code + city: a German e-invoice is invalid without the buyer's
+  // (BR-DE-8/9), and one free-text line cannot be split reliably (#339).
+  const [newPostcode, setNewPostcode] = useState('');
+  const [newCity, setNewCity] = useState('');
   const { customers, invoices, jobs, addCustomer, isLoading } = useAppState();
   const { user } = useAuth();
   const [trackers, setTrackers] = useState<TrackerData[]>([]);
@@ -153,11 +157,12 @@ export default function BedrijfScreen() {
       newEmail.trim() || undefined,
       newPhone.trim() || undefined,
       newAddress.trim() || undefined,
+      { postcode: newPostcode.trim() || undefined, city: newCity.trim() || undefined },
     );
     hapticSuccess();
-    setNewName(''); setNewEmail(''); setNewPhone(''); setNewAddress('');
+    setNewName(''); setNewEmail(''); setNewPhone(''); setNewAddress(''); setNewPostcode(''); setNewCity('');
     setShowAddModal(false);
-  }, [newName, newEmail, newPhone, newAddress, addCustomer]);
+  }, [newName, newEmail, newPhone, newAddress, newPostcode, newCity, addCustomer]);
 
   const handleSendReminder = useCallback(async (trackerId: string) => {
     try {
@@ -534,6 +539,10 @@ export default function BedrijfScreen() {
               <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
               <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.textMuted} keyboardType="phone-pad" />
               <TextInput style={s.modalInput} value={newAddress} onChangeText={setNewAddress} placeholder={t('customers.addressPlaceholder', 'Address')} placeholderTextColor={DK.colors.textMuted} />
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TextInput style={[s.modalInput, { flex: 1 }]} value={newPostcode} onChangeText={setNewPostcode} placeholder={t('contractor.customers.postcodePlaceholder', 'Post code')} placeholderTextColor={DK.colors.textMuted} />
+                <TextInput style={[s.modalInput, { flex: 2 }]} value={newCity} onChangeText={setNewCity} placeholder={t('contractor.customers.cityPlaceholder', 'City')} placeholderTextColor={DK.colors.textMuted} />
+              </View>
               <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
                 <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                 <DKLabel style={s.modalSubmitText}>{t('dk.actions.addCustomer', 'Add customer')}</DKLabel>
