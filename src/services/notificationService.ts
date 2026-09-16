@@ -17,6 +17,11 @@ import { registerSingletonReset } from './singletonReset';
 import { todayKey } from '../utils/dateKey';
 
 const PERSIST_KEY = '@vasco_notifications_v2';
+// Which notification types the contractor wants. Separate key: the inbox is
+// trimmed to 50 and rewritten constantly, and a preference must not ride on
+// that. Every switch on the notifications screen used to live in memory only —
+// muting "Angebot abgelaufen" lasted until the app was next killed (#339).
+const PREFS_KEY = '@vasco_notification_prefs_v1';
 
 // =============================================================================
 // TYPES
@@ -93,7 +98,10 @@ class NotificationService {
   private static instance: NotificationService;
   private listeners: Set<NotifListener> = new Set();
   private notifications: AppNotification[] = [];
-  private preferences: NotificationPreference[] = [...defaultPreferences];
+  // Cloned per ELEMENT, not just the array: `togglePreference` mutates the
+  // objects in place, so `[...defaultPreferences]` let one account's toggle
+  // rewrite the module-level defaults that every later account starts from.
+  private preferences: NotificationPreference[] = defaultPreferences.map((p) => ({ ...p }));
   private hydrated = false;
 
   static getInstance(): NotificationService {
@@ -105,19 +113,45 @@ class NotificationService {
       // marked-read notifications + preference toggles would carry over to
       // user B. Routed through registerSingletonReset for centralized wiring.
       registerSingletonReset((userId) => {
-        NotificationService.instance.notifications = [];
-        NotificationService.instance.preferences = [...defaultPreferences];
-        NotificationService.instance.hydrated = false;
-        NotificationService.instance.notify();
-        if (userId) NotificationService.instance.hydrate();
+        const inst = NotificationService.instance;
+        inst.notifications = [];
+        inst.preferences = defaultPreferences.map((p) => ({ ...p }));
+        inst.hydrated = false;
+        inst.notify();
+        // BOTH stored copies belong to the account that just left, and both
+        // must be gone BEFORE the next account hydrates — clearing the memory
+        // and then re-reading the same keys handed user B user A's inbox and
+        // (once preferences persisted) their mute list. Awaited via the chain,
+        // not fired alongside hydrate().
+        void Promise.all([
+          AsyncStorage.removeItem(PERSIST_KEY).catch(() => {}),
+          AsyncStorage.removeItem(PREFS_KEY).catch(() => {}),
+        ]).then(() => { if (userId) inst.hydrate(); });
       });
     }
     return NotificationService.instance;
   }
 
-  /** Load persisted user-fired notifications on first instantiation. */
+  /** Load persisted user-fired notifications + preferences on first instantiation. */
   private async hydrate(): Promise<void> {
     if (this.hydrated) return;
+    try {
+      const rawPrefs = await AsyncStorage.getItem(PREFS_KEY);
+      if (rawPrefs) {
+        const saved = JSON.parse(rawPrefs) as Array<{ type: NotificationType; enabled?: boolean; pushEnabled?: boolean }>;
+        if (Array.isArray(saved)) {
+          // Merge onto the defaults by type, so a type added in a later release
+          // arrives with its default rather than missing from the screen.
+          this.preferences = defaultPreferences.map((d) => {
+            const hit = saved.find((x) => x?.type === d.type);
+            return hit ? { ...d, enabled: hit.enabled ?? d.enabled, pushEnabled: hit.pushEnabled ?? d.pushEnabled } : { ...d };
+          });
+          this.notify();
+        }
+      }
+    } catch {
+      // Ignore; keep the defaults.
+    }
     try {
       const raw = await AsyncStorage.getItem(PERSIST_KEY);
       if (raw) {
@@ -194,6 +228,18 @@ class NotificationService {
     if (pref) {
       pref[field] = !pref[field];
       this.notify();
+      this.persistPreferences();
+    }
+  }
+
+  private async persistPreferences(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(
+        PREFS_KEY,
+        JSON.stringify(this.preferences.map(({ type, enabled, pushEnabled }) => ({ type, enabled, pushEnabled }))),
+      );
+    } catch {
+      // Silent — the switch still reflects this session.
     }
   }
 

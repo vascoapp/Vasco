@@ -63,6 +63,14 @@ export type Job = {
   scheduledStartTime?: string;
   scheduledEndTime?: string;
   estimatedDuration?: number;
+  /**
+   * Project (aannemer multi-job grouping) this job belongs to. `jobs.project_id`
+   * has existed since migration 20260501000001, but neither mapper knew about
+   * it: the link lived only in `projects.jobIds` in local state, so a reinstall
+   * or a second device showed every project with no jobs and a € 0 P&L (#339).
+   */
+  projectId?: string;
+
   // Financial
   quoteId?: string;
   invoiceId?: string;

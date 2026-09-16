@@ -108,6 +108,8 @@ export type JobRow = {
   trade: string | null;
   /** Quote this job was created from — migration 20260806000005. */
   quote_id: string | null;
+  /** Project this job belongs to — migration 20260501000001 (no FK by design). */
+  project_id: string | null;
   priority: string | null;
   rooms_areas: string[] | null;
   specifications: string | null;

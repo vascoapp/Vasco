@@ -642,6 +642,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const { listProjects } = await import('../lib/dataProvider');
           const projectRows = await listProjects();
           {
+            // The persistent side of the job↔project link is `jobs.project_id`,
+            // so the project's job list is DERIVED from the jobs just loaded.
+            const jobIdsByProject = new Map<string, string[]>();
+            for (const job of j) {
+              const pid = (job as { projectId?: string }).projectId;
+              if (!pid) continue;
+              const list = jobIdsByProject.get(pid);
+              if (list) list.push(job.id); else jobIdsByProject.set(pid, [job.id]);
+            }
             const mapped: Project[] = projectRows.map((r: any) => ({
               id: r.id,
               title: r.name,
@@ -663,7 +672,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               billingTerms: Array.isArray(r.billing_terms) ? r.billing_terms : [],
               retentionPercent: Number(r.retention_percent ?? 0),
               changeOrders: Array.isArray(r.change_orders) ? r.change_orders : [],
-              jobIds: [],
+              // Was hardcoded `[]`, so every BE refresh emptied the project's
+              // job list and its P&L, cost roll-up and budget variance all read
+              // € 0 on any device that had not made the links itself (#339).
+              jobIds: jobIdsByProject.get(r.id) ?? [],
               quoteIds: [],
               invoiceIds: [],
               subcontractorIds: [],
@@ -684,7 +696,17 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             // promoted to a BE uuid.
             setProjects((prev) => {
               const tempRows = prev.filter((row) => isTempIdFast(row.id));
-              return [...tempRows, ...mapped];
+              // `jobIds` is derived from the BE jobs, which by definition do not
+              // include a job created offline and not yet flushed. Carry those
+              // temp ids over, the same reason temp ROWS are carried over (R57):
+              // otherwise assigning a job to a project while offline looks like
+              // it worked and then quietly undoes itself on the next refresh.
+              const withOfflineLinks = mapped.map((p) => {
+                const before = prev.find((x) => x.id === p.id);
+                const tempJobIds = (before?.jobIds ?? []).filter((id) => isTempIdFast(id));
+                return tempJobIds.length ? { ...p, jobIds: [...p.jobIds, ...tempJobIds] } : p;
+              });
+              return [...tempRows, ...withOfflineLinks];
             });
           }
         } catch (err) {
@@ -4403,8 +4425,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       addJobToProject: (projectId, jobId) => {
         setProjects(prev => prev.map(p =>
-          p.id === projectId ? { ...p, jobIds: [...p.jobIds, jobId], updatedAt: new Date().toISOString() } : p
+          // Guard the duplicate: the menu offers unassigned jobs, but a double
+          // tap used to push the id twice and double every cost it rolls up.
+          p.id === projectId && !p.jobIds.includes(jobId)
+            ? { ...p, jobIds: [...p.jobIds, jobId], updatedAt: new Date().toISOString() }
+            : p
         ));
+        // The link lives on the JOB (`jobs.project_id`). Writing it only into
+        // the project's local `jobIds` meant the next refresh — which rebuilds
+        // projects from the BE — dropped it, and the project's P&L went to € 0.
+        setJobs(prev => prev.map(jb => (jb.id === jobId ? { ...jb, projectId, updatedAt: new Date().toISOString() } : jb)));
+        if (isSupabaseConfigured) {
+          const payload = jobUpdatesToRowPayload({ projectId });
+          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+            persistOrQueue('jobs', 'update', () => dbUpdateJob(jobId, payload), { rowId: jobId, payload }),
+          ).catch(() => {});
+        }
       },
       getProjectPnL: (projectId): ProjectPnL => {
         const project = projects.find(p => p.id === projectId);

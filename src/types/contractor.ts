@@ -154,6 +154,16 @@ export interface Job {
   actualStartTime?: string;
   actualEndTime?: string;
 
+  /**
+   * The project (aannemer multi-job grouping) this job belongs to.
+   * `projects.jobIds` was the only record of the link and lived in local state
+   * alone, so after a reinstall — or on a second device — every project's job
+   * list was empty and its P&L read € 0 (#339). The DB column
+   * (`jobs.project_id`, migration 20260501000001) already existed; nothing on
+   * either side of the mapper knew about it.
+   */
+  projectId?: string;
+
   // Financial
   quoteId?: string;
   quotedAmount?: number;

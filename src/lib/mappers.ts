@@ -249,6 +249,7 @@ export function jobUpdatesToRowPayload(updates: Partial<Job>): Record<string, un
   if ('agreedAmount' in updates)       out.agreed_amount = updates.agreedAmount ?? null;
   if ('trade' in updates)              out.trade = updates.trade ?? null;
   if ('quoteId' in updates)            out.quote_id = updates.quoteId ?? null;
+  if ('projectId' in updates)          out.project_id = updates.projectId ?? null;
   if ('priority' in updates)           out.priority = updates.priority ?? null;
   if ('roomsAreas' in updates)         out.rooms_areas = updates.roomsAreas ?? null;
   if ('specifications' in updates)     out.specifications = updates.specifications ?? null;
@@ -315,6 +316,9 @@ export function jobRowToJob(row: JobRow): Job {
     // which meant it never survived a cold start and the quote→job→invoice
     // chain could not actually be followed in the data.
     quoteId: row.quote_id ?? undefined,
+    // The project link. Read back so a project's job list survives a cold
+    // start on a device that never held the local copy.
+    projectId: row.project_id ?? undefined,
     priority: (row.priority as JobPriority) ?? 'normal',
     roomsAreas: row.rooms_areas ?? undefined,
     specifications: row.specifications ?? undefined,

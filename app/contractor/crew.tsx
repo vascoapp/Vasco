@@ -26,6 +26,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { DecimalInput } from '../../src/components/shared/DecimalInput';
 import { useAppState } from '../../src/state/AppState';
 import type { Worker, WorkerRole } from '../../src/domain/worker';
 import { SemanticColors } from '../../src/theme/colors';
@@ -242,7 +243,9 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
   const [email, setEmail] = useState(original?.email ?? '');
   const [phone, setPhone] = useState(original?.phone ?? '');
   const [trade, setTrade] = useState(original?.trade ?? '');
-  const [hourlyCost, setHourlyCost] = useState(original?.hourlyCost?.toString() ?? '');
+  // A cost with cents: `Number("37,50")` is NaN on every EU keypad, and NaN
+  // reached the worker record and every margin that reads it (#339).
+  const [hourlyCost, setHourlyCost] = useState<number>(original?.hourlyCost ?? 0);
   const [isActive, setIsActive] = useState(original?.isActive ?? true);
 
   const canSave = name.trim().length > 0;
@@ -254,7 +257,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
       email: email || undefined,
       phone: phone || undefined,
       trade: trade || undefined,
-      hourlyCost: hourlyCost ? Number(hourlyCost) : undefined,
+      hourlyCost: hourlyCost > 0 ? hourlyCost : undefined,
       isActive,
       color: undefined,
     }, original);
@@ -309,7 +312,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
           <TextInput value={trade} onChangeText={setTrade} placeholder="HVAC / electrical / plumbing…" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} />
 
           <Text style={styles.label}>{t('crew.hourlyCostSym', 'Hourly cost to you ({{sym}})', { sym: currencySymbol(user?.country as never) })}</Text>
-          <TextInput value={hourlyCost} onChangeText={setHourlyCost} placeholder="35" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} keyboardType="numeric" />
+          <DecimalInput value={hourlyCost} onChangeValue={setHourlyCost} money placeholder="35" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} keyboardType="numeric" />
 
           <View style={styles.activeRow}>
             <Text style={styles.activeLabel}>{t('crew.active', 'Active on payroll')}</Text>

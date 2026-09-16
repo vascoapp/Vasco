@@ -13,6 +13,10 @@
 //    `.replace(',', '.')` fixes got "1.500" wrong instead. Use
 //    `parseDecimalInput` (src/utils/decimalInput).
 //
+// The name list is the guard's blind spot: `Number(hourlyCost)` in crew.tsx sat
+// in scope for a year because "Cost" was not in it (found 2026-09-16). When a
+// new numeric field slips through, widen the list rather than allow-listing it.
+//
 // Scope: the contractor surfaces. app/hub/** and the site-lead tree are out of
 // scope by decision (memory: contractor + aannemer only).
 import fs from 'fs';
@@ -93,7 +97,7 @@ describe('typed numbers keep what was typed', () => {
         // `parseFloat` / a hand-rolled comma replace, and the two shapes that
         // slipped past the first version of this guard: `parseInt` on a typed
         // quantity (0,5 h became 1) and `Number(newBudget)` ("85.000" → 85).
-        const typedName = String.raw`(?:new[A-Z]\w*|\w*(?:Text|Input|Amount|Price|Budget|Qty|Quantity|Rate|Percent|Hours|Value))`;
+        const typedName = String.raw`(?:new[A-Z]\w*|\w*(?:Text|Input|Amount|Price|Budget|Qty|Quantity|Rate|Percent|Hours|Value|Cost|Fee|Total|Margin))`;
         if (
           /\bparseFloat\(/.test(line)
           || /\breplace\(\s*(['"]),\1\s*,\s*(['"])\.\2\s*\)/.test(line)

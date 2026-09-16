@@ -1,0 +1,118 @@
+/**
+ * @jest-environment node
+ */
+// Every switch on the notifications screen lived in memory only: muting
+// "Angebot abgelaufen" lasted until the app was next killed, and the screen
+// gave no hint of that (#339, sweep 2026-09-16).
+//
+// The account boundary is the other half. The singleton survives logout, so
+// the stored inbox and the stored mute list both have to be gone BEFORE the
+// next account hydrates — and the reset used to clear memory and then re-read
+// the very same key.
+const mockStore = new Map<string, string>();
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  __esModule: true,
+  default: {
+    getItem: jest.fn(async (k: string) => mockStore.get(k) ?? null),
+    setItem: jest.fn(async (k: string, v: string) => { mockStore.set(k, v); }),
+    // Deliberately SLOW: a removal that has not finished when the next account
+    // hydrates is exactly the race being guarded. With an instant mock, code
+    // that fires the removal alongside hydrate() looks correct.
+    removeItem: jest.fn((k: string) => new Promise<void>((resolve) => {
+      setTimeout(() => { mockStore.delete(k); resolve(); }, 20);
+    })),
+  },
+}));
+
+const PREFS_KEY = '@vasco_notification_prefs_v1';
+const PERSIST_KEY = '@vasco_notifications_v2';
+
+import { notificationService } from '../notificationService';
+import { setCurrentUser } from '../../lib/currentUser';
+import fs from 'fs';
+import path from 'path';
+import { stripComments } from '../../utils/stripComments';
+
+const flush = () => new Promise((r) => setTimeout(r, 0));
+/** Long enough for the slow removeItem above to land. */
+const settle = () => new Promise((r) => setTimeout(r, 60));
+
+/** The real transition: the singleton's reset is wired to a user change. */
+const switchAccountTo = async (id: string) => {
+  setCurrentUser({ id });
+  await settle();
+  await flush();
+};
+
+const prefFor = (type: string) => notificationService.getPreferences().find((p) => p.type === type);
+
+describe('notification preferences survive a restart', () => {
+  it('a toggle is written to storage', async () => {
+    const first = notificationService.getPreferences()[0];
+    const before = first.enabled;
+    notificationService.togglePreference(first.type, 'enabled');
+    await flush();
+
+    expect(prefFor(first.type)?.enabled).toBe(!before);
+    const saved = JSON.parse(mockStore.get(PREFS_KEY) ?? '[]');
+    expect(saved.find((p: { type: string }) => p.type === first.type).enabled).toBe(!before);
+  });
+
+  it('an unknown type in storage does not drop a preference the release added', async () => {
+    mockStore.set(PREFS_KEY, JSON.stringify([{ type: 'no_such_type', enabled: false }]));
+    // Re-hydrate the way a cold start would.
+    await switchAccountTo('user-1');
+
+    // Every default type is still listed — merged by type, not replaced.
+    expect(notificationService.getPreferences().length).toBeGreaterThan(0);
+    expect(notificationService.getPreferences().some((p) => (p.type as string) === 'no_such_type')).toBe(false);
+  });
+});
+
+describe('the next account does not inherit the last one', () => {
+  it('clears both stored copies before hydrating', async () => {
+    mockStore.set(PREFS_KEY, JSON.stringify([{ type: 'overdue_invoice', enabled: false }]));
+    mockStore.set(PERSIST_KEY, JSON.stringify([{ id: 'n1', type: 'overdue_invoice', createdAt: new Date().toISOString() }]));
+
+    await switchAccountTo('user-2');
+
+    expect(mockStore.has(PREFS_KEY)).toBe(false);
+    expect(mockStore.has(PERSIST_KEY)).toBe(false);
+    expect(notificationService.getNotifications?.().length ?? 0).toBe(0);
+    // Back to the defaults, not user A's mute.
+    expect(prefFor('overdue_invoice')?.enabled).toBe(true);
+  });
+});
+
+describe('the defaults stay default', () => {
+  it('a toggle does not rewrite the template every later account starts from', async () => {
+    // `[...defaultPreferences]` copies the ARRAY and shares the OBJECTS, and
+    // togglePreference mutates in place — so user A's mute became the default.
+    const type = notificationService.getPreferences()[0].type;
+    const original = notificationService.getPreferences()[0].enabled;
+    notificationService.togglePreference(type, 'enabled');
+    await flush();
+    expect(prefFor(type)?.enabled).toBe(!original);
+
+    mockStore.clear();
+    await switchAccountTo('user-3');
+    expect(prefFor(type)?.enabled).toBe(original);
+  });
+});
+
+describe('nothing starts from a SHARED copy of the defaults', () => {
+  // The behavioural test above only exercises the reset path, so it cannot see
+  // the field initialiser. This one can: `[...defaultPreferences]` copies the
+  // array and shares the objects, and togglePreference mutates them in place.
+  // stripComments: the fix's own comment quotes the shape it removed.
+  const src = stripComments(fs.readFileSync(path.resolve(__dirname, '../notificationService.ts'), 'utf8'));
+
+  it('never spreads the defaults array', () => {
+    expect(src).not.toMatch(/\[\.\.\.defaultPreferences\]/);
+  });
+
+  it('clones every element, at both sites', () => {
+    const clones = src.match(/defaultPreferences\.map\(\(p\) => \(\{ \.\.\.p \}\)\)/g) ?? [];
+    expect(clones.length).toBe(2);
+  });
+});
