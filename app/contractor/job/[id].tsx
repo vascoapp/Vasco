@@ -21,8 +21,9 @@ import {
   Platform,
   Share,
   Modal,
+  Image,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { Palette, SemanticColors } from '../../../src/theme/colors';
@@ -41,7 +42,6 @@ import { useAppState } from '../../../src/state/AppState';
 import { isJobFinished } from '../../../src/domain/jobs';
 import { openDirections, formatDestination } from '../../../src/utils/directions';
 import { PhotoGallery, type PhotoItem } from '../../../src/components/contractor/PhotoGallery';
-import { showPhotoPicker } from '../../../src/utils/photoPicker';
 import JobComments from '../../../src/components/contractor/JobComments';
 import { addActivityEntry } from '../../../src/services/jobCommentsService';
 import { evaluateCompletion } from '../../../src/services/jobCompletionChecklist';
@@ -122,25 +122,49 @@ export default function JobDetailPage() {
   const autoTriggeredInvoiceRef = useRef(false);
   const [photoCount, setPhotoCount] = useState(0);
   const [jobPhotos, setJobPhotos] = useState<PhotoItem[]>([]);
+  // Bumped on focus so returning from /photos re-reads the list.
+  const [photoRefreshTick, setPhotoRefreshTick] = useState(0);
 
-  // Load real photo count from jobPhotoService on mount + every time we come back from /photos.
+  // Load the real photos from jobPhotoService on mount + every time we come
+  // back from /photos. The gallery below used to render a `jobPhotos` array
+  // that only this screen's own "add" button ever wrote to — so it opened
+  // EMPTY for a job with twenty uploaded photos, and anything added in it
+  // vanished on navigation because nothing uploaded it (#339).
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         if (!id) return;
         const photos = await listJobPhotos(String(id));
-        if (!cancelled) setPhotoCount(photos.length);
+        if (cancelled) return;
+        setPhotoCount(photos.length);
+        setJobPhotos(
+          photos
+            .filter((p) => !!p.publicUrl)
+            .map((p) => ({
+              uri: p.publicUrl as string,
+              date: p.takenAt,
+              // PhotoGallery knows three labels; the service has five kinds.
+              label: p.kind === 'before' || p.kind === 'after' ? p.kind : 'progress',
+              notes: p.caption,
+            })),
+        );
       } catch {}
     })();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, photoRefreshTick]);
   const [jobCompleted, setJobCompleted] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
 
+  // Coming back from the photos screen must re-read the list; without this the
+  // count and the gallery keep whatever they held when the screen first
+  // mounted, which is how the old local-only gallery hid its own defect.
+  useFocusEffect(useCallback(() => { setPhotoRefreshTick((n) => n + 1); }, []));
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    setPhotoRefreshTick((n) => n + 1);
     setTimeout(() => {
       setRefreshing(false);
       hapticSuccess();
@@ -1181,18 +1205,11 @@ export default function JobDetailPage() {
           <PhotoGallery
             photos={jobPhotos}
             jobTitle={job.projectName}
-            onAddPhoto={() => {
-              showPhotoPicker((photo) => {
-                const newPhoto: PhotoItem = {
-                  uri: photo.uri,
-                  date: new Date().toISOString(),
-                  label: jobPhotos.length === 0 ? 'before' : jobCompleted ? 'after' : 'progress',
-                };
-                setJobPhotos(prev => [...prev, newPhoto]);
-                setPhotoCount(prev => prev + 1);
-                hapticSuccess();
-              });
-            }}
+            // One upload path. This used to push a local file:// URI into
+            // component state and nothing else — no upload, no row, gone on
+            // the next navigation. The photos screen labels the shot
+            // (before/during/after), uploads it, and queues it when offline.
+            onAddPhoto={() => router.push(`/contractor/job/${job.id}/photos` as any)}
           />
         </View>
 
@@ -1568,40 +1585,32 @@ export default function JobDetailPage() {
                 {t('jobs.photosCaptured', { defaultValue: '{{count}} photos captured', count: photoCount })}
               </Text>
             )}
+            {/* These tiles were drawn from the COUNT: an icon placeholder per
+                photo, the first half labelled "Before" and the rest "After",
+                with no image behind any of them — and the add button opened no
+                camera at all. It incremented the counter and announced "Photo
+                N captured and saved" (#339). Now: the real thumbnails, their
+                real labels, and the one route that actually uploads. */}
             <View style={styles.galleryGrid}>
-              {Array.from({ length: Math.min(photoCount, 6) }).map((_, idx) => (
-                <View key={idx} style={styles.galleryItem}>
-                  <View style={[styles.galleryThumb, { backgroundColor: idx < Math.ceil(photoCount / 2) ? '#E8E4DF' : '#D4EDDA' }]}>
-                    <Ionicons name="image" size={24} color={idx < Math.ceil(photoCount / 2) ? SemanticColors.textTertiary : SemanticColors.feedbackSuccess} />
-                  </View>
-                  <View style={[styles.galleryLabel, { backgroundColor: idx < Math.ceil(photoCount / 2) ? '#F5F5F5' : SemanticColors.feedbackSuccess + '14' }]}>
-                    <Text style={[styles.galleryLabelText, { color: idx < Math.ceil(photoCount / 2) ? SemanticColors.textTertiary : SemanticColors.feedbackSuccess }]}>
-                      {idx < Math.ceil(photoCount / 2) ? t('jobs.before', 'Before') : t('jobs.after', 'After')}
+              {jobPhotos.slice(0, 6).map((photo) => (
+                <View key={photo.uri} style={styles.galleryItem}>
+                  <Image source={{ uri: photo.uri }} style={styles.galleryThumb} resizeMode="cover" />
+                  <View style={styles.galleryLabel}>
+                    <Text style={styles.galleryLabelText}>
+                      {photo.label === 'before'
+                        ? t('jobs.before', 'Before')
+                        : photo.label === 'after'
+                          ? t('jobs.after', 'After')
+                          : t('jobs.during', 'During')}
                     </Text>
                   </View>
                 </View>
               ))}
               <Pressable
                 style={styles.galleryAddItem}
-                onPress={() => {
-                  Alert.alert(
-                    t('jobs.takePhoto', 'Take Photo'),
-                    t('jobs.photoSourcePrompt', 'Choose a photo source'),
-                    [
-                      { text: t('jobs.camera', 'Camera'), onPress: () => {
-                        hapticSuccess();
-                        setPhotoCount(prev => prev + 1);
-                        Alert.alert(t('jobs.photoAdded', 'Photo added'), t('jobs.photoAddedDesc', { defaultValue: 'Photo {{count}} captured and saved.', count: photoCount + 1 }));
-                      }},
-                      { text: t('jobs.photoLibrary', 'Photo Library'), onPress: () => {
-                        hapticSuccess();
-                        setPhotoCount(prev => prev + 1);
-                        Alert.alert(t('jobs.photoAdded', 'Photo added'), t('jobs.photoAddedDesc', { defaultValue: 'Photo {{count}} captured and saved.', count: photoCount + 1 }));
-                      }},
-                      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                    ]
-                  );
-                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('jobs.takePhoto', 'Take Photo')}
+                onPress={() => router.push(`/contractor/job/${job.id}/photos` as any)}
               >
                 <Ionicons name="camera" size={28} color={Palette.hermesOrange} />
                 <Text style={styles.galleryAddText}>{t('jobs.takePhoto', 'Take Photo')}</Text>

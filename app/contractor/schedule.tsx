@@ -515,8 +515,12 @@ export default function DragScheduleScreen() {
 
       // PERSIST to AppState — update job with scheduled date/time and status
       try {
-        const startTime = `${hour.toString().padStart(2, '0')}:00`;
-        const endTime = `${(hour + job.estimatedHours).toString().padStart(2, '0')}:00`;
+        const startTime = hoursToHM(hour);
+        // `${hour + estimatedHours}:00` wrote "11.5:00" for any job with a
+        // fractional estimate — an invalid time, persisted onto the job, sent
+        // to the ICS export and shown on the job screen (#339). The file
+        // already had the formatter; this write path never used it.
+        const endTime = hoursToHM(hour + job.estimatedHours);
         updateJob(job.jobId, {
           scheduledDate: todayStr,
           scheduledStartTime: startTime,
