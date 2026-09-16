@@ -632,6 +632,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .then((mod) => mod.syncSubscriptionFromServer())
             .catch(() => {});
         }
+        // ...and on every cold start with a restored session. The pull used to
+        // run on SIGNED_IN only, which fires when someone signs in — not when
+        // the app reopens with a session already stored. So the device kept
+        // whatever local copy it had: a contractor in a 14-day trial saw
+        // "Kostenlos" on their profile, and a plan bought on another device
+        // never arrived (#339).
+        if (event === 'INITIAL_SESSION') {
+          import('../services/subscriptionService')
+            .then((mod) => mod.syncSubscriptionFromServer())
+            .catch(() => {});
+        }
       } else if (event === 'SIGNED_OUT') {
         // R102: ONLY clear user on the explicit SIGNED_OUT event. Other
         // events with a null session (notably INITIAL_SESSION at startup

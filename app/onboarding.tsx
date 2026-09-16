@@ -454,7 +454,16 @@ export default function OnboardingScreen() {
         completedAt: new Date().toISOString(),
       };
       await AsyncStorage.setItem('@vasco_onboarding', JSON.stringify(onboardingData));
-      await AsyncStorage.setItem('@vasco_subscription', JSON.stringify({ tier: selectedPlan, billingCycle }));
+      // MERGE: a plain overwrite dropped `trialEndsAt`, which `AuthContext.signUp`
+      // had just written — picking the free plan silently ended the trial on
+      // this device until the next server sync (#339).
+      try {
+        const rawSub = await AsyncStorage.getItem('@vasco_subscription');
+        const prevSub = rawSub ? JSON.parse(rawSub) : {};
+        await AsyncStorage.setItem('@vasco_subscription', JSON.stringify({ ...prevSub, tier: selectedPlan, billingCycle }));
+      } catch {
+        await AsyncStorage.setItem('@vasco_subscription', JSON.stringify({ tier: selectedPlan, billingCycle }));
+      }
 
       // Persist tier selection server-side so the user can't downgrade by
       // reinstalling the app and the web admin can report real tier metrics.
