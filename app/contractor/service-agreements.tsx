@@ -252,18 +252,14 @@ export default function ServiceAgreementsScreen() {
                 placeholderTextColor={SemanticColors.textDisabled}
               />
 
-              {/* Auto-invoice toggle */}
-              <View style={s.toggleRow}>
-                <Text style={s.toggleLabel}>{t('agreements.autoInvoice', 'Auto-generate invoice')}</Text>
-                <Pressable
-                  style={[s.toggleBtn, formAutoInvoice && s.toggleBtnActive]}
-                  onPress={() => setFormAutoInvoice(!formAutoInvoice)}
-                >
-                  <Text style={[s.toggleBtnText, formAutoInvoice && s.toggleBtnTextActive]}>
-                    {formAutoInvoice ? t('common.on', 'On') : t('common.off', 'Off')}
-                  </Text>
-                </Pressable>
-              </View>
+              {/* "Auto-generate invoice" was a toggle over a field nothing
+                  reads: `autoInvoice` is stored on the pattern
+                  (recurringJobService) and no code — app or edge function —
+                  ever creates an invoice from it. A switch that changes
+                  nothing is worse than no switch (#339). The agreement still
+                  schedules the VISIT; invoicing it goes through the job, which
+                  is where the hours and materials are. Restore this when
+                  something consumes the flag. */}
 
               {/* Create button */}
               <Pressable style={s.createButton} onPress={handleCreateAgreement}>

@@ -26,16 +26,11 @@
     },
     "goals.better_quotes": "Win more estimates",
     "challenges.quoting": "Creating estimates takes too long",
-    "featAannemerQuote": "Cross-trade estimate builder",
     "aiInsight.quotes": "Smart estimate pricing",
     "complianceInfo": "Vasco monitors your certifications and warns on expiry. You also receive notifications for Sales tax deadlines and insurance.",
-    "valueProp1Desc": "Vasco prepares estimates, reminders, and invoices automatically",
     "vatPresetTitle": "Sales tax scheme set",
     "vatPresetKor": "Selected KOR — change in Settings if turnover will exceed $20.000.",
-    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed €25,000.",
-    "aiInsight": {
-      "quotes": "Smart estimate pricing"
-    }
+    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed €25,000."
   },
   "dashboard": {
     "quotesAwaitingApproval": "{{count}} estimates awaiting approval",
@@ -204,9 +199,7 @@
   "dk": {
     "hero": {
       "guideStart": "Start with your first estimate",
-      "guideStartDesc": "Take a photo of the work and Vasco will draft the estimate.",
       "guideAannemerProjectsDesc": "Open a project to coordinate trades, track sub-estimates, and keep the schedule aligned.",
-      "guideAannemerStartDesc": "Add the trades you coordinate and Vasco builds the cross-trade estimate.",
       "guideFollowup_one": "Follow up on {{count}} open estimate",
       "guideFollowup_other": "Follow up on {{count}} open estimates"
     },
@@ -219,7 +212,6 @@
       "viewQuotes": "View estimates"
     },
     "empty": {
-      "noJobsDesc": "Track jobs from estimate to paid invoice. Vasco follows up automatically when customers go quiet.",
       "noLeadsDesc": "Request a estimate from customers or create one.",
       "noCustomersDesc": "Customers fill in automatically when you send a estimate — or add one manually to track jobs and revenue per customer.",
       "noQuotes": "No estimates yet",

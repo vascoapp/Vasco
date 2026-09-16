@@ -207,6 +207,18 @@ export function calculateTimeSaved(ctx: AutomationContext): TimeSavedMetrics {
 // React hook — run automations periodically
 // ---------------------------------------------------------------------------
 
+/**
+ * ⚠️ NOT AN AUTOMATION ENGINE. `runAllAutomations` DETECTS candidates and every
+ * result carries `actionTaken: false` — it has never sent, created or scheduled
+ * anything. The Automations tab that rendered its config was removed on
+ * 2026-09-16 (#339) because its toggles changed nothing and its "hours saved"
+ * banner came from an invented formula.
+ *
+ * What actually prepares work for the contractor is the AI queue
+ * (`aiActionQueueService` + `workflowPackService`): it drafts an action and
+ * waits for one tap. If this file is ever wired to a real sender, the copy has
+ * to change with it — "automatically" is a promise, not a label.
+ */
 export function useAutomations(ctx: AutomationContext): {
   results: AutomationResult[];
   timeSaved: TimeSavedMetrics;

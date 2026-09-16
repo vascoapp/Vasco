@@ -33,7 +33,7 @@ import { useSubmissions } from '../../src/services/submissionStore';
 import { formatMoney2, formatDecimal1, type Country } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
-type TabKey = 'queue' | 'insights' | 'automations' | 'more';
+type TabKey = 'queue' | 'insights' | 'more';
 
 interface ProactiveAction {
   id: string;
@@ -118,7 +118,7 @@ export default function VascoScreen() {
     quotes: quotes.map(q => ({ id: q.id, customer: q.customer ?? '', amount: q.amount ?? 0, status: q.status, lastUpdated: q.lastUpdated })),
     customers: customers.map(c => ({ id: c.id, name: c.name })),
   }), [jobs, invoices, quotes, customers]);
-  const { results: automationResults, timeSaved, config: autoConfig, updateConfig } = useAutomations(automationCtx);
+  const { results: automationResults } = useAutomations(automationCtx);
 
   useEffect(() => { recordScreenVisit('vasco'); }, []);
 
@@ -318,17 +318,10 @@ export default function VascoScreen() {
   const heroAction = proactiveActions[0];
   const restOfQueue = proactiveActions.slice(1);
 
-  const autoToggles = [
-    { key: 'autoInvoiceEnabled', icon: 'receipt-outline' as IconName, title: t('ai.autoInvoicing'), desc: t('ai.autoInvoicingDesc'), enabled: autoConfig.autoInvoiceEnabled },
-    { key: 'autoReminder', icon: 'notifications-outline' as IconName, title: t('ai.paymentReminders'), desc: t('ai.paymentRemindersDesc', { days: autoConfig.autoReminderDays }), enabled: autoConfig.autoReminderDays > 0 },
-    { key: 'autoFollowup', icon: 'chatbubble-outline' as IconName, title: t('ai.quoteFollowUp'), desc: t('ai.quoteFollowUpDesc', { days: autoConfig.autoFollowupDays }), enabled: autoConfig.autoFollowupDays > 0 },
-    { key: 'certExpiry', icon: 'shield-checkmark-outline' as IconName, title: t('ai.certWarning'), desc: t('ai.certWarningDesc', { days: autoConfig.certExpiryWarningDays }), enabled: autoConfig.certExpiryWarningDays > 0 },
-  ];
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: 'queue', label: t('dk.tabs.queue', 'Queue').toUpperCase(), count: proactiveActions.length },
     { key: 'insights', label: t('dk.tabs.insights', 'Insights').toUpperCase(), count: recommendations.length },
-    { key: 'automations', label: t('dk.tabs.automations', 'Automations').toUpperCase(), count: autoToggles.filter(a => a.enabled).length },
     { key: 'more', label: t('dk.tabs.more', 'More').toUpperCase() },
   ];
 
@@ -545,52 +538,13 @@ export default function VascoScreen() {
           </>
         )}
 
-        {tab === 'automations' && (
-          <>
-            {timeSaved.weeklyHoursSaved > 0 && (
-              <View style={s.savedBanner}>
-                <Ionicons name="time-outline" size={14} color={DK.colors.success} />
-                <Text style={s.savedBannerText}>{t('dk.ai.hoursSavedPerWeek', { hours: formatDecimal1(timeSaved.weeklyHoursSaved, (user?.country ?? 'NL') as Country), defaultValue: '~{{hours}}h/week saving potential' }).toUpperCase()}</Text>
-              </View>
-            )}
-            <View style={s.autoList}>
-              {autoToggles.map((auto, idx) => (
-                <Pressable
-                  key={auto.key}
-                  style={[s.autoRow, idx < autoToggles.length - 1 && s.autoRowBorder]}
-                  onPress={() => {
-                    hapticSuccess();
-                    if (auto.key === 'autoInvoiceEnabled') updateConfig({ autoInvoiceEnabled: !auto.enabled });
-                    else if (auto.key === 'autoReminder') updateConfig({ autoReminderDays: auto.enabled ? 0 : 7 });
-                    else if (auto.key === 'autoFollowup') updateConfig({ autoFollowupDays: auto.enabled ? 0 : 3 });
-                    else if (auto.key === 'certExpiry') updateConfig({ certExpiryWarningDays: auto.enabled ? 0 : 30 });
-                  }}
-                >
-                  <View style={[s.autoIcon, auto.enabled && s.autoIconOn]}>
-                    <Ionicons name={auto.icon} size={16} color={auto.enabled ? DK.colors.accent : DK.colors.textMuted} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.autoTitle}>{auto.title}</Text>
-                    <Text style={s.autoDesc}>{auto.desc}</Text>
-                  </View>
-                  <View style={[s.toggle, auto.enabled && s.toggleOn]}>
-                    <View style={[s.toggleDot, auto.enabled && s.toggleDotOn]} />
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-            {automationResults.length > 0 && (
-              <Text style={s.autoResultCount}>
-                {t('dk.ai.actionsExecutedWeek', { count: automationResults.filter(r => r.actionTaken).length, defaultValue: '{{count}} actions executed this week' }).toUpperCase()}
-              </Text>
-            )}
-            <Pressable style={s.manageLink} onPress={() => router.push('/contractor/automations' as any)}>
-              <DKLabel style={s.manageLinkText}>{t('dk.ai.manageAllAutomations', 'Manage all automations')}</DKLabel>
-              <Ionicons name="chevron-forward" size={14} color={DK.colors.accent} />
-            </Pressable>
-          </>
-        )}
-
+        {/* The AUTOMATIONS tab is gone (#339). Its four toggles wrote a config
+            that only `automationService` read, and that service's own results
+            are all `actionTaken: false` — nothing was ever automated by it, so
+            turning "payment reminders" off changed nothing. The banner above
+            them reported hours saved from an invented formula
+            (invoices x 0.25h + quotes x 0.5h). What DOES prepare work is the
+            queue, which is the first tab: it drafts and waits for one tap. */}
         {tab === 'more' && (
           <>
             {/* R89: IA grouped by job-to-be-done, not a flat chip row.
