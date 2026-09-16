@@ -3359,7 +3359,7 @@
     "verify": "Esegui verifica",
     "export": "Esporta registro (.txt)",
     "footnote": "La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Conserva questa esportazione con la tua documentazione per il periodo di conservazione previsto dalla legge nel tuo paese.",
-    "footnoteGobd": "Il GoBD richiede 10 anni di conservazione. La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Per la certificazione completa di archivio (DATEV-zertifiziert), abbina questa esportazione all'archivio del tuo commercialista.",
+    "footnoteGobd": "Conservazione: 8 anni per fatture e documenti contabili (§14b UStG / §147 AO dalla BEG IV), 10 anni per libri e bilanci. La catena di hash dimostra che nessuna voce è stata modificata a posteriori. Per una certificazione d'archivio completa (DATEV-zertifiziert), abbini questa esportazione all'archivio del suo commercialista.",
     "sectionTitle": "Registro di controllo",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Registro di controllo Vasco",
@@ -4324,7 +4324,7 @@
     "upgradesNotPositive": "Queste scelte danno zero o meno: non c’è nulla da fatturare.",
     "upgradeInvoiceTitle": "{{project}} — extra scelti",
     "recordWarningTitle": "Registra l’avviso di prezzo",
-    "recordWarningBody": "Conferma di aver detto al cliente che \"{{item}}\" comporta un costo aggiuntivo. Necessario prima di fatturarlo (art. 7:755 BW).",
+    "recordWarningBody": "Conferma di aver avvisato il cliente che «{{item}}» comporta un costo aggiuntivo. Obbligatorio prima della fatturazione{{statute}}.",
     "upgradesChangedBody": "Queste scelte sono cambiate mentre la finestra era aperta. Controlla l’elenco e riprova."
   },
   "besparen": {
@@ -5837,7 +5837,7 @@
     "coStatusApproved": "Approvata",
     "coStatusRejected": "Rifiutata",
     "warningMissing": "Cliente non avvisato dell'aumento di prezzo",
-    "warningMissingHint": "Art. 7:755 BW: puoi addebitare i lavori aggiuntivi solo se hai avvisato il cliente in tempo del maggior costo. Registralo qui.",
+    "warningMissingHint": "I lavori aggiuntivi possono essere fatturati solo se il cliente è stato avvisato per tempo del maggior costo{{statute}}. Da registrare qui.",
     "recordWarning": "Registra l'avviso",
     "warnedOn": "Avvisato il {{date}}",
     "markApproved": "Cliente approvato",

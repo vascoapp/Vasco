@@ -107,12 +107,14 @@ export const MOLLIE_METHODS_PER_COUNTRY: Record<string, CountryPaymentConfig> = 
       { name: 'Apple Pay', icon: 'logo-apple' },
     ],
   },
+  // giropay was shut down at the end of 2024 (Mollie dropped it 30.06.2024) and
+  // standalone Sofort ended at Mollie on 30.09.2024 — it is part of Klarna now.
+  // Offering either promised a German customer a way to pay that no longer
+  // exists (#339).
   DE: {
-    methods: ['paypal', 'giropay', 'sofort', 'creditcard', 'klarna', 'sepadirectdebit', 'applepay'],
+    methods: ['paypal', 'creditcard', 'klarna', 'sepadirectdebit', 'applepay'],
     display: [
       { name: 'PayPal', icon: 'logo-paypal' },
-      { name: 'giropay', icon: 'card-outline' },
-      { name: 'Sofort', icon: 'card-outline' },
       { name: 'Credit Card', icon: 'card-outline' },
       { name: 'Klarna', icon: 'pricetag-outline' },
       { name: 'SEPA', icon: 'swap-horizontal-outline' },

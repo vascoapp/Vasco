@@ -124,7 +124,7 @@ export const PAYMENT_FEES: Record<PaymentMethod, FeeStructure> = {
 
 export const COUNTRY_PAYMENT_METHODS: Record<Country, PaymentMethod[]> = {
   NL: ['ideal', 'credit_card', 'sepa_direct_debit', 'apple_pay', 'klarna'],
-  DE: ['sofort', 'credit_card', 'sepa_direct_debit', 'apple_pay', 'klarna', 'paypal'],
+  DE: ['credit_card', 'sepa_direct_debit', 'apple_pay', 'klarna', 'paypal'],
   FR: ['credit_card', 'apple_pay', 'sepa_direct_debit', 'klarna', 'paypal'],
   ES: ['credit_card', 'apple_pay', 'sepa_direct_debit', 'paypal'],
   IT: ['credit_card', 'apple_pay', 'sepa_direct_debit', 'paypal'],

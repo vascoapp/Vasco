@@ -243,7 +243,8 @@ export function defaultPaymentMethodsForCountry(country: string | undefined): st
   const c = (country ?? '').toUpperCase();
   if (c === 'NL') return ['ideal', 'sepadirectdebit', 'creditcard', 'paypal'];
   if (c === 'BE') return ['bancontact', 'sepadirectdebit', 'creditcard'];
-  if (c === 'DE') return ['sofort', 'sepadirectdebit', 'klarnapaylater', 'creditcard'];
+  // No 'sofort'/'giropay': both retired in 2024 (Sofort is inside Klarna now).
+  if (c === 'DE') return ['sepadirectdebit', 'klarnapaylater', 'creditcard'];
   if (c === 'AT') return ['eps', 'sepadirectdebit', 'creditcard'];
   if (c === 'FR') return ['creditcard', 'sepadirectdebit', 'paypal'];
   if (c === 'ES') return ['creditcard', 'sepadirectdebit', 'paypal'];

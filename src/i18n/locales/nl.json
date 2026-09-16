@@ -3201,7 +3201,7 @@
     "verify": "Verificatie uitvoeren",
     "export": "Exporteer audit-spoor (.txt)",
     "footnote": "De hash-keten bewijst dat geen enkele boeking achteraf is gewijzigd. Bewaar deze export bij je administratie gedurende de wettelijke bewaartermijn in jouw land.",
-    "footnoteGobd": "GoBD vereist 10 jaar bewaartermijn. De hash-keten bewijst dat geen entry achteraf is gewijzigd. Voor volledige archiefcertificering (DATEV-zertifiziert) combineer deze export met het archief van je boekhouder.",
+    "footnoteGobd": "Bewaartermijn: 8 jaar voor facturen en boekingsstukken (§14b UStG / §147 AO sinds BEG IV), 10 jaar voor boeken en jaarrekeningen. De hashketen bewijst dat geen enkele regel achteraf is gewijzigd. Combineer de export met het archief van je accountant voor volledige archiefcertificering (DATEV-zertifiziert).",
     "sectionTitle": "Audit-spoor",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco audit-spoor",
@@ -4311,7 +4311,7 @@
     "upgradesNotPositive": "Deze keuzes komen op nul of minder uit, er valt niets te factureren.",
     "upgradeInvoiceTitle": "{{project}} — gekozen meerwerk",
     "recordWarningTitle": "Waarschuwing vastleggen",
-    "recordWarningBody": "Bevestigt dat je de klant hebt verteld dat \"{{item}}\" meerwerk is. Verplicht voordat je het mag factureren (art. 7:755 BW).",
+    "recordWarningBody": "Bevestigt dat je de klant hebt verteld dat „{{item}}\" meerkosten geeft. Vereist vóór facturatie{{statute}}.",
     "upgradesChangedBody": "Deze keuzes zijn veranderd terwijl dit venster openstond. Controleer de lijst en probeer het opnieuw."
   },
   "besparen": {
@@ -5824,7 +5824,7 @@
     "coStatusApproved": "Akkoord",
     "coStatusRejected": "Afgewezen",
     "warningMissing": "Klant niet gewaarschuwd over prijsverhoging",
-    "warningMissingHint": "Art. 7:755 BW: je mag meerwerk alleen doorberekenen als je de klant op tijd hebt gewaarschuwd dat het duurder werd. Leg dat hier vast.",
+    "warningMissingHint": "Meerwerk mag alleen worden berekend als de klant op tijd is gewaarschuwd dat het de prijs verhoogt{{statute}}. Leg het hier vast.",
     "recordWarning": "Waarschuwing vastleggen",
     "warnedOn": "Gewaarschuwd op {{date}}",
     "markApproved": "Akkoord van klant",

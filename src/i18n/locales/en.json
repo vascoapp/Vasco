@@ -3214,7 +3214,7 @@
     "verify": "Run verification",
     "export": "Export trail (.txt)",
     "footnote": "The hash chain proves no entry was retroactively changed. Keep this export with your records for your country's statutory retention period.",
-    "footnoteGobd": "GoBD requires 10-year retention. The hash chain proves no entry was retroactively changed. For full archive certification (DATEV-zertifiziert), pair this export with your accountant's archive.",
+    "footnoteGobd": "Retention: 8 years for invoices and booking vouchers (§14b UStG / §147 AO since BEG IV), 10 years for books and annual accounts. The hash chain proves no entry was retroactively changed. For full archive certification (DATEV-zertifiziert), pair this export with your accountant's archive.",
     "sectionTitle": "Audit trail",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco audit trail",
@@ -4324,7 +4324,7 @@
     "upgradesNotPositive": "These choices come to zero or less, so there is nothing to invoice.",
     "upgradeInvoiceTitle": "{{project}} — chosen upgrades",
     "recordWarningTitle": "Record the price warning",
-    "recordWarningBody": "Confirms you told the customer that \"{{item}}\" costs extra. Required before you can bill it (art. 7:755 BW).",
+    "recordWarningBody": "Confirms you told the customer that \"{{item}}\" costs extra. Required before billing{{statute}}.",
     "upgradesChangedBody": "These choices changed while the dialog was open. Check the list and try again."
   },
   "besparen": {
@@ -5837,7 +5837,7 @@
     "coStatusApproved": "Approved",
     "coStatusRejected": "Declined",
     "warningMissing": "Customer not warned about the price increase",
-    "warningMissingHint": "Art. 7:755 BW: you may only charge for additional work if you warned the customer in time that it would cost more. Record that here.",
+    "warningMissingHint": "Extra work may only be charged when the customer was warned in time that it raises the price{{statute}}. Record it here.",
     "recordWarning": "Record warning",
     "warnedOn": "Warned on {{date}}",
     "markApproved": "Customer approved",

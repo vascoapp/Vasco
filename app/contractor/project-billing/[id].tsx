@@ -28,6 +28,7 @@ import { useKeyboardInset } from '../../../src/hooks/useKeyboardInset';
 import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
+import { statuteSuffix } from '../../../src/domain/extraWorkLaw';
 import { formatCurrency, type Country, formatDateShortAuto } from '../../../src/i18n/formatting';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
@@ -498,7 +499,7 @@ export default function ProjectBillingScreen() {
                         {t('projectBilling.warningMissing', 'Customer not warned about the price increase')}
                       </Text>
                       <Text style={styles.warnHint}>
-                        {t('projectBilling.warningMissingHint', '')}
+                        {t('projectBilling.warningMissingHint', { statute: statuteSuffix(country), defaultValue: '' })}
                       </Text>
                       <Pressable
                         style={styles.warnBtn}

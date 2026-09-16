@@ -3359,7 +3359,7 @@
     "verify": "Ejecutar verificación",
     "export": "Exportar registro (.txt)",
     "footnote": "La cadena de hash demuestra que ninguna entrada fue modificada a posteriori. Conserva esta exportación con tu documentación durante el plazo legal de conservación de tu país.",
-    "footnoteGobd": "GoBD requiere 10 años de retención. La cadena de hash demuestra que ninguna entrada fue modificada a posteriori. Para certificación de archivo completa (DATEV-zertifiziert), combina esta exportación con el archivo de tu contable.",
+    "footnoteGobd": "Conservación: 8 años para facturas y justificantes contables (§14b UStG / §147 AO desde la BEG IV), 10 años para libros y cuentas anuales. La cadena de hash demuestra que ningún asiento se modificó después. Para una certificación de archivo completa (DATEV-zertifiziert), combine esta exportación con el archivo de su asesor.",
     "sectionTitle": "Registro de auditoría",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Registro de auditoría Vasco",
@@ -4324,7 +4324,7 @@
     "upgradesNotPositive": "Estas elecciones suman cero o menos, así que no hay nada que facturar.",
     "upgradeInvoiceTitle": "{{project}} — extras elegidos",
     "recordWarningTitle": "Registrar el aviso de precio",
-    "recordWarningBody": "Confirma que avisaste al cliente de que \"{{item}}\" cuesta más. Obligatorio antes de facturarlo (art. 7:755 BW).",
+    "recordWarningBody": "Confirma que ha avisado al cliente de que «{{item}}» supone un coste adicional. Obligatorio antes de facturar{{statute}}.",
     "upgradesChangedBody": "Estas elecciones han cambiado mientras el diálogo estaba abierto. Revisa la lista e inténtalo de nuevo."
   },
   "besparen": {
@@ -5837,7 +5837,7 @@
     "coStatusApproved": "Aprobado",
     "coStatusRejected": "Rechazado",
     "warningMissing": "Cliente no avisado del aumento de precio",
-    "warningMissingHint": "Art. 7:755 BW: solo puedes cobrar el trabajo adicional si avisaste al cliente a tiempo del sobrecoste. Regístralo aquí.",
+    "warningMissingHint": "Los trabajos adicionales solo pueden facturarse si se avisó al cliente a tiempo del sobrecoste{{statute}}. Regístrelo aquí.",
     "recordWarning": "Registrar aviso",
     "warnedOn": "Avisado el {{date}}",
     "markApproved": "Cliente aprobó",

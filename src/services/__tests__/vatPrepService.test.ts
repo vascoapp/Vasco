@@ -149,7 +149,11 @@ describe('prepareVatReturn — DE UStVA', () => {
     expect(draft.totalOutputVat).toBeCloseTo(190, 2);
   });
 
-  it('flags §13b reverse-charge as kz_35 with low confidence', () => {
+  // Kz 60, not Kz 35: the supplier of a §13b construction service reports the
+  // net turnover in Kz 60 (the recipient's own boxes are 84/85, and Kz 35/36 is
+  // 'Umsätze zu anderen Steuersätzen'). The draft named the wrong box for the
+  // commonest German B2B case (#339).
+  it('flags §13b reverse-charge as kz_60 with low confidence', () => {
     const draft = prepareVatReturn({
       country: 'DE',
       periodStart: '2026-01-01',
@@ -159,10 +163,10 @@ describe('prepareVatReturn — DE UStVA', () => {
       ],
       expenses: [],
     });
-    expect(draft.lines[0].classification).toBe('kz_35');
+    expect(draft.lines[0].classification).toBe('kz_60');
     expect(draft.lines[0].vatAmount).toBe(0);
     expect(draft.lines[0].confidence).toBeLessThan(0.75);
-    expect(draft.rollups.kz_35.net).toBeCloseTo(5000, 2);
+    expect(draft.rollups.kz_60.net).toBeCloseTo(5000, 2);
   });
 
   it('classifies German business expense with 19% vorsteuer into kz_66', () => {

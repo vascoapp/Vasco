@@ -54,7 +54,8 @@ export function formatVatClassification(code: string): string {
 export type VatClassDE =
   | 'kz_81'   // Standard 19% — construction services, materials
   | 'kz_86'   // Reduced 7% — rarely applicable to trades (e.g. prints)
-  | 'kz_35'   // Reverse charge §13b UStG (received)
+  | 'kz_60'   // §13b UStG — SUPPLIER side: the recipient owes the tax.
+              // (Kz 84/85 are the recipient's boxes; Kz 35/36 = other rates.)
   | 'kz_41'   // Intra-community supplies tax-free (§4 Nr. 1b)
   | 'kz_43'   // Exports outside EU
   | 'kz_66';  // Input VAT (Vorsteuer) from other businesses
@@ -179,7 +180,7 @@ function classifyInvoiceDE(invoice: Invoice): { classification: VatClassDE; rate
   const label = `${invoice.job ?? ''} ${invoice.customer ?? ''} ${(invoice as any).description ?? ''}`.toLowerCase();
 
   if (/§13b|reverse.?charge|reverse ?proxy|nettorechnung|steuerschuldn?erschaft/.test(label)) {
-    classification = 'kz_35';
+    classification = 'kz_60';
     rate = 0;
     confidence = 0.7;
     warnings.push('§13b UStG — USt-IdNr. des Kunden prüfen');
@@ -322,7 +323,7 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     // DE buckets
     kz_81: { net: 0, vat: 0 },
     kz_86: { net: 0, vat: 0 },
-    kz_35: { net: 0, vat: 0 },
+    kz_60: { net: 0, vat: 0 },
     kz_41: { net: 0, vat: 0 },
     kz_43: { net: 0, vat: 0 },
     kz_66: { net: 0, vat: 0 },

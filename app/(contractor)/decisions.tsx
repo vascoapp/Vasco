@@ -15,6 +15,7 @@ import { Palette, SemanticColors } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useRouter } from 'expo-router';
+import { statuteSuffix } from '../../src/domain/extraWorkLaw';
 import { formatCurrency, type Country } from '../../src/i18n/formatting';
 import { useAuth } from '../../src/context/AuthContext';
 import { Spacing } from '../../src/theme/spacing';
@@ -435,8 +436,11 @@ export default function KeuzeScreen() {
     Alert.alert(
       t('decisions.recordWarningTitle', 'Record the price warning'),
       t('decisions.recordWarningBody', {
-        defaultValue: 'Confirms you told the customer that "{{item}}" costs extra. Required before you can bill it (art. 7:755 BW).',
+        defaultValue: 'Confirms you told the customer that "{{item}}" costs extra. Required before billing{{statute}}.',
         item: itemName,
+        // The market's OWN statute. Every locale cited art. 7:755 BW — Dutch
+        // law — to German, French, Spanish and Italian contractors (#339).
+        statute: statuteSuffix(country),
       }),
       [
         { text: t('common.cancel', 'Cancel'), style: 'cancel' },

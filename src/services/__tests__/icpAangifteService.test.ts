@@ -129,9 +129,15 @@ describe('defaultPaymentMethodsForCountry', () => {
     const { defaultPaymentMethodsForCountry } = require('../../integrations/mollie');
     expect(defaultPaymentMethodsForCountry('NL')?.[0]).toBe('ideal');
   });
-  test('DE prefers Sofort', () => {
+  // Sofort was Germany's default until Mollie retired it on 30.09.2024 (it is
+  // part of Klarna now) and giropay shut down at the end of 2024. SEPA direct
+  // debit is what a German customer is offered first (#339).
+  test('DE prefers SEPA, and offers neither retired method', () => {
     const { defaultPaymentMethodsForCountry } = require('../../integrations/mollie');
-    expect(defaultPaymentMethodsForCountry('DE')?.[0]).toBe('sofort');
+    const de = defaultPaymentMethodsForCountry('DE') ?? [];
+    expect(de[0]).toBe('sepadirectdebit');
+    expect(de).not.toContain('sofort');
+    expect(de).not.toContain('giropay');
   });
   test('BE prefers Bancontact', () => {
     const { defaultPaymentMethodsForCountry } = require('../../integrations/mollie');

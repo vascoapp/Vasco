@@ -51,7 +51,7 @@ const COUNTRY_COMPLIANCE: Record<CountryCode, { heading: string; body: string; e
   },
   DE: {
     heading: 'Deutschland (DE)',
-    body: 'Handelsregister-Eintrag · Umsatzsteuer-ID (USt-IdNr) · GoBD-konforme Aufzeichnungen · 10-Jahre-Aufbewahrungspflicht (HGB §257) · B2B E-Rechnung seit Jan 2025 verpflichtend zu empfangen.',
+    body: 'Gewerbeanmeldung (Handelsregister nur für Kaufleute; Handwerksrolle je nach Gewerk) · Umsatzsteuer-ID (USt-IdNr) · GoBD-konforme Aufzeichnungen · Aufbewahrung: 8 Jahre für Rechnungen und Buchungsbelege, 10 Jahre für Bücher (§147 AO / §257 HGB, BEG IV) · B2B E-Rechnung seit Jan 2025 verpflichtend zu empfangen.',
     einvoice: 'XRechnung (B2G · Bund/Länder) · ZUGFeRD (hybrid PDF+XML) · Peppol BIS 3.0.',
     governingLaw: 'Es gilt deutsches Recht. Gerichtsstand ist der Sitz des Anbieters, soweit gesetzlich zulässig.',
   },

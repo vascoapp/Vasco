@@ -64,11 +64,14 @@ const NL_STRINGS: CountryStrings = {
   rowLabels: {
     rubriek_1a: '1a (21%)',
     rubriek_1b: '1b (9%)',
-    rubriek_1c: '1c (0%)',
+    // 1c is 'overige tarieven', NOT 0%: the 0%/verlegd box is 1e. And 3a is
+    // outside the EU while 3b is inside — these two were swapped, in the
+    // export a contractor copies into the return (#339).
+    rubriek_1c: '1c (overige tarieven)',
     rubriek_2a: '2a (verlegd)',
-    rubriek_3a: '3a (EU)',
-    rubriek_3b: '3b (non-EU)',
-    rubriek_4a: '4a (intra-EU)',
+    rubriek_3a: '3a (buiten de EU)',
+    rubriek_3b: '3b (binnen de EU)',
+    rubriek_4a: '4a (van buiten de EU)',
     rubriek_5b: '5b (voorbelasting, kosten)',
   },
 };
@@ -88,7 +91,11 @@ const DE_STRINGS: CountryStrings = {
   rowLabels: {
     kz_81: 'KZ 81 (19% Standardsatz)',
     kz_86: 'KZ 86 (7% ermäßigt)',
-    kz_35: 'KZ 35 (§13b Reverse Charge)',
+    // Kz 60 is the SUPPLIER side of §13b: turnover for which the RECIPIENT
+    // owes the tax. It was labelled 'KZ 35', which is 'Umsätze zu anderen
+    // Steuersätzen' — the wrong box for the commonest B2B construction case
+    // (the recipient's own boxes are 84/85) (#339).
+    kz_60: 'KZ 60 (Umsätze §13b — Leistungsempfänger schuldet die Steuer)',
     kz_41: 'KZ 41 (innergem. Lieferungen)',
     kz_43: 'KZ 43 (Ausfuhrlieferungen)',
     kz_66: 'KZ 66 (Vorsteuerabzug)',
@@ -120,7 +127,7 @@ export function formatSummary(draft: VatReturnDraft, businessName: string): stri
 
   // Iterate over rollups (country-agnostic source) — works for NL rubriek_* and DE kz_*.
   const orderedKeys = country === 'DE'
-    ? ['kz_81', 'kz_86', 'kz_35', 'kz_41', 'kz_43', 'kz_66']
+    ? ['kz_81', 'kz_86', 'kz_60', 'kz_41', 'kz_43', 'kz_66']
     : ['rubriek_1a', 'rubriek_1b', 'rubriek_1c', 'rubriek_2a', 'rubriek_3a', 'rubriek_3b', 'rubriek_4a', 'rubriek_5b'];
   for (const key of orderedKeys) {
     const bucket = draft.rollups[key];
@@ -214,7 +221,7 @@ function renderHtml(draft: VatReturnDraft, businessName: string): string {
     ? `<section><h2>${lowConfTitle} (${lowConf.length})</h2>${renderLines(lowConf, country)}</section>`
     : '';
   const orderedKeys = country === 'DE'
-    ? ['kz_81', 'kz_86', 'kz_35', 'kz_41', 'kz_43', 'kz_66']
+    ? ['kz_81', 'kz_86', 'kz_60', 'kz_41', 'kz_43', 'kz_66']
     : ['rubriek_1a', 'rubriek_1b', 'rubriek_1c', 'rubriek_2a', 'rubriek_3a', 'rubriek_3b', 'rubriek_4a', 'rubriek_5b'];
   const rowsHtml = orderedKeys
     .map(key => {

@@ -205,8 +205,11 @@ export const GERMAN_GOVERNMENT_PORTALS = {
 // ---------------------------------------------------------------------------
 
 export const GERMAN_RETENTION_PERIODS = {
-  rechnungen: 10 * 365,        // 10 years (§14b UStG)
-  buchungsbelege: 10 * 365,    // 10 years (§257 HGB)
+  // 8 years since the Bürokratieentlastungsgesetz IV (§14b(1) UStG,
+  // §147(3) AO, §257 HGB) — invoices and booking vouchers only. Books,
+  // inventories and annual accounts still run 10.
+  rechnungen: 8 * 365,         // 8 years (§14b UStG, BEG IV)
+  buchungsbelege: 8 * 365,     // 8 years (§147(3) AO, BEG IV)
   geschaeftsbriefe: 6 * 365,   // 6 years (§257 HGB)
   vertraege: 10 * 365,         // 10 years
   lohnunterlagen: 6 * 365,     // 6 years

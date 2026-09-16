@@ -3214,7 +3214,7 @@
     "verify": "Überprüfung starten",
     "export": "Trail exportieren (.txt)",
     "footnote": "Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Bewahren Sie diesen Export für die gesetzliche Aufbewahrungsfrist Ihres Landes auf.",
-    "footnoteGobd": "GoBD verlangt 10 Jahre Aufbewahrung. Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Für vollständige Archiv-Zertifizierung (DATEV-zertifiziert) kombinieren Sie den Export mit dem Archiv Ihres Steuerberaters.",
+    "footnoteGobd": "Aufbewahrung: 8 Jahre für Rechnungen und Buchungsbelege (§14b UStG / §147 AO seit BEG IV), 10 Jahre für Bücher und Jahresabschlüsse. Die Hash-Kette beweist, dass kein Eintrag nachträglich verändert wurde. Für vollständige Archiv-Zertifizierung (DATEV-zertifiziert) kombinieren Sie den Export mit dem Archiv Ihres Steuerberaters.",
     "sectionTitle": "Audit-Trail",
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco Audit-Trail",
@@ -4324,7 +4324,7 @@
     "upgradesNotPositive": "Diese Auswahl ergibt null oder weniger — es gibt nichts zu berechnen.",
     "upgradeInvoiceTitle": "{{project}} — gewählte Extras",
     "recordWarningTitle": "Hinweis auf Mehrkosten festhalten",
-    "recordWarningBody": "Bestätigt, dass Sie dem Kunden gesagt haben, dass „{{item}}\" Mehrkosten verursacht. Vor der Abrechnung erforderlich (§ 7:755 BW / Anspruch auf Mehrvergütung).",
+    "recordWarningBody": "Bestätigt, dass Sie dem Kunden gesagt haben, dass „{{item}}\" Mehrkosten verursacht. Vor der Abrechnung erforderlich{{statute}}.",
     "upgradesChangedBody": "Diese Auswahl hat sich geändert, während der Dialog offen war. Prüfen Sie die Liste und versuchen Sie es erneut."
   },
   "besparen": {
@@ -5837,7 +5837,7 @@
     "coStatusApproved": "Genehmigt",
     "coStatusRejected": "Abgelehnt",
     "warningMissing": "Kunde nicht über die Preiserhöhung gewarnt",
-    "warningMissingHint": "Art. 7:755 BW: Mehrarbeit darf nur berechnet werden, wenn der Kunde rechtzeitig auf die Mehrkosten hingewiesen wurde. Hier festhalten.",
+    "warningMissingHint": "Mehrarbeit darf nur berechnet werden, wenn der Kunde rechtzeitig auf die Mehrkosten hingewiesen wurde{{statute}}. Hier festhalten.",
     "recordWarning": "Hinweis festhalten",
     "warnedOn": "Gewarnt am {{date}}",
     "markApproved": "Kunde einverstanden",
