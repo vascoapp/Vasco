@@ -33,6 +33,12 @@ const SKIP = ['node_modules', '__tests__', '__screenwalk__', 'test-utils'];
  * A NEW sharing file fails until it is guarded or classified here; a stale
  * entry fails too, so this cannot rot into a blanket exemption.
  */
+// `customerQuoteAcceptanceService.ts` left this list with it: it now
+// reports `shared` from the share result, which is what the caller marks the
+// quote sent on.
+// `app/quotes/[id].tsx` left this list on 2026-09-16: sharing the quote now
+// DOES have a consequence — it marks the quote sent — so the share result is
+// read (#339). The banner used to mark it sent before sharing anything.
 const NO_CONSEQUENCE: Record<string, string> = {
   // ── Exports: a copy of data the contractor is already looking at. ──────────
   'app/contractor/reports.tsx': 'CSV/PDF of a report already on screen. No state write.',
@@ -45,7 +51,6 @@ const NO_CONSEQUENCE: Record<string, string> = {
   'app/contractor/message-templates.tsx': 'Shares a template body for the contractor to reuse.',
   'app/contractor/repeat-work.tsx': 'Shares a maintenance list. Alert is the catch branch.',
   'app/contractor/referrals.tsx': 'Shares a referral link; the `refresh()` after it re-reads state rather than asserting a send.',
-  'app/quotes/[id].tsx': 'Shares the quote; nothing follows the await.',
   'src/services/budgetPdfService.ts': 'PDF generator — hands the file over, records nothing.',
   'src/services/invoicePdfService.ts': 'PDF generator — records nothing.',
   'src/services/quotePdfService.ts': 'PDF generator — records nothing.',
@@ -54,7 +59,6 @@ const NO_CONSEQUENCE: Record<string, string> = {
   'src/services/dataExportService.ts': 'GDPR data export — records nothing.',
   'src/services/receiptShareService.ts': 'Receipt image share — records nothing.',
   'src/services/calendarExportService.ts': 'ICS export. Alert is the catch branch.',
-  'src/services/customerQuoteAcceptanceService.ts': 'Shares the acceptance URL and returns it; asserts nothing about delivery.',
   'src/components/contractor/ShareQuoteButton.tsx': 'Only `setBusy(false)` follows — a spinner, not a claim.',
   'src/components/contractor/ShareDecisionTracker.tsx': 'Three shares; every Alert is a catch-branch fallback that shows the link so the contractor can copy it manually. `setLinkCopied` is UI feedback for the copy, not the send.',
   'src/components/shared/ErrorBoundary.tsx': 'Shares a crash report. No product state.',

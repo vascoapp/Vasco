@@ -23,6 +23,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
 import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
+import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { signQuoteLink } from '../../src/services/publicQuotePortalService';
 import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/intelligenceCaptureService';
 import { isDemoMode } from '../../src/context/AuthContext';
@@ -206,14 +207,17 @@ export default function QuoteDetailScreen() {
       const signed = await signQuoteLink(quote.id);
       if (signed.ok && signed.url) {
         const greeting = customerDisplayName ? t('shareQuote.greeting', { name: customerDisplayName }) : '';
-        await Share.share({
+        const res = await Share.share({
           message: t('shareQuote.message', { greeting, url: signed.url }),
           url: signed.url,
           title: t('shareQuote.shareTitle', 'Quote'),
         });
+        // Backing out of the share sheet is not sending. Status follows the
+        // artefact, never the button (#197 / #339).
+        if (!wasShareDismissed(res)) markQuoteSent(quote.id);
         return;
       }
-      await shareQuoteWithAcceptanceLink({
+      const fallback = await shareQuoteWithAcceptanceLink({
         // GROSS, not `quote.amount`. See the unit note above: `Quote.amount` is
         // NET, and this number is the one the CUSTOMER reads — in the share
         // message, under "Gesamt/Totaal/Total" on the acceptance page, and on
@@ -224,6 +228,7 @@ export default function QuoteDetailScreen() {
         id: quote.id, customer: quote.customer, customerName: customerDisplayName,
         amount: total, job: quote.job,
       });
+      if (fallback.shared) markQuoteSent(quote.id);
       if (isDemoMode) {
         Alert.alert(
           t('quotes.demoMode', 'Demo mode'),
@@ -369,23 +374,13 @@ export default function QuoteDetailScreen() {
         {quote.status === 'draft' && (
           <Pressable
             style={styles.assistBanner}
-            onPress={() => {
-              markQuoteSent(quote.id);
-              hapticSuccess();
-              Alert.alert(
-                t('quotes.quoteSent', 'Quote sent!'),
-                t('quotes.quoteSentDesc', 'Vasco will remind you in 3 days to follow up.'),
-                [
-                  { text: t('quotes.shareApprovalLink', 'Share approval link'), onPress: async () => {
-                    try {
-                      // R14.1: customer arg is the UUID, customerName needs the resolved name.
-                      await shareQuoteWithAcceptanceLink({ id: quote.id, customer: quote.customer, customerName: customerDisplayName, amount: total, job: quote.job });
-                    } catch {}
-                  }},
-                  { text: t('common.close', 'Close') },
-                ],
-              );
-            }}
+            // This used to mark the quote SENT and then announce "Quote sent!"
+            // BEFORE anything was shared — the share was an optional button in
+            // the alert. A quote the customer never received sat in the
+            // pipeline as sent, and the follow-up card counted days from a
+            // send that had not happened (#197's shape, #339). Now it shares
+            // first and the status follows the share.
+            onPress={() => { hapticSuccess(); void shareCustomerLink(); }}
             accessibilityRole="button"
           >
             <View style={styles.assistIcon}>

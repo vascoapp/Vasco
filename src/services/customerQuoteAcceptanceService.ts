@@ -18,6 +18,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share } from 'react-native';
+import { wasShareDismissed } from '../utils/shareOutcome';
 import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -335,7 +336,7 @@ export async function shareQuoteWithAcceptanceLink(quote: {
   amount: number;
   description?: string;
   job?: string;
-}): Promise<string> {
+}): Promise<{ url: string; shared: boolean }> {
   const t = i18n.t.bind(i18n);
   const { url } = await createAcceptanceLink(quote);
 
@@ -355,9 +356,13 @@ export async function shareQuoteWithAcceptanceLink(quote: {
     url,
   });
 
+  // Whether the customer actually got it. The caller marks the quote SENT off
+  // this: backing out of the share sheet is not sending (#339).
+  let shared = false;
   try {
-    await Share.share({ message, title: t('approval.quoteTitle', 'Quote') });
+    const res = await Share.share({ message, title: t('approval.quoteTitle', 'Quote') });
+    shared = !wasShareDismissed(res);
   } catch {}
 
-  return url;
+  return { url, shared };
 }
