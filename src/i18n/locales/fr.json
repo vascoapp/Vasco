@@ -1709,7 +1709,9 @@
     "teamOnlyDesc": "Les bons de commande sont destinés aux équipes qui commandent le matériel à l'avance. Vous travaillez seul ? Utilisez Matériaux pour comparer les prix.",
     "materialCount_one": "{{count}} matériau",
     "materialCount_other": "{{count}} matériaux",
-    "unknownSupplier": "Fournisseur à choisir"
+    "unknownSupplier": "Fournisseur à choisir",
+    "priceComparison": "Comparaison des prix fournisseurs",
+    "materialsCompared": "{{count}} matériaux comparés"
   },
   "workerCerts": {
     "title": "Certificats des ouvriers",

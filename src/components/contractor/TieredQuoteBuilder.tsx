@@ -921,8 +921,13 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             description: svc.item.name,
             quantity: svc.quantity,
           });
-          // Only override when the predictor came back with a reasonable value
-          return hours > 0 && hours < 24 ? { ...svc, quantity: hours } : svc;
+          // Only an HOURLY line has a quantity measured in hours. This wrote
+          // the predicted hours into `quantity` whatever the unit was, so a
+          // "Zählerschrank, 1 Stück, €450" line became 0,9 Stück — €405 — and
+          // 2 pieces became 1,7 (#207's shape, #339). A prediction may fill a
+          // field named `suggested*`; it may not rewrite what is billed.
+          const isHourly = (svc.item as { pricingType?: string }).pricingType === 'hourly';
+          return isHourly && hours > 0 && hours < 24 ? { ...svc, quantity: hours } : svc;
         } catch { return svc; }
       }));
       setSelectedServices(prev => [...prev, ...refined]);

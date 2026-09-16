@@ -1709,7 +1709,9 @@
     "teamOnlyDesc": "Gli ordini di acquisto sono pensati per team che ordinano materiale in anticipo. Lavori da solo? Usa Materiali per confrontare i prezzi.",
     "materialCount_one": "{{count}} materiale",
     "materialCount_other": "{{count}} materiali",
-    "unknownSupplier": "Fornitore da scegliere"
+    "unknownSupplier": "Fornitore da scegliere",
+    "priceComparison": "Confronto prezzi fornitori",
+    "materialsCompared": "{{count}} materiali confrontati"
   },
   "workerCerts": {
     "title": "Certificati dei lavoratori",

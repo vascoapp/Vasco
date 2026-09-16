@@ -1709,7 +1709,9 @@
     "teamOnlyDesc": "Purchase orders are for teams that order materials in advance. Working solo? Use Materials to compare prices.",
     "materialCount_one": "{{count}} material",
     "materialCount_other": "{{count}} materials",
-    "unknownSupplier": "Supplier to be chosen"
+    "unknownSupplier": "Supplier to be chosen",
+    "priceComparison": "Supplier price comparison",
+    "materialsCompared": "{{count}} materials compared"
   },
   "workerCerts": {
     "title": "Worker Certificates",

@@ -178,8 +178,11 @@ export default function PurchaseOrdersScreen() {
       {procurement.totalSavings > 0 && !procurement.loading && (
         <Pressable
           style={styles.aiBanner}
+          // Was hardcoded DUTCH ("AI Inkoopadvies" / "materialen geanalyseerd")
+          // on every market's screen, and called a rule-based supplier price
+          // comparison "AI" (#339).
           onPress={() => Alert.alert(
-            'AI Inkoopadvies',
+            t('purchaseOrders.priceComparison', 'Supplier price comparison'),
             procurement.results.map(r => r.recommendation).join('\n\n'),
           )}
         >
@@ -187,7 +190,7 @@ export default function PurchaseOrdersScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.aiBannerTitle}>{procurement.recommendation}</Text>
             <Text style={styles.aiBannerSub}>
-              {procurement.results.length} materialen geanalyseerd
+              {t('purchaseOrders.materialsCompared', { defaultValue: '{{count}} materials compared', count: procurement.results.length })}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />

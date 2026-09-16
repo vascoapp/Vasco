@@ -1709,7 +1709,9 @@
     "teamOnlyDesc": "Bestellungen sind für Teams gedacht, die Material im Voraus ordern. Arbeiten Sie allein? Nutzen Sie Materialien zum Preisvergleich.",
     "materialCount_one": "{{count}} Material",
     "materialCount_other": "{{count}} Materialien",
-    "unknownSupplier": "Lieferant noch zu wählen"
+    "unknownSupplier": "Lieferant noch zu wählen",
+    "priceComparison": "Lieferanten-Preisvergleich",
+    "materialsCompared": "{{count}} Materialien verglichen"
   },
   "workerCerts": {
     "title": "Mitarbeiterzertifikate",

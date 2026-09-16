@@ -1709,7 +1709,9 @@
     "teamOnlyDesc": "Los pedidos de compra son para equipos que piden material por adelantado. ¿Trabajas solo? Usa Materiales para comparar precios.",
     "materialCount_one": "{{count}} material",
     "materialCount_other": "{{count}} materiales",
-    "unknownSupplier": "Proveedor por elegir"
+    "unknownSupplier": "Proveedor por elegir",
+    "priceComparison": "Comparativa de precios de proveedores",
+    "materialsCompared": "{{count}} materiales comparados"
   },
   "workerCerts": {
     "title": "Certificados de trabajadores",

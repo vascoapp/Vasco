@@ -1473,7 +1473,9 @@
     "teamOnlyDesc": "Inkooporders zijn bedoeld voor teams die materiaal vooraf bestellen. Werk je solo? Gebruik Materialen om prijzen te vergelijken.",
     "materialCount_one": "{{count}} materiaal",
     "materialCount_other": "{{count}} materialen",
-    "unknownSupplier": "Leverancier nog te kiezen"
+    "unknownSupplier": "Leverancier nog te kiezen",
+    "priceComparison": "Prijsvergelijking leveranciers",
+    "materialsCompared": "{{count}} materialen vergeleken"
   },
   "workerCerts": {
     "title": "Certificaten Medewerkers",
