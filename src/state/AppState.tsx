@@ -1,7 +1,7 @@
 // React
 import { formatMoney } from '../i18n/formatting';
 import appI18n from '../i18n/i18n';
-import { jobBillingBasis } from '../services/jobBillingBasis';
+import { jobBillingBasis, invoiceFromJobBilling } from '../services/jobBillingBasis';
 import { buildJobFromQuote } from '../services/quoteToJob';
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -3038,7 +3038,6 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // elsewhere treats as a COST rate, so it is the fallback, not the
           // first choice.
           hourlyRate: hourlyChargeRate,
-          vatRatePercent: jobVatRate,
           labels: {
             labour: (hours: number) =>
               appI18n.t('invoices.labourLine', 'Labour ({{hours}} h)', { hours }),
@@ -3074,14 +3073,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 ),
           );
         }
-        // `Invoice.amount` is GROSS everywhere in this app. A quoted job keeps
-        // billing exactly what was agreed; an actuals-billed job grosses its
-        // own lines up at the profile's effective rate (0% for KOR /
-        // Kleinunternehmer, 19% DE, 21% NL — never the NL constant).
-        const amount = billing.source === 'quote'
-          ? billing.agreedAmount
-          : grossFromNet(billing.netAmount, jobVatRate);
         const docNumber = await nextDocumentNumber('invoice');
+        // Lines + GROSS amount — see `invoiceFromJobBilling` for why this is
+        // not simply `billing.agreedAmount` (that was the quote's NET, stored
+        // as a gross total: the VAT was never billed, #339).
+        const { lines: jobInvSourceItems, amount } = invoiceFromJobBilling({
+          billing,
+          quoteLines: job.quoteId ? (lineItems[job.quoteId] ?? []) : [],
+          fallbackVatRatePercent: jobVatRate,
+          makeLine: (li, idx) => ({
+            id: `li-${docNumber}-${idx}`,
+            description: li.description,
+            quantity: li.quantity,
+            unitPrice: li.unitPrice,
+          }),
+        });
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
 
@@ -3137,14 +3143,6 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // they carry a per-line `vatRate` that the persist block below reads,
         // and remapping them into fresh {description, quantity, unitPrice}
         // objects would have dropped it back to the profile default.
-        const jobInvSourceItems = billing.source === 'quote'
-          ? (job.quoteId ? (lineItems[job.quoteId] ?? []) : [])
-          : (billing.lineItems.map((li, idx) => ({
-              id: `li-${docNumber}-${idx}`,
-              description: li.description,
-              quantity: li.quantity,
-              unitPrice: li.unitPrice,
-            })) as typeof lineItems[string]);
         if (jobInvSourceItems.length > 0) {
           setLineItems((prev) => ({ ...prev, [docNumber]: jobInvSourceItems }));
         }

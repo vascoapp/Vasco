@@ -1,4 +1,5 @@
 import type { Job } from '../domain/jobs';
+import { grossFromDocumentLines } from '../domain/business';
 import type { JobMaterial, Material } from '../domain/materials';
 
 /**
@@ -32,7 +33,13 @@ export interface JobBillingBasis {
    * guessing at a rate it cannot see.
    */
   netAmount: number;
-  /** What was agreed up front, gross — only meaningful when source is 'quote'. */
+  /**
+   * What was agreed up front, NET — only meaningful when source is 'quote'.
+   * It is copied from `Quote.amount` (`quoteToJob`), and a quote's amount is
+   * net. This field was documented and treated as GROSS, so a job invoiced
+   * off an accepted €1.000 quote became an invoice of €1.000 gross: the VAT
+   * was never billed (#339).
+   */
   agreedAmount: number;
   /**
    * `quote` — a price was agreed up front and that is what gets billed.
@@ -128,11 +135,9 @@ export function jobBillingBasis(args: {
   jobMaterials: JobMaterial[];
   catalog: Pick<Material, 'id' | 'name'>[];
   hourlyRate?: number;
-  /** Used to split an agreed GROSS price back into a net line. */
-  vatRatePercent: number;
   labels: BillingLabels;
 }): JobBillingBasis {
-  const { job, quoteLines, jobMaterials, catalog, hourlyRate, vatRatePercent, labels } = args;
+  const { job, quoteLines, jobMaterials, catalog, hourlyRate, labels } = args;
   const agreed = job.agreedAmount ?? job.quotedAmount ?? 0;
 
   // What the job recorded, regardless of how it is billed. A fixed-price
@@ -157,7 +162,8 @@ export function jobBillingBasis(args: {
       : [{
           description: job.title,
           quantity: 1,
-          unitPrice: Math.round((agreed / (1 + vatRatePercent / 100)) * 100) / 100,
+          // Already net (see `agreedAmount`). The caller grosses the lines up.
+          unitPrice: Math.round(agreed * 100) / 100,
         }];
     const net = Math.round(lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0) * 100) / 100;
     return { lineItems: lines, netAmount: net, agreedAmount: agreed, source: 'quote', unpricedHours: 0, workRecord };
@@ -174,4 +180,33 @@ export function jobBillingBasis(args: {
     return { lineItems: [], netAmount: 0, agreedAmount: 0, source: 'none', unpricedHours, workRecord };
   }
   return { lineItems, netAmount, agreedAmount: 0, source: 'actuals', unpricedHours, workRecord };
+}
+
+/**
+ * The lines an invoice-from-job stores, and its GROSS `amount`.
+ *
+ * Extracted from `addInvoiceFromJob` so the arithmetic is testable: it used to
+ * store `billing.agreedAmount` — the quote's NET amount — as the invoice's
+ * GROSS total, so an accepted €1.000 quote invoiced as €1.000 and the VAT was
+ * never billed (#339). It also dropped the agreed-price line when the job had
+ * no quote lines, storing an invoice with none.
+ *
+ * - Quote lines, when there are any, pass through untouched: they carry the
+ *   per-line `vatRate` the customer agreed to.
+ * - Otherwise the basis's own lines (agreed-price line, or hours + materials).
+ * - The amount follows the one VAT rule (`grossFromDocumentLines`): the lines'
+ *   own rates when they reconcile, else `fallbackVatRatePercent` (0% for
+ *   KOR / Kleinunternehmer).
+ */
+export function invoiceFromJobBilling<L extends { quantity: number; unitPrice: number; vatRate?: number }>(args: {
+  billing: JobBillingBasis;
+  quoteLines: L[];
+  fallbackVatRatePercent: number;
+  makeLine: (line: BillableLine, index: number) => L;
+}): { lines: L[]; amount: number } {
+  const { billing, quoteLines, fallbackVatRatePercent, makeLine } = args;
+  const lines = billing.source === 'quote' && quoteLines.length > 0
+    ? quoteLines
+    : billing.lineItems.map(makeLine);
+  return { lines, amount: grossFromDocumentLines(billing.netAmount, lines, fallbackVatRatePercent) };
 }

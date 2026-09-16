@@ -44,6 +44,8 @@ import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber } from '../../src/domain/documents';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
+import { getEffectiveVatRate } from '../../src/domain/business';
 import { overdueReminderMessage } from '../../src/services/overdueReminderMessage';
 import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { daysOverdue } from '../../src/utils/invoiceDue';
@@ -125,7 +127,7 @@ function DSOHint({ customerId, amount }: { customerId?: string; amount?: number 
 
 function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoice[]; expandedId: string | null; onToggleExpand: (id: string) => void }) {
   const { t } = useTranslation();
-  const { businessProfile, customers, jobs } = useAppState();
+  const { businessProfile, customers, jobs, lineItems } = useAppState();
   const { user } = useAuth();
   // Profile first, account as fallback (CLAUDE.md, #218).
   const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
@@ -439,8 +441,18 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       );
                       return;
                     }
-                    const autoInv = invoiceAutomationService.getInvoice(invoice.id);
-                    if (autoInv) {
+                    // Built from the real invoice. This read
+                    // `invoiceAutomationService.getInvoice`, an in-memory list no
+                    // real flow fills — so for every real invoice the share did
+                    // nothing but show "not found" (#339).
+                    const autoInv = pdfInvoiceFromRecord({
+                      invoice,
+                      lines: lineItems[invoice.id],
+                      customer: findDocumentCustomer(customers, invoice) ?? undefined,
+                      fallbackVatRatePercent: getEffectiveVatRate(businessProfile),
+                      fallbackDescription: t('invoices.services', 'Services rendered'),
+                    });
+                    {
                       hapticSuccess();
                       const link = await createPaymentLink({
                         invoiceId: invoice.id,
@@ -473,8 +485,6 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                             : autoInv.deliveryDate,
                       };
                       await generateInvoicePdf(enriched, businessProfile, link?.url, customerSignature ? { customerSignature } : undefined);
-                    } else {
-                      Alert.alert(t('invoices.downloadPdf', 'PDF'), t('invoices.invoiceNotFound', 'Factuur niet gevonden in automatiseringssysteem.'));
                     }
                   }}
                 >

@@ -17,7 +17,6 @@ import { useAuth } from '../../src/context/AuthContext';
 import { recordHandover, channelForCountry } from '../../src/services/submissionStore';
 import { hapticError, hapticSuccess } from '../../src/utils/haptics';
 import { generateInvoicePdf, buildInvoicePdfBase64 } from '../../src/services/invoicePdfService';
-import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
 import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../../src/config/paymentMethods';
 import { formatCurrency, formatDate, formatDateShort, formatDayMonth } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -44,6 +43,7 @@ import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow 
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { DecimalInput } from '../../src/components/shared/DecimalInput';
+import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -253,6 +253,16 @@ export default function InvoiceDetailScreen() {
   // null on a genuinely mixed-rate invoice: the label omits the percentage
   // rather than printing a blended average that appears on no tax return.
   const vatRatePct = vatBreakdown.ratePct;
+
+  // The PDF input for THIS invoice: the lines on screen (the stored ones, or
+  // the single line synthesised above), the customer record, one VAT rule.
+  const pdfForThisInvoice = () => pdfInvoiceFromRecord({
+    invoice,
+    lines: localItems,
+    customer: invoiceCustomer ?? undefined,
+    fallbackVatRatePercent: Math.round(effectiveRate * 100),
+    fallbackDescription: t('invoices.services', 'Services rendered'),
+  });
 
   // R66 round 13: handleSaveCustomer removed. The flow wrote the
   // customer's display NAME into the documents.customer_id UUID FK
@@ -472,7 +482,9 @@ export default function InvoiceDetailScreen() {
     // contractor sent a separate PDF via WhatsApp/Drive. Now we generate
     // the same PDF the share-button produces and attach it.
     let pdfBase64: string | undefined;
-    const autoInvForPdf = invoiceAutomationService.getInvoice(invoice.id);
+    // Built from the real invoice — `invoiceAutomationService.getInvoice` is an
+    // in-memory list no real flow fills, so this attachment was never added (#339).
+    const autoInvForPdf = pdfForThisInvoice();
     if (autoInvForPdf) {
       const linkedJob = (invoice as any).jobId
         ? jobs.find((j: any) => j.id === (invoice as any).jobId)
@@ -545,7 +557,9 @@ export default function InvoiceDetailScreen() {
       return;
     }
     hapticSuccess();
-    const autoInv = invoiceAutomationService.getInvoice(invoice.id);
+    // Built from the real invoice (see pdfForThisInvoice) — this used to read an
+    // empty in-memory service, so the PDF button did nothing after its haptic.
+    const autoInv = pdfForThisInvoice();
     if (autoInv) {
       // R303: embed customer-handover signature when the linked job has one
       // captured. Same pattern as facturen.tsx PDF button (R301).

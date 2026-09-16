@@ -8,7 +8,9 @@ import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
-import { invoiceAutomationService } from '../../src/services/invoiceAutomationService';
+import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
+import { findDocumentCustomer } from '../../src/domain/customers';
+import { getEffectiveVatRate } from '../../src/domain/business';
 import { generateInvoicePdf } from '../../src/services/invoicePdfService';
 import { useAppState } from '../../src/state/AppState';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
@@ -24,7 +26,7 @@ export default function PdfModal() {
   const { t } = useTranslation();
   const { source, id } = useLocalSearchParams<{ source?: string; id?: string }>();
   const router = useRouter();
-  const { businessProfile, jobs, invoices } = useAppState();
+  const { businessProfile, jobs, invoices, lineItems, customers } = useAppState();
   const [generating, setGenerating] = useState(false);
 
   const label = source === 'invoice'
@@ -45,7 +47,18 @@ export default function PdfModal() {
         );
         return;
       }
-      const invoice = invoiceAutomationService.getInvoice(id);
+      // Built from the real invoice. `invoiceAutomationService.getInvoice` is an
+      // in-memory list no real flow fills, so this always said "not found" (#339).
+      const record = invoices.find((inv) => inv.id === id);
+      const invoice = record
+        ? pdfInvoiceFromRecord({
+            invoice: record,
+            lines: lineItems[record.id],
+            customer: findDocumentCustomer(customers, record) ?? undefined,
+            fallbackVatRatePercent: getEffectiveVatRate(businessProfile),
+            fallbackDescription: t('invoices.services', 'Services rendered'),
+          })
+        : undefined;
       if (!invoice) {
         Alert.alert(
           t('common.error', 'Error'),

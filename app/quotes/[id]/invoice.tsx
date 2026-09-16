@@ -204,7 +204,9 @@ export default function InvoiceFromQuoteScreen() {
             <>
               <PrimaryButton
                 label={t('quoteToInvoice.generatePdf')}
-                onPress={() => router.push('/(modals)/pdf?source=invoice')}
+                // The id was never passed, so the modal fell through to its
+                // "PDF support is coming soon" branch for a real invoice.
+                onPress={() => router.push(`/(modals)/pdf?source=invoice&id=${encodeURIComponent(invoiceId)}` as any)}
               />
               <PrimaryButton label={t('quoteToInvoice.markSent')} onPress={handleMarkSent} />
             </>

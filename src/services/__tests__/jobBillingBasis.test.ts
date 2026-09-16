@@ -1,5 +1,6 @@
 import {
   jobBillingBasis,
+  invoiceFromJobBilling,
   buildJobActualLines,
   loggedHours,
   billableMaterials,
@@ -108,7 +109,6 @@ describe('jobBillingBasis', () => {
       jobMaterials: [material()],
       catalog,
       hourlyRate: 65,
-      vatRatePercent: 19,
       labels,
     });
     expect(basis.source).toBe('quote');
@@ -118,7 +118,7 @@ describe('jobBillingBasis', () => {
 
   it('falls back to the quoted amount when nothing was separately agreed', () => {
     const basis = jobBillingBasis({
-      job: { ...bareJob, quotedAmount: 280 }, quoteLines, jobMaterials: [], catalog, hourlyRate: 65, vatRatePercent: 19, labels,
+      job: { ...bareJob, quotedAmount: 280 }, quoteLines, jobMaterials: [], catalog, hourlyRate: 65, labels,
     });
     expect(basis.source).toBe('quote');
     expect(basis.agreedAmount).toBe(280);
@@ -126,14 +126,14 @@ describe('jobBillingBasis', () => {
 
   it('bills the job\'s own record when no price was ever agreed — the case that used to throw', () => {
     const job = { ...bareJob, timeEntries: [{ id: '1', date: '2026-08-01', hours: 3 }] };
-    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [material()], catalog, hourlyRate: 65, vatRatePercent: 19, labels });
+    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [material()], catalog, hourlyRate: 65, labels });
     expect(basis.source).toBe('actuals');
     expect(basis.lineItems.map(l => l.description)).toEqual(['Arbeitsstunden (3 Std.)', 'Grohe mengkraan']);
     expect(basis.netAmount).toBe(3 * 65 + 2 * 45);
   });
 
   it('reports "none" — not a zero invoice — when the job recorded nothing at all', () => {
-    const basis = jobBillingBasis({ job: bareJob, quoteLines: [], jobMaterials: [], catalog, hourlyRate: 65, vatRatePercent: 19, labels });
+    const basis = jobBillingBasis({ job: bareJob, quoteLines: [], jobMaterials: [], catalog, hourlyRate: 65, labels });
     expect(basis.source).toBe('none');
     expect(basis.netAmount).toBe(0);
     expect(basis.lineItems).toEqual([]);
@@ -141,7 +141,7 @@ describe('jobBillingBasis', () => {
 
   it('refuses rather than minting a EUR 0 invoice when the hours cannot be priced', () => {
     const job = { ...bareJob, timeEntries: [{ id: '1', date: '2026-08-01', hours: 6 }] };
-    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [], catalog, hourlyRate: undefined, vatRatePercent: 19, labels });
+    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [], catalog, hourlyRate: undefined, labels });
     expect(basis.source).toBe('none');
     expect(basis.netAmount).toBe(0);
     // The caller needs to tell the contractor WHICH of the two reasons it is.
@@ -150,19 +150,21 @@ describe('jobBillingBasis', () => {
 
   it('bills the materials and reports the unpriced hours when only the rate is missing', () => {
     const job = { ...bareJob, timeEntries: [{ id: '1', date: '2026-08-01', hours: 6 }] };
-    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [material()], catalog, hourlyRate: undefined, vatRatePercent: 19, labels });
+    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [material()], catalog, hourlyRate: undefined, labels });
     expect(basis.source).toBe('actuals');
     expect(basis.netAmount).toBe(90);
     expect(basis.unpricedHours).toBe(6);
   });
 
   it('gives an agreed-price job a real line named after the job when no quote lines exist', () => {
-    const job = { ...bareJob, agreedAmount: 119, title: 'Lekkage reparatie', timeEntries: [{ id: '1', date: '2026-08-01', hours: 2 }] };
-    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [], catalog, hourlyRate: 65, vatRatePercent: 19, labels });
+    const job = { ...bareJob, agreedAmount: 100, title: 'Lekkage reparatie', timeEntries: [{ id: '1', date: '2026-08-01', hours: 2 }] };
+    const basis = jobBillingBasis({ job, quoteLines: [], jobMaterials: [], catalog, hourlyRate: 65, labels });
     expect(basis.source).toBe('quote');
+    // `agreedAmount` is the QUOTE's amount, which is NET (quoteToJob copies
+    // `quote.amount`). It used to be divided by 1.19 as if gross, so the
+    // invoice billed the net figure as its gross total and the VAT was lost.
     expect(basis.lineItems).toEqual([{ description: 'Lekkage reparatie', quantity: 1, unitPrice: 100 }]);
-    // The line is NET and grosses back up to exactly what was agreed.
-    expect(Math.round(basis.lineItems[0].unitPrice * 1.19 * 100) / 100).toBe(119);
+    expect(basis.netAmount).toBe(100);
   });
 
   it('carries the job record onto a fixed-price invoice as a note, not as lines', () => {
@@ -171,7 +173,7 @@ describe('jobBillingBasis', () => {
       timeEntries: [{ id: '1', date: '2026-08-01', hours: 2.5 }],
       completedAt: '2026-08-08T10:00:00.000Z',
     };
-    const basis = jobBillingBasis({ job, quoteLines, jobMaterials: [material()], catalog, hourlyRate: 65, vatRatePercent: 19, labels });
+    const basis = jobBillingBasis({ job, quoteLines, jobMaterials: [material()], catalog, hourlyRate: 65, labels });
     expect(basis.lineItems).toEqual(quoteLines); // the agreement, untouched
     expect(basis.workRecord).toContain('2.5 Std.');
     expect(basis.workRecord).toContain('1 Materialien');
@@ -179,14 +181,71 @@ describe('jobBillingBasis', () => {
   });
 
   it('has no work record when the job recorded nothing', () => {
-    const basis = jobBillingBasis({ job: { ...bareJob, agreedAmount: 280 }, quoteLines, jobMaterials: [], catalog, hourlyRate: 65, vatRatePercent: 19, labels });
+    const basis = jobBillingBasis({ job: { ...bareJob, agreedAmount: 280 }, quoteLines, jobMaterials: [], catalog, hourlyRate: 65, labels });
     expect(basis.workRecord).toBeUndefined();
   });
 
   it('does not treat planned materials as a reason to invoice', () => {
     const basis = jobBillingBasis({
-      job: bareJob, quoteLines: [], jobMaterials: [material({ status: 'planned' })], catalog, hourlyRate: 65, vatRatePercent: 19, labels,
+      job: bareJob, quoteLines: [], jobMaterials: [material({ status: 'planned' })], catalog, hourlyRate: 65, labels,
     });
     expect(basis.source).toBe('none');
+  });
+});
+
+describe('invoiceFromJobBilling — the invoice a job becomes', () => {
+  const makeLine = (li: { description: string; quantity: number; unitPrice: number }, i: number) => ({ id: `l${i}`, ...li });
+
+  it('bills an accepted quote GROSS: net €1.000 at 19% is an invoice of €1.190', () => {
+    const quoteLines = [{ id: 'q1', description: 'Bad', quantity: 1, unitPrice: 1000 }];
+    const billing = jobBillingBasis({
+      job: { ...bareJob, agreedAmount: 1000 }, quoteLines, jobMaterials: [], catalog, hourlyRate: 65, labels,
+    });
+    const { lines, amount } = invoiceFromJobBilling({ billing, quoteLines, fallbackVatRatePercent: 19, makeLine });
+    // Was 1000: the quote's net stored as the gross total, VAT never billed.
+    expect(amount).toBe(1190);
+    expect(lines).toBe(quoteLines);
+  });
+
+  it("keeps the quote lines' own agreed rate (NL 9% labour)", () => {
+    const quoteLines = [{ id: 'q1', description: 'Schilderwerk', quantity: 1, unitPrice: 1000, vatRate: 9 }];
+    const billing = jobBillingBasis({
+      job: { ...bareJob, agreedAmount: 1000 }, quoteLines, jobMaterials: [], catalog, hourlyRate: 65, labels,
+    });
+    expect(invoiceFromJobBilling({ billing, quoteLines, fallbackVatRatePercent: 21, makeLine }).amount).toBe(1090);
+  });
+
+  it('stores the agreed-price line when the job has no quote lines (it was dropped)', () => {
+    const billing = jobBillingBasis({
+      job: { ...bareJob, agreedAmount: 280, title: 'Lekkage' }, quoteLines: [], jobMaterials: [], catalog, hourlyRate: 65, labels,
+    });
+    const { lines, amount } = invoiceFromJobBilling({ billing, quoteLines: [], fallbackVatRatePercent: 19, makeLine });
+    expect(lines).toEqual([{ id: 'l0', description: 'Lekkage', quantity: 1, unitPrice: 280 }]);
+    expect(amount).toBe(333.2);
+  });
+
+  it('bills nothing extra for a Kleinunternehmer (0%)', () => {
+    const quoteLines = [{ id: 'q1', description: 'Wartung', quantity: 1, unitPrice: 185.5 }];
+    const billing = jobBillingBasis({
+      job: { ...bareJob, agreedAmount: 185.5 }, quoteLines, jobMaterials: [], catalog, hourlyRate: 65, labels,
+    });
+    expect(invoiceFromJobBilling({ billing, quoteLines, fallbackVatRatePercent: 0, makeLine }).amount).toBe(185.5);
+  });
+});
+
+describe('addInvoiceFromJob uses invoiceFromJobBilling', () => {
+  // The pure function is only worth its tests if the mutator goes through it.
+  // Before #339 the mutator decided the amount inline and stored the quote's
+  // NET `agreedAmount` as the invoice's GROSS total.
+  it('computes lines + amount through the helper, never agreedAmount directly', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const { stripComments } = require('../../utils/stripComments');
+    const src: string = stripComments(fs.readFileSync(path.join(__dirname, '../../state/AppState.tsx'), 'utf8'));
+    const start = src.indexOf('addInvoiceFromJob: async');
+    expect(start).toBeGreaterThan(-1);
+    const body = src.slice(start, src.indexOf('setInvoices((prev) => [newInvoice', start));
+    expect(body).toMatch(/invoiceFromJobBilling\(/);
+    expect(body).not.toMatch(/amount\s*[:=][^;\n]*billing\.agreedAmount/);
   });
 });
