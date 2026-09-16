@@ -325,7 +325,7 @@
     "valueProp3Desc": "Vergunningen, certificaten, EU-regelgeving — alles bijgehouden",
     "vatPresetTitle": "BTW-regeling ingesteld",
     "vatPresetKor": "KOR geselecteerd — wijzig in Instellingen als je omzet boven €20.000 uitkomt.",
-    "vatPresetKlein": "Kleinunternehmer geselecteerd — wijzig in Instellingen als omzet boven €22.000 komt.",
+    "vatPresetKlein": "Kleinunternehmer geselecteerd — wijzig in Instellingen als omzet boven €25.000 komt.",
     "perMonth": "/mnd",
     "aiInsight": {
       "leads": "Leadscoring"
@@ -3188,8 +3188,8 @@
       "applyA11y": "Pas voorgestelde BTW-regeling toe",
       "standardTeam": "Standaard BTW — kleineondernemers­regelingen gelden alleen voor zzp'ers.",
       "standardCountry": "Standaard BTW — geen kleineondernemers­regeling beschikbaar voor jouw land/rechtsvorm.",
-      "korNl": "Solo eenmanszaak — KOR past als je jaaromzet onder €20.000 blijft.",
-      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmerregeling past bij voorjaars­omzet ≤ €22.000 en lopend jaar ≤ €50.000."
+      "korNl": "Solo eenmanszaak — KOR past als je omzet onder €20.000 blijft (vorig én lopend jaar) én je je bij de Belastingdienst hebt aangemeld.",
+      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmerregeling past bij vorig­jaaromzet ≤ €25.000 en lopend jaar ≤ €100.000."
     }
   },
   "audit": {

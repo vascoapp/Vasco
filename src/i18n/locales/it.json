@@ -325,7 +325,7 @@
     "valueProp3Desc": "Permessi, certificati, normative UE — tutto tracciato",
     "vatPresetTitle": "Regime IVA impostato",
     "vatPresetKor": "KOR selezionato — cambia in Impostazioni se il fatturato supera €20.000.",
-    "vatPresetKlein": "Kleinunternehmer selezionato — cambia in Impostazioni se supera €22.000.",
+    "vatPresetKlein": "Kleinunternehmer selezionato — cambia in Impostazioni se supera €25.000.",
     "perMonth": "/mese",
     "aiInsight": {
       "payments": "Solleciti di pagamento",
@@ -3346,8 +3346,8 @@
       "applyA11y": "Applica regime IVA suggerito",
       "standardTeam": "IVA standard — i regimi per piccole imprese si applicano solo agli autonomi solo.",
       "standardCountry": "IVA standard — nessun regime per piccole imprese disponibile per il tuo paese/forma giuridica.",
-      "korNl": "Eenmanszaak in solo — KOR adatto se il fatturato annuo resta sotto €20.000.",
-      "kleinDe": "Einzelunternehmen in solo — Kleinunternehmer adatto con fatturato anno precedente ≤ €22.000 e anno corrente ≤ €50.000."
+      "korNl": "Eenmanszaak in solo — KOR adatto se il fatturato resta sotto €20.000 (anno precedente e corrente) E dopo la registrazione al Belastingdienst.",
+      "kleinDe": "Einzelunternehmen in solo — Kleinunternehmer adatto con fatturato anno precedente ≤ €25.000 e anno corrente ≤ €100.000."
     }
   },
   "audit": {

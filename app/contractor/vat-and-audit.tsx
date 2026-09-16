@@ -103,7 +103,7 @@ export default function VatAndAuditScreen() {
     {
       value: 'small_business_DE_kleinunternehmer',
       label: t('vatScheme.kleinunternehmer', 'Kleinunternehmer (§19 UStG)'),
-      subtitle: 'DE · Keine USt · Vorjahr ≤ €22.000 · laufendes ≤ €50.000',
+      subtitle: 'DE · Keine USt · Vorjahr ≤ €25.000 · laufendes ≤ €100.000',
       visible: country === 'DE',
     },
   ];

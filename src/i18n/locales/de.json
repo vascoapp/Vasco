@@ -325,7 +325,7 @@
     "valueProp3Desc": "Genehmigungen, Zertifikate, EU-Vorschriften — alles im Blick",
     "vatPresetTitle": "USt-Regelung gesetzt",
     "vatPresetKor": "KOR ausgewählt — in den Einstellungen ändern, falls Umsatz über €20.000.",
-    "vatPresetKlein": "Kleinunternehmer ausgewählt — in Einstellungen ändern, falls Umsatz über €22.000.",
+    "vatPresetKlein": "Kleinunternehmer ausgewählt — in Einstellungen ändern, falls Umsatz über €25.000.",
     "perMonth": "/Mon.",
     "aiInsight": {
       "payments": "Zahlungserinnerungen",
@@ -3201,8 +3201,8 @@
       "applyA11y": "Vorgeschlagene USt-Regelung übernehmen",
       "standardTeam": "Standard-USt — Kleinunternehmerregelungen gelten nur für Solo-Unternehmer.",
       "standardCountry": "Standard-USt — keine Kleinunternehmerregelung für Ihr Land/Ihre Rechtsform.",
-      "korNl": "Solo eenmanszaak — KOR passt, wenn Ihr Jahresumsatz unter €20.000 bleibt.",
-      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer passt bei Vorjahresumsatz ≤ €22.000 und laufendem Jahr ≤ €50.000."
+      "korNl": "Solo eenmanszaak — KOR passt bei Jahresumsatz unter €20.000 (Vorjahr und laufendes Jahr) UND nach Anmeldung bei der Belastingdienst.",
+      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer passt bei Vorjahresumsatz ≤ €25.000 und laufendem Jahr ≤ €100.000."
     }
   },
   "audit": {

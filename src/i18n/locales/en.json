@@ -325,7 +325,7 @@
     "valueProp3Desc": "Permits, certificates, EU regulations — all tracked",
     "vatPresetTitle": "VAT scheme set",
     "vatPresetKor": "Selected KOR — change in Settings if turnover will exceed €20.000.",
-    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed €22.000.",
+    "vatPresetKlein": "Selected Kleinunternehmer — change in Settings if turnover will exceed €25.000.",
     "perMonth": "/mo",
     "aiInsight": {
       "payments": "Payment reminders",
@@ -3201,8 +3201,8 @@
       "applyA11y": "Apply suggested VAT scheme",
       "standardTeam": "Standard VAT — small-business schemes only apply to solo contractors.",
       "standardCountry": "Standard VAT — no small-business exemption available for your country/business type.",
-      "korNl": "Solo eenmanszaak — KOR fits if your annual turnover stays under €20.000.",
-      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer fits if previous-year turnover ≤ €22.000 and current-year ≤ €50.000."
+      "korNl": "Solo eenmanszaak — KOR fits if turnover stays under €20.000 (previous and current year) AND you have registered for it with the Belastingdienst.",
+      "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer fits if previous-year turnover ≤ €25.000 and current-year ≤ €100.000."
     }
   },
   "audit": {

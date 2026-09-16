@@ -325,7 +325,7 @@
     "valueProp3Desc": "Permis, certificats, réglementations UE — tout suivi",
     "vatPresetTitle": "Régime de TVA défini",
     "vatPresetKor": "KOR sélectionné — modifiez dans Paramètres si votre CA dépasse €20.000.",
-    "vatPresetKlein": "Kleinunternehmer sélectionné — modifiez dans Paramètres si CA > €22.000.",
+    "vatPresetKlein": "Kleinunternehmer sélectionné — modifiez dans Paramètres si CA > €25 000.",
     "perMonth": "/mois",
     "aiInsight": {
       "payments": "Relances de paiement",
@@ -3346,8 +3346,8 @@
       "applyA11y": "Appliquer le régime de TVA suggéré",
       "standardTeam": "TVA standard — les régimes simplifiés ne s'appliquent qu'aux indépendants en solo.",
       "standardCountry": "TVA standard — aucun régime simplifié disponible pour votre pays/forme juridique.",
-      "korNl": "Eenmanszaak en solo — KOR convient si votre chiffre annuel reste sous €20 000.",
-      "kleinDe": "Einzelunternehmen en solo — Kleinunternehmer convient si CA année précédente ≤ €22 000 et année en cours ≤ €50 000."
+      "korNl": "Eenmanszaak en solo — la KOR convient si le CA reste sous €20 000 (année précédente et en cours) ET après inscription auprès du Belastingdienst.",
+      "kleinDe": "Einzelunternehmen en solo — Kleinunternehmer convient si CA année précédente ≤ €25 000 et année en cours ≤ €100 000."
     }
   },
   "audit": {

@@ -4,8 +4,10 @@
 // Reads what we already know from onboarding (country + businessType + teamSize)
 // and recommends the most-likely-applicable VAT scheme:
 //   - NL eenmanszaak + solo → KOR (Kleineondernemersregeling, turnover ≤ €20k)
-//   - DE Einzelunternehmen + solo → Kleinunternehmer (§19 UStG, ≤ €22k prior /
-//     ≤ €50k current)
+//   - DE Einzelunternehmen + solo → Kleinunternehmer (§19 UStG, ≤ €25k prior /
+//     ≤ €100k current — the 2025 limits; the old €22k/€50k pair was repealed
+//     by the Jahressteuergesetz 2024 and crossing €100k now ends the
+//     exemption for that very sale)
 //   - Anything else → standard
 //
 // The suggestion is non-binding — contractor confirms or overrides on the VAT
@@ -52,7 +54,7 @@ export function suggestVatScheme(input: {
   if (country === 'NL' && businessType && NL_SOLO_TYPES.includes(businessType)) {
     return {
       suggested: 'small_business_NL_KOR',
-      reason: 'Solo eenmanszaak — KOR fits if your annual turnover stays under €20.000.',
+      reason: 'Solo eenmanszaak — KOR fits under €20.000 turnover (previous AND current year) and only once registered for it with the Belastingdienst.',
       i18nKey: 'vatScheme.advisor.korNl',
       confident: true,
     };
@@ -61,7 +63,7 @@ export function suggestVatScheme(input: {
   if (country === 'DE' && businessType && DE_SOLO_TYPES.includes(businessType)) {
     return {
       suggested: 'small_business_DE_kleinunternehmer',
-      reason: 'Solo Einzelunternehmen — Kleinunternehmer fits if previous-year turnover ≤ €22.000 and current-year ≤ €50.000.',
+      reason: 'Solo Einzelunternehmen — Kleinunternehmer fits if previous-year turnover ≤ €25.000 and current-year ≤ €100.000.',
       i18nKey: 'vatScheme.advisor.kleinDe',
       confident: true,
     };

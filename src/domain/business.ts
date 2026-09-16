@@ -1,7 +1,8 @@
 // R250: VAT scheme. 'standard' = normal trade VAT (21/19/etc).
 // 'small_business_NL_KOR' = Dutch Kleineondernemersregeling, no VAT charged
 // (turnover ≤ €20k/yr). 'small_business_DE_kleinunternehmer' = §19 UStG,
-// no VAT charged (turnover ≤ €22k prior year, ≤ €50k current year).
+// no VAT charged (turnover ≤ €25k prior year, ≤ €100k current year — the
+// 2025 limits under the Jahressteuergesetz 2024).
 // When small_business is set, every invoice must show 0% VAT and a legal
 // note ("BTW niet van toepassing — KOR" / "Kein Ausweis der USt gem. §19 UStG").
 export type VatScheme =

@@ -24,6 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
+import { logWarn } from '../src/utils/errorHandler';
 import i18n from '../src/i18n/i18n';
 import { useAuth, type Country, type Language } from '../src/context/AuthContext';
 import { useAppState } from '../src/state/AppState';
@@ -462,14 +463,26 @@ export default function OnboardingScreen() {
         if (isSupabaseConfigured) {
           const { data: { user: authUser } } = await supabase.auth.getUser();
           if (authUser) {
-            await (supabase.from('subscriptions' as any) as any).upsert({
+            // `subscriptions.billing_cycle` allows only 'monthly' | 'yearly'
+            // (live CHECK). This sent the UI's 'annual' — the DEFAULT — so the
+            // whole upsert failed and the error was swallowed: the plan choice
+            // never reached the server at all (#339).
+            const cycle = billingCycle === 'annual' ? 'yearly' : 'monthly';
+            // Never write `trial_ends_at: null`. `AuthContext.signUp` starts a
+            // 14-day Pro trial; picking the free plan here used to erase it —
+            // and erasing it is not what "I'll start on free" means. The trial
+            // expires on its own in `loadSubscription`.
+            const { error: planError } = await (supabase.from('subscriptions' as any) as any).upsert({
               user_id: authUser.id,
               tier: selectedPlan,
-              billing_cycle: billingCycle,
+              billing_cycle: cycle,
               status: selectedPlan === 'free' ? 'active' : 'trialing',
-              trial_ends_at: selectedPlan === 'free' ? null : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              ...(selectedPlan === 'free'
+                ? {}
+                : { trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() }),
               updated_at: new Date().toISOString(),
             }, { onConflict: 'user_id' });
+            if (planError) logWarn('Onboarding', `plan upsert failed: ${planError.message ?? planError}`);
           }
         }
       } catch {
@@ -528,29 +541,44 @@ export default function OnboardingScreen() {
       // Push captured registration fields into AppState.businessProfile so
       // the invoice-send legal gate (R145) sees the real values on day one.
       try {
+        // ⚠️ These MUST be keys from REG_FIELDS above — that is what the form
+        // writes into `regFields`. They were a second spelling of the same
+        // idea ('ustIdNr' vs the form's 'ustId', 'hrb' vs 'handelsregister',
+        // 'tva' vs 'tvaIntra', 'companyNumber' vs 'companiesHouse',
+        // 'codiceFiscale' vs 'cameraCommercio'), so the German VAT ID a
+        // contractor typed in onboarding never reached their profile and the
+        // invoice-send gate then blocked them for "USt-IdNr missing" (#339).
+        // `regFieldKeysExist` in the onboarding test pins them to REG_FIELDS.
         const countryVatKey = country === 'NL' ? 'btw'
-          : country === 'DE' ? 'ustIdNr'
-          : country === 'FR' ? 'tva'
+          : country === 'DE' ? 'ustId'
+          : country === 'FR' ? 'tvaIntra'
           : country === 'ES' ? 'nif'
           : country === 'IT' ? 'partitaIva'
           : country === 'UK' ? 'vatNumber'
           : 'vatNumber';
         const regRegKey = country === 'NL' ? 'kvk'
-          : country === 'DE' ? 'hrb'
+          : country === 'DE' ? 'handelsregister'
           : country === 'FR' ? 'siret'
-          : country === 'UK' ? 'companyNumber'
-          : country === 'ES' ? 'nif'
-          : country === 'IT' ? 'codiceFiscale'
+          : country === 'UK' ? 'companiesHouse'
+          : country === 'ES' ? 'iae'
+          : country === 'IT' ? 'cameraCommercio'
           : 'kvk';
-        // R264: pre-apply confident VAT scheme so the contractor lands already
-        // configured rather than discovering it in settings later. Only applies
-        // when advisor.confident=true (NL eenmanszaak+solo or DE Einzel+solo).
-        const { suggestVatScheme } = await import('../src/services/vatSchemeAdvisor');
-        const advice = suggestVatScheme({ country, businessType, teamSize });
-        const vatSchemeToApply = advice.confident ? advice.suggested : 'standard';
+        // R264 pre-applied the advisor's suggestion. It is now only a
+        // SUGGESTION (surfaced on the USt & audit screen), because applying it
+        // silently put every German solo Einzelunternehmen on Kleinunternehmer
+        // (§19 UStG) — every invoice issued without VAT — on the strength of
+        // "solo + sole trader", which says nothing about turnover. The
+        // advisor's own header says to err toward standard for exactly this
+        // reason, and NL KOR additionally requires registering with the
+        // Belastingdienst first (#339 / L1 / L2).
+        const vatSchemeToApply = 'standard';
 
         await updateBusinessProfile({
           country: (country ?? undefined) as any,
+          // The contractor typed this on the service-area step and it went
+          // only into `@vasco_onboarding`; XRechnung needs the seller's post
+          // code (BR-DE-9) and the invoice PDF prints it (#339).
+          ...(postcode.trim() ? { postcode: postcode.trim() } : {}),
           // R74 US foundation: state code threaded for sales-tax lookup +
           // state-license routing. Ignored for non-US countries.
           state: country === 'US' ? (usState ?? undefined) : undefined,
@@ -565,19 +593,9 @@ export default function OnboardingScreen() {
           address: regFields.address || regFields.businessAddress,
         });
 
-        // Surface a one-shot toast so the contractor knows it was preset and
-        // can change it if their turnover will exceed the threshold.
-        if (advice.confident) {
-          const toastKey = vatSchemeToApply === 'small_business_NL_KOR'
-            ? 'onboarding.vatPresetKor'
-            : 'onboarding.vatPresetKlein';
-          Alert.alert(
-            t('onboarding.vatPresetTitle', 'VAT scheme set'),
-            t(toastKey, vatSchemeToApply === 'small_business_NL_KOR'
-              ? 'Selected KOR — change in Settings if turnover will exceed €20.000.'
-              : 'Selected Kleinunternehmer — change in Settings if turnover will exceed €22.000.'),
-          );
-        }
+        // No toast: nothing was preset. The USt & audit screen carries the
+        // recommendation, where the thresholds are shown and the contractor
+        // chooses.
       } catch {}
 
       i18n.changeLanguage(language);
