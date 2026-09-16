@@ -569,7 +569,8 @@
     "signOffFirst": "Erst abzeichnen lassen",
     "signOffHow": "Wie soll die Unterschrift eingeholt werden?",
     "lifecycleStageLabel": "Phase",
-    "stageOf": "{{step}} von {{total}}"
+    "stageOf": "{{step}} von {{total}}",
+    "markOrdered": "Als bestellt markieren"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",

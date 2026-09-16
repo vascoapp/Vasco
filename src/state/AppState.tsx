@@ -847,6 +847,36 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     return unsub;
   }, []);
 
+  // Whether an integration is CONNECTED is a fact about stored credentials, not
+  // session state. These three flags were only ever set true by the connect
+  // action, so after every restart the app forgot: the invoice screen asked the
+  // contractor to connect Mollie again and hid the payment link on an invoice
+  // they could already be paid for (#339). Each integration already knows —
+  // `isConnected()` reads its own SecureStore entry — nothing asked it.
+  useEffect(() => {
+    let alive = true;
+    const refreshConnections = async () => {
+      try {
+        const [mollie, stripe, moneybird] = await Promise.all([
+          import('../integrations/mollie').then((m) => m.isConnected()).catch(() => false),
+          import('../integrations/stripe').then((m) => m.isConnected()).catch(() => false),
+          import('../integrations/moneybird').then((m) => m.isConnected()).catch(() => false),
+        ]);
+        if (!alive) return;
+        setMollieConnected(mollie);
+        setStripeConnected(stripe);
+        setMoneybirdConnected(moneybird);
+      } catch {
+        // Keychain unreadable — leave the flags as they are rather than
+        // claiming "not connected" and hiding a working payment link.
+      }
+    };
+    void refreshConnections();
+    // Re-read on sign-in/sign-out: the credentials are per contractor.
+    const unsub = subscribeUserChange(() => { void refreshConnections(); });
+    return () => { alive = false; unsub(); };
+  }, []);
+
   // Hydrate from AsyncStorage when offline (no Supabase)
   // persistReady uses state (not ref) to trigger re-render and guard persist effects
   const SEED_VERSION = '2026-03-25-v4';

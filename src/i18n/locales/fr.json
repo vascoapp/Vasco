@@ -569,7 +569,8 @@
     "signOffFirst": "Faire signer d'abord",
     "signOffHow": "Comment voulez-vous obtenir la signature ?",
     "lifecycleStageLabel": "Étape",
-    "stageOf": "{{step}} sur {{total}}"
+    "stageOf": "{{step}} sur {{total}}",
+    "markOrdered": "Marquer comme commandé"
   },
   "compliance": {
     "manageInsurance": "Gérer assurances & sinistres",

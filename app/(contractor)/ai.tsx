@@ -98,6 +98,15 @@ export default function VascoScreen() {
   const [actioned, setActioned] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  // The edit the contractor typed, PER action. "Done" only closed the editor
+  // (it clears editingId), and the send then fell back to the original draft —
+  // so an edited reminder went out unedited (#339).
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const editedTextFor = (a: { id: string; shareText?: string }) => edits[a.id] ?? a.shareText;
+  const setEditFor = (id: string, txt: string) => {
+    setEditText(txt);
+    setEdits((prev) => ({ ...prev, [id]: txt }));
+  };
   const [tab, setTab] = useState<TabKey>('queue');
 
   // 'ai', not 'compliance'. Every other caller passes its own screen (geld →
@@ -262,7 +271,7 @@ export default function VascoScreen() {
   const handleAction = async (action: ProactiveAction) => {
     hapticSuccess();
     if (action.actionType === 'share' && action.shareText) {
-      const text = editingId === action.id && editText ? editText : action.shareText;
+      const text = editedTextFor(action) ?? action.shareText;
       try {
         if (Platform.OS === 'web') { await navigator.clipboard.writeText(text); alert(t('ai.copiedToClipboard')); }
         else {
@@ -373,6 +382,8 @@ export default function VascoScreen() {
             action={heroAction}
             editingId={editingId}
             editText={editText}
+            editedTextFor={editedTextFor}
+            setEditFor={setEditFor}
             setEditingId={setEditingId}
             setEditText={setEditText}
             onApprove={() => handleAction(heroAction)}
@@ -427,8 +438,8 @@ export default function VascoScreen() {
                   {editingId === action.id && action.shareText && (
                     <TextInput
                       style={s.editInput}
-                      value={editText || action.shareText}
-                      onChangeText={setEditText}
+                      value={editedTextFor(action) ?? ''}
+                      onChangeText={(txt) => setEditFor(action.id, txt)}
                       multiline
                       placeholderTextColor={DK.colors.textMuted}
                     />
@@ -658,7 +669,7 @@ export default function VascoScreen() {
 }
 
 // ─── Subcomponents ────────────────────────────────────────────────────────
-function HeroActionCard({ action, editingId, editText, setEditingId, setEditText, onApprove, onDismiss, t }: { action: ProactiveAction; editingId: string | null; editText: string; setEditingId: (id: string | null) => void; setEditText: (txt: string) => void; onApprove: () => void; onDismiss: () => void; t: any }) {
+function HeroActionCard({ action, editingId, editText, setEditingId, setEditText, editedTextFor, setEditFor, onApprove, onDismiss, t }: { action: ProactiveAction; editingId: string | null; editText: string; setEditingId: (id: string | null) => void; setEditText: (txt: string) => void; editedTextFor: (a: { id: string; shareText?: string }) => string | undefined; setEditFor: (id: string, txt: string) => void; onApprove: () => void; onDismiss: () => void; t: any }) {
   const editing = editingId === action.id;
   return (
     <View style={heroStyles.wrap}>
@@ -691,8 +702,8 @@ function HeroActionCard({ action, editingId, editText, setEditingId, setEditText
         {editing && action.shareText && (
           <TextInput
             style={heroStyles.editInput}
-            value={editText || action.shareText}
-            onChangeText={setEditText}
+            value={editedTextFor(action) ?? ''}
+            onChangeText={(txt) => setEditFor(action.id, txt)}
             multiline
             placeholderTextColor="#FFFFFF77"
           />

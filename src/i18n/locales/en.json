@@ -569,7 +569,8 @@
     "signOffFirst": "Get sign-off first",
     "signOffHow": "How do you want the sign-off?",
     "lifecycleStageLabel": "Stage",
-    "stageOf": "{{step}} of {{total}}"
+    "stageOf": "{{step}} of {{total}}",
+    "markOrdered": "Mark as ordered"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",

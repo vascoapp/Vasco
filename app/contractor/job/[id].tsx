@@ -29,6 +29,7 @@ import { Palette, SemanticColors } from '../../../src/theme/colors';
 import { SafeArea } from '../../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { hapticSuccess } from '../../../src/utils/haptics';
+import type { JobMaterialStatus } from '../../../src/domain/materials';
 import { useClockIn } from '../../../src/services/clockInService';
 import { smartSchedulerService, LIFECYCLE_ORDER, LIFECYCLE_COLORS, LIFECYCLE_TO_DOMAIN_STATUS, lifecycleLabel, lifecycleNextAction, useJobLifecyclePipeline, toLifecycleStatus } from '../../../src/services/smartSchedulerService';
 import type { JobLifecycleStatus } from '../../../src/services/smartSchedulerService';
@@ -88,6 +89,9 @@ interface MaterialPrediction {
   reorderNeeded: boolean;
   estimatedCost: number;
   supplier: string;
+  /** The stored row's status — what "ordered" is read from, so it survives a
+   *  reload (it used to live in a local Set that a reload emptied). */
+  status: JobMaterialStatus;
 }
 
 // Contacts now sourced from AppState customers
@@ -132,7 +136,6 @@ export default function JobDetailPage() {
     return () => { cancelled = true; };
   }, [id]);
   const [jobCompleted, setJobCompleted] = useState(false);
-  const [orderedMaterials, setOrderedMaterials] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
 
@@ -144,7 +147,7 @@ export default function JobDetailPage() {
     }, 800);
   }, []);
 
-  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers, businessProfile, updateJob, updateJobStatus, removeJob, workers } = useAppState();
+  const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers, businessProfile, updateJob, updateJobStatus, updateJobMaterialStatus, removeJob, workers } = useAppState();
   const { user } = useAuth();
   const country = (user?.country ?? 'NL') as Country;
   // Shared enum→label map: trade is stored as a slug on some rows and as a
@@ -384,6 +387,7 @@ export default function JobDetailPage() {
       quantity: `${jm.quantity} ${jm.unit}`,
       inStock: jm.status !== 'planned',
       reorderNeeded: jm.status === 'planned',
+      status: jm.status,
       estimatedCost: jm.totalPrice || (jm.unitPrice ? jm.unitPrice * jm.quantity : 0),
       supplier: catSup?.name || '',
     };
@@ -1042,25 +1046,26 @@ export default function JobDetailPage() {
                     <Text style={styles.materialName}>{mat.name}</Text>
                     <Text style={styles.materialDetail}>{[mat.quantity, mat.supplier].filter(Boolean).join(' · ')}</Text>
                   </View>
-                  {mat.reorderNeeded && !orderedMaterials.has(mat.id) ? (
+                  {/* This used to add the id to a local Set and alert "{{name}}
+                      has been ordered from {{supplier}}" — nothing was ordered,
+                      nothing was stored, and the claim survived a reload as
+                      "not ordered" (#339). Vasco has no supplier ordering
+                      channel: it records that YOU ordered it, on the material
+                      row, where the status already lives. */}
+                  {mat.reorderNeeded ? (
                     <Pressable
                       style={styles.reorderBtn}
                       accessibilityRole="button"
-                      accessibilityLabel={`${t('jobs.order', 'Order')} ${mat.name}`}
+                      accessibilityLabel={`${t('jobs.markOrdered', 'Mark as ordered')} ${mat.name}`}
                       onPress={() => {
-                        setOrderedMaterials(prev => new Set(prev).add(mat.id));
-                        Alert.alert(
-                          t('jobs.ordered', 'Ordered'),
-                          mat.supplier
-                            ? t('jobs.orderedDesc', { defaultValue: '{{name}} has been ordered from {{supplier}}.', name: mat.name, supplier: mat.supplier })
-                            : t('jobs.orderedDescNoSupplier', { defaultValue: '{{name}} has been ordered.', name: mat.name }),
-                        );
+                        updateJobMaterialStatus(mat.id, String(id), 'ordered');
+                        hapticSuccess();
                       }}
                     >
                       <Ionicons name="cart" size={13} color="#fff" />
-                      <Text style={styles.reorderBtnText}>{t('jobs.order', 'Order')}</Text>
+                      <Text style={styles.reorderBtnText}>{t('jobs.markOrdered', 'Mark as ordered')}</Text>
                     </Pressable>
-                  ) : mat.reorderNeeded && orderedMaterials.has(mat.id) ? (
+                  ) : mat.status === 'ordered' ? (
                     <View style={[styles.reorderBtn, { backgroundColor: SemanticColors.feedbackSuccess }]}>
                       <Ionicons name="checkmark" size={13} color="#fff" />
                       <Text style={styles.reorderBtnText}>{t('jobs.ordered', 'Ordered')}</Text>

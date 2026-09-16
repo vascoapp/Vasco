@@ -562,7 +562,8 @@
     "signOffFirst": "Eerst laten aftekenen",
     "signOffHow": "Hoe wil je de handtekening ophalen?",
     "lifecycleStageLabel": "Fase",
-    "stageOf": "{{step}} van {{total}}"
+    "stageOf": "{{step}} van {{total}}",
+    "markOrdered": "Markeer als besteld"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",
