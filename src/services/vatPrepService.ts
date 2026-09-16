@@ -22,6 +22,7 @@
 
 import { localDateKey } from '../utils/dateKey';
 import type { Invoice, Quote } from '../domain/documents';
+import { isSmallBusinessExempt, type VatScheme } from '../domain/business';
 
 export type VatRateNL = 21 | 9 | 0;
 export type VatClassNL =
@@ -125,6 +126,14 @@ export interface VatPrepInput {
     vatRate?: number;
     category?: string;
   }>;
+  /**
+   * The contractor's VAT scheme. A Kleinunternehmer (§19 UStG) or a KOR
+   * contractor charges NO output VAT, so splitting their gross invoices at
+   * 19/21% produced a return draft declaring tax they never collected (#339).
+   * Their input VAT is not deductible either, so the draft carries the turnover
+   * and nothing else.
+   */
+  vatScheme?: VatScheme;
   /** Same quarter last year — used for YoY variance detection. */
   prevYearTotalOutputVat?: number;
 }
@@ -249,6 +258,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     throw new Error(`VAT prep: country ${input.country} not yet supported`);
   }
   const isDE = input.country === 'DE';
+  // §19 UStG / KOR: no output VAT is charged and no input VAT is reclaimed.
+  const exempt = isSmallBusinessExempt({ vatScheme: input.vatScheme });
 
   const lines: VatLine[] = [];
   const periodStartMs = new Date(input.periodStart).getTime();
@@ -267,7 +278,9 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     const gross = inv.amount ?? 0;
     if (gross <= 0) continue;
     const classified = isDE ? classifyInvoiceDE(inv) : classifyInvoice(inv);
-    const { classification, rate, confidence, warnings } = classified;
+    const { classification, confidence, warnings } = classified;
+    // An exempt contractor's invoice carries no VAT whatever the job looks like.
+    const rate = exempt ? 0 : classified.rate;
     const net = rate > 0 ? gross / (1 + rate / 100) : gross;
     const vat = gross - net;
     lines.push({
@@ -291,7 +304,10 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     const gross = exp.amount ?? 0;
     if (gross <= 0) continue;
     const classifiedExp = isDE ? classifyExpenseDE(exp) : classifyExpense(exp);
-    const { classification, rate, confidence, warnings } = classifiedExp;
+    const { classification, confidence, warnings } = classifiedExp;
+    // No output VAT, no input VAT: an exempt contractor deducts nothing, so
+    // the expense goes in at its gross cost.
+    const rate = exempt ? 0 : classifiedExp.rate;
     const net = rate > 0 ? gross / (1 + rate / 100) : gross;
     const vat = gross - net;
     lines.push({

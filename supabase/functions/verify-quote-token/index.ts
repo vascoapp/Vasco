@@ -177,8 +177,13 @@ Deno.serve(async (req) => {
     // `src/constants/taxRates.ts`; keep the two in step.
     const VAT_RATES: Record<string, number> = {
       NL: 0.21, DE: 0.19, FR: 0.20, ES: 0.21, IT: 0.22, UK: 0.20,
+      // No VAT in the US; sales tax is a different tax and is not computed here.
+      US: 0,
     };
-    const standardRate = VAT_RATES[profile?.country ?? ''] ?? 0.21;
+    // An unknown country adds NO tax rather than the Dutch rate: showing a
+    // customer a total inflated by a tax nobody charged is the worse failure
+    // (#339). Mirrors `getVATRate` in src/constants/taxRates.ts.
+    const standardRate = VAT_RATES[profile?.country ?? ''] ?? 0;
     const netTotal = Number(quote.total_amount) || 0;
 
     // The quote's OWN agreed rates outrank the country standard — mirrors

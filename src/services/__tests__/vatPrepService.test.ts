@@ -236,3 +236,57 @@ describe('currentBtwPeriod / previousBtwPeriod', () => {
     expect(prev.periodEnd).toBe('2025-12-31');
   });
 });
+
+describe('a Kleinunternehmer / KOR contractor declares no VAT', () => {
+  // The draft split every gross invoice at 19/21% whatever the contractor's
+  // scheme, so a §19 UStG contractor's UStVA declared output tax they never
+  // charged — and claimed input tax they cannot deduct (#339).
+  const base = {
+    periodStart: '2026-07-01',
+    periodEnd: '2026-09-30',
+    expenses: [{ id: 'e1', description: 'Material', date: '2026-08-02', amount: 119, vatRate: 19 }],
+  };
+  const invoice = (over: Record<string, unknown> = {}) => ({
+    id: 'RE-1', customer: 'c', job: 'Wartung', amount: 1190, status: 'sent',
+    issueDate: '2026-08-01', dueInDays: 14, ...over,
+  }) as never;
+
+  it('DE: no output VAT and no input VAT on the draft', () => {
+    const draft = prepareVatReturn({
+      ...base, country: 'DE', vatScheme: 'small_business_DE_kleinunternehmer', invoices: [invoice()],
+    } as never);
+    expect(draft.lines.every((l) => l.vatAmount === 0)).toBe(true);
+    expect(draft.lines[0].netAmount).toBe(1190);
+    expect(draft.totalOutputVat).toBe(0);
+    expect(draft.totalInputVat).toBe(0);
+  });
+
+  it('NL KOR: the same', () => {
+    const draft = prepareVatReturn({
+      ...base, country: 'NL', vatScheme: 'small_business_NL_KOR', invoices: [invoice()],
+    } as never);
+    expect(draft.totalOutputVat).toBe(0);
+    expect(draft.totalInputVat).toBe(0);
+  });
+
+  it('a standard-scheme contractor still declares it', () => {
+    const draft = prepareVatReturn({
+      ...base, country: 'DE', vatScheme: 'standard', invoices: [invoice()],
+    } as never);
+    expect(draft.totalOutputVat).toBeCloseTo(190, 1);
+    expect(draft.totalInputVat).toBeCloseTo(19, 1);
+  });
+});
+
+it('the VAT-prep screen passes the contractor scheme to the draft', () => {
+  // The pure function is only worth its tests if the screen hands it the
+  // scheme; nothing asserted that, and the decoy proved it.
+  const fs = require('fs');
+  const path = require('path');
+  const { stripComments } = require('../../utils/stripComments');
+  const src: string = stripComments(
+    fs.readFileSync(path.join(__dirname, '../../../app/contractor/vat-prep.tsx'), 'utf8'),
+  );
+  const call = src.slice(src.indexOf('prepareVatReturn({'), src.indexOf('});', src.indexOf('prepareVatReturn({')));
+  expect(call).toMatch(/vatScheme:\s*businessProfile\?\.vatScheme/);
+});

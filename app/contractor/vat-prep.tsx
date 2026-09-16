@@ -54,6 +54,9 @@ export default function VatPrepScreen() {
     const bounds = periodChoice === 'current' ? currentBtwPeriod() : previousBtwPeriod();
     return prepareVatReturn({
       country,
+      // §19 UStG / KOR: no output VAT and no input VAT. Without this the draft
+      // declared tax a Kleinunternehmer never charged (#339).
+      vatScheme: businessProfile?.vatScheme,
       periodStart: bounds.periodStart,
       periodEnd: bounds.periodEnd,
       invoices: invoices as any,
@@ -66,7 +69,7 @@ export default function VatPrepScreen() {
         category: e.category,
       })),
     });
-  }, [country, periodChoice, invoices, rawExpenses]);
+  }, [country, businessProfile?.vatScheme, periodChoice, invoices, rawExpenses]);
 
   const lowConfLines = draft.lines.filter((l) => l.confidence < 0.75);
 
