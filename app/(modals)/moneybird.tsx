@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, Text, TextInput, View, Pressable, Alert } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Screen } from '../../src/components/Screen';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing } from '../../src/theme/spacing';
@@ -9,25 +8,28 @@ import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useTranslation } from 'react-i18next';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
-
-const STORAGE_KEY = '@vasco_moneybird_config';
+import {
+  connectWithPersonalToken,
+  clearMoneybirdConfig,
+  isConnected as isMoneybirdConnected,
+} from '../../src/integrations/moneybird';
 
 export default function MoneybirdConnectModal() {
   const { t } = useTranslation();
-  const { connectMoneybird, moneybirdConnected } = useAppState();
+  const { connectMoneybird, disconnectMoneybird, moneybirdConnected } = useAppState();
   const [apiToken, setApiToken] = useState('');
   const [administrationId, setAdministrationId] = useState('');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [errorReason, setErrorReason] = useState<'invalid_token' | 'no_administration' | 'network' | null>(null);
   const [connected, setConnected] = useState(moneybirdConnected);
 
   // Check if already connected on mount
   useEffect(() => {
     (async () => {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setConnected(true);
-      }
+      // The integration's own secure store is the only truth about whether a
+      // token is usable — this screen used to read a key nothing else wrote.
+      if (await isMoneybirdConnected()) setConnected(true);
     })();
   }, []);
 
@@ -42,27 +44,25 @@ export default function MoneybirdConnectModal() {
 
     setTesting(true);
     setTestResult(null);
+    setErrorReason(null);
 
-    try {
-      // Save config to AsyncStorage
-      await AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          accessToken: apiToken.trim(),
-          administrationId: administrationId.trim(),
-          connectedAt: Date.now(),
-        }),
-      );
-
-      setTestResult('success');
-      setConnected(true);
-      connectMoneybird();
-      hapticSuccess();
-    } catch {
+    // Really call Moneybird. "Testen" that only wrote to storage said the
+    // connection was good for a token that had never been used (#339).
+    const result = await connectWithPersonalToken({
+      accessToken: apiToken.trim(),
+      administrationId: administrationId.trim() || undefined,
+    });
+    setTesting(false);
+    if (!result.ok) {
       setTestResult('error');
-    } finally {
-      setTesting(false);
+      setErrorReason(result.reason);
+      return;
     }
+    setAdministrationId(result.administrationId);
+    setTestResult('success');
+    setConnected(true);
+    connectMoneybird();
+    hapticSuccess();
   };
 
   const handleDisconnect = () => {
@@ -75,7 +75,8 @@ export default function MoneybirdConnectModal() {
           text: t('moneybird.disconnect', 'Loskoppelen'),
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.removeItem(STORAGE_KEY);
+            await clearMoneybirdConfig();
+            disconnectMoneybird();
             setConnected(false);
             setApiToken('');
             setAdministrationId('');
@@ -168,7 +169,11 @@ export default function MoneybirdConnectModal() {
 
         {testResult === 'error' && (
           <Text style={styles.errorText}>
-            {t('moneybird.connectionFailed', 'Verbinding mislukt — controleer je API token')}
+            {errorReason === 'no_administration'
+              ? t('moneybird.noAdministration', 'Geen administratie gevonden bij dit token — controleer het administratie-ID')
+              : errorReason === 'network'
+                ? t('moneybird.connectionUnreachable', 'Moneybird niet bereikbaar — probeer het opnieuw')
+                : t('moneybird.connectionFailed', 'Verbinding mislukt — controleer je API token')}
           </Text>
         )}
 

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -225,10 +225,18 @@ export default function BusinessSettingsScreen() {
     let cancelled = false;
     import('../../src/lib/dataProvider')
       .then(({ peekDocumentCounter }) => peekDocumentCounter('invoice'))
-      .then((n) => { if (!cancelled && n != null) setNextInvoiceNo(String(n)); })
+      .then((n) => {
+        if (cancelled || n == null) return;
+        setNextInvoiceNo(String(n));
+        loadedCounter.current = String(n);
+      })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
+
+  // Where the series stood when the screen opened, so Save can tell a typed
+  // change from the value it displayed.
+  const loadedCounter = useRef<string | null>(null);
 
   const applyCounter = useCallback(async () => {
     const n = parseInt(nextInvoiceNo, 10);
@@ -247,6 +255,9 @@ export default function BusinessSettingsScreen() {
       const { setDocumentCounter } = await import('../../src/lib/dataProvider');
       const res = await setDocumentCounter('invoice', n);
       if (res.ok) {
+        // Save compares against this; without the update it would re-send the
+        // number Apply had just committed.
+        loadedCounter.current = String(res.next);
         Alert.alert(
           t('settings.counterSet', 'Numbering updated'),
           t('settings.counterSetBody', 'Your next invoice will be number {{n}}.', { n: res.next }),
@@ -302,6 +313,25 @@ export default function BusinessSettingsScreen() {
 
     setSaving(true);
     try {
+      // The numbering field sat above a separate "Apply" button, and Save —
+      // the button a contractor presses after filling a form in — silently
+      // discarded whatever they had typed there (#339). Save commits it too.
+      const typedCounter = parseInt(nextInvoiceNo, 10);
+      if (
+        Number.isFinite(typedCounter)
+        && typedCounter >= 1
+        && nextInvoiceNo !== (loadedCounter.current ?? '')
+      ) {
+        const { setDocumentCounter } = await import('../../src/lib/dataProvider');
+        const res = await setDocumentCounter('invoice', typedCounter);
+        if (!res.ok) {
+          // Refused (the series never moves backwards) — say so and stay on the
+          // screen rather than leaving with the number unchanged and unmentioned.
+          Alert.alert(t('settings.counterRefused', 'Cannot move numbering backwards'), res.message);
+          return;
+        }
+        loadedCounter.current = String(res.next);
+      }
       await updateBusinessProfile({
         businessName: sanitizeInput(businessName).trim(),
         kvkNumber: cleanKvk.trim(),
@@ -338,7 +368,7 @@ export default function BusinessSettingsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, personType, fiscalRegime, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, invoicePrefix, quotePrefix, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, personType, fiscalRegime, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, invoicePrefix, quotePrefix, nextInvoiceNo, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);

@@ -2535,7 +2535,9 @@
     "invalidToken": "Token inválido o conexión fallida",
     "disconnect": "Desconectar",
     "disconnectDesc": "Eliminar conexión con Moneybird",
-    "stateMismatch": "Falló la validación de seguridad. Inténtalo de nuevo."
+    "stateMismatch": "Falló la validación de seguridad. Inténtalo de nuevo.",
+    "noAdministration": "No se encontró ninguna administración para este token — comprueba el ID de administración",
+    "connectionUnreachable": "Moneybird no disponible — inténtalo de nuevo"
   },
   "contractor": {
     "customers": {
@@ -5717,7 +5719,8 @@
     "savedTitle": "Guardado",
     "savedBody": "Valoración de calidad del trabajo registrada.",
     "errorTitle": "Error",
-    "errorBody": "No se pudo guardar. Inténtelo de nuevo."
+    "errorBody": "No se pudo guardar. Inténtelo de nuevo.",
+    "errorJobPending": "Este trabajo aún no se ha guardado — inténtalo de nuevo en un momento."
   },
   "customerTag": {
     "vip": "VIP",

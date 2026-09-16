@@ -2535,7 +2535,9 @@
     "invalidToken": "Invalid token or connection failed",
     "disconnect": "Disconnect",
     "disconnectDesc": "Remove Moneybird connection",
-    "stateMismatch": "Security validation failed. Please try again."
+    "stateMismatch": "Security validation failed. Please try again.",
+    "noAdministration": "No administration found for this token — check the administration ID",
+    "connectionUnreachable": "Moneybird unreachable — please try again"
   },
   "contractor": {
     "customers": {
@@ -5717,7 +5719,8 @@
     "savedTitle": "Saved",
     "savedBody": "Job quality feedback recorded.",
     "errorTitle": "Error",
-    "errorBody": "Could not save. Try again."
+    "errorBody": "Could not save. Try again.",
+    "errorJobPending": "This job has not finished saving yet — try again in a moment."
   },
   "customerTag": {
     "vip": "VIP",

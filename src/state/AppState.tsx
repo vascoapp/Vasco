@@ -208,6 +208,8 @@ type AppState = {
   replaceInvoiceLines: (id: string, items: QuoteLineItem[]) => Promise<boolean>;
   updateBusinessProfile: (updates: Partial<BusinessProfile>) => Promise<void>;
   connectMoneybird: () => void;
+  /** Disconnecting must clear the flag too, or export stays enabled with no token. */
+  disconnectMoneybird: () => void;
   exportInvoice: (invoiceId: string) => Promise<void>;
   addMaterial: (material: Omit<Material, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   removeMaterial: (id: string) => void;
@@ -2985,6 +2987,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       // ═════════════════════════════════════════════════════════════════════
 
       connectMoneybird: () => setMoneybirdConnected(true),
+      disconnectMoneybird: () => setMoneybirdConnected(false),
       exportInvoice: async (invoiceId) => {
         // R307: tier gate — accounting integrations are paid-tier only.
         // Was completely ungated; free users could export to Moneybird/etc

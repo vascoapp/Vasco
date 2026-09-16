@@ -2535,7 +2535,9 @@
     "invalidToken": "Ungültiger Token oder Verbindung fehlgeschlagen",
     "disconnect": "Trennen",
     "disconnectDesc": "Moneybird-Verbindung entfernen",
-    "stateMismatch": "Sicherheitsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    "stateMismatch": "Sicherheitsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "noAdministration": "Keine Verwaltung zu diesem Token gefunden — prüfen Sie die Verwaltungs-ID",
+    "connectionUnreachable": "Moneybird nicht erreichbar — bitte erneut versuchen"
   },
   "contractor": {
     "customers": {
@@ -5717,7 +5719,8 @@
     "savedTitle": "Gespeichert",
     "savedBody": "Feedback zur Auftragsqualität erfasst.",
     "errorTitle": "Fehler",
-    "errorBody": "Speichern fehlgeschlagen. Bitte erneut versuchen."
+    "errorBody": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    "errorJobPending": "Dieser Auftrag wurde noch nicht gespeichert — bitte gleich erneut versuchen."
   },
   "customerTag": {
     "vip": "VIP",

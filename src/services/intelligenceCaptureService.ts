@@ -179,11 +179,21 @@ export interface JobQualityInput {
   rebookWithin180d?: boolean;
 }
 
-export async function upsertJobQualitySignal(input: JobQualityInput): Promise<void> {
-  if (!isSupabaseConfigured) return;
+/**
+ * Outcome of the write, because the screen tells the contractor what happened.
+ * It used to return void and swallow every failure — supabase-js RESOLVES with
+ * `{ error }` rather than throwing, so the try/catch below caught nothing and
+ * the form said "Saved" for a write that never landed (#339).
+ */
+export type JobQualityWriteResult =
+  | { ok: true }
+  | { ok: false; reason: 'offline' | 'no-session' | 'job-not-saved' | 'rejected'; message?: string };
+
+export async function upsertJobQualitySignal(input: JobQualityInput): Promise<JobQualityWriteResult> {
+  if (!isSupabaseConfigured) return { ok: false, reason: 'offline' };
   // R58: getAuthedUserId returns null for placeholder; guard catches it.
   const userId = getAuthedUserId();
-  if (!userId) return;
+  if (!userId) return { ok: false, reason: 'no-session' };
   // R59: job_id is the upsert key — can't be null. If the caller still
   // holds a temp id (job hasn't flushed to BE yet), skip the write and
   // log telemetry. The form-level UI should retry post-refresh, or we
@@ -195,10 +205,10 @@ export async function upsertJobQualitySignal(input: JobQualityInput): Promise<vo
       userId,
       new Error(`skipped: job_id is temp (${input.jobId}) — flush job first`),
     );
-    return;
+    return { ok: false, reason: 'job-not-saved' };
   }
   try {
-    await (supabase.from as any)('job_quality_signals').upsert({
+    const { error } = await (supabase.from as any)('job_quality_signals').upsert({
       job_id: input.jobId,
       user_id: userId,
       customer_id: nullifyTempId(input.customerId),
@@ -208,8 +218,14 @@ export async function upsertJobQualitySignal(input: JobQualityInput): Promise<vo
       referral_generated: input.referralGenerated ?? false,
       rebook_within_180d: input.rebookWithin180d ?? false,
     });
+    if (error) {
+      await logIntelligenceWriteFailure('job_quality_signals.upsert', userId, error);
+      return { ok: false, reason: 'rejected', message: error.message };
+    }
+    return { ok: true };
   } catch (err) {
     await logIntelligenceWriteFailure('job_quality_signals.upsert', userId, err);
+    return { ok: false, reason: 'rejected', message: err instanceof Error ? err.message : undefined };
   }
 }
 

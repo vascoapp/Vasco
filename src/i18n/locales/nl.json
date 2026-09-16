@@ -2528,7 +2528,9 @@
     "invalidToken": "Ongeldig token of verbinding mislukt",
     "disconnect": "Ontkoppelen",
     "disconnectDesc": "Moneybird-verbinding verwijderen",
-    "stateMismatch": "Beveiligingscontrole mislukt. Probeer het opnieuw."
+    "stateMismatch": "Beveiligingscontrole mislukt. Probeer het opnieuw.",
+    "noAdministration": "Geen administratie gevonden bij dit token — controleer het administratie-ID",
+    "connectionUnreachable": "Moneybird niet bereikbaar — probeer het opnieuw"
   },
   "contractor": {
     "customers": {
@@ -5710,7 +5712,8 @@
     "savedTitle": "Opgeslagen",
     "savedBody": "Feedback over kluskwaliteit vastgelegd.",
     "errorTitle": "Fout",
-    "errorBody": "Opslaan mislukt. Probeer het opnieuw."
+    "errorBody": "Opslaan mislukt. Probeer het opnieuw.",
+    "errorJobPending": "Deze klus is nog niet opgeslagen — probeer het zo opnieuw."
   },
   "customerTag": {
     "vip": "VIP",

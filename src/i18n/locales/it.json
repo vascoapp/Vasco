@@ -2535,7 +2535,9 @@
     "invalidToken": "Token non valido o connessione fallita",
     "disconnect": "Disconnetti",
     "disconnectDesc": "Rimuovi connessione Moneybird",
-    "stateMismatch": "Convalida di sicurezza non riuscita. Riprova."
+    "stateMismatch": "Convalida di sicurezza non riuscita. Riprova.",
+    "noAdministration": "Nessuna amministrazione trovata per questo token — controlla l'ID amministrazione",
+    "connectionUnreachable": "Moneybird non raggiungibile — riprova"
   },
   "contractor": {
     "customers": {
@@ -5717,7 +5719,8 @@
     "savedTitle": "Salvato",
     "savedBody": "Feedback sulla qualità del lavoro registrato.",
     "errorTitle": "Errore",
-    "errorBody": "Salvataggio non riuscito. Riprova."
+    "errorBody": "Salvataggio non riuscito. Riprova.",
+    "errorJobPending": "Questo lavoro non è ancora stato salvato — riprova tra un momento."
   },
   "customerTag": {
     "vip": "VIP",

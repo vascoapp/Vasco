@@ -10,8 +10,14 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 import { deriveLiveNotifications } from '../notificationService';
+import { todayKey } from '../../utils/dateKey';
 
-const todayStr = new Date().toISOString().split('T')[0];
+// The LOCAL calendar day, which is what a `scheduledDate` means and what the
+// service compares against. `toISOString()` is UTC: between local midnight and
+// 02:00 CEST it names YESTERDAY, so these three tests failed every night for
+// two hours and were written off as "a run that crossed midnight". They never
+// crossed anything — the test was in a different timezone from the code.
+const todayStr = todayKey();
 
 describe('deriveLiveNotifications (R272)', () => {
   test('overdue invoice → urgent notification with correct route', () => {

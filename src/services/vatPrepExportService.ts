@@ -68,7 +68,8 @@ const NL_STRINGS: CountryStrings = {
     // outside the EU while 3b is inside — these two were swapped, in the
     // export a contractor copies into the return (#339).
     rubriek_1c: '1c (overige tarieven)',
-    rubriek_2a: '2a (verlegd)',
+    rubriek_1e: '1e (0% / btw verlegd naar afnemer)',
+    rubriek_2a: '2a (btw naar u verlegd)',
     rubriek_3a: '3a (buiten de EU)',
     rubriek_3b: '3b (binnen de EU)',
     rubriek_4a: '4a (van buiten de EU)',
@@ -128,7 +129,7 @@ export function formatSummary(draft: VatReturnDraft, businessName: string): stri
   // Iterate over rollups (country-agnostic source) — works for NL rubriek_* and DE kz_*.
   const orderedKeys = country === 'DE'
     ? ['kz_81', 'kz_86', 'kz_60', 'kz_41', 'kz_43', 'kz_66']
-    : ['rubriek_1a', 'rubriek_1b', 'rubriek_1c', 'rubriek_2a', 'rubriek_3a', 'rubriek_3b', 'rubriek_4a', 'rubriek_5b'];
+    : ['rubriek_1a', 'rubriek_1b', 'rubriek_1c', 'rubriek_1e', 'rubriek_2a', 'rubriek_3a', 'rubriek_3b', 'rubriek_4a', 'rubriek_5b'];
   for (const key of orderedKeys) {
     const bucket = draft.rollups[key];
     if (!bucket) continue;
@@ -222,7 +223,7 @@ function renderHtml(draft: VatReturnDraft, businessName: string): string {
     : '';
   const orderedKeys = country === 'DE'
     ? ['kz_81', 'kz_86', 'kz_60', 'kz_41', 'kz_43', 'kz_66']
-    : ['rubriek_1a', 'rubriek_1b', 'rubriek_1c', 'rubriek_2a', 'rubriek_3a', 'rubriek_3b', 'rubriek_4a', 'rubriek_5b'];
+    : ['rubriek_1a', 'rubriek_1b', 'rubriek_1c', 'rubriek_1e', 'rubriek_2a', 'rubriek_3a', 'rubriek_3b', 'rubriek_4a', 'rubriek_5b'];
   const rowsHtml = orderedKeys
     .map(key => {
       const bucket = draft.rollups[key];

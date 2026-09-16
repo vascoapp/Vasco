@@ -8,6 +8,7 @@ import {
   previousBtwPeriod,
   type VatPrepInput,
 } from '../vatPrepService';
+import { formatSummary } from '../vatPrepExportService';
 import type { Invoice } from '../../domain/documents';
 
 const makeInvoice = (overrides: Partial<Invoice & Record<string, any>> = {}): Invoice => ({
@@ -53,7 +54,12 @@ describe('prepareVatReturn — NL BTW', () => {
     expect(draft.warnings.some((w) => w.includes('lage zekerheid'))).toBe(true);
   });
 
-  it('flags verleggingsregeling as rubriek_2a (reverse-charge, 0%)', () => {
+  // An invoice WE sent under the verleggingsregeling is declared in 1e.
+  // Rubriek 2a is the opposite side of the same transaction: tax shifted TO us
+  // on an invoice we RECEIVED. Declaring our own subcontracting turnover in 2a
+  // told the Belastingdienst we owed the tax we had just shifted away (#339) —
+  // the identical supplier/recipient mix-up as DE's kz_35 vs kz_60.
+  it('declares an outgoing verleggingsregeling invoice in rubriek 1e, not 2a', () => {
     const draft = prepareVatReturn({
       country: 'NL',
       periodStart: '2026-01-01',
@@ -61,11 +67,26 @@ describe('prepareVatReturn — NL BTW', () => {
       invoices: [makeInvoice({ id: 'inv-rev', job: 'onderaanneming verleggingsregeling', amount: 5000, issueDate: '2026-02-20' })],
       expenses: [],
     });
-    expect(draft.lines[0].classification).toBe('rubriek_2a');
+    expect(draft.lines[0].classification).toBe('rubriek_1e');
     expect(draft.lines[0].vatRate).toBe(0);
-    // Output VAT stays zero on reverse-charge
-    expect(draft.rubriek_2a.net).toBeCloseTo(5000, 1);
-    expect(draft.rubriek_2a.vat).toBe(0);
+    expect(draft.rollups.rubriek_1e.net).toBeCloseTo(5000, 1);
+    expect(draft.rollups.rubriek_1e.vat).toBe(0);
+    // Nothing lands in the recipient box, and no output VAT is owed.
+    expect(draft.rollups.rubriek_2a.net).toBe(0);
+    expect(draft.totalOutputVat).toBe(0);
+  });
+
+  it('exports 1e with the supplier-side label and 2a with the recipient-side one', () => {
+    const draft = prepareVatReturn({
+      country: 'NL',
+      periodStart: '2026-01-01',
+      periodEnd: '2026-03-31',
+      invoices: [makeInvoice({ id: 'inv-rev', job: 'onderaanneming verleggingsregeling', amount: 5000, issueDate: '2026-02-20' })],
+      expenses: [],
+    });
+    const txt = formatSummary(draft, 'De Vries Installaties');
+    expect(txt).toContain('1e (0% / btw verlegd naar afnemer)');
+    expect(txt).toContain('2a (btw naar u verlegd)');
   });
 
   it('rolls expenses into rubriek_5b (input VAT reclaim)', () => {

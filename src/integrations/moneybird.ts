@@ -224,6 +224,56 @@ export async function exchangeCodeForToken(
 }
 
 // ---------------------------------------------------------------------------
+// Personal access token
+// ---------------------------------------------------------------------------
+
+/**
+ * Moneybird's other credential: a personal API token the contractor copies out
+ * of their own Moneybird account. It is the only flow the connect screen offers
+ * (there is no registered OAuth client), and it never expires — so it carries no
+ * refresh token and `expiresAt: 0`, which `apiCall` must not read as "expired".
+ *
+ * Before 2026-09-16 the connect screen wrote the token to a plain AsyncStorage
+ * key of its own (`@vasco_moneybird_config`) that nothing ever read, reported
+ * "Verbinding geslaagd" without contacting Moneybird, and left every export
+ * unauthenticated (#339). Verifying here is the point: an administration list
+ * is the cheapest call that proves the token works AND yields the id every
+ * other endpoint needs.
+ */
+export async function connectWithPersonalToken(input: {
+  accessToken: string;
+  administrationId?: string;
+}): Promise<{ ok: true; administrationId: string } | { ok: false; reason: 'invalid_token' | 'no_administration' | 'network' }> {
+  const token = input.accessToken.trim();
+  if (!token) return { ok: false, reason: 'invalid_token' };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`${API_BASE}/administrations.json`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (res.status === 401 || res.status === 403) return { ok: false, reason: 'invalid_token' };
+    if (!res.ok) return { ok: false, reason: 'network' };
+    const admins = (await res.json()) as Array<{ id?: string | number }> | null;
+    const wanted = input.administrationId?.trim();
+    // A typed administration id must exist on the account — silently falling
+    // back to the first one would export invoices into someone else's books.
+    const match = wanted
+      ? (admins ?? []).find((a) => String(a?.id) === wanted)
+      : (admins ?? [])[0];
+    const adminId = match?.id != null ? String(match.id) : '';
+    if (!adminId) return { ok: false, reason: 'no_administration' };
+    await saveConfig({ accessToken: token, refreshToken: '', administrationId: adminId, expiresAt: 0 });
+    return { ok: true, administrationId: adminId };
+  } catch {
+    clearTimeout(timeout);
+    return { ok: false, reason: 'network' };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Token refresh
 // ---------------------------------------------------------------------------
 
@@ -261,8 +311,10 @@ async function apiCall<T>(path: string, options?: RequestInit): Promise<T | null
   let config = await getConfig();
   if (!config) return null;
 
-  // Auto-refresh if token expires within 5 minutes
-  if (Date.now() > config.expiresAt - 300_000) {
+  // Auto-refresh if token expires within 5 minutes. A personal access token has
+  // no refresh token and no expiry — refreshing it would fail and take every
+  // call down with it.
+  if (config.refreshToken && Date.now() > config.expiresAt - 300_000) {
     const refreshed = await refreshAccessToken(config);
     if (!refreshed) return null;
     config = refreshed;

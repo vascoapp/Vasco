@@ -60,7 +60,7 @@ describe('formatSummary', () => {
     expect(txt).toContain('BTW-aangifte — 2026-Q1');
     expect(txt).toContain('De Vries Installatie');
     expect(txt).toContain('1a (21%)');
-    expect(txt).toContain('2a (verlegd)');
+    expect(txt).toContain('2a (btw naar u verlegd)');
     expect(txt).toContain('Te betalen/terug');
     expect(txt).toContain('9%-regime'); // warning passed through
     expect(txt).toContain('YoY variatie');

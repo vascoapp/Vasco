@@ -28,8 +28,13 @@ export type VatRateNL = 21 | 9 | 0;
 export type VatClassNL =
   | 'rubriek_1a'   // Standard 21% — construction services, materials
   | 'rubriek_1b'   // Reduced 9% — specific services (painting interior >2yr homes)
-  | 'rubriek_1c'   // 0% — not common for trades
-  | 'rubriek_2a'   // Reverse-charge supplies (B2B construction)
+  | 'rubriek_1c'   // Overige tarieven (niet 0%) — not common for trades
+  | 'rubriek_1e'   // SUPPLIER side: 0% / "btw verlegd naar de afnemer". This is
+                   // where a subcontractor declares the turnover of an invoice
+                   // issued under the verleggingsregeling.
+  | 'rubriek_2a'   // RECIPIENT side: "btw naar u verlegd" — the tax you owe on
+                   // an invoice you RECEIVED. Never an outgoing invoice (#339);
+                   // the same supplier/recipient mix-up was DE's kz_35 vs kz_60.
   | 'rubriek_3a'   // Exports inside EU
   | 'rubriek_3b'   // Exports outside EU
   | 'rubriek_4a'   // Intra-EU acquisitions
@@ -92,6 +97,8 @@ export interface VatReturnDraft {
   rubriek_1a: { net: number; vat: number };
   rubriek_1b: { net: number; vat: number };
   rubriek_1c: { net: number; vat: number };
+  /** Optional: added after the flat shape shipped — read `rollups` for new code. */
+  rubriek_1e?: { net: number; vat: number };
   rubriek_2a: { net: number; vat: number };
   rubriek_3a: { net: number; vat: number };
   rubriek_3b: { net: number; vat: number };
@@ -164,7 +171,8 @@ function classifyInvoice(invoice: Invoice): { classification: VatClassNL; rate: 
   }
   // Reverse-charge — when customer is also registered for BTW (B2B construction subcontract).
   if (/verleggingsregeling|verlegd|reverse charge/i.test(label)) {
-    classification = 'rubriek_2a';
+    // 1e, not 2a: this is an invoice WE sent. 2a is the box for tax shifted TO us.
+    classification = 'rubriek_1e';
     rate = 0;
     confidence = 0.7;
     warnings.push('Verleggingsregeling — verifieer BTW-nummer klant');
@@ -331,6 +339,7 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     rubriek_1a: { net: 0, vat: 0 },
     rubriek_1b: { net: 0, vat: 0 },
     rubriek_1c: { net: 0, vat: 0 },
+    rubriek_1e: { net: 0, vat: 0 },
     rubriek_2a: { net: 0, vat: 0 },
     rubriek_3a: { net: 0, vat: 0 },
     rubriek_3b: { net: 0, vat: 0 },
@@ -360,8 +369,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
   const totalOutputVat = isDE
     ? (rollups.kz_81.vat + rollups.kz_86.vat + rollups.kz_41.vat + rollups.kz_43.vat)
     : (rollups.rubriek_1a.vat + rollups.rubriek_1b.vat + rollups.rubriek_1c.vat
-       + rollups.rubriek_2a.vat + rollups.rubriek_3a.vat + rollups.rubriek_3b.vat
-       + rollups.rubriek_4a.vat);
+       + rollups.rubriek_1e.vat + rollups.rubriek_2a.vat + rollups.rubriek_3a.vat
+       + rollups.rubriek_3b.vat + rollups.rubriek_4a.vat);
   const totalInputVat = isDE ? rollups.kz_66.vat : rollups.rubriek_5b.vat;
   const netPayable = Math.round((totalOutputVat - totalInputVat) * 100) / 100;
 
@@ -392,6 +401,7 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     rubriek_1a: rollups.rubriek_1a,
     rubriek_1b: rollups.rubriek_1b,
     rubriek_1c: rollups.rubriek_1c,
+    rubriek_1e: rollups.rubriek_1e,
     rubriek_2a: rollups.rubriek_2a,
     rubriek_3a: rollups.rubriek_3a,
     rubriek_3b: rollups.rubriek_3b,

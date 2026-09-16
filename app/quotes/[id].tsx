@@ -54,7 +54,6 @@ export default function QuoteDetailScreen() {
   const [applied, setApplied] = useState(false);
   const [sharingLink, setSharingLink] = useState(false);
   const [engagement, setEngagement] = useState<QuoteEngagement | null>(null);
-  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     if (!quote?.id) return;
@@ -344,27 +343,14 @@ export default function QuoteDetailScreen() {
           <View style={styles.cardHeader}>
             <Ionicons name="person" size={18} color={Palette.hermesOrange} />
             <Text style={styles.cardTitle}>{t('jobs.client', 'Client')}</Text>
-            {(quote.status === 'draft' || quote.status === 'sent') && (
-              <Pressable
-                onPress={() => {
-                  if (quote.status === 'sent' && !editing) {
-                    Alert.alert(
-                      t('quotes.editSentQuote', 'Edit sent quote?'),
-                      t('quotes.editSentQuoteDesc', 'Editing will mark this quote as draft. You will need to re-send it.'),
-                      [
-                        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                        { text: t('common.edit', 'Edit'), onPress: () => { updateQuote(quote.id, { status: 'draft' }); setEditing(true); } },
-                      ],
-                    );
-                  } else { setEditing(!editing); }
-                }}
-                style={styles.editBtn}
-                accessibilityRole="button"
-                accessibilityLabel={editing ? t('common.done', 'Done') : t('common.edit', 'Edit')}
-              >
-                <Ionicons name={editing ? 'checkmark' : 'pencil'} size={14} color={Palette.hermesOrange} />
-              </Pressable>
-            )}
+            {/* The pencil that used to sit here edited nothing: `editing` was
+                read by its own icon and by nothing else on the screen. On a
+                SENT quote it first asked to demote the quote to draft — so the
+                only thing it could do was undo the send, in exchange for an
+                edit mode that did not exist (#339). Removed rather than
+                stubbed: a control that damages the document and delivers
+                nothing is worse than no control. Changing a quote's customer
+                is its own job. */}
           </View>
           <Text style={styles.customerName}>{customerDisplayName}</Text>
           <Text style={styles.customerJob}>{quote.job}</Text>
@@ -619,11 +605,6 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
   cardTitle: { flex: 1, fontSize: 14, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  editBtn: {
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: Palette.hermesOrange + '14',
-    alignItems: 'center', justifyContent: 'center',
-  },
 
   // Customer
   customerName: { fontSize: 16, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, marginTop: 4 },

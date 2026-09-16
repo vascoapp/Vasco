@@ -60,6 +60,11 @@ export default function RecurringEditScreen() {
   const [estimatedDuration, setEstimatedDuration] = useState('');
   const [reminderDays, setReminderDays] = useState('7');
   const [loaded, setLoaded] = useState(isNew);
+  // The template's own start date. Save used to stamp `new Date()` every time,
+  // so changing the reminder lead time on a yearly boiler service due next
+  // month pushed it a full year out — the schedule slid forward by however long
+  // ago the contract was created (#339). It is set once, when the contract is.
+  const [startDate, setStartDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (isNew) return;
@@ -74,6 +79,7 @@ export default function RecurringEditScreen() {
       setEstimatedAmount(t.estimatedAmount ? String(t.estimatedAmount) : '');
       setEstimatedDuration(t.estimatedDurationHours ? String(t.estimatedDurationHours) : '');
       setReminderDays(String(t.reminderDaysBeforeDue));
+      setStartDate(t.startDate);
       setLoaded(true);
     });
   }, [id, isNew]);
@@ -122,7 +128,7 @@ export default function RecurringEditScreen() {
       customerName: customer?.name,
       cadence,
       customIntervalDays: cadence === 'custom' ? Math.max(7, Math.min(parseInt(customDays, 10) || 90, 365)) : undefined,
-      startDate: new Date().toISOString(),
+      startDate: startDate ?? new Date().toISOString(),
       reminderDaysBeforeDue: parseInt(reminderDays, 10) || 7,
       // parseFloat read a German "85,50" as 85 and "1,5" hours as 1.
       estimatedAmount: parseDecimalInput(estimatedAmount),

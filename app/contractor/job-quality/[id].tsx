@@ -44,7 +44,10 @@ export default function JobQualityScreen() {
     if (!id) return;
     setSubmitting(true);
     try {
-      await upsertJobQualitySignal({
+      // The write RESOLVES with `{ error }` on failure — it does not throw. The
+      // try/catch alone meant "Saved" for feedback that never left the device,
+      // and the contractor closed the screen believing it was recorded (#339).
+      const res = await upsertJobQualitySignal({
         jobId: id,
         paidOnTime: paidOnTime ?? undefined,
         customerReviewScore: reviewScore ?? undefined,
@@ -52,6 +55,15 @@ export default function JobQualityScreen() {
         referralGenerated: referral,
         rebookWithin180d: rebook,
       });
+      if (!res.ok) {
+        Alert.alert(
+          t('jobQuality.errorTitle', 'Error'),
+          res.reason === 'job-not-saved'
+            ? t('jobQuality.errorJobPending', 'This job has not finished saving yet — try again in a moment.')
+            : t('jobQuality.errorBody', 'Could not save. Try again.'),
+        );
+        return;
+      }
       hapticSuccess();
       Alert.alert(t('jobQuality.savedTitle', 'Saved'), t('jobQuality.savedBody', 'Job quality feedback recorded.'));
       router.back();

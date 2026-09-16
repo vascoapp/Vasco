@@ -2535,7 +2535,9 @@
     "invalidToken": "Token invalide ou connexion échouée",
     "disconnect": "Déconnecter",
     "disconnectDesc": "Supprimer la connexion Moneybird",
-    "stateMismatch": "Échec de la validation de sécurité. Veuillez réessayer."
+    "stateMismatch": "Échec de la validation de sécurité. Veuillez réessayer.",
+    "noAdministration": "Aucune administration trouvée pour ce jeton — vérifiez l'identifiant d'administration",
+    "connectionUnreachable": "Moneybird injoignable — veuillez réessayer"
   },
   "contractor": {
     "customers": {
@@ -5717,7 +5719,8 @@
     "savedTitle": "Enregistré",
     "savedBody": "Retour sur la qualité du chantier enregistré.",
     "errorTitle": "Erreur",
-    "errorBody": "Échec de l'enregistrement. Réessayez."
+    "errorBody": "Échec de l'enregistrement. Réessayez.",
+    "errorJobPending": "Ce chantier n'est pas encore enregistré — réessayez dans un instant."
   },
   "customerTag": {
     "vip": "VIP",
