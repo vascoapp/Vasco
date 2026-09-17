@@ -324,6 +324,14 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
 - **Never `Intl.NumberFormat#formatToParts`** — Hermes lacks it; it passes in
   node and throws on device (`compactCurrency.test.ts`).
 - Always run `npx tsc --noEmit | grep "^app/"` after changes
+- **🔴 CHECK EVERY PIECE OF CODE YOU ADD, EVERY TIME.** Re-read the diff you
+  just wrote as if reviewing someone else; run tsc and the touched suites;
+  **decoy the guard** (`node scripts/decoy-check.mjs`) — a test that does not
+  fail when the defect returns has checked nothing, and a "toothless" verdict is
+  run down, never written off. For layout, money, tax or credentials verify the
+  EFFECT (the device, the generated artefact, the DB row), not the shape. If a
+  check is deferred, say so out loud — "still owed: the device pass" is what
+  preceded learnings #343, where a fix broke ten screens that were working.
 - Always update memory .md files after completing work
 
 ## Demo Accounts (any password)

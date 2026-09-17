@@ -31,7 +31,12 @@ describe('the device asks the server for the entitlement', () => {
   it('still syncs on sign-in', () => {
     const at = auth.indexOf("event === 'SIGNED_IN'");
     expect(at).toBeGreaterThan(-1);
-    expect(auth.slice(at, at + 900)).toMatch(/syncSubscriptionFromServer\(\)/);
+    // Bounded by the NEXT branch, not a fixed 900 characters: that window
+    // reached into the INITIAL_SESSION branch below, so deleting this branch's
+    // own sync call passed on its neighbour's (meta-sweep 2026-09-17).
+    const next = auth.indexOf("event === 'INITIAL_SESSION'", at);
+    const window = auth.slice(at, next === -1 ? at + 900 : next);
+    expect(window).toMatch(/syncSubscriptionFromServer\(\)/);
   });
 });
 

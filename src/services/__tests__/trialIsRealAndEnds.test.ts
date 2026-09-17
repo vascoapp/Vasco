@@ -33,6 +33,7 @@ jest.mock('../../lib/supabase', () => ({
 }));
 
 import fs from 'fs';
+import { stripComments } from '../../utils/stripComments';
 import path from 'path';
 import {
   startTrial,
@@ -151,7 +152,10 @@ describe('the promise is wired to something', () => {
           if (entry.name === 'node_modules' || entry.name === '__tests__') continue;
           walk(p);
         } else if (/\.tsx?$/.test(entry.name) && !p.endsWith('subscriptionService.ts')) {
-          if (/\bstartTrial\s*\(/.test(fs.readFileSync(p, 'utf8'))) {
+          // stripComments: `// startTrial() runs here` counted as a caller, so
+          // deleting the real call and leaving the comment kept this green —
+          // and every signup would land on Free again (meta-sweep 2026-09-17).
+          if (/\bstartTrial\s*\(/.test(stripComments(fs.readFileSync(p, 'utf8')))) {
             callers.push(path.relative(repo, p));
           }
         }

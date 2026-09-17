@@ -38,6 +38,17 @@ const KEYS = [
   'common.automatedFollowUps',
 ];
 
+// ⚠️ `get()` returns undefined for a missing key and the callers filter those
+// out, so renaming a key — or adding a new claim — silently left it unchecked.
+// The sibling guard `paywallMakesNoDarkClaims` has this; this one did not
+// (meta-sweep 2026-09-17).
+describe('the key list is still real', () => {
+  const en = load('en');
+  it.each(KEYS)('%s still exists in en', (key) => {
+    expect({ key, found: typeof get(en, key) === 'string' }).toEqual({ key, found: true });
+  });
+});
+
 const get = (j: unknown, key: string): string | undefined => {
   let cur: any = j;
   for (const part of key.split('.')) {

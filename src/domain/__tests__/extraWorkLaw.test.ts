@@ -54,8 +54,11 @@ describe('the copy no longer hardcodes one country\'s law', () => {
   });
 
   it('both render sites fill the slot', () => {
+    // stripComments: a comment mentioning `statute: statuteSuffix(` satisfied
+    // this while the sentence printed the raw {{statute}} slot.
+    const { stripComments } = require('../../utils/stripComments');
     for (const rel of ['app/(contractor)/decisions.tsx', 'app/contractor/project-billing/[id].tsx']) {
-      const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+      const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
       expect(src).toMatch(/statute:\s*statuteSuffix\(/);
     }
   });
@@ -72,12 +75,17 @@ describe('the screens read the statute country profile-first', () => {
   // Dutch statute for an account with no country at all — the citation sits
   // beside a warning the contractor shows their customer.
   it.each(screens)('%s prefers businessProfile.country and does not default to NL', (rel) => {
-    const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    const { stripComments } = require('../../utils/stripComments');
+    const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
     const at = src.indexOf('const country =');
     expect(at).toBeGreaterThan(-1);
-    const decl = src.slice(at, src.indexOf(';', at));
+    const end = src.indexOf(';', at);
+    expect(end).toBeGreaterThan(at);
+    const decl = src.slice(at, end);
     expect(decl).toMatch(/businessProfile\.country/);
-    expect(decl).not.toMatch(/\?\?\s*'NL'/);
+    // `??` AND `||`, single or double quotes: `businessProfile.country ??
+    // user?.country || 'NL'` would have passed the first version.
+    expect(decl).not.toMatch(/(\?\?|\|\|)\s*['"]NL['"]/);
   });
 });
 

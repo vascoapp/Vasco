@@ -27,11 +27,30 @@ describe('document screens fall back to the effective rate', () => {
       .toEqual({ rel, usesCountryStandard: false });
   });
 
-  it('at least one of them computes a breakdown at all (the check is live)', () => {
-    const any = DOCUMENT_SCREENS.some((rel) =>
-      /documentVatBreakdown\s*\(|getEffectiveVatRate\s*\(/.test(
-        stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8')),
-      ));
-    expect(any).toBe(true);
+  // ⚠️ "at least ONE of them" let the other three rot, and an absence check
+  // alone is satisfied by a hardcoded rate. Every screen must name the
+  // effective-rate helper, and none may inline a country→rate table
+  // (meta-sweep 2026-09-17).
+  // `tiered-quote.tsx` derives NO rate: it forwards the line's own
+  // (`item.vatRate ?? tier.vatRate`), which is the #253 fix and must stay that
+  // way. The others compute a fallback and must take the EFFECTIVE one.
+  const RATE_DERIVING = DOCUMENT_SCREENS.filter((r) => !r.endsWith('tiered-quote.tsx'));
+
+  it('the forwarding screen still forwards instead of deriving', () => {
+    const src = stripComments(fs.readFileSync(path.join(ROOT, 'app/contractor/tiered-quote.tsx'), 'utf8'));
+    expect(src).toMatch(/vatRate:\s*item\.vatRate \?\? tier\.vatRate/);
+  });
+
+  it.each(RATE_DERIVING)('%s computes its rate through the effective-rate helper', (rel) => {
+    const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+    expect({ rel, usesHelper: /documentVatBreakdown\s*\(|getEffectiveVatRate\s*\(/.test(src) })
+      .toEqual({ rel, usesHelper: true });
+  });
+
+  it.each(DOCUMENT_SCREENS)('%s does not hardcode a country rate', (rel) => {
+    const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+    // e.g. `country === 'DE' ? 0.19 : 0.21` or `? 19 : 21`
+    const hardcoded = /country\s*===\s*'[A-Z]{2}'\s*\?\s*0?\.?\d+\s*:\s*0?\.?\d+/.test(src);
+    expect({ rel, hardcoded }).toEqual({ rel, hardcoded: false });
   });
 });
