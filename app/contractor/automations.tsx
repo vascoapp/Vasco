@@ -12,6 +12,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useWorkflowPacks, getPackROI, getPackHealth, resolvePackName, resolvePackDescription, type PackHealth } from '../../src/services/workflowPackService';
 import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
 import { formatCurrency } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -23,7 +24,10 @@ export default function AutomationsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const { packs, toggle, enabledCount } = useWorkflowPacks();
   const [packROIs, setPackROIs] = useState<Record<string, { actionsTriggered: number; actionsApproved: number; estimatedRevenue: number; estimatedTimeSaved: number }>>({});
   // R66r49 #7: pack health from real telemetry. Surfaces approveRate +

@@ -47,9 +47,11 @@ export default function RecurringEditScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
-  const { customers, jobs } = useAppState();
+  const { customers, jobs, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

@@ -65,3 +65,45 @@ describe('an unknown country does not become the Dutch VAT rate', () => {
     expect(read(rel)).not.toMatch(pattern);
   });
 });
+
+describe('every contractor screen resolves its country profile-first', () => {
+  // ~30 screens declared `const country = (user?.country ?? 'NL')` and passed it
+  // to formatCurrency, so a UK contractor whose profile said UK — but whose
+  // account metadata still said NL — was billed out in EUROS on quotes,
+  // invoices, purchase orders and insurance (#218; swept 2026-09-18).
+  const DIRS = ['app/contractor', 'app/(contractor)', 'app/quotes', 'app/invoices', 'app/(modals)'];
+
+  function walk(dir: string): string[] {
+    const abs = path.join(ROOT, dir);
+    if (!fs.existsSync(abs)) return [];
+    return fs.readdirSync(abs, { withFileTypes: true }).flatMap((e) => {
+      const rel = path.join(dir, e.name);
+      if (e.isDirectory()) return e.name === '__tests__' ? [] : walk(rel);
+      return e.name.endsWith('.tsx') ? [rel] : [];
+    });
+  }
+
+  it('no screen takes the contractor country from the account alone', () => {
+    const offenders: string[] = [];
+    let checked = 0;
+    for (const rel of DIRS.flatMap(walk)) {
+      const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+      for (const m of src.matchAll(/const country\s*=\s*([^;]+);/g)) {
+        checked += 1;
+        const decl = m[1];
+        if (/user\?\.country/.test(decl) && !/businessProfile\??\.country/.test(decl)) {
+          offenders.push(`${rel}: ${decl.trim().slice(0, 80)}`);
+        }
+      }
+    }
+    expect(checked).toBeGreaterThanOrEqual(20);
+    expect(offenders).toEqual([]);
+  });
+
+  it('the module-level accessor is fed the profile country, not the account one', () => {
+    const src = stripComments(fs.readFileSync(path.join(ROOT, 'src/state/AppState.tsx'), 'utf8'));
+    expect(src).toMatch(/country: bp\.country \?\? getCurrentCountry\(\)/);
+    expect(src).not.toMatch(/country: getCurrentCountry\(\) \?\? bp\.country/);
+  });
+});
+

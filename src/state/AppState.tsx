@@ -555,8 +555,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (userId) {
           setCurrentUser({
             id: userId,
-            country: getCurrentCountry() ?? bp.country,
-            trade: getCurrentTrade() ?? bp.trade,
+            // PROFILE first (#218). This was `getCurrentCountry() ?? bp.country`
+            // — the account value winning over the profile the contractor had
+            // just edited — and this ref is what `formatCurrency` falls back to
+            // at ~189 argument-less call sites, so a UK contractor whose account
+            // metadata still said NL was shown € instead of £.
+            country: bp.country ?? getCurrentCountry(),
+            trade: bp.trade ?? getCurrentTrade(),
             vatScheme: bp.vatScheme,
           });
         }

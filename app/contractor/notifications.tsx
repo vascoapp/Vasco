@@ -67,11 +67,13 @@ const TYPE_FALLBACKS: Record<NotificationType, string> = {
 export default function NotificationsScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
   // R272: combined feed = persisted user-fired + live-derived from AppState
-  const { invoices, jobs } = useAppState();
+  const { invoices, jobs, businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const { notifications, markRead, markAllRead } = useCombinedNotifications({
     invoices: invoices as any,
     jobs: jobs as any,

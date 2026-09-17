@@ -41,7 +41,6 @@ const FREQUENCY_OPTIONS: RecurringFrequency[] = ['weekly', 'biweekly', 'monthly'
 export default function ServiceAgreementsScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
   // Localise the frequency + status enums (getFrequencyLabel returns English;
   // the status badge used a raw capitalised enum).
   const freqLabel = (f: RecurringFrequency) => t(`agreements.freq.${f}`, getFrequencyLabel(f));
@@ -50,7 +49,10 @@ export default function ServiceAgreementsScreen() {
   // frequency and status the R322 pass fixed — same leak, one row over.
   const { tradeLabel } = makeEntityLabels(t);
   const router = useRouter();
-  const { jobs, customers } = useAppState();
+  const { jobs, customers, businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const {
     agreements,
     loading,

@@ -14,6 +14,7 @@ import { DK } from '../../src/theme/draftkings';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useInsurancePolicies } from '../../src/services/complianceService';
 import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
 import { formatCurrency, formatDateShortAuto } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { Toast } from '../../src/components/shared/Toast';
@@ -74,7 +75,10 @@ export default function InsuranceScreen() {
   const router = useRouter();
   const { policies, loading } = useInsurancePolicies();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 600); }, []);
 

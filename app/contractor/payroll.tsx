@@ -40,7 +40,9 @@ export default function PayrollScreen() {
   const [period, setPeriod] = useState<PayrollPeriod>('week');
   const { jobs, workers, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const hoursLabel = (h: number) =>
     t('common.durationH', { defaultValue: '{{h}}h', h: formatDecimal1(h, country) });
 

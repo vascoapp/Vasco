@@ -102,9 +102,9 @@ interface ColumnBounds {
 export default function PipelineScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { leads, addLead, updateLead, removeLead, moveLeadStatus } = useAppState();
+  const { leads, addLead, updateLead, removeLead, moveLeadStatus, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country as Country) ?? 'NL';
+  const country = ((businessProfile?.country ?? user?.country) as Country) ?? 'NL';
 
   const grouped = useMemo(() => groupLeadsByStatus(leads), [leads]);
   const totalValue = useMemo(() => pipelineValue(leads), [leads]);
@@ -360,7 +360,8 @@ function LeadCard({
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = (user?.country as Country) ?? 'NL';
+  const { businessProfile } = useAppState();
+  const country = ((businessProfile?.country ?? user?.country) as Country) ?? 'NL';
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartedRef = useRef(false);
   const movedRef = useRef(false);
@@ -498,7 +499,8 @@ function LeadModal({ visible, original, onClose, onSave, onDelete }: LeadModalPr
   const [notes, setNotes] = useState(original?.notes ?? '');
 
   const { user } = useAuth();
-  const country = (user?.country as Country) ?? 'NL';
+  const { businessProfile } = useAppState();
+  const country = ((businessProfile?.country ?? user?.country) as Country) ?? 'NL';
 
   const canSave = customerName.trim().length > 0;
 

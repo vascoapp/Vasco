@@ -84,10 +84,12 @@ export default function BesparenScreen() {
   const ledger = useActionLedger();
   const predictive = usePredictiveSavings();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
 
   // Procurement agent
-  const { jobs, jobMaterials, materials } = useAppState();
+  const { jobs, jobMaterials, materials, businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const activeJobs = jobs.filter(j => ['accepted', 'scheduled', 'in-progress'].includes(j.status));
   const materialNeeds: MaterialNeed[] = activeJobs.flatMap(job => {
     const jm = jobMaterials[job.id] || [];

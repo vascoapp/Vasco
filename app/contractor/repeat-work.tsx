@@ -46,7 +46,9 @@ export default function RepeatWorkScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { businessProfile } = useAppState();
-  const country = user?.country ?? 'NL';
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL');
   const opportunities = useMaintenanceOpportunities();
 
   /**

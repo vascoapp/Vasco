@@ -24,6 +24,7 @@ import { hapticSuccess } from '../../../src/utils/haptics';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 import { formatCurrency } from '../../../src/i18n/formatting';
 import { useAuth } from '../../../src/context/AuthContext';
+import { useAppState } from '../../../src/state/AppState';
 import {
   usePricebook,
   newEntry,
@@ -64,7 +65,10 @@ export default function PricebookEditorScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
-  const country = user?.country ?? 'NL';
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL');
   const { entries, loading, upsert, remove } = usePricebook();
 
   const isNew = id === 'new';

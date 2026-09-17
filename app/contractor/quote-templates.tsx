@@ -10,6 +10,7 @@ import { PAGE_BG, TYPE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useQuoteTemplates, TEMPLATE_CATEGORIES, localizeTemplate, localizeCategory, type QuoteTemplate, type TemplateCategory } from '../../src/services/quoteTemplateService';
 import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
 import { useTranslation } from 'react-i18next';
 import { formatCurrency } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -23,7 +24,10 @@ export default function QuoteTemplatesScreen() {
   const { t } = useTranslation();
   const { templates, remove } = useQuoteTemplates();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);

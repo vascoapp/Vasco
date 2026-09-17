@@ -173,7 +173,9 @@ export default function JobDetailPage() {
 
   const { addInvoiceFromJob, jobs, invoices, quotes, customers, jobMaterials: jobMaterialsMap, materials: materialCatalog, suppliers, businessProfile, updateJob, updateJobStatus, updateJobMaterialStatus, removeJob, workers } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   // Shared enum→label map: trade is stored as a slug on some rows and as a
   // display name on others, so the assignment guard must normalise before
   // comparing, or it fires on correct assignments.

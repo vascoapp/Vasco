@@ -34,9 +34,11 @@ import { Typography } from '../../src/theme/typography';
 export default function NewQuoteScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { addQuote, customers, quotes } = useAppState();
+  const { addQuote, customers, quotes, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
 
   // R17.2: track customer NAME for display + customer ID for addQuote.
   // Was previously single-string state — picking a customer set the NAME and

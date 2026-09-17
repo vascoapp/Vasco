@@ -101,7 +101,7 @@ export default function CustomerViewScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { quoteId, t: tokenParam } = useLocalSearchParams<{ quoteId?: string; t?: string }>();
-  const { quotes, customers, convertQuoteToJob } = useAppState();
+  const { quotes, customers, convertQuoteToJob, businessProfile } = useAppState();
   const [remoteQuote, setRemoteQuote] = useState<typeof DEMO_QUOTE | null>(null);
 
   // If the URL carries a signed token, fetch the quote via the public Edge
@@ -181,7 +181,9 @@ export default function CustomerViewScreen() {
   const [viewRecorded, setViewRecorded] = useState(false);
 
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const fmt = (n: number) => formatCurrency(n, country);
   // Returns a localised date, or null for an empty/unparseable value — the
   // caller then omits the row rather than showing the customer "Valid until

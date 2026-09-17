@@ -49,9 +49,11 @@ export default function ProjectDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { projects, updateProject, jobs, invoices, customers, getProjectPnL, addJobToProject } = useAppState();
+  const { projects, updateProject, jobs, invoices, customers, getProjectPnL, addJobToProject, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   // The job rows printed the raw JobStatus enum ('completed', 'in-progress')
   // and a hardcoded € formatted in the DEVICE locale, on an aannemer P&L
   // screen. Same class as the R322 werk/customer-detail fixes.

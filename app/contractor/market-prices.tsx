@@ -20,6 +20,7 @@ import { useCohortBenchmarks, compareToMarket } from '../../src/services/cohortB
 import { usePriceIndex } from '../../src/services/priceIndexService';
 import { getPriceRecommendations, type PriceRecommendation } from '../../src/services/invoiceScanService';
 import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
 import { formatCurrency, formatDecimal1, type Country } from '../../src/i18n/formatting';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -41,8 +42,11 @@ export default function MarketPricesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const { businessProfile } = useAppState();
   const trade = user?.trade ?? 'general';
-  const country = user?.country ?? 'NL';
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL');
 
   // priceIndexService/cohortBenchmarkService emit snake_case DB enums
   // ('concrete_cement', 'copper_pipes', 'general'). They were rendered raw as

@@ -287,11 +287,13 @@ const COLORS = [Palette.hermesOrange, '#3B82F6', '#10B981', '#EC4899', '#14B8A6'
 export default function DragScheduleScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
   // Hidden for launch — see featureFlagService DEFAULTS.route_optimization.
   const routeOptimizationEnabled = useFeatureFlag('route_optimization');
   const router = useRouter();
-  const { jobs, customers, workers, updateJobStatus, updateJob } = useAppState();
+  const { jobs, customers, workers, updateJobStatus, updateJob, businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   // Only people currently on the crew get a lane. Inactive workers are kept
   // for historical job records (see src/domain/worker.ts) and must not appear.
   const activeWorkers = useMemo(() => workers.filter((w: Worker) => w.isActive), [workers]);

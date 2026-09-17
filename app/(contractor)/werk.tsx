@@ -58,9 +58,11 @@ export default function WerkScreen() {
   const kbInset = useKeyboardInset();
   const router = useRouter();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
   const [refreshing, setRefreshing] = useState(false);
   const { jobs, addJob, removeJob, projects, isLoading, businessProfile, customers } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const [showNewJob, setShowNewJob] = useState(false);
   const [newJobTitle, setNewJobTitle] = useState('');
   // This sheet is the ONLY in-app job-creation path, and it passed
@@ -561,7 +563,7 @@ export default function WerkScreen() {
                 <JobRow
                   key={job.id}
                   title={job.title || job.description || ''}
-                  meta={[job.quotedAmount ? formatCurrency(job.quotedAmount, (user?.country ?? 'NL') as Country) : null, job.status ? jobStatusLabel(String(job.status)) : null].filter(Boolean).join(' · ')}
+                  meta={[job.quotedAmount ? formatCurrency(job.quotedAmount, country) : null, job.status ? jobStatusLabel(String(job.status)) : null].filter(Boolean).join(' · ')}
                   accent={DK.colors.highlight}
                   onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                   onLongPress={() => handleDeleteJob(job.id, job.title || job.description || '')}
@@ -584,7 +586,7 @@ export default function WerkScreen() {
                   // the figure Geld's Projectboek and the project screen use.
                   // This showed the raw budget, so two projects listed here as
                   // 12.500 + 18.000 while Projectboek said 29.000 (16.500 quoted).
-                  meta={`${t('dk.pill.jobsCount', { count: project.jobIds.length })} · ${formatCurrency(contractValue(project), (user?.country ?? 'NL') as Country)}`}
+                  meta={`${t('dk.pill.jobsCount', { count: project.jobIds.length })} · ${formatCurrency(contractValue(project), country)}`}
                   accent={project.status === 'active' ? DK.colors.accent : DK.colors.textMuted}
                   onPress={() => router.push(`/contractor/projects/${project.id}` as any)}
                 />

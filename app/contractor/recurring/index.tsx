@@ -31,6 +31,7 @@ import {
 import { formatAmount } from '../../../src/utils/formatAmount';
 import { formatCurrency, type Country } from '../../../src/i18n/formatting';
 import { useAuth } from '../../../src/context/AuthContext';
+import { useAppState } from '../../../src/state/AppState';
 import { hapticSuccess, hapticWarning } from '../../../src/utils/haptics';
 
 export default function RecurringJobsListScreen() {
@@ -205,7 +206,10 @@ interface CardProps {
 function Card({ inst, onTogglePause, onRemove, onEdit }: CardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const dueLabel = inst.overdue
     ? t('recurring.daysOverdue', '{{count}} days overdue', { count: -inst.daysUntilDue })
     : inst.daysUntilDue === 0

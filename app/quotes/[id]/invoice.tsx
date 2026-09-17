@@ -21,9 +21,11 @@ export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { quotes, lineItems, addInvoice, markInvoiceSent, invoices, customers } = useAppState();
+  const { quotes, lineItems, addInvoice, markInvoiceSent, invoices, customers, businessProfile } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const [creating, setCreating] = useState(false);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
 

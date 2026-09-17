@@ -26,6 +26,7 @@ import {
   type DailyMetricPoint,
 } from '../../src/services/intelligenceCaptureService';
 import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
 import { formatCurrency0, formatDecimal1, type Country } from '../../src/i18n/formatting';
 
 interface MonthRow { month: string; avgMargin: number; medianMargin: number; quotes: number; }
@@ -34,8 +35,11 @@ interface BucketRow { amountBucket: string; winRate: number; quotes: number; con
 export default function MarketInsightsScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { businessProfile } = useAppState();
   const trade = user?.trade ?? 'plumbing';
-  const country = user?.country ?? 'NL';
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL');
 
   const [refreshing, setRefreshing] = useState(false);
   const [marginTrend, setMarginTrend] = useState<MonthRow[]>([]);

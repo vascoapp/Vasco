@@ -25,6 +25,7 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID, TOUCH } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAuth } from '../../src/context/AuthContext';
+import { useAppState } from '../../src/state/AppState';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { trackEvent } from '../../src/services/eventTrackingService';
 import {
@@ -80,6 +81,7 @@ export default function MaterialSearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  const { businessProfile } = useAppState();
   const params = useLocalSearchParams<{ q?: string }>();
 
   // Search state — pre-fill from route params (e.g., reorder_materials links)
@@ -106,7 +108,9 @@ export default function MaterialSearchScreen() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [creatingPO, setCreatingPO] = useState(false);
 
-  const country = user?.country ?? 'NL';
+  // Profile first, account as fallback (#218): a contractor who set UK in
+  // their profile was formatted in euros while the account still said NL.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL');
   const userTrade = user?.trade ?? 'general';
   const cc = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
 
