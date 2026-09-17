@@ -63,6 +63,14 @@ interface ContractorPermit {
   authority: string;
   status: PermitStatus;
   jobTitle: string;
+  /**
+   * The job this permit belongs to. The wizard made the contractor PICK a job
+   * and then stored only its title, so the job-scoped view had to match on a
+   * title SUBSTRING: renaming the job broke the link, and "Badkamer" matched
+   * "Badkamer renovatie" as well (#339). Optional because permits drafted
+   * before this field exists have no id to fill in.
+   */
+  jobId?: string;
   address: string;
   submissionDate?: string;
   targetDecisionDate?: string;
@@ -132,7 +140,11 @@ export default function PermitsScreen() {
   const visiblePermits = useMemo(() => {
     if (!focusJob) return permits;
     const titleLower = (focusJob.title ?? '').toLowerCase();
-    return permits.filter((p) => p.jobTitle.toLowerCase().includes(titleLower));
+    // Id first; the title match stays only for permits stored before `jobId`
+    // existed, where it is the only link there is.
+    return permits.filter((p) => (p.jobId
+      ? p.jobId === focusJob.id
+      : p.jobTitle.toLowerCase().includes(titleLower)));
   }, [permits, focusJob]);
   // Auto-expand the first matching permit on entry from the queue.
   useEffect(() => {
@@ -272,6 +284,7 @@ export default function PermitsScreen() {
       authority: wizard.authority || t('permits.defaultAuthority', 'Gemeente'),
       status: 'not-submitted',
       jobTitle: wizard.jobTitle,
+      jobId: selectedJobId ?? undefined,
       address: wizard.address,
       notes: wizard.notes || undefined,
       documents: [],

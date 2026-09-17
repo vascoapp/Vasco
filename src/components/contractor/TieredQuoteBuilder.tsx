@@ -465,6 +465,29 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // Calibration
   const calibrationLineItems = selectedServices.map(s => ({ description: s.item.name, estimate: s.item.basePrice * s.quantity }));
   const calibrations = useQuoteCalibration(calibrationLineItems);
+  /**
+   * Calibration keyed by the line it belongs to.
+   *
+   * `useQuoteCalibration` SKIPS lines with no matching job type and lines
+   * whose delta is under 5%, so its output is COMPACTED: `calibrations[idx]`
+   * is not `selectedServices[idx]`. Apply read it positionally and adjusted a
+   * different line than the one the number came from (#339).
+   *
+   * It is also an HOURS multiplier, so it may only touch a line whose quantity
+   * is measured in hours — the same rule as the duration predictor (#207).
+   */
+  const calibrationByDescription = useMemo(
+    () => new Map(calibrations.map((c) => [c.lineItemDescription, c])),
+    [calibrations],
+  );
+  const calibratableServices = useMemo(
+    () => selectedServices.filter((sv) => {
+      const cal = calibrationByDescription.get(sv.item.name);
+      const isHourly = (sv.item as { pricingType?: string }).pricingType === 'hourly';
+      return !!cal && cal.combinedMultiplier > 1 && isHourly;
+    }),
+    [selectedServices, calibrationByDescription],
+  );
 
   // The catalogue this quote is built from. One source, used both by the
   // service picker and by the AI scope→lines matcher below, so the builder can
@@ -1610,21 +1633,26 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           </View>
 
           {/* Calibration */}
-          {calibrations.length > 0 && !calibrationApplied && (
+          {calibratableServices.length > 0 && !calibrationApplied && (
             <View style={s.vascoRow}>
               <Text style={s.vascoText}>
+                {/* Describes only the lines Apply will change — a count and a
+                    "+X%" taken from every calibration promised an adjustment
+                    to lines Apply skips. */}
                 {t('quotes.calibrationLine', 'Based on {{count}} prior jobs: hours {{adjustment}}', {
-                  count: calibrations[0]?.basedOnJobCount || 0,
-                  adjustment: calibrations.some(c => c.combinedMultiplier > 1)
-                    ? `+${Math.round((Math.max(...calibrations.map(c => c.combinedMultiplier)) - 1) * 100)}%`
-                    : t('quotes.onSchedule', 'on schedule'),
+                  count: calibrationByDescription.get(calibratableServices[0].item.name)?.basedOnJobCount || 0,
+                  adjustment: `+${Math.round((Math.max(...calibratableServices.map(sv => calibrationByDescription.get(sv.item.name)?.combinedMultiplier ?? 1)) - 1) * 100)}%`,
                 })}
               </Text>
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 <Pressable style={s.vascoApply} onPress={() => {
-                  setSelectedServices(prev => prev.map((sv, idx) => {
-                    const cal = calibrations[idx];
-                    return cal && cal.combinedMultiplier > 1 ? { ...sv, quantity: Math.ceil(sv.quantity * cal.combinedMultiplier) } : sv;
+                  setSelectedServices(prev => prev.map((sv) => {
+                    const cal = calibrationByDescription.get(sv.item.name);
+                    const isHourly = (sv.item as { pricingType?: string }).pricingType === 'hourly';
+                    if (!cal || cal.combinedMultiplier <= 1 || !isHourly) return sv;
+                    // Keep the halves: `Math.ceil` turned 2,5 h × 1,1 into 3 h,
+                    // which is a bigger adjustment than the calibration asked for.
+                    return { ...sv, quantity: Math.round(sv.quantity * cal.combinedMultiplier * 100) / 100 };
                   }));
                   setCalibrationApplied(true);
                 }}>
@@ -1636,7 +1664,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
               </View>
             </View>
           )}
-          {calibrationApplied && calibrations.length > 0 && (
+          {calibrationApplied && calibratableServices.length > 0 && (
             <View style={s.vascoRow}>
               <Ionicons name="checkmark-circle" size={14} color={SemanticColors.feedbackSuccess} />
               <Text style={[s.vascoText, { color: SemanticColors.feedbackSuccess }]}>{t('quotes.calibrationApplied', 'Calibration applied')}</Text>

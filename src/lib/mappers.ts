@@ -206,6 +206,7 @@ export function customerRowToCustomer(row: CustomerRow): Customer {
     taxId: row.tax_id ?? undefined,
     einvoiceRouting: row.einvoice_routing ?? undefined,
     einvoiceEmail: row.einvoice_email ?? undefined,
+    createdAt: row.created_at,
   };
 }
 

@@ -114,3 +114,25 @@ describe('a sent quote is not demoted by a control that edits nothing', () => {
     expect(src).not.toMatch(/updateQuote\([^)]*\{\s*status:\s*'draft'\s*\}/);
   });
 });
+
+describe('a permit remembers WHICH job it is for', () => {
+  const src = read('app/contractor/permits.tsx');
+
+  it('stores the picked job id', () => {
+    // The wizard made the contractor pick a job and kept only its title.
+    const create = src.slice(src.indexOf('const handleCreatePermit'), src.indexOf('setActiveTab(\'overzicht\')'));
+    expect(create).toMatch(/jobId: selectedJobId \?\? undefined/);
+  });
+
+  it('scopes by id, with the title match only as the legacy fallback', () => {
+    const start = src.indexOf('const visiblePermits');
+    // End anchored from the start: a bare indexOf can find an earlier match
+    // and hand back an empty slice that every `not.toMatch` passes (#339).
+    const filter = src.slice(start, src.indexOf('}, [permits, focusJob]', start));
+    expect(filter.length).toBeGreaterThan(100);
+    expect(filter).toMatch(/p\.jobId === focusJob\.id/);
+    // Renaming the job used to break the link, and "Badkamer" matched
+    // "Badkamer renovatie" too.
+    expect(filter).toMatch(/p\.jobId\s*\?/);
+  });
+});

@@ -58,7 +58,15 @@ export function scoreCustomer(ctx: Context): CustomerProfile {
     .filter(Boolean)
     .map((s) => new Date(s).getTime())
     .sort((a, b) => b - a)[0] ?? 0;
-  const lastActivityDays = lastActivity ? Math.floor((now - lastActivity) / DAY) : 9999;
+  // A customer with no jobs and no invoices has no ACTIVITY, but they are not
+  // dormant — they may have been added a minute ago. Falling back to 9999 days
+  // badged every brand-new customer "Inactive / no activity for 333 months"
+  // the moment they were saved (#339). Their own createdAt is the honest
+  // floor; only when even that is missing do we treat the age as unknown.
+  const customerSince = ctx.customer.createdAt;
+  const fallbackActivity = customerSince ? new Date(customerSince).getTime() : 0;
+  const effectiveActivity = lastActivity || (Number.isFinite(fallbackActivity) ? fallbackActivity : 0);
+  const lastActivityDays = effectiveActivity ? Math.floor((now - effectiveActivity) / DAY) : 0;
 
   // Composite score
   let score = 0;

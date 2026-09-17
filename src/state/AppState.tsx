@@ -1072,7 +1072,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       priceObservations: priceObsMap,
       addCustomer: async (name, email, phone, address, extra) => {
         const tempId = `c-${Date.now()}`;
-        const newCustomer: Customer = { id: tempId, name, email, phone, address, ...extra };
+        const newCustomer: Customer = { id: tempId, name, email, phone, address, createdAt: new Date().toISOString(), ...extra };
         setCustomers((prev) => [newCustomer, ...prev]);
 
         // R52: split BE-persist from post-create housekeeping. Was a real

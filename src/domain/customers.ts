@@ -24,6 +24,11 @@ export type Customer = {
    *  Destinatario ('0000000' when routing by PEC). Without it SDI rejects. */
   einvoiceRouting?: string;
   einvoiceEmail?: string;
+  /** When the contractor added them (`customers.created_at`). Read-only: the
+   *  write mapper is an allowlist and never sends it. The customer tagger uses
+   *  it as the floor for "last activity" — without it a customer with no work
+   *  yet had no age at all (#339). */
+  createdAt?: string;
 };
 
 /**
