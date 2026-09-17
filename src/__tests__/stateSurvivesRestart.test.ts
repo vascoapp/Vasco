@@ -53,6 +53,16 @@ describe('an edited reminder is the one that gets sent', () => {
     expect(ai).toMatch(/editedTextFor/);
   });
 
+  it('falls back to the draft when the box was CLEARED', () => {
+    // `edits[id] ?? shareText` keeps '' — a value — so clearing the editor and
+    // approving opened the share sheet with an empty message.
+    const at = ai.indexOf('const editedTextFor');
+    expect(at).toBeGreaterThan(-1);
+    const body = ai.slice(at, ai.indexOf('const setEditFor', at));
+    expect(body).toMatch(/\.trim\(\)/);
+    expect(body).not.toMatch(/edits\[a\.id\] \?\? a\.shareText/);
+  });
+
   it('shares the edited text, not the original draft', () => {
     const at = ai.indexOf('const handleAction');
     const body = ai.slice(at, at + 900);

@@ -933,7 +933,8 @@
     "openInvoice": "Rechnung für {{customer}} öffnen",
     "showActions": "Aktionen für {{customer}}",
     "linesNotSavedTitle": "Positionen nicht gespeichert",
-    "linesNotSavedBody": "Die Rechnungspositionen konnten nicht gespeichert werden. Bitte Verbindung prüfen und erneut versuchen – es wurde nichts geändert."
+    "linesNotSavedBody": "Die Rechnungspositionen konnten nicht gespeichert werden. Bitte Verbindung prüfen und erneut versuchen – es wurde nichts geändert.",
+    "agreedExclVat": "exkl. MwSt."
   },
   "expenses": {
     "title": "Ausgaben",
@@ -4488,7 +4489,9 @@
     "total": "Gesamt",
     "saving": "Speichern...",
     "saveDraft": "Entwurf speichern",
-    "fromPricebook": "+ Aus Preisliste"
+    "fromPricebook": "+ Aus Preisliste",
+    "zeroQuantityTitle": "Position ohne Menge",
+    "zeroQuantityDesc": "Geben Sie für „{{description}}“ eine Menge größer als null ein."
   },
   "checklist": {
     "beforePhoto": "Foto vorher",

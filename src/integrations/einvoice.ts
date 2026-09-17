@@ -180,13 +180,17 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   // is keyed on. Summing the lines rather than reusing data.totalVat: a single
   // stated total cannot be split back out per rate, and an invoice mixing 19%
   // and 7% (materials vs. some reduced-rate work) is ordinary.
+  // The tax is computed ONCE on the taxable amount of each rate, not line by
+  // line. Rounding every line's VAT and adding those up drifts: ten lines of
+  // € 12,34 at 19% gave € 23,40 where the taxable amount € 123,40 × 19% is
+  // € 23,45 — and that figure is the VAT a German B2B invoice states.
   const byRate = new Map<number, { net: number; vat: number }>();
   for (const li of roundedLines) {
     const acc = byRate.get(li.vatRate) ?? { net: 0, vat: 0 };
     acc.net = round2(acc.net + li.lineTotal);
-    acc.vat = round2(acc.vat + li.lineTotal * (li.vatRate / 100));
     byRate.set(li.vatRate, acc);
   }
+  for (const [rate, acc] of byRate) acc.vat = round2(acc.net * (rate / 100));
   // The totals the document STATES, from the same rounded lines the receiver
   // re-adds. `data.total*` is what the screen computed; if the two ever
   // disagree the invoice is rejected, so the lines win.

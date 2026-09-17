@@ -63,7 +63,8 @@
     "emptyQuotes": "No active estimates",
     "tabQuotes": "Estimates",
     "pendingApproval_one": "{{count}} estimate awaiting approval",
-    "pendingApproval_other": "{{count}} estimates awaiting approval"
+    "pendingApproval_other": "{{count}} estimates awaiting approval",
+    "agreedExclVat": "excl. tax"
   },
   "expenses": {
     "amount": "Amount (excl. Sales tax)",

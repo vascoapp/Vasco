@@ -102,7 +102,13 @@ export default function VascoScreen() {
   // (it clears editingId), and the send then fell back to the original draft —
   // so an edited reminder went out unedited (#339).
   const [edits, setEdits] = useState<Record<string, string>>({});
-  const editedTextFor = (a: { id: string; shareText?: string }) => edits[a.id] ?? a.shareText;
+  // An empty edit is not an edit. Clearing the box and approving used to open
+  // the share sheet with a blank message — `edits[id] ?? shareText` keeps '',
+  // which is a value. Whitespace-only counts as cleared.
+  const editedTextFor = (a: { id: string; shareText?: string }) => {
+    const edited = edits[a.id];
+    return edited && edited.trim() ? edited : a.shareText;
+  };
   const setEditFor = (id: string, txt: string) => {
     setEditText(txt);
     setEdits((prev) => ({ ...prev, [id]: txt }));

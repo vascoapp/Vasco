@@ -34,7 +34,10 @@ describe('getStandardVatRate', () => {
   it('returns 21 for ES', () => expect(getStandardVatRate('ES')).toBe(21));
   it('returns 22 for IT', () => expect(getStandardVatRate('IT')).toBe(22));
   it('returns 20 for UK', () => expect(getStandardVatRate('UK')).toBe(20));
-  it('falls back to 21 for undefined', () => expect(getStandardVatRate(undefined)).toBe(21));
+  // NOT the Dutch 21: an unknown country is unknown. The customer's quote page
+  // (verify-quote-token) has always returned 0 here, and a silent NL default
+  // made the app gross a quote the page showed net.
+  it('returns 0 for an unknown country instead of the Dutch rate', () => expect(getStandardVatRate(undefined)).toBe(0));
 });
 
 describe('getEffectiveVatRate', () => {
@@ -48,8 +51,11 @@ describe('getEffectiveVatRate', () => {
   it('returns 0 when Kleinunternehmer regardless of country', () => {
     expect(getEffectiveVatRate({ country: 'DE', vatScheme: 'small_business_DE_kleinunternehmer' })).toBe(0);
   });
-  it('falls back to NL 21 when country undefined and scheme standard', () => {
-    expect(getEffectiveVatRate({ vatScheme: 'standard' })).toBe(21);
+  it('returns 0 when the country is unknown, rather than inventing the Dutch rate', () => {
+    // Both sides of the same quote must agree: the customer's page computes
+    // this the same way, and a fabricated 21% is the failure that is hardest
+    // to see — it looks like a total.
+    expect(getEffectiveVatRate({ vatScheme: 'standard' })).toBe(0);
   });
 });
 

@@ -33,11 +33,20 @@ describe('every late-fee caller uses it', () => {
   const ROOT = path.resolve(__dirname, '../../..');
   const callers = ['app/invoices/[id].tsx', 'app/(contractor)/facturen.tsx', 'src/services/aiActionQueueService.ts'];
 
-  it.each(callers)('%s computes the fee on the payable amount', (rel) => {
+  // EVERY call, not the first one: `invoices/[id].tsx` has two — the email
+  // disclosure and the overdue timeline — and checking only `indexOf` left the
+  // second charging interest on retention that is not due, so the screen and
+  // the customer's reminder disagreed.
+  it.each(callers)('%s computes the fee on the payable amount at every call', (rel) => {
     const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-    const at = src.indexOf('computeLateFee(');
-    expect(at).toBeGreaterThan(-1);
-    const args = src.slice(at, src.indexOf('})', at));
-    expect(args).toMatch(/invoiceAmount:\s*amountPayableNow\(/);
+    const calls: string[] = [];
+    for (let at = src.indexOf('computeLateFee('); at !== -1; at = src.indexOf('computeLateFee(', at + 1)) {
+      const end = src.indexOf('})', at);
+      calls.push(src.slice(at, end === -1 ? at + 400 : end));
+    }
+    // The import line is not a call.
+    const invocations = calls.filter((c) => c.includes('invoiceAmount:'));
+    expect(invocations.length).toBeGreaterThan(0);
+    for (const args of invocations) expect(args).toMatch(/invoiceAmount:\s*amountPayableNow\(/);
   });
 });

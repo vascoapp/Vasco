@@ -60,3 +60,24 @@ describe('the copy no longer hardcodes one country\'s law', () => {
     }
   });
 });
+
+describe('the screens read the statute country profile-first', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const ROOT = path.resolve(__dirname, '../../..');
+  const screens = ['app/(contractor)/decisions.tsx', 'app/contractor/project-billing/[id].tsx'];
+
+  // `user?.country ?? 'NL'` cited "art. 7:755 BW" at a German contractor whose
+  // profile says DE (#218: the profile outranks the account), and invented the
+  // Dutch statute for an account with no country at all — the citation sits
+  // beside a warning the contractor shows their customer.
+  it.each(screens)('%s prefers businessProfile.country and does not default to NL', (rel) => {
+    const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    const at = src.indexOf('const country =');
+    expect(at).toBeGreaterThan(-1);
+    const decl = src.slice(at, src.indexOf(';', at));
+    expect(decl).toMatch(/businessProfile\.country/);
+    expect(decl).not.toMatch(/\?\?\s*'NL'/);
+  });
+});
+

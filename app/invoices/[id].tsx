@@ -1485,7 +1485,11 @@ export default function InvoiceDetailScreen() {
               const feeCountry = lateFeeCountry(country);
               if (!feeCountry) return null;
               const fee = computeLateFee({
-                invoiceAmount: invoice.amount,
+                // Same basis as the disclosure above: retention withheld from
+                // this instalment is not due, so it accrues no interest. This
+                // site kept `invoice.amount`, so the overdue timeline on screen
+                // claimed more interest than the reminder the customer reads.
+                invoiceAmount: amountPayableNow(invoice),
                 daysOverdue: Math.abs(invoice.dueInDays),
                 country: feeCountry,
                 customerType: lateFeeCustomerType(invoiceCustomer, feeCountry),

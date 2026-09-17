@@ -939,7 +939,10 @@ export default function FacturenScreen() {
                     const job = completedJobs[0];
                     setBottomSheet({
                       visible: true,
-                      title: `${t('invoices.createInvoiceFor', 'Factuur maken voor')} "${job.title}" (${formatMoney((job.agreedAmount || job.quotedAmount || 0))})?`,
+                      // `agreedAmount` is NET. Printing it bare made the
+                      // confirmation name one figure and the invoice another —
+                      // "(€ 280)?" then an invoice for € 333,20.
+                      title: `${t('invoices.createInvoiceFor', 'Factuur maken voor')} "${job.title}" (${formatMoney((job.agreedAmount || job.quotedAmount || 0))} ${t('invoices.agreedExclVat', 'excl. VAT')})?`,
                       actions: [
                         {
                           label: t('invoices.create', 'Aanmaken'),
@@ -971,7 +974,7 @@ export default function FacturenScreen() {
                       title: t('invoices.chooseJobDesc', 'Kies een klus om te factureren:'),
                       actions: [
                         ...completedJobs.slice(0, 5).map(job => ({
-                          label: `${job.title} · ${formatMoney((job.agreedAmount || job.quotedAmount || 0))}`,
+                          label: `${job.title} · ${formatMoney((job.agreedAmount || job.quotedAmount || 0))} ${t('invoices.agreedExclVat', 'excl. VAT')}`,
                           icon: 'briefcase-outline' as const,
                           onPress: async () => {
                             closeBottomSheet();

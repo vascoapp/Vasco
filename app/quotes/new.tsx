@@ -128,6 +128,17 @@ export default function NewQuoteScreen() {
       Alert.alert(t('quoteNew.noItemsTitle', 'No line items'), t('quoteNew.noItemsDesc', 'Add at least one line item with a description.'));
       return;
     }
+    // A described line with quantity 0 used to be saved as a € 0 line — the
+    // `Math.max(1, ...)` that silently made it 1 went when the field became a
+    // DecimalInput. Neither silent answer is right: say which line it is.
+    const zeroQty = validItems.find((i) => !(i.quantity > 0));
+    if (zeroQty) {
+      Alert.alert(
+        t('quoteNew.zeroQuantityTitle', 'Line without a quantity'),
+        t('quoteNew.zeroQuantityDesc', 'Enter a quantity greater than zero for "{{description}}".', { description: zeroQty.description.trim() }),
+      );
+      return;
+    }
     const itemTotal = validItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
     if (itemTotal <= 0) {
       Alert.alert(t('quoteNew.invalidAmountTitle', 'Invalid amount'), t('quoteNew.invalidAmountDesc', 'Quote total must be greater than zero. Check your line item prices.'));

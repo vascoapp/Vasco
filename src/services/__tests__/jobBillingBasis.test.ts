@@ -249,3 +249,20 @@ describe('addInvoiceFromJob uses invoiceFromJobBilling', () => {
     expect(body).not.toMatch(/amount\s*[:=][^;\n]*billing\.agreedAmount/);
   });
 });
+
+describe('a screen that prints agreedAmount says what it is', () => {
+  // `agreedAmount` is NET (it comes from `quote.amount`). The Facturen
+  // confirmation printed it bare — "Create invoice for X (€ 280)?" — and then
+  // created an invoice for € 333,20. Either label it or gross it; the one
+  // thing it may not do is look like the invoice total.
+  const fs = require('fs');
+  const path = require('path');
+  const src = fs.readFileSync(path.resolve(__dirname, '../../../app/(contractor)/facturen.tsx'), 'utf8');
+
+  it('every agreedAmount the screen formats carries the excl-VAT label', () => {
+    const prints = [...src.matchAll(/formatMoney\(\(job\.agreedAmount[^\n]*/g)].map((m) => m[0]);
+    expect(prints.length).toBeGreaterThanOrEqual(2);
+    for (const line of prints) expect(line).toMatch(/invoices\.agreedExclVat/);
+  });
+});
+

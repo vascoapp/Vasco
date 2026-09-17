@@ -933,7 +933,8 @@
     "openInvoice": "Apri fattura di {{customer}}",
     "showActions": "Azioni per {{customer}}",
     "linesNotSavedTitle": "Righe non salvate",
-    "linesNotSavedBody": "Non è stato possibile salvare le righe della fattura. Verifichi la connessione e riprovi: non è stato modificato nulla."
+    "linesNotSavedBody": "Non è stato possibile salvare le righe della fattura. Verifichi la connessione e riprovi: non è stato modificato nulla.",
+    "agreedExclVat": "IVA escl."
   },
   "expenses": {
     "title": "Spese",
@@ -4488,7 +4489,9 @@
     "total": "Totale",
     "saving": "Salvataggio...",
     "saveDraft": "Salva bozza",
-    "fromPricebook": "+ Dal listino"
+    "fromPricebook": "+ Dal listino",
+    "zeroQuantityTitle": "Riga senza quantità",
+    "zeroQuantityDesc": "Inserisci una quantità maggiore di zero per «{{description}}»."
   },
   "checklist": {
     "beforePhoto": "Foto prima",

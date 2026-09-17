@@ -933,7 +933,8 @@
     "openInvoice": "Open invoice for {{customer}}",
     "showActions": "Actions for {{customer}}",
     "linesNotSavedTitle": "Lines not saved",
-    "linesNotSavedBody": "The invoice lines could not be saved. Check your connection and try again — nothing was changed."
+    "linesNotSavedBody": "The invoice lines could not be saved. Check your connection and try again — nothing was changed.",
+    "agreedExclVat": "excl. VAT"
   },
   "expenses": {
     "title": "Expenses",
@@ -4488,7 +4489,9 @@
     "total": "Total",
     "saving": "Saving...",
     "saveDraft": "Save draft",
-    "fromPricebook": "+ From pricebook"
+    "fromPricebook": "+ From pricebook",
+    "zeroQuantityTitle": "Line without a quantity",
+    "zeroQuantityDesc": "Enter a quantity greater than zero for \"{{description}}\"."
   },
   "checklist": {
     "beforePhoto": "Before photo",

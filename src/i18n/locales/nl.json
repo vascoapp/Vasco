@@ -926,7 +926,8 @@
     "openInvoice": "Factuur openen voor {{customer}}",
     "showActions": "Acties voor {{customer}}",
     "linesNotSavedTitle": "Regels niet opgeslagen",
-    "linesNotSavedBody": "De factuurregels konden niet worden opgeslagen. Controleer de verbinding en probeer het opnieuw — er is niets gewijzigd."
+    "linesNotSavedBody": "De factuurregels konden niet worden opgeslagen. Controleer de verbinding en probeer het opnieuw — er is niets gewijzigd.",
+    "agreedExclVat": "excl. btw"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -4538,7 +4539,9 @@
     "total": "Totaal",
     "saving": "Opslaan...",
     "saveDraft": "Concept opslaan",
-    "fromPricebook": "+ Uit prijslijst"
+    "fromPricebook": "+ Uit prijslijst",
+    "zeroQuantityTitle": "Regel zonder aantal",
+    "zeroQuantityDesc": "Vul voor “{{description}}” een aantal groter dan nul in."
   },
   "checklist": {
     "beforePhoto": "Foto vooraf",

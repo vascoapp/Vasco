@@ -84,10 +84,14 @@ type ViewMode = 'list' | 'detail' | 'template-picker' | 'customer-picker';
 
 export default function KeuzeScreen() {
   const { t } = useTranslation();
-  const { customers, addInvoiceFromDecisionUpgrades } = useAppState();
+  const { customers, addInvoiceFromDecisionUpgrades, businessProfile } = useAppState();
   const router = useRouter();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  // Profile first, account as fallback (#218) — and NO 'NL' default: the
+  // statute cited beside an extra-work warning is a legal claim, and
+  // `statuteSuffix` already prints nothing for a country it does not know.
+  // Currency still needs a concrete country, so it keeps its own fallback.
+  const country = (businessProfile.country ?? user?.country) as Country | undefined;
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTracker, setSelectedTracker] = useState<CustomerDecisionTracker | null>(null);
   // Template chosen, waiting for the contractor to attach a customer before we

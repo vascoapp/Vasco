@@ -933,7 +933,8 @@
     "openInvoice": "Ouvrir la facture de {{customer}}",
     "showActions": "Actions pour {{customer}}",
     "linesNotSavedTitle": "Lignes non enregistrées",
-    "linesNotSavedBody": "Les lignes de la facture n’ont pas pu être enregistrées. Vérifiez la connexion et réessayez — rien n’a été modifié."
+    "linesNotSavedBody": "Les lignes de la facture n’ont pas pu être enregistrées. Vérifiez la connexion et réessayez — rien n’a été modifié.",
+    "agreedExclVat": "HT"
   },
   "expenses": {
     "title": "Dépenses",
@@ -4488,7 +4489,9 @@
     "total": "Total",
     "saving": "Enregistrement...",
     "saveDraft": "Enregistrer le brouillon",
-    "fromPricebook": "+ Depuis la grille"
+    "fromPricebook": "+ Depuis la grille",
+    "zeroQuantityTitle": "Ligne sans quantité",
+    "zeroQuantityDesc": "Saisissez une quantité supérieure à zéro pour « {{description}} »."
   },
   "checklist": {
     "beforePhoto": "Photo avant",

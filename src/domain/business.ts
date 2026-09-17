@@ -108,7 +108,12 @@ export function isSmallBusinessExempt(profile: { vatScheme?: VatScheme }): boole
 import { getVATRate as getVATRateDecimal } from '../constants/taxRates';
 
 export function getStandardVatRate(country: BusinessProfile['country']): number {
-  return Math.round(getVATRateDecimal(country ?? 'NL') * 100);
+  // No `?? 'NL'`. An unknown country is unknown: `getVATRate` returns 0 and
+  // warns, and the customer's quote page (verify-quote-token) does the same.
+  // This line was the last silent Dutch default, and it made the two sides
+  // disagree — the app grossing a quote at 21% that the page showed net, which
+  // is the €6.800-vs-€8.092 defect one step further out.
+  return Math.round(getVATRateDecimal(country ?? '') * 100);
 }
 
 export function getEffectiveVatRate(profile: { country?: BusinessProfile['country']; vatScheme?: VatScheme }): number {

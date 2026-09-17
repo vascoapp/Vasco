@@ -933,7 +933,8 @@
     "openInvoice": "Abrir factura de {{customer}}",
     "showActions": "Acciones para {{customer}}",
     "linesNotSavedTitle": "Líneas no guardadas",
-    "linesNotSavedBody": "No se han podido guardar las líneas de la factura. Compruebe la conexión y vuelva a intentarlo; no se ha modificado nada."
+    "linesNotSavedBody": "No se han podido guardar las líneas de la factura. Compruebe la conexión y vuelva a intentarlo; no se ha modificado nada.",
+    "agreedExclVat": "sin IVA"
   },
   "expenses": {
     "title": "Gastos",
@@ -4488,7 +4489,9 @@
     "total": "Total",
     "saving": "Guardando...",
     "saveDraft": "Guardar borrador",
-    "fromPricebook": "+ De la lista"
+    "fromPricebook": "+ De la lista",
+    "zeroQuantityTitle": "Línea sin cantidad",
+    "zeroQuantityDesc": "Introduzca una cantidad mayor que cero para «{{description}}»."
   },
   "checklist": {
     "beforePhoto": "Foto antes",

@@ -179,6 +179,28 @@ describe('the totals the receiver re-adds (BR-CO-10/13/15)', () => {
   it('raises no validator errors for that invoice', () => {
     expect(report(validateXmlString(generateXRechnungXML(CENTS), parse))).toEqual([]);
   });
+
+  // The tax of a rate group is the group's taxable amount × the rate, computed
+  // ONCE. Rounding each line's VAT and adding those up drifts with the line
+  // count, and our own validator cannot see it: it checks that the totals add
+  // up, not that the VAT matches the taxable amount.
+  it('taxes the taxable amount, not each line separately', () => {
+    const TEN: EInvoiceData = {
+      ...B2B,
+      lineItems: Array.from({ length: 10 }, (_, i) => ({
+        description: `Position ${i + 1}`, quantity: 1, unitCode: 'stuk',
+        unitPrice: 12.34, vatRate: 19, lineTotal: 12.34,
+      })),
+      totalNet: 123.4, totalVat: 23.45, totalGross: 146.85,
+    } as EInvoiceData;
+
+    const xml = generateXRechnungXML(TEN);
+    // 123.40 × 19% = 23.446 → 23.45. Per-line rounding gave 23.40.
+    expect(num(xml, 'cbc:TaxableAmount')).toBe(123.4);
+    expect(num(xml, 'cbc:TaxAmount')).toBe(23.45);
+    expect(num(xml, 'cbc:TaxInclusiveAmount')).toBe(146.85);
+    expect(report(validateXmlString(xml, parse))).toEqual([]);
+  });
 });
 
 describe('a Kleinunternehmer invoice is EXEMPT, not 0% standard-rated', () => {

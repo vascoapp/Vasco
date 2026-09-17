@@ -75,10 +75,15 @@ export default function ProjectBillingScreen() {
   const {
     projects, invoices, updateProject,
     addTermInvoice, addChangeOrderInvoice, addRetentionReleaseInvoice,
+    businessProfile,
   } = useAppState();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
-  const money = useCallback((n: number) => formatCurrency(n, country), [country]);
+  // Profile first, account as fallback (#218) — and NO 'NL' default: the
+  // statute cited beside an extra-work warning is a legal claim, and
+  // `statuteSuffix` already prints nothing for a country it does not know.
+  // Currency still needs a concrete country, so it keeps its own fallback.
+  const country = (businessProfile.country ?? user?.country) as Country | undefined;
+  const money = useCallback((n: number) => formatCurrency(n, country ?? 'NL'), [country]);
 
   const project = useMemo(() => projects.find((p) => p.id === id), [projects, id]);
 
