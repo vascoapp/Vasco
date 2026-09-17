@@ -43,6 +43,17 @@ export function defaultPaymentSuccessUrl(): string {
 // ---------------------------------------------------------------------------
 
 export interface MollieConfig {
+  /**
+   * The Vasco account this credential belongs to.
+   *
+   * The reset used to DELETE the stored key on any user change — and a cold
+   * start is one: `currentUserId` starts as the 'current-user' placeholder and
+   * becomes the real id when the session is restored. So the contractor's
+   * payment key was thrown away on every launch and the payment link silently
+   * stopped being offered until they reconnected. Deleting is right for a
+   * DIFFERENT account, which is what the owner tag makes decidable.
+   */
+  userId?: string;
   apiKey: string; // live or test key
   profileId?: string;
 }
@@ -102,13 +113,26 @@ let migrated = false;
 // migration latch — mirrors stripe.ts. Stops a previous contractor's
 // Mollie API key from leaking into the next signed-in user's session.
 import { registerSingletonReset } from '../services/singletonReset';
+import { getAuthedUserId } from '../lib/currentUser';
 let resetRegistered = false;
 function ensureResetRegistered(): void {
   if (resetRegistered) return;
   resetRegistered = true;
-  registerSingletonReset(() => {
+  registerSingletonReset((userId) => {
     migrated = false;
-    void deleteSecureItem(STORAGE_KEY).catch(() => {});
+    void (async () => {
+      if (userId) {
+        const raw = await getSecureItem(STORAGE_KEY).catch(() => null);
+        if (raw) {
+          try {
+            if ((JSON.parse(raw) as { userId?: string }).userId === userId) return;
+          } catch {
+            // Unparseable: fall through and delete it.
+          }
+        }
+      }
+      await deleteSecureItem(STORAGE_KEY).catch(() => {});
+    })();
   });
 }
 ensureResetRegistered();
@@ -118,14 +142,25 @@ async function getConfig(): Promise<MollieConfig | null> {
     // One-time migration from AsyncStorage to SecureStore
     if (!migrated) { migrated = true; await migrateToSecure(LEGACY_KEY, STORAGE_KEY); }
     const raw = await getSecureItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const config = JSON.parse(raw) as MollieConfig;
+    // Belt as well as braces: the reset deletes another account's credential,
+    // but it runs asynchronously, so between a sign-in and that delete the key
+    // must not be readable by the wrong account either.
+    // Strict, like Moneybird: an UNSTAMPED config predates the owner field, so
+    // it belongs to nobody we can name. Refusing it costs one reconnect;
+    // accepting it is how a credential reaches the wrong account.
+    const authed = getAuthedUserId();
+    if (authed && config.userId !== authed) return null;
+    return config;
   } catch {
     return null;
   }
 }
 
 export async function saveMollieConfig(config: MollieConfig): Promise<void> {
-  await setSecureItem(STORAGE_KEY, JSON.stringify(config));
+  // Stamp the owner on every write; see the `userId` field above.
+  await setSecureItem(STORAGE_KEY, JSON.stringify({ ...config, userId: config.userId ?? getAuthedUserId() ?? undefined }));
 }
 
 export async function clearMollieConfig(): Promise<void> {

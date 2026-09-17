@@ -9,6 +9,7 @@
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 import * as Crypto from 'expo-crypto';
 
+import { getAuthedUserId } from '../lib/currentUser';
 const STORAGE_KEY = 'vasco_moneybird';
 const LEGACY_KEY = '@vasco_moneybird';
 const API_BASE = 'https://moneybird.com/api/v2';
@@ -24,6 +25,20 @@ export interface MoneybirdConfig {
   refreshToken: string;
   administrationId: string;
   expiresAt: number; // epoch ms
+  /**
+   * The Vasco account that connected this Moneybird administration.
+   *
+   * The token lives under ONE device-wide keychain key. Mollie and Stripe drop
+   * theirs when the user changes; this one had nothing of the kind, so after
+   * contractor A signed out and B signed in, B's invoice screen offered the
+   * Moneybird export as connected — and exporting would have pushed B's
+   * invoices into A's books with A's token. A credential that does not name
+   * its owner is a credential the next account inherits.
+   *
+   * Absent on a config stored before this field existed: treated as someone
+   * else's, which fails closed (reconnect) rather than open.
+   */
+  userId?: string;
 }
 
 export interface MoneybirdContact {
@@ -90,14 +105,24 @@ async function getConfig(): Promise<MoneybirdConfig | null> {
   try {
     if (!migrated) { migrated = true; await migrateToSecure(LEGACY_KEY, STORAGE_KEY); }
     const raw = await getSecureItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const config = JSON.parse(raw) as MoneybirdConfig;
+    // The ownership check belongs on the READ, not only on `isConnected()`:
+    // `apiCall` takes its token from here, so a screen that skips the
+    // connected check would still have exported into the previous account's
+    // books. Demo mode has no authenticated account and keeps its config.
+    const authed = getAuthedUserId();
+    if (authed && config.userId !== authed) return null;
+    return config;
   } catch {
     return null;
   }
 }
 
 async function saveConfig(config: MoneybirdConfig): Promise<void> {
-  await setSecureItem(STORAGE_KEY, JSON.stringify(config));
+  // Stamp the owner on every write, including the token refresh path.
+  const userId = config.userId ?? getAuthedUserId() ?? undefined;
+  await setSecureItem(STORAGE_KEY, JSON.stringify({ ...config, userId }));
 }
 
 export async function clearMoneybirdConfig(): Promise<void> {
@@ -106,7 +131,13 @@ export async function clearMoneybirdConfig(): Promise<void> {
 
 export async function isConnected(): Promise<boolean> {
   const config = await getConfig();
-  return config !== null && config.accessToken.length > 0;
+  if (config === null || config.accessToken.length === 0) return false;
+  // Only for the account that connected it. `getAuthedUserId()` is null in
+  // demo mode and before sign-in, where there is no account to belong to and
+  // the stored config is the demo one.
+  const userId = getAuthedUserId();
+  if (!userId) return true;
+  return config.userId === userId;
 }
 
 // ---------------------------------------------------------------------------

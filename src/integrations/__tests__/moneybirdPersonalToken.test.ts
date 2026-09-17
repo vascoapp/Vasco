@@ -111,3 +111,38 @@ describe('the connect screen is wired to the integration', () => {
     expect(handler.slice(0, success)).toMatch(/if \(!result\.ok\)[\s\S]*return;/);
   });
 });
+
+describe('the token belongs to the account that connected it', () => {
+  // One device-wide keychain key, and nothing dropped it on a user change:
+  // after A signed out and B signed in, B's invoice screen showed Moneybird as
+  // connected and an export would have gone into A's books with A's token.
+  const { setCurrentUser } = require('../../lib/currentUser');
+
+  beforeEach(() => { mockStore.clear(); jest.restoreAllMocks(); });
+  afterAll(() => { setCurrentUser(null); });
+
+  it('reads as connected for the account that connected it', async () => {
+    setCurrentUser({ id: 'user-A' });
+    global.fetch = jest.fn().mockResolvedValue(okJson([{ id: 1, name: 'A BV' }])) as unknown as typeof fetch;
+    await connectWithPersonalToken({ accessToken: 'tok-A' });
+
+    await expect(isConnected()).resolves.toBe(true);
+    expect(JSON.parse(mockStore.get('vasco_moneybird') ?? '{}').userId).toBe('user-A');
+  });
+
+  it('does not read as connected for the NEXT account on the device', async () => {
+    setCurrentUser({ id: 'user-A' });
+    global.fetch = jest.fn().mockResolvedValue(okJson([{ id: 1, name: 'A BV' }])) as unknown as typeof fetch;
+    await connectWithPersonalToken({ accessToken: 'tok-A' });
+
+    setCurrentUser({ id: 'user-B' });
+    await expect(isConnected()).resolves.toBe(false);
+  });
+
+  it('treats a config stored before the owner field as someone else\'s', async () => {
+    mockStore.set('vasco_moneybird', JSON.stringify({ accessToken: 'tok-old', refreshToken: '', administrationId: '1', expiresAt: 0 }));
+    setCurrentUser({ id: 'user-C' });
+    await expect(isConnected()).resolves.toBe(false);
+  });
+});
+

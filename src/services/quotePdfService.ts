@@ -26,7 +26,11 @@ function registrationLabel(country?: Country): string {
   switch (country) {
     case 'DE': return 'HRB';
     case 'FR': return 'SIRET';
-    case 'ES': return 'NIF';
+    // The Spanish NIF is the VAT identifier, printed from `vatNumber` below.
+    // This slot holds what both writers put in it — the IAE activity code
+    // (onboarding's `iae` field, business settings' "IAE" input) — so labelling
+    // it "NIF" printed the activity code 5045 as the company's tax number.
+    case 'ES': return 'IAE';
     case 'IT': return 'REA';
     case 'UK': return 'Co. no.';
     case 'NL':

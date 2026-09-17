@@ -56,8 +56,16 @@ const getRegistrationLabel = (country?: string) => {
     case 'NL': return 'KvK';
     case 'DE': return 'Handelsregister';
     case 'FR': return 'SIRET';
-    case 'ES': return 'NIF';
-    case 'IT': return 'Partita IVA';
+    // The Spanish NIF is the VAT identifier, printed from `vatNumber` below.
+    // This slot holds what both writers put in it — the IAE activity code
+    // (onboarding's `iae` field, business settings' "IAE" input) — so labelling
+    // it "NIF" printed the activity code 5045 as the company's tax number.
+    case 'ES': return 'IAE';
+    // The REA (Repertorio Economico Amministrativo) is the registration
+    // number; the Partita IVA is the VAT identifier. This screen still had the
+    // mix-up the PDFs were fixed for — its copy of the table was never read by
+    // the guard, because it is an arrow function with a different name.
+    case 'IT': return 'REA';
     case 'UK': return 'Companies House';
     default: return 'Registration';
   }

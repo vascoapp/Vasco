@@ -116,3 +116,49 @@ describe('nothing starts from a SHARED copy of the defaults', () => {
     expect(clones.length).toBe(2);
   });
 });
+
+describe('a cold start is not a new account', () => {
+  // `currentUserId` starts as the 'current-user' placeholder and becomes the
+  // real id the moment AuthContext restores the session, so EVERY launch
+  // looked like a user change and deleted both stored copies: the mute this
+  // file is about never survived a restart, and neither did the inbox.
+  const OWNER_KEY = '@vasco_notifications_owner_v1';
+
+  it('keeps the inbox and the mutes when the same account resolves', async () => {
+    mockStore.clear();
+    mockStore.set(OWNER_KEY, 'user-7');
+    mockStore.set(PREFS_KEY, JSON.stringify([{ type: 'overdue_invoice', enabled: false }]));
+    mockStore.set(PERSIST_KEY, JSON.stringify([{ id: 'n7', type: 'overdue_invoice', createdAt: new Date().toISOString() }]));
+
+    await switchAccountTo('user-7');
+
+    expect(mockStore.has(PREFS_KEY)).toBe(true);
+    expect(mockStore.has(PERSIST_KEY)).toBe(true);
+    expect(prefFor('overdue_invoice')?.enabled).toBe(false);
+  });
+
+  it('still drops them for a DIFFERENT account', async () => {
+    mockStore.clear();
+    mockStore.set(OWNER_KEY, 'user-7');
+    mockStore.set(PREFS_KEY, JSON.stringify([{ type: 'overdue_invoice', enabled: false }]));
+    mockStore.set(PERSIST_KEY, JSON.stringify([{ id: 'n7', type: 'overdue_invoice', createdAt: new Date().toISOString() }]));
+
+    await switchAccountTo('user-8');
+
+    expect(mockStore.has(PREFS_KEY)).toBe(false);
+    expect(mockStore.has(PERSIST_KEY)).toBe(false);
+    expect(prefFor('overdue_invoice')?.enabled).toBe(true);
+  });
+
+  it('stamps the owner when a preference is written, so the next launch keeps it', async () => {
+    mockStore.clear();
+    setCurrentUser({ id: 'user-9' });
+    await settle();
+    const type = notificationService.getPreferences()[0].type;
+    notificationService.togglePreference(type, 'enabled');
+    await flush();
+    await settle();
+    expect(mockStore.get(OWNER_KEY)).toBe('user-9');
+  });
+});
+

@@ -457,10 +457,28 @@ export default function OnboardingScreen() {
       // MERGE: a plain overwrite dropped `trialEndsAt`, which `AuthContext.signUp`
       // had just written — picking the free plan silently ended the trial on
       // this device until the next server sync (#339).
+      // Picking "free" during the trial is "I do not want to pay yet", NOT
+      // "end my trial today". `AuthContext.signUp` grants 14 days of Pro and
+      // `loadSubscription` expires it on its own; writing tier 'free' here
+      // took those days away from everyone who left the default selected —
+      // and 'free' IS the default. The choice still lands: it is what they
+      // drop to when the trial runs out.
+      let keepTrialTier: SubscriptionTier | null = null;
+      let keepTrialEndsAt: string | null = null;
       try {
         const rawSub = await AsyncStorage.getItem('@vasco_subscription');
         const prevSub = rawSub ? JSON.parse(rawSub) : {};
-        await AsyncStorage.setItem('@vasco_subscription', JSON.stringify({ ...prevSub, tier: selectedPlan, billingCycle }));
+        const trialEndsAt = typeof prevSub?.trialEndsAt === 'string' ? prevSub.trialEndsAt : null;
+        const trialActive = !!trialEndsAt && new Date(trialEndsAt).getTime() > Date.now();
+        keepTrialTier = trialActive && selectedPlan === 'free' ? ((prevSub?.tier as SubscriptionTier) ?? 'pro') : null;
+        // The ORIGINAL end date. Stamping a fresh +14 days here would restart
+        // the trial on the day onboarding happens to be finished.
+        keepTrialEndsAt = keepTrialTier ? trialEndsAt : null;
+        await AsyncStorage.setItem('@vasco_subscription', JSON.stringify({
+          ...prevSub,
+          tier: keepTrialTier ?? selectedPlan,
+          billingCycle,
+        }));
       } catch {
         await AsyncStorage.setItem('@vasco_subscription', JSON.stringify({ tier: selectedPlan, billingCycle }));
       }
@@ -481,14 +499,19 @@ export default function OnboardingScreen() {
             // 14-day Pro trial; picking the free plan here used to erase it —
             // and erasing it is not what "I'll start on free" means. The trial
             // expires on its own in `loadSubscription`.
+            // `keepTrialTier` is set when the free plan was chosen while the
+            // signUp trial is still running: the row keeps the trial tier, and
+            // the sync on the next launch therefore stops reporting Free at a
+            // contractor who has days left.
+            const tierToWrite = keepTrialTier ?? selectedPlan;
             const { error: planError } = await (supabase.from('subscriptions' as any) as any).upsert({
               user_id: authUser.id,
-              tier: selectedPlan,
+              tier: tierToWrite,
               billing_cycle: cycle,
-              status: selectedPlan === 'free' ? 'active' : 'trialing',
-              ...(selectedPlan === 'free'
+              status: tierToWrite === 'free' ? 'active' : 'trialing',
+              ...(tierToWrite === 'free'
                 ? {}
-                : { trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() }),
+                : { trial_ends_at: keepTrialEndsAt ?? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() }),
               updated_at: new Date().toISOString(),
             }, { onConflict: 'user_id' });
             if (planError) logWarn('Onboarding', `plan upsert failed: ${planError.message ?? planError}`);

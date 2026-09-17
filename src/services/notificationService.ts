@@ -14,6 +14,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
 import { registerSingletonReset } from './singletonReset';
+// STATIC, not `await import(...)`: a dynamic import throws under jest without
+// --experimental-vm-modules and the try/catch below would swallow it, leaving
+// every stored copy ownerless and dropped on the next launch (#300's trap).
+import { getAuthedUserId } from '../lib/currentUser';
 import { todayKey } from '../utils/dateKey';
 
 const PERSIST_KEY = '@vasco_notifications_v2';
@@ -22,6 +26,17 @@ const PERSIST_KEY = '@vasco_notifications_v2';
 // that. Every switch on the notifications screen used to live in memory only —
 // muting "Angebot abgelaufen" lasted until the app was next killed (#339).
 const PREFS_KEY = '@vasco_notification_prefs_v1';
+/**
+ * Which account the two stored copies belong to.
+ *
+ * Wiping them on every user CHANGE was wrong, because a cold start is one:
+ * `currentUserId` starts as the `'current-user'` placeholder and becomes the
+ * real id the moment AuthContext restores the session, so every launch deleted
+ * the inbox and the mute list of the account that was still signed in. The
+ * data has to be dropped when it belongs to SOMEONE ELSE, which is a different
+ * question — and only this owner tag can answer it.
+ */
+const OWNER_KEY = '@vasco_notifications_owner_v1';
 
 // =============================================================================
 // TYPES
@@ -123,10 +138,22 @@ class NotificationService {
         // and then re-reading the same keys handed user B user A's inbox and
         // (once preferences persisted) their mute list. Awaited via the chain,
         // not fired alongside hydrate().
-        void Promise.all([
-          AsyncStorage.removeItem(PERSIST_KEY).catch(() => {}),
-          AsyncStorage.removeItem(PREFS_KEY).catch(() => {}),
-        ]).then(() => { if (userId) inst.hydrate(); });
+        void AsyncStorage.getItem(OWNER_KEY)
+          .catch(() => null)
+          .then(async (owner) => {
+            // Same account arriving from the placeholder (every cold start):
+            // keep what is on disk. A different account, or a logout: the
+            // stored copies belong to whoever left, and must be gone BEFORE
+            // the next account hydrates — clearing memory and then re-reading
+            // the same keys handed user B user A's inbox and mute list.
+            if (owner && userId && owner === userId) { if (userId) await inst.hydrate(); return; }
+            await Promise.all([
+              AsyncStorage.removeItem(PERSIST_KEY).catch(() => {}),
+              AsyncStorage.removeItem(PREFS_KEY).catch(() => {}),
+              AsyncStorage.removeItem(OWNER_KEY).catch(() => {}),
+            ]);
+            if (userId) await inst.hydrate();
+          });
       });
     }
     return NotificationService.instance;
@@ -176,6 +203,7 @@ class NotificationService {
       // Trim to last 50 — older notifications drop off
       const trimmed = this.notifications.slice(0, 50);
       await AsyncStorage.setItem(PERSIST_KEY, JSON.stringify(trimmed));
+      await this.stampOwner();
     } catch {
       // Silent
     }
@@ -232,12 +260,26 @@ class NotificationService {
     }
   }
 
+  /** Record who the stored copies belong to; see OWNER_KEY. */
+  private async stampOwner(): Promise<void> {
+    try {
+      const id = getAuthedUserId();
+      if (id) await AsyncStorage.setItem(OWNER_KEY, id);
+    } catch {
+      // Ignore: an unstamped copy is treated as someone else's and dropped,
+      // which is the safe direction.
+    }
+  }
+
   private async persistPreferences(): Promise<void> {
     try {
       await AsyncStorage.setItem(
         PREFS_KEY,
         JSON.stringify(this.preferences.map(({ type, enabled, pushEnabled }) => ({ type, enabled, pushEnabled }))),
       );
+      // A mute is often the FIRST thing written — without this stamp the
+      // preferences would be ownerless and dropped on the next launch.
+      await this.stampOwner();
     } catch {
       // Silent — the switch still reflects this session.
     }

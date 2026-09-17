@@ -22,7 +22,13 @@ function read(rel: string): string {
 
 /** Pull `case 'XX': return 'Label';` pairs out of one named function body. */
 function tableOf(src: string, fnName: string): Record<string, string> {
-  const start = src.indexOf(`function ${fnName}(`);
+  // Both shapes: `function name(` and `const name = (` — the profile screen
+  // holds a THIRD copy of this table as an arrow function, and a helper that
+  // only knew the first shape returned {} for it, which passes every
+  // assertion written as "not equal".
+  const start = src.includes(`function ${fnName}(`)
+    ? src.indexOf(`function ${fnName}(`)
+    : src.indexOf(`const ${fnName} = (`);
   if (start === -1) return {};
   const body = src.slice(start, src.indexOf('\n}', start));
   const out: Record<string, string> = {};
@@ -71,6 +77,41 @@ describe('registration vs VAT identifier labels', () => {
     }
     expect(reg.FR).toBe('SIRET');
     expect(reg.DE).toBe('HRB');
-    expect(reg.ES).toBe('NIF');
+    // ES: the registration slot holds the IAE activity code; the NIF is the
+    // VAT identifier and is printed from `vatNumber`.
+    expect(reg.ES).toBe('IAE');
   });
 });
+
+describe('the registration slot is not labelled as the VAT identifier', () => {
+  // Spain: `kvkNumber` holds the IAE activity code — that is what onboarding's
+  // `iae` field and the "IAE" input in business settings both write into it —
+  // and the label said "NIF", which is the tax number printed from `vatNumber`.
+  // A Spanish invoice therefore announced the activity code as the NIF.
+  const profileSrc = (() => {
+    try {
+      return fs.readFileSync(path.resolve(__dirname, '../../../app/contractor/profile.tsx'), 'utf8');
+    } catch { return ''; }
+  })();
+
+  it('reads the third copy of the table too', () => {
+    expect(profileSrc).not.toBe('');
+  });
+
+  it('never labels a registration number with a VAT identifier name', () => {
+    for (const [name, src] of [['invoice', invoiceSrc], ['quote', quoteSrc], ['profile', profileSrc]] as const) {
+      const reg = name === 'profile' ? tableOf(src, 'getRegistrationLabel') : tableOf(src, 'registrationLabel');
+      const vat = name === 'profile' ? tableOf(src, 'getVatLabel') : tableOf(src, 'vatLabel');
+      // An empty table would pass every "not equal" below. Five, not six:
+      // the PDF copies let NL fall through to the default.
+      expect(Object.keys(reg).length).toBeGreaterThanOrEqual(5);
+      for (const [country, label] of Object.entries(reg)) {
+        if (vat[country]) expect(`${name}:${country}:${label}`).not.toBe(`${name}:${country}:${vat[country]}`);
+      }
+      expect(reg.ES).toBe('IAE');
+      // The Italian registration number is the REA, never the Partita IVA.
+      expect(reg.IT === 'Partita IVA' || reg.IT === 'P.IVA').toBe(false);
+    }
+  });
+});
+

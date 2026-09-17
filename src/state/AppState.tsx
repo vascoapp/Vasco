@@ -1945,6 +1945,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       // ═════════════════════════════════════════════════════════════════════
 
       markQuoteSent: (id) => {
+        // Sending is a promotion, never a demotion. The quote screen offers
+        // "Send to customer" on an ACCEPTED quote too (re-sending the link is
+        // legitimate), and this set the status unconditionally: sharing an
+        // accepted quote put it back to `sent`, which brought the Accept tile
+        // back — a second job from one quote — and restarted the follow-up
+        // counter. Only a draft is promoted; re-sharing a sent quote still
+        // refreshes the timestamp.
+        const current = quotes.find((q) => q.id === id);
+        if (current && current.status !== 'draft' && current.status !== 'sent') return;
         setQuotes((prev) =>
           prev.map((quote) =>
             // ISO, not 'Just now'. `lastUpdated` is read as a TIMESTAMP by
