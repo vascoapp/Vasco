@@ -62,6 +62,13 @@ export interface EInvoiceData {
    * 0%", which is rejected on BR-S-05.
    */
   taxExemptionReason?: string;
+  /**
+   * Is the SELLER under a small-business scheme (Kleinunternehmer / KOR /
+   * franchise en base / forfettario)? Decides `E` vs `Z` for a 0% line — see
+   * `taxCategoryFor`. Omitted means "yes", which is what every caller meant
+   * before a zero-rated supply was possible.
+   */
+  sellerVatExempt?: boolean;
 
   // Payment
   iban?: string;
@@ -140,11 +147,37 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * 0% (BR-S-05 requires a rate > 0); an exempt invoice — Kleinunternehmer §19
  * UStG, KOR — is `E`, and BR-E-10 requires a reason with it.
  */
-export function taxCategoryFor(vatRate: number): 'S' | 'E' {
-  return vatRate > 0 ? 'S' : 'E';
+/**
+ * UBL tax category for a line.
+ *
+ * `E` (exempt) is a statement about the SELLER — they charge no VAT because
+ * they are under a small-business scheme — and it carries an exemption reason
+ * naming the statute. `Z` (zero-rated) is a statement about the SUPPLY. Every
+ * 0% line used to be exported as E with the German § 19 reason, so a
+ * VAT-registered contractor's zero-rated line (a German PV installation under
+ * § 12(3) UStG) declared its seller a Kleinunternehmer, and a Dutch KOR seller
+ * cited German law.
+ */
+export function taxCategoryFor(vatRate: number, sellerVatExempt = true): 'S' | 'E' | 'Z' {
+  if (vatRate > 0) return 'S';
+  return sellerVatExempt ? 'E' : 'Z';
 }
 
-export const DEFAULT_EXEMPTION_REASON = 'Steuerbefreiter Kleinunternehmer gemäß § 19 UStG';
+/** The statute a small-business seller cites, by their own country. */
+const EXEMPTION_REASON_BY_COUNTRY: Record<string, string> = {
+  DE: 'Steuerbefreiter Kleinunternehmer gemäß § 19 UStG',
+  NL: 'Kleineondernemersregeling (KOR), art. 25 Wet OB',
+  FR: 'TVA non applicable, art. 293 B du CGI',
+  IT: 'Operazione in regime forfettario, art. 1 c. 54-89 L. 190/2014',
+  ES: 'Operación exenta de IVA (régimen de franquicia)',
+  UK: 'Not VAT registered',
+};
+
+export const DEFAULT_EXEMPTION_REASON = EXEMPTION_REASON_BY_COUNTRY.DE;
+
+export function exemptionReasonFor(country?: string): string {
+  return EXEMPTION_REASON_BY_COUNTRY[country ?? 'DE'] ?? EXEMPTION_REASON_BY_COUNTRY.DE;
+}
 
 export function generateXRechnungXML(data: EInvoiceData): string {
   const cur = data.currency;
@@ -156,7 +189,11 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   // UNROUNDED values differs by a cent on ordinary invoices (2 × 0,5 × 10,01),
   // and that is a hard rejection (BR-CO-10, #339).
   const roundedLines = data.lineItems.map((li) => ({ ...li, lineTotal: round2(li.lineTotal) }));
-  const exemptionReason = data.taxExemptionReason ?? DEFAULT_EXEMPTION_REASON;
+  // The seller's own statute, not Germany's, and only when the seller really
+  // is exempt. `sellerVatExempt` defaults to true so an older caller that omits
+  // it keeps the previous behaviour for a genuinely exempt invoice.
+  const sellerVatExempt = data.sellerVatExempt ?? true;
+  const exemptionReason = data.taxExemptionReason ?? exemptionReasonFor(sellerCountry);
 
   const lines = roundedLines.map((li, idx) => `
     <cac:InvoiceLine>
@@ -166,7 +203,7 @@ export function generateXRechnungXML(data: EInvoiceData): string {
       <cac:Item>
         <cbc:Name>${escapeXml(li.description)}</cbc:Name>
         <cac:ClassifiedTaxCategory>
-          <cbc:ID>${taxCategoryFor(li.vatRate)}</cbc:ID>
+          <cbc:ID>${taxCategoryFor(li.vatRate, sellerVatExempt)}</cbc:ID>
           <cbc:Percent>${li.vatRate}</cbc:Percent>
           <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
         </cac:ClassifiedTaxCategory>
@@ -197,17 +234,23 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   const totalNet = round2([...byRate.values()].reduce((s, a) => s + a.net, 0));
   const totalVat = round2([...byRate.values()].reduce((s, a) => s + a.vat, 0));
   const totalGross = round2(totalNet + totalVat);
-  const subtotals = [...byRate.entries()].map(([rate, a]) => `
+  // The reason belongs to category E only: it explains why the SELLER charges
+  // no VAT. A zero-rated supply (Z) has no such statute to cite, and BR-Z rules
+  // do not ask for one.
+  const subtotals = [...byRate.entries()].map(([rate, a]) => {
+    const category = taxCategoryFor(rate, sellerVatExempt);
+    return `
     <cac:TaxSubtotal>
       <cbc:TaxableAmount currencyID="${cur}">${a.net.toFixed(2)}</cbc:TaxableAmount>
       <cbc:TaxAmount currencyID="${cur}">${a.vat.toFixed(2)}</cbc:TaxAmount>
       <cac:TaxCategory>
-        <cbc:ID>${taxCategoryFor(rate)}</cbc:ID>
-        <cbc:Percent>${rate}</cbc:Percent>${rate > 0 ? '' : `
-        <cbc:TaxExemptionReason>${escapeXml(exemptionReason)}</cbc:TaxExemptionReason>`}
+        <cbc:ID>${category}</cbc:ID>
+        <cbc:Percent>${rate}</cbc:Percent>${category === 'E' ? `
+        <cbc:TaxExemptionReason>${escapeXml(exemptionReason)}</cbc:TaxExemptionReason>` : ''}
         <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
       </cac:TaxCategory>
-    </cac:TaxSubtotal>`).join('');
+    </cac:TaxSubtotal>`;
+  }).join('');
 
   // BR-DE-15. A B2B invoice has no Leitweg-ID, and an empty BT-10 is as
   // invalid as an absent one, so it falls back to the invoice number — a
@@ -315,17 +358,29 @@ export function generateCIIXML(data: EInvoiceData): string {
   const buyerCountry = data.buyerCountry ?? sellerCountry;
   const d = (iso: string) => iso.replace(/-/g, '');
 
-  // Same BG-23 logic as the UBL path: one breakdown per rate, summed from the
-  // lines, because a single stated total cannot be split back out per rate.
+  // Same BG-23 logic as the UBL path, and now the same ROUNDING discipline:
+  // the lines are rounded first and every total is derived from them. This
+  // path printed `li.lineTotal.toFixed(2)` per line while summing the
+  // unrounded values, and then took the header from `data.total*` — what the
+  // screen computed — so two lines of 0,25 × 10,06 printed 2,52 + 2,52 under a
+  // LineTotalAmount of 5,03. BR-CO-10 rejects that, and this is the live FR
+  // (Factur-X) and DE-non-XRechnung export.
+  const ciiLines = data.lineItems.map((li) => ({ ...li, lineTotal: round2(li.lineTotal) }));
+  const sellerVatExempt = data.sellerVatExempt ?? true;
   const byRate = new Map<number, { net: number; vat: number }>();
-  for (const li of data.lineItems) {
+  for (const li of ciiLines) {
     const acc = byRate.get(li.vatRate) ?? { net: 0, vat: 0 };
-    acc.net += li.lineTotal;
-    acc.vat += li.lineTotal * (li.vatRate / 100);
+    acc.net = round2(acc.net + li.lineTotal);
     byRate.set(li.vatRate, acc);
   }
+  // Tax per rate group, computed once on the taxable amount.
+  for (const [rate, acc] of byRate) acc.vat = round2(acc.net * (rate / 100));
+  const ciiNet = round2([...byRate.values()].reduce((sum, a) => sum + a.net, 0));
+  const ciiVat = round2([...byRate.values()].reduce((sum, a) => sum + a.vat, 0));
+  const ciiGross = round2(ciiNet + ciiVat);
+  const ciiExemptionReason = data.taxExemptionReason ?? exemptionReasonFor(sellerCountry);
 
-  const lines = data.lineItems.map((li, idx) => `
+  const lines = ciiLines.map((li, idx) => `
     <ram:IncludedSupplyChainTradeLineItem>
       <ram:AssociatedDocumentLineDocument>
         <ram:LineID>${idx + 1}</ram:LineID>
@@ -344,7 +399,7 @@ export function generateCIIXML(data: EInvoiceData): string {
       <ram:SpecifiedLineTradeSettlement>
         <ram:ApplicableTradeTax>
           <ram:TypeCode>VAT</ram:TypeCode>
-          <ram:CategoryCode>S</ram:CategoryCode>
+          <ram:CategoryCode>${taxCategoryFor(li.vatRate, sellerVatExempt)}</ram:CategoryCode>
           <ram:RateApplicablePercent>${li.vatRate}</ram:RateApplicablePercent>
         </ram:ApplicableTradeTax>
         <ram:SpecifiedTradeSettlementLineMonetarySummation>
@@ -353,14 +408,18 @@ export function generateCIIXML(data: EInvoiceData): string {
       </ram:SpecifiedLineTradeSettlement>
     </ram:IncludedSupplyChainTradeLineItem>`).join('');
 
-  const tradeTaxes = [...byRate.entries()].map(([rate, a]) => `
+  const tradeTaxes = [...byRate.entries()].map(([rate, a]) => {
+    const category = taxCategoryFor(rate, sellerVatExempt);
+    return `
       <ram:ApplicableTradeTax>
         <ram:CalculatedAmount>${a.vat.toFixed(2)}</ram:CalculatedAmount>
-        <ram:TypeCode>VAT</ram:TypeCode>
+        <ram:TypeCode>VAT</ram:TypeCode>${category === 'E' ? `
+        <ram:ExemptionReason>${escapeXml(ciiExemptionReason)}</ram:ExemptionReason>` : ''}
         <ram:BasisAmount>${a.net.toFixed(2)}</ram:BasisAmount>
-        <ram:CategoryCode>S</ram:CategoryCode>
+        <ram:CategoryCode>${category}</ram:CategoryCode>
         <ram:RateApplicablePercent>${rate}</ram:RateApplicablePercent>
-      </ram:ApplicableTradeTax>`).join('');
+      </ram:ApplicableTradeTax>`;
+  }).join('');
 
   const party = (
     name: string, street: string, city: string | undefined, zip: string | undefined,
@@ -425,11 +484,11 @@ export function generateCIIXML(data: EInvoiceData): string {
         <ram:DueDateDateTime><udt:DateTimeString format="102">${d(data.dueDate)}</udt:DateTimeString></ram:DueDateDateTime>
       </ram:SpecifiedTradePaymentTerms>
       <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
-        <ram:LineTotalAmount>${data.totalNet.toFixed(2)}</ram:LineTotalAmount>
-        <ram:TaxBasisTotalAmount>${data.totalNet.toFixed(2)}</ram:TaxBasisTotalAmount>
-        <ram:TaxTotalAmount currencyID="${cur}">${data.totalVat.toFixed(2)}</ram:TaxTotalAmount>
-        <ram:GrandTotalAmount>${data.totalGross.toFixed(2)}</ram:GrandTotalAmount>
-        <ram:DuePayableAmount>${data.totalGross.toFixed(2)}</ram:DuePayableAmount>
+        <ram:LineTotalAmount>${ciiNet.toFixed(2)}</ram:LineTotalAmount>
+        <ram:TaxBasisTotalAmount>${ciiNet.toFixed(2)}</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="${cur}">${ciiVat.toFixed(2)}</ram:TaxTotalAmount>
+        <ram:GrandTotalAmount>${ciiGross.toFixed(2)}</ram:GrandTotalAmount>
+        <ram:DuePayableAmount>${ciiGross.toFixed(2)}</ram:DuePayableAmount>
       </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
     </ram:ApplicableHeaderTradeSettlement>
   </rsm:SupplyChainTradeTransaction>

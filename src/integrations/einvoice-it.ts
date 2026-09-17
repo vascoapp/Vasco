@@ -194,6 +194,18 @@ export function generateFatturaPAXml(data: FatturaPA): string {
 
   // Build VAT summary (DatiRiepilogo)
   const vatSummary = buildDatiRiepilogo(data.dettaglioLinee, data.esigibilitaIva, data.splitPayment);
+  // The document total follows from that same summary — PLUS the two things
+  // SdI expects inside it and the line summary does not carry: the virtual
+  // marca da bollo (€ 2,00) and a cassa previdenziale contribution.
+  const lineTotals = fatturaDocumentTotals(data.dettaglioLinee);
+  const fatturaTotals = {
+    ...lineTotals,
+    gross: round2(
+      lineTotals.gross
+      + (data.bolloVirtuale ? (data.importoBollo ?? 2) : 0)
+      + (data.cassaPrevidenziale?.importoContributoCassa ?? 0),
+    ),
+  };
 
   // Build line items (DettaglioLinee)
   const dettaglioXml = data.dettaglioLinee.map((li, idx) => `
@@ -322,7 +334,7 @@ export function generateFatturaPAXml(data: FatturaPA): string {
         <Divisa>${data.divisa}</Divisa>
         <Data>${data.data}</Data>
         <Numero>${escapeXml(data.numero)}</Numero>${bolloXml}${cassaXml}
-        <ImportoTotaleDocumento>${data.totalGross.toFixed(2)}</ImportoTotaleDocumento>
+        <ImportoTotaleDocumento>${fatturaTotals.gross.toFixed(2)}</ImportoTotaleDocumento>
       </DatiGeneraliDocumento>
     </DatiGenerali>
     <DatiBeniServizi>${dettaglioXml}
@@ -335,6 +347,29 @@ ${vatSummary}
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Imponibile + imposta from the lines AS PRINTED. `ImportoTotaleDocumento` used
+ * to be `data.totalGross` — a third number, computed by the screen — beside a
+ * DatiRiepilogo summed independently; SdI rejects a document whose total does
+ * not follow from its summary (scarto 00423).
+ */
+export function fatturaDocumentTotals(items: Array<{ prezzoTotale: number; aliquotaIva: number }>): { net: number; tax: number; gross: number } {
+  const groups: Record<number, number> = {};
+  for (const item of items) {
+    groups[item.aliquotaIva] = round2((groups[item.aliquotaIva] ?? 0) + round2(item.prezzoTotale));
+  }
+  let net = 0;
+  let tax = 0;
+  for (const rate of Object.keys(groups)) {
+    const base = groups[Number(rate)];
+    net = round2(net + base);
+    tax = round2(tax + round2(base * (Number(rate) / 100)));
+  }
+  return { net, tax, gross: round2(net + tax) };
+}
 
 function buildDatiRiepilogo(
   items: FatturaPALineItem[],
@@ -358,8 +393,14 @@ function buildDatiRiepilogo(
         natura: item.natura,
       };
     }
-    groups[key].imponibile += item.prezzoTotale;
-    groups[key].imposta += item.prezzoTotale * (item.aliquotaIva / 100);
+    // The lines print `prezzoTotale.toFixed(2)`, so the summary has to add up
+    // the SAME rounded figures — SdI rejects a document whose
+    // ImportoTotaleDocumento does not follow from its DatiRiepilogo (00423) —
+    // and the tax is levied once on the resulting imponibile.
+    groups[key].imponibile = round2(groups[key].imponibile + round2(item.prezzoTotale));
+  }
+  for (const g of Object.values(groups)) {
+    g.imposta = round2(g.imponibile * (g.aliquota / 100));
   }
 
   // Determine EsigibilitaIVA

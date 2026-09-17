@@ -497,19 +497,24 @@ export async function exportInvoice(invoice: UnifiedInvoice): Promise<{ success:
     }
     case 'datev': {
       const datev = await import('./datev');
-      const totalAmount = invoice.lineItems.reduce(
-        (sum, li) => sum + li.quantity * li.unitPrice * (1 + (li.vatRate ?? 0) / 100),
-        0,
-      );
-      const blendedVat = invoice.lineItems[0]?.vatRate ?? 19;
-      const result = await datev.exportToDATEV([{
+      // ONE booking row per VAT rate. The export used to take the FIRST line's
+      // rate for the whole invoice, so an invoice mixing 19% materials and 7%
+      // work was posted entirely at 19% — the Steuerberater's books, and the
+      // UStVA drawn from them, then carried tax nobody charged.
+      const grossByRate = new Map<number, number>();
+      for (const li of invoice.lineItems) {
+        const rate = li.vatRate ?? 0;
+        const gross = li.quantity * li.unitPrice * (1 + rate / 100);
+        grossByRate.set(rate, (grossByRate.get(rate) ?? 0) + gross);
+      }
+      const result = await datev.exportToDATEV([...grossByRate.entries()].map(([vatRate, amount]) => ({
         id: invoice.reference ?? '',
         customerName: invoice.contactExternalId ?? '',
-        amount: totalAmount,
-        vatRate: blendedVat,
+        amount,
+        vatRate,
         date: invoice.invoiceDate,
         isPaid: false,
-      }]);
+      })));
       return result.success
         ? { success: true, externalId: `datev-${result.exportedAt}` }
         : { success: false, error: result.error ?? 'DATEV export failed' };

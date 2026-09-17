@@ -121,6 +121,8 @@ export function generateFacturaeXml(data: FacturaeInvoice): string {
 
   // Build tax outputs (IVA)
   const taxOutputs = buildTaxOutputs(data.lineItems);
+  // Same source as the TaxesOutputs block above: the lines as printed.
+  const totals = facturaeTaxTotals(data.lineItems);
   // Build tax withholdings (IRPF)
   const taxWithholdings = buildTaxWithholdings(data.lineItems);
 
@@ -242,13 +244,13 @@ ${taxOutputs}
 ${taxWithholdings}
       </TaxesWithheld>` : ''}
       <InvoiceTotals>
-        <TotalGrossAmount>${data.totalNet.toFixed(2)}</TotalGrossAmount>
-        <TotalGrossAmountBeforeTaxes>${data.totalNet.toFixed(2)}</TotalGrossAmountBeforeTaxes>
-        <TotalTaxOutputs>${data.totalVat.toFixed(2)}</TotalTaxOutputs>
+        <TotalGrossAmount>${totals.base.toFixed(2)}</TotalGrossAmount>
+        <TotalGrossAmountBeforeTaxes>${totals.base.toFixed(2)}</TotalGrossAmountBeforeTaxes>
+        <TotalTaxOutputs>${totals.tax.toFixed(2)}</TotalTaxOutputs>
         <TotalTaxesWithheld>${data.totalIrpf.toFixed(2)}</TotalTaxesWithheld>
-        <InvoiceTotal>${(data.totalNet + data.totalVat - data.totalIrpf).toFixed(2)}</InvoiceTotal>
-        <TotalOutstandingAmount>${data.totalGross.toFixed(2)}</TotalOutstandingAmount>
-        <TotalExecutableAmount>${data.totalGross.toFixed(2)}</TotalExecutableAmount>
+        <InvoiceTotal>${round2(totals.base + totals.tax - data.totalIrpf).toFixed(2)}</InvoiceTotal>
+        <TotalOutstandingAmount>${round2(totals.base + totals.tax - data.totalIrpf).toFixed(2)}</TotalOutstandingAmount>
+        <TotalExecutableAmount>${round2(totals.base + totals.tax - data.totalIrpf).toFixed(2)}</TotalExecutableAmount>
       </InvoiceTotals>
       <Items>
         ${invoiceLinesXml}
@@ -290,22 +292,48 @@ export function generateVerifactuQR(data: FacturaeInvoice): string {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function buildTaxOutputs(items: FacturaeLineItem[]): string {
-  const groups: Record<number, { basisAmount: number; taxAmount: number }> = {};
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/**
+ * The taxable base and the tax PER RATE, from the lines as PRINTED.
+ *
+ * One implementation, used by both the TaxesOutputs block and the header
+ * totals. They used to be computed twice — the block from the lines, the
+ * header from `data.totalNet/totalVat` (what the screen computed) — so
+ * Facturae's arithmetic check (Σ TaxesOutputs = TotalTaxOutputs) could fail by
+ * a cent. Two copies of one sum is how they drift apart; a decoy on one of them
+ * passed while the other was still right, which is exactly the warning.
+ */
+export function facturaeTaxGroups(items: FacturaeLineItem[]): Array<{ rate: number; base: number; tax: number }> {
+  const bases: Record<number, number> = {};
   for (const item of items) {
-    if (!groups[item.ivaRate]) {
-      groups[item.ivaRate] = { basisAmount: 0, taxAmount: 0 };
-    }
-    groups[item.ivaRate].basisAmount += item.lineTotal;
-    groups[item.ivaRate].taxAmount += item.ivaAmount;
+    // The ROUNDED line total: each line prints `lineTotal.toFixed(2)`, so the
+    // taxable base must add up the same figures the receiver re-adds.
+    bases[item.ivaRate] = round2((bases[item.ivaRate] ?? 0) + round2(item.lineTotal));
   }
+  // The tax of a rate group is its taxable base x the rate, computed ONCE.
+  // Adding up each line's already-rounded VAT drifted: ten lines of EUR 12,34
+  // at 21% summed to 25,90 where 123,40 x 21% is 25,91.
+  return Object.keys(bases).map((rate) => ({
+    rate: Number(rate),
+    base: bases[Number(rate)],
+    tax: round2(bases[Number(rate)] * (Number(rate) / 100)),
+  }));
+}
 
-  return Object.entries(groups).map(([rate, g]) => `        <Tax>
+export function facturaeTaxTotals(items: FacturaeLineItem[]): { base: number; tax: number } {
+  return facturaeTaxGroups(items).reduce(
+    (acc, g) => ({ base: round2(acc.base + g.base), tax: round2(acc.tax + g.tax) }),
+    { base: 0, tax: 0 },
+  );
+}
+
+function buildTaxOutputs(items: FacturaeLineItem[]): string {
+  return facturaeTaxGroups(items).map((g) => `        <Tax>
           <TaxTypeCode>01</TaxTypeCode>
-          <TaxRate>${parseFloat(rate).toFixed(2)}</TaxRate>
-          <TaxableBase><TotalAmount>${g.basisAmount.toFixed(2)}</TotalAmount></TaxableBase>
-          <TaxAmount><TotalAmount>${g.taxAmount.toFixed(2)}</TotalAmount></TaxAmount>
+          <TaxRate>${g.rate.toFixed(2)}</TaxRate>
+          <TaxableBase><TotalAmount>${g.base.toFixed(2)}</TotalAmount></TaxableBase>
+          <TaxAmount><TotalAmount>${g.tax.toFixed(2)}</TotalAmount></TaxAmount>
         </Tax>`).join('\n');
 }
 

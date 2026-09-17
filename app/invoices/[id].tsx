@@ -36,7 +36,7 @@ import { Share as RNShare } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
-import { getEffectiveVatRate, documentVatBreakdown } from '../../src/domain/business';
+import { isSmallBusinessExempt, getEffectiveVatRate, documentVatBreakdown } from '../../src/domain/business';
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
@@ -754,6 +754,10 @@ export default function InvoiceDetailScreen() {
       totalNet: subtotal,
       totalVat: vatAmount,
       totalGross: total,
+      // Decides `E` (the SELLER is under a small-business scheme, with the
+      // statute cited) vs `Z` (a zero-rated supply). Every 0% line used to be
+      // exported as E with the German § 19 reason, whoever the seller was.
+      sellerVatExempt: isSmallBusinessExempt(businessProfile),
       iban: (businessProfile as any)?.iban,
       bic: (businessProfile as any)?.bic,
       paymentReference: (invoice as any).reference ?? invoice.id,

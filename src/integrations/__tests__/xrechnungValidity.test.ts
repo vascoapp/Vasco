@@ -229,3 +229,69 @@ describe('a Kleinunternehmer invoice is EXEMPT, not 0% standard-rated', () => {
 });
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+describe('the CII path (Factur-X / ZUGFeRD) totals the same way', () => {
+  // This generator is the LIVE French export and the German non-XRechnung one,
+  // and it never got the line-rounding fix: it printed each line rounded while
+  // summing the unrounded values, and took its header from `data.total*` —
+  // what the SCREEN computed — so the two could disagree by construction.
+  const { generateCIIXML } = require('../einvoice');
+  const n = (xml: string, tag: string) => Number(new RegExp(`<${tag}[^>]*>([\\d.]+)<`).exec(xml)?.[1]);
+
+  const DRIFT = {
+    ...B2B,
+    lineItems: [
+      { description: 'Montage', quantity: 0.25, unitCode: 'HUR', unitPrice: 10.06, vatRate: 19, lineTotal: 2.515 },
+      { description: 'Montage 2', quantity: 0.25, unitCode: 'HUR', unitPrice: 10.06, vatRate: 19, lineTotal: 2.515 },
+    ],
+    totalNet: 5.03, totalVat: 0.9557, totalGross: 5.99,
+  } as EInvoiceData;
+
+  it('derives the header from the rounded lines (BR-CO-10)', () => {
+    const xml = generateCIIXML(DRIFT);
+    const printed = [...xml.matchAll(/<ram:LineTotalAmount>([\d.]+)<\/ram:LineTotalAmount>/g)].map((m) => Number(m[1]));
+    // [line, line, header] in CII order — the header equals the sum printed.
+    const header = printed[printed.length - 1];
+    expect(printed.slice(0, 2)).toEqual([2.52, 2.52]);
+    expect(header).toBe(5.04);
+    expect(n(xml, 'ram:BasisAmount')).toBe(5.04);
+    expect(n(xml, 'ram:GrandTotalAmount')).toBe(round2(5.04 + Number(n(xml, 'ram:TaxTotalAmount'))));
+  });
+
+  it('taxes the taxable amount once per rate', () => {
+    const xml = generateCIIXML(DRIFT);
+    expect(n(xml, 'ram:CalculatedAmount')).toBe(round2(5.04 * 0.19));
+  });
+});
+
+describe('a 0% line says WHY it is 0%', () => {
+  // `E` is a statement about the SELLER (a small-business scheme, with the
+  // statute); `Z` is a statement about the SUPPLY. Every 0% line used to be E
+  // with the German § 19 reason — so a VAT-registered contractor's zero-rated
+  // line declared him a Kleinunternehmer, and a Dutch KOR seller cited German
+  // law.
+  const ZERO_LINE = {
+    ...B2B,
+    lineItems: [{ description: 'PV-Anlage', quantity: 1, unitCode: 'stuk', unitPrice: 8000, vatRate: 0, lineTotal: 8000 }],
+    totalNet: 8000, totalVat: 0, totalGross: 8000,
+  } as EInvoiceData;
+
+  it('a VAT-registered seller gets Z and no exemption reason', () => {
+    const xml = generateXRechnungXML({ ...ZERO_LINE, sellerVatExempt: false } as EInvoiceData);
+    expect(xml).toMatch(/<cbc:ID>Z<\/cbc:ID>/);
+    expect(xml).not.toMatch(/TaxExemptionReason/);
+  });
+
+  it('an exempt seller still gets E with the statute', () => {
+    const xml = generateXRechnungXML({ ...ZERO_LINE, sellerVatExempt: true } as EInvoiceData);
+    expect(xml).toMatch(/<cbc:ID>E<\/cbc:ID>/);
+    expect(xml).toMatch(/§ 19 UStG/);
+  });
+
+  it('cites the SELLER country statute, not always the German one', () => {
+    const xml = generateXRechnungXML({ ...ZERO_LINE, sellerCountry: 'NL', sellerVatExempt: true } as EInvoiceData);
+    expect(xml).toMatch(/KOR/);
+    expect(xml).not.toMatch(/§ 19 UStG/);
+  });
+});
+

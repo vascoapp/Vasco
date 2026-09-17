@@ -22,6 +22,8 @@ export interface DATEVConfig {
   expiresAt: number;
 }
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 export interface DATEVBookingRecord {
   belegdatum: string;        // Document date (DDMM)
   buchungstext: string;       // Booking text
@@ -182,9 +184,16 @@ export function invoiceToDATEVRecords(invoice: {
   date: string;
   isPaid: boolean;
 }): DATEVBookingRecord[] {
-  const netAmount = invoice.amount / (1 + invoice.vatRate / 100);
-  const vatAmount = invoice.amount - netAmount;
-  const dateFormatted = invoice.date.replace(/-/g, '').slice(4); // DDMM format
+  // In a DATEV Buchungsstapel the Umsatz of a row that carries a BU-Schlüssel
+  // is the GROSS amount: DATEV derives the net and the USt from it. This wrote
+  // the NET, so a € 1.190,00 invoice at 19% was booked as Erlöse € 840,34 +
+  // USt € 159,66 — the Steuerberater filed revenue and output VAT that were
+  // both short, on every German invoice exported.
+  const grossAmount = round2(invoice.amount);
+  // Belegdatum is DDMM. `'2026-09-17'.replace(...).slice(4)` is '0917' —
+  // MMDD — which DATEV reads as day 09 of month 17 and refuses.
+  const [, month = '', day = ''] = invoice.date.split('-');
+  const dateFormatted = `${day.padStart(2, '0')}${month.padStart(2, '0')}`;
 
   const taxCode = invoice.vatRate === 19 ? DATEV_TAX_CODES['19_percent']
     : invoice.vatRate === 7 ? DATEV_TAX_CODES['7_percent']
@@ -193,7 +202,7 @@ export function invoiceToDATEVRecords(invoice: {
   return [{
     belegdatum: dateFormatted,
     buchungstext: `Rechnung ${invoice.id} - ${invoice.customerName}`,
-    umsatz: netAmount,
+    umsatz: grossAmount,
     sollHaben: 'S',
     konto: '10000', // Debitor (customer receivable)
     gegenkonto: '8400', // Erlöse 19% USt (revenue)

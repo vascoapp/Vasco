@@ -38,6 +38,11 @@ function regFieldKeys(): Record<string, string[]> {
 /** The keys the SAVE step reads, per country, out of the two ternaries. */
 function savedKeys(varName: string): Record<string, string> {
   const at = SRC.indexOf(`const ${varName} =`);
+  // Renaming the variable used to give `at = -1`, an INVERTED slice, an empty
+  // expression and a `{}` that satisfied every assertion below — the tax-ID
+  // persistence this file exists for, silently unguarded (meta-sweep
+  // 2026-09-17).
+  if (at === -1) throw new Error(`onboarding no longer declares \`const ${varName} =\` — update this guard`);
   const expr = SRC.slice(at, SRC.indexOf(';', at));
   const out: Record<string, string> = {};
   for (const m of expr.matchAll(/country === '([A-Z]{2})'\s*\?\s*'([^']+)'/g)) out[m[1]] = m[2];

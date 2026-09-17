@@ -40,7 +40,14 @@ describe('business settings: Save commits the invoice counter too', () => {
     expect(after).toMatch(/if \(!res\.ok\)/);
     // The refusal must return BEFORE router.back(), or the contractor leaves
     // believing the number was taken.
-    expect(after.indexOf('return;')).toBeLessThan(after.indexOf('router.back()') === -1 ? Infinity : after.indexOf('router.back()'));
+    // ⚠️ `indexOf` is −1 when ABSENT, and −1 is less than every index — the
+    // original form of this check passed when the `return;` was deleted, i.e.
+    // it could not fail in the direction it was written for (meta-sweep
+    // 2026-09-17).
+    const ret = after.indexOf('return;');
+    const back = after.indexOf('router.back()');
+    expect(ret).toBeGreaterThan(-1);
+    if (back > -1) expect(ret).toBeLessThan(back);
   });
 
   it('Apply moves the baseline, so Save does not re-send the same number', () => {
