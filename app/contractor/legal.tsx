@@ -333,7 +333,7 @@ export default function LegalScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { invoices, jobs, customers } = useAppState();
+  const { invoices, jobs, customers, businessProfile } = useAppState();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     privacy: true,
     terms: false,
@@ -343,7 +343,11 @@ export default function LegalScreen() {
   });
 
   // Build sections dynamically so the Compliance block only shows the user's country
-  const userCountry = (user?.country as CountryCode | undefined) ?? 'NL';
+  // Profile first, account second (#218). This picks the whole compliance
+  // pack — GDPR authority, tax authority, e-invoice standard — so an account
+  // whose metadata has no country used to hand a German contractor the Dutch
+  // AVG/KvK/Belastingdienst block and "Peppol" instead of XRechnung.
+  const userCountry = ((businessProfile?.country ?? user?.country) as CountryCode | undefined) ?? 'NL';
   const userCompliance = COUNTRY_COMPLIANCE[userCountry] ?? COUNTRY_COMPLIANCE.NL;
   const sections: LegalSection[] = LEGAL_SECTIONS.map((section) => {
     if (section.id !== 'compliance') return section;

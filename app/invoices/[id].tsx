@@ -26,6 +26,7 @@ import {
 } from '../../src/services/customerPaymentPreferenceService';
 import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceService';
 import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
+import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { computeLateFee, disclosureLineLocalized, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
 import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML, type EInvoiceData } from '../../src/integrations/einvoice';
 import { Share as RNShare } from 'react-native';
@@ -413,7 +414,12 @@ export default function InvoiceDetailScreen() {
       invoiceCustomer?.email
       ?? (invoice as any).customerEmail
       ?? (invoice as any).customer_email;
-    const language = (user?.language ?? 'nl') as 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
+    // The language of the email the CUSTOMER receives, and of the late-fee
+    // disclosure line inside it. `user?.language ?? 'nl'` sent a German
+    // contractor's invoice mail in Dutch whenever the account metadata had no
+    // language — `messageLocale()` reads the ACTIVE language, which
+    // `applySavedLanguage` resolves profile-first (#218).
+    const language = messageLocale() as 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
     // Optimistic local update
     markInvoiceSent(invoice.id);

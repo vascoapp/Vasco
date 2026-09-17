@@ -4659,7 +4659,9 @@
     "reviewNeeded": "Zu prüfen",
     "allLines": "Alle Posten",
     "shareAccountant": "An Steuerberater senden",
-    "accountantSeat": "Steuerberater dauerhaften Zugang geben"
+    "accountantSeat": "Steuerberater dauerhaften Zugang geben",
+    "unsupportedTitle": "USt-Voranmeldung hier nicht verfügbar",
+    "unsupportedBody": "Vasco bereitet die niederländische BTW-aangifte und die deutsche USt-Voranmeldung vor. Ihre Rechnungen und Ausgaben exportieren Sie weiterhin unter Finanzen für Ihre Steuerberatung."
   },
   "automations": {
     "healthNew": "NEU",

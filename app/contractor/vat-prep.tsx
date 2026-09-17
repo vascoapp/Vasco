@@ -46,10 +46,16 @@ export default function VatPrepScreen() {
   const initialPeriod: PeriodChoice = periodParam === 'current' ? 'current' : 'previous';
   const [periodChoice, setPeriodChoice] = useState<PeriodChoice>(initialPeriod);
 
-  // R221: country gate — NL BTW and DE UStVA both supported. Screen geld
-  // already gates entry by businessProfile.country so by the time we land
-  // here the contractor is in a supported jurisdiction.
-  const country: 'NL' | 'DE' = businessProfile?.country === 'DE' ? 'DE' : 'NL';
+  // R221: country gate — NL BTW and DE UStVA are the two returns this app can
+  // prepare. ⚠️ The comment here used to say geld.tsx had already gated entry.
+  // It had not: the AI queue's quarter-end `tax_prep` card pushes this route
+  // directly, so a French contractor landed on a **Dutch BTW-aangifte** —
+  // rubriek labels, nl-NL money and an "Open DigiD" button — because every
+  // other country was coerced to NL (sweep 2026-09-17). The card is gated now,
+  // and this screen refuses instead of guessing.
+  const profileCountry = businessProfile?.country;
+  const vatReturnSupported = profileCountry === 'NL' || profileCountry === 'DE';
+  const country: 'NL' | 'DE' = profileCountry === 'DE' ? 'DE' : 'NL';
   const draft: VatReturnDraft = useMemo(() => {
     const bounds = periodChoice === 'current' ? currentBtwPeriod() : previousBtwPeriod();
     return prepareVatReturn({
@@ -181,6 +187,27 @@ export default function VatPrepScreen() {
       },
     ];
   };
+
+  // Every hook above this line (#338).
+  if (!vatReturnSupported) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+            <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>{t('vatPrep.unsupportedTitle', 'VAT return not available here')}</Text>
+          </View>
+        </View>
+        <View style={{ padding: 20 }}>
+          <Text style={styles.subtitle}>
+            {t('vatPrep.unsupportedBody', 'Vasco prepares the Dutch BTW-aangifte and the German UStVA. Your invoices and expenses are still exported from Finance for your accountant.')}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

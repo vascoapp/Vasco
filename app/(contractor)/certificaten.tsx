@@ -23,6 +23,7 @@ import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
+import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency0, formatDateShortAuto, formatDayMonthAuto, type Country } from '../../src/i18n/formatting';
 
@@ -346,7 +347,11 @@ function BlockedWorkBanner({ blockedCount }: { blockedCount: number }) {
 
 export default function CertificatenScreen() {
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { businessProfile } = useAppState();
+  // Profile first (#218): this chooses which government portals are linked,
+  // and an account with no country sent a German contractor to KVK, RDW and
+  // the Belastingdienst.
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const portals = governmentPortalsFor(country);
   const { t } = useTranslation();
   const router = useRouter();

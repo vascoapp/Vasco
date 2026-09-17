@@ -4659,7 +4659,9 @@
     "reviewNeeded": "À vérifier",
     "allLines": "Toutes les lignes",
     "shareAccountant": "Envoyer à l'expert-comptable",
-    "accountantSeat": "Donner un accès permanent à l’expert-comptable"
+    "accountantSeat": "Donner un accès permanent à l’expert-comptable",
+    "unsupportedTitle": "Déclaration de TVA non disponible ici",
+    "unsupportedBody": "Vasco prépare la BTW-aangifte néerlandaise et l'UStVA allemande. Vous exportez toujours vos factures et vos dépenses depuis Finances pour votre comptable."
   },
   "automations": {
     "healthNew": "NOUVEAU",

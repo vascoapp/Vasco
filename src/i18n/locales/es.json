@@ -4659,7 +4659,9 @@
     "reviewNeeded": "Por revisar",
     "allLines": "Todas las líneas",
     "shareAccountant": "Enviar a la gestoría",
-    "accountantSeat": "Dar acceso continuo al asesor"
+    "accountantSeat": "Dar acceso continuo al asesor",
+    "unsupportedTitle": "Declaración de IVA no disponible aquí",
+    "unsupportedBody": "Vasco prepara la BTW-aangifte neerlandesa y la UStVA alemana. Puede seguir exportando sus facturas y gastos desde Finanzas para su asesor."
   },
   "automations": {
     "healthNew": "NUEVO",

@@ -168,7 +168,11 @@ export function extractFromSpreadsheet(
   // wrong for DE 19% / FR/UK 20% / IT 22%. Suppliers issue invoices in their
   // own jurisdiction's rate; using the contractor's country is a sane default
   // since cross-border B2B invoices flip to 0% reverse-charge anyway.
-  const vatRate = getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL');
+  // No `?? 'NL'`: this re-added the silent Dutch default that
+  // `getStandardVatRate` had just been cleared of, so an imported supplier
+  // sheet with no VAT column was booked at 21% for a German (19%) or French
+  // (20%) contractor — and that total feeds the pricing moat.
+  const vatRate = getStandardVatRate(getCurrentCountry() as BusinessProfile['country']);
   const vatAmount = subtotal * (vatRate / 100);
   const total = subtotal + vatAmount;
 

@@ -4709,7 +4709,9 @@
     "reviewNeeded": "Te controleren",
     "allLines": "Alle regels",
     "shareAccountant": "Naar boekhouder sturen",
-    "accountantSeat": "Accountant doorlopend toegang geven"
+    "accountantSeat": "Accountant doorlopend toegang geven",
+    "unsupportedTitle": "Btw-aangifte hier niet beschikbaar",
+    "unsupportedBody": "Vasco bereidt de Nederlandse btw-aangifte en de Duitse USt-Voranmeldung voor. Uw facturen en uitgaven exporteert u gewoon via Geld voor uw boekhouder."
   },
   "market": {
     "noBenchmarksDesc": "Meer data nodig voor benchmarks",

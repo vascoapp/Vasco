@@ -4659,7 +4659,9 @@
     "reviewNeeded": "Da controllare",
     "allLines": "Tutte le voci",
     "shareAccountant": "Invia al commercialista",
-    "accountantSeat": "Dai accesso continuativo al commercialista"
+    "accountantSeat": "Dai accesso continuativo al commercialista",
+    "unsupportedTitle": "Dichiarazione IVA non disponibile qui",
+    "unsupportedBody": "Vasco prepara la BTW-aangifte olandese e la UStVA tedesca. Le tue fatture e spese restano esportabili da Denaro per il tuo commercialista."
   },
   "automations": {
     "healthNew": "NUOVO",

@@ -1335,10 +1335,17 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   }
 
   // ─── NEW: Tax prep reminder (quarter-end) ───
+  // ONLY where we can actually prepare a return. `prepareVatReturn` supports
+  // NL (BTW-aangifte) and DE (UStVA); the screen behind this card used to
+  // coerce every other country to NL, so a French contractor tapping it got a
+  // Dutch return with Dutch rubrieken and an "Open DigiD" button. The card is
+  // the gate — the screen is reachable from it without passing geld.tsx.
+  // Unknown country: no card (the #339 rule — skip, never default).
   const month = new Date().getMonth();
   const day = new Date().getDate();
   const isQuarterEnd = (month === 2 || month === 5 || month === 8 || month === 11) && day >= 20;
-  if (isQuarterEnd) {
+  const vatReturnSupported = context.country === 'NL' || context.country === 'DE';
+  if (isQuarterEnd && vatReturnSupported) {
     const quarterName = `Q${Math.floor(month / 3) + 1}`;
     const paidInvoiceCount = (context.allInvoices ?? []).filter((i: any) => i.status === 'paid').length;
     const id = await addToQueue({

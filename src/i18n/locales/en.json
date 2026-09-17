@@ -4659,7 +4659,9 @@
     "reviewNeeded": "Needs review",
     "allLines": "All lines",
     "shareAccountant": "Send to accountant",
-    "accountantSeat": "Give accountant ongoing access"
+    "accountantSeat": "Give accountant ongoing access",
+    "unsupportedTitle": "VAT return not available here",
+    "unsupportedBody": "Vasco prepares the Dutch BTW-aangifte and the German UStVA. Your invoices and expenses are still exported from Finance for your accountant."
   },
   "automations": {
     "healthNew": "NEW",

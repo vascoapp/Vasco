@@ -38,7 +38,10 @@ export default function ExpensesScreen() {
   const { user } = useAuth();
   // Profile first, account as fallback (#218) — VAT below already read the profile.
   const country = (businessProfile.country ?? user?.country ?? 'NL') as Country;
-  const vatRate = getVATRate(businessProfile.country ?? 'NL');
+  // No `?? 'NL'`: `getVATRate` already returns 0 and warns for a country it
+  // does not know, and this default defeated that — every expense showed
+  // "21% btw" to a German contractor whose profile had not hydrated yet.
+  const vatRate = getVATRate(businessProfile.country ?? '');
   const vatPct = Math.round(vatRate * 100);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDesc, setNewDesc] = useState('');
