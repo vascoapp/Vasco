@@ -17,18 +17,42 @@
 //   default: 20260427000001_time_of_day_capture.sql + 20260427000002_invoice_payment_timing.sql
 // =============================================================================
 
+import { execSync } from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-const TARGETS = process.argv.length > 2
-  ? process.argv.slice(2)
-  : [
-      '20260427000001_time_of_day_capture.sql',
-      '20260427000002_invoice_payment_timing.sql',
-    ];
+// With no arguments, smoke the migrations that are NEW OR MODIFIED in the
+// working tree — which is what "unpushed migrations" means and what this script
+// was written for.
+// ⚠️ It used to default to two HARDCODED filenames from April, so running it
+// bare printed "✓ all checks passed" about migrations that had been live for
+// months while the ones just written went unchecked: a green about the wrong
+// subject (2026-09-17). Scanning ALL of them instead is no good either — it
+// re-reports historical warnings on migrations that later files already fixed.
+function defaultTargets() {
+  try {
+    const out = execSync('git status --porcelain -- supabase/migrations', { cwd: ROOT, encoding: 'utf8' });
+    const files = out
+      .split('\n')
+      .map((line) => line.slice(3).trim())
+      .filter((f) => f.endsWith('.sql'))
+      .map((f) => f.split('/').pop())
+      .filter(Boolean);
+    return [...new Set(files)].sort();
+  } catch {
+    // No git: check nothing rather than claim a green over the wrong files.
+    return [];
+  }
+}
+
+const TARGETS = process.argv.length > 2 ? process.argv.slice(2) : defaultTargets();
+if (TARGETS.length === 0) {
+  console.log('\nMIGRATION SMOKE — no new or modified migration files; pass filenames to check specific ones.');
+  process.exit(0);
+}
 
 const errors = [];
 const warns = [];

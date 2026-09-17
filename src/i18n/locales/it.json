@@ -1956,11 +1956,8 @@
     "tierBetterTagline": "Il più scelto",
     "tierBestTagline": "Qualità migliore",
     "tierGoodFeature1": "Materiali standard",
-    "tierGoodFeature2": "1 anno di garanzia",
     "tierBetterFeature1": "Materiali di qualità",
-    "tierBetterFeature2": "2 anni di garanzia",
     "tierBestFeature1": "Materiali premium",
-    "tierBestFeature2": "2 anni di garanzia",
     "tierBestFeature3": "Controllo successivo gratuito",
     "pickPackageTitle": "Quale pacchetto invii?",
     "pickPackageDesc": "Il tuo cliente riceve il pacchetto che scegli qui. Può sempre rispondere e chiederne un altro.",
@@ -1980,7 +1977,8 @@
     "vatRateLabel": "Aliquota IVA",
     "vatStandard": "{{rate}}% — aliquota ordinaria",
     "vatReduced": "{{rate}}% — ristrutturazione, immobile di oltre 2 anni",
-    "vatEnergy": "{{rate}}% — riqualificazione energetica"
+    "vatEnergy": "{{rate}}% — riqualificazione energetica",
+    "tiersSamePriceHint": "Ogni pacchetto usa i tuoi prezzi. Imposta un prezzo per pacchetto su ciascun servizio nel tuo listino."
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -2310,7 +2308,7 @@
     "vatScheme": "Regime IVA",
     "vatStandard": "Standard",
     "auditTrail": "Traccia di controllo",
-    "auditTrailValue": "Inalterabile",
+    "auditTrailValue": "Manomissione rilevabile",
     "maintenanceContracts": "Contratti di manutenzione",
     "recurringValue": "Gestisci",
     "plan": "PIANO",
@@ -2360,7 +2358,7 @@
     "creditsAvailable_one": "{{count}} mese di abbonamento gratuito disponibile — applicato automaticamente al pagamento.",
     "creditsAvailable_other": "{{count}} mesi di abbonamento gratuito disponibili — applicati automaticamente al pagamento.",
     "exportFailedDesc": "Non è stato possibile generare l'esportazione dei tuoi dati. Riprova o scrivi a privacy@vascobuild.com.",
-    "auditTrailValueGobd": "Conforme a GoBD",
+    "auditTrailValueGobd": "Registro a prova di manomissione",
     "province": "Provincia",
     "fiscalRegime": "Regime fiscale",
     "personType": "Tipo (persona fisica o società)",
@@ -7105,5 +7103,16 @@
         "name": "Ristrutturazione completa"
       }
     }
+  },
+  "vatBasis": {
+    "section": "Quando l’IVA diventa esigibile",
+    "soll": "Alla data della fattura",
+    "sollHint": "Standard. L’IVA è dovuta nel periodo della fattura, anche se il cliente non ha pagato.",
+    "ist": "Quando il cliente paga",
+    "istHint": "IVA per cassa. Solo se ammesso al regime.",
+    "filingSection": "Con quale frequenza dichiari",
+    "monthly": "Mensile",
+    "quarterly": "Trimestrale",
+    "yearly": "Annuale"
   }
 }

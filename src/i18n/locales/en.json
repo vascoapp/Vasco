@@ -1956,11 +1956,8 @@
     "tierBetterTagline": "Most chosen",
     "tierBestTagline": "Best quality",
     "tierGoodFeature1": "Standard materials",
-    "tierGoodFeature2": "1 year warranty",
     "tierBetterFeature1": "Quality materials",
-    "tierBetterFeature2": "2 year warranty",
     "tierBestFeature1": "Premium materials",
-    "tierBestFeature2": "2 year warranty",
     "tierBestFeature3": "Free follow-up check",
     "pickPackageTitle": "Which package do you send?",
     "pickPackageDesc": "Your customer receives the package you pick here. They can always reply and ask for another.",
@@ -1980,7 +1977,8 @@
     "vatRateLabel": "VAT rate",
     "vatStandard": "{{rate}}% — standard rate",
     "vatReduced": "{{rate}}% — renovation, home over 2 years old",
-    "vatEnergy": "{{rate}}% — energy renovation"
+    "vatEnergy": "{{rate}}% — energy renovation",
+    "tiersSamePriceHint": "Every package quotes your own prices. Give a package its own price per service in your pricebook."
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -2310,7 +2308,7 @@
     "vatScheme": "VAT scheme",
     "vatStandard": "Standard",
     "auditTrail": "Audit trail",
-    "auditTrailValue": "Tamper-proof",
+    "auditTrailValue": "Tamper-evident",
     "maintenanceContracts": "Maintenance contracts",
     "recurringValue": "Manage",
     "plan": "PLAN",
@@ -2360,7 +2358,7 @@
     "creditsAvailable_one": "{{count}} month of free subscription available — applied automatically at checkout.",
     "creditsAvailable_other": "{{count}} months of free subscription available — applied automatically at checkout.",
     "exportFailedDesc": "Could not build your data export. Please try again, or contact privacy@vascobuild.com.",
-    "auditTrailValueGobd": "GoBD-compliant",
+    "auditTrailValueGobd": "Tamper-evident log",
     "province": "Province",
     "fiscalRegime": "Tax regime",
     "personType": "Person type (individual or company)",
@@ -7105,5 +7103,16 @@
     "filedBody": "Vasco creates the file — it does not send it to the authority. Confirm only once you have actually filed {{format}}.",
     "filedYes": "Yes, filed",
     "filedNotYet": "Not yet"
+  },
+  "vatBasis": {
+    "section": "When VAT is due",
+    "soll": "On the invoice date",
+    "sollHint": "Standard. VAT is due in the period you issue the invoice, even if the customer has not paid.",
+    "ist": "When the customer pays",
+    "istHint": "Cash accounting. Only available if your tax office has approved it.",
+    "filingSection": "How often you file",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly"
   }
 }

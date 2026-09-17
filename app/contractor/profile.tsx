@@ -667,12 +667,15 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="shield-checkmark-outline"
               label={t('profile.auditTrail', 'Audit trail')}
-              // GoBD is a German standard — naming it to a Dutch/French/… user is
-              // confusing. The mechanism (hash-chained immutable log) IS GoBD-style,
-              // so keep the strong "GoBD-conform" claim for DE and show a neutral,
-              // plain-language description everywhere else.
+              // DECIDED 2026-09-17 (user): describe the MECHANISM, do not claim
+              // conformity. "GoBD-konform" is a statement about an audited
+              // procedure — it needs a Verfahrensdokumentation and, in practice,
+              // an auditor's sign-off; we have a hash-chained append-only log,
+              // which is the honest thing to say and is what the GoBD page's
+              // own footnote already tells the contractor to pair with their
+              // accountant's archive.
               value={country === 'DE'
-                ? t('profile.auditTrailValueGobd', 'GoBD-compliant')
+                ? t('profile.auditTrailValueGobd', 'Tamper-evident log')
                 : t('profile.auditTrailValue', 'Tamper-proof')}
               border
               onPress={() => router.push('/contractor/vat-and-audit' as any)}

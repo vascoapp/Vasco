@@ -234,6 +234,7 @@ describe('R66 round 49 — contractor critical path E2E', () => {
         id: 'uuid-1',
         user_id: 'user-1',
         doc_type: 'invoice',
+        title: null,
         status: 'sent',
         customer_id: null,
         job_id: null,

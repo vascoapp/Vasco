@@ -39,7 +39,39 @@ describe('quote tier presets', () => {
     expect(d.best.features).toContain('Premiummaterial');
     expect(d.best.features.some(f => /jaar|materiaal/.test(f))).toBe(false);
     const n = defaultTierPresets(tFor(nl));
-    expect(n.good.features).toContain('Garantie 1 jaar');
+    // The NL basic package used to promise "Garantie 1 jaar" here.
+    expect(n.good.features.length).toBeGreaterThan(0);
+    expect(n.good.features.every(f => /materia/i.test(f))).toBe(true);
+  });
+
+  // DECIDED 2026-09-17 (user): a statutory right is not a feature. The basic
+  // package promised one year and the paid ones two, while the law gives the
+  // customer two years on work and five on building works in DE whatever the
+  // quote says — so the cheap tier understated the buyer's rights and the
+  // upgrades sold them something they already had (UCPD Annex I No. 10).
+  it('no package advertises a warranty', () => {
+    for (const dict of [de, nl, en]) {
+      const p = defaultTierPresets(tFor(dict));
+      for (const key of ['good', 'better', 'best'] as const) {
+        for (const f of p[key].features) {
+          expect(`${key}:${f}`).not.toMatch(/warrant|garant|gewährleistung/i);
+        }
+      }
+    }
+  });
+
+  it('strips the warranty bullet from a preset saved before the decision', () => {
+    const merged = mergeTierPresets(
+      { good: { name: 'Basis', features: ['Standardmaterial', '1 Jahr Gewährleistung'] } },
+      defaultTierPresets(tFor(de)),
+    );
+    expect(merged.good.features).toEqual(['Standardmaterial']);
+  });
+
+  it('falls back rather than shipping an empty package when the warranty was the only bullet', () => {
+    const defaults = defaultTierPresets(tFor(de));
+    const merged = mergeTierPresets({ best: { name: 'Premium', features: ['2 Jahre Gewährleistung'] } }, defaults);
+    expect(merged.best.features).toEqual(defaults.best.features);
   });
 
   it('every locale ships all three package names', () => {
@@ -98,10 +130,19 @@ describe('tierUnitPrice — the cents the contractor typed', () => {
     expect(tierUnitPrice(185.5, 'good')).toBe(185.5);
   });
 
-  it('rounds a marked-up price to cents, not to whole euros', () => {
-    expect(tierUnitPrice(185.5, 'better')).toBe(231.88); // was 232
-    expect(tierUnitPrice(185.5, 'best')).toBe(287.53);   // was 288
-    expect(tierUnitPrice(100, 'better')).toBe(125);
+  // DECIDED 2026-09-17 (user): every tier quotes the contractor's OWN price.
+  // The default package used to leave at +25% and Premium at +55%, silently,
+  // under a tier named "Standard".
+  it('quotes the contractor price, to the cent, on every tier', () => {
+    expect(tierUnitPrice(185.5, 'good')).toBe(185.5);
+    expect(tierUnitPrice(185.5, 'better')).toBe(185.5);
+    expect(tierUnitPrice(185.5, 'best')).toBe(185.5);
+    // …and still to the CENT, which is what #339 fixed here.
+    expect(tierUnitPrice(12.345, 'better')).toBe(12.35);
+  });
+
+  it('a markup is an explicit variant price the contractor typed', () => {
+    expect(tierUnitPrice(185.5, 'best', 249.99)).toBe(249.99);
   });
 
   it('lets a pricebook variant price win untouched', () => {

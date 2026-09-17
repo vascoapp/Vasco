@@ -1926,6 +1926,17 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             );
           })}
         </View>
+        {/* Since 2026-09-17 every package quotes the contractor's OWN price
+            (TIER_MULTIPLIER is 1 across the board — it used to add 25% and 55%
+            silently). So the three cards carry the same total until the
+            contractor sets a per-package price, and saying so beats leaving
+            them to wonder why. The CUSTOMER only ever receives the selected
+            package, so this note is for the contractor alone. */}
+        {new Set(tiers.map((tier) => tier.total)).size === 1 && (
+          <Text style={s.tiersSamePriceHint}>
+            {t('quotes.tiersSamePriceHint', 'Every package quotes your own prices. Give a package its own price per service in your pricebook.')}
+          </Text>
+        )}
 
         {/* Line items summary */}
         <View style={s.section}>
@@ -2503,6 +2514,13 @@ const s = StyleSheet.create({
   vascoSkipText: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textTertiary },
 
   // Tier cards
+  tiersSamePriceHint: {
+    fontFamily: TYPE.bodyFamily,
+    fontSize: TYPE.captionSize,
+    color: SemanticColors.textTertiary,
+    marginTop: GRID.xs,
+    marginHorizontal: GRID.md,
+  },
   tiersRow: { flexDirection: 'row', gap: GRID.xs },
   tierCard: {
     flex: 1, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md,

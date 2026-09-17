@@ -125,6 +125,18 @@ export interface VatPrepInput {
   periodStart: string;
   periodEnd: string;
   invoices: Invoice[];
+  /**
+   * WHEN the tax falls due, for the OUTGOING side.
+   *
+   * `soll` (default) — Soll-Versteuerung: on the invoice date, whether or not
+   * the customer has paid. `ist` — Ist-Versteuerung (§20 UStG, and the NL
+   * kasstelsel): on the date the money arrived. For a trade that waits 45 days
+   * to be paid this moves whole invoices between periods, which is the
+   * difference between a return that matches the bank and one that does not.
+   * Declared in `GermanTaxSettings` since the German types were written and
+   * read by nothing until 2026-09-17.
+   */
+  vatBasis?: 'soll' | 'ist';
   expenses: Array<{
     id: string;
     description: string;
@@ -161,13 +173,21 @@ function classifyInvoice(invoice: Invoice): { classification: VatClassNL; rate: 
 
   const label = `${invoice.job ?? ''} ${invoice.customer ?? ''} ${(invoice as any).description ?? ''}`.toLowerCase();
 
-  // Reduced 9% — painting/tiling work on homes >2yr, specific maintenance.
-  // Flag as low-confidence — require review.
-  if (/schilderen|tegel|stucwerk|isolatie|schilderwerk/.test(label)) {
+  // Reduced 9% — the Dutch reduced rate on labour at a home older than two
+  // years covers a NARROW list: painting, plastering, wallpapering and
+  // insulating (plus cleaning inside the home). It does NOT cover plumbing,
+  // electrical work or TILING, all of which this matcher claimed — "tegel" put
+  // a 21% bathroom job into rubriek 1b at 9%, understating the VAT the
+  // contractor owed and leaving them to make up the difference at the
+  // year-end reconciliation (#339 L11).
+  // Source: Belastingdienst, "Diensten aan woningen ouder dan 2 jaar".
+  // Still low-confidence and still flagged: the age of the home is a fact only
+  // the contractor knows.
+  if (/schilderen|schilderwerk|stucwerk|stukadoor|behangen|behangwerk|isolatie|isoleren/.test(label)) {
     classification = 'rubriek_1b';
     rate = 9;
     confidence = 0.55;
-    warnings.push('9%-regime alleen geldig als woning >2 jaar oud — bevestig of dit klopt');
+    warnings.push('9%-tarief geldt alleen voor schilder-, stukadoors-, behang- en isolatiewerk (arbeid) aan een woning ouder dan 2 jaar — bevestig of dit klopt');
   }
   // Reverse-charge — when customer is also registered for BTW (B2B construction subcontract).
   if (/verleggingsregeling|verlegd|reverse charge/i.test(label)) {
@@ -277,9 +297,15 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     return t >= periodStartMs && t <= periodEndMs;
   };
 
-  // Sent invoices — only those paid OR invoiced within the period.
+  // Sent invoices, dated by the basis the contractor files on.
+  const cashBasis = input.vatBasis === 'ist';
   for (const inv of input.invoices) {
-    const invDate = (inv as any).issueDate ?? (inv as any).sentAt ?? (inv as any).createdAt;
+    const issuedOn = (inv as any).issueDate ?? (inv as any).sentAt ?? (inv as any).createdAt;
+    const paidOn = (inv as any).paidAt ?? (inv as any).paidDate ?? (inv as any).paymentDate;
+    // Ist-Versteuerung declares an invoice in the period it was PAID, and not
+    // at all until then. Soll declares it when it was issued.
+    if (cashBasis && inv.status !== 'paid') continue;
+    const invDate = cashBasis ? (paidOn ?? issuedOn) : issuedOn;
     if (!invDate || !inPeriod(invDate)) continue;
     // Only count invoices that are sent/paid (not draft).
     if (inv.status === 'draft') continue;
@@ -452,8 +478,47 @@ export function previousBtwPeriod(now: Date = new Date()): { periodStart: string
   };
 }
 
-// R221 — DE UStVA uses quarterly filing by default (monthly for high-revenue
-// firms). Default cadence matches NL BTW; helpers are thin aliases so the
-// screen code can pick the right pair by country.
+/** The current / previous calendar MONTH, for a contractor who files monthly. */
+export function currentMonthPeriod(now: Date = new Date()): { periodStart: string; periodEnd: string } {
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  return { periodStart: localDateKey(start), periodEnd: localDateKey(end) };
+}
+
+export function previousMonthPeriod(now: Date = new Date()): { periodStart: string; periodEnd: string } {
+  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  return { periodStart: localDateKey(start), periodEnd: localDateKey(end) };
+}
+
+/**
+ * The period bounds for this contractor's filing cadence.
+ *
+ * Quarterly is the default in both markets, but a newly founded German
+ * business commonly files MONTHLY (§18 UStG) and the app had no way to say so —
+ * `voranmeldungszeitraum` was declared in the German types and read by nothing,
+ * so a monthly filer was always handed a quarter (#339, fixed 2026-09-17).
+ */
+export function vatPeriodFor(
+  filingPeriod: 'monthly' | 'quarterly' | 'yearly' | undefined,
+  which: 'current' | 'previous',
+  now: Date = new Date(),
+): { periodStart: string; periodEnd: string } {
+  if (filingPeriod === 'monthly') {
+    return which === 'current' ? currentMonthPeriod(now) : previousMonthPeriod(now);
+  }
+  if (filingPeriod === 'yearly') {
+    const year = which === 'current' ? now.getFullYear() : now.getFullYear() - 1;
+    return {
+      periodStart: localDateKey(new Date(year, 0, 1)),
+      periodEnd: localDateKey(new Date(year, 11, 31, 23, 59, 59)),
+    };
+  }
+  return which === 'current' ? currentBtwPeriod(now) : previousBtwPeriod(now);
+}
+
+// R221 — DE UStVA uses quarterly filing by default (monthly for newly founded
+// businesses, §18 UStG). Default cadence matches NL BTW; helpers are thin
+// aliases so the screen code can pick the right pair by country.
 export const currentUstvaPeriod = currentBtwPeriod;
 export const previousUstvaPeriod = previousBtwPeriod;

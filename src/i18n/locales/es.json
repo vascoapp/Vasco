@@ -1956,11 +1956,8 @@
     "tierBetterTagline": "El más elegido",
     "tierBestTagline": "Mejor calidad",
     "tierGoodFeature1": "Materiales estándar",
-    "tierGoodFeature2": "1 año de garantía",
     "tierBetterFeature1": "Materiales de calidad",
-    "tierBetterFeature2": "2 años de garantía",
     "tierBestFeature1": "Materiales premium",
-    "tierBestFeature2": "2 años de garantía",
     "tierBestFeature3": "Revisión posterior gratuita",
     "pickPackageTitle": "¿Qué paquete envías?",
     "pickPackageDesc": "Tu cliente recibe el paquete que elijas aquí. Siempre puede responder y pedir otro.",
@@ -1980,7 +1977,8 @@
     "vatRateLabel": "Tipo de IVA",
     "vatStandard": "{{rate}}% — tipo general",
     "vatReduced": "{{rate}}% — reforma, vivienda de más de 2 años",
-    "vatEnergy": "{{rate}}% — reforma energética"
+    "vatEnergy": "{{rate}}% — reforma energética",
+    "tiersSamePriceHint": "Cada paquete usa sus propios precios. Defina un precio por paquete para cada servicio en su catálogo."
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -2310,7 +2308,7 @@
     "vatScheme": "Régimen IVA",
     "vatStandard": "Estándar",
     "auditTrail": "Registro de auditoría",
-    "auditTrailValue": "Inalterable",
+    "auditTrailValue": "Manipulación detectable",
     "maintenanceContracts": "Contratos de mantenimiento",
     "recurringValue": "Gestionar",
     "plan": "PLAN",
@@ -2360,7 +2358,7 @@
     "creditsAvailable_one": "{{count}} mes de suscripción gratis disponible — se aplica automáticamente al pagar.",
     "creditsAvailable_other": "{{count}} meses de suscripción gratis disponibles — se aplican automáticamente al pagar.",
     "exportFailedDesc": "No se pudo generar la exportación de tus datos. Inténtalo de nuevo o escribe a privacy@vascobuild.com.",
-    "auditTrailValueGobd": "Conforme a GoBD",
+    "auditTrailValueGobd": "Registro a prueba de manipulaciones",
     "province": "Provincia",
     "fiscalRegime": "Régimen fiscal",
     "personType": "Tipo de persona (física o jurídica)",
@@ -7105,5 +7103,16 @@
         "name": "Reforma integral"
       }
     }
+  },
+  "vatBasis": {
+    "section": "Cuándo se devenga el IVA",
+    "soll": "En la fecha de factura",
+    "sollHint": "Estándar. El IVA se devenga en el periodo de la factura, aunque el cliente no haya pagado.",
+    "ist": "Cuando el cliente paga",
+    "istHint": "Criterio de caja. Solo si está acogido a ese régimen.",
+    "filingSection": "Con qué frecuencia declara",
+    "monthly": "Mensual",
+    "quarterly": "Trimestral",
+    "yearly": "Anual"
   }
 }

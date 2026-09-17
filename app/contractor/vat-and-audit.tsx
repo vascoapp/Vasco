@@ -173,6 +173,62 @@ export default function VatAndAuditScreen() {
           ))}
         </View>
 
+        {/* WHEN the tax falls due, and HOW OFTEN it is filed.
+            `GermanTaxSettings` declared both since the German types were
+            written and NOTHING read or wrote either, so every return was
+            prepared on invoice dates and quarterly — wrong for a small trade
+            on Ist-Versteuerung (§20 UStG, tax due when the customer pays) and
+            for the newly founded business that files monthly (§18 UStG).
+            Radio rows, matching the scheme picker above: two and three options,
+            all visible, no strip to scroll. */}
+        <DKLabel style={[styles.section, { marginTop: GRID.lg }]}>{t('vatBasis.section', 'When VAT is due')}</DKLabel>
+        <View style={styles.card}>
+          {([
+            { value: 'soll' as const, label: t('vatBasis.soll', 'On the invoice date'), subtitle: t('vatBasis.sollHint', 'Standard. VAT is due in the period you issue the invoice, even if the customer has not paid.') },
+            { value: 'ist' as const, label: t('vatBasis.ist', 'When the customer pays'), subtitle: t('vatBasis.istHint', 'Cash accounting. Only available if your tax office has approved it.') },
+          ]).map((opt, idx) => (
+            <Pressable
+              key={opt.value}
+              style={[styles.row, idx > 0 && styles.rowBorder]}
+              onPress={() => { void updateBusinessProfile({ vatBasis: opt.value }); }}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: (businessProfile.vatBasis ?? 'soll') === opt.value }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowLabel}>{opt.label}</Text>
+                <Text style={styles.rowSubtitle}>{opt.subtitle}</Text>
+              </View>
+              <View style={[styles.radio, (businessProfile.vatBasis ?? 'soll') === opt.value && styles.radioActive]}>
+                {(businessProfile.vatBasis ?? 'soll') === opt.value && <View style={styles.radioDot} />}
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        <DKLabel style={[styles.section, { marginTop: GRID.lg }]}>{t('vatBasis.filingSection', 'How often you file')}</DKLabel>
+        <View style={styles.card}>
+          {([
+            { value: 'monthly' as const, label: t('vatBasis.monthly', 'Monthly') },
+            { value: 'quarterly' as const, label: t('vatBasis.quarterly', 'Quarterly') },
+            { value: 'yearly' as const, label: t('vatBasis.yearly', 'Yearly') },
+          ]).map((opt, idx) => (
+            <Pressable
+              key={opt.value}
+              style={[styles.row, idx > 0 && styles.rowBorder]}
+              onPress={() => { void updateBusinessProfile({ filingPeriod: opt.value }); }}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: (businessProfile.filingPeriod ?? 'quarterly') === opt.value }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowLabel}>{opt.label}</Text>
+              </View>
+              <View style={[styles.radio, (businessProfile.filingPeriod ?? 'quarterly') === opt.value && styles.radioActive]}>
+                {(businessProfile.filingPeriod ?? 'quarterly') === opt.value && <View style={styles.radioDot} />}
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
         {scheme !== 'standard' && (
           <View style={styles.notice}>
             <Ionicons name="information-circle" size={18} color={DK.colors.highlight} />

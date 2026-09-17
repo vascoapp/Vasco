@@ -34,10 +34,18 @@ export const MAX_TIER_FEATURES = 4;
 
 /**
  * What each package multiplies the contractor's own price by.
- * ⚠️ The MARKUP itself is a commercial decision (open with the user): the
- * default package sends the contractor's price +25%.
+ *
+ * DECIDED 2026-09-17 (user): **every tier defaults to the contractor's own
+ * price.** It used to send the default package out at +25% and Premium at
+ * +55% of the price in their pricebook, silently, under a tier named
+ * "Standard" — so a contractor's very first quote was 25% above what they
+ * thought they were charging (#339 P25).
+ *
+ * The markup is still available, per service, as a pricebook VARIANT price for
+ * that tier (`tierUnitPrice` prefers it). That is an explicit number the
+ * contractor typed, which is the difference that matters.
  */
-export const TIER_MULTIPLIER: Record<TierKey, number> = { good: 1, better: 1.25, best: 1.55 };
+export const TIER_MULTIPLIER: Record<TierKey, number> = { good: 1, better: 1, best: 1 };
 
 /**
  * The unit price a package quotes for one pricebook service.
@@ -56,6 +64,33 @@ export function tierUnitPrice(basePrice: number, tier: TierKey, variantPrice?: n
 const STORAGE_KEY = '@vasco_quote_tier_presets';
 
 /**
+ * The warranty bullets these packages used to ship with, in every language.
+ *
+ * DECIDED 2026-09-17 (user): a statutory right is not a feature. The basic
+ * package advertised "1 year warranty" and the paid ones "2 years" — but the
+ * customer's rights are set by law whatever a quote says (DE §634a BGB: two
+ * years on work, five on building works; IT two; FR one/two/ten), so the cheap
+ * tier UNDERSTATED what the buyer is owed and the upgrades charged for
+ * something they already had. Advertising statutory rights as a distinctive
+ * feature is a banned practice in itself (UCPD Annex I No. 10).
+ *
+ * These strings are stripped ONCE from presets already saved on a device —
+ * removing the defaults alone would have left every existing contractor still
+ * sending them.
+ */
+const LEGACY_WARRANTY_FEATURES = [
+  '1 year warranty', '2 year warranty',
+  '1 jaar garantie', '2 jaar garantie',
+  '1 Jahr Gewährleistung', '2 Jahre Gewährleistung',
+  '1 an de garantie', '2 ans de garantie',
+  '1 año de garantía', '2 años de garantía',
+  '1 anno di garanzia', '2 anni di garanzia',
+].map((x) => x.toLowerCase());
+
+const isLegacyWarrantyFeature = (feature: string): boolean =>
+  LEGACY_WARRANTY_FEATURES.includes(feature.trim().toLowerCase());
+
+/**
  * Defaults in the contractor's own language. Deliberately generic — a plumber
  * and a painter both start here and edit from it.
  */
@@ -65,21 +100,18 @@ export function defaultTierPresets(t: TFunction): TierPresets {
       name: t('quotes.tierGoodName', 'Basic'),
       features: [
         t('quotes.tierGoodFeature1', 'Standard materials'),
-        t('quotes.tierGoodFeature2', '1 year warranty'),
       ],
     },
     better: {
       name: t('quotes.tierBetterName', 'Standard'),
       features: [
         t('quotes.tierBetterFeature1', 'Quality materials'),
-        t('quotes.tierBetterFeature2', '2 year warranty'),
       ],
     },
     best: {
       name: t('quotes.tierBestName', 'Premium'),
       features: [
         t('quotes.tierBestFeature1', 'Premium materials'),
-        t('quotes.tierBestFeature2', '2 year warranty'),
         t('quotes.tierBestFeature3', 'Free follow-up check'),
       ],
     },
@@ -95,6 +127,8 @@ function cleanPreset(raw: unknown, fallback: TierPreset): TierPreset {
         .filter((f): f is string => typeof f === 'string')
         .map(f => f.trim())
         .filter(Boolean)
+        // A preset saved before 2026-09-17 still carries the warranty bullet.
+        .filter(f => !isLegacyWarrantyFeature(f))
         .slice(0, MAX_TIER_FEATURES)
     : [];
   // An array that cleans down to nothing (corrupt storage, or every row

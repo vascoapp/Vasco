@@ -284,7 +284,13 @@ const LEGAL_SECTIONS: LegalSection[] = [
         contentDefault:
           'Vasco supports compliance requirements across 6 EU countries:\n\n' +
           '\u2022 Netherlands (NL): KvK (Kamer van Koophandel) registration, BTW-nummer (VAT), Belastingdienst 7-year retention, Dutch BW (Burgerlijk Wetboek) for contract law\n' +
-          '\u2022 Germany (DE): Handelsregister registration, Umsatzsteuer-ID (VAT), GoBD-compliant record keeping, 10-year retention for financial documents (HGB \u00a7257), XRechnung/ZUGFeRD e-invoicing\n' +
+          // Corrected 2026-09-17: this English list is a SECOND copy of the
+          // per-country facts and still carried the two defects already fixed
+          // in COUNTRY_COMPLIANCE above — a Handelsregister entry is required
+          // of Kaufleute, not of every tradesperson (it is Gewerbeanmeldung
+          // plus, per trade, the Handwerksrolle), and since BEG IV invoices and
+          // booking vouchers are kept 8 years while books stay 10.
+          '\u2022 Germany (DE): Gewerbeanmeldung (Handelsregister only for Kaufleute; Handwerksrolle depending on the trade), Umsatzsteuer-ID (VAT), GoBD-compliant record keeping, retention 8 years for invoices and booking vouchers / 10 years for books (\u00a7147 AO, \u00a7257 HGB, BEG IV), XRechnung/ZUGFeRD e-invoicing, B2B e-invoice RECEIPT mandatory since Jan 2025\n' +
           '\u2022 France (FR): SIRET/SIREN registration, TVA number, 10-year retention (Code de Commerce), Factur-X e-invoicing, mandatory e-invoicing for B2B (2026)\n' +
           '\u2022 Spain (ES): NIF/CIF registration, NIF-IVA (VAT), 6-year retention (C\u00f3digo de Comercio), Facturae/TicketBAI e-invoicing\n' +
           '\u2022 Italy (IT): Partita IVA, Codice Fiscale, FatturaPA mandatory e-invoicing via SDI, 10-year retention (Codice Civile art. 2220)\n' +

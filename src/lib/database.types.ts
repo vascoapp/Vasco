@@ -40,6 +40,9 @@ export type BusinessSettingsRow = {
   // and the contractor's KOR/Kleinunternehmer status reverted to standard
   // VAT after every cold start.
   vat_scheme: string | null;
+  // Migration 20260917000003 — how this contractor actually files.
+  vat_basis: string | null;
+  filing_period: string | null;
   business_type: string | null;
   team_size: string | null;
   trade: string | null;
@@ -185,6 +188,10 @@ export type DocumentRow = {
   id: string;
   user_id: string;
   doc_type: 'quote' | 'invoice';
+  /** Migration 20260917000001 — what the contractor calls this document. The
+   *  builder always asked for it and nothing stored it, so every quote reopened
+   *  "Untitled" after a restart (#339 D6). NULL = fall back to the job. */
+  title: string | null;
   status: 'draft' | 'sent' | 'paid';
   customer_id: string | null;
   job_id: string | null;

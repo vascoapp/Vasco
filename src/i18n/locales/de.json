@@ -1956,11 +1956,8 @@
     "tierBetterTagline": "Am häufigsten gewählt",
     "tierBestTagline": "Beste Qualität",
     "tierGoodFeature1": "Standardmaterial",
-    "tierGoodFeature2": "1 Jahr Gewährleistung",
     "tierBetterFeature1": "Qualitätsmaterial",
-    "tierBetterFeature2": "2 Jahre Gewährleistung",
     "tierBestFeature1": "Premiummaterial",
-    "tierBestFeature2": "2 Jahre Gewährleistung",
     "tierBestFeature3": "Kostenlose Nachkontrolle",
     "pickPackageTitle": "Welches Paket senden Sie?",
     "pickPackageDesc": "Ihr Kunde erhält das Paket, das Sie hier wählen. Er kann jederzeit antworten und nach einem anderen fragen.",
@@ -1980,7 +1977,8 @@
     "vatRateLabel": "USt-Satz",
     "vatStandard": "{{rate}}% — Regelsatz",
     "vatReduced": "{{rate}}% — Renovierung, Wohnung älter als 2 Jahre",
-    "vatEnergy": "{{rate}}% — energetische Sanierung"
+    "vatEnergy": "{{rate}}% — energetische Sanierung",
+    "tiersSamePriceHint": "Jedes Paket verwendet Ihre eigenen Preise. Einen eigenen Paketpreis legen Sie je Leistung in Ihrer Preisliste fest."
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -2310,7 +2308,7 @@
     "vatScheme": "USt-Schema",
     "vatStandard": "Standard",
     "auditTrail": "Audit-Trail",
-    "auditTrailValue": "Manipulationssicher",
+    "auditTrailValue": "Manipulationen erkennbar",
     "maintenanceContracts": "Wartungsverträge",
     "recurringValue": "Verwalten",
     "plan": "ABO",
@@ -2360,7 +2358,7 @@
     "creditsAvailable_one": "{{count}} Monat Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
     "creditsAvailable_other": "{{count}} Monate Gratis-Abo verfügbar — wird beim Bezahlen automatisch angewendet.",
     "exportFailedDesc": "Ihr Datenexport konnte nicht erstellt werden. Bitte versuchen Sie es erneut oder wenden Sie sich an privacy@vascobuild.com.",
-    "auditTrailValueGobd": "GoBD-konform",
+    "auditTrailValueGobd": "Manipulationssicheres Protokoll",
     "province": "Provinz",
     "fiscalRegime": "Steuerregime",
     "personType": "Rechtsform (Person oder Unternehmen)",
@@ -7105,5 +7103,16 @@
     "filedBody": "Vasco erstellt die Datei — sie wird nicht an die Behörde übermittelt. Bestätigen Sie erst, wenn Sie {{format}} tatsächlich eingereicht haben.",
     "filedYes": "Ja, eingereicht",
     "filedNotYet": "Noch nicht"
+  },
+  "vatBasis": {
+    "section": "Wann die USt entsteht",
+    "soll": "Mit dem Rechnungsdatum",
+    "sollHint": "Standard (Soll-Versteuerung). Die USt entsteht im Zeitraum der Rechnungsstellung, auch wenn der Kunde noch nicht gezahlt hat.",
+    "ist": "Wenn der Kunde zahlt",
+    "istHint": "Ist-Versteuerung (§20 UStG). Nur wenn Ihr Finanzamt sie genehmigt hat.",
+    "filingSection": "Wie oft Sie melden",
+    "monthly": "Monatlich",
+    "quarterly": "Vierteljährlich",
+    "yearly": "Jährlich"
   }
 }

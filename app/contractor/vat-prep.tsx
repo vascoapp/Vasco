@@ -17,6 +17,7 @@ import { useAppState } from '../../src/state/AppState';
 import {
   prepareVatReturn,
   currentBtwPeriod,
+  vatPeriodFor,
   previousBtwPeriod,
   type VatReturnDraft,
   type VatLine,
@@ -57,9 +58,16 @@ export default function VatPrepScreen() {
   const vatReturnSupported = profileCountry === 'NL' || profileCountry === 'DE';
   const country: 'NL' | 'DE' = profileCountry === 'DE' ? 'DE' : 'NL';
   const draft: VatReturnDraft = useMemo(() => {
-    const bounds = periodChoice === 'current' ? currentBtwPeriod() : previousBtwPeriod();
+    // The contractor's own cadence: a monthly filer was always handed a
+    // quarter, because `filingPeriod` had nowhere to live until migration
+    // 20260917000003.
+    const bounds = vatPeriodFor(businessProfile?.filingPeriod, periodChoice);
     return prepareVatReturn({
       country,
+      // Ist-Versteuerung declares an invoice when it is PAID, not when it is
+      // issued — for a trade paid at 45 days that moves whole invoices between
+      // periods.
+      vatBasis: businessProfile?.vatBasis,
       // §19 UStG / KOR: no output VAT and no input VAT. Without this the draft
       // declared tax a Kleinunternehmer never charged (#339).
       vatScheme: businessProfile?.vatScheme,
@@ -75,7 +83,7 @@ export default function VatPrepScreen() {
         category: e.category,
       })),
     });
-  }, [country, businessProfile?.vatScheme, periodChoice, invoices, rawExpenses]);
+  }, [country, businessProfile?.vatScheme, businessProfile?.vatBasis, businessProfile?.filingPeriod, periodChoice, invoices, rawExpenses]);
 
   const lowConfLines = draft.lines.filter((l) => l.confidence < 0.75);
 

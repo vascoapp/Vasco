@@ -1949,11 +1949,8 @@
     "tierBetterTagline": "Meest gekozen",
     "tierBestTagline": "Beste kwaliteit",
     "tierGoodFeature1": "Standaard materiaal",
-    "tierGoodFeature2": "Garantie 1 jaar",
     "tierBetterFeature1": "Kwaliteitsmateriaal",
-    "tierBetterFeature2": "Garantie 2 jaar",
     "tierBestFeature1": "Premium materiaal",
-    "tierBestFeature2": "Garantie 2 jaar",
     "tierBestFeature3": "Gratis nacontrole",
     "pickPackageTitle": "Welk pakket stuur je?",
     "pickPackageDesc": "Je klant krijgt het pakket dat je hier kiest. Hij kan altijd reageren en om een ander vragen.",
@@ -1973,7 +1970,8 @@
     "vatRateLabel": "Btw-tarief",
     "vatStandard": "{{rate}}% — standaardtarief",
     "vatReduced": "{{rate}}% — renovatie, woning ouder dan 2 jaar",
-    "vatEnergy": "{{rate}}% — energierenovatie"
+    "vatEnergy": "{{rate}}% — energierenovatie",
+    "tiersSamePriceHint": "Elk pakket gebruikt uw eigen prijzen. Een eigen pakketprijs stelt u per dienst in uw prijslijst in."
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -2303,7 +2301,7 @@
     "vatScheme": "BTW-regeling",
     "vatStandard": "Standaard",
     "auditTrail": "Audit-spoor",
-    "auditTrailValue": "Onwijzigbaar",
+    "auditTrailValue": "Manipulatie zichtbaar",
     "maintenanceContracts": "Onderhoudscontracten",
     "recurringValue": "Beheer",
     "plan": "ABONNEMENT",
@@ -2353,7 +2351,7 @@
     "creditsAvailable_one": "{{count}} maand gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
     "creditsAvailable_other": "{{count}} maanden gratis abonnement beschikbaar — wordt automatisch toegepast bij het afrekenen.",
     "exportFailedDesc": "We konden je gegevensexport niet maken. Probeer het opnieuw of neem contact op via privacy@vascobuild.com.",
-    "auditTrailValueGobd": "GoBD-conform",
+    "auditTrailValueGobd": "Manipulatiebestendig logboek",
     "province": "Provincie",
     "fiscalRegime": "Belastingregime",
     "personType": "Rechtsvorm (persoon of bedrijf)",
@@ -7098,5 +7096,16 @@
     "filedBody": "Vasco maakt het bestand — het verstuurt niets naar de instantie. Bevestig pas als je {{format}} echt hebt ingediend.",
     "filedYes": "Ja, ingediend",
     "filedNotYet": "Nog niet"
+  },
+  "vatBasis": {
+    "section": "Wanneer de btw verschuldigd is",
+    "soll": "Op de factuurdatum",
+    "sollHint": "Standaard (factuurstelsel). De btw is verschuldigd in het tijdvak van de factuur, ook als de klant nog niet betaald heeft.",
+    "ist": "Als de klant betaalt",
+    "istHint": "Kasstelsel. Alleen als u daarvoor in aanmerking komt.",
+    "filingSection": "Hoe vaak u aangifte doet",
+    "monthly": "Maandelijks",
+    "quarterly": "Per kwartaal",
+    "yearly": "Jaarlijks"
   }
 }

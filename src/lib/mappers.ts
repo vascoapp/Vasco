@@ -16,7 +16,9 @@ export function documentRowToQuote(row: DocumentRow): Quote {
   return {
     id: row.document_number ?? row.id,
     customer: row.customer_id ?? '',
-    job: row.job_id ?? '',
+    // The stored title wins; the job id is the fallback for quotes written
+    // before `documents.title` existed (migration 20260917000001).
+    job: row.title ?? row.job_id ?? '',
     amount: Number(row.total_amount),
     status: row.status as Quote['status'],
     lastUpdated: formatRelativeDate(row.updated_at),
@@ -137,6 +139,8 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
     // these were silently undefined on every cold start, reverting KOR /
     // Kleinunternehmer contractors to standard VAT.
     vatScheme: (row.vat_scheme as BusinessProfile['vatScheme']) ?? undefined,
+    vatBasis: (row.vat_basis as BusinessProfile['vatBasis']) ?? undefined,
+    filingPeriod: (row.filing_period as BusinessProfile['filingPeriod']) ?? undefined,
     businessType: row.business_type ?? undefined,
     teamSize: (row.team_size as BusinessProfile['teamSize']) ?? undefined,
     trade: row.trade ?? undefined,

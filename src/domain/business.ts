@@ -58,6 +58,17 @@ export type BusinessProfile = {
   enabledPaymentMethods?: string[];
   // R250: VAT scheme — drives every invoice's VAT treatment.
   vatScheme?: VatScheme;
+  /**
+   * WHEN the VAT falls due (DE §13/§20 UStG).
+   * `soll` = on invoice issue (Soll-Versteuerung, the German default);
+   * `ist`  = on payment receipt (Ist-Versteuerung, available to small trades).
+   * Undefined = not stated, treated as `soll`. Declared in
+   * `GermanTaxSettings` since the German types were written and read by
+   * NOTHING until 2026-09-17 — every return was prepared on invoice dates.
+   */
+  vatBasis?: 'soll' | 'ist';
+  /** How often the VAT return is filed. Undefined = not stated (quarterly). */
+  filingPeriod?: 'monthly' | 'quarterly' | 'yearly';
   // R66 NL launch: payment + locale fields. Migration
   // `20260415000001_business_profiles.sql` declared these on
   // `business_settings` but the mapper + UI dropped them. Without `iban`,
@@ -126,12 +137,13 @@ export function getEffectiveVatRate(profile: { country?: BusinessProfile['countr
 // that country for trade-relevant categories, or null when the country
 // has no relevant reduced bracket.
 //
-// NL 9% — renovation + maintenance labor on residential homes >2 years
-//   old (Belastingdienst Verlaagd tarief, BTW-Tarievenregeling). Applies
-//   to plumbing/electrical/painting/tiling/etc — the bread-and-butter of
-//   solo contractors. Big real-money issue: at 21% the contractor either
-//   over-charges the customer or eats the difference at year-end VAT
-//   reconciliation. Source: belastingdienst.nl/wps/wcm/connect/bldcontentnl/
+// NL 9% — a NARROW list of labour on homes older than 2 years: painting,
+//   plastering, wallpapering and insulating, plus cleaning inside the home.
+//   ⚠️ It does NOT cover plumbing, electrical work or tiling, which this
+//   comment used to claim and which the VAT-return classifier used to match on
+//   — the contractor would have charged 9% where 21% was due and owed the
+//   difference at the year-end reconciliation (#339 L11, corrected
+//   2026-09-17). Source: belastingdienst.nl/wps/wcm/connect/bldcontentnl/
 //   belastingdienst/zakelijk/btw/tarieven_en_vrijstellingen/
 //   diensten_9_btw/diensten_aan_woningen_ouder_dan_2_jaar.
 // FR 10% — travaux d'amélioration, de transformation, d'aménagement et

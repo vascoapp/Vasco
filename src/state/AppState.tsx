@@ -2243,6 +2243,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             // The FK reads the ID we were handed, never the display name.
             customer_id: isUuid(customer) ? customer : null,
             job_id: isUuid(job) ? job : null,
+            // `job` is a job UUID when the quote came from a job, and the TITLE
+            // the contractor typed otherwise — in which case it was nulled just
+            // above and stored NOWHERE, so the quote came back "Untitled" on
+            // the next cold start (#339 D6). The title column keeps it.
+            title: isUuid(job) ? null : (job || null),
             total_amount: total,
           };
           // R66 round 47: persist per-line VAT rate. Closes the R38 deferred
@@ -2736,6 +2741,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // contractors back to 21% VAT on their first post-onboard invoice.
           // Migration 20260507000007 adds the columns; mapper now persists.
           if (updates.vatScheme !== undefined) dbUpdates.vat_scheme = updates.vatScheme || null;
+          if (updates.vatBasis !== undefined) dbUpdates.vat_basis = updates.vatBasis || null;
+          if (updates.filingPeriod !== undefined) dbUpdates.filing_period = updates.filingPeriod || null;
           if (updates.businessType !== undefined) dbUpdates.business_type = updates.businessType || null;
           if (updates.teamSize !== undefined) dbUpdates.team_size = updates.teamSize || null;
           if (updates.trade !== undefined) dbUpdates.trade = updates.trade || null;

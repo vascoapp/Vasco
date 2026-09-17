@@ -1956,11 +1956,8 @@
     "tierBetterTagline": "Le plus choisi",
     "tierBestTagline": "Meilleure qualité",
     "tierGoodFeature1": "Matériaux standard",
-    "tierGoodFeature2": "Garantie 1 an",
     "tierBetterFeature1": "Matériaux de qualité",
-    "tierBetterFeature2": "Garantie 2 ans",
     "tierBestFeature1": "Matériaux premium",
-    "tierBestFeature2": "Garantie 2 ans",
     "tierBestFeature3": "Contrôle de suivi offert",
     "pickPackageTitle": "Quelle formule envoyez-vous ?",
     "pickPackageDesc": "Votre client reçoit la formule choisie ici. Il peut toujours répondre et en demander une autre.",
@@ -1980,7 +1977,8 @@
     "vatRateLabel": "Taux de TVA",
     "vatStandard": "{{rate}} % — taux normal",
     "vatReduced": "{{rate}} % — rénovation, logement de plus de 2 ans",
-    "vatEnergy": "{{rate}} % — rénovation énergétique"
+    "vatEnergy": "{{rate}} % — rénovation énergétique",
+    "tiersSamePriceHint": "Chaque formule reprend vos propres prix. Définissez un prix par formule pour chaque prestation dans votre catalogue."
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",
@@ -2310,7 +2308,7 @@
     "vatScheme": "Régime TVA",
     "vatStandard": "Standard",
     "auditTrail": "Piste d'audit",
-    "auditTrailValue": "Inviolable",
+    "auditTrailValue": "Inviolabilité vérifiable",
     "maintenanceContracts": "Contrats de maintenance",
     "recurringValue": "Gérer",
     "plan": "FORMULE",
@@ -2360,7 +2358,7 @@
     "creditsAvailable_one": "{{count}} mois d’abonnement offert — appliqué automatiquement au paiement.",
     "creditsAvailable_other": "{{count}} mois d’abonnement offerts — appliqués automatiquement au paiement.",
     "exportFailedDesc": "Impossible de générer l'export de vos données. Réessayez ou contactez privacy@vascobuild.com.",
-    "auditTrailValueGobd": "Conforme GoBD",
+    "auditTrailValueGobd": "Journal inviolable",
     "province": "Province",
     "fiscalRegime": "Régime fiscal",
     "personType": "Type (personne ou société)",
@@ -7105,5 +7103,16 @@
         "name": "Rénovation complète"
       }
     }
+  },
+  "vatBasis": {
+    "section": "Exigibilité de la TVA",
+    "soll": "À la date de facture",
+    "sollHint": "Standard (TVA sur les débits). La TVA est due sur la période de facturation, même si le client n’a pas payé.",
+    "ist": "À l’encaissement",
+    "istHint": "TVA sur les encaissements. Uniquement si votre régime le permet.",
+    "filingSection": "Fréquence de déclaration",
+    "monthly": "Mensuelle",
+    "quarterly": "Trimestrielle",
+    "yearly": "Annuelle"
   }
 }
