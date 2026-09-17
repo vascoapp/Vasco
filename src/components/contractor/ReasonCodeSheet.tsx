@@ -82,7 +82,7 @@ export function ReasonCodeSheet({ visible, lineLabel, originalQty, newQty, onDis
             and iOS does not lift a Modal above the keyboard, so the free-text
             reason box and the confirm button sat behind it. Fourth site of
             this class; invisible on the simulator's hardware keyboard. */}
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
         <View style={[styles.sheet, kbInset ? { paddingBottom: kbInset + GRID.md } : null]}>
           <View style={styles.handle} />
 

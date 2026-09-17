@@ -1639,8 +1639,8 @@ export default function JobDetailPage() {
               activity's `adjustResize`, so inside a Modal Android needs an
               explicit behavior. 'height' is what the auth screens already use
               and what is verified working on the device. */}
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <View style={[styles.signatureSheet, { paddingBottom: kbInset ? kbInset + GRID.md : undefined }]}>
+          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <View style={[styles.signatureSheet, kbInset ? { paddingBottom: kbInset + GRID.md } : null]}>
             <Text style={styles.signatureTitle}>{t('jobs.siteContact', 'Site contact')}</Text>
             <Text style={styles.signatureSubtitle}>
               {t('jobs.siteContactDesc', 'Who is on site and the number to reach them on. Used instead of the customer number when Vasco contacts the job.')}

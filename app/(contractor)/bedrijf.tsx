@@ -530,9 +530,9 @@ export default function BedrijfScreen() {
 
       {/* ─── ADD CUSTOMER MODAL ─── */}
       <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
-            <Pressable style={[s.modalSheet, { paddingBottom: kbInset ? kbInset + 16 : undefined }]} onPress={(e) => e.stopPropagation()}>
+            <Pressable style={[s.modalSheet, kbInset ? { paddingBottom: kbInset + 16 } : null]} onPress={(e) => e.stopPropagation()}>
               <View style={s.modalHandle} />
               <DKLabel style={s.modalTitle}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
               <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />

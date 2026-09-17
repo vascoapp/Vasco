@@ -236,9 +236,9 @@ export default function WerkScreen() {
   // Rendered in BOTH returns now.
   const newJobModal = (
   <Modal visible={showNewJob} transparent animationType="slide" onRequestClose={() => setShowNewJob(false)}>
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+    <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
       <Pressable style={styles.modalOverlay} onPress={() => setShowNewJob(false)}>
-        <Pressable style={[styles.modalSheet, { paddingBottom: kbInset ? kbInset + 16 : undefined }]} onPress={() => {}}>
+        <Pressable style={[styles.modalSheet, kbInset ? { paddingBottom: kbInset + 16 } : null]} onPress={() => {}}>
           <View style={styles.modalHandle} />
           <DKLabel style={styles.modalTitle}>{t('dk.actions.newJob', 'New job')}</DKLabel>
           <TextInput

@@ -331,8 +331,8 @@ export default function CustomerPhonebookScreen() {
       {/* Add customer modal — simple: name + phone + email */}
       <Modal visible={showAdd} transparent animationType="slide" onRequestClose={() => setShowAdd(false)}>
         <Pressable style={s.overlay} onPress={() => setShowAdd(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-            <Pressable style={[s.sheet, { paddingBottom: kbInset ? kbInset + GRID.md : undefined }]} onPress={() => {}}>
+          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <Pressable style={[s.sheet, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={() => {}}>
               <View style={s.handle} />
               <Text style={s.sheetTitle}>{t('contractor.customers.newCustomer', 'New customer')}</Text>
 

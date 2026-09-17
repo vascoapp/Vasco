@@ -116,8 +116,8 @@ export default function ExpensesScreen() {
               behind it. The expense could not be recorded on a real device at
               all. Same KeyboardAvoidingView pattern customer-crm.tsx already
               uses for its bottom sheet. */}
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <View style={[styles.modalSheet, { paddingBottom: kbInset ? kbInset + Spacing.md : undefined }]}>
+          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <View style={[styles.modalSheet, kbInset ? { paddingBottom: kbInset + Spacing.md } : null]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>{t('expenses.newExpense', 'Nieuwe uitgave')}</Text>
             <TextInput

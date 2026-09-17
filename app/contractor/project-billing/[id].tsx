@@ -562,7 +562,7 @@ export default function ProjectBillingScreen() {
             screen never caught it. Same fix expenses.tsx and customer-crm.tsx
             already carry. */}
         <Pressable style={styles.modalOverlay} onPress={closeTermForm}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={[styles.modalCard, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>
               {editingTerm
@@ -600,7 +600,7 @@ export default function ProjectBillingScreen() {
         onRequestClose={() => setShowRetentionForm(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setShowRetentionForm(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={[styles.modalCard, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>
               {t('projectBilling.editRetention', 'Edit retention %')}
@@ -633,7 +633,7 @@ export default function ProjectBillingScreen() {
       {/* Add change order */}
       <Modal visible={showCoForm} transparent animationType="slide" onRequestClose={() => setShowCoForm(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowCoForm(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={[styles.modalCard, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>{t('projectBilling.addChangeOrder', 'Add change order')}</Text>
             <TextInput

@@ -316,8 +316,8 @@ export default function InsuranceScreen() {
 
       {/* Claim modal */}
       <Modal visible={showClaimModal} animationType="slide" transparent onRequestClose={() => setShowClaimModal(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { paddingBottom: kbInset ? kbInset + Spacing.md : undefined }]}>
+        <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={styles.modalOverlay}>
+          <View style={[styles.modalContent, kbInset ? { paddingBottom: kbInset + Spacing.md } : null]}>
             <View style={styles.modalHeader}>
               {/* "Record", not "file" — the modal writes a local dossier and
                   the disclaimer + button below say Vasco does not send it to
@@ -327,6 +327,14 @@ export default function InsuranceScreen() {
                 <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
               </Pressable>
             </View>
+
+            {/* The body SCROLLS. With the keyboard up (device, 2026-09-17) the
+                photo button and "Schaden erfassen" sat behind the keys: the
+                sheet is capped at maxHeight 85%, so once the keyboard takes
+                half the screen the content is simply taller than the sheet and
+                the bottom padding cannot lift what does not fit. A cap needs a
+                scroll area, not more padding. */}
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
             {/* Policy selector.
 
@@ -420,6 +428,7 @@ export default function InsuranceScreen() {
             <Text style={styles.claimDisclaimer}>
               {t('insurance.recordDisclaimer', 'Vasco does not send this to your insurer. Report it to them yourself — we keep the record and remind you.')}
             </Text>
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>

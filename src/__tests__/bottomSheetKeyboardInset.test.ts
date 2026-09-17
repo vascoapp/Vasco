@@ -110,4 +110,37 @@ describe('a bottom sheet with a field pads for the keyboard', () => {
     }
     expect(hits).toEqual([]);
   });
+
+  // DEVICE, 2026-09-17: the inset and a KeyboardAvoidingView are two lifts.
+  // A KAV at the Modal's ROOT does move the sheet on this Android build, so
+  // "New job" (root KAV + inset) was pushed a whole keyboard height too high —
+  // its title and field off the top, a blank gap above the keyboard — while
+  // "Neuer Kunde" (KAV nested in the overlay, inert) sat exactly right on the
+  // inset alone. One mechanism per platform: the inset on Android, KAV on iOS.
+  it('never lifts a sheet twice on Android — a KAV beside the inset is iOS-only', () => {
+    const doubled: string[] = [];
+    let checked = 0;
+    for (const { rel, src } of files) {
+      if (!/useKeyboardInset\s*\(/.test(src)) continue;
+      for (const m of src.matchAll(/<KeyboardAvoidingView\b[^>]*>/g)) {
+        checked += 1;
+        if (!/enabled=\{Platform\.OS === 'ios'\}/.test(m[0])) {
+          doubled.push(`${rel}:${src.slice(0, m.index!).split('\n').length}`);
+        }
+      }
+    }
+    expect(checked).toBeGreaterThanOrEqual(13);
+    expect(doubled).toEqual([]);
+  });
+
+  // RN 0.81 `flattenStyle` copies `undefined` like any value, so
+  // `{ paddingBottom: kbInset ? kbInset + 16 : undefined }` ERASES the sheet's
+  // own stylesheet padding whenever the keyboard is closed — buttons land on the
+  // home indicator. Apply the inset as a whole object or not at all.
+  it('the inset never overrides the sheet padding with undefined', () => {
+    const erasing = files.flatMap(({ rel, src }) =>
+      [...src.matchAll(/(paddingBottom|marginBottom|bottom)\s*:\s*[^,}]*\bkbInset\b[^,}]*(:\s*undefined|\|\|\s*undefined)/g)]
+        .map((m) => `${rel}:${src.slice(0, m.index!).split('\n').length}`));
+    expect(erasing).toEqual([]);
+  });
 });

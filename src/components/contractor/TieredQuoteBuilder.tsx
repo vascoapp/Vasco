@@ -1498,7 +1498,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           onRequestClose={() => setShowTemplateNamer(false)}
         >
           <View style={s.namerScrim}>
-            <View style={[s.namerCard, { marginBottom: kbInset || undefined }]}>
+            <View style={[s.namerCard, kbInset ? { marginBottom: kbInset } : null]}>
               <Text style={s.namerTitle}>
                 {editingTemplate
                   ? t('quotes.updateTemplate', 'Update template')
@@ -2107,7 +2107,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         onRequestClose={() => setShowTierEditor(false)}
       >
         <View style={s.namerScrim}>
-          <View style={[s.namerCard, { maxWidth: 420, maxHeight: '85%', marginBottom: kbInset || undefined }]}>
+          <View style={[s.namerCard, { maxWidth: 420, maxHeight: '85%' }, kbInset ? { marginBottom: kbInset } : null]}>
             <Text style={s.namerTitle}>{t('quotes.editPackagesTitle', 'Your packages')}</Text>
             <Text style={s.packageHeaderDesc}>
               {t('quotes.editPackagesDesc', 'Names and promises go out on the quote your customer reads.')}

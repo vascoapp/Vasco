@@ -290,8 +290,8 @@ export default function MessageTemplatesScreen() {
               the category chips, the message body, the variable chips and
               Save. The template could not be written. Same shape and same fix
               as the Ausgaben sheet. */}
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <View style={[styles.modalSheet, { paddingBottom: kbInset ? kbInset + GRID.md : undefined }]}>
+          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <View style={[styles.modalSheet, kbInset ? { paddingBottom: kbInset + GRID.md } : null]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>
               {editingTemplate
