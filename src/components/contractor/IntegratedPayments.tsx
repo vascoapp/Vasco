@@ -33,6 +33,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { getPaymentDisplayForCountry, getPaymentProviderForCountry, paymentMethodLabel } from '../../config/paymentMethods';
 import { formatCurrency, formatCurrency0, type Country, formatDateShortAuto } from '../../i18n/formatting';
+import { daysUntilDue as daysUntilDueOf, isPastDue } from '../../utils/invoiceDue';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
   platform: 'ios' as const,
@@ -240,9 +241,12 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
   const { user } = useAuth();
   const { t } = useTranslation();
   const country = (user?.country ?? 'NL') as Country;
-  const dueDate = new Date(invoice.dueDate);
-  const today = new Date();
-  const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  // Calendar days from local midnight, not elapsed milliseconds: this said
+  // "2 days overdue" in the afternoon for an invoice that had been late since
+  // yesterday morning, and `new Date('2026-08-31')` is UTC midnight — the
+  // PREVIOUS local day for every market this app ships to. `daysUntilDue`
+  // (src/utils/invoiceDue) is the one answer the rest of the app uses.
+  const daysUntilDue = daysUntilDueOf({ dueDate: invoice.dueDate }) ?? 0;
   const isOverdue = daysUntilDue < 0;
 
   return (
@@ -487,11 +491,11 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
 
   // Calculate totals
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + inv.total, 0);
+  // Same rule for the money: `new Date(key) < new Date()` makes an invoice
+  // due TODAY overdue from midnight UTC — i.e. from 01:00/02:00 local, before
+  // the day it is due has begun.
   const totalOverdue = outstandingInvoices
-    .filter((inv) => {
-      const dueDate = new Date(inv.dueDate);
-      return dueDate < new Date();
-    })
+    .filter((inv) => isPastDue({ dueDate: inv.dueDate }))
     .reduce((sum, inv) => sum + inv.total, 0);
 
   // Was: show a confirm, fire a tracking event, then alert "Payment link

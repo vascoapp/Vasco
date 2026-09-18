@@ -39,11 +39,16 @@ const PLANS: Record<
     monthly: 39,
     yearly: 29,
     popular: true,
+    // The app's own plan screen was corrected months ago and this page — the
+    // one a contractor actually pays from — kept the old promises. "Full EVE
+    // AI" is sold on an LLM layer with no provider key in production, so
+    // photo→quote and generated scope text throw; the same claim is blocked in
+    // the Play listing by `npm run check:listing`. These four ship today.
     features: [
       "Unlimited jobs, quotes & invoices",
-      "Full EVE AI — Agent, Auditor & Analyst",
-      "Purchasing agent & ML predictions",
-      "Cross-contractor price benchmarking",
+      "Automated reminders & follow-ups",
+      "E-invoicing: XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA",
+      "Purchasing agent & accounting exports",
     ],
   },
   contractor: {
@@ -51,11 +56,16 @@ const PLANS: Record<
     tagline: "For teams that need seats & integrations",
     monthly: 69,
     yearly: 49,
+    // "API access & white-label portal" was removed from the app's plan screen
+    // for a reason worth repeating here: there is no public API surface and no
+    // white-label theming anywhere in the product, and `hasApiAccess` /
+    // `hasWhiteLabel` have zero consumers outside the tier table. Selling them
+    // at EUR 69 is a promise the product cannot keep.
     features: [
       "Everything in Pro",
       "Up to 15 team seats",
-      "API access & white-label portal",
-      "Subcontractor portal + priority support",
+      "Team features: worker scorecards, van stock, change orders",
+      "Dedicated support + onboarding",
     ],
   },
 };

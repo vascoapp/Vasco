@@ -23,6 +23,7 @@
 import { localDateKey } from '../utils/dateKey';
 import type { Invoice, Quote } from '../domain/documents';
 import { isSmallBusinessExempt, type VatScheme } from '../domain/business';
+import { parseCalendarDay } from '../utils/dateKey';
 
 export type VatRateNL = 21 | 9 | 0;
 export type VatClassNL =
@@ -445,7 +446,10 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
 }
 
 function periodLabel(periodStart: string): string {
-  const d = new Date(periodStart);
+  // `new Date('2026-01-01')` is UTC midnight, which is 31 December in every
+  // market WEST of Greenwich — the label for a US contractor's Q1 came back
+  // "2025-Q4". `parseCalendarDay` reads a date key as a LOCAL day.
+  const d = parseCalendarDay(periodStart) ?? new Date(periodStart);
   const year = d.getFullYear();
   const quarter = Math.floor(d.getMonth() / 3) + 1;
   return `${year}-Q${quarter}`;

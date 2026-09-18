@@ -115,6 +115,7 @@ import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuo
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
 import { fkOrNull, queueFkRepairs, queueRowFkRepairs } from '../services/fkRepair';
+import { ensureCanCreate, ensureCanUsePaymentLink } from '../services/tierGatePrompt';
 
 export type ContractorMetrics = {
   revenueThisMonth: number;
@@ -948,6 +949,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     return due;
   }, [businessProfile?.defaultPaymentTerms]);
   const hydrated = useRef(false);
+  // The executor bindings below are registered in an effect whose deps are
+  // function identities, so a closure over `invoices` would freeze at the
+  // first render — an empty list, a count of 0, and a cap that can never fire.
+  // That is the exact defect the live count was introduced to fix, so the
+  // binding reads the latest list through a ref instead.
+  const invoicesRef = useRef<Invoice[]>([]);
 
   // PRODUCTION hydrate: wait until we know WHO is signed in. Reading the cache
   // before that could put one contractor's invoices on another's screen for the
@@ -2997,7 +3004,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // R56: gate removed — persistOrQueue handles temp ids.
         if (isSupabaseConfigured) {
           import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
-            persistOrQueue('materials', 'delete', () => dbDeleteMaterial(id), { rowId: id }),
+            // `material_catalog`, not `materials`: the ONLINE lambda calls
+            // dbDeleteMaterial, which targets material_catalog — but the
+            // queued replay used this name, and no such table exists. An
+            // offline delete was retried five times and dropped, so the
+            // material came back on the next refresh. The name is the one
+            // thing the two halves of persistOrQueue do NOT share.
+            persistOrQueue('material_catalog', 'delete', () => dbDeleteMaterial(id), { rowId: id }),
           ).catch(() => {});
         }
       },
@@ -4918,20 +4931,32 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     ]
   );
 
+  // Kept current every render, so the gate in the executor binding counts the
+  // invoices that exist now rather than the ones that existed at mount.
+  invoicesRef.current = invoices;
+
   // Register real side-effect bindings so actionExecutor can actually execute
   // create_invoice / create_payment_link / etc instead of returning a route hint.
   useEffect(() => {
     // Import here to keep this optional and avoid a circular dep
     import('../intelligence/actionExecutor').then((mod) => {
       mod.registerExecutorBindings({
+        // The tier gate lives HERE, not in `actionExecutor`: this binding is
+        // the only way the AI queue reaches these mutators, and the executor
+        // has no invoice list to count. Everything else that creates an
+        // invoice does so from a screen that asks first — this path had no
+        // confirmation step at all, so an invoice and a payment link could
+        // both be minted for a Free account without anyone being asked (#349).
         createInvoiceFromJob: async (jobId: string) => {
           try {
+            if (!(await ensureCanCreate('invoice', invoicesRef.current))) return null;
             const id = await (value as any).addInvoiceFromJob(jobId);
             return id as string;
           } catch { return null; }
         },
         createPaymentLink: async (invoiceId: string, amount: number) => {
           try {
+            if (!(await ensureCanUsePaymentLink())) return null;
             await (value as any).createPaymentLink(invoiceId, amount);
             return 'ok';
           } catch { return null; }

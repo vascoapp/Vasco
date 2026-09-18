@@ -329,6 +329,7 @@ class CollectionsAgentService {
 import { useAppState } from '../state/AppState';
 import { formatMoney } from '../i18n/formatting';
 import { localDateKey } from '../utils/dateKey';
+import { daysUntilDue, daysOverdue as daysOverdueOf } from '../utils/invoiceDue';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -373,9 +374,14 @@ function deriveDSO(invoices: any[]): DSOMetrics {
 function deriveDunningSequences(invoices: any[]): DunningSequence[] {
   const now = Date.now();
   return invoices
-    .filter((i) => i.status === 'overdue' || (i.status === 'sent' && i.dueInDays !== undefined && i.dueInDays < 0))
+    // Derived from `dueDate`, not the `dueInDays` SNAPSHOT: that field is
+    // written once when the invoice is sent and never recomputed, so an
+    // invoice forty days late still reported the escalation step it had on
+    // day one — and this function decides whether the customer is at
+    // "vriendelijk" or at "incasso" (#337/#347's shape).
+    .filter((i) => i.status === 'overdue' || (i.status === 'sent' && (daysUntilDue(i) ?? 0) < 0))
     .map((inv) => {
-      const daysOverdue = Math.max(0, Math.abs(inv.dueInDays ?? 0));
+      const daysOverdue = daysOverdueOf(inv) ?? 0;
       // Step heuristic: 0-7d vriendelijk, 7-14d herinnering, 14-30d urgent,
       // 30-60d aanmaning, 60+d incasso.
       const currentStep: DunningStepType =
