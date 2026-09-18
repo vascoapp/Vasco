@@ -7,8 +7,9 @@
 // =============================================================================
 
 import type { Country } from '../context/AuthContext';
+import i18n from '../i18n/i18n';
 import type { SubscriptionTier, SubscriptionState } from './subscriptionService';
-import { getTierLimits } from './subscriptionService';
+import { getTierLimits, minimumTierFor, TIERS } from './subscriptionService';
 
 // ─── E-Invoice Formats ─────────────────────────────────────────────────────
 
@@ -38,12 +39,15 @@ export interface EInvoiceFormatConfig {
 // exists anywhere in the repo — they were tier-pricing fiction. The
 // EInvoiceFormat type still includes them so downstream switches stay
 // exhaustive; add them back here once generators ship.
+// `requiredTier` here is the tier that GRANTS the format — `hasEInvoicing`,
+// which Pro already has. It said 'contractor' on every row: nothing reads the
+// field today, but it is the same wrong price the gate used to quote.
 export const E_INVOICE_FORMATS: EInvoiceFormatConfig[] = [
-  { id: 'xrechnung', name: 'XRechnung', country: 'DE', mandatory: true, mandatoryFor: 'B2G invoices', description: 'German government e-invoicing standard (EN 16931)', requiredTier: 'contractor', autoSubmission: true },
-  { id: 'zugferd', name: 'ZUGFeRD', country: 'DE', mandatory: false, mandatoryFor: 'Recommended for B2B', description: 'Structured PDF with embedded XML — readable by humans and machines', requiredTier: 'contractor', autoSubmission: false },
-  { id: 'facturx', name: 'Factur-X', country: 'FR', mandatory: true, mandatoryFor: 'All B2B (from 2026)', description: 'French e-invoice standard (CII XML). PDF/A-3 container not generated yet — see einvoice-fr.ts', requiredTier: 'contractor', autoSubmission: true },
-  { id: 'facturae', name: 'Facturae', country: 'ES', mandatory: true, mandatoryFor: 'B2G + large B2B', description: 'Spanish structured e-invoice format with SII reporting', requiredTier: 'contractor', autoSubmission: true },
-  { id: 'fatturapa', name: 'FatturaPA / SDI', country: 'IT', mandatory: true, mandatoryFor: 'All invoices (B2B + B2C)', description: 'Italian mandatory e-invoicing via Sistema di Interscambio', requiredTier: 'contractor', autoSubmission: true },
+  { id: 'xrechnung', name: 'XRechnung', country: 'DE', mandatory: true, mandatoryFor: 'B2G invoices', description: 'German government e-invoicing standard (EN 16931)', requiredTier: 'pro', autoSubmission: true },
+  { id: 'zugferd', name: 'ZUGFeRD', country: 'DE', mandatory: false, mandatoryFor: 'Recommended for B2B', description: 'Structured PDF with embedded XML — readable by humans and machines', requiredTier: 'pro', autoSubmission: false },
+  { id: 'facturx', name: 'Factur-X', country: 'FR', mandatory: true, mandatoryFor: 'All B2B (from 2026)', description: 'French e-invoice standard (CII XML). PDF/A-3 container not generated yet — see einvoice-fr.ts', requiredTier: 'pro', autoSubmission: true },
+  { id: 'facturae', name: 'Facturae', country: 'ES', mandatory: true, mandatoryFor: 'B2G + large B2B', description: 'Spanish structured e-invoice format with SII reporting', requiredTier: 'pro', autoSubmission: true },
+  { id: 'fatturapa', name: 'FatturaPA / SDI', country: 'IT', mandatory: true, mandatoryFor: 'All invoices (B2B + B2C)', description: 'Italian mandatory e-invoicing via Sistema di Interscambio', requiredTier: 'pro', autoSubmission: true },
 ];
 
 // ─── Compliance Packs ──────────────────────────────────────────────────────
@@ -142,10 +146,20 @@ export function canUseEInvoiceFormat(
 
   if (!limits.hasEInvoicing) {
     const config = E_INVOICE_FORMATS.find((f) => f.id === format);
+    const name = config?.name || format;
+    // Two things were wrong with the old literal. It named the CONTRACTOR plan
+    // (€69/mo) for something Pro (€39/mo) grants — a €360/year oversell aimed
+    // squarely at the German e-invoice obligation that is the whole wedge —
+    // and it was English in all six markets. Both now come from one place.
+    const requiredTier = minimumTierFor('hasEInvoicing') ?? 'pro';
     return {
       allowed: false,
-      reason: `${config?.name || format} e-invoicing requires the Contractor plan.`,
-      requiredTier: 'contractor',
+      reason: i18n.t('tierGate.featureRequiresTier', {
+        feature: name,
+        tier: TIERS[requiredTier].name,
+        defaultValue: `${name} requires the ${TIERS[requiredTier].name} plan.`,
+      }),
+      requiredTier,
       formatName: config?.name,
     };
   }

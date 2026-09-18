@@ -24,6 +24,12 @@ export interface SendInvoiceResult {
   ok: boolean;
   messageId?: string | null;
   error?: string;
+  /** The email went out AND the invoice was recorded as sent. False means the
+   *  customer has the invoice but the backend still shows a draft — the one
+   *  case where "sent" and "not sent" are both true, and the contractor must
+   *  not simply send it again. Absent on older function deployments. */
+  statusUpdated?: boolean;
+  warning?: string;
 }
 
 export async function sendInvoice(input: SendInvoiceInput): Promise<SendInvoiceResult> {

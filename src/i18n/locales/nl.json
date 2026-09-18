@@ -320,7 +320,14 @@
       "scheduleDesc": "Afspraken, tijden en overlappingen in één overzicht",
       "quotes": "Offertes in minuten",
       "quotesDesc": "Je prijslijst en sjablonen worden drie pakketten",
-      "leadsDesc": "Zie wie nog niet heeft gereageerd"
+      "leadsDesc": "Zie wie nog niet heeft gereageerd",
+      "payments": "Betalingsherinneringen",
+      "automation": "Automatisch factureren",
+      "automationDesc": "Maak facturen van afgeronde klussen met één tik",
+      "compliance": "Certificaten bijhouden",
+      "complianceDesc": "Melding voordat je certificeringen verlopen",
+      "insights": "Zakelijke inzichten",
+      "insightsDesc": "Wekelijkse rapporten over omzet, klussen en trends"
     }
   },
   "dashboard": {
@@ -640,7 +647,7 @@
   "billing": {
     "upgradeRequired": "Upgrade nodig",
     "viewPlans": "Bekijk abonnementen",
-    "formatNeedsContractor": "Dit formaat vereist het Contractor-abonnement."
+    "formatNeedsUpgrade": "Dit formaat vereist een betaald abonnement."
   },
   "reasonCode": {
     "title": "Waarom pas je dit aan?",
@@ -833,6 +840,8 @@
     "noEmailDesc": "Lokaal gemarkeerd als verstuurd. Voeg het e-mailadres van de klant toe om de factuur de volgende keer automatisch te versturen.",
     "sentTitle": "Factuur verstuurd",
     "sentDesc": "Verstuurd naar {{email}}. Vasco herinnert je als de betaling te laat is.",
+    "sentNotRecordedTitle": "Verstuurd — maar niet vastgelegd",
+    "sentNotRecordedDesc": "De factuur is bij {{email}} aangekomen, maar we konden hem niet als verstuurd markeren. Stuur hem niet nogmaals — controleer de status zo meteen.",
     "sendFailedTitle": "E-mail niet verstuurd",
     "sendFailedDesc": "Lokaal gemarkeerd als verzonden, maar de e-mail kon niet worden afgeleverd: {{error}}",
     "heroLabelPaid": "Betaald",

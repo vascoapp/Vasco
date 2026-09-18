@@ -647,7 +647,7 @@
   "billing": {
     "upgradeRequired": "Upgrade erforderlich",
     "viewPlans": "Abos ansehen",
-    "formatNeedsContractor": "Dieses Format erfordert den Contractor-Plan."
+    "formatNeedsUpgrade": "Dieses Format erfordert einen kostenpflichtigen Tarif."
   },
   "reasonCode": {
     "title": "Warum haben Sie das geändert?",
@@ -840,6 +840,8 @@
     "noEmailDesc": "Lokal als gesendet markiert. Fügen Sie die Kunden-E-Mail hinzu, um die Rechnung beim nächsten Mal automatisch zu senden.",
     "sentTitle": "Rechnung gesendet",
     "sentDesc": "An {{email}} gesendet. Vasco erinnert Sie bei verspäteter Zahlung.",
+    "sentNotRecordedTitle": "Gesendet — aber nicht erfasst",
+    "sentNotRecordedDesc": "Die Rechnung hat {{email}} erreicht, konnte aber nicht als gesendet markiert werden. Senden Sie sie nicht erneut — prüfen Sie den Status gleich noch einmal.",
     "sendFailedTitle": "E-Mail nicht gesendet",
     "sendFailedDesc": "Lokal als gesendet markiert, aber die E-Mail konnte nicht zugestellt werden: {{error}}",
     "heroLabelPaid": "Bezahlt",

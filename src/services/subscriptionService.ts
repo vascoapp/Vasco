@@ -90,6 +90,10 @@ export interface TierConfig {
 
 // ─── Tier Configurations ───────────────────────────────────────────────────
 
+/** Cheapest → dearest. Used to answer "which plan unlocks this?" from the
+ *  table rather than from a literal at the call site. */
+export const TIER_ORDER: readonly SubscriptionTier[] = ['free', 'pro', 'contractor'] as const;
+
 export const TIERS: Record<SubscriptionTier, TierConfig> = {
   free: {
     id: 'free',
@@ -446,38 +450,53 @@ export function canAddTeamMember(state: SubscriptionState, liveCount?: number): 
   return { allowed: true };
 }
 
+/** Cheapest tier whose limits actually grant `feature` — null if none does.
+ *
+ * Every hand-written "this needs the Contractor plan" is a price quoted from
+ * memory, and one of them was wrong: e-invoicing is granted at Pro (€39/mo)
+ * while `canUseEInvoiceFormat` told a German contractor — whose whole reason
+ * for being here is the e-invoice obligation — to buy Contractor (€69/mo),
+ * €360 a year more.
+ * Ask the tier table instead; it is the same table billing reads. */
+export function minimumTierFor(feature: keyof TierLimits): SubscriptionTier | null {
+  for (const tier of TIER_ORDER) {
+    if (TIERS[tier].limits[feature] === true) return tier;
+  }
+  return null;
+}
+
 export function canUseFeature(state: SubscriptionState, feature: keyof TierLimits): GateResult {
   const limits = getTierLimits(state.tier);
   const value = limits[feature];
   if (typeof value === 'boolean' && !value) {
-    const featureInfo: Record<string, { name: string; tier: SubscriptionTier }> = {
-      hasPaymentProcessing: { name: 'Payment processing', tier: 'pro' },
-      hasAccountingIntegrations: { name: 'Accounting integrations', tier: 'pro' },
-      hasEInvoicing: { name: 'E-invoicing', tier: 'pro' },
-      hasFullEInvoicing: { name: 'All e-invoice formats', tier: 'pro' },
-      hasEveAI: { name: 'EVE AI assistant', tier: 'pro' },
-      hasEveAuditor: { name: 'EVE compliance monitoring', tier: 'pro' },
-      hasEveAnalyst: { name: 'EVE business intelligence', tier: 'pro' },
-      hasAutomationPacks: { name: 'Automation packs', tier: 'pro' },
-      hasMlPredictions: { name: 'ML predictions', tier: 'pro' },
-      hasBenchmarking: { name: 'Contractor benchmarking', tier: 'pro' },
-      hasPriceIndex: { name: 'EU price index', tier: 'pro' },
-      hasInvoiceScanning: { name: 'Invoice scanning', tier: 'pro' },
-      hasPurchasingAgent: { name: 'Purchasing agent', tier: 'pro' },
-      hasBulkPurchaseOptimizer: { name: 'Bulk purchase optimizer', tier: 'pro' },
-      hasPriceDropAlerts: { name: 'Price drop alerts', tier: 'pro' },
-      hasSupplierScoring: { name: 'Supplier reliability scoring', tier: 'pro' },
-      hasPdfExport: { name: 'PDF/CSV export', tier: 'pro' },
-      hasClientPortal: { name: 'Client portal', tier: 'pro' },
-      hasQuoteTemplates: { name: 'Quote templates', tier: 'pro' },
-      hasCustomerDecisions: { name: 'Customer decision tracker', tier: 'pro' },
-      hasApiAccess: { name: 'API access', tier: 'contractor' },
-      hasWhiteLabel: { name: 'White-label documents', tier: 'contractor' },
-      hasSubcontractorPortal: { name: 'Subcontractor portal', tier: 'contractor' },
-      hasWorkerPortal: { name: 'Worker portal', tier: 'contractor' },
-      hasCalendarSync: { name: 'Calendar sync', tier: 'pro' },
-      hasDedicatedSupport: { name: 'Dedicated support', tier: 'contractor' },
-      hasOnboardingAssistance: { name: 'Onboarding assistance', tier: 'contractor' },
+    const featureInfo: Record<string, { name: string }> = {
+      hasPaymentProcessing: { name: 'Payment processing' },
+      hasAccountingIntegrations: { name: 'Accounting integrations' },
+      hasEInvoicing: { name: 'E-invoicing' },
+      hasFullEInvoicing: { name: 'All e-invoice formats' },
+      hasEveAI: { name: 'EVE AI assistant' },
+      hasEveAuditor: { name: 'EVE compliance monitoring' },
+      hasEveAnalyst: { name: 'EVE business intelligence' },
+      hasAutomationPacks: { name: 'Automation packs' },
+      hasMlPredictions: { name: 'ML predictions' },
+      hasBenchmarking: { name: 'Contractor benchmarking' },
+      hasPriceIndex: { name: 'EU price index' },
+      hasInvoiceScanning: { name: 'Invoice scanning' },
+      hasPurchasingAgent: { name: 'Purchasing agent' },
+      hasBulkPurchaseOptimizer: { name: 'Bulk purchase optimizer' },
+      hasPriceDropAlerts: { name: 'Price drop alerts' },
+      hasSupplierScoring: { name: 'Supplier reliability scoring' },
+      hasPdfExport: { name: 'PDF/CSV export' },
+      hasClientPortal: { name: 'Client portal' },
+      hasQuoteTemplates: { name: 'Quote templates' },
+      hasCustomerDecisions: { name: 'Customer decision tracker' },
+      hasApiAccess: { name: 'API access' },
+      hasWhiteLabel: { name: 'White-label documents' },
+      hasSubcontractorPortal: { name: 'Subcontractor portal' },
+      hasWorkerPortal: { name: 'Worker portal' },
+      hasCalendarSync: { name: 'Calendar sync' },
+      hasDedicatedSupport: { name: 'Dedicated support' },
+      hasOnboardingAssistance: { name: 'Onboarding assistance' },
     };
     const info = featureInfo[feature];
     // Localize the feature name shown in the upgrade prompt. Pre-fix the
@@ -485,12 +504,18 @@ export function canUseFeature(state: SubscriptionState, feature: keyof TierLimit
     // verbatim into the localized message, so a Dutch user saw
     // "Invoice scanning vereist het pro-abonnement". tierGate.features.<key>
     // carries the name in all 6 locales; fall back to the English name.
+    const requiredTier = minimumTierFor(feature) ?? 'pro';
     const localizedName = i18n.t(`tierGate.features.${String(feature)}`, { defaultValue: info?.name ?? String(feature) });
     return {
       allowed: false,
-      reason: i18n.t('tierGate.featureRequiresTier', { feature: localizedName, tier: info?.tier ?? 'pro' }),
+      // The tier comes from the table, and `featureInfo` no longer carries one.
+      // It was a second copy of the pricing that had already drifted
+      // (e-invoicing sold at Pro, quoted as Contractor); a copy that merely
+      // agrees today is a copy that can disagree tomorrow, and nothing would
+      // have caught it. The map supplies the display NAME only.
+      reason: i18n.t('tierGate.featureRequiresTier', { feature: localizedName, tier: TIERS[requiredTier].name }),
       upgradeFeature: localizedName,
-      requiredTier: info?.tier ?? 'pro',
+      requiredTier,
     };
   }
   return { allowed: true };

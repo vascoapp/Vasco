@@ -210,14 +210,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Mark invoice as sent
-    await admin
+    // Mark invoice as sent. The email is already gone — irreversible — so a
+    // refused status write must NOT turn into a non-2xx: the caller would read
+    // that as "not sent" and send the customer a second copy. It is reported
+    // instead, and the old code could not report it at all because supabase-js
+    // resolves with `{ error }` and nothing read it: the invoice stayed a draft
+    // in the database, the dunning clock never started, and the contractor was
+    // told it went out.
+    const { error: statusError } = await admin
       .from('documents')
       .update({ status: 'sent', sent_at: new Date().toISOString() })
       .eq('id', invoiceId)
       .eq('doc_type', 'invoice');
+    if (statusError) {
+      console.error(`send-invoice: email delivered but status not recorded for ${invoiceId}:`, statusError.message);
+    }
 
-    return new Response(JSON.stringify({ ok: true, messageId: resendJson?.id ?? null }), {
+    return new Response(JSON.stringify({
+      ok: true,
+      messageId: resendJson?.id ?? null,
+      statusUpdated: !statusError,
+      ...(statusError ? { warning: `Email sent, but the invoice status was not recorded: ${statusError.message}` } : {}),
+    }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {

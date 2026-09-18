@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
 import { emitIdRemap } from './idRemapBus';
+import { registerSingletonReset } from './singletonReset';
 import { emitDocNumberRemap } from './docNumberRemapBus';
 // R59: temp-id helpers moved to src/lib/idShape.ts so other modules
 // (moat emit gates, AppState refresh, etc.) share one source of truth.
@@ -99,6 +100,55 @@ function stripTempId<T extends Record<string, any> | unknown>(payload: T): T {
   }
   return payload;
 }
+
+/**
+ * Temp→real ids this device has already learned, kept across launches.
+ *
+ * ⚠️ `flushQueue`'s own `idMap` is built ONLY from inserts flushed in the same
+ * pass. When the PARENT was created while online — its temp id swapped locally,
+ * nothing queued — and a CHILD write queued later carries that temp id in its
+ * payload, the flush has no mapping for it and sends `proj-1789…` at a uuid
+ * column: rejected (22P02), retried, and the link is lost (sweep 2026-09-18).
+ *
+ * Every mutator that swaps a temp id for a real one records it here, so the
+ * queue can rewrite the payload whenever the child finally goes out. Bounded
+ * and account-scoped: an id map is one contractor's, and it must not outlive
+ * their session (#344).
+ */
+const REMAP_KEY = '@vasco_id_remap_v1';
+const REMAP_MAX = 500;
+
+export async function rememberIdRemap(tempId: string, realId: string): Promise<void> {
+  if (!tempId || !realId || tempId === realId) return;
+  try {
+    const raw = await AsyncStorage.getItem(REMAP_KEY);
+    const map: Record<string, string> = raw ? JSON.parse(raw) : {};
+    map[tempId] = realId;
+    const keys = Object.keys(map);
+    if (keys.length > REMAP_MAX) {
+      // Oldest-first: the object preserves insertion order for string keys.
+      for (const k of keys.slice(0, keys.length - REMAP_MAX)) delete map[k];
+    }
+    await AsyncStorage.setItem(REMAP_KEY, JSON.stringify(map));
+  } catch {
+    // Non-fatal: the in-pass map still covers the common case.
+  }
+}
+
+async function loadRememberedRemaps(): Promise<Map<string, string>> {
+  try {
+    const raw = await AsyncStorage.getItem(REMAP_KEY);
+    if (!raw) return new Map();
+    return new Map(Object.entries(JSON.parse(raw) as Record<string, string>));
+  } catch {
+    return new Map();
+  }
+}
+
+registerSingletonReset(() => {
+  // The map belongs to the account that just left.
+  void AsyncStorage.removeItem(REMAP_KEY).catch(() => {});
+});
 
 // R49: ID-mapping helpers.
 function remapValue(v: unknown, idMap: Map<string, string>): unknown {
@@ -250,7 +300,8 @@ export async function flushQueue(): Promise<{ processed: number; dropped: number
 
   const now = Date.now();
   const survivors: QueuedWrite[] = [];
-  const idMap = new Map<string, string>();
+  // Seeded with what earlier sessions learned, then extended by this pass.
+  const idMap = await loadRememberedRemaps();
   let processed = 0;
   let dropped = 0;
 
@@ -264,6 +315,7 @@ export async function flushQueue(): Promise<{ processed: number; dropped: number
     if (result.ok) {
       if (result.mapping) {
         idMap.set(result.mapping.temp, result.mapping.real);
+        void rememberIdRemap(result.mapping.temp, result.mapping.real);
         // R54: notify listeners (ontology, semanticSearch, embeddingService)
         // so they can re-key any side-effect rows they wrote under the
         // temp id. Pass the original payload so listeners can derive

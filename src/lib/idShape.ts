@@ -26,9 +26,20 @@ const TEMP_ID_PATTERNS: readonly RegExp[] = [
   /^proj-\d+$/,
   /^q-\d+$/,
   /^inv-\d+$/,
+  // ⚠️ `lead-`, `lead-rej-` and `worker-` were MISSING, while AppState mints
+  // all three (`lead-${Date.now()}` at addLead, `lead-rej-` on quote rejection,
+  // `worker-${Date.now()}` at addWorker) and queues a payload containing
+  // `id: tempId`. Nothing recognised them, so `stripTempId` left the temp id
+  // in the insert, Postgres rejected it (22P02 at a uuid column), and the
+  // queue dropped the write after five attempts: a lead or a crew member
+  // created without signal NEVER reached the backend, and no idRemap was ever
+  // emitted for them either (sweep 2026-09-18).
+  /^lead-\d+$/,
+  /^lead-rej-\d+$/,
+  /^worker-\d+$/,
 ];
 
-const TEMP_ID_RE_FULL = /^(c|j|q|inv|mat|sup|jm|proj)-\d+$/;
+const TEMP_ID_RE_FULL = /^(c|j|q|inv|mat|sup|jm|proj|lead|lead-rej|worker)-\d+$/;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

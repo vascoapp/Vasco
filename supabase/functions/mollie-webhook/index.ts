@@ -243,19 +243,29 @@ Deno.serve(async (req) => {
           if (monthsApplied > 0) {
             try {
               const admin = createClient(supabaseUrl2, supabaseServiceKey2);
-              const { data: sub } = await admin
+              // Every step here is checked, because the catch below is a
+              // COMPENSATION: it hands the credits back. supabase-js resolves
+              // with `{ error }` instead of throwing, so an unread error meant
+              // the catch could never run — the credits were consumed, the
+              // period was never extended, and nothing anywhere said so.
+              const { data: sub, error: readErr } = await admin
                 .from('subscriptions')
                 .select('current_period_ends_at')
                 .eq('user_id', userId)
                 .maybeSingle();
+              // A failed READ is not "no current period": treating it as one
+              // restarts the term from today and silently shortens what the
+              // customer already paid for.
+              if (readErr) throw new Error(`subscription read failed: ${readErr.message}`);
               const base = sub?.current_period_ends_at ? new Date(sub.current_period_ends_at) : new Date();
               const day = base.getDate();
               base.setMonth(base.getMonth() + monthsApplied);
               if (base.getDate() < day) base.setDate(0);
-              await admin
+              const { error: extendErr } = await admin
                 .from('subscriptions')
                 .update({ current_period_ends_at: base.toISOString(), updated_at: new Date().toISOString() })
                 .eq('user_id', userId);
+              if (extendErr) throw new Error(`period extension refused: ${extendErr.message}`);
               console.log(`Mollie: extended period for user=${userId} by ${monthsApplied}mo`);
             } catch (err) {
               await restoreCredits(supabaseUrl2, supabaseServiceKey2, consumed.map((c) => c.consumedId));

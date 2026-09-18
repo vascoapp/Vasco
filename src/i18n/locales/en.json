@@ -647,7 +647,7 @@
   "billing": {
     "upgradeRequired": "Upgrade required",
     "viewPlans": "View plans",
-    "formatNeedsContractor": "This format needs the Contractor plan."
+    "formatNeedsUpgrade": "This format requires a paid plan."
   },
   "reasonCode": {
     "title": "Why did you change this?",
@@ -840,6 +840,8 @@
     "noEmailDesc": "Marked as sent locally. Add the customer email to send the invoice automatically next time.",
     "sentTitle": "Invoice sent",
     "sentDesc": "Sent to {{email}}. Vasco will remind you if payment is late.",
+    "sentNotRecordedTitle": "Sent — but not recorded",
+    "sentNotRecordedDesc": "The invoice reached {{email}}, but we could not mark it as sent. Do not send it again — check the invoice status in a moment.",
     "sendFailedTitle": "Email not sent",
     "sendFailedDesc": "Marked as sent locally, but the email could not be delivered: {{error}}",
     "heroLabelPaid": "Paid",

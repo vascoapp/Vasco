@@ -1196,6 +1196,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               prev.map((c) => (c.id === tempId ? { ...c, id: (row as any).id } : c))
             );
             finalId = (row as any).id as string;
+            // Teach the offline queue this mapping: a child write that queues LATER
+            // may still carry the temp id in its payload, and the flush only knows
+            // mappings from its own pass (sweep 2026-09-18).
+            void import('../services/offlineWriteQueue').then(({ rememberIdRemap }) => rememberIdRemap(tempId, finalId)).catch(() => {});
           } catch (err) {
             logWarn('AppState', `addCustomer persist failed or timed out: ${err}`);
             try {
@@ -1758,6 +1762,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
             finalId = row.id;
+            // Teach the offline queue this mapping: a child write that queues LATER
+            // may still carry the temp id in its payload, and the flush only knows
+            // mappings from its own pass (sweep 2026-09-18).
+            void import('../services/offlineWriteQueue').then(({ rememberIdRemap }) => rememberIdRemap(tempId, finalId)).catch(() => {});
           } catch (err) {
             // Was log-only — an offline / timed-out job was NEVER queued, so it
             // stayed a temp row in local storage and never reached the backend
@@ -2978,6 +2986,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               prev.map((s) => (s.id === tempId ? { ...s, id: (row as any).id } : s)),
             );
             finalId = (row as any).id as string;
+            // Teach the offline queue this mapping: a child write that queues LATER
+            // may still carry the temp id in its payload, and the flush only knows
+            // mappings from its own pass (sweep 2026-09-18).
+            void import('../services/offlineWriteQueue').then(({ rememberIdRemap }) => rememberIdRemap(tempId, finalId)).catch(() => {});
           } catch (err) {
             logWarn('AppState', `addSupplier persist failed: ${err}`);
             try {
@@ -3035,6 +3047,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               ),
             }));
             finalId = (row as any).id as string;
+            // Teach the offline queue this mapping: a child write that queues LATER
+            // may still carry the temp id in its payload, and the flush only knows
+            // mappings from its own pass (sweep 2026-09-18).
+            void import('../services/offlineWriteQueue').then(({ rememberIdRemap }) => rememberIdRemap(tempId, finalId)).catch(() => {});
           } catch (err) {
             logWarn('AppState', `addJobMaterial persist failed: ${err}`);
             // R54: was a bare log — material insert never reached BE if the

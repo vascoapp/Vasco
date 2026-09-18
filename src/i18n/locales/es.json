@@ -647,7 +647,7 @@
   "billing": {
     "upgradeRequired": "Actualización necesaria",
     "viewPlans": "Ver planes",
-    "formatNeedsContractor": "Este formato requiere el plan Contractor."
+    "formatNeedsUpgrade": "Este formato requiere un plan de pago."
   },
   "reasonCode": {
     "title": "¿Por qué lo cambiaste?",
@@ -840,6 +840,8 @@
     "noEmailDesc": "Marcada como enviada localmente. Añade el correo del cliente para enviar la factura automáticamente la próxima vez.",
     "sentTitle": "Factura enviada",
     "sentDesc": "Enviada a {{email}}. Vasco te avisará si el pago se retrasa.",
+    "sentNotRecordedTitle": "Enviada — pero no registrada",
+    "sentNotRecordedDesc": "La factura llegó a {{email}}, pero no pudimos marcarla como enviada. No la envíes de nuevo — comprueba su estado en un momento.",
     "sendFailedTitle": "Correo no enviado",
     "sendFailedDesc": "Marcada como enviada localmente, pero no se pudo entregar el correo: {{error}}",
     "heroLabelPaid": "Pagado",

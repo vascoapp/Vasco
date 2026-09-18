@@ -536,7 +536,18 @@ export default function InvoiceDetailScreen() {
       bodyOverride,
       pdfBase64,
     });
-    if (result.ok) {
+    if (result.ok && result.statusUpdated === false) {
+      // The customer HAS the invoice; only the server-side status write was
+      // refused. Saying "sent" plainly would invite a second send to the same
+      // customer, and saying "failed" would be untrue.
+      Alert.alert(
+        t('invoices.sentNotRecordedTitle', 'Sent — but not recorded'),
+        t('invoices.sentNotRecordedDesc', {
+          defaultValue: 'The invoice reached {{email}}, but we could not mark it as sent. Do not send it again — check the invoice status in a moment.',
+          email: customerEmail,
+        }),
+      );
+    } else if (result.ok) {
       Alert.alert(
         t('invoices.sentTitle', 'Invoice sent'),
         t('invoices.sentDesc', {
@@ -709,7 +720,9 @@ export default function InvoiceDetailScreen() {
   };
 
   const handleExportEInvoice = async (format: 'XRechnung' | 'ZUGFeRD') => {
-    // Tier gate: e-invoicing is Contractor-only
+    // Tier gate: e-invoicing is granted by Pro and above. The message comes
+    // from the gate, which reads the tier table — this fallback must not name
+    // a plan, or it becomes the next wrong price quote.
     try {
       const { loadSubscription } = await import('../../src/services/subscriptionService');
       const { canUseEInvoiceFormat } = await import('../../src/services/complianceGatingService');
@@ -719,7 +732,7 @@ export default function InvoiceDetailScreen() {
       if (!gate.allowed) {
         Alert.alert(
           t('billing.upgradeRequired', 'Upgrade required'),
-          gate.reason ?? t('billing.formatNeedsContractor', 'This format needs the Contractor plan.'),
+          gate.reason ?? t('billing.formatNeedsUpgrade', 'This format requires a paid plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
             { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
@@ -905,7 +918,7 @@ export default function InvoiceDetailScreen() {
       if (!gate.allowed) {
         Alert.alert(
           t('billing.upgradeRequired', 'Upgrade required'),
-          gate.reason ?? t('billing.formatNeedsContractor', 'This format needs the Contractor plan.'),
+          gate.reason ?? t('billing.formatNeedsUpgrade', 'This format requires a paid plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
             { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
@@ -944,7 +957,7 @@ export default function InvoiceDetailScreen() {
       if (!gate.allowed) {
         Alert.alert(
           t('billing.upgradeRequired', 'Upgrade required'),
-          gate.reason ?? t('billing.formatNeedsContractor', 'This format needs the Contractor plan.'),
+          gate.reason ?? t('billing.formatNeedsUpgrade', 'This format requires a paid plan.'),
           [
             { text: t('common.cancel', 'Cancel'), style: 'cancel' },
             { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },

@@ -31,6 +31,7 @@
 import Image from 'next/image';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
+import { enqueue as queueWrite, flush as flushOutbox, hasPendingSignature } from '../../../lib/portalOutbox';
 import { CUSTOMER_GLOSSARY, type GlossaryLang } from '../../../lib/customerGlossary';
 import { moneyFormatter } from '@/lib/money';
 import { portalCategoryName, portalItemName, portalOptionLabel, type PortalLang } from '../../../lib/decisionCatalogI18n';
@@ -94,12 +95,12 @@ function moneyFmt(country: string | undefined, lang: Lang) {
 }
 
 const COPY: Record<Lang, Record<string, string>> = {
-  en: { eyebrow: 'Your choices', appCta: 'Open in Vasco app', code: 'Access code', loading: 'Loading your project…', notFoundTitle: 'Link not found', notFoundBody: 'This link is invalid or has been removed. Ask your contractor for a new one.', expiredTitle: 'Link expired', expiredBody: 'This link is no longer active. Ask your contractor to resend it.', retry: 'Try again', decidedOf: 'decided', choose: 'Choose one', included: 'Included', yourChoice: 'Your choice', change: 'Change', save: 'Save', saving: 'Saving…', saved: 'Saved — sent to your contractor', savedLocal: "Saved on your device — we'll send it when you're back online", allDoneTitle: 'All set!', allDoneBody: "You've made all your choices. Your contractor has them.", typeAnswer: 'Type your answer', footer: '© Vasco · vascobuild.com', runningCost: 'Your choices so far', vsBase: 'vs base quote', noExtra: 'No extra cost', glossaryBtn: 'What do these words mean?', glossaryTitle: 'Words explained', close: 'Close', addPhotos: 'Add photos', uploading: 'Uploading…', askTitle: 'Have a question?', askPlaceholder: 'Ask your contractor anything…', send: 'Send', sending: 'Sending…', yourQuestions: 'Your questions', signTitle: 'Confirm your choices', signBody: 'Sign below to confirm the choices above (optional).', yourName: 'Your name', clear: 'Clear', signSave: 'Confirm & sign', signed: 'Signed — thank you!', payTitle: 'Payment', payNow: 'Pay now', payDeposit: 'Pay deposit', paid: 'Payment received', qaDemoReply: 'Thanks — your contractor will reply soon.', awaitingReply: 'Waiting for your contractor to reply…' , yes: 'Yes', no: 'No'},
-  nl: { eyebrow: 'Jouw keuzes', appCta: 'Open in Vasco-app', code: 'Toegangscode', loading: 'Je project laden…', notFoundTitle: 'Link niet gevonden', notFoundBody: 'Deze link is ongeldig of verwijderd. Vraag je aannemer om een nieuwe.', expiredTitle: 'Link verlopen', expiredBody: 'Deze link is niet meer actief. Vraag je aannemer om hem opnieuw te sturen.', retry: 'Opnieuw proberen', decidedOf: 'gekozen', choose: 'Kies er één', included: 'Inbegrepen', yourChoice: 'Jouw keuze', change: 'Wijzigen', save: 'Opslaan', saving: 'Opslaan…', saved: 'Opgeslagen — naar je aannemer gestuurd', savedLocal: 'Opgeslagen op je toestel — we sturen het zodra je weer online bent', allDoneTitle: 'Helemaal klaar!', allDoneBody: 'Je hebt al je keuzes gemaakt. Je aannemer heeft ze.', typeAnswer: 'Typ je antwoord', footer: '© Vasco · vascobuild.com', runningCost: 'Je keuzes tot nu toe', vsBase: 't.o.v. basisofferte', noExtra: 'Geen extra kosten', glossaryBtn: 'Wat betekenen deze woorden?', glossaryTitle: 'Woorden uitgelegd', close: 'Sluiten', addPhotos: "Foto's toevoegen", uploading: 'Uploaden…', askTitle: 'Een vraag?', askPlaceholder: 'Vraag je aannemer wat je wilt…', send: 'Versturen', sending: 'Versturen…', yourQuestions: 'Jouw vragen', signTitle: 'Bevestig je keuzes', signBody: 'Onderteken hieronder om je keuzes te bevestigen (optioneel).', yourName: 'Je naam', clear: 'Wissen', signSave: 'Bevestigen & ondertekenen', signed: 'Ondertekend — bedankt!', payTitle: 'Betaling', payNow: 'Nu betalen', payDeposit: 'Aanbetaling doen', paid: 'Betaling ontvangen', qaDemoReply: 'Bedankt — je aannemer reageert snel.', awaitingReply: 'Wachten op antwoord van je aannemer…' , yes: 'Ja', no: 'Nee'},
-  de: { eyebrow: 'Ihre Auswahl', appCta: 'In Vasco-App öffnen', code: 'Zugangscode', loading: 'Ihr Projekt wird geladen…', notFoundTitle: 'Link nicht gefunden', notFoundBody: 'Dieser Link ist ungültig oder wurde entfernt. Bitten Sie Ihren Handwerksbetrieb um einen neuen.', expiredTitle: 'Link abgelaufen', expiredBody: 'Dieser Link ist nicht mehr aktiv. Bitten Sie Ihren Handwerksbetrieb, ihn erneut zu senden.', retry: 'Erneut versuchen', decidedOf: 'entschieden', choose: 'Wählen Sie eine', included: 'Inbegriffen', yourChoice: 'Ihre Wahl', change: 'Ändern', save: 'Speichern', saving: 'Speichern…', saved: 'Gespeichert — an Ihren Handwerksbetrieb gesendet', savedLocal: 'Auf Ihrem Gerät gespeichert — wir senden es, sobald Sie wieder online sind', allDoneTitle: 'Alles erledigt!', allDoneBody: 'Sie haben alle Auswahlen getroffen. Ihr Handwerksbetrieb hat sie.', typeAnswer: 'Geben Sie Ihre Antwort ein', footer: '© Vasco · vascobuild.com', runningCost: 'Ihre bisherige Auswahl', vsBase: 'ggü. Basisangebot', noExtra: 'Keine Mehrkosten', glossaryBtn: 'Was bedeuten diese Wörter?', glossaryTitle: 'Wörter erklärt', close: 'Schließen', addPhotos: 'Fotos hinzufügen', uploading: 'Hochladen…', askTitle: 'Eine Frage?', askPlaceholder: 'Fragen Sie Ihren Handwerksbetrieb alles…', send: 'Senden', sending: 'Senden…', yourQuestions: 'Ihre Fragen', signTitle: 'Bestätigen Sie Ihre Auswahl', signBody: 'Unterschreiben Sie unten, um Ihre Auswahl zu bestätigen (optional).', yourName: 'Ihr Name', clear: 'Löschen', signSave: 'Bestätigen & unterschreiben', signed: 'Unterschrieben — danke!', payTitle: 'Zahlung', payNow: 'Jetzt zahlen', payDeposit: 'Anzahlung leisten', paid: 'Zahlung erhalten', qaDemoReply: 'Danke — Ihr Handwerksbetrieb antwortet bald.', awaitingReply: 'Warten auf die Antwort Ihres Handwerksbetriebs…' , yes: 'Ja', no: 'Nein'},
-  fr: { eyebrow: 'Vos choix', appCta: "Ouvrir dans l'app Vasco", code: "Code d'accès", loading: 'Chargement de votre projet…', notFoundTitle: 'Lien introuvable', notFoundBody: "Ce lien est invalide ou a été supprimé. Demandez-en un nouveau à votre artisan.", expiredTitle: 'Lien expiré', expiredBody: "Ce lien n'est plus actif. Demandez à votre artisan de le renvoyer.", retry: 'Réessayer', decidedOf: 'décidé', choose: 'Choisissez-en un', included: 'Inclus', yourChoice: 'Votre choix', change: 'Modifier', save: 'Enregistrer', saving: 'Enregistrement…', saved: 'Enregistré — envoyé à votre artisan', savedLocal: "Enregistré sur votre appareil — nous l'enverrons dès votre retour en ligne", allDoneTitle: 'Tout est prêt !', allDoneBody: 'Vous avez fait tous vos choix. Votre artisan les a reçus.', typeAnswer: 'Saisissez votre réponse', footer: '© Vasco · vascobuild.com', runningCost: 'Vos choix jusqu’ici', vsBase: 'vs devis de base', noExtra: 'Sans coût supplémentaire', glossaryBtn: 'Que signifient ces mots ?', glossaryTitle: 'Mots expliqués', close: 'Fermer', addPhotos: 'Ajouter des photos', uploading: 'Téléversement…', askTitle: 'Une question ?', askPlaceholder: 'Demandez à votre artisan…', send: 'Envoyer', sending: 'Envoi…', yourQuestions: 'Vos questions', signTitle: 'Confirmez vos choix', signBody: 'Signez ci-dessous pour confirmer vos choix (facultatif).', yourName: 'Votre nom', clear: 'Effacer', signSave: 'Confirmer & signer', signed: 'Signé — merci !', payTitle: 'Paiement', payNow: 'Payer maintenant', payDeposit: 'Payer l’acompte', paid: 'Paiement reçu', qaDemoReply: 'Merci — votre artisan répondra bientôt.', awaitingReply: 'En attente de la réponse de votre artisan…' , yes: 'Oui', no: 'Non'},
-  es: { eyebrow: 'Tus elecciones', appCta: 'Abrir en la app Vasco', code: 'Código de acceso', loading: 'Cargando tu proyecto…', notFoundTitle: 'Enlace no encontrado', notFoundBody: 'Este enlace no es válido o se ha eliminado. Pide uno nuevo a tu contratista.', expiredTitle: 'Enlace caducado', expiredBody: 'Este enlace ya no está activo. Pide a tu contratista que lo reenvíe.', retry: 'Reintentar', decidedOf: 'decidido', choose: 'Elige una', included: 'Incluido', yourChoice: 'Tu elección', change: 'Cambiar', save: 'Guardar', saving: 'Guardando…', saved: 'Guardado — enviado a tu contratista', savedLocal: 'Guardado en tu dispositivo — lo enviaremos cuando vuelvas a estar en línea', allDoneTitle: '¡Todo listo!', allDoneBody: 'Has hecho todas tus elecciones. Tu contratista las tiene.', typeAnswer: 'Escribe tu respuesta', footer: '© Vasco · vascobuild.com', runningCost: 'Tus elecciones hasta ahora', vsBase: 'vs presupuesto base', noExtra: 'Sin coste extra', glossaryBtn: '¿Qué significan estas palabras?', glossaryTitle: 'Palabras explicadas', close: 'Cerrar', addPhotos: 'Añadir fotos', uploading: 'Subiendo…', askTitle: '¿Una pregunta?', askPlaceholder: 'Pregunta lo que quieras a tu contratista…', send: 'Enviar', sending: 'Enviando…', yourQuestions: 'Tus preguntas', signTitle: 'Confirma tus elecciones', signBody: 'Firma abajo para confirmar tus elecciones (opcional).', yourName: 'Tu nombre', clear: 'Borrar', signSave: 'Confirmar y firmar', signed: 'Firmado — ¡gracias!', payTitle: 'Pago', payNow: 'Pagar ahora', payDeposit: 'Pagar anticipo', paid: 'Pago recibido', qaDemoReply: 'Gracias — tu contratista responderá pronto.', awaitingReply: 'Esperando la respuesta de tu contratista…' , yes: 'Sí', no: 'No'},
-  it: { eyebrow: 'Le tue scelte', appCta: "Apri nell'app Vasco", code: 'Codice di accesso', loading: 'Caricamento del tuo progetto…', notFoundTitle: 'Link non trovato', notFoundBody: 'Questo link non è valido o è stato rimosso. Chiedine uno nuovo al tuo tecnico.', expiredTitle: 'Link scaduto', expiredBody: 'Questo link non è più attivo. Chiedi al tuo tecnico di reinviarlo.', retry: 'Riprova', decidedOf: 'deciso', choose: 'Scegline una', included: 'Incluso', yourChoice: 'La tua scelta', change: 'Modifica', save: 'Salva', saving: 'Salvataggio…', saved: 'Salvato — inviato al tuo tecnico', savedLocal: 'Salvato sul tuo dispositivo — lo invieremo appena tornerai online', allDoneTitle: 'Tutto pronto!', allDoneBody: 'Hai fatto tutte le tue scelte. Il tuo tecnico le ha ricevute.', typeAnswer: 'Scrivi la tua risposta', footer: '© Vasco · vascobuild.com', runningCost: 'Le tue scelte finora', vsBase: 'vs preventivo base', noExtra: 'Nessun costo extra', glossaryBtn: 'Cosa significano queste parole?', glossaryTitle: 'Parole spiegate', close: 'Chiudi', addPhotos: 'Aggiungi foto', uploading: 'Caricamento…', askTitle: 'Una domanda?', askPlaceholder: 'Chiedi qualsiasi cosa al tuo tecnico…', send: 'Invia', sending: 'Invio…', yourQuestions: 'Le tue domande', signTitle: 'Conferma le tue scelte', signBody: 'Firma qui sotto per confermare le tue scelte (facoltativo).', yourName: 'Il tuo nome', clear: 'Cancella', signSave: 'Conferma e firma', signed: 'Firmato — grazie!', payTitle: 'Pagamento', payNow: 'Paga ora', payDeposit: 'Paga acconto', paid: 'Pagamento ricevuto', qaDemoReply: 'Grazie — il tuo tecnico risponderà presto.', awaitingReply: 'In attesa della risposta del tuo tecnico…' , yes: 'Sì', no: 'No'},
+  en: { eyebrow: 'Your choices', appCta: 'Open in Vasco app', code: 'Access code', loading: 'Loading your project…', notFoundTitle: 'Link not found', notFoundBody: 'This link is invalid or has been removed. Ask your contractor for a new one.', expiredTitle: 'Link expired', expiredBody: 'This link is no longer active. Ask your contractor to resend it.', retry: 'Try again', decidedOf: 'decided', choose: 'Choose one', included: 'Included', yourChoice: 'Your choice', change: 'Change', save: 'Save', saving: 'Saving…', saved: 'Saved — sent to your contractor', savedLocal: "Saved on your device — we'll send it when you're back online", notSaved: 'Not sent — check your connection and try again', signedLocal: "Signed on your device — we'll send it when you're back online", allDoneTitle: 'All set!', allDoneBody: "You've made all your choices. Your contractor has them.", typeAnswer: 'Type your answer', footer: '© Vasco · vascobuild.com', runningCost: 'Your choices so far', vsBase: 'vs base quote', noExtra: 'No extra cost', glossaryBtn: 'What do these words mean?', glossaryTitle: 'Words explained', close: 'Close', addPhotos: 'Add photos', uploading: 'Uploading…', askTitle: 'Have a question?', askPlaceholder: 'Ask your contractor anything…', send: 'Send', sending: 'Sending…', yourQuestions: 'Your questions', signTitle: 'Confirm your choices', signBody: 'Sign below to confirm the choices above (optional).', yourName: 'Your name', clear: 'Clear', signSave: 'Confirm & sign', signed: 'Signed — thank you!', payTitle: 'Payment', payNow: 'Pay now', payDeposit: 'Pay deposit', paid: 'Payment received', qaDemoReply: 'Thanks — your contractor will reply soon.', awaitingReply: 'Waiting for your contractor to reply…' , yes: 'Yes', no: 'No'},
+  nl: { eyebrow: 'Jouw keuzes', appCta: 'Open in Vasco-app', code: 'Toegangscode', loading: 'Je project laden…', notFoundTitle: 'Link niet gevonden', notFoundBody: 'Deze link is ongeldig of verwijderd. Vraag je aannemer om een nieuwe.', expiredTitle: 'Link verlopen', expiredBody: 'Deze link is niet meer actief. Vraag je aannemer om hem opnieuw te sturen.', retry: 'Opnieuw proberen', decidedOf: 'gekozen', choose: 'Kies er één', included: 'Inbegrepen', yourChoice: 'Jouw keuze', change: 'Wijzigen', save: 'Opslaan', saving: 'Opslaan…', saved: 'Opgeslagen — naar je aannemer gestuurd', savedLocal: 'Opgeslagen op je toestel — we sturen het zodra je weer online bent', notSaved: 'Niet verzonden — controleer je verbinding en probeer het opnieuw', signedLocal: 'Ondertekend op je toestel — we sturen het zodra je weer online bent', allDoneTitle: 'Helemaal klaar!', allDoneBody: 'Je hebt al je keuzes gemaakt. Je aannemer heeft ze.', typeAnswer: 'Typ je antwoord', footer: '© Vasco · vascobuild.com', runningCost: 'Je keuzes tot nu toe', vsBase: 't.o.v. basisofferte', noExtra: 'Geen extra kosten', glossaryBtn: 'Wat betekenen deze woorden?', glossaryTitle: 'Woorden uitgelegd', close: 'Sluiten', addPhotos: "Foto's toevoegen", uploading: 'Uploaden…', askTitle: 'Een vraag?', askPlaceholder: 'Vraag je aannemer wat je wilt…', send: 'Versturen', sending: 'Versturen…', yourQuestions: 'Jouw vragen', signTitle: 'Bevestig je keuzes', signBody: 'Onderteken hieronder om je keuzes te bevestigen (optioneel).', yourName: 'Je naam', clear: 'Wissen', signSave: 'Bevestigen & ondertekenen', signed: 'Ondertekend — bedankt!', payTitle: 'Betaling', payNow: 'Nu betalen', payDeposit: 'Aanbetaling doen', paid: 'Betaling ontvangen', qaDemoReply: 'Bedankt — je aannemer reageert snel.', awaitingReply: 'Wachten op antwoord van je aannemer…' , yes: 'Ja', no: 'Nee'},
+  de: { eyebrow: 'Ihre Auswahl', appCta: 'In Vasco-App öffnen', code: 'Zugangscode', loading: 'Ihr Projekt wird geladen…', notFoundTitle: 'Link nicht gefunden', notFoundBody: 'Dieser Link ist ungültig oder wurde entfernt. Bitten Sie Ihren Handwerksbetrieb um einen neuen.', expiredTitle: 'Link abgelaufen', expiredBody: 'Dieser Link ist nicht mehr aktiv. Bitten Sie Ihren Handwerksbetrieb, ihn erneut zu senden.', retry: 'Erneut versuchen', decidedOf: 'entschieden', choose: 'Wählen Sie eine', included: 'Inbegriffen', yourChoice: 'Ihre Wahl', change: 'Ändern', save: 'Speichern', saving: 'Speichern…', saved: 'Gespeichert — an Ihren Handwerksbetrieb gesendet', savedLocal: 'Auf Ihrem Gerät gespeichert — wir senden es, sobald Sie wieder online sind', notSaved: 'Nicht gesendet — prüfen Sie Ihre Verbindung und versuchen Sie es erneut', signedLocal: 'Auf Ihrem Gerät unterschrieben — wir senden es, sobald Sie wieder online sind', allDoneTitle: 'Alles erledigt!', allDoneBody: 'Sie haben alle Auswahlen getroffen. Ihr Handwerksbetrieb hat sie.', typeAnswer: 'Geben Sie Ihre Antwort ein', footer: '© Vasco · vascobuild.com', runningCost: 'Ihre bisherige Auswahl', vsBase: 'ggü. Basisangebot', noExtra: 'Keine Mehrkosten', glossaryBtn: 'Was bedeuten diese Wörter?', glossaryTitle: 'Wörter erklärt', close: 'Schließen', addPhotos: 'Fotos hinzufügen', uploading: 'Hochladen…', askTitle: 'Eine Frage?', askPlaceholder: 'Fragen Sie Ihren Handwerksbetrieb alles…', send: 'Senden', sending: 'Senden…', yourQuestions: 'Ihre Fragen', signTitle: 'Bestätigen Sie Ihre Auswahl', signBody: 'Unterschreiben Sie unten, um Ihre Auswahl zu bestätigen (optional).', yourName: 'Ihr Name', clear: 'Löschen', signSave: 'Bestätigen & unterschreiben', signed: 'Unterschrieben — danke!', payTitle: 'Zahlung', payNow: 'Jetzt zahlen', payDeposit: 'Anzahlung leisten', paid: 'Zahlung erhalten', qaDemoReply: 'Danke — Ihr Handwerksbetrieb antwortet bald.', awaitingReply: 'Warten auf die Antwort Ihres Handwerksbetriebs…' , yes: 'Ja', no: 'Nein'},
+  fr: { eyebrow: 'Vos choix', appCta: "Ouvrir dans l'app Vasco", code: "Code d'accès", loading: 'Chargement de votre projet…', notFoundTitle: 'Lien introuvable', notFoundBody: "Ce lien est invalide ou a été supprimé. Demandez-en un nouveau à votre artisan.", expiredTitle: 'Lien expiré', expiredBody: "Ce lien n'est plus actif. Demandez à votre artisan de le renvoyer.", retry: 'Réessayer', decidedOf: 'décidé', choose: 'Choisissez-en un', included: 'Inclus', yourChoice: 'Votre choix', change: 'Modifier', save: 'Enregistrer', saving: 'Enregistrement…', saved: 'Enregistré — envoyé à votre artisan', savedLocal: "Enregistré sur votre appareil — nous l'enverrons dès votre retour en ligne", notSaved: 'Non envoyé — vérifiez votre connexion et réessayez', signedLocal: "Signé sur votre appareil — nous l'enverrons dès votre retour en ligne", allDoneTitle: 'Tout est prêt !', allDoneBody: 'Vous avez fait tous vos choix. Votre artisan les a reçus.', typeAnswer: 'Saisissez votre réponse', footer: '© Vasco · vascobuild.com', runningCost: 'Vos choix jusqu’ici', vsBase: 'vs devis de base', noExtra: 'Sans coût supplémentaire', glossaryBtn: 'Que signifient ces mots ?', glossaryTitle: 'Mots expliqués', close: 'Fermer', addPhotos: 'Ajouter des photos', uploading: 'Téléversement…', askTitle: 'Une question ?', askPlaceholder: 'Demandez à votre artisan…', send: 'Envoyer', sending: 'Envoi…', yourQuestions: 'Vos questions', signTitle: 'Confirmez vos choix', signBody: 'Signez ci-dessous pour confirmer vos choix (facultatif).', yourName: 'Votre nom', clear: 'Effacer', signSave: 'Confirmer & signer', signed: 'Signé — merci !', payTitle: 'Paiement', payNow: 'Payer maintenant', payDeposit: 'Payer l’acompte', paid: 'Paiement reçu', qaDemoReply: 'Merci — votre artisan répondra bientôt.', awaitingReply: 'En attente de la réponse de votre artisan…' , yes: 'Oui', no: 'Non'},
+  es: { eyebrow: 'Tus elecciones', appCta: 'Abrir en la app Vasco', code: 'Código de acceso', loading: 'Cargando tu proyecto…', notFoundTitle: 'Enlace no encontrado', notFoundBody: 'Este enlace no es válido o se ha eliminado. Pide uno nuevo a tu contratista.', expiredTitle: 'Enlace caducado', expiredBody: 'Este enlace ya no está activo. Pide a tu contratista que lo reenvíe.', retry: 'Reintentar', decidedOf: 'decidido', choose: 'Elige una', included: 'Incluido', yourChoice: 'Tu elección', change: 'Cambiar', save: 'Guardar', saving: 'Guardando…', saved: 'Guardado — enviado a tu contratista', savedLocal: 'Guardado en tu dispositivo — lo enviaremos cuando vuelvas a estar en línea', notSaved: 'No enviado — comprueba tu conexión e inténtalo de nuevo', signedLocal: 'Firmado en tu dispositivo — lo enviaremos cuando vuelvas a estar en línea', allDoneTitle: '¡Todo listo!', allDoneBody: 'Has hecho todas tus elecciones. Tu contratista las tiene.', typeAnswer: 'Escribe tu respuesta', footer: '© Vasco · vascobuild.com', runningCost: 'Tus elecciones hasta ahora', vsBase: 'vs presupuesto base', noExtra: 'Sin coste extra', glossaryBtn: '¿Qué significan estas palabras?', glossaryTitle: 'Palabras explicadas', close: 'Cerrar', addPhotos: 'Añadir fotos', uploading: 'Subiendo…', askTitle: '¿Una pregunta?', askPlaceholder: 'Pregunta lo que quieras a tu contratista…', send: 'Enviar', sending: 'Enviando…', yourQuestions: 'Tus preguntas', signTitle: 'Confirma tus elecciones', signBody: 'Firma abajo para confirmar tus elecciones (opcional).', yourName: 'Tu nombre', clear: 'Borrar', signSave: 'Confirmar y firmar', signed: 'Firmado — ¡gracias!', payTitle: 'Pago', payNow: 'Pagar ahora', payDeposit: 'Pagar anticipo', paid: 'Pago recibido', qaDemoReply: 'Gracias — tu contratista responderá pronto.', awaitingReply: 'Esperando la respuesta de tu contratista…' , yes: 'Sí', no: 'No'},
+  it: { eyebrow: 'Le tue scelte', appCta: "Apri nell'app Vasco", code: 'Codice di accesso', loading: 'Caricamento del tuo progetto…', notFoundTitle: 'Link non trovato', notFoundBody: 'Questo link non è valido o è stato rimosso. Chiedine uno nuovo al tuo tecnico.', expiredTitle: 'Link scaduto', expiredBody: 'Questo link non è più attivo. Chiedi al tuo tecnico di reinviarlo.', retry: 'Riprova', decidedOf: 'deciso', choose: 'Scegline una', included: 'Incluso', yourChoice: 'La tua scelta', change: 'Modifica', save: 'Salva', saving: 'Salvataggio…', saved: 'Salvato — inviato al tuo tecnico', savedLocal: 'Salvato sul tuo dispositivo — lo invieremo appena tornerai online', notSaved: 'Non inviato — controlla la connessione e riprova', signedLocal: 'Firmato sul tuo dispositivo — lo invieremo appena tornerai online', allDoneTitle: 'Tutto pronto!', allDoneBody: 'Hai fatto tutte le tue scelte. Il tuo tecnico le ha ricevute.', typeAnswer: 'Scrivi la tua risposta', footer: '© Vasco · vascobuild.com', runningCost: 'Le tue scelte finora', vsBase: 'vs preventivo base', noExtra: 'Nessun costo extra', glossaryBtn: 'Cosa significano queste parole?', glossaryTitle: 'Parole spiegate', close: 'Chiudi', addPhotos: 'Aggiungi foto', uploading: 'Caricamento…', askTitle: 'Una domanda?', askPlaceholder: 'Chiedi qualsiasi cosa al tuo tecnico…', send: 'Invia', sending: 'Invio…', yourQuestions: 'Le tue domande', signTitle: 'Conferma le tue scelte', signBody: 'Firma qui sotto per confermare le tue scelte (facoltativo).', yourName: 'Il tuo nome', clear: 'Cancella', signSave: 'Conferma e firma', signed: 'Firmato — grazie!', payTitle: 'Pagamento', payNow: 'Paga ora', payDeposit: 'Paga acconto', paid: 'Pagamento ricevuto', qaDemoReply: 'Grazie — il tuo tecnico risponderà presto.', awaitingReply: 'In attesa della risposta del tuo tecnico…' , yes: 'Sì', no: 'No'},
 };
 
 type Phase = 'loading' | 'ready' | 'not_found' | 'expired' | 'app_only';
@@ -121,7 +122,9 @@ export default function CustomerPortal({ params }: PageProps) {
   const [qa, setQa] = useState<QAEntry[]>([]);
   const [qDraft, setQDraft] = useState('');
   const [qSending, setQSending] = useState(false);
-  const [signed, setSigned] = useState(false);
+  // false = not signed · 'sent' = the backend has it · 'queued' = it is in the
+  // outbox only. The banner must not say "thank you" for the third case.
+  const [signed, setSigned] = useState<false | 'sent' | 'queued'>(false);
 
   const deepLink = `vasco://customer/${encodeURIComponent(code)}`;
   const fmt = useMemo(() => moneyFmt(data?.contractorCountry, lang), [data?.contractorCountry, lang]);
@@ -159,6 +162,33 @@ export default function CustomerPortal({ params }: PageProps) {
 
   const showToast = (msg: string) => { setToast(msg); window.setTimeout(() => setToast(null), 3500); };
 
+  // Drain whatever a previous visit could not send: once the portal has loaded
+  // (so we know the backend is reachable) and again whenever the browser says
+  // the connection is back. Delivered entries leave the queue; the rest keep
+  // their place.
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    let alive = true;
+    const drain = async () => {
+      const code = data?.accessToken ?? '';
+      // A signature queued on an earlier VISIT is why this runs before the
+      // flush: without it the pad renders empty again and a second signature
+      // row gets written for the same acknowledgement.
+      const hadSignature = !!code && hasPendingSignature(code);
+      if (hadSignature) setSigned(prev => prev || 'queued');
+      const res = await flushOutbox(getSupabase());
+      if (!alive || res.delivered === 0) return;
+      showToast(t.saved);
+      if (res.signatures > 0) setSigned('sent');
+    };
+    void drain();
+    if (typeof window === 'undefined') return () => { alive = false; };
+    const onOnline = () => { void drain(); };
+    window.addEventListener('online', onOnline);
+    return () => { alive = false; window.removeEventListener('online', onOnline); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t is a constant per language; re-running on it would re-flush
+  }, [phase, data?.accessToken]);
+
   const submit = useCallback(async (item: PortalItem, value: string, photos?: string[]) => {
     if (!data) return;
     setPendingItem(item.id);
@@ -184,7 +214,16 @@ export default function CustomerPortal({ params }: PageProps) {
       } catch { /* local */ }
     }
     setPendingItem(null);
-    showToast(ok ? t.saved : t.savedLocal);
+    // A refused write is KEPT, not just announced: `savedLocal` promises a
+    // later send, and before the outbox existed nothing ever sent it. If even
+    // localStorage refuses (private mode, quota), say plainly it did not go.
+    if (ok) { showToast(t.saved); return; }
+    const kept = queueWrite({
+      kind: 'decision',
+      trackerId: data.trackerId,
+      row: { tracker_id: data.trackerId, item_id: item.id, submitted_by: 'customer', value, submitted_at: new Date().toISOString(), ...(photos && photos.length ? { photos } : {}) },
+    });
+    showToast(kept ? t.savedLocal : t.notSaved);
   }, [data, t]);
 
   const uploadPhotos = useCallback(async (item: PortalItem, files: FileList) => {
@@ -218,7 +257,10 @@ export default function CustomerPortal({ params }: PageProps) {
       }
     }
     if (urls.length) await submit(item, `${urls.length} photo(s)`, urls);
-    else { setPendingItem(null); showToast(t.savedLocal); }
+    // Photos are the answer here, and a File cannot go in the outbox (size,
+    // and localStorage holds strings). Nothing was kept, so do not claim it
+    // will be sent later — ask for the retry instead.
+    else { setPendingItem(null); showToast(t.notSaved); }
   }, [data, submit, t]);
 
   const sendQuestion = useCallback(async () => {
@@ -417,17 +459,37 @@ export default function CustomerPortal({ params }: PageProps) {
       {allDone && !signed && (
         <div style={{ maxWidth: 560, margin: '24px auto 0', padding: '0 20px' }}>
           <SignaturePad t={t} country={data.contractorCountry} onSign={async (name, svg) => {
+            // The customer is confirming a contract. The RPC RAISES on an
+            // expired or unknown access code, and supabase-js RESOLVES with
+            // `{ error }` rather than throwing — so the old try/catch saw a
+            // refusal as success and rendered "Signed — thank you!" over a
+            // signature that reached nobody.
             const sb = getSupabase();
+            const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null;
+            let delivered = false;
             if (sb && data.accessToken.length >= 4) {
-              try { await sb.rpc('write_signature_via_portal', { p_access_code: data.accessToken, p_signer_name: name, p_signer_role: 'customer', p_signature_svg: svg, p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null }); } catch { /* best-effort */ }
+              try {
+                const { error } = await sb.rpc('write_signature_via_portal', { p_access_code: data.accessToken, p_signer_name: name, p_signer_role: 'customer', p_signature_svg: svg, p_user_agent: userAgent });
+                delivered = !error;
+              } catch { delivered = false; }
             }
-            setSigned(true); showToast(t.signed);
+            if (delivered) { setSigned('sent'); showToast(t.signed); return; }
+            const kept = data.accessToken.length >= 4 && queueWrite({
+              kind: 'signature', accessCode: data.accessToken, signerName: name,
+              signerRole: 'customer', signatureSvg: svg, userAgent,
+            });
+            if (kept) { setSigned('queued'); showToast(t.signedLocal); }
+            else { setSigned(false); showToast(t.notSaved); }
           }} />
         </div>
       )}
       {signed && (
         <div style={{ maxWidth: 560, margin: '24px auto 0', padding: '0 20px' }}>
-          <div style={{ background: 'rgba(34,197,94,0.1)', border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 14, padding: '16px 20px', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>✓ {t.signed}</div>
+          <div style={signed === 'sent'
+            ? { background: 'rgba(34,197,94,0.1)', border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 14, padding: '16px 20px', textAlign: 'center', fontSize: 14, fontWeight: 600 }
+            : { background: 'rgba(245,158,11,0.1)', border: `1px solid rgba(245,158,11,0.35)`, borderRadius: 14, padding: '16px 20px', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>
+            {signed === 'sent' ? `✓ ${t.signed}` : `⏳ ${t.signedLocal}`}
+          </div>
         </div>
       )}
 
@@ -520,7 +582,7 @@ function PhotoUpload({ item, t, pending, onPick }: { item: PortalItem; t: Record
   );
 }
 
-function SignaturePad({ t, country, onSign }: { t: Record<string, string>; country?: string; onSign: (name: string, svg: string) => void }) {
+function SignaturePad({ t, country, onSign }: { t: Record<string, string>; country?: string; onSign: (name: string, svg: string) => Promise<void> }) {
   const [name, setName] = useState('');
   const [path, setPath] = useState('');
   const [saving, setSaving] = useState(false);
@@ -548,7 +610,11 @@ function SignaturePad({ t, country, onSign }: { t: Record<string, string>; count
       </svg>
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
         <button onClick={() => setPath('')} style={btnGhost}>{t.clear}</button>
-        <button disabled={saving || !name.trim() || !path} onClick={async () => { setSaving(true); await onSign(name.trim(), path); }}
+        {/* `saving` must be released: a refused signature leaves this pad
+            mounted (the parent only hides it on success or on a queued write),
+            and without the finally the button stayed disabled on "Saving…"
+            with no way to try again. */}
+        <button disabled={saving || !name.trim() || !path} onClick={async () => { setSaving(true); try { await onSign(name.trim(), path); } finally { setSaving(false); } }}
           style={{ ...btnPrimary, flex: 1, opacity: saving || !name.trim() || !path ? 0.5 : 1 }}>{saving ? t.saving : t.signSave}</button>
       </div>
     </div>

@@ -647,7 +647,7 @@
   "billing": {
     "upgradeRequired": "Aggiornamento richiesto",
     "viewPlans": "Vedi piani",
-    "formatNeedsContractor": "Questo formato richiede il piano Contractor."
+    "formatNeedsUpgrade": "Questo formato richiede un piano a pagamento."
   },
   "reasonCode": {
     "title": "Perché l'hai cambiato?",
@@ -840,6 +840,8 @@
     "noEmailDesc": "Segnata come inviata localmente. Aggiungi l'email del cliente per inviare la fattura automaticamente la prossima volta.",
     "sentTitle": "Fattura inviata",
     "sentDesc": "Inviata a {{email}}. Vasco ti ricorderà se il pagamento è in ritardo.",
+    "sentNotRecordedTitle": "Inviata — ma non registrata",
+    "sentNotRecordedDesc": "La fattura è arrivata a {{email}}, ma non siamo riusciti a contrassegnarla come inviata. Non inviarla di nuovo — controlla lo stato tra poco.",
     "sendFailedTitle": "Email non inviata",
     "sendFailedDesc": "Segnata come inviata localmente, ma l'email non è stata consegnata: {{error}}",
     "heroLabelPaid": "Pagato",

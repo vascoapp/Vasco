@@ -578,8 +578,12 @@ export function getActionsForType(type: NotificationType): PushNotificationActio
 }
 
 /** Should we show/deliver this push? Respects quiet hours + preferences */
-export function shouldDeliver(type: NotificationType): boolean {
-  if (isInQuietHours()) return false;
+/** `now` is injectable for the same reason `isInQuietHours` takes one: without
+ *  it this function reads the wall clock, and anything testing it passes by
+ *  day and fails between 22:00 and 07:00 — which is exactly what happened to
+ *  `notificationPreferencesPersist` on the night of 2026-09-18. */
+export function shouldDeliver(type: NotificationType, now: Date = new Date()): boolean {
+  if (isInQuietHours(now)) return false;
   const prefs = notificationService.getPreferences();
   const pref = prefs.find(p => p.type === type);
   return pref ? pref.enabled && pref.pushEnabled : true;

@@ -189,10 +189,25 @@ describe('every push the app sends can be switched off', () => {
 
   it('muting a type stops its delivery', () => {
     const { shouldDeliver } = require('../pushNotificationService');
-    expect(shouldDeliver('invoice_paid')).toBe(true);
+    // A FIXED midday clock. Reading `new Date()` here made this test pass by
+    // day and fail every night: quiet hours (22:00–07:00 by default) short
+    // -circuit `shouldDeliver` before it ever looks at the preference, so the
+    // suite went red at 00:00 with nothing wrong in the app.
+    const midday = new Date('2026-09-18T12:00:00');
+    expect(shouldDeliver('invoice_paid', midday)).toBe(true);
     notificationService.togglePreference('invoice_paid', 'enabled');
-    expect(shouldDeliver('invoice_paid')).toBe(false);
+    expect(shouldDeliver('invoice_paid', midday)).toBe(false);
     notificationService.togglePreference('invoice_paid', 'enabled');
+    expect(shouldDeliver('invoice_paid', midday)).toBe(true);
+  });
+
+  it('quiet hours silence a type that is switched ON', () => {
+    const { shouldDeliver } = require('../pushNotificationService');
+    // The other half of the same gate, and the reason the clock must be
+    // injected rather than read.
+    expect(shouldDeliver('invoice_paid', new Date('2026-09-18T23:30:00'))).toBe(false);
+    expect(shouldDeliver('invoice_paid', new Date('2026-09-19T03:00:00'))).toBe(false);
+    expect(shouldDeliver('invoice_paid', new Date('2026-09-19T08:00:00'))).toBe(true);
   });
 });
 
