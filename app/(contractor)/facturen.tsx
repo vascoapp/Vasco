@@ -494,7 +494,15 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                             ? new Date(linkedJob.completedAt)
                             : autoInv.deliveryDate,
                       };
-                      await generateInvoicePdf(enriched, businessProfile, link?.url, customerSignature ? { customerSignature } : undefined);
+                      await generateInvoicePdf(enriched, businessProfile, link?.url, {
+                        ...(customerSignature ? { customerSignature } : {}),
+                        frMentions: {
+                          buyerVatId: findDocumentCustomer(customers, invoice)?.vatId,
+                          operationNature: (invoice as any).operationNature,
+                          deliveryAddress: (invoice as any).deliveryAddress,
+                          tvaSurLesDebits: businessProfile?.tvaSurLesDebits,
+                        },
+                      });
                     }
                   }}
                 >

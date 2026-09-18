@@ -69,6 +69,12 @@ export type BusinessProfile = {
   vatBasis?: 'soll' | 'ist';
   /** How often the VAT return is filed. Undefined = not stated (quarterly). */
   filingPeriod?: 'monthly' | 'quarterly' | 'yearly';
+  /**
+   * FR: the seller has opted to account for VAT on DEBITS rather than on
+   * receipts. When true, every invoice must carry the mention "Option pour le
+   * paiement de la TVA d'après les débits" (mandatory from 1 September 2026).
+   */
+  tvaSurLesDebits?: boolean;
   // R66 NL launch: payment + locale fields. Migration
   // `20260415000001_business_profiles.sql` declared these on
   // `business_settings` but the mapper + UI dropped them. Without `iban`,

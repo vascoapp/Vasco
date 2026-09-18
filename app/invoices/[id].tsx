@@ -43,6 +43,7 @@ import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../s
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { amountPayableNow } from '../../src/domain/documents';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { DecimalInput } from '../../src/components/shared/DecimalInput';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
@@ -161,6 +162,8 @@ export default function InvoiceDetailScreen() {
   const [savingItems, setSavingItems] = useState(false);
   const [localItems, setLocalItems] = useState<EditableLineItem[]>([]);
   const [editingNotes, setEditingNotes] = useState(false);
+  // Filled by the effect below once the invoice has loaded.
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [notes, setNotes] = useState('');
 
   // Customer preference
@@ -170,6 +173,10 @@ export default function InvoiceDetailScreen() {
     if (invoice) {
       // R66 round 13: notes is now a real Invoice field — no `as any` cast.
       setNotes(invoice.notes ?? '');
+      // Same reason as `notes`: the invoice arrives AFTER first render, so a
+      // useState initialiser would capture '' and the contractor's saved
+      // delivery address would look empty when they reopened the screen.
+      setDeliveryAddress((invoice as any).deliveryAddress ?? '');
       getCustomerPaymentPreference(invoice.id).then(setCustomerPreference);
       // Build line items from appLineItems or synthesize from amount
       const existing = appLineItems[invoice.id];
@@ -599,7 +606,17 @@ export default function InvoiceDetailScreen() {
             ? new Date(linkedJob.completedAt)
             : autoInv.deliveryDate,
       };
-      await generateInvoicePdf(enriched, businessProfile, undefined, customerSignature ? { customerSignature } : undefined);
+      await generateInvoicePdf(enriched, businessProfile, undefined, {
+        ...(customerSignature ? { customerSignature } : {}),
+        // FR 2026 mentions. Each fact prints a line only when it exists; the
+        // buyer's SIREN is derived from their own VAT number.
+        frMentions: {
+          buyerVatId: invoiceCustomer?.vatId,
+          operationNature: (invoice as any).operationNature,
+          deliveryAddress: (invoice as any).deliveryAddress,
+          tvaSurLesDebits: businessProfile?.tvaSurLesDebits,
+        },
+      });
     }
   };
 
@@ -1607,6 +1624,53 @@ export default function InvoiceDetailScreen() {
           )}
         </View>
 
+        {/* FR 2026 mentions. The reform requires the NATURE of the operation and
+            a delivery address when it differs — facts only the contractor can
+            state, so they are asked for rather than guessed. France only: the
+            block is meaningless anywhere else, and the PDF prints each line
+            only when its fact exists (#339 L14). */}
+        {country === 'FR' && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('invoices.frMentionsTitle', 'Mentions obligatoires (France)')}</Text>
+            <DKMenu
+              accessibilityLabel={t('invoices.operationNature', "Nature de l'opération")}
+              items={([
+                { key: 'goods', label: t('invoices.natureGoods', 'Livraison de biens') },
+                { key: 'services', label: t('invoices.natureServices', 'Prestation de services') },
+                { key: 'mixed', label: t('invoices.natureMixed', 'Opération mixte') },
+              ] as const).map((o) => ({
+                key: o.key,
+                label: o.label,
+                selected: (invoice as any).operationNature === o.key,
+                onPress: () => updateInvoice(invoice.id, { operationNature: o.key } as any),
+              }))}
+              renderAnchor={(open: () => void) => (
+                <Pressable onPress={open} style={styles.frMentionRow} accessibilityRole="button">
+                  <Text style={styles.frMentionLabel}>{t('invoices.operationNature', "Nature de l'opération")}</Text>
+                  <Text style={styles.frMentionValue}>
+                    {(invoice as any).operationNature === 'goods' ? t('invoices.natureGoods', 'Livraison de biens')
+                      : (invoice as any).operationNature === 'services' ? t('invoices.natureServices', 'Prestation de services')
+                        : (invoice as any).operationNature === 'mixed' ? t('invoices.natureMixed', 'Opération mixte')
+                          : t('invoices.natureUnset', 'À préciser')}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
+                </Pressable>
+              )}
+            />
+            <Text style={styles.frMentionLabel}>{t('invoices.deliveryAddress', 'Adresse de livraison (si différente)')}</Text>
+            <TextInput
+              style={styles.notesInput}
+              value={deliveryAddress}
+              onChangeText={setDeliveryAddress}
+              onBlur={() => updateInvoice(invoice.id, { deliveryAddress: deliveryAddress.trim() } as any)}
+              placeholder={t('invoices.deliveryAddressPlaceholder', 'Laisser vide si identique à la facturation')}
+              placeholderTextColor={SemanticColors.textTertiary}
+              multiline
+              textAlignVertical="top"
+            />
+          </View>
+        )}
+
         <View style={{ height: SafeArea.bottom + GRID.xl }} />
       </ScrollView>
     </View>
@@ -2115,6 +2179,26 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.bodyFamily,
     color: SemanticColors.textPrimary,
     minHeight: 80,
+  },
+  frMentionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: GRID.sm,
+    paddingVertical: GRID.sm,
+  },
+  frMentionLabel: {
+    fontFamily: TYPE.bodyFamily,
+    fontSize: TYPE.captionSize,
+    color: SemanticColors.textSecondary,
+    marginTop: GRID.xs,
+  },
+  frMentionValue: {
+    flex: 1,
+    textAlign: 'right',
+    fontFamily: TYPE.titleFamily,
+    fontSize: TYPE.captionSize,
+    color: SemanticColors.textPrimary,
   },
   notesText: {
     fontSize: TYPE.captionSize,

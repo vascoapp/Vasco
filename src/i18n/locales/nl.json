@@ -913,7 +913,15 @@
     "showActions": "Acties voor {{customer}}",
     "linesNotSavedTitle": "Regels niet opgeslagen",
     "linesNotSavedBody": "De factuurregels konden niet worden opgeslagen. Controleer de verbinding en probeer het opnieuw — er is niets gewijzigd.",
-    "agreedExclVat": "excl. btw"
+    "agreedExclVat": "excl. btw",
+    "frMentionsTitle": "Verplichte vermeldingen (Frankrijk)",
+    "operationNature": "Aard van de transactie",
+    "natureGoods": "Levering van goederen",
+    "natureServices": "Dienstverlening",
+    "natureMixed": "Gemengde transactie",
+    "natureUnset": "Nog opgeven",
+    "deliveryAddress": "Afleveradres (indien afwijkend)",
+    "deliveryAddressPlaceholder": "Leeg laten als gelijk aan het factuuradres"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -4319,7 +4327,8 @@
     "upgradeInvoiceTitle": "{{project}} — gekozen meerwerk",
     "recordWarningTitle": "Waarschuwing vastleggen",
     "recordWarningBody": "Bevestigt dat je de klant hebt verteld dat „{{item}}\" meerkosten geeft. Vereist vóór facturatie{{statute}}.",
-    "upgradesChangedBody": "Deze keuzes zijn veranderd terwijl dit venster openstond. Controleer de lijst en probeer het opnieuw."
+    "upgradesChangedBody": "Deze keuzes zijn veranderd terwijl dit venster openstond. Controleer de lijst en probeer het opnieuw.",
+    "upgradesAlreadyBilled": "Deze keuzes staan al op factuur {{number}}."
   },
   "besparen": {
     "materialFallback": "Materiaal {{id}}"
@@ -7102,6 +7111,9 @@
     "filingSection": "Hoe vaak u aangifte doet",
     "monthly": "Maandelijks",
     "quarterly": "Per kwartaal",
-    "yearly": "Jaarlijks"
+    "yearly": "Jaarlijks",
+    "frDebitsSection": "TVA sur les débits (FR)",
+    "frDebitsLabel": "Ik heb gekozen voor btw op basis van facturatie (débits)",
+    "frDebitsHint": "De bijbehorende vermelding komt op uw facturen te staan."
   }
 }

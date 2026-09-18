@@ -13,7 +13,7 @@ import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, grossFromN
 import { Customer, findDocumentCustomer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
-import { Invoice, Quote, documentNumber } from '../domain/documents';
+import { Invoice, Quote, documentNumber, invoiceAlreadyBillingDecisionItems } from '../domain/documents';
 import { completionStampFor } from '../domain/jobs';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
 import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
@@ -233,6 +233,12 @@ type AppState = {
     customerName?: string;
     title: string;
     lines: { description: string; quantity: number; unitPrice: number }[];
+    /**
+     * The decision items these lines charge for. Stored on the invoice so the
+     * same chosen upgrade cannot be billed from a second device — the
+     * tracker's own "billed" stamp is AsyncStorage and does not travel.
+     */
+    decisionItemIds?: string[];
   }) => Promise<string>;
   /** Raise the invoice for one project billing term (termijnfactuur). */
   addTermInvoice: (projectId: string, termId: string) => Promise<string>;
@@ -2653,6 +2659,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // column, no mapper coverage). Migration 20260507000003 adds
           // documents.notes; mapper now wires it through.
           if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+          // FR 2026 mentions (migration 20260918000002). `?? null` so clearing
+          // a stated nature or delivery address really clears it — an empty
+          // string would print an empty mention.
+          if (updates.operationNature !== undefined) dbUpdates.operation_nature = updates.operationNature ?? null;
+          if (updates.deliveryAddress !== undefined) dbUpdates.delivery_address = updates.deliveryAddress || null;
           if (Object.keys(dbUpdates).length > 0) {
             import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
               persistOrQueue('documents', 'update', () => updateDocument(id, dbUpdates), { rowId: id, payload: dbUpdates }),
@@ -2845,6 +2856,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.vatScheme !== undefined) dbUpdates.vat_scheme = updates.vatScheme || null;
           if (updates.vatBasis !== undefined) dbUpdates.vat_basis = updates.vatBasis || null;
           if (updates.filingPeriod !== undefined) dbUpdates.filing_period = updates.filingPeriod || null;
+          if (updates.tvaSurLesDebits !== undefined) dbUpdates.tva_sur_les_debits = updates.tvaSurLesDebits ?? null;
           if (updates.businessType !== undefined) dbUpdates.business_type = updates.businessType || null;
           if (updates.teamSize !== undefined) dbUpdates.team_size = updates.teamSize || null;
           if (updates.trade !== undefined) dbUpdates.trade = updates.trade || null;
@@ -3432,9 +3444,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
        * `decisionUpgradeBilling` — the caller passes only lines it has already
        * cleared, and stamps the tracker with the id this returns.
        */
-      addInvoiceFromDecisionUpgrades: async ({ customerId, customerName, title, lines }) => {
+      addInvoiceFromDecisionUpgrades: async ({ customerId, customerName, title, lines, decisionItemIds }) => {
         if (!lines.length) {
           throw new Error(appI18n.t('decisions.noUpgradesToBill', 'There are no upgrades to bill yet.'));
+        }
+        // CROSS-DEVICE de-dup. The tracker stamps itself "billed", but that
+        // stamp lives in AsyncStorage and does not travel, so the same chosen
+        // upgrade could be invoiced again from a second device or after a
+        // reinstall — two invoices to the customer for one decision (#339 D14).
+        // Invoices sync, so they are the side that can answer "already billed?".
+        const alreadyBilled = invoiceAlreadyBillingDecisionItems(invoices, decisionItemIds);
+        if (alreadyBilled) {
+          throw new Error(appI18n.t('decisions.upgradesAlreadyBilled', {
+            defaultValue: 'These choices are already on invoice {{number}}.',
+            number: documentNumber(alreadyBilled),
+          }));
         }
         const net = Math.round(lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0) * 100) / 100;
         if (net <= 0) {
@@ -3460,6 +3484,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount,
           status: 'draft',
           dueInDays: 14,
+          decisionItemIds: decisionItemIds?.length ? decisionItemIds : undefined,
         };
         setInvoices((prev) => [newInvoice, ...prev]);
         const itemsWithIds = lines.map((li, idx) => ({
@@ -3477,6 +3502,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             document_number: docNumber,
             customer_id: isUuid(customerId) ? customerId : null,
             job_id: null,
+            // The de-dup key, on the side that syncs (migration 20260918000001).
+            decision_item_ids: decisionItemIds?.length ? decisionItemIds : null,
             total_amount: amount,
             due_date: dueDate.toISOString(),
           };

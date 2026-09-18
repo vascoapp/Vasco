@@ -920,7 +920,15 @@
     "showActions": "Azioni per {{customer}}",
     "linesNotSavedTitle": "Righe non salvate",
     "linesNotSavedBody": "Non è stato possibile salvare le righe della fattura. Verifichi la connessione e riprovi: non è stato modificato nulla.",
-    "agreedExclVat": "IVA escl."
+    "agreedExclVat": "IVA escl.",
+    "frMentionsTitle": "Menzioni obbligatorie (Francia)",
+    "operationNature": "Natura dell'operazione",
+    "natureGoods": "Cessione di beni",
+    "natureServices": "Prestazione di servizi",
+    "natureMixed": "Operazione mista",
+    "natureUnset": "Da indicare",
+    "deliveryAddress": "Indirizzo di consegna (se diverso)",
+    "deliveryAddressPlaceholder": "Lasciare vuoto se uguale a quello di fatturazione"
   },
   "expenses": {
     "title": "Spese",
@@ -4326,7 +4334,8 @@
     "upgradeInvoiceTitle": "{{project}} — extra scelti",
     "recordWarningTitle": "Registra l’avviso di prezzo",
     "recordWarningBody": "Conferma di aver avvisato il cliente che «{{item}}» comporta un costo aggiuntivo. Obbligatorio prima della fatturazione{{statute}}.",
-    "upgradesChangedBody": "Queste scelte sono cambiate mentre la finestra era aperta. Controlla l’elenco e riprova."
+    "upgradesChangedBody": "Queste scelte sono cambiate mentre la finestra era aperta. Controlla l’elenco e riprova.",
+    "upgradesAlreadyBilled": "Queste scelte sono già sulla fattura {{number}}."
   },
   "besparen": {
     "materialFallback": "Materiale {{id}}"
@@ -7109,6 +7118,9 @@
     "filingSection": "Con quale frequenza dichiari",
     "monthly": "Mensile",
     "quarterly": "Trimestrale",
-    "yearly": "Annuale"
+    "yearly": "Annuale",
+    "frDebitsSection": "IVA sui debiti (FR)",
+    "frDebitsLabel": "Ho optato per l'IVA secondo i debiti",
+    "frDebitsHint": "La menzione corrispondente sarà stampata sulle tue fatture."
   }
 }

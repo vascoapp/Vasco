@@ -417,6 +417,9 @@ export default function KeuzeScreen() {
                   ),
                 }),
                 lines: upgradeInvoiceLines(fresh, labelUpgrade),
+                // Travels with the invoice, so a second device can see these
+                // choices were already billed (the tracker's stamp cannot).
+                decisionItemIds: fresh.map((e) => e.itemId),
               });
               // Stamp them so the same choice cannot be billed twice.
               commitTracker((t0) => markUpgradesBilled(t0, fresh.map((e) => e.itemId), invoiceId));

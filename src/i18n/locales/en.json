@@ -920,7 +920,15 @@
     "showActions": "Actions for {{customer}}",
     "linesNotSavedTitle": "Lines not saved",
     "linesNotSavedBody": "The invoice lines could not be saved. Check your connection and try again — nothing was changed.",
-    "agreedExclVat": "excl. VAT"
+    "agreedExclVat": "excl. VAT",
+    "frMentionsTitle": "Mandatory mentions (France)",
+    "operationNature": "Nature of the operation",
+    "natureGoods": "Supply of goods",
+    "natureServices": "Supply of services",
+    "natureMixed": "Mixed operation",
+    "natureUnset": "To be stated",
+    "deliveryAddress": "Delivery address (if different)",
+    "deliveryAddressPlaceholder": "Leave empty if the same as the billing address"
   },
   "expenses": {
     "title": "Expenses",
@@ -4326,7 +4334,8 @@
     "upgradeInvoiceTitle": "{{project}} — chosen upgrades",
     "recordWarningTitle": "Record the price warning",
     "recordWarningBody": "Confirms you told the customer that \"{{item}}\" costs extra. Required before billing{{statute}}.",
-    "upgradesChangedBody": "These choices changed while the dialog was open. Check the list and try again."
+    "upgradesChangedBody": "These choices changed while the dialog was open. Check the list and try again.",
+    "upgradesAlreadyBilled": "These choices are already on invoice {{number}}."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -7109,6 +7118,9 @@
     "filingSection": "How often you file",
     "monthly": "Monthly",
     "quarterly": "Quarterly",
-    "yearly": "Yearly"
+    "yearly": "Yearly",
+    "frDebitsSection": "VAT on debits (FR)",
+    "frDebitsLabel": "I have opted to account for VAT on debits",
+    "frDebitsHint": "The corresponding mention will be printed on your invoices."
   }
 }

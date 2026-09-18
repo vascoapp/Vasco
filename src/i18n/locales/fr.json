@@ -920,7 +920,15 @@
     "showActions": "Actions pour {{customer}}",
     "linesNotSavedTitle": "Lignes non enregistrées",
     "linesNotSavedBody": "Les lignes de la facture n’ont pas pu être enregistrées. Vérifiez la connexion et réessayez — rien n’a été modifié.",
-    "agreedExclVat": "HT"
+    "agreedExclVat": "HT",
+    "frMentionsTitle": "Mentions obligatoires (France)",
+    "operationNature": "Nature de l'opération",
+    "natureGoods": "Livraison de biens",
+    "natureServices": "Prestation de services",
+    "natureMixed": "Opération mixte",
+    "natureUnset": "À préciser",
+    "deliveryAddress": "Adresse de livraison (si différente)",
+    "deliveryAddressPlaceholder": "Laisser vide si identique à la facturation"
   },
   "expenses": {
     "title": "Dépenses",
@@ -4326,7 +4334,8 @@
     "upgradeInvoiceTitle": "{{project}} — options choisies",
     "recordWarningTitle": "Consigner l’avertissement de prix",
     "recordWarningBody": "Confirme que vous avez prévenu le client que « {{item}} » entraîne un surcoût. Obligatoire avant facturation{{statute}}.",
-    "upgradesChangedBody": "Ces choix ont changé pendant que la fenêtre était ouverte. Vérifiez la liste et réessayez."
+    "upgradesChangedBody": "Ces choix ont changé pendant que la fenêtre était ouverte. Vérifiez la liste et réessayez.",
+    "upgradesAlreadyBilled": "Ces choix figurent déjà sur la facture {{number}}."
   },
   "besparen": {
     "materialFallback": "Matériau {{id}}"
@@ -7109,6 +7118,9 @@
     "filingSection": "Fréquence de déclaration",
     "monthly": "Mensuelle",
     "quarterly": "Trimestrielle",
-    "yearly": "Annuelle"
+    "yearly": "Annuelle",
+    "frDebitsSection": "TVA sur les débits",
+    "frDebitsLabel": "J'ai opté pour le paiement de la TVA d'après les débits",
+    "frDebitsHint": "La mention correspondante sera imprimée sur vos factures."
   }
 }

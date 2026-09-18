@@ -191,6 +191,57 @@ function getLabels(lang?: string): DocLabels {
  * today's figure onto a document that outlives it would be the same mistake as
  * a hardcoded VAT rate.
  */
+/**
+ * The 9-digit SIREN inside a French VAT number.
+ *
+ * A French TVA intracommunautaire is `FR` + a 2-character key + the 9-digit
+ * SIREN, so the buyer's SIREN — which the 2026 reform requires on the invoice —
+ * is already there whenever the customer's VAT number is. Derived rather than
+ * stored: a second field for a number the first one contains is two places to
+ * be wrong (#170's shape).
+ *
+ * Returns null for anything that is not a well-formed FR number, because a
+ * partial legal mention is worse than an absent one.
+ */
+export function sirenFromFrenchVatId(vatId?: string | null): string | null {
+  if (!vatId) return null;
+  const compact = vatId.replace(/[\s.]/g, '').toUpperCase();
+  const m = /^FR([0-9A-Z]{2})(\d{9})$/.exec(compact);
+  return m ? m[2] : null;
+}
+
+/**
+ * The mentions the French reform adds from 1 September 2026, each rendered ONLY
+ * when the fact behind it exists. Nothing here is inferred: the nature of the
+ * operation and the delivery address are stated by the contractor, the SIREN
+ * comes from the customer's own VAT number, and the débits option is a setting.
+ */
+export function frenchInvoiceMentions2026(input: {
+  buyerVatId?: string | null;
+  operationNature?: 'goods' | 'services' | 'mixed' | null;
+  deliveryAddress?: string | null;
+  tvaSurLesDebits?: boolean | null;
+}): string[] {
+  const out: string[] = [];
+  const siren = sirenFromFrenchVatId(input.buyerVatId);
+  if (siren) out.push(`SIREN du client : ${siren}`);
+  if (input.operationNature) {
+    const label = input.operationNature === 'goods'
+      ? 'livraison de biens'
+      : input.operationNature === 'services'
+        ? 'prestation de services'
+        : 'opération mixte (biens et services)';
+    out.push(`Nature de l'opération : ${label}.`);
+  }
+  if (input.deliveryAddress && input.deliveryAddress.trim()) {
+    out.push(`Adresse de livraison : ${input.deliveryAddress.trim()}.`);
+  }
+  if (input.tvaSurLesDebits) {
+    out.push("Option pour le paiement de la TVA d'après les débits.");
+  }
+  return out;
+}
+
 export function legalMentions(country?: Country): string[] {
   switch (country) {
     case 'FR':
@@ -242,6 +293,13 @@ function buildInvoiceHtml(
   // country === 'US'. Routing # is 9 digits, account # is 4-17 digits.
   routingNumber?: string,
   bankAccountNumber?: string,
+  /** The facts behind the FR 2026 mentions; each missing one prints no line. */
+  frMentions?: {
+    buyerVatId?: string | null;
+    operationNature?: 'goods' | 'services' | 'mixed' | null;
+    deliveryAddress?: string | null;
+    tvaSurLesDebits?: boolean | null;
+  },
 ): string {
   const L = getLabels(language);
   const curr = getCurrencySymbol(country);
@@ -515,7 +573,12 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
     return parts.length ? `<div style="margin-top:4px;font-size:10px;color:#6B7280">${parts.join(' · ')}</div>` : '';
   })()}
   ${(() => {
-    const mentions = legalMentions(country);
+    // The French reform's mentions come first — they are about THIS invoice —
+    // then the standing ones (penalty rate, recovery indemnity).
+    const mentions = [
+      ...(country === 'FR' ? frenchInvoiceMentions2026(frMentions ?? {}) : []),
+      ...legalMentions(country),
+    ];
     return mentions.length
       ? `<div style="margin-top:10px;font-size:9px;color:#6B7280;line-height:1.5;text-align:left">${mentions.map((m) => `<div>${m}</div>`).join('')}</div>`
       : '';
@@ -605,6 +668,17 @@ export async function generateInvoicePdf(
   paymentUrl?: string,
   options?: {
     showPoweredBy?: boolean; // true for Gratis tier
+    /**
+     * The facts behind the French 2026 mentions. Passed in rather than derived
+     * here: only the caller knows the customer's VAT number and what the
+     * contractor stated about this invoice. Omitted facts print no line.
+     */
+    frMentions?: {
+      buyerVatId?: string | null;
+      operationNature?: 'goods' | 'services' | 'mixed' | null;
+      deliveryAddress?: string | null;
+      tvaSurLesDebits?: boolean | null;
+    };
     // R301: optional customer-handover signature embed. When supplied,
     // signatureHtmlBlock is appended to the invoice HTML.
     customerSignature?: {
@@ -630,6 +704,7 @@ export async function generateInvoicePdf(
     businessProfile?.vatScheme,
     businessProfile?.routingNumber,
     businessProfile?.bankAccountNumber,
+    options?.frMentions,
   );
 
   // R301: embed signature when customer signed off on the linked job.
@@ -691,6 +766,13 @@ export async function buildInvoicePdfBase64(
   paymentUrl?: string,
   options?: {
     showPoweredBy?: boolean;
+    /** Same facts as `generateInvoicePdf`; see that signature. */
+    frMentions?: {
+      buyerVatId?: string | null;
+      operationNature?: 'goods' | 'services' | 'mixed' | null;
+      deliveryAddress?: string | null;
+      tvaSurLesDebits?: boolean | null;
+    };
     customerSignature?: { svgDataUri: string; signedAt: string; signerName: string; language?: string };
   },
 ): Promise<string | null> {
@@ -710,6 +792,7 @@ export async function buildInvoicePdfBase64(
       businessProfile?.vatScheme,
       businessProfile?.routingNumber,
       businessProfile?.bankAccountNumber,
+      options?.frMentions,
     );
     if (options?.customerSignature) {
       const { signatureHtmlBlock, getLegalText } = await import('./signatureService');

@@ -42,6 +42,8 @@ export type BusinessSettingsRow = {
   vat_scheme: string | null;
   // Migration 20260917000003 — how this contractor actually files.
   vat_basis: string | null;
+  // FR: the seller accounts for VAT on debits; the invoice must say so.
+  tva_sur_les_debits: boolean | null;
   filing_period: string | null;
   business_type: string | null;
   team_size: string | null;
@@ -233,6 +235,11 @@ export type DocumentRow = {
   /** Retentie withheld from this invoice. total_amount stays the full term
    *  value so VAT is charged on the full amount; payable-now is derived. */
   retention_amount: number;
+  // Migration 20260918000001 — which chosen upgrades this invoice billed.
+  decision_item_ids: string[] | null;
+  // Migration 20260918000002 — the FR 2026 invoice mentions.
+  operation_nature: 'goods' | 'services' | 'mixed' | null;
+  delivery_address: string | null;
   is_retention_release: boolean;
   created_at: string;
   updated_at: string;

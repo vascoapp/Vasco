@@ -920,7 +920,15 @@
     "showActions": "Aktionen für {{customer}}",
     "linesNotSavedTitle": "Positionen nicht gespeichert",
     "linesNotSavedBody": "Die Rechnungspositionen konnten nicht gespeichert werden. Bitte Verbindung prüfen und erneut versuchen – es wurde nichts geändert.",
-    "agreedExclVat": "exkl. MwSt."
+    "agreedExclVat": "exkl. MwSt.",
+    "frMentionsTitle": "Pflichtangaben (Frankreich)",
+    "operationNature": "Art des Umsatzes",
+    "natureGoods": "Lieferung von Gegenständen",
+    "natureServices": "Dienstleistung",
+    "natureMixed": "Gemischter Umsatz",
+    "natureUnset": "Noch anzugeben",
+    "deliveryAddress": "Lieferadresse (falls abweichend)",
+    "deliveryAddressPlaceholder": "Leer lassen, wenn identisch mit der Rechnungsadresse"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -4326,7 +4334,8 @@
     "upgradeInvoiceTitle": "{{project}} — gewählte Extras",
     "recordWarningTitle": "Hinweis auf Mehrkosten festhalten",
     "recordWarningBody": "Bestätigt, dass Sie dem Kunden gesagt haben, dass „{{item}}\" Mehrkosten verursacht. Vor der Abrechnung erforderlich{{statute}}.",
-    "upgradesChangedBody": "Diese Auswahl hat sich geändert, während der Dialog offen war. Prüfen Sie die Liste und versuchen Sie es erneut."
+    "upgradesChangedBody": "Diese Auswahl hat sich geändert, während der Dialog offen war. Prüfen Sie die Liste und versuchen Sie es erneut.",
+    "upgradesAlreadyBilled": "Diese Auswahl steht bereits auf Rechnung {{number}}."
   },
   "besparen": {
     "materialFallback": "Material {{id}}"
@@ -7109,6 +7118,9 @@
     "filingSection": "Wie oft Sie melden",
     "monthly": "Monatlich",
     "quarterly": "Vierteljährlich",
-    "yearly": "Jährlich"
+    "yearly": "Jährlich",
+    "frDebitsSection": "TVA sur les débits (FR)",
+    "frDebitsLabel": "Ich habe zur Besteuerung nach vereinbarten Entgelten (débits) optiert",
+    "frDebitsHint": "Der entsprechende Hinweis wird auf Ihren Rechnungen gedruckt."
   }
 }

@@ -96,6 +96,25 @@ export type Invoice = {
    * VAT and produce an e-invoice total that disagrees with the contract.
    */
   retentionAmount?: number;
+  /**
+   * Decision-tracker item ids this invoice already charged for.
+   *
+   * The cross-device guard against billing one chosen upgrade twice: the
+   * tracker's own "billed" stamp lives in AsyncStorage and does not travel, so
+   * a second device would raise a second invoice for the same choice (#339
+   * D14). Invoices sync, so the key lives here. Undefined on every invoice not
+   * raised from decision upgrades.
+   */
+  decisionItemIds?: string[];
+  /**
+   * FR 2026 mentions (mandatory from 1 September 2026). Both are stated by the
+   * CONTRACTOR: the nature of the operation is a statement to the tax
+   * authority, and a delivery address only exists when it differs from the
+   * buyer's. Undefined = not stated, and the PDF omits the line rather than
+   * guessing one (#339 L14).
+   */
+  operationNature?: 'goods' | 'services' | 'mixed';
+  deliveryAddress?: string;
   /** The final invoice that releases everything withheld. Withholds nothing itself. */
   isRetentionRelease?: boolean;
 };
@@ -144,6 +163,25 @@ export function documentNumber(
  * on it. Every late-fee caller passed `invoice.amount`, over-claiming interest
  * in the reminder the customer reads (#339).
  */
+/**
+ * The invoice that already charged for any of these decision items, if there is
+ * one.
+ *
+ * The cross-device guard against billing a chosen upgrade twice. The decision
+ * tracker stamps itself "billed", but that stamp lives in AsyncStorage and does
+ * not travel, so a second device (or a reinstall) would raise a second invoice
+ * for the same choice and the customer would receive both (#339 D14).
+ * Invoices sync, so they are the side that can answer the question.
+ */
+export function invoiceAlreadyBillingDecisionItems<T extends { decisionItemIds?: string[] }>(
+  invoices: readonly T[],
+  itemIds: readonly string[] | undefined,
+): T | undefined {
+  if (!itemIds || itemIds.length === 0) return undefined;
+  const wanted = new Set(itemIds);
+  return invoices.find((inv) => (inv.decisionItemIds ?? []).some((id) => wanted.has(id)));
+}
+
 export function amountPayableNow(
   invoice: { amount: number; retentionAmount?: number | null },
 ): number {

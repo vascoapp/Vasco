@@ -74,6 +74,9 @@ export function documentRowToInvoice(row: DocumentRow): Invoice {
     billingTermId: row.billing_term_id ?? undefined,
     changeOrderId: row.change_order_id ?? undefined,
     retentionAmount: row.retention_amount != null ? Number(row.retention_amount) : undefined,
+    decisionItemIds: row.decision_item_ids ?? undefined,
+    operationNature: row.operation_nature ?? undefined,
+    deliveryAddress: row.delivery_address ?? undefined,
     isRetentionRelease: row.is_retention_release || undefined,
     // Rule #8 step 5 again, and the reason this one survived every previous
     // sweep: the writer is an edge function (mollie-webhook / stripe-webhook),
@@ -140,6 +143,7 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
     // Kleinunternehmer contractors to standard VAT.
     vatScheme: (row.vat_scheme as BusinessProfile['vatScheme']) ?? undefined,
     vatBasis: (row.vat_basis as BusinessProfile['vatBasis']) ?? undefined,
+    tvaSurLesDebits: row.tva_sur_les_debits ?? undefined,
     filingPeriod: (row.filing_period as BusinessProfile['filingPeriod']) ?? undefined,
     businessType: row.business_type ?? undefined,
     teamSize: (row.team_size as BusinessProfile['teamSize']) ?? undefined,

@@ -47,7 +47,7 @@ const COUNTRY_COMPLIANCE: Record<CountryCode, { heading: string; body: string; e
     heading: 'Nederland (NL)',
     body: 'KvK (Kamer van Koophandel) registratie · BTW-nummer · Belastingdienst 7-jaar bewaarplicht · Nederlands Burgerlijk Wetboek voor contractrecht.',
     einvoice: 'Peppol BIS 3.0 · UBL 2.1 (e-facturering Rijksoverheid, via Digipoort).',
-    governingLaw: 'These terms are governed by the laws of the Netherlands. Disputes will first be submitted to mediation in Amsterdam.',
+    governingLaw: 'Op deze voorwaarden is Nederlands recht van toepassing. Geschillen worden eerst voorgelegd aan mediation in Amsterdam.',
   },
   DE: {
     heading: 'Deutschland (DE)',

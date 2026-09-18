@@ -205,6 +205,31 @@ export default function VatAndAuditScreen() {
           ))}
         </View>
 
+        {/* FRANCE: TVA sur les débits. From 1 September 2026 an invoice must
+            say so when the seller has opted for it, and only the seller knows
+            (#339 L14). France only — the option does not exist elsewhere. */}
+        {country === 'FR' && (
+          <>
+            <DKLabel style={[styles.section, { marginTop: GRID.lg }]}>{t('vatBasis.frDebitsSection', 'TVA sur les débits')}</DKLabel>
+            <View style={styles.card}>
+              <Pressable
+                style={styles.row}
+                onPress={() => { void updateBusinessProfile({ tvaSurLesDebits: !businessProfile.tvaSurLesDebits }); }}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: !!businessProfile.tvaSurLesDebits }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>{t('vatBasis.frDebitsLabel', "J'ai opté pour le paiement de la TVA d'après les débits")}</Text>
+                  <Text style={styles.rowSubtitle}>{t('vatBasis.frDebitsHint', 'La mention correspondante sera imprimée sur vos factures.')}</Text>
+                </View>
+                <View style={[styles.radio, businessProfile.tvaSurLesDebits && styles.radioActive]}>
+                  {businessProfile.tvaSurLesDebits && <View style={styles.radioDot} />}
+                </View>
+              </Pressable>
+            </View>
+          </>
+        )}
+
         <DKLabel style={[styles.section, { marginTop: GRID.lg }]}>{t('vatBasis.filingSection', 'How often you file')}</DKLabel>
         <View style={styles.card}>
           {([
