@@ -1163,14 +1163,51 @@ export default function FacturenScreen() {
                         <View key={idx} style={styles.dunningStepDot}>
                           <View style={[
                             styles.dunningDot,
-                            { backgroundColor: step.status === 'sent' ? SemanticColors.feedbackSuccess : step.status === 'pending' ? SemanticColors.textDisabled : SemanticColors.textTertiary }
+                            // GREEN only for a step with evidence it was sent.
+                            // `due` (its date has passed, nothing recorded) is
+                            // amber — it is a prompt, not an achievement. It
+                            // used to be green from the calendar alone.
+                            { backgroundColor: step.status === 'sent'
+                              ? SemanticColors.feedbackSuccess
+                              : step.status === 'due'
+                                ? SemanticColors.feedbackWarning
+                                : step.status === 'pending'
+                                  ? SemanticColors.textDisabled
+                                  : SemanticColors.textTertiary }
                           ]} />
                         </View>
                       ))}
                     </View>
                     <Pressable
                       style={styles.dunningAction}
-                      onPress={() => setToast({ visible: true, message: t('invoices.reminderSentTo', 'Herinnering verstuurd naar {{name}}.', { name: seq.customerName }) })}
+                      onPress={async () => {
+                        // This used to BE the toast: the handler's whole body was
+                        // `setToast('Herinnering verstuurd naar …')`, so the
+                        // contractor was told an escalation had gone out on an
+                        // overdue invoice and the customer received nothing
+                        // (#197's shape, found by the 2026-09-18 sweep).
+                        // Same builder and share sheet as the per-row reminder
+                        // above — one reminder text, one way of sending it.
+                        // The sequences are derived from these same invoices, so
+                        // the lookup hits — but a miss must not silently do
+                        // nothing, which is the defect this button already had.
+                        // The sequence carries the customer, the amount and the
+                        // age, so a reminder can be written either way.
+                        const inv = invoices.find((i: any) => i.id === seq.invoiceId);
+                        const msg = overdueReminderMessage(t, {
+                          customer: (inv ? findDocumentCustomer(customers, inv)?.name : undefined) ?? seq.customerName,
+                          number: inv ? documentNumber(inv) : seq.invoiceId,
+                          amount: formatCurrency(inv ? inv.amount : seq.invoiceAmount, country),
+                          days: (inv ? daysOverdue(inv) : seq.daysOverdue) ?? seq.daysOverdue ?? 0,
+                          business: businessProfile?.businessName || user?.company || '',
+                        });
+                        const res = await Share.share({ message: msg, title: t('invoices.sendReminder', 'Herinnering') });
+                        // Only claim it when the sheet was not dismissed.
+                        if (res.action !== Share.dismissedAction) {
+                          hapticSuccess();
+                          setToast({ visible: true, message: t('invoices.reminderSentTo', 'Herinnering verstuurd naar {{name}}.', { name: seq.customerName }) });
+                        }
+                      }}
                     >
                       <Text style={styles.dunningActionText} numberOfLines={1}>{t('invoices.sendNow', 'Verstuur nu')}</Text>
                     </Pressable>

@@ -232,6 +232,25 @@ const DESTRUCTIVE = /uitlog|log\s?out|logout|afmelden|abmelden|d\u00e9connex|cer
  * this list is the finding list, not a silencer.
  */
 const KNOWN_INERT = new Set<string>([
+  // ── Verified on a DEVICE, in the SHIPPING posture, 2026-09-18 ────────────
+  // A real production account (DEMO_MODE off, zero rows) on the emulator: each
+  // of these OPENS ITS SHEET or SWITCHES ITS TAB when a human presses it. They
+  // read as inert here for two harness reasons, both structural:
+  //   1. The loop presses every control on ONE mounted tree and never resets,
+  //      so the header "add" button opens the sheet and its EMPTY-STATE twin —
+  //      which only exists when the list is empty, i.e. only in this posture —
+  //      then sets the same state again. No signature change, no defect.
+  //   2. A tab that is the DEFAULT on an empty account: with no invoices,
+  //      Facturen opens on Angebote, so pressing Angebote changes nothing.
+  // `quotes/new :: Pressable#1` is the customer-picker wrapper, which is a
+  // no-op only because there are no customers to pick; the field underneath
+  // still focuses and accepts typing (checked on the device).
+  '(contractor)/bedrijf :: Nieuwe klant toevoegen#2',   // sheet opens (device)
+  '(contractor)/facturen :: Offertes#1',                // default tab when empty
+  'contractor/customer-crm :: Klant toevoegen#1',       // sheet opens (device)
+  'contractor/projects :: Nieuw project#1',             // sheet opens (device)
+  'quotes/new :: Pressable#1',                          // picker with nothing to pick
+  '(tabs)/work :: Offertes (0)#1',                      // default tab when empty
   // Pressing the tab/filter/segment that is ALREADY selected on mount. Verified
   // individually: each sets the value the screen already holds (e.g.
   // `viewMode` defaults to `'list'`, `severity` to `'Laag'`, `period` to

@@ -444,6 +444,7 @@ export const cashFlowService = new CashFlowService();
 // ============================================
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { useAppState } from '../state/AppState';
 import { useExpenses } from './expenseService';
 import { localDateKey } from '../utils/dateKey';
@@ -673,7 +674,8 @@ export function computeSeasonalPatterns(
 }
 
 export function useCashFlow() {
-  const { invoices: appInvoices } = useAppState();
+  const { invoices: appInvoices, markInvoicePaid: markInvoicePaidInState } = useAppState();
+  const router = useRouter();
   // R26: real expenses from canonical expenseService (was mock singleton).
   // expenseService stores per-contractor in AsyncStorage + Supabase via R262.
   const { expenses: appExpenses } = useExpenses();
@@ -812,13 +814,31 @@ export function useCashFlow() {
   const aging = useMemo(() => computeInvoiceAging(invoices), [invoices]);
   const forecast = useMemo(() => computeForecast(invoices, expenses, 8), [invoices, expenses]);
 
+  // ⚠️ These two used to call `cashFlowService.markInvoicePaid` /
+  // `.sendReminder`, which mutate the singleton's `this.invoices` Map — seeded
+  // ONLY by `__seedMockData()` and therefore permanently EMPTY in the app. Both
+  // methods begin `const invoice = this.invoices.get(id); if (invoice) {…}`, so
+  // for every real invoice they were silent no-ops: the contractor pressed
+  // "Mark as paid" and nothing changed, pressed "Send reminder" and nobody was
+  // reminded, with no error either way (sweep 2026-09-18, same root as the
+  // `getInvoices` deprecation note above).
+  //
+  // `markPaid` now goes through AppState's `markInvoicePaid`, which is the
+  // mutator the rest of the app uses (it persists, queues offline and fires the
+  // payment-received side effects).
   const markPaid = useCallback((invoiceId: string, method: string) => {
+    markInvoicePaidInState(invoiceId);
+    // Keep the analytics/learning signal the old path emitted.
     cashFlowService.markInvoicePaid(invoiceId, method);
-  }, []);
+  }, [markInvoicePaidInState]);
 
+  // A reminder is a message to a customer, and this component has no share
+  // surface of its own, so it hands the caller the invoice rather than
+  // pretending: the dashboard opens the invoice, where Erinnern shares a real
+  // reminder text (`overdueReminderMessage`) through the share sheet.
   const sendReminder = useCallback((invoiceId: string) => {
-    cashFlowService.sendReminder(invoiceId);
-  }, []);
+    router.push({ pathname: '/invoices/[id]', params: { id: invoiceId } } as never);
+  }, [router]);
 
   const addExpense = useCallback((expense: Omit<Expense, 'id'>) => {
     return cashFlowService.addExpense(expense);

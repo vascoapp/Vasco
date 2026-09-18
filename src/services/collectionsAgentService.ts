@@ -27,8 +27,23 @@ export interface DSOMetrics {
 export interface DunningStep {
   step: DunningStepType;
   scheduledDate: string;
+  /** Only ever set from a RECORDED send. Nothing records one yet — see `status`. */
   sentDate?: string;
-  status: 'pending' | 'sent' | 'skipped';
+  /**
+   * `due`   — the scheduled date has passed and this step has not been sent.
+   * `pending` — scheduled for later.
+   * `sent`  — evidence exists that it went out. **Nothing produces this today**:
+   *   there is no per-invoice reminder record anywhere in the app, so claiming
+   *   it would be inventing one.
+   *
+   * It used to be computed from the CALENDAR — `isPast ? 'sent' : 'pending'` —
+   * so a 40-day-overdue invoice showed four green "sent" dots with fabricated
+   * `sentDate`s for reminders nobody had sent. In Germany and the Netherlands a
+   * Mahnung/aanmaning is the precondition for statutory interest and collection
+   * costs, so that was a false legal record rendered as a timeline (sweep
+   * 2026-09-18).
+   */
+  status: 'pending' | 'due' | 'sent' | 'skipped';
 }
 
 export interface DunningSequence {
@@ -378,10 +393,12 @@ function deriveDunningSequences(invoices: any[]): DunningSequence[] {
       const steps: DunningStep[] = stepOrder.map((step) => {
         const scheduledMs = baseDue + dayOffsets[step] * DAY_MS;
         const isPast = scheduledMs < now && stepOrder.indexOf(step) <= stepOrder.indexOf(currentStep);
+        // A step whose date has passed is DUE, not sent: the app keeps no
+        // record of a reminder having been sent, so it cannot say that one was.
         return {
           step,
           scheduledDate: localDateKey(new Date(scheduledMs)),
-          ...(isPast ? { sentDate: localDateKey(new Date(scheduledMs)), status: 'sent' as const } : { status: 'pending' as const }),
+          status: isPast ? ('due' as const) : ('pending' as const),
         };
       });
       return {
