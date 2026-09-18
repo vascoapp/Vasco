@@ -207,10 +207,10 @@ function getDemoInsights(trade: string, goals: string[], t: any): { icon: string
   const insights: { icon: string; title: string; subtitle: string }[] = [];
 
   if (goals.includes('faster_payments')) {
-    insights.push({ icon: 'cash', title: t('onboarding.aiInsight.payments', 'Payment reminders'), subtitle: t('onboarding.aiInsight.paymentsDesc', 'Auto-send reminders for overdue invoices') });
+    insights.push({ icon: 'cash', title: t('onboarding.aiInsight.payments', 'Payment reminders'), subtitle: t('onboarding.aiInsight.paymentsDesc', 'Reminders for overdue invoices — prepared, you send them with one tap') });
   }
   if (goals.includes('better_quotes')) {
-    insights.push({ icon: 'document-text', title: t('onboarding.aiInsight.quotes', 'Smart quote pricing'), subtitle: t('onboarding.aiInsight.quotesDesc', 'AI suggests prices based on local market data') });
+    insights.push({ icon: 'document-text', title: t('onboarding.aiInsight.quotes', 'Quotes in minutes'), subtitle: t('onboarding.aiInsight.quotesDesc', 'Your price list and templates become three packages') });
   }
   if (goals.includes('less_admin')) {
     insights.push({ icon: 'sparkles', title: t('onboarding.aiInsight.automation', 'Auto-invoicing'), subtitle: t('onboarding.aiInsight.automationDesc', 'Generate invoices from completed jobs in one tap') });
@@ -219,12 +219,12 @@ function getDemoInsights(trade: string, goals: string[], t: any): { icon: string
     insights.push({ icon: 'shield-checkmark', title: t('onboarding.aiInsight.compliance', 'Certificate tracking'), subtitle: t('onboarding.aiInsight.complianceDesc', 'Alerts before your certifications expire') });
   }
   if (goals.includes('more_jobs')) {
-    insights.push({ icon: 'trending-up', title: t('onboarding.aiInsight.leads', 'Lead scoring'), subtitle: t('onboarding.aiInsight.leadsDesc', 'Prioritize leads most likely to convert') });
+    insights.push({ icon: 'trending-up', title: t('onboarding.aiInsight.leads', 'Open quotes'), subtitle: t('onboarding.aiInsight.leadsDesc', 'See who has not answered yet') });
   }
 
   // Always have at least 3
   if (insights.length < 3) {
-    insights.push({ icon: 'time', title: t('onboarding.aiInsight.schedule', 'Smart scheduling'), subtitle: t('onboarding.aiInsight.scheduleDesc', 'Optimize your route and job order daily') });
+    insights.push({ icon: 'time', title: t('onboarding.aiInsight.schedule', 'Day planner'), subtitle: t('onboarding.aiInsight.scheduleDesc', 'Appointments, times and clashes at a glance') });
   }
   if (insights.length < 3) {
     insights.push({ icon: 'analytics', title: t('onboarding.aiInsight.insights', 'Business insights'), subtitle: t('onboarding.aiInsight.insightsDesc', 'Weekly reports on revenue, jobs, and trends') });

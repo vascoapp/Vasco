@@ -933,6 +933,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // persistReady uses state (not ref) to trigger re-render and guard persist effects
   const SEED_VERSION = '2026-03-25-v4';
   const [persistReady, setPersistReady] = useState(false);
+  /** Due date for a document issued today, on the contractor's own terms. */
+  const dueDateOnTerms = useCallback((from: Date = new Date()): Date => {
+    const days = businessProfile?.defaultPaymentTerms;
+    const due = new Date(from);
+    due.setDate(due.getDate() + (typeof days === 'number' && days > 0 ? days : 14));
+    return due;
+  }, [businessProfile?.defaultPaymentTerms]);
   const hydrated = useRef(false);
 
   // PRODUCTION hydrate: wait until we know WHO is signed in. Reading the cache
@@ -2165,9 +2172,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             }),
           ).catch(() => {});
         }
-        // AI data collector
-        const sentDue = new Date();
-        sentDue.setDate(sentDue.getDate() + 14);
+        // AI data collector. The due date it reports is the one the invoice
+        // actually carries — the contractor's own terms, not a flat 14.
+        const sentDue = (invoice as any)?.dueDate ? new Date((invoice as any).dueDate) : dueDateOnTerms();
         emitInvoiceSent(getCurrentUserId(), id, {
           customerId: invoice?.customer ?? '',
           amount: invoice?.amount ?? 0,
@@ -2278,6 +2285,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ).catch(() => {});
         }
       },
+      // The contractor's own payment terms. Seven mutators each hardcoded
+      // `+ 14` while `businessProfile.defaultPaymentTerms` existed with a
+      // column, both mappers and a display line in IntegratedPayments — a field
+      // with a reader and NO writer, so a contractor on 30-day terms still
+      // issued every invoice at 14 (#208's shape, sweep 2026-09-18).
+      // 14 stays the fallback: it is the Dutch/German default and what every
+      // existing invoice already used.
       addQuote: async (customer, job, items) => {
         const total = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
 
@@ -2421,8 +2435,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (!sourceQuote) throw new Error(`Quote ${sourceQuoteId} not found`);
 
         const docNumber = await nextDocumentNumber('invoice');
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
+        const dueDate = dueDateOnTerms();
 
         // `Quote.amount` is the NET sum of its line items; `Invoice.amount` is
         // GROSS everywhere in this app (see addInvoiceFromJob, which grosses up
@@ -3251,8 +3264,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             unitPrice: li.unitPrice,
           }),
         });
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
+        const dueDate = dueDateOnTerms();
 
         // R287: same duplicate-protection as addInvoice. addInvoiceFromJob
         // skips the validator-on-quote path so we re-run the invoice check.
@@ -3425,8 +3437,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const amount = Math.round(net * (1 + vatRate / 100) * 100) / 100;
 
         const docNumber = await nextDocumentNumber('invoice');
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
+        const dueDate = dueDateOnTerms();
         const resolvedName = customerName
           ?? customers.find((c) => c.id === customerId)?.name
           ?? '';
@@ -3565,8 +3576,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const retention = grossFromNet(retentionForTerm(project, term), projectVatRate);
 
         const docNumber = await nextDocumentNumber('invoice');
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
+        const dueDate = dueDateOnTerms();
 
         const customer = customers.find((c) => c.id === project.customerId);
         const customerName = customer?.name ?? '';
@@ -3690,8 +3700,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // gross. See the note in addProjectTermInvoice above.
         const amount = grossFromNet(Number(order.amount), getEffectiveVatRate(businessProfile));
         const docNumber = await nextDocumentNumber('invoice');
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
+        const dueDate = dueDateOnTerms();
 
         const customer = customers.find((c) => c.id === project.customerId);
         const customerName = customer?.name ?? '';
@@ -3802,8 +3811,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (!gate.allowed) throw new Error(gate.reason ?? 'Retention cannot be released yet');
 
         const docNumber = await nextDocumentNumber('invoice');
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
+        const dueDate = dueDateOnTerms();
 
         const customer = customers.find((c) => c.id === project.customerId);
         const customerName = customer?.name ?? '';

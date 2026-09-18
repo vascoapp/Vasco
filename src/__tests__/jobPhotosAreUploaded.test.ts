@@ -63,3 +63,40 @@ describe('the upload path itself still exists', () => {
     expect(photosScreen).toMatch(/base64: true/);
   });
 });
+
+describe('a failed photo read is not an empty gallery', () => {
+  // `listJobPhotos` returned [] for offline, for a query error and for "this
+  // job has none" alike, and the job screen re-reads on every FOCUS — so
+  // walking into a basement and coming back emptied a gallery of twenty photos
+  // and set the count to 0 (sweep 2026-09-18).
+  const fs = require('fs');
+  const path = require('path');
+  const ROOT = path.resolve(__dirname, '../..');
+  const read = (rel: string) => stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+
+  it('the service reports failure as null, not as an empty list', () => {
+    const svc = read('src/services/jobPhotoService.ts');
+    const at = svc.indexOf('export async function listJobPhotos');
+    expect(at).toBeGreaterThan(-1);
+    const body = svc.slice(at, svc.indexOf('export async function deleteJobPhoto'));
+    expect(body).toMatch(/Promise<JobPhotoRecord\[\] \| null>/);
+    expect(body).toMatch(/if \(!isSupabaseConfigured\) return null;/);
+    // The catch must not swallow into [].
+    expect(body.slice(body.lastIndexOf('catch'))).toMatch(/return null;/);
+  });
+
+  it('the job screen keeps what it has when the read fails', () => {
+    const screen = read('app/contractor/job/[id].tsx');
+    const at = screen.indexOf('const photos = await listJobPhotos(String(id));');
+    expect(at).toBeGreaterThan(-1);
+    expect(screen.slice(at, at + 400)).toMatch(/if \(photos === null\) return;/);
+  });
+
+  it('the photos screen does the same, and reads prev to avoid a stale closure', () => {
+    const screen = read('app/contractor/job/[id]/photos.tsx');
+    expect(screen).toMatch(/const loadFailed = list === null;/);
+    expect(screen).toMatch(/setPhotos\(\(prev\) =>/);
+    expect(screen).toMatch(/loadFailed \? prev : serverPhotos/);
+  });
+});
+

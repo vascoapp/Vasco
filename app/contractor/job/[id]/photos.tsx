@@ -42,7 +42,12 @@ export default function JobPhotosScreen() {
   const refresh = useCallback(async () => {
     if (!id) return;
     setLoading(true);
+    // `null` = the read failed (offline / query error), which is NOT the same
+    // as "no photos". Keep whatever is already on screen and still show the
+    // pending queue below, so a failed refresh never looks like a deletion.
     const list = await listJobPhotos(String(id));
+    const serverPhotos = list ?? [];
+    const loadFailed = list === null;
     // R66 round 27: merge in pending offline-queued photos so the
     // contractor sees them immediately (with a local file:// preview)
     // instead of "where did my photo go?". Queued photos use a synthetic
@@ -61,13 +66,15 @@ export default function JobPhotosScreen() {
       }));
       // Pending first (newest) then server list. Filter dupes by id.
       const seen = new Set(pendingAsRecords.map((p) => p.id));
-      const merged = [
+      // Functional form: on a FAILED read we keep the photos already on screen,
+      // and reading them from `prev` avoids a stale closure (the callback's
+      // deps are [id]).
+      setPhotos((prev) => [
         ...pendingAsRecords,
-        ...list.filter((p) => !seen.has(p.id)),
-      ];
-      setPhotos(merged);
+        ...(loadFailed ? prev : serverPhotos).filter((p) => !seen.has(p.id)),
+      ]);
     } catch {
-      setPhotos(list);
+      if (!loadFailed) setPhotos(serverPhotos);
     }
     setLoading(false);
   }, [id]);

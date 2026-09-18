@@ -95,6 +95,13 @@ export default function BusinessSettingsScreen() {
   // R66 NL launch: payment fields. Without IBAN every NL invoice goes
   // out with no bank details — customer can't pay.
   const [iban, setIban] = useState(businessProfile.iban ?? '');
+  // Payment terms. The column, both mappers and a display line in
+  // IntegratedPayments existed; NO screen could set it, so seven mutators
+  // hardcoded 14 days and a contractor on 30-day terms still issued every
+  // invoice at 14 (#208's shape, sweep 2026-09-18).
+  const [paymentTerms, setPaymentTerms] = useState(
+    businessProfile.defaultPaymentTerms != null ? String(businessProfile.defaultPaymentTerms) : '',
+  );
   const [bic, setBic] = useState(businessProfile.bic ?? '');
   // R119: US users get routing number + bank account number instead
   // of IBAN/BIC (US doesn't use SEPA — ACH transfers route by
@@ -216,8 +223,16 @@ export default function BusinessSettingsScreen() {
           { label: t('settings.bic', 'BIC / SWIFT'), value: bic, onChange: setBic, placeholder: country === 'NL' ? 'ABNANL2A' : country === 'DE' ? 'COBADEFFXXX' : '' },
         ];
 
-    return [...common, ...countryFields, ...contactFields, ...paymentFields];
-  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, t]);
+    const termsField: FieldDef[] = [{
+      label: t('settings.paymentTerms', 'Payment term (days)'),
+      value: paymentTerms,
+      onChange: setPaymentTerms,
+      placeholder: '14',
+      keyboardType: 'number-pad' as const,
+    }];
+
+    return [...common, ...countryFields, ...contactFields, ...paymentFields, ...termsField];
+  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, t]);
 
   // Show where the series actually stands. Uses the read-only peek RPC: a
   // settings screen must not consume an invoice number just by being opened.
@@ -353,6 +368,12 @@ export default function BusinessSettingsScreen() {
         routingNumber: country === 'US' ? sanitizeInput(routingNumber).replace(/\s/g, '').trim() : undefined,
         bankAccountNumber: country === 'US' ? sanitizeInput(bankAccountNumber).replace(/\s/g, '').trim() : undefined,
         country,
+        // A typed term of 0 or junk falls back to the 14-day default rather
+        // than writing a due date of "today".
+        defaultPaymentTerms: (() => {
+          const n = parseInt(paymentTerms.replace(/\D/g, ''), 10);
+          return Number.isFinite(n) && n > 0 ? n : undefined;
+        })(),
         enabledPaymentMethods,
         // Sanitised to the same shape the BE will accept: anything else is
         // silently ignored there and would mint I0001 while the settings screen
@@ -368,7 +389,7 @@ export default function BusinessSettingsScreen() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, personType, fiscalRegime, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, country, enabledPaymentMethods, invoicePrefix, quotePrefix, nextInvoiceNo, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, personType, fiscalRegime, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, country, enabledPaymentMethods, invoicePrefix, quotePrefix, nextInvoiceNo, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);

@@ -152,8 +152,18 @@ export async function uploadJobPhoto(input: UploadJobPhotoInput): Promise<JobPho
   }
 }
 
-export async function listJobPhotos(jobId: string): Promise<JobPhotoRecord[]> {
-  if (!isSupabaseConfigured) return [];
+/**
+ * The job's photos, or `null` when they could not be loaded.
+ *
+ * ⚠️ The distinction matters: this used to return `[]` for "offline", "the
+ * query failed" and "this job genuinely has none" alike, and the job screen
+ * re-reads on every focus — so going offline and coming back emptied a gallery
+ * of twenty photos and set the "N photos" count to 0 (sweep 2026-09-18).
+ * A caller that cannot tell the two apart will overwrite good data with a
+ * failure.
+ */
+export async function listJobPhotos(jobId: string): Promise<JobPhotoRecord[] | null> {
+  if (!isSupabaseConfigured) return null;
   try {
     const { data } = await (supabase.from('job_photos' as any) as any)
       .select('id, storage_path, caption, kind, taken_at')
@@ -177,7 +187,8 @@ export async function listJobPhotos(jobId: string): Promise<JobPhotoRecord[]> {
     }
     return out;
   } catch {
-    return [];
+    // Could not load — NOT "there are none".
+    return null;
   }
 }
 

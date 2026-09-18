@@ -137,6 +137,11 @@ export default function JobDetailPage() {
         if (!id) return;
         const photos = await listJobPhotos(String(id));
         if (cancelled) return;
+        // `null` means the read FAILED (offline, or the query errored). Keep
+        // what is on screen: this effect runs on every focus, so overwriting
+        // with an empty list emptied a gallery of twenty photos the moment the
+        // contractor walked into a basement.
+        if (photos === null) return;
         setPhotoCount(photos.length);
         setJobPhotos(
           photos
@@ -1422,7 +1427,7 @@ export default function JobDetailPage() {
                 let checklistWarning = '';
                 let needsSignoff = false;
                 try {
-                  const photos = await listJobPhotos(job.id).catch(() => []);
+                  const photos = (await listJobPhotos(job.id).catch(() => null)) ?? [];
                   const result = evaluateCompletion({
                     job: job as any,
                     photos: photos as any,

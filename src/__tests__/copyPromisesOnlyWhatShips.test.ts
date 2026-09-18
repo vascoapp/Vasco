@@ -108,3 +108,46 @@ describe('onboarding and home promise only what ships', () => {
     expect(src).not.toMatch(/setFormAutoInvoice\(!/);
   });
 });
+
+describe('a corrected string has no stale twin', () => {
+  // 4af7c2d rewrote the NESTED `onboarding.aiInsight.*` copy and left 85 FLAT
+  // `"aiInsight.quotes"`-style duplicates across the seven locale files, still
+  // carrying "AI suggests prices based on local market data", "Auto-send
+  // reminders" and "Optimize your route". i18next resolves a flat dotted key,
+  // so which one a contractor saw depended on lookup order (sweep 2026-09-18).
+  // Flat dotted keys are fine when they are the ONLY copy (`goals.more_jobs`
+  // and friends). The defect is a flat key that DUPLICATES a nested one: two
+  // strings for one slot, and the corrected one is not necessarily the one
+  // i18next returns.
+  it.each(['de', 'en', 'en-US', 'nl', 'fr', 'es', 'it'])('%s has no flat key duplicating a nested one', (loc) => {
+    const dict = JSON.parse(fs.readFileSync(path.join(ROOT, `src/i18n/locales/${loc}.json`), 'utf8'));
+    const ob = dict.onboarding ?? {};
+    const duplicated = Object.keys(ob)
+      .filter((k) => k.includes('.'))
+      .filter((k) => {
+        const [head, ...rest] = k.split('.');
+        const nested = ob[head];
+        return nested && typeof nested === 'object' && rest.join('.') in nested;
+      });
+    expect({ loc, duplicated }).toEqual({ loc, duplicated: [] });
+  });
+
+  // The inline `defaultValue` is what ships when a key is missing, so it is copy
+  // too — and it still said "Smart quote pricing" / "AI suggests prices".
+  it('the screen fallbacks make no AI or automation claim', () => {
+    const src = fs.readFileSync(path.join(ROOT, 'app/onboarding.tsx'), 'utf8');
+    const insights = src.slice(src.indexOf("goals.includes('faster_payments')"), src.indexOf('Always have at least 3'));
+    expect(insights).not.toMatch(/AI suggests|Smart quote pricing|Auto-send|Optimize your route|Lead scoring/i);
+  });
+
+  it('the free-plan note does not call a concurrent cap a monthly one', () => {
+    // `maxActiveJobs: 5` counts jobs open AT ONCE; the note said "5 jobs a
+    // month", so a contractor with five open jobs was blocked on the 1st.
+    for (const loc of ['de', 'en', 'nl', 'fr', 'es', 'it']) {
+      const dict = JSON.parse(fs.readFileSync(path.join(ROOT, `src/i18n/locales/${loc}.json`), 'utf8'));
+      const note = dict.onboarding?.aiDemoNote ?? '';
+      expect(`${loc}: ${note}`).toMatch(/gleichzeitig|gelijktijdig|tegelijk|at a time|à la fois|a la vez|contemporaneamente/i);
+    }
+  });
+});
+
