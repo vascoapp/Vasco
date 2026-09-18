@@ -321,8 +321,27 @@ export default function VascoScreen() {
         {
           text: t('profile.deleteAccount'), style: 'destructive',
           onPress: async () => {
-            if (user?.id) await requestAccountDeletion(user.id);
-            Alert.alert(t('profile.accountDeleted'));
+            // The THIRD entry point to account deletion, and the one that did
+            // not check. Its siblings (contractor/legal.tsx,
+            // contractor/profile.tsx) both refuse to claim unless
+            // `serverRequested` came back true; this one discarded the result
+            // and announced "Your account has been deleted" — for a GDPR
+            // Art. 17 request that may never have left the device, and which is
+            // a 30-day REQUEST even when it does (sweep 2026-09-18).
+            const result = user?.id
+              ? await requestAccountDeletion(user.id)
+              : { success: false, localCleared: false, serverRequested: false };
+            if (!result.success || !result.serverRequested) {
+              Alert.alert(
+                t('legal.deletionFailed', 'Could not submit request'),
+                t('legal.deletionFailedDesc', 'Your request did not reach our servers. Check your internet connection and try again, or contact privacy@vascobuild.com.'),
+              );
+              return;
+            }
+            Alert.alert(
+              t('legal.deleteConfirmTitle', 'Account deletion requested'),
+              t('legal.deleteConfirmDesc', 'Your data will be removed within 30 days. You will receive a confirmation email.'),
+            );
             await logout();
           },
         },

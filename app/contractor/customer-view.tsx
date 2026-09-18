@@ -33,23 +33,41 @@ interface CustomerInteraction {
   timestamp: string;
 }
 
-async function recordInteraction(interaction: Omit<CustomerInteraction, 'id' | 'timestamp'>) {
+/**
+ * Whether this interaction reached the contractor.
+ *
+ * `delivered` means the row landed in `customer_interactions`, which is the
+ * ONLY channel to the contractor (customerInteractionWatcher subscribes to
+ * INSERTs on it). The local AsyncStorage copy is a record on the customer's own
+ * device and nobody else ever reads it.
+ */
+type InteractionOutcome = { delivered: boolean; storedLocally: boolean };
+
+async function recordInteraction(interaction: Omit<CustomerInteraction, 'id' | 'timestamp'>): Promise<InteractionOutcome> {
   const entry: CustomerInteraction = {
     ...interaction,
     id: `ci-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     timestamp: new Date().toISOString(),
   };
   // Save to AsyncStorage (offline-first, capped at 500 entries)
+  let storedLocally = false;
   try {
     const raw = await AsyncStorage.getItem('@vasco_customer_interactions');
     const all: CustomerInteraction[] = raw ? JSON.parse(raw) : [];
     all.push(entry);
     await AsyncStorage.setItem('@vasco_customer_interactions', JSON.stringify(all.slice(-500)));
+    storedLocally = true;
   } catch {}
-  // Best-effort Supabase upsert for the data moat
+  // The row the CONTRACTOR learns from. ⚠️ supabase-js RESOLVES with `{ error }`
+  // instead of throwing, so the old `try { await insert(...) } catch {}` treated
+  // an RLS refusal, the rate-limit trigger and a constraint violation as
+  // success — and this is the only channel to the contractor, so an accepted
+  // quote (a contract) could vanish while the customer read "Quote accepted!"
+  // (sweep 2026-09-18).
+  let delivered = false;
   if (isSupabaseConfigured) {
     try {
-      await (supabase.from('customer_interactions' as any) as any).insert({
+      const { error } = await (supabase.from('customer_interactions' as any) as any).insert({
         id: entry.id,
         quote_id: entry.quoteId,
         customer_id: entry.customerId,
@@ -57,9 +75,12 @@ async function recordInteraction(interaction: Omit<CustomerInteraction, 'id' | '
         data: entry.data,
         created_at: entry.timestamp,
       });
-    } catch {}
+      delivered = !error;
+    } catch {
+      delivered = false;
+    }
   }
-  return entry;
+  return { delivered, storedLocally };
 }
 
 // R38: was used as preview fixture AND as field fallback when real quote
@@ -178,6 +199,8 @@ export default function CustomerViewScreen() {
   const [changeMessage, setChangeMessage] = useState('');
   const [showChangeForm, setShowChangeForm] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  // Did the acceptance reach the contractor (interaction row or created job)?
+  const [acceptReachedContractor, setAcceptReachedContractor] = useState(true);
   const [viewRecorded, setViewRecorded] = useState(false);
 
   const { user } = useAuth();
@@ -244,31 +267,50 @@ export default function CustomerViewScreen() {
     }
     hapticSuccess();
     // Data moat: capture acceptance with all selections
-    await recordInteraction({
+    const outcome = await recordInteraction({
       quoteId: quote.id, customerId: quote.customerId, type: 'accept',
       data: { tierId: selectedTier, tierTotal: quote.tiers.find(t => t.id === selectedTier)?.total, decisions, allDecisionsCompleted: Object.keys(decisions).length === quote.decisions.length },
     });
     // Golden path: auto-create a job from the accepted quote (if this is a real quote from AppState)
+    let jobCreated = false;
     if (quoteId) {
       try {
         await convertQuoteToJob(quote.id);
+        jobCreated = true;
       } catch {
-        // Non-blocking — user still sees the success state
+        // Falls through to the "we could not reach them" state below.
       }
     }
+    // An acceptance the contractor cannot see is not an acceptance. If neither
+    // channel landed — the interaction row nor the job — say so and give the
+    // customer a way to confirm, rather than showing a tick for a contract that
+    // exists only on their own phone.
+    setAcceptReachedContractor(outcome.delivered || jobCreated);
     setAccepted(true);
   };
 
-  const handleChangeRequest = () => {
+  const handleChangeRequest = async () => {
     if (!changeMessage.trim()) return;
     hapticSuccess();
-    recordInteraction({
+    // Await it, and read the outcome: the insert is the only way the contractor
+    // hears about this, and supabase-js resolves with `{ error }` rather than
+    // throwing, so the old fire-and-forget call claimed "sent" for a request
+    // that had been refused.
+    const outcome = await recordInteraction({
       quoteId: quote.id, customerId: quote.customerId, type: 'change_request',
       data: { message: changeMessage, selectedTier, decisions },
     });
-    Alert.alert(t('customerView.sentTitle', 'Sent'), t('customerView.changeRequestSent', 'Your change request has been sent. The contractor will contact you.'));
-    setShowChangeForm(false);
-    setChangeMessage('');
+    if (outcome.delivered) {
+      Alert.alert(t('customerView.sentTitle', 'Sent'), t('customerView.changeRequestSent', 'Your change request has been sent. The contractor will contact you.'));
+      setShowChangeForm(false);
+      setChangeMessage('');
+      return;
+    }
+    // Not delivered: keep the text so nothing they typed is lost.
+    Alert.alert(
+      t('customerView.notSentTitle', 'Not sent'),
+      t('customerView.notSentDesc', 'We could not reach {{business}}. Your message is still here — try again, or contact them directly.', { business: quote.businessName }),
+    );
   };
 
   if (accepted) {
@@ -278,7 +320,14 @@ export default function CustomerViewScreen() {
           <Ionicons name="checkmark-circle" size={64} color={SemanticColors.feedbackSuccess} />
           <Text style={s.successTitle}>{t('customerView.acceptedTitle', 'Quote accepted!')}</Text>
           <Text style={s.successRef}>{t('customerView.reference', 'Reference')}: {quote.reference}</Text>
-          <Text style={s.successDesc}>{t('customerView.acceptedDesc', '{{business}} will be in touch shortly to schedule.', { business: quote.businessName })}</Text>
+          <Text style={s.successDesc}>
+            {acceptReachedContractor
+              ? t('customerView.acceptedDesc', '{{business}} will be in touch shortly to schedule.', { business: quote.businessName })
+              // Neither the interaction row nor the job landed, so the only
+              // record of this acceptance is on this phone. Saying "they will
+              // be in touch" would be the lie that matters most on this screen.
+              : t('customerView.acceptedNotDeliveredDesc', 'Your acceptance is saved on this device, but we could not reach {{business}}. Please contact them to confirm.', { business: quote.businessName })}
+          </Text>
           <Pressable style={s.successBtn} onPress={() => router.back()}>
             <Text style={s.successBtnText}>{t('common.close', 'Close')}</Text>
           </Pressable>

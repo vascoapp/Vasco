@@ -5,7 +5,7 @@
 // =============================================================================
 
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Share } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DKMenu } from '../../src/components/shared/DKMenu';
@@ -112,9 +112,35 @@ export default function PurchaseOrdersScreen() {
   const handleAction = (order: PurchaseOrder) => {
     switch (order.status) {
       case 'draft':
+        // Vasco has no supplier channel: nothing here ever reached
+        // {supplierName}, the status simply flipped to "submitted" in memory
+        // (sweep 2026-09-18). So the contractor sends it — the order text goes
+        // through the share sheet, exactly like a reminder — and the app records
+        // that it went out, which is the EVE rule: prepare, the human sends.
         Alert.alert(t('purchaseOrders.submitOrder', 'Bestelling versturen'), `${order.poNumber} ${t('purchaseOrders.submitTo', 'versturen naar')} ${order.supplierName}?`, [
           { text: t('purchaseOrders.cancel', 'Annuleren'), style: 'cancel' },
-          { text: t('purchaseOrders.submit', 'Versturen'), onPress: () => submit(order.id) },
+          {
+            text: t('purchaseOrders.submit', 'Versturen'),
+            onPress: async () => {
+              const lines = order.items
+                .map((i) => `• ${i.quantity} × ${i.description}`)
+                .join('\n');
+              const message = t('purchaseOrders.shareBody', {
+                defaultValue: '{{po}} — order for {{supplier}}\n\n{{lines}}\n\nTotal: {{total}}',
+                po: order.poNumber,
+                supplier: order.supplierName,
+                lines,
+                total: formatCurrency(order.total, country),
+              });
+              try {
+                const res = await Share.share({ message, title: order.poNumber });
+                // Only record it as sent when the sheet was not dismissed.
+                if (res.action !== Share.dismissedAction) submit(order.id);
+              } catch {
+                // Sharing unavailable — leave it a draft rather than claim it went.
+              }
+            },
+          },
         ]);
         break;
       case 'confirmed':

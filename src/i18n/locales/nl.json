@@ -1476,7 +1476,8 @@
     "materialCount_other": "{{count}} materialen",
     "unknownSupplier": "Leverancier nog te kiezen",
     "priceComparison": "Prijsvergelijking leveranciers",
-    "materialsCompared": "{{count}} materialen vergeleken"
+    "materialsCompared": "{{count}} materialen vergeleken",
+    "shareBody": "{{po}} — bestelling voor {{supplier}}\n\n{{lines}}\n\nTotaal: {{total}}"
   },
   "workerCerts": {
     "title": "Certificaten Medewerkers",
@@ -1597,7 +1598,9 @@
       "permit_update": "Vergunning updates",
       "delivery_update": "Leveringsupdates",
       "credential_expiry": "Certificaat verlopen",
-      "general": "Algemeen"
+      "general": "Algemeen",
+      "invoice_paid": "Betaling ontvangen",
+      "customer_interaction": "Klantreactie op een offerte"
     },
     "types": {
       "schedule": "Planning",
@@ -1607,7 +1610,9 @@
       "permit": "Vergunning",
       "delivery": "Levering",
       "cert": "Certificaat",
-      "general": "Algemeen"
+      "general": "Algemeen",
+      "paid": "Betaling",
+      "customer": "Klant"
     },
     "push": {
       "paidTitle": "Betaling ontvangen",
@@ -3575,7 +3580,10 @@
     "requestChange": "Wijziging aanvragen",
     "describeChange": "Beschrijf uw gewenste wijziging…",
     "sendRequest": "Verstuur verzoek",
-    "questions": "Vragen?"
+    "questions": "Vragen?",
+    "notSentTitle": "Niet verzonden",
+    "notSentDesc": "We konden {{business}} niet bereiken. Uw bericht staat er nog — probeer het opnieuw of neem rechtstreeks contact op.",
+    "acceptedNotDeliveredDesc": "Uw akkoord is op dit apparaat bewaard, maar we konden {{business}} niet bereiken. Neem contact op om het te bevestigen."
   },
   "ingestion": {
     "title": "Importpool",
@@ -4644,16 +4652,17 @@
   },
   "paymentAlerts": {
     "linkCreatedTitle": "Gelukt",
-    "linkCreatedBody": "Betaallink aangemaakt en gekopieerd!",
+    "linkCreatedBody": "Betaallink aangemaakt — deel hem met uw klant.",
     "reminderEmailTitle": "Verzonden",
     "reminderEmailBody": "E-mailherinnering verzonden!",
     "reminderWhatsappBody": "WhatsApp-herinnering verzonden!",
-    "copiedTitle": "Gekopieerd",
-    "copiedBody": "Betaallink gekopieerd:\n{{url}}",
+    "copiedTitle": "Betaallink",
+    "copiedBody": "Betaallink om te delen:\n{{url}}",
     "paymentLinkFailedTitle": "Betaallink mislukt",
     "paymentLinkFailedBody": "Probeer opnieuw of check je betaalprovider-instellingen.",
     "moneybirdFailedTitle": "Moneybird-export mislukt",
-    "moneybirdFailedBody": "Probeer opnieuw of check je Moneybird-koppeling."
+    "moneybirdFailedBody": "Probeer opnieuw of check je Moneybird-koppeling.",
+    "linkTitle": "Betaallink"
   },
   "quoteToInvoice": {
     "notFound": "Offerte {{id}} niet gevonden",

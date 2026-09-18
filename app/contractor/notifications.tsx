@@ -50,6 +50,8 @@ const TYPE_CONFIG: Record<NotificationType, { icon: IconName; color: string; lab
   permit_update: { icon: 'document-text', color: Palette.hermesOrange, labelKey: 'notifications.types.permit' },
   delivery_update: { icon: 'cube', color: SemanticColors.feedbackSuccess, labelKey: 'notifications.types.delivery' },
   credential_expiry: { icon: 'ribbon', color: SemanticColors.feedbackWarning, labelKey: 'notifications.types.cert' },
+  invoice_paid: { icon: 'cash', color: SemanticColors.feedbackSuccess, labelKey: 'notifications.types.paid' },
+  customer_interaction: { icon: 'chatbubble-ellipses', color: Palette.hermesOrange, labelKey: 'notifications.types.customer' },
   general: { icon: 'notifications', color: SemanticColors.textSecondary, labelKey: 'notifications.types.general' },
 };
 
@@ -61,6 +63,8 @@ const TYPE_FALLBACKS: Record<NotificationType, string> = {
   permit_update: 'Permit',
   delivery_update: 'Delivery',
   credential_expiry: 'Cert',
+  invoice_paid: 'Paid',
+  customer_interaction: 'Customer',
   general: 'General',
 };
 

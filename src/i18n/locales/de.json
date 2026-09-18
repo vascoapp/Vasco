@@ -1321,7 +1321,9 @@
       "permit_update": "Genehmigungs-Updates",
       "delivery_update": "Liefer-Updates",
       "credential_expiry": "Zertifikatsablauf",
-      "general": "Allgemein"
+      "general": "Allgemein",
+      "invoice_paid": "Zahlung eingegangen",
+      "customer_interaction": "Kundenreaktion auf ein Angebot"
     },
     "types": {
       "schedule": "Termin",
@@ -1331,7 +1333,9 @@
       "permit": "Genehmigung",
       "delivery": "Lieferung",
       "cert": "Zertifikat",
-      "general": "Allgemein"
+      "general": "Allgemein",
+      "paid": "Zahlung",
+      "customer": "Kunde"
     },
     "push": {
       "paidTitle": "Zahlung erhalten",
@@ -1712,7 +1716,8 @@
     "materialCount_other": "{{count}} Materialien",
     "unknownSupplier": "Lieferant noch zu wählen",
     "priceComparison": "Lieferanten-Preisvergleich",
-    "materialsCompared": "{{count}} Materialien verglichen"
+    "materialsCompared": "{{count}} Materialien verglichen",
+    "shareBody": "{{po}} — Bestellung für {{supplier}}\n\n{{lines}}\n\nGesamt: {{total}}"
   },
   "workerCerts": {
     "title": "Mitarbeiterzertifikate",
@@ -3582,7 +3587,10 @@
     "requestChange": "Änderung anfragen",
     "describeChange": "Beschreiben Sie die gewünschte Änderung…",
     "sendRequest": "Anfrage senden",
-    "questions": "Fragen?"
+    "questions": "Fragen?",
+    "notSentTitle": "Nicht gesendet",
+    "notSentDesc": "Wir konnten {{business}} nicht erreichen. Ihre Nachricht ist noch da — versuchen Sie es erneut oder wenden Sie sich direkt an den Betrieb.",
+    "acceptedNotDeliveredDesc": "Ihre Zusage ist auf diesem Gerät gespeichert, aber wir konnten {{business}} nicht erreichen. Bitte bestätigen Sie sie direkt beim Betrieb."
   },
   "ingestion": {
     "title": "Datenpool",
@@ -4594,16 +4602,17 @@
   },
   "paymentAlerts": {
     "linkCreatedTitle": "Erfolg",
-    "linkCreatedBody": "Zahlungslink erstellt und kopiert!",
+    "linkCreatedBody": "Zahlungslink erstellt — teilen Sie ihn mit Ihrer Kundschaft.",
     "reminderEmailTitle": "Gesendet",
     "reminderEmailBody": "E-Mail-Erinnerung gesendet!",
     "reminderWhatsappBody": "WhatsApp-Erinnerung gesendet!",
-    "copiedTitle": "Kopiert",
-    "copiedBody": "Zahlungslink in Zwischenablage:\n{{url}}",
+    "copiedTitle": "Zahlungslink",
+    "copiedBody": "Zahlungslink zum Teilen:\n{{url}}",
     "paymentLinkFailedTitle": "Zahlungslink fehlgeschlagen",
     "paymentLinkFailedBody": "Bitte erneut versuchen oder Provider-Einstellungen prüfen.",
     "moneybirdFailedTitle": "Moneybird-Export fehlgeschlagen",
-    "moneybirdFailedBody": "Bitte erneut versuchen oder Moneybird-Verbindung prüfen."
+    "moneybirdFailedBody": "Bitte erneut versuchen oder Moneybird-Verbindung prüfen.",
+    "linkTitle": "Zahlungslink"
   },
   "quoteToInvoice": {
     "notFound": "Angebot {{id}} nicht gefunden",

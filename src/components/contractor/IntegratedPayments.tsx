@@ -12,8 +12,10 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Share,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { hapticSuccess } from '../../utils/haptics';
 import { useRouter } from 'expo-router';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
@@ -529,6 +531,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
           ? [{ id: invoice.customerId, type: 'customer', name: invoice.customerName, confidence: 0.9 }]
           : [],
       });
+      // Was "…created and copied to clipboard!". It was never copied.
       Alert.alert(t('paymentAlerts.linkCreatedTitle'), t('paymentAlerts.linkCreatedBody'));
     } catch (err) {
       Alert.alert(
@@ -540,8 +543,19 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
     }
   };
 
-  const handleCopyLink = (url: string) => {
-    Alert.alert(t('paymentAlerts.copiedTitle'), t('paymentAlerts.copiedBody', { url }));
+  // Nothing here ever touched a clipboard — the app has no clipboard module at
+  // all (adding one is a native dependency, which would take fixes off the OTA
+  // channel), and the alert simply CLAIMED the copy. The share sheet is how
+  // every other link in this app reaches a customer, so the button now opens
+  // it; the URL is in the message, which is also how a contractor copies it.
+  const handleCopyLink = async (url: string) => {
+    try {
+      const res = await Share.share({ message: url, url });
+      if (res.action !== Share.dismissedAction) hapticSuccess();
+    } catch {
+      // Sharing unavailable: show the link so it can still be read off screen.
+      Alert.alert(t('paymentAlerts.linkTitle', 'Payment link'), url);
+    }
   };
 
   const tabs = [

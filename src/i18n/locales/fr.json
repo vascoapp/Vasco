@@ -1321,7 +1321,9 @@
       "permit_update": "Mises a jour permis",
       "delivery_update": "Mises a jour livraisons",
       "credential_expiry": "Expiration certificat",
-      "general": "Général"
+      "general": "Général",
+      "invoice_paid": "Paiement reçu",
+      "customer_interaction": "Réponse du client à un devis"
     },
     "types": {
       "schedule": "Planning",
@@ -1331,7 +1333,9 @@
       "permit": "Permis",
       "delivery": "Livraison",
       "cert": "Certif.",
-      "general": "Général"
+      "general": "Général",
+      "paid": "Paiement",
+      "customer": "Client"
     },
     "push": {
       "paidTitle": "Paiement reçu",
@@ -1712,7 +1716,8 @@
     "materialCount_other": "{{count}} matériaux",
     "unknownSupplier": "Fournisseur à choisir",
     "priceComparison": "Comparaison des prix fournisseurs",
-    "materialsCompared": "{{count}} matériaux comparés"
+    "materialsCompared": "{{count}} matériaux comparés",
+    "shareBody": "{{po}} — commande pour {{supplier}}\n\n{{lines}}\n\nTotal : {{total}}"
   },
   "workerCerts": {
     "title": "Certificats des ouvriers",
@@ -3582,7 +3587,10 @@
     "requestChange": "Demander une modification",
     "describeChange": "Décrivez la modification souhaitée…",
     "sendRequest": "Envoyer la demande",
-    "questions": "Des questions ?"
+    "questions": "Des questions ?",
+    "notSentTitle": "Non envoyé",
+    "notSentDesc": "Nous n'avons pas pu joindre {{business}}. Votre message est conservé — réessayez ou contactez l'entreprise directement.",
+    "acceptedNotDeliveredDesc": "Votre acceptation est enregistrée sur cet appareil, mais nous n'avons pas pu joindre {{business}}. Merci de les contacter pour confirmer."
   },
   "ingestion": {
     "title": "Pool d’importation",
@@ -4594,16 +4602,17 @@
   },
   "paymentAlerts": {
     "linkCreatedTitle": "Succès",
-    "linkCreatedBody": "Lien de paiement créé et copié !",
+    "linkCreatedBody": "Lien de paiement créé — partagez-le avec votre client.",
     "reminderEmailTitle": "Envoyé",
     "reminderEmailBody": "Rappel par email envoyé !",
     "reminderWhatsappBody": "Rappel WhatsApp envoyé !",
-    "copiedTitle": "Copié",
-    "copiedBody": "Lien de paiement copié :\n{{url}}",
+    "copiedTitle": "Lien de paiement",
+    "copiedBody": "Lien de paiement à partager :\n{{url}}",
     "paymentLinkFailedTitle": "Échec du lien de paiement",
     "paymentLinkFailedBody": "Réessayez ou vérifiez les paramètres de votre prestataire de paiement.",
     "moneybirdFailedTitle": "Échec de l'export Moneybird",
-    "moneybirdFailedBody": "Réessayez ou vérifiez votre connexion Moneybird."
+    "moneybirdFailedBody": "Réessayez ou vérifiez votre connexion Moneybird.",
+    "linkTitle": "Lien de paiement"
   },
   "quoteToInvoice": {
     "notFound": "Devis {{id}} introuvable",

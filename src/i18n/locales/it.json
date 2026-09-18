@@ -1321,7 +1321,9 @@
       "permit_update": "Aggiornamenti permessi",
       "delivery_update": "Aggiornamenti consegna",
       "credential_expiry": "Scadenza certificato",
-      "general": "Generale"
+      "general": "Generale",
+      "invoice_paid": "Pagamento ricevuto",
+      "customer_interaction": "Risposta del cliente a un preventivo"
     },
     "types": {
       "schedule": "Agenda",
@@ -1331,7 +1333,9 @@
       "permit": "Permesso",
       "delivery": "Consegna",
       "cert": "Cert.",
-      "general": "Generale"
+      "general": "Generale",
+      "paid": "Pagamento",
+      "customer": "Cliente"
     },
     "push": {
       "paidTitle": "Pagamento ricevuto",
@@ -1712,7 +1716,8 @@
     "materialCount_other": "{{count}} materiali",
     "unknownSupplier": "Fornitore da scegliere",
     "priceComparison": "Confronto prezzi fornitori",
-    "materialsCompared": "{{count}} materiali confrontati"
+    "materialsCompared": "{{count}} materiali confrontati",
+    "shareBody": "{{po}} — ordine per {{supplier}}\n\n{{lines}}\n\nTotale: {{total}}"
   },
   "workerCerts": {
     "title": "Certificati dei lavoratori",
@@ -3582,7 +3587,10 @@
     "requestChange": "Richiedi una modifica",
     "describeChange": "Descrivi la modifica che desideri…",
     "sendRequest": "Invia richiesta",
-    "questions": "Domande?"
+    "questions": "Domande?",
+    "notSentTitle": "Non inviato",
+    "notSentDesc": "Non siamo riusciti a contattare {{business}}. Il messaggio è ancora qui: riprova o contattali direttamente.",
+    "acceptedNotDeliveredDesc": "La tua accettazione è salvata su questo dispositivo, ma non siamo riusciti a contattare {{business}}. Contattali per confermare."
   },
   "ingestion": {
     "title": "Pool di importazione",
@@ -4594,16 +4602,17 @@
   },
   "paymentAlerts": {
     "linkCreatedTitle": "Riuscito",
-    "linkCreatedBody": "Link di pagamento creato e copiato!",
+    "linkCreatedBody": "Link di pagamento creato — condividilo con il cliente.",
     "reminderEmailTitle": "Inviato",
     "reminderEmailBody": "Promemoria email inviato!",
     "reminderWhatsappBody": "Promemoria WhatsApp inviato!",
-    "copiedTitle": "Copiato",
-    "copiedBody": "Link di pagamento copiato:\n{{url}}",
+    "copiedTitle": "Link di pagamento",
+    "copiedBody": "Link di pagamento da condividere:\n{{url}}",
     "paymentLinkFailedTitle": "Errore link di pagamento",
     "paymentLinkFailedBody": "Riprova o controlla le impostazioni del provider di pagamento.",
     "moneybirdFailedTitle": "Errore export Moneybird",
-    "moneybirdFailedBody": "Riprova o controlla la connessione Moneybird."
+    "moneybirdFailedBody": "Riprova o controlla la connessione Moneybird.",
+    "linkTitle": "Link di pagamento"
   },
   "quoteToInvoice": {
     "notFound": "Preventivo {{id}} non trovato",

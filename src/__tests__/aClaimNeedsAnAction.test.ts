@@ -121,3 +121,89 @@ describe('the cash-flow dashboard acts on the real invoice', () => {
   });
 });
 
+describe('an order is sent by the contractor, and survives a restart', () => {
+  // `purchaseOrderService` had no AsyncStorage and no Supabase at all: every PO
+  // and every status set on it died with the process, while the screen said
+  // "Bestelling verstuurd naar {supplier}" for an order no supplier ever
+  // received (sweep 2026-09-18). Vasco has no supplier channel, so the
+  // contractor sends it — share sheet — and the app records that it went.
+  const svc = read('src/services/purchaseOrderService.ts');
+  const screen = read('app/contractor/purchase-orders.tsx');
+
+  it('the store is persisted and revived with real Dates', () => {
+    expect(svc).toMatch(/PO_STORAGE_KEY/);
+    expect(svc).toMatch(/AsyncStorage\.setItem\(PO_STORAGE_KEY/);
+    expect(svc).toMatch(/createdAt: new Date\(o\.createdAt\)/);
+  });
+
+  it('the stored copy is dropped when the account changes', () => {
+    const reset = svc.slice(svc.indexOf('registerSingletonReset'), svc.indexOf('return PurchaseOrderService.instance'));
+    expect(reset).toMatch(/removeItem\(PO_STORAGE_KEY\)/);
+  });
+
+  it('the hook reads the store before it stops loading', () => {
+    const hook = svc.slice(svc.indexOf('export function usePurchaseOrders'), svc.indexOf('return { orders, loading'));
+    expect(hook).toMatch(/purchaseOrderService\.load\(\)/);
+    expect(hook).toMatch(/setLoading\(false\)/);
+  });
+
+  it('sending shares the order and only then records it', () => {
+    const at = screen.indexOf("case 'draft':");
+    const block = screen.slice(at, screen.indexOf("case 'confirmed'", at));
+    expect(block).toMatch(/Share\.share\(/);
+    expect(block).toMatch(/dismissedAction/);
+    // The status must not flip on the bare press any more.
+    expect(block).not.toMatch(/onPress: \(\) => submit\(order\.id\)/);
+  });
+});
+
+describe('a deletion request is not announced as a deletion', () => {
+  // Three entry points; this was the one that discarded the result and said
+  // "Your account has been deleted" — for a GDPR Art. 17 request that may never
+  // have left the device, and which is a 30-day request even when it does.
+  const ai = read('app/(contractor)/ai.tsx');
+  // NOT the first occurrence — that is the import line (#342's trap, again).
+  // Anchor on the CALL.
+  const at = ai.indexOf('await requestAccountDeletion(');
+
+  it('checks that the request reached the server', () => {
+    const block = ai.slice(at - 200, at + 900);
+    // The CONDITION, not just the words: asserting that `serverRequested`
+    // appears somewhere passed when the branch was changed to `if (false)`
+    // — shape instead of effect, which is the failure this file exists for.
+    expect(block).toMatch(/if \(!result\.success \|\| !result\.serverRequested\)/);
+    expect(block).toMatch(/legal\.deletionFailed/);
+    // …and it must RETURN before anything claims success.
+    const failure = block.slice(block.indexOf('if (!result.success'));
+    expect(failure.slice(0, failure.indexOf('}'))).toMatch(/Alert\.alert/);
+    expect(failure).toMatch(/return;/);
+  });
+
+  it('claims a request, not a completed deletion', () => {
+    const block = ai.slice(at, at + 900);
+    expect(block).toMatch(/legal\.deleteConfirmTitle/);
+    expect(block).not.toMatch(/profile\.accountDeleted/);
+  });
+});
+
+describe('nothing claims a clipboard the app does not have', () => {
+  // No clipboard module is installed (adding one is a native dependency, which
+  // takes fixes off the OTA channel), yet the payments screen said "copied to
+  // clipboard" twice. It shares the link now.
+  const pay = read('src/components/contractor/IntegratedPayments.tsx');
+
+  it('the copy handler opens the share sheet', () => {
+    const at = pay.indexOf('const handleCopyLink');
+    expect(at).toBeGreaterThan(-1);
+    expect(pay.slice(at, at + 600)).toMatch(/Share\.share\(/);
+  });
+
+  it('no payment string promises a clipboard in any language', () => {
+    for (const loc of ['de', 'en', 'nl', 'fr', 'es', 'it']) {
+      const dict = JSON.parse(fs.readFileSync(path.join(ROOT, `src/i18n/locales/${loc}.json`), 'utf8'));
+      const strings = JSON.stringify(dict.paymentAlerts ?? {});
+      expect(`${loc}: ${strings}`).not.toMatch(/clipboard|Zwischenablage|klembord|presse-papiers|portapapeles|appunti/i);
+    }
+  });
+});
+

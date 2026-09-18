@@ -50,6 +50,14 @@ export type NotificationType =
   | 'permit_update'
   | 'delivery_update'
   | 'credential_expiry'
+  // Two events the app actually pushes that had NO type here, so the
+  // notifications screen could not offer a switch for them and
+  // `shouldDeliver()` had nothing to check: a payment landing
+  // (invoicePaymentWatcher) and a customer accepting / asking for a change
+  // (customerInteractionWatcher). Both pushed regardless of any setting
+  // (sweep 2026-09-18).
+  | 'invoice_paid'
+  | 'customer_interaction'
   | 'general';
 
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -100,6 +108,8 @@ const defaultPreferences: NotificationPreference[] = [
   { type: 'permit_update', label: 'notifications.prefLabels.permit_update', enabled: true, pushEnabled: false },
   { type: 'delivery_update', label: 'notifications.prefLabels.delivery_update', enabled: true, pushEnabled: false },
   { type: 'credential_expiry', label: 'notifications.prefLabels.credential_expiry', enabled: true, pushEnabled: true },
+  { type: 'invoice_paid', label: 'notifications.prefLabels.invoice_paid', enabled: true, pushEnabled: true },
+  { type: 'customer_interaction', label: 'notifications.prefLabels.customer_interaction', enabled: true, pushEnabled: true },
   { type: 'general', label: 'notifications.prefLabels.general', enabled: true, pushEnabled: false },
 ];
 

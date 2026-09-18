@@ -1321,7 +1321,9 @@
       "permit_update": "Permit updates",
       "delivery_update": "Delivery updates",
       "credential_expiry": "Certificate expiry",
-      "general": "General"
+      "general": "General",
+      "invoice_paid": "Payment received",
+      "customer_interaction": "Customer replied to a quote"
     },
     "types": {
       "schedule": "Schedule",
@@ -1331,7 +1333,9 @@
       "permit": "Permit",
       "delivery": "Delivery",
       "cert": "Cert",
-      "general": "General"
+      "general": "General",
+      "paid": "Paid",
+      "customer": "Customer"
     },
     "push": {
       "paidTitle": "Payment received",
@@ -1712,7 +1716,8 @@
     "materialCount_other": "{{count}} materials",
     "unknownSupplier": "Supplier to be chosen",
     "priceComparison": "Supplier price comparison",
-    "materialsCompared": "{{count}} materials compared"
+    "materialsCompared": "{{count}} materials compared",
+    "shareBody": "{{po}} — order for {{supplier}}\n\n{{lines}}\n\nTotal: {{total}}"
   },
   "workerCerts": {
     "title": "Worker Certificates",
@@ -3582,7 +3587,10 @@
     "requestChange": "Request a change",
     "describeChange": "Describe the change you want…",
     "sendRequest": "Send request",
-    "questions": "Questions?"
+    "questions": "Questions?",
+    "notSentTitle": "Not sent",
+    "notSentDesc": "We could not reach {{business}}. Your message is still here — try again, or contact them directly.",
+    "acceptedNotDeliveredDesc": "Your acceptance is saved on this device, but we could not reach {{business}}. Please contact them to confirm."
   },
   "ingestion": {
     "title": "Ingestion pool",
@@ -4594,16 +4602,17 @@
   },
   "paymentAlerts": {
     "linkCreatedTitle": "Success",
-    "linkCreatedBody": "Payment link created and copied to clipboard!",
+    "linkCreatedBody": "Payment link created — share it with your customer.",
     "reminderEmailTitle": "Sent",
     "reminderEmailBody": "Email reminder sent!",
     "reminderWhatsappBody": "WhatsApp reminder sent!",
-    "copiedTitle": "Copied",
-    "copiedBody": "Payment link copied to clipboard:\n{{url}}",
+    "copiedTitle": "Payment link",
+    "copiedBody": "Payment link to share:\n{{url}}",
     "paymentLinkFailedTitle": "Payment link failed",
     "paymentLinkFailedBody": "Please retry or check your payment provider settings.",
     "moneybirdFailedTitle": "Moneybird export failed",
-    "moneybirdFailedBody": "Please retry or check your Moneybird connection."
+    "moneybirdFailedBody": "Please retry or check your Moneybird connection.",
+    "linkTitle": "Payment link"
   },
   "quoteToInvoice": {
     "notFound": "Quote {{id}} not found",

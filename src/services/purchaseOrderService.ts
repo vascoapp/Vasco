@@ -8,6 +8,7 @@ import { DEMO_MODE } from '../config/demo';
 import { useState, useEffect, useCallback } from 'react';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { registerSingletonReset } from './singletonReset';
 import { getCurrentCountry } from '../lib/currentUser';
 import { getStandardVatRate, type BusinessProfile } from '../domain/business';
@@ -134,11 +135,23 @@ const mockOrders: PurchaseOrder[] = DEMO_MODE ? DEMO_ORDERS : [];
 
 type POListener = () => void;
 
+/**
+ * Where the contractor's purchase orders live between launches.
+ *
+ * There was nowhere: this service had no AsyncStorage and no Supabase at all
+ * (sweep 2026-09-18), so every PO — and every status the contractor set on it —
+ * died with the process, while the screen said "Bestelling verstuurd naar
+ * {supplier}". Device-local for now; a PO is not yet a backend entity, and
+ * inventing a table for it is a Schema Lock decision, not a bug fix.
+ */
+const PO_STORAGE_KEY = '@vasco_purchase_orders_v1';
+
 class PurchaseOrderService {
   private static instance: PurchaseOrderService;
   private listeners: Set<POListener> = new Set();
   private orders: PurchaseOrder[] = [...mockOrders];
   private counter = 42;
+  private hydrated = false;
 
   static getInstance(): PurchaseOrderService {
     if (!PurchaseOrderService.instance) {
@@ -147,6 +160,9 @@ class PurchaseOrderService {
         const inst = PurchaseOrderService.instance;
         inst.orders = [...mockOrders];
         inst.counter = 42;
+        inst.hydrated = false;
+        // The stored copy belongs to the account that just left (#344).
+        void AsyncStorage.removeItem(PO_STORAGE_KEY).catch(() => {});
         inst.listeners.forEach((l) => l());
       });
     }
@@ -158,7 +174,45 @@ class PurchaseOrderService {
     return () => this.listeners.delete(listener);
   }
 
-  private notify(): void { this.listeners.forEach(l => l()); }
+  private notify(): void {
+    this.listeners.forEach(l => l());
+    void this.persist();
+  }
+
+  /** Dates survive JSON as strings; revive them or every `.toLocaleDateString` throws. */
+  private async hydrate(): Promise<void> {
+    if (this.hydrated) return;
+    this.hydrated = true;
+    try {
+      const raw = await AsyncStorage.getItem(PO_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { orders?: unknown; counter?: number };
+      if (Array.isArray(parsed.orders)) {
+        this.orders = (parsed.orders as PurchaseOrder[]).map((o) => ({
+          ...o,
+          createdAt: new Date(o.createdAt),
+          updatedAt: new Date(o.updatedAt),
+          expectedDelivery: o.expectedDelivery ? new Date(o.expectedDelivery) : o.expectedDelivery,
+          actualDelivery: o.actualDelivery ? new Date(o.actualDelivery) : o.actualDelivery,
+        }));
+        if (typeof parsed.counter === 'number') this.counter = parsed.counter;
+        this.listeners.forEach(l => l());
+      }
+    } catch {
+      // Unreadable store: keep what is in memory rather than losing the session.
+    }
+  }
+
+  private async persist(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(PO_STORAGE_KEY, JSON.stringify({ orders: this.orders, counter: this.counter }));
+    } catch {
+      // Non-fatal: the order is still on screen for this session.
+    }
+  }
+
+  /** Called by the hook on mount — the orders are read before they are shown. */
+  load(): Promise<void> { return this.hydrate(); }
 
   getOrders(status?: POStatus): PurchaseOrder[] {
     if (status) return this.orders.filter(o => o.status === status);
@@ -257,9 +311,16 @@ export function usePurchaseOrders(status?: POStatus) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setOrders(purchaseOrderService.getOrders(status));
-    setLoading(false);
-    return purchaseOrderService.subscribe(() => setOrders(purchaseOrderService.getOrders(status)));
+    let alive = true;
+    const unsub = purchaseOrderService.subscribe(() => setOrders(purchaseOrderService.getOrders(status)));
+    // Read what was stored before showing anything: the orders used to live in
+    // memory only, so a restart emptied the screen.
+    void purchaseOrderService.load().then(() => {
+      if (!alive) return;
+      setOrders(purchaseOrderService.getOrders(status));
+      setLoading(false);
+    });
+    return () => { alive = false; unsub(); };
   }, [status]);
 
   const create = useCallback(

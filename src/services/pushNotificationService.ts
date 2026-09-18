@@ -453,6 +453,18 @@ const TYPE_ROUTES: Record<NotificationType, { groupRoute: string; actions: PushN
       { label: 'View certs', route: '/(contractor)/certificaten', icon: 'ribbon' },
     ],
   },
+  invoice_paid: {
+    groupRoute: '/(contractor)/geld',
+    actions: [
+      { label: 'View invoice', route: '/(contractor)/geld', icon: 'cash' },
+    ],
+  },
+  customer_interaction: {
+    groupRoute: '/(contractor)/klanten',
+    actions: [
+      { label: 'View customer', route: '/(contractor)/klanten', icon: 'people' },
+    ],
+  },
   general: {
     groupRoute: '/contractor/notifications',
     actions: [],
@@ -460,6 +472,8 @@ const TYPE_ROUTES: Record<NotificationType, { groupRoute: string; actions: PushN
 };
 
 const TYPE_GROUP_LABELS: Record<NotificationType, string> = {
+  invoice_paid: 'payments received',
+  customer_interaction: 'customer replies',
   overdue_invoice: 'overdue invoices',
   schedule_change: 'schedule changes',
   team_assignment: 'team assignments',

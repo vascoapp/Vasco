@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { sendInstantNotification, isInQuietHours } from './pushNotificationService';
+import { sendInstantNotification, shouldDeliver, isInQuietHours } from './pushNotificationService';
 import i18n from '../i18n/i18n';
 import { formatMoney2 } from '../i18n/formatting';
 
@@ -81,11 +81,12 @@ export function watchInvoicePayments(
             : '';
           const title = i18n.t('notifications.push.paidTitle');
           const body = i18n.t('notifications.push.paidBody', { ref, amount: amountDisplay });
-          // R66r60: respect quiet hours. Payment landing is urgent but not so
-          // urgent it justifies overriding DND/sleep — the row still updates
-          // the in-app UI immediately via the mutator bus (R37), and the
-          // contractor sees the notification when they wake up.
-          if (!isInQuietHours()) {
+          // R66r60: respect quiet hours — and the per-type switch as well,
+          // which this path ignored: muting "Zahlung eingegangen" left the push
+          // arriving anyway (sweep 2026-09-18). `shouldDeliver` checks both.
+          // Payment landing is urgent but not so urgent it overrides either;
+          // the row still updates the in-app UI immediately via the mutator bus.
+          if (shouldDeliver('invoice_paid')) {
             sendInstantNotification(title, body, { type: 'invoice_paid', invoiceId: event.invoiceId }).catch(() => {});
           }
 

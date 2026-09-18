@@ -162,3 +162,37 @@ describe('a cold start is not a new account', () => {
   });
 });
 
+describe('every push the app sends can be switched off', () => {
+  // The switches screen offered eight types; the app pushed two events that had
+  // no type at all — a payment landing (invoicePaymentWatcher) and a customer
+  // accepting or asking for a change (customerInteractionWatcher). Both watchers
+  // checked quiet hours and nothing else, so muting anything silenced only the
+  // AI queue, which was the one path that called shouldDeliver (sweep
+  // 2026-09-18).
+  const fs = require('fs');
+  const path = require('path');
+  const ROOT = path.resolve(__dirname, '../../..');
+  const read = (rel: string) => stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+
+  it('the two watchers go through the gate that reads the preference', () => {
+    for (const rel of ['src/services/invoicePaymentWatcher.ts', 'src/services/customerInteractionWatcher.ts']) {
+      const src = read(rel);
+      expect({ rel, gated: /shouldDeliver\(/.test(src) }).toEqual({ rel, gated: true });
+    }
+  });
+
+  it('their events have a type the screen can offer a switch for', () => {
+    const types = notificationService.getPreferences().map((p) => p.type as string);
+    expect(types).toContain('invoice_paid');
+    expect(types).toContain('customer_interaction');
+  });
+
+  it('muting a type stops its delivery', () => {
+    const { shouldDeliver } = require('../pushNotificationService');
+    expect(shouldDeliver('invoice_paid')).toBe(true);
+    notificationService.togglePreference('invoice_paid', 'enabled');
+    expect(shouldDeliver('invoice_paid')).toBe(false);
+    notificationService.togglePreference('invoice_paid', 'enabled');
+  });
+});
+

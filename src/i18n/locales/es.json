@@ -1321,7 +1321,9 @@
       "permit_update": "Actualizaciones de permisos",
       "delivery_update": "Actualizaciones de entrega",
       "credential_expiry": "Caducidad de certificado",
-      "general": "General"
+      "general": "General",
+      "invoice_paid": "Pago recibido",
+      "customer_interaction": "Respuesta del cliente a un presupuesto"
     },
     "types": {
       "schedule": "Agenda",
@@ -1331,7 +1333,9 @@
       "permit": "Permiso",
       "delivery": "Entrega",
       "cert": "Cert.",
-      "general": "General"
+      "general": "General",
+      "paid": "Pago",
+      "customer": "Cliente"
     },
     "push": {
       "paidTitle": "Pago recibido",
@@ -1712,7 +1716,8 @@
     "materialCount_other": "{{count}} materiales",
     "unknownSupplier": "Proveedor por elegir",
     "priceComparison": "Comparativa de precios de proveedores",
-    "materialsCompared": "{{count}} materiales comparados"
+    "materialsCompared": "{{count}} materiales comparados",
+    "shareBody": "{{po}} — pedido para {{supplier}}\n\n{{lines}}\n\nTotal: {{total}}"
   },
   "workerCerts": {
     "title": "Certificados de trabajadores",
@@ -3582,7 +3587,10 @@
     "requestChange": "Solicitar un cambio",
     "describeChange": "Describe el cambio que quieres…",
     "sendRequest": "Enviar solicitud",
-    "questions": "¿Preguntas?"
+    "questions": "¿Preguntas?",
+    "notSentTitle": "No enviado",
+    "notSentDesc": "No hemos podido contactar con {{business}}. Su mensaje sigue aquí: inténtelo de nuevo o contacte directamente.",
+    "acceptedNotDeliveredDesc": "Su aceptación está guardada en este dispositivo, pero no hemos podido contactar con {{business}}. Contáctelos para confirmar."
   },
   "ingestion": {
     "title": "Depósito de datos",
@@ -4594,16 +4602,17 @@
   },
   "paymentAlerts": {
     "linkCreatedTitle": "Éxito",
-    "linkCreatedBody": "¡Enlace de pago creado y copiado!",
+    "linkCreatedBody": "Enlace de pago creado: compártalo con su cliente.",
     "reminderEmailTitle": "Enviado",
     "reminderEmailBody": "¡Recordatorio por email enviado!",
     "reminderWhatsappBody": "¡Recordatorio WhatsApp enviado!",
-    "copiedTitle": "Copiado",
-    "copiedBody": "Enlace de pago copiado:\n{{url}}",
+    "copiedTitle": "Enlace de pago",
+    "copiedBody": "Enlace de pago para compartir:\n{{url}}",
     "paymentLinkFailedTitle": "Error al crear enlace de pago",
     "paymentLinkFailedBody": "Inténtalo de nuevo o revisa la configuración del proveedor.",
     "moneybirdFailedTitle": "Error de exportación a Moneybird",
-    "moneybirdFailedBody": "Inténtalo de nuevo o revisa tu conexión Moneybird."
+    "moneybirdFailedBody": "Inténtalo de nuevo o revisa tu conexión Moneybird.",
+    "linkTitle": "Enlace de pago"
   },
   "quoteToInvoice": {
     "notFound": "Presupuesto {{id}} no encontrado",
