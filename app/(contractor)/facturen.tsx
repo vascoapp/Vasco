@@ -371,7 +371,12 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       // customer can't pay. Abort with localized alert.
                       const link = await createPaymentLink({
                         invoiceId: invoice.id,
-                        amount: autoInv.total,
+                        // What the customer owes TODAY. Retention withheld from
+                        // an instalment is not due until the release invoice,
+                        // so asking for the full total through the payment link
+                        // asks for money the contract says they may hold —
+                        // the same basis the late-fee interest already uses.
+                        amount: amountPayableNow(invoice),
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
                       if (!link?.url) {
@@ -456,7 +461,12 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       hapticSuccess();
                       const link = await createPaymentLink({
                         invoiceId: invoice.id,
-                        amount: autoInv.total,
+                        // What the customer owes TODAY. Retention withheld from
+                        // an instalment is not due until the release invoice,
+                        // so asking for the full total through the payment link
+                        // asks for money the contract says they may hold —
+                        // the same basis the late-fee interest already uses.
+                        amount: amountPayableNow(invoice),
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
                       // R301: embed customer-handover signature on the invoice
@@ -496,7 +506,9 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   onPress={async () => {
                     const link = await createPaymentLink({
                       invoiceId: invoice.id,
-                      amount: invoice.amount,
+                      // Payable now, not the full total: retention is held back
+                      // until the release invoice.
+                      amount: amountPayableNow(invoice),
                       description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: invoice.id }),
                     });
                     if (link?.url) {

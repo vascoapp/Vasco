@@ -105,9 +105,31 @@ claims.length === 0
 console.log('\n\x1b[1mPhone screenshots\x1b[0m');
 
 const PLAY_LOCALES = { en: 'en-US', nl: 'nl-NL', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
-// Names whose SCREEN advertises something dark in production. Filename-based on
-// purpose: the capture pipeline names by screen, so this is stable and cheap.
+// Names whose SCREEN advertises something dark in production. A denylist is the
+// SECOND line of defence only: it tests the FILENAME, so renaming
+// `4_photo_to_quote.png` to `4_smart_quote.png` shipped the same image, caption
+// and all — the very defect this file's header says it exists to stop
+// (meta-sweep 2026-09-17).
 const FORBIDDEN_SHOTS = /(photo[_-]?to[_-]?quote|ki[_-]?angebot|ai[_-]?quote)/i;
+
+/**
+ * The FIRST line of defence: the capture script's own ship list.
+ *
+ * `make-play-screenshots.sh` declares `SHOTS` (what ships) and `EXCLUDED` (what
+ * must not, and why). Anything in the upload directory that is not in SHOTS is
+ * something nobody decided to ship — a rename, a leftover, a re-added capture —
+ * and an allowlist catches all three where a word denylist catches none.
+ */
+function shipList() {
+  const sh = readFileSync(join(ROOT, 'scripts/make-play-screenshots.sh'), 'utf8');
+  const decl = /declare -a SHOTS=\(([^)]*)\)/.exec(sh);
+  if (!decl) return null;
+  return decl[1].split(/\s+/).map((x) => x.replace(/"/g, '').trim()).filter(Boolean);
+}
+const SHOTS = shipList();
+if (!SHOTS || SHOTS.length === 0) {
+  bad('cannot read SHOTS from scripts/make-play-screenshots.sh — the screenshot allowlist is the gate');
+}
 
 /** PNG dimensions straight from the IHDR chunk — no image library needed. */
 function pngSize(file) {
@@ -136,6 +158,13 @@ for (const [loc, play] of Object.entries(PLAY_LOCALES)) {
   for (const f of files) {
     if (FORBIDDEN_SHOTS.test(f)) {
       problems.push(`${f} advertises a feature that is dark in production`);
+      continue;
+    }
+    // Not on the ship list = nobody decided to ship it. Catches a rename, which
+    // the denylist above cannot.
+    const base = f.replace(/\.png$/i, '');
+    if (SHOTS && !SHOTS.includes(base)) {
+      problems.push(`${f} is not in SHOTS in make-play-screenshots.sh — it was renamed, left over, or re-added without a decision`);
       continue;
     }
     const size = pngSize(join(dir, f));

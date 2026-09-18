@@ -50,3 +50,29 @@ describe('every late-fee caller uses it', () => {
     for (const args of invocations) expect(args).toMatch(/invoiceAmount:\s*amountPayableNow\(/);
   });
 });
+
+describe('a payment link asks only for what is due now', () => {
+  // The late-fee callers were fixed to charge interest on the payable amount;
+  // the PAYMENT LINK beside them still asked for the full invoice total, so a
+  // €28.560 instalment with €1.428 retention sent the customer a link for the
+  // whole of it — money the contract says they may hold until the release
+  // invoice (sweep 2026-09-18).
+  const ROOT = path.resolve(__dirname, '../../..');
+  const LINK_CALLERS = ['app/(contractor)/facturen.tsx', 'app/invoices/[id].tsx'];
+
+  it.each(LINK_CALLERS)('%s bills the payable amount', (rel) => {
+    const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+    const calls: string[] = [];
+    for (let at = src.indexOf('createPaymentLink('); at !== -1; at = src.indexOf('createPaymentLink(', at + 1)) {
+      calls.push(src.slice(at, at + 320));
+    }
+    // The import line is not a call.
+    const invocations = calls.filter((c) => /amount|invoice\.id/.test(c));
+    expect(invocations.length).toBeGreaterThan(0);
+    for (const call of invocations) {
+      expect(call).toMatch(/amountPayableNow\(/);
+      expect(call).not.toMatch(/amount: autoInv\.total|createPaymentLink\(invoice\.id, invoice\.amount\)/);
+    }
+  });
+});
+

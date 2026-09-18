@@ -338,7 +338,9 @@ export default function InvoiceDetailScreen() {
 
   const handleCreatePayment = async () => {
     try {
-      await createPaymentLink(invoice.id, invoice.amount);
+      // Retention withheld from this instalment is not payable yet (the same
+      // basis `computeLateFee` uses two screens over).
+      await createPaymentLink(invoice.id, amountPayableNow(invoice));
       hapticSuccess();
     } catch (err) {
       // R66 round 8: was silent (just a vibration). Now surfaces the reason
