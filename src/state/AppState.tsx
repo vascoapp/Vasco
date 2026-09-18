@@ -114,6 +114,7 @@ import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSI
 import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
+import { fkOrNull, queueFkRepairs, queueRowFkRepairs } from '../services/fkRepair';
 
 export type ContractorMetrics = {
   revenueThisMonth: number;
@@ -2369,13 +2370,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // dropped, the cohort moat lost the signal, and on cold start the
           // quote vanished. Now: null out non-UUIDs so the row lands; FE
           // Quote.customer keeps the display string locally.
+          // …and a temp id — a customer created moments ago, offline — is
+          // resolved from the persisted remap rather than nulled, with a queued
+          // repair for the case where the parent has not landed yet (#349).
+          // A display string resolves to null exactly as before.
+          const quoteCustomerFk = await fkOrNull(customer);
+          const quoteJobFk = await fkOrNull(job);
           const docPayload = {
             doc_type: 'quote' as const,
             status: 'draft' as const,
             document_number: docNumber,
             // The FK reads the ID we were handed, never the display name.
-            customer_id: isUuid(customer) ? customer : null,
-            job_id: isUuid(job) ? job : null,
+            customer_id: quoteCustomerFk.value,
+            job_id: quoteJobFk.value,
             // `job` is a job UUID when the quote came from a job, and the TITLE
             // the contractor typed otherwise — in which case it was nulled just
             // above and stored NOWHERE, so the quote came back "Untitled" on
@@ -2422,6 +2429,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({ table: 'documents', op: 'insert', payload: { ...docPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
+          await queueFkRepairs(docNumber, [['customer_id', quoteCustomerFk], ['job_id', quoteJobFk]]);
         }
 
         // AI data collector — quote event + per-line pricing intelligence
@@ -2547,9 +2555,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // BE rejected and the converted invoice was lost.
           // Prefer the FK field; `customer` is the display name now, so
           // testing it for a uuid would drop the link on every converted quote.
+          // …and a temp id resolves from the persisted remap instead of being
+          // nulled; `queueFkRepairs` below heals whatever is still pending.
           const quoteCustomerRef = sourceQuote.customerId ?? sourceQuote.customer;
-          const safeCustomerId = isUuid(quoteCustomerRef) ? quoteCustomerRef : null;
-          const safeJobId = isUuid(sourceQuote.job) ? sourceQuote.job : null;
+          const invCustomerFk = await fkOrNull(quoteCustomerRef);
+          const invJobFk = await fkOrNull(sourceQuote.job);
+          const safeCustomerId = invCustomerFk.value;
+          const safeJobId = invJobFk.value;
           try {
             const row = await createDocument({
               doc_type: 'invoice',
@@ -2606,6 +2618,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               });
             } catch {}
           }
+          await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['job_id', invJobFk]]);
         }
 
         // AI data collector
@@ -3399,17 +3412,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const deliveryDateIso = job.completedAt
             ? localDateKey(new Date(job.completedAt))
             : null;
+          // R83+: documents.customer_id / job_id are uuid FKs, and a temp id at
+          // one is 22P02 — which used to mean the whole invoice never persisted,
+          // so both were nulled. That kept the document and threw away the
+          // link, permanently: nothing backfills an already-inserted row.
+          // `fkOrNull` resolves the temp id from the persisted remap when the
+          // parent flushed in an earlier session, and `queueFkRepairs` below
+          // heals the rest once it does (#349).
+          const invCustomerFk = await fkOrNull(job.customerId);
+          const invJobFk = await fkOrNull(jobId);
           const invPayload = {
             doc_type: 'invoice' as const,
             status: 'draft' as const,
             document_number: docNumber,
-            // R83+: documents.customer_id / job_id are uuid FKs. job.customerId
-            // (and a not-yet-flushed jobId) can be a non-uuid seed/temp id →
-            // 22P02 → createDocument throws → the catch queues the SAME payload
-            // → flush also fails → the invoice-from-job silently never persists.
-            // Guard like every sibling documents write (isUuid → null).
-            customer_id: isUuid(job.customerId) ? job.customerId : null,
-            job_id: isUuid(jobId) ? jobId : null,
+            customer_id: invCustomerFk.value,
+            job_id: invJobFk.value,
             total_amount: amount,
             due_date: dueDate.toISOString(),
             delivery_date: deliveryDateIso,
@@ -3444,6 +3461,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
+          // Queued AFTER the insert either way, so the flush fills the FKs in
+          // on the row it just created.
+          await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['job_id', invJobFk]]);
         }
 
         // R55: was missing emitInvoiceSent + trackEvent — addInvoice() (the
@@ -3547,11 +3567,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setLineItems((prev) => ({ ...prev, [docNumber]: itemsWithIds as typeof lineItems[string] }));
 
         if (isSupabaseConfigured) {
+          // The customer chose these upgrades in their own portal, so the
+          // invoice detached from them was the one document that could never
+          // be re-linked by hand.
+          const upgradeCustomerFk = await fkOrNull(customerId);
           const invPayload = {
             doc_type: 'invoice' as const,
             status: 'draft' as const,
             document_number: docNumber,
-            customer_id: isUuid(customerId) ? customerId : null,
+            customer_id: upgradeCustomerFk.value,
             job_id: null,
             // The de-dup key, on the side that syncs (migration 20260918000001).
             decision_item_ids: decisionItemIds?.length ? decisionItemIds : null,
@@ -3582,6 +3606,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
+          await queueFkRepairs(docNumber, [['customer_id', upgradeCustomerFk]]);
         }
 
         import('../services/gobdAuditTrailService').then((m) =>
@@ -3703,17 +3728,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
 
         if (isSupabaseConfigured) {
+          // A temp `project_id`/`customer_id` used to be nulled outright, which
+          // detached a progress instalment from the project that owns it — and
+          // with it the withheld retention. Resolved from the remap when known,
+          // healed by the queued repair when not (#349).
+          const invCustomerFk = await fkOrNull(project.customerId);
+          const invProjectFk = await fkOrNull(projectId);
           const invPayload = {
             doc_type: 'invoice' as const,
             status: 'draft' as const,
             document_number: docNumber,
-            customer_id: isUuid(project.customerId) ? project.customerId : null,
+            customer_id: invCustomerFk.value,
             job_id: null,
             total_amount: amount,
             due_date: dueDate.toISOString(),
             // Rule #8 step 4 — the write mappers for the document-side
             // progress-billing columns.
-            project_id: isUuid(projectId) ? projectId : null,
+            project_id: invProjectFk.value,
             billing_term_id: termId,
             retention_amount: retention,
             is_retention_release: false,
@@ -3727,6 +3758,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
+          await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['project_id', invProjectFk]]);
           // Persist the term-status change through the same project patch path
           // every other project edit uses.
           try {
@@ -3825,15 +3857,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         );
 
         if (isSupabaseConfigured) {
+          // A temp `project_id`/`customer_id` used to be nulled outright, which
+          // detached a progress instalment from the project that owns it — and
+          // with it the withheld retention. Resolved from the remap when known,
+          // healed by the queued repair when not (#349).
+          const invCustomerFk = await fkOrNull(project.customerId);
+          const invProjectFk = await fkOrNull(projectId);
           const invPayload = {
             doc_type: 'invoice' as const,
             status: 'draft' as const,
             document_number: docNumber,
-            customer_id: isUuid(project.customerId) ? project.customerId : null,
+            customer_id: invCustomerFk.value,
             job_id: null,
             total_amount: amount,
             due_date: dueDate.toISOString(),
-            project_id: isUuid(projectId) ? projectId : null,
+            project_id: invProjectFk.value,
             change_order_id: changeOrderId,
             retention_amount: 0,
             is_retention_release: false,
@@ -3847,6 +3885,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
+          await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['project_id', invProjectFk]]);
           try {
             const { updateProject: updateProjectRow } = await import('../lib/dataProvider');
             const patched = (projects.find((p) => p.id === projectId)?.changeOrders ?? []).map((c) =>
@@ -3930,15 +3969,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setInvoices((prev) => [newInvoice, ...prev]);
 
         if (isSupabaseConfigured) {
+          // A temp `project_id`/`customer_id` used to be nulled outright, which
+          // detached a progress instalment from the project that owns it — and
+          // with it the withheld retention. Resolved from the remap when known,
+          // healed by the queued repair when not (#349).
+          const invCustomerFk = await fkOrNull(project.customerId);
+          const invProjectFk = await fkOrNull(projectId);
           const invPayload = {
             doc_type: 'invoice' as const,
             status: 'draft' as const,
             document_number: docNumber,
-            customer_id: isUuid(project.customerId) ? project.customerId : null,
+            customer_id: invCustomerFk.value,
             job_id: null,
             total_amount: held,
             due_date: dueDate.toISOString(),
-            project_id: isUuid(projectId) ? projectId : null,
+            project_id: invProjectFk.value,
             retention_amount: 0,
             is_retention_release: true,
           };
@@ -3951,6 +3996,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
             } catch {}
           }
+          await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['project_id', invProjectFk]]);
         }
 
         import('../services/gobdAuditTrailService').then((m) =>
@@ -4067,18 +4113,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // path (tiered-quote.tsx fallback to t('customer')). jobs.customer_id
           // is a uuid FK; non-uuid value would reject the insert and the
           // quote→job conversion would silently fail.
+          // …and a temp customer id resolves from the remap rather than being
+          // nulled, with a queued repair for whatever is still pending (#349).
+          const convCustomerFk = await fkOrNull(quote.customerId ?? quote.customer);
           const jobPayload = {
             title: newJob.title,
             description: newJob.description,
-            // `quote.customer` is the DISPLAY NAME for any quote made in this
-            // session — `addQuote` sets `customer: matchedCustomer?.name`, with
-            // the real uuid beside it in `customerId`. Reading only `.customer`
-            // dropped the FK on a fully online conversion with a perfectly good
-            // customer, and it only ever worked for BE-hydrated quotes (where
-            // the mapper puts the uuid in `.customer`). `addInvoice` already
-            // resolves it this way; these two did not.
-            customer_id: isUuid(quote.customerId) ? quote.customerId
-              : isUuid(quote.customer) ? quote.customer : null,
+            customer_id: convCustomerFk.value,
             quoted_amount: quote.amount,
             agreed_amount: quote.amount,
             // Everything below was built above, put on the optimistic job, and
@@ -4136,6 +4177,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               await queueWrite({ table: 'documents', op: 'update', rowId: quoteId, payload: { status: 'accepted' } });
             } catch {}
           }
+          // `finalJobId` is the real id on success and the temp id offline; the
+          // flush rewrites the latter from the same map before applying.
+          await queueRowFkRepairs('jobs', finalJobId, [['customer_id', convCustomerFk]]);
         }
 
         // Post-create housekeeping — uniform across BE-success / offline /
@@ -4303,25 +4347,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
           if (isSupabaseConfigured) {
             // R66 round 18: same uuid guard — see updateQuote acceptance path.
+            // This block is NOT inside an async function (the enclosing
+            // `updateQuote` is a plain callback), so the FK resolution runs in
+            // its own IIFE rather than with a bare `await`.
+            void (async () => {
+            const acceptCustomerFk = await fkOrNull(quote.customerId ?? quote.customer);
             dbCreateJob({
               title: autoJob.title,
-            // `quote.customer` is the DISPLAY NAME for any quote made in this
-            // session — `addQuote` sets `customer: matchedCustomer?.name`, with
-            // the real uuid beside it in `customerId`. Reading only `.customer`
-            // dropped the FK on a fully online conversion with a perfectly good
-            // customer, and it only ever worked for BE-hydrated quotes (where
-            // the mapper puts the uuid in `.customer`). `addInvoice` already
-            // resolves it this way; these two did not.
-            customer_id: isUuid(quote.customerId) ? quote.customerId
-              : isUuid(quote.customer) ? quote.customer : null,
+              // Same resolution as convertQuoteToJob above.
+              customer_id: acceptCustomerFk.value,
               quoted_amount: quote.amount,
               agreed_amount: quote.amount,
-            }).then((row) => {
+            }).then(async (row) => {
               setJobs((prev) => prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)));
               void import('../services/offlineWriteQueue')
                 .then(({ rememberIdRemap }) => rememberIdRemap(tempId, row.id))
                 .catch(() => {});
+              await queueRowFkRepairs('jobs', row.id, [['customer_id', acceptCustomerFk]]);
             }).catch((err) => logWarn('AppState', `auto-create job from updateQuote failed: ${err}`));
+            })();
           }
         }
 
@@ -4527,12 +4571,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         if (isSupabaseConfigured) {
           (async () => {
+            // A project detached from its customer loses the P&L grouping, the
+            // ledger and every project-level customer read. Resolve, then heal
+            // what could not be resolved (#349).
+            const projectCustomerFk = await fkOrNull(project.customerId);
             try {
               const { createProject: dbCreateProject } = await import('../lib/dataProvider');
               const row = await withTimeout(dbCreateProject({
                 name: project.title,
                 description: project.description,
-                customer_id: isUuid(project.customerId) ? project.customerId : null,
+                customer_id: projectCustomerFk.value,
                 status: project.status,
                 start_date: project.startDate ?? null,
                 target_end_date: project.targetEndDate ?? null,
@@ -4565,7 +4613,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     user_id: getCurrentUserId(),
                     name: project.title,
                     description: project.description,
-                    customer_id: isUuid(project.customerId) ? project.customerId : null,
+                    customer_id: projectCustomerFk.value,
                     status: project.status,
                     start_date: project.startDate ?? null,
                     target_end_date: project.targetEndDate ?? null,
@@ -4579,6 +4627,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 });
               } catch {}
             }
+            // rowId is the project's OWN temp id: the flush rewrites it from
+            // the same map, so this lands on the row its own insert created.
+            await queueRowFkRepairs('projects', tempId, [['customer_id', projectCustomerFk]]);
           })();
         }
         return tempId;

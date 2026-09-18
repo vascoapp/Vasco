@@ -135,6 +135,24 @@ export async function rememberIdRemap(tempId: string, realId: string): Promise<v
   }
 }
 
+/**
+ * The real id this device has already learned for a temp id, or null.
+ *
+ * A direct-to-backend write cannot send `c-1789…` at a uuid column, but the
+ * parent may well have been persisted in an EARLIER session — in which case
+ * the mapping is on disk and the FK is recoverable instead of being nulled.
+ */
+export async function resolveRememberedId(id: unknown): Promise<string | null> {
+  if (typeof id !== 'string' || !id || !isTempId(id)) return null;
+  try {
+    const map = await loadRememberedRemaps();
+    const real = map.get(id);
+    return real && isUuid(real) ? real : null;
+  } catch {
+    return null;
+  }
+}
+
 async function loadRememberedRemaps(): Promise<Map<string, string>> {
   try {
     const raw = await AsyncStorage.getItem(REMAP_KEY);
@@ -191,6 +209,14 @@ interface ApplyResult {
   ok: boolean;
   /** When set, the BE generated a new id for an insert that had a temp id. */
   mapping?: { temp: string; real: string };
+  /**
+   * When set, an offline-minted placeholder document number was replaced by a
+   * real one at insert time. Later entries in the SAME queue still address the
+   * document by its placeholder (`rowId`, `match.document_number`), and an
+   * `.eq()` on a number that no longer exists updates nothing and reports no
+   * error — a silent no-op. Folding this into the id map rewrites them.
+   */
+  docNumber?: { placeholder: string; real: string };
 }
 
 async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promise<ApplyResult> {
@@ -207,6 +233,7 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
     return { ok: true }; // treat as processed so it leaves the queue
   }
 
+  let mintedDocNumber: { placeholder: string; real: string } | undefined;
   try {
     if (remapped.op === 'insert') {
       const tempId = (remapped.payload && typeof remapped.payload === 'object'
@@ -239,6 +266,7 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
             const realNum = rpcResult.data;
             if (!rpcResult.error && typeof realNum === 'string' && realNum.length > 0) {
               stripped = { ...(stripped as Record<string, any>), document_number: realNum };
+              mintedDocNumber = { placeholder: placeholderNum, real: realNum };
               emitDocNumberRemap({
                 docType,
                 placeholderNumber: placeholderNum,
@@ -260,12 +288,12 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
         if (error) return { ok: false };
         const realId = (data as any)?.id;
         if (typeof realId === 'string' && realId.length > 0) {
-          return { ok: true, mapping: { temp: tempId, real: realId } };
+          return { ok: true, mapping: { temp: tempId, real: realId }, docNumber: mintedDocNumber };
         }
-        return { ok: true };
+        return { ok: true, docNumber: mintedDocNumber };
       }
       const { error } = await table.insert(stripped);
-      return { ok: !error };
+      return { ok: !error, docNumber: error ? undefined : mintedDocNumber };
     }
     if (remapped.op === 'upsert') {
       const { error } = await table.upsert(stripTempId(remapped.payload));
@@ -313,6 +341,12 @@ export async function flushQueue(): Promise<{ processed: number; dropped: number
     }
     const result = await applyWrite(entry, idMap);
     if (result.ok) {
+      if (result.docNumber) {
+        // Same map, same mechanism: every later entry that still names the
+        // placeholder — rowId, match or payload — is rewritten to the number
+        // the database actually assigned.
+        idMap.set(result.docNumber.placeholder, result.docNumber.real);
+      }
       if (result.mapping) {
         idMap.set(result.mapping.temp, result.mapping.real);
         void rememberIdRemap(result.mapping.temp, result.mapping.real);

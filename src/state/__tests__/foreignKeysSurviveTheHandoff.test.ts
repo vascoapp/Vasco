@@ -30,21 +30,23 @@ const SRC = stripComments(
 );
 
 describe('a quote converted to a job keeps its customer', () => {
-  it('both conversion sites prefer the id field over the display name', () => {
-    const resolved = [...SRC.matchAll(
-      /customer_id: isUuid\(quote\.customerId\) \? quote\.customerId\s*\n\s*: isUuid\(quote\.customer\) \? quote\.customer : null,/g,
-    )];
-    expect(resolved.length).toBe(2);
+  it('both conversion sites read the id field first, the display name second', () => {
+    // `quote.customerId ?? quote.customer` in that order is the whole fix: the
+    // id for anything made in this session, the `.customer` slot for a
+    // BE-hydrated quote (where the mapper puts the uuid there). Reading only
+    // `.customer` dropped the FK on a fully online conversion.
+    const sites = [...SRC.matchAll(/await fkOrNull\(quote\.customerId \?\? quote\.customer\)/g)];
+    expect(sites.length).toBe(2);
   });
 
   it('no site reads only the display name any more', () => {
     expect(SRC).not.toMatch(/customer_id: isUuid\(quote\.customer\) \? quote\.customer : null,/);
   });
 
-  it('the name is still accepted as a fallback', () => {
-    // A BE-hydrated quote carries the uuid in `.customer`; dropping that
-    // branch would break the case that used to be the only working one.
-    expect(SRC).toMatch(/isUuid\(quote\.customer\) \? quote\.customer : null/);
+  it('the resolution goes through fkOrNull, so a temp id is looked up too', () => {
+    // Not `isUuid(...) ? ... : null` any more: a customer created offline has
+    // a temp id here, and `fkOrNull` finds the real one when it is known.
+    expect(SRC).not.toMatch(/customer_id: isUuid\(quote\.customerId\)/);
   });
 });
 
@@ -75,5 +77,61 @@ describe('a project teaches the queue its real id', () => {
       expect({ at: swap.index, remembers: /rememberIdRemap\(/.test(near) })
         .toEqual({ at: swap.index, remembers: true });
     }
+  });
+});
+
+describe('a FK that cannot be written yet is repaired, not discarded', () => {
+  // `isUuid(x) ? x : null` keeps the document and throws away the link, and
+  // nothing backfills an already-inserted row. Every write that guards a uuid
+  // FK now resolves through `fkOrNull` (which consults the persisted temp→real
+  // map) and queues a repair for whatever is still pending. See #349 and
+  // `src/services/fkRepair.ts`.
+  it('no documents write nulls a temp FK outright any more', () => {
+    for (const bad of [
+      /customer_id: isUuid\(job\.customerId\)/,
+      /customer_id: isUuid\(project\.customerId\)/,
+      /project_id: isUuid\(projectId\)/,
+      /customer_id: isUuid\(customer\) \? customer : null/,
+      /job_id: isUuid\(jobId\) \? jobId : null/,
+      /customer_id: isUuid\(customerId\) \? customerId : null/,
+      /customer_id: isUuid\(quote\.customerId\)/,
+    ]) {
+      expect({ pattern: String(bad), present: bad.test(SRC) })
+        .toEqual({ pattern: String(bad), present: false });
+    }
+  });
+
+  it('every resolved FK has a repair queued for it', () => {
+    const resolved = [...SRC.matchAll(/await fkOrNull\(/g)];
+    const repairs = [...SRC.matchAll(/await queue(?:Row)?FkRepairs\(/g)];
+    // EXACT, not "at least": the FK names repeat across sites (four mutators
+    // each call theirs `invCustomerFk`), so a per-name check passes while a
+    // whole site's repair is deleted — that version of this test was proven
+    // toothless by decoy. The count is what has teeth. Adding a site means
+    // updating this number, which is the moment to ask whether the new site
+    // queues its repair too.
+    expect({ resolved: resolved.length, repairs: repairs.length })
+      .toEqual({ resolved: 16, repairs: 10 });
+
+    // …and every repair names an FK that was actually resolved.
+    for (const m of SRC.matchAll(/\['([a-z_]+)', (\w+Fk)\]/g)) {
+      expect({ column: m[1], fk: m[2], declared: SRC.includes(`const ${m[2]} = await fkOrNull(`) })
+        .toEqual({ column: m[1], fk: m[2], declared: true });
+    }
+  });
+
+  it('the repairs address rows the flush can still find', () => {
+    // Documents are matched by document_number, other tables by their row id —
+    // both of which the flush rewrites from the same map before applying.
+    expect(SRC).toMatch(/queueFkRepairs\(docNumber, \[/);
+    expect(SRC).toMatch(/queueRowFkRepairs\('projects', tempId, \[/);
+    expect(SRC).toMatch(/queueRowFkRepairs\('jobs', finalJobId, \[/);
+  });
+
+  it('leads are the deliberate exception', () => {
+    // A lead row carries customer_name / phone / email denormalised, so a null
+    // FK costs the join and not the information. Left as-is ON PURPOSE — if
+    // that ever changes, this test is where to notice.
+    expect(SRC).toMatch(/customer_id: isUuid\(newLead\.customerId\)/);
   });
 });
