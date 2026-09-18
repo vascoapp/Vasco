@@ -59,7 +59,7 @@ import { buildPriceRiskSignals } from '../logic/priceRisk';
 import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { getCurrentUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
+import { getCurrentUserId, getAuthedUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
 import { isTempIdFast, isUuid } from '../lib/idShape';
 import { jobUpdatesToRowPayload, customerUpdatesToRowPayload } from '../lib/mappers';
 import { USE_SEED_DATA } from '../config/demo';
@@ -261,6 +261,29 @@ const AppStateContext = createContext<AppState | null>(null);
 
 // Seed data flag — controlled by src/config/demo.ts (true in __DEV__ or when EXPO_PUBLIC_DEMO_MODE=true)
 const useSeedData = USE_SEED_DATA;
+
+/**
+ * The keys that make up the offline cache, and who they belong to.
+ *
+ * DECIDED 2026-09-18 (user): production caches locally too. Hydrate and every
+ * persist effect used to be gated on `useSeedData` (= DEMO_MODE), so a
+ * SHIPPING build started empty on every cold start — a contractor in a
+ * basement or a new-build saw nothing until the network came back, and a job
+ * created offline lived only in memory plus the write queue (#339 S-H2).
+ *
+ * The account boundary is the reason this was not simply ungated: a cache is
+ * one contractor's books. `clearUserScopedStorage()` wipes every `@vasco_*`
+ * key on a clean logout, but a session that expires, an app that is killed
+ * mid-switch or a reinstall-over-the-top does not pass through it — so the
+ * cache NAMES its owner and is dropped when someone else signs in (#344).
+ */
+const CACHE_KEYS = [
+  '@vasco_jobs', '@vasco_invoices', '@vasco_quotes', '@vasco_customers',
+  '@vasco_projects', '@vasco_leads', '@vasco_workers', '@vasco_line_items',
+  '@vasco_business_profile',
+];
+const CACHE_OWNER_KEY = '@vasco_cache_owner_v1';
+
 
 // Fallback labour cost per hour, used only when neither the assigned worker's
 // `hourlyCost` nor the contractor's own `hourlyRate` is set. A placeholder, not
@@ -911,6 +934,67 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const SEED_VERSION = '2026-03-25-v4';
   const [persistReady, setPersistReady] = useState(false);
   const hydrated = useRef(false);
+
+  // PRODUCTION hydrate: wait until we know WHO is signed in. Reading the cache
+  // before that could put one contractor's invoices on another's screen for the
+  // moment it takes the session to restore, which is worse than a blank screen.
+  useEffect(() => {
+    if (useSeedData) return;
+    let alive = true;
+    // Which account the in-memory cache was hydrated FOR. A switch inside one
+    // process (sign out, sign in as someone else) has to re-run the ownership
+    // check — `hydrated.current` alone would skip it and leave the previous
+    // contractor's books on disk under the new user's session.
+    let hydratedFor: string | null = null;
+    const hydrateFor = async (userId: string | null) => {
+      if (!alive || !userId || hydratedFor === userId) return;
+      hydrated.current = true;
+      hydratedFor = userId;
+      try {
+        const owner = await AsyncStorage.getItem(CACHE_OWNER_KEY);
+        if (owner && owner !== userId) {
+          // Someone else's books. Drop them before anything can render.
+          await AsyncStorage.multiRemove(CACHE_KEYS);
+        } else {
+          const pairs: [string, (v: any) => void][] = [
+            ['@vasco_jobs', setJobs], ['@vasco_invoices', setInvoices],
+            ['@vasco_quotes', setQuotes], ['@vasco_customers', setCustomers],
+            ['@vasco_projects', setProjects], ['@vasco_leads', setLeads],
+            ['@vasco_workers', setWorkers],
+          ];
+          for (const [key, setter] of pairs) {
+            const raw = await AsyncStorage.getItem(key);
+            if (!raw) continue;
+            try {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length > 0) setter(parsed);
+            } catch {}
+          }
+          const liRaw = await AsyncStorage.getItem('@vasco_line_items');
+          if (liRaw) {
+            try {
+              const liParsed = JSON.parse(liRaw);
+              if (liParsed && typeof liParsed === 'object' && !Array.isArray(liParsed)
+                  && Object.keys(liParsed).length > 0) setLineItems(liParsed);
+            } catch {}
+          }
+          const bpRaw = await AsyncStorage.getItem('@vasco_business_profile');
+          if (bpRaw) {
+            try {
+              const bpParsed = JSON.parse(bpRaw);
+              if (bpParsed && typeof bpParsed === 'object') setBusinessProfile(prev => ({ ...prev, ...bpParsed }));
+            } catch {}
+          }
+        }
+        await AsyncStorage.setItem(CACHE_OWNER_KEY, userId);
+      } catch {}
+      if (alive) setPersistReady(true);
+    };
+    void hydrateFor(getAuthedUserId());
+    const unsub = subscribeUserChange((id) => { void hydrateFor(id); });
+    return () => { alive = false; unsub(); };
+  }, []);
+
   useEffect(() => {
     if (useSeedData && !hydrated.current) {
       hydrated.current = true;
@@ -976,49 +1060,49 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
   // Persist to AsyncStorage — ONLY after hydration completes (persistReady=true)
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_jobs', JSON.stringify(jobs)).catch(() => {});
     }
   }, [jobs, persistReady]);
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_invoices', JSON.stringify(invoices)).catch(() => {});
     }
   }, [invoices, persistReady]);
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_quotes', JSON.stringify(quotes)).catch(() => {});
     }
   }, [quotes, persistReady]);
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_customers', JSON.stringify(customers)).catch(() => {});
     }
   }, [customers, persistReady]);
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_line_items', JSON.stringify(lineItems)).catch(() => {});
     }
   }, [lineItems, persistReady]);
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_projects', JSON.stringify(projects)).catch(() => {});
     }
   }, [projects, persistReady]);
   // R81 US Phase 4: persist leads alongside the other entity arrays.
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_leads', JSON.stringify(leads)).catch(() => {});
     }
   }, [leads, persistReady]);
   // R86 crew dispatch lite: persist workers.
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_workers', JSON.stringify(workers)).catch(() => {});
     }
   }, [workers, persistReady]);
   useEffect(() => {
-    if (useSeedData && persistReady) {
+    if (persistReady) {
       AsyncStorage.setItem('@vasco_business_profile', JSON.stringify(businessProfile)).catch(() => {});
     }
   }, [businessProfile, persistReady]);

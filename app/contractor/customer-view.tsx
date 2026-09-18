@@ -426,7 +426,16 @@ export default function CustomerViewScreen() {
               placeholderTextColor={SemanticColors.textTertiary}
               multiline
             />
-            <Pressable style={s.sendChangeBtn} onPress={handleChangeRequest}>
+            {/* Disabled while the box is empty. The handler early-returns on a
+                blank message, so tapping "Send request" did NOTHING and said
+                nothing — a control that promises a send and silently declines
+                it (found by pressableIsWired in the shipping posture). */}
+            <Pressable
+              style={[s.sendChangeBtn, !changeMessage.trim() && { opacity: 0.5 }]}
+              onPress={handleChangeRequest}
+              disabled={!changeMessage.trim()}
+              accessibilityState={{ disabled: !changeMessage.trim() }}
+            >
               <Text style={s.sendChangeBtnText}>{t('customerView.sendRequest', 'Send request')}</Text>
             </Pressable>
           </View>

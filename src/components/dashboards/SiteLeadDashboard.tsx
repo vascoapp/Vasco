@@ -507,6 +507,12 @@ export function SiteLeadDashboard({ initialTab = 'overview' }: SiteLeadDashboard
           <Pressable
             style={styles.headerNotifBtn}
             onPress={() => router.push('/sitelead/dispatch' as any)}
+            accessibilityRole="button"
+            // Icon-only: without a name a screen reader announces "button".
+            // One header serves all five site-lead tabs, so this was five
+            // unnamed controls in the shipping posture — the contractor's copy
+            // of the same bell was named in 0e5c37f.
+            accessibilityLabel={t('notifications.title', 'Notifications')}
           >
             <Ionicons name="notifications-outline" size={20} color={SemanticColors.textPrimary} />
             {unreadCount > 0 && (
