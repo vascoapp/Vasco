@@ -463,7 +463,12 @@ class DecisionIntelligenceService {
         p_decision_type: item.itemId || item.id,
         p_days_to_decide: daysToDecide ?? null,
         p_was_overdue: Boolean(item.isOverdue),
-        p_reminder_responsive: Boolean(item.isOverdue && (item.remindersSent ?? 0) > 0),
+        // `remindersSent` is initialised to 0 at every creation site and
+        // incremented NOWHERE — no decision reminder has ever been sent — so
+        // this argument was a constant `false` being fed to the cohort model as
+        // if it were an observation (sweep 2026-09-18). `null` says "unknown",
+        // which is the truth, and keeps the column honest until reminders exist.
+        p_reminder_responsive: (item.remindersSent ?? 0) > 0 ? Boolean(item.isOverdue) : null,
       });
     } catch {
       // Best-effort.

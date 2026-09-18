@@ -301,7 +301,7 @@
     "seedCustomer": "Example customer",
     "completionError": "Something went wrong. Please try again.",
     "availablePaymentMethods": "Available payment methods in {{country}}:",
-    "complianceInfo": "Vasco monitors your certifications and warns on expiry. You also receive notifications for VAT deadlines and insurance.",
+    "complianceInfo": "Noted. Add the expiry date under Compliance and Vasco will warn you before it runs out.",
     "settingsHint": "You can set up integrations, notifications and templates later via Compliance.",
     "valueProp1Title": "Prepared for you, sent by you",
     "valueProp1Desc": "Quotes, reminders and invoices are drafted and waiting — nothing goes out until you tap send",

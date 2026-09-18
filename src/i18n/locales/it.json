@@ -301,7 +301,7 @@
     "seedCustomer": "Cliente di esempio",
     "completionError": "Qualcosa è andato storto. Per favore riprova.",
     "availablePaymentMethods": "Metodi di pagamento disponibili in {{country}}:",
-    "complianceInfo": "Vasco monitora le tue certificazioni e avvisa alla scadenza. Ricevi anche notifiche per scadenze IVA e assicurazioni.",
+    "complianceInfo": "Annotato. Inserisci la data di scadenza in Conformità e Vasco ti avviserà per tempo.",
     "settingsHint": "Puoi configurare integrazioni, notifiche e modelli più tardi tramite Conformità.",
     "valueProp1Title": "Preparato, lei conferma",
     "valueProp1Desc": "Preventivi, solleciti e fatture pronti — nulla parte finché non tocca invia",

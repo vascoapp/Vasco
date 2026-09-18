@@ -1107,7 +1107,14 @@ export default function OnboardingScreen() {
             <View style={styles.complianceInfoCard}>
               <Ionicons name="shield-checkmark-outline" size={18} color={Palette.hermesOrange} style={{ marginTop: 1 }} />
               <Text style={styles.complianceInfoText}>
-                {t('onboarding.complianceInfo', 'Vasco monitors your certifications and warns on expiry. You also receive notifications for VAT deadlines and insurance.')}
+                {/* This step records the NAMES the contractor ticks and nothing else — no
+                    number, no issuer, no expiry — so the old copy ("Vasco
+                    monitors your certifications and warns on expiry") promised a
+                    watch that nothing could keep: the Compliance screen's
+                    monitor needs an expiry date, and reads a different store
+                    entirely (sweep 2026-09-18). It now says where the warning
+                    actually comes from. */}
+                {t('onboarding.complianceInfo', 'Noted. Add the expiry date under Compliance and Vasco will warn you before it runs out.')}
               </Text>
             </View>
           </View>

@@ -301,7 +301,7 @@
     "seedCustomer": "Beispielkunde",
     "completionError": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
     "availablePaymentMethods": "Verfügbare Zahlungsmethoden in {{country}}:",
-    "complianceInfo": "Vasco überwacht Ihre Zertifizierungen und warnt bei Ablauf. Sie erhalten auch Benachrichtigungen für USt-Fristen und Versicherungen.",
+    "complianceInfo": "Notiert. Tragen Sie unter Compliance das Ablaufdatum ein — dann warnt Vasco Sie rechtzeitig vor Ablauf.",
     "settingsHint": "Sie können Integrationen, Benachrichtigungen und Vorlagen später über Compliance einrichten.",
     "valueProp1Title": "Vorbereitet, Sie bestätigen",
     "valueProp1Desc": "Angebote, Erinnerungen und Rechnungen liegen fertig bereit — gesendet wird erst auf Ihr Tippen",

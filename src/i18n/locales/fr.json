@@ -301,7 +301,7 @@
     "seedCustomer": "Exemple de client",
     "completionError": "Quelque chose s'est mal passé. Veuillez réessayer.",
     "availablePaymentMethods": "Méthodes de paiement disponibles en {{country}} :",
-    "complianceInfo": "Vasco surveille vos certifications et vous avertit à l'expiration. Vous recevez également des notifications pour les échéances TVA et les assurances.",
+    "complianceInfo": "Noté. Indiquez la date d’expiration dans Conformité et Vasco vous préviendra à temps.",
     "settingsHint": "Vous pouvez configurer les intégrations, notifications et modèles plus tard via Conformité.",
     "valueProp1Title": "Préparé, vous validez",
     "valueProp1Desc": "Devis, relances et factures sont prêts — rien ne part avant votre validation",

@@ -207,3 +207,48 @@ describe('nothing claims a clipboard the app does not have', () => {
   });
 });
 
+
+describe('nothing states a cadence or a watch that does not exist', () => {
+  // `reminderFrequency` is hardcoded 'every_2_days' at all three creation sites
+  // and no scheduler reads it — no decision reminder has ever been sent — yet
+  // the tracker card told the contractor (and their customer) "Reminders: every
+  // 2 days". And the onboarding compliance step promised "Vasco monitors your
+  // certifications and warns on expiry" while collecting only a NAME: no
+  // number, no issuer, no expiry, and the Compliance screen reads a different
+  // store entirely (sweep 2026-09-18).
+  const tracker = read('src/components/contractor/DecisionTracker.tsx');
+
+  it('the tracker no longer prints a reminder cadence', () => {
+    expect(tracker).not.toMatch(/dt\.reminders'\)\}: \{tracker\.reminderFrequency/);
+  });
+
+  it('the cohort model is not fed a constant "no reminder response"', () => {
+    const intel = read('src/intelligence/decisionIntelligence.ts');
+    expect(intel).not.toMatch(/p_reminder_responsive: Boolean\(item\.isOverdue && \(item\.remindersSent \?\? 0\) > 0\)/);
+    expect(intel).toMatch(/p_reminder_responsive: \(item\.remindersSent \?\? 0\) > 0 \? Boolean\(item\.isOverdue\) : null/);
+  });
+
+  it('onboarding does not promise a watch it cannot keep', () => {
+    for (const loc of ['de', 'en', 'nl', 'fr', 'es', 'it']) {
+      const dict = JSON.parse(fs.readFileSync(path.join(ROOT, `src/i18n/locales/${loc}.json`), 'utf8'));
+      const info = dict.onboarding?.complianceInfo ?? '';
+      expect(`${loc}: ${info}`).not.toMatch(/monitors your certifications|überwacht Ihre Zertifizierungen|bewaakt uw certificeringen/i);
+      // …and it points at where the warning actually comes from.
+      expect(`${loc}: ${info}`).toMatch(/Compliance|Conformité|Cumplimiento|Conformità/i);
+    }
+  });
+});
+
+describe('an exempt contractor exports no VAT', () => {
+  // A line can carry a rate from before the scheme changed; exemption is a fact
+  // about the SELLER and outranks it, or the books show 19% where the invoice
+  // shows 0% (sweep 2026-09-18).
+  const state = read('src/state/AppState.tsx');
+  it('the Moneybird payload zeroes every line for §19 / KOR', () => {
+    // The CALL, not the import at the top of the file (#342's trap).
+    const at = state.indexOf('await exportInvoiceToMoneybird');
+    expect(at).toBeGreaterThan(-1);
+    const block = state.slice(Math.max(0, at - 1200), at);
+    expect(block).toMatch(/isSmallBusinessExempt\(businessProfile\)\s*\n?\s*\? 0/);
+  });
+});

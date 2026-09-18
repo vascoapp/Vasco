@@ -790,11 +790,16 @@ export default function FacturenScreen() {
         </View>
       )}
 
-      {/* Tabs */}
-      <View style={styles.tabBar}>
+      {/* Tabs. `accessibilityRole="tab"` + `selected` — on the device both tabs
+          reported `selected=false` to the accessibility tree, so a screen
+          reader could not tell which one was active; the distinction was
+          carried by colour alone (device walk 2026-09-18). */}
+      <View style={styles.tabBar} accessibilityRole="tablist">
         <Pressable
           style={[styles.tab, activeTab === 'offertes' && styles.tabActive]}
           onPress={() => setActiveTab('offertes')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'offertes' }}
         >
           <Text style={[styles.tabText, activeTab === 'offertes' && styles.tabTextActive]}>
             {t('invoices.tabQuotes', 'Offertes')}
@@ -803,6 +808,8 @@ export default function FacturenScreen() {
         <Pressable
           style={[styles.tab, activeTab === 'facturen' && styles.tabActive]}
           onPress={() => setActiveTab('facturen')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'facturen' }}
         >
           <Text style={[styles.tabText, activeTab === 'facturen' && styles.tabTextActive]}>
             {t('invoices.tabInvoices', 'Facturen')}
@@ -811,6 +818,8 @@ export default function FacturenScreen() {
         <Pressable
           style={[styles.tab, activeTab === 'incasso' && styles.tabActive]}
           onPress={() => setActiveTab('incasso')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'incasso' }}
         >
           <Text style={[styles.tabText, activeTab === 'incasso' && styles.tabTextActive]}>
             {t('invoices.tabCollections', 'Incasso')}

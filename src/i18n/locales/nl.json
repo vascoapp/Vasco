@@ -301,7 +301,7 @@
     "seedCustomer": "Voorbeeldklant",
     "completionError": "Er ging iets mis. Probeer het opnieuw.",
     "availablePaymentMethods": "Beschikbare betaalmethoden in {{country}}:",
-    "complianceInfo": "Vasco bewaakt je certificeringen en waarschuwt bij verloop. Je ontvangt ook meldingen voor BTW-deadlines en verzekeringen.",
+    "complianceInfo": "Genoteerd. Vul onder Compliance de vervaldatum in — dan waarschuwt Vasco u op tijd.",
     "settingsHint": "Je kunt integraties, meldingen en sjablonen later instellen via Compliance.",
     "valueProp1Title": "Voorbereid, jij bevestigt",
     "valueProp1Desc": "Offertes, herinneringen en facturen staan klaar — pas verzonden als jij op sturen tikt",

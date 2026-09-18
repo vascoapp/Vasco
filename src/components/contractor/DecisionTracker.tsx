@@ -661,12 +661,12 @@ function OverviewTab({
             </Text>
           </Pressable>
         )}
-        <View style={styles.contactRow}>
-          <Ionicons name="notifications" size={16} color={SemanticColors.textSecondary} />
-          <Text style={styles.contactText}>
-            {t('dt.reminders')}: {tracker.reminderFrequency.replace('_', ' ')}
-          </Text>
-        </View>
+        {/* "Reminders: every 2 days" removed 2026-09-18. `reminderFrequency` is
+            hardcoded `'every_2_days'` at all three creation sites and NO
+            scheduler reads it — nothing has ever sent a decision reminder — so
+            the row stated a cadence that does not exist, on a card the
+            contractor shows their customer. The field stays on the type; when
+            a reminder mechanism exists, this row can come back with it. */}
       </View>
 
       {/* Timeline */}

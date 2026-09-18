@@ -3162,7 +3162,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 // #339: each line keeps the rate it was AGREED at; the profile
                 // rate is only the fallback. Stamping it over every line
                 // exported an NL 9% labour line into the books at 21%.
-                vatRate: (li as { vatRate?: number }).vatRate ?? getEffectiveVatRate(businessProfile),
+                // ⚠️ EXCEPT when the contractor is exempt (§19 / KOR): they
+                // charge no VAT at all, so a line carrying an older rate — a
+                // quote written before the scheme changed — must not export at
+                // 19% into books that show 0% on the invoice itself (the screen
+                // reads `documentVatBreakdown`, which treats the exempt rate as
+                // final). Exemption is a fact about the SELLER and outranks the
+                // line (sweep 2026-09-18).
+                vatRate: isSmallBusinessExempt(businessProfile)
+                  ? 0
+                  : (li as { vatRate?: number }).vatRate ?? getEffectiveVatRate(businessProfile),
               })),
             }
           : undefined;
