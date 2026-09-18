@@ -1367,6 +1367,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 // Online path: rekey any tempId-keyed housekeeping (ontology /
                 // embeddings / events). Offline path gets this automatically via
                 // the insert→select→mapping in flushQueue.
+                // `emitIdRemap` rekeys the SIDE-EFFECT stores (ontology,
+                // embeddings, event queues). The WRITE queue is a separate
+                // map and needs telling too, or a child row queued later
+                // keeps the temp id with nothing to rewrite it. (#348)
+                const { rememberIdRemap } = await import('../services/offlineWriteQueue');
+                await rememberIdRemap(tempId, data.id as string);
                 const { emitIdRemap } = await import('../services/idRemapBus');
                 emitIdRemap({ table: 'leads', tempId, realId: data.id as string, payload: { name: newLead.customerName } });
               }
@@ -1563,6 +1569,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 setWorkers((prev) =>
                   prev.map((w) => (w.id === tempId ? { ...w, id: data.id as string } : w))
                 );
+                // `emitIdRemap` rekeys the SIDE-EFFECT stores (ontology,
+                // embeddings, event queues). The WRITE queue is a separate
+                // map and needs telling too, or a child row queued later
+                // keeps the temp id with nothing to rewrite it. (#348)
+                const { rememberIdRemap } = await import('../services/offlineWriteQueue');
+                await rememberIdRemap(tempId, data.id as string);
                 const { emitIdRemap } = await import('../services/idRemapBus');
                 emitIdRemap({ table: 'workers', tempId, realId: data.id as string, payload: { name: newWorker.name } });
               }
@@ -2337,6 +2349,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount: total,
           status: 'draft',
           lastUpdated: new Date().toISOString(),
+          // Stamped locally, not only by the backend mapper: the monthly tier
+          // caps count documents by `createdAt`, so an unstamped optimistic row
+          // was invisible to the gate and Free was effectively unlimited.
+          createdAt: new Date().toISOString(),
         };
 
         // Optimistic local update
@@ -2499,6 +2515,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount: grossAmount,
           status: 'draft',
           dueInDays: 14,
+          // Stamped locally, not only by the backend mapper: the monthly tier
+          // caps count documents by `createdAt`, so an unstamped optimistic row
+          // was invisible to the gate and Free was effectively unlimited.
+          createdAt: new Date().toISOString(),
         };
 
         // Optimistic local update
@@ -2922,6 +2942,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               prev.map((m) => (m.id === tempId ? { ...m, id: (row as any).id } : m)),
             );
             const persistedId = (row as any).id as string;
+            // Teach the offline queue this mapping: a child write that queues
+            // LATER still carries the parent's temp id, and the flush can only
+            // rewrite it if the mapping was recorded here (see #348).
+            void import('../services/offlineWriteQueue')
+              .then(({ rememberIdRemap }) => rememberIdRemap(tempId, persistedId))
+              .catch(() => {});
+
             // Fire-and-forget cohort-wide index (R279). Materials write user_id=null
             // inside indexItem so other contractors can match against them.
             import('../intelligence/semanticSearch').then(({ indexMaterialForSearch }) =>
@@ -3339,6 +3366,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount,
           status: 'draft',
           dueInDays: 14,
+          // Stamped locally, not only by the backend mapper: the monthly tier
+          // caps count documents by `createdAt`, so an unstamped optimistic row
+          // was invisible to the gate and Free was effectively unlimited.
+          createdAt: new Date().toISOString(),
           // What the job recorded, carried onto the invoice the contractor is
           // about to send. Editable in the invoice screen like any note.
           notes: billing.workRecord,
@@ -3500,6 +3531,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount,
           status: 'draft',
           dueInDays: 14,
+          // Stamped locally, not only by the backend mapper: the monthly tier
+          // caps count documents by `createdAt`, so an unstamped optimistic row
+          // was invisible to the gate and Free was effectively unlimited.
+          createdAt: new Date().toISOString(),
           decisionItemIds: decisionItemIds?.length ? decisionItemIds : undefined,
         };
         setInvoices((prev) => [newInvoice, ...prev]);
@@ -3642,6 +3677,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount,
           status: 'draft',
           dueInDays: 14,
+          createdAt: new Date().toISOString(),
           projectId,
           billingTermId: termId,
           retentionAmount: retention,
@@ -3767,6 +3803,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount,
           status: 'draft',
           dueInDays: 14,
+          createdAt: new Date().toISOString(),
           projectId,
           changeOrderId,
         };
@@ -3883,6 +3920,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           amount: held,
           status: 'draft',
           dueInDays: 14,
+          createdAt: new Date().toISOString(),
           projectId,
           // Withholds nothing itself, and is what retentionHeld nets off so a
           // released project stops reporting a balance.
@@ -4032,7 +4070,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const jobPayload = {
             title: newJob.title,
             description: newJob.description,
-            customer_id: isUuid(quote.customer) ? quote.customer : null,
+            // `quote.customer` is the DISPLAY NAME for any quote made in this
+            // session — `addQuote` sets `customer: matchedCustomer?.name`, with
+            // the real uuid beside it in `customerId`. Reading only `.customer`
+            // dropped the FK on a fully online conversion with a perfectly good
+            // customer, and it only ever worked for BE-hydrated quotes (where
+            // the mapper puts the uuid in `.customer`). `addInvoice` already
+            // resolves it this way; these two did not.
+            customer_id: isUuid(quote.customerId) ? quote.customerId
+              : isUuid(quote.customer) ? quote.customer : null,
             quoted_amount: quote.amount,
             agreed_amount: quote.amount,
             // Everything below was built above, put on the optimistic job, and
@@ -4063,6 +4109,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
             finalJobId = row.id;
+            // Teach the offline queue this mapping: a child write that queues
+            // LATER still carries the parent's temp id, and the flush can only
+            // rewrite it if the mapping was recorded here (see #348).
+            void import('../services/offlineWriteQueue')
+              .then(({ rememberIdRemap }) => rememberIdRemap(tempId, row.id))
+              .catch(() => {});
+
             // R52: was `.catch(() => {})` — silenced quote-status-update
             // failures left the quote stuck in `draft` on BE while the job
             // existed. Now queues the update on failure so reconnect drains.
@@ -4252,11 +4305,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             // R66 round 18: same uuid guard — see updateQuote acceptance path.
             dbCreateJob({
               title: autoJob.title,
-              customer_id: isUuid(quote.customer) ? quote.customer : null,
+            // `quote.customer` is the DISPLAY NAME for any quote made in this
+            // session — `addQuote` sets `customer: matchedCustomer?.name`, with
+            // the real uuid beside it in `customerId`. Reading only `.customer`
+            // dropped the FK on a fully online conversion with a perfectly good
+            // customer, and it only ever worked for BE-hydrated quotes (where
+            // the mapper puts the uuid in `.customer`). `addInvoice` already
+            // resolves it this way; these two did not.
+            customer_id: isUuid(quote.customerId) ? quote.customerId
+              : isUuid(quote.customer) ? quote.customer : null,
               quoted_amount: quote.amount,
               agreed_amount: quote.amount,
             }).then((row) => {
               setJobs((prev) => prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)));
+              void import('../services/offlineWriteQueue')
+                .then(({ rememberIdRemap }) => rememberIdRemap(tempId, row.id))
+                .catch(() => {});
             }).catch((err) => logWarn('AppState', `auto-create job from updateQuote failed: ${err}`));
           }
         }
@@ -4410,6 +4474,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     setLeads((prev) =>
                       prev.map((l) => (l.id === tempId ? { ...l, id: data.id as string } : l))
                     );
+                    const { rememberIdRemap } = await import('../services/offlineWriteQueue');
+                    await rememberIdRemap(tempId, data.id as string);
                     const { emitIdRemap } = await import('../services/idRemapBus');
                     emitIdRemap({ table: 'leads', tempId, realId: data.id as string, payload: { name: newLead.customerName } });
                   }
@@ -4477,7 +4543,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 retention_percent: project.retentionPercent ?? 0,
                 change_orders: project.changeOrders ?? [],
               }), 3000, 'addProject');
-              setProjects(prev => prev.map(p => p.id === tempId ? { ...p, id: (row as any).id } : p));
+              const finalProjectId = (row as any).id as string;
+              setProjects(prev => prev.map(p => p.id === tempId ? { ...p, id: finalProjectId } : p));
+              // Teach the queue the mapping, like addCustomer and addJob do.
+              // Without it, `addJobToProject` queues an update carrying
+              // `project_id: 'proj-<ts>'`, the flush has nothing to rewrite it
+              // with, Postgres rejects it (22P02) five times and the write is
+              // dropped — the job silently leaves the project.
+              void import('../services/offlineWriteQueue')
+                .then(({ rememberIdRemap }) => rememberIdRemap(tempId, finalProjectId))
+                .catch(() => {});
             } catch (err) {
               logWarn('AppState', `addProject persist failed or timed out: ${err}`);
               try {

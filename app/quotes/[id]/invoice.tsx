@@ -16,6 +16,7 @@ import { formatCurrency, type Country } from '../../../src/i18n/formatting';
 import { logError } from '../../../src/utils/errorHandler';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 import { findDocumentCustomer } from '../../../src/domain/customers';
+import { ensureCanCreate } from '../../../src/services/tierGatePrompt';
 
 export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
@@ -45,31 +46,8 @@ export default function InvoiceFromQuoteScreen() {
 
   const handleCreateInvoice = useCallback(async () => {
     if (!id) return;
-    // Tier gate — block monthly-cap users before we mint an invoice number.
-    // R52: count invoices created this calendar month from real AppState.
-    try {
-      const { loadSubscription, canCreateInvoice } = await import('../../../src/services/subscriptionService');
-      const sub = await loadSubscription();
-      const monthStart = new Date();
-      monthStart.setDate(1);
-      monthStart.setHours(0, 0, 0, 0);
-      const invoicesThisMonth = invoices.filter((inv: any) => {
-        const created = inv.createdAt ? new Date(inv.createdAt) : null;
-        return created && created >= monthStart;
-      }).length;
-      const gate = canCreateInvoice(sub, invoicesThisMonth);
-      if (!gate.allowed) {
-        Alert.alert(
-          t('billing.upgradeRequired'),
-          gate.reason,
-          [
-            { text: t('common.cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans'), onPress: () => router.push('/contractor/profile' as any) },
-          ],
-        );
-        return;
-      }
-    } catch {}
+    // One shared chokepoint — see `tierGatePrompt`.
+    if (!(await ensureCanCreate('invoice', invoices))) return;
     setCreating(true);
     try {
       const newId = await addInvoice(id);

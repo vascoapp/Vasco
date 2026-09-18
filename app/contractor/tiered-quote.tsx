@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { TieredQuoteBuilder } from '../../src/components/contractor';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
+import { ensureCanCreate } from '../../src/services/tierGatePrompt';
 
 export default function TieredQuoteScreen() {
   const router = useRouter();
@@ -80,6 +81,11 @@ export default function TieredQuoteScreen() {
             // duplicate, unknown VAT) the /quotes/new path has had since R304.
             // Was R2 deferral — the validator was wired in AppState.addQuote
             // but always proceeded with `// Still allow creation`.
+            // Tier cap FIRST — this is the DEFAULT "new quote" destination
+            // (the + on the invoices tab and the AI queue's draft_quote both
+            // land here), and it was the one quote path with no gate at all,
+            // while /quotes/new — the secondary route — had one.
+            if (!(await ensureCanCreate('quote', quotes))) return;
             const { gateQuoteValidation } = await import('../../src/services/quoteValidationGate');
             const ok = await gateQuoteValidation(
               { customer: customerArg, amount: tierTotal, lineItems },

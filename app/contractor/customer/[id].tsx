@@ -23,6 +23,7 @@ import { useCustomerInbox, type InboundChannel } from '../../../src/services/cus
 import { recordImpression, recordTap, primeCache as primeReplyCache } from '../../../src/services/smartReplyLearningService';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { useKeyboardInset } from '../../../src/hooks/useKeyboardInset';
+import { daysUntilDue } from '../../../src/utils/invoiceDue';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -91,7 +92,8 @@ export default function CustomerDetailScreen() {
       latestInvoice: latestI ? {
         id: latestI.id, status: latestI.status,
         sentAt: latestI.sentAt ?? latestI.createdAt,
-        dueInDays: latestI.dueInDays,
+        // Derived: the stored snapshot froze the day this invoice was sent.
+        dueInDays: daysUntilDue(latestI) ?? latestI.dueInDays,
         amount: latestI.amount,
       } : undefined,
       latestJob: latestJ ? {

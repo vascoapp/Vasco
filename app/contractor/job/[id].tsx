@@ -55,6 +55,7 @@ import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { formatCurrency, formatCurrency0, formatTime } from '../../../src/i18n/formatting';
 import type { Country } from '../../../src/i18n/formatting';
 import { wasShareDismissed } from '../../../src/utils/shareOutcome';
+import { ensureCanCreate } from '../../../src/services/tierGatePrompt';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -214,6 +215,10 @@ export default function JobDetailPage() {
     autoTriggeredInvoiceRef.current = true;
     (async () => {
       try {
+        // This one fires on MOUNT from the queue card's deep link, so the cap
+        // has to be checked before anything is minted — there is no button
+        // press to hang it on.
+        if (!(await ensureCanCreate('invoice', invoices))) return;
         await addInvoiceFromJob(id);
         router.replace('/(contractor)/facturen' as any);
       } catch (err) {
@@ -226,7 +231,7 @@ export default function JobDetailPage() {
         );
       }
     })();
-  }, [action, id, addInvoiceFromJob, router]);
+  }, [action, id, addInvoiceFromJob, invoices, router]);
   const { advance, recordHours } = useJobLifecyclePipeline();
   const costVariance = useJobCostVariance(id || '');
   // R206: cohort cost-variance baseline for the contractor's trade/country.
@@ -887,6 +892,7 @@ export default function JobDetailPage() {
                     // was invoiced.
                     if (invoicingStep) {
                       try {
+                        if (!(await ensureCanCreate('invoice', invoices))) return;
                         const newInvoiceId = await addInvoiceFromJob(job.id);
                         router.push(`/invoices/${newInvoiceId}` as any);
                       } catch (err) {
@@ -1565,6 +1571,7 @@ export default function JobDetailPage() {
               // list, and found no invoice and no explanation. The throw
               // carries the reason; show it and stay put.
               try {
+                if (!(await ensureCanCreate('invoice', invoices))) return;
                 await addInvoiceFromJob(job.id);
               } catch (err) {
                 Alert.alert(

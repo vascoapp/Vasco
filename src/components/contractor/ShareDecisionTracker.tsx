@@ -28,6 +28,7 @@ import { generateAccessCode } from '../../data/mockCustomerPortal';
 import { useAppState } from '../../state/AppState';
 import { logInfo } from '../../utils/errorHandler';
 import { parseDecimalInput } from '../../utils/decimalInput';
+import { ensureCanUsePaymentLink } from '../../services/tierGatePrompt';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -65,6 +66,8 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
     }
     setCreatingLink(true);
     try {
+      // The `finally` below clears `creatingLink`, so a plain return is enough.
+      if (!(await ensureCanUsePaymentLink())) return;
       const url = await requestTrackerDeposit(accessCode, amount);
       setCreatedLink(url);
       Alert.alert(

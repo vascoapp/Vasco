@@ -31,6 +31,7 @@ import { DKLabel } from '../../src/components/shared/DKLabel';
 import { useMaintenanceOpportunities } from '../../src/services/maintenanceOpportunityService';
 import { useSubmissions } from '../../src/services/submissionStore';
 import { formatMoney2, formatDecimal1, type Country } from '../../src/i18n/formatting';
+import { daysUntilDue } from '../../src/utils/invoiceDue';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabKey = 'queue' | 'insights' | 'more';
@@ -129,7 +130,7 @@ export default function VascoScreen() {
 
   const automationCtx = useMemo<AutomationContext>(() => ({
     jobs: jobs.map(j => ({ id: j.id, title: j.title, status: j.status, customerId: j.customerId ?? '', agreedAmount: j.agreedAmount, completedAt: j.completedAt })),
-    invoices: invoices.map(i => ({ id: i.id, customer: i.customer ?? '', amount: i.amount ?? 0, status: i.status, dueInDays: i.dueInDays ?? 0 })),
+    invoices: invoices.map(i => ({ id: i.id, customer: i.customer ?? '', amount: i.amount ?? 0, status: i.status, dueInDays: daysUntilDue(i) ?? i.dueInDays ?? 0 })),
     quotes: quotes.map(q => ({ id: q.id, customer: q.customer ?? '', amount: q.amount ?? 0, status: q.status, lastUpdated: q.lastUpdated })),
     customers: customers.map(c => ({ id: c.id, name: c.name })),
   }), [jobs, invoices, quotes, customers]);

@@ -62,6 +62,9 @@ import type { DunningSequence as DunningSeqType } from '../../src/services/colle
 import { predictCustomerDSO } from '../../src/intelligence/predictions';
 import { Toast } from '../../src/components/shared/Toast';
 import { getCustomerPaymentPreference } from '../../src/services/customerPaymentPreferenceService';
+// The payment-link gate a few hundred lines above was the only tier check in
+// this file; the create-invoice sheet below it had none.
+import { ensureCanCreate } from '../../src/services/tierGatePrompt';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -624,7 +627,7 @@ export default function FacturenScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
-  const { jobs, addInvoiceFromJob, businessProfile, customers, quotes: storedQuotes, isLoading } = useAppState();
+  const { jobs, addInvoiceFromJob, businessProfile, customers, quotes: storedQuotes, invoices: storedInvoices, isLoading } = useAppState();
   const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const [activeTab, setActiveTab] = useState<TabView>('offertes');
   const [refreshing, setRefreshing] = useState(false);
@@ -983,6 +986,7 @@ export default function FacturenScreen() {
                             // Without this guard, contractor saw success
                             // haptic + toast on a failed create.
                             try {
+                              if (!(await ensureCanCreate('invoice', storedInvoices))) return;
                               await addInvoiceFromJob(job.id);
                               hapticSuccess();
                               setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });
@@ -1009,6 +1013,7 @@ export default function FacturenScreen() {
                             closeBottomSheet();
                             // R66 round 10: same try/catch as single-job branch above.
                             try {
+                              if (!(await ensureCanCreate('invoice', storedInvoices))) return;
                               await addInvoiceFromJob(job.id);
                               hapticSuccess();
                               setToast({ visible: true, message: `${t('invoices.invoiceCreated', 'Factuur aangemaakt')} — ${t('invoices.invoiceCreatedDesc', 'De factuur is aangemaakt als concept.')}` });

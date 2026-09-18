@@ -30,6 +30,7 @@ import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
+import { ensureCanCreate } from '../../src/services/tierGatePrompt';
 
 export default function NewQuoteScreen() {
   const { t } = useTranslation();
@@ -147,32 +148,10 @@ export default function NewQuoteScreen() {
       return;
     }
 
-    // Tier gate — free users see an upgrade prompt when they hit their monthly quote cap.
-    // R52: count quotes created this calendar month from real AppState
-    // (legacy `quotesUsedThisMonth` counter was never incremented).
-    try {
-      const { loadSubscription, canCreateQuote } = await import('../../src/services/subscriptionService');
-      const sub = await loadSubscription();
-      const monthStart = new Date();
-      monthStart.setDate(1);
-      monthStart.setHours(0, 0, 0, 0);
-      const quotesThisMonth = quotes.filter((q: any) => {
-        const created = q.createdAt ? new Date(q.createdAt) : null;
-        return created && created >= monthStart;
-      }).length;
-      const gate = canCreateQuote(sub, quotesThisMonth);
-      if (!gate.allowed) {
-        Alert.alert(
-          t('billing.upgradeRequired', 'Upgrade required'),
-          gate.reason,
-          [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
-          ],
-        );
-        return;
-      }
-    } catch {}
+    // One shared chokepoint — see `tierGatePrompt`. This screen used to carry
+    // its own copy of the counting rule, and the copy on the OTHER quote
+    // screen did not exist at all.
+    if (!(await ensureCanCreate('quote', quotes))) return;
 
     // R304: validator gate — checks for duplicate quotes (same customer + amount
     // within 7 days), zero-priced items, missing VAT config. Errors show

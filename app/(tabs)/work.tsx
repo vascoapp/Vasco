@@ -9,6 +9,7 @@ import { SemanticColors } from '../../src/theme/colors';
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
+import { daysUntilDue } from '../../src/utils/invoiceDue';
 
 type Tab = 'quotes' | 'invoices';
 
@@ -207,7 +208,7 @@ export default function WorkScreen() {
                       <View>
                         <Text style={styles.itemTitle}>{invoice.customer}</Text>
                         <Text style={[styles.itemSubtitle, styles.itemSubtitleDanger]}>
-                          {t('tabs.work.daysOverdue', '{{days}} days overdue', { days: Math.abs(invoice.dueInDays) })}
+                          {t('tabs.work.daysOverdue', '{{days}} days overdue', { days: Math.abs(daysUntilDue(invoice) ?? invoice.dueInDays) })}
                         </Text>
                       </View>
                     </View>
@@ -235,7 +236,7 @@ export default function WorkScreen() {
                       <View>
                         <Text style={styles.itemTitle}>{invoice.customer}</Text>
                         <Text style={styles.itemSubtitle}>
-                          {t('tabs.work.dueInDays', 'Due in {{days}} days', { days: invoice.dueInDays })}
+                          {t('tabs.work.dueInDays', 'Due in {{days}} days', { days: daysUntilDue(invoice) ?? invoice.dueInDays })}
                         </Text>
                       </View>
                     </View>

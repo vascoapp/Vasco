@@ -179,7 +179,10 @@ export default function CustomerPortal({ params }: PageProps) {
       const res = await flushOutbox(getSupabase());
       if (!alive || res.delivered === 0) return;
       showToast(t.saved);
-      if (res.signatures > 0) setSigned('sent');
+      // `res.signatures` counts every code in the queue, and one browser can
+      // hold two projects' portals. Promote this page's banner only when THIS
+      // code's signature is the one that left.
+      if (res.signatures > 0 && hadSignature && !hasPendingSignature(code)) setSigned('sent');
     };
     void drain();
     if (typeof window === 'undefined') return () => { alive = false; };

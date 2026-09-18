@@ -63,7 +63,7 @@ describe('the signature is only called signed when it landed', () => {
     // and the RPC INSERTs unconditionally.
     expect(PAGE).toMatch(/const hadSignature = !!code && hasPendingSignature\(code\)/);
     expect(PAGE).toMatch(/if \(hadSignature\) setSigned\(prev => prev \|\| 'queued'\)/);
-    expect(PAGE).toMatch(/if \(res\.signatures > 0\) setSigned\('sent'\)/);
+    expect(PAGE).toMatch(/if \(res\.signatures > 0 && hadSignature && !hasPendingSignature\(code\)\) setSigned\('sent'\)/);
     expect(OUTBOX).toMatch(/export function hasPendingSignature/);
   });
 

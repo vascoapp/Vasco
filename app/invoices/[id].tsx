@@ -47,6 +47,12 @@ import { DKMenu } from '../../src/components/shared/DKMenu';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { DecimalInput } from '../../src/components/shared/DecimalInput';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
+// `invoice.dueInDays` is a STORED SNAPSHOT written once and never recomputed,
+// so the hero on this screen said "Due in 14 days" for an invoice that had
+// been overdue for a month. Every other surface already derives it from
+// `dueDate`; this one — the screen the contractor actually opens — did not.
+import { daysUntilDue } from '../../src/utils/invoiceDue';
+import { ensureCanUsePaymentLink } from '../../src/services/tierGatePrompt';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -259,6 +265,10 @@ export default function InvoiceDetailScreen() {
   );
   const vatAmount = vatBreakdown.vat;
   const total = vatBreakdown.gross;
+  // Derived from `dueDate`, never from the frozen `dueInDays` snapshot. null
+  // when the invoice carries neither, so the screen omits the figure rather
+  // than printing a confident "Due in 0 days".
+  const dueIn = daysUntilDue(invoice);
   // null on a genuinely mixed-rate invoice: the label omits the percentage
   // rather than printing a blended average that appears on no tax return.
   const vatRatePct = vatBreakdown.ratePct;
@@ -345,6 +355,10 @@ export default function InvoiceDetailScreen() {
 
   const handleCreatePayment = async () => {
     try {
+      // Payment processing is a paid entitlement, gated on the invoice LIST
+      // and — until now — not here, where the same action sits on every
+      // invoice's detail screen.
+      if (!(await ensureCanUsePaymentLink())) return;
       // Retention withheld from this instalment is not payable yet (the same
       // basis `computeLateFee` uses two screens over).
       await createPaymentLink(invoice.id, amountPayableNow(invoice));
@@ -446,7 +460,10 @@ export default function InvoiceDetailScreen() {
 
     // Cadence-aware escalation: if the invoice is already overdue we pick a
     // gentle / firm / final template so the tone matches the situation.
-    const daysOverdue = invoice.dueInDays < 0 ? Math.abs(invoice.dueInDays) : 0;
+    // Derived, not the frozen snapshot: this number picks the dunning
+    // template AND is the basis the reminder quotes. A stale count sent a
+    // gentle first notice for an invoice 40 days late (and vice versa).
+    const daysOverdue = Math.abs(Math.min(0, daysUntilDue(invoice) ?? 0));
     let subject: string | undefined;
     let bodyOverride: string | undefined;
     if (daysOverdue >= 3) {
@@ -1056,7 +1073,7 @@ export default function InvoiceDetailScreen() {
           <Text style={styles.heroLabel}>
             {invoice.status === 'paid'
               ? t('invoices.heroLabelPaid', 'Paid').toUpperCase()
-              : invoice.dueInDays < 0
+              : (dueIn ?? 0) < 0
                 ? t('invoices.heroLabelOverdue', 'Overdue').toUpperCase()
                 : t('invoices.heroLabelOutstanding', 'Outstanding').toUpperCase()}
           </Text>
@@ -1064,9 +1081,11 @@ export default function InvoiceDetailScreen() {
           <Text style={styles.heroDue}>
             {invoice.status === 'paid'
               ? t('invoices.paymentReceived', 'Payment received')
-              : invoice.dueInDays >= 0
-                ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: invoice.dueInDays })
-                : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(invoice.dueInDays) })
+              : dueIn === null
+                ? ''
+                : dueIn >= 0
+                  ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: dueIn })
+                  : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(dueIn) })
             }
           </Text>
         </View>
@@ -1514,7 +1533,7 @@ export default function InvoiceDetailScreen() {
                 labelColor={SemanticColors.feedbackError}
                 date={`${invoice.dueDate
                   ? formatDayMonth(new Date(invoice.dueDate), country as Country)
-                  : ''} · ${Math.abs(invoice.dueInDays)} ${t('invoices.daysLate', 'days late')}`}
+                  : ''} · ${Math.abs(dueIn ?? 0)} ${t('invoices.daysLate', 'days late')}`}
                 showLine
               />
             )}
@@ -1532,7 +1551,9 @@ export default function InvoiceDetailScreen() {
                 // site kept `invoice.amount`, so the overdue timeline on screen
                 // claimed more interest than the reminder the customer reads.
                 invoiceAmount: amountPayableNow(invoice),
-                daysOverdue: Math.abs(invoice.dueInDays),
+                // The statutory interest is charged PER DAY, so a frozen
+                // count is a wrong amount of money, not a wrong label.
+                daysOverdue: Math.abs(Math.min(0, dueIn ?? 0)),
                 country: feeCountry,
                 customerType: lateFeeCustomerType(invoiceCustomer, feeCountry),
               });
@@ -1575,10 +1596,12 @@ export default function InvoiceDetailScreen() {
             {invoice.status !== 'paid' && (
               <TimelineEntry
                 icon="calendar-outline"
-                color={invoice.dueInDays < 0 ? SemanticColors.feedbackError : SemanticColors.textTertiary}
-                label={invoice.dueInDays >= 0
-                  ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: invoice.dueInDays })
-                  : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(invoice.dueInDays) })}
+                color={(dueIn ?? 0) < 0 ? SemanticColors.feedbackError : SemanticColors.textTertiary}
+                label={dueIn === null
+                  ? t('invoices.dueDate', 'Due date')
+                  : dueIn >= 0
+                    ? t('invoices.dueIn', { defaultValue: 'Due in {{count}} days', count: dueIn })
+                    : t('invoices.overdueDays', { defaultValue: '{{count}} days overdue', count: Math.abs(dueIn) })}
                 date={invoice.dueDate
                   ? formatDate(new Date(invoice.dueDate), country as Country)
                   : ''}

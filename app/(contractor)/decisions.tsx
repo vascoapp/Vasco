@@ -47,6 +47,7 @@ import { DecisionActivityPanel } from '../../src/components/contractor/DecisionA
 // idRemapBus. For R30 we keep the existing FE id shape and stay
 // AsyncStorage-only — no BE writes that could expose the drift.
 import { recordDecisionOnTracker, applySubmissionsToTracker } from '../../src/services/decisionRecording';
+import { ensureCanCreate } from '../../src/services/tierGatePrompt';
 import {
   billableUpgrades,
   upgradeTotal,
@@ -84,7 +85,7 @@ type ViewMode = 'list' | 'detail' | 'template-picker' | 'customer-picker';
 
 export default function KeuzeScreen() {
   const { t } = useTranslation();
-  const { customers, addInvoiceFromDecisionUpgrades, businessProfile } = useAppState();
+  const { customers, addInvoiceFromDecisionUpgrades, businessProfile, invoices } = useAppState();
   const router = useRouter();
   const { user } = useAuth();
   // Profile first, account as fallback (#218) — and NO 'NL' default: the
@@ -406,6 +407,7 @@ export default function KeuzeScreen() {
               return;
             }
             try {
+              if (!(await ensureCanCreate('invoice', invoices))) return;
               const invoiceId = await addInvoiceFromDecisionUpgrades({
                 customerId: current.customerId,
                 customerName: current.customerName,
