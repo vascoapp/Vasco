@@ -1,7 +1,7 @@
 // =============================================================================
 // EXPENSES — Uitgaven beheer
 // =============================================================================
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
 import { DKMenu } from '../../src/components/shared/DKMenu';
+import { getReducedVatRate, getEnergyRenovationVatRate, round2 } from '../../src/domain/business';
 import { parseDecimalInput } from '../../src/utils/decimalInput';
 import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
@@ -47,6 +48,38 @@ export default function ExpensesScreen() {
   const [newDesc, setNewDesc] = useState('');
   const [newAmount, setNewAmount] = useState('');
   const [newCategory, setNewCategory] = useState<ExpenseCategory>('materiaal');
+  // The rate on THIS expense. Every expense used to be stamped with the
+  // country's STANDARD rate, including the exempt ones: a € 500 insurance
+  // premium stored € 105,00 of input VAT that was never charged, and
+  // `vat-prep` reclaims exactly this field as voorbelasting (#354).
+  //
+  // Vasco does not judge eligibility — the same principle as the reduced rate
+  // on a quote (`getReducedVatRate`). The contractor picks; the default is
+  // unchanged, so nothing silently moves for anyone who does not.
+  const [newVatPct, setNewVatPct] = useState<number>(vatPct);
+  // `vatPct` comes from the business profile, which hydrates AFTER the first
+  // render — so a plain `useState(vatPct)` initialiser freezes at 0 and the
+  // form would default every expense to 0% for a contractor whose profile had
+  // not loaded yet. Follow it while the form is CLOSED; once it is open the
+  // contractor's own choice stands. (Same shape as #339's deliveryAddress.)
+  useEffect(() => {
+    if (!showAddForm) setNewVatPct(vatPct);
+  }, [vatPct, showAddForm]);
+  const vatRateOptions = useMemo(() => {
+    const reduced = getReducedVatRate(businessProfile.country ?? undefined);
+    const energy = getEnergyRenovationVatRate(businessProfile.country ?? undefined);
+    const pcts = Array.from(new Set([vatPct, reduced, energy, 0].filter(
+      (r): r is number => typeof r === 'number',
+    ))).sort((a, b) => b - a);
+    return pcts.map((pct) => ({
+      pct,
+      label: pct === 0
+        ? t('expenses.vatExempt', { defaultValue: '0% (exempt)' })
+        : pct === vatPct
+          ? t('expenses.vatStandard', { defaultValue: '{{pct}}% (standard)', pct })
+          : t('expenses.vatReduced', { defaultValue: '{{pct}}% (reduced)', pct }),
+    }));
+  }, [vatPct, businessProfile.country, t]);
 
   // EXPENSE_CATEGORIES ships hardcoded Dutch labels ("Materiaal", "Voertuig",
   // "Gereedschap", "Kantoor"), so a German contractor was filing tax-relevant
@@ -72,12 +105,15 @@ export default function ExpensesScreen() {
       date: new Date(),
       deductible: true,
       deductionPercentage: catDef?.deductionDefault ?? 100,
-      vatRate: vatPct,
-      vatAmount: amt * vatRate,
+      vatRate: newVatPct,
+      // Cents: `33.33 * 0.21` is `6.999300000000001`, and this figure is
+      // reclaimed on a VAT return.
+      vatAmount: round2(amt * (newVatPct / 100)),
     });
     hapticSuccess();
     setNewDesc('');
     setNewAmount('');
+    setNewVatPct(vatPct);
     setShowAddForm(false);
   };
   const stats = useExpenseStats();
@@ -166,6 +202,30 @@ export default function ExpensesScreen() {
                   <Pressable style={styles.modalCatAnchor} onPress={open} accessibilityRole="button">
                     <Text style={styles.modalCatAnchorText} numberOfLines={1}>
                       {categoryLabel(EXPENSE_CATEGORIES.find(c => c.id === newCategory))}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={SemanticColors.textSecondary} />
+                  </Pressable>
+                )}
+              />
+              </View>
+              {/* One of N → a menu, not a chip strip (CLAUDE.md). The rates
+                  offered are this contractor's own: standard, the country's
+                  reduced rate where one exists, and 0% for an exempt supply
+                  such as an insurance premium. */}
+              <View style={{ flex: 1 }}>
+              <DKMenu
+                accessibilityLabel={t('expenses.vatRate', { defaultValue: 'VAT rate' })}
+                items={vatRateOptions.map((opt: { pct: number; label: string }) => ({
+                  key: String(opt.pct),
+                  label: opt.label,
+                  selected: newVatPct === opt.pct,
+                  onPress: () => setNewVatPct(opt.pct),
+                }))}
+                renderAnchor={(open) => (
+                  <Pressable style={styles.modalCatAnchor} onPress={open} accessibilityRole="button">
+                    <Text style={styles.modalCatAnchorText} numberOfLines={1}>
+                      {vatRateOptions.find((o: { pct: number }) => o.pct === newVatPct)?.label
+                        ?? `${newVatPct}%`}
                     </Text>
                     <Ionicons name="chevron-down" size={16} color={SemanticColors.textSecondary} />
                   </Pressable>
