@@ -10,6 +10,7 @@ import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { daysUntilDue } from '../../src/utils/invoiceDue';
+import { issuedInvoices } from '../../src/utils/collectionRate';
 
 type Tab = 'quotes' | 'invoices';
 
@@ -25,7 +26,10 @@ export default function WorkScreen() {
   const sentInvoices = invoices.filter((i) => i.status === 'sent');
   const paidInvoices = invoices.filter((i) => i.status === 'paid');
 
-  const totalOutstanding = invoices
+  // "Outstanding" means money a customer owes. A DRAFT has been sent to
+  // nobody, so counting it said "€ 20.000 outstanding" when € 8.000 of that
+  // had never left the app — the reason `issuedInvoices` exists (#354).
+  const totalOutstanding = issuedInvoices(invoices)
     .filter((i) => i.status !== 'paid')
     .reduce((sum, i) => sum + i.amount, 0);
 

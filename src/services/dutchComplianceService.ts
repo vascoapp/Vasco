@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { round2 } from '../domain/business';
 import {
   KvKRegistration,
   KvKAlert,
@@ -344,20 +345,31 @@ class DutchComplianceService {
     });
   }
 
-  calculateBtw(invoices: { amount: number; vatRate: number }[], expenses: { amount: number; vatAmount: number }[]): BtwCalculation {
+  /**
+   * ⚠️ `netAmount`, not `amount`. The variables here are named `salesExclBtw…`
+   * and the rate is applied ON TOP, so these figures must be EX-VAT — but the
+   * parameter used to be `{ amount, vatRate }`, which is the shape of a
+   * domain `Invoice`, whose `amount` is GROSS everywhere in this codebase.
+   * Passing one would have declared € 12.100 of turnover as € 12.100 net and
+   * owed € 2.541 of BTW instead of € 2.100: a 21 % over-declaration to the
+   * Belastingdienst. The rename is what stops that (#354). Currently no
+   * caller — this is a filing, so it should not sit armed.
+   */
+  calculateBtw(invoices: { netAmount: number; vatRate: number }[], expenses: { amount: number; vatAmount: number }[]): BtwCalculation {
     let salesExclBtw21 = 0;
     let salesExclBtw9 = 0;
     let salesExclBtw0 = 0;
 
     invoices.forEach((inv) => {
-      if (inv.vatRate === 21) salesExclBtw21 += inv.amount;
-      else if (inv.vatRate === 9) salesExclBtw9 += inv.amount;
-      else salesExclBtw0 += inv.amount;
+      if (inv.vatRate === 21) salesExclBtw21 += inv.netAmount;
+      else if (inv.vatRate === 9) salesExclBtw9 += inv.netAmount;
+      else salesExclBtw0 += inv.netAmount;
     });
 
-    const btwOwed21 = salesExclBtw21 * 0.21;
-    const btwOwed9 = salesExclBtw9 * 0.09;
-    const totalBtwOwed = btwOwed21 + btwOwed9;
+    // Cents: a BTW box is a cent value, not a float.
+    const btwOwed21 = round2(salesExclBtw21 * 0.21);
+    const btwOwed9 = round2(salesExclBtw9 * 0.09);
+    const totalBtwOwed = round2(btwOwed21 + btwOwed9);
 
     const purchasesExclBtw = expenses.reduce((sum, e) => sum + e.amount, 0);
     const btwPaid = expenses.reduce((sum, e) => sum + e.vatAmount, 0);
@@ -782,7 +794,9 @@ export function useBtwRegistration() {
   const currentPeriod = useMemo(() => dutchComplianceService.getCurrentBtwPeriod(), [periods]);
 
   const calculateBtw = useCallback(
-    (invoices: { amount: number; vatRate: number }[], expenses: { amount: number; vatAmount: number }[]) => {
+    // `netAmount` all the way out to the screen — see the note on
+    // `calculateBtw`. An `Invoice.amount` is GROSS and must not land here.
+    (invoices: { netAmount: number; vatRate: number }[], expenses: { amount: number; vatAmount: number }[]) => {
       return dutchComplianceService.calculateBtw(invoices, expenses);
     },
     []

@@ -279,47 +279,109 @@ export function getVatExemptionNote(country: string | undefined, vatScheme: VatS
  * than print the blended average: "BTW (13,8%)" is a number that appears on no
  * invoice and in no tax table. The AMOUNT is exact either way.
  */
+/**
+ * Money to the cent, corrected for float REPRESENTATION.
+ *
+ * `1.5 * 0.19` is `0.28499999999999998`, so a plain `Math.round(n * 100) / 100`
+ * gives € 0,28 where the exact decimal 0,285 rounds up to € 0,29 — a cent of
+ * VAT lost on an amount as ordinary as € 1,50 at 19 %. Normalising to twelve
+ * significant digits first restores the value the arithmetic actually means
+ * before rounding it (#354).
+ */
+export function round2(n: number): number {
+  if (!Number.isFinite(n)) return n;
+  // Half away from zero — commercial rounding. `Math.round` rounds half toward
+  // +∞, which sends a credit note's −0,285 to −0,28 while +0,285 goes to
+  // +0,29: the same amount rounded two different ways depending on its sign.
+  const cents = Math.round(Number((Math.abs(n) * 100).toPrecision(12)));
+  return (n < 0 ? -cents : cents) / 100;
+}
+
+/** One VAT rate on a document, with the net it applies to and the tax due. */
+export interface VatRateGroup {
+  ratePct: number;
+  net: number;
+  vat: number;
+}
+
+/**
+ * The document's VAT, grouped by rate and rounded PER GROUP — which is both
+ * what a tax authority asks for and what makes the printed rows add up.
+ *
+ * Rounding per LINE understates a ten-line invoice by cents (#345); rounding
+ * only the document total lets the per-rate rows a PDF prints disagree with
+ * the Total beneath them: 3 × € 8,83 at 21 % plus 1 × € 10,04 at 9 % printed
+ * "Subtotaal 36,53 / BTW 21 % 5,56 / BTW 9 % 0,90" under a Total of € 43,00,
+ * which is a cent more than those lines add to (#354).
+ */
+export function vatRateGroups(
+  netAmount: number,
+  lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
+  fallbackVatRatePercent: number,
+): VatRateGroup[] {
+  if (fallbackVatRatePercent === 0) return [];
+  const all = lines ?? [];
+  const rated = all.filter((l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate));
+  const wholeDocument = (ratePct: number): VatRateGroup[] =>
+    ratePct === 0
+      ? []
+      : [{ ratePct, net: round2(netAmount), vat: round2(netAmount * (ratePct / 100)) }];
+
+  // No usable line rates: the profile's rate on the whole amount.
+  if (rated.length === 0 || rated.length !== all.length) return wholeDocument(fallbackVatRatePercent);
+
+  const lineNet = rated.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+  const rates = Array.from(new Set(rated.map((l) => l.vatRate as number)));
+
+  // The lines no longer add up to the amount (a discount, a hand-edited
+  // total). The agreed RATE still applies — to the amount, not the lines.
+  if (Math.abs(lineNet - netAmount) > 0.01) {
+    return wholeDocument(rates.length === 1 ? rates[0] : fallbackVatRatePercent);
+  }
+
+  return rates
+    .map((ratePct) => {
+      const net = rated
+        .filter((l) => l.vatRate === ratePct)
+        .reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+      return { ratePct, net: round2(net), vat: round2(net * (ratePct / 100)) };
+    })
+    .filter((g) => g.net !== 0 || g.vat !== 0)
+    .sort((a, b) => b.ratePct - a.ratePct);
+}
+
 export function documentVatBreakdown(
   netAmount: number,
   lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
   fallbackVatRatePercent: number,
-): { net: number; vat: number; gross: number; ratePct: number | null } {
-  const net = Math.round(netAmount * 100) / 100;
-  const gross = grossFromDocumentLines(netAmount, lines, fallbackVatRatePercent);
-  const vat = Math.round((gross - net) * 100) / 100;
-  const all = lines ?? [];
-  const rated = all.filter((l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate));
-  if (fallbackVatRatePercent === 0) return { net, vat, gross, ratePct: 0 };
-  if (rated.length > 0 && rated.length === all.length) {
-    const rates = Array.from(new Set(rated.map((l) => l.vatRate as number)));
-    return { net, vat, gross, ratePct: rates.length === 1 ? rates[0] : null };
-  }
-  return { net, vat, gross, ratePct: fallbackVatRatePercent };
+): { net: number; vat: number; gross: number; ratePct: number | null; groups: VatRateGroup[] } {
+  const net = round2(netAmount);
+  // ONE computation feeds all three figures AND the per-rate rows a document
+  // prints, so `net + Σ rows === gross` by construction (#354).
+  const groups = vatRateGroups(netAmount, lines, fallbackVatRatePercent);
+  const vat = round2(groups.reduce((s, g) => s + g.vat, 0));
+  const gross = round2(net + vat);
+  if (fallbackVatRatePercent === 0) return { net, vat, gross, ratePct: 0, groups };
+  // null on a genuinely mixed-rate document: the label omits the percentage
+  // rather than printing a blended average that appears on no tax return.
+  const ratePct = groups.length === 1 ? groups[0].ratePct : groups.length === 0 ? fallbackVatRatePercent : null;
+  return { net, vat, gross, ratePct, groups };
 }
 
+/**
+ * The document's gross — the SAME rule the printed VAT rows follow, because it
+ * is derived from them. It used to sum each line's own gross and round once,
+ * which can land a cent away from `net + Σ per-rate VAT` and leave an invoice
+ * that does not add up (#354).
+ */
 export function grossFromDocumentLines(
   netAmount: number,
   lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
   fallbackVatRatePercent: number,
 ): number {
-  if (fallbackVatRatePercent === 0) return Math.round(netAmount * 100) / 100;
-  const rated = (lines ?? []).filter(
-    (l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate),
-  );
-  if (rated.length === 0 || rated.length !== (lines ?? []).length) {
-    return grossFromNet(netAmount, fallbackVatRatePercent);
-  }
-  const lineNet = rated.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-  if (Math.abs(lineNet - netAmount) <= 0.01) {
-    const gross = rated.reduce(
-      (s, l) => s + l.quantity * l.unitPrice * (1 + (l.vatRate as number) / 100),
-      0,
-    );
-    return Math.round(gross * 100) / 100;
-  }
-  const rates = Array.from(new Set(rated.map((l) => l.vatRate as number)));
-  if (rates.length === 1) return grossFromNet(netAmount, rates[0]);
-  return grossFromNet(netAmount, fallbackVatRatePercent);
+  if (fallbackVatRatePercent === 0) return round2(netAmount);
+  const groups = vatRateGroups(netAmount, lines, fallbackVatRatePercent);
+  return round2(round2(netAmount) + groups.reduce((s, g) => s + g.vat, 0));
 }
 
 export function grossFromNet(netAmount: number, vatRatePercent: number): number {

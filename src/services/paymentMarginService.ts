@@ -14,6 +14,7 @@
 
 import type { Country } from '../context/AuthContext';
 import type { SubscriptionTier } from './subscriptionService';
+import { round2 } from '../domain/business';
 
 // ─── Tier → Commission Rate ────────────────────────────────────────────────
 
@@ -173,13 +174,24 @@ export function calculatePaymentFees(
   return {
     method,
     amount,
-    processorFee: Math.round(processorFee * 100) / 100,
-    vascoFee: Math.round(vascoFee * 100) / 100,
-    totalFee: Math.round(totalFee * 100) / 100,
-    contractorReceives: Math.round(contractorReceives * 100) / 100,
+    // One chain, derived: the two fees are rounded, the total is their sum and
+    // what the contractor receives is the amount minus that total. Rounding
+    // all four independently let the displayed breakdown sum to a cent more
+    // than the displayed total (#354).
+    ...(() => {
+      const processor = round2(processorFee);
+      const vasco = round2(vascoFee);
+      const fees = round2(processor + vasco);
+      return {
+        processorFee: processor,
+        vascoFee: vasco,
+        totalFee: fees,
+        contractorReceives: round2(round2(amount) - fees),
+      };
+    })(),
     displayProcessorFee,
     displayVascoFee,
-    displayTotalFee: `EUR ${(Math.round(totalFee * 100) / 100).toFixed(2)}`,
+    displayTotalFee: `EUR ${round2(round2(processorFee) + round2(vascoFee)).toFixed(2)}`,
     commissionPercent,
   };
 }

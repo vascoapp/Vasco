@@ -12,6 +12,7 @@ import * as Sharing from 'expo-sharing';
 import { File } from 'expo-file-system';
 import type { AutoInvoice } from './invoiceAutomationService';
 import { DEMO_MODE } from '../config/demo';
+import { vatRateGroups } from '../domain/business';
 import type { Country } from '../context/AuthContext';
 import { logWarn } from '../utils/errorHandler';
 
@@ -343,12 +344,22 @@ function buildInvoiceHtml(
   const sColor = statusColor(invoice.status);
 
   // VAT breakdown by rate — zero everything for small-business scheme.
+  //
+  // `vatRateGroups` is the same computation the document's own total comes
+  // from, so these rows and the Total beneath them cannot disagree. Building
+  // the map here instead summed each rate group unrounded and rounded only at
+  // render, while `invoice.total` was rounded once over the whole document:
+  // 3 × € 8,83 at 21 % + 1 × € 10,04 at 9 % printed rows adding to € 42,99
+  // under a Total of € 43,00 — on a legally binding invoice (#354).
+  // Every AutoInvoice line carries its own rate, so the fallback only matters
+  // if the subtotal has drifted from the lines (a discount, a hand-edited
+  // total) — in which case the document's own single rate is the right answer.
+  const documentRate = invoice.lineItems[0]?.vatRate ?? 0;
   const vatByRate = new Map<number, number>();
   if (!isSmallBusinessExempt) {
-    invoice.lineItems.forEach(li => {
-      const vatAmt = li.quantity * li.unitPrice * li.vatRate / 100;
-      vatByRate.set(li.vatRate, (vatByRate.get(li.vatRate) ?? 0) + vatAmt);
-    });
+    for (const group of vatRateGroups(invoice.subtotal, invoice.lineItems, documentRate)) {
+      vatByRate.set(group.ratePct, group.vat);
+    }
   }
   const vatRows = isSmallBusinessExempt
     ? `<div class="summary-row"><span>${L.vatAmount}</span><span>${curr}${fmt(0, locale)}</span></div>`

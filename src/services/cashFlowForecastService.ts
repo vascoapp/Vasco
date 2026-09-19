@@ -140,10 +140,14 @@ export async function buildForecast(input: ForecastInput): Promise<ForecastSumma
   for (const d of days) {
     d.net = d.inflow - d.outflow;
     cumulative += d.net;
-    d.cumulative = Math.round(cumulative);
+    // Round the two INPUTS, then derive net and the running balance from the
+    // rounded figures. Rounding all four independently let a column print
+    // "in 1.211 / out 605 / net 605" — three numbers that do not reconcile on
+    // the chart a contractor reads their runway off (#354).
     d.inflow = Math.round(d.inflow);
     d.outflow = Math.round(d.outflow);
-    d.net = Math.round(d.net);
+    d.net = d.inflow - d.outflow;
+    d.cumulative = Math.round(cumulative);
   }
 
   const minCashDay = days.reduce((min, d) => (d.cumulative < min.cumulative ? d : min), days[0]);

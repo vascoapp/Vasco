@@ -431,7 +431,9 @@ export default function GeldScreen() {
         <View style={s.sectionHeaderRow}>
           <View style={s.sectionTitleBlock}>
             <DKLabel style={s.sectionTitle}>{t('invoices.invoices', 'Facturen')}</DKLabel>
-            <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{invoices.length}</Text></View>
+            {/* The count of what is LISTED below, which is filtered. Filter to
+                "overdue" and the pill read 27 over four rows (#354). */}
+            <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{invoiceDocs.length}</Text></View>
           </View>
           <Pressable onPress={() => setShowInvoiceFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.options', 'Options')}>
             <Ionicons name="options-outline" size={20} color={invoiceStatusFilter !== 'all' ? DK.colors.accent : DK.colors.textMuted} />
@@ -485,7 +487,7 @@ export default function GeldScreen() {
         <View style={s.sectionHeaderRow}>
           <View style={s.sectionTitleBlock}>
             <DKLabel style={s.sectionTitle}>{t('quotes.quotes', 'Offertes')}</DKLabel>
-            <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{quotes.length}</Text></View>
+            <View style={s.sectionCountPill}><Text style={s.sectionCountText}>{quoteDocs.length}</Text></View>
           </View>
           <Pressable onPress={() => setShowQuoteFilterModal(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.options', 'Options')}>
             <Ionicons name="options-outline" size={20} color={quoteStatusFilter !== 'all' ? DK.colors.accent : DK.colors.textMuted} />

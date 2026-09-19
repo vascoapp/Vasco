@@ -92,6 +92,11 @@ export function buildAccountantHandover(input: {
   }
 
   const invoices: HandoverInvoice[] = input.invoices
+    // A DRAFT has no `sentAt`, so it fell through to `createdAt` and was
+    // counted in both the header count and the invoiced total — while
+    // `vatPrepService` skips drafts. The accountant received two different
+    // turnover figures for one quarter (#354).
+    .filter((inv) => inv.status !== 'draft')
     .filter((inv) => inPeriod(inv.sentAt ?? inv.createdAt, periodStart, periodEnd))
     .map((inv) => ({
       // `id` carries the minted document_number (I0042) — see documentNumber().

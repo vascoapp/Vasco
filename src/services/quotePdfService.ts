@@ -8,6 +8,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { DEMO_MODE } from '../config/demo';
 import type { Country } from '../context/AuthContext';
+import { vatRateGroups } from '../domain/business';
 
 const fmt = (n: number, locale?: string) =>
   n.toLocaleString(locale || 'en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -232,11 +233,15 @@ function buildQuoteHtml(
       <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
     </tr>`).join('\n');
 
+  // The same groups the quote's own total is derived from, so the rows and the
+  // Total agree — see the note in `invoicePdfService` (#354). A quote the
+  // customer accepts becomes the invoice they are billed from; it has to add
+  // up in both documents.
+  const documentRate = quote.lineItems[0]?.vatRate ?? 0;
   const vatByRate = new Map<number, number>();
-  quote.lineItems.forEach(li => {
-    const vatAmt = li.quantity * li.unitPrice * li.vatRate / 100;
-    vatByRate.set(li.vatRate, (vatByRate.get(li.vatRate) ?? 0) + vatAmt);
-  });
+  for (const group of vatRateGroups(quote.subtotal, quote.lineItems, documentRate)) {
+    vatByRate.set(group.ratePct, group.vat);
+  }
   const vatRows = Array.from(vatByRate.entries())
     .sort((a, b) => a[0] - b[0])
     .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${rate}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)

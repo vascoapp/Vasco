@@ -12,6 +12,7 @@ import { exportInvoice, syncPaymentStatus } from '../integrations/accounting';
 import { createPaymentLink } from '../integrations/mollie';
 import type { UnifiedInvoice, UnifiedLineItem } from '../integrations/accounting';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { vatRateGroups, round2 } from '../domain/business';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -168,8 +169,24 @@ export async function executeStageAction(
           lineItems,
           currency: 'EUR',
           status: 'draft',
-          totalExclVat: lineItems.reduce((s, li) => s + li.totalExclVat, 0),
-          totalInclVat: lineItems.reduce((s, li) => s + li.totalExclVat * (1 + li.vatRate / 100), 0),
+          // Per-rate-group, rounded once per group, with the total derived
+          // from them — the same rule `documentVatBreakdown` owns. Grossing
+          // each line and summing sent `161.77700000000002` to the
+          // bookkeeping provider for ten lines of € 13,37 at 21 %, where the
+          // correct figures are € 133,70 net, € 28,08 VAT, € 161,78 gross
+          // (#354).
+          ...(() => {
+            const groups = vatRateGroups(
+              lineItems.reduce((s, li) => s + li.totalExclVat, 0),
+              lineItems.map((li) => ({ quantity: 1, unitPrice: li.totalExclVat, vatRate: li.vatRate })),
+              lineItems[0]?.vatRate ?? 0,
+            );
+            const totalExclVat = round2(lineItems.reduce((s, li) => s + li.totalExclVat, 0));
+            return {
+              totalExclVat,
+              totalInclVat: round2(totalExclVat + groups.reduce((sum, g) => sum + g.vat, 0)),
+            };
+          })(),
         };
 
         const exportResult = await exportInvoice(invoice);

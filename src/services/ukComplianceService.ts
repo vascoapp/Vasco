@@ -14,6 +14,7 @@
 
 import { localDateKey, todayKey } from '../utils/dateKey';
 import { useState, useEffect, useCallback } from 'react';
+import { round2 } from '../domain/business';
 import {
   CompaniesHouseRegistration,
   CompaniesHouseAlert,
@@ -220,18 +221,25 @@ class UKComplianceService {
     };
   }
 
+  /**
+   * ⚠️ `netAmount` — the rate is applied ON TOP, so these are EX-VAT figures.
+   * The parameter used to be `{ amount, rate }`, and an `Invoice.amount` is
+   * GROSS in this codebase: passing one would have put £12,000 of gross sales
+   * in Box 6 and claimed £2,400 of output VAT instead of £2,000. Boxes 1-9 go
+   * to HMRC, so they are pence values, not floats (#354). No caller today.
+   */
   calculateVATReturn(
-    sales: { amount: number; rate: 0 | 5 | 20 }[],
+    sales: { netAmount: number; rate: 0 | 5 | 20 }[],
     purchases: { amount: number; vatAmount: number }[],
     reverseCharge?: { outputs: number; inputs: number }
   ): UKVATCalculation {
-    const salesStandardRate = sales.filter(s => s.rate === 20).reduce((sum, s) => sum + s.amount, 0);
-    const salesReducedRate = sales.filter(s => s.rate === 5).reduce((sum, s) => sum + s.amount, 0);
-    const salesZeroRate = sales.filter(s => s.rate === 0).reduce((sum, s) => sum + s.amount, 0);
+    const salesStandardRate = round2(sales.filter(s => s.rate === 20).reduce((sum, s) => sum + s.netAmount, 0));
+    const salesReducedRate = round2(sales.filter(s => s.rate === 5).reduce((sum, s) => sum + s.netAmount, 0));
+    const salesZeroRate = round2(sales.filter(s => s.rate === 0).reduce((sum, s) => sum + s.netAmount, 0));
 
-    const vatOwedStandard = salesStandardRate * 0.20;
-    const vatOwedReduced = salesReducedRate * 0.05;
-    const totalVatOwed = vatOwedStandard + vatOwedReduced;
+    const vatOwedStandard = round2(salesStandardRate * 0.20);
+    const vatOwedReduced = round2(salesReducedRate * 0.05);
+    const totalVatOwed = round2(vatOwedStandard + vatOwedReduced);
 
     const purchasesExclVat = purchases.reduce((sum, p) => sum + p.amount, 0);
     const vatReclaimed = purchases.reduce((sum, p) => sum + p.vatAmount, 0);
@@ -316,9 +324,11 @@ class UKComplianceService {
   }
 
   calculateCISDeduction(grossAmount: number, materialsAmount: number, deductionRate: 0 | 20 | 30): CISPayment {
-    const taxableAmount = grossAmount - materialsAmount;
-    const cisDeduction = taxableAmount * (deductionRate / 100);
-    const netPayment = grossAmount - cisDeduction;
+    const taxableAmount = round2(grossAmount - materialsAmount);
+    // Pence: this figure is filed with HMRC and paid to a subcontractor, so
+    // `206.89200000000002` is not an amount (#354).
+    const cisDeduction = round2(taxableAmount * (deductionRate / 100));
+    const netPayment = round2(grossAmount - cisDeduction);
 
     return {
       id: `cis-${Date.now()}`,
@@ -1079,7 +1089,8 @@ export function useVATReturn(registration?: UKVATRegistration) {
 
   const calculateReturn = useCallback(
     (
-      sales: { amount: number; rate: 0 | 5 | 20 }[],
+      // `netAmount`: Box 6 is turnover EX-VAT — see `calculateVATReturn`.
+      sales: { netAmount: number; rate: 0 | 5 | 20 }[],
       purchases: { amount: number; vatAmount: number }[],
       reverseCharge?: { outputs: number; inputs: number }
     ) => {

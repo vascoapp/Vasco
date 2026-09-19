@@ -203,6 +203,11 @@ export default function ProfileScreen() {
   const userTrade = effectiveTrade ? t(`onboarding.trades.${effectiveTrade}`, effectiveTrade) : t('profile.contractor', 'Contractor');
   const companyName = businessProfile?.businessName || user?.company || '';
   const country = businessProfile?.country || user?.country || 'NL';
+  // The plan prices are hardcoded numbers, so only the SYMBOL varies — but a
+  // UK contractor was quoted "£49/mo" at signup (onboarding gets this right)
+  // and "€49/mo" on the in-app upgrade card, which is the page they hand over
+  // a card on (#354).
+  const planCurrencySymbol = country === 'US' ? '$' : country === 'UK' ? '£' : '€';
 
   // R9.2: surface device-calendar sync state. Was only reachable via a one-time
   // prompt in schedule.tsx — users who tapped "later" lost the entry forever.
@@ -569,7 +574,7 @@ export default function ProfileScreen() {
                           <View style={styles.tierCardHeader}>
                             <Text style={styles.tierName}>{t(TIER_NAME_KEY[t2] ?? '', cfg.name)}</Text>
                             <Text style={styles.tierPrice}>
-                              €{price}
+                              {planCurrencySymbol}{price}
                               <Text style={styles.tierPriceUnit}>/{t('profile.perMonth', 'mo')}</Text>
                             </Text>
                           </View>
@@ -577,7 +582,7 @@ export default function ProfileScreen() {
                             // "€49/mo" on an annual plan is charged as €588 up
                             // front. Say so beside the price, not at checkout.
                             <Text style={styles.tierTagline}>
-                              {t('profile.billedYearly', { defaultValue: '{{price}} billed yearly', price: `€${cfg.annualPrice}` })}
+                              {t('profile.billedYearly', { defaultValue: '{{price}} billed yearly', price: `${planCurrencySymbol}${cfg.annualPrice}` })}
                             </Text>
                           )}
                           <Text style={styles.tierTagline}>{t(TIER_DESC_KEY[t2] ?? '', cfg.tagline)}</Text>

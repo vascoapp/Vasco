@@ -86,6 +86,8 @@ export default function VatPrepScreen() {
   }, [country, businessProfile?.vatScheme, businessProfile?.vatBasis, businessProfile?.filingPeriod, periodChoice, invoices, rawExpenses]);
 
   const lowConfLines = draft.lines.filter((l) => l.confidence < 0.75);
+  // Its twin: the rows the list below actually renders.
+  const confidentLines = draft.lines.filter((l) => l.confidence >= 0.75);
 
   /**
    * Build and share the accountant handover for the period on screen.
@@ -298,10 +300,16 @@ export default function VatPrepScreen() {
 
         {/* All lines */}
         <View style={styles.section}>
+          {/* The count must be of the rows RENDERED. Heading the list with
+              `draft.lines.length` while filtering to high-confidence rows meant
+              a contractor reconciling line-by-line before filing saw "Alle
+              regels (40)" over 34 rows whose VAT did not add up to the totals
+              card above — the difference being the six low-confidence lines
+              already listed under "Te controleren" (#354). */}
           <Text style={styles.sectionTitle}>
-            {t('vatPrep.allLines', 'Alle regels')} ({draft.lines.length})
+            {t('vatPrep.allLines', 'Alle regels')} ({confidentLines.length})
           </Text>
-          {draft.lines.filter((l) => l.confidence >= 0.75).map((l) => <LineCard key={l.id} line={l} country={country} />)}
+          {confidentLines.map((l) => <LineCard key={l.id} line={l} country={country} />)}
         </View>
 
         <DKMenu
