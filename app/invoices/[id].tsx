@@ -134,7 +134,15 @@ export default function InvoiceDetailScreen() {
   // Country/scheme-aware VAT rate (honors DE 19%, FR 20%, KOR/Kleinunternehmer
   // 0%, etc.). Falls back to the NL VAT_RATE only when no profile is loaded.
   // Was hardcoded 21% everywhere — wrong tax on every non-NL invoice + export.
-  const effectiveRate = businessProfile ? getEffectiveVatRate(businessProfile) / 100 : VAT_RATE;
+  const profileRate = businessProfile ? getEffectiveVatRate(businessProfile) / 100 : VAT_RATE;
+  // A retention-release invoice recovers money that was already invoiced AND
+  // already taxed on the term invoices — its `amount` is the withheld GROSS
+  // and no new VAT arises (see progress-billing: VAT is charged on the FULL
+  // term amount, the customer just pays less now). Splitting it by the profile
+  // rate printed "Subtotaal € 1.250,00 / BTW € 262,50" on € 1.512,50 that had
+  // already been declared: output VAT over-declared and the customer reclaims
+  // it twice (#354).
+  const effectiveRate = invoice?.isRetentionRelease ? 0 : profileRate;
   const paymentMethods = getPaymentDisplayForCountry(country);
   // R214: cohort-backed payment timing for the invoice detail caption.
   // Hook unconditionally; consumer below is null-safe.
@@ -499,7 +507,10 @@ export default function InvoiceDetailScreen() {
           // would have opened "Hallo c-1787349342347".
           customer: invoiceCustomerName,
           ref: invoice.id,
-          amount: formatCurrency(invoice.amount, country),
+          // The same basis as `disclosure` below, which already uses
+          // `amountPayableNow`: the email asked for the full total while the
+          // interest beside it was computed on what is actually due (#354).
+          amount: formatCurrency(amountPayableNow(invoice), country),
           days: daysOverdue,
           link: paymentUrl ?? '',
           business: (businessProfile as any)?.businessName ?? 'Vasco',

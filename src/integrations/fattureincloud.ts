@@ -133,10 +133,29 @@ export function getSdiDocumentType(isPublicAdministration: boolean): 'FPA12' | '
 // Marca da bollo — required for invoices > €77.47 with IVA-exempt items
 // ---------------------------------------------------------------------------
 
-export function requiresMarcaDaBollo(items: { netPrice: number; vatRate: number }[]): boolean {
-  const exemptTotal = items
-    .filter(i => i.vatRate === 0)
-    .reduce((sum, i) => sum + i.netPrice, 0);
+/**
+ * Is the €2 marca da bollo due? Italian rule: an invoice whose IVA-exempt /
+ * non-soggetto amount exceeds € 77,47.
+ *
+ * ⚠️ The parameter was called `netPrice`, which everywhere else in this file
+ * means the UNIT price (`net_price: item.price`) — while both callers were
+ * passing `price * quantity`. They were right and the name was wrong, so the
+ * arithmetic held by luck: the next caller to read the signature and pass a
+ * unit price would have answered "no bollo" on a € 100,00 exempt invoice made
+ * of ten € 10,00 lines. Renamed to say what it needs.
+ *
+ * 🔴 NOT WIRED, deliberately — see the note in `toFatturaPA`. Setting
+ * `bolloVirtuale` makes the FatturaPA generator add € 2,00 to
+ * `ImportoTotaleDocumento`, so switching it on here alone would make the XML
+ * disagree with the PDF and the screen by € 2,00. Charging the bollo to the
+ * customer is a product decision that has to appear on the invoice itself.
+ */
+export function requiresMarcaDaBollo(
+  lines: { lineTotal: number; vatRate: number }[],
+): boolean {
+  const exemptTotal = lines
+    .filter(l => l.vatRate === 0)
+    .reduce((sum, l) => sum + l.lineTotal, 0);
   return exemptTotal > 77.47;
 }
 
@@ -334,7 +353,7 @@ export async function createIssuedDocument(invoice: {
 
   // Check marca da bollo
   const needsBollo = requiresMarcaDaBollo(
-    invoice.lineItems.map(li => ({ netPrice: li.price * li.quantity, vatRate: li.vatRate })),
+    invoice.lineItems.map(li => ({ lineTotal: li.price * li.quantity, vatRate: li.vatRate })),
   );
 
   const eiData: FattureInCloudEiData | undefined = invoice.isPublicAdministration != null
@@ -401,7 +420,7 @@ export function vascoToFattureInCloudDocument(invoice: {
   }));
 
   const needsBollo = requiresMarcaDaBollo(
-    invoice.lineItems.map(li => ({ netPrice: li.unitPrice * li.quantity, vatRate: li.vatRate })),
+    invoice.lineItems.map(li => ({ lineTotal: li.unitPrice * li.quantity, vatRate: li.vatRate })),
   );
 
   return {

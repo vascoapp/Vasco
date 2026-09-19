@@ -164,12 +164,23 @@ export function vascoToLexofficeInvoice(invoice: {
         taxRatePercentage: li.vatRate,
       },
     })),
-    totalPrice: {
-      totalNetAmount: invoice.lineItems.reduce((s, li) => s + li.unitPrice * li.quantity, 0),
-      totalGrossAmount: invoice.lineItems.reduce((s, li) => s + li.unitPrice * li.quantity * (1 + li.vatRate / 100), 0),
-      totalTaxAmount: invoice.lineItems.reduce((s, li) => s + li.unitPrice * li.quantity * (li.vatRate / 100), 0),
-      currency: 'EUR',
-    },
+    // Three sums of the same lines, each rounded independently by the
+    // receiver, do not have to agree: ONE line of € 1,50 at 19 % gives
+    // net 1,50 + tax 0,28 = 1,78 while the gross sum rounds to 1,79. The tax
+    // is DERIVED from the two rounded figures instead, so net + tax === gross
+    // by construction — the same rule `documentVatBreakdown` follows and the
+    // one #345 imposed on the three XML exporters (#354).
+    totalPrice: (() => {
+      const round2 = (n: number) => Math.round(n * 100) / 100;
+      const net = round2(invoice.lineItems.reduce((s, li) => s + li.unitPrice * li.quantity, 0));
+      const gross = round2(invoice.lineItems.reduce((s, li) => s + li.unitPrice * li.quantity * (1 + li.vatRate / 100), 0));
+      return {
+        totalNetAmount: net,
+        totalGrossAmount: gross,
+        totalTaxAmount: round2(gross - net),
+        currency: 'EUR' as const,
+      };
+    })(),
     taxConditions: { taxType: 'net' },
     paymentConditions: {
       paymentTermLabel: 'Zahlbar innerhalb von 14 Tagen',

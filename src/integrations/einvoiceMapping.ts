@@ -174,6 +174,18 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
     natura: naturaFor(l.vatRate),
   }));
 
+  // 🔴 KNOWN GAP, recorded rather than silently closed: an Italian invoice
+  // whose IVA-exempt amount exceeds € 77,47 legally requires a € 2,00 marca da
+  // bollo. `requiresMarcaDaBollo` (fattureincloud.ts) computes exactly that and
+  // has no callers, and `bolloVirtuale` below is never set — so the stamp is
+  // simply absent from every such invoice.
+  //
+  // Wiring it HERE alone would be wrong: the generator adds € 2,00 to
+  // `ImportoTotaleDocumento`, so the XML would state a total € 2,00 higher
+  // than the PDF and the screen — a document stating its total twice, which is
+  // the defect class this file was cleaned up for (#345). Charging the bollo
+  // to the customer has to be a line the contractor sees and the customer
+  // reads, in all three artefacts. Product decision, then one change.
   return {
     ok: true,
     document: {

@@ -26,6 +26,7 @@
 import type { Invoice } from '../domain/documents';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../intelligence/mlModels';
 import { localDateKey, parseCalendarDay, calendarDaysBetween } from '../utils/dateKey';
+import { amountPayableNow } from '../domain/documents';
 
 export interface ForecastDay {
   date: string;             // YYYY-MM-DD
@@ -105,10 +106,16 @@ export async function buildForecast(input: ForecastInput): Promise<ForecastSumma
 
   const byCategory = { openInvoices: 0, purchaseOrders: 0 };
 
-  // 1. Open invoices — face amount (GROSS: what the customer transfers)
+  // 1. Open invoices — what the customer will actually TRANSFER on the due
+  // date. Retention withheld from an instalment is not due until the release
+  // invoice, possibly months later, so booking the face value made the
+  // forecast optimistic by the whole retention: a € 50.000 termijnfactuur with
+  // € 2.500 held back shows € 50.000 arriving and € 47.500 does. `minCashDay`
+  // — the point of this screen — then falls on the wrong day. The late-fee
+  // path and the payment link already use this helper (#354).
   for (const inv of input.invoices) {
     if (inv.status !== 'sent' && inv.status !== 'overdue') continue;
-    const amt = inv.amount ?? 0;
+    const amt = amountPayableNow(inv);
     if (amt <= 0) continue;
     const offset = await expectedInvoiceOffset(inv, today);
     if (offset === null || offset >= horizon) continue;

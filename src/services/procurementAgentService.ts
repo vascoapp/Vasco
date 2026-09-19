@@ -412,7 +412,11 @@ export function generatePurchaseOrder(results: SourcingResult[]): AutoPurchaseOr
       items: lineItems,
       totalExclVat: Math.round(totalExclVat * 100) / 100,
       vatRate,
-      totalInclVat: Math.round(totalExclVat * 1.21 * 100) / 100,
+      // R66r51 made the RATE country-aware and left the TOTAL at 1.21, so
+      // every German PO printed "19%" and added 21% — €1.000,00 excl became
+      // €1.210,00 where €1.190,00 is right, and the document contradicted its
+      // own rate line. Only NL was correct (#354).
+      totalInclVat: Math.round(totalExclVat * (1 + vatRate / 100) * 100) / 100,
       jobId: items[0]?.material.jobId,
     };
   });

@@ -141,14 +141,17 @@ export default function QuoteDetailScreen() {
   // a banner.
 
   const sharePdf = async () => {
-    const items = lineItems[quote.id] ?? [];
-    const sub = items.reduce((acc, i) => acc + i.unitPrice * i.quantity, 0);
-    // Same rule as the screen above. This used to stamp the country's standard
-    // rate onto EVERY line of the PDF — overwriting each line's own agreed rate
-    // in the document the customer actually receives.
-    const bd = documentVatBreakdown(sub, items, fallbackVatPct);
-    const vpct = bd.ratePct;
-    const vamt = bd.vat;
+    // The SAME numbers the screen shows — `displayLineItems`, not the raw map.
+    // This read `lineItems[quote.id]` directly, so a quote with no STORED
+    // lines (the €6.800 case the comment above documents) printed an empty
+    // table and "Subtotaal € 0,00 / Totaal € 0,00" in the PDF the customer
+    // receives, while the screen beside it read € 8.228,00 — and `markQuoteSent`
+    // then recorded it as sent (#354).
+    const items = displayLineItems;
+    const sub = subtotal;
+    const bd = vatBreakdown;
+    const vpct = vatRatePct;
+    const vamt = vatAmount;
     const pdfData: QuotePdfData = {
       quoteNumber: quote.id,
       customerName: customerDisplayName ?? t('jobs.client', 'Client'),

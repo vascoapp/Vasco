@@ -395,7 +395,9 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       const text = renderPaymentReminderForTag(locale, {
                         customer: autoInv.customerName ?? '',
                         ref: autoInv.invoiceNumber,
-                        amount: formatCurrency(autoInv.total, country),
+                        // Matches the link minted above — the message must not
+                        // ask for a figure the checkout will not charge (#354).
+                        amount: formatCurrency(amountPayableNow(invoice), country),
                         link: link.url,
                         business: businessProfile.businessName ?? '',
                       }, tag);
@@ -416,7 +418,9 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       const msg = overdueReminderMessage(t, {
                         customer: findDocumentCustomer(customers, invoice)?.name ?? (invoice as any).customerName ?? '',
                         number: documentNumber(invoice),
-                        amount: formatCurrency(invoice.amount, country),
+                        // What is actually owed today: retention withheld from
+                        // an instalment is not overdue (#354).
+                        amount: formatCurrency(amountPayableNow(invoice), country),
                         days: daysOverdue(invoice) ?? 0,
                         // Profile first, account as fallback (#218).
                         business: businessProfile?.businessName || user?.company || '',
@@ -528,7 +532,11 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         t('invoices.paymentLinkCreated', 'Payment link created'),
                         `${t('invoices.paymentLinkReady', 'Payment link is ready to share')}:\n${link.url}`,
                       );
-                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: ${formatCurrency(invoice.amount, country)}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
+                      // The SAME figure the link charges. Quoting
+                      // `invoice.amount` told the customer € 30.250,00 beside a
+                      // checkout for € 28.737,50 — the retention is held back
+                      // (#354).
+                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: ${formatCurrency(amountPayableNow(invoice), country)}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
                     } else {
                       Alert.alert(t('invoices.error', 'Fout'), t('invoices.paymentLinkFailed', 'Betaallink kon niet worden aangemaakt.'));
                     }
@@ -1090,7 +1098,9 @@ export default function FacturenScreen() {
                                 ? {
                                     customer: autoInv.customerName ?? '',
                                     ref: autoInv.invoiceNumber,
-                                    amount: formatCurrency(autoInv.total, country),
+                                    // Payable-now, like every other reminder
+                                    // on this screen (#354).
+                                    amount: formatCurrency(amountPayableNow(inv as any), country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
                                   }

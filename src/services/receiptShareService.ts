@@ -12,6 +12,7 @@ import * as Print from 'expo-print';
 // so this returned { ok: true } on a share that shared nothing.
 import * as Sharing from 'expo-sharing';
 import type { Invoice } from '../domain/documents';
+import { formatCurrency, type Country } from '../i18n/formatting';
 
 interface ReceiptArgs {
   invoice: Pick<Invoice, 'id' | 'amount' | 'customer'>;
@@ -19,7 +20,11 @@ interface ReceiptArgs {
   paidAt?: Date;
   paymentMethod?: string;
   locale?: 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
-  currency?: string;
+  /**
+   * The CONTRACTOR's country — what the money is in. Currency follows the
+   * seller, never the reader's language (`docs/ui-playbook.md` §8).
+   */
+  country?: Country;
 }
 
 const HEADINGS: Record<string, string> = {
@@ -42,10 +47,15 @@ const PAID_LABEL: Record<string, string> = {
 
 function html(args: ReceiptArgs): string {
   const loc = args.locale ?? 'nl';
-  const currency = args.currency ?? (loc === 'en' ? 'GBP' : 'EUR');
   const paidAt = args.paidAt ?? new Date();
   const paidStr = paidAt.toLocaleString(loc);
-  const amount = `${currency} ${args.invoice.amount.toFixed(2)}`;
+  // The currency used to be inferred from the app LANGUAGE — `loc === 'en'`
+  // meant GBP — so a Dutch contractor using the app in English sent the
+  // customer a receipt for "GBP 1210.00" on a € 1.210,00 invoice, and a UK
+  // contractor working in Dutch got EUR on a sterling one. `toFixed(2)` also
+  // printed "1210.00" where a Dutch or German reader expects "1.210,00".
+  // `formatCurrency` takes the contractor's COUNTRY and does both (#354).
+  const amount = formatCurrency(args.invoice.amount, args.country);
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     body { font-family: -apple-system, Inter, sans-serif; color: #0D1B2A; padding: 40px; }

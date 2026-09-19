@@ -101,7 +101,12 @@ export default function VandaagDK() {
     const start = new Date(); start.setHours(0, 0, 0, 0);
     return invoices
       .filter((i) => i.status === 'paid' && i.paidAt && new Date(i.paidAt) >= start)
-      .reduce((s, i) => s + (i.total || 0), 0);
+      // `Invoice.total` is declared optional and NOTHING writes it — not the
+      // mapper, not any mutator. Every other reader falls back to `.amount`
+      // (geld.tsx, customer-crm, IntegratedPayments); this one did not, so the
+      // first tile on the first screen after login read € 0 no matter how much
+      // came in today (#354).
+      .reduce((s, i) => s + (i.total || i.amount || 0), 0);
   }, [invoices]);
   const activeQuotes = quotes.filter((q) => q.status === 'sent').length;
 

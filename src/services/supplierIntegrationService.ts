@@ -707,9 +707,20 @@ class SupplierIntegrationService {
       })),
       subtotal: cart.subtotal,
       deliveryCost: cart.deliveryCost,
-      // R66r51: country-aware VAT (was NL 21% hardcoded).
-      tax: cart.subtotal * (getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL') / 100),
-      total: cart.total * (1 + getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL') / 100),
+      // ONE base for both. R66r51 made the rate country-aware but left the two
+      // figures on different bases: `tax` on the subtotal, `total` on
+      // subtotal + delivery (line 656). Delivery is a taxable supply, so the
+      // VAT on it was charged in the total and missing from the tax line —
+      // €224,40 + €6,95 delivery at 21% showed tax €47,12 against a total of
+      // €279,93, which is €1,46 more than 224,40 + 6,95 + 47,12. Neither was
+      // rounded either, so `279.93349999999998` was stored and summed into the
+      // monthly spend (#354).
+      ...(() => {
+        const rate = getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL');
+        const net = round2(cart.subtotal + cart.deliveryCost);
+        const tax = round2(net * (rate / 100));
+        return { tax, total: round2(net + tax) };
+      })(),
       createdAt: new Date().toISOString(),
       submittedAt: new Date().toISOString(),
       expectedDelivery: this.calculateExpectedDelivery(cart),
@@ -800,6 +811,9 @@ export const supplierIntegrationService = new SupplierIntegrationService();
 // ============================================
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+
+/** Money is cents. */
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export function useSuppliers(filter?: { status?: Supplier['integrationStatus']; category?: string }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>(() =>

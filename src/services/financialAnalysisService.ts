@@ -13,6 +13,7 @@ import { useExpenses, type Expense } from './expenseService';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { findDocumentCustomer } from '../domain/customers';
 import { daysOverdue as invoiceDaysOverdue } from '../utils/invoiceDue';
+import { getEffectiveVatRate } from '../domain/business';
 
 /** Decided quotes (accepted/rejected/expired) before a win rate means anything. */
 export const MIN_DECIDED_QUOTES = 5;
@@ -165,7 +166,30 @@ export function analyzeFinancials(
    * concentration percentages were computed over the split.
    */
   customers?: { id: string; name: string }[],
+  /**
+   * The contractor's effective VAT rate, in percent (0 for KOR /
+   * Kleinunternehmer). Needed because `Invoice.amount` is GROSS while
+   * `Expense.amount` is NET — the seed rows carry `amount: 125,
+   * vatAmount: 26.25`, the entry form writes `vatAmount = amt * rate`, and the
+   * VAT-prep screen has to re-gross it. Subtracting one from the other
+   * reported a margin overstated by the whole VAT rate (€12.100 of paid
+   * invoices minus €2.000 of costs read as 83% where the truth is 80%), and
+   * `financialReportService` writes those figures into the P&L CSV handed to
+   * the accountant (#354).
+   *
+   * VAT is neither income nor cost for a VAT-registered contractor: it passes
+   * through. So both sides are stated NET.
+   *
+   * Omitted = the caller's amounts are already net. The one production caller
+   * (`useFinancialAnalysis`) always passes it.
+   */
+  vatRatePercent?: number,
 ): FinancialSummary {
+  // A paid invoice's GROSS back to the turnover an accountant would recognise.
+  const toNet = (grossAmount: number): number =>
+    vatRatePercent && vatRatePercent > 0
+      ? Math.round((grossAmount / (1 + vatRatePercent / 100)) * 100) / 100
+      : grossAmount;
   const customerLabel = (doc: { customerId?: string | null; customer?: string | null; customerName?: string | null }): string =>
     (doc.customerName as string | undefined)
     ?? (customers ? findDocumentCustomer(customers, doc)?.name : undefined)
@@ -173,7 +197,9 @@ export function analyzeFinancials(
     ?? '';
   // ---- Revenue from paid invoices ----
   const paidInvoices = invoices.filter(i => i.status === 'paid');
-  const totalRevenue = paidInvoices.reduce((s, i) => s + (i.total || i.amount || 0), 0);
+  const totalRevenue = Math.round(
+    paidInvoices.reduce((s, i) => s + toNet(i.total || i.amount || 0), 0) * 100,
+  ) / 100;
 
   // ---- Monthly buckets (last 12 months) ----
   const last12 = lastNMonths(12, now);
@@ -195,7 +221,9 @@ export function analyzeFinancials(
       if (paid) {
         const mk = getMonthKey(paid);
         if (monthMap[mk]) {
-          monthMap[mk].revenue += (inv.total || inv.amount || 0);
+          // Net, like `totalRevenue` — the monthly chart and the headline
+          // figure must be the same kind of number.
+          monthMap[mk].revenue += toNet(inv.total || inv.amount || 0);
         }
       }
     }
@@ -354,7 +382,9 @@ export function analyzeFinancials(
   for (const inv of paidInvoices) {
     const name = customerLabel(inv);
     if (!customerRevMap[name]) customerRevMap[name] = { revenue: 0, count: 0, customerId: inv.customerId };
-    customerRevMap[name].revenue += (inv.total || inv.amount || 0);
+    // Net: "Top customers" and the concentration percentages are computed
+    // over the same turnover the headline reports.
+    customerRevMap[name].revenue += toNet(inv.total || inv.amount || 0);
     customerRevMap[name].count++;
   }
   const topCustomers: CustomerConcentration[] = Object.entries(customerRevMap)
@@ -407,12 +437,18 @@ export function analyzeFinancials(
 // =============================================================================
 
 export function useFinancialAnalysis(): FinancialSummary {
-  const { invoices, quotes, customers } = useAppState();
+  const { invoices, quotes, customers, businessProfile } = useAppState();
   // Real recorded expenses — the receipt scanner and manual entry both write
   // here. Subscribed so a newly scanned receipt updates the Geld tab.
   const { expenses } = useExpenses();
   return useMemo(
-    () => analyzeFinancials(invoices, quotes, new Date(), expenses, customers as { id: string; name: string }[]),
-    [invoices, quotes, expenses, customers],
+    // The effective rate — 0 for KOR / Kleinunternehmer, so their gross IS
+    // their net and nothing is divided.
+    () => analyzeFinancials(
+      invoices, quotes, new Date(), expenses,
+      customers as { id: string; name: string }[],
+      businessProfile ? getEffectiveVatRate(businessProfile) : 0,
+    ),
+    [invoices, quotes, expenses, customers, businessProfile],
   );
 }

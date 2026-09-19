@@ -46,6 +46,13 @@ export interface PdfSourceInvoice {
   sentAt?: string;
   createdAt?: string;
   notes?: string;
+  /**
+   * A retention-release invoice recovers money already invoiced and already
+   * taxed on the term invoices — `amount` is the withheld GROSS and no new VAT
+   * arises. Without this the synthesised line splits it by the profile rate
+   * and the PDF charges the VAT a second time (#354).
+   */
+  isRetentionRelease?: boolean;
 }
 
 export interface PdfSourceCustomer {
@@ -70,8 +77,12 @@ export function pdfInvoiceFromRecord(args: {
   fallbackDescription: string;
   now?: Date;
 }): AutoInvoice {
-  const { invoice, customer, fallbackVatRatePercent, fallbackDescription } = args;
+  const { invoice, customer, fallbackDescription } = args;
   const now = args.now ?? new Date();
+  // A retention release carries no new VAT: the tax on this money was charged
+  // and declared when the term invoice went out. Anything else would
+  // over-declare output VAT and let the customer reclaim it twice.
+  const fallbackVatRatePercent = invoice.isRetentionRelease ? 0 : args.fallbackVatRatePercent;
 
   // An invoice with no stored lines gets one, split out of its GROSS amount —
   // the same thing the detail screen shows for it.
