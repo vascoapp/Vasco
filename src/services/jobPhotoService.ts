@@ -8,6 +8,7 @@
 
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { isTempIdFast } from '../lib/idShape';
+import { logWarn } from '../utils/errorHandler';
 
 export type PhotoKind = 'before' | 'during' | 'after' | 'defect' | 'handover';
 
@@ -192,11 +193,40 @@ export async function listJobPhotos(jobId: string): Promise<JobPhotoRecord[] | n
   }
 }
 
+/**
+ * Delete a job photo — both halves, and say honestly whether it happened.
+ *
+ * The screen asks "Delete photo? This cannot be undone." Both calls here had
+ * their results discarded and `return true` ran unconditionally, so:
+ *  - a refused ROW delete made the photo reappear on the next refresh, with
+ *    the caller having already been told it was gone;
+ *  - a refused STORAGE remove left the image bytes in the bucket with no row
+ *    pointing at them — a customer's job photo the contractor believes is
+ *    destroyed, still fetchable by anyone who mints a signed URL. That is the
+ *    half nobody can see.
+ *
+ * `uploadJobPhoto`, eighty lines above, checks both of its writes. This one
+ * checked neither (#352).
+ */
 export async function deleteJobPhoto(photoId: string, storagePath: string): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   try {
-    await supabase.storage.from('job-photos').remove([storagePath]);
-    await (supabase.from('job_photos' as any) as any).delete().eq('id', photoId);
+    // Row first: while the row is gone the object is unreachable through the
+    // app, so a failure here is the one that must stop the whole delete.
+    const { error: rowErr } = await (supabase.from('job_photos' as any) as any)
+      .delete()
+      .eq('id', photoId);
+    if (rowErr) {
+      logWarn('jobPhotoService', `deleteJobPhoto: row ${photoId} not deleted: ${rowErr.message}`);
+      return false;
+    }
+    const { error: storageErr } = await supabase.storage.from('job-photos').remove([storagePath]);
+    if (storageErr) {
+      // The photo is out of the app but its bytes survive. Report the delete
+      // as incomplete rather than claiming it is destroyed.
+      logWarn('jobPhotoService', `deleteJobPhoto: row ${photoId} deleted but the file remains at ${storagePath}: ${storageErr.message}`);
+      return false;
+    }
     return true;
   } catch {
     return false;

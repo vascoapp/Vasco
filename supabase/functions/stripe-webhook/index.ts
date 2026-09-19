@@ -287,6 +287,14 @@ Deno.serve(async (req) => {
         // Feature-flagged via CREDIT_REDEMPTION_ENABLED. Skipped when Option A
         // (STRIPE_COUPON_REDEMPTION) is on so we don't double-redeem.
         let extendedPeriodEnd = currentPeriodEnd;
+        // Credits consumed for THIS event, so the write below can hand them
+        // back if it fails. They were redeemed inside the `if` and the
+        // compensation lived there too — inside a try that wrapped only Date
+        // arithmetic, which cannot throw. `restoreCredits` was unreachable by
+        // construction, and the write that actually decides whether the
+        // extension exists is fifteen lines lower, outside it. Same defect as
+        // mollie-webhook, still live here (#352).
+        let consumedCreditIds: string[] = [];
         const creditFlag = Deno.env.get('CREDIT_REDEMPTION_ENABLED') === 'true';
         const couponMode = Deno.env.get('STRIPE_COUPON_REDEMPTION') === 'true';
         const isFirstSeeing = await claimWebhookEvent(supabaseUrl0, supabaseServiceKey0, 'stripe', event.id);
@@ -295,17 +303,13 @@ Deno.serve(async (req) => {
             supabaseUrl0, supabaseServiceKey0, userId, 12,
           );
           if (monthsApplied > 0) {
-            try {
-              const d = new Date(currentPeriodEnd);
-              const day = d.getDate();
-              d.setMonth(d.getMonth() + monthsApplied);
-              if (d.getDate() < day) d.setDate(0);
-              extendedPeriodEnd = d.toISOString();
-              console.log(`Extended period for user=${userId} by ${monthsApplied}mo → ${extendedPeriodEnd}`);
-            } catch (err) {
-              await restoreCredits(supabaseUrl0, supabaseServiceKey0, consumed.map((c) => c.consumedId));
-              console.error('period extension failed, credits restored:', String(err));
-            }
+            consumedCreditIds = consumed.map((c) => c.consumedId);
+            const d = new Date(currentPeriodEnd);
+            const day = d.getDate();
+            d.setMonth(d.getMonth() + monthsApplied);
+            if (d.getDate() < day) d.setDate(0);
+            extendedPeriodEnd = d.toISOString();
+            console.log(`Extended period for user=${userId} by ${monthsApplied}mo → ${extendedPeriodEnd}`);
           }
         }
 
@@ -320,8 +324,20 @@ Deno.serve(async (req) => {
             current_period_ends_at: extendedPeriodEnd,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id' });
-        if (subErr) console.error('subscriptions upsert failed:', subErr.message);
-        else console.log(`Subscription synced: user=${userId} tier=${tier} status=${status}`);
+        if (subErr) {
+          // THIS is the failure the compensation exists for: the credits are
+          // already spent and the extension never landed. `event.id` was
+          // claimed above, so Stripe's retry is treated as a replay and will
+          // never redeem again — without this, the customer pays, loses the
+          // credits and gets nothing.
+          console.error('subscriptions upsert failed:', subErr.message);
+          if (consumedCreditIds.length > 0) {
+            await restoreCredits(supabaseUrl0, supabaseServiceKey0, consumedCreditIds);
+            console.error(`restored ${consumedCreditIds.length} credit(s) for user=${userId}`);
+          }
+        } else {
+          console.log(`Subscription synced: user=${userId} tier=${tier} status=${status}`);
+        }
       } else {
         console.warn(`Subscription event missing metadata — user_id=${userId} tier=${tier}`);
       }

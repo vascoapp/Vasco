@@ -421,6 +421,8 @@
       "uploadFailedDesc": "Photo could not be uploaded. Try again when online.",
       "deleteTitle": "Delete photo?",
       "deleteDesc": "This cannot be undone.",
+      "deleteFailedTitle": "Photo not deleted",
+      "deleteFailedDesc": "The photo could not be removed. Check your connection and try again.",
       "queuedTitle": "Photo saved offline",
       "queuedDesc": "It will upload to the cloud as soon as you reconnect or the parent job syncs."
     },

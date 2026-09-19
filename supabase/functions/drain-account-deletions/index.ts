@@ -169,8 +169,18 @@ Deno.serve(async (req) => {
     if (userErr) errors.push(`auth.deleteUser: ${userErr.message}`);
 
     // Step 6 — finalise the request row.
+    //
+    // Everything above is irreversible: rows hard-deleted, buckets emptied,
+    // the auth user gone. These two writes are the ONLY record of that, and
+    // their results were discarded. On the success path that loses the GDPR
+    // Art. 17 completion record — the row stays `processing`, which the fetch
+    // at the top does not select, so a regulator sees an unfulfilled request
+    // over an account that no longer exists. On the failure path the rollback
+    // to `pending` is the only thing that makes the next tick retry; if it
+    // does not land, the erasure is permanently half-done and never retried
+    // (#352).
     if (errors.length === 0) {
-      await admin
+      const { error: doneErr } = await admin
         .from('account_deletion_requests')
         .update({
           status: 'done',
@@ -178,11 +188,16 @@ Deno.serve(async (req) => {
           processor_notes: `hard_deleted=${HARD_DELETE_TABLES.length} anon=${ANONYMISE_TABLES.length} buckets=${STORAGE_BUCKETS_TO_EMPTY.length}`,
         })
         .eq('id', row.id);
-      results.push({ id: row.id, status: 'done' });
+      if (doneErr) {
+        console.error(`drain-account-deletions: ERASURE COMPLETED for request ${row.id} (user ${row.user_id}) but the completion record was NOT written:`, doneErr.message);
+        results.push({ id: row.id, status: 'done', note: `completion record not written: ${doneErr.message}` });
+      } else {
+        results.push({ id: row.id, status: 'done' });
+      }
     } else {
       // Rollback the lock so the next cron tick retries. Cap at 5 retries
       // via a note suffix; operator intervention needed past that.
-      await admin
+      const { error: rollbackErr } = await admin
         .from('account_deletion_requests')
         .update({
           status: 'pending',
@@ -191,7 +206,17 @@ Deno.serve(async (req) => {
             : `retry: ${errors.slice(0, 3).join('|')}`,
         })
         .eq('id', row.id);
-      results.push({ id: row.id, status: 'failed', note: errors.join(' | ') });
+      if (rollbackErr) {
+        // Stuck in `processing`: no tick will pick it up again, and part of
+        // the account is already gone. This needs a human.
+        console.error(`drain-account-deletions: request ${row.id} is STRANDED in processing — the lock rollback failed (${rollbackErr.message}) after a partial erasure. Manual intervention required.`);
+      }
+      results.push({
+        id: row.id,
+        status: 'failed',
+        note: errors.join(' | '),
+        ...(rollbackErr ? { stranded: true } : {}),
+      });
     }
   }
 

@@ -421,6 +421,8 @@
       "uploadFailedDesc": "Foto kon niet worden geüpload. Probeer het opnieuw zodra je online bent.",
       "deleteTitle": "Foto verwijderen?",
       "deleteDesc": "Dit kan niet ongedaan worden gemaakt.",
+      "deleteFailedTitle": "Foto niet verwijderd",
+      "deleteFailedDesc": "De foto kon niet worden verwijderd. Controleer je verbinding en probeer het opnieuw.",
       "queuedTitle": "Foto offline opgeslagen",
       "queuedDesc": "De foto wordt geüpload zodra je weer online bent of de bovenliggende klus is gesynchroniseerd."
     },

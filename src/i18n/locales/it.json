@@ -421,6 +421,8 @@
       "uploadFailedDesc": "Impossibile caricare la foto. Riprova quando sei online.",
       "deleteTitle": "Eliminare la foto?",
       "deleteDesc": "Questa operazione non può essere annullata.",
+      "deleteFailedTitle": "Foto non eliminata",
+      "deleteFailedDesc": "Non è stato possibile eliminare la foto. Controlla la connessione e riprova.",
       "queuedTitle": "Foto salvata offline",
       "queuedDesc": "Verrà caricata nel cloud non appena tornerai online o il lavoro principale verrà sincronizzato."
     },

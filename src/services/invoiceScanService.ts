@@ -245,32 +245,61 @@ async function saveScanHistory(invoice: ScannedInvoice): Promise<void> {
     const trimmed = history.slice(0, 200);
     await AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(trimmed));
   } catch {}
-  // Cross-device sync: push to scanned_invoices table (migration in round 37)
-  if (isSupabaseConfigured) {
+  // Cross-device sync: push to scanned_invoices table (migration in round 37).
+  //
+  // A scanned supplier invoice is a financial source document — supplier VAT,
+  // document number, subtotal/VAT/total. The insert's result used to be
+  // discarded inside a try/catch that could not fire (supabase-js resolves
+  // with `{ error }`), under a comment promising "offlineWriteQueue can pick
+  // it up later" when this file contained no `queueWrite` at all. The scan
+  // lived only on that phone, capped at 200 entries, and a reinstall or a
+  // device swap lost it for good (#352).
+  if (!isSupabaseConfigured) return;
+
+  let userId: string | null = null;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    userId = user?.id ?? null;
+  } catch {
+    // No session — the AsyncStorage copy above is all there is.
+  }
+  if (!userId) return;
+
+  // Built here, not inside the try, so the failure path can still queue it.
+  const row = {
+    id: invoice.id,
+    user_id: userId,
+    document_type: invoice.documentType,
+    supplier_name: invoice.supplierName,
+    supplier_address: invoice.supplierAddress ?? null,
+    supplier_vat: invoice.supplierVat ?? null,
+    document_number: invoice.documentNumber ?? null,
+    document_date: invoice.documentDate ?? null,
+    subtotal: invoice.subtotal,
+    vat_amount: invoice.vatAmount,
+    total: invoice.total,
+    currency: currencyForCountry((getCurrentCountry() || 'NL') as Country),
+    payment_terms: invoice.paymentTerms ?? null,
+    confidence: invoice.confidence,
+    line_items: invoice.lineItems,
+    scanned_at: invoice.scannedAt,
+  };
+
+  const queueIt = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      await (supabase.from('scanned_invoices' as any) as any).insert({
-        id: invoice.id,
-        user_id: user.id,
-        document_type: invoice.documentType,
-        supplier_name: invoice.supplierName,
-        supplier_address: invoice.supplierAddress ?? null,
-        supplier_vat: invoice.supplierVat ?? null,
-        document_number: invoice.documentNumber ?? null,
-        document_date: invoice.documentDate ?? null,
-        subtotal: invoice.subtotal,
-        vat_amount: invoice.vatAmount,
-        total: invoice.total,
-        currency: currencyForCountry((getCurrentCountry() || 'NL') as Country),
-        payment_terms: invoice.paymentTerms ?? null,
-        confidence: invoice.confidence,
-        line_items: invoice.lineItems,
-        scanned_at: invoice.scannedAt,
-      });
+      const { queueWrite } = await import('./offlineWriteQueue');
+      await queueWrite({ table: 'scanned_invoices', op: 'insert', payload: row });
     } catch {
-      // Offline — AsyncStorage copy is still the source of truth; offlineWriteQueue can pick up later.
+      // Queueing itself failed; the AsyncStorage copy is what is left.
     }
+  };
+
+  try {
+    const { error } = await (supabase.from('scanned_invoices' as any) as any).insert(row);
+    if (error) await queueIt();
+  } catch {
+    // A transport throw (no network at all) gets the same treatment.
+    await queueIt();
   }
 }
 

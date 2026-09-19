@@ -156,14 +156,31 @@ Deno.serve(async (req) => {
       externalRef = parsed?.id ?? parsed?.order_id ?? parsed?.reference ?? null;
     } catch {}
 
-    // Persist linkage
-    await admin
+    // Persist linkage. The order is ALREADY with the supplier at this point —
+    // goods are on their way and money is committed — so this result has to be
+    // read and reported, not discarded: if the PO never flips to `submitted`
+    // and never stores `external_ref`, the app shows it as unsent, the
+    // contractor presses "order" again, and a second REAL order goes out with
+    // nothing to reconcile it against (#352).
+    const { error: linkErr } = await admin
       .from('purchase_orders')
       .update({ external_ref: externalRef, external_provider: body.supplierId, submitted_at: new Date().toISOString(), status: 'submitted' })
       .eq('id', body.poId)
       .eq('user_id', user.id);
+    if (linkErr) {
+      console.error(`place-supplier-order: order placed with ${body.supplierId} (ref=${externalRef}) but PO ${body.poId} not marked submitted:`, linkErr.message);
+    }
 
-    return new Response(JSON.stringify({ ok: true, externalRef, supplier: body.supplierId }), {
+    // Still 200, deliberately: a non-2xx here would have the caller re-submit
+    // to the supplier, which is the worse of the two failures. The caller is
+    // told what did and did not happen instead.
+    return new Response(JSON.stringify({
+      ok: true,
+      externalRef,
+      supplier: body.supplierId,
+      recorded: !linkErr,
+      ...(linkErr ? { warning: `Order placed with the supplier, but it could not be marked as submitted: ${linkErr.message}. Do not order again — reference ${externalRef ?? 'unknown'}.` } : {}),
+    }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {

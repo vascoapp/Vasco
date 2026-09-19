@@ -421,6 +421,8 @@
       "uploadFailedDesc": "No se pudo subir la foto. Inténtalo de nuevo cuando estés en línea.",
       "deleteTitle": "¿Eliminar foto?",
       "deleteDesc": "Esta acción no se puede deshacer.",
+      "deleteFailedTitle": "Foto no eliminada",
+      "deleteFailedDesc": "No se pudo eliminar la foto. Comprueba tu conexión e inténtalo de nuevo.",
       "queuedTitle": "Foto guardada sin conexión",
       "queuedDesc": "Se subirá a la nube en cuanto vuelvas a estar online o se sincronice el trabajo principal."
     },

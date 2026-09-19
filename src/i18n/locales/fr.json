@@ -421,6 +421,8 @@
       "uploadFailedDesc": "Photo non envoyée. Réessayez une fois en ligne.",
       "deleteTitle": "Supprimer la photo ?",
       "deleteDesc": "Cette action est irréversible.",
+      "deleteFailedTitle": "Photo non supprimée",
+      "deleteFailedDesc": "La photo n'a pas pu être supprimée. Vérifiez votre connexion et réessayez.",
       "queuedTitle": "Photo enregistrée hors ligne",
       "queuedDesc": "Elle sera envoyée dans le cloud dès que vous serez à nouveau en ligne ou que la mission parente sera synchronisée."
     },

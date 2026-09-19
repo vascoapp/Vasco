@@ -421,6 +421,8 @@
       "uploadFailedDesc": "Foto konnte nicht hochgeladen werden. Versuchen Sie es online erneut.",
       "deleteTitle": "Foto löschen?",
       "deleteDesc": "Dies kann nicht rückgängig gemacht werden.",
+      "deleteFailedTitle": "Foto nicht gelöscht",
+      "deleteFailedDesc": "Das Foto konnte nicht entfernt werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
       "queuedTitle": "Foto offline gespeichert",
       "queuedDesc": "Sie wird in die Cloud hochgeladen, sobald Sie wieder online sind oder der übergeordnete Auftrag synchronisiert wurde."
     },

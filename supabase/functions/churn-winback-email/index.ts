@@ -137,6 +137,9 @@ Deno.serve(async (req) => {
 
   const results: Array<{ userId: string; variant: string | 'none'; delivery: string }> = [];
   let sentCount = 0;
+  // Emails that went out without their suppression row — the number that
+  // matters if this ever starts re-mailing people.
+  let suppressionFailures = 0;
 
   for (const [userId, signupIso] of signupByUser) {
     // 2. Cooldown check: any winback sent in last 30 days → skip.
@@ -194,7 +197,12 @@ Deno.serve(async (req) => {
     const body = tpl.body.replace('{days}', String(daysSince));
 
     const { ok, error } = await sendResend(resendKey, email, tpl.subject, body);
-    await admin.from('churn_winback_log').insert({
+    // This row is the SUPPRESSION LIST: the 30-day cooldown above reads it.
+    // The mail has already left, so a dropped row does not merely lose a
+    // statistic — the next tick sees no cooldown and mails the same lapsed
+    // customer again, every run, until the insert happens to succeed. Its
+    // result was discarded (#352).
+    const { error: logErr } = await admin.from('churn_winback_log').insert({
       user_id: userId,
       variant,
       locale,
@@ -202,11 +210,21 @@ Deno.serve(async (req) => {
       success: ok,
       error: error ?? null,
     });
+    if (logErr) {
+      console.error(`churn-winback: EMAIL SENT to user ${userId} but the suppression row was not written (${logErr.message}) — this address can be mailed again on the next tick`);
+      suppressionFailures += 1;
+    }
     if (ok) sentCount += 1;
-    results.push({ userId, variant, delivery: ok ? 'sent' : `failed:${error}` });
+    results.push({
+      userId,
+      variant,
+      delivery: ok ? 'sent' : `failed:${error}`,
+      ...(logErr ? { suppressionRecorded: false } : {}),
+    });
   }
 
   return json({
+    suppressionFailures,
     processed: signupByUser.size,
     sent: sentCount,
     details: results,

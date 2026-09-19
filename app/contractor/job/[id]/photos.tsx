@@ -143,8 +143,17 @@ export default function JobPhotosScreen() {
           text: t('common.delete', 'Delete'),
           style: 'destructive',
           onPress: async () => {
-            await deleteJobPhoto(photo.id, photo.storagePath);
+            // The dialog above promises "this cannot be undone". If the delete
+            // did not happen, the photo simply reappears after `refresh()` and
+            // the contractor is left to guess why — say it instead (#352).
+            const deleted = await deleteJobPhoto(photo.id, photo.storagePath);
             await refresh();
+            if (!deleted) {
+              Alert.alert(
+                t('jobs.photos.deleteFailedTitle', 'Photo not deleted'),
+                t('jobs.photos.deleteFailedDesc', 'The photo could not be removed. Check your connection and try again.'),
+              );
+            }
           },
         },
       ],
