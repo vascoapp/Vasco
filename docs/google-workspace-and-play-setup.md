@@ -158,5 +158,15 @@ upload key lives on EAS; without this, losing the `collectai` Expo account is
 unrecoverable), then the Data safety / content rating / target audience forms —
 answers pre-derived at `claude.ai/code/artifact/54db2fb9-d873-471d-aa1b-be06142dfea8`.
 
-🔴 **Nobody has ever run Vasco on Android.** `vasco-real.apk` sits in the repo
-root, uninstalled. That is a larger risk than any of the paperwork above.
+~~🔴 Nobody has ever run Vasco on Android.~~ **No longer true — corrected
+2026-09-19.** Vasco has now been run on Android across three sessions on the
+dedicated `VascoWalk` AVD (Pixel 7, API 36), in the German posture, via a
+JS-bundle-swapped APK: 2026-09-09, 2026-09-14 (11 device defects fixed,
+learnings #325–#335) and 2026-09-19 (expense VAT picker verified end to end,
+filter-sheet translation defect found and fixed). The tabs, the money screens
+and the add-expense flow have all been exercised by hand on the device.
+
+What remains untested on Android is the RELEASE artifact specifically: every
+run so far has been a debug-signed APK with a swapped bundle, never the signed
+AAB that Play would serve. Install `vasco-play-v2.aab` via `bundletool
+build-apks --mode=universal` before the first Internal-testing release.
