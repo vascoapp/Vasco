@@ -620,6 +620,26 @@ export interface Database {
         };
         Update: Partial<Omit<SupplierRow, 'id' | 'user_id' | 'created_at'>>;
       };
+      // `LeadRow` / `WorkerRow` have existed since R81/R86 and are accurate,
+      // but neither table was ever listed HERE — so `supabase.from('leads')`
+      // had no typed shape and every write went through an `as any` with
+      // nothing checking the payload (#351).
+      leads: {
+        Row: LeadRow;
+        Insert: Partial<LeadRow> & {
+          customer_name: string;
+          user_id: string;
+        };
+        Update: Partial<Omit<LeadRow, 'id' | 'user_id' | 'created_at'>>;
+      };
+      workers: {
+        Row: WorkerRow;
+        Insert: Partial<WorkerRow> & {
+          name: string;
+          user_id: string;
+        };
+        Update: Partial<Omit<WorkerRow, 'id' | 'user_id' | 'created_at'>>;
+      };
       job_materials: {
         Row: JobMaterialRow;
         Insert: Partial<JobMaterialRow> & {

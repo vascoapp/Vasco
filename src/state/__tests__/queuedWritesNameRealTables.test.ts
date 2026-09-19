@@ -77,17 +77,22 @@ describe('every queued write names a table that exists', () => {
   });
 });
 
-describe('the generated types are missing two tables the app writes to', () => {
-  // Not a wrong name — a real gap. `leads` and `workers` are created by
-  // `20260520000002_leads.sql` / `20260520000004_workers.sql` and written
-  // through `as any` casts, so nothing type-checks those payloads: a renamed
-  // or dropped column there fails at runtime, in the queue, silently.
+describe('every table the app writes to is typed, not just real', () => {
+  // These two were the find: `leads` and `workers` are created by
+  // `20260520000002_leads.sql` / `20260520000004_workers.sql`, `LeadRow` and
+  // `WorkerRow` have existed since R81/R86 — and neither table was listed in
+  // the `Tables` map, so `supabase.from('leads')` had no typed shape and every
+  // write went through an `as any` with nothing checking the payload.
   //
-  // Pinned rather than fixed by hand: regenerating types is
-  // `npx supabase gen types typescript --linked`, which rewrites the whole
-  // file and belongs in its own change. When that happens, this test flips.
-  it.each(['leads', 'workers'])('%s exists in migrations but not in database.types.ts', (table) => {
+  // A table that EXISTS is not the same as a table the compiler knows about.
+  it.each(['leads', 'workers'])('%s is typed', (table) => {
     expect({ table, created: createdTables.has(table) }).toEqual({ table, created: true });
-    expect({ table, typed: typedTables.has(table) }).toEqual({ table, typed: false });
+    expect({ table, typed: typedTables.has(table) }).toEqual({ table, typed: true });
+  });
+
+  it('every queued table is TYPED, not merely present in a migration', () => {
+    for (const table of new Set(queuedTables)) {
+      expect({ table, typed: typedTables.has(table) }).toEqual({ table, typed: true });
+    }
   });
 });

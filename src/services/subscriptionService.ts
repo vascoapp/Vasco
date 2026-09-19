@@ -257,8 +257,6 @@ export interface SubscriptionState {
   seatsUsed: number;
   seatsPurchased: number;
   aiInsightsUsedThisMonth: number;
-  quotesUsedThisMonth: number;
-  invoicesUsedThisMonth: number;
   activeJobCount: number;
   clientCount: number;
   trialEndsAt: string | null;        // 14-day trial of Pro
@@ -286,8 +284,6 @@ function defaultState(): SubscriptionState {
     seatsUsed: 1,
     seatsPurchased: 0,
     aiInsightsUsedThisMonth: 0,
-    quotesUsedThisMonth: 0,
-    invoicesUsedThisMonth: 0,
     activeJobCount: 0,
     clientCount: 0,
     trialEndsAt: null,
@@ -322,9 +318,12 @@ export async function loadSubscription(): Promise<SubscriptionState> {
       const usageMonth = await AsyncStorage.getItem(USAGE_KEY);
       const currentMonth = new Date().toISOString().slice(0, 7);
       if (usageMonth !== currentMonth) {
+        // Only the AI counter survives: it is the one with a writer
+        // (`recordAiInsightUsage`, called from the AI chat screen). The quote
+        // and invoice counters were removed — they were written by nothing,
+        // read by nothing after the caps moved to a live count, and existed
+        // only to be mistaken for usage a screen could display (#351).
         state.aiInsightsUsedThisMonth = 0;
-        state.quotesUsedThisMonth = 0;
-        state.invoicesUsedThisMonth = 0;
         await AsyncStorage.setItem(USAGE_KEY, currentMonth);
         await saveSubscription(state);
       }
@@ -404,18 +403,31 @@ export function canCreateJob(state: SubscriptionState, liveCount?: number): Gate
   return { allowed: true };
 }
 
-export function canCreateQuote(state: SubscriptionState, liveCount?: number): GateResult {
+/** `liveCount` is REQUIRED — see the note on `canCreateInvoice`. */
+export function canCreateQuote(state: SubscriptionState, liveCount: number): GateResult {
   const limits = getTierLimits(state.tier);
-  const count = liveCount ?? state.quotesUsedThisMonth;
+  const count = liveCount;
   if (count >= limits.maxQuotesPerMonth) {
     return { allowed: false, reason: i18n.t('tierGate.quoteLimitReached', { count: limits.maxQuotesPerMonth }), upgradeFeature: 'More quotes', requiredTier: 'pro' };
   }
   return { allowed: true };
 }
 
-export function canCreateInvoice(state: SubscriptionState, liveCount?: number): GateResult {
+/**
+ * `liveCount` is REQUIRED, and deliberately so.
+ *
+ * It used to be optional, falling back to `state.invoicesUsedThisMonth` — a
+ * counter that has NEVER been incremented, because `recordInvoiceUsage` and
+ * `recordQuoteUsage` had zero callers in the entire repo. So every caller that
+ * omitted the argument compared 0 against the cap and was always allowed: a
+ * gate that reads as enforcement and is a no-op. The two dead recorders are
+ * gone and the compiler now asks for the real number (#351).
+ *
+ * `src/services/tierGatePrompt.ts` is the one place that counts it.
+ */
+export function canCreateInvoice(state: SubscriptionState, liveCount: number): GateResult {
   const limits = getTierLimits(state.tier);
-  const count = liveCount ?? state.invoicesUsedThisMonth;
+  const count = liveCount;
   if (count >= limits.maxInvoicesPerMonth) {
     return { allowed: false, reason: i18n.t('tierGate.invoiceLimitReached', { count: limits.maxInvoicesPerMonth }), upgradeFeature: 'More invoices', requiredTier: 'pro' };
   }
@@ -525,18 +537,6 @@ export function canUseFeature(state: SubscriptionState, feature: keyof TierLimit
 
 export async function recordAiInsightUsage(state: SubscriptionState): Promise<SubscriptionState> {
   const updated = { ...state, aiInsightsUsedThisMonth: state.aiInsightsUsedThisMonth + 1 };
-  await saveSubscription(updated);
-  return updated;
-}
-
-export async function recordQuoteUsage(state: SubscriptionState): Promise<SubscriptionState> {
-  const updated = { ...state, quotesUsedThisMonth: state.quotesUsedThisMonth + 1 };
-  await saveSubscription(updated);
-  return updated;
-}
-
-export async function recordInvoiceUsage(state: SubscriptionState): Promise<SubscriptionState> {
-  const updated = { ...state, invoicesUsedThisMonth: state.invoicesUsedThisMonth + 1 };
   await saveSubscription(updated);
   return updated;
 }

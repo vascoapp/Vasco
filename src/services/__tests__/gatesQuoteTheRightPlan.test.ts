@@ -25,8 +25,6 @@ const state = (tier: SubscriptionState['tier']): SubscriptionState => ({
   seatsUsed: 1,
   seatsPurchased: 0,
   aiInsightsUsedThisMonth: 0,
-  quotesUsedThisMonth: 0,
-  invoicesUsedThisMonth: 0,
   activeJobCount: 0,
   clientCount: 0,
   trialEndsAt: null,

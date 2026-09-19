@@ -15,8 +15,9 @@
 // And the two that DID gate could not bite: they counted documents by
 // `createdAt`, which none of the create-mutators set on the optimistic object,
 // so the count was 0 for anything made in the session and permanently 0 on an
-// install with no backend. (`recordQuoteUsage`/`recordInvoiceUsage` still have
-// no callers — the live count replaces them.)
+// install with no backend. `recordQuoteUsage`/`recordInvoiceUsage` are now
+// DELETED and `liveCount` is a required argument, so a caller cannot fall back
+// to a counter nothing maintains.
 //
 // This guard pins both halves: every creating call site goes through the one
 // helper, and the optimistic rows carry the timestamp the helper counts.
@@ -117,5 +118,26 @@ describe('createdThisMonth counts what it should', () => {
     expect(createdThisMonth([{ createdAt: 'not-a-date' }], now)).toBe(0);
     expect(createdThisMonth(undefined, now)).toBe(0);
     expect(createdThisMonth([], now)).toBe(0);
+  });
+});
+
+describe('a cap cannot be checked against a counter nothing maintains', () => {
+  const SERVICE = read('src/services/subscriptionService.ts');
+
+  it('the dead recorders are gone', () => {
+    // They had zero callers, so `quotesUsedThisMonth` / `invoicesUsedThisMonth`
+    // were permanently 0 — and the gates fell back to them.
+    expect(SERVICE).not.toMatch(/export async function recordQuoteUsage/);
+    expect(SERVICE).not.toMatch(/export async function recordInvoiceUsage/);
+    // The one that IS called stays.
+    expect(SERVICE).toMatch(/export async function recordAiInsightUsage/);
+  });
+
+  it('the live count is required, not optional', () => {
+    expect(SERVICE).toMatch(/export function canCreateQuote\(state: SubscriptionState, liveCount: number\)/);
+    expect(SERVICE).toMatch(/export function canCreateInvoice\(state: SubscriptionState, liveCount: number\)/);
+    // …and neither falls back to the stored counter any more.
+    expect(SERVICE).not.toMatch(/liveCount \?\? state\.quotesUsedThisMonth/);
+    expect(SERVICE).not.toMatch(/liveCount \?\? state\.invoicesUsedThisMonth/);
   });
 });
