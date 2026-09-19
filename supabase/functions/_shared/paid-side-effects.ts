@@ -43,7 +43,11 @@ export async function dispatchPaidSideEffects(
       const paid = new Date(paidAt || new Date().toISOString()).getTime();
       const daysToPayment = Math.max(0, Math.round((paid - issued) / 86400000));
       const isOverdue = paid > new Date(dueAt).getTime();
-      await admin.from('invoice_outcomes').insert({
+      // Fires exactly once per payment, behind the idempotency claim — so a
+      // dropped row is NEVER recoverable and there is no backfill. It is the
+      // training row `predict_customer_dso` learns from; without it that
+      // contractor's DSO silently falls back to the global default forever.
+      const { error: outcomeErr } = await admin.from('invoice_outcomes').insert({
         user_id: inv.user_id,
         invoice_id: invoiceId,
         customer_id: inv.customer_id,
@@ -54,9 +58,14 @@ export async function dispatchPaidSideEffects(
         days_to_payment: daysToPayment,
         is_overdue: isOverdue,
       });
+      if (outcomeErr) {
+        // The catch below cannot see this: supabase-js resolves with
+        // `{ error }` rather than throwing (#353).
+        console.error(`invoice_outcomes seed failed for invoice ${invoiceId}:`, outcomeErr.message);
+      }
     }
   } catch (err) {
-    console.warn('invoice_outcomes seed failed:', String(err));
+    console.warn('invoice_outcomes seed threw:', String(err));
   }
 
   let customerEmail: string | null = null;
@@ -78,7 +87,11 @@ export async function dispatchPaidSideEffects(
   // 1. Customer receipt email
   if (customerEmail) {
     try {
-      await fetch(`${supabaseUrl}/functions/v1/send-invoice`, {
+      // `fetch` only rejects on a transport failure: a 4xx/5xx from Resend
+      // arrives as a perfectly fine Response, so this `catch` saw nothing and
+      // the customer's PAID RECEIPT silently never went out, with no record
+      // anywhere that it had not (#353).
+      const receiptRes = await fetch(`${supabaseUrl}/functions/v1/send-invoice`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,12 +104,17 @@ export async function dispatchPaidSideEffects(
           locale: 'en',
         }),
       });
-    } catch {}
+      if (!receiptRes.ok) {
+        console.error(`paid receipt NOT sent for invoice ${invoiceId} to ${customerEmail}: ${receiptRes.status} ${await receiptRes.text().catch(() => '')}`);
+      }
+    } catch (err) {
+      console.error(`paid receipt request failed for invoice ${invoiceId}:`, String(err));
+    }
   }
 
   // 2. Contractor push notification
   try {
-    await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+    const pushRes = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -109,5 +127,10 @@ export async function dispatchPaidSideEffects(
         data: { type: 'invoice_paid', invoiceId },
       }),
     });
-  } catch {}
+    if (!pushRes.ok) {
+      console.error(`payment-received push NOT sent for invoice ${invoiceId}: ${pushRes.status}`);
+    }
+  } catch (err) {
+    console.error(`payment-received push request failed for invoice ${invoiceId}:`, String(err));
+  }
 }

@@ -45,13 +45,16 @@ export async function recordGeneratorDismissal(input: {
   const userId = getAuthedUserId();
   if (!userId) return;
   try {
-    await (supabase.from as any)('generator_dismissals').insert({
+    // Same dead catch as persistPhotoAnalysis — and the same consequence: if
+    // this table were ungranted, nothing anywhere would say so (#353).
+    const { error } = await (supabase.from as any)('generator_dismissals').insert({
       user_id: userId,
       generator_id: input.generatorId,
       insight_id: input.insightId ?? null,
       screen: input.screen ?? null,
       reason: input.reason ?? null,
     });
+    if (error) await logIntelligenceWriteFailure('generator_dismissals.insert', userId, error);
   } catch (err) {
     await logIntelligenceWriteFailure('generator_dismissals.insert', userId, err);
   }
@@ -141,7 +144,13 @@ export async function persistPhotoAnalysis(input: PhotoAnalysisRow): Promise<voi
   const userId = getAuthedUserId();
   if (!userId) return;
   try {
-    await (supabase.from as any)('photo_analyses').insert({
+    // The comment on `recordPortalEvent` above describes this exact bug and
+    // that call site was fixed; this one, in the same file, was not. The
+    // `catch` cannot fire (supabase-js resolves with `{ error }`), so
+    // `logIntelligenceWriteFailure` — a function written specifically for this
+    // — has never run once, and the row comments below name the two ways the
+    // whole moat row gets dropped (#353).
+    const { error } = await (supabase.from as any)('photo_analyses').insert({
       user_id: userId,
       // R59: nullify temp ids — photo_analyses.job_id / quote_id are FK
       // columns; writing `j-{ts}` would fail the constraint and lose the
@@ -160,6 +169,7 @@ export async function persistPhotoAnalysis(input: PhotoAnalysisRow): Promise<voi
       estimated_cost_eur: input.estimatedCostEur ?? null,
       raw_response: input.rawResponse ?? null,
     });
+    if (error) await logIntelligenceWriteFailure('photo_analyses.insert', userId, error);
   } catch (err) {
     await logIntelligenceWriteFailure('photo_analyses.insert', userId, err);
   }

@@ -337,7 +337,10 @@ Deno.serve(async (req) => {
       });
       const sendJson = await sendRes.json().catch(() => ({}));
 
-      await admin.from('push_notification_log').insert({
+      // The dedupe row for this pack step: the 24-hour lookup above reads it,
+      // so a dropped row lets the same automation nudge fire again on the
+      // next tick — to the contractor, a pack that repeats itself (#353).
+      const { error: incassoLogErr } = await admin.from('push_notification_log').insert({
         user_id: userId,
         notif_type: notifType,
         entity_key: step,
@@ -346,6 +349,9 @@ Deno.serve(async (req) => {
         success: !!sendJson?.ok,
         error: sendJson?.ok ? null : (sendJson?.error ?? 'unknown'),
       });
+      if (incassoLogErr) {
+        console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${incassoLogErr.message}) — this step can repeat`);
+      }
 
       if (sendJson?.ok) pushed++;
       else errors.push({ userId, error: sendJson?.error ?? 'send-push failed' });
@@ -398,7 +404,10 @@ Deno.serve(async (req) => {
       });
       const qSendJson = await qSend.json().catch(() => ({}));
 
-      await admin.from('push_notification_log').insert({
+      // The dedupe row for this pack step: the 24-hour lookup above reads it,
+      // so a dropped row lets the same automation nudge fire again on the
+      // next tick — to the contractor, a pack that repeats itself (#353).
+      const { error: followupLogErr } = await admin.from('push_notification_log').insert({
         user_id: userId,
         notif_type: qNotifType,
         entity_key: qStep,
@@ -407,6 +416,9 @@ Deno.serve(async (req) => {
         success: !!qSendJson?.ok,
         error: qSendJson?.ok ? null : (qSendJson?.error ?? 'unknown'),
       });
+      if (followupLogErr) {
+        console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${followupLogErr.message}) — this step can repeat`);
+      }
 
       if (qSendJson?.ok) pushed++;
       else errors.push({ userId, error: qSendJson?.error ?? 'quote send-push failed' });
@@ -466,7 +478,10 @@ Deno.serve(async (req) => {
         });
         const jSendJson = await jSend.json().catch(() => ({}));
 
-        await admin.from('push_notification_log').insert({
+        // The dedupe row for this pack step: the 24-hour lookup above reads it,
+        // so a dropped row lets the same automation nudge fire again on the
+        // next tick — to the contractor, a pack that repeats itself (#353).
+        const { error: milestoneLogErr } = await admin.from('push_notification_log').insert({
           user_id: userId,
           notif_type: jNotifType,
           entity_key: jStep,
@@ -475,6 +490,9 @@ Deno.serve(async (req) => {
           success: !!jSendJson?.ok,
           error: jSendJson?.ok ? null : (jSendJson?.error ?? 'unknown'),
         });
+        if (milestoneLogErr) {
+          console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${milestoneLogErr.message}) — this step can repeat`);
+        }
 
         if (jSendJson?.ok) pushed++;
         else errors.push({ userId, error: jSendJson?.error ?? `${jStep} send-push failed` });

@@ -64,16 +64,31 @@ export async function redeemCredits(
 }
 
 /**
- * Returns true if (provider, eventId) was inserted (first time we see it),
- * false if it already existed (this webhook retried). Use to gate
- * non-idempotent side effects like credit consumption.
+ * Three outcomes, not two:
+ *
+ *  - `'first'`     — we inserted the row; this event has not been handled.
+ *  - `'duplicate'` — unique violation (23505); the provider is retrying.
+ *  - `'unknown'`   — the claim itself failed (timeout, connection cap, RLS).
+ *
+ * It used to return a plain boolean, and a transient DB error returned the
+ * same `false` as a genuine duplicate. Every caller read that as "already
+ * processed", so one failed INSERT permanently skipped the customer's paid
+ * receipt and the contractor's push — for a payment that really happened,
+ * with nothing anywhere recording the decision (#353).
+ *
+ * The caller has to choose, because the right answer differs: for a
+ * NON-idempotent money step (consuming credits) `'unknown'` must behave like
+ * `'duplicate'` and skip; for a notification, delivering a possible duplicate
+ * beats silently delivering nothing.
  */
+export type WebhookClaim = 'first' | 'duplicate' | 'unknown';
+
 export async function claimWebhookEvent(
   supabaseUrl: string,
   serviceKey: string,
   provider: 'stripe' | 'mollie',
   eventId: string,
-): Promise<boolean> {
+): Promise<WebhookClaim> {
   const admin = createClient(supabaseUrl, serviceKey);
   const { data, error } = await admin
     .from('webhook_idempotency')
@@ -81,11 +96,11 @@ export async function claimWebhookEvent(
     .select('event_id');
   if (error) {
     // Postgres unique-violation = 23505 → already processed
-    if ((error as any).code === '23505') return false;
-    console.warn('claimWebhookEvent error:', error.message);
-    return false;
+    if ((error as any).code === '23505') return 'duplicate';
+    console.error(`claimWebhookEvent could not claim ${provider}/${eventId}:`, error.message);
+    return 'unknown';
   }
-  return Array.isArray(data) && data.length > 0;
+  return Array.isArray(data) && data.length > 0 ? 'first' : 'unknown';
 }
 
 /**

@@ -94,8 +94,13 @@ export async function upsertEntity(entity: {
     .limit(1)
     .maybeSingle();
 
+  // The UPDATE branch used to discard its result and `return existing.id`, so
+  // a caller could not tell a refreshed row from a refused one — while the
+  // INSERT branch a few lines below has always checked. Every first write
+  // landed and every subsequent update was lost, which is how an intelligence
+  // graph freezes at day one with nothing in the log (#353).
   if (existing) {
-    await from('entities')
+    const { error: updErr } = await from('entities')
       .update({
         aliases: entity.aliases,
         attributes: entity.attributes,
@@ -103,6 +108,7 @@ export async function upsertEntity(entity: {
         confidence: entity.confidence,
       })
       .eq('id', existing.id);
+    if (updErr) { logWarn('IntelDP', `upsertEntity update: ${updErr.message}`); return null; }
     return existing.id;
   }
 
@@ -203,13 +209,19 @@ export async function resolveCalibrationEntry(
   accurate: boolean,
 ): Promise<void> {
   if (!isSupabaseConfigured) return;
-  await from('calibration_entries')
+  // No destructure at all, while `insertCalibrationEntry` beside it logs its
+  // error. An unresolved entry keeps coming back from
+  // `getCalibrationEntriesByGenerator({ unresolvedOnly })`, so any "we were
+  // X% accurate" figure the contractor is shown is computed over an empty
+  // resolved set (#353).
+  const { error } = await from('calibration_entries')
     .update({
       actual_value: actualValue,
       resolved_at: new Date().toISOString(),
       accurate,
     })
     .eq('id', entryId);
+  if (error) logWarn('IntelDP', `resolveCalibrationEntry ${entryId}: ${error.message}`);
 }
 
 export async function getCalibrationEntriesByGenerator(
@@ -403,10 +415,14 @@ export async function upsertMaterial(material: {
     .limit(1)
     .maybeSingle();
 
+  // Same shape as upsertEntity: the update branch reported success it had
+  // not verified, so re-scanning an invoice never refreshed a material the
+  // catalogue already had (#353).
   if (existing) {
-    await from('material_catalog')
+    const { error: updErr } = await from('material_catalog')
       .update(material)
       .eq('id', existing.id);
+    if (updErr) { logWarn('IntelDP', `upsertMaterial update: ${updErr.message}`); return null; }
     return existing.id;
   }
 
@@ -445,9 +461,13 @@ export async function addMaterialAlias(
     .single();
   if (!data) return;
   const aliases = [...((data.aliases as string[]) || []), alias];
-  await from('material_catalog')
+  // The alias is what stops the same material being created again from the
+  // next scanned invoice; losing it shows up only as a slowly duplicating
+  // catalogue, with nothing in the log (#353).
+  const { error } = await from('material_catalog')
     .update({ aliases })
     .eq('id', materialId);
+  if (error) logWarn('IntelDP', `addMaterialAlias ${materialId}: ${error.message}`);
 }
 
 // ── Suppliers ────────────────────────────────────────────────
@@ -470,7 +490,8 @@ export async function upsertSupplier(supplier: {
     .maybeSingle();
 
   if (existing) {
-    await from('suppliers').update(supplier).eq('id', existing.id);
+    const { error: updErr } = await from('suppliers').update(supplier).eq('id', existing.id);
+    if (updErr) { logWarn('IntelDP', `upsertSupplier update: ${updErr.message}`); return null; }
     return existing.id;
   }
 

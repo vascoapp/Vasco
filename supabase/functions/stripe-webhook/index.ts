@@ -173,7 +173,9 @@ Deno.serve(async (req) => {
       const isFirstSeeingUpcoming = await claimWebhookEvent(
         supabaseUrl0, supabaseServiceKey0, 'stripe', event.id,
       );
-      if (!isFirstSeeingUpcoming) {
+      // Only a confirmed duplicate short-circuits; an unclaimable event is
+      // still handled, with a log, rather than dropped.
+      if (isFirstSeeingUpcoming === 'duplicate') {
         return new Response(JSON.stringify({ received: true, status: 'invoice.upcoming retry' }), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -298,7 +300,8 @@ Deno.serve(async (req) => {
         const creditFlag = Deno.env.get('CREDIT_REDEMPTION_ENABLED') === 'true';
         const couponMode = Deno.env.get('STRIPE_COUPON_REDEMPTION') === 'true';
         const isFirstSeeing = await claimWebhookEvent(supabaseUrl0, supabaseServiceKey0, 'stripe', event.id);
-        if (creditFlag && !couponMode && isFirstSeeing && status === 'active' && currentPeriodEnd) {
+        // Money: `'first'` only — see the note in credit-redemption.ts.
+        if (creditFlag && !couponMode && isFirstSeeing === 'first' && status === 'active' && currentPeriodEnd) {
           const { monthsApplied, consumed } = await redeemCredits(
             supabaseUrl0, supabaseServiceKey0, userId, 12,
           );
@@ -516,7 +519,11 @@ Deno.serve(async (req) => {
     const isFirstSeeingPaid = await claimWebhookEvent(
       supabaseUrl, supabaseServiceKey, 'stripe', event.id,
     );
-    if (isFirstSeeingPaid) {
+    // Notification: deliver unless this is a confirmed replay.
+    if (isFirstSeeingPaid !== 'duplicate') {
+      if (isFirstSeeingPaid === 'unknown') {
+        console.error(`stripe ${event.id}: idempotency claim failed — sending paid side effects anyway`);
+      }
       await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
         console.warn('paid side-effects failed:', String(err)),
       );

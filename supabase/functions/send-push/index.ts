@@ -133,12 +133,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Prune tokens that Expo told us are dead
+    // Prune tokens that Expo told us are dead. `pruned: N` is a claim about
+    // this delete, and its result was never read — if it is refused the dead
+    // tokens stay, every future push wastes a slot and inflates `failed`, and
+    // the response says they were removed (#353).
+    let pruned = 0;
     if (invalidTokens.length > 0) {
-      await admin.from('push_tokens').delete().in('token', invalidTokens);
+      const { error: pruneErr } = await admin.from('push_tokens').delete().in('token', invalidTokens);
+      if (pruneErr) console.error(`send-push: ${invalidTokens.length} dead token(s) NOT pruned:`, pruneErr.message);
+      else pruned = invalidTokens.length;
     }
 
-    return new Response(JSON.stringify({ ok: true, sent, failed, pruned: invalidTokens.length }), {
+    return new Response(JSON.stringify({ ok: true, sent, failed, pruned }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {

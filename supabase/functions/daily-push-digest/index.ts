@@ -238,6 +238,9 @@ Deno.serve(async (req) => {
 
   const results: Array<{ userId: string; decision: string; delivery: string }> = [];
   let sentCount = 0;
+  // Pushes that landed without their dedupe row — the number to watch if
+  // contractors start reporting repeats.
+  let dedupeFailures = 0;
 
   for (const userId of userIds) {
     // Rate-limit: skip if any push sent to this user in the last 24h.
@@ -365,7 +368,12 @@ Deno.serve(async (req) => {
       err = (e as Error).message;
     }
 
-    await admin.from('push_notification_log').insert({
+    // This row is the DEDUPE key: the 24-hour lookup above reads it. The
+    // push has already reached the phone, so a dropped row means the same
+    // notification fires again tomorrow, and every day after, until an
+    // insert happens to succeed — notification fatigue, then uninstall
+    // (#353). Its result was discarded.
+    const { error: logErr } = await admin.from('push_notification_log').insert({
       user_id: userId,
       notif_type: decision.type,
       entity_key: decision.entityKey,
@@ -375,10 +383,14 @@ Deno.serve(async (req) => {
       error: err,
       sent_at: nowIso,
     });
+    if (logErr) {
+      console.error(`daily-push-digest: push delivered to ${userId} (${decision.type}) but the dedupe row was not written (${logErr.message}) — it can re-fire tomorrow`);
+      dedupeFailures += 1;
+    }
 
     if (success) sentCount += 1;
     results.push({ userId, decision: decision.type, delivery: success ? 'sent' : `failed:${err}` });
   }
 
-  return json({ processed: userIds.length, sent: sentCount, results });
+  return json({ processed: userIds.length, sent: sentCount, dedupeFailures, results });
 });

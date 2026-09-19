@@ -14,6 +14,7 @@ import { MS_PER_HOUR } from '../utils/timeConstants';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import i18n from '../i18n/i18n';
 import { formatMoney } from '../i18n/formatting';
+import { logWarn } from '../utils/errorHandler';
 
 const TOKEN_KEY = '@vasco_push_token';
 const DEVICE_ID_KEY = '@vasco_device_id';
@@ -64,7 +65,7 @@ async function persistPushTokenToSupabase(token: string): Promise<void> {
     if (!user) return;
     const deviceId = await getOrCreateDeviceId();
     const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web';
-    await (supabase.from('push_tokens' as any) as any).upsert(
+    const { error } = await (supabase.from('push_tokens' as any) as any).upsert(
       {
         user_id: user.id,
         device_id: deviceId,
@@ -74,8 +75,15 @@ async function persistPushTokenToSupabase(token: string): Promise<void> {
       },
       { onConflict: 'user_id,device_id' },
     );
-  } catch {
-    // Silent — push tokens are best-effort
+    if (error) {
+      // "Best-effort" is a fair description of the RETRY policy, not of the
+      // claim made to the user: the OS permission was granted, the app says
+      // notifications are on, and without this row NO push ever arrives —
+      // payment reminders and job alerts included. At least say so (#353).
+      logWarn('push', `token not registered for user ${user.id}: ${error.message} — this device will receive no notifications`);
+    }
+  } catch (err) {
+    logWarn('push', `token registration failed: ${String(err)}`);
   }
 }
 
@@ -191,12 +199,19 @@ export async function unregisterPushToken(): Promise<void> {
     if (!user) return;
     const deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
     if (!deviceId) return;
-    await supabase
+    const { error } = await supabase
       .from('push_tokens' as any)
       .delete()
       .eq('user_id', user.id)
       .eq('device_id', deviceId);
-  } catch {}
+    if (error) {
+      // The mirror of the registration bug: a signed-OUT device that keeps
+      // its row keeps receiving that account's notifications (#353).
+      logWarn('push', `token NOT removed on logout for user ${user.id}: ${error.message} — this device may still receive their notifications`);
+    }
+  } catch (err) {
+    logWarn('push', `token removal failed on logout: ${String(err)}`);
+  }
 }
 
 export async function getPushToken(): Promise<string | null> {

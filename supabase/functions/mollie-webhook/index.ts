@@ -186,7 +186,13 @@ Deno.serve(async (req) => {
       const isFirstSeeingPaid = await claimWebhookEvent(
         supabaseUrl, supabaseServiceKey, 'mollie', paymentId,
       );
-      if (isFirstSeeingPaid) {
+      // A notification, not a money step: on `'unknown'` (the claim itself
+      // failed) deliver anyway. A duplicate receipt is a nuisance; a missing
+      // one is a payment the customer was never told about (#353).
+      if (isFirstSeeingPaid !== 'duplicate') {
+        if (isFirstSeeingPaid === 'unknown') {
+          console.error(`mollie ${paymentId}: idempotency claim failed — sending paid side effects anyway`);
+        }
         // Fire-and-forget: receipt email + contractor push + invoice_outcomes seed
         await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
           console.warn('paid side-effects failed:', String(err)),
@@ -236,7 +242,10 @@ Deno.serve(async (req) => {
       const supabaseServiceKey2 = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
       if (userId && supabaseUrl2 && supabaseServiceKey2) {
         const isFirstSeeing = await claimWebhookEvent(supabaseUrl2, supabaseServiceKey2, 'mollie', paymentId);
-        if (isFirstSeeing) {
+        // Consuming credits is NOT idempotent, so `'unknown'` must behave
+        // like `'duplicate'`: skip. Redeeming twice takes months the customer
+        // paid for.
+        if (isFirstSeeing === 'first') {
           const { monthsApplied, consumed } = await redeemCredits(
             supabaseUrl2, supabaseServiceKey2, userId, 12,
           );

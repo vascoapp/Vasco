@@ -11,6 +11,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getAuthedUserId } from '../lib/currentUser';
 import { subscribeIdRemap, type IdRemapEvent } from './idRemapBus';
+import { logWarn } from '../utils/errorHandler';
 
 interface EmbedResult {
   ok: boolean;
@@ -262,7 +263,7 @@ function initLeadWorkerRemapListener() {
         .eq('id', oldId)
         .maybeSingle();
       if (row && row.embedding) {
-        await (supabase.from('embeddings') as any).upsert({
+        const { error: copyErr } = await (supabase.from('embeddings') as any).upsert({
           id: newId,
           item_type: row.item_type,
           title: row.title,
@@ -271,8 +272,18 @@ function initLeadWorkerRemapListener() {
           metadata: row.metadata ?? {},
           user_id: row.user_id,
         });
+        // The delete used to run regardless of whether the copy landed, which
+        // produced exactly the search-coverage gap this listener exists to
+        // close: the row under the temp id wiped, nothing under the real one.
+        // Keep the old row when the copy failed — a duplicate is recoverable,
+        // a hole is not (#353).
+        if (copyErr) {
+          logWarn('embeddings', `remap ${oldId}→${newId}: copy failed (${copyErr.message}) — keeping the original row`);
+          return;
+        }
       }
-      await (supabase.from('embeddings') as any).delete().eq('id', oldId);
+      const { error: delErr } = await (supabase.from('embeddings') as any).delete().eq('id', oldId);
+      if (delErr) logWarn('embeddings', `remap ${oldId}→${newId}: old row not removed: ${delErr.message}`);
     } catch {
       // best-effort — search coverage degrades briefly on failure, never
       // breaks the user flow.

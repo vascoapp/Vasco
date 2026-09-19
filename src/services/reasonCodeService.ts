@@ -12,6 +12,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentUserId } from '../lib/currentUser';
+import { logWarn } from '../utils/errorHandler';
 
 const LOCAL_KEY = '@vasco_quote_line_deltas';
 const PENDING_FLUSH_KEY = '@vasco_quote_line_deltas_pending';
@@ -131,10 +132,20 @@ export async function annotateDelta(deltaId: string, reasonCode: ReasonCode, fre
 
   if (isSupabaseConfigured) {
     try {
-      await (supabase.from as any)('quote_line_deltas')
+      // `recordLineEdit` and `flushPendingDeltas` in this file both check their
+      // error and route to `queuePending`; this one did neither, and
+      // `queuePending` only re-sends INSERTS — an annotation has no retry path
+      // at all. The chip sticks in the UI (the local copy is written first and
+      // `listRecentDeltas` reads local), while the moat row keeps
+      // `reason_code: null` — the column the cohort pricing analysis is built
+      // on (#353).
+      const { error } = await (supabase.from as any)('quote_line_deltas')
         .update({ reason_code: reasonCode, free_text_reason: freeText })
         .eq('id', all[idx].id);
-    } catch {}
+      if (error) logWarn('reasonCode', `annotation not persisted for delta ${all[idx].id}: ${error.message}`);
+    } catch (err) {
+      logWarn('reasonCode', `annotation request failed: ${String(err)}`);
+    }
   }
 }
 

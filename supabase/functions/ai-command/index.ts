@@ -150,11 +150,21 @@ Deno.serve(async (req) => {
       }
       const nextCount = inWindow ? (row?.count ?? 0) + 1 : 1;
       const nextWindowStart = inWindow ? row!.window_start : now.toISOString();
-      await admin
+      // The increment IS the rate limit. Its result was discarded inside a
+      // catch that cannot fire (supabase-js resolves with `{ error }`), so a
+      // refused upsert — an RLS change, a renamed column, a connection cap —
+      // meant `count` never advanced and EVERY user had unlimited Anthropic
+      // calls, indefinitely, announced by a `console.error` that never ran.
+      // Failing open on a single call is the stated intent; failing open
+      // forever, silently, is not (#353).
+      const { error: limitErr } = await admin
         .from('ai_rate_limit')
         .upsert({ user_id: user.id, window_start: nextWindowStart, count: nextCount, updated_at: now.toISOString() });
+      if (limitErr) {
+        console.error(`ai-command: rate-limit counter NOT incremented for user ${user.id} (${limitErr.message}) — this user is effectively unlimited until it recovers`);
+      }
     } catch (e) {
-      console.error('ai-command rate-limit check failed (failing open):', e);
+      console.error('ai-command rate-limit check threw (failing open):', e);
     }
   }
 
