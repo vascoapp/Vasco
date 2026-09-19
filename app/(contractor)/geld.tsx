@@ -809,7 +809,14 @@ export default function GeldScreen() {
             <DKLabel style={s.modalTitle}>{t('dk.actions.filterInvoices', 'Filter invoices')}</DKLabel>
             {(['all', 'overdue', 'sent', 'paid', 'draft'] as const).map(status => (
               <Pressable key={status} style={[s.modalRow, invoiceStatusFilter === status && s.modalRowActive]} onPress={() => { setInvoiceStatusFilter(status); setShowInvoiceFilterModal(false); }}>
-                <DKLabel style={[s.modalRowText, invoiceStatusFilter === status && s.modalRowTextActive]}>{status}</DKLabel>
+                {/* `{status}` rendered the raw enum key, so a German
+                    contractor read ALL / OVERDUE / SENT / PAID / DRAFT in a
+                    sheet whose own title and sort rows are translated — and
+                    `invoiceStatusLabel` was already defined in this file and
+                    used by the list rows below. Seen on the device. */}
+                <DKLabel style={[s.modalRowText, invoiceStatusFilter === status && s.modalRowTextActive]}>
+                  {status === 'all' ? t('common.all', 'All') : invoiceStatusLabel(status)}
+                </DKLabel>
                 {invoiceStatusFilter === status && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
@@ -831,7 +838,9 @@ export default function GeldScreen() {
             <DKLabel style={s.modalTitle}>{t('dk.actions.filterQuotes', 'Filter quotes')}</DKLabel>
             {(['all', 'sent', 'accepted', 'draft'] as const).map(status => (
               <Pressable key={status} style={[s.modalRow, quoteStatusFilter === status && s.modalRowActive]} onPress={() => { setQuoteStatusFilter(status); setShowQuoteFilterModal(false); }}>
-                <DKLabel style={[s.modalRowText, quoteStatusFilter === status && s.modalRowTextActive]}>{status}</DKLabel>
+                <DKLabel style={[s.modalRowText, quoteStatusFilter === status && s.modalRowTextActive]}>
+                  {status === 'all' ? t('common.all', 'All') : quoteStatusLabel(status)}
+                </DKLabel>
                 {quoteStatusFilter === status && <Ionicons name="checkmark" size={18} color={DK.colors.accent} />}
               </Pressable>
             ))}
