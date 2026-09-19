@@ -64,12 +64,23 @@ describe('the generators use those helpers, not the screen totals', () => {
   const path = require('path');
   const read = (f: string) => fs.readFileSync(path.resolve(__dirname, '..', f), 'utf8');
 
-  it('FatturaPA states a total derived from its own summary (plus bollo/cassa)', () => {
+  it('FatturaPA states a total derived from its own summary (plus a RECHARGED bollo / cassa)', () => {
     const src = read('einvoice-it.ts');
     expect(src).toMatch(/<ImportoTotaleDocumento>\$\{fatturaTotals\.gross\.toFixed\(2\)\}/);
     expect(src).not.toMatch(/<ImportoTotaleDocumento>\$\{data\.totalGross/);
     const at = src.indexOf('const fatturaTotals');
-    expect(src.slice(at, at + 400)).toMatch(/bolloVirtuale/);
+    expect(at).toBeGreaterThan(-1);
+    const totals = src.slice(at, at + 600);
+    // #345's rule stands — something the LINES do not carry is added to the
+    // total explicitly and in view. What changed is the condition (#354):
+    // `bolloVirtuale` means the € 2,00 stamp is DUE and declared in
+    // `DatiBollo`, which is owed by the ISSUER and changes nothing the
+    // customer pays. Only `bolloRicaricato` — passing it on — belongs in
+    // `ImportoTotaleDocumento`, and adding it on the declaration made the XML
+    // state a total € 2,00 higher than the PDF and the screen.
+    expect(totals).toMatch(/bolloRicaricato/);
+    expect(totals).not.toMatch(/data\.bolloVirtuale \?/);
+    expect(totals).toMatch(/cassaPrevidenziale/);
   });
 
   it('Facturae states totals derived from its own lines', () => {

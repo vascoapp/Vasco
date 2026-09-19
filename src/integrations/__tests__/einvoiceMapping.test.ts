@@ -168,3 +168,50 @@ describe('Facturae mapping', () => {
     expect(mixed.document.lineItems.map((l) => l.ivaAmount)).toEqual([21, 10]);
   });
 });
+
+describe('the marca da bollo is declared without moving the total', () => {
+  // Italian law: an invoice whose IVA-exempt amount exceeds € 77,47 needs the
+  // € 2,00 stamp. `bolloVirtuale` existed and was set by NOBODY, so every such
+  // invoice went out without it (#354).
+  const exempt = (lineTotal: number) => ({
+    ...IT,
+    lines: [{ description: 'Prestazione esente', quantity: 1, unitPrice: lineTotal, lineTotal, vatRate: 0, unit: 'pz' }],
+  });
+
+  it('declares the stamp above the threshold', () => {
+    const r = toFatturaPA(exempt(100));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.document.bolloVirtuale).toBe(true);
+    expect(r.document.importoBollo).toBe(2);
+  });
+
+  it('does not below it', () => {
+    const r = toFatturaPA(exempt(50));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.document.bolloVirtuale).toBeUndefined();
+  });
+
+  it('does not on an ordinary taxed invoice', () => {
+    const r = toFatturaPA(IT);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.document.bolloVirtuale).toBeUndefined();
+  });
+
+  it('declaring it does NOT recharge it to the customer', () => {
+    // The stamp is owed by the ISSUER. `bolloRicaricato` is the separate flag
+    // that adds € 2,00 to `ImportoTotaleDocumento` — and it may only be set
+    // when the charge is visible on the invoice the customer reads, or the XML
+    // states a total € 2,00 higher than the PDF.
+    const r = toFatturaPA(exempt(100));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.document.bolloRicaricato).toBeUndefined();
+    const xml = generateFatturaPAXml(r.document);
+    expect(xml).toContain('<BolloVirtuale>SI</BolloVirtuale>');
+    // 100,00 exempt: the total is the lines, not the lines plus the stamp.
+    expect(xml).toContain('<ImportoTotaleDocumento>100.00</ImportoTotaleDocumento>');
+  });
+});

@@ -6,6 +6,23 @@
 // Format: FatturaPA XML v1.2 (FPA12 for PA, FPR12 for private)
 // =============================================================================
 
+/**
+ * Is the € 2,00 marca da bollo due? Italian rule: an invoice whose IVA-exempt
+ * / non-soggetto amount exceeds € 77,47.
+ *
+ * Takes LINE TOTALS — the amount the rule is about — not unit prices.
+ */
+export function marcaDaBolloDue(
+  lines: { lineTotal: number; vatRate: number }[],
+): boolean {
+  const exemptTotal = lines
+    .filter((l) => l.vatRate === 0)
+    .reduce((sum, l) => sum + l.lineTotal, 0);
+  return exemptTotal > 77.47;
+}
+
+export const MARCA_DA_BOLLO_EUR = 2.0;
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -152,8 +169,20 @@ export interface FatturaPA {
   iban?: string;
   dataScadenzaPagamento?: string; // Due date YYYY-MM-DD
 
-  // Bollo virtuale
-  bolloVirtuale?: boolean; // Marca da bollo 2 EUR for exempt invoices > 77.47 EUR
+  // Bollo virtuale. TWO separate facts, and conflating them is what kept this
+  // switched off entirely (#354):
+  //
+  //  • `bolloVirtuale` — the € 2,00 stamp is DUE and has been paid virtually.
+  //    Italian law requires it on an invoice whose non-soggetto/esente amount
+  //    exceeds € 77,47. It is declared in `DatiBollo` and is owed by the
+  //    ISSUER; declaring it changes nothing the customer pays.
+  //  • `bolloRicaricato` — the issuer is passing that € 2,00 on. THAT is what
+  //    adds to `ImportoTotaleDocumento`, and it may only be set when the
+  //    charge is also visible on the invoice the customer reads. Otherwise the
+  //    XML states a total € 2,00 higher than the PDF.
+  bolloVirtuale?: boolean;
+  /** Recharged to the customer — see above. Adds to the document total. */
+  bolloRicaricato?: boolean;
   importoBollo?: number; // Default 2.00
 
   // Split payment (Scissione pagamenti) for PA invoices
@@ -202,7 +231,10 @@ export function generateFatturaPAXml(data: FatturaPA): string {
     ...lineTotals,
     gross: round2(
       lineTotals.gross
-      + (data.bolloVirtuale ? (data.importoBollo ?? 2) : 0)
+      // Only a RECHARGED stamp is part of what the customer owes. Adding it
+      // whenever the stamp was merely declared made the XML disagree with the
+      // PDF and the screen by € 2,00.
+      + (data.bolloRicaricato ? (data.importoBollo ?? 2) : 0)
       + (data.cassaPrevidenziale?.importoContributoCassa ?? 0),
     ),
   };

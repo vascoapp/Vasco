@@ -134,32 +134,16 @@ export function getSdiDocumentType(isPublicAdministration: boolean): 'FPA12' | '
 // ---------------------------------------------------------------------------
 
 /**
- * Is the €2 marca da bollo due? Italian rule: an invoice whose IVA-exempt /
- * non-soggetto amount exceeds € 77,47.
- *
- * ⚠️ The parameter was called `netPrice`, which everywhere else in this file
- * means the UNIT price (`net_price: item.price`) — while both callers were
- * passing `price * quantity`. They were right and the name was wrong, so the
- * arithmetic held by luck: the next caller to read the signature and pass a
- * unit price would have answered "no bollo" on a € 100,00 exempt invoice made
- * of ten € 10,00 lines. Renamed to say what it needs.
- *
- * 🔴 NOT WIRED, deliberately — see the note in `toFatturaPA`. Setting
- * `bolloVirtuale` makes the FatturaPA generator add € 2,00 to
- * `ImportoTotaleDocumento`, so switching it on here alone would make the XML
- * disagree with the PDF and the screen by € 2,00. Charging the bollo to the
- * customer is a product decision that has to appear on the invoice itself.
+ * The Italian stamp-duty rule lives with the other Italian e-invoice rules —
+ * `einvoice-it.marcaDaBolloDue` — and is re-exported here for this provider's
+ * two call sites. One rule, one place: a second copy is how the exempt-amount
+ * threshold would drift from the one the FatturaPA generator uses (#354).
  */
-export function requiresMarcaDaBollo(
-  lines: { lineTotal: number; vatRate: number }[],
-): boolean {
-  const exemptTotal = lines
-    .filter(l => l.vatRate === 0)
-    .reduce((sum, l) => sum + l.lineTotal, 0);
-  return exemptTotal > 77.47;
-}
+import { marcaDaBolloDue, MARCA_DA_BOLLO_EUR } from './einvoice-it';
 
-export const MARCA_DA_BOLLO_AMOUNT = 2.0;
+// Re-exported under this module's historical names so the two call sites below
+// — and anything importing them — keep working, while there is only ONE rule.
+export { marcaDaBolloDue as requiresMarcaDaBollo, MARCA_DA_BOLLO_EUR as MARCA_DA_BOLLO_AMOUNT };
 
 // ---------------------------------------------------------------------------
 // Config persistence
@@ -352,7 +336,7 @@ export async function createIssuedDocument(invoice: {
   }));
 
   // Check marca da bollo
-  const needsBollo = requiresMarcaDaBollo(
+  const needsBollo = marcaDaBolloDue(
     invoice.lineItems.map(li => ({ lineTotal: li.price * li.quantity, vatRate: li.vatRate })),
   );
 
@@ -369,7 +353,7 @@ export async function createIssuedDocument(invoice: {
         date: todayKey(),
         currency: { id: 'EUR' },
         items_list,
-        stamp_duty: needsBollo ? MARCA_DA_BOLLO_AMOUNT : undefined,
+        stamp_duty: needsBollo ? MARCA_DA_BOLLO_EUR : undefined,
         ei_data: eiData,
       },
     }),
@@ -419,7 +403,7 @@ export function vascoToFattureInCloudDocument(invoice: {
     vat: { id: 0, value: getIvaRate(li.vatRate) },
   }));
 
-  const needsBollo = requiresMarcaDaBollo(
+  const needsBollo = marcaDaBolloDue(
     invoice.lineItems.map(li => ({ lineTotal: li.unitPrice * li.quantity, vatRate: li.vatRate })),
   );
 
@@ -429,7 +413,7 @@ export function vascoToFattureInCloudDocument(invoice: {
     date: invoice.date,
     currency: { id: 'EUR' },
     items_list,
-    stamp_duty: needsBollo ? MARCA_DA_BOLLO_AMOUNT : undefined,
+    stamp_duty: needsBollo ? MARCA_DA_BOLLO_EUR : undefined,
     ei_data: invoice.isPublicAdministration != null
       ? { original_document_type: getSdiDocumentType(invoice.isPublicAdministration) }
       : undefined,

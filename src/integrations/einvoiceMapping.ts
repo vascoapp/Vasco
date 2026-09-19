@@ -22,6 +22,7 @@
 // =============================================================================
 
 import type { FatturaPA, FatturaPALineItem, RegimeFiscale } from './einvoice-it';
+import { marcaDaBolloDue, MARCA_DA_BOLLO_EUR } from './einvoice-it';
 import type { FacturaeInvoice, FacturaeLineItem, PersonTypeCode, RegimeFiscal } from './einvoice-es';
 
 /** What every screen already has: the invoice, its lines, and both parties. */
@@ -174,18 +175,19 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
     natura: naturaFor(l.vatRate),
   }));
 
-  // 🔴 KNOWN GAP, recorded rather than silently closed: an Italian invoice
-  // whose IVA-exempt amount exceeds € 77,47 legally requires a € 2,00 marca da
-  // bollo. `requiresMarcaDaBollo` (fattureincloud.ts) computes exactly that and
-  // has no callers, and `bolloVirtuale` below is never set — so the stamp is
-  // simply absent from every such invoice.
+  // An Italian invoice whose IVA-exempt amount exceeds € 77,47 legally requires
+  // a € 2,00 marca da bollo, and nothing used to set it — every such invoice
+  // went out without the stamp.
   //
-  // Wiring it HERE alone would be wrong: the generator adds € 2,00 to
-  // `ImportoTotaleDocumento`, so the XML would state a total € 2,00 higher
-  // than the PDF and the screen — a document stating its total twice, which is
-  // the defect class this file was cleaned up for (#345). Charging the bollo
-  // to the customer has to be a line the contractor sees and the customer
-  // reads, in all three artefacts. Product decision, then one change.
+  // It is DECLARED here and not recharged: the stamp is owed by the ISSUER, so
+  // `ImportoTotaleDocumento` is unchanged and the XML still agrees with the
+  // PDF and the screen to the cent. Passing it on to the customer is a
+  // separate flag (`bolloRicaricato`) and a pricing decision that has to show
+  // as a visible line in all three artefacts first (#354).
+  const bolloDue = marcaDaBolloDue(
+    src.lines.map((l) => ({ lineTotal: l.lineTotal, vatRate: l.vatRate })),
+  );
+
   return {
     ok: true,
     document: {
@@ -196,6 +198,7 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
       // per contractor already and is what they will quote when chasing it.
       progressivoInvio: src.invoiceNumber.replace(/[^A-Za-z0-9]/g, '').slice(-10) || '1',
       codiceDestinatario: routing || '0000000',
+      ...(bolloDue ? { bolloVirtuale: true, importoBollo: MARCA_DA_BOLLO_EUR } : {}),
       cedentePrestatore: {
         denominazione: src.seller.name,
         partitaIva: bareFiscalCode(sellerVat, src.seller.country ?? 'IT') as string,
