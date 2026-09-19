@@ -35,16 +35,17 @@ describe('the contractor sets the rate on the expense', () => {
     expect(body).not.toMatch(/vatAmount: amt \* vatRate,/);
   });
 
-  it('offers exempt and the reduced rate, not only the standard one', () => {
+  it('offers the rates a SUPPLIER may have charged, not the quote rate', () => {
     const at = SRC.indexOf('const vatRateOptions');
     expect(at).toBeGreaterThan(-1);
     const body = SRC.slice(at, SRC.indexOf('}, [vatPct', at));
-    expect(body).toMatch(/getReducedVatRate\(/);
-    expect(body).toMatch(/getEnergyRenovationVatRate\(/);
-    // 0% must always be offered: an exempt supply exists in every market.
-    expect(body).toMatch(/\[vatPct, reduced, energy, 0\]/);
-    // De-duplicated and ordered, so a country whose reduced rate equals its
-    // standard one does not show the same line twice.
+    // `getReducedVatRate` answers a different question — which reduced rate
+    // the contractor may CHARGE on renovation work — and is null for DE by
+    // design, so a German contractor could not record a 7% purchase at all.
+    expect(body).toMatch(/purchaseVatRates\(/);
+    expect(body).not.toMatch(/getReducedVatRate\(/);
+    // The profile's own standard rate and 0% are always present.
+    expect(body).toMatch(/vatPct,/);
     expect(body).toMatch(/Array\.from\(new Set\(/);
   });
 
@@ -87,5 +88,39 @@ describe('every market can read the picker', () => {
     // The percentage is interpolated, not baked into the sentence.
     expect(dict.expenses.vatStandard).toContain('{{pct}}');
     expect(dict.expenses.vatReduced).toContain('{{pct}}');
+  });
+});
+
+describe('every market can record what its suppliers charge', () => {
+  const { purchaseVatRates } = require('../constants/taxRates');
+
+  it.each([
+    ['NL', [21, 9, 0]],
+    ['DE', [19, 7, 0]],
+    ['FR', [20, 10, 5.5, 2.1, 0]],
+    ['ES', [21, 10, 4, 0]],
+    ['IT', [22, 10, 5, 4, 0]],
+    ['UK', [20, 5, 0]],
+  ])('%s', (country, expected) => {
+    expect(purchaseVatRates(country)).toEqual(expected);
+  });
+
+  it('the German 7% — the rate that started this — is offered', () => {
+    // Found on the device: the picker showed 19% and 0% and nothing else,
+    // because the options came from the renovation helper.
+    expect(purchaseVatRates('DE')).toContain(7);
+  });
+
+  it('every market can record an exempt purchase', () => {
+    for (const c of ['NL', 'DE', 'FR', 'ES', 'IT', 'UK', 'US']) {
+      expect({ c, exempt: purchaseVatRates(c).includes(0) }).toEqual({ c, exempt: true });
+    }
+  });
+
+  it('an unknown market gets 0 only, never another country\'s table', () => {
+    // The same principle `getVATRate` states: inventing a tax figure is the
+    // worse failure.
+    expect(purchaseVatRates('XX')).toEqual([0]);
+    expect(purchaseVatRates('')).toEqual([0]);
   });
 });

@@ -31,6 +31,44 @@ export function getVATRate(country: string): number {
   return rate;
 }
 
+/**
+ * Every VAT rate a supplier in this country can legitimately have charged —
+ * i.e. the rates a contractor may need to RECORD on an expense, in percent.
+ *
+ * This is deliberately NOT `getReducedVatRate`. That one answers a different
+ * question: which reduced rate a contractor may CHARGE on renovation work,
+ * which is an eligibility assertion about their own job and is null for DE by
+ * design. Reusing it for expenses meant a German contractor could not record a
+ * 7 % purchase at all — only 19 % or exempt (#354, found on the device).
+ *
+ * Getting an entry wrong here costs nothing but an option the contractor does
+ * not need: nothing is applied automatically, the rate is always picked by
+ * hand, and the standard rate stays the default.
+ */
+export const PURCHASE_VAT_RATES: Record<string, number[]> = {
+  NL: [21, 9, 0],
+  DE: [19, 7, 0],
+  // FR also has 5.5 (energy renovation, food, books) and 2.1 (press, some
+  // medicines) — a tradesperson sees 5.5 on insulation materials.
+  FR: [20, 10, 5.5, 2.1, 0],
+  ES: [21, 10, 4, 0],
+  IT: [22, 10, 5, 4, 0],
+  UK: [20, 5, 0],
+  // No VAT: a US expense carries sales tax, which this app does not compute.
+  US: [0],
+};
+
+export function purchaseVatRates(country: string): number[] {
+  const rates = PURCHASE_VAT_RATES[country];
+  if (!rates) {
+    // Same principle as `getVATRate`: an unknown market gets the honest
+    // minimum rather than another country's table.
+    logWarn('taxRates', `no purchase VAT rates for country "${country}" — offering 0 only`);
+    return [0];
+  }
+  return rates;
+}
+
 export function calculateVAT(amount: number, country: string): number {
   return Math.round(amount * getVATRate(country) * 100) / 100;
 }

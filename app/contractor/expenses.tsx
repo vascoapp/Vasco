@@ -14,14 +14,14 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useExpenses, useExpenseStats, EXPENSE_CATEGORIES, type ExpenseCategory } from '../../src/services/expenseService';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
-import { getVATRate } from '../../src/constants/taxRates';
+import { getVATRate, purchaseVatRates } from '../../src/constants/taxRates';
 import { formatCurrency, formatDayMonthAuto } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
 import { DKMenu } from '../../src/components/shared/DKMenu';
-import { getReducedVatRate, getEnergyRenovationVatRate, round2 } from '../../src/domain/business';
+import { round2 } from '../../src/domain/business';
 import { parseDecimalInput } from '../../src/utils/decimalInput';
 import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
@@ -66,11 +66,17 @@ export default function ExpensesScreen() {
     if (!showAddForm) setNewVatPct(vatPct);
   }, [vatPct, showAddForm]);
   const vatRateOptions = useMemo(() => {
-    const reduced = getReducedVatRate(businessProfile.country ?? undefined);
-    const energy = getEnergyRenovationVatRate(businessProfile.country ?? undefined);
-    const pcts = Array.from(new Set([vatPct, reduced, energy, 0].filter(
-      (r): r is number => typeof r === 'number',
-    ))).sort((a, b) => b - a);
+    // The rates a SUPPLIER may have charged, not the reduced rate this
+    // contractor may charge on a renovation. The first version used
+    // `getReducedVatRate`, which is null for Germany by design — so a German
+    // contractor could record 19% or exempt and nothing in between, while 7%
+    // is on half the receipts in their van (#354, found on the device).
+    const pcts = Array.from(new Set([
+      ...purchaseVatRates(businessProfile.country ?? ''),
+      // The profile's own standard rate leads, even if the table disagrees.
+      vatPct,
+      0,
+    ])).sort((a, b) => b - a);
     return pcts.map((pct) => ({
       pct,
       label: pct === 0
