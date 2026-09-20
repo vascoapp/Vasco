@@ -387,3 +387,19 @@ export function grossFromDocumentLines(
 export function grossFromNet(netAmount: number, vatRatePercent: number): number {
   return Math.round(netAmount * (1 + vatRatePercent / 100) * 100) / 100;
 }
+
+/**
+ * The inverse: a GROSS amount back to the turnover an accountant recognises.
+ *
+ * `Invoice.amount` is GROSS and `Quote.amount` is NET (#241/#242), so anything
+ * reporting revenue from paid invoices has to divide — and three places were
+ * each doing it their own way, or not at all. The Kunden tab summed
+ * `inv.amount` raw while Finanzen divided, so the same customer read € 3.200 on
+ * one screen and "€ 2,7 Tsd." on the other.
+ *
+ * A rate of 0 (Kleinunternehmer / KOR) charges no VAT, so nothing is divided.
+ */
+export function netFromGross(grossAmount: number, vatRatePercent: number): number {
+  if (!(vatRatePercent > 0)) return grossAmount;
+  return round2(grossAmount / (1 + vatRatePercent / 100));
+}

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
+import { getEffectiveVatRate, netFromGross } from '../../src/domain/business';
 import { useAuth } from '../../src/context/AuthContext';
 import { useContractorDecisionInbox } from '../../src/services/decisionSyncService';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -106,7 +107,7 @@ export default function BedrijfScreen() {
   // (BR-DE-8/9), and one free-text line cannot be split reliably (#339).
   const [newPostcode, setNewPostcode] = useState('');
   const [newCity, setNewCity] = useState('');
-  const { customers, invoices, jobs, addCustomer, isLoading } = useAppState();
+  const { customers, invoices, jobs, addCustomer, isLoading, businessProfile } = useAppState();
   const { user } = useAuth();
   const [trackers, setTrackers] = useState<TrackerData[]>([]);
   const [tab, setTab] = useState<TabKey>('overview');
@@ -201,16 +202,23 @@ export default function BedrijfScreen() {
       if (c.name) byName[String(c.name).trim().toLowerCase()] = c.id;
     });
 
+    // `Invoice.amount` is GROSS (#241/#242). Finanzen reports revenue NET —
+    // VAT is neither income nor cost, it passes through — so summing the gross
+    // here made the SAME customer read € 3.200 on this tab and "€ 2,7 Tsd." on
+    // the other. Same helper, same rate as `analyzeFinancials`, so the two
+    // cannot drift apart again.
+    const vatRatePercent = businessProfile ? getEffectiveVatRate(businessProfile) : 0;
+
     const map: Record<string, number> = {};
     invoices.forEach((inv: any) => {
       if (inv.status !== 'paid') return;
       const key = inv.customerId
         ?? byName[String(inv.customer ?? inv.customerName ?? '').trim().toLowerCase()];
       if (!key) return; // unattributable — better than inventing a bucket
-      map[key] = (map[key] || 0) + (inv.amount || 0);
+      map[key] = (map[key] || 0) + netFromGross(inv.amount || 0, vatRatePercent);
     });
     return map;
-  }, [invoices, customers]);
+  }, [invoices, customers, businessProfile]);
 
   const customerJobs = useMemo(() => {
     const map: Record<string, number> = {};

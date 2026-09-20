@@ -13,7 +13,7 @@ import { useExpenses, type Expense } from './expenseService';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { findDocumentCustomer } from '../domain/customers';
 import { daysOverdue as invoiceDaysOverdue } from '../utils/invoiceDue';
-import { getEffectiveVatRate } from '../domain/business';
+import { getEffectiveVatRate, netFromGross } from '../domain/business';
 
 /** Decided quotes (accepted/rejected/expired) before a win rate means anything. */
 export const MIN_DECIDED_QUOTES = 5;
@@ -186,10 +186,10 @@ export function analyzeFinancials(
   vatRatePercent?: number,
 ): FinancialSummary {
   // A paid invoice's GROSS back to the turnover an accountant would recognise.
+  // One helper for this, shared with the Kunden tab — they disagreed for as
+  // long as both existed.
   const toNet = (grossAmount: number): number =>
-    vatRatePercent && vatRatePercent > 0
-      ? Math.round((grossAmount / (1 + vatRatePercent / 100)) * 100) / 100
-      : grossAmount;
+    netFromGross(grossAmount, vatRatePercent ?? 0);
   const customerLabel = (doc: { customerId?: string | null; customer?: string | null; customerName?: string | null }): string =>
     (doc.customerName as string | undefined)
     ?? (customers ? findDocumentCustomer(customers, doc)?.name : undefined)
