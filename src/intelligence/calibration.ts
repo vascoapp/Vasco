@@ -30,6 +30,14 @@ export interface CalibrationEntry {
   actualValue?: number;
   resolvedAt?: string;
   accurate?: boolean;
+  /**
+   * The uuid `calibration_entries` minted for this prediction, when it reached
+   * Supabase. `id` above is a LOCAL `cal-<ts>-<rand>` string and the column is
+   * a uuid, so resolving by `id` could never match a row — it is not even a
+   * valid uuid, so PostgREST answers 22P02. Every resolution was therefore
+   * local-only, which is why the DB's resolved count stayed at zero.
+   */
+  remoteId?: string;
 }
 
 export interface CalibrationScore {
@@ -111,13 +119,26 @@ export async function logPrediction(entry: Omit<CalibrationEntry, 'id'>): Promis
 
   await saveStore(store);
 
-  // Persist to Supabase (fire-and-forget)
+  // Persist to Supabase, and keep the row id it mints — without it the
+  // resolution below has nothing valid to key on.
   if (isSupabaseConfigured) {
     dbInsertCalibration({
       generator_id: entry.generatorId,
       prediction: entry.prediction,
       predicted_value: entry.predictedValue,
-    }).catch(() => {});
+    })
+      .then(async (remoteId) => {
+        if (!remoteId) return;
+        // Re-load rather than mutating the `store` captured above: this
+        // resolves after an await, and other predictions may have been
+        // written (and old ones pruned) in between.
+        const fresh = await loadStore();
+        const mine = fresh.entries.find((e) => e.id === id);
+        if (!mine) return; // pruned past MAX_ENTRIES already
+        mine.remoteId = remoteId;
+        await saveStore(fresh);
+      })
+      .catch(() => {});
   }
 
   return id;
@@ -143,18 +164,30 @@ export async function resolvePrediction(
 
   await saveStore(store);
 
-  // Persist to Supabase
-  if (isSupabaseConfigured) {
-    dbResolveCalibration(entryId, actualValue, entry.accurate ?? false).catch(() => {});
+  // Persist to Supabase, keyed on the uuid the row actually has. When the
+  // insert never landed (offline, or it failed) there is no remote row to
+  // resolve, and sending the local `cal-…` id would only produce a 22P02.
+  if (isSupabaseConfigured && entry.remoteId) {
+    dbResolveCalibration(entry.remoteId, actualValue, entry.accurate ?? false).catch(() => {});
   }
 }
 
 export async function getCalibrationScores(): Promise<CalibrationScore[]> {
-  // Prefer Supabase when available
+  // Prefer Supabase when it actually has RESOLVED outcomes.
+  //
+  // It used to be `dbScores.length > 0` — the presence of any row at all. A
+  // row is written when a prediction is MADE, and resolution happens through a
+  // separate path, so in production this branch returned as soon as the first
+  // prediction was logged and never again reached the local store. With every
+  // DB row unresolved, `getAllCalibrationScores` computes
+  // `rate = resolved > 0 ? accurate / resolved : 0.5` — so every generator
+  // scored a flat 0.5 forever, while the AsyncStorage store beneath it held
+  // the real resolutions written by job completion, quote outcomes and
+  // invoice payments. A constant multiplier is not a calibration.
   if (isSupabaseConfigured) {
     try {
       const dbScores = await dbGetCalibrationScores();
-      if (dbScores.length > 0) {
+      if (dbScores.some((s) => s.resolved > 0)) {
         return dbScores.map((s) => ({
           generatorId: s.generator_id,
           totalPredictions: s.total,

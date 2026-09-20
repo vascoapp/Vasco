@@ -119,6 +119,77 @@ describe('a priced line knows which quote it belongs to', () => {
   });
 });
 
+describe('calibrationIdsAreRealGeneratorIds', () => {
+  // A registry of ids keyed on an open set rots silently in both directions
+  // (#163/#171). Stage 7 of the ingestion bridge looked up
+  // `supplierPricingGenerator` / `materialCostGenerator` /
+  // `quotePricingGenerator` — camelCase names no generator has ever logged —
+  // so it resolved nothing on every scan, which is what left every
+  // `calibration_entries` row unresolved and pinned every score to 0.5.
+  const { PRICE_PREDICTION_GENERATORS } = require('../ingestion/intelligenceBridge');
+
+  // Every id any generator actually passes to `logPrediction`.
+  const loggedIds = (() => {
+    const ids = new Set<string>();
+    const walk = (dir: string) => {
+      for (const name of fs.readdirSync(dir)) {
+        const full = path.join(dir, name);
+        const stat = fs.statSync(full);
+        if (stat.isDirectory()) { if (name !== '__tests__') walk(full); continue; }
+        if (!name.endsWith('.ts') && !name.endsWith('.tsx')) continue;
+        const src = stripComments(fs.readFileSync(full, 'utf8'));
+        for (const m of src.matchAll(/generatorId:\s*'([^']+)'/g)) ids.add(m[1]);
+      }
+    };
+    walk(path.join(ROOT, 'src'));
+    return ids;
+  })();
+
+  it('the corpus of logged ids is non-empty (the scan itself works)', () => {
+    // Without this, an extractor that silently matches nothing would make
+    // every assertion below vacuous.
+    expect(loggedIds.size).toBeGreaterThan(20);
+  });
+
+  it.each([...PRICE_PREDICTION_GENERATORS])('%s is an id a generator really logs', (id) => {
+    expect({ id, logged: loggedIds.has(id as string) }).toEqual({ id, logged: true });
+  });
+
+  it('the camelCase names that could never match are gone', () => {
+    const SRC = read('src/ingestion/intelligenceBridge.ts');
+    for (const dead of ['supplierPricingGenerator', 'materialCostGenerator', 'quotePricingGenerator']) {
+      expect({ dead, present: SRC.includes(dead) }).toEqual({ dead, present: false });
+    }
+  });
+});
+
+describe('a calibration score is resolved data, not a placeholder', () => {
+  const CAL = read('src/intelligence/calibration.ts');
+
+  it('Supabase scores are preferred only when something was resolved', () => {
+    // `dbScores.length > 0` returned on the first prediction ever LOGGED, and
+    // an unresolved set computes rate = 0.5 for everything.
+    expect(CAL).toMatch(/if \(dbScores\.some\(\(s\) => s\.resolved > 0\)\) \{/);
+    expect(CAL).not.toMatch(/if \(dbScores\.length > 0\) \{/);
+  });
+
+  it('a resolution keys on the uuid the row actually has', () => {
+    // The local id is `cal-<ts>-<rand>`; the column is a uuid, so the old
+    // call could not match — it could not even parse.
+    expect(CAL).toMatch(/remoteId\?: string;/);
+    expect(CAL).toMatch(/if \(isSupabaseConfigured && entry\.remoteId\) \{/);
+    expect(CAL).toMatch(/dbResolveCalibration\(entry\.remoteId,/);
+    expect(CAL).not.toMatch(/dbResolveCalibration\(entryId,/);
+  });
+
+  it('the id the insert mints is captured rather than discarded', () => {
+    expect(CAL).toMatch(/\.then\(async \(remoteId\) => \{/);
+    expect(CAL).toMatch(/mine\.remoteId = remoteId;/);
+    // Re-loaded, not the closure's stale copy — the entry list moves on.
+    expect(CAL).toMatch(/const fresh = await loadStore\(\);/);
+  });
+});
+
 describe('the acceptance rate cannot reach 1.0 from a mixed record', () => {
   // The arithmetic the static guards above exist to protect. `calibrateModels`
   // computes `personalAcceptanceRate` as the mean of `actual` over the last N

@@ -22,6 +22,30 @@ import {
 import type { ExtractedInvoice } from './invoiceExtractor';
 import { logWarn } from '../utils/errorHandler';
 
+/**
+ * The generators whose predictions a scanned supplier invoice can RESOLVE —
+ * i.e. the ones that predict a price this document is evidence about.
+ *
+ * ⚠️ These are `logPrediction` ids and must match it EXACTLY. This list used
+ * to read `supplierPricingGenerator` / `materialCostGenerator` /
+ * `quotePricingGenerator` — camelCase names that no generator has ever logged
+ * (every real id is kebab-case). So Stage 7 looked up three ids that do not
+ * exist, found nothing, and resolved nothing — for every scan, forever. That
+ * left every `calibration_entries` row unresolved, which made
+ * `getAllCalibrationScores` return `rate = 0.5` for every generator, which
+ * `getCalibrationScores` then preferred over the locally-resolved data.
+ *
+ * `calibrationIdsAreRealGeneratorIds` in the guard suite fails if any id here
+ * stops being logged, because a hand-maintained registry keyed on an open set
+ * rots silently in both directions (#163/#171).
+ */
+export const PRICE_PREDICTION_GENERATORS = [
+  'supplier-price',
+  'supplier-price-anomaly',
+  'material-suggestion',
+  'smart-pricing',
+] as const;
+
 // ── Types ──────────────────────────────────────────────────
 
 export type IngestionSourceType = 'pdf' | 'paste' | 'excel' | 'csv' | 'camera';
@@ -236,14 +260,7 @@ export async function processExtraction(
   // ── Stage 7: Calibration resolution ────────────────────
   try {
     if (invoice.supplierName && invoice.total) {
-      // Check pricing-related generators for pending predictions
-      const generators = [
-        'supplierPricingGenerator',
-        'materialCostGenerator',
-        'quotePricingGenerator',
-      ];
-
-      for (const gen of generators) {
+      for (const gen of PRICE_PREDICTION_GENERATORS) {
         const entries = await getCalibrationEntriesByGenerator(gen, {
           unresolvedOnly: true,
           maxAgeDays: 90,
