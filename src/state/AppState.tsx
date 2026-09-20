@@ -42,6 +42,8 @@ import {
   recordPricingData,
   emitQuoteRejected,
   recordPricingOutcome,
+  recordJobDurationData,
+  recordCustomerPaymentPattern,
   emitLeadCreated,
   emitLeadStatusChanged,
   emitLeadConverted,
@@ -1936,7 +1938,45 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             import('../intelligence/mlModels').then((ml) =>
               ml.recordModelPrediction('duration', job.estimatedDuration as number, actualHours),
             ).catch(() => {});
+            // …and into the COHORT corpus. `get_cohort_job_duration` reads
+            // `job_duration_data`, which nothing had ever written, so the
+            // cohort ratio was unavailable to every contractor and
+            // `predictJobDuration` fell back to a hardcoded 1.15 forever.
+            recordJobDurationData(getCurrentUserId(), {
+              trade: job.trade ?? businessProfile.trade ?? 'general',
+              country: businessProfile.country ?? 'NL',
+              jobType: job.title,
+              estimatedHours: job.estimatedDuration as number,
+              actualHours,
+              completedAt: new Date().toISOString(),
+            }).catch(() => {});
           }
+          // `job_outcomes` is what `train-extra-models` reads to build the
+          // capacity-overrun predictor, and it had NO writer: the only caller
+          // of `syncJobOutcome` was `loopIntelligence.onStageTransition`,
+          // which itself has no callers anywhere in the repo. The card was
+          // therefore permanently empty.
+          //
+          // Deliberately NOT wiring `onStageTransition` to fix this. It
+          // fabricates what it does not know — a 0.6 cost ratio, a 14-day due
+          // date, "agreed ≈ actual" — and this path has the contractor's real
+          // hours and real costs already in scope.
+          import('../intelligence/cloudSync').then(({ syncJobOutcome }) =>
+            syncJobOutcome(getCurrentUserId(), {
+              jobId: id,
+              jobType: job.title,
+              trade: job.trade ?? businessProfile.trade ?? undefined,
+              estimatedHours: job.estimatedDuration ?? 0,
+              actualHours,
+              estimatedCost,
+              actualCost,
+              marginPercent: estimatedCost > 0
+                ? ((estimatedCost - actualCost) / estimatedCost) * 100
+                : 0,
+              customerId: job.customerId ?? undefined,
+              completedAt: new Date().toISOString(),
+            }),
+          ).catch(() => {});
           // Ontology: propagate job completion
           propagateJobCompletion(id, {
             actualCost,
@@ -2322,6 +2362,28 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             });
             await ml.recordModelPrediction('payment', prediction.predictedDays, actualDays);
           }).catch(() => {});
+          // …and into the COHORT corpus. `get_cohort_dso` reads
+          // `customer_payment_patterns`, which nothing had ever written, so
+          // the cohort DSO was unavailable and `predictPaymentTiming` fell
+          // back to a hardcoded 21 days for everyone.
+          // One resolver for a document's customer (#214) — FK, then
+          // id-in-the-name-slot, then name. Never a local lookup.
+          const paidCustomerId = findDocumentCustomer(customers, paidInv)?.id
+            ?? paidInv?.customerId;
+          if (paidCustomerId && paidInv) {
+            const dueIso = paidInv.dueDate
+              ?? new Date(issuedAtMs + (paidInv.dueInDays ?? 30) * 86_400_000).toISOString();
+            recordCustomerPaymentPattern(getCurrentUserId(), {
+              customerId: paidCustomerId,
+              invoiceId: paidInv.id,
+              invoiceAmount: paidInv.amount ?? 0,
+              invoiceDate: new Date(issuedAtMs).toISOString(),
+              dueDate: dueIso,
+              paymentDate: new Date().toISOString(),
+              daysToPayment: actualDays,
+              wasOverdue: (paidInv.dueInDays ?? 0) < 0,
+            }).catch(() => {});
+          }
         }
         // Ontology: propagate payment
         propagatePayment(id, 0).catch(() => {});

@@ -212,15 +212,34 @@ Deno.serve(async (req) => {
             continue;
           }
 
+          // ⚠️ These argument NAMES are the function's signature — PostgREST
+          // resolves an RPC by them, so a mismatch is not a coercion error but
+          // "function not found" (PGRST202), every single week.
+          //
+          // This used to pass p_bias / p_feature_means / p_feature_stds /
+          // p_n_samples / p_train_accuracy. The function has exactly one
+          // overload — (p_trade, p_country, p_weights, p_training_samples,
+          // p_accuracy) — so nothing ever saved, and any model this job
+          // trained was discarded at the last step.
+          //
+          // `p_weights` is the WHOLE model object, not the coefficient map:
+          // the function reads `p_weights->'weights'` to record the feature
+          // columns, and the client deserializes the same object as
+          // `ModelWeights`. `persistModel` in quoteWinModelService is the
+          // reference implementation of this call — keep the two in step.
           const { error: saveErr } = await admin.rpc('save_quote_win_model', {
             p_trade: trade,
             p_country: country,
-            p_bias: result.bias,
-            p_weights: result.weights,
-            p_feature_means: result.means,
-            p_feature_stds: result.stds,
-            p_n_samples: result.n,
-            p_train_accuracy: result.accuracy,
+            p_weights: {
+              bias: result.bias,
+              weights: result.weights,
+              featureMeans: result.means,
+              featureStds: result.stds,
+              nSamples: result.n,
+              trainedAt: new Date().toISOString(),
+            },
+            p_training_samples: result.n,
+            p_accuracy: result.accuracy,
           });
           if (saveErr) {
             summary.errors.push(`save ${trade}/${country}: ${saveErr.message}`);

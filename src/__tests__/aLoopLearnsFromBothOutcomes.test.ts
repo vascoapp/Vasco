@@ -190,6 +190,99 @@ describe('a calibration score is resolved data, not a placeholder', () => {
   });
 });
 
+describe('a table the cohort RPCs read has something in it', () => {
+  // `get_cohort_job_duration` reads `job_duration_data`, `get_cohort_dso` reads
+  // `customer_payment_patterns`, `train-extra-models` reads `job_outcomes`.
+  // All three existed, were granted, were RLS'd and were READ — and none had a
+  // single INSERT anywhere in src/, app/ or supabase/functions/. A field with
+  // readers and no writer (#208), one level up: a whole table.
+  const COLLECTOR_SRC = COLLECTOR;
+
+  it.each([
+    ['job_duration_data', /supabase\.from\('job_duration_data'\)\.insert\(/],
+    ['customer_payment_patterns', /supabase\.from\('customer_payment_patterns'\)\.insert\(/],
+  ])('%s has a writer', (_table, pattern) => {
+    expect(COLLECTOR_SRC).toMatch(pattern);
+  });
+
+  it('job_outcomes is written from the path that has real hours and costs', () => {
+    expect(APPSTATE).toMatch(/syncJobOutcome\(getCurrentUserId\(\), \{/);
+    // NOT by waking `onStageTransition`, which invents a 0.6 cost ratio and a
+    // 14-day due date for data it does not have.
+    expect(APPSTATE).not.toMatch(/onStageTransition\(/);
+  });
+
+  it('both cohort writers are reached from a real user action', () => {
+    expect(APPSTATE).toMatch(/recordJobDurationData\(getCurrentUserId\(\), \{/);
+    expect(APPSTATE).toMatch(/recordCustomerPaymentPattern\(getCurrentUserId\(\), \{/);
+    // …and are imported, not just referenced. A bare call to a name AppState
+    // only dynamic-imports is `undefined` at runtime and tsc cannot see it
+    // through the `import(...)` form.
+    expect(APPSTATE).toMatch(/\n  recordJobDurationData,/);
+    expect(APPSTATE).toMatch(/\n  recordCustomerPaymentPattern,/);
+  });
+
+  it('a duration row without both sides is not written at all', () => {
+    // The ratio is what the RPC medians; half a row teaches nothing and
+    // would drag the cohort toward whatever default filled the gap.
+    expect(COLLECTOR_SRC).toMatch(
+      /if \(!\(data\.estimatedHours > 0\) \|\| !\(data\.actualHours && data\.actualHours > 0\)\) return;/,
+    );
+  });
+
+  it('the NOT NULL columns are all guarded before the insert', () => {
+    // customer_payment_patterns has five NOT NULL columns with no default. A
+    // row missing any of them can only ever fail — the half of
+    // check:insertable with teeth.
+    expect(COLLECTOR_SRC).toMatch(
+      /if \(!data\.customerId \|\| !data\.invoiceId \|\| !data\.invoiceDate \|\| !data\.dueDate\) return;/,
+    );
+    expect(COLLECTOR_SRC).toMatch(/if \(!Number\.isFinite\(data\.invoiceAmount\)\) return;/);
+  });
+
+  it('the DATE columns get a date, not a timestamp', () => {
+    // invoice_date / due_date / payment_date are DATE. Handing them a full
+    // ISO string works by coercion today and is a silent timezone shift.
+    expect(COLLECTOR_SRC).toMatch(/const asDate = \(iso: string\) => iso\.slice\(0, 10\);/);
+  });
+});
+
+describe('the weekly retrain can actually save what it trained', () => {
+  const RETRAIN = read('supabase/functions/weekly-retrain-models/index.ts');
+
+  it('the RPC is called with the argument names the function declares', () => {
+    // PostgREST resolves an RPC by argument NAME, so a mismatch is
+    // "function not found" (PGRST202), not a coercion error. The live
+    // catalogue has exactly one overload:
+    //   save_quote_win_model(text, text, jsonb, integer, real)
+    expect(RETRAIN).toMatch(/p_training_samples: result\.n,/);
+    expect(RETRAIN).toMatch(/p_accuracy: result\.accuracy,/);
+    for (const invented of ['p_bias:', 'p_feature_means:', 'p_feature_stds:', 'p_n_samples:', 'p_train_accuracy:']) {
+      expect({ invented, present: RETRAIN.includes(invented) }).toEqual({ invented, present: false });
+    }
+  });
+
+  it('p_weights is the whole model, which is what both sides read', () => {
+    // The SQL does `p_weights->'weights'` to record feature columns, and the
+    // client deserializes the same object as ModelWeights.
+    expect(RETRAIN).toMatch(/p_weights: \{\s*\n\s*bias: result\.bias,/);
+    for (const field of ['weights: result.weights,', 'featureMeans: result.means,', 'featureStds: result.stds,', 'nSamples: result.n,']) {
+      expect({ field, present: RETRAIN.includes(field) }).toEqual({ field, present: true });
+    }
+  });
+
+  it('the edge trainer and the client scorer featurize identically', () => {
+    // Activating the save is only safe while these agree — a model trained on
+    // one feature set and scored against another is worse than no model.
+    const CLIENT = read('src/services/quoteWinModelService.ts');
+    const names = ['log_amount', 'month_sin', 'month_cos', 'is_residential', 'is_commercial', 'is_small_team', 'is_medium', 'is_large'];
+    const order = (src: string) =>
+      names.filter((n) => src.includes(`${n}:`)).join(',');
+    expect(order(RETRAIN)).toBe(names.join(','));
+    expect(order(CLIENT)).toBe(names.join(','));
+  });
+});
+
 describe('the acceptance rate cannot reach 1.0 from a mixed record', () => {
   // The arithmetic the static guards above exist to protect. `calibrateModels`
   // computes `personalAcceptanceRate` as the mean of `actual` over the last N

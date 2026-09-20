@@ -641,6 +641,100 @@ export async function recordPricingData(userId: string, data: {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Cohort corpora — the two tables the cohort RPCs read and NOTHING wrote
+// ---------------------------------------------------------------------------
+// `get_cohort_job_duration` reads `job_duration_data` and `get_cohort_dso`
+// reads `customer_payment_patterns`. Both tables have existed since migration
+// 002, both are granted and RLS'd, both are read by `predictJobDuration` and
+// `predictPaymentTiming` — and neither had a single INSERT anywhere in the
+// app or the edge functions. So both RPCs always failed their
+// `COUNT(DISTINCT user_id) >= 5` k-anonymity gate and the predictors fell back
+// to a hardcoded 1.15 duration ratio and a hardcoded 21-day DSO, permanently.
+//
+// A field with readers and no writer (#208), one level up: a whole TABLE with
+// readers and no writer.
+// ---------------------------------------------------------------------------
+
+export async function recordJobDurationData(userId: string, data: {
+  trade: string;
+  country: string;
+  jobType: string;
+  estimatedHours: number;
+  actualHours?: number;
+  crewSize?: number;
+  startedAt?: string;
+  completedAt?: string;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  if (isPlaceholderUserId(userId)) return;
+  // The ratio is what the cohort RPC medians. Without both sides there is
+  // nothing to learn from, so the row is not worth writing.
+  if (!(data.estimatedHours > 0) || !(data.actualHours && data.actualHours > 0)) return;
+
+  try {
+    const row: Record<string, unknown> = {
+      user_id: userId,
+      trade: data.trade,
+      country: data.country,
+      job_type: data.jobType,
+      estimated_hours: data.estimatedHours,
+      actual_hours: data.actualHours,
+      duration_ratio: data.actualHours / data.estimatedHours,
+    };
+    if (data.crewSize !== undefined) row.crew_size = data.crewSize;
+    if (data.startedAt !== undefined) row.started_at = data.startedAt;
+    if (data.completedAt !== undefined) row.completed_at = data.completedAt;
+    const { error } = await supabase.from('job_duration_data').insert(row as any);
+    if (error) throw error;
+  } catch (err) {
+    await logIntelligenceWriteFailure('job_duration_data.insert', userId, err);
+  }
+}
+
+export async function recordCustomerPaymentPattern(userId: string, data: {
+  customerId: string;
+  customerType?: string;
+  invoiceId: string;
+  invoiceAmount: number;
+  invoiceDate: string;   // ISO — the date the invoice was issued
+  dueDate: string;       // ISO
+  paymentDate?: string;  // ISO — omitted while still unpaid
+  daysToPayment?: number;
+  wasOverdue?: boolean;
+  paymentMethod?: string;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  if (isPlaceholderUserId(userId)) return;
+
+  // These five are NOT NULL with no default: a row missing any of them can
+  // only ever fail, which is the half of `check:insertable` with teeth.
+  if (!data.customerId || !data.invoiceId || !data.invoiceDate || !data.dueDate) return;
+  if (!Number.isFinite(data.invoiceAmount)) return;
+
+  const asDate = (iso: string) => iso.slice(0, 10); // the columns are DATE
+
+  try {
+    const row: Record<string, unknown> = {
+      user_id: userId,
+      customer_id: data.customerId,
+      invoice_id: data.invoiceId,
+      invoice_amount: data.invoiceAmount,
+      invoice_date: asDate(data.invoiceDate),
+      due_date: asDate(data.dueDate),
+    };
+    if (data.customerType !== undefined) row.customer_type = data.customerType;
+    if (data.paymentDate !== undefined) row.payment_date = asDate(data.paymentDate);
+    if (data.daysToPayment !== undefined) row.days_to_payment = data.daysToPayment;
+    if (data.wasOverdue !== undefined) row.was_overdue = data.wasOverdue;
+    if (data.paymentMethod !== undefined) row.payment_method = data.paymentMethod;
+    const { error } = await supabase.from('customer_payment_patterns').insert(row as any);
+    if (error) throw error;
+  } catch (err) {
+    await logIntelligenceWriteFailure('customer_payment_patterns.insert', userId, err);
+  }
+}
+
 export type DeclineReason =
   | 'price_too_high'
   | 'chose_competitor'
