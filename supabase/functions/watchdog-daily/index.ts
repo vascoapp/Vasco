@@ -103,6 +103,37 @@ function sectionOk(s: unknown): s is Record<string, unknown> {
 
 // --- cron analysis -----------------------------------------------------------
 
+/**
+ * Every job `supabase/cron.sql` registers.
+ *
+ * ⚠️ This list is the whole point. The check here used to be `!cron.length` —
+ * "are there ANY schedules?" — and on 2026-09-20 production had exactly ONE of
+ * these eleven registered (`vasco-watchdog-daily`, i.e. the watchdog itself).
+ * One is not zero, so no finding ever fired, while GDPR erasure requests
+ * queued undrained, every push and all ten automation packs were silent, and
+ * referral credits were never granted. A presence check cannot see a partial
+ * application; only an expected SET can.
+ *
+ * `cronExpectationsMatchCronSql` in the jest suite fails when this disagrees
+ * with the `cron.schedule(...)` calls in cron.sql, in either direction — the
+ * same drift that put `vasco-watchdog-daily` in cron.sql and left it out of
+ * cron-health.sql's expected list, so the one job that WAS registered was the
+ * one nothing checked for.
+ */
+const EXPECTED_CRON_JOBS = [
+  'vasco-churn-winback',
+  'vasco-daily-push-digest',
+  'vasco-drain-account-deletions',
+  'vasco-grant-referral-credits',
+  'vasco-pack-trigger-tick',
+  'vasco-refresh-generator-approval-rates',
+  'vasco-stale-draft-cleanup',
+  'vasco-train-extra-models',
+  'vasco-watchdog-daily',
+  'vasco-weekly-digest',
+  'vasco-weekly-retrain-models',
+] as const;
+
 interface CronRow {
   jobname: string;
   schedule: string;
@@ -355,7 +386,16 @@ function buildMessage(args: {
     const failing = cron.filter((c) => c.failures > 0);
     const idleDaily = cron.filter((c) => c.runs === 0 && isDailySchedule(c.schedule) && c.active);
     const inactive = cron.filter((c) => !c.active);
-    L.push(`${cron.length} schedules · ${cron.filter((c) => c.runs > 0).length} ran · ${failing.length} with failures`);
+    const missingNames = EXPECTED_CRON_JOBS.filter((j) => !cron.some((c) => c.jobname === j));
+    L.push(
+      `${cron.length}/${EXPECTED_CRON_JOBS.length} schedules · `
+      + `${cron.filter((c) => c.runs > 0).length} ran · ${failing.length} with failures`,
+    );
+    // "1 schedules" read as healthy. "1/11" does not.
+    if (missingNames.length) {
+      L.push(`🔴 NOT REGISTERED (${missingNames.length}) — run <code>supabase/cron.sql</code>:`);
+      for (const j of missingNames.slice(0, 12)) L.push(`   • ${esc(j)}`);
+    }
     for (const c of failing.slice(0, 6)) {
       L.push(`🔴 ${esc(c.jobname)} — ${c.failures}/${c.runs} failed`);
       if (c.lastMessage) L.push(`   <code>${esc(c.lastMessage.slice(0, 120))}</code>`);
@@ -494,6 +534,20 @@ function detectIssues(
   if (cronError) add('warn', `Cron health could not be read: ${cronError}`);
   else if (!cron.length) add('critical', 'No vasco-* cron schedules registered — automations are not running');
   else {
+    // A PARTIAL application is the failure this missed for months: one
+    // registered job satisfied `cron.length`, and ten missing ones went
+    // unreported. Name each, because which ones are missing decides how bad
+    // it is — an undrained deletion queue is a legal deadline, a missed
+    // retrain is not.
+    const registered = new Set(cron.map((c) => c.jobname));
+    const missing = EXPECTED_CRON_JOBS.filter((j) => !registered.has(j));
+    if (missing.length) {
+      add(
+        'critical',
+        `${missing.length} of ${EXPECTED_CRON_JOBS.length} cron schedules are NOT registered — `
+        + `run supabase/cron.sql: ${missing.join(', ')}`,
+      );
+    }
     for (const c of cron.filter((x) => x.failures > 0)) {
       add('critical', `Automation ${c.jobname} failed ${c.failures}× in 24h`);
     }
