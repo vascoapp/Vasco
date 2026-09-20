@@ -2295,11 +2295,34 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }).catch(() => {});
         // Close the payment-prediction calibration loop: record predicted vs
         // actual days-to-pay so future DSO forecasts get more accurate.
-        const predictedDays = 14;
-        const actualDays = Math.max(0, 14 - (paidInv?.dueInDays ?? 0));
-        import('../intelligence/mlModels').then((ml) =>
-          ml.recordModelPrediction('payment', predictedDays, actualDays),
-        ).catch(() => {});
+        //
+        // BOTH halves used to be fabricated. `predictedDays` was the literal
+        // 14 — never what `predictPaymentTiming` actually said — and
+        // `actualDays` was `14 - dueInDays`, which measures the PAYMENT TERM,
+        // not how long the customer took. `calibrateModels` sets
+        // `personalBaseDSO` to the mean of `actual`, so the contractor's DSO
+        // converged on an artefact of their own invoice terms.
+        //
+        // The real interval is issue → payment, which is what
+        // `PaymentPrediction.predictedDays` is defined as ("days from invoice
+        // sent to payment"). When the invoice carries neither a sent nor a
+        // created date there is nothing to measure, so we record NOTHING
+        // rather than invent one — inventing a figure is the worse failure.
+        const issuedAtIso = paidInv?.sentAt ?? paidInv?.createdAt;
+        const issuedAtMs = issuedAtIso ? new Date(issuedAtIso).getTime() : NaN;
+        if (Number.isFinite(issuedAtMs)) {
+          const actualDays = Math.max(0, Math.round((Date.now() - issuedAtMs) / 86_400_000));
+          import('../intelligence/mlModels').then(async (ml) => {
+            // What the model would say for this invoice, so the accuracy
+            // telemetry compares a real prediction against a real outcome.
+            const prediction = await ml.predictPaymentTiming({
+              customerId: paidInv?.customerId,
+              amount: paidInv?.amount ?? 0,
+              country: businessProfile.country ?? undefined,
+            });
+            await ml.recordModelPrediction('payment', prediction.predictedDays, actualDays);
+          }).catch(() => {});
+        }
         // Ontology: propagate payment
         propagatePayment(id, 0).catch(() => {});
         // R25: queue customer-facing thank-you (closes R3 deferral —
@@ -2458,6 +2481,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }).catch(() => {});
         for (const item of items) {
           recordPricingData(getCurrentUserId(), {
+            // The quote these lines belong to. Without it every outcome write
+            // (accepted/rejected, sent-at hour, actual cost) matched no row and
+            // the cohort model had no labelled training data at all.
+            quoteId: docNumber,
             trade: profTrade,
             country: profCountry,
             lineDescription: item.description,
@@ -4103,8 +4130,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }).catch(() => {});
         // Close the quote-win calibration loop: feed the predictor with the
         // actual outcome so future win-chance badges get more accurate.
+        // `actual` is 1 for accepted / 0 for rejected — `calibrateModels`
+        // averages it into `personalAcceptanceRate`, so BOTH outcomes must be
+        // recorded. Only this accept path existed, which meant the rate
+        // converged on 1.0 and told every contractor they win every quote.
+        // The rejection twin is in `updateQuote`'s declined branch.
         import('../intelligence/mlModels').then((ml) =>
-          ml.recordModelPrediction('quote_win', 0.5, 1),
+          ml.recordQuoteWinOutcome(quote, true, businessProfile.country ?? undefined),
         ).catch(() => {});
         // R237: also resolve quote-outcome calibration predictions for
         // generators that predicted likelihood-of-acceptance.
@@ -4405,6 +4437,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // generators that predicted likelihood-of-acceptance.
           import('../intelligence/learningStorage').then((m) =>
             m.resolveOutcomesFromQuoteOutcome(false, timeToDecisionHours !== undefined ? Math.round(timeToDecisionHours / 24) : undefined),
+          ).catch(() => {});
+          // The quote-win loop's missing half. Without this only acceptances
+          // were ever recorded, so `personalAcceptanceRate` averaged a column
+          // of 1s and reported a 100% win rate to every contractor.
+          import('../intelligence/mlModels').then((ml) =>
+            ml.recordQuoteWinOutcome(quote, false, businessProfile.country ?? undefined),
           ).catch(() => {});
 
           // Stage 2 bridge: if a lead already pointed at this quote

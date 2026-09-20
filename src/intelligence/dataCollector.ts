@@ -587,6 +587,14 @@ export async function logIntelligenceWriteFailure(
 // ---------------------------------------------------------------------------
 
 export async function recordPricingData(userId: string, data: {
+  // The quote this line belongs to. EVERY outcome writer keys on it —
+  // `recordPricingOutcome` (.eq('quote_id', …)), the R255 time-of-day update
+  // in markQuoteSent, and `get_quote_win_training_data` (which filters
+  // `quote_id IS NOT NULL`). It was never written, so every outcome UPDATE
+  // matched zero rows and the entire cohort learning layer trained on nothing.
+  // It is the app-side quote id, which is the DOCUMENT NUMBER (AppState
+  // stamps `id: docNumber`), not a uuid — the column is text for that reason.
+  quoteId?: string;
   trade: string;
   country: string;
   jobType?: string;
@@ -623,6 +631,7 @@ export async function recordPricingData(userId: string, data: {
     };
     if (data.contractorSegment !== undefined) row.contractor_segment = data.contractorSegment;
     if (data.postcode !== undefined) row.postcode = data.postcode;
+    if (data.quoteId !== undefined) row.quote_id = data.quoteId;
     const { error } = await supabase.from('pricing_intelligence').insert(row as any);
     if (error) throw error;
   } catch (err) {

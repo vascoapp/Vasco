@@ -19,6 +19,7 @@ import { getQuoteWinModel, scoreQuoteWin } from '../services/quoteWinModelServic
 import { getCohortDso } from '../services/paymentTimingMoatService';
 import { getCohortDurationRatio } from '../services/jobDurationMoatService';
 import { loadOnboardingPreferences, type TeamSize } from '../services/onboardingPreferencesService';
+import { logWarn } from '../utils/errorHandler';
 
 // R208: map onboarding TeamSize → pricing_intelligence.contractor_segment.
 // 'small' on the onboarding side stores as 'small_team' on the model side.
@@ -421,6 +422,45 @@ export async function recordModelPrediction(
     // Auto-calibrate: store prediction/actual pairs for coefficient learning
     await recordCalibrationPoint(model, predicted, actual);
   } catch {}
+}
+
+/**
+ * Record how a quote actually ended — the ONLY way `quote_win` outcomes should
+ * be written.
+ *
+ * `calibrateModels` sets `personalAcceptanceRate` to the MEAN of `actual`, so
+ * a loop that records only wins does not merely learn slowly, it converges on
+ * 1.0 and then feeds that back as `baseRate` in `predictQuoteWin` — telling a
+ * contractor they win every quote they send. For six months the accept path in
+ * `AppState` was the only caller and it passed a hardcoded `(0.5, 1)`.
+ *
+ * Both outcomes go through here so neither branch can be added without the
+ * other, and `predicted` is the model's real probability rather than a
+ * constant, so the accuracy telemetry means something.
+ */
+export async function recordQuoteWinOutcome(
+  quote: { amount: number; customerId?: string; customer?: string },
+  accepted: boolean,
+  country?: string,
+): Promise<void> {
+  try {
+    // Dynamic, matching the `getCurrentUserId` import above — this module is
+    // pulled in by the state layer and a static edge back into it risks a
+    // cycle.
+    const { getCurrentTrade } = await import('../lib/currentUser');
+    const prediction = await predictQuoteWin({
+      amount: quote.amount,
+      trade: getCurrentTrade() ?? 'general',
+      country,
+      customerId: quote.customerId,
+    });
+    await recordModelPrediction('quote_win', prediction.probability, accepted ? 1 : 0);
+  } catch (err) {
+    // Never let a learning write break the user's action — but never let it
+    // vanish either (#353). A silently dropped rejection is precisely how the
+    // acceptance rate drifts back toward 1.0.
+    logWarn('mlModels', `recordQuoteWinOutcome(${accepted ? 'accepted' : 'rejected'}) failed: ${err}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
