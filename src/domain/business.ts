@@ -385,7 +385,22 @@ export function grossFromDocumentLines(
 }
 
 export function grossFromNet(netAmount: number, vatRatePercent: number): number {
-  return Math.round(netAmount * (1 + vatRatePercent / 100) * 100) / 100;
+  // `round2`, not `Math.round` — the two reasons that helper exists apply here
+  // exactly as they do to VAT rows (#354), and this function sat two lines
+  // above it still doing it the old way:
+  //
+  //   • float representation: 1,005 at 0 % is 100.49999999999999 cents, so
+  //     Math.round gives € 1,00 where the decimal the arithmetic means is 1,01;
+  //   • sign: Math.round rounds half toward +∞, so a −0,285 credit becomes
+  //     −0,28 while +0,285 becomes +0,29 — the same amount rounded two
+  //     different ways depending on which side of zero it falls.
+  //
+  // No caller passes a negative today (`addProgressInvoice` throws on
+  // `netAmount <= 0`), so this was latent rather than live. But minderwerk is a
+  // negative by definition and bills on a customer-facing document, and a money
+  // helper that disagrees with its own sibling is a trap waiting for the first
+  // caller that does.
+  return round2(netAmount * (1 + vatRatePercent / 100));
 }
 
 /**

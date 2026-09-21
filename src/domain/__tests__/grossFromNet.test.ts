@@ -24,7 +24,7 @@
 // These pin the conversion itself, so the two callers cannot drift apart again.
 // =============================================================================
 
-import { grossFromNet, getEffectiveVatRate } from '../business';
+import { grossFromNet, getEffectiveVatRate, netFromGross, round2 } from '../business';
 
 describe('grossFromNet', () => {
   it('adds VAT and rounds to cents, not to whole euros', () => {
@@ -90,5 +90,45 @@ describe('grossFromNet', () => {
     });
     expect(rate).toBe(0);
     expect(grossFromNet(250, rate)).toBe(250);
+  });
+});
+
+// #360 — `grossFromNet` used raw `Math.round` while `round2` sat two lines below
+// it, written precisely because `Math.round` gets money wrong in two ways.
+describe('grossFromNet rounds money the way round2 does, not the way Math.round does', () => {
+  it('rounds a half-cent UP rather than losing it to float representation', () => {
+    // 1,005 in float is 100.49999999999999 cents. Math.round gives 1,00.
+    expect(grossFromNet(1.005, 0)).toBe(1.01);
+    expect(grossFromNet(2.675, 0)).toBe(2.68);
+  });
+
+  it('rounds a NEGATIVE half-cent away from zero, like its positive twin', () => {
+    // The bug with teeth. Math.round rounds half toward +∞, so −0,285 became
+    // −0,28 while +0,285 became +0,29 — the same magnitude rounded two
+    // different ways depending on sign. A credit note is a negative document,
+    // and minderwerk is negative by definition.
+    expect(grossFromNet(-0.285, 0)).toBe(-0.29);
+    expect(grossFromNet(-1.5, 19)).toBe(-1.79);
+    expect(grossFromNet(-2.675, 0)).toBe(-2.68);
+  });
+
+  it('is symmetric about zero — the sign never changes the magnitude', () => {
+    for (const [net, rate] of [[1.5, 19], [0.285, 0], [2.675, 0], [8.15, 21]] as const) {
+      expect({ net, rate, sym: grossFromNet(-net, rate) === -grossFromNet(net, rate) })
+        .toEqual({ net, rate, sym: true });
+    }
+  });
+
+  it('agrees with round2 on every case, because it IS round2', () => {
+    for (const [net, rate] of [[1.005, 0], [-1.005, 0], [1.5, 19], [-1.5, 19], [33.33, 19]] as const) {
+      expect(grossFromNet(net, rate)).toBe(round2(net * (1 + rate / 100)));
+    }
+  });
+
+  it('still round-trips with netFromGross, which already used round2', () => {
+    // The two halves of the same conversion must not disagree about rounding.
+    for (const [net, rate] of [[106, 19], [1000, 21], [33.33, 19]] as const) {
+      expect(netFromGross(grossFromNet(net, rate), rate)).toBe(round2(net));
+    }
   });
 });

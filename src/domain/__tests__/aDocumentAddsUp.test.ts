@@ -112,3 +112,95 @@ describe('the PDFs print those groups rather than their own sum', () => {
     expect(src).not.toMatch(/const vatAmt = li\.quantity \* li\.unitPrice \* li\.vatRate \/ 100;/);
   });
 });
+
+// A guard that enumerates the cases you remember only tests your memory (#349).
+// These fuzz the invariant over thousands of documents the author never thought
+// of, in every EU6 rate combination, with quantities and prices that land on
+// half-cents on purpose.
+describe('the invariant holds for documents nobody wrote a case for', () => {
+  const RATES = [0, 5, 7, 9, 10, 19, 20, 21, 22];
+
+  /** Deterministic PRNG — a fuzz that cannot be reproduced is a flake. */
+  function rng(seed: number) {
+    let x = seed >>> 0;
+    return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296);
+  }
+
+  it('subtotal + every VAT row equals the printed total, 5000 documents', () => {
+    const rand = rng(20260921);
+    const failures: unknown[] = [];
+    for (let i = 0; i < 5000; i++) {
+      const fallback = RATES[Math.floor(rand() * RATES.length)];
+      const n = 1 + Math.floor(rand() * 5);
+      const lines = Array.from({ length: n }, () => ({
+        // Quantities and prices chosen to land on halves and thirds of a cent.
+        quantity: Math.round(rand() * 2000) / 100,
+        unitPrice: Math.round(rand() * 50000) / 100,
+        vatRate: RATES[Math.floor(rand() * RATES.length)],
+      }));
+      const netAmount = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+      const b = documentVatBreakdown(netAmount, lines, fallback);
+      const rowSum = round2(b.groups.reduce((s, g) => s + g.vat, 0));
+      if (round2(b.net + rowSum) !== b.gross) {
+        failures.push({ i, fallback, lines, net: b.net, rowSum, gross: b.gross });
+      }
+    }
+    expect(failures.slice(0, 3)).toEqual([]);
+  });
+
+  it('the total the document stores is the total its rows imply, 5000 documents', () => {
+    // grossFromDocumentLines computes the STORED amount; documentVatBreakdown
+    // feeds what is PRINTED. #354 batch 2 was these two disagreeing, so the fix
+    // had to go in the helper — changing only the PDF would have left the
+    // record and the document saying different things.
+    const rand = rng(777);
+    const failures: unknown[] = [];
+    for (let i = 0; i < 5000; i++) {
+      const fallback = RATES[Math.floor(rand() * RATES.length)];
+      const lines = Array.from({ length: 1 + Math.floor(rand() * 4) }, () => ({
+        quantity: Math.round(rand() * 1000) / 100,
+        unitPrice: Math.round(rand() * 30000) / 100,
+        vatRate: RATES[Math.floor(rand() * RATES.length)],
+      }));
+      const netAmount = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+      const stored = grossFromDocumentLines(netAmount, lines, fallback);
+      const printed = documentVatBreakdown(netAmount, lines, fallback).gross;
+      if (stored !== printed) failures.push({ i, fallback, lines, stored, printed });
+    }
+    expect(failures.slice(0, 3)).toEqual([]);
+  });
+
+  // ⚠️ The contract #354 established is `net + Σ rows === gross`, and VAT is
+  // taken on the UNROUNDED line sum. So a printed row's VAT is not always its
+  // printed (rounded) net times its rate — e.g. a 21 % group whose lines sum to
+  // 231,5476 prints net 231,55 and VAT 48,62, while 231,55 × 21 % is 48,63.
+  // Both conventions are defensible (VAT on the true base vs VAT on the base of
+  // record) and the difference is at most a cent, but only one of them lets a
+  // reader re-derive the row. That is an OPEN DECISION, not a defect — see
+  // learnings #360 — so this asserts the contract as it actually stands.
+  it('every rate group is its own UNROUNDED net times its own rate, to the cent', () => {
+    const rand = rng(31337);
+    const failures: unknown[] = [];
+    for (let i = 0; i < 3000; i++) {
+      const fallback = RATES[1 + Math.floor(rand() * (RATES.length - 1))];
+      const lines = Array.from({ length: 1 + Math.floor(rand() * 4) }, () => ({
+        quantity: Math.round(rand() * 900) / 100,
+        unitPrice: Math.round(rand() * 20000) / 100,
+        vatRate: RATES[Math.floor(rand() * RATES.length)],
+      }));
+      const netAmount = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+      for (const g of vatRateGroups(netAmount, lines, fallback)) {
+        const unrounded = lines
+          .filter((l) => l.vatRate === g.ratePct)
+          .reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
+        // Only meaningful when the groups came from the lines themselves; a
+        // whole-document fallback group is taken on the amount, not the lines.
+        const fromLines = round2(unrounded) === g.net;
+        if (fromLines && g.vat !== round2(unrounded * (g.ratePct / 100))) {
+          failures.push({ i, g, unrounded });
+        }
+      }
+    }
+    expect(failures.slice(0, 3)).toEqual([]);
+  });
+});
