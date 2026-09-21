@@ -14,6 +14,14 @@
 //
 // Three lists of the same names, authored separately, drifting in both
 // directions (#170). This fails the moment any two disagree.
+//
+// 2026-09-21: there was a FOURTH. `scripts/register-crons.mjs` — the script
+// whose whole job is to register these schedules — carried its own array of
+// nine while cron.sql defined eleven, so a successful run would register all
+// eleven and then verify nine, reporting success. The two it omitted included
+// `vasco-pack-trigger-tick`, which drives all ten automation packs. The fix is
+// not a fourth correct list: the script now DERIVES the names from cron.sql,
+// and the test below fails if anyone writes them out by hand again.
 import fs from 'fs';
 import path from 'path';
 
@@ -107,5 +115,36 @@ describe('a partial application is reported, not just a total one', () => {
     expect(SQL).toMatch(/CRON HEALTH FAILED/);
     // …and catches drift the other way too.
     expect(SQL).toMatch(/not \(j\.jobname = any\(expected\)\)/);
+  });
+});
+
+describe('the registration script does not keep its own copy of the list', () => {
+  const SCRIPT = read('scripts/register-crons.mjs');
+
+  it('names no job literally', () => {
+    // The whole defect in one assertion: a `'vasco-…'` literal in this file is
+    // a list that can drift from cron.sql. There must not be one.
+    const literals = [...SCRIPT.matchAll(/'(vasco-[^']+)'/g)].map((m) => m[1]);
+    expect(literals).toEqual([]);
+  });
+
+  it('derives the expected set from cron.sql', () => {
+    expect(SCRIPT).toMatch(/function jobsInCronSql/);
+    expect(SCRIPT).toContain("cron\\.schedule\\(");
+    expect(SCRIPT).toMatch(/const REQUIRED_JOBS = jobsInCronSql\(cronSql\)/);
+  });
+
+  it('refuses to run when the parse comes back empty', () => {
+    // Verifying against an empty expected set "passes" whatever happened —
+    // the same vacuous shape the first test in this file guards against.
+    expect(SCRIPT).toMatch(/REQUIRED_JOBS\.length === 0/);
+    expect(SCRIPT).toMatch(/refusing to run/);
+  });
+
+  it('does not call an RPC this project has never defined', () => {
+    // `executeSql` POSTed to /rest/v1/rpc/exec, which exists in no migration.
+    // It was dead — every path went through the CLI — but it read as the
+    // mechanism, which is how it survived.
+    expect(SCRIPT).not.toMatch(/rpc\/exec/);
   });
 });

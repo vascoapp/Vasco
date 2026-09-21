@@ -4,8 +4,14 @@
 // =============================================================================
 // One-shot setup script — substitutes placeholders in supabase/cron.sql with
 // real env values, then executes against the linked Supabase project. Closes
-// the R8 launch-critical gap where pg_cron extension is installed but the 9
+// the R8 launch-critical gap where pg_cron extension is installed but the
 // schedules were never registered.
+//
+// The expected job names are DERIVED from cron.sql, never listed here. This
+// file used to carry its own array of 9 while cron.sql defined 11, so a run
+// would register all eleven and then verify nine — the same "the check is
+// narrower than the truth" shape that let production sit at 1/11 unreported
+// for months (#357). A fourth hand-written copy of a list is the defect.
 //
 // Usage:
 //   SUPABASE_URL=https://xxxx.supabase.co \
@@ -15,7 +21,7 @@
 // Idempotent — safe to re-run. cron.schedule() upserts by jobname.
 //
 // Exit codes:
-//   0 = all 9 schedules registered + verified
+//   0 = every schedule cron.sql defines is registered + verified
 //   1 = pg_cron not installed (push migration 20260502000002 first)
 //   2 = SQL execution failure
 //   3 = env vars missing
@@ -42,37 +48,18 @@ if (!SUPABASE_URL.startsWith('https://') || SUPABASE_URL.endsWith('/')) {
   process.exit(3);
 }
 
-const REQUIRED_JOBS = [
-  'vasco-weekly-digest',
-  'vasco-stale-draft-cleanup',
-  'vasco-drain-account-deletions',
-  'vasco-daily-push-digest',
-  'vasco-churn-winback',
-  'vasco-grant-referral-credits',
-  'vasco-weekly-retrain-models',
-  'vasco-train-extra-models',
-  'vasco-refresh-generator-approval-rates',
-];
-
-// ── 1. Verify pg_cron is installed ──
-async function executeSql(sql) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec`, {
-    method: 'POST',
-    headers: {
-      apikey: SERVICE_KEY,
-      Authorization: `Bearer ${SERVICE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ sql }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`HTTP ${res.status}: ${body}`);
-  }
-  return res.json();
+/**
+ * The names cron.sql actually schedules — the single source of truth, shared
+ * with the watchdog and cron-health.sql via the cronExpectationsMatchCronSql
+ * guard. `select cron.schedule(` — the job name is the first argument.
+ */
+function jobsInCronSql(src) {
+  const names = new Set();
+  for (const m of src.matchAll(/cron\.schedule\(\s*'([^']+)'/g)) names.add(m[1]);
+  return [...names].sort();
 }
 
-// Direct SQL via supabase-js is preferred. Fall back to shell `supabase db query` if not available.
+// All SQL goes through the linked CLI — there is no `exec` RPC in this project.
 async function runViaSupabaseCli(sqlText) {
   const { spawnSync } = await import('node:child_process');
   const res = spawnSync('supabase', ['db', 'query', '--linked', sqlText], {
@@ -105,7 +92,15 @@ async function runViaSupabaseCli(sqlText) {
     process.exit(2);
   }
 
-  // Verify pg_cron is installed (R293 migration must already be applied)
+  const REQUIRED_JOBS = jobsInCronSql(cronSql);
+  if (REQUIRED_JOBS.length === 0) {
+    // Two empty arrays compare equal; a parser that matched nothing would
+    // "verify" a run that registered nothing. Refuse instead.
+    console.error('[register-crons] Parsed no job names out of cron.sql — refusing to run.');
+    process.exit(2);
+  }
+
+  // ── 1. Verify pg_cron is installed (R293 migration must already be applied)
   console.log('[register-crons] Verifying pg_cron extension…');
   try {
     const out = await runViaSupabaseCli(
@@ -123,7 +118,7 @@ async function runViaSupabaseCli(sqlText) {
   }
 
   // Execute the substituted cron.sql
-  console.log('[register-crons] Registering 9 schedules…');
+  console.log(`[register-crons] Registering ${REQUIRED_JOBS.length} schedules…`);
   try {
     await runViaSupabaseCli(expanded);
     console.log('[register-crons] ✓ cron.sql executed without error');
