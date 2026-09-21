@@ -27,6 +27,7 @@ declare
     'vasco-drain-account-deletions',
     'vasco-grant-referral-credits',
     'vasco-pack-trigger-tick',
+    'vasco-reconcile-http-outcomes',
     'vasco-refresh-generator-approval-rates',
     'vasco-stale-draft-cleanup',
     'vasco-train-extra-models',

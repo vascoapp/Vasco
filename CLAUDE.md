@@ -324,6 +324,24 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
 - **Never `Intl.NumberFormat#formatToParts`** — Hermes lacks it; it passes in
   node and throws on device (`compactCurrency.test.ts`).
 - Always run `npx tsc --noEmit | grep "^app/"` after changes
+- **A scheduled call is judged by its OUTCOME, not by pg_cron.** `net.http_post`
+  inside a cron body can return 401 and pg_cron still records the run
+  `succeeded` — the statement enqueued a request, which is all it promised.
+  Every job firing HTTP must therefore record its request id into
+  `public.cron_http_calls` (`with sent as (select net.http_post(…) as
+  request_id) insert into …`), because `net._http_response` carries **no url**
+  and the request queue is emptied on completion, so an unrecorded call can
+  never be attributed back to its job. `vasco-reconcile-http-outcomes` copies
+  verdicts out every 10 min — pg_net prunes within hours, and a digest-time
+  join would report a reassuring zero. Guard:
+  `cronExpectationsMatchCronSql.test.ts`. See learnings #359.
+  - 🔴 **Apply the migrations BEFORE running `supabase/cron.sql`.** The body is
+    one statement: no `cron_http_calls` table means the insert aborts it and
+    the HTTP call is never made. That stops automations, loudly — which is the
+    accepted trade, but only in that order.
+  - ⚠️ **Four lists of the cron job names must agree** (`cron.sql`, the
+    watchdog's `EXPECTED_CRON_JOBS`, `cron-health.sql`, and — derived, never
+    written — `scripts/register-crons.mjs`). #357/#358.
 - **🔴 CHECK EVERY PIECE OF CODE YOU ADD, EVERY TIME.** Re-read the diff you
   just wrote as if reviewing someone else; run tsc and the touched suites;
   **decoy the guard** (`node scripts/decoy-check.mjs`) — a test that does not

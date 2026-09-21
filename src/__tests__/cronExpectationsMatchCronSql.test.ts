@@ -165,3 +165,78 @@ describe('the registration script does not keep its own copy of the list', () =>
     expect(SCRIPT).not.toMatch(/rpc\/exec/);
   });
 });
+
+// #359 — pg_cron records a run as `succeeded` when the statement enqueued an
+// HTTP request, whatever came back. Eleven schedules registered with a key
+// that had never been exercised would have reported healthy either way.
+describe('a scheduled call is judged by its OUTCOME, not by pg_cron', () => {
+  const CRON = read('supabase/cron.sql');
+  const WATCHDOG = read('supabase/functions/watchdog-daily/index.ts');
+
+  /** Each `select cron.schedule('name', …)` block, split on the call itself. */
+  function scheduleBlocks(): { job: string; body: string }[] {
+    return CRON.split(/select cron\.schedule\(/).slice(1).map((b) => ({
+      job: (b.match(/^\s*'([^']+)'/) ?? [, '?'])[1] as string,
+      body: b,
+    }));
+  }
+
+  it('cron.sql is parsed into blocks at all', () => {
+    // Without this the per-block assertions below are vacuously true.
+    const blocks = scheduleBlocks();
+    expect(blocks.length).toBeGreaterThanOrEqual(12);
+    expect(blocks.filter((b) => b.body.includes('net.http_post')).length).toBeGreaterThanOrEqual(9);
+  });
+
+  it('EVERY job that fires an HTTP call records its request id', () => {
+    // This is the guard that matters for jobs written LATER. A new schedule
+    // with a bare `select net.http_post(…)` is invisible again: pg_net's
+    // response carries no url, and the request queue is emptied on completion,
+    // so an unrecorded id can never be attributed back to its job.
+    const unrecorded = scheduleBlocks()
+      .filter((b) => b.body.includes('net.http_post'))
+      .filter((b) => !b.body.includes('insert into public.cron_http_calls'))
+      .map((b) => b.job);
+    expect(unrecorded).toEqual([]);
+  });
+
+  it('each recorded call is filed under its OWN job name', () => {
+    // A copy-paste that files job B's call under job A's name is worse than
+    // no attribution: it points the operator at a healthy job.
+    for (const b of scheduleBlocks().filter((x) => x.body.includes('net.http_post'))) {
+      expect({ job: b.job, filesItselfCorrectly: b.body.includes(`select '${b.job}', request_id`) })
+        .toEqual({ job: b.job, filesItselfCorrectly: true });
+    }
+  });
+
+  it('the outcomes are copied out of pg_net before it prunes them', () => {
+    // pg_net's TTL is hours; the erasure drain fires at 02:00 and the watchdog
+    // reads at 07:00. A join at digest time finds nothing and calls it health.
+    const reconciler = scheduleBlocks().find((b) => b.job === 'vasco-reconcile-http-outcomes');
+    expect(reconciler).toBeDefined();
+    expect(reconciler!.body).toMatch(/reconcile_cron_http_outcomes/);
+    expect(reconciler!.body).toMatch(/'\*\/10 \* \* \* \*'/);
+  });
+
+  it('the watchdog reads outcomes and raises a CRITICAL naming the job', () => {
+    expect(WATCHDOG).toMatch(/get_cron_http_failures/);
+    const at = WATCHDOG.indexOf('REGISTERED IS NOT WORKING (#359)');
+    expect(at).toBeGreaterThan(-1);
+    const body = WATCHDOG.slice(at, at + 1200);
+    expect(body).toMatch(/add\(\s*'critical'/);
+    expect(body).toMatch(/\$\{jobname\}/);
+  });
+
+  it('an unreadable outcome source degrades loudly instead of reading as zero', () => {
+    // "No failures" and "could not check for failures" must never look alike.
+    expect(WATCHDOG).toMatch(/Scheduled HTTP outcomes could not be read/);
+  });
+
+  it('the RPC never returns pg_net headers or body', () => {
+    // net._http_response.headers carries the service-role JWT; .content can
+    // carry customer data. Only the verdict may cross that boundary.
+    const MIG = read('supabase/migrations/20260921000001_cron_http_outcomes.sql');
+    const rpc = MIG.slice(MIG.indexOf('function public.get_cron_http_failures'));
+    expect(rpc).not.toMatch(/r\.headers|r\.content|\bcontent\b/);
+  });
+});

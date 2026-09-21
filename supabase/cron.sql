@@ -6,6 +6,12 @@
 --   create extension if not exists pg_cron;
 --   create extension if not exists pg_net;
 --
+-- 🔴 APPLY THE MIGRATIONS FIRST. Since #359 every http_post body is a single
+--    statement that also INSERTs into public.cron_http_calls. If that table or
+--    its grants are missing, the statement rolls back and the HTTP call is
+--    never made — running this file against a database without
+--    20260921000001_cron_http_outcomes.sql stops every automation.
+--
 -- IMPORTANT: replace the two placeholders before running:
 --   <SUPABASE_URL>          e.g. https://xxxx.supabase.co
 --   <SERVICE_ROLE_KEY>      the service_role JWT (store via Dashboard, not committed)
@@ -19,14 +25,18 @@ select cron.schedule(
   'vasco-weekly-digest',
   '0 8 * * 1',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/weekly-digest',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/weekly-digest',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-weekly-digest', request_id from sent;
   $$
 );
 
@@ -51,14 +61,18 @@ select cron.schedule(
   'vasco-drain-account-deletions',
   '0 2 * * *',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/drain-account-deletions',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/drain-account-deletions',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-drain-account-deletions', request_id from sent;
   $$
 );
 
@@ -70,14 +84,18 @@ select cron.schedule(
   'vasco-daily-push-digest',
   '0 18 * * *',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/daily-push-digest',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/daily-push-digest',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-daily-push-digest', request_id from sent;
   $$
 );
 
@@ -89,14 +107,18 @@ select cron.schedule(
   'vasco-churn-winback',
   '0 10 * * 1',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/churn-winback-email',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/churn-winback-email',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-churn-winback', request_id from sent;
   $$
 );
 
@@ -108,14 +130,18 @@ select cron.schedule(
   'vasco-grant-referral-credits',
   '0 4 * * *',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/grant-referral-credits',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/grant-referral-credits',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-grant-referral-credits', request_id from sent;
   $$
 );
 
@@ -128,14 +154,18 @@ select cron.schedule(
   'vasco-weekly-retrain-models',
   '0 2 * * 1',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/weekly-retrain-models',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/weekly-retrain-models',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-weekly-retrain-models', request_id from sent;
   $$
 );
 
@@ -146,14 +176,18 @@ select cron.schedule(
   'vasco-train-extra-models',
   '0 3 * * *',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/train-extra-models',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/train-extra-models',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-train-extra-models', request_id from sent;
   $$
 );
 
@@ -177,14 +211,18 @@ select cron.schedule(
   'vasco-pack-trigger-tick',
   '0 9 * * *',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/pack-trigger-tick',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/pack-trigger-tick',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-pack-trigger-tick', request_id from sent;
   $$
 );
 
@@ -201,16 +239,32 @@ select cron.schedule(
   'vasco-watchdog-daily',
   '0 7,8 * * *',
   $$
-    select net.http_post(
-      url := '<SUPABASE_URL>/functions/v1/watchdog-daily',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
-      ),
-      body := '{}'::jsonb
-    );
+    with sent as (
+      select net.http_post(
+        url := '<SUPABASE_URL>/functions/v1/watchdog-daily',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+        ),
+        body := '{}'::jsonb
+      ) as request_id
+    )
+    insert into public.cron_http_calls (jobname, request_id)
+    select 'vasco-watchdog-daily', request_id from sent;
   $$
 );
 
 -- Listing live jobs (run in psql after setup to verify):
 -- select * from cron.job;
+
+-- #359 — copy HTTP outcomes out of pg_net before it prunes them, every 10 min.
+-- This is the job that makes all the others honest: without it, a 401 at 02:00
+-- is gone by the time the 07:00 watchdog looks, and the digest reports health.
+-- It touches no network, so it cannot itself fail the way it exists to detect.
+select cron.schedule(
+  'vasco-reconcile-http-outcomes',
+  '*/10 * * * *',
+  $$
+    select public.reconcile_cron_http_outcomes();
+  $$
+);

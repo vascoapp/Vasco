@@ -126,6 +126,7 @@ const EXPECTED_CRON_JOBS = [
   'vasco-drain-account-deletions',
   'vasco-grant-referral-credits',
   'vasco-pack-trigger-tick',
+  'vasco-reconcile-http-outcomes',
   'vasco-refresh-generator-approval-rates',
   'vasco-stale-draft-cleanup',
   'vasco-train-extra-models',
@@ -143,6 +144,19 @@ interface CronRow {
   end_time: string | null;
   duration_ms: number | null;
   message: string | null;
+}
+
+/**
+ * A scheduled HTTP call that did not succeed. pg_cron cannot see these: the
+ * job body's statement was "enqueue a request", and enqueuing succeeded even
+ * when the request came back 401. #359.
+ */
+interface CronHttpFailure {
+  jobname: string;
+  sent_at: string;
+  status_code: number | null;
+  reason: string;
+  detail: string | null;
 }
 
 interface CronJobSummary {
@@ -444,6 +458,8 @@ function detectIssues(
   logs: PlatformLogs,
   cron: CronJobSummary[],
   cronError: string | null,
+  httpFailures: CronHttpFailure[],
+  httpError: string | null,
   snapshotError: string | null,
   degraded: string[],
   now: Date,
@@ -556,6 +572,30 @@ function detectIssues(
     }
     for (const c of cron.filter((x) => !x.active)) {
       add('warn', `Automation ${c.jobname} is disabled`);
+    }
+  }
+
+  // REGISTERED IS NOT WORKING (#359). Every check above reads pg_cron, which
+  // records a run as `succeeded` when the statement enqueued an HTTP request —
+  // regardless of what came back. A wrong service-role key makes all eleven
+  // schedules green and does nothing. These are the actual outcomes.
+  if (httpError) {
+    add('warn', `Scheduled HTTP outcomes could not be read: ${httpError}`);
+  } else if (httpFailures.length) {
+    // Group by job: one broken key produces a burst, and eleven lines saying
+    // the same thing buries the one that matters.
+    const byJob = new Map<string, { n: number; reason: string; code: number | null }>();
+    for (const f of httpFailures) {
+      const e = byJob.get(f.jobname);
+      if (e) e.n++;
+      else byJob.set(f.jobname, { n: 1, reason: f.reason, code: f.status_code });
+    }
+    for (const [jobname, e] of byJob) {
+      add(
+        'critical',
+        `Automation ${jobname} ran but its call FAILED ${e.n}× (${e.reason}) — `
+        + 'pg_cron reports these runs as succeeded',
+      );
     }
   }
 
@@ -691,9 +731,10 @@ Deno.serve(async (req) => {
   // ---- collect (independently; one failure must not blank the digest) -------
   const logsCfg = readLogsConfig();
 
-  const [snapRes, cronRes, logsRes, llmKey] = await Promise.all([
+  const [snapRes, cronRes, httpRes, logsRes, llmKey] = await Promise.all([
     supabase.rpc('watchdog_snapshot', { p_since: since.toISOString() }),
     supabase.rpc('get_cron_runs_since', { p_since: since.toISOString() }),
+    supabase.rpc('get_cron_http_failures', { p_since: since.toISOString() }),
     logsCfg
       ? collectPlatformLogs(logsCfg, since, now)
       : Promise.resolve(unavailableLogs('WATCHDOG_MGMT_TOKEN / WATCHDOG_PROJECT_REF not set')),
@@ -704,11 +745,16 @@ Deno.serve(async (req) => {
   const snapshotError = snapRes.error ? String(snapRes.error.message).slice(0, 300) : null;
   const cronError = cronRes.error ? String(cronRes.error.message).slice(0, 300) : null;
   const cron = summariseCron((cronRes.data ?? []) as CronRow[]);
+  const httpError = httpRes.error ? String(httpRes.error.message).slice(0, 300) : null;
+  const httpFailures = (httpRes.data ?? []) as CronHttpFailure[];
   const logs = logsRes;
 
   const degraded = Array.isArray(snapshot.degraded) ? (snapshot.degraded as string[]) : [];
 
-  const issues = detectIssues(snapshot, logs, cron, cronError, snapshotError, degraded, now, llmKey);
+  const issues = detectIssues(
+    snapshot, logs, cron, cronError, httpFailures, httpError,
+    snapshotError, degraded, now, llmKey,
+  );
   const severity: Severity = issues.some((i) => i.severity === 'critical')
     ? 'critical'
     : issues.length ? 'warn' : 'ok';
