@@ -141,6 +141,23 @@ describe('the registration script does not keep its own copy of the list', () =>
     expect(SCRIPT).toMatch(/refusing to run/);
   });
 
+  it('sends cron.sql as a FILE, not as a positional argument', () => {
+    // `supabase db query <sql>` is parsed by Cobra, which reads a leading `-`
+    // as a flag. cron.sql opens with `-- ====`, so the real run died on
+    // `unknown flag: --` while a stubbed CLI — which read argv directly and
+    // never parsed flags — reported success. A stub cannot verify the
+    // interface to the thing it replaces.
+    expect(SCRIPT).toMatch(/'db', 'query', '--linked', '-f', tmp/);
+    expect(SCRIPT).toMatch(/await runSqlFile\(expanded\)/);
+    // …and the key must not go back onto the command line, where `ps` sees it.
+    expect(SCRIPT).not.toMatch(/runViaSupabaseCli\(expanded\)/);
+  });
+
+  it('does not leave the key in a temp file after the run', () => {
+    expect(SCRIPT).toMatch(/mode: 0o600/);
+    expect(SCRIPT).toMatch(/finally \{[\s\S]*?unlinkSync\(tmp\)/);
+  });
+
   it('does not call an RPC this project has never defined', () => {
     // `executeSql` POSTed to /rest/v1/rpc/exec, which exists in no migration.
     // It was dead — every path went through the CLI — but it read as the

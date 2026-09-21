@@ -27,7 +27,8 @@
 //   3 = env vars missing
 // =============================================================================
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -60,6 +61,11 @@ function jobsInCronSql(src) {
 }
 
 // All SQL goes through the linked CLI — there is no `exec` RPC in this project.
+//
+// ⚠️ Positional SQL only. `supabase db query <sql>` is parsed by Cobra, which
+// treats a leading `-` as a FLAG: cron.sql opens with `-- ====…` and the CLI
+// died on `unknown flag: --`. Anything that may begin with a comment, and
+// anything carrying the service-role key, goes through runSqlFile instead.
 async function runViaSupabaseCli(sqlText) {
   const { spawnSync } = await import('node:child_process');
   const res = spawnSync('supabase', ['db', 'query', '--linked', sqlText], {
@@ -70,6 +76,33 @@ async function runViaSupabaseCli(sqlText) {
     throw new Error(`supabase CLI failed: ${res.stderr || res.stdout}`);
   }
   return res.stdout;
+}
+
+/**
+ * Execute a SQL *file* via the CLI's documented `-f` flag.
+ *
+ * Two reasons this is not the positional form:
+ *   • Cobra reads a leading `-` as a flag, and cron.sql starts with `-- ===`;
+ *   • the expanded SQL embeds the service-role key, and an argv element is
+ *     visible in `ps` for the lifetime of the process. A 0600 file is not.
+ * The file is removed in a finally, so it does not outlive the run.
+ */
+async function runSqlFile(sqlText) {
+  const { spawnSync } = await import('node:child_process');
+  const tmp = join(tmpdir(), `vasco-cron-${process.pid}-${Date.now()}.sql`);
+  writeFileSync(tmp, sqlText, { mode: 0o600 });
+  try {
+    const res = spawnSync('supabase', ['db', 'query', '--linked', '-f', tmp], {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (res.status !== 0) {
+      throw new Error(`supabase CLI failed: ${res.stderr || res.stdout}`);
+    }
+    return res.stdout;
+  } finally {
+    try { unlinkSync(tmp); } catch { /* already gone */ }
+  }
 }
 
 (async () => {
@@ -120,7 +153,7 @@ async function runViaSupabaseCli(sqlText) {
   // Execute the substituted cron.sql
   console.log(`[register-crons] Registering ${REQUIRED_JOBS.length} schedules…`);
   try {
-    await runViaSupabaseCli(expanded);
+    await runSqlFile(expanded);
     console.log('[register-crons] ✓ cron.sql executed without error');
   } catch (err) {
     console.error('[register-crons] cron.sql execution failed:', err.message);
