@@ -146,6 +146,14 @@ npm run check:drift                    # database.types.ts vs the LIVE columns,
                                        # ⚠️ grep "who writes this field" misses
                                        # edge-function writers — check
                                        # supabase/functions/** too.
+npm run check:rpcs                     # calls every set-returning plpgsql RPC
+                                       # in prod with NULLs, rolled back. Eight
+                                       # failed on EVERY call (42702: a RETURNS
+                                       # TABLE column shadowing a table column)
+                                       # and applied cleanly — plpgsql is only
+                                       # checked when a statement RUNS. ⚠️ An
+                                       # early return hides the main query; seed
+                                       # rows in a rolled-back txn for that. #361
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
 
 # Store + ops gates.
