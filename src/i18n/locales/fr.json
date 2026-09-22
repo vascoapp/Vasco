@@ -504,6 +504,7 @@
     "photosCaptured": "{{count}} photos prises",
     "before": "Avant",
     "after": "Après",
+    "during": "Pendant",
     "takePhoto": "Prendre une photo",
     "photoSourcePrompt": "Choisissez une source de photo",
     "camera": "Appareil photo",

@@ -504,6 +504,7 @@
     "photosCaptured": "{{count}} foto acquisite",
     "before": "Prima",
     "after": "Dopo",
+    "during": "Durante",
     "takePhoto": "Scatta foto",
     "photoSourcePrompt": "Scegli una sorgente foto",
     "camera": "Fotocamera",

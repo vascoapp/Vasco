@@ -504,6 +504,7 @@
     "photosCaptured": "{{count}} foto's gemaakt",
     "before": "Voor",
     "after": "Na",
+    "during": "Tijdens",
     "takePhoto": "Foto maken",
     "photoSourcePrompt": "Kies een fotobron",
     "camera": "Camera",

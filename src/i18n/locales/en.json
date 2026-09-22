@@ -504,6 +504,7 @@
     "photosCaptured": "{{count}} photos captured",
     "before": "Before",
     "after": "After",
+    "during": "During",
     "takePhoto": "Take Photo",
     "photoSourcePrompt": "Choose a photo source",
     "camera": "Camera",
