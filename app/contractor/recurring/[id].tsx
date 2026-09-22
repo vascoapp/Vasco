@@ -5,7 +5,7 @@
 // Otherwise → load existing + allow edits + delete.
 // =============================================================================
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ import { TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { DKLabel } from '../../../src/components/shared/DKLabel';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 import { DKSelect, type DKSelectOption } from '../../../src/components/shared/DKSelect';
+import { AddCustomerSheet } from '../../../src/components/shared/AddCustomerSheet';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
 import { historyForCustomer, type ProposalJob } from '../../../src/services/siteAssetService';
@@ -67,6 +68,20 @@ export default function RecurringEditScreen() {
   // month pushed it a full year out — the schedule slid forward by however long
   // ago the contract was created (#339). It is set once, when the contract is.
   const [startDate, setStartDate] = useState<string | null>(null);
+
+  // A contract needs a customer, so with none the question comes FIRST: the
+  // add-customer sheet opens on arrival, once. It used to let the contractor
+  // fill in the whole form and then answer the customer picker with "Add a
+  // customer first" and only Cancel (TestFlight, 2026-09-22).
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const hasCustomers = (customers ?? []).length > 0;
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (isNew && !hasCustomers && !autoOpened.current) {
+      autoOpened.current = true;
+      setShowAddCustomer(true);
+    }
+  }, [isNew, hasCustomers]);
 
   useEffect(() => {
     if (isNew) return;
@@ -172,14 +187,31 @@ export default function RecurringEditScreen() {
         <Field label={t('recurring.descLabel', 'Description (optional)')} value={description} onChange={setDescription} multiline />
 
         <DKLabel style={styles.section}>{t('recurring.customer', 'CUSTOMER')}</DKLabel>
-        <DKSelect
-          title={t('recurring.customer', 'CUSTOMER')}
-          value={customerId}
-          onChange={setCustomerId}
-          options={customerOptions}
-          placeholder={t('recurring.pickCustomer', 'Choose a customer')}
-          emptyText={t('recurring.noCustomers', 'Add a customer first, then set up their maintenance contract.')}
-          testID="recurring-customer-select"
+        {hasCustomers ? (
+          <DKSelect
+            title={t('recurring.customer', 'CUSTOMER')}
+            value={customerId}
+            onChange={setCustomerId}
+            options={customerOptions}
+            placeholder={t('recurring.pickCustomer', 'Choose a customer')}
+            emptyText={t('recurring.noCustomers', 'Add a customer first, then set up their maintenance contract.')}
+            testID="recurring-customer-select"
+          />
+        ) : (
+          <Pressable
+            style={styles.addCustomer}
+            onPress={() => setShowAddCustomer(true)}
+            accessibilityRole="button"
+            testID="recurring-add-customer"
+          >
+            <Ionicons name="person-add-outline" size={18} color={DK.colors.accent} />
+            <Text style={styles.addCustomerText}>{t('dk.actions.newCustomer', 'New customer')}</Text>
+          </Pressable>
+        )}
+        <AddCustomerSheet
+          visible={showAddCustomer}
+          onClose={() => setShowAddCustomer(false)}
+          onAdded={(newId) => setCustomerId(newId)}
         />
 
         {/* Previous work at this customer — the whole reason to open a recurring
@@ -315,6 +347,13 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   content: { padding: GRID.lg, paddingBottom: GRID.xl * 2, gap: GRID.md },
   section: { color: DK.colors.textMuted, marginTop: GRID.sm },
+  addCustomer: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    paddingHorizontal: GRID.md, paddingVertical: 14,
+    borderRadius: RADIUS.md, borderWidth: 1,
+    borderColor: DK.colors.accent + '55', backgroundColor: DK.colors.accent + '14',
+  },
+  addCustomerText: { fontSize: TYPE.bodySize, fontFamily: DK.type.body500, color: DK.colors.text },
   fieldLabel: { fontSize: 12, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
   field: {
     backgroundColor: DK.colors.panel, borderRadius: RADIUS.md, borderWidth: 1, borderColor: DK.colors.border,
