@@ -3574,7 +3574,18 @@
     "eInvoiceUnknownSupplier": "Onbekende leverancier",
     "eInvoicePricesAdded": "Prijzen toegevoegd aan je prijsindex.",
     "importNothingSaved": "Er kon niets worden opgeslagen (materialen: {{count}}). Controleer je verbinding en probeer het opnieuw.",
-    "importSomeFailed": "Niet opgeslagen: {{count}} — importeer opnieuw om het nog eens te proberen."
+    "importSomeFailed": "Niet opgeslagen: {{count}} — importeer opnieuw om het nog eens te proberen.",
+    "readInvoiceTitle": "Leveranciersfactuur inlezen",
+    "readInvoiceDesc": "Lees de factuur van je groothandel in. Vasco onthoudt wat je per materiaal betaalde, zodat je ziet wanneer prijzen stijgen.",
+    "eInvoiceFormats": "XRechnung, ZUGFeRD, Factur-X of Peppol",
+    "photoReceipt": "Foto van een bon",
+    "priceInsightTitle": "Prijsinzicht",
+    "priceWatchTitle": "Prijslijst van je groothandel",
+    "priceWatchDesc": "Koppel het DATANORM-bestand van je groothandel. Vasco volgt de prijzen van de materialen die je gebruikt en waarschuwt als ze stijgen.",
+    "priceWatchButton": "Prijslijst importeren",
+    "marketPrices": "Marktprijzen bekijken",
+    "priceWatchNoRises": "Materialen gevolgd: {{count}} · geen stijging boven {{pct}}%",
+    "priceWatchRises": "Prijzen die zijn gestegen"
   },
   "customerView": {
     "pickTierTitle": "Kies een pakket",

@@ -3574,7 +3574,18 @@
     "eInvoiceUnknownSupplier": "Unknown supplier",
     "eInvoicePricesAdded": "Prices added to your price index.",
     "importNothingSaved": "Nothing could be saved (materials: {{count}}). Check your connection and try again.",
-    "importSomeFailed": "Not saved: {{count}} — import again to retry them."
+    "importSomeFailed": "Not saved: {{count}} — import again to retry them.",
+    "readInvoiceTitle": "Read a supplier invoice",
+    "readInvoiceDesc": "Read in the invoice from your wholesaler. Vasco keeps what you paid per material, so you can see when prices go up.",
+    "eInvoiceFormats": "XRechnung, ZUGFeRD, Factur-X or Peppol",
+    "photoReceipt": "Photo of a receipt",
+    "priceInsightTitle": "Price insight",
+    "priceWatchTitle": "Your wholesaler's price list",
+    "priceWatchDesc": "Link your wholesaler's DATANORM file. Vasco tracks the prices of the materials you use and warns you when they rise.",
+    "priceWatchButton": "Import price list",
+    "marketPrices": "View market prices",
+    "priceWatchNoRises": "Materials tracked: {{count}} · no rises above {{pct}}%",
+    "priceWatchRises": "Prices that went up"
   },
   "customerView": {
     "pickTierTitle": "Pick a package",

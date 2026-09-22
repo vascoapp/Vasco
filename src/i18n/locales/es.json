@@ -3574,7 +3574,18 @@
     "eInvoiceUnknownSupplier": "Proveedor desconocido",
     "eInvoicePricesAdded": "Precios añadidos a tu índice de precios.",
     "importNothingSaved": "No se ha podido guardar nada (materiales: {{count}}). Comprueba tu conexión e inténtalo de nuevo.",
-    "importSomeFailed": "Sin guardar: {{count}}; vuelve a importar para reintentarlo."
+    "importSomeFailed": "Sin guardar: {{count}}; vuelve a importar para reintentarlo.",
+    "readInvoiceTitle": "Leer una factura de proveedor",
+    "readInvoiceDesc": "Lee la factura de tu mayorista. Vasco guarda lo que pagaste por cada material, para que veas cuándo suben los precios.",
+    "eInvoiceFormats": "XRechnung, ZUGFeRD, Factur-X o Peppol",
+    "photoReceipt": "Foto de un tique",
+    "priceInsightTitle": "Seguimiento de precios",
+    "priceWatchTitle": "Tarifa de tu mayorista",
+    "priceWatchDesc": "Vincula el archivo DATANORM de tu mayorista. Vasco sigue los precios de los materiales que usas y te avisa cuando suben.",
+    "priceWatchButton": "Importar tarifa",
+    "marketPrices": "Ver precios de mercado",
+    "priceWatchNoRises": "Materiales seguidos: {{count}} · ninguna subida de más del {{pct}} %",
+    "priceWatchRises": "Precios que han subido"
   },
   "customerView": {
     "pickTierTitle": "Elige un paquete",

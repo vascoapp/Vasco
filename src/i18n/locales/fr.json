@@ -3574,7 +3574,18 @@
     "eInvoiceUnknownSupplier": "Fournisseur inconnu",
     "eInvoicePricesAdded": "Prix ajoutés à votre index tarifaire.",
     "importNothingSaved": "Rien n'a pu être enregistré (matériaux : {{count}}). Vérifiez votre connexion et réessayez.",
-    "importSomeFailed": "Non enregistrés : {{count}} — importez à nouveau pour réessayer."
+    "importSomeFailed": "Non enregistrés : {{count}} — importez à nouveau pour réessayer.",
+    "readInvoiceTitle": "Lire une facture fournisseur",
+    "readInvoiceDesc": "Importez la facture de votre grossiste. Vasco retient ce que vous avez payé par matériau, pour que vous voyiez quand les prix augmentent.",
+    "eInvoiceFormats": "XRechnung, ZUGFeRD, Factur-X ou Peppol",
+    "photoReceipt": "Photo d'un ticket",
+    "priceInsightTitle": "Suivi des prix",
+    "priceWatchTitle": "Tarif de votre grossiste",
+    "priceWatchDesc": "Liez le fichier DATANORM de votre grossiste. Vasco suit le prix des matériaux que vous utilisez et vous prévient quand ils augmentent.",
+    "priceWatchButton": "Importer le tarif",
+    "marketPrices": "Voir les prix du marché",
+    "priceWatchNoRises": "Matériaux suivis : {{count}} · aucune hausse de plus de {{pct}} %",
+    "priceWatchRises": "Prix en hausse"
   },
   "customerView": {
     "pickTierTitle": "Choisissez une formule",

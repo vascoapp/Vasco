@@ -1,26 +1,42 @@
 // =============================================================================
-// INKOOP - Full Purchasing Hub
+// INKOOP — supplier invoices in, price intelligence out  (rebuilt 2026-09-22)
 // =============================================================================
-// Combined leveranciers + herbestellen with predictive planning,
-// bon scanner, and savings insights. Benchmarking intelligence drives
-// Vasco tips behind the scenes (not shown in UI).
+// Rebuilt around what actually works. An audit of the old nine-tile hub found
+// Herbestellen, Leveranciers, Voorraad and both headline figures ("Stockouts
+// voorkomen" 0, "Bespaard op inkoop" €0) fed by an inventory that ONLY a test
+// seed ever filled; "Zoek materiaal" searched hardcoded prices and kept its
+// orders on the device; the savings block could not be shown to work. They are
+// gone, not hidden — nothing writes the data they need (learnings #362/#363).
+//
+// What stays is what writes real rows:
+//   1. Read a supplier invoice → purchase prices land in the contractor's price
+//      history (material_price_history), the input for everything in 2.
+//      E-factuur works today. The photo route (receipt scanner) needs Claude
+//      Vision and appears by itself when the server reports it can run it
+//      (useAiCapabilities) — no build when the key is set.
+//   2. Prijsinzicht — DATANORM offered as an intelligence, not a tile: link the
+//      wholesaler's price list, and Vasco watches the prices of what you buy.
+//      The drift / forecast / lead-time / price-drop cards hide when empty.
+//
+// Purchase prices are NOT turned into selling prices: a quote line is the
+// contractor's own price, and a supplier invoice is what they paid.
 // =============================================================================
 
-import { formatMoney, formatCurrency, formatCurrency0, type Country } from '../../src/i18n/formatting';
-import { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert } from 'react-native';
+import { formatCurrency } from '../../src/i18n/formatting';
+import { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as DocumentPicker from 'expo-document-picker';
 import { File as ExpoFile } from 'expo-file-system';
-import { SemanticColors, Palette } from '../../src/theme/colors';
-import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { useSavingsAggregation, useSavingsTimeline } from '../../src/services/savingsAggregatorService';
-import { useInventory, useReorderSuggestions } from '../../src/services/reorderService';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { DK } from '../../src/theme/draftkings';
+import { TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
+import { DKLabel } from '../../src/components/shared/DKLabel';
 import { ReceiptScanner } from '../../src/components/contractor/ReceiptScanner';
-// feedPricingMoat / ScannedInvoice imports removed in R11.1 — scanInvoicePhoto
-// in the ReceiptScanner is the single moat-feed entry point now.
 import { parseDateanormV4, parseDateanormV5, importDatanormToMoat } from '../../src/integrations/datanorm';
 import { getCurrentTrade, getCurrentCountry } from '../../src/lib/currentUser';
 import { MaterialDriftCard } from '../../src/components/contractor/MaterialDriftCard';
@@ -29,24 +45,25 @@ import { SeasonalityBanner } from '../../src/components/contractor/SeasonalityBa
 import { MaterialPriceForecastCard } from '../../src/components/contractor/MaterialPriceForecastCard';
 import { SupplierLeadtimePredictionCard } from '../../src/components/contractor/SupplierLeadtimePredictionCard';
 import { useAppState } from '../../src/state/AppState';
+import { useAiCapabilities } from '../../src/services/aiCapabilities';
+import { useMyPriceWatch, PRICE_RISE_THRESHOLD_PCT } from '../../src/services/personalPriceWatch';
 
 export default function InkoopScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const savings = useSavingsAggregation();
-  const timeline = useSavingsTimeline();
-  const { inventory, lowStockCount } = useInventory();
-  const { suggestions, criticalCount, markOrdered, statistics } = useReorderSuggestions();
   const { businessProfile } = useAppState();
   const trade = businessProfile?.trade ?? 'general';
   const country = businessProfile?.country ?? 'NL';
+  // The photo route needs Claude Vision; offered only when the server can run it.
+  const { vision } = useAiCapabilities();
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
   const [importingEInvoice, setImportingEInvoice] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
+  // Your own supplier prices over time — the intelligence DATANORM feeds.
+  const { watch, refresh: refreshPriceWatch } = useMyPriceWatch();
 
-  // R307: tier gate — receipt scanning is paid-tier only. Wraps both
-  // mount sites (quick-action chip + scanner card) so neither bypasses.
+  // R307: tier gate — receipt scanning is paid-tier only. The photo button is
+  // the single entry to the scanner, so this is the one place it is enforced.
   const openReceiptScanner = useCallback(async () => {
     try {
       const { loadSubscription, canUseFeature } = await import('../../src/services/subscriptionService');
@@ -145,8 +162,9 @@ export default function InkoopScreen() {
       Alert.alert(t('inkoop.importFailedTitle', 'Import failed'), t('inkoop.importFailedRead', 'Something went wrong reading the file.'));
     } finally {
       setIsImporting(false);
+      refreshPriceWatch();
     }
-  }, []);
+  }, [refreshPriceWatch]);
 
   /**
    * Read a supplier e-invoice (XRechnung / ZUGFeRD / Peppol UBL).
@@ -191,775 +209,209 @@ export default function InkoopScreen() {
       );
     } finally {
       setImportingEInvoice(false);
+      refreshPriceWatch();
     }
-  }, [t, country]);
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical': return SemanticColors.feedbackError;
-      case 'high': return Palette.hermesOrange;
-      case 'medium': return Palette.hermesOrange;
-      default: return SemanticColors.textTertiary;
-    }
-  };
+  }, [t, country, refreshPriceWatch]);
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
-          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{t('inkoop.title', 'Purchasing')}</Text>
-        <View style={{ width: 40, alignItems: 'flex-end' }}>
-          {criticalCount > 0 && (
-            <View style={styles.headerBadge}>
-              <Text style={styles.headerBadgeText}>{criticalCount}</Text>
-            </View>
-          )}
-        </View>
-      </View>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
+      <DKScreenHeader title={t('inkoop.title', 'Purchasing')} />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-      <ScrollView
-        ref={scrollRef}
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Seasonality nudge — peak-season material warning, hidden when no signal */}
-        <SeasonalityBanner trade={trade} country={country} />
+        {/* 1. Read a supplier invoice — the one input that writes real rows. */}
+        <View style={styles.hero}>
+          <View style={styles.heroIcon}>
+            <Ionicons name="document-text-outline" size={26} color={DK.colors.accent} />
+          </View>
+          <Text style={styles.heroTitle}>{t('inkoop.readInvoiceTitle', 'Read a supplier invoice')}</Text>
+          <Text style={styles.heroDesc}>
+            {t('inkoop.readInvoiceDesc', 'Read in the invoice from your wholesaler. Vasco keeps what you paid per material, so you can see when prices go up.')}
+          </Text>
 
-        {/* ============================================ */}
-        {/* 0. QUICK ACTIONS                            */}
-        {/* ============================================ */}
-        {/* Wraps instead of scrolling sideways: in German the third action was cut
-            at the screen edge and the fourth (suppliers) was entirely off-screen,
-            with the scroll indicator hidden (device walk, 2026-09-14; #304). */}
-        <View style={styles.quickActions}>
-          <Pressable style={styles.quickChip} onPress={() => openReceiptScanner()}>
-            <Ionicons name="scan" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>{t('inkoop.receiptScanner', 'Receipt scanner')}</Text>
-          </Pressable>
-          {/* Sits beside the camera because it is the same job with a better
-              input. A supplier's XRechnung already contains article numbers,
-              quantities and unit prices as the supplier declared them — no
-              vision extraction, no confidence gate, no mis-read decimal. */}
-          <Pressable style={styles.quickChip} onPress={importEInvoice} disabled={importingEInvoice}>
-            <Ionicons name="document-text-outline" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>
-              {importingEInvoice
-                ? t('inkoop.eInvoiceReading', 'Reading…')
-                : t('inkoop.eInvoiceImport', 'Read e-invoice')}
+          <Pressable
+            style={({ pressed }) => [styles.primary, pressed && styles.pressed, importingEInvoice && styles.disabled]}
+            onPress={importEInvoice}
+            disabled={importingEInvoice}
+            accessibilityRole="button"
+            testID="inkoop-einvoice"
+          >
+            <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+            {importingEInvoice
+              ? <ActivityIndicator color={DK.colors.text} />
+              : <Ionicons name="document-attach-outline" size={20} color={DK.colors.text} />}
+            <Text style={styles.primaryText}>
+              {importingEInvoice ? t('inkoop.eInvoiceReading', 'Reading…') : t('inkoop.eInvoiceImport', 'Read e-invoice')}
             </Text>
           </Pressable>
-          <Pressable style={styles.quickChip} onPress={() => {
-            if (criticalCount > 0) {
-              // Route to material search with the first critical item as query
-              const firstCritical = suggestions.find(s => s.priority === 'critical');
-              router.push(firstCritical
-                ? `/contractor/material-search?q=${encodeURIComponent(firstCritical.materialName)}` as any
-                : '/contractor/material-search' as any);
-            } else {
-              Alert.alert(t('inkoop.stockOk', 'Stock is in order'), t('inkoop.noReorders', 'No reorders needed right now.'));
-            }
-          }}>
-            <Ionicons name="repeat" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>{t('inkoop.reorder', 'Reorder')}</Text>
-            {criticalCount > 0 && <View style={styles.chipBadge}><Text style={styles.chipBadgeText}>{criticalCount}</Text></View>}
-          </Pressable>
-          <Pressable style={styles.quickChip} onPress={() => {
-            const suppliers = [...new Set(inventory.map(i => i.preferredSupplier).filter(Boolean))];
-            Alert.alert(
-              t('inkoop.suppliers', 'Suppliers'),
-              suppliers.length > 0
-                ? t('inkoop.suppliersList', 'You work with {{count}} suppliers:\n\n{{names}}', { count: suppliers.length, names: suppliers.join('\n') })
-                : t('inkoop.suppliersEmpty', 'No suppliers linked yet.'),
-            );
-          }}>
-            <Ionicons name="storefront" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>{t('inkoop.suppliers', 'Suppliers')}</Text>
-          </Pressable>
-          <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/market-prices' as any)}>
-            <Ionicons name="bar-chart" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>{t('inkoop.benchmarking', 'Benchmarking')}</Text>
-          </Pressable>
+          <Text style={styles.hint}>{t('inkoop.eInvoiceFormats', 'XRechnung, ZUGFeRD, Factur-X or Peppol')}</Text>
+
+          {vision ? (
+            <Pressable
+              style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+              onPress={openReceiptScanner}
+              accessibilityRole="button"
+              testID="inkoop-photo"
+            >
+              <Ionicons name="camera-outline" size={20} color={DK.colors.accent} />
+              <Text style={styles.secondaryText}>{t('inkoop.photoReceipt', 'Photo of a receipt')}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        {/* 2. Prijsinzicht — DATANORM as an intelligence, plus the cards it feeds. */}
+        <DKLabel style={styles.section}>{t('inkoop.priceInsightTitle', 'Price insight')}</DKLabel>
+
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
+            <Ionicons name="pulse-outline" size={20} color={DK.colors.accent} />
+            <Text style={styles.cardTitle}>{t('inkoop.priceWatchTitle', "Your wholesaler's price list")}</Text>
+          </View>
+          <Text style={styles.cardDesc}>
+            {t('inkoop.priceWatchDesc', "Link your wholesaler's DATANORM file. Vasco tracks the prices of the materials you use and warns you when they rise.")}
+          </Text>
           <Pressable
-            style={[styles.quickChip, isImporting && { opacity: 0.5 }]}
+            style={({ pressed }) => [styles.secondary, pressed && styles.pressed, isImporting && styles.disabled]}
             onPress={handleDatanormImport}
             disabled={isImporting}
+            accessibilityRole="button"
+            testID="inkoop-datanorm"
           >
-            <Ionicons name="cloud-upload" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>{isImporting ? t('inkoop.importing', 'Importing…') : 'DATANORM'}</Text>
+            {isImporting
+              ? <ActivityIndicator color={DK.colors.accent} />
+              : <Ionicons name="cloud-upload-outline" size={20} color={DK.colors.accent} />}
+            <Text style={styles.secondaryText}>
+              {isImporting ? t('inkoop.importing', 'Importing…') : t('inkoop.priceWatchButton', 'Import price list')}
+            </Text>
           </Pressable>
-          <Pressable style={styles.quickChip} onPress={() => router.push('/contractor/material-search' as any)}>
-            <Ionicons name="search" size={16} color={Palette.hermesOrange} />
-            <Text style={styles.quickChipText}>{t('inkoop.searchMaterial', 'Search material')}</Text>
-          </Pressable>
-        </View>
 
-        {/* ============================================ */}
-        {/* 1. HERO STATS                               */}
-        {/* ============================================ */}
-        <View style={styles.heroRow}>
-          <View style={styles.heroCard}>
-            <View style={styles.heroIconWrap}>
-              <Ionicons name="shield-checkmark" size={18} color={SemanticColors.feedbackSuccess} />
-            </View>
-            <Text style={styles.heroValue}>{statistics.stockoutsAvoided}</Text>
-            <Text style={styles.heroLabel}>{t('inkoop.stockoutsAvoided', 'Stockouts\navoided')}</Text>
-          </View>
-          <View style={styles.heroCard}>
-            <View style={[styles.heroIconWrap, { backgroundColor: Palette.hermesOrange + '12' }]}>
-              <Ionicons name="wallet" size={18} color={Palette.hermesOrange} />
-            </View>
-            <Text style={styles.heroValue}>{formatMoney(statistics.totalSavings)}</Text>
-            <Text style={styles.heroLabel}>{t('inkoop.totalSaved', 'Saved on\npurchasing')}</Text>
-          </View>
-          {/* Omitted, not zeroed. accuracyRate is null until prediction-vs-
-              actual history exists; "0% forecast accuracy" claims our
-              forecasts are never right, which is a different and worse
-              statement than "not measured yet". */}
-          {statistics.accuracyRate !== null && (
-            <View style={styles.heroCard}>
-              <View style={[styles.heroIconWrap, { backgroundColor: '#3B82F612' }]}>
-                <Ionicons name="analytics" size={18} color="#3B82F6" />
-              </View>
-              <Text style={styles.heroValue}>{statistics.accuracyRate}%</Text>
-              <Text style={styles.heroLabel}>{t('inkoop.forecastAccuracy', 'Forecast\naccuracy')}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Cohort intelligence — surfaces drift + price drops + ML forecasts, hidden when no signal */}
-        <MaterialDriftCard trade={trade} country={country} />
-        <MaterialPriceForecastCard trade={trade} country={country} />
-        <SupplierLeadtimePredictionCard />
-        <PriceDropAlertCard trade={trade} country={country} />
-
-        {/* ============================================ */}
-        {/* 2. LEVERANCIERS & VOORRAAD                  */}
-        {/* ============================================ */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('inkoop.stock', 'Stock')}</Text>
-            {lowStockCount > 0 && (
-              <View style={styles.alertPill}>
-                <View style={styles.alertDot} />
-                <Text style={styles.alertPillText}>{t('inkoop.lowCount', '{{count}} low', { count: lowStockCount })}</Text>
-              </View>
-            )}
-          </View>
-
-          {suggestions.length > 0 ? (
-            suggestions.slice(0, 5).map(suggestion => {
-              const item = inventory.find(i => i.materialId === suggestion.materialId);
-              const stockPercent = Math.min(100, ((item?.currentStock || 0) / (item?.optimalStock || 1)) * 100);
-              const isLow = (item?.currentStock || 0) <= (item?.minimumStock || 0);
-
-              return (
-                <View key={suggestion.id} style={styles.supplierCard}>
-                  <View style={[styles.priorityBar, { backgroundColor: getPriorityColor(suggestion.priority) }]} />
-                  <View style={styles.supplierContent}>
-                    <View style={styles.supplierTop}>
+          {/* Your own supplier prices, latest vs the previous list. Hidden until
+              something has been seen twice — before that there is no change. */}
+          {watch.tracked > 0 ? (
+            <View style={styles.watch} testID="inkoop-price-watch">
+              {watch.rises.length === 0 ? (
+                <Text style={styles.watchNone}>
+                  {t('inkoop.priceWatchNoRises', 'Materials tracked: {{count}} · no rises above {{pct}}%', { count: watch.tracked, pct: PRICE_RISE_THRESHOLD_PCT })}
+                </Text>
+              ) : (
+                <>
+                  <Text style={styles.watchTitle}>{t('inkoop.priceWatchRises', 'Prices that went up')}</Text>
+                  {watch.rises.map((r) => (
+                    <View key={r.key} style={styles.riseRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.materialName} numberOfLines={1}>{suggestion.materialName}</Text>
-                        <View style={styles.supplierMeta}>
-                          <Ionicons name="storefront" size={11} color="#999" />
-                          <Text style={styles.supplierText}>{item?.preferredSupplier || t('inkoop.supplier', 'Supplier')}</Text>
-                          <Text style={styles.categoryDot}>·</Text>
-                          <Text style={styles.supplierText}>{suggestion.category}</Text>
-                        </View>
-                      </View>
-                      <View style={[styles.urgencyChip, { backgroundColor: getPriorityColor(suggestion.priority) + '12' }]}>
-                        <Text style={[styles.urgencyValue, { color: getPriorityColor(suggestion.priority) }]}>
-                          {suggestion.daysUntilStockout === 0 ? t('inkoop.outNow', 'Out!') : `${suggestion.daysUntilStockout}d`}
+                        <Text style={styles.riseName} numberOfLines={2}>{r.materialName}</Text>
+                        <Text style={styles.riseMeta}>
+                          {r.supplierName} · {formatCurrency(r.previous, country)} → {formatCurrency(r.latest, country)}{r.unit ? ` / ${r.unit}` : ''}
                         </Text>
                       </View>
+                      <Text style={styles.risePct}>+{r.pct}%</Text>
                     </View>
-
-                    {/* Stock indicator */}
-                    <View style={styles.stockRow}>
-                      <View style={styles.stockTrack}>
-                        <View style={[styles.stockFill, {
-                          width: `${stockPercent}%`,
-                          backgroundColor: isLow ? SemanticColors.feedbackError : Palette.hermesOrange,
-                        }]} />
-                      </View>
-                      <Text style={styles.stockText}>{item?.currentStock || 0}/{item?.optimalStock || 0}</Text>
-                    </View>
-
-                    <Text style={styles.reasonText} numberOfLines={1}>{suggestion.reason}</Text>
-
-                    <View style={styles.supplierBottom}>
-                      <View style={styles.costRow}>
-                        <Text style={styles.qtyText}>{suggestion.suggestedQuantity}×</Text>
-                        <Text style={styles.costText}>{formatCurrency0(suggestion.estimatedCost, country as Country)}</Text>
-                        {suggestion.bulkDiscount && (
-                          <View style={styles.savingsChip}>
-                            <Text style={styles.savingsChipText}>-{suggestion.bulkDiscount.discountPercent}%</Text>
-                          </View>
-                        )}
-                      </View>
-                      <Pressable
-                        style={styles.orderBtn}
-                        onPress={() => {
-                          markOrdered(suggestion.id);
-                          Alert.alert(t('inkoop.ordered', 'Ordered'), t('inkoop.orderedBody', '{{name}} has been ordered.', { name: suggestion.materialName }));
-                        }}
-                      >
-                        <Ionicons name="cart" size={14} color="#fff" />
-                      </Pressable>
-                    </View>
-                  </View>
-                </View>
-              );
-            })
-          ) : inventory.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Ionicons name="cube-outline" size={28} color={SemanticColors.textTertiary} />
-              <Text style={styles.emptyText}>
-                {t('inkoop.noStockTracked', 'No stock tracked yet')}
-              </Text>
-              <Text style={[styles.emptyText, { fontSize: 12, marginTop: 4 }]}>
-                {t('inkoop.noStockTrackedSub', 'Scan a receipt or import DATANORM to start.')}
-              </Text>
+                  ))}
+                </>
+              )}
             </View>
-          ) : (
-            <View style={styles.emptyCard}>
-              <Ionicons name="checkmark-circle" size={28} color={SemanticColors.feedbackSuccess} />
-              <Text style={styles.emptyText}>{t('inkoop.stockOk', 'Stock is in order!')}</Text>
-            </View>
-          )}
+          ) : null}
         </View>
 
-        {/* ============================================ */}
-        {/* 3. BON SCANNER                              */}
-        {/* ============================================ */}
-        <Pressable style={styles.scannerCard} onPress={() => openReceiptScanner()}>
-          <View style={styles.scannerIcon}>
-            <Ionicons name="scan" size={20} color={Palette.hermesOrange} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.scannerTitle}>{t('inkoop.receiptScanner', 'Receipt scanner')}</Text>
-            <Text style={styles.scannerSub}>{t('inkoop.receiptScannerDesc', 'Scan a receipt to record costs')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color="#CCC" />
+        {/* Each hides itself when it has nothing real to say. */}
+        <SeasonalityBanner trade={trade} country={country} />
+        <MaterialDriftCard trade={trade} country={country} />
+        <PriceDropAlertCard trade={trade} country={country} />
+        <MaterialPriceForecastCard trade={trade} country={country} />
+        <SupplierLeadtimePredictionCard />
+
+        <Pressable
+          style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
+          onPress={() => router.push('/contractor/market-prices' as any)}
+          accessibilityRole="button"
+        >
+          <Ionicons name="stats-chart-outline" size={18} color={DK.colors.text} />
+          <Text style={styles.linkText}>{t('inkoop.marketPrices', 'View market prices')}</Text>
+          <Ionicons name="chevron-forward" size={18} color={DK.colors.text} />
         </Pressable>
-
-        {/* ============================================ */}
-        {/* 4. BESPARINGEN                              */}
-        {/* ============================================ */}
-        {/* R285: breakdown widths now come from real category amounts.
-            Categories with amount=0 are filtered out instead of being faked.
-            YTD label dropped — month*5.5 projection was misleading. */}
-        {(() => {
-          const palette = [Palette.hermesOrange, Palette.hermesOrange + 'CC', Palette.pastelOrange, '#888'];
-          const realBreakdown = savings.breakdown
-            .filter(c => c.amount > 0)
-            .map((c, idx) => ({ ...c, color: palette[idx % palette.length] }));
-          const totalAmount = realBreakdown.reduce((s, c) => s + c.amount, 0);
-          if (realBreakdown.length === 0) return null;
-          return (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('inkoop.savings', 'Savings')}</Text>
-
-              {/* Savings breakdown — widths recomputed from real amounts */}
-              <View style={styles.card}>
-                <View style={styles.breakdownBar}>
-                  {realBreakdown.map(c => (
-                    <View
-                      key={c.id}
-                      style={{ flex: c.amount, backgroundColor: c.color }}
-                    />
-                  ))}
-                </View>
-                {realBreakdown.map(c => {
-                  const pct = totalAmount > 0 ? Math.round((c.amount / totalAmount) * 100) : 0;
-                  return (
-                    <View key={c.id} style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: c.color }]} />
-                      <Text style={styles.legendLabel}>{c.label}</Text>
-                      <Text style={styles.legendAmount}>{formatCurrency0(c.amount, country as Country)}</Text>
-                      <Text style={styles.legendPct}>{pct}%</Text>
-                    </View>
-                  );
-                })}
-              </View>
-
-              {/* Savings timeline — labelled "this month" since the source is monthly */}
-              <View style={styles.card}>
-                <View style={styles.timelineTop}>
-                  <View>
-                    <Text style={styles.timelineLabel}>{t('inkoop.savedThisMonth', 'Saved this month')}</Text>
-                    <Text style={styles.timelineAmount}>{formatCurrency0(savings.totalSavedThisMonth, country as Country)}</Text>
-                  </View>
-                  {/* Hidden when the trend is unknown — it used to render a
-                      bare "+%" (hardcoded 12 before, null now) beside the
-                      real monthly total. */}
-                  {savings.trendPercent !== null && (
-                    <View style={styles.trendPill}>
-                      <Ionicons name="arrow-up" size={12} color={SemanticColors.feedbackSuccess} />
-                      <Text style={styles.trendText}>+{savings.trendPercent}%</Text>
-                    </View>
-                  )}
-                </View>
-            <View style={styles.chartRow}>
-              {timeline.map((m, idx) => {
-                const maxVal = Math.max(...timeline.map(t => t.amount));
-                const barH = Math.max(6, (m.amount / maxVal) * 72);
-                const isCurrent = idx === timeline.length - 1;
-                return (
-                  <View key={m.month} style={styles.barCol}>
-                    {isCurrent && (
-                      <Text style={styles.barValue}>{formatCurrency0(m.amount, country as Country)}</Text>
-                    )}
-                    <View style={[styles.bar, {
-                      height: barH,
-                      backgroundColor: isCurrent ? Palette.hermesOrange : Palette.pastelOrange,
-                      opacity: isCurrent ? 1 : 0.5,
-                    }]} />
-                    <Text style={[styles.barLabel, isCurrent && styles.barLabelActive]}>{m.month}</Text>
-                  </View>
-                );
-              })}
-                </View>
-              </View>
-            </View>
-          );
-        })()}
-
-        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Receipt Scanner Modal — R11.1: removed redundant feedPricingMoat
-          call. scanInvoicePhoto already feeds the moat on every successful
-          OCR (invoiceScanService.ts:98). Calling feedPricingMoat again here
-          double-counted every camera scan in material_price_history,
-          inflating cohort sample sizes by 2x. */}
+      {/* The scanner feeds the price history itself (invoiceScanService) —
+          feeding it again here double-counted every scan (R11.1). */}
       <Modal visible={showReceiptScanner} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setShowReceiptScanner(false)}>
         <ReceiptScanner
           onClose={() => setShowReceiptScanner(false)}
           onComplete={() => setShowReceiptScanner(false)}
         />
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
-// ============================================
-// STYLES
-// ============================================
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#14181F",
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: SafeArea.top,
-    paddingBottom: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Archivo_800ExtraBold',
-    color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 1.2 },
-  headerBadge: {
-    backgroundColor: SemanticColors.feedbackError,
-    borderRadius: 12,
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerBadgeText: {
-    fontSize: 11,
-    fontFamily: 'Archivo_800ExtraBold',
-    color: '#fff',
-  },
-  scrollView: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
-    gap: 24,
-  },
+  container: { flex: 1, backgroundColor: DK.colors.bg },
+  scroll: { flex: 1 },
+  content: { padding: GRID.lg, gap: GRID.md, paddingBottom: GRID.xl * 2 },
 
-  // Quick Actions
-  quickActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingVertical: 2,
+  hero: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: GRID.lg,
+    gap: GRID.sm,
   },
-  quickChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Palette.hermesOrange + '0C',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: Palette.hermesOrange + '20',
+  heroIcon: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: DK.colors.accent + '1A',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: GRID.xs,
   },
-  quickChipText: {
-    fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
-    color: "#FFFFFF",
-  },
-  chipBadge: {
-    backgroundColor: SemanticColors.feedbackError,
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  chipBadgeText: {
-    fontSize: 10,
-    fontFamily: 'Archivo_800ExtraBold' as const,
-    color: '#fff',
-  },
+  heroTitle: { fontFamily: DK.type.display800, fontSize: TYPE.sectionSize, color: DK.colors.text },
+  heroDesc: { fontFamily: DK.type.body400, fontSize: TYPE.bodySize, color: DK.colors.text, lineHeight: 22, marginBottom: GRID.sm },
 
-  // Hero stats
-  heroRow: {
-    flexDirection: 'row',
-    gap: 10,
+  primary: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm,
+    borderRadius: DK.radius.button, overflow: 'hidden',
+    paddingVertical: GRID.md,
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.45, shadowRadius: 16, elevation: 8,
   },
-  heroCard: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: "#14181F",
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-  },
-  heroIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  heroValue: {
-    fontSize: 17,
-    fontFamily: 'Archivo_900Black',
-    color: "#FFFFFF",
-  },
-  heroLabel: {
-    fontSize: 10,
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 2,
-    lineHeight: 14,
-  },
+  primaryText: { fontFamily: DK.type.display800, fontSize: TYPE.titleSize, color: DK.colors.text },
+  hint: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.textMuted, textAlign: 'center' },
 
-  // Sections
-  section: { gap: 10 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  secondary: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm,
+    borderRadius: DK.radius.button,
+    borderWidth: 1, borderColor: DK.colors.accent + '55',
+    backgroundColor: DK.colors.accent + '14',
+    paddingVertical: GRID.md,
+    marginTop: GRID.xs,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontFamily: 'Archivo_800ExtraBold',
-    color: '#999',
-    letterSpacing: 0.8,
-  },
-  alertPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: SemanticColors.feedbackError + '10',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  alertDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: SemanticColors.feedbackError,
-  },
-  alertPillText: {
-    fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
-    color: SemanticColors.feedbackError,
-  },
+  secondaryText: { fontFamily: DK.type.body500, fontSize: TYPE.bodySize, color: DK.colors.text },
 
-  // Supplier cards
-  supplierCard: {
-    flexDirection: 'row',
-    backgroundColor: "#14181F",
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  priorityBar: { width: 4 },
-  supplierContent: {
-    flex: 1,
-    padding: 14,
-    gap: 8,
-  },
-  supplierTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  materialName: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
-    color: "#FFFFFF",
-  },
-  supplierMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 3,
-  },
-  supplierText: {
-    fontSize: 11,
-    color: '#999',
-  },
-  categoryDot: {
-    fontSize: 11,
-    color: '#CCC',
-  },
-  urgencyChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  urgencyValue: {
-    fontSize: 12,
-    fontFamily: 'Archivo_900Black',
-  },
+  // Same as the tabs' section titles (werk.tsx sectionTitle).
+  section: { fontFamily: DK.type.display900, fontSize: TYPE.captionSize, letterSpacing: 1.8, color: DK.colors.text, marginTop: GRID.sm },
 
-  // Stock bar
-  stockRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stockTrack: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#F0F0F0',
-    overflow: 'hidden',
-  },
-  stockFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  stockText: {
-    fontSize: 10,
-    color: '#BBB',
-    fontFamily: 'Inter_600SemiBold',
-    minWidth: 32,
-  },
-  reasonText: {
-    fontSize: 12,
-    color: '#777',
-    lineHeight: 16,
-  },
-  supplierBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  costRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  qtyText: {
-    fontSize: 13,
-    fontFamily: 'Archivo_800ExtraBold',
-    color: "#FFFFFF",
-  },
-  costText: {
-    fontSize: 13,
-    color: '#777',
-  },
-  savingsChip: {
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  savingsChipText: {
-    fontSize: 10,
-    fontFamily: 'Archivo_800ExtraBold',
-    color: SemanticColors.feedbackSuccess,
-  },
-  orderBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Palette.hermesOrange,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Empty
-  emptyCard: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    backgroundColor: "#14181F",
-    borderRadius: 16,
-    gap: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#999',
-  },
-
-  // Scanner
-  scannerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: "#14181F",
-    borderRadius: 16,
-    padding: 16,
-  },
-  scannerIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 16,
-    backgroundColor: Palette.hermesOrange + '10',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scannerTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
-    color: "#FFFFFF",
-  },
-  scannerSub: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 2,
-  },
-
-  // Card
   card: {
-    backgroundColor: "#14181F",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: DK.colors.panel,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: DK.colors.border,
+    padding: GRID.md,
+    gap: GRID.sm,
   },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  cardTitle: { flex: 1, fontFamily: DK.type.display700, fontSize: TYPE.titleSize, color: DK.colors.text },
+  cardDesc: { fontFamily: DK.type.body400, fontSize: TYPE.bodySize, color: DK.colors.text, lineHeight: 22 },
 
-  // Breakdown
-  breakdownBar: {
-    flexDirection: 'row',
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 14,
+  watch: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: DK.colors.border, paddingTop: GRID.sm, marginTop: GRID.xs, gap: GRID.sm },
+  watchNone: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.textMuted },
+  watchTitle: { fontFamily: DK.type.display900, fontSize: TYPE.captionSize, letterSpacing: 1.2, color: DK.colors.text },
+  riseRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  riseName: { fontFamily: DK.type.body500, fontSize: TYPE.bodySize, color: DK.colors.text },
+  riseMeta: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.textMuted, marginTop: 2 },
+  risePct: { fontFamily: DK.type.display800, fontSize: TYPE.titleSize, color: DK.colors.danger },
+  linkRow: {
+    flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
+    backgroundColor: DK.colors.panel,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: DK.colors.border,
+    paddingHorizontal: GRID.md, paddingVertical: 14,
   },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  legendLabel: {
-    flex: 1,
-    fontSize: 13,
-    color: '#444',
-  },
-  legendAmount: {
-    fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
-    color: "#FFFFFF",
-    marginRight: 8,
-  },
-  legendPct: {
-    fontSize: 12,
-    color: '#BBB',
-    width: 32,
-  },
+  linkText: { flex: 1, fontFamily: DK.type.body500, fontSize: TYPE.bodySize, color: DK.colors.text },
 
-  // Timeline
-  timelineTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  timelineLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
-  },
-  timelineAmount: {
-    fontSize: 22,
-    fontFamily: 'Archivo_900Black',
-    color: "#FFFFFF",
-  },
-  trendPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: SemanticColors.feedbackSuccessBg,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  trendText: {
-    fontSize: 12,
-    fontFamily: 'Archivo_800ExtraBold',
-    color: SemanticColors.feedbackSuccess,
-  },
-  chartRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 4,
-    height: 100,
-  },
-  barCol: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: '100%',
-  },
-  bar: {
-    width: '100%',
-    borderRadius: 4,
-    minHeight: 6,
-  },
-  barValue: {
-    fontSize: 10,
-    fontFamily: 'Archivo_800ExtraBold',
-    color: Palette.hermesOrange,
-    marginBottom: 4,
-  },
-  barLabel: {
-    fontSize: 9,
-    color: '#CCC',
-    marginTop: 6,
-  },
-  barLabelActive: {
-    color: "#FFFFFF",
-    fontFamily: 'Archivo_800ExtraBold',
-  },
+  pressed: { opacity: 0.85 },
+  disabled: { opacity: 0.6 },
 });

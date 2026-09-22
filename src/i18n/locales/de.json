@@ -3574,7 +3574,18 @@
     "eInvoiceUnknownSupplier": "Unbekannter Lieferant",
     "eInvoicePricesAdded": "Preise zu Ihrem Preisindex hinzugefügt.",
     "importNothingSaved": "Es konnte nichts gespeichert werden (Materialien: {{count}}). Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-    "importSomeFailed": "Nicht gespeichert: {{count}} — importieren Sie erneut, um es noch einmal zu versuchen."
+    "importSomeFailed": "Nicht gespeichert: {{count}} — importieren Sie erneut, um es noch einmal zu versuchen.",
+    "readInvoiceTitle": "Lieferantenrechnung einlesen",
+    "readInvoiceDesc": "Lesen Sie die Rechnung Ihres Großhändlers ein. Vasco merkt sich, was Sie pro Material bezahlt haben, damit Sie sehen, wann Preise steigen.",
+    "eInvoiceFormats": "XRechnung, ZUGFeRD, Factur-X oder Peppol",
+    "photoReceipt": "Foto eines Belegs",
+    "priceInsightTitle": "Preiseinblick",
+    "priceWatchTitle": "Preisliste Ihres Großhändlers",
+    "priceWatchDesc": "Verknüpfen Sie die DATANORM-Datei Ihres Großhändlers. Vasco verfolgt die Preise der Materialien, die Sie verwenden, und warnt Sie, wenn sie steigen.",
+    "priceWatchButton": "Preisliste importieren",
+    "marketPrices": "Marktpreise ansehen",
+    "priceWatchNoRises": "Verfolgte Materialien: {{count}} · kein Anstieg über {{pct}} %",
+    "priceWatchRises": "Gestiegene Preise"
   },
   "customerView": {
     "pickTierTitle": "Paket wählen",

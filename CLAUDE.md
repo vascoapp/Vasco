@@ -334,6 +334,15 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   its errors must RETURN whether it landed (`emitMaterialPurchased` → boolean,
   `feedPricingMoat` → count, `upsertMaterialCatalogRow` → inserted/exists/
   failed) and the screen claims only that (#363).
+- **AI features follow the SERVER, not the build.** Gate anything that calls
+  an LLM on `useAiCapabilities()` (`src/services/aiCapabilities.ts`, backed by
+  the `ai-capabilities` edge function, booleans only): `vision` for photo
+  analysis, `text` for drafting. Setting ANTHROPIC_API_KEY switches them on
+  within the hour — no build, no OTA. Unreachable = OFF. The build flags in
+  `config/ai.ts` are an override and the offline fallback only (#364).
+- **Inkoop = supplier invoices in, price intelligence out** (rebuilt #364).
+  Do not re-add Herbestellen / Leveranciers / Voorraad / stock figures until
+  something WRITES inventory — they were fed only by a test seed.
 - **Embeddings are DARK in production** — no OPENAI/VOYAGE key.
   `EMBEDDINGS_ENABLED` (`src/config/ai.ts`, off) gates every call to
   `generate-embedding` / `embed-text`; semantic search falls back to its

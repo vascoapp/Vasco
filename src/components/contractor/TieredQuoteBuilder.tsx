@@ -57,7 +57,7 @@ import { useTranslation } from 'react-i18next';
 // via the generate-sow edge fn. Lives in the preview/send step so
 // contractors review the prose before tapping Send.
 import { generateScopeOfWork, loadQuoteTonePreset, loadToneExamples } from '../../services/sowGeneratorService';
-import { LLM_GENERATION_ENABLED } from '../../config/ai';
+import { useAiCapabilities } from '../../services/aiCapabilities';
 import { useAppState } from '../../state/AppState';
 import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate, getSelectableVatRates, getEnergyRenovationVatRate } from '../../domain/business';
 import { localDateKey } from '../../utils/dateKey';
@@ -200,6 +200,10 @@ interface TieredQuoteBuilderProps {
 
 export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClose }: TieredQuoteBuilderProps) {
   const { t } = useTranslation();
+  // Which AI features the server can run NOW (ai-capabilities edge function):
+  // photo → quote needs vision, scope drafting needs text. Both switch on by
+  // themselves when the operator sets the key — no build, no OTA.
+  const aiCaps = useAiCapabilities();
   // Android: a Modal gets no adjustResize, so these centred cards sit under
   // the keyboard. Lift them by its height (#339).
   const kbInset = useKeyboardInset();
@@ -1348,9 +1352,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 ]}
               />
               </View>
-              {/* Photo → quote needs the LLM edge function; with no key it
-                  500s (config/ai.ts). Not offered until it can answer. */}
-              {LLM_GENERATION_ENABLED ? (
+              {/* Photo → quote needs Claude Vision; with no key analyze-photo
+                  500s. Offered only when the server says it can answer. */}
+              {aiCaps.vision ? (
                 <Pressable
                   testID="ai-scan-row"
                   style={s.startTile}
@@ -2029,7 +2033,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           {/* Without a live LLM the scope is the contractor's own text — the
               same field the generated draft lands in, minus any claim that
               Vasco writes it (config/ai.ts). */}
-          {!LLM_GENERATION_ENABLED && (
+          {!aiCaps.text && (
             <View style={s.sowResultBox}>
               <TextInput
                 value={sowText}
@@ -2043,7 +2047,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
               />
             </View>
           )}
-          {LLM_GENERATION_ENABLED && !sowText && !sowLoading && (
+          {aiCaps.text && !sowText && !sowLoading && (
             <>
               {/* R64 (audit fix #9): explainer subtitle so contractors who
                   don't know what an SOW is can see what tapping does. */}
@@ -2092,7 +2096,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
               </Text>
             </Pressable>
           )}
-          {LLM_GENERATION_ENABLED && sowText && !sowLoading && (
+          {aiCaps.text && sowText && !sowLoading && (
             <View style={s.sowResultBox}>
               <TextInput
                 value={sowText}
