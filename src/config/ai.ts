@@ -17,3 +17,20 @@
  */
 export const LLM_GENERATION_ENABLED: boolean =
   process.env.EXPO_PUBLIC_LLM_ENABLED === 'true';
+
+/**
+ * Are server-side EMBEDDINGS live?
+ *
+ * `generate-embedding` and `embed-text` need OPENAI_API_KEY or VOYAGE_API_KEY,
+ * and production has neither (`npx supabase secrets list`, 2026-09-22). Every
+ * call answered 503 — including one per keystroke in the quote builder, where
+ * "Similar past jobs" spun beside a first-time contractor's scope text while
+ * the watchdog counted the 5xx (TestFlight, 2026-09-22). With this off, the
+ * semantic search goes straight to its local keyword index, which is what it
+ * fell back to after the 503 anyway — minus the round trip and the spinner.
+ *
+ * Off unless the build sets EXPO_PUBLIC_EMBEDDINGS_ENABLED=true — set it in the
+ * same change that funds the key.
+ */
+export const EMBEDDINGS_ENABLED: boolean =
+  process.env.EXPO_PUBLIC_EMBEDDINGS_ENABLED === 'true';

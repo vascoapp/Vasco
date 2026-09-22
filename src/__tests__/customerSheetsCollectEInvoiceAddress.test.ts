@@ -12,7 +12,10 @@ import path from 'path';
 import { stripComments } from '../utils/stripComments';
 
 const ROOT = path.resolve(__dirname, '../..');
-const SHEETS = ['app/contractor/customer-crm.tsx', 'app/(contractor)/bedrijf.tsx'];
+// The Klanten tab's sheet moved into a shared component (2026-09-22) so the
+// quote builder can create a customer with the SAME form; the guard follows
+// the form, and a third test below pins that Klanten still uses it.
+const SHEETS = ['app/contractor/customer-crm.tsx', 'src/components/shared/AddCustomerSheet.tsx'];
 
 describe('both new-customer sheets collect post code and city', () => {
   it.each(SHEETS)('%s has the fields', (rel) => {
@@ -32,6 +35,13 @@ describe('both new-customer sheets collect post code and city', () => {
 });
 
 describe('icon-only controls have a name', () => {
+  it('the Klanten tab and the quote builder both use the shared sheet', () => {
+    for (const rel of ['app/(contractor)/bedrijf.tsx', 'app/contractor/tiered-quote.tsx']) {
+      const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+      expect({ rel, uses: /<AddCustomerSheet\b/.test(src) }).toEqual({ rel, uses: true });
+    }
+  });
+
   it('the home notification bell is labelled', () => {
     const src = fs.readFileSync(path.join(ROOT, 'app/(contractor)/index.tsx'), 'utf8');
     const at = src.indexOf('styles.bellBtn');

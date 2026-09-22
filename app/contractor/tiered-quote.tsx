@@ -1,11 +1,19 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Alert } from 'react-native';
+import { Alert, View, Text, Pressable, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { TieredQuoteBuilder } from '../../src/components/contractor';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { ensureCanCreate } from '../../src/services/tierGatePrompt';
+import { DK } from '../../src/theme/draftkings';
+import { TYPE, GRID } from '../../src/theme/tabStyles';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
+import { DKMenu } from '../../src/components/shared/DKMenu';
+import { DKLabel } from '../../src/components/shared/DKLabel';
+import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
 
 export default function TieredQuoteScreen() {
   const router = useRouter();
@@ -25,11 +33,97 @@ export default function TieredQuoteScreen() {
     () => (params.jobId ? jobs.find((j) => j.id === params.jobId) : undefined),
     [params.jobId, jobs],
   );
+  // WHO the quote is for is asked FIRST. Every generic entry point (Geld,
+  // Werk, Facturen, Vandaag, the activation checklist — about fifteen) opens
+  // this screen with no customer, and the builder has no picker of its own:
+  // a first-time contractor filled in an entire quote and was only then told
+  // "No customer attached", with Cancel or Create anyway and no way to add one
+  // (TestFlight, 2026-09-22). Asking here covers every caller at once.
+  const [chosenCustomerId, setChosenCustomerId] = useState<string | null>(null);
+  const [skippedCustomer, setSkippedCustomer] = useState(false);
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+
   const prefillCustomer = useMemo(() => {
-    const id = params.customerId ?? linkedJob?.customerId ?? undefined;
+    const id = params.customerId ?? linkedJob?.customerId ?? chosenCustomerId ?? undefined;
     if (!id) return undefined;
     return customers.find((c: any) => c.id === id) as any;
-  }, [params.customerId, linkedJob?.customerId, customers]);
+  }, [params.customerId, linkedJob?.customerId, chosenCustomerId, customers]);
+
+  // A caller that NAMED a customer or a job keeps its old behaviour, even if
+  // that record is gone — this step is for "no customer was given".
+  const callerNamedOne = !!(params.customerId || linkedJob?.customerId);
+  const askForCustomer = !callerNamedOne && !prefillCustomer && !skippedCustomer;
+  const hasCustomers = customers.length > 0;
+
+  // No customers at all: go straight to adding the first one, once. Closing
+  // the sheet leaves the step on screen with the same button, never a loop.
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (askForCustomer && !hasCustomers && !autoOpened.current) {
+      autoOpened.current = true;
+      setShowAddCustomer(true);
+    }
+  }, [askForCustomer, hasCustomers]);
+
+  if (askForCustomer) {
+    return (
+      <View style={cs.root}>
+        <DKScreenHeader title={t('dk.actions.newQuote', 'New quote')} />
+        <View style={cs.body}>
+          <Ionicons name="person-add-outline" size={40} color={DK.colors.textMuted} />
+          <DKLabel style={cs.heading}>{t('tieredQuote.whoIsItFor', 'Who is this quote for?')}</DKLabel>
+          {hasCustomers ? (
+            <View style={cs.menuWrap}>
+              {/* One-of-N → a balloon menu, never a chip strip (CLAUDE.md). */}
+              <DKMenu
+                accessibilityLabel={t('jobs.selectCustomer', 'Select customer')}
+                items={[
+                  ...(customers as { id: string; name: string; phone?: string }[]).map((c) => ({
+                    key: c.id,
+                    label: c.name,
+                    detail: c.phone,
+                    onPress: () => setChosenCustomerId(c.id),
+                  })),
+                  {
+                    key: '__new__',
+                    label: t('dk.actions.newCustomer', 'New customer'),
+                    icon: 'add' as const,
+                    emphasis: true,
+                    onPress: () => setShowAddCustomer(true),
+                  },
+                ]}
+                renderAnchor={(open) => (
+                  <Pressable style={cs.anchor} onPress={open} accessibilityRole="button">
+                    <Ionicons name="person-outline" size={16} color={DK.colors.textMuted} />
+                    <Text style={cs.anchorText} numberOfLines={1}>{t('jobs.selectCustomer', 'Select customer')}</Text>
+                    <Ionicons name="chevron-down" size={16} color={DK.colors.textMuted} />
+                  </Pressable>
+                )}
+              />
+            </View>
+          ) : (
+            <>
+              <Text style={cs.desc}>
+                {t('tieredQuote.firstCustomerDesc', 'Add your customer first — the quote is made out to them and sent to them.')}
+              </Text>
+              <Pressable style={cs.primary} onPress={() => setShowAddCustomer(true)} accessibilityRole="button">
+                <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+                <DKLabel style={cs.primaryText}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
+              </Pressable>
+            </>
+          )}
+          <Pressable onPress={() => setSkippedCustomer(true)} hitSlop={8} accessibilityRole="button">
+            <Text style={cs.skip}>{t('tieredQuote.continueWithoutCustomer', 'Continue without a customer')}</Text>
+          </Pressable>
+        </View>
+        <AddCustomerSheet
+          visible={showAddCustomer}
+          onClose={() => setShowAddCustomer(false)}
+          onAdded={(id) => setChosenCustomerId(id)}
+        />
+      </View>
+    );
+  }
 
   return (
     <TieredQuoteBuilder
@@ -190,3 +284,29 @@ export default function TieredQuoteScreen() {
     />
   );
 }
+
+const cs = StyleSheet.create({
+  root: { flex: 1, backgroundColor: DK.colors.bg },
+  body: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: GRID.md, paddingHorizontal: GRID.lg, paddingBottom: GRID.xl },
+  heading: { fontFamily: DK.type.display900, fontSize: TYPE.titleSize, color: DK.colors.text, letterSpacing: 1.8, textAlign: 'center' },
+  desc: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.textMuted, textAlign: 'center', maxWidth: 300 },
+  // The menu's own wrapper sizes to content, so the width goes on a View
+  // around it, not on the anchor (docs/ui-playbook.md §2).
+  menuWrap: { alignSelf: 'stretch' },
+  anchor: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: DK.colors.panel2,
+    borderRadius: DK.radius.button,
+    borderWidth: 1, borderColor: DK.colors.border,
+    paddingHorizontal: 14, paddingVertical: 14,
+  },
+  anchorText: { flex: 1, minWidth: 0, fontSize: TYPE.bodySize, fontFamily: DK.type.body500, color: DK.colors.text },
+  primary: {
+    borderRadius: DK.radius.button, overflow: 'hidden',
+    paddingVertical: 14, paddingHorizontal: GRID.xl,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 18, elevation: 10,
+  },
+  primaryText: { fontFamily: DK.type.display900, fontSize: TYPE.captionSize, color: DK.colors.text, letterSpacing: 1.4 },
+  skip: { fontFamily: DK.type.body500, fontSize: TYPE.captionSize, color: DK.colors.textMuted, textDecorationLine: 'underline', marginTop: GRID.sm },
+});

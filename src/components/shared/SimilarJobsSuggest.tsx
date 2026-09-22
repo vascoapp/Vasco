@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { searchSimilarJobs, type SearchResult } from '../../intelligence/semanticSearch';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function SimilarJobsSuggest({ query, onPickJob }: Props) {
+  const { t } = useTranslation();
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -37,13 +39,16 @@ export function SimilarJobsSuggest({ query, onPickJob }: Props) {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [query]);
 
-  if (!loading && results.length === 0) return null;
+  // Nothing to show until there IS something: a panel that appears only to
+  // spin and vanish is noise, and for a contractor with no past jobs it spun
+  // on every keystroke and found nothing (TestFlight, 2026-09-22).
+  if (results.length === 0) return null;
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="sparkles" size={14} color={Palette.hermesOrange} />
-        <Text style={styles.title}>Similar past jobs</Text>
+        <Text style={styles.title}>{t('quotes.similarPastJobs', 'Similar past jobs')}</Text>
         {loading && <ActivityIndicator size="small" color={Palette.hermesOrange} />}
       </View>
       {results.map((r) => (
@@ -52,7 +57,7 @@ export function SimilarJobsSuggest({ query, onPickJob }: Props) {
           onPress={() => onPickJob?.(r.id)}
           style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}
           accessibilityRole="button"
-          accessibilityLabel={`Reuse past job ${r.title}`}
+          accessibilityLabel={t('quotes.reusePastJob', { title: r.title, defaultValue: 'Reuse past job {{title}}' })}
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.rowTitle} numberOfLines={1}>{r.title}</Text>

@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, TextInput, Modal, KeyboardAvoidingView, Platform, Share, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -24,7 +24,7 @@ import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DKLabel } from '../../src/components/shared/DKLabel';
-import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
+import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
 
 // R113 versioned this to `_v2` to escape a poisoned v1 cache that held
 // auto-seeded fake trackers. But NOTHING EVER WROTE `_v2` — every writer
@@ -88,26 +88,10 @@ const SEED_TRACKERS: TrackerData[] = [];
 
 export default function BedrijfScreen() {
   const { t } = useTranslation();
-  // Android: a Modal is its own window and never gets the activity's
-  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
-  // keyboard height has to pad it directly (useKeyboardInset, #339).
-  const kbInset = useKeyboardInset();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  // Address was not captured here at all, only in the enterprise-tab customer
-  // modal that a contractor never sees. Without it the app holds no location
-  // for anyone a contractor adds, which quietly disables directions-to-job and
-  // any per-site history.
-  const [newAddress, setNewAddress] = useState('');
-  // Post code + city: a German e-invoice is invalid without the buyer's
-  // (BR-DE-8/9), and one free-text line cannot be split reliably (#339).
-  const [newPostcode, setNewPostcode] = useState('');
-  const [newCity, setNewCity] = useState('');
-  const { customers, invoices, jobs, addCustomer, isLoading, businessProfile } = useAppState();
+  const { customers, invoices, jobs, isLoading, businessProfile } = useAppState();
   const { user } = useAuth();
   const [trackers, setTrackers] = useState<TrackerData[]>([]);
   const [tab, setTab] = useState<TabKey>('overview');
@@ -150,20 +134,6 @@ export default function BedrijfScreen() {
     setRefreshing(true);
     setTimeout(() => { setRefreshing(false); hapticSuccess(); }, 600);
   }, []);
-
-  const handleAddCustomer = useCallback(async () => {
-    if (!newName.trim()) return;
-    await addCustomer(
-      newName.trim(),
-      newEmail.trim() || undefined,
-      newPhone.trim() || undefined,
-      newAddress.trim() || undefined,
-      { postcode: newPostcode.trim() || undefined, city: newCity.trim() || undefined },
-    );
-    hapticSuccess();
-    setNewName(''); setNewEmail(''); setNewPhone(''); setNewAddress(''); setNewPostcode(''); setNewCity('');
-    setShowAddModal(false);
-  }, [newName, newEmail, newPhone, newAddress, newPostcode, newCity, addCustomer]);
 
   const handleSendReminder = useCallback(async (trackerId: string) => {
     try {
@@ -536,29 +506,8 @@ export default function BedrijfScreen() {
         <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* ─── ADD CUSTOMER MODAL ─── */}
-      <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
-        <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <Pressable style={s.modalOverlay} onPress={() => setShowAddModal(false)}>
-            <Pressable style={[s.modalSheet, kbInset ? { paddingBottom: kbInset + 16 } : null]} onPress={(e) => e.stopPropagation()}>
-              <View style={s.modalHandle} />
-              <DKLabel style={s.modalTitle}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
-              <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />
-              <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
-              <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.textMuted} keyboardType="phone-pad" />
-              <TextInput style={s.modalInput} value={newAddress} onChangeText={setNewAddress} placeholder={t('customers.addressPlaceholder', 'Address')} placeholderTextColor={DK.colors.textMuted} />
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput style={[s.modalInput, { flex: 1 }]} value={newPostcode} onChangeText={setNewPostcode} placeholder={t('contractor.customers.postcodePlaceholder', 'Post code')} placeholderTextColor={DK.colors.textMuted} />
-                <TextInput style={[s.modalInput, { flex: 2 }]} value={newCity} onChangeText={setNewCity} placeholder={t('contractor.customers.cityPlaceholder', 'City')} placeholderTextColor={DK.colors.textMuted} />
-              </View>
-              <Pressable style={[s.modalSubmit, !newName.trim() && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={!newName.trim()}>
-                <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                <DKLabel style={s.modalSubmitText}>{t('dk.actions.addCustomer', 'Add customer')}</DKLabel>
-              </Pressable>
-            </Pressable>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Modal>
+      {/* ─── ADD CUSTOMER — shared with the quote builder ─── */}
+      <AddCustomerSheet visible={showAddModal} onClose={() => setShowAddModal(false)} />
     </View>
   );
 }
@@ -817,7 +766,7 @@ const s = StyleSheet.create({
     paddingVertical: 32, paddingHorizontal: 24, gap: 8,
   },
   emptyIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: DK.colors.accent + '1A', alignItems: 'center', justifyContent: 'center' },
-  emptyTitle: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: 1.4 },
+  emptyTitle: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: 1.4, textAlign: 'center' },
   emptyDesc: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, textAlign: 'center', lineHeight: 17 },
   emptyCta: { marginTop: 8, paddingVertical: 10, paddingHorizontal: 20, borderRadius: DK.radius.chip, backgroundColor: DK.colors.accent + '14', borderWidth: 1, borderColor: DK.colors.accent + '44' },
   emptyCtaText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.accent, letterSpacing: 1.2 },
@@ -828,34 +777,6 @@ const s = StyleSheet.create({
   },
   manageLinkText: { fontFamily: DK.type.display800, fontSize: 11, color: DK.colors.accent, letterSpacing: 1.2 },
 
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: DK.colors.panel,
-    borderTopLeftRadius: DK.radius.card, borderTopRightRadius: DK.radius.card,
-    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderColor: DK.colors.border,
-    padding: 20, paddingBottom: 40, gap: 10,
-  },
-  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: DK.colors.border, alignSelf: 'center', marginBottom: 8 },
-  modalTitle: { fontFamily: DK.type.display900, fontSize: 16, color: DK.colors.text, letterSpacing: 1.8 },
-  modalInput: {
-    backgroundColor: DK.colors.panel2,
-    borderRadius: DK.radius.button,
-    borderWidth: 1, borderColor: DK.colors.border,
-    paddingHorizontal: 14, paddingVertical: 14,
-    fontSize: 15,
-    fontFamily: DK.type.body500,
-    color: DK.colors.text,
-  },
-  modalSubmit: {
-    borderRadius: DK.radius.button,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    marginTop: 4,
-  },
-  modalSubmitText: { fontFamily: DK.type.display900, fontSize: 13, color: '#FFFFFF', letterSpacing: 1.4 },
 });
 
 const heroStyles = StyleSheet.create({

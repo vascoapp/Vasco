@@ -1987,7 +1987,11 @@
     "vatStandard": "{{rate}} % — taux normal",
     "vatReduced": "{{rate}} % — rénovation, logement de plus de 2 ans",
     "vatEnergy": "{{rate}} % — rénovation énergétique",
-    "tiersSamePriceHint": "Chaque formule reprend vos propres prix. Définissez un prix par formule pour chaque prestation dans votre catalogue."
+    "tiersSamePriceHint": "Chaque formule reprend vos propres prix. Définissez un prix par formule pour chaque prestation dans votre catalogue.",
+    "similarPastJobs": "Chantiers passés similaires",
+    "reusePastJob": "Réutiliser le chantier {{title}}",
+    "prefilledFromPhotosBy": "Prérempli à partir des photos de {{name}} : {{count}}",
+    "prefilledFromPhotos": "Prérempli à partir des photos du client : {{count}}"
   },
   "queue": {
     "lowWinTitle": "Faible chance d'acceptation · {{customer}}",
@@ -2083,7 +2087,10 @@
     "sendAnyway": "Envoyer quand même",
     "createAnyway": "Créer quand même",
     "zeroAmount": "Le total du devis doit être supérieur à zéro.",
-    "jobLabelMore": "{{first}} +{{count}}"
+    "jobLabelMore": "{{first}} +{{count}}",
+    "whoIsItFor": "Pour qui est ce devis ?",
+    "firstCustomerDesc": "Ajoutez d'abord votre client — le devis est établi à son nom et lui est envoyé.",
+    "continueWithoutCustomer": "Continuer sans client"
   },
   "project": {
     "changeStatus": "Changer le statut",
@@ -6086,7 +6093,12 @@
       "gen-2": "Démolition",
       "gen-3": "Plâtrerie",
       "gen-4": "Carrelage",
-      "gen-5": "Transport & évacuation"
+      "gen-5": "Transport & évacuation",
+      "pnt-1": "Préparation des murs",
+      "pnt-2": "Peinture des murs intérieurs",
+      "pnt-3": "Peinture du plafond",
+      "pnt-4": "Boiseries — portes et huisseries",
+      "pnt-5": "Décollage du papier peint"
     },
     "unit": {
       "hour": "h",

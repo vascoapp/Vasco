@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: DK.colors.accent + '1A', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  emptyTitle: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: 1.4 },
+  emptyTitle: { fontFamily: DK.type.display900, fontSize: 14, color: DK.colors.text, letterSpacing: 1.4, textAlign: 'center' },
   emptyDesc: { fontFamily: DK.type.body400, fontSize: 12, color: DK.colors.textMuted, textAlign: 'center', lineHeight: 17 },
   emptyCta: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -983,7 +983,7 @@ const styles = StyleSheet.create({
 
   // Full empty
   fullEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 24 },
-  fullEmptyTitle: { fontFamily: DK.type.display900, fontSize: 16, color: DK.colors.text, letterSpacing: 1.8, marginTop: 10 },
+  fullEmptyTitle: { fontFamily: DK.type.display900, fontSize: 16, color: DK.colors.text, letterSpacing: 1.8, marginTop: 10, textAlign: 'center' },
   fullEmptyDesc: { fontFamily: DK.type.body400, fontSize: 13, color: DK.colors.textMuted },
   fullEmptyBtn: {
     marginTop: 14,

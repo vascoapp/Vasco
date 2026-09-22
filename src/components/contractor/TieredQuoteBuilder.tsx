@@ -21,7 +21,6 @@ import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
 import { MS_PER_DAY } from '../../utils/timeConstants';
-import { MOCK_PRICEBOOK } from '../../data/mockPricebook';
 import { usePricebook } from '../../services/pricebookService';
 import { DEMO_MODE } from '../../config/demo';
 import { SimilarJobsSuggest } from '../shared/SimilarJobsSuggest';
@@ -115,6 +114,16 @@ const TRADE_PRICEBOOK: Record<string, { id: string; nameKey: string; basePrice: 
     { id: 'crp-3', nameKey: 'crp-3', basePrice: 85, unitKey: 'hour' },
     { id: 'crp-4', nameKey: 'crp-4', basePrice: 65, unitKey: 'hour' },
     { id: 'crp-5', nameKey: 'crp-5', basePrice: 35, unitKey: 'sqm' },
+  ],
+  // Painting had no entry here, so the demo builder read MOCK_PRICEBOOK
+  // instead: English service names and package bullets on a Dutch screen, and
+  // per-package prices (×1.4 / ×2) that bypassed the ×1 package decision (#346).
+  painting: [
+    { id: 'pnt-1', nameKey: 'pnt-1', basePrice: 12, unitKey: 'sqm' },
+    { id: 'pnt-2', nameKey: 'pnt-2', basePrice: 18, unitKey: 'sqm' },
+    { id: 'pnt-3', nameKey: 'pnt-3', basePrice: 15, unitKey: 'sqm' },
+    { id: 'pnt-4', nameKey: 'pnt-4', basePrice: 85, unitKey: 'piece' },
+    { id: 'pnt-5', nameKey: 'pnt-5', basePrice: 14, unitKey: 'sqm' },
   ],
   general: [
     { id: 'gen-1', nameKey: 'gen-1', basePrice: 55, unitKey: 'hour' },
@@ -396,9 +405,10 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         }
       }
       if (h.result.jobType) setScopeText(h.result.jobType);
+      // Count after a colon: no plural machinery needed in any locale.
       setHandoffBanner(h.customerName
-        ? `Prefilled from ${h.photoUrls.length} photos sent by ${h.customerName}`
-        : `Prefilled from ${h.photoUrls.length} customer photos`);
+        ? t('quotes.prefilledFromPhotosBy', { name: h.customerName, count: h.photoUrls.length, defaultValue: 'Prefilled from photos sent by {{name}}: {{count}}' })
+        : t('quotes.prefilledFromPhotos', { count: h.photoUrls.length, defaultValue: 'Prefilled from customer photos: {{count}}' }));
     })();
     return () => { cancelled = true; };
   }, []);
@@ -503,9 +513,6 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         .filter(e => e.isActive)
         .map(e => ({ ...e, contractorId: '' })) as unknown as PricebookItem[];
     }
-
-    const withVariants = MOCK_PRICEBOOK.filter(i => i.variants && i.variants.length > 0);
-    if (trade === 'painting' && withVariants.length > 0) return withVariants;
 
     const tradeItems = TRADE_PRICEBOOK[trade] ?? TRADE_PRICEBOOK.general ?? [];
     // Resolve the catalogue's stable ids into the reader's language HERE, so
@@ -933,42 +940,45 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     // Strip the score before adding to selectedServices
     const matchedClean = matched.map(({ score: _score, ...rest }) => rest);
 
-    // Ask the ML duration predictor to refine the rough quantity for each new
-    // line item. Fire-and-forget — falls back to the matched quantity on
-    // any failure so the UX never stalls.
-    import('../../services/mlPrefillService').then(async (mod) => {
-      const refined = await Promise.all(matchedClean.map(async (svc) => {
-        try {
-          const hours = await mod.prefillDurationForLine({
-            trade,
-            description: svc.item.name,
-            quantity: svc.quantity,
-          });
-          // Only an HOURLY line has a quantity measured in hours. This wrote
-          // the predicted hours into `quantity` whatever the unit was, so a
-          // "Zählerschrank, 1 Stück, €450" line became 0,9 Stück — €405 — and
-          // 2 pieces became 1,7 (#207's shape, #339). A prediction may fill a
-          // field named `suggested*`; it may not rewrite what is billed.
-          const isHourly = (svc.item as { pricingType?: string }).pricingType === 'hourly';
-          return isHourly && hours > 0 && hours < 24 ? { ...svc, quantity: hours } : svc;
-        } catch { return svc; }
-      }));
-      setSelectedServices(prev => [...prev, ...refined]);
-      for (const m of refined) {
-        baselinesRef.current.set(m.item.id, {
-          originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
-          source: 'ai_draft', sku: m.item.id, description: m.item.name,
-        });
-      }
-    }).catch(() => {
-      setSelectedServices(prev => [...prev, ...matchedClean]);
-      for (const m of matchedClean) {
-        baselinesRef.current.set(m.item.id, {
-          originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
-          source: 'ai_draft', sku: m.item.id, description: m.item.name,
-        });
-      }
-    });
+    // The lines land NOW. They used to wait for the ML duration predictor on
+    // every one of them — a network call with no timeout — so on a device the
+    // scope text cleared at 600 ms and the lines appeared about half a minute
+    // later: it read as "my description was eaten" (iOS sim, 2026-09-22). The
+    // prediction only ever changed HOURLY lines anyway.
+    setSelectedServices(prev => [...prev, ...matchedClean]);
+    for (const m of matchedClean) {
+      baselinesRef.current.set(m.item.id, {
+        originalQty: m.quantity, originalUnitPrice: m.item.basePrice,
+        source: 'ai_draft', sku: m.item.id, description: m.item.name,
+      });
+    }
+
+    // Only an HOURLY line has a quantity measured in hours. Refining any other
+    // unit wrote predicted hours into a piece count — a "Zählerschrank, 1 Stück,
+    // €450" line became 0,9 Stück, €405 (#207's shape, #339). A prediction may
+    // fill a field named `suggested*`; it may not rewrite what is billed.
+    const hourlyLines = matchedClean.filter(
+      (svc) => (svc.item as { pricingType?: string }).pricingType === 'hourly',
+    );
+    if (hourlyLines.length > 0) {
+      import('../../services/mlPrefillService').then((mod) => {
+        for (const svc of hourlyLines) {
+          mod.prefillDurationForLine({ trade, description: svc.item.name, quantity: svc.quantity })
+            .then((hours) => {
+              if (!(hours > 0 && hours < 24) || hours === svc.quantity) return;
+              // Never over a number the contractor has already changed.
+              setSelectedServices(prev => prev.map(s =>
+                s.item.id === svc.item.id && s.quantity === svc.quantity ? { ...s, quantity: hours } : s,
+              ));
+              const base = baselinesRef.current.get(svc.item.id);
+              if (base && base.originalQty === svc.quantity) {
+                baselinesRef.current.set(svc.item.id, { ...base, originalQty: hours });
+              }
+            })
+            .catch(() => {});
+        }
+      }).catch(() => {});
+    }
 
     setTimeout(() => {
       setAiExplanations(prev => ({ ...prev, ...explanations }));

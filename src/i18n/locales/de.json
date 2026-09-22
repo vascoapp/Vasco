@@ -1987,7 +1987,11 @@
     "vatStandard": "{{rate}}% — Regelsatz",
     "vatReduced": "{{rate}}% — Renovierung, Wohnung älter als 2 Jahre",
     "vatEnergy": "{{rate}}% — energetische Sanierung",
-    "tiersSamePriceHint": "Jedes Paket verwendet Ihre eigenen Preise. Einen eigenen Paketpreis legen Sie je Leistung in Ihrer Preisliste fest."
+    "tiersSamePriceHint": "Jedes Paket verwendet Ihre eigenen Preise. Einen eigenen Paketpreis legen Sie je Leistung in Ihrer Preisliste fest.",
+    "similarPastJobs": "Ähnliche frühere Aufträge",
+    "reusePastJob": "Früheren Auftrag {{title}} wiederverwenden",
+    "prefilledFromPhotosBy": "Vorausgefüllt aus Fotos von {{name}}: {{count}}",
+    "prefilledFromPhotos": "Vorausgefüllt aus Kundenfotos: {{count}}"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -2083,7 +2087,10 @@
     "sendAnyway": "Trotzdem senden",
     "createAnyway": "Trotzdem erstellen",
     "zeroAmount": "Die Angebotssumme muss größer als null sein.",
-    "jobLabelMore": "{{first}} +{{count}}"
+    "jobLabelMore": "{{first}} +{{count}}",
+    "whoIsItFor": "Für wen ist dieses Angebot?",
+    "firstCustomerDesc": "Legen Sie zuerst Ihren Kunden an — das Angebot wird auf ihn ausgestellt und ihm zugesendet.",
+    "continueWithoutCustomer": "Ohne Kunden fortfahren"
   },
   "project": {
     "changeStatus": "Status ändern",
@@ -7028,7 +7035,12 @@
       "gen-2": "Abbrucharbeiten",
       "gen-3": "Putzarbeiten",
       "gen-4": "Fliesenarbeiten",
-      "gen-5": "Transport & Entsorgung"
+      "gen-5": "Transport & Entsorgung",
+      "pnt-1": "Wandvorbereitung",
+      "pnt-2": "Innenwände streichen",
+      "pnt-3": "Decke streichen",
+      "pnt-4": "Holzarbeiten — Türen und Zargen",
+      "pnt-5": "Tapete entfernen"
     },
     "unit": {
       "hour": "Std.",

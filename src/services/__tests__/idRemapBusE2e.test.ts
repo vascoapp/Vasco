@@ -30,6 +30,10 @@ const mockInserts: Array<{ table: string; payload: any }> = [];
 const mockUpdates: Array<{ table: string; payload: any; where: any }> = [];
 const mockEmbedCalls: any[] = [];
 
+// This suite tests the REMAP mechanism, so the embedding writers must run.
+// Production keeps them dark (config/ai.ts EMBEDDINGS_ENABLED, no key).
+jest.mock('../../config/ai', () => ({ LLM_GENERATION_ENABLED: false, EMBEDDINGS_ENABLED: true }));
+
 jest.mock('../../lib/supabase', () => ({
   __esModule: true,
   isSupabaseConfigured: true,

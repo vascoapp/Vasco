@@ -1476,7 +1476,7 @@ export default function OnboardingScreen() {
           keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
         >
-          <FadeIn key={step} delay={0} duration={300}>
+          <FadeIn key={step} delay={0} duration={300} style={styles.stepFade}>
             {renderStep()}
           </FadeIn>
         </ScrollView>
@@ -1581,6 +1581,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: SafeArea.side,
     paddingBottom: GRID.xl,
+  },
+  // The FadeIn wrapper must GROW, or `centeredContent`'s flex: 1 has no
+  // height to fill and the welcome step stacks from the top — the logo sat
+  // right under the status bar with ~180 pt empty below the button (TestFlight,
+  // 2026-09-22). Steps 2+ are top-aligned children, so growing only the
+  // wrapper leaves them where they were.
+  stepFade: {
+    flexGrow: 1,
   },
   centeredContent: {
     flex: 1,

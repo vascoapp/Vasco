@@ -27,6 +27,19 @@ describe('quote builder with no LLM', () => {
     expect(r.error).toBeNull();
     const root = (r.tree as any).root;
 
+    // The screen asks who the quote is for before the builder opens
+    // (customerStepComesFirst.test.tsx). This test is about the builder, so
+    // step past it the way a contractor would.
+    const skip = (nl as any).tieredQuote.continueWithoutCustomer as string;
+    const skipBtn = root.findAll(
+      (n: any) => typeof n.props?.onPress === 'function'
+        && n.findAll((c: any) => c.props?.children === skip, { deep: true }).length > 0,
+      { deep: true },
+    );
+    expect(skipBtn.length).toBeGreaterThan(0);
+    await act(async () => { skipBtn[skipBtn.length - 1].props.onPress(); });
+    for (let i = 0; i < 6; i++) await act(async () => { await new Promise((res) => setTimeout(res, 0)); });
+
     // Step 1: no photo tile.
     expect(root.findAll((n: any) => n.props?.testID === 'ai-scan-row', { deep: true })).toHaveLength(0);
 

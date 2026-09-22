@@ -1987,7 +1987,11 @@
     "vatStandard": "{{rate}}% — tipo general",
     "vatReduced": "{{rate}}% — reforma, vivienda de más de 2 años",
     "vatEnergy": "{{rate}}% — reforma energética",
-    "tiersSamePriceHint": "Cada paquete usa sus propios precios. Defina un precio por paquete para cada servicio en su catálogo."
+    "tiersSamePriceHint": "Cada paquete usa sus propios precios. Defina un precio por paquete para cada servicio en su catálogo.",
+    "similarPastJobs": "Trabajos anteriores similares",
+    "reusePastJob": "Reutilizar el trabajo {{title}}",
+    "prefilledFromPhotosBy": "Prerrellenado con fotos de {{name}}: {{count}}",
+    "prefilledFromPhotos": "Prerrellenado con fotos del cliente: {{count}}"
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -2083,7 +2087,10 @@
     "sendAnyway": "Enviar igualmente",
     "createAnyway": "Crear igualmente",
     "zeroAmount": "El total del presupuesto debe ser mayor que cero.",
-    "jobLabelMore": "{{first}} +{{count}}"
+    "jobLabelMore": "{{first}} +{{count}}",
+    "whoIsItFor": "¿Para quién es este presupuesto?",
+    "firstCustomerDesc": "Añade primero a tu cliente: el presupuesto va a su nombre y se le envía.",
+    "continueWithoutCustomer": "Continuar sin cliente"
   },
   "project": {
     "changeStatus": "Cambiar estado",
@@ -6086,7 +6093,12 @@
       "gen-2": "Demolición",
       "gen-3": "Enlucido",
       "gen-4": "Alicatado",
-      "gen-5": "Transporte y retirada"
+      "gen-5": "Transporte y retirada",
+      "pnt-1": "Preparación de paredes",
+      "pnt-2": "Pintura de paredes interiores",
+      "pnt-3": "Pintura de techo",
+      "pnt-4": "Carpintería — puertas y marcos",
+      "pnt-5": "Retirada de papel pintado"
     },
     "unit": {
       "hour": "h",

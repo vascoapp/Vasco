@@ -1987,7 +1987,11 @@
     "vatStandard": "{{rate}}% — standaardtarief",
     "vatReduced": "{{rate}}% — renovatie, woning ouder dan 2 jaar",
     "vatEnergy": "{{rate}}% — energierenovatie",
-    "tiersSamePriceHint": "Elk pakket gebruikt uw eigen prijzen. Een eigen pakketprijs stelt u per dienst in uw prijslijst in."
+    "tiersSamePriceHint": "Elk pakket gebruikt uw eigen prijzen. Een eigen pakketprijs stelt u per dienst in uw prijslijst in.",
+    "similarPastJobs": "Vergelijkbare eerdere klussen",
+    "reusePastJob": "Eerdere klus {{title}} hergebruiken",
+    "prefilledFromPhotosBy": "Vooraf ingevuld uit foto's van {{name}}: {{count}}",
+    "prefilledFromPhotos": "Vooraf ingevuld uit foto's van de klant: {{count}}"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -2083,7 +2087,10 @@
     "sendAnyway": "Toch verzenden",
     "createAnyway": "Toch aanmaken",
     "zeroAmount": "Het offertetotaal moet groter zijn dan nul.",
-    "jobLabelMore": "{{first}} +{{count}}"
+    "jobLabelMore": "{{first}} +{{count}}",
+    "whoIsItFor": "Voor wie is deze offerte?",
+    "firstCustomerDesc": "Voeg eerst je klant toe — de offerte staat op hun naam en gaat naar hen.",
+    "continueWithoutCustomer": "Doorgaan zonder klant"
   },
   "project": {
     "changeStatus": "Status wijzigen",
@@ -7028,7 +7035,12 @@
       "gen-2": "Sloopwerk",
       "gen-3": "Stucwerk",
       "gen-4": "Tegelwerk",
-      "gen-5": "Transport & afvoer"
+      "gen-5": "Transport & afvoer",
+      "pnt-1": "Wanden voorbereiden",
+      "pnt-2": "Binnenmuren schilderen",
+      "pnt-3": "Plafond schilderen",
+      "pnt-4": "Houtwerk — deuren en kozijnen",
+      "pnt-5": "Behang verwijderen"
     },
     "unit": {
       "hour": "uur",

@@ -13,6 +13,7 @@
 // =============================================================================
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { EMBEDDINGS_ENABLED } from '../config/ai';
 import { getCurrentUserId } from '../lib/currentUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { subscribeIdRemap, type IdRemapEvent } from '../services/idRemapBus';
@@ -46,7 +47,7 @@ export interface EmbeddingEntry {
 // ---------------------------------------------------------------------------
 
 async function generateEmbedding(text: string): Promise<number[] | null> {
-  if (!isSupabaseConfigured) return null;
+  if (!isSupabaseConfigured || !EMBEDDINGS_ENABLED) return null;
 
   try {
     const { data, error } = await supabase.functions.invoke('generate-embedding', {

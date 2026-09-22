@@ -8,6 +8,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback } from 'react';
 import i18n from '../i18n/i18n';
+import { applySavedLanguage, applySavedCountry } from '../i18n/savedLanguage';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { isJobFinished } from '../domain/jobs';
 import { addToQueue, getQueueHistory, getRequiredPermits } from './aiActionQueueService';
@@ -1001,6 +1002,15 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
     // If subscription read fails, fall through (don't block paid contractors).
   }
 
+  // Every card below PERSISTS resolved copy — title, message, button, impact.
+  // Vandaag calls this on mount, before AuthContext has applied the saved
+  // language, so i18n is still on the DEVICE locale: a Dutch contractor on an
+  // English iPhone got "End of Day Routine: 17:00 / VIEW · Saves time" in
+  // English beside a Dutch home screen, and the once-a-day gate kept it that
+  // way. populateQueue has awaited these since #210; this path never did.
+  await applySavedLanguage();
+  await applySavedCountry();
+
   const packs = await getWorkflowPacks();
   const enabledPacks = packs.filter(p => p.enabled);
   const now = Date.now();
@@ -1437,9 +1447,14 @@ function matchTrigger(
         const done = new Date(j.completedAt || '').getTime();
         return Number.isFinite(done) && now - done < dayMs ? sum + worked : sum;
       }, 0);
-      // The auto_log_hours step reports hours; with none recorded it has
-      // nothing to report.
+      // Each step reports one number, and a step whose number is zero has
+      // nothing to say. The header promised "at least 1 in-progress job" and
+      // only the hours step ever checked: a brand-new account with no jobs at
+      // all was shown "End of Day Routine: 17:00 — Jobs not finished today: 0"
+      // on its first evening.
       if (step.action === 'auto_log_hours' && hoursToday <= 0) break;
+      if (step.action === 'flag_incomplete_jobs' && todayCount <= 0) break;
+      if (step.action === 'prep_tomorrow' && tomorrow <= 0) break;
       results.push({
         label: '17:00',
         customer: '',

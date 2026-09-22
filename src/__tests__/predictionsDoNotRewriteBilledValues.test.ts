@@ -18,12 +18,24 @@ const ROOT = path.resolve(__dirname, '../..');
 describe('the duration predictor only refines hourly lines', () => {
   const src = stripComments(fs.readFileSync(path.join(ROOT, 'src/components/contractor/TieredQuoteBuilder.tsx'), 'utf8'));
 
-  it('guards the override on the line being hourly', () => {
-    const at = src.indexOf('prefillDurationForLine');
-    expect(at).toBeGreaterThan(-1);
-    const block = src.slice(at, at + 900);
-    expect(block).toMatch(/pricingType === 'hourly'/);
-    expect(block).toMatch(/isHourly && hours > 0/);
+  // Since 2026-09-22 the lines land at once and only the HOURLY ones are sent
+  // to the predictor afterwards, so the guard sits BEFORE the call (it filters
+  // what is predicted) rather than after it (discarding what came back). The
+  // assertion follows the behaviour, not the position.
+  it('only ever sends hourly lines to the predictor', () => {
+    const call = src.indexOf('prefillDurationForLine');
+    expect(call).toBeGreaterThan(-1);
+    const filterAt = src.lastIndexOf('const hourlyLines', call);
+    expect(filterAt).toBeGreaterThan(-1);
+    const filter = src.slice(filterAt, src.indexOf(';', filterAt));
+    expect(filter).toMatch(/pricingType === 'hourly'/);
+    // ...and the call iterates exactly that list.
+    expect(src.slice(filterAt, call)).toMatch(/for \(const svc of hourlyLines\)/);
+  });
+
+  it('never overwrites a quantity the contractor already changed', () => {
+    const call = src.indexOf('prefillDurationForLine');
+    expect(src.slice(call, call + 900)).toMatch(/s\.quantity === svc\.quantity \? \{ \.\.\.s, quantity: hours \}/);
   });
 
   it('never assigns the predicted hours unconditionally', () => {

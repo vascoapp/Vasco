@@ -1987,7 +1987,11 @@
     "vatStandard": "{{rate}}% — standard rate",
     "vatReduced": "{{rate}}% — renovation, home over 2 years old",
     "vatEnergy": "{{rate}}% — energy renovation",
-    "tiersSamePriceHint": "Every package quotes your own prices. Give a package its own price per service in your pricebook."
+    "tiersSamePriceHint": "Every package quotes your own prices. Give a package its own price per service in your pricebook.",
+    "similarPastJobs": "Similar past jobs",
+    "reusePastJob": "Reuse past job {{title}}",
+    "prefilledFromPhotosBy": "Prefilled from photos sent by {{name}}: {{count}}",
+    "prefilledFromPhotos": "Prefilled from customer photos: {{count}}"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -2083,7 +2087,10 @@
     "sendAnyway": "Send anyway",
     "createAnyway": "Create anyway",
     "zeroAmount": "Quote total must be greater than zero.",
-    "jobLabelMore": "{{first}} +{{count}}"
+    "jobLabelMore": "{{first}} +{{count}}",
+    "whoIsItFor": "Who is this quote for?",
+    "firstCustomerDesc": "Add your customer first — the quote is made out to them and sent to them.",
+    "continueWithoutCustomer": "Continue without a customer"
   },
   "project": {
     "changeStatus": "Change status",
@@ -7028,7 +7035,12 @@
       "gen-2": "Demolition",
       "gen-3": "Plastering",
       "gen-4": "Tiling",
-      "gen-5": "Transport & disposal"
+      "gen-5": "Transport & disposal",
+      "pnt-1": "Wall preparation",
+      "pnt-2": "Interior wall painting",
+      "pnt-3": "Ceiling painting",
+      "pnt-4": "Woodwork — doors and frames",
+      "pnt-5": "Wallpaper removal"
     },
     "unit": {
       "hour": "hr",

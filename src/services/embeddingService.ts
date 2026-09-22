@@ -9,6 +9,7 @@
 // =============================================================================
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { EMBEDDINGS_ENABLED } from '../config/ai';
 import { getAuthedUserId } from '../lib/currentUser';
 import { subscribeIdRemap, type IdRemapEvent } from './idRemapBus';
 import { logWarn } from '../utils/errorHandler';
@@ -22,6 +23,7 @@ interface EmbedResult {
 
 async function callEmbed(body: Record<string, unknown>): Promise<EmbedResult> {
   if (!isSupabaseConfigured) return { ok: false, error: 'supabase not configured' };
+  if (!EMBEDDINGS_ENABLED) return { ok: false, error: 'embeddings not enabled' };
   try {
     const { data, error } = await supabase.functions.invoke('embed-text', { body });
     if (error) return { ok: false, error: error.message };
@@ -130,7 +132,7 @@ initCustomerRemapListener();
 // ---------------------------------------------------------------------------
 
 async function generateEmbeddingVector(text: string): Promise<number[] | null> {
-  if (!isSupabaseConfigured) return null;
+  if (!isSupabaseConfigured || !EMBEDDINGS_ENABLED) return null;
   try {
     const { data, error } = await supabase.functions.invoke('generate-embedding', { body: { text } });
     if (error || !data?.embedding) return null;
@@ -294,7 +296,7 @@ function initLeadWorkerRemapListener() {
 initLeadWorkerRemapListener();
 
 export async function findSimilarCustomersByText(text: string, limit = 5): Promise<Array<{ customerId: string; similarity: number }>> {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured || !EMBEDDINGS_ENABLED) return [];
   const userId = getAuthedUserId();
   if (!userId) return [];
   // First embed the query text

@@ -515,5 +515,31 @@ describe('workflowPackService', () => {
       expect(prep).toBeDefined();
       expect(prep).toMatch(/:\s*1$/);
     });
+
+    // A brand-new account opened at 20:05 on its first evening was shown
+    // "End of Day Routine: 17:00 — Jobs not finished today: 0" (TestFlight,
+    // 2026-09-22). A step whose number is zero has nothing to report.
+    it('queues nothing at all for an account with no jobs', async () => {
+      jest.setSystemTime(new Date(2026, 4, 10, 20, 5, 0));
+      const pack = DEFAULT_PACKS.find((p) => p.id === 'einde_dag')!;
+      await saveWorkflowPacks([{ ...pack, enabled: true }]);
+      mockAddToQueue.mockClear();
+      await evaluateTriggers({ invoices: [], quotes: [], customers: [], jobs: [] } as any);
+      expect(mockAddToQueue).not.toHaveBeenCalled();
+    });
+
+    it('still flags a job left unfinished today', async () => {
+      jest.setSystemTime(new Date(2026, 4, 10, 18, 0, 0));
+      const pack = DEFAULT_PACKS.find((p) => p.id === 'einde_dag')!;
+      await saveWorkflowPacks([{ ...pack, enabled: true }]);
+      mockAddToQueue.mockClear();
+      await evaluateTriggers({
+        invoices: [], quotes: [], customers: [],
+        jobs: [{ id: 'j1', title: 'Badkamer', status: 'in-progress' }],
+      } as any);
+      const texts = mockAddToQueue.mock.calls.map((c: any[]) => String(c[0].preparedData?.template ?? ''));
+      expect(texts.some((x) => /:\s*1$/.test(x) && /niet afgerond|not finished|nicht abgeschlossen|non terminés|sin terminar|non completati/i.test(x))).toBe(true);
+      expect(texts.every((x) => !/:\s*0$/.test(x))).toBe(true);
+    });
   });
 });

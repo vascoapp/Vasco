@@ -1987,7 +1987,11 @@
     "vatStandard": "{{rate}}% — aliquota ordinaria",
     "vatReduced": "{{rate}}% — ristrutturazione, immobile di oltre 2 anni",
     "vatEnergy": "{{rate}}% — riqualificazione energetica",
-    "tiersSamePriceHint": "Ogni pacchetto usa i tuoi prezzi. Imposta un prezzo per pacchetto su ciascun servizio nel tuo listino."
+    "tiersSamePriceHint": "Ogni pacchetto usa i tuoi prezzi. Imposta un prezzo per pacchetto su ciascun servizio nel tuo listino.",
+    "similarPastJobs": "Lavori precedenti simili",
+    "reusePastJob": "Riutilizza il lavoro {{title}}",
+    "prefilledFromPhotosBy": "Precompilato dalle foto di {{name}}: {{count}}",
+    "prefilledFromPhotos": "Precompilato dalle foto del cliente: {{count}}"
   },
   "queue": {
     "lowWinTitle": "Bassa probabilità · {{customer}}",
@@ -2083,7 +2087,10 @@
     "sendAnyway": "Invia comunque",
     "createAnyway": "Crea comunque",
     "zeroAmount": "Il totale del preventivo deve essere maggiore di zero.",
-    "jobLabelMore": "{{first}} +{{count}}"
+    "jobLabelMore": "{{first}} +{{count}}",
+    "whoIsItFor": "Per chi è questo preventivo?",
+    "firstCustomerDesc": "Aggiungi prima il tuo cliente: il preventivo è intestato a lui e gli viene inviato.",
+    "continueWithoutCustomer": "Continua senza cliente"
   },
   "project": {
     "changeStatus": "Cambia stato",
@@ -6086,7 +6093,12 @@
       "gen-2": "Demolizioni",
       "gen-3": "Intonacatura",
       "gen-4": "Piastrellatura",
-      "gen-5": "Trasporto e smaltimento"
+      "gen-5": "Trasporto e smaltimento",
+      "pnt-1": "Preparazione pareti",
+      "pnt-2": "Tinteggiatura pareti interne",
+      "pnt-3": "Tinteggiatura soffitto",
+      "pnt-4": "Legno — porte e telai",
+      "pnt-5": "Rimozione carta da parati"
     },
     "unit": {
       "hour": "h",
