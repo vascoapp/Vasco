@@ -47,7 +47,7 @@ const decoySql = DECOY
   : '';
 
 const sql = `do $probe$
-declare f record; rep text := ''; args text;
+declare f record; rep text := ''; args text; n int := 0;
 begin
   ${decoySql}
   for f in
@@ -59,15 +59,16 @@ begin
       and p.proargmodes is not null and 't' = any (p.proargmodes::text[])
     order by 1
   loop
+    n := n + 1;
     args := coalesce((select string_agg('null', ',') from generate_series(1, f.pronargs)), '');
     begin
       execute format('select count(*) from public.%I(%s)', f.proname, args);
       rep := rep || f.proname || '=ok|';
     exception when others then
-      rep := rep || f.proname || '=' || sqlstate || '~' || translate(left(sqlerrm, 100), '"''|~', '____') || '|';
+      rep := rep || f.proname || '=' || sqlstate || '~' || translate(left(sqlerrm, 100), '"''|~[]', '______') || '|';
     end;
   end loop;
-  raise exception 'CHECK_RPCS[%]', rep;
+  raise exception 'CHECK_RPCS_TOTAL<%>CHECK_RPCS[%]', n, rep;
 end $probe$;`;
 
 const dir = mkdtempSync(join(tmpdir(), 'check-rpcs-'));
@@ -87,6 +88,8 @@ try {
   rmSync(dir, { recursive: true, force: true });
 }
 
+// `]` is stripped from error text above: a message like "integer[]" used to
+// end this match early and silently drop every function after it (review).
 const m = out.match(/CHECK_RPCS\[([^\]]*)\]/);
 if (!m) {
   // No report means the probe never ran — never read that as "all clean".
@@ -99,6 +102,14 @@ const results = m[1].split('|').filter(Boolean).map((entry) => {
   const [state, msg] = rest === 'ok' ? ['ok', ''] : rest.split('~');
   return { name, state, msg };
 });
+
+// The probe states how many entries it wrote; parsing fewer means the report
+// was cut short, and a partial report must never read as a clean one.
+const total = Number((out.match(/CHECK_RPCS_TOTAL<(\d+)>/) ?? [])[1] ?? NaN);
+if (!(results.length === total)) {
+  console.error(`check:rpcs parsed ${results.length} of ${total} probe results — refusing to call a partial report clean.`);
+  process.exit(2);
+}
 
 if (results.length < 20) {
   console.error(`check:rpcs probed only ${results.length} functions — expected 20+. Refusing to call that clean.`);

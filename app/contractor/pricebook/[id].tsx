@@ -178,7 +178,7 @@ export default function PricebookEditorScreen() {
             value={draft.name}
             onChangeText={(v) => patch({ name: v })}
             placeholder={t('pricebook.namePlaceholder', 'e.g. Boiler service')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
           />
           {errorFor('name') && (
             <Text style={styles.errorText}>{t('pricebook.error.nameRequired', 'Give this service a name')}</Text>
@@ -192,7 +192,7 @@ export default function PricebookEditorScreen() {
             value={draft.description}
             onChangeText={(v) => patch({ description: v })}
             placeholder={t('pricebook.descriptionPlaceholder', 'Appears on the quote line')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             multiline
           />
         </View>
@@ -241,7 +241,7 @@ export default function PricebookEditorScreen() {
               value={priceText}
               onChangeText={setPriceText}
               placeholder="0,00"
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               keyboardType="decimal-pad"
             />
           </View>
@@ -254,7 +254,7 @@ export default function PricebookEditorScreen() {
                 value={draft.unit ?? ''}
                 onChangeText={(v) => patch({ unit: v })}
                 placeholder={draft.pricingType === 'hourly' ? t('pricebook.unitHour', 'hour') : t('pricebook.unitExample', 'm²')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
               />
             </View>
           )}
@@ -280,7 +280,7 @@ export default function PricebookEditorScreen() {
               value={labourMinutesText}
               onChangeText={setLabourMinutesText}
               placeholder="0"
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               keyboardType="number-pad"
             />
           </View>
@@ -293,7 +293,7 @@ export default function PricebookEditorScreen() {
               value={labourRateText}
               onChangeText={setLabourRateText}
               placeholder="0,00"
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               keyboardType="decimal-pad"
             />
           </View>
@@ -306,7 +306,7 @@ export default function PricebookEditorScreen() {
             value={materialsText}
             onChangeText={setMaterialsText}
             placeholder="0,00"
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             keyboardType="decimal-pad"
           />
         </View>

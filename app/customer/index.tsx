@@ -84,7 +84,7 @@ export default function CustomerLandingScreen() {
             value={accessCode}
             onChangeText={(text) => { setAccessCode(text); if (error) setError(''); }}
             placeholder={t('customerPortal.codePlaceholder', 'Paste the code from your message')}
-            placeholderTextColor={DK.colors.textMuted}
+            placeholderTextColor={DK.colors.placeholder}
             autoCapitalize="none"
             autoCorrect={false}
             // Was 8, which could not hold a real 32-character code. 64 is the

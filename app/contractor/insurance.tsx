@@ -381,7 +381,7 @@ export default function InsuranceScreen() {
               value={claimDescription}
               onChangeText={setClaimDescription}
               placeholder={t('insurance.descriptionPlaceholder', 'Beschrijf de schade of het incident...')}
-              placeholderTextColor={DK.colors.textMuted}
+              placeholderTextColor={DK.colors.placeholder}
               multiline
             />
 
@@ -392,7 +392,7 @@ export default function InsuranceScreen() {
               value={claimDate}
               onChangeText={setClaimDate}
               placeholder="DD-MM-JJJJ"
-              placeholderTextColor={DK.colors.textMuted}
+              placeholderTextColor={DK.colors.placeholder}
             />
 
             {/* Amount */}
@@ -402,7 +402,7 @@ export default function InsuranceScreen() {
               value={claimAmount}
               onChangeText={setClaimAmount}
               placeholder="€ 0,00"
-              placeholderTextColor={DK.colors.textMuted}
+              placeholderTextColor={DK.colors.placeholder}
               keyboardType="numeric"
             />
 
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   modalContent: { backgroundColor: DK.colors.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 20, paddingBottom: SafeArea.bottom + 16, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontFamily: 'Archivo_800ExtraBold', color: DK.colors.text },
-  fieldLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: DK.colors.textMuted, marginBottom: 6, marginTop: 8 },
+  fieldLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: DK.colors.text, marginBottom: 6, marginTop: 8 },
   fieldInput: { backgroundColor: DK.colors.panel2, borderRadius: 12, borderWidth: 1, borderColor: DK.colors.border, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: DK.colors.text },
   policyChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: DK.colors.panel2, borderWidth: 1, borderColor: DK.colors.border },
   policyChipActive: { backgroundColor: Palette.hermesOrange + '15', borderColor: Palette.hermesOrange },

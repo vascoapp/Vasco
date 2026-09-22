@@ -322,7 +322,7 @@ export default function IngestionModal() {
                   value={pasteText}
                   onChangeText={setPasteText}
                   placeholder={t('ingestion.pastePlaceholder', 'Paste invoice / quote text here…')}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   multiline
                   numberOfLines={8}
                   textAlignVertical="top"

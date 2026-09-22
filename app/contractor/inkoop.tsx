@@ -114,18 +114,31 @@ export default function InkoopScreen() {
       const supplierName = rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') || 'DATANORM Supplier';
       const supplierId = supplierName.toLowerCase().replace(/\s+/g, '_');
 
-      const { imported, skipped } = await importDatanormToMoat(articles, supplierId, {
+      const { imported, skipped, failed } = await importDatanormToMoat(articles, supplierId, {
         supplierName,
         trade: getCurrentTrade() || 'general',
         country: getCurrentCountry() || 'NL',
       });
+
+      // Nothing landed: say so, instead of "0 materials imported" under a
+      // success title (#363).
+      if (imported === 0 && failed > 0) {
+        Alert.alert(
+          t('inkoop.importFailedTitle', 'Import failed'),
+          t('inkoop.importNothingSaved', 'Nothing could be saved (materials: {{count}}). Check your connection and try again.', { count: failed }),
+        );
+        return;
+      }
 
       Alert.alert(
         t('inkoop.importSuccessTitle', 'Import successful'),
         t('inkoop.importSuccessBody', '{{imported}} materials imported from {{supplier}}.{{skippedNote}}', {
           imported,
           supplier: supplierName,
-          skippedNote: skipped > 0 ? `\n${t('inkoop.importSkipped', '{{count}} skipped (duplicates or invalid price).', { count: skipped })}` : '',
+          skippedNote: [
+            skipped > 0 ? t('inkoop.importSkipped', '{{count}} skipped (duplicates or invalid price).', { count: skipped }) : '',
+            failed > 0 ? t('inkoop.importSomeFailed', 'Not saved: {{count}} — import again to retry them.', { count: failed }) : '',
+          ].filter(Boolean).map((line) => `\n${line}`).join(''),
         }),
       );
     } catch {

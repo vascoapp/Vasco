@@ -131,7 +131,7 @@ export default function StripeConnectModal() {
             <TextInput
               style={styles.input}
               placeholder={t('stripe.apiKeyPlaceholder', 'sk_live_xxxx or sk_test_xxxx')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               value={apiKey}
               onChangeText={setApiKey}
               autoCapitalize="none"

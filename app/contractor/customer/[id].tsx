@@ -407,7 +407,7 @@ export default function CustomerDetailScreen() {
               value={inboxDraft}
               onChangeText={setInboxDraft}
               placeholder={t('inbox.placeholder', 'Paste or type the message…')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               multiline
               autoFocus
               maxLength={1000}

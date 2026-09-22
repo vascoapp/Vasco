@@ -303,7 +303,7 @@ export default function MessageTemplatesScreen() {
             <TextInput
               style={styles.modalInput}
               placeholder={t('templates.titlePlaceholder', 'Template name')}
-              placeholderTextColor={SemanticColors.textDisabled}
+              placeholderTextColor={SemanticColors.placeholder}
               value={editorTitle}
               onChangeText={setEditorTitle}
             />
@@ -343,7 +343,7 @@ export default function MessageTemplatesScreen() {
             <TextInput
               style={[styles.modalInput, styles.modalBodyInput]}
               placeholder={t('templates.bodyPlaceholder', 'Message body. Use {{customer}}, {{amount}}, {{date}}, {{jobTitle}} for variables.')}
-              placeholderTextColor={SemanticColors.textDisabled}
+              placeholderTextColor={SemanticColors.placeholder}
               value={editorBody}
               onChangeText={setEditorBody}
               multiline

@@ -251,7 +251,7 @@ export default function ServiceAgreementsScreen() {
                 value={formStartDate}
                 onChangeText={setFormStartDate}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor={SemanticColors.textDisabled}
+                placeholderTextColor={SemanticColors.placeholder}
               />
 
               {/* "Auto-generate invoice" was a toggle over a field nothing

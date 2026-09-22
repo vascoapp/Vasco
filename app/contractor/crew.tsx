@@ -282,7 +282,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
 
         <ScrollView contentContainerStyle={{ padding: GRID.lg }}>
           <Text style={styles.label}>{t('crew.name', 'Name *')}</Text>
-          <TextInput value={name} onChangeText={setName} placeholder={t('crew.namePlaceholder', 'Name')} placeholderTextColor={SemanticColors.textTertiary} style={styles.input} />
+          <TextInput value={name} onChangeText={setName} placeholder={t('crew.namePlaceholder', 'Name')} placeholderTextColor={SemanticColors.placeholder} style={styles.input} />
 
           <Text style={styles.label}>{t('crew.role', 'Role')}</Text>
           <View style={styles.roleGrid}>
@@ -303,16 +303,16 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
           </View>
 
           <Text style={styles.label}>{t('crew.email', 'Email')}</Text>
-          <TextInput value={email} onChangeText={setEmail} placeholder="mike@example.com" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} keyboardType="email-address" autoCapitalize="none" />
+          <TextInput value={email} onChangeText={setEmail} placeholder="mike@example.com" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="email-address" autoCapitalize="none" />
 
           <Text style={styles.label}>{t('crew.phone', 'Phone')}</Text>
-          <TextInput value={phone} onChangeText={setPhone} placeholder="+1 555 0123" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} keyboardType="phone-pad" />
+          <TextInput value={phone} onChangeText={setPhone} placeholder="+1 555 0123" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="phone-pad" />
 
           <Text style={styles.label}>{t('crew.trade', 'Trade specialty')}</Text>
-          <TextInput value={trade} onChangeText={setTrade} placeholder="HVAC / electrical / plumbing…" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} />
+          <TextInput value={trade} onChangeText={setTrade} placeholder="HVAC / electrical / plumbing…" placeholderTextColor={SemanticColors.placeholder} style={styles.input} />
 
           <Text style={styles.label}>{t('crew.hourlyCostSym', 'Hourly cost to you ({{sym}})', { sym: currencySymbol(user?.country as never) })}</Text>
-          <DecimalInput value={hourlyCost} onChangeValue={setHourlyCost} money placeholder="35" placeholderTextColor={SemanticColors.textTertiary} style={styles.input} keyboardType="numeric" />
+          <DecimalInput value={hourlyCost} onChangeValue={setHourlyCost} money placeholder="35" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="numeric" />
 
           <View style={styles.activeRow}>
             <Text style={styles.activeLabel}>{t('crew.active', 'Active on payroll')}</Text>

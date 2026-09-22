@@ -1061,7 +1061,7 @@ export default function OnboardingScreen() {
                     onChangeText={(v) => setRegFields((prev) => ({ ...prev, [field.key]: v }))}
                     onBlur={() => setRegFieldsTouched((prev) => ({ ...prev, [field.key]: true }))}
                     placeholder={field.placeholder ?? ''}
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                     autoCapitalize="characters"
                   />
                   {errorMsg ? <Text style={styles.fieldError}>{errorMsg}</Text> : null}
@@ -1134,7 +1134,7 @@ export default function OnboardingScreen() {
                 value={postcode}
                 onChangeText={setPostcode}
                 placeholder={country === 'US' ? '90210' : country === 'UK' ? 'SW1A 1AA' : country === 'DE' ? '10115' : country === 'FR' ? '75001' : country === 'ES' ? '28013' : country === 'IT' ? '00184' : '1234 AB'}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 autoCapitalize="characters"
               />
             </View>

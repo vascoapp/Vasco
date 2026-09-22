@@ -107,8 +107,11 @@ export async function scanInvoicePhoto(
 
         // Save to history
         await saveScanHistory(invoice);
-        // Feed the moat
-        await feedPricingMoat(invoice);
+        // Feed the moat — not awaited. feedPricingMoat now waits for its writes
+        // so the e-invoice path can report what landed (#363); the photo scan
+        // already has its result and must not sit on N network round trips on
+        // a weak site connection before showing it (review, 2026-09-22).
+        feedPricingMoat(invoice).catch(() => {});
         // R239+: persist analysis for cross-quote learning + agent queries
         import('./intelligenceCaptureService').then((m) =>
           m.persistPhotoAnalysis({
@@ -146,7 +149,10 @@ export async function scanInvoicePhoto(
 export async function feedPricingMoat(
   invoice: ScannedInvoice,
   moatSource: 'invoice_scan' | 'einvoice' = 'invoice_scan',
-): Promise<void> {
+): Promise<number> {
+  // Resolves to the number of price rows that LANDED — 0 when the arithmetic
+  // gate declines or every write fails — so a caller can only claim "prices
+  // added" when some were (#363).
   const userId = getCurrentUserId();
 
   // ARITHMETIC GATE. The per-line confidence filter below is the extractor
@@ -163,7 +169,7 @@ export async function feedPricingMoat(
   const verification = verifyExtractedInvoice(invoice);
   if (!verification.moatSafe) {
     logWarn('InvoiceScan', `Not feeding moat: ${summariseVerification(verification)}`);
-    return;
+    return 0;
   }
 
   // R282: cohort attribution — fall back to user's profile when the OCR
@@ -183,10 +189,11 @@ export async function feedPricingMoat(
   // low-confidence line poisons the cohort average for that material. Feed only
   // confident lines; the scan itself is still saved in full for the contractor.
   const MOAT_MIN_LINE_CONFIDENCE = 50;
+  const writes: Promise<boolean>[] = [];
   for (const item of invoice.lineItems) {
     if (typeof item.confidence === 'number' && item.confidence < MOAT_MIN_LINE_CONFIDENCE) continue;
     const itemTrade = item.category || userTrade || 'general';
-    emitMaterialPurchased(userId, {
+    writes.push(emitMaterialPurchased(userId, {
       materialName: item.description,
       supplierId: invoice.supplierName.toLowerCase().replace(/\s+/g, '_'),
       supplierName: invoice.supplierName,
@@ -207,8 +214,9 @@ export async function feedPricingMoat(
       vatRate: item.vatRate,
       observedAt: invoice.documentDate,
       source: moatSource,
-    }).catch(() => {});
+    }).catch(() => false));
   }
+  const landed = (await Promise.all(writes)).filter(Boolean).length;
 
   // Record total spend for metrics
   recordMetricSnapshot('marginLeakage', invoice.total).catch(() => {});
@@ -230,6 +238,8 @@ export async function feedPricingMoat(
       source: moatSource,
     },
   }).catch(() => {});
+
+  return landed;
 }
 
 // ---------------------------------------------------------------------------

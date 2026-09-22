@@ -310,6 +310,35 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   bakes both the wording and the currency format into strings it stores; the
   scheduler runs before the profile merges, so a German contractor got a card
   reading "€ 280" (nl-NL) beside one reading "350 € überfällig" (#210).
+  ⚠️ That includes `workflowPackService.evaluateTriggers` (fixed 2026-09-22,
+  #362) — Vandaag calls it on mount, before the profile merges, and an
+  English iPhone baked "End of Day Routine / VIEW" into a Dutch queue. Any
+  NEW producer of queue cards needs the same two awaits.
+- **A card whose number is zero is not a card.** A nudge that reads "Jobs not
+  finished today: 0" to a contractor with no jobs is noise on day one; gate
+  every step on its own count (#362).
+- **If a form REQUIRES something, ask for it BEFORE the form** — never let
+  the contractor fill everything in and then refuse. A quote and a
+  maintenance contract need a customer: with none, the shared
+  `AddCustomerSheet` (`src/components/shared`) opens on arrival; with some,
+  a DKMenu picker comes first. The quote builder had no picker at all and
+  ~15 entry points opened it bare (#362). User's rule, 2026-09-22.
+- **Placeholders use `SemanticColors.placeholder` / `DK.colors.placeholder`**
+  (#B6BCC6), never a text grey — readable yet visibly not an entered value.
+  Menus, pop-ups and form labels are WHITE (`DK.colors.text`); the rest of
+  the app keeps its secondary grey. User's call, 2026-09-22. ⚠️ The ACTIVE
+  `SemanticColors` is `DKTheme` in `colors.ts` — add new tokens THERE.
+  Guard: `formsAndMenusAreReadable`.
+- **A success message waits for the write it announces.** "N imported",
+  "Prices added" and "Saved" are claims about rows. A writer that swallows
+  its errors must RETURN whether it landed (`emitMaterialPurchased` → boolean,
+  `feedPricingMoat` → count, `upsertMaterialCatalogRow` → inserted/exists/
+  failed) and the screen claims only that (#363).
+- **Embeddings are DARK in production** — no OPENAI/VOYAGE key.
+  `EMBEDDINGS_ENABLED` (`src/config/ai.ts`, off) gates every call to
+  `generate-embedding` / `embed-text`; semantic search falls back to its
+  local keyword index. Same pattern as `LLM_GENERATION_ENABLED`: set it in
+  the change that funds the key. Guard: `embeddingsStayDarkWithoutAKey`.
 - **A country-dependent nudge must SKIP when the country is unknown**, never
   default. `context.country || 'NL'` handed a German plumber the Dutch permit
   list, and the same default silently withheld the XRechnung reminder — one
@@ -347,6 +376,9 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
     one statement: no `cron_http_calls` table means the insert aborts it and
     the HTTP call is never made. That stops automations, loudly — which is the
     accepted trade, but only in that order.
+  - ⚠️ **Every `net.http_post` sets `timeout_milliseconds := 180000`.**
+    pg_net's default is a 5 s CLIENT timeout: three healthy jobs (6–19 s,
+    all 200) were raised as criticals on the outcome check's first day (#361).
   - ⚠️ **Four lists of the cron job names must agree** (`cron.sql`, the
     watchdog's `EXPECTED_CRON_JOBS`, `cron-health.sql`, and — derived, never
     written — `scripts/register-crons.mjs`). #357/#358.

@@ -11,7 +11,8 @@ import { importEInvoiceXml } from '../einvoiceImportService';
 
 jest.mock('../invoiceScanService', () => ({
   ...jest.requireActual('../invoiceScanService'),
-  feedPricingMoat: jest.fn().mockResolvedValue(undefined),
+  // Resolves to the number of price rows that LANDED (#363).
+  feedPricingMoat: jest.fn().mockResolvedValue(3),
 }));
 
 const { feedPricingMoat } = jest.requireMock('../invoiceScanService');
@@ -59,6 +60,15 @@ describe('importing a supplier e-invoice', () => {
     const r = await importEInvoiceXml(XRECHNUNG);
     expect(feedPricingMoat).toHaveBeenCalledTimes(1);
     expect(r.fedMoat).toBe(true);
+  });
+
+  it('does not claim prices were added when none landed', async () => {
+    // The arithmetic gate declined, or every insert failed: feedPricingMoat
+    // resolves 0. The screen used to say "Prices added" anyway (#363).
+    feedPricingMoat.mockResolvedValueOnce(0);
+    const r = await importEInvoiceXml(XRECHNUNG);
+    expect(r.ok).toBe(true);
+    expect(r.fedMoat).toBe(false);
   });
 
   it("tags the moat rows 'einvoice', not 'invoice_scan'", async () => {

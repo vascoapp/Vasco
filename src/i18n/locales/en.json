@@ -2272,7 +2272,8 @@
     "pendingDecisionsCount_one": "{{count}} pending decision",
     "pendingDecisionsCount_other": "{{count}} pending decisions",
     "daysOverdueCount_one": "{{count}} day overdue",
-    "daysOverdueCount_other": "{{count}} days overdue"
+    "daysOverdueCount_other": "{{count}} days overdue",
+    "taxPrepAlwaysRequired": "Also required when you sent no invoices."
   },
   "profile": {
     "title": "Profile",
@@ -3571,7 +3572,9 @@
     "eInvoiceReadTitle": "Invoice read",
     "eInvoiceReadBody": "{{supplier}} · {{count}} lines · {{total}}{{moat}}",
     "eInvoiceUnknownSupplier": "Unknown supplier",
-    "eInvoicePricesAdded": "Prices added to your price index."
+    "eInvoicePricesAdded": "Prices added to your price index.",
+    "importNothingSaved": "Nothing could be saved (materials: {{count}}). Check your connection and try again.",
+    "importSomeFailed": "Not saved: {{count}} — import again to retry them."
   },
   "customerView": {
     "pickTierTitle": "Pick a package",

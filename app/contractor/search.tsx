@@ -198,7 +198,7 @@ export default function SearchScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder={t('common.search', 'Zoeken...')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={query}
             onChangeText={setQuery}
             autoFocus

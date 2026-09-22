@@ -756,7 +756,7 @@ export default function BudgetOptimizerDashboard({
           <TextInput
             style={styles.searchInput}
             placeholder="Zoek op code, omschrijving of categorie..."
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />

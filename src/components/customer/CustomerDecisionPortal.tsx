@@ -833,7 +833,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog, onToast }: Pay
             <TextInput
               style={styles.signModalInput}
               placeholder={t('decisionPortal.signNamePlaceholder', 'Your full name')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               value={signerName}
               onChangeText={setSignerName}
               autoCapitalize="words"
@@ -1325,7 +1325,7 @@ function AskAQuestionCard({
         placeholder={history.length > 0
           ? t('decisionPortal.questionPlaceholderMore', 'Ask another question…')
           : t('decisionPortal.questionPlaceholder', 'Type your question…')}
-        placeholderTextColor={SemanticColors.textTertiary}
+        placeholderTextColor={SemanticColors.placeholder}
         value={question}
         onChangeText={setQuestion}
         multiline
@@ -1573,7 +1573,7 @@ function DecisionItemCard({
               <TextInput
                 style={styles.textInput}
                 placeholder={t('decisionPortal.enterChoicePlaceholder', 'Enter your choice{{unit}}...', { unit: item.unit ? ` (${item.unit})` : '' })}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={textValue}
                 onChangeText={setTextValue}
                 keyboardType={item.inputType === 'number' ? 'numeric' : 'default'}
@@ -1657,7 +1657,7 @@ function DecisionItemCard({
               <TextInput
                 style={[styles.textInput, { minHeight: 60 }]}
                 placeholder={t('decisionPortal.descPlaceholder', 'Description (optional) — or paste a link...')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={textValue}
                 onChangeText={setTextValue}
                 multiline
@@ -1729,7 +1729,7 @@ function DecisionItemCard({
             <TextInput
               style={styles.notesInput}
               placeholder={t('decisionPortal.notePlaceholder', 'Add a comment...')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               value={notes}
               onChangeText={setNotes}
               multiline
@@ -1950,7 +1950,7 @@ export function AccessCodeEntry({ onSubmit, error, errorKind, rateLimitUntil, on
         <TextInput
           style={styles.accessInput}
           placeholder="XXXXXX"
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
           value={code}
           onChangeText={(text) => setCode(text.toUpperCase())}
           autoCapitalize="characters"

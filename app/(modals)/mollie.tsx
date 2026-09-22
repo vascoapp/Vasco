@@ -135,7 +135,7 @@ export default function MollieConnectModal() {
             <TextInput
               style={styles.input}
               placeholder={t('mollie.apiKeyPlaceholder', 'live_xxxx or test_xxxx')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               value={apiKey}
               onChangeText={setApiKey}
               autoCapitalize="none"

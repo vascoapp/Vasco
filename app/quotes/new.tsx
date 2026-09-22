@@ -216,7 +216,7 @@ export default function NewQuoteScreen() {
                   // user is editing freely, so we can't claim the row link any more.
                   onChangeText={(v) => { setCustomer(v); setCustomerId(null); setShowCustomerPicker(false); }}
                   placeholder={customers.length > 0 ? t('quoteNew.pickerPlaceholder', 'Type or pick a customer') : t('quoteNew.customerPlaceholder', 'e.g. De Jong')}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                 />
               </Pressable>
               {showCustomerPicker && customers.length > 0 && (
@@ -244,7 +244,7 @@ export default function NewQuoteScreen() {
                 value={job}
                 onChangeText={setJob}
                 placeholder={t('quoteNew.jobPlaceholder', 'e.g. Interior repaint')}
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
               />
             </View>
           </View>
@@ -267,7 +267,7 @@ export default function NewQuoteScreen() {
                   value={item.description}
                   onChangeText={(v) => updateItem(index, 'description', v)}
                   placeholder={t('quoteNew.descriptionPlaceholder', 'Description')}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                 />
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>

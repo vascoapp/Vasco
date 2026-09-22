@@ -257,7 +257,7 @@ export default function JobFormScreen() {
                           number: n,
                         });
                       }}
-                      placeholderTextColor={SemanticColors.textTertiary}
+                      placeholderTextColor={SemanticColors.placeholder}
                     />
                   ) : (
                     <TextInput
@@ -265,7 +265,7 @@ export default function JobFormScreen() {
                       multiline
                       value={a.text ?? ''}
                       onChangeText={(v) => patch(a.fieldId, { text: v })}
-                      placeholderTextColor={SemanticColors.textTertiary}
+                      placeholderTextColor={SemanticColors.placeholder}
                     />
                   )}
                 </View>

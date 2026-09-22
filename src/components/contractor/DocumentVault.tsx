@@ -144,7 +144,7 @@ export function DocumentVault() {
         <TextInput
           style={styles.searchInput}
           placeholder="Zoek documenten..."
-          placeholderTextColor={SemanticColors.textSecondary}
+          placeholderTextColor={SemanticColors.placeholder}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />

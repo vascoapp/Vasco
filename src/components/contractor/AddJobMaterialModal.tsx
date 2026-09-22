@@ -215,7 +215,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
               <TextInput
                 style={s.searchInput}
                 placeholder={t('materials.searchMaterial', 'Search material...')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={search}
                 onChangeText={setSearch}
                 autoFocus
@@ -294,7 +294,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                   onChangeText={setQuantity}
                   keyboardType="decimal-pad"
                   placeholder="1"
-                  placeholderTextColor={SemanticColors.textTertiary}
+                  placeholderTextColor={SemanticColors.placeholder}
                 />
               </View>
               <View style={[s.fieldGroup, { flex: 0.6 }]}>
@@ -304,7 +304,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                   value={unit}
                   onChangeText={setUnit}
                   placeholder={selectedMaterial?.baseUnit}
-                  placeholderTextColor={SemanticColors.textTertiary}
+                  placeholderTextColor={SemanticColors.placeholder}
                 />
               </View>
             </View>
@@ -324,7 +324,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                 onChangeText={setPriceInput}
                 keyboardType="decimal-pad"
                 placeholder={bestPrice?.price ? bestPrice.price.toFixed(2) : t('materials.unitPricePlaceholder', '0.00')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
               />
             </View>
 
@@ -360,7 +360,7 @@ export function AddJobMaterialModal({ visible, jobId, onClose }: AddJobMaterialM
                 value={notes}
                 onChangeText={setNotes}
                 placeholder={t('materials.notesPlaceholder', 'E.g. specific color code...')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 multiline
               />
             </View>

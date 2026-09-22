@@ -484,7 +484,10 @@ export async function emitMaterialPurchased(userId: string, data: {
   // material_price_history is the one table we cannot un-poison. Column is
   // unconstrained TEXT, so this needs no migration.
   source?: 'manual' | 'api' | 'invoice_scan' | 'einvoice' | 'catalog';
-}): Promise<void> {
+}): Promise<boolean> {
+  // Returns whether the material_price_history row LANDED. Callers used to be
+  // unable to tell, so "Prices added to your price index" was shown whether or
+  // not a single row was written (#363). Existing callers ignore it.
   await emitBusinessEvent(userId, {
     eventType: 'material_purchased',
     entityType: 'material',
@@ -544,10 +547,13 @@ export async function emitMaterialPurchased(userId: string, data: {
         observed_at: data.observedAt ?? new Date().toISOString(),
       } as any);
       if (error) throw error;
+      return true;
     } catch (err) {
       await logIntelligenceWriteFailure('material_price_history.insert', userId, err);
+      return false;
     }
   }
+  return false;
 }
 
 // ---------------------------------------------------------------------------

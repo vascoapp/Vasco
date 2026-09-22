@@ -544,7 +544,7 @@ export default function MaterialSearchScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder={t('materialSearch.searchPlaceholder', 'Search materials...')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={query}
             onChangeText={handleQueryChange}
             maxLength={100}

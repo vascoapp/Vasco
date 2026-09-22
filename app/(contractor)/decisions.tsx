@@ -573,6 +573,7 @@ export default function KeuzeScreen() {
               <PhotoSubmissionsPanel
                 submissions={decisionSubmissions}
                 trackerId={selectedTracker.id}
+                customerId={selectedTracker.customerId && selectedTracker.customerId !== 'new' ? selectedTracker.customerId : undefined}
                 customerName={selectedTracker.customerName}
               />
               {/* R66 round 47: customer activity / hesitation timeline. Only

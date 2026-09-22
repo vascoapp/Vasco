@@ -138,7 +138,7 @@ export default function SiteAssetsScreen() {
               value={draft.name}
               onChangeText={(v) => setDraft({ ...draft, name: v })}
               placeholder={t('siteAssets.namePlaceholder', 'e.g. CV-ketel Remeha Avanta')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
 
             <Text style={styles.fieldLabel}>{t('siteAssets.details', 'Model, serial, position')}</Text>
@@ -147,7 +147,7 @@ export default function SiteAssetsScreen() {
               value={draft.details ?? ''}
               onChangeText={(v) => setDraft({ ...draft, details: v })}
               placeholder={t('siteAssets.detailsPlaceholder', 'Optional')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
 
             <Text style={styles.fieldLabel}>{t('siteAssets.category', 'Category')}</Text>
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   proposalSite: { color: SemanticColors.textPrimary, fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily },
   proposalWhy: { color: SemanticColors.textSecondary, fontSize: TYPE.captionSize },
   editTitle: { color: SemanticColors.textPrimary, fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily },
-  fieldLabel: { color: SemanticColors.textSecondary, fontSize: TYPE.captionSize, marginTop: 6 },
+  fieldLabel: { color: SemanticColors.textPrimary, fontSize: TYPE.captionSize, marginTop: 6 },
   input: {
     backgroundColor: SemanticColors.surfaceBackground,
     borderRadius: RADIUS.md,

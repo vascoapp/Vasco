@@ -2272,7 +2272,8 @@
     "pendingDecisionsCount_one": "{{count}} openstaande beslissing",
     "pendingDecisionsCount_other": "{{count}} openstaande beslissingen",
     "daysOverdueCount_one": "{{count}} dag achterstallig",
-    "daysOverdueCount_other": "{{count}} dagen achterstallig"
+    "daysOverdueCount_other": "{{count}} dagen achterstallig",
+    "taxPrepAlwaysRequired": "Ook verplicht als je geen facturen hebt verstuurd."
   },
   "profile": {
     "title": "Profiel",
@@ -3571,7 +3572,9 @@
     "eInvoiceReadTitle": "Factuur ingelezen",
     "eInvoiceReadBody": "{{supplier}} · {{count}} regels · {{total}}{{moat}}",
     "eInvoiceUnknownSupplier": "Onbekende leverancier",
-    "eInvoicePricesAdded": "Prijzen toegevoegd aan je prijsindex."
+    "eInvoicePricesAdded": "Prijzen toegevoegd aan je prijsindex.",
+    "importNothingSaved": "Er kon niets worden opgeslagen (materialen: {{count}}). Controleer je verbinding en probeer het opnieuw.",
+    "importSomeFailed": "Niet opgeslagen: {{count}} — importeer opnieuw om het nog eens te proberen."
   },
   "customerView": {
     "pickTierTitle": "Kies een pakket",

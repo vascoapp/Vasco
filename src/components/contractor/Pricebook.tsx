@@ -137,7 +137,7 @@ export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mod
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder={t('pricebook.searchPlaceholder', 'Search services…')}
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
         />
       </View>
 

@@ -257,7 +257,7 @@ export function PriceComparison({ onClose }: PriceComparisonProps) {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder={t('prices.searchPlaceholder', 'Search material...')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
           />
           {searchQuery !== '' && (
             <Pressable onPress={() => setSearchQuery('')}>

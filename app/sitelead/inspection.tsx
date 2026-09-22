@@ -156,7 +156,7 @@ export default function InspectionScreen() {
               <TextInput
                 style={styles.addItemInput}
                 placeholder="Nieuw controlepunt..."
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newItemText}
                 onChangeText={setNewItemText}
                 autoFocus
@@ -210,7 +210,7 @@ export default function InspectionScreen() {
           <TextInput
             style={styles.notesInput}
             placeholder={t('sitelead.inspectionNotesPlaceholder', 'Voeg eventuele opmerkingen toe...')}
-            placeholderTextColor={SemanticColors.textSecondary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={notes}
             onChangeText={setNotes}
             multiline

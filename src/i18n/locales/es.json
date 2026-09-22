@@ -2272,7 +2272,8 @@
     "pendingDecisionsCount_one": "{{count}} decisión pendiente",
     "pendingDecisionsCount_other": "{{count}} decisiones pendientes",
     "daysOverdueCount_one": "{{count}} día de retraso",
-    "daysOverdueCount_other": "{{count}} días de retraso"
+    "daysOverdueCount_other": "{{count}} días de retraso",
+    "taxPrepAlwaysRequired": "También es obligatoria si no has emitido facturas."
   },
   "profile": {
     "title": "Perfil",
@@ -3571,7 +3572,9 @@
     "eInvoiceReadTitle": "Factura leída",
     "eInvoiceReadBody": "{{supplier}} · {{count}} líneas · {{total}}{{moat}}",
     "eInvoiceUnknownSupplier": "Proveedor desconocido",
-    "eInvoicePricesAdded": "Precios añadidos a tu índice de precios."
+    "eInvoicePricesAdded": "Precios añadidos a tu índice de precios.",
+    "importNothingSaved": "No se ha podido guardar nada (materiales: {{count}}). Comprueba tu conexión e inténtalo de nuevo.",
+    "importSomeFailed": "Sin guardar: {{count}}; vuelve a importar para reintentarlo."
   },
   "customerView": {
     "pickTierTitle": "Elige un paquete",

@@ -437,7 +437,7 @@ export default function BusinessSettingsScreen() {
                   value={field.value}
                   onChangeText={field.onChange}
                   placeholder={field.placeholder}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   keyboardType={field.keyboardType}
                   multiline={field.multiline}
                   maxLength={field.multiline ? 500 : 100}
@@ -513,7 +513,7 @@ export default function BusinessSettingsScreen() {
                 value={invoicePrefix}
                 onChangeText={(v) => setInvoicePrefix(cleanPrefix(v))}
                 placeholder="2026-"
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
                 autoCapitalize="characters"
                 maxLength={12}
               />
@@ -537,7 +537,7 @@ export default function BusinessSettingsScreen() {
                 value={quotePrefix}
                 onChangeText={(v) => setQuotePrefix(cleanPrefix(v))}
                 placeholder="Q"
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
                 autoCapitalize="characters"
                 maxLength={12}
               />
@@ -553,7 +553,7 @@ export default function BusinessSettingsScreen() {
                   value={nextInvoiceNo}
                   onChangeText={(v) => setNextInvoiceNo(v.replace(/[^0-9]/g, '').slice(0, 7))}
                   placeholder="88"
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   keyboardType="number-pad"
                 />
                 <Pressable

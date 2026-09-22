@@ -570,7 +570,7 @@ function Field({
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor={SemanticColors.textTertiary}
+        placeholderTextColor={SemanticColors.placeholder}
         style={[styles.input, multiline && { minHeight: 72, textAlignVertical: 'top' }]}
         keyboardType={keyboardType ?? 'default'}
         multiline={multiline}

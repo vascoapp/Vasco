@@ -298,7 +298,7 @@ export default function ProjectsScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('contractor.projects.projectNamePlaceholder', 'Project name (e.g. Bathroom renovation)')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newTitle}
                 onChangeText={setNewTitle}
               />
@@ -339,7 +339,7 @@ export default function ProjectsScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('contractor.projects.budgetPlaceholder', 'Budget €')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newBudget}
                 onChangeText={setNewBudget}
                 keyboardType="numeric"
@@ -353,7 +353,7 @@ export default function ProjectsScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('contractor.projects.retentionPlaceholder', 'Retention % (optional)')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newRetention}
                 onChangeText={setNewRetention}
                 // decimal-pad, not numeric: this field accepts "7,5" and the

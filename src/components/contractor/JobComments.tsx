@@ -144,7 +144,7 @@ export default function JobComments({ jobId }: JobCommentsProps) {
           value={inputText}
           onChangeText={setInputText}
           placeholder={t('jobs.addComment', 'Add a comment...')}
-          placeholderTextColor={SemanticColors.textDisabled}
+          placeholderTextColor={SemanticColors.placeholder}
           multiline
           maxLength={500}
           returnKeyType="send"

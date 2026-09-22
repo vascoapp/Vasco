@@ -99,6 +99,7 @@ const DarkTheme = {
   textSecondary: '#C8C8C8',                 // Supporting text
   textTertiary: '#8F8F8F',                  // Placeholder, hints
   textDisabled: '#5A5A5A',                  // Disabled state
+  placeholder: '#B6BCC6',
   textInverse: Palette.gray900,             // On light backgrounds
   textLink: Palette.vascoPrimary,           // Interactive links
 
@@ -186,6 +187,7 @@ const LightTheme = {
   textSecondary: Palette.gray600,
   textTertiary: Palette.gray500,
   textDisabled: Palette.gray400,
+  placeholder: Palette.gray500,
   textInverse: Palette.white,
   textLink: Palette.orange600,
 
@@ -272,6 +274,7 @@ const WarmTheme = {
   textSecondary: '#666660',                       // Medium gray
   textTertiary: '#999690',                        // Light gray
   textDisabled: '#C4C0BA',                        // Disabled
+  placeholder: '#999690',
   textInverse: Palette.white,                     // On dark backgrounds
   textLink: Palette.hermesOrange,                 // Links
 
@@ -360,6 +363,13 @@ const DKTheme = {
   textSecondary: '#9CA3AF',
   textTertiary: '#6B7280',
   textDisabled: '#4B5563',
+  // Placeholders in forms. Readable on the dark panels yet still clearly NOT
+  // an entered value. The active greys (#6B7280 tertiary, #4B5563 disabled)
+  // were hard to decipher on TestFlight (user, 2026-09-22). #D1D5DB was tried
+  // first and sat ~1.5:1 from entered white — "10115" read as filled in.
+  // Every placeholderTextColor in app/ and src/components uses this, except
+  // app/hub (not contractor surface) and ai.tsx's own translucent white.
+  placeholder: '#B6BCC6',
   textInverse: '#0B0E11',
   textLink: '#F97316',
 

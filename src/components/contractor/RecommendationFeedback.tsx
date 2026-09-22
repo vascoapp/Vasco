@@ -316,7 +316,7 @@ export function RecommendationFeedbackCard({
                     onChangeText={setActualPrice}
                     keyboardType="decimal-pad"
                     placeholder="0.00"
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                 </View>
                 <Text style={styles.inputHint}>
@@ -334,7 +334,7 @@ export function RecommendationFeedbackCard({
                   value={feedbackText}
                   onChangeText={setFeedbackText}
                   placeholder="Vertel ons meer over waarom dit niet relevant was..."
-                  placeholderTextColor={SemanticColors.textTertiary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   multiline
                   numberOfLines={3}
                 />

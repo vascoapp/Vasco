@@ -113,7 +113,7 @@ export default function MoneybirdConnectModal() {
             <TextInput
               style={styles.input}
               placeholder={t('moneybird.tokenPlaceholder', 'Plak je Moneybird API token')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               value={apiToken}
               onChangeText={setApiToken}
               autoCapitalize="none"
@@ -136,7 +136,7 @@ export default function MoneybirdConnectModal() {
           <TextInput
             style={styles.input}
             placeholder={t('moneybird.adminIdPlaceholder', 'Optioneel — wordt automatisch gedetecteerd')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={administrationId}
             onChangeText={setAdministrationId}
             autoCapitalize="none"

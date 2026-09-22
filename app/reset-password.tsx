@@ -106,7 +106,7 @@ export default function ResetPasswordScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('signup.passwordPlaceholder', 'Password (min 8 characters)')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -116,7 +116,7 @@ export default function ResetPasswordScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('signup.confirmPasswordPlaceholder', 'Confirm password')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={confirm}
                 onChangeText={setConfirm}
                 secureTextEntry

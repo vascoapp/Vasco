@@ -791,7 +791,7 @@ function MilestoneModal({ state, allMilestones, onClose, onSave, onDelete }: Mil
             value={title}
             onChangeText={setTitle}
             placeholder={t('project.milestoneTitlePlaceholder', 'e.g. Rough-in complete')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             style={styles.input}
             autoFocus={!existing}
           />

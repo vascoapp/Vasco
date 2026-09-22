@@ -196,7 +196,7 @@ export default function SignupScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('auth.emailPlaceholder', 'Email address')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={email}
                 onChangeText={(v) => { setEmail(v); if (emailExists) setEmailExists(false); }}
                 autoCapitalize="none"
@@ -206,7 +206,7 @@ export default function SignupScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('signup.passwordPlaceholder', 'Password (min 8 characters)')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -215,7 +215,7 @@ export default function SignupScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('signup.confirmPasswordPlaceholder', 'Confirm password')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry

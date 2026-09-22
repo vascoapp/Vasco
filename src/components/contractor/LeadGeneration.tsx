@@ -300,7 +300,7 @@ export const LeadGeneration: React.FC = () => {
               <TextInput
                 style={styles.searchInput}
                 placeholder="Zoek leads..."
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />

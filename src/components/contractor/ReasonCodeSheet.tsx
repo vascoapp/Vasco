@@ -102,7 +102,7 @@ export function ReasonCodeSheet({ visible, lineLabel, originalQty, newQty, onDis
               <TextInput
                 style={styles.input}
                 placeholder={t('reasonCode.otherPlaceholder', 'Briefly, what was it?')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={freeText}
                 onChangeText={setFreeText}
                 autoFocus

@@ -315,7 +315,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder={t('auth.emailPlaceholder', 'Email address')}
-                  placeholderTextColor={SemanticColors.textTertiary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -325,7 +325,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder={t('auth.passwordPlaceholder', 'Password')}
-                  placeholderTextColor={SemanticColors.textTertiary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry

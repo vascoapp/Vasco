@@ -2272,7 +2272,8 @@
     "pendingDecisionsCount_one": "{{count}} ausstehende Entscheidung",
     "pendingDecisionsCount_other": "{{count}} ausstehende Entscheidungen",
     "daysOverdueCount_one": "{{count}} Tag überfällig",
-    "daysOverdueCount_other": "{{count}} Tage überfällig"
+    "daysOverdueCount_other": "{{count}} Tage überfällig",
+    "taxPrepAlwaysRequired": "Auch erforderlich, wenn Sie keine Rechnungen gestellt haben."
   },
   "profile": {
     "title": "Profil",
@@ -3571,7 +3572,9 @@
     "eInvoiceReadTitle": "Rechnung eingelesen",
     "eInvoiceReadBody": "{{supplier}} · {{count}} Positionen · {{total}}{{moat}}",
     "eInvoiceUnknownSupplier": "Unbekannter Lieferant",
-    "eInvoicePricesAdded": "Preise zu Ihrem Preisindex hinzugefügt."
+    "eInvoicePricesAdded": "Preise zu Ihrem Preisindex hinzugefügt.",
+    "importNothingSaved": "Es konnte nichts gespeichert werden (Materialien: {{count}}). Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "importSomeFailed": "Nicht gespeichert: {{count}} — importieren Sie erneut, um es noch einmal zu versuchen."
   },
   "customerView": {
     "pickTierTitle": "Paket wählen",

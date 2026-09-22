@@ -405,7 +405,7 @@ Totaal:                                   €217,70`);
         <TextInput
           style={styles.textArea}
           placeholder={t('receipt.placeholder', 'Paste the receipt or invoice text here…')}
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
           value={rawText}
           onChangeText={onTextChange}
           multiline

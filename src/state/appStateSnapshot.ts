@@ -27,7 +27,9 @@ export interface AppStateSnapshot {
    * here were never written either. The purchasing agent fell back to
    * `'general'`, `'NL'` and Amsterdam's postcode instead.
    */
-  businessProfile?: { phone?: string; trade?: string; country?: string; postcode?: string };
+  // vatScheme: the quarter-end VAT card must not tell a KOR / Kleinunternehmer
+  // contractor — who files no return — that one is due (review, 2026-09-22).
+  businessProfile?: { phone?: string; trade?: string; country?: string; postcode?: string; vatScheme?: string; filingPeriod?: string };
   updatedAt: number;
 }
 

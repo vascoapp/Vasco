@@ -17,7 +17,7 @@ import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
 
 export default function TieredQuoteScreen() {
   const router = useRouter();
-  const { addQuote, updateQuote, updateJobStatus, customers, quotes, jobs } = useAppState();
+  const { addQuote, updateQuote, updateJobStatus, customers, quotes, jobs, isLoading } = useAppState();
   const { t } = useTranslation();
   const sendingRef = useRef(false);
 
@@ -59,11 +59,13 @@ export default function TieredQuoteScreen() {
   // the sheet leaves the step on screen with the same button, never a loop.
   const autoOpened = useRef(false);
   useEffect(() => {
-    if (askForCustomer && !hasCustomers && !autoOpened.current) {
+    // Not while customers are still loading: on a cold start an existing
+    // contractor would be handed "add your first customer" (review).
+    if (askForCustomer && !hasCustomers && !isLoading && !autoOpened.current) {
       autoOpened.current = true;
       setShowAddCustomer(true);
     }
-  }, [askForCustomer, hasCustomers]);
+  }, [askForCustomer, hasCustomers, isLoading]);
 
   if (askForCustomer) {
     return (
@@ -94,9 +96,9 @@ export default function TieredQuoteScreen() {
                 ]}
                 renderAnchor={(open) => (
                   <Pressable style={cs.anchor} onPress={open} accessibilityRole="button">
-                    <Ionicons name="person-outline" size={16} color={DK.colors.textMuted} />
+                    <Ionicons name="person-outline" size={16} color={DK.colors.text} />
                     <Text style={cs.anchorText} numberOfLines={1}>{t('jobs.selectCustomer', 'Select customer')}</Text>
-                    <Ionicons name="chevron-down" size={16} color={DK.colors.textMuted} />
+                    <Ionicons name="chevron-down" size={16} color={DK.colors.text} />
                   </Pressable>
                 )}
               />
@@ -289,7 +291,7 @@ const cs = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   body: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: GRID.md, paddingHorizontal: GRID.lg, paddingBottom: GRID.xl },
   heading: { fontFamily: DK.type.display900, fontSize: TYPE.titleSize, color: DK.colors.text, letterSpacing: 1.8, textAlign: 'center' },
-  desc: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.textMuted, textAlign: 'center', maxWidth: 300 },
+  desc: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.text, textAlign: 'center', maxWidth: 300 },
   // The menu's own wrapper sizes to content, so the width goes on a View
   // around it, not on the anchor (docs/ui-playbook.md §2).
   menuWrap: { alignSelf: 'stretch' },
@@ -308,5 +310,5 @@ const cs = StyleSheet.create({
     shadowColor: DK.colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 18, elevation: 10,
   },
   primaryText: { fontFamily: DK.type.display900, fontSize: TYPE.captionSize, color: DK.colors.text, letterSpacing: 1.4 },
-  skip: { fontFamily: DK.type.body500, fontSize: TYPE.captionSize, color: DK.colors.textMuted, textDecorationLine: 'underline', marginTop: GRID.sm },
+  skip: { fontFamily: DK.type.body500, fontSize: TYPE.captionSize, color: DK.colors.text, textDecorationLine: 'underline', marginTop: GRID.sm },
 });

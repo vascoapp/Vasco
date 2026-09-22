@@ -15,6 +15,8 @@ export const DK = {
     border: '#2A3038',
     text: '#FFFFFF',
     textMuted: '#9CA3AF',
+    // Form placeholders — see SemanticColors.placeholder (2026-09-22).
+    placeholder: '#B6BCC6',
     primaryDark: '#9A3412',
     primary: '#C2410C',
     accent: '#F97316',

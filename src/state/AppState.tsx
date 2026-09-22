@@ -5099,6 +5099,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           trade: businessProfile?.trade,
           country: businessProfile?.country,
           postcode: businessProfile?.postcode,
+          vatScheme: businessProfile?.vatScheme,
+          filingPeriod: businessProfile?.filingPeriod,
         },
       });
     }).catch(() => {});

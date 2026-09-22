@@ -579,7 +579,7 @@ export default function ProjectBillingScreen() {
               value={termTitle}
               onChangeText={setTermTitle}
               placeholder={t('projectBilling.termTitlePlaceholder', 'E.g. Start of work')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
             <TextInput
               style={styles.input}
@@ -587,7 +587,7 @@ export default function ProjectBillingScreen() {
               onChangeText={setTermPercent}
               keyboardType="decimal-pad"
               placeholder={t('projectBilling.percentLabel', 'Percentage')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
             <Pressable style={styles.saveBtn} onPress={editingTerm ? saveEditedTerm : saveTerm}>
               <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>
@@ -616,7 +616,7 @@ export default function ProjectBillingScreen() {
               onChangeText={setRetentionInput}
               keyboardType="decimal-pad"
               placeholder={t('projectBilling.retentionRate', 'Retention')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               accessibilityLabel={t('projectBilling.editRetention', 'Edit retention %')}
             />
             {hasInvoicedTerms ? (
@@ -646,7 +646,7 @@ export default function ProjectBillingScreen() {
               value={coTitle}
               onChangeText={setCoTitle}
               placeholder={t('projectBilling.termTitlePlaceholder', 'E.g. Extra sockets')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
             <TextInput
               style={styles.input}
@@ -654,7 +654,7 @@ export default function ProjectBillingScreen() {
               onChangeText={setCoAmount}
               keyboardType="numbers-and-punctuation"
               placeholder={t('projectBilling.amountLabel', 'Amount')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
             <Pressable style={styles.saveBtn} onPress={saveChangeOrder}>
               <Text style={styles.saveBtnText}>{t('projectBilling.save', 'Save')}</Text>

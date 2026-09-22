@@ -556,7 +556,7 @@ export function HandoverPackBuilder({
         <TextInput
           style={styles.feedbackInput}
           placeholder={t('handover.feedbackPlaceholder')}
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
           value={customerFeedback}
           onChangeText={setCustomerFeedback}
           multiline

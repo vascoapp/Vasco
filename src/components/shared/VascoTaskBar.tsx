@@ -54,7 +54,7 @@ export function VascoTaskBar({ onSubmit, placeholder = 'Bijv. "Inspectie ketel o
           value={input}
           onChangeText={handleChange}
           placeholder={placeholder}
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
           returnKeyType="done"
           onSubmitEditing={handleSubmit}
         />

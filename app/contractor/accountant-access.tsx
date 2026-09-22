@@ -185,7 +185,7 @@ export default function AccountantAccessScreen() {
             value={label}
             onChangeText={setLabel}
             placeholder={t('accountantAccess.namePlaceholder', 'Accountant or practice name')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             autoCapitalize="words"
             editable={!publishing}
           />

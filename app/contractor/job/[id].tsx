@@ -1044,7 +1044,7 @@ export default function JobDetailPage() {
             <TextInput
               style={styles.notesInput}
               placeholder={t('jobs.notesPlaceholder', 'Type your notes here...')}
-              placeholderTextColor={SemanticColors.textDisabled}
+              placeholderTextColor={SemanticColors.placeholder}
               multiline
               value={notes}
               onChangeText={setNotes}
@@ -1662,14 +1662,14 @@ export default function JobDetailPage() {
             <TextInput
               style={styles.siteInput}
               placeholder={t('jobs.siteContactPlaceholder', 'Name or role, e.g. building concierge')}
-              placeholderTextColor={SemanticColors.textDisabled}
+              placeholderTextColor={SemanticColors.placeholder}
               value={editingSite?.contact ?? ''}
               onChangeText={(v) => setEditingSite((s) => (s ? { ...s, contact: v } : s))}
             />
             <TextInput
               style={styles.siteInput}
               placeholder={t('jobs.sitePhonePlaceholder', 'Phone number on site')}
-              placeholderTextColor={SemanticColors.textDisabled}
+              placeholderTextColor={SemanticColors.placeholder}
               value={editingSite?.phone ?? ''}
               onChangeText={(v) => setEditingSite((s) => (s ? { ...s, phone: v } : s))}
               keyboardType="phone-pad"

@@ -11,6 +11,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emitMaterialPurchased } from '../intelligence/dataCollector';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getAuthedUserId } from '../lib/currentUser';
 
 const IMPORTED_KEY = '@vasco_datanorm_imported';
 
@@ -265,18 +266,24 @@ export function parseDateanormV5(text: string): DatanormArticle[] {
  * Each article is emitted as a material_purchased event so the intelligence
  * engine can track supplier prices.
  */
-async function loadImportedArticles(): Promise<Set<string>> {
+// Per contractor. One device-wide set meant a second account on the phone
+// skipped everything the first had imported — and every article imported
+// under the old 'datanorm-import' id (whose price rows all FAILED) stayed
+// marked done, so a re-import could never backfill them (review, #363).
+const importedKeyFor = (userId: string) => `${IMPORTED_KEY}:${userId || 'anon'}`;
+
+async function loadImportedArticles(userId: string): Promise<Set<string>> {
   try {
-    const raw = await AsyncStorage.getItem(IMPORTED_KEY);
+    const raw = await AsyncStorage.getItem(importedKeyFor(userId));
     return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
   } catch {
     return new Set();
   }
 }
 
-async function saveImportedArticles(set: Set<string>): Promise<void> {
+async function saveImportedArticles(userId: string, set: Set<string>): Promise<void> {
   try {
-    await AsyncStorage.setItem(IMPORTED_KEY, JSON.stringify([...set]));
+    await AsyncStorage.setItem(importedKeyFor(userId), JSON.stringify([...set]));
   } catch {
     // Non-critical — worst case we re-import duplicates next time
   }
@@ -291,11 +298,13 @@ async function upsertMaterialCatalogRow(args: {
   manufacturerCode: string;
   unit: string;
   category: string;
-}): Promise<void> {
-  if (!isSupabaseConfigured) return;
+}): Promise<'inserted' | 'exists' | 'failed'> {
+  // Says what happened. It returned void and swallowed every error, so the
+  // import counted an article "imported" whether or not a row landed (#363).
+  if (!isSupabaseConfigured) return 'failed';
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return 'failed';
     // Check existence first (manufacturer_code isn't a unique index, so we
     // emulate upsert manually to keep this safe across users).
     const { data: existing } = await (supabase
@@ -304,16 +313,17 @@ async function upsertMaterialCatalogRow(args: {
       .eq('user_id', user.id)
       .eq('manufacturer_code', args.manufacturerCode)
       .maybeSingle();
-    if (existing?.id) return; // already in catalog, skip
-    await (supabase.from('material_catalog' as any) as any).insert({
+    if (existing?.id) return 'exists';
+    const { error } = await (supabase.from('material_catalog' as any) as any).insert({
       user_id: user.id,
       name: args.name.slice(0, 200),
       manufacturer_code: args.manufacturerCode,
       base_unit: args.unit || 'piece',
       category: args.category || 'general',
     });
+    return error ? 'failed' : 'inserted';
   } catch {
-    // Non-critical — moat write already succeeded
+    return 'failed';
   }
 }
 
@@ -326,17 +336,21 @@ export async function importDatanormToMoat(
     country?: string;
     userId?: string;
   },
-): Promise<{ imported: number; skipped: number }> {
-  const userId = options?.userId ?? 'datanorm-import';
+): Promise<{ imported: number; skipped: number; failed: number }> {
+  // The signed-in contractor. This defaulted to the string 'datanorm-import',
+  // which material_price_history.observed_by (uuid, FK → auth.users) rejects:
+  // every price row failed, silently, while the screen said "imported" (#363).
+  const userId = options?.userId ?? getAuthedUserId() ?? '';
   const supplierName = options?.supplierName ?? supplierId;
   const trade = options?.trade ?? 'general';
   const country = options?.country ?? 'NL';
 
   // Load previously imported article numbers for deduplication
-  const alreadyImported = await loadImportedArticles();
+  const alreadyImported = await loadImportedArticles(userId);
 
   let imported = 0;
   let skipped = 0;
+  let failed = 0;
 
   for (const article of articles) {
     if (!article.articleNumber || article.unitPrice <= 0) {
@@ -355,7 +369,25 @@ export async function importDatanormToMoat(
       const fullName = article.extendedDescription
         ? `${article.description} — ${article.extendedDescription}`
         : article.description;
-      await emitMaterialPurchased(userId, {
+      // Catalogue row FIRST: it is what the contractor sees (the material
+      // picker), so it decides "imported". The price row is written only after
+      // it, and an article is marked done only when BOTH landed — a retry of a
+      // half-landed article re-writes only what is missing. Writing the price
+      // row first duplicated it on every "import again to retry" whenever the
+      // catalogue insert failed, in the one table that cannot be cleaned (#363).
+      const landed = await upsertMaterialCatalogRow({
+        name: fullName,
+        manufacturerCode: article.articleNumber,
+        unit: article.unit,
+        category: trade,
+      });
+      if (landed === 'failed') {
+        failed++;
+        continue;
+      }
+      // No signed-in contractor: the price row has no one to attribute it to
+      // (the FK would reject it), so there is nothing to write or retry.
+      const priceLanded = !userId || await emitMaterialPurchased(userId, {
         materialName: fullName,
         supplierId,
         supplierName,
@@ -364,31 +396,18 @@ export async function importDatanormToMoat(
         unit: article.unit,
         trade,
         country,
-        // R283: catalog imports must self-attribute as 'catalog' (was
-        // previously falling through to the hardcoded 'invoice_scan'
-        // default in dataCollector, polluting OCR sample stats).
+        // R283: catalog imports self-attribute as 'catalog'.
         source: 'catalog',
       });
-      // R12.3: also upsert into material_catalog so the imported article
-      // appears in AddJobMaterialModal's picker. Was previously writing
-      // only to material_price_history (the moat), so contractors saw a
-      // "X imported" toast but nothing in their picker — DATANORM imports
-      // were dormant for the German market they're built for.
-      await upsertMaterialCatalogRow({
-        name: fullName,
-        manufacturerCode: article.articleNumber,
-        unit: article.unit,
-        category: trade,
-      });
-      alreadyImported.add(dedupeKey);
       imported++;
+      if (priceLanded) alreadyImported.add(dedupeKey);
     } catch {
-      skipped++;
+      failed++;
     }
   }
 
   // Persist updated set
-  await saveImportedArticles(alreadyImported);
+  await saveImportedArticles(userId, alreadyImported);
 
-  return { imported, skipped };
+  return { imported, skipped, failed };
 }

@@ -22,10 +22,11 @@ jest.mock('../../lib/currentUser', () => ({
 // Track inserts per table so we can isolate the material_price_history row
 // from incidental business_events writes that flushToCloud also performs.
 const mockInsertsByTable: Record<string, any[]> = {};
+let mockMphError: any = null;
 const mockFrom = jest.fn((table: string) => ({
   insert: jest.fn(async (row: any) => {
     (mockInsertsByTable[table] ||= []).push(row);
-    return { error: null };
+    return { error: table === 'material_price_history' ? mockMphError : null };
   }),
 }));
 jest.mock('../../lib/supabase', () => ({
@@ -39,6 +40,17 @@ describe('emitMaterialPurchased — R283 enrichment', () => {
   beforeEach(() => {
     Object.keys(mockInsertsByTable).forEach((k) => delete mockInsertsByTable[k]);
     mockFrom.mockClear();
+    mockMphError = null;
+  });
+
+  // #363: callers claim "prices added" from this, so it must tell the truth.
+  const minimal = { materialName: 'Kupferrohr 15 mm', supplierId: 'richter', supplierName: 'Richter', price: 12.5, quantity: 1, unit: 'm', trade: 'plumbing' };
+  it('reports true when the price row landed', async () => {
+    await expect(emitMaterialPurchased('11111111-1111-1111-1111-111111111111', minimal)).resolves.toBe(true);
+  });
+  it('reports false when the insert failed', async () => {
+    mockMphError = { message: 'invalid input syntax for type uuid' };
+    await expect(emitMaterialPurchased('11111111-1111-1111-1111-111111111111', minimal)).resolves.toBe(false);
   });
 
   function lastMphRow() {

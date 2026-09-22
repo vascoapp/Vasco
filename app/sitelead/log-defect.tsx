@@ -112,7 +112,7 @@ export default function LogDefectScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('sitelead.defectLocationPlaceholder', 'bijv. Blok A - Badkamer 201')}
-            placeholderTextColor={SemanticColors.textSecondary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={location}
             onChangeText={setLocation}
           />
@@ -124,7 +124,7 @@ export default function LogDefectScreen() {
           <TextInput
             style={[styles.input, styles.inputMultiline]}
             placeholder={t('sitelead.defectDescriptionPlaceholder', 'Beschrijf het probleem...')}
-            placeholderTextColor={SemanticColors.textSecondary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -212,7 +212,7 @@ export default function LogDefectScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('sitelead.defectGuaranteeRefPlaceholder', 'Referentienummer')}
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={guaranteeRef}
                 onChangeText={setGuaranteeRef}
               />
@@ -223,7 +223,7 @@ export default function LogDefectScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('sitelead.defectGuaranteeExpiryPlaceholder', 'DD-MM-JJJJ')}
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={guaranteeExpiry}
                 onChangeText={setGuaranteeExpiry}
               />

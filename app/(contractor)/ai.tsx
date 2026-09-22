@@ -467,7 +467,7 @@ export default function VascoScreen() {
                       value={editedTextFor(action) ?? ''}
                       onChangeText={(txt) => setEditFor(action.id, txt)}
                       multiline
-                      placeholderTextColor={DK.colors.textMuted}
+                      placeholderTextColor={DK.colors.placeholder}
                     />
                   )}
                   <View style={s.actionButtons}>

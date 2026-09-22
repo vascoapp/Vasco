@@ -294,7 +294,7 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
                 onChangeText={setDepositInput}
                 keyboardType="decimal-pad"
                 placeholder={t('share.depositAmount', 'Amount')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 accessibilityLabel={t('share.depositAmount', 'Amount')}
               />
               <Pressable

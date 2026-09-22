@@ -124,7 +124,7 @@ export function DKSelect({
         >
           {selected?.label ?? placeholder ?? t('common.select', 'Select')}
         </Text>
-        <Ionicons name="chevron-down" size={18} color={DK.colors.textMuted} />
+        <Ionicons name="chevron-down" size={18} color={DK.colors.text} />
       </Pressable>
 
       <Modal
@@ -144,12 +144,12 @@ export function DKSelect({
 
             {showSearch && (
               <View style={styles.searchWrap}>
-                <Ionicons name="search" size={16} color={DK.colors.textMuted} />
+                <Ionicons name="search" size={16} color={DK.colors.text} />
                 <TextInput
                   value={query}
                   onChangeText={setQuery}
                   placeholder={t('common.search', 'Search')}
-                  placeholderTextColor={DK.colors.textMuted}
+                  placeholderTextColor={DK.colors.placeholder}
                   style={styles.searchInput}
                   autoCorrect={false}
                   returnKeyType="search"
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   triggerPressed: { borderColor: DK.colors.accent },
   triggerDisabled: { opacity: 0.5 },
   triggerText: { flex: 1, fontSize: 14, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
-  triggerPlaceholder: { color: DK.colors.textMuted },
+  triggerPlaceholder: { color: DK.colors.placeholder },
 
   // CENTRED, not bottom-anchored — deliberately.
   //
@@ -268,7 +268,8 @@ const styles = StyleSheet.create({
     fontFamily: DK.type.display800,
     fontSize: 12,
     letterSpacing: 1.3,
-    color: DK.colors.textMuted,
+    // White in pop-ups and menus, not grey (user, 2026-09-22).
+    color: DK.colors.text,
     paddingHorizontal: GRID.md,
     marginBottom: GRID.sm,
   },
@@ -293,9 +294,9 @@ const styles = StyleSheet.create({
   optionPressed: { backgroundColor: DK.colors.accent + '15' },
   optionLabel: { fontSize: 15, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
   optionLabelSel: { color: DK.colors.accent, fontFamily: TYPE.titleFamily },
-  optionSub: { fontSize: 12, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted, marginTop: 2 },
+  optionSub: { fontSize: 12, fontFamily: TYPE.captionFamily, color: DK.colors.text, marginTop: 2 },
   empty: {
-    fontSize: 14, fontFamily: TYPE.bodyFamily, color: DK.colors.textMuted,
+    fontSize: 14, fontFamily: TYPE.bodyFamily, color: DK.colors.text,
     textAlign: 'center', paddingVertical: GRID.lg, paddingHorizontal: GRID.md,
   },
   cancel: {

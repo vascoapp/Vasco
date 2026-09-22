@@ -34,6 +34,26 @@ describe('the VAT return refuses a market it cannot prepare', () => {
     const before = queue.slice(Math.max(0, at - 1200), at);
     expect(before).toMatch(/vatReturnSupported/);
   });
+
+  it('the card states the obligation, never an invoice count (2026-09-22)', () => {
+    // It printed ALL-TIME paid invoices as "N facturen om te exporteren", and
+    // "0" read as "nothing to file" — a VAT return is due with no turnover too.
+    const at = queue.indexOf("type: 'tax_prep'");
+    const card = queue.slice(at, queue.indexOf('});', at));
+    expect(card).toMatch(/automation\.taxPrepAlwaysRequired/);
+    expect(card).not.toMatch(/invoicesToExport|invoiceCount|paidInvoiceCount/);
+  });
+
+  it('never tells a KOR / Kleinunternehmer contractor a return is due', () => {
+    // They file no VAT return; "also required with no invoices" is false for them.
+    const at = queue.indexOf("type: 'tax_prep'");
+    const before = queue.slice(Math.max(0, at - 1500), at);
+    expect(before).toMatch(/isSmallBusinessExempt/);
+    expect(before).toMatch(/&& !vatExempt\)/);
+    // ...nor a DE business on yearly filing (no UStVA), and only NL/DE at all.
+    expect(before).toMatch(/filingPeriod === 'yearly'/);
+    expect(before).toMatch(/context\.country === 'NL' \|\| context\.country === 'DE'/);
+  });
 });
 
 describe('customer-facing language and compliance follow the profile', () => {

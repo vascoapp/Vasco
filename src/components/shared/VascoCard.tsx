@@ -471,7 +471,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
               onChangeText={setEditText}
               multiline
               placeholder={t('vasco.editReply', 'Edit the reply…')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
           ) : (
             <>
@@ -490,7 +490,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
           onChangeText={setEditText}
           multiline
           placeholder={t('vasco.editMessage', 'Pas bericht aan...')}
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
         />
       )}
 

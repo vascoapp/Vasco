@@ -12,6 +12,8 @@ import { View, StyleSheet, Pressable, TextInput, Modal, KeyboardAvoidingView, Pl
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { DK } from '../../theme/draftkings';
+import { TYPE } from '../../theme/tabStyles';
+import { SemanticColors } from '../../theme/colors';
 import { useAppState } from '../../state/AppState';
 import { hapticSuccess } from '../../utils/haptics';
 import { useKeyboardInset } from '../../hooks/useKeyboardInset';
@@ -72,13 +74,13 @@ export function AddCustomerSheet({ visible, onClose, onAdded }: Props) {
           <Pressable style={[s.modalSheet, kbInset ? { paddingBottom: kbInset + 16 } : null]} onPress={(e) => e.stopPropagation()}>
             <View style={s.modalHandle} />
             <DKLabel style={s.modalTitle}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
-            <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.textMuted} autoFocus />
-            <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.textMuted} keyboardType="email-address" autoCapitalize="none" />
-            <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.textMuted} keyboardType="phone-pad" />
-            <TextInput style={s.modalInput} value={newAddress} onChangeText={setNewAddress} placeholder={t('customers.addressPlaceholder', 'Address')} placeholderTextColor={DK.colors.textMuted} />
+            <TextInput style={s.modalInput} value={newName} onChangeText={setNewName} placeholder={t('customers.namePlaceholder', 'Customer name')} placeholderTextColor={DK.colors.placeholder} autoFocus />
+            <TextInput style={s.modalInput} value={newEmail} onChangeText={setNewEmail} placeholder={t('customers.emailPlaceholder', 'Email')} placeholderTextColor={DK.colors.placeholder} keyboardType="email-address" autoCapitalize="none" />
+            <TextInput style={s.modalInput} value={newPhone} onChangeText={setNewPhone} placeholder={t('customers.phonePlaceholder', 'Phone')} placeholderTextColor={DK.colors.placeholder} keyboardType="phone-pad" />
+            <TextInput style={s.modalInput} value={newAddress} onChangeText={setNewAddress} placeholder={t('customers.addressPlaceholder', 'Address')} placeholderTextColor={DK.colors.placeholder} />
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TextInput style={[s.modalInput, { flex: 1 }]} value={newPostcode} onChangeText={setNewPostcode} placeholder={t('contractor.customers.postcodePlaceholder', 'Post code')} placeholderTextColor={DK.colors.textMuted} />
-              <TextInput style={[s.modalInput, { flex: 2 }]} value={newCity} onChangeText={setNewCity} placeholder={t('contractor.customers.cityPlaceholder', 'City')} placeholderTextColor={DK.colors.textMuted} />
+              <TextInput style={[s.modalInput, { flex: 1 }]} value={newPostcode} onChangeText={setNewPostcode} placeholder={t('contractor.customers.postcodePlaceholder', 'Post code')} placeholderTextColor={DK.colors.placeholder} />
+              <TextInput style={[s.modalInput, { flex: 2 }]} value={newCity} onChangeText={setNewCity} placeholder={t('contractor.customers.cityPlaceholder', 'City')} placeholderTextColor={DK.colors.placeholder} />
             </View>
             <Pressable style={[s.modalSubmit, disabled && { opacity: 0.5 }]} onPress={handleAddCustomer} disabled={disabled}>
               <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
@@ -92,7 +94,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded }: Props) {
 }
 
 const s = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: SemanticColors.surfaceOverlay, justifyContent: 'flex-end' },
   modalSheet: {
     backgroundColor: DK.colors.panel,
     borderTopLeftRadius: DK.radius.card, borderTopRightRadius: DK.radius.card,
@@ -100,13 +102,13 @@ const s = StyleSheet.create({
     padding: 20, paddingBottom: 40, gap: 10,
   },
   modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: DK.colors.border, alignSelf: 'center', marginBottom: 8 },
-  modalTitle: { fontFamily: DK.type.display900, fontSize: 16, color: DK.colors.text, letterSpacing: 1.8 },
+  modalTitle: { fontFamily: DK.type.display900, fontSize: TYPE.titleSize, color: DK.colors.text, letterSpacing: 1.8 },
   modalInput: {
     backgroundColor: DK.colors.panel2,
     borderRadius: DK.radius.button,
     borderWidth: 1, borderColor: DK.colors.border,
     paddingHorizontal: 14, paddingVertical: 14,
-    fontSize: 15,
+    fontSize: TYPE.bodySize,
     fontFamily: DK.type.body500,
     color: DK.colors.text,
   },
@@ -118,5 +120,5 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 4,
   },
-  modalSubmitText: { fontFamily: DK.type.display900, fontSize: 13, color: '#FFFFFF', letterSpacing: 1.4 },
+  modalSubmitText: { fontFamily: DK.type.display900, fontSize: TYPE.captionSize, color: DK.colors.text, letterSpacing: 1.4 },
 });

@@ -472,7 +472,7 @@ export default function CustomerViewScreen() {
               value={changeMessage}
               onChangeText={setChangeMessage}
               placeholder={t('customerView.describeChange', 'Describe the change you want…')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               multiline
             />
             {/* Disabled while the box is empty. The handler early-returns on a

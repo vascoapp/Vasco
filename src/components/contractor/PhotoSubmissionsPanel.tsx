@@ -20,10 +20,12 @@ import { hapticSuccess } from '../../utils/haptics';
 interface Props {
   submissions: DecisionSubmission[];
   trackerId?: string;
+  /** The tracker's customer, or undefined when none is linked ('new'). */
+  customerId?: string;
   customerName?: string;
 }
 
-export function PhotoSubmissionsPanel({ submissions, trackerId, customerName }: Props) {
+export function PhotoSubmissionsPanel({ submissions, trackerId, customerId, customerName }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
@@ -48,12 +50,17 @@ export function PhotoSubmissionsPanel({ submissions, trackerId, customerName }: 
       await stashHandoff({
         trackerId,
         submissionId: submission.id,
+        customerId,
         customerName,
         photoUrls: submission.photos,
         result,
       });
       hapticSuccess();
-      router.push('/contractor/tiered-quote' as any);
+      // The customer is known — hand it over, so the quote screen does not ask
+      // "who is this for?" about the customer who just sent the photos.
+      router.push((customerId
+        ? `/contractor/tiered-quote?customerId=${encodeURIComponent(customerId)}`
+        : '/contractor/tiered-quote') as any);
     } catch {
       Alert.alert(
         t('photoSubmissions.failTitle', 'Analysis failed'),

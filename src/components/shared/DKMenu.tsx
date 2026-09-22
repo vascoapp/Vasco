@@ -172,7 +172,7 @@ export function DKMenu({ renderAnchor, items, accessibilityLabel }: Props) {
                       <Ionicons
                         name={item.icon}
                         size={16}
-                        color={item.emphasis ? DK.colors.accent : DK.colors.textMuted}
+                        color={item.emphasis ? DK.colors.accent : DK.colors.text}
                       />
                     ) : null}
                     <View style={styles.itemMain}>
@@ -238,5 +238,6 @@ const styles = StyleSheet.create({
   itemMain: { flex: 1 },
   itemLabel: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
   itemLabelEmphasis: { fontFamily: TYPE.titleFamily, color: DK.colors.accent },
-  itemDetail: { fontSize: TYPE.labelSize, fontFamily: TYPE.bodyFamily, color: DK.colors.textMuted, marginTop: 1 },
+  // White in pop-ups and menus, not grey (user, 2026-09-22).
+  itemDetail: { fontSize: TYPE.labelSize, fontFamily: TYPE.bodyFamily, color: DK.colors.text, marginTop: 1 },
 });

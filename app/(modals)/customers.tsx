@@ -248,7 +248,7 @@ export default function CustomersScreen() {
                   value={name}
                   onChangeText={setName}
                   placeholder={t('customersModal.namePlaceholder', 'e.g. De Jong')}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   autoFocus={!editing}
                 />
               </View>
@@ -259,7 +259,7 @@ export default function CustomersScreen() {
                   value={email}
                   onChangeText={setEmail}
                   placeholder={emailExample}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -271,7 +271,7 @@ export default function CustomersScreen() {
                   value={phone}
                   onChangeText={setPhone}
                   placeholder={phoneExample}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   keyboardType="phone-pad"
                 />
               </View>
@@ -282,7 +282,7 @@ export default function CustomersScreen() {
                   value={address}
                   onChangeText={setAddress}
                   placeholder={addressExample}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                 />
               </View>
               {/* Post code and city on one row: they are read together and
@@ -296,7 +296,7 @@ export default function CustomersScreen() {
                     value={postcode}
                     onChangeText={setPostcode}
                     placeholder={postcodeExample}
-                    placeholderTextColor={SemanticColors.textSecondary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                 </View>
                 <View style={{ flex: 2 }}>
@@ -306,7 +306,7 @@ export default function CustomersScreen() {
                     value={city}
                     onChangeText={setCity}
                     placeholder={cityExample}
-                    placeholderTextColor={SemanticColors.textSecondary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                 </View>
               </View>
@@ -321,7 +321,7 @@ export default function CustomersScreen() {
                   onChangeText={setVatId}
                   autoCapitalize="characters"
                   placeholder={vatExample}
-                  placeholderTextColor={SemanticColors.textSecondary}
+                  placeholderTextColor={SemanticColors.placeholder}
                 />
               </View>
               {needsProvince && (
@@ -333,7 +333,7 @@ export default function CustomersScreen() {
                     onChangeText={setProvince}
                     autoCapitalize={isItaly ? 'characters' : 'words'}
                     placeholder={isItaly ? 'MI' : 'Madrid'}
-                    placeholderTextColor={SemanticColors.textSecondary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                 </View>
               )}
@@ -342,17 +342,17 @@ export default function CustomersScreen() {
                   <View style={styles.fieldColumn}>
                     <Text style={Typography.muted}>{t('customersModal.fieldTaxIdIt', 'Codice fiscale (Italy)')}</Text>
                     <TextInput style={styles.input} value={taxId} onChangeText={setTaxId} autoCapitalize="characters"
-                      placeholder="RSSMRA80A01F205X" placeholderTextColor={SemanticColors.textSecondary} />
+                      placeholder="RSSMRA80A01F205X" placeholderTextColor={SemanticColors.placeholder} />
                   </View>
                   <View style={styles.fieldColumn}>
                     <Text style={Typography.muted}>{t('customersModal.fieldSdiCode', 'SDI recipient code (Italy)')}</Text>
                     <TextInput style={styles.input} value={sdiCode} onChangeText={setSdiCode} autoCapitalize="characters"
-                      maxLength={7} placeholder="0000000" placeholderTextColor={SemanticColors.textSecondary} />
+                      maxLength={7} placeholder="0000000" placeholderTextColor={SemanticColors.placeholder} />
                   </View>
                   <View style={styles.fieldColumn}>
                     <Text style={Typography.muted}>{t('customersModal.fieldPec', 'PEC address (Italy)')}</Text>
                     <TextInput style={styles.input} value={pec} onChangeText={setPec} autoCapitalize="none"
-                      keyboardType="email-address" placeholder="nome@pec.it" placeholderTextColor={SemanticColors.textSecondary} />
+                      keyboardType="email-address" placeholder="nome@pec.it" placeholderTextColor={SemanticColors.placeholder} />
                   </View>
                 </>
               )}

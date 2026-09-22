@@ -2272,7 +2272,8 @@
     "pendingDecisionsCount_one": "{{count}} décision en attente",
     "pendingDecisionsCount_other": "{{count}} décisions en attente",
     "daysOverdueCount_one": "{{count}} jour de retard",
-    "daysOverdueCount_other": "{{count}} jours de retard"
+    "daysOverdueCount_other": "{{count}} jours de retard",
+    "taxPrepAlwaysRequired": "Obligatoire même si vous n'avez émis aucune facture."
   },
   "profile": {
     "title": "Profil",
@@ -3571,7 +3572,9 @@
     "eInvoiceReadTitle": "Facture lue",
     "eInvoiceReadBody": "{{supplier}} · {{count}} lignes · {{total}}{{moat}}",
     "eInvoiceUnknownSupplier": "Fournisseur inconnu",
-    "eInvoicePricesAdded": "Prix ajoutés à votre index tarifaire."
+    "eInvoicePricesAdded": "Prix ajoutés à votre index tarifaire.",
+    "importNothingSaved": "Rien n'a pu être enregistré (matériaux : {{count}}). Vérifiez votre connexion et réessayez.",
+    "importSomeFailed": "Non enregistrés : {{count}} — importez à nouveau pour réessayer."
   },
   "customerView": {
     "pickTierTitle": "Choisissez une formule",

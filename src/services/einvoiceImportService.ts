@@ -94,8 +94,10 @@ export async function importEInvoiceXml(xml: string): Promise<ImportResult> {
     };
   }
 
-  // The moat feed keeps its own arithmetic gate; this only reports whether the
-  // attempt was made, and never blocks the import if it throws.
+  // True only when price rows LANDED. This was set after the call returned,
+  // whatever it did — feedPricingMoat returns early when its arithmetic gate
+  // declines and swallows every insert error — so "Prices added to your price
+  // index" was shown over zero rows (#363). Never blocks the import.
   let fedMoat = false;
   try {
     // Tagged 'einvoice', not 'invoice_scan'. These rows are the supplier's own
@@ -103,8 +105,7 @@ export async function importEInvoiceXml(xml: string): Promise<ImportResult> {
     // of a photograph. Same table, materially different evidence — and if the
     // vision path ever regresses, provenance is the only thing that makes the
     // trustworthy rows separable.
-    await feedPricingMoat(invoice, 'einvoice');
-    fedMoat = true;
+    fedMoat = (await feedPricingMoat(invoice, 'einvoice')) > 0;
   } catch (err) {
     logWarn('EInvoiceImport', `moat feed failed: ${String(err)}`);
   }

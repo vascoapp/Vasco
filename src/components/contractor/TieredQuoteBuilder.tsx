@@ -352,6 +352,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     (async () => {
       const h = await consumeHandoff();
       if (cancelled || !h || !h.result) return;
+      // Another customer's photos: drop them rather than prefill this quote.
+      // A handoff for a known customer only belongs on THAT customer's quote.
+      if (h.customerId && h.customerId !== customer?.id) return;
       const items = h.result.detectedItems ?? [];
       // R190: run AI-baseline lines through the cohort tuner before showing.
       // Each line gets cohort-typical qty/price adjustments capped at ±50%,
@@ -966,7 +969,10 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
           mod.prefillDurationForLine({ trade, description: svc.item.name, quantity: svc.quantity })
             .then((hours) => {
               if (!(hours > 0 && hours < 24) || hours === svc.quantity) return;
-              // Never over a number the contractor has already changed.
+              // Not over a number the contractor has changed SINCE the lines
+              // landed. A number typed in the scope text ("8 uur") only set
+              // the first line's starting quantity and can still be refined —
+              // pre-existing behaviour, noted in review.
               setSelectedServices(prev => prev.map(s =>
                 s.item.id === svc.item.id && s.quantity === svc.quantity ? { ...s, quantity: hours } : s,
               ));
@@ -1155,7 +1161,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
               value={customName}
               onChangeText={setCustomName}
               placeholder={t('quotes.customServiceName', 'Service name')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
             <View style={s.customRow}>
               <TextInput
@@ -1163,7 +1169,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 value={customPrice}
                 onChangeText={setCustomPrice}
                 placeholder={t('quotes.customServicePrice', 'Price ({{sym}})', { sym: currencySymbol(country) })}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 keyboardType="decimal-pad"
               />
               <TextInput
@@ -1171,7 +1177,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 value={customUnit}
                 onChangeText={setCustomUnit}
                 placeholder={t('quotes.customServiceUnit', 'Unit')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
               />
             </View>
             <Pressable style={s.customAddBtn} onPress={addCustomService} accessibilityRole="button">
@@ -1377,7 +1383,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 value={scopeText}
                 onChangeText={setScopeText}
                 placeholder={t('quotes.scopePlaceholder', 'Describe the job scope…')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 returnKeyType="send"
                 onSubmitEditing={handleAIDraft}
                 editable={!aiDrafting}
@@ -1405,8 +1411,8 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
 
             {selectedServices.length > 0 ? (
               <View style={s.serviceList}>
-                {selectedServices.map(sv => (
-                  <View key={sv.item.id} style={s.serviceRow}>
+                {selectedServices.map((sv, i) => (
+                  <View key={sv.item.id} style={[s.serviceRow, s.builderRow, i > 0 && s.builderRowDivider]}>
                     <View style={{ flex: 1 }}>
                       <Text style={s.serviceName}>{sv.item.name}</Text>
                       {/* Editable unit price — tap to adjust for this quote */}
@@ -1434,11 +1440,11 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                     </View>
                     <View style={s.qtyRow}>
                       <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity - 1)} accessibilityRole="button" accessibilityLabel={t('common.remove', 'Remove')}>
-                        <Ionicons name="remove" size={14} color={SemanticColors.textPrimary} />
+                        <Ionicons name="remove" size={18} color={SemanticColors.textPrimary} />
                       </Pressable>
                       <Text style={s.qtyText}>{sv.quantity}</Text>
                       <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity + 1)} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
-                        <Ionicons name="add" size={14} color={SemanticColors.textPrimary} />
+                        <Ionicons name="add" size={18} color={SemanticColors.textPrimary} />
                       </Pressable>
                     </View>
                   </View>
@@ -1519,7 +1525,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 value={templateNameDraft}
                 onChangeText={setTemplateNameDraft}
                 placeholder={t('quotes.templateNamePlaceholder', 'Template name')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 autoFocus
                 selectTextOnFocus
               />
@@ -2031,7 +2037,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 multiline
                 style={s.sowTextInput}
                 placeholder={t('quotes.scopeManualPlaceholder', 'What is included, what is not, warranty terms…')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 textAlignVertical="top"
                 accessibilityLabel={t('quotes.scopeTitle', 'Scope of work')}
               />
@@ -2094,7 +2100,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 multiline
                 style={s.sowTextInput}
                 placeholder={t('quotes.scopePlaceholder', 'Scope text')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 textAlignVertical="top"
               />
               <View style={s.sowActionsRow}>
@@ -2153,7 +2159,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                         style={s.tierEditorInput}
                         value={draft.name}
                         onChangeText={v => setDraft({ name: v })}
-                        placeholderTextColor={SemanticColors.textTertiary}
+                        placeholderTextColor={SemanticColors.placeholder}
                         accessibilityLabel={t('quotes.packageName', 'Package name')}
                       />
                     </View>
@@ -2169,7 +2175,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                             setDraft({ features: next });
                           }}
                           placeholder={t('quotes.packageFeaturePlaceholder', 'e.g. 2 year warranty')}
-                          placeholderTextColor={SemanticColors.textTertiary}
+                          placeholderTextColor={SemanticColors.placeholder}
                           accessibilityLabel={t('quotes.packageFeature', 'Promise {{n}}', { n: i + 1 })}
                         />
                       </View>
@@ -2276,7 +2282,7 @@ const s = StyleSheet.create({
     paddingVertical: 0,
   },
   aiExplanation: { flexDirection: 'row', alignItems: 'flex-start', gap: 4, marginTop: 4, paddingRight: 8 },
-  aiExplanationText: { flex: 1, fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, lineHeight: 14 },
+  aiExplanationText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: Palette.hermesOrange, lineHeight: 18 },
 
   // Sections
   section: { gap: GRID.sm },
@@ -2294,10 +2300,16 @@ const s = StyleSheet.create({
   serviceRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
   },
-  serviceName: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, flex: 1 },
-  servicePrice: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
-  priceEditRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 },
-  priceInput: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange, minWidth: 44, paddingVertical: 2, paddingHorizontal: 6, backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm },
+  // The builder's rows sat straight inside the rounded, overflow-hidden list
+  // with no padding: the first row's corner was clipped and every row touched
+  // the card edge (TestFlight + iOS sim, 2026-09-22). The review step pads its
+  // own wrapper (serviceRowCol), so the padding lives here, not on serviceRow.
+  builderRow: { paddingHorizontal: GRID.md, paddingVertical: 14 },
+  builderRowDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: SemanticColors.borderDefault },
+  serviceName: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, flex: 1 },
+  servicePrice: { fontSize: TYPE.bodySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
+  priceEditRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: GRID.xs },
+  priceInput: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.hermesOrange, minWidth: 56, paddingVertical: 4, paddingHorizontal: 8, backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.sm },
   customCard: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, padding: GRID.md, gap: GRID.sm, marginBottom: GRID.md },
   customTitle: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
   customInput: { fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.sm, paddingHorizontal: 12, paddingVertical: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: SemanticColors.borderDefault },
@@ -2308,9 +2320,10 @@ const s = StyleSheet.create({
   lineHintRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   lineHintText: { fontSize: TYPE.tinySize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, flex: 1 },
 
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  qtyBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
-  qtyText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, minWidth: 24, textAlign: 'center' },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm },
+  // 36 pt: the 28 pt steppers were small targets on a site with gloves on.
+  qtyBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
+  qtyText: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, minWidth: 28, textAlign: 'center' },
 
   // Templates
   saveTemplateRow: {

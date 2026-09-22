@@ -246,7 +246,7 @@ export default function WerkScreen() {
           <TextInput
             style={styles.modalInput}
             placeholder={t('pipeline.jobDescription', 'Omschrijving klus')}
-            placeholderTextColor={DK.colors.textMuted}
+            placeholderTextColor={DK.colors.placeholder}
             value={newJobTitle}
             onChangeText={setNewJobTitle}
             maxLength={120}
@@ -289,7 +289,7 @@ export default function WerkScreen() {
               <Pressable style={styles.customerAnchor} onPress={open} accessibilityRole="button">
                 <Ionicons name="person-outline" size={16} color={DK.colors.textMuted} />
                 <Text
-                  style={[styles.customerAnchorText, !newJobCustomerId && { color: DK.colors.textMuted }]}
+                  style={[styles.customerAnchorText, !newJobCustomerId && { color: DK.colors.placeholder }]}
                   numberOfLines={1}
                 >
                   {(customers as { id: string; name: string }[]).find((c) => c.id === newJobCustomerId)?.name

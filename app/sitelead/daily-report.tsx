@@ -196,7 +196,7 @@ export default function DailyReportScreen() {
               onChangeText={setTemperature}
               keyboardType="number-pad"
               placeholder="°C"
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
             <Text style={styles.inlineUnit}>°C</Text>
           </View>
@@ -269,7 +269,7 @@ export default function DailyReportScreen() {
                 value={entry.notes}
                 onChangeText={(v) => updateProgress(i, 'notes', v)}
                 placeholder={t('dailyReport.progressNotes')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 multiline
               />
             </View>
@@ -304,7 +304,7 @@ export default function DailyReportScreen() {
             value={safetyNotes}
             onChangeText={setSafetyNotes}
             placeholder={t('dailyReport.safetyNotes')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             multiline
           />
         </View>
@@ -317,7 +317,7 @@ export default function DailyReportScreen() {
             value={deliveries}
             onChangeText={setDeliveries}
             placeholder={t('dailyReport.deliveriesPlaceholder')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             multiline
           />
           <TextInput
@@ -325,7 +325,7 @@ export default function DailyReportScreen() {
             value={issues}
             onChangeText={setIssues}
             placeholder={t('dailyReport.issuesPlaceholder')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             multiline
           />
         </View>
@@ -364,7 +364,7 @@ export default function DailyReportScreen() {
             value={generalNotes}
             onChangeText={setGeneralNotes}
             placeholder={t('dailyReport.generalNotesPlaceholder')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             multiline
           />
         </View>

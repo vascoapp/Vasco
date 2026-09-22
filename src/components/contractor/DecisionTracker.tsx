@@ -960,7 +960,7 @@ function DecisionItemCard({
               <TextInput
                 style={styles.textInput}
                 placeholder={t('dt.enter', { name: localizeItemName(item.itemId, item.name, t).toLowerCase() })}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={inputValue}
                 onChangeText={setInputValue}
                 keyboardType={item.inputType === 'number' ? 'numeric' : 'default'}

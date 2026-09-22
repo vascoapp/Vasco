@@ -311,7 +311,7 @@ export function ExecutionConfirmationModal({
           value={pinCode}
           onChangeText={setPinCode}
           placeholder="• • • •"
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
           keyboardType="numeric"
           secureTextEntry
           maxLength={6}
@@ -344,7 +344,7 @@ export function ExecutionConfirmationModal({
           value={twoFactorCode}
           onChangeText={setTwoFactorCode}
           placeholder="• • • • • •"
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
           keyboardType="numeric"
           maxLength={6}
           autoFocus

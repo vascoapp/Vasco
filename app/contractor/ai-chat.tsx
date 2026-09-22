@@ -258,7 +258,7 @@ export default function AiChatScreen() {
             value={input}
             onChangeText={setInput}
             placeholder={t('aiChat.placeholder', 'Ask anything…')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             style={styles.input}
             multiline
             onSubmitEditing={() => handleSend()}

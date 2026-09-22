@@ -48,7 +48,7 @@ export default function RecurringEditScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
-  const { customers, jobs, businessProfile } = useAppState();
+  const { customers, jobs, businessProfile, isLoading } = useAppState();
   const { user } = useAuth();
   // Profile first, account as fallback (#218): a contractor who set UK in
   // their profile was formatted in euros while the account still said NL.
@@ -77,11 +77,12 @@ export default function RecurringEditScreen() {
   const hasCustomers = (customers ?? []).length > 0;
   const autoOpened = useRef(false);
   useEffect(() => {
-    if (isNew && !hasCustomers && !autoOpened.current) {
+    // Not while customers are still loading (cold start of an existing user).
+    if (isNew && !hasCustomers && !isLoading && !autoOpened.current) {
       autoOpened.current = true;
       setShowAddCustomer(true);
     }
-  }, [isNew, hasCustomers]);
+  }, [isNew, hasCustomers, isLoading]);
 
   useEffect(() => {
     if (isNew) return;
@@ -334,7 +335,7 @@ function Field({ label, value, onChange, placeholder, multiline, keyboardType = 
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor={DK.colors.textMuted}
+        placeholderTextColor={DK.colors.placeholder}
         multiline={multiline}
         keyboardType={keyboardType}
         style={[styles.field, multiline && { minHeight: 60, textAlignVertical: 'top' }]}
@@ -346,7 +347,8 @@ function Field({ label, value, onChange, placeholder, multiline, keyboardType = 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   content: { padding: GRID.lg, paddingBottom: GRID.xl * 2, gap: GRID.md },
-  section: { color: DK.colors.textMuted, marginTop: GRID.sm },
+  // Form labels are white, not grey (user, 2026-09-22).
+  section: { color: DK.colors.text, marginTop: GRID.sm },
   addCustomer: {
     flexDirection: 'row', alignItems: 'center', gap: GRID.sm,
     paddingHorizontal: GRID.md, paddingVertical: 14,
@@ -354,7 +356,7 @@ const styles = StyleSheet.create({
     borderColor: DK.colors.accent + '55', backgroundColor: DK.colors.accent + '14',
   },
   addCustomerText: { fontSize: TYPE.bodySize, fontFamily: DK.type.body500, color: DK.colors.text },
-  fieldLabel: { fontSize: 12, fontFamily: TYPE.captionFamily, color: DK.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
+  fieldLabel: { fontSize: 12, fontFamily: TYPE.captionFamily, color: DK.colors.text, textTransform: 'uppercase', letterSpacing: 1 },
   field: {
     backgroundColor: DK.colors.panel, borderRadius: RADIUS.md, borderWidth: 1, borderColor: DK.colors.border,
     color: DK.colors.text, padding: GRID.md, fontFamily: TYPE.bodyFamily, fontSize: 14,

@@ -182,7 +182,7 @@ export function AIAssistant() {
         <TextInput
           style={styles.input}
           placeholder={t('aiAssistant.askPlaceholder', 'Ask a question...')}
-          placeholderTextColor={SemanticColors.textSecondary}
+          placeholderTextColor={SemanticColors.placeholder}
           value={inputText}
           onChangeText={setInputText}
           onSubmitEditing={handleSend}

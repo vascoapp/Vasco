@@ -588,7 +588,7 @@ export default function PermitsScreen() {
                     value={wizard.jobTitle}
                     onChangeText={v => setWizard(w => ({ ...w, jobTitle: v }))}
                     placeholder={t('permits.jobNamePlaceholder', 'bijv. Warmtepomp installatie')}
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                 </View>
                 <View style={styles.inputGroup}>
@@ -598,7 +598,7 @@ export default function PermitsScreen() {
                     value={wizard.address}
                     onChangeText={v => setWizard(w => ({ ...w, address: v }))}
                     placeholder={t('permits.addressPlaceholder', 'Straat, stad')}
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                 </View>
                 <View style={styles.inputGroup}>
@@ -608,7 +608,7 @@ export default function PermitsScreen() {
                     value={wizard.authority}
                     onChangeText={v => setWizard(w => ({ ...w, authority: v }))}
                     placeholder={t('permits.authorityPlaceholder', 'bijv. Gemeente Amsterdam')}
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                 </View>
                 <View style={styles.inputGroup}>
@@ -618,7 +618,7 @@ export default function PermitsScreen() {
                     value={wizard.notes}
                     onChangeText={v => setWizard(w => ({ ...w, notes: v }))}
                     placeholder={t('permits.optional', 'Optioneel')}
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                     multiline
                   />
                 </View>
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
   typeName: { fontSize: 15, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
   typeDesc: { fontSize: 12, color: SemanticColors.textSecondary, marginTop: 2 },
   inputGroup: { gap: 4 },
-  inputLabel: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textSecondary },
+  inputLabel: { fontSize: 13, fontFamily: 'Archivo_700Bold', color: SemanticColors.textPrimary },
   textInput: {
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12,
     padding: Spacing.sm, paddingHorizontal: Spacing.md,

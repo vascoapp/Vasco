@@ -1345,14 +1345,29 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   const day = new Date().getDate();
   const isQuarterEnd = (month === 2 || month === 5 || month === 8 || month === 11) && day >= 20;
   const vatReturnSupported = context.country === 'NL' || context.country === 'DE';
-  if (isQuarterEnd && vatReturnSupported) {
+  // "Also required with no invoices" is true in both markets this card reaches
+  // — NL nihilaangifte, DE Nullmeldung for UStVA filers — but NOT for a
+  // contractor who files no periodic return at all: KOR / Kleinunternehmer
+  // (no VAT return) or a DE business the Finanzamt put on YEARLY filing (no
+  // UStVA). Those get no card. Other countries never reach it (above).
+  let vatExempt = false;
+  try {
+    const { getAppStateSnapshot } = await import('../state/appStateSnapshot');
+    const { isSmallBusinessExempt } = await import('../domain/business');
+    const bp = getAppStateSnapshot().businessProfile;
+    vatExempt = isSmallBusinessExempt({ vatScheme: bp?.vatScheme as any }) || bp?.filingPeriod === 'yearly';
+  } catch {}
+  if (isQuarterEnd && vatReturnSupported && !vatExempt) {
     const quarterName = `Q${Math.floor(month / 3) + 1}`;
-    const paidInvoiceCount = (context.allInvoices ?? []).filter((i: any) => i.status === 'paid').length;
+    // No invoice count. It counted every paid invoice EVER, not this quarter's,
+    // and a first-time contractor read "0 facturen om te exporteren" as "nothing
+    // to do" — but a VAT-registered business files even with no turnover (NL
+    // nihil-aangifte, DE UStVA). The card says that instead (user, 2026-09-22).
     const id = await addToQueue({
       type: 'tax_prep',
       title: t('automation.taxPrep', { defaultValue: '{{quarter}} tax prep', quarter: quarterName }),
-      description: `${paidInvoiceCount} ${t('automation.invoicesToExport', 'invoices to export')}`,
-      preparedData: { quarter: quarterName, invoiceCount: paidInvoiceCount },
+      description: t('automation.taxPrepAlwaysRequired', 'Also required when you sent no invoices.'),
+      preparedData: { quarter: quarterName },
       actionLabel: t('automation.exportDocs', 'Export'),
       estimatedImpact: t('automation.taxCompliance', 'Tax compliance'),
       expiresAt: new Date(now + 10 * dayMs).toISOString(),

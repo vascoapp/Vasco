@@ -314,7 +314,7 @@ function LicenseModal({ visible, original, onClose, onSave, onDelete, isUs, defa
             value={number}
             onChangeText={setNumber}
             placeholder="e.g. TACLA85432C"
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             style={styles.input}
             autoCapitalize="characters"
           />
@@ -325,7 +325,7 @@ function LicenseModal({ visible, original, onClose, onSave, onDelete, isUs, defa
             value={expiryDate}
             onChangeText={setExpiryDate}
             placeholder="2027-06-30"
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             style={styles.input}
             keyboardType="numeric"
           />
@@ -336,7 +336,7 @@ function LicenseModal({ visible, original, onClose, onSave, onDelete, isUs, defa
             value={issuingAuthority}
             onChangeText={setIssuingAuthority}
             placeholder="e.g. Texas Department of Licensing and Regulation"
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             style={styles.input}
           />
 

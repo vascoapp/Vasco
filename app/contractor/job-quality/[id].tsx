@@ -109,7 +109,7 @@ export default function JobQualityScreen() {
           value={reviewText}
           onChangeText={setReviewText}
           placeholder={t('jobQuality.reviewPlaceholder', 'Optional review text')}
-          placeholderTextColor={DK.colors.textMuted}
+          placeholderTextColor={DK.colors.placeholder}
           multiline
           style={styles.textarea}
         />

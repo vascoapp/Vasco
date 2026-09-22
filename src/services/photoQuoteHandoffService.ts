@@ -16,6 +16,10 @@ const HANDOFF_KEY = '@vasco_photo_quote_handoff';
 export interface PhotoQuoteHandoff {
   trackerId?: string;
   submissionId?: string;
+  /** Whose photos these are. The builder only consumes a handoff for the SAME
+   *  customer: a stashed handoff outlived a backed-out quote and prefilled
+   *  another customer's quote with these lines (review, 2026-09-22). */
+  customerId?: string;
   customerName?: string;
   photoUrls: string[];
   result: {

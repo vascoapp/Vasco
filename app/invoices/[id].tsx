@@ -1221,7 +1221,7 @@ export default function InvoiceDetailScreen() {
                     value={item.description}
                     onChangeText={(v) => handleUpdateItem(item.id, 'description', v)}
                     placeholder={t('invoices.itemDescription', 'Description')}
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                   <DecimalInput
                     style={[styles.lineInput, { width: 40, textAlign: 'center' }]}
@@ -1660,7 +1660,7 @@ export default function InvoiceDetailScreen() {
               value={notes}
               onChangeText={setNotes}
               placeholder={t('invoices.addNotes', 'Add internal notes...')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               multiline
               textAlignVertical="top"
             />
@@ -1711,7 +1711,7 @@ export default function InvoiceDetailScreen() {
               onChangeText={setDeliveryAddress}
               onBlur={() => updateInvoice(invoice.id, { deliveryAddress: deliveryAddress.trim() } as any)}
               placeholder={t('invoices.deliveryAddressPlaceholder', 'Laisser vide si identique à la facturation')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               multiline
               textAlignVertical="top"
             />

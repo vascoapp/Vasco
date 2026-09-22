@@ -434,7 +434,7 @@ export const CustomerInsights: React.FC = () => {
               <TextInput
                 style={styles.searchInput}
                 placeholder="Zoek klanten..."
-                placeholderTextColor={SemanticColors.textSecondary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />

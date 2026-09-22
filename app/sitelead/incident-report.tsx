@@ -163,7 +163,7 @@ export default function IncidentReportScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('sitelead.incidentLocationPlaceholder', 'E.g. Construction site South, 2nd floor')}
-            placeholderTextColor={SemanticColors.textSecondary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={location}
             onChangeText={setLocation}
           />
@@ -175,7 +175,7 @@ export default function IncidentReportScreen() {
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder={t('sitelead.incidentDescriptionPlaceholder', 'Describe what happened...')}
-            placeholderTextColor={SemanticColors.textSecondary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -190,7 +190,7 @@ export default function IncidentReportScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('sitelead.incidentPeoplePlaceholder', 'Names of people involved')}
-            placeholderTextColor={SemanticColors.textSecondary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={people}
             onChangeText={setPeople}
           />

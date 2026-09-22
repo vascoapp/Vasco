@@ -197,7 +197,7 @@ export default function CustomerPhonebookScreen() {
         <TextInput
           style={s.searchInput}
           placeholder={t('contractor.customers.searchPlaceholder', 'Search by name, phone or email...')}
-          placeholderTextColor={SemanticColors.textTertiary}
+          placeholderTextColor={SemanticColors.placeholder}
           value={search}
           onChangeText={setSearch}
           autoCorrect={false}
@@ -339,7 +339,7 @@ export default function CustomerPhonebookScreen() {
               <TextInput
                 style={s.input}
                 placeholder={t('contractor.customers.namePlaceholder', 'Name *')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newName}
                 onChangeText={setNewName}
                 autoFocus
@@ -347,7 +347,7 @@ export default function CustomerPhonebookScreen() {
               <TextInput
                 style={s.input}
                 placeholder={t('contractor.customers.phonePlaceholder', 'Phone')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newPhone}
                 onChangeText={setNewPhone}
                 keyboardType="phone-pad"
@@ -355,7 +355,7 @@ export default function CustomerPhonebookScreen() {
               <TextInput
                 style={s.input}
                 placeholder={t('contractor.customers.emailPlaceholder', 'Email')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newEmail}
                 onChangeText={setNewEmail}
                 keyboardType="email-address"
@@ -364,7 +364,7 @@ export default function CustomerPhonebookScreen() {
               <TextInput
                 style={s.input}
                 placeholder={t('contractor.customers.addressPlaceholder', 'Address')}
-                placeholderTextColor={SemanticColors.textTertiary}
+                placeholderTextColor={SemanticColors.placeholder}
                 value={newAddress}
                 onChangeText={setNewAddress}
               />
@@ -372,14 +372,14 @@ export default function CustomerPhonebookScreen() {
                 <TextInput
                   style={[s.input, { flex: 1 }]}
                   placeholder={t('contractor.customers.postcodePlaceholder', 'Post code')}
-                  placeholderTextColor={SemanticColors.textTertiary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   value={newPostcode}
                   onChangeText={setNewPostcode}
                 />
                 <TextInput
                   style={[s.input, { flex: 2 }]}
                   placeholder={t('contractor.customers.cityPlaceholder', 'City')}
-                  placeholderTextColor={SemanticColors.textTertiary}
+                  placeholderTextColor={SemanticColors.placeholder}
                   value={newCity}
                   onChangeText={setNewCity}
                 />

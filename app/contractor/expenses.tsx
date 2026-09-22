@@ -168,7 +168,7 @@ export default function ExpensesScreen() {
             <TextInput
               style={styles.modalInput}
               placeholder={t('expenses.description', 'Omschrijving')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               value={newDesc}
               onChangeText={setNewDesc}
             />
@@ -178,7 +178,7 @@ export default function ExpensesScreen() {
                  terugvorderbaar figure (amount x vatRate). A contractor typing
                  the receipt TOTAL would overstate the reclaim by 21%. */
               placeholder={t('expenses.amount', 'Bedrag (excl. btw)')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
               value={newAmount}
               onChangeText={setNewAmount}
               keyboardType="decimal-pad"

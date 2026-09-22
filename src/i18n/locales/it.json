@@ -2272,7 +2272,8 @@
     "pendingDecisionsCount_one": "{{count}} decisione in sospeso",
     "pendingDecisionsCount_other": "{{count}} decisioni in sospeso",
     "daysOverdueCount_one": "{{count}} giorno di ritardo",
-    "daysOverdueCount_other": "{{count}} giorni di ritardo"
+    "daysOverdueCount_other": "{{count}} giorni di ritardo",
+    "taxPrepAlwaysRequired": "Obbligatoria anche se non hai emesso fatture."
   },
   "profile": {
     "title": "Profilo",
@@ -3571,7 +3572,9 @@
     "eInvoiceReadTitle": "Fattura letta",
     "eInvoiceReadBody": "{{supplier}} · {{count}} righe · {{total}}{{moat}}",
     "eInvoiceUnknownSupplier": "Fornitore sconosciuto",
-    "eInvoicePricesAdded": "Prezzi aggiunti al tuo indice prezzi."
+    "eInvoicePricesAdded": "Prezzi aggiunti al tuo indice prezzi.",
+    "importNothingSaved": "Non è stato possibile salvare nulla (materiali: {{count}}). Controlla la connessione e riprova.",
+    "importSomeFailed": "Non salvati: {{count}} — importa di nuovo per riprovare."
   },
   "customerView": {
     "pickTierTitle": "Scegli un pacchetto",

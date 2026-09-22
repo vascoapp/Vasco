@@ -133,7 +133,7 @@ export function TaxCalculatorDashboard() {
           <TextInput
             style={styles.input}
             placeholder="Enter amount"
-            placeholderTextColor={SemanticColors.textSecondary}
+            placeholderTextColor={SemanticColors.placeholder}
             value={taxAmount}
             onChangeText={setTaxAmount}
             keyboardType="numeric"

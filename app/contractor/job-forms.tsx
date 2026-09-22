@@ -193,7 +193,7 @@ export default function JobFormsScreen() {
               value={editing?.name ?? ''}
               onChangeText={(v) => editing && setEditing({ ...editing, name: v })}
               placeholder={t('jobForms.formNamePlaceholder', '')}
-              placeholderTextColor={SemanticColors.textTertiary}
+              placeholderTextColor={SemanticColors.placeholder}
             />
 
             <View style={styles.fieldsHeader}>
@@ -211,7 +211,7 @@ export default function JobFormsScreen() {
                     value={f.label}
                     onChangeText={(v) => patchField(f.id, { label: v })}
                     placeholder={t('jobForms.fieldLabelPlaceholder', '')}
-                    placeholderTextColor={SemanticColors.textTertiary}
+                    placeholderTextColor={SemanticColors.placeholder}
                   />
                   <Pressable hitSlop={8} onPress={() => removeField(f.id)}>
                     <Ionicons name="close-circle" size={20} color={SemanticColors.textTertiary} />
@@ -240,7 +240,7 @@ export default function JobFormsScreen() {
                       value={f.unit ?? ''}
                       onChangeText={(v) => patchField(f.id, { unit: v })}
                       placeholder={t('jobForms.unit', 'Unit')}
-                      placeholderTextColor={SemanticColors.textTertiary}
+                      placeholderTextColor={SemanticColors.placeholder}
                     />
                   )}
                   <View style={styles.requiredRow}>

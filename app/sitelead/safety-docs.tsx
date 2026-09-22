@@ -214,11 +214,11 @@ export default function SafetyDocsScreen() {
           <Text style={styles.sectionTitle}>{t('safetyDocs.projectDetails', 'Project gegevens')}</Text>
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>{t('safetyDocs.project', 'Project')}</Text>
-            <TextInput style={styles.fieldInput} value={projectName} onChangeText={setProjectName} placeholderTextColor={SemanticColors.textTertiary} />
+            <TextInput style={styles.fieldInput} value={projectName} onChangeText={setProjectName} placeholderTextColor={SemanticColors.placeholder} />
           </View>
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>{t('safetyDocs.location', 'Locatie')}</Text>
-            <TextInput style={styles.fieldInput} value={location} onChangeText={setLocation} placeholder={t('safetyDocs.locationPlaceholder', 'Specifieke locatie op bouwplaats')} placeholderTextColor={SemanticColors.textTertiary} />
+            <TextInput style={styles.fieldInput} value={location} onChangeText={setLocation} placeholder={t('safetyDocs.locationPlaceholder', 'Specifieke locatie op bouwplaats')} placeholderTextColor={SemanticColors.placeholder} />
           </View>
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>{t('safetyDocs.date', 'Datum')}</Text>
@@ -293,7 +293,7 @@ export default function SafetyDocsScreen() {
             value={additionalNotes}
             onChangeText={setAdditionalNotes}
             placeholder={t('safetyDocs.additionalNotesPlaceholder', 'Extra veiligheidsmaatregelen, specifieke aandachtspunten...')}
-            placeholderTextColor={SemanticColors.textTertiary}
+            placeholderTextColor={SemanticColors.placeholder}
             multiline
           />
         </View>
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: SemanticColors.surfacePrimary, borderRadius: 12, padding: 14,
   },
-  fieldLabel: { fontSize: 14, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary },
+  fieldLabel: { fontSize: 14, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary },
   fieldInput: {
     flex: 1, textAlign: 'right', fontSize: 14, fontFamily: 'Inter_500Medium',
     color: SemanticColors.textPrimary, marginLeft: 12,
