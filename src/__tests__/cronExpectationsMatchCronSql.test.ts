@@ -200,6 +200,17 @@ describe('a scheduled call is judged by its OUTCOME, not by pg_cron', () => {
     expect(unrecorded).toEqual([]);
   });
 
+  it('no call is judged by pg_net\'s 5-second default timeout (#361)', () => {
+    // Without an explicit timeout pg_net gives up after 5000 ms and records
+    // `timed_out` — while the function carries on and returns 200. Three
+    // healthy jobs were raised as criticals that way on the detector's first
+    // day. The timeout must clear the edge-function wall clock (150 s).
+    for (const b of scheduleBlocks().filter((x) => x.body.includes('net.http_post'))) {
+      const ms = Number((b.body.match(/timeout_milliseconds\s*:=\s*(\d+)/) ?? [])[1] ?? 0);
+      expect({ job: b.job, clearsWallClock: ms > 150_000 }).toEqual({ job: b.job, clearsWallClock: true });
+    }
+  });
+
   it('each recorded call is filed under its OWN job name', () => {
     // A copy-paste that files job B's call under job A's name is worse than
     // no attribution: it points the operator at a healthy job.

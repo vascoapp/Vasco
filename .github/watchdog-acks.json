@@ -20,6 +20,11 @@
       "match": "No LLM provider key set",
       "reason": "Known and accepted: ANTHROPIC_API_KEY / MOONSHOT_API_KEY are deliberately unset in production, so photo-to-quote, SOW drafting and the AI queue are dark. Tracked; the Play store listing deliberately claims no AI features because of it. Not an incident — a funding decision.",
       "expires": "2026-12-01"
+    },
+    {
+      "match": "vasco-daily-push-digest ran but its call FAILED 1× (timeout)",
+      "reason": "#361: the 2026-09-22 18:00 run returned 200 in 6.2 s (edge logs) but pg_net gave up at its 5 s default. All job bodies now set timeout_milliseconds := 180000 (re-registered 18:30 UTC, verified by replay). This one pre-fix row stays inside the 24 h window for the 2026-09-23 run only. Any other count or failure kind still fails the run.",
+      "expires": "2026-09-23"
     }
   ]
 }

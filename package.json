@@ -19,6 +19,7 @@
     "smoke:endpoints": "node scripts/endpoint-health.mjs",
     "check:insertable": "node scripts/insertability.mjs",
     "check:drift": "node scripts/schema-drift.mjs",
+    "check:rpcs": "node scripts/check-rpcs-run.mjs",
     "smoke:customer": "node scripts/customer-surface-scan.mjs",
     "render:icons": "node scripts/render-icons.mjs",
     "capture:screenshots": "bash scripts/capture-screenshots.sh",

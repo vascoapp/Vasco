@@ -12,6 +12,13 @@
 --    never made — running this file against a database without
 --    20260921000001_cron_http_outcomes.sql stops every automation.
 --
+-- ⚠️ Every http_post sets timeout_milliseconds (#361). pg_net's default is
+--    5000 ms — a CLIENT timeout, not the function's. watchdog-daily (19 s),
+--    train-extra-models (9 s) and daily-push-digest (6 s) all returned 200
+--    while pg_net recorded them as timed out, and the outcome watchdog raised
+--    them as criticals. 180 s is above the edge-function wall clock (150 s on
+--    this plan), so a function killed there reports its own status first.
+--
 -- IMPORTANT: replace the two placeholders before running:
 --   <SUPABASE_URL>          e.g. https://xxxx.supabase.co
 --   <SERVICE_ROLE_KEY>      the service_role JWT (store via Dashboard, not committed)
@@ -32,7 +39,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -68,7 +76,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -91,7 +100,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -114,7 +124,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -137,7 +148,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -161,7 +173,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -183,7 +196,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -218,7 +232,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
@@ -246,7 +261,8 @@ select cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
         ),
-        body := '{}'::jsonb
+        body := '{}'::jsonb,
+        timeout_milliseconds := 180000
       ) as request_id
     )
     insert into public.cron_http_calls (jobname, request_id)
