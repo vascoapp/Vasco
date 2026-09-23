@@ -147,16 +147,25 @@ function notifyQueueChanged(): void {
 const currentLocale = (): string => String(i18n.language ?? '').slice(0, 2).toLowerCase();
 
 /**
- * Producers that fire ONCE, on an event (invoice sent, on my way, payment in,
- * job done). Their cards cannot be regenerated, so a language sweep must not
- * drop them — they expire within days on their own.
+ * The ONLY producers a language sweep may drop: the ones its two callers
+ * rebuild immediately afterwards, from current data — populateQueue
+ * (`automation_*`, `trade_*`) and the workflow packs (`workflow_*`).
+ *
+ * An ALLOW-list, deliberately. The first version exempted a deny-list of
+ * one-off producers (`event_*`, `job_completion`) and missed the maintenance
+ * agreement: a `service_agreement_*` card is made once, after the agreement's
+ * next date has already moved on, and its preparedData is the ONLY copy of the
+ * visit — dropping it lost the visit for good. Certificate renewals
+ * (`compliance-agent`) only return at the next stage. Unknown producer = KEEP:
+ * a card in yesterday's language beats a card that is gone (review, #366).
  */
-const ONE_OFF_SOURCE = /^(event_|job_completion$)/;
+const REBUILT_ON_EVERY_RUN = /^(automation_|trade_|workflow_)/;
 
 /**
  * Drop PENDING cards written in another language — or before cards recorded
- * one — so the producers write them again in the contractor's language.
- * Acted-on cards stay (they are history), as do one-off event cards. After a
+ * one — so the producers write them again in the contractor's language. Only
+ * cards from producers that rebuild on every run are dropped; acted-on cards
+ * (history) and every other producer's cards stay. After a
  * drop, the end-of-day pack's once-a-day gate is cleared and the scheduler is
  * asked to rebuild on its next tick, so replacements do not wait 2 hours.
  * Returns how many were dropped.
@@ -170,7 +179,7 @@ export async function dropStaleLanguageCards(): Promise<number> {
     const keep = items.filter((q) =>
       q.status !== 'pending'
       || q.locale === lang
-      || ONE_OFF_SOURCE.test(q.sourceGeneratorId ?? ''),
+      || !REBUILT_ON_EVERY_RUN.test(q.sourceGeneratorId ?? ''),
     );
     const dropped = items.length - keep.length;
     if (dropped === 0) return 0;
