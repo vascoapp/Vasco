@@ -23,6 +23,7 @@ import {
 // Mock aiActionQueueService.addToQueue for evaluateTriggers
 const mockAddToQueue = jest.fn((..._args: any[]) => Promise.resolve('q-mock-id'));
 jest.mock('../aiActionQueueService', () => ({
+  dropStaleLanguageCards: jest.fn(() => Promise.resolve(0)),
   addToQueue: (...args: any[]) => mockAddToQueue(...args),
   getQueueHistory: jest.fn(() => Promise.resolve([])),
 }));

@@ -111,6 +111,18 @@ describe('navigate paths', () => {
     });
   });
 
+  it('tax_prep for Q3 tapped in September opens the CURRENT quarter (#365)', async () => {
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
+    jest.setSystemTime(new Date(2026, 8, 22, 10, 0, 0));
+    try {
+      const router = makeRouter();
+      await executeApprovedQueueItem(makeItem({ type: 'tax_prep', preparedData: { quarter: 'Q3', year: 2026 } }), { router });
+      expect(router.push).toHaveBeenCalledWith({ pathname: '/contractor/vat-prep', params: { period: 'current' } });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('einvoice_submit deep-links to invoice with submit prefill', async () => {
     const router = makeRouter();
     await executeApprovedQueueItem(
@@ -221,5 +233,23 @@ describe('special handling', () => {
     expect(result.via).toBe('noop');
     expect(Share.share).not.toHaveBeenCalled();
     expect(router.push).not.toHaveBeenCalled();
+  });
+});
+
+// ─── tax_prep opens the quarter the card NAMES (#365) ────────────────────────
+// It always sent 'previous', so "Btw-voorbereiding Q3" tapped on 22 Sep opened Q2.
+describe('taxPrepPeriod', () => {
+  const { taxPrepPeriod } = require('../queueItemExecutor');
+  it('Q3 tapped in September is the current quarter', () => {
+    expect(taxPrepPeriod({ quarter: 'Q3', year: 2026 }, new Date(2026, 8, 22))).toBe('current');
+  });
+  it('Q3 tapped on 1 October is the previous quarter', () => {
+    expect(taxPrepPeriod({ quarter: 'Q3', year: 2026 }, new Date(2026, 9, 1))).toBe('previous');
+  });
+  it('Q4 tapped in January is the previous quarter', () => {
+    expect(taxPrepPeriod({ quarter: 'Q4', year: 2026 }, new Date(2027, 0, 2))).toBe('previous');
+  });
+  it('a card without a quarter keeps the old default', () => {
+    expect(taxPrepPeriod(undefined, new Date(2026, 8, 22))).toBe('previous');
   });
 });

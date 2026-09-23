@@ -8,7 +8,7 @@
 import { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  Alert, Linking, Modal, TextInput, KeyboardAvoidingView, Platform,
+  Linking, TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,41 +21,23 @@ import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
-import { isValidEmail, isValidPhone, sanitizeInput } from '../../src/utils/validation';
 import { CustomerTagBadge } from '../../src/components/contractor/CustomerTagBadge';
 import { scoreAllCustomers } from '../../src/services/customerTaggingService';
-import { findDuplicates } from '../../src/services/customerDedupService';
 import { formatMoney } from '../../src/i18n/formatting';
-import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
+import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export default function CustomerPhonebookScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  // Android: a Modal is its own window and never gets the activity's
-  // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
-  // keyboard height has to pad it directly (useKeyboardInset, #339).
-  const kbInset = useKeyboardInset();
-  const { customers, jobs, invoices, addCustomer } = useAppState();
+  const { customers, jobs, invoices } = useAppState();
   // R98 — `q` query param seeds the search filter so the AI bot's
   // find_customer intent lands here with the right list already
   // narrowed. Wired from app/contractor/ai-chat.tsx routeForIntent.
   const { q: aiSearchPrefill } = useLocalSearchParams<{ q?: string }>();
   const [search, setSearch] = useState(aiSearchPrefill ?? '');
   const [showAdd, setShowAdd] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  // See bedrijf.tsx: neither contractor path captured an address, so the app
-  // held no location for any customer a contractor created.
-  const [newAddress, setNewAddress] = useState('');
-  // A German e-invoice is invalid without the buyer's post code and city
-  // (BR-DE-8/9), and the Spanish and Italian formats need them too. The sheet
-  // collected one free-text address line, which cannot be split reliably
-  // ("Marktplatz 3, 10178 Berlin" vs "Via Roma 1 — 20100 Milano (MI)") (#339).
-  const [newPostcode, setNewPostcode] = useState('');
-  const [newCity, setNewCity] = useState('');
 
   // Build contact list with job count + auto-tags
   const contacts = useMemo(() => {
@@ -108,75 +90,6 @@ export default function CustomerPhonebookScreen() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [filtered]);
 
-  const handleAdd = async () => {
-    if (!newName.trim()) return;
-    const cleanName = sanitizeInput(newName);
-    const cleanEmail = sanitizeInput(newEmail);
-    const cleanPhone = sanitizeInput(newPhone);
-    const cleanAddress = sanitizeInput(newAddress);
-
-    if (cleanEmail && !isValidEmail(cleanEmail)) {
-      Alert.alert(t('common.error', 'Error'), t('validation.invalidEmail', 'Please enter a valid email address'));
-      return;
-    }
-    if (cleanPhone && !isValidPhone(cleanPhone)) {
-      Alert.alert(t('common.error', 'Error'), t('validation.invalidPhone', 'Please enter a valid phone number'));
-      return;
-    }
-
-    // R305: tier gate — canAddClient was 0 callers despite the maxClients
-    // limit existing in TierLimits. Free users could add unlimited customers.
-    // R52: pass live `customers.length` so the gate sees real usage; the
-    // legacy `state.clientCount` was never incremented anywhere.
-    try {
-      const { loadSubscription, canAddClient } = await import('../../src/services/subscriptionService');
-      const sub = await loadSubscription();
-      const gate = canAddClient(sub, customers.length);
-      if (!gate.allowed) {
-        Alert.alert(
-          t('billing.upgradeRequired', 'Upgrade required'),
-          gate.reason ?? t('contractor.customers.limitReached', 'You have reached your client limit on this plan.'),
-          [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
-          ],
-        );
-        return;
-      }
-    } catch {}
-
-    const dupes = findDuplicates(
-      { name: cleanName, email: cleanEmail || undefined, phone: cleanPhone || undefined },
-      customers as any,
-    );
-    const commit = async () => {
-      await addCustomer(cleanName, cleanEmail || undefined, cleanPhone || undefined, cleanAddress || undefined, {
-        postcode: sanitizeInput(newPostcode) || undefined,
-        city: sanitizeInput(newCity) || undefined,
-      });
-      hapticSuccess();
-      setNewName('');
-      setNewPhone('');
-      setNewEmail('');
-      setNewAddress('');
-      setNewPostcode('');
-      setNewCity('');
-      setShowAdd(false);
-    };
-    if (dupes.length > 0) {
-      const top = dupes[0];
-      Alert.alert(
-        t('contractor.customers.possibleDuplicate', 'Possible duplicate'),
-        `${top.existing.name}\n${top.reasons.join(' · ')}`,
-        [
-          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-          { text: t('contractor.customers.addAnyway', 'Add anyway'), onPress: () => { void commit(); } },
-        ],
-      );
-      return;
-    }
-    await commit();
-  };
 
   return (
     <View style={s.container}>
@@ -328,74 +241,9 @@ export default function CustomerPhonebookScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Add customer modal — simple: name + phone + email */}
-      <Modal visible={showAdd} transparent animationType="slide" onRequestClose={() => setShowAdd(false)}>
-        <Pressable style={s.overlay} onPress={() => setShowAdd(false)}>
-          <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
-            <Pressable style={[s.sheet, kbInset ? { paddingBottom: kbInset + GRID.md } : null]} onPress={() => {}}>
-              <View style={s.handle} />
-              <Text style={s.sheetTitle}>{t('contractor.customers.newCustomer', 'New customer')}</Text>
-
-              <TextInput
-                style={s.input}
-                placeholder={t('contractor.customers.namePlaceholder', 'Name *')}
-                placeholderTextColor={SemanticColors.placeholder}
-                value={newName}
-                onChangeText={setNewName}
-                autoFocus
-              />
-              <TextInput
-                style={s.input}
-                placeholder={t('contractor.customers.phonePlaceholder', 'Phone')}
-                placeholderTextColor={SemanticColors.placeholder}
-                value={newPhone}
-                onChangeText={setNewPhone}
-                keyboardType="phone-pad"
-              />
-              <TextInput
-                style={s.input}
-                placeholder={t('contractor.customers.emailPlaceholder', 'Email')}
-                placeholderTextColor={SemanticColors.placeholder}
-                value={newEmail}
-                onChangeText={setNewEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <TextInput
-                style={s.input}
-                placeholder={t('contractor.customers.addressPlaceholder', 'Address')}
-                placeholderTextColor={SemanticColors.placeholder}
-                value={newAddress}
-                onChangeText={setNewAddress}
-              />
-              <View style={{ flexDirection: 'row', gap: GRID.sm }}>
-                <TextInput
-                  style={[s.input, { flex: 1 }]}
-                  placeholder={t('contractor.customers.postcodePlaceholder', 'Post code')}
-                  placeholderTextColor={SemanticColors.placeholder}
-                  value={newPostcode}
-                  onChangeText={setNewPostcode}
-                />
-                <TextInput
-                  style={[s.input, { flex: 2 }]}
-                  placeholder={t('contractor.customers.cityPlaceholder', 'City')}
-                  placeholderTextColor={SemanticColors.placeholder}
-                  value={newCity}
-                  onChangeText={setNewCity}
-                />
-              </View>
-
-              <Pressable
-                style={[s.submitBtn, !newName.trim() && { opacity: 0.5 }]}
-                onPress={handleAdd}
-                disabled={!newName.trim()}
-              >
-                <Text style={s.submitBtnText}>{t('common.add', 'Add')}</Text>
-              </Pressable>
-            </Pressable>
-          </KeyboardAvoidingView>
-        </Pressable>
-      </Modal>
+      {/* THE customer form — plan limit, validation, duplicate check, VAT id
+          and the market's e-invoice fields in one place (#365). */}
+      <AddCustomerSheet visible={showAdd} onClose={() => setShowAdd(false)} />
     </View>
   );
 }
@@ -550,52 +398,4 @@ const s = StyleSheet.create({
     color: Palette.white,
   },
 
-  // Modal
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  sheet: {
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    padding: 20,
-    paddingBottom: 40,
-    gap: 10,
-  },
-  handle: {
-    width: 36, height: 4, borderRadius: 2,
-    backgroundColor: SemanticColors.borderDefault,
-    alignSelf: 'center',
-    marginBottom: 8,
-  },
-  sheetTitle: {
-    fontSize: TYPE.sectionSize,
-    fontFamily: TYPE.displayFamily,
-    color: SemanticColors.textPrimary,
-    marginBottom: 4,
-  },
-  input: {
-    backgroundColor: PAGE_BG,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.bodyFamily,
-    color: SemanticColors.textPrimary,
-  },
-  submitBtn: {
-    backgroundColor: Palette.hermesOrange,
-    borderRadius: RADIUS.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 4,
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    elevation: 6,
-  },
-  submitBtnText: {
-    fontSize: TYPE.bodySize,
-    fontFamily: TYPE.titleFamily,
-    color: Palette.white,
-  },
 });

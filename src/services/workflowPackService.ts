@@ -11,7 +11,7 @@ import i18n from '../i18n/i18n';
 import { applySavedLanguage, applySavedCountry } from '../i18n/savedLanguage';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { isJobFinished } from '../domain/jobs';
-import { addToQueue, getQueueHistory, getRequiredPermits } from './aiActionQueueService';
+import { addToQueue, getQueueHistory, getRequiredPermits, dropStaleLanguageCards } from './aiActionQueueService';
 import { getCurrentCountry, getCurrentUserId } from '../lib/currentUser';
 import { loadSubscription, getTierLimits } from './subscriptionService';
 import { getAppStateSnapshot } from '../state/appStateSnapshot';
@@ -1010,6 +1010,8 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
   // way. populateQueue has awaited these since #210; this path never did.
   await applySavedLanguage();
   await applySavedCountry();
+  // Cards written in another language go, and are written again below (#365).
+  await dropStaleLanguageCards();
 
   const packs = await getWorkflowPacks();
   const enabledPacks = packs.filter(p => p.enabled);

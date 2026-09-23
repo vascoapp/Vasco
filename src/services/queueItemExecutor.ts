@@ -69,6 +69,19 @@ export function isInformationalQueueType(t: QueueItemType): boolean {
  * `alreadyShared` = true tells us VascoCard already opened the Share sheet
  * for shareable types; we should not double-fire it.
  */
+/**
+ * Which vat-prep period shows the quarter a tax_prep card names, at the moment
+ * it is tapped. vat-prep only knows "current" and "previous" relative to today.
+ * A card without a quarter keeps the old default.
+ */
+export function taxPrepPeriod(data: { quarter?: string; year?: number } | undefined, now: Date): 'current' | 'previous' {
+  const q = Number(String(data?.quarter ?? '').replace(/^Q/i, ''));
+  if (!(q >= 1 && q <= 4)) return 'previous';
+  const year = typeof data?.year === 'number' ? data.year : now.getFullYear();
+  const nowQ = Math.floor(now.getMonth() / 3) + 1;
+  return q === nowQ && year === now.getFullYear() ? 'current' : 'previous';
+}
+
 export async function executeApprovedQueueItem(
   item: QueueItem,
   deps: ExecutorDeps,
@@ -306,13 +319,13 @@ async function runExecution(
       return { executed: true, via: 'navigate', detail: 'market-prices' };
     }
     case 'tax_prep': {
-      // R21: pass `period=previous` — the queue fires in the last 11 days
-      // of each quarter end month with the just-ending quarter in mind.
-      // vat-prep already defaults to 'previous'; the explicit param means
-      // a contractor who toggled to 'current' previously gets re-pinned to
-      // 'previous' on this entry. Was R1 deferral.
-      router.push({ pathname: '/contractor/vat-prep', params: { period: 'previous' } } as any);
-      return { executed: true, via: 'navigate', detail: 'vat-prep?period=previous' };
+      // Open the quarter the card NAMES. The card fires from the 20th of a
+      // quarter's last month and lives 10 days, so "Q3" is the CURRENT quarter
+      // until 30 Sep and the PREVIOUS one from 1 Oct. This always sent
+      // 'previous' — "Btw-voorbereiding Q3" tapped on 22 Sep opened Q2 (#365).
+      const period = taxPrepPeriod(item.preparedData, new Date());
+      router.push({ pathname: '/contractor/vat-prep', params: { period } } as any);
+      return { executed: true, via: 'navigate', detail: `vat-prep?period=${period}` };
     }
     case 'accounting_export': {
       // Was building `format`/`period` params here "ready when the upstream

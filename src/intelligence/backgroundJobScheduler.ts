@@ -1032,3 +1032,18 @@ export async function getLastCheckedAt(): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * Make the NEXT scheduler tick rebuild the action queue instead of waiting out
+ * the 2-hour window. Used after stale-language cards are dropped, so their
+ * replacements arrive in the contractor's language straight away (#365).
+ */
+export async function requestQueueRebuild(): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(SCHEDULER_KEY);
+    if (!raw) return; // never ran: the first tick rebuilds anyway
+    const state: SchedulerState = JSON.parse(raw);
+    state.lastSixHourlyRun = '';
+    await AsyncStorage.setItem(SCHEDULER_KEY, JSON.stringify(state));
+  } catch {}
+}

@@ -26,6 +26,7 @@ jest.mock('../../lib/currentUser', () => ({
 // evening, and "queues something" would have passed even if the welcome pack
 // never fired. Assert on what was actually queued instead.
 jest.mock('../aiActionQueueService', () => ({
+  dropStaleLanguageCards: jest.fn(() => Promise.resolve(0)),
   ...jest.requireActual('../aiActionQueueService'),
   addToQueue: jest.fn(() => Promise.resolve('queued-1')),
   getQueueHistory: () => Promise.resolve([]),

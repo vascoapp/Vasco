@@ -46,12 +46,17 @@ run('customer edit flow', () => {
     await act(async () => { postcodeInput.props.onChangeText('3511 AB'); });
     await act(async () => { byValue('Utrecht').props.onChangeText(''); });
 
+    // The form is the shared AddCustomerSheet since #365: its save button is a
+    // Pressable around the (uppercased) label text, not PrimaryButton's `label`.
     const save = root.findAll(
-      (n: any) => typeof n.props?.onPress === 'function' && typeof n.props?.label === 'string' && /opslaan/i.test(n.props.label),
+      (n: any) => typeof n.props?.onPress === 'function'
+        && n.findAll((c: any) => typeof c.props?.children === 'string' && /opslaan/i.test(c.props.children), { deep: true }).length > 0,
       { deep: true },
     );
     expect(save.length).toBeGreaterThan(0);
-    await act(async () => { await save[0].props.onPress(); });
+    // Innermost match: the sheet's backdrop Pressable also CONTAINS the label,
+    // and pressing it closes the sheet instead of saving.
+    await act(async () => { await save[save.length - 1].props.onPress(); });
     for (let i = 0; i < 6; i++) {
       await act(async () => { await new Promise((res) => setTimeout(res, 0)); });
     }

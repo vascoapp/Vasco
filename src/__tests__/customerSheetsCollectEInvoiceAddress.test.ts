@@ -12,36 +12,54 @@ import path from 'path';
 import { stripComments } from '../utils/stripComments';
 
 const ROOT = path.resolve(__dirname, '../..');
-// The Klanten tab's sheet moved into a shared component (2026-09-22) so the
-// quote builder can create a customer with the SAME form; the guard follows
-// the form, and a third test below pins that Klanten still uses it.
-const SHEETS = ['app/contractor/customer-crm.tsx', 'src/components/shared/AddCustomerSheet.tsx'];
+// ONE customer form (#365). There were three, each missing what another had:
+// the Free-plan limit and duplicate check lived only in customer-crm, the VAT
+// id and Italian e-invoice fields only in (modals)/customers.
+const FORM = 'src/components/shared/AddCustomerSheet.tsx';
+const read = (rel: string) => stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 
-describe('both new-customer sheets collect post code and city', () => {
-  it.each(SHEETS)('%s has the fields', (rel) => {
-    const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-    expect(src).toMatch(/postcodePlaceholder/);
-    expect(src).toMatch(/cityPlaceholder/);
+describe('the one customer form', () => {
+  const src = read(FORM);
+
+  it('collects post code, city and VAT id and passes them on', () => {
+    expect(src).toMatch(/customersModal\.fieldPostcode/);
+    expect(src).toMatch(/customersModal\.fieldCity/);
+    expect(src).toMatch(/customersModal\.fieldVatId/);
+    const structured = src.slice(src.indexOf('const structured = {'), src.indexOf('};', src.indexOf('const structured = {')));
+    expect(structured).toMatch(/postcode:/);
+    expect(structured).toMatch(/city:/);
+    expect(structured).toMatch(/vatId:/);
+    expect(src).toMatch(/addCustomer\([\s\S]{0,160}orUndefined\(structured\)/);
   });
 
-  it.each(SHEETS)('%s passes them to addCustomer', (rel) => {
-    const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-    const at = src.indexOf('addCustomer(');
-    expect(at).toBeGreaterThan(-1);
-    const call = src.slice(at, src.indexOf(');', at));
-    expect(call).toMatch(/postcode:/);
-    expect(call).toMatch(/city:/);
+  it('applies the plan limit and the duplicate check before adding', () => {
+    expect(src).toMatch(/canAddClient\(sub, customers\.length\)/);
+    expect(src).toMatch(/findDuplicates\(/);
+  });
+
+  it('edits as well as adds', () => {
+    expect(src).toMatch(/updateCustomer\(customer\.id/);
+  });
+
+  it('every screen that adds a customer uses it', () => {
+    for (const rel of [
+      'app/(contractor)/bedrijf.tsx', 'app/contractor/tiered-quote.tsx', 'app/contractor/recurring/[id].tsx',
+      'app/contractor/customer-crm.tsx', 'app/(modals)/customers.tsx',
+    ]) {
+      expect({ rel, uses: /<AddCustomerSheet\b/.test(read(rel)) }).toEqual({ rel, uses: true });
+    }
+  });
+
+  it('no screen or component calls addCustomer( itself — a fourth form cannot appear', () => {
+    const glob = require('glob') as { sync: (p: string, o?: any) => string[] };
+    const files = [...glob.sync('app/**/*.tsx', { cwd: ROOT }), ...glob.sync('src/components/**/*.tsx', { cwd: ROOT })]
+      .filter((f) => !f.includes('__tests__') && !f.startsWith('app/hub/') && f !== FORM);
+    const offenders = files.filter((f) => /\baddCustomer\(/.test(read(f)));
+    expect(offenders).toEqual([]);
   });
 });
 
 describe('icon-only controls have a name', () => {
-  it('the Klanten tab and the quote builder both use the shared sheet', () => {
-    for (const rel of ['app/(contractor)/bedrijf.tsx', 'app/contractor/tiered-quote.tsx']) {
-      const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-      expect({ rel, uses: /<AddCustomerSheet\b/.test(src) }).toEqual({ rel, uses: true });
-    }
-  });
-
   it('the home notification bell is labelled', () => {
     const src = fs.readFileSync(path.join(ROOT, 'app/(contractor)/index.tsx'), 'utf8');
     const at = src.indexOf('styles.bellBtn');

@@ -82,10 +82,11 @@ describe('a bottom sheet with a field pads for the keyboard', () => {
   it('sees the sheets it claims to', () => {
     const sheets = files.flatMap(({ rel, src }) =>
       modalBlocks(src).filter((b) => hasTextInput(b.body) && isOverlaySheet(b.body) && !NOT_A_BOTTOM_SHEET.test(b.body)).map(() => rel));
-    // customer-crm, customer/[id], bedrijf, werk, expenses, message-templates,
-    // insurance, job/[id], projects, project-billing ×3, ReasonCodeSheet …
+    // AddCustomerSheet (THE customer form since #365 — customer-crm's and the
+    // modal's own forms were folded into it), customer/[id], werk, expenses,
+    // message-templates, insurance, job/[id], projects, project-billing ×3, …
     expect(sheets.length).toBeGreaterThanOrEqual(12);
-    expect(sheets).toContain(path.join('app', 'contractor', 'customer-crm.tsx'));
+    expect(sheets).toContain(path.join('src', 'components', 'shared', 'AddCustomerSheet.tsx'));
   });
 
   it('every one applies the keyboard inset to its own sheet', () => {
@@ -129,7 +130,8 @@ describe('a bottom sheet with a field pads for the keyboard', () => {
         }
       }
     }
-    expect(checked).toBeGreaterThanOrEqual(13);
+    // 12 since #365: customer-crm's duplicate customer form (and its KAV) went.
+    expect(checked).toBeGreaterThanOrEqual(12);
     expect(doubled).toEqual([]);
   });
 

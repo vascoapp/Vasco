@@ -95,6 +95,13 @@ export interface QueueItem {
   /** How many similar events rolled into this item (e.g. "3 overdue invoices"). */
   count?: number;
   /**
+   * The language the card's text was written in (2-letter). A card PERSISTS
+   * resolved copy, so one written in English stays English after the
+   * contractor switches to Dutch — Jan's home showed "Reminder for
+   * F-2026-0038 / SEND REMINDER" under "Goedenavond" (#365).
+   */
+  locale?: string;
+  /**
    * The title as its producer wrote it, before any "+N more" suffix. Kept so a
    * second merge recomposes from the original instead of re-suffixing an
    * already-suffixed string. Not parsed back out of `title`: that suffix is
@@ -135,6 +142,53 @@ function notifyQueueChanged(): void {
       try { listener(); } catch { /* a bad subscriber must not break the rest */ }
     }
   }, 150);
+}
+
+const currentLocale = (): string => String(i18n.language ?? '').slice(0, 2).toLowerCase();
+
+/**
+ * Producers that fire ONCE, on an event (invoice sent, on my way, payment in,
+ * job done). Their cards cannot be regenerated, so a language sweep must not
+ * drop them — they expire within days on their own.
+ */
+const ONE_OFF_SOURCE = /^(event_|job_completion$)/;
+
+/**
+ * Drop PENDING cards written in another language — or before cards recorded
+ * one — so the producers write them again in the contractor's language.
+ * Acted-on cards stay (they are history), as do one-off event cards. After a
+ * drop, the end-of-day pack's once-a-day gate is cleared and the scheduler is
+ * asked to rebuild on its next tick, so replacements do not wait 2 hours.
+ * Returns how many were dropped.
+ */
+export async function dropStaleLanguageCards(): Promise<number> {
+  const lang = currentLocale();
+  if (!lang) return 0;
+  try {
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const items: QueueItem[] = raw ? JSON.parse(raw) : [];
+    const keep = items.filter((q) =>
+      q.status !== 'pending'
+      || q.locale === lang
+      || ONE_OFF_SOURCE.test(q.sourceGeneratorId ?? ''),
+    );
+    const dropped = items.length - keep.length;
+    if (dropped === 0) return 0;
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(keep));
+    await AsyncStorage.removeItem('@vasco_pack_daily_17_last_fired').catch(() => {});
+    import('../intelligence/backgroundJobScheduler')
+      .then((m) => m.requestQueueRebuild())
+      .catch(() => {});
+    notifyQueueChanged();
+    return dropped;
+  } catch {
+    return 0;
+  }
+}
+
+// A language switch mid-session: sweep at once. (The jest i18n stub has no .on.)
+if (typeof (i18n as any).on === 'function') {
+  (i18n as any).on('languageChanged', () => { dropStaleLanguageCards().catch(() => {}); });
 }
 
 /** Subscribe to queue mutations. Returns an unsubscribe fn. */
@@ -362,6 +416,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     id,
     status: 'pending',
     createdAt: new Date().toISOString(),
+    locale: currentLocale(),
   };
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
@@ -839,6 +894,9 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // the module-level country ref, which AuthContext has not corrected from the
   // saved profile yet when the scheduler fires on app open.
   await applySavedCountry();
+  // Now that the language is the contractor's: drop cards written in another
+  // one, so this run writes them again in the right language (#365).
+  await dropStaleLanguageCards();
 
   const t = i18n.t.bind(i18n);
   const now = Date.now();
@@ -1367,7 +1425,8 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       type: 'tax_prep',
       title: t('automation.taxPrep', { defaultValue: '{{quarter}} tax prep', quarter: quarterName }),
       description: t('automation.taxPrepAlwaysRequired', 'Also required when you sent no invoices.'),
-      preparedData: { quarter: quarterName },
+      // The year pins which Q3 this is; the executor opens it (#365).
+      preparedData: { quarter: quarterName, year: new Date().getFullYear() },
       actionLabel: t('automation.exportDocs', 'Export'),
       estimatedImpact: t('automation.taxCompliance', 'Tax compliance'),
       expiresAt: new Date(now + 10 * dayMs).toISOString(),

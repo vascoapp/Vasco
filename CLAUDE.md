@@ -317,6 +317,15 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
 - **A card whose number is zero is not a card.** A nudge that reads "Jobs not
   finished today: 0" to a contractor with no jobs is noise on day one; gate
   every step on its own count (#362).
+- **ONE customer form: `AddCustomerSheet`** (`src/components/shared`) — add
+  AND edit, with the Free-plan limit, validation, duplicate check, VAT id and
+  every market's e-invoice fields. Never call `addCustomer(` from a screen;
+  open the sheet. There were three forms, each missing what another had
+  (#365). Guard: `customerSheetsCollectEInvoiceAddress`.
+- **Queue cards carry the `locale` they were written in.** Pending cards in
+  another language are dropped and regenerated (`dropStaleLanguageCards`),
+  except one-off event cards (`event_*`, `job_completion`), which nothing
+  would recreate — give a NEW event producer such a source id (#365).
 - **If a form REQUIRES something, ask for it BEFORE the form** — never let
   the contractor fill everything in and then refuse. A quote and a
   maintenance contract need a customer: with none, the shared
