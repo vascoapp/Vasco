@@ -66,11 +66,20 @@ describe('DATANORM import reports what landed', () => {
   it('retries only the price row when that is what failed', async () => {
     mockMoatInsert.mockResolvedValueOnce(false);
     const first = await importDatanormToMoat([article('D1')], 'richter');
-    expect(first.imported).toBe(1);
+    // Its price row did not land: failed, not imported (review #366).
+    expect(first).toMatchObject({ imported: 0, failed: 1 });
     const again = await importDatanormToMoat([article('D1')], 'richter');
     // Not skipped as a duplicate: its price row never landed.
     expect(again.skipped).toBe(0);
     expect(mockMoatInsert).toHaveBeenCalledTimes(2);
+  });
+
+  it("next year's list at a new price is recorded, not skipped as a duplicate", async () => {
+    await importDatanormToMoat([article('E1')], 'richter');
+    const nextYear = await importDatanormToMoat([{ ...article('E1'), unitPrice: 13.5 }], 'richter');
+    expect(nextYear).toEqual({ imported: 1, skipped: 0, failed: 0 });
+    const sameAgain = await importDatanormToMoat([{ ...article('E1'), unitPrice: 13.5 }], 'richter');
+    expect(sameAgain.skipped).toBe(1);
   });
 
   it('retries a failed article next time instead of skipping it as a duplicate', async () => {

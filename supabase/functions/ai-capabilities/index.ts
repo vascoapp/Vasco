@@ -15,6 +15,8 @@
 // detail: the response is readable by any signed-in user.
 // =============================================================================
 
+import { taskHasProvider } from '../_shared/llm.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -30,16 +32,16 @@ Deno.serve((req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const anthropic = present('ANTHROPIC_API_KEY');
-  // Same names _shared/llm.ts providerKey() reads — KIMI_API_KEY is its alias
-  // for Moonshot (and checkLlmKey in _shared/supabaseLogs.ts, the watchdog's
-  // outside-in check of the same thing via the Management API).
-  const moonshot = present('MOONSHOT_API_KEY') || present('KIMI_API_KEY');
 
   const body = {
     // analyze-photo (photo → quote, Bon scanner) is Claude Vision only.
     vision: anthropic,
-    // Text stages (scope of work, phrasing) route Claude OR Kimi (_shared/llm.ts).
-    text: anthropic || moonshot,
+    // Scope-of-work drafting, asked of the LLM router itself: it resolves the
+    // provider per task and defaults to anthropic, so "a Kimi key is set" was
+    // not enough — `anthropic || moonshot` said yes and the drafting button
+    // then failed (review #366). The watchdog's checkLlmKey checks key NAMES
+    // outside-in for alerting; this answers "can the app use it".
+    text: taskHasProvider('sow'),
     // generate-embedding / embed-text.
     embeddings: present('OPENAI_API_KEY') || present('VOYAGE_API_KEY'),
   };

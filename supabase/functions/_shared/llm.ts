@@ -151,6 +151,18 @@ async function callProvider(provider: LlmProvider, model: string, key: string, o
  * usable attempt fails (or none has a configured key) — callers keep their own
  * try/catch and map the throw to a clean `ok:false` fallback for the UI.
  */
+/**
+ * Could `chat({ task })` run right now? Uses the SAME provider resolution and
+ * key lookup as chat() itself, so ai-capabilities cannot drift from it: a
+ * Kimi-only key with no LLM_PROVIDER set does NOT make a task runnable,
+ * because chat() defaults both primary and fallback to anthropic (review #366).
+ */
+export function taskHasProvider(task: string): boolean {
+  const primary = resolveProvider(task, 'PROVIDER', 'anthropic');
+  const fallback = resolveProvider(task, 'FALLBACK_PROVIDER', 'anthropic');
+  return !!providerKey(primary) || !!providerKey(fallback);
+}
+
 export async function chat(opts: ChatOptions): Promise<ChatResult> {
   const primaryProvider = resolveProvider(opts.task, 'PROVIDER', 'anthropic');
   const fallbackProvider = resolveProvider(opts.task, 'FALLBACK_PROVIDER', 'anthropic');

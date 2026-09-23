@@ -164,7 +164,7 @@ export default function InkoopScreen() {
       setIsImporting(false);
       refreshPriceWatch();
     }
-  }, [refreshPriceWatch]);
+  }, [t, refreshPriceWatch]);
 
   /**
    * Read a supplier e-invoice (XRechnung / ZUGFeRD / Peppol UBL).

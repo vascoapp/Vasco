@@ -31,7 +31,7 @@ import { predictQuoteWin, QUOTE_WIN_MIN_DISPLAY_CONFIDENCE, type QuoteWinPredict
 import { useAuth } from '../../context/AuthContext';
 import { searchCatalog, type CatalogItem } from '../../integrations/suppliers';
 import { AIQuoteFromPhoto } from './AIQuoteFromPhoto';
-import { consumeHandoff } from '../../services/photoQuoteHandoffService';
+import { consumeHandoff, peekHandoff } from '../../services/photoQuoteHandoffService';
 import { applyCohortAdjustments, type CohortAdjustmentSummary } from '../../services/pricingMoatService';
 import { recordDelta, annotateDelta, type DeltaSource, type ReasonCode } from '../../services/reasonCodeService';
 import { ReasonCodeSheet } from './ReasonCodeSheet';
@@ -354,11 +354,14 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Look first, take second: a handoff for a known customer belongs only on
+      // THAT customer's quote. Another customer's photos are LEFT stashed (not
+      // thrown away — the analysis was paid for) for the quote they belong to.
+      const peeked = await peekHandoff();
+      if (cancelled || !peeked || !peeked.result) return;
+      if (peeked.customerId && peeked.customerId !== customer?.id) return;
       const h = await consumeHandoff();
       if (cancelled || !h || !h.result) return;
-      // Another customer's photos: drop them rather than prefill this quote.
-      // A handoff for a known customer only belongs on THAT customer's quote.
-      if (h.customerId && h.customerId !== customer?.id) return;
       const items = h.result.detectedItems ?? [];
       // R190: run AI-baseline lines through the cohort tuner before showing.
       // Each line gets cohort-typical qty/price adjustments capped at ±50%,

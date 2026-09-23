@@ -323,9 +323,13 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   open the sheet. There were three forms, each missing what another had
   (#365). Guard: `customerSheetsCollectEInvoiceAddress`.
 - **Queue cards carry the `locale` they were written in.** Pending cards in
-  another language are dropped and regenerated (`dropStaleLanguageCards`),
-  except one-off event cards (`event_*`, `job_completion`), which nothing
-  would recreate — give a NEW event producer such a source id (#365).
+  another language are dropped and regenerated (`dropStaleLanguageCards`) —
+  but ONLY from producers on its allow-list (`automation_*`, `trade_*`,
+  `workflow_*`), the ones rebuilt right after. Everything else is kept: a
+  deny-list version deleted maintenance-visit cards whose preparedData was the
+  only copy of the visit (#366). A new producer is kept by default; add it to
+  the allow-list only if it is rebuilt on every run. **When deleting to
+  regenerate, enumerate what regenerates — never what doesn't.**
 - **If a form REQUIRES something, ask for it BEFORE the form** — never let
   the contractor fill everything in and then refuse. A quote and a
   maintenance contract need a customer: with none, the shared

@@ -25,7 +25,9 @@ run('customer edit flow', () => {
   it('opens on the stored customer and saves the change onto the same row', async () => {
     await AsyncStorage.setItem('@vasco_seed_version', '2026-03-25-v4');
     await AsyncStorage.setItem('@vasco_customers', JSON.stringify([
-      { id: 'c1', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', city: 'Utrecht' },
+      // A stored phone today's validator would reject: editing the post code
+      // must not be blocked by an old field nobody touched (review #366).
+      { id: 'c1', name: 'Bakkerij Smit', email: 'info@bakkerijsmit.nl', phone: '020 (kantoor)', city: 'Utrecht' },
     ]));
 
     const r = await walkScreen(CustomersModal(), { settlePasses: 14, params: { id: 'c1' } });

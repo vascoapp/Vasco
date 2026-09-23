@@ -358,8 +358,12 @@ export async function importDatanormToMoat(
       continue;
     }
 
-    // Deduplicate: skip articles already imported from any supplier
-    const dedupeKey = `${supplierId}:${article.articleNumber}`;
+    // Deduplicate on supplier + article + PRICE. Without the price, next
+    // year's list from the same wholesaler (same supplier id — the file name's
+    // year is stripped) skipped EVERY article, so no second price row was ever
+    // written and the price watch could never see a rise (review #366). Same
+    // price again = the same observation; a new price = a new one.
+    const dedupeKey = `${supplierId}:${article.articleNumber}:${article.unitPrice}`;
     if (alreadyImported.has(dedupeKey)) {
       skipped++;
       continue;
@@ -399,8 +403,16 @@ export async function importDatanormToMoat(
         // R283: catalog imports self-attribute as 'catalog'.
         source: 'catalog',
       });
-      imported++;
-      if (priceLanded) alreadyImported.add(dedupeKey);
+      // The price row is what the price watch reads, so an article whose price
+      // did not land is NOT imported: it counts as failed, stays out of the
+      // dedupe set, and "import again" re-writes only the price (the catalogue
+      // row then already exists) — review #366.
+      if (priceLanded) {
+        alreadyImported.add(dedupeKey);
+        imported++;
+      } else {
+        failed++;
+      }
     } catch {
       failed++;
     }

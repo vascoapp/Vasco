@@ -93,17 +93,43 @@ export function computePriceRises(rows: PriceRow[], limit = 5): PriceWatch {
   return { tracked, rises: rises.slice(0, limit) };
 }
 
+/** One row per supplier + material + unit, from get_my_price_pairs. */
+interface PricePair {
+  supplier_id: string;
+  supplier_name: string | null;
+  material_name: string;
+  unit: string;
+  previous_price: number;
+  previous_day: string;
+  latest_price: number;
+  latest_day: string;
+  total_pairs: number;
+}
+
+/**
+ * The database groups ALL of the contractor's rows (get_my_price_pairs,
+ * migration 20260923000001) and returns latest vs previous per group, biggest
+ * rise first, with the true total. Reading the newest 2,000 raw rows instead
+ * saw only the latest import of a large price list — no earlier price, no
+ * rise, ever (review #366). The pairs are turned back into two observations
+ * each so computePriceRises stays the single definition of "a rise".
+ */
 export async function getMyPriceWatch(): Promise<PriceWatch> {
   const uid = getAuthedUserId();
   if (!isSupabaseConfigured || !uid) return { tracked: 0, rises: [] };
   try {
-    const { data, error } = await (supabase.from('material_price_history') as any)
-      .select('supplier_id, supplier_name, material_name, canonical_name, unit, price_excl_vat, observed_at')
-      .eq('observed_by', uid)
-      .order('observed_at', { ascending: false })
-      .limit(2000);
-    if (error || !Array.isArray(data)) return { tracked: 0, rises: [] };
-    return computePriceRises(data as PriceRow[]);
+    const { data, error } = await (supabase.rpc as any)('get_my_price_pairs', { p_limit: 200 });
+    if (error || !Array.isArray(data) || data.length === 0) return { tracked: 0, rises: [] };
+    const pairs = data as PricePair[];
+    const rows: PriceRow[] = pairs.flatMap((p) => {
+      const base = { supplier_id: p.supplier_id, supplier_name: p.supplier_name, material_name: p.material_name, canonical_name: null, unit: p.unit };
+      return [
+        { ...base, price_excl_vat: Number(p.previous_price), observed_at: `${p.previous_day}T00:00:00Z` },
+        { ...base, price_excl_vat: Number(p.latest_price), observed_at: `${p.latest_day}T00:00:00Z` },
+      ];
+    });
+    const watch = computePriceRises(rows);
+    return { tracked: Number(pairs[0].total_pairs) || watch.tracked, rises: watch.rises };
   } catch {
     return { tracked: 0, rises: [] };
   }

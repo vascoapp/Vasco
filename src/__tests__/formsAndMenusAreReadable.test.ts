@@ -34,6 +34,11 @@ describe('forms, pop-ups and menus are readable', () => {
       while ((m = re.exec(src))) {
         if (/textTertiary|textSecondary|textDisabled|textMuted/.test(m[1])) offenders.push(`${relative(ROOT, join(ROOT, f))}: ${m[1]}`);
       }
+      // A raw hex dodges the token check above (review #366). The AI tab's
+      // translucent white on its own gradient is the one deliberate exception.
+      for (const h of src.matchAll(/placeholderTextColor=["']#([0-9A-Fa-f]{3,8})["']/g)) {
+        if (!(f === 'app/(contractor)/ai.tsx' && h[1].toUpperCase() === 'FFFFFF77')) offenders.push(`${f}: #${h[1]}`);
+      }
     }
     expect(offenders).toEqual([]);
   });

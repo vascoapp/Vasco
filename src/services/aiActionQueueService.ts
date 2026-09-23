@@ -1422,8 +1422,13 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const { getAppStateSnapshot } = await import('../state/appStateSnapshot');
     const { isSmallBusinessExempt } = await import('../domain/business');
     const bp = getAppStateSnapshot().businessProfile;
-    vatExempt = isSmallBusinessExempt({ vatScheme: bp?.vatScheme as any }) || bp?.filingPeriod === 'yearly';
-  } catch {}
+    // Profile not loaded yet (a scheduler run before AppState fills the
+    // snapshot): we cannot know, so SKIP this run — never default to "due"
+    // for a contractor who may file no return at all (CLAUDE.md; review #366).
+    vatExempt = !bp || isSmallBusinessExempt({ vatScheme: bp.vatScheme as any }) || bp.filingPeriod === 'yearly';
+  } catch {
+    vatExempt = true;
+  }
   if (isQuarterEnd && vatReturnSupported && !vatExempt) {
     const quarterName = `Q${Math.floor(month / 3) + 1}`;
     // No invoice count. It counted every paid invoice EVER, not this quarter's,

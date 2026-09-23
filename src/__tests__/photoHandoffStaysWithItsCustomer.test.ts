@@ -27,9 +27,27 @@ describe('the photo handoff stays with its customer', () => {
     expect(screen.slice(at, at + 400)).toMatch(/customerId=\{selectedTracker\.customerId && selectedTracker\.customerId !== 'new'/);
   });
 
-  it("the builder drops another customer's handoff", () => {
+  it("the builder checks whose photos they are BEFORE taking them", () => {
     const builder = read('src/components/contractor/TieredQuoteBuilder.tsx');
-    const at = builder.indexOf('await consumeHandoff()');
-    expect(builder.slice(at, at + 300)).toMatch(/if \(h\.customerId && h\.customerId !== customer\?\.id\) return;/);
+    const peek = builder.indexOf('await peekHandoff()');
+    const consume = builder.indexOf('await consumeHandoff()');
+    expect(peek).toBeGreaterThan(-1);
+    expect(consume).toBeGreaterThan(peek);
+    // The customer check sits between the look and the take.
+    expect(builder.slice(peek, consume)).toMatch(/peeked\.customerId !== customer\?\.id\) return;/);
+  });
+});
+
+describe('peeking does not consume (behaviour, not source shape)', () => {
+  const { stashHandoff, peekHandoff, consumeHandoff } = require('../services/photoQuoteHandoffService');
+  it("another customer's handoff survives a look and is still there for its own quote", async () => {
+    await stashHandoff({ customerId: 'cust-A', customerName: 'A', photoUrls: ['x'], result: { detectedItems: [] } });
+    const first = await peekHandoff();
+    expect(first?.customerId).toBe('cust-A');
+    const again = await peekHandoff();
+    expect(again?.customerId).toBe('cust-A');       // still there
+    const taken = await consumeHandoff();
+    expect(taken?.customerId).toBe('cust-A');
+    expect(await peekHandoff()).toBeNull();          // consumed now
   });
 });

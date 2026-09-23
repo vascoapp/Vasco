@@ -86,6 +86,23 @@ export async function stashHandoff(h: Omit<PhotoQuoteHandoff, 'createdAt'>): Pro
   } catch {}
 }
 
+/**
+ * Read WITHOUT clearing. The builder checks whose photos these are before it
+ * takes them: consuming first threw a paid-for analysis away whenever the
+ * customer did not resolve yet (review #366). Null when none or stale (>1h).
+ */
+export async function peekHandoff(): Promise<PhotoQuoteHandoff | null> {
+  try {
+    const raw = await AsyncStorage.getItem(HANDOFF_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PhotoQuoteHandoff;
+    const ageMs = Date.now() - new Date(parsed.createdAt).getTime();
+    return ageMs > 60 * 60 * 1000 ? null : parsed;
+  } catch {
+    return null;
+  }
+}
+
 /** Read + clear any pending handoff. Returns null when none or stale (>1h). */
 export async function consumeHandoff(): Promise<PhotoQuoteHandoff | null> {
   try {

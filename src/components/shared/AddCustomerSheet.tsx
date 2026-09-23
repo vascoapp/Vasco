@@ -132,11 +132,15 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     if (!cleanName || saving) return;
     const cleanEmail = sanitizeInput(email);
     const cleanPhone = sanitizeInput(phone);
-    if (cleanEmail && !isValidEmail(cleanEmail)) {
+    // Validate what the contractor TYPED. An existing customer's stored phone
+    // ("020…", a note in brackets) must not block adding the post code or VAT
+    // id an e-invoice needs — the reason the edit path exists (review #366).
+    const changed = (v: string, before?: string | null) => !customer || v !== (before ?? '');
+    if (cleanEmail && changed(cleanEmail, customer?.email) && !isValidEmail(cleanEmail)) {
       Alert.alert(t('common.error', 'Error'), t('validation.invalidEmail', 'Please enter a valid email address'));
       return;
     }
-    if (cleanPhone && !isValidPhone(cleanPhone)) {
+    if (cleanPhone && changed(cleanPhone, customer?.phone) && !isValidPhone(cleanPhone)) {
       Alert.alert(t('common.error', 'Error'), t('validation.invalidPhone', 'Please enter a valid phone number'));
       return;
     }
@@ -156,6 +160,9 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     if (customer) {
       setSaving(true);
       try {
+        // updateCustomer applies the change locally and persists-or-QUEUES it
+        // (offlineWriteQueue), so closing as saved is true even offline; the
+        // catch is for a local failure only (review #366).
         await updateCustomer(customer.id, {
           name: cleanName, email: cleanEmail, phone: cleanPhone, address: cleanAddress, ...structured,
         });
