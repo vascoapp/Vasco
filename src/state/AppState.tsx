@@ -132,6 +132,9 @@ type AppState = {
   isLoading: boolean;
   refreshData: () => Promise<void>;
   businessProfile: BusinessProfile;
+  /** True once `businessProfile` is this contractor's own, not the empty
+   *  placeholder. A form seeded before this is true saves blanks (D4). */
+  profileLoaded: boolean;
   quotes: Quote[];
   invoices: Invoice[];
   jobs: Job[];
@@ -271,6 +274,15 @@ const AppStateContext = createContext<AppState | null>(null);
 
 // Seed data flag — controlled by src/config/demo.ts (true in __DEV__ or when EXPO_PUBLIC_DEMO_MODE=true)
 const useSeedData = USE_SEED_DATA;
+
+/**
+ * A cached profile that is only the empty placeholder
+ * (`{ isComplete, completenessPercent }`) — written by builds before
+ * 2026-09-24 — is not the contractor's profile and must not mark it loaded.
+ */
+export function isOwnProfile(p: Record<string, unknown>): boolean {
+  return Object.keys(p).some((k) => k !== 'isComplete' && k !== 'completenessPercent');
+}
 
 /**
  * The keys that make up the offline cache, and who they belong to.
@@ -478,6 +490,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(
     useSeedData ? initialBusinessProfile : { isComplete: false, completenessPercent: 0 },
   );
+  // Whether `businessProfile` holds THIS contractor's profile (from the backend
+  // or their own cache) rather than the empty placeholder above. The scheduler
+  // reads it through the snapshot: a KOR / Kleinunternehmer contractor's
+  // placeholder has no vatScheme, so before this flag the quarter-end VAT card
+  // treated them as a VAT filer on every pre-hydrate run (sweep 2026-09-23, D1).
+  const [profileLoaded, setProfileLoaded] = useState<boolean>(useSeedData);
   const [quotes, setQuotes] = useState<Quote[]>(useSeedData ? initialQuotes : []);
   const [invoices, setInvoices] = useState<Invoice[]>(useSeedData ? initialInvoices : []);
   const [jobs, setJobs] = useState(useSeedData ? SEED_JOBS : [] as Job[]);
@@ -581,6 +599,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       setLeads(ld);
       setWorkers(wk);
       setBusinessProfile(bp);
+      setProfileLoaded(true);
       // R66r50: push vatScheme into currentUser ref so non-hook consumers
       // (photo-quote preview, spreadsheet extractor) compute KOR-correct VAT.
       if (bp?.vatScheme) {
@@ -616,7 +635,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       // Keep any local lines the backend did not return, AND send them, which
       // is what the comment at the queueing site has always promised and
       // nothing has ever done.
-      setLineItems((prev) => {
+      // Unreadable (null): keep what we have and heal NOTHING — with no server
+      // answer every cached document would look offline-created (review
+      // 2026-09-24).
+      if (li) setLineItems((prev) => {
         const merged = { ...li };
         const orphans: Record<string, typeof prev[string]> = {};
         for (const [docNumber, items] of Object.entries(prev)) {
@@ -784,6 +806,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         setLeads([]);
         setWorkers([]);
         setBusinessProfile({ isComplete: false, completenessPercent: 0 });
+        setProfileLoaded(false);
         setExtractedDocs([]);
         setPriceObsMap({});
         setMoneybirdConnected(false);
@@ -1005,7 +1028,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (bpRaw) {
             try {
               const bpParsed = JSON.parse(bpRaw);
-              if (bpParsed && typeof bpParsed === 'object') setBusinessProfile(prev => ({ ...prev, ...bpParsed }));
+              if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) setProfileLoaded(true); }
             } catch {}
           }
         }
@@ -1070,7 +1093,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             if (bpRaw) {
               try {
                 const bpParsed = JSON.parse(bpRaw);
-                if (bpParsed && typeof bpParsed === 'object') setBusinessProfile(prev => ({ ...prev, ...bpParsed }));
+                if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) setProfileLoaded(true); }
               } catch {}
             }
           }
@@ -1124,11 +1147,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       AsyncStorage.setItem('@vasco_workers', JSON.stringify(workers)).catch(() => {});
     }
   }, [workers, persistReady]);
+  // Only the contractor's OWN profile is cached. Persisting the empty
+  // placeholder meant the next cold start hydrated it and called the profile
+  // loaded (review 2026-09-24) — the D1/D2 defects by another door.
   useEffect(() => {
-    if (persistReady) {
+    if (persistReady && profileLoaded) {
       AsyncStorage.setItem('@vasco_business_profile', JSON.stringify(businessProfile)).catch(() => {});
     }
-  }, [businessProfile, persistReady]);
+  }, [businessProfile, persistReady, profileLoaded]);
 
   const recalcQuoteTotal = (quoteId: string, items: QuoteLineItem[]) => {
     const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
@@ -1171,6 +1197,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       isLoading,
       refreshData,
       businessProfile,
+      profileLoaded,
       quotes,
       invoices,
       jobs,
@@ -5007,6 +5034,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       isLoading,
       refreshData,
       businessProfile,
+      profileLoaded,
       customers,
       extractedDocs,
       invoices,
@@ -5102,9 +5130,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           vatScheme: businessProfile?.vatScheme,
           filingPeriod: businessProfile?.filingPeriod,
         },
+        profileLoaded,
       });
     }).catch(() => {});
-  }, [jobs, quotes, invoices, customers, businessProfile]);
+  }, [jobs, quotes, invoices, customers, businessProfile, profileLoaded]);
 
   // R66 round 37: expose the imperative mutators non-hook consumers need
   // (realtime watchers in app/_layout.tsx) so webhook → BE update → realtime

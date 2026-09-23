@@ -30,6 +30,13 @@ export interface AppStateSnapshot {
   // vatScheme: the quarter-end VAT card must not tell a KOR / Kleinunternehmer
   // contractor — who files no return — that one is due (review, 2026-09-22).
   businessProfile?: { phone?: string; trade?: string; country?: string; postcode?: string; vatScheme?: string; filingPeriod?: string };
+  /**
+   * True once `businessProfile` is the contractor's own (backend or cache).
+   * The provider ALWAYS passes a businessProfile object — before hydrate it is
+   * the empty placeholder — so `!businessProfile` never means "not loaded".
+   * Anything that must not guess from a blank profile reads this (D1).
+   */
+  profileLoaded?: boolean;
   updatedAt: number;
 }
 

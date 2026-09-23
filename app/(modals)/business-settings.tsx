@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -52,7 +53,48 @@ function cleanPrefix(raw: string): string {
   return raw.replace(/[^A-Za-z0-9/_-]/g, '').slice(0, 12);
 }
 
+/**
+ * Every field below is seeded ONCE, by `useState(businessProfile.x)`. Opened
+ * before the profile had loaded — a cold start, a deep link, a push — the form
+ * showed blanks, and Save wrote every blank back over the contractor's real
+ * business name, VAT number and IBAN (sweep 2026-09-23, D4). So the form is not
+ * mounted until the profile is the contractor's own, and Save sends only the
+ * fields that differ from what the form was opened with.
+ */
 export default function BusinessSettingsScreen() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { profileLoaded } = useAppState();
+  if (profileLoaded) return <BusinessSettingsForm />;
+  return (
+    <Screen>
+      <View style={[styles.container, styles.headerRow]}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back', 'Back')}
+          style={styles.backBtn}
+        >
+          <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
+        </Pressable>
+        <Text style={[Typography.title, { flex: 1 }]}>{t('settings.business', 'Business details')}</Text>
+      </View>
+      <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Palette.hermesOrange} />
+    </Screen>
+  );
+}
+
+/** Same value for the purpose of "did the contractor change this?" — an
+ *  absent field and an empty one are the same blank. */
+function sameValue(a: unknown, b: unknown): boolean {
+  const blank = (v: unknown) => v === undefined || v === null || v === '';
+  if (blank(a) && blank(b)) return true;
+  if (Array.isArray(a) || Array.isArray(b)) return JSON.stringify(a) === JSON.stringify(b);
+  return a === b;
+}
+
+function BusinessSettingsForm() {
   const { t } = useTranslation();
   const router = useRouter();
   const { businessProfile, updateBusinessProfile } = useAppState();
@@ -122,6 +164,11 @@ export default function BusinessSettingsScreen() {
   const [enabledPaymentMethods, setEnabledPaymentMethods] = useState<string[]>(
     businessProfile.enabledPaymentMethods ?? [...allPaymentMethods]
   );
+  // What the form SHOWED when it opened — Save diffs against this, not the live
+  // profile, so a background refresh is not overwritten by a field the
+  // contractor never touched. Payment methods are the form's own default
+  // ("all") when the profile has none, so that default is the baseline too.
+  const openedWith = useRef({ ...businessProfile, enabledPaymentMethods });
 
   // Country-specific fields
   const fields = useMemo((): FieldDef[] => {
@@ -347,7 +394,7 @@ export default function BusinessSettingsScreen() {
         }
         loadedCounter.current = String(res.next);
       }
-      await updateBusinessProfile({
+      const next: Partial<typeof businessProfile> = {
         businessName: sanitizeInput(businessName).trim(),
         kvkNumber: cleanKvk.trim(),
         vatNumber: cleanVat.trim(),
@@ -381,7 +428,11 @@ export default function BusinessSettingsScreen() {
         // filenames and in URLs, so the restriction is not cosmetic.
         invoicePrefix: cleanPrefix(invoicePrefix),
         quotePrefix: cleanPrefix(quotePrefix),
-      });
+      };
+      const changed = Object.fromEntries(
+        Object.entries(next).filter(([k, v]) => !sameValue(v, (openedWith.current as Record<string, unknown>)[k])),
+      ) as Partial<typeof businessProfile>;
+      if (Object.keys(changed).length > 0) await updateBusinessProfile(changed);
       router.back();
     } catch (err) {
       logError('BusinessSettings', err);

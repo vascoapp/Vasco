@@ -1491,10 +1491,12 @@ export default function JobDetailPage() {
                       'Hi {{customer}}, please sign off on the completed work for "{{job}}": vascobuild.com/sign/{{ref}}',
                       { customer: customerLabel, job: job.projectName || 'the project', ref: id },
                     );
-                    await Share.share({
+                    const res = await Share.share({
                       message: messageBody,
                       title: t('jobs.signatureRequestTitle', 'Sign-off request'),
                     });
+                    // A backed-out sheet resolves; it must not log "sent" (B2).
+                    if (wasShareDismissed(res)) return;
                     addActivityEntry(id || '', 'signature_requested', t('jobs.activitySignatureRequested', { defaultValue: 'Sign-off link sent to {{customer}}', customer: customerLabel })).catch(() => {});
                   } catch {}
                 };

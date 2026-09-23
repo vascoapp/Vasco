@@ -43,6 +43,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber, amountPayableNow } from '../../src/domain/documents';
+import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 import { getEffectiveVatRate } from '../../src/domain/business';
@@ -426,7 +427,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         business: businessProfile?.businessName || user?.company || '',
                       });
                       const res = await Share.share({ message: msg, title: t('invoices.sendReminder', 'Herinnering') });
-                      if (res.action !== Share.dismissedAction) hapticSuccess();
+                      if (!wasShareDismissed(res)) hapticSuccess();
                     }
                   }}
                 >
@@ -1107,12 +1108,17 @@ export default function FacturenScreen() {
                                 : {
                                     customer: findDocumentCustomer(customers as any, inv as any)?.name
                                       ?? (inv as any).customer ?? '',
-                                    ref: (inv as any).reference ?? inv.id,
-                                    amount: formatCurrency(inv.amount, country),
+                                    ref: documentNumber(inv as any),
+                                    // What is owed today, not the gross total —
+                                    // same as the branch above (#354; B3).
+                                    amount: formatCurrency(amountPayableNow(inv as any), country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
                                   }, tag);
-                              await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') });
+                              const res = await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') });
+                              // Backing out of the sheet RESOLVES, it does not
+                              // throw — it was counted as a reminder sent (B3).
+                              if (wasShareDismissed(res)) { skipped++; continue; }
                               sent++;
                             } catch {
                               skipped++;
@@ -1241,13 +1247,14 @@ export default function FacturenScreen() {
                         const msg = overdueReminderMessage(t, {
                           customer: (inv ? findDocumentCustomer(customers, inv)?.name : undefined) ?? seq.customerName,
                           number: inv ? documentNumber(inv) : seq.invoiceId,
-                          amount: formatCurrency(inv ? inv.amount : seq.invoiceAmount, country),
+                          // Payable now, like the per-row reminder (#354; B3).
+                          amount: formatCurrency(inv ? amountPayableNow(inv as any) : seq.invoiceAmount, country),
                           days: (inv ? daysOverdue(inv) : seq.daysOverdue) ?? seq.daysOverdue ?? 0,
                           business: businessProfile?.businessName || user?.company || '',
                         });
                         const res = await Share.share({ message: msg, title: t('invoices.sendReminder', 'Herinnering') });
                         // Only claim it when the sheet was not dismissed.
-                        if (res.action !== Share.dismissedAction) {
+                        if (!wasShareDismissed(res)) {
                           hapticSuccess();
                           setToast({ visible: true, message: t('invoices.reminderSentTo', 'Herinnering verstuurd naar {{name}}.', { name: seq.customerName }) });
                         }

@@ -8,6 +8,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share, Platform } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { selectAllPages } from '../lib/dataProvider';
 import { todayKey } from '../utils/dateKey';
 
 // ---------------------------------------------------------------------------
@@ -174,6 +175,11 @@ interface BackendDataset {
   decision_trackers: unknown[];
   expenses: unknown[];
   fetched_at: string;
+  /**
+   * Tables that could not be read in full. An Art. 15/20 export that is
+   * silently missing a table is worse than one that says so (C3).
+   */
+  incomplete_tables: string[];
 }
 
 async function collectFromBackend(): Promise<BackendDataset | null> {
@@ -218,18 +224,22 @@ async function collectFromBackend(): Promise<BackendDataset | null> {
       decision_trackers: [],
       expenses: [],
       fetched_at: new Date().toISOString(),
+      incomplete_tables: [],
     };
 
-    // Run in parallel — a slow table doesn't block the others.
-    const entries = Object.entries(queries) as [keyof BackendDataset, () => Promise<unknown>][];
+    // Every row, page by page: each unranged read stopped at 1000 rows, so a
+    // contractor with a few years of documents or line items got a truncated
+    // export that reported success (sweep 2026-09-23, C3). Ordered by id so
+    // no row is skipped or repeated between pages.
+    const entries = Object.entries(queries) as [keyof BackendDataset, () => any][];
     await Promise.all(
-      entries.map(async ([key, run]) => {
+      entries.map(async ([key, build]) => {
         try {
-          const { data, error } = (await run()) as { data: unknown[] | null; error: unknown };
-          if (error || !data) return;
-          (result as unknown as Record<string, unknown>)[key] = data;
+          const rows = await selectAllPages<unknown>(() => build().order('id', { ascending: true }));
+          (result as unknown as Record<string, unknown>)[key] = rows;
         } catch {
-          // Per-table failure: leave [] in place. Better partial than nothing.
+          // Per-table failure: keep the rest, but SAY which table is missing.
+          result.incomplete_tables.push(String(key));
         }
       }),
     );

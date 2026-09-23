@@ -72,3 +72,53 @@ describe('a failing scheduled job must not wedge the scheduler', () => {
     expect(saved.lastHourlyRun).toBeTruthy();
   });
 });
+
+// D2 (sweep 2026-09-23): the first tick fired on app open over the EMPTY
+// pre-hydrate arrays and stamped its 2h/12h gates, so the queue blocks did not
+// see the contractor's real data again for hours.
+describe('the scheduler waits for hydrate', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    stopBackgroundJobScheduler();
+    mockPopulateQueue.mockImplementation(async () => undefined);
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+  });
+  afterEach(() => { stopBackgroundJobScheduler(); jest.useRealTimers(); });
+
+  it('not hydrated: runs nothing and writes NO gate timestamps', async () => {
+    startBackgroundJobScheduler(() => ({ ...ctx(), ready: false }));
+    await flush();
+    expect(mockPopulateQueue).not.toHaveBeenCalled();
+    expect(AsyncStorage.setItem).not.toHaveBeenCalledWith('@vasco_scheduler_state', expect.anything());
+  });
+
+  it('the 30-minute tick ALSO waits — a slow hydrate never stamps the gates', async () => {
+    jest.useFakeTimers({ doNotFake: ['setImmediate', 'nextTick'] });
+    startBackgroundJobScheduler(() => ({ ...ctx(), ready: false }));
+    await jest.advanceTimersByTimeAsync(31 * 60 * 1000);
+    jest.useRealTimers();
+    await flush();
+    expect(mockPopulateQueue).not.toHaveBeenCalled();
+    expect(AsyncStorage.setItem).not.toHaveBeenCalledWith('@vasco_scheduler_state', expect.anything());
+  });
+
+  it('runs the first tick over the REAL data once hydrate lands', async () => {
+    jest.useFakeTimers({ doNotFake: ['setImmediate', 'nextTick'] });
+    let ready = false;
+    const jobs: any[] = [];
+    startBackgroundJobScheduler(() => ({ ...ctx(), jobs, ready }));
+    await jest.advanceTimersByTimeAsync(4000);
+    expect(mockPopulateQueue).not.toHaveBeenCalled();
+    ready = true;
+    jobs.push({ id: 'j1', status: 'completed' });
+    await jest.advanceTimersByTimeAsync(2500);
+    jest.useRealTimers();
+    await flush();
+    // Briefing on start, the 6-hourly block and the daily briefing each build
+    // the queue — every one of them over the hydrated data, none over [].
+    expect(mockPopulateQueue).toHaveBeenCalled();
+    for (const call of mockPopulateQueue.mock.calls as any[]) {
+      expect(call[0].completedJobs).toEqual([{ id: 'j1', status: 'completed' }]);
+    }
+  });
+});

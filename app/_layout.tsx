@@ -265,6 +265,8 @@ function RootLayoutNav() {
           // Profile first, account as fallback (CLAUDE.md). `snap.country` was
           // read here but never written, so this was only ever user.country.
           country: snap.businessProfile?.country ?? user.country,
+          // Wait for THIS contractor's data — see SchedulerContext (D2).
+          ready: snap.profileLoaded === true,
         };
       });
       return () => { setErrorUser(null); stopAutoSync(); stopEventFlushing(); stopWatch(); stopTables(); stopInteractions(); stopSignatures(); stopBackgroundJobScheduler(); pushSub.remove(); };

@@ -90,3 +90,60 @@ describe('DATANORM import reports what landed', () => {
     expect(r).toEqual({ imported: 1, skipped: 0, failed: 0 });
   });
 });
+
+// Sweep 2026-09-23, C4.
+describe('DATANORM import state', () => {
+  beforeEach(async () => {
+    mockInserts.length = 0;
+    mockCatalogError = null;
+    mockMoatInsert.mockClear();
+    await AsyncStorage.clear();
+  });
+
+  it('a price that goes back to an earlier value is recorded (A → B → A)', async () => {
+    await importDatanormToMoat([article('F1')], 'richter');                          // 12.50
+    await importDatanormToMoat([{ ...article('F1'), unitPrice: 13.5 }], 'richter'); // 13.50
+    const back = await importDatanormToMoat([article('F1')], 'richter');             // 12.50 again
+    expect(back).toEqual({ imported: 1, skipped: 0, failed: 0 });
+    expect(mockMoatInsert).toHaveBeenCalledTimes(3);
+  });
+
+  it('a 100k-article list never stores one value past ~1 MB (Android reads fail near 2 MB)', async () => {
+    const many = Array.from({ length: 100_000 }, (_, i) => ({ ...article(`ART-${String(i).padStart(8, '0')}`), unitPrice: 1234.56 }));
+    await importDatanormToMoat(many, 'gc_gruppe_grosshandel');
+    const keys = await AsyncStorage.getAllKeys();
+    const values = await AsyncStorage.multiGet(keys);
+    const biggest = Math.max(...values.map(([, v]) => (v ?? '').length));
+    expect(biggest).toBeLessThan(1_000_000);
+    // ...and the whole list reads back: the same file again skips everything.
+    mockMoatInsert.mockClear();
+    const again = await importDatanormToMoat(many, 'gc_gruppe_grosshandel');
+    expect(again.skipped).toBe(100_000);
+    expect(mockMoatInsert).not.toHaveBeenCalled();
+  }, 60_000);
+
+  it('carries the old flat set over, so an upgrade does not re-import everything', async () => {
+    await AsyncStorage.setItem('@vasco_datanorm_imported:11111111-1111-1111-1111-111111111111',
+      JSON.stringify(['richter:G1:12.5', 'richter:G2', 'other:G1:9']));
+    const r = await importDatanormToMoat([article('G1'), article('G2')], 'richter');
+    // G1 at 12.50 was imported before; G2 had no recorded price, so it is written.
+    expect(r).toEqual({ imported: 1, skipped: 1, failed: 0 });
+    expect(await AsyncStorage.getItem('@vasco_datanorm_imported:11111111-1111-1111-1111-111111111111')).toBeNull();
+    // The other supplier's entry survived the migration.
+    const other = await importDatanormToMoat([{ ...article('G1'), unitPrice: 9 }], 'other');
+    expect(other.skipped).toBe(1);
+  });
+});
+
+describe('an unreadable legacy set', () => {
+  it('is deleted, not kept holding storage forever', async () => {
+    await AsyncStorage.clear();
+    const KEY = '@vasco_datanorm_imported:11111111-1111-1111-1111-111111111111';
+    await AsyncStorage.setItem(KEY, '["x"]');
+    // The legacy read is the first getItem of the import; only it fails.
+    (AsyncStorage.getItem as jest.Mock).mockImplementationOnce(async () => { throw new Error('Row too big to fit into CursorWindow'); });
+    const r = await importDatanormToMoat([article('H1')], 'richter');
+    expect(r.imported).toBe(1);
+    expect(await AsyncStorage.getAllKeys()).not.toContain(KEY);
+  });
+});

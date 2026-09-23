@@ -53,6 +53,7 @@ describe('customer-facing messages are localized and name a document number', ()
     expect(src).not.toMatch(/`[^`]*invoice \$\{inv\.id\}/i);
     // ...and the fallback branch must go through the same localized template.
     expect(src).toMatch(/renderPaymentReminderForTag\(bulkLocale, autoInv/);
-    expect(src).toMatch(/ref:\s*\(inv as any\)\.reference/);
+    // The one resolver for a document's number (src/domain/documents.ts).
+    expect(src).toMatch(/ref:\s*documentNumber\(inv as any\)/);
   });
 });

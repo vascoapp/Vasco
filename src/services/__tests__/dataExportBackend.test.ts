@@ -15,6 +15,7 @@ const mockBackend = {
   configured: true,
   user: { id: 'user-42' } as { id: string } | null,
   rowsByTable: new Map<string, unknown[]>(),
+  failTables: new Set<string>(),
 };
 jest.mock('../../lib/supabase', () => ({
   isSupabaseConfigured: true,
@@ -26,12 +27,20 @@ jest.mock('../../lib/supabase', () => ({
       },
     },
     from: (table: string) => ({
-      select: () => ({
-        eq: async () => {
-          const state = (globalThis as any).__mockBackend;
-          return { data: state?.rowsByTable?.get(table) ?? [], error: null };
-        },
-      }),
+      // A query builder: the export pages with .order().range() (C3).
+      select: () => {
+        const q: any = {
+          eq: () => q,
+          order: () => q,
+          range: async (from: number, to: number) => {
+            const state = (globalThis as any).__mockBackend;
+            const rows = state?.failTables?.has(table) ? null : (state?.rowsByTable?.get(table) ?? []);
+            if (rows === null) return { data: null, error: new Error('fail') };
+            return { data: rows.slice(from, to + 1), error: null };
+          },
+        };
+        return q;
+      },
     }),
   },
 }));
@@ -57,6 +66,7 @@ beforeEach(() => {
   mockBackend.configured = true;
   mockBackend.user = { id: 'user-42' };
   mockBackend.rowsByTable.clear();
+  mockBackend.failTables.clear();
   lastShare = null;
 });
 
@@ -89,13 +99,15 @@ describe('exportAllData with backend', () => {
   });
 
   test('partial-table failure does not abort the export', async () => {
-    // Make `signatures` query reject; everything else succeeds.
-    // We replicate by leaving signatures empty + verifying success.
+    // `signatures` fails; everything else succeeds.
     mockBackend.rowsByTable.set('jobs', [{ id: 'job-1' }]);
+    mockBackend.failTables.add('signatures');
     const result = await exportAllData('json');
     expect(result.success).toBe(true);
     const parsed = JSON.parse(lastShare!.content);
     expect(parsed.data.backend.jobs).toEqual([{ id: 'job-1' }]);
     expect(parsed.data.backend.signatures).toEqual([]);
+    // ...and the export SAYS it is missing (C3).
+    expect(parsed.data.backend.incomplete_tables).toEqual(['signatures']);
   });
 });

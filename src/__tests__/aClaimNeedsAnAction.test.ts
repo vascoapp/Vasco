@@ -99,7 +99,7 @@ describe('the dunning ladder does not invent a send', () => {
     const handler = screen.slice(at, screen.indexOf('</Pressable>', at));
     expect(handler).toMatch(/overdueReminderMessage\(/);
     expect(handler).toMatch(/Share\.share\(/);
-    expect(handler).toMatch(/dismissedAction/);
+    expect(handler).toMatch(/wasShareDismissed\(res\)|dismissedAction/);
   });
 });
 

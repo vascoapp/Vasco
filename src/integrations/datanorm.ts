@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emitMaterialPurchased } from '../intelligence/dataCollector';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getAuthedUserId } from '../lib/currentUser';
+import { logWarn } from '../utils/errorHandler';
 
 const IMPORTED_KEY = '@vasco_datanorm_imported';
 
@@ -272,20 +273,89 @@ export function parseDateanormV5(text: string): DatanormArticle[] {
 // marked done, so a re-import could never backfill them (review, #363).
 const importedKeyFor = (userId: string) => `${IMPORTED_KEY}:${userId || 'anon'}`;
 
-async function loadImportedArticles(userId: string): Promise<Set<string>> {
+// What was last imported, per supplier + article: the PRICE. Two defects in
+// the flat set this replaces (sweep 2026-09-23, C4):
+//  - it held every price ever seen, so a list that went A → B → back to A
+//    skipped the return to A and the price watch never saw the drop;
+//  - it was ONE blob per contractor, one entry per article per price. A large
+//    wholesaler list is 100k+ articles, and Android AsyncStorage cannot read a
+//    value much past 2 MB — the read failed, the set came back empty, and the
+//    next import wrote every price again as a new day, which hides a real rise
+//    (the watch compares the two latest days).
+// Now: one map per supplier, split into bounded chunks.
+const CHUNK = 20_000; // ~20k × ~30 bytes ≈ 600 KB per value
+type LastPrices = Map<string, number>;
+const supplierKey = (userId: string, supplierId: string) => `${importedKeyFor(userId)}:s:${supplierId}`;
+
+async function readChunks(base: string): Promise<LastPrices> {
+  const out: LastPrices = new Map();
+  const count = Number(await AsyncStorage.getItem(base)) || 0;
+  for (let i = 0; i < count; i++) {
+    const raw = await AsyncStorage.getItem(`${base}:${i}`);
+    for (const [art, price] of Object.entries(raw ? JSON.parse(raw) as Record<string, number> : {})) out.set(art, price);
+  }
+  return out;
+}
+
+async function writeChunks(base: string, prices: LastPrices): Promise<void> {
+  const entries = [...prices.entries()];
+  const count = Math.ceil(entries.length / CHUNK);
+  for (let i = 0; i < count; i++) {
+    await AsyncStorage.setItem(`${base}:${i}`, JSON.stringify(Object.fromEntries(entries.slice(i * CHUNK, (i + 1) * CHUNK))));
+  }
+  await AsyncStorage.setItem(base, String(count));
+}
+
+/** Fold the old flat set (`supplier:article:price`) into per-supplier maps, once. */
+async function migrateLegacySet(userId: string): Promise<void> {
+  let raw: string | null = null;
   try {
-    const raw = await AsyncStorage.getItem(importedKeyFor(userId));
-    return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+    raw = await AsyncStorage.getItem(importedKeyFor(userId));
   } catch {
-    return new Set();
+    // Too big to read — nothing can be carried, and leaving it would hold
+    // megabytes of Android's ~6 MB AsyncStorage total forever (review
+    // 2026-09-24). A full store fails EVERY setItem, the offline queue's too.
+    await AsyncStorage.removeItem(importedKeyFor(userId)).catch(() => {});
+    return;
+  }
+  if (raw == null) return;
+  const bySupplier = new Map<string, LastPrices>();
+  try {
+    for (const entry of JSON.parse(raw) as string[]) {
+      // Entries without a price predate #366 and cannot say what was imported;
+      // dropping them costs at most one same-price observation.
+      const m = /^(.*):([^:]+):([^:]+)$/.exec(entry);
+      const price = m ? Number(m[3]) : NaN;
+      if (!m || !Number.isFinite(price)) continue;
+      if (!bySupplier.has(m[1])) bySupplier.set(m[1], new Map());
+      bySupplier.get(m[1])!.set(m[2], price); // insertion order = import order: last wins
+    }
+  } catch { /* unparseable: nothing to carry */ }
+  for (const [supplierId, prices] of bySupplier) {
+    const base = supplierKey(userId, supplierId);
+    const existing = await readChunks(base).catch(() => new Map() as LastPrices);
+    await writeChunks(base, new Map([...prices, ...existing]));
+  }
+  await AsyncStorage.removeItem(importedKeyFor(userId));
+}
+
+async function loadLastPrices(userId: string, supplierId: string): Promise<LastPrices> {
+  try {
+    await migrateLegacySet(userId);
+    return await readChunks(supplierKey(userId, supplierId));
+  } catch (e) {
+    // Bounded chunks make this corruption, not size. Worst case: one repeat
+    // observation per article on this import.
+    logWarn('datanorm', `import state unreadable: ${e}`);
+    return new Map();
   }
 }
 
-async function saveImportedArticles(userId: string, set: Set<string>): Promise<void> {
+async function saveLastPrices(userId: string, supplierId: string, prices: LastPrices): Promise<void> {
   try {
-    await AsyncStorage.setItem(importedKeyFor(userId), JSON.stringify([...set]));
-  } catch {
-    // Non-critical — worst case we re-import duplicates next time
+    await writeChunks(supplierKey(userId, supplierId), prices);
+  } catch (e) {
+    logWarn('datanorm', `import state not saved: ${e}`);
   }
 }
 
@@ -345,8 +415,8 @@ export async function importDatanormToMoat(
   const trade = options?.trade ?? 'general';
   const country = options?.country ?? 'NL';
 
-  // Load previously imported article numbers for deduplication
-  const alreadyImported = await loadImportedArticles(userId);
+  // The price each article was last imported at, for this supplier.
+  const lastPrices = await loadLastPrices(userId, supplierId);
 
   let imported = 0;
   let skipped = 0;
@@ -358,13 +428,11 @@ export async function importDatanormToMoat(
       continue;
     }
 
-    // Deduplicate on supplier + article + PRICE. Without the price, next
-    // year's list from the same wholesaler (same supplier id — the file name's
-    // year is stripped) skipped EVERY article, so no second price row was ever
-    // written and the price watch could never see a rise (review #366). Same
-    // price again = the same observation; a new price = a new one.
-    const dedupeKey = `${supplierId}:${article.articleNumber}:${article.unitPrice}`;
-    if (alreadyImported.has(dedupeKey)) {
+    // Skip only when the price is the one LAST imported. Next year's list from
+    // the same wholesaler (same supplier id — the file name's year is
+    // stripped) must write its new prices (review #366), and a price that goes
+    // back to an earlier value is a change too (C4).
+    if (lastPrices.get(article.articleNumber) === article.unitPrice) {
       skipped++;
       continue;
     }
@@ -408,7 +476,7 @@ export async function importDatanormToMoat(
       // dedupe set, and "import again" re-writes only the price (the catalogue
       // row then already exists) — review #366.
       if (priceLanded) {
-        alreadyImported.add(dedupeKey);
+        lastPrices.set(article.articleNumber, article.unitPrice);
         imported++;
       } else {
         failed++;
@@ -418,8 +486,7 @@ export async function importDatanormToMoat(
     }
   }
 
-  // Persist updated set
-  await saveImportedArticles(userId, alreadyImported);
+  await saveLastPrices(userId, supplierId, lastPrices);
 
   return { imported, skipped, failed };
 }

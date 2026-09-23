@@ -37,7 +37,11 @@ export default function VatAndAuditScreen() {
   const { businessProfile, updateBusinessProfile } = useAppState();
   const country = businessProfile.country ?? 'NL';
 
-  const [scheme, setScheme] = useState<VatScheme>(businessProfile.vatScheme ?? 'standard');
+  // Read from the profile, not copied into state once: opened before hydrate,
+  // the copy said 'standard' for a KOR / Kleinunternehmer contractor for as long
+  // as the screen stayed open (sweep 2026-09-23, D4). updateBusinessProfile is
+  // optimistic, so the tick still moves the moment it is tapped.
+  const scheme: VatScheme = businessProfile.vatScheme ?? 'standard';
   const [verification, setVerification] = useState<AuditVerificationResult | null>(null);
   const [entryCount, setEntryCount] = useState<number>(0);
 
@@ -53,7 +57,6 @@ export default function VatAndAuditScreen() {
 
   const handleSchemeChange = async (next: VatScheme) => {
     if (next === scheme) return;
-    setScheme(next);
     await updateBusinessProfile({ vatScheme: next });
     hapticSuccess();
   };

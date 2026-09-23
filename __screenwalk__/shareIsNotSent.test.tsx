@@ -22,6 +22,7 @@
  */
 import fs from 'fs';
 import path from 'path';
+import { stripComments } from '../src/utils/stripComments';
 
 const ROOT = path.join(__dirname, '..');
 const ROOTS = ['app', 'src'];
@@ -96,6 +97,25 @@ function readOrEmpty(f: string): string {
 }
 
 const SHARES = /\b(Share\.share|RNShare\.share|Sharing\.shareAsync)\s*\(/;
+// `await Share.share(` whose result is NOT assigned (no `=` just before).
+const BARE_SHARE = /(?<![=(,]\s*)(?<![=(,])\bawait\s+(?:Share|RNShare)\.share\s*\(/g;
+
+/** Index just past the `)` that closes the `(` at `open`. */
+function callEnd(src: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    const c = src[i];
+    if (c === '(') depth++;
+    else if (c === ')' && --depth === 0) return i + 1;
+    else if (c === '`' || c === "'" || c === '"') {
+      // skip a string literal (template ${} nesting is rare in share args and
+      // balanced parens inside it are harmless to the depth count)
+      const q = c;
+      for (i++; i < src.length && src[i] !== q; i++) if (src[i] === '\\') i++;
+    }
+  }
+  return src.length;
+}
 
 describe('a cancelled share is not a send', () => {
   const files = ROOTS.flatMap((r) => walk(path.join(ROOT, r)));
@@ -112,6 +132,34 @@ describe('a cancelled share is not a send', () => {
 
   it('has no unguarded, unclassified share', () => {
     expect(unguarded.filter((f) => !(f in NO_CONSEQUENCE))).toEqual([]);
+  });
+
+  // Per CALL SITE, not per file (sweep 2026-09-23, B3). facturen.tsx checked
+  // `dismissedAction` on two of its shares, so the file-level test above
+  // passed — while its bulk reminder loop awaited a bare `Share.share` and
+  // counted every backed-out sheet as "sent", and job/[id].tsx logged
+  // "Sign-off link sent" the same way. A bare `await Share.share(…)` is only
+  // safe as the LAST statement of its block: nothing can then act on it.
+  it('no bare share is followed by code that could record it', () => {
+    const offenders: string[] = [];
+    for (const f of sharing) {
+      if (f in NO_CONSEQUENCE) continue;
+      const src = stripComments(readOrEmpty(path.join(ROOT, f)));
+      for (const m of src.matchAll(BARE_SHARE)) {
+        const end = callEnd(src, m.index! + m[0].length - 1);
+        const next = src.slice(end).match(/^\s*;?\s*(\S)/)?.[1];
+        if (next !== '}') offenders.push(`${f}:${src.slice(0, m.index).split('\n').length}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('the call-site check detects the shape (decoy)', () => {
+    const bad = stripComments("try { await Share.share({ message: m }); sent++; } catch {}");
+    const ok = stripComments("if (x) { await Share.share({ message: `${a}` }); } else { y(); }");
+    const at = (src: string) => { const m = [...src.matchAll(BARE_SHARE)][0]; return src.slice(callEnd(src, m.index! + m[0].length - 1)).match(/^\s*;?\s*(\S)/)?.[1]; };
+    expect(at(bad)).toBe('s');
+    expect(at(ok)).toBe('}');
   });
 
   it('has no stale classification', () => {

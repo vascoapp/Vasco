@@ -1431,13 +1431,16 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // UStVA). Those get no card. Other countries never reach it (above).
   let vatExempt = false;
   try {
-    const { getAppStateSnapshot } = await import('../state/appStateSnapshot');
-    const { isSmallBusinessExempt } = await import('../domain/business');
-    const bp = getAppStateSnapshot().businessProfile;
-    // Profile not loaded yet (a scheduler run before AppState fills the
-    // snapshot): we cannot know, so SKIP this run — never default to "due"
-    // for a contractor who may file no return at all (CLAUDE.md; review #366).
-    vatExempt = !bp || isSmallBusinessExempt({ vatScheme: bp.vatScheme as any }) || bp.filingPeriod === 'yearly';
+    const { getAppStateSnapshot } = require('../state/appStateSnapshot');
+    const { isSmallBusinessExempt } = require('../domain/business');
+    const snap = getAppStateSnapshot();
+    const bp = snap.businessProfile;
+    // Profile not loaded yet (a scheduler run before hydrate): we cannot know,
+    // so SKIP this run — never default to "due" for a contractor who may file
+    // no return at all (CLAUDE.md; review #366). NOT `!bp`: the snapshot always
+    // carries a profile object, the empty placeholder before hydrate, so that
+    // test never fired (sweep 2026-09-23, D1).
+    vatExempt = !snap.profileLoaded || !bp || isSmallBusinessExempt({ vatScheme: bp.vatScheme as any }) || bp.filingPeriod === 'yearly';
   } catch {
     vatExempt = true;
   }

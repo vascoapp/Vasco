@@ -58,7 +58,9 @@ describe('what the message asks for is what the link charges', () => {
     // Retention withheld from an instalment is not due yet: the checkout
     // charges `amountPayableNow`, so the text beside it must too.
     expect(SRC).not.toMatch(/amount: formatCurrency\(autoInv\.total, country\)/);
-    expect(SRC).not.toMatch(/amount: formatCurrency\(invoice\.amount, country\)/);
+    // Any variable name — the bulk loop named it `inv` and slipped past a
+    // check that only knew `invoice` (B3). Also the `inv ? inv.amount : …` form.
+    expect(SRC).not.toMatch(/amount: formatCurrency\((?:\w+ \? )?\w+\.amount\b/);
     const payableNow = [...SRC.matchAll(/formatCurrency\(amountPayableNow\([^)]*\), country\)/g)];
     expect(payableNow.length).toBeGreaterThanOrEqual(4);
   });

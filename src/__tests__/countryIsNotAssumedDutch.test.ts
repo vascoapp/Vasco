@@ -52,8 +52,10 @@ describe('the VAT return refuses a market it cannot prepare', () => {
     expect(before).toMatch(/&& !vatExempt\)/);
     // ...nor a DE business on yearly filing (no UStVA), and only NL/DE at all.
     expect(before).toMatch(/filingPeriod === 'yearly'/);
-    // Profile not loaded yet → skip this run, never assume a return is due.
-    expect(before).toMatch(/vatExempt = !bp \|\|/);
+    // Profile not loaded yet → skip. Behaviour is proven in
+    // vatCardWaitsForTheProfile.test.ts (this regex once passed on a gate
+    // that never fired — D1).
+    expect(before).toMatch(/vatExempt = !snap\.profileLoaded \|\|/);
     expect(before).toMatch(/context\.country === 'NL' \|\| context\.country === 'DE'/);
   });
 });

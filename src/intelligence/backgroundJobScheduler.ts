@@ -669,23 +669,48 @@ export async function getMorningBriefing(): Promise<MorningBriefing | null> {
 // ---------------------------------------------------------------------------
 
 let schedulerTimer: ReturnType<typeof setInterval> | null = null;
+let readyPoll: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * `ready: false` = AppState has not loaded this contractor's data yet. The
+ * scheduler used to fire its first tick on app open over the EMPTY pre-hydrate
+ * arrays — and stamp its 2h/12h gates doing so, so the blocks that build the
+ * queue did not look at the real data again for hours (sweep 2026-09-23, D2).
+ * Omitted = ready (callers that always pass real data).
+ */
+interface SchedulerContext {
+  invoices: any[];
+  quotes: any[];
+  jobs: any[];
+  customers?: any[];
+  country?: string;
+  ready?: boolean;
+}
 
 export function startBackgroundJobScheduler(
-  getContext: () => { invoices: any[]; quotes: any[]; jobs: any[]; customers?: any[]; country?: string },
+  getContext: () => SchedulerContext,
 ): void {
   if (schedulerTimer) return;
 
-  // Run morning briefing immediately on first start
-  const ctx = getContext();
-  generateMorningBriefing(ctx).catch(() => {});
-
-  // R14.4: also kick the gated tick once immediately on start. Without this,
-  // a contractor who opens the app briefly (< 30 min) never sees any of the
-  // 6-hourly / daily blocks fire — populateQueue, evaluateTriggers, EVE live
-  // actions, and ML calibration all wait for the first setInterval tick.
-  // The internal state.lastXRun gates ensure we don't re-run blocks that
-  // already ran recently.
-  runScheduledTick(getContext).catch(() => {});
+  // Morning briefing + R14.4's immediate tick. Without the immediate tick a
+  // contractor who opens the app briefly (< 30 min) never sees any of the
+  // 6-hourly / daily blocks fire. The internal state.lastXRun gates ensure we
+  // don't re-run blocks that already ran recently.
+  const firstRun = () => {
+    generateMorningBriefing(getContext()).catch(() => {});
+    runScheduledTick(getContext).catch(() => {});
+  };
+  // ...but only once the data is there (D2): poll cheaply until hydrate.
+  if (getContext().ready === false) {
+    readyPoll = setInterval(() => {
+      if (getContext().ready === false) return;
+      if (readyPoll) clearInterval(readyPoll);
+      readyPoll = null;
+      firstRun();
+    }, 2000);
+  } else {
+    firstRun();
+  }
 
   // Check every 30 minutes if any scheduled jobs are due
   schedulerTimer = setInterval(() => { runScheduledTick(getContext).catch(() => {}); }, 30 * 60 * 1000);
@@ -693,8 +718,10 @@ export function startBackgroundJobScheduler(
 
 // R14.4: extracted from the setInterval body so it can also fire once on start.
 async function runScheduledTick(
-  getContext: () => { invoices: any[]; quotes: any[]; jobs: any[]; customers?: any[]; country?: string },
+  getContext: () => SchedulerContext,
 ): Promise<void> {
+    // Not hydrated: do nothing and — the point — write no gate timestamps.
+    if (getContext().ready === false) return;
     // Cadence state is hoisted and written in a `finally`. It used to be
     // declared here and saved as the LAST statement of the try, which meant one
     // unguarded job failure skipped the write entirely — losing the timestamps
@@ -1012,6 +1039,10 @@ async function runScheduledTick(
 }
 
 export function stopBackgroundJobScheduler(): void {
+  if (readyPoll) {
+    clearInterval(readyPoll);
+    readyPoll = null;
+  }
   if (schedulerTimer) {
     clearInterval(schedulerTimer);
     schedulerTimer = null;

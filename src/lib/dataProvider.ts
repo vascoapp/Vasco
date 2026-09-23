@@ -56,16 +56,49 @@ async function getUserId(): Promise<string> {
 
 // ── Documents ────────────────────────────────────────────────
 
+// ---------------------------------------------------------------------------
+// Read EVERY row. PostgREST caps each response at max_rows — 1000 in
+// production (verified 2026-09-23) — and truncates silently: no error, just
+// fewer rows. loadLineItems read one unranged page, so past ~1000 line items
+// the PDF, the Moneybird export and every line edit worked from a truncated
+// set, and a line edit then wrote the truncation back (sweep 2026-09-23, C1).
+// `build` must return a query with a TOTAL order (end on a unique column), or
+// rows can be skipped or repeated between pages.
+// ---------------------------------------------------------------------------
+export const PAGE_SIZE = 1000;
+export async function selectAllPages<T>(build: () => any, maxRows = 100_000): Promise<T[]> {
+  const out: T[] = [];
+  const seen = new Set<unknown>();
+  for (let from = 0; from < maxRows; from += PAGE_SIZE) {
+    const { data, error } = await build().range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const rows = (data ?? []) as T[];
+    // Offset pages are not a snapshot: a row inserted mid-read shifts the next
+    // page and repeats a row. A repeated line item is a duplicate line on the
+    // document, so drop rows already seen (by id).
+    for (const r of rows) {
+      const id = (r as { id?: unknown } | null)?.id;
+      if (id != null) {
+        if (seen.has(id)) continue;
+        seen.add(id);
+      }
+      out.push(r);
+    }
+    if (rows.length < PAGE_SIZE) return out;
+  }
+  logWarn('dataProvider', `selectAllPages stopped at ${maxRows} rows`);
+  return out;
+}
+
 export async function listDocuments(docType: 'quote' | 'invoice'): Promise<DocumentRow[]> {
   if (!isSupabaseConfigured) return [];
 
-  const { data, error } = await supabase
+  const data = await selectAllPages<DocumentRow>(() => supabase
     .from('documents')
     .select('*')
     .eq('doc_type', docType)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true }));
   return (data ?? []) as DocumentRow[];
 }
 
@@ -284,12 +317,11 @@ export async function replaceLineItems(
 export async function listCustomers() {
   if (!isSupabaseConfigured) return [];
 
-  const { data, error } = await supabase
+  const data = await selectAllPages<any>(() => supabase
     .from('customers')
     .select('*')
-    .order('name', { ascending: true });
-
-  if (error) throw error;
+    .order('name', { ascending: true })
+    .order('id', { ascending: true }));
   return data ?? [];
 }
 
@@ -375,12 +407,11 @@ export async function upsertBusinessSettings(
 export async function listJobs() {
   if (!isSupabaseConfigured) return [];
 
-  const { data, error } = await supabase
+  const data = await selectAllPages<any>(() => supabase
     .from('jobs')
     .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true }));
   return data ?? [];
 }
 
@@ -639,17 +670,29 @@ export async function loadInvoices(): Promise<Invoice[]> {
   return rows.map(documentRowToInvoice);
 }
 
-export async function loadLineItems(): Promise<Record<string, QuoteLineItem[]>> {
+/**
+ * `null` = could not be read. Never `{}` for a failure: refreshData treats a
+ * document with cached lines but none from the server as created offline and
+ * RE-SENDS its lines — and line_items has no natural key, so `{}` re-inserted
+ * a second copy of every line on the account (review 2026-09-24; paging made
+ * a failure likelier, one request became N).
+ */
+export async function loadLineItems(): Promise<Record<string, QuoteLineItem[]> | null> {
   if (!isSupabaseConfigured) return mockLineItems;
 
-  // Fetch all user's line items in one query, group by document_number
-  const { data, error } = await (supabase.from('line_items') as any)
-    .select('*, documents!inner(document_number)')
-    .order('position', { ascending: true });
-
-  if (error) {
+  // ALL of the user's line items, page by page (one unranged read stopped at
+  // 1000 rows — C1). Totally ordered so no row is skipped between pages;
+  // grouping below keeps each document's lines in `position` order.
+  let data: any[];
+  try {
+    data = await selectAllPages<any>(() => (supabase.from('line_items') as any)
+      .select('*, documents!inner(document_number)')
+      .order('document_id', { ascending: true })
+      .order('position', { ascending: true })
+      .order('id', { ascending: true }));
+  } catch (error) {
     logWarn('dataProvider', `loadLineItems failed: ${error}`);
-    return {};
+    return null;
   }
 
   const grouped: Record<string, QuoteLineItem[]> = {};
@@ -800,12 +843,11 @@ export async function loadSuppliers(): Promise<Supplier[]> {
 export async function listJobMaterials(): Promise<JobMaterialRow[]> {
   if (!isSupabaseConfigured) return [];
 
-  const { data, error } = await supabase
+  const data = await selectAllPages<JobMaterialRow>(() => supabase
     .from('job_materials')
     .select('*')
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
+    .order('created_at', { ascending: true })
+    .order('id', { ascending: true }));
   return (data ?? []) as JobMaterialRow[];
 }
 
@@ -1004,11 +1046,11 @@ export async function loadPriceHistoryByMaterialSupplier(): Promise<
 
 export async function listExpenses(): Promise<ExpenseRow[]> {
   if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase
+  const data = await selectAllPages<ExpenseRow>(() => supabase
     .from('expenses')
     .select('*')
-    .order('expense_date', { ascending: false });
-  if (error) throw error;
+    .order('expense_date', { ascending: false })
+    .order('id', { ascending: true }));
   return (data ?? []) as ExpenseRow[];
 }
 
@@ -1184,11 +1226,20 @@ export async function updateTrackerPayment(accessCode: string, updates: {
 }): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('decision_trackers') as any)
+  const { data, error } = await (supabase.from('decision_trackers') as any)
     .update(updates)
-    .eq('access_code', accessCode);
+    .eq('access_code', accessCode)
+    .select('id');
   if (error) {
     logWarn('dataProvider', `updateTrackerPayment failed: ${error.message}`);
+    return false;
+  }
+  // An UPDATE that matches no row — tracker not synced yet, or RLS hid it — is
+  // not an error to PostgREST. It returned true, and the contractor was told
+  // the portal now shows a Pay button that nobody had written (sweep
+  // 2026-09-23, B1). Only a row actually changed counts.
+  if (!Array.isArray(data) || data.length === 0) {
+    logWarn('dataProvider', 'updateTrackerPayment matched no tracker');
     return false;
   }
   return true;
