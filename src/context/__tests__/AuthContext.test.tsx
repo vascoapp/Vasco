@@ -52,9 +52,12 @@ jest.mock('../../services/eventTrackingService', () => ({
 }));
 jest.mock('../../lib/currentUser', () => ({
   setCurrentUser: (v: unknown) => mockSetCurrentUser(v),
+  // logout reads who is leaving, so their device-only data stays theirs (A4).
+  getAuthedUserId: () => 'user-leaving',
 }));
 jest.mock('../../services/sessionCleanup', () => ({
   clearUserScopedStorage: jest.fn(() => Promise.resolve()),
+  claimDeviceData: jest.fn(() => Promise.resolve(true)),
 }));
 jest.mock('../../services/pushNotificationService', () => ({
   unregisterPushToken: jest.fn(() => Promise.resolve()),
@@ -185,6 +188,9 @@ describe('AuthContext.logout', () => {
     expect(mockClearUserContext).toHaveBeenCalled();
     expect(mockStopAutoSync).toHaveBeenCalled();
     expect(mockStopEventFlushing).toHaveBeenCalled();
+    // Logout names who is leaving, so their device-only data stays theirs (A4).
+    const { clearUserScopedStorage } = require('../../services/sessionCleanup');
+    expect(clearUserScopedStorage).toHaveBeenCalledWith('user-leaving');
   });
 });
 

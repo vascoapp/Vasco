@@ -147,6 +147,17 @@ function notifyQueueChanged(): void {
 const currentLocale = (): string => String(i18n.language ?? '').slice(0, 2).toLowerCase();
 
 /**
+ * Pending AND not expired. Every dedupe check used `status === 'pending'`
+ * alone, but nothing ever marks a card expired: an unseen card that expired
+ * stayed "pending" forever — hidden by getQueue, yet blocking its successors.
+ * An expired maintenance-visit card silently swallowed every later visit
+ * (sweep 2026-09-23, A1).
+ */
+function isLivePending(q: QueueItem, nowIso: string = new Date().toISOString()): boolean {
+  return q.status === 'pending' && (!q.expiresAt || q.expiresAt > nowIso);
+}
+
+/**
  * The ONLY producers a language sweep may drop: the ones its two callers
  * rebuild immediately afterwards, from current data — populateQueue
  * (`automation_*`, `trade_*`) and the workflow packs (`workflow_*`).
@@ -217,10 +228,11 @@ export async function getQueue(): Promise<QueueItem[]> {
       (!i.expiresAt || i.expiresAt > now) &&
       (!i.snoozedUntil || i.snoozedUntil <= now)
     );
-    // Prune old non-pending items (keep last 7 days for history)
+    // Prune history — acted-on AND expired cards — after 7 days. Expired
+    // pending cards used to be kept forever (A1).
     const cutoff = new Date(Date.now() - 7 * MS_PER_DAY).toISOString();
     const pruned = items.filter(i =>
-      i.status === 'pending' || i.createdAt > cutoff
+      isLivePending(i, now) || i.createdAt > cutoff
     );
     if (pruned.length < items.length) {
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(pruned)).catch(() => {});
@@ -436,7 +448,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     // re-bump the count) on every subsequent run.
     if (item.entityKey) {
       const match = existing.find(q =>
-        q.status === 'pending'
+        isLivePending(q)
         && q.type === item.type
         && (q.entityKey === item.entityKey || q.mergedKeys?.includes(item.entityKey!)),
       );
@@ -465,7 +477,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
         && (q.resolvedAt ?? '') > justChasedCutoff,
       )) return '';
       const rivals = existing.filter(q =>
-        q.status === 'pending' && collectionsInvoiceOf(q) === collectionsInvoice);
+        isLivePending(q) && collectionsInvoiceOf(q) === collectionsInvoice);
       if (rivals.some(q => collectionsRank(q) >= rank)) return '';
       // Only single-invoice cards are replaced. A legacy card that already
       // folded other invoices into "+N" still speaks for them; deleting it
@@ -493,7 +505,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     const target = targetOf(item.preparedData);
     if (target && SINGLE_ACTION_PER_ENTITY_TYPES.includes(item.type)) {
       const dupe = existing.find(q =>
-        q.status === 'pending'
+        isLivePending(q)
         && q.type === item.type
         && targetOf(q.preparedData) === target,
       );
@@ -518,7 +530,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     // invoice and its amount, and the one-card-per-invoice rule above needs to
     // be able to replace it without dropping someone else's reminder.
     const siblingIdx = collectionsInvoice ? -1 : existing.findIndex(q =>
-      q.status === 'pending'
+      isLivePending(q)
       && q.type === item.type
       && !!q.entityKey
       && q.sourceGeneratorId === item.sourceGeneratorId,
@@ -555,7 +567,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     }
     // Legacy dedup fallback for items without entityKey
     if (!item.entityKey && existing.some(q =>
-      q.status === 'pending' && q.type === item.type && (
+      isLivePending(q) && q.type === item.type && (
         q.title === item.title ||
         (item.sourceGeneratorId && q.sourceGeneratorId === item.sourceGeneratorId)
       )

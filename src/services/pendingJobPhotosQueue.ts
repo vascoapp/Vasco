@@ -67,6 +67,8 @@ export interface PendingPhoto {
   caption?: string;
   queuedAt: string;
   attempts: number;
+  /** When the last upload attempt failed — paces retries after 10 failures. */
+  lastAttemptAt?: string;
 }
 
 async function ensureDir(): Promise<void> {
@@ -161,20 +163,30 @@ async function removeFromQueue(id: string): Promise<void> {
 /** Bump attempts on a queue entry that failed retry. */
 async function bumpAttempts(id: string): Promise<void> {
   const queue = await readQueue();
-  await writeQueue(queue.map((p) => (p.id === id ? { ...p, attempts: p.attempts + 1 } : p)));
+  const at = new Date().toISOString();
+  await writeQueue(queue.map((p) => (p.id === id ? { ...p, attempts: p.attempts + 1, lastAttemptAt: at } : p)));
 }
+
+/** After this many failures, retry at most once a day instead of every flush. */
+const SLOW_RETRY_AFTER = 10;
+const SLOW_RETRY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Replay the queue. Reads each pending file's base64, calls uploadJobPhoto.
  * Skips entries whose parent job is still on a temp id (R59 contract — only
  * resolves once the parent job sync drains and the FE rebinds to the BE uuid).
- * Drops entries after 10 attempts to avoid infinite-retry on poison rows.
+ * After 10 failures an entry retries once a day — it is never dropped, because
+ * its file is the only copy of the photo (sweep 2026-09-23, A3).
  */
 export async function flushQueue(opts?: {
   isTempJobId?: (id: string) => boolean;
 }): Promise<{ uploaded: number; remaining: number; dropped: number }> {
   const queue = await readQueue();
   if (queue.length === 0) return { uploaded: 0, remaining: 0, dropped: 0 };
+  // Kept across logout (A4): only its owner's session may upload it.
+  const { deviceDataBelongsTo } = require('./sessionCleanup');
+  const { getAuthedUserId } = require('../lib/currentUser');
+  if (!(await deviceDataBelongsTo(getAuthedUserId()))) return { uploaded: 0, remaining: queue.length, dropped: 0 };
 
   // R66 round 27: default temp-id detection from the canonical idShape
   // helper. Without this default, the app/_layout.tsx caller (which
@@ -193,10 +205,14 @@ export async function flushQueue(opts?: {
     // the next photo replay tick succeeds).
     if (isTempJobId(record.jobId)) continue;
 
-    if (record.attempts >= 10) {
-      logWarn('pendingJobPhotosQueue', `Dropping ${record.id} after 10 failed attempts`);
-      await removeFromQueue(record.id);
-      dropped += 1;
+    // NEVER deleted for failing. This dropped the entry AND deleted the file —
+    // the only copy of a customer's site photo — after 10 failures, and every
+    // offline foreground counted as one (uploadJobPhoto cannot say "offline"
+    // from "rejected"). Past 10 failures it slows to one try a day instead,
+    // stays listed under its job, and is still uploaded when the network or
+    // the server comes back (sweep 2026-09-23, A3).
+    if (record.attempts >= SLOW_RETRY_AFTER && record.lastAttemptAt
+      && Date.now() - new Date(record.lastAttemptAt).getTime() < SLOW_RETRY_MS) {
       continue;
     }
 

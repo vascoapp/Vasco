@@ -28,10 +28,16 @@ import { emitDocNumberRemap } from './docNumberRemapBus';
 // (moat emit gates, AppState refresh, etc.) share one source of truth.
 import { isTempId, isUuid } from '../lib/idShape';
 import { isOfflineMintedDocNumber } from '../lib/dataProvider';
+import { deviceDataBelongsTo } from './sessionCleanup';
+import { getAuthedUserId } from '../lib/currentUser';
 
 const QUEUE_KEY = '@vasco_offline_writes';
-const MAX_QUEUE = 200;
-const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // Drop entries older than a week
+// Raised from 200 (sweep 2026-09-23): trimming the OLDEST evicts parent
+// inserts first, orphaning every child write queued after them.
+const MAX_QUEUE = 1000;
+// 30 days (was 7): a contractor on a remote site, or a phone left in a van,
+// must not lose a week-old mark-paid on the day it finally syncs.
+const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type WriteOp = 'insert' | 'update' | 'delete' | 'upsert';
 
@@ -61,16 +67,30 @@ async function saveQueue(queue: QueuedWrite[]): Promise<void> {
   } catch {}
 }
 
+/**
+ * Every read-modify-write of the queue key runs through this chain. Two
+ * concurrent queueWrite calls each loaded the queue, pushed, and saved — the
+ * second save erased the first write (sweep 2026-09-23, A2).
+ */
+let storeLock: Promise<unknown> = Promise.resolve();
+function withStoreLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = storeLock.then(fn, fn);
+  storeLock = run.catch(() => {});
+  return run;
+}
+
 /** Add a write to the queue. Safe to call from any write path. */
 export async function queueWrite(entry: Omit<QueuedWrite, 'id' | 'createdAt' | 'attempts'>): Promise<void> {
-  const queue = await loadQueue();
-  queue.push({
-    ...entry,
-    id: `w-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    createdAt: Date.now(),
-    attempts: 0,
+  await withStoreLock(async () => {
+    const queue = await loadQueue();
+    queue.push({
+      ...entry,
+      id: `w-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: Date.now(),
+      attempts: 0,
+    });
+    await saveQueue(queue);
   });
-  await saveQueue(queue);
 }
 
 // R277/R59: temp IDs (c-{ts}, j-{ts}, mat-{ts}, sup-{ts}, jm-{ts},
@@ -207,6 +227,13 @@ function remapEntry(entry: QueuedWrite, idMap: Map<string, string>): QueuedWrite
 
 interface ApplyResult {
   ok: boolean;
+  /**
+   * The write did not reach the server (offline, timeout, 5xx) — it was not
+   * REJECTED. Such a failure must not count toward giving up: the flush runs
+   * on every foreground with no connectivity check, so five app switches in
+   * a basement discarded an offline mark-paid (sweep 2026-09-23, A2).
+   */
+  transient?: boolean;
   /** When set, the BE generated a new id for an insert that had a temp id. */
   mapping?: { temp: string; real: string };
   /**
@@ -219,7 +246,19 @@ interface ApplyResult {
   docNumber?: { placeholder: string; real: string };
 }
 
-async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promise<ApplyResult> {
+/**
+ * A PostgREST rejection carries a code (PGRST204, 23505, 42501 …). A request
+ * that never got an answer — offline, DNS, timeout, 5xx gateway — has none, or
+ * says so in its message. Only a rejection may count toward giving up.
+ */
+function failed(error: any): ApplyResult {
+  const code = String(error?.code ?? '');
+  const msg = String(error?.message ?? error ?? '');
+  const transient = !code || /network|fetch|timed? ?out|timeout|abort|offline|ECONN|ENOTFOUND|5\d\d/i.test(msg);
+  return { ok: false, transient };
+}
+
+async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>, pendingInsertIds: Set<string> = new Set()): Promise<ApplyResult> {
   // Rewrite FK references using accumulated id mappings before sending.
   const remapped = remapEntry(entry, idMap);
   const table = supabase.from(remapped.table as any) as any;
@@ -230,7 +269,11 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
   // with no rows matched. Drop quietly; local state is the source of
   // truth until the next reconnect-create.
   if ((remapped.op === 'update' || remapped.op === 'delete') && isTempId(remapped.rowId)) {
-    return { ok: true }; // treat as processed so it leaves the queue
+    // Its parent insert is still QUEUED (it failed only for want of a network
+    // this pass): keep the edit for the pass that lands the parent. Dropping it
+    // here lost the edit whenever the parent had to wait (sweep 2026-09-23).
+    if (pendingInsertIds.has(remapped.rowId as string)) return { ok: false, transient: true };
+    return { ok: true }; // no parent will ever land — leave the queue
   }
 
   let mintedDocNumber: { placeholder: string; real: string } | undefined;
@@ -285,7 +328,7 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
       if (typeof tempId === 'string' && isTempId(tempId)) {
         // R49: capture BE-generated id so child rows can rewrite their FKs.
         const { data, error } = await table.insert(stripped).select('id').single();
-        if (error) return { ok: false };
+        if (error) return failed(error);
         const realId = (data as any)?.id;
         if (typeof realId === 'string' && realId.length > 0) {
           return { ok: true, mapping: { temp: tempId, real: realId }, docNumber: mintedDocNumber };
@@ -293,38 +336,60 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>): Promi
         return { ok: true, docNumber: mintedDocNumber };
       }
       const { error } = await table.insert(stripped);
-      return { ok: !error, docNumber: error ? undefined : mintedDocNumber };
+      if (error) return failed(error);
+      return { ok: true, docNumber: mintedDocNumber };
     }
     if (remapped.op === 'upsert') {
       const { error } = await table.upsert(stripTempId(remapped.payload));
-      return { ok: !error };
+      return error ? failed(error) : { ok: true };
     }
     if (remapped.op === 'update') {
       let q = table.update(stripTempId(remapped.payload));
       if (remapped.rowId) q = q.eq(matchColumn(remapped.table, remapped.rowId), remapped.rowId);
       if (remapped.match) for (const [k, v] of Object.entries(remapped.match)) q = q.eq(k, v);
       const { error } = await q;
-      return { ok: !error };
+      return error ? failed(error) : { ok: true };
     }
     if (remapped.op === 'delete') {
       let q = table.delete();
       if (remapped.rowId) q = q.eq(matchColumn(remapped.table, remapped.rowId), remapped.rowId);
       if (remapped.match) for (const [k, v] of Object.entries(remapped.match)) q = q.eq(k, v);
       const { error } = await q;
-      return { ok: !error };
+      return error ? failed(error) : { ok: true };
     }
     return { ok: false };
-  } catch {
-    return { ok: false };
+  } catch (err) {
+    // A throw here is the network (fetch rejected), not a server verdict.
+    return failed(err);
   }
 }
 
-/** Flush queued writes. Skips if offline/unconfigured. Removes succeeded + expired. */
-export async function flushQueue(): Promise<{ processed: number; dropped: number }> {
-  if (!isSupabaseConfigured) return { processed: 0, dropped: 0 };
+/**
+ * Flush queued writes. Removes what landed and what the server REJECTED five
+ * times; keeps everything that merely could not reach it.
+ *
+ * Three ways this lost data (sweep 2026-09-23, A2):
+ *   - offline foregrounds counted as attempts, so five app switches with no
+ *     signal discarded the write;
+ *   - it saved its survivors over the queue at the end, erasing every write
+ *     queued WHILE it ran (a long flush of network calls);
+ *   - two flushes (foreground + a mutation) could run at once.
+ */
+let flushInFlight: Promise<{ processed: number; dropped: number }> | null = null;
 
+export function flushQueue(): Promise<{ processed: number; dropped: number }> {
+  if (!isSupabaseConfigured) return Promise.resolve({ processed: 0, dropped: 0 });
+  if (flushInFlight) return flushInFlight;
+  flushInFlight = runFlush().finally(() => { flushInFlight = null; });
+  return flushInFlight;
+}
+
+async function runFlush(): Promise<{ processed: number; dropped: number }> {
   const queue = await loadQueue();
   if (queue.length === 0) return { processed: 0, dropped: 0 };
+  // The queue survives logout now (A4). Never send one contractor's unsynced
+  // writes under ANOTHER contractor's session — wait for the owner check.
+  if (!(await deviceDataBelongsTo(getAuthedUserId()))) return { processed: 0, dropped: 0 };
 
   const now = Date.now();
   const survivors: QueuedWrite[] = [];
@@ -332,6 +397,9 @@ export async function flushQueue(): Promise<{ processed: number; dropped: number
   const idMap = await loadRememberedRemaps();
   let processed = 0;
   let dropped = 0;
+  // Temp ids whose INSERT is still waiting: a child edit of one of them is
+  // kept, not dropped as "no parent will ever land".
+  const pendingInsertIds = new Set<string>();
 
   for (const entry of queue) {
     if (now - entry.createdAt > MAX_AGE_MS) {
@@ -339,7 +407,7 @@ export async function flushQueue(): Promise<{ processed: number; dropped: number
       logWarn('offlineWriteQueue', `Dropping stale write after ${Math.round((now - entry.createdAt) / 86400000)}d: ${entry.table}.${entry.op}`);
       continue;
     }
-    const result = await applyWrite(entry, idMap);
+    const result = await applyWrite(entry, idMap, pendingInsertIds);
     if (result.ok) {
       if (result.docNumber) {
         // Same map, same mechanism: every later entry that still names the
@@ -364,16 +432,28 @@ export async function flushQueue(): Promise<{ processed: number; dropped: number
       processed += 1;
       continue;
     }
+    if (entry.op === 'insert' && isTempId(entry.payload?.id)) pendingInsertIds.add(entry.payload.id);
+    if (result.transient) {
+      // Never reached the server — not the write's fault. Keep, uncounted.
+      survivors.push(entry);
+      continue;
+    }
     entry.attempts += 1;
     if (entry.attempts >= 5) {
       dropped += 1;
-      logWarn('offlineWriteQueue', `Giving up on ${entry.table}.${entry.op} after 5 attempts`);
+      logWarn('offlineWriteQueue', `Giving up on ${entry.table}.${entry.op} after 5 rejections`);
     } else {
       survivors.push(entry);
     }
   }
 
-  await saveQueue(survivors);
+  // Merge, don't overwrite: anything queued while this flush was on the
+  // network is still in storage and must survive the save.
+  await withStoreLock(async () => {
+    const seen = new Set(queue.map((e) => e.id));
+    const arrived = (await loadQueue()).filter((e) => !seen.has(e.id));
+    await saveQueue([...survivors, ...arrived]);
+  });
   return { processed, dropped };
 }
 

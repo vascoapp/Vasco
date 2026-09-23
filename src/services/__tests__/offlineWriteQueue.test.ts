@@ -9,6 +9,13 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn(async (k: string, v: string) => { store[k] = v; }),
 }));
 
+// The queues upload only for the contractor who owns them (sweep A4): sign
+// one in. Everything else in currentUser stays real.
+jest.mock('../../lib/currentUser', () => ({
+  ...jest.requireActual('../../lib/currentUser'),
+  getAuthedUserId: () => '11111111-1111-1111-1111-111111111111',
+}));
+
 // Fresh supabase mock per test via jest.resetModules
 function mockSupabase(succeed: boolean) {
   jest.doMock('../../lib/supabase', () => ({

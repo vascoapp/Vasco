@@ -19,6 +19,12 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(async (k: string) => { delete store[k]; }),
 }));
 
+// The queue uploads only for the contractor who owns it (sweep A4).
+jest.mock('../../lib/currentUser', () => ({
+  ...jest.requireActual('../../lib/currentUser'),
+  getAuthedUserId: () => '11111111-1111-1111-1111-111111111111',
+}));
+
 const QUEUE_KEY = '@vasco_offline_writes';
 /** The queue as it sits on disk — `loadQueue` is private, and it should stay
  *  that way: what a caller can observe is what the flush will read. */

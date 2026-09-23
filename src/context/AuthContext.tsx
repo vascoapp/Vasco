@@ -7,7 +7,8 @@ import { trackEvent, initSession, setUserContext, clearUserContext, flushEvents 
 import { DEMO_MODE } from '../config/demo';
 import { logWarn } from '../utils/errorHandler';
 import { withTimeout } from '../utils/withTimeout';
-import { setCurrentUser } from '../lib/currentUser';
+import { setCurrentUser, getAuthedUserId } from '../lib/currentUser';
+import { clearUserScopedStorage, claimDeviceData } from '../services/sessionCleanup';
 import { recordLogin as recordActivationLogin } from '../services/activationMilestonesService';
 import { addBreadcrumb } from '../lib/errorReporting';
 import { setAccountLanguage } from '../i18n/savedLanguage';
@@ -679,6 +680,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const trade = (user as any).trade as string | undefined;
       const role = user.role === 'site-lead' ? 'sitelead' : (user.role ?? 'contractor');
       setCurrentUser({ id: user.id, country, trade });
+      // Device-only data (pricebook, agreements, templates, unsynced writes and
+      // photos) is kept at logout; a DIFFERENT contractor signing in wipes it,
+      // the same one keeps it (sweep 2026-09-23, A4).
+      void claimDeviceData(user.id).catch(() => {});
       startEventFlushing(user.id);
       startAutoSync(user.id, role, trade, country);
     } else {
@@ -1026,6 +1031,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // Read before signOut clears it (this callback has no deps).
+    const outgoingUserId = getAuthedUserId();
     // R104: record the explicit-logout entry into the event log so we can
     // distinguish "user tapped Logout" from "supabase emitted SIGNED_OUT
     // for unknown reasons" when reading the diagnostic.
@@ -1055,8 +1062,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Multi-tenancy hazard on shared devices + demo accounts. Preserves
     // device-level keys (device_id, seed_version, consents).
     try {
-      const { clearUserScopedStorage } = await import('../services/sessionCleanup');
-      await clearUserScopedStorage();
+      // Static import: the dynamic import() threw under Jest and the catch
+      // swallowed it, so no test ever exercised this cleanup (sweep A4).
+      // Pass who is leaving: their device-only data stays, owned by them.
+      await clearUserScopedStorage(outgoingUserId);
     } catch {}
     // Module state outlives the session — leaving it set would apply the
     // previous contractor's language to whoever signs in next.

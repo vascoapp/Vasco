@@ -192,6 +192,13 @@ export async function requestAccountDeletion(
     let serverRequested = false;
     if (isSupabaseConfigured && userId) {
       serverRequested = await requestServerDeletion(userId);
+      // The request did not reach the server: stop HERE. Wiping the phone and
+      // signing out anyway destroyed every unsynced change and photo while
+      // the screen said "try again" — and there was nothing left to try
+      // again FROM (sweep 2026-09-23, B6).
+      if (!serverRequested) {
+        return { success: false, localCleared: false, serverRequested: false, error: 'server_request_failed' };
+      }
     }
 
     // Step 2: Clear all local data
