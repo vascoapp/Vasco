@@ -57,51 +57,20 @@ jest.mock('expo-router', () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// react-i18next mock — returns key as translation
+// i18n — REAL i18next, pinned to English (convergence plan P0, 2026-09-24)
 // ---------------------------------------------------------------------------
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, defaultValue?: string) =>
-      typeof defaultValue === 'string' ? defaultValue : key,
-    i18n: { language: 'en', changeLanguage: jest.fn() },
-  }),
-  initReactI18next: { type: '3rdParty', init: jest.fn() },
+// Both react-i18next and src/i18n/i18n used to be replaced with a `t` that
+// returned the CODE's fallback string. So no unit test ever read the app's
+// real copy: a key missing from en.json, a key that is an object instead of a
+// string, a wrong {{placeholder}} name, or a card baked in the wrong language
+// could not fail. The device is pinned to en-GB; a test that needs another
+// language calls i18n.changeLanguage (and restores it) or mocks
+// expo-localization itself.
+jest.mock('expo-localization', () => ({
+  getLocales: () => [{ languageTag: 'en-GB', languageCode: 'en', regionCode: 'GB' }],
+  getCalendars: () => [{ timeZone: 'Europe/Amsterdam' }],
 }));
-
-// ---------------------------------------------------------------------------
-// i18next direct mock — for services that import i18n directly
-// ---------------------------------------------------------------------------
-// Mirrors i18next's {{placeholder}} interpolation. Without this the mock
-// returned defaultValue verbatim, so a test could never tell a correctly
-// interpolated string from one whose params never bound — real i18next DOES
-// interpolate defaultValue. Unknown placeholders are left intact on purpose so
-// a param-name mismatch stays visible as a literal {{foo}} in assertions.
-// Name must start with `mock` — babel-plugin-jest-hoist hoists jest.mock()
-// factories above this declaration and only allows out-of-scope references
-// through for `mock`-prefixed bindings.
-const mockInterpolate = (template: string, params?: Record<string, any>): string => {
-  if (!params) return template;
-  return template.replace(/\{\{(\w+)\}\}/g, (whole, name) =>
-    params[name] !== undefined && params[name] !== null ? String(params[name]) : whole,
-  );
-};
-
-jest.mock('./src/i18n/i18n', () => ({
-  __esModule: true,
-  default: {
-    t: (key: string, defaultValueOrOpts?: any, maybeOpts?: any) => {
-      if (typeof defaultValueOrOpts === 'string') {
-        return mockInterpolate(defaultValueOrOpts, maybeOpts);
-      }
-      if (defaultValueOrOpts?.defaultValue) {
-        return mockInterpolate(defaultValueOrOpts.defaultValue, defaultValueOrOpts);
-      }
-      return key;
-    },
-    language: 'en',
-    changeLanguage: jest.fn(),
-  },
-}));
+require('./src/i18n/i18n');
 
 // ---------------------------------------------------------------------------
 // expo-haptics mock

@@ -197,7 +197,11 @@ describe('pickTemplateForLocale', () => {
     // pre-R49 values — defaults must win.
   });
 
-  it('priority 2: i18nKey wins over template when defaults missing for locale', () => {
+  // The locale files under i18nKey are NEVER message copy: they hold pre-R49
+  // text and, for the appointment pack, a label ("Morgen") that reached Dutch
+  // customers as the whole SMS (convergence plan P0, 2026-09-24). A locale
+  // with no in-code copy gets the English default, never Dutch.
+  it('a locale with no default gets English — not the locale file, not Dutch', () => {
     (globalThis as any).__i18nMap = {
       'workflowPacks.test.reminder': 'I18N value for fr',
     };
@@ -205,13 +209,12 @@ describe('pickTemplateForLocale', () => {
       i18nKey: 'workflowPacks.test.reminder',
       defaults: { en: 'EN only' }, // no fr default
     });
-    expect(pickTemplateForLocale(step, 'fr')).toBe('I18N value for fr');
+    expect(pickTemplateForLocale(step, 'fr')).toBe('EN only');
   });
 
-  it('priority 3: template fallback when no defaults + no resolvable i18nKey', () => {
+  it('no defaults at all → the template', () => {
     const step = mkStep({
       i18nKey: 'workflowPacks.test.does_not_exist',
-      // no defaults
     });
     expect(pickTemplateForLocale(step, 'fr')).toBe('NL fallback {{customer}}');
   });
@@ -221,7 +224,7 @@ describe('pickTemplateForLocale', () => {
       defaults: { en: 'EN-only step' },
     });
     expect(pickTemplateForLocale(step, 'en')).toBe('EN-only step');
-    expect(pickTemplateForLocale(step, 'de')).toBe('NL fallback {{customer}}');
+    expect(pickTemplateForLocale(step, 'de')).toBe('EN-only step');
   });
 
   it('NL contractor always gets template (no defaults.nl needed)', () => {

@@ -987,17 +987,16 @@ function getContractorLocale(): LocaleCode {
 
 /** @internal exported for unit testing — see workflowPackHelpers.test.ts */
 export function pickTemplateForLocale(step: WorkflowStep, locale: LocaleCode): string {
-  // R66r49 #5: priority is `defaults[locale] → i18nKey → step.template`.
-  // The in-code `defaults` map wins over i18n because the i18n keys still
-  // hold the pre-R49 templates (no {{currency}}, no EU 2011/7/EU text);
-  // shipping the new copy via code beats waiting for translator review.
-  // i18nKey kept as legacy fallback so older builds keep working.
+  // The copy lives IN CODE: `step.template` is the Dutch, `defaults` the other
+  // five (einde_dag also carries defaults.nl). The locale files under
+  // `step.i18nKey` hold pre-R49 copy — and for the appointment pack a LABEL.
+  // They used to be the fallback for any locale without a default, which is
+  // Dutch: every Dutch customer got the legacy text, and the day-before
+  // appointment SMS read just "Morgen". It stayed invisible because the jest
+  // i18n stub returned '' there (convergence plan P0, 2026-09-24).
   if (step.defaults?.[locale]) return step.defaults[locale]!;
-  if (step.i18nKey) {
-    const v = i18n.t(step.i18nKey, { defaultValue: '' });
-    if (v && v !== step.i18nKey) return v;
-  }
-  return step.template;
+  if (locale === 'nl') return step.template;
+  return step.defaults?.en ?? step.template;
 }
 
 export async function evaluateTriggers(context: TriggerContext): Promise<number> {
