@@ -92,6 +92,7 @@ failure**:
   - `documentVaultService.createShareLink`;
   - `reputationService.requestReview`;
   - the `predictiveMaintenanceService` fixtures.
+- **P1.1 DONE 2026-09-24** — docs/P1_REACHABILITY.md.
 - **P1.2 🔴 Delete or quarantine.** You decide from one list. Every deletion
   removes future findings for good.
 - **P1.3 Gate what is reachable but not ready** for the beachhead market (DE).
@@ -138,4 +139,4 @@ Sweep only on the core surface, money/legal/customer-facing first.
 | Date | Global app-logic stubs | Unit files with real i18n | Unreachable files | HIGH found in core-surface sweep |
 |---|---|---|---|---|
 | 2026-09-24 | 5 | 4 / 302 | not measured | — |
-| 2026-09-24 (eve) | 0 (tradeContext, cohort, scan, i18n removed; backend = fake with live schema) | all (real i18n global) | not measured | — |
+| 2026-09-24 (eve) | 0 (tradeContext, cohort, scan, i18n removed; backend = fake with live schema) | all (real i18n global) | 243 files / 88k lines (30%) — `npm run audit:reach`, docs/P1_REACHABILITY.md | 7 dead prod paths found by the new net, all fixed |
