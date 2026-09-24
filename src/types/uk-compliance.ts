@@ -821,3 +821,14 @@ export const UK_GOVERNMENT_PORTALS = {
   citb: { name: 'CITB', url: 'https://www.citb.co.uk', description: 'Construction Industry Training Board' },
   planningPortal: { name: 'Planning Portal', url: 'https://www.planningportal.co.uk', description: 'Planning permission applications' },
 } as const;
+
+/**
+ * Statutory record-keeping periods that UK law actually sets (days, like the
+ * other markets). Only duties are listed: contracts (a limitation period is
+ * not a keeping duty) and customer data (GDPR sets no fixed period) are left
+ * out rather than invented — see src/data/retentionPeriods.ts.
+ */
+export const UK_RETENTION_PERIODS = {
+  invoices: 6 * 365,        // 6 years — VAT records (HMRC VAT Notice 700/21)
+  employeeRecords: 3 * 365, // 3 years after the tax year — PAYE records (HMRC)
+};

@@ -126,4 +126,30 @@ describe('fakeSupabase', () => {
     const anon = createFakeSupabase({ userId: null });
     expect((await anon.client.from('customers').select('id')).error?.code).toBe('42501');
   });
+
+  // PostgREST: an upsert without onConflict targets the PRIMARY KEY. The fake
+  // assumed `id`, and job_quality_signals (PK job_id) has none — every walk
+  // reported a rejection production never makes (2026-09-24).
+  it('upsert without onConflict uses the primary key, as PostgREST does', async () => {
+    const f = createFakeSupabase({ userId: U });
+    const JOB = '33333333-3333-4333-8333-333333333333';
+    const r1 = await f.client.from('job_quality_signals').upsert({ job_id: JOB, user_id: U, paid_on_time: true });
+    expect(r1.error).toBeNull();
+    const r2 = await f.client.from('job_quality_signals').upsert({ job_id: JOB, user_id: U, paid_on_time: false });
+    expect(r2.error).toBeNull();
+    expect(f.rows('job_quality_signals')).toHaveLength(1);
+    expect(f.rows('job_quality_signals')[0].paid_on_time).toBe(false);
+  });
+
+  it('a filter on an embedded resource is checked against THAT table, and only when embedded', async () => {
+    const f = createFakeSupabase({ userId: U });
+    const ok = await f.client.from('decision_submissions')
+      .select('id, tracker:decision_trackers!inner(user_id)').eq('tracker.user_id', U);
+    expect(ok.error).toBeNull();
+    const badCol = await f.client.from('decision_submissions')
+      .select('id, tracker:decision_trackers!inner(user_id)').eq('tracker.owner', U);
+    expect(badCol.error?.code).toBe('42703');
+    const notEmbedded = await f.client.from('decision_submissions').select('id').eq('tracker.user_id', U);
+    expect(notEmbedded.error).not.toBeNull();
+  });
 });

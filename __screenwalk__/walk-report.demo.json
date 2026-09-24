@@ -1034,7 +1034,12 @@
    "error": null,
    "texts": [
     "",
-    "Vergunningen"
+    "Vergunningen",
+    "",
+    "Nog geen vergunningen",
+    "Voeg de vergunningen en certificaten toe die je hebt, zodat Vasco je 30 dagen voor het verlopen kan waarschuwen.",
+    "",
+    "Vergunning toevoegen"
    ],
    "a11y": [
     "Terug"
@@ -1405,8 +1410,8 @@
    "texts": [
     "",
     "Profiel",
-    "W",
-    "walk@vascobuild.test",
+    "U",
+    "User",
     "Vakman",
     "PRESTATIES",
     "",
@@ -1428,10 +1433,8 @@
     "ACCOUNT",
     "",
     "Naam",
-    "walk@vascobuild.test",
     "",
     "E-mail",
-    "walk@vascobuild.test",
     "",
     "Bedrijfsnaam",
     "",

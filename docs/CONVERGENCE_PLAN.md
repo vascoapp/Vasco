@@ -69,9 +69,10 @@ failure**:
   "Morgen". The fake backend (`src/test-utils/fakeSupabase.ts`, schema
   snapshot of 92 tables / 1,105 columns, `npm run schema:snapshot`) is now
   the global default: configured, nobody signed in. Every update mapper is
-  checked against the live columns. **Next:** run the screen-walk flows on
-  the fake with a signed-in contractor, so AppState's inline create payloads
-  hit the schema too.
+  checked against the live columns. **Done (night):** `walk:prod` runs on
+  the fake, signed in, under the schema net; zero rejections after fixing 4
+  real defects (#372). Rule: a harness posture must be a state a device can
+  be in.
 - **P0.3 Fake backend for unit tests.** An in-memory PostgREST fake that
   enforces what production enforces:
   - `max_rows = 1000`;
@@ -140,3 +141,4 @@ Sweep only on the core surface, money/legal/customer-facing first.
 |---|---|---|---|---|
 | 2026-09-24 | 5 | 4 / 302 | not measured | — |
 | 2026-09-24 (eve) | 0 (tradeContext, cohort, scan, i18n removed; backend = fake with live schema) | all (real i18n global) | 243 files / 88k lines (30%) — `npm run audit:reach`, docs/P1_REACHABILITY.md | 7 dead prod paths found by the new net, all fixed |
+| 2026-09-24 (night) | 0; screen walks: prod on live-schema fake + net, fresh signed in | all | unchanged (243 / 30%) | 4 found by the corrected postures (logout race, offline docs vanish, sessionless refresh, NaN card), all fixed |

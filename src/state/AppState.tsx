@@ -60,7 +60,7 @@ import { createMolliePayment } from '../integrations/mollie';
 import { buildPriceRiskSignals } from '../logic/priceRisk';
 import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { getCurrentUserId, getAuthedUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
 import { isTempIdFast, isUuid } from '../lib/idShape';
 import { jobUpdatesToRowPayload, customerUpdatesToRowPayload } from '../lib/mappers';
@@ -581,7 +581,38 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // SECTION: Data Hydration (refreshData, AsyncStorage persistence)
   // ═══════════════════════════════════════════════════════════════════════════
 
+  // Bumped whenever the signed-in USER changes (subscribeUserChange fires
+  // only on an id change). refreshData commits only if it is unchanged.
+  const userGenerationRef = useRef(0);
   const refreshData = useCallback(async () => {
+    // Nobody signed in (a logged-out cold start): every read below is refused
+    // (anon has no table grants) — twelve doomed requests per app open, and
+    // the state they would replace belongs to nobody. Sign-in refreshes
+    // through subscribeUserChange (live-schema prod walk, 2026-09-24).
+    // `isLoading` starts TRUE — returning without clearing it left every
+    // session-less screen (demo accounts) on a spinner for good.
+    let owner: string | null = null;
+    if (isSupabaseConfigured) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        owner = data?.session?.user?.id ?? null;
+      } catch { /* unknown = not signed in */ }
+      if (!owner) { setIsLoading(false); return; }
+    }
+    // The loads take seconds. A logout (or account switch) in between wiped
+    // state — and this refresh then wrote the PREVIOUS contractor's documents
+    // and customers back into it, and from there into storage, for whoever
+    // uses the device next (live-schema prod walk, 2026-09-24). Commit only
+    // while the signed-in USER has not changed since the refresh began. Not
+    // a session re-read: a token refresh that blips to null mid-load is the
+    // same contractor, and their data was being silently thrown away (review).
+    const generation = userGenerationRef.current;
+    const stillOwner = () => userGenerationRef.current === generation;
+    // Read the queue BEFORE the server lists: a flush landing in between
+    // would otherwise leave a document in neither list (review 2026-09-24).
+    const pendingDocsP = import('../services/offlineWriteQueue')
+      .then((m) => m.pendingDocumentNumbers())
+      .catch(() => new Set<string>());
     setIsLoading(true);
     try {
       const [q, inv, bp, li, cust, j, mat, sup, jm, po, ld, wk] = await Promise.all([
@@ -598,8 +629,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         loadLeads(),
         loadWorkers(),
       ]);
-      setQuotes(q);
-      setInvoices(inv);
+      // Keep documents created offline whose insert is still queued — the
+      // server does not have them yet, so a wholesale replace erased them
+      // from the screen and from storage (2026-09-24).
+      const { keepPendingDocuments } = await import('../services/offlineWriteQueue');
+      const pendingDocs = await pendingDocsP;
+      if (!stillOwner()) return;
+      setQuotes((prev) => keepPendingDocuments(prev, q, pendingDocs));
+      setInvoices((prev) => keepPendingDocuments(prev, inv, pendingDocs));
       // R96 — hydrate leads + workers (rule #8 gap fix). Previously these
       // were write-only from the client's perspective; the entity tables
       // existed but nothing READ from them, so every cold-start the
@@ -686,18 +723,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const tempRows = prev.filter((row) => isTempIdFast(row.id));
         return [...tempRows, ...sup];
       });
-      // Quotes use docNumber as id (not a temp-id pattern), so wholesale
-      // replace at the top of refreshData is correct — addQuote already
-      // calls nextDocumentNumber() which produces a stable string the BE
-      // persists verbatim. No re-merge needed here.
+      // Quotes/invoices use docNumber as id (not a temp-id pattern); the ones
+      // still queued are kept above via pendingDocumentNumbers().
       setJobMaterialsMap(jm);
       setPriceObsMap(po);
 
       // Load extracted documents from Supabase (if configured)
-      if (isSupabaseConfigured) {
+      if (isSupabaseConfigured && stillOwner()) {
         try {
           const rows = await listExtractedDocuments();
-          if (rows.length > 0) {
+          if (rows.length > 0 && stillOwner()) {
             const docs = rows.map((r) => rowToExtractedDocument(r, []));
             setExtractedDocs(docs);
           }
@@ -706,10 +741,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
 
         // R275: load projects from BE (promoted from AsyncStorage-only)
+        if (!stillOwner()) return;
+        // Logout signs out BEFORE it announces the user change, so the
+        // generation cannot see that window; the (local, network-free)
+        // session can. Without it this read went out as anon (prod walk).
         try {
           const { listProjects } = await import('../lib/dataProvider');
+          const { data: stillSignedIn } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+          if (!stillSignedIn?.session) return;
           const projectRows = await listProjects();
-          {
+          if (stillOwner()) {
             // The persistent side of the job↔project link is `jobs.project_id`,
             // so the project's job list is DERIVED from the jobs just loaded.
             const jobIdsByProject = new Map<string, string[]>();
@@ -784,7 +825,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     } catch (err) {
       logWarn('AppState', `refreshData failed: ${err}`);
     } finally {
-      setIsLoading(false);
+      // A refresh discarded for a user change must not end the spinner its
+      // replacement is still loading under (review 2026-09-24).
+      if (stillOwner()) setIsLoading(false);
     }
   }, []);
 
@@ -799,6 +842,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // Listens to the currentUser pub/sub set by AuthContext.setCurrentUser.
   useEffect(() => {
     const unsub = subscribeUserChange((userId) => {
+      userGenerationRef.current += 1;
       if (userId === null) {
         // Logged out — wipe in-memory arrays. AsyncStorage already cleared
         // by sessionCleanup.clearUserScopedStorage() in AuthContext.logout.

@@ -8723,5 +8723,294 @@
   "regulated_submissions": [
    "CASCADE"
   ]
+ },
+ "primaryKeys": {
+  "app_config": [
+   "key"
+  ],
+  "quote_line_deltas": [
+   "id"
+  ],
+  "learning_profiles": [
+   "id"
+  ],
+  "insight_interactions": [
+   "id"
+  ],
+  "calibration_entries": [
+   "id"
+  ],
+  "job_outcomes": [
+   "id"
+  ],
+  "invoice_outcomes": [
+   "id"
+  ],
+  "accounting_loops": [
+   "id"
+  ],
+  "price_observations": [
+   "id"
+  ],
+  "analytics_events": [
+   "id"
+  ],
+  "cohort_benchmarks": [
+   "id"
+  ],
+  "integration_connections": [
+   "id"
+  ],
+  "data_events": [
+   "id"
+  ],
+  "feedback_weights": [
+   "id"
+  ],
+  "pricing_intelligence": [
+   "id"
+  ],
+  "job_duration_data": [
+   "id"
+  ],
+  "customer_payment_patterns": [
+   "id"
+  ],
+  "material_price_history": [
+   "id"
+  ],
+  "job_embeddings": [
+   "id"
+  ],
+  "ai_models": [
+   "id"
+  ],
+  "ai_predictions": [
+   "id"
+  ],
+  "cohort_weekly_stats": [
+   "id"
+  ],
+  "contractor_skill_profiles": [
+   "id"
+  ],
+  "business_events": [
+   "id"
+  ],
+  "decision_trackers": [
+   "id"
+  ],
+  "decision_items": [
+   "id"
+  ],
+  "decision_submissions": [
+   "id"
+  ],
+  "decision_activities": [
+   "id"
+  ],
+  "business_settings": [
+   "id"
+  ],
+  "customers": [
+   "id"
+  ],
+  "jobs": [
+   "id"
+  ],
+  "document_counters": [
+   "id"
+  ],
+  "documents": [
+   "id"
+  ],
+  "line_items": [
+   "id"
+  ],
+  "extracted_documents": [
+   "id"
+  ],
+  "extracted_line_items": [
+   "id"
+  ],
+  "entities": [
+   "id"
+  ],
+  "entity_relationships": [
+   "id"
+  ],
+  "training_examples": [
+   "id"
+  ],
+  "model_predictions": [
+   "id"
+  ],
+  "material_catalog": [
+   "id"
+  ],
+  "suppliers": [
+   "id"
+  ],
+  "job_materials": [
+   "id"
+  ],
+  "account_deletion_requests": [
+   "id"
+  ],
+  "customer_interactions": [
+   "id"
+  ],
+  "eve_telemetry": [
+   "id"
+  ],
+  "feature_flags": [
+   "key",
+   "country"
+  ],
+  "affiliate_clicks": [
+   "id"
+  ],
+  "job_photos": [
+   "id"
+  ],
+  "push_tokens": [
+   "id"
+  ],
+  "scanned_invoices": [
+   "id"
+  ],
+  "subscriptions": [
+   "user_id"
+  ],
+  "supplier_connections": [
+   "user_id",
+   "supplier_id"
+  ],
+  "purchase_orders": [
+   "id"
+  ],
+  "projects": [
+   "id"
+  ],
+  "embeddings": [
+   "id"
+  ],
+  "signatures": [
+   "id"
+  ],
+  "generator_dismissals": [
+   "id"
+  ],
+  "customer_portal_events": [
+   "id"
+  ],
+  "photo_analyses": [
+   "id"
+  ],
+  "job_quality_signals": [
+   "job_id"
+  ],
+  "model_training_pairs": [
+   "id"
+  ],
+  "ml_cashflow_gap_predictions": [
+   "user_id"
+  ],
+  "ml_supplier_leadtime_predictions": [
+   "user_id",
+   "supplier_id"
+  ],
+  "ml_material_price_forecasts": [
+   "trade",
+   "country",
+   "material_category",
+   "forecast_horizon_days"
+  ],
+  "ml_capacity_overrun_predictions": [
+   "user_id"
+  ],
+  "moat_schema_metadata": [
+   "id"
+  ],
+  "ts_daily_business_metrics": [
+   "user_id",
+   "day"
+  ],
+  "customer_embeddings": [
+   "customer_id"
+  ],
+  "material_embeddings": [
+   "material_key"
+  ],
+  "quote_line_embeddings": [
+   "id"
+  ],
+  "regional_preference_aggregates": [
+   "id"
+  ],
+  "decision_timing_aggregates": [
+   "id"
+  ],
+  "leads": [
+   "id"
+  ],
+  "workers": [
+   "id"
+  ],
+  "ai_rate_limit": [
+   "user_id"
+  ],
+  "subscription_audit": [
+   "id"
+  ],
+  "watchdog_runs": [
+   "id"
+  ],
+  "customer_questions": [
+   "id"
+  ],
+  "contractor_pricing_calibration": [
+   "id"
+  ],
+  "churn_winback_log": [
+   "id"
+  ],
+  "push_notification_log": [
+   "id"
+  ],
+  "referral_codes": [
+   "user_id"
+  ],
+  "referral_attributions": [
+   "id"
+  ],
+  "subscription_credits": [
+   "id"
+  ],
+  "webhook_idempotency": [
+   "provider",
+   "event_id"
+  ],
+  "expenses": [
+   "id"
+  ],
+  "gobd_audit_log": [
+   "id"
+  ],
+  "quote_acceptance_links": [
+   "token"
+  ],
+  "accountant_handovers": [
+   "id"
+  ],
+  "regulated_submissions": [
+   "id"
+  ],
+  "material_canonical_aliases": [
+   "variant_key"
+  ],
+  "cron_http_calls": [
+   "id"
+  ]
  }
 }

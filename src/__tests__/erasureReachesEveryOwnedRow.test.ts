@@ -74,6 +74,8 @@ describe('export, then delete', () => {
   it('the record is minimal: the free-text reason is cleared, and it ages out after 3 years', () => {
     expect(SRC).toMatch(/status: 'done'[\s\S]{0,300}reason: null/);
     expect(SRC).toMatch(/3 \* 365 \* 86_400_000[\s\S]{0,200}\.delete\(\)\.eq\('status', 'done'\)\.lt\('processed_at', cutoff\)/);
+    // A withdrawn request has no processed_at: it ages from when it was made.
+    expect(SRC).toMatch(/\.delete\(\)\.eq\('status', 'cancelled'\)\.lt\('requested_at', cutoff\)/);
   });
 });
 

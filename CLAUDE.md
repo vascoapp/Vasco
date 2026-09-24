@@ -356,6 +356,23 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
 - **Inkoop = supplier invoices in, price intelligence out** (rebuilt #364).
   Do not re-add Herbestellen / Leveranciers / Voorraad / stock figures until
   something WRITES inventory — they were fed only by a test seed.
+- **Account deletion = EXPORT, THEN DELETE** (user's call, 2026-09-24).
+  Keeping invoices is the CONTRACTOR's legal duty, not Vasco's — never
+  build "we keep anonymised records". ONE screen starts a deletion
+  (`app/contractor/delete-account.tsx`): duty per country
+  (`src/domain/recordRetention.ts` ← `retentionPeriods.ts`), a COMPLETE
+  export (`result.complete`), a required acknowledgement, then
+  `accountDeletionService`. The worker (`drain-account-deletions`) erases
+  everything; the only survivor is the erasure record
+  (`account_deletion_requests`, no FK, reason nulled, 3 years).
+  - A table whose FK to `auth.users` is NOT `CASCADE` survives the cascade:
+    the worker must delete it explicitly. `npm run schema:snapshot` records
+    `authUserFks`; guard `erasureReachesEveryOwnedRow` fails on a miss.
+  - A new owned table the contractor must keep → add it to the export
+    (`dataExportService` BackendDataset; child tables via `byParent`).
+  - Guards: `deleteAccountExportsFirst`, `deletionRequestLands` (live
+    schema), `erasureReachesEveryOwnedRow`. Legal copy lives twice
+    (`docs/legal` = `admin/content/legal`, must stay identical).
 - **Dormant code is GATED, not deleted** (user's call, 2026-09-24): ~30% of
   the code no signed-in contractor can reach stays for future extensions.
   `src/config/dormant.ts` lists the gated routes (the root layout redirects

@@ -59,6 +59,14 @@ for (const f of JSON.parse(fkOut.slice(fkOut.indexOf('{'))).rows) {
   const t = f.t.replace(/^public\./, '');
   (authUserFks[t] ??= []).push(ACTION[f.a] ?? f.a);
 }
+// PostgREST's upsert without `onConflict` targets the PRIMARY KEY — which is
+// `job_id`, not `id`, on job_quality_signals (2026-09-24).
+const pkSql = `select c.conrelid::regclass::text as t, array_to_json(array(
+    select a.attname from unnest(c.conkey) k join pg_attribute a on a.attrelid = c.conrelid and a.attnum = k)) as cols
+  from pg_constraint c where c.contype = 'p' and c.connamespace = 'public'::regnamespace`;
+const pkOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', pkSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const primaryKeys = {};
+for (const r of JSON.parse(pkOut.slice(pkOut.indexOf('{'))).rows) primaryKeys[r.t.replace(/^public\./, '')] = r.cols;
 const file = new URL('../src/test-utils/schema.snapshot.json', import.meta.url);
-writeFileSync(file, JSON.stringify({ takenAt: new Date().toISOString().slice(0, 10), tables, functions, grants, authUserFks }, null, 1) + '\n');
+writeFileSync(file, JSON.stringify({ takenAt: new Date().toISOString().slice(0, 10), tables, functions, grants, authUserFks, primaryKeys }, null, 1) + '\n');
 console.log(`schema snapshot: ${Object.keys(tables).length} tables, ${rows.length} columns, ${Object.keys(functions).length} functions, grants on ${Object.keys(grants).length} tables`);

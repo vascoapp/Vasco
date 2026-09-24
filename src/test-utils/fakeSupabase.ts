@@ -40,6 +40,8 @@ type FnSig = { args: string[]; required: string[] };
 const FUNCTIONS = ((schema as any).functions ?? {}) as Record<string, FnSig[]>;
 /** Table privileges of the `authenticated` role, live. `anon` has none (schema lock v1.17). */
 const GRANTS = ((schema as any).grants ?? {}) as Record<string, string[]>;
+/** An upsert without `onConflict` targets the primary key, as PostgREST does. */
+const PRIMARY_KEYS = ((schema as any).primaryKeys ?? {}) as Record<string, string[]>;
 
 /** Does a live overload accept exactly these argument names? (PostgREST rule) */
 function rpcMatches(name: string, args: Record<string, unknown>): boolean {
@@ -237,7 +239,7 @@ export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean
       },
       insert(p: any) { st.op = 'insert'; st.payload = p; return q; },
       upsert(p: any, o?: { onConflict?: string; ignoreDuplicates?: boolean }) {
-        st.op = 'upsert'; st.payload = p; st.onConflict = o?.onConflict ?? 'id'; st.ignoreDuplicates = !!o?.ignoreDuplicates; return q;
+        st.op = 'upsert'; st.payload = p; st.onConflict = o?.onConflict ?? (PRIMARY_KEYS[t] ?? ['id']).join(','); st.ignoreDuplicates = !!o?.ignoreDuplicates; return q;
       },
       update(p: any) { st.op = 'update'; st.payload = p; return q; },
       delete() { st.op = 'delete'; return q; },
@@ -269,6 +271,21 @@ export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean
     function execute(): Result {
       const done = (r: Result) => { calls.push({ table: t, op: st.op, payload: st.payload, error: r.error }); return r; };
       if (!TABLES[t]) return done({ data: null, error: err('42P01', `relation "public.${t}" does not exist`) });
+      // `tracker.user_id` filters an EMBEDDED resource: valid only when the
+      // select embeds it (`tracker:decision_trackers!inner(…)`), and checked
+      // against THAT table. The fake does not join, so the filter is not
+      // applied to rows — its column is still held to the live schema.
+      const embedded = st.filters.filter((f) => f.col.includes('.'));
+      for (const f of embedded) {
+        const [alias, col] = f.col.split('.');
+        const m = new RegExp(`(?:^|[,\\s(])${alias}(?::(\\w+))?(?:!\\w+)?\\(`).exec(st.sel);
+        if (!m) return done({ data: null, error: err('PGRST108', `'${alias}' is not an embedded resource in this request`) });
+        const et = m[1] ?? alias;
+        if (!TABLES[et]) return done({ data: null, error: err('PGRST200', `Could not find a relationship '${et}' in the schema cache`) });
+        const bad = checkColumns(et, [col], '42703');
+        if (bad) return done({ data: null, error: bad });
+      }
+      st.filters = st.filters.filter((f) => !f.col.includes('.'));
       const badFilter = checkColumns(t, st.filters.map((f) => f.col).concat(st.order.map((o) => o.col)), '42703');
       if (badFilter) return done({ data: null, error: badFilter });
       const match = (r: Row) => visible(t, r) && st.filters.every((f) => f.fn(r[f.col]));

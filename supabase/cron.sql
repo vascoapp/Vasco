@@ -63,8 +63,9 @@ select cron.schedule(
 
 -- R220 — GDPR Art. 17 deletion-request drain, daily 02:00 UTC.
 -- Processes up to 50 pending rows in account_deletion_requests per run:
--- erases user-owned data, anonymises tax-retained rows, calls
--- auth.admin.deleteUser, marks status='done'.
+-- erases ALL user-owned data (export, then delete — the contractor keeps
+-- their own records), calls auth.admin.deleteUser, marks status='done'; the
+-- request row survives as the erasure record for 3 years.
 select cron.schedule(
   'vasco-drain-account-deletions',
   '0 2 * * *',

@@ -27,6 +27,13 @@ const base = require('./jest.screens.config.js');
  *     would assert a market the walk is no longer standing in. Country coverage
  *     stays in `npm run walk`, where the postures are real.
  *
+ *   - flows that SEED LOCAL FIXTURES (AsyncStorage rows with ids like `c1`
+ *     that no backend holds). Since 2026-09-24 this posture runs on the
+ *     live-schema fake backend, signed in; the refresh correctly replaces
+ *     local rows with the (empty) server truth, so the seeded row is gone
+ *     before the flow starts. They prove their flow in `walk`. To bring one
+ *     here, seed the FAKE (`require('../src/lib/supabase').__fake.seed`).
+ *
  * What remains is exactly the question worth asking with demo data off: does
  * every screen still mount, and does any fabricated-fixture shape reach the
  * render? That is walk.test + detectors.test + the empty-state suites.
@@ -34,6 +41,9 @@ const base = require('./jest.screens.config.js');
 module.exports = {
   ...base,
   setupFiles: [...base.setupFiles, './jest.screens.prod.setup.ts'],
+  // The live-schema net: a suite whose screens sent a call the real schema
+  // would reject (unknown column, NOT NULL, RLS, grant) fails.
+  setupFilesAfterEnv: [...(base.setupFilesAfterEnv ?? []), './jest.afterEnv.ts'],
   testPathIgnorePatterns: [
     '/node_modules/',
     '<rootDir>/__screenwalk__/crewBoard.test.tsx',
@@ -48,5 +58,14 @@ module.exports = {
     '<rootDir>/__screenwalk__/euIT.test.tsx',
     '<rootDir>/__screenwalk__/handwerker.test.tsx',
     '<rootDir>/__screenwalk__/aannemer.test.tsx',
+    // Local-fixture flows (see above).
+    '<rootDir>/__screenwalk__/customerDetailDocuments.test.tsx',
+    '<rootDir>/__screenwalk__/flowCustomerEdit.test.tsx',
+    '<rootDir>/__screenwalk__/flowCustomerRowOpens.test.tsx',
+    '<rootDir>/__screenwalk__/flowInvoiceLinesEdit.test.tsx',
+    '<rootDir>/__screenwalk__/flowInvoiceRowOpens.test.tsx',
+    '<rootDir>/__screenwalk__/flowLeadCreateQuote.test.tsx',
+    '<rootDir>/__screenwalk__/flowQuoteSendKeepsAccepted.test.tsx',
+    '<rootDir>/__screenwalk__/flowQuoteSendMarksSent.test.tsx',
   ],
 };

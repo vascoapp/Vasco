@@ -14,6 +14,9 @@ afterAll(() => {
   try { fake = require('./src/lib/supabase').__fake; } catch { return; }
   if (!fake?.calls) return; // this suite mocked the backend itself
   const bad = fake.calls.filter((c: any) => c.error && SCHEMA_CLASS.has(c.error.code));
+  if (bad.length && process.env.WALK_SCHEMA_DUMP) {
+    require('fs').appendFileSync(process.env.WALK_SCHEMA_DUMP, bad.map((c: any) => `${c.op} ${c.table}: ${c.error.code} ${c.error.message}`).join('\n') + '\n');
+  }
   if (bad.length) {
     const lines = bad.slice(0, 10).map((c: any) => `  ${c.op} ${c.table}: ${c.error.code} ${c.error.message}`);
     throw new Error(`The live schema would reject ${bad.length} backend call(s) this suite made:\n${lines.join('\n')}`);

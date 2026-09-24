@@ -110,6 +110,11 @@ Deno.serve(async (req) => {
   const cutoff = new Date(Date.now() - 3 * 365 * 86_400_000).toISOString();
   const { error: ageErr } = await admin.from('account_deletion_requests').delete().eq('status', 'done').lt('processed_at', cutoff);
   if (ageErr) console.error(`drain-account-deletions: could not age out old erasure records: ${ageErr.message}`);
+  // A request the user withdrew (set by the operator on an email) was never
+  // processed — no processed_at — and was kept forever. Same 3 years, from
+  // when it was made.
+  const { error: cancelErr } = await admin.from('account_deletion_requests').delete().eq('status', 'cancelled').lt('requested_at', cutoff);
+  if (cancelErr) console.error(`drain-account-deletions: could not age out old cancelled requests: ${cancelErr.message}`);
 
   if (!pending || pending.length === 0) return json({ processed: 0 });
 

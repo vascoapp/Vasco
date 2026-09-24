@@ -6,7 +6,7 @@
  * toe…" and only Annuleren. The add-customer sheet now opens on arrival.
  *
  * Meaningful only with zero customers, so it asserts in `walk:fresh` and
- * checks the ordinary picker in `walk` (seeded customers).
+ * `walk:prod` and checks the ordinary picker in `walk` (seeded customers).
  * ONE test per file — the harness keeps a module-scoped AppState.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,7 +27,8 @@ describe('new maintenance contract', () => {
     const sheetOpen = root.findAll((n: any) => n.type === Modal && n.props.visible === true
       && n.findAll((c: any) => c.props?.children === newCustomer, { deep: true }).length > 0, { deep: true }).length > 0;
     const picker = root.findAll((n: any) => n.props?.testID === 'recurring-customer-select', { deep: true }).length > 0;
-    if (process.env.WALK_POSTURE === 'fresh') {
+    // walk:prod is a signed-in account on an EMPTY backend — day one, too.
+    if (process.env.WALK_POSTURE === 'fresh' || process.env.WALK_REAL_AUTH === '1') {
       expect(sheetOpen).toBe(true);
       expect(picker).toBe(false);
     } else {

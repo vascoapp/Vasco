@@ -290,6 +290,11 @@ export async function getCapacityOverrunPrediction(): Promise<CapacityOverrunPre
       .eq('user_id', userId)
       .maybeSingle();
     if (error || !data) return null;
+    // A missing or null figure is NO prediction: NaN slipped past the card's
+    // `< 0.5` / `< 1` hide gates (every comparison with NaN is false) and
+    // rendered "NaN% kans · ~NaNd uitloop" on Vandaag (fresh walk 2026-09-24).
+    const nums = [data.overrun_probability, data.predicted_overrun_days, data.horizon_days];
+    if (nums.some((v) => v == null || !Number.isFinite(Number(v)))) return null;
     return {
       overrunProbability: Number(data.overrun_probability),
       predictedOverrunDays: Number(data.predicted_overrun_days),

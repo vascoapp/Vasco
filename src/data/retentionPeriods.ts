@@ -7,7 +7,7 @@
  * figures, so every other market was told the wrong period **in its own
  * language**, by a product that sells itself on compliance:
  *
- *   DE  invoices 10 years (§14b UStG, §257 HGB) — shown as 7
+ *   DE  invoices 8 years (§14b UStG / §147 AO, cut from 10 by BEG IV in 2025) — shown as 7
  *   FR  invoices 10 years (Code de commerce L123-22) — shown as 7
  *   IT  invoices 10 years (Codice Civile art. 2220) — shown as 7
  *   ES  invoices 6 years (Código de Comercio art. 30) — shown as 7
@@ -19,8 +19,8 @@
  * ⚠️ Each market lists only the categories ITS OWN law defines. Germany's set
  * has no customer-data period, so the German notice does not claim one —
  * inventing a figure is exactly the failure this file exists to fix. Markets
- * with no retention constants at all (UK, US) render no notice rather than a
- * borrowed one.
+ * with no retention constants at all (US) render no notice rather than a
+ * borrowed one. The UK lists only the two duties its law sets (2026-09-24).
  */
 import type { Country } from '../context/AuthContext';
 import { DUTCH_RETENTION_PERIODS } from '../types/dutch-compliance';
@@ -28,6 +28,7 @@ import { GERMAN_RETENTION_PERIODS } from '../types/german-compliance';
 import { FRENCH_RETENTION_PERIODS } from '../types/french-compliance';
 import { ITALIAN_RETENTION_PERIODS } from '../types/italian-compliance';
 import { SPANISH_RETENTION_PERIODS } from '../types/spanish-compliance';
+import { UK_RETENTION_PERIODS } from '../types/uk-compliance';
 
 /** A retention row: which i18n label, and how many YEARS. */
 export interface RetentionEntry {
@@ -73,8 +74,13 @@ const ES: RetentionEntry[] = [
   { labelKey: 'personnel', years: days(SPANISH_RETENTION_PERIODS.employeeRecords) },
 ];
 
+const UK: RetentionEntry[] = [
+  { labelKey: 'invoices', years: days(UK_RETENTION_PERIODS.invoices) },
+  { labelKey: 'personnel', years: days(UK_RETENTION_PERIODS.employeeRecords) },
+];
+
 const BY_COUNTRY: Partial<Record<Country, RetentionEntry[]>> = {
-  NL, DE, FR, IT, ES,
+  NL, DE, FR, IT, ES, UK,
 };
 
 /**

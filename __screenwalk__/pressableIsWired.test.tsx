@@ -30,6 +30,7 @@ import { Alert, Linking } from 'react-native';
 import { walkScreen, teardown, resetWalkSession } from '../src/test-utils/screenWalk';
 import fs from 'fs';
 import { APP_DIR, PARAMS, listScreens, routeId } from './screens';
+import { isDormantRoute } from '../src/config/dormant';
 
 jest.setTimeout(600_000);
 
@@ -52,8 +53,20 @@ function installProbes() {
   // export is the same jest.fn, but read the one the app actually calls.
   const shareMod = require('react-native/Libraries/Share/Share').default;
   const storage = require('@react-native-async-storage/async-storage').default;
+  // walk:prod runs on the live-schema fake, whose `from` is not a jest.fn —
+  // its own call log is the record of backend traffic there.
+  const fake = require('../src/lib/supabase').__fake;
+  // Opening the system file / photo picker IS the action; "cancelled" then
+  // returning quietly is correct, not inert.
+  const docPicker = require('expo-document-picker');
+  const imgPicker = require('expo-image-picker');
+  const pickerCalls = () => (docPicker.getDocumentAsync?.mock?.calls?.length ?? 0)
+    + (imgPicker.launchImageLibraryAsync?.mock?.calls?.length ?? 0)
+    + (imgPicker.launchCameraAsync?.mock?.calls?.length ?? 0);
 
   const before = {
+    fake: fake?.calls?.length ?? 0,
+    picker: pickerCalls(),
     nav: Object.values(nav).reduce((n: number, f: any) => n + (f?.mock?.calls?.length ?? 0), 0),
     alert: 0,
     share: shareMod.share?.mock?.calls?.length ?? 0,
@@ -77,6 +90,8 @@ function installProbes() {
       if ((shareMod.share?.mock?.calls?.length ?? 0) > before.share) out.push({ kind: 'share', detail: '' });
       if ((supabase?.from?.mock?.calls?.length ?? 0) > before.from) out.push({ kind: 'supabase.from', detail: '' });
       if ((supabase?.rpc?.mock?.calls?.length ?? 0) > before.rpc) out.push({ kind: 'supabase.rpc', detail: '' });
+      if ((fake?.calls?.length ?? 0) > before.fake) out.push({ kind: 'backend', detail: String(fake.calls[fake.calls.length - 1]?.table ?? '') });
+      if (pickerCalls() > before.picker) out.push({ kind: 'picker', detail: '' });
       if ((supabase?.functions?.invoke?.mock?.calls?.length ?? 0) > before.invoke) out.push({ kind: 'edge fn', detail: '' });
       const writeNow = (storage.setItem?.mock?.calls?.length ?? 0)
         + (storage.multiSet?.mock?.calls?.length ?? 0)
@@ -99,6 +114,12 @@ function installProbes() {
  * findAll returns a node per layer, so the same handler appears more than once;
  * dedupe on the function identity.
  */
+const insideModal = (n: any): boolean => {
+  const { Modal } = require('react-native');
+  for (let p = n.parent; p; p = p.parent) if (p.type === Modal) return true;
+  return false;
+};
+const EMPTY_HANDLER = /^\s*(?:\(\s*\)\s*=>\s*\{\s*\}|function\s*\w*\s*\(\s*\)\s*\{\s*\})\s*$/;
 function pressables(tree: any): { press: () => void; label: string; key: string }[] {
   const seen = new Set<unknown>();
   const out: { press: () => void; label: string; key: string }[] = [];
@@ -112,6 +133,15 @@ function pressables(tree: any): { press: () => void; label: string; key: string 
     if (seen.has(fn)) continue;
     seen.add(fn);
     if (n.props.disabled === true || n.props.accessibilityState?.disabled === true) continue;
+    // `onPress={() => {}}` on a modal's CARD is a touch-stopper: it keeps a tap
+    // inside the sheet from reaching the overlay that closes it. Empty by
+    // design, in every modal — not a control (2026-09-24, projects.tsx).
+    // Only a CONTAINER of other controls INSIDE A MODAL qualifies — an empty
+    // handler on a plain button, or on a list row that merely holds a trash
+    // icon, is exactly the dead control this suite exists to find (review).
+    if (EMPTY_HANDLER.test(Function.prototype.toString.call(fn))
+      && insideModal(n)
+      && n.findAll((c: any) => c !== n && typeof c?.props?.onPress === 'function' && c.props.onPress !== fn, { deep: true }).length > 0) continue;
     // accessibilityLabel FIRST. An icon-only control renders an Ionicons glyph
     // from the Unicode private-use area, which is a perfectly good non-empty
     // string and prints as nothing at all — every such control was reported as
@@ -250,7 +280,16 @@ const KNOWN_INERT = new Set<string>([
   'contractor/customer-crm :: Klant toevoegen#1',       // sheet opens (device)
   'contractor/projects :: Nieuw project#1',             // sheet opens (device)
   'quotes/new :: Pressable#1',                          // picker with nothing to pick
-  '(tabs)/work :: Offertes (0)#1',                      // default tab when empty
+  // Zero customers: the add-customer sheet is ALREADY open on arrival
+  // (customer-first, tiered-quote.tsx:66), so this sets the same `true`. Once
+  // the sheet is closed, the button reopens it (read in the code, 2026-09-24).
+  'contractor/tiered-quote :: NIEUWE KLANT#1',
+  // Loop order (harness reason 1), read in the code 2026-09-24: the overdue
+  // banner's "Bekijk" (facturen.tsx:807) is pressed first and already selects
+  // the Facturen tab; the header "+" already opened the project sheet that the
+  // empty-state button (projects.tsx:262) opens again.
+  '(contractor)/facturen :: Facturen#1',
+  'contractor/projects :: Nieuw project#2',
   // Pressing the tab/filter/segment that is ALREADY selected on mount. Verified
   // individually: each sets the value the screen already holds (e.g.
   // `viewMode` defaults to `'list'`, `severity` to `'Laag'`, `period` to
@@ -260,7 +299,6 @@ const KNOWN_INERT = new Set<string>([
   '(contractor)/certificaten :: Overzicht#1',
   '(contractor)/decisions :: Actief#1',   // "Active" filter, the default
   '(contractor)/werk :: VANDAAG#1',       // "Today" filter, the default
-  'contractor/ai-assistant :: Chat#1',
   'contractor/cashflow :: Overzicht#1',
   'contractor/expenses :: Alle#1',
   'contractor/material-search :: Alles#1',
@@ -276,22 +314,12 @@ const KNOWN_INERT = new Set<string>([
   'contractor/vat-and-audit :: Standaard BTW#1',
   'contractor/vat-prep :: Afgelopen kwartaal#1',
   'contractor/warranty :: Actief#1',
-  'sitelead/close-defect :: Alle#1',
-  'sitelead/daily-report :: Zonnig#1',
-  'sitelead/dispatch :: Lijstweergave#1',
-  'sitelead/incident-report :: Incident#1',
-  'sitelead/incident-report :: Laag#1',
-  'sitelead/log-defect :: Gebrek#1',
-  'sitelead/reports :: Deze Week#1',
-  'sitelead/worker-certs :: Alle#1',
 
   // `expo-document-picker` / `expo-image-picker` are mocked to resolve
   // `{canceled:true}`, so the handler returns early and nothing changes. Real
   // in the app. ⚠️ Check the early return happens BEFORE any loading flag is
   // set, or resets it in a `finally` — otherwise cancelling really does wedge
   // the button, and that IS a bug.
-  '(modals)/ingestion :: Bestand kiezen#1',
-  '(modals)/ingestion :: PDF uploaden#1',
   'contractor/inkoop :: DATANORM#1',
   'contractor/inkoop :: E-factuur inlezen#1',
   'contractor/job/[id]/photos :: Gebrek-foto toevoegen#1',
@@ -309,21 +337,11 @@ const KNOWN_INERT = new Set<string>([
   'contractor/inkoop :: Bon scanner#2',
   'contractor/pipeline :: Lead toevoegen#1',
 
-  // `HandoverPackBuilder`'s step indicator navigates only
-  // `if (isCompleted || index === currentStepIndex)`. On mount you are on step
-  // 0, so step 0 re-selects itself and steps 1-4 are forward skips the wizard
-  // blocks by design.
-  'contractor/handover/[jobId] :: Certificaat#1',
-  'contractor/handover/[jobId] :: Checklist#1',
-  'contractor/handover/[jobId] :: Documenten#1',
-  'contractor/handover/[jobId] :: Foto\'s#1',
-  'contractor/handover/[jobId] :: Voorbeeld#1',
 
   // Guarded by an empty input or an empty collection — the harness types
   // nothing and adds nothing, so the guard correctly refuses.
   // `if (newItemText.trim())` and `if (cart.length > 0)`.
   'contractor/material-search :: Winkelwagen#1',
-  'sitelead/inspection :: Toevoegen#1',
 
   // A hidden multi-tap affordance: the logo opens the auth event log only on
   // the FIFTH tap (`if (next >= 5)`). One press correctly shows nothing.
@@ -366,7 +384,11 @@ function listPressableScreens(): string[] {
       if (e.name === '_layout.tsx' || e.name.startsWith('+') || e.name === 'error.tsx') continue;
       const rel = full.slice(APP_DIR.length + 1);
       if (rel.startsWith('hub/') || rel.includes('/hub/')) continue;
-      if (/^\(tabs\)\/(cfo-|dir-|buildos)/.test(rel)) continue;
+      // Dormant routes (src/config/dormant.ts) are redirected away from every
+      // signed-in user — the (tabs) enterprise group included. Gated, not
+      // swept (CLAUDE.md); this replaced a hand-kept `(tabs)/cfo-|dir-|buildos`
+      // list that let the rest of (tabs) through (2026-09-24).
+      if (isDormantRoute(rel.replace(/\.tsx$/, '').split('/').filter((x) => x !== 'index'))) continue;
       out.push(rel);
     }
   };

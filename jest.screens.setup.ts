@@ -325,7 +325,36 @@ jest.mock('react-native-svg', () => {
 //                     no rows yet. This is the posture that exposes content
 //                     presented as the user's own history on a clean install.
 // ---------------------------------------------------------------------------
+//   prod (WALK_REAL_AUTH=1) — a SIGNED-IN contractor on the live-schema fake
+//                     backend (src/test-utils/fakeSupabase.ts): every write
+//                     meets the real columns, NOT NULLs, RLS and grants, and
+//                     reads answer with what was written. Rejecting every read
+//                     while a session existed modelled "signed in, network
+//                     down" — so a correct refusal ("Lines not saved") read as
+//                     a failing flow (2026-09-24).
+// ---------------------------------------------------------------------------
+export const WALK_PROD_USER_ID = '0a1b2c3d-0000-4000-8000-00000000fa11';
 jest.mock('./src/lib/supabase', () => {
+  if (process.env.WALK_REAL_AUTH === '1') {
+    const mod = require('./src/test-utils/fakeSupabase').fakeSupabaseModule({ userId: '0a1b2c3d-0000-4000-8000-00000000fa11' });
+    mod.supabase.auth.signInWithPassword = async ({ email }: { email?: string } = {}) => ({
+      data: {
+        user: {
+          id: '0a1b2c3d-0000-4000-8000-00000000fa11',
+          email: email ?? 'walk@vascobuild.test',
+          user_metadata: {
+            role: 'contractor',
+            country: process.env.WALK_COUNTRY ?? 'NL',
+            language: process.env.WALK_LANGUAGE ?? 'nl',
+          },
+        },
+        session: { access_token: 'walk-token' },
+      },
+      error: null,
+    });
+    mod.supabase.removeChannel = () => undefined;
+    return mod;
+  }
   const fresh = process.env.WALK_POSTURE === 'fresh';
   const answer = () =>
     fresh
@@ -349,8 +378,10 @@ jest.mock('./src/lib/supabase', () => {
     order: jest.fn(() => chain),
     range: jest.fn(() => chain),
     limit: jest.fn(() => chain),
-    single: jest.fn(() => answer()),
-    maybeSingle: jest.fn(() => answer()),
+    // PostgREST answers "no row" to single()/maybeSingle() with data NULL,
+    // never an empty array — `[]` read as a row and rendered NaN (2026-09-24).
+    single: jest.fn(() => (fresh ? Promise.resolve({ data: null, error: null }) : answer())),
+    maybeSingle: jest.fn(() => (fresh ? Promise.resolve({ data: null, error: null }) : answer())),
     then: (res: any, rej: any) => answer().then(res, rej),
     catch: (rej: any) => answer().catch(rej),
   };
@@ -365,7 +396,10 @@ jest.mock('./src/lib/supabase', () => {
         getSession: jest.fn(() =>
           Promise.resolve({
             data: {
-              session: process.env.WALK_REAL_AUTH === '1'
+              // `fresh` is a SIGNED-IN contractor with zero rows: refreshData
+              // skips without a session (2026-09-24), so no session here would
+              // leave the demo seeds on screen and measure nothing.
+              session: process.env.WALK_REAL_AUTH === '1' || fresh
                 ? { access_token: 'walk-token', user: { id: 'walk-prod-user', email: 'walk@vascobuild.test' } }
                 : null,
             },

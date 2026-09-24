@@ -805,8 +805,8 @@ export default function ProfileScreen() {
         {/* Statutory retention periods, PER MARKET.
             This was one hardcoded sentence — "Invoices 7 years · Contracts 7
             years · …" — translated into all six languages. Those are the DUTCH
-            figures, so a German contractor was told 7 years when §14b UStG says
-            TEN, and France and Italy likewise (10) and Spain (6). The correct
+            figures, so a German contractor was told 7 years when the law says
+            eight (ten before BEG IV, 2025), France and Italy 10, Spain 6. The correct
             numbers already sat in src/types/*-compliance.ts; this notice never
             read them. Markets with no statutory figures in this codebase render
             nothing rather than borrowing another country's. */}

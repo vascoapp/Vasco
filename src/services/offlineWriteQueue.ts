@@ -462,6 +462,27 @@ export async function queueSize(): Promise<number> {
 }
 
 /**
+ * Document numbers whose INSERT is still waiting in the queue. A refresh that
+ * replaced quotes/invoices wholesale with the server's list dropped these from
+ * the screen and from local storage, leaving the queued write as the only
+ * copy (2026-09-24). The refresh keeps them.
+ */
+export async function pendingDocumentNumbers(): Promise<Set<string>> {
+  const out = new Set<string>();
+  for (const w of await loadQueue()) {
+    const n = w.table === 'documents' && w.op === 'insert' ? w.payload?.document_number : null;
+    if (typeof n === 'string' && n) out.add(n);
+  }
+  return out;
+}
+
+/** Server rows, plus local rows the server does not have yet but the queue will send. */
+export function keepPendingDocuments<T extends { id: string }>(local: T[], server: T[], pending: Set<string>): T[] {
+  const onServer = new Set(server.map((d) => d.id));
+  return [...local.filter((d) => pending.has(d.id) && !onServer.has(d.id)), ...server];
+}
+
+/**
  * Run a BE write with offline-queue fallback. R277.
  *
  * Use as a one-line replacement for `await fn().catch(err => logWarn(...))`
