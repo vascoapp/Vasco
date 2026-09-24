@@ -32,10 +32,10 @@ Vasco processes personal data on your behalf for:
 | Category | Data Types | Purpose | Retention |
 |----------|-----------|---------|-----------|
 | Customer contacts | Name, email, phone, address | CRM, invoicing | Account lifetime |
-| Financial records | Invoices, quotes, payments | Business management | 7 years (tax law) |
-| Job records | Descriptions, schedules, photos | Job management | 5 years |
-| Time tracking | Clock-in/out, hours worked | Payroll, costing | 5 years |
-| AI learning | Interaction patterns, preferences | Personalization | Account lifetime |
+| Financial records | Invoices, quotes, payments | Business management | Until account deletion; offered to the Controller as a download before deletion (the Controller's own retention duty) |
+| Job records | Descriptions, schedules, photos | Job management | Account lifetime; erased with the account |
+| Time tracking | Clock-in/out, hours worked | Payroll, costing | Account lifetime; erased with the account |
+| AI learning | Interaction patterns, preferences | Personalization | Account lifetime; erased with the account |
 
 ---
 

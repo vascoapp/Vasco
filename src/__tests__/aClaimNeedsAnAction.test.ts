@@ -158,31 +158,30 @@ describe('an order is sent by the contractor, and survives a restart', () => {
 });
 
 describe('a deletion request is not announced as a deletion', () => {
-  // Three entry points; this was the one that discarded the result and said
-  // "Your account has been deleted" — for a GDPR Art. 17 request that may never
-  // have left the device, and which is a 30-day request even when it does.
-  const ai = read('app/(contractor)/ai.tsx');
-  // NOT the first occurrence — that is the import line (#342's trap, again).
-  // Anchor on the CALL.
-  const at = ai.indexOf('await requestAccountDeletion(');
+  // There were three entry points; one discarded the result and said "Your
+  // account has been deleted" for a request that may never have left the
+  // device. Since 2026-09-24 there is ONE flow — app/contractor/delete-account
+  // — and the others route to it (behaviour: deleteAccountExportsFirst).
+  const screen = read('app/contractor/delete-account.tsx');
+  const at = screen.indexOf('await requestAccountDeletion(');
 
-  it('checks that the request reached the server', () => {
-    const block = ai.slice(at - 200, at + 900);
-    // The CONDITION, not just the words: asserting that `serverRequested`
-    // appears somewhere passed when the branch was changed to `if (false)`
-    // — shape instead of effect, which is the failure this file exists for.
+  it('checks that the request reached the server, and returns before claiming', () => {
+    const block = screen.slice(at - 200, at + 700);
     expect(block).toMatch(/if \(!result\.success \|\| !result\.serverRequested\)/);
-    expect(block).toMatch(/legal\.deletionFailed/);
-    // …and it must RETURN before anything claims success.
     const failure = block.slice(block.indexOf('if (!result.success'));
-    expect(failure.slice(0, failure.indexOf('}'))).toMatch(/Alert\.alert/);
-    expect(failure).toMatch(/return;/);
+    expect(failure.slice(0, failure.indexOf('return;'))).toMatch(/accountDeletion\.failedTitle/);
   });
 
   it('claims a request, not a completed deletion', () => {
-    const block = ai.slice(at, at + 900);
-    expect(block).toMatch(/legal\.deleteConfirmTitle/);
-    expect(block).not.toMatch(/profile\.accountDeleted/);
+    const block = screen.slice(at, at + 900);
+    expect(block).toMatch(/accountDeletion\.doneTitle/);
+    expect(block).not.toMatch(/accountDeleted/);
+  });
+
+  it('the other entry points only route to it', () => {
+    for (const f of ['app/(contractor)/ai.tsx', 'app/contractor/profile.tsx', 'app/contractor/legal.tsx']) {
+      expect(read(f)).toMatch(/handleDeleteAccount = \(\) => router\.push\('\/contractor\/delete-account'/);
+    }
   });
 });
 

@@ -24,7 +24,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How do I delete my account?",
-    a: "Open the app → Profile → Legal → Delete my account. Your data is queued for permanent deletion within 30 days per GDPR Article 17. We send a confirmation email when deletion completes.",
+    a: "Open the app → Profile → Delete my account. It first lets you download your invoices and records (keeping them is your own legal duty), then everything is permanently deleted within 30 days per GDPR Article 17.",
   },
   {
     q: "How do I export my data?",

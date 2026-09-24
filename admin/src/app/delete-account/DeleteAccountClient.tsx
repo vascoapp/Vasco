@@ -68,6 +68,7 @@ interface Copy {
   reason: string;
   optional: string;
   typeToConfirm: string;
+  ackRecords: string;
   deleteBtn: string;
   submitting: string;
   doneHeading: string;
@@ -94,7 +95,7 @@ const COPY: Record<Loc, Copy> = {
       "Connected accounting and payment integrations",
     ],
     retention:
-      "Invoices already issued may be kept in anonymised form where tax law requires it — seven years in the Netherlands, ten in Germany. Everything else is erased.",
+      "Everything is erased, invoices included — keeping your business records is your own obligation (for example 7 years in the Netherlands, 8 in Germany). Download them in the Vasco app first: Profile → Delete account shows you how.",
     privacy: "Privacy Policy",
     whySignIn:
       "Sign in to confirm this is your account. We ask because otherwise anyone could request deletion of someone else's data.",
@@ -110,6 +111,7 @@ const COPY: Record<Loc, Copy> = {
     reason: "Why are you leaving?",
     optional: "(optional)",
     typeToConfirm: "Type DELETE to confirm",
+    ackRecords: "I have my invoices and accounting records, and I know I must keep them myself.",
     deleteBtn: "Delete my account",
     submitting: "Submitting…",
     doneHeading: "Your account is scheduled for deletion",
@@ -119,7 +121,7 @@ const COPY: Record<Loc, Copy> = {
     alreadyBody:
       "Your account is queued for erasure and will be removed within 30 days. There is nothing else to do. To cancel, email us before it completes.",
     inAppHint:
-      "Prefer to do this in the app? Open Vasco → Profile → Legal → Delete my account. Either route does the same thing.",
+      "Better in the app: Vasco → Profile → Delete my account first lets you download your records, then deletes.",
     questions: "Questions about your data:",
     unavailable:
       "Account deletion is temporarily unavailable here. Email us and we will delete your account within 30 days.",
@@ -138,7 +140,7 @@ const COPY: Record<Loc, Copy> = {
       "Gekoppelde boekhoud- en betaalintegraties",
     ],
     retention:
-      "Al verstuurde facturen kunnen geanonimiseerd bewaard blijven waar de belastingwet dat vereist — zeven jaar in Nederland, tien in Duitsland. De rest wordt gewist.",
+      "Alles wordt gewist, ook je facturen — je administratie bewaren is je eigen plicht (bijvoorbeeld 7 jaar in Nederland, 8 in Duitsland). Download die eerst in de Vasco-app: Profiel → Account verwijderen laat zien hoe.",
     privacy: "Privacyverklaring",
     whySignIn:
       "Log in om te bevestigen dat dit jouw account is. We vragen dit omdat anders iemand anders verwijdering van jouw gegevens zou kunnen aanvragen.",
@@ -154,6 +156,7 @@ const COPY: Record<Loc, Copy> = {
     reason: "Waarom stop je?",
     optional: "(optioneel)",
     typeToConfirm: "Typ DELETE om te bevestigen",
+    ackRecords: "Ik heb mijn facturen en administratie en weet dat ik die zelf moet bewaren.",
     deleteBtn: "Verwijder mijn account",
     submitting: "Versturen…",
     doneHeading: "Je account staat klaar om verwijderd te worden",
@@ -163,7 +166,7 @@ const COPY: Record<Loc, Copy> = {
     alreadyBody:
       "Je account staat in de wachtrij en wordt binnen 30 dagen verwijderd. Je hoeft niets meer te doen. Annuleren? Mail ons voordat het klaar is.",
     inAppHint:
-      "Liever in de app? Open Vasco → Profiel → Juridisch → Account verwijderen. Beide routes doen hetzelfde.",
+      "Beter in de app: Vasco → Profiel → Account verwijderen laat je eerst je administratie downloaden en verwijdert daarna.",
     questions: "Vragen over je gegevens:",
     unavailable:
       "Account verwijderen kan hier tijdelijk niet. Mail ons en we verwijderen je account binnen 30 dagen.",
@@ -182,7 +185,7 @@ const COPY: Record<Loc, Copy> = {
       "Verbundene Buchhaltungs- und Zahlungsintegrationen",
     ],
     retention:
-      "Bereits gestellte Rechnungen können anonymisiert aufbewahrt werden, wo das Steuerrecht es verlangt — sieben Jahre in den Niederlanden, zehn in Deutschland. Alles andere wird gelöscht.",
+      "Alles wird gelöscht, auch Ihre Rechnungen — die Aufbewahrung Ihrer Geschäftsunterlagen ist Ihre eigene Pflicht (zum Beispiel 8 Jahre in Deutschland, 7 in den Niederlanden). Laden Sie sie zuerst in der Vasco-App herunter: Profil → Konto löschen zeigt Ihnen, wie.",
     privacy: "Datenschutzerklärung",
     whySignIn:
       "Melden Sie sich an, um zu bestätigen, dass dies Ihr Konto ist. Wir fragen danach, weil sonst jede beliebige Person die Löschung fremder Daten beantragen könnte.",
@@ -198,6 +201,7 @@ const COPY: Record<Loc, Copy> = {
     reason: "Warum verlassen Sie uns?",
     optional: "(optional)",
     typeToConfirm: "Geben Sie DELETE ein, um zu bestätigen",
+    ackRecords: "Ich habe meine Rechnungen und Unterlagen und weiß, dass ich sie selbst aufbewahren muss.",
     deleteBtn: "Mein Konto löschen",
     submitting: "Wird gesendet…",
     doneHeading: "Ihr Konto ist zur Löschung vorgemerkt",
@@ -207,7 +211,7 @@ const COPY: Record<Loc, Copy> = {
     alreadyBody:
       "Ihr Konto steht in der Warteschlange und wird innerhalb von 30 Tagen gelöscht. Sie müssen nichts weiter tun. Zum Abbrechen schreiben Sie uns, bevor der Vorgang abgeschlossen ist.",
     inAppHint:
-      "Lieber in der App? Öffnen Sie Vasco → Profil → Rechtliches → Konto löschen. Beide Wege bewirken dasselbe.",
+      "Besser in der App: Vasco → Profil → Konto löschen lässt Sie zuerst Ihre Unterlagen herunterladen und löscht danach.",
     questions: "Fragen zu Ihren Daten:",
     unavailable:
       "Das Löschen des Kontos ist hier vorübergehend nicht möglich. Schreiben Sie uns, dann löschen wir Ihr Konto innerhalb von 30 Tagen.",
@@ -226,7 +230,7 @@ const COPY: Record<Loc, Copy> = {
       "Intégrations comptables et de paiement connectées",
     ],
     retention:
-      "Les factures déjà émises peuvent être conservées sous forme anonymisée là où la loi fiscale l'exige — sept ans aux Pays-Bas, dix en Allemagne. Tout le reste est effacé.",
+      "Tout est effacé, factures comprises — conserver vos documents d’entreprise est votre propre obligation (par exemple 10 ans en France, 7 aux Pays-Bas). Téléchargez-les d’abord dans l’app Vasco : Profil → Supprimer le compte vous montre comment.",
     privacy: "Politique de confidentialité",
     whySignIn:
       "Connectez-vous pour confirmer qu'il s'agit bien de votre compte. Nous le demandons car sinon n'importe qui pourrait demander la suppression des données d'autrui.",
@@ -242,6 +246,7 @@ const COPY: Record<Loc, Copy> = {
     reason: "Pourquoi partez-vous ?",
     optional: "(facultatif)",
     typeToConfirm: "Tapez DELETE pour confirmer",
+    ackRecords: "J’ai mes factures et documents comptables, et je sais que je dois les conserver moi-même.",
     deleteBtn: "Supprimer mon compte",
     submitting: "Envoi…",
     doneHeading: "Votre compte est programmé pour suppression",
@@ -251,7 +256,7 @@ const COPY: Record<Loc, Copy> = {
     alreadyBody:
       "Votre compte est en file d'attente et sera supprimé sous 30 jours. Rien d'autre à faire. Pour annuler, écrivez-nous avant la fin du délai.",
     inAppHint:
-      "Vous préférez le faire dans l'app ? Ouvrez Vasco → Profil → Mentions légales → Supprimer mon compte. Les deux font la même chose.",
+      "Mieux dans l’app : Vasco → Profil → Supprimer mon compte vous permet d’abord de télécharger vos documents, puis supprime.",
     questions: "Questions sur vos données :",
     unavailable:
       "La suppression de compte est momentanément indisponible ici. Écrivez-nous et nous supprimerons votre compte sous 30 jours.",
@@ -270,7 +275,7 @@ const COPY: Record<Loc, Copy> = {
       "Integraciones de contabilidad y pagos conectadas",
     ],
     retention:
-      "Las facturas ya emitidas pueden conservarse de forma anonimizada donde la ley fiscal lo exija — siete años en los Países Bajos, diez en Alemania. Todo lo demás se borra.",
+      "Se borra todo, también tus facturas — conservar los registros de tu empresa es tu propia obligación (por ejemplo 6 años en España, 7 en los Países Bajos). Descárgalos primero en la app de Vasco: Perfil → Eliminar cuenta te muestra cómo.",
     privacy: "Política de privacidad",
     whySignIn:
       "Inicia sesión para confirmar que esta es tu cuenta. Lo pedimos porque de lo contrario cualquiera podría solicitar el borrado de datos ajenos.",
@@ -286,6 +291,7 @@ const COPY: Record<Loc, Copy> = {
     reason: "¿Por qué te vas?",
     optional: "(opcional)",
     typeToConfirm: "Escribe DELETE para confirmar",
+    ackRecords: "Tengo mis facturas y registros contables, y sé que debo conservarlos yo.",
     deleteBtn: "Eliminar mi cuenta",
     submitting: "Enviando…",
     doneHeading: "Tu cuenta está programada para eliminarse",
@@ -295,7 +301,7 @@ const COPY: Record<Loc, Copy> = {
     alreadyBody:
       "Tu cuenta está en cola y se eliminará en un plazo de 30 días. No hace falta nada más. Para cancelar, escríbenos antes de que se complete.",
     inAppHint:
-      "¿Prefieres hacerlo en la app? Abre Vasco → Perfil → Legal → Eliminar mi cuenta. Ambas rutas hacen lo mismo.",
+      "Mejor en la app: Vasco → Perfil → Eliminar mi cuenta te deja descargar primero tus registros y después elimina.",
     questions: "Dudas sobre tus datos:",
     unavailable:
       "Eliminar la cuenta no está disponible aquí ahora mismo. Escríbenos y borraremos tu cuenta en 30 días.",
@@ -314,7 +320,7 @@ const COPY: Record<Loc, Copy> = {
       "Integrazioni contabili e di pagamento collegate",
     ],
     retention:
-      "Le fatture già emesse possono essere conservate in forma anonima dove la legge fiscale lo richiede — sette anni nei Paesi Bassi, dieci in Germania. Tutto il resto viene cancellato.",
+      "Viene cancellato tutto, fatture comprese — conservare i documenti della tua impresa è un tuo obbligo (per esempio 10 anni in Italia, 7 nei Paesi Bassi). Scaricali prima nell’app Vasco: Profilo → Elimina account ti mostra come.",
     privacy: "Informativa sulla privacy",
     whySignIn:
       "Accedi per confermare che questo è il tuo account. Lo chiediamo perché altrimenti chiunque potrebbe chiedere la cancellazione dei dati altrui.",
@@ -330,6 +336,7 @@ const COPY: Record<Loc, Copy> = {
     reason: "Perché ci lasci?",
     optional: "(facoltativo)",
     typeToConfirm: "Digita DELETE per confermare",
+    ackRecords: "Ho le mie fatture e scritture contabili, e so che devo conservarle io.",
     deleteBtn: "Elimina il mio account",
     submitting: "Invio…",
     doneHeading: "Il tuo account è programmato per l'eliminazione",
@@ -339,7 +346,7 @@ const COPY: Record<Loc, Copy> = {
     alreadyBody:
       "Il tuo account è in coda e sarà eliminato entro 30 giorni. Non serve altro. Per annullare, scrivici prima che venga completata.",
     inAppHint:
-      "Preferisci farlo nell'app? Apri Vasco → Profilo → Note legali → Elimina il mio account. Entrambe le strade fanno la stessa cosa.",
+      "Meglio nell’app: Vasco → Profilo → Elimina il mio account ti fa prima scaricare i tuoi documenti, poi elimina.",
     questions: "Domande sui tuoi dati:",
     unavailable:
       "L'eliminazione dell'account non è disponibile qui al momento. Scrivici e cancelleremo il tuo account entro 30 giorni.",
@@ -365,6 +372,10 @@ export default function DeleteAccountClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmText, setConfirmText] = useState("");
+  // Export, then delete: the web route cannot offer the download, so it
+  // requires the same acknowledgement the app does (review 2026-09-24).
+  const [ackRecords, setAckRecords] = useState(false);
+  const ready = confirmText === "DELETE" && ackRecords;
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -408,6 +419,7 @@ export default function DeleteAccountClient() {
 
   async function handleDelete(e: React.FormEvent) {
     e.preventDefault();
+    if (!ready) return; // Enter in a field must not bypass the acknowledgement
     setError(null);
     setBusy(true);
     try {
@@ -594,6 +606,16 @@ export default function DeleteAccountClient() {
               />
             </div>
 
+            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16, fontSize: 14, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={ackRecords}
+                onChange={(ev) => setAckRecords(ev.target.checked)}
+                style={{ marginTop: 3 }}
+              />
+              <span>{t.ackRecords}</span>
+            </label>
+
             <div style={{ marginBottom: 20 }}>
               <label htmlFor="confirm" style={label}>
                 {t.typeToConfirm}
@@ -610,16 +632,16 @@ export default function DeleteAccountClient() {
 
             <button
               type="submit"
-              disabled={busy || confirmText !== "DELETE"}
+              disabled={busy || !ready}
               style={{
-                background: confirmText === "DELETE" ? DK.danger : DK.panel2,
-                color: confirmText === "DELETE" ? "#2B1219" : DK.muted,
-                border: `1px solid ${confirmText === "DELETE" ? DK.danger : DK.border}`,
+                background: ready ? DK.danger : DK.panel2,
+                color: ready ? "#2B1219" : DK.muted,
+                border: `1px solid ${ready ? DK.danger : DK.border}`,
                 borderRadius: 8,
                 padding: "11px 20px",
                 fontSize: 15,
                 fontWeight: 700,
-                cursor: confirmText === "DELETE" && !busy ? "pointer" : "not-allowed",
+                cursor: ready && !busy ? "pointer" : "not-allowed",
               }}
             >
               {busy ? t.submitting : t.deleteBtn}

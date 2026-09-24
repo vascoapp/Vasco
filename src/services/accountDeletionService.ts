@@ -112,15 +112,8 @@ export async function clearAllLocalData(): Promise<{ cleared: number }> {
  * Since Supabase client SDK cannot delete auth users (requires admin/service key),
  * we insert a deletion request row that a server-side function or admin can process.
  *
- * The expected table schema:
- *   account_deletion_requests (
- *     id uuid primary key default gen_random_uuid(),
- *     user_id uuid references auth.users(id),
- *     requested_at timestamptz default now(),
- *     platform text,
- *     status text default 'pending',
- *     processed_at timestamptz
- *   )
+ * The live columns are in src/test-utils/schema.snapshot.json — this
+ * docblock once listed a `platform` column that never existed.
  */
 async function requestServerDeletion(userId: string): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
@@ -133,13 +126,14 @@ async function requestServerDeletion(userId: string): Promise<boolean> {
       status: 'pending',
     };
 
-    // Try to insert into deletion requests table
+    // Only LIVE columns: the table has no `platform`, and one unknown key
+    // makes PostgREST reject the whole row (PGRST204) — every in-app deletion
+    // failed once the flows were merged onto this path (review 2026-09-24).
     const { error } = await (supabase
       .from('account_deletion_requests') as any)
       .insert({
         user_id: request.userId,
         requested_at: request.requestedAt,
-        platform: request.platform,
         status: request.status,
       });
 

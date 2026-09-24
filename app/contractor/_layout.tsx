@@ -41,6 +41,7 @@ export default function ContractorLayout() {
       <Stack.Screen name="pricebook" />
       <Stack.Screen name="tiered-quote" />
       <Stack.Screen name="payments" />
+      <Stack.Screen name="delete-account" />
       <Stack.Screen name="job/[id]" />
       <Stack.Screen name="ai-assistant" />
       <Stack.Screen name="eve" />

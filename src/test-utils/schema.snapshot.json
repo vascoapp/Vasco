@@ -7906,14 +7906,6 @@
     "required": []
    }
   ],
-  "get_analytics_summary": [
-   {
-    "args": [
-     "p_days"
-    ],
-    "required": []
-   }
-  ],
   "match_similar_jobs": [
    {
     "args": [
@@ -7934,6 +7926,20 @@
     "args": [
      "p_limit"
     ],
+    "required": []
+   }
+  ],
+  "get_analytics_summary": [
+   {
+    "args": [
+     "p_days"
+    ],
+    "required": []
+   }
+  ],
+  "age_analytics_events": [
+   {
+    "args": [],
     "required": []
    }
   ]
@@ -8493,6 +8499,229 @@
    "INSERT",
    "SELECT",
    "UPDATE"
+  ]
+ },
+ "authUserFks": {
+  "referral_codes": [
+   "CASCADE"
+  ],
+  "quote_line_deltas": [
+   "CASCADE"
+  ],
+  "learning_profiles": [
+   "CASCADE"
+  ],
+  "insight_interactions": [
+   "CASCADE"
+  ],
+  "calibration_entries": [
+   "CASCADE"
+  ],
+  "job_outcomes": [
+   "CASCADE"
+  ],
+  "invoice_outcomes": [
+   "CASCADE"
+  ],
+  "accounting_loops": [
+   "CASCADE"
+  ],
+  "analytics_events": [
+   "SET NULL"
+  ],
+  "price_observations": [
+   "SET NULL"
+  ],
+  "integration_connections": [
+   "CASCADE"
+  ],
+  "data_events": [
+   "SET NULL"
+  ],
+  "feedback_weights": [
+   "CASCADE"
+  ],
+  "pricing_intelligence": [
+   "CASCADE"
+  ],
+  "job_duration_data": [
+   "CASCADE"
+  ],
+  "customer_payment_patterns": [
+   "CASCADE"
+  ],
+  "material_price_history": [
+   "SET NULL"
+  ],
+  "job_embeddings": [
+   "SET NULL"
+  ],
+  "ai_predictions": [
+   "CASCADE"
+  ],
+  "contractor_skill_profiles": [
+   "CASCADE"
+  ],
+  "business_events": [
+   "CASCADE"
+  ],
+  "decision_trackers": [
+   "CASCADE"
+  ],
+  "business_settings": [
+   "CASCADE"
+  ],
+  "customers": [
+   "CASCADE"
+  ],
+  "jobs": [
+   "CASCADE"
+  ],
+  "document_counters": [
+   "CASCADE"
+  ],
+  "documents": [
+   "CASCADE"
+  ],
+  "line_items": [
+   "CASCADE"
+  ],
+  "extracted_documents": [
+   "CASCADE"
+  ],
+  "entities": [
+   "CASCADE"
+  ],
+  "entity_relationships": [
+   "CASCADE"
+  ],
+  "training_examples": [
+   "CASCADE"
+  ],
+  "model_predictions": [
+   "CASCADE"
+  ],
+  "material_catalog": [
+   "CASCADE"
+  ],
+  "suppliers": [
+   "CASCADE"
+  ],
+  "job_materials": [
+   "CASCADE"
+  ],
+  "eve_telemetry": [
+   "CASCADE"
+  ],
+  "job_photos": [
+   "CASCADE"
+  ],
+  "push_tokens": [
+   "CASCADE"
+  ],
+  "scanned_invoices": [
+   "CASCADE"
+  ],
+  "affiliate_clicks": [
+   "CASCADE"
+  ],
+  "subscriptions": [
+   "CASCADE"
+  ],
+  "supplier_connections": [
+   "CASCADE"
+  ],
+  "purchase_orders": [
+   "CASCADE"
+  ],
+  "projects": [
+   "CASCADE"
+  ],
+  "embeddings": [
+   "CASCADE"
+  ],
+  "signatures": [
+   "CASCADE"
+  ],
+  "generator_dismissals": [
+   "CASCADE"
+  ],
+  "customer_portal_events": [
+   "CASCADE"
+  ],
+  "photo_analyses": [
+   "CASCADE"
+  ],
+  "job_quality_signals": [
+   "CASCADE"
+  ],
+  "model_training_pairs": [
+   "SET NULL"
+  ],
+  "ml_cashflow_gap_predictions": [
+   "CASCADE"
+  ],
+  "ml_supplier_leadtime_predictions": [
+   "CASCADE"
+  ],
+  "ml_capacity_overrun_predictions": [
+   "CASCADE"
+  ],
+  "ts_daily_business_metrics": [
+   "CASCADE"
+  ],
+  "customer_embeddings": [
+   "CASCADE"
+  ],
+  "quote_line_embeddings": [
+   "CASCADE"
+  ],
+  "leads": [
+   "CASCADE"
+  ],
+  "workers": [
+   "CASCADE"
+  ],
+  "ai_rate_limit": [
+   "CASCADE"
+  ],
+  "subscription_audit": [
+   "CASCADE"
+  ],
+  "customer_questions": [
+   "CASCADE",
+   "NO ACTION"
+  ],
+  "contractor_pricing_calibration": [
+   "CASCADE"
+  ],
+  "churn_winback_log": [
+   "CASCADE"
+  ],
+  "push_notification_log": [
+   "CASCADE"
+  ],
+  "referral_attributions": [
+   "CASCADE",
+   "CASCADE"
+  ],
+  "subscription_credits": [
+   "CASCADE"
+  ],
+  "expenses": [
+   "CASCADE"
+  ],
+  "gobd_audit_log": [
+   "CASCADE"
+  ],
+  "quote_acceptance_links": [
+   "CASCADE"
+  ],
+  "accountant_handovers": [
+   "CASCADE"
+  ],
+  "regulated_submissions": [
+   "CASCADE"
   ]
  }
 }

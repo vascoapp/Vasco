@@ -1,7 +1,7 @@
 # Privacy Policy — Vasco
 
-**Last updated:** May 9, 2026
-**Effective date:** May 9, 2026
+**Last updated:** September 24, 2026
+**Effective date:** September 24, 2026
 
 Vasco ("we," "us," "our") operates the Vasco mobile application (the "App"). This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our App.
 
@@ -126,12 +126,10 @@ When cloud sync is enabled, data is stored on our servers hosted by Supabase (AW
 - Business events for analytics
 
 ### 3.3 Data Retention
-- **Active account data:** Retained as long as your account is active
-- **Invoices and financial records:** 7 years (per EU tax law requirements)
-- **Quotes and estimates:** 5 years
-- **Job records:** 5 years after completion
-- **AI learning data:** Retained while account is active; deleted within 30 days of account deletion
-- **Analytics events:** 12 months, then anonymized
+- **While your account is active:** your data (customers, jobs, quotes, invoices, photos, scans) is kept until you delete it
+- **When you delete your account:** everything is erased within 30 days, invoices included. We keep only a minimal record that the deletion was carried out (no content), for 3 years
+- **Your own retention duty:** the invoices and accounting records of your business must be kept by *you* for the period your tax law requires (for example 7 years in the Netherlands, 8 years for invoices in Germany, 10 years in France and Italy, 6 years in Spain and the UK). The app asks you to download them before it deletes your account; Vasco does not keep them for you afterwards
+- **Usage analytics:** anonymised after 12 months, deleted after 25 months
 
 ---
 
@@ -204,7 +202,7 @@ Request a copy of all personal data we hold about you.
 Correct any inaccurate personal data.
 
 ### 5.3 Erasure ("Right to Be Forgotten")
-Request deletion of your personal data. We will delete your data within 30 days, except where retention is required by law (e.g., tax records for 7 years).
+Request deletion of your personal data. We will delete your data within 30 days. Download your invoices and accounting records first: keeping them for the statutory period is your business's own obligation, and we do not retain them after deletion.
 
 ### 5.4 Data Portability
 Export your data in a machine-readable format (CSV/JSON).

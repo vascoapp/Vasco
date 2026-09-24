@@ -10,6 +10,8 @@ import { Share, Platform } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { selectAllPages } from '../lib/dataProvider';
 import { todayKey } from '../utils/dateKey';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,6 +31,12 @@ interface ExportResult {
   success: boolean;
   keyCount: number;
   error?: string;
+  /**
+   * The backend was reached and EVERY table was read in full. Only a complete
+   * export may be offered as "your records" before account deletion — an
+   * offline export (local cache only) or one missing a table is not.
+   */
+  complete?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -174,6 +182,28 @@ interface BackendDataset {
   signatures: unknown[];
   decision_trackers: unknown[];
   expenses: unknown[];
+  // Records a business must keep too (review 2026-09-24): incoming supplier
+  // invoices, the GoBD audit chain, projects, POs, filings, adviser seats,
+  // customer questions.
+  scanned_invoices: unknown[];
+  gobd_audit_log: unknown[];
+  projects: unknown[];
+  purchase_orders: unknown[];
+  regulated_submissions: unknown[];
+  accountant_handovers: unknown[];
+  customer_questions: unknown[];
+  // …and what the review found still missing: photo records (the files stay
+  // in storage — the rows say which exist), invoice numbering, workers,
+  // extracted supplier documents and their lines, and the customer's
+  // decisions behind any meerwerk invoice (tracker-keyed).
+  job_photos: unknown[];
+  document_counters: unknown[];
+  workers: unknown[];
+  extracted_documents: unknown[];
+  extracted_line_items: unknown[];
+  decision_items: unknown[];
+  decision_submissions: unknown[];
+  decision_activities: unknown[];
   fetched_at: string;
   /**
    * Tables that could not be read in full. An Art. 15/20 export that is
@@ -209,6 +239,17 @@ async function collectFromBackend(): Promise<BackendDataset | null> {
       signatures: () => (supabase.from('signatures' as any) as any).select('*').eq('contractor_user_id', user.id),
       decision_trackers: () => supabase.from('decision_trackers').select('*').eq('user_id', user.id),
       expenses: () => (supabase.from('expenses' as any) as any).select('*').eq('user_id', user.id),
+      scanned_invoices: () => (supabase.from('scanned_invoices' as any) as any).select('*').eq('user_id', user.id),
+      gobd_audit_log: () => (supabase.from('gobd_audit_log' as any) as any).select('*').eq('user_id', user.id),
+      projects: () => (supabase.from('projects' as any) as any).select('*').eq('user_id', user.id),
+      purchase_orders: () => (supabase.from('purchase_orders' as any) as any).select('*').eq('user_id', user.id),
+      regulated_submissions: () => (supabase.from('regulated_submissions' as any) as any).select('*').eq('user_id', user.id),
+      accountant_handovers: () => (supabase.from('accountant_handovers' as any) as any).select('*').eq('user_id', user.id),
+      customer_questions: () => (supabase.from('customer_questions' as any) as any).select('*').eq('contractor_user_id', user.id),
+      job_photos: () => (supabase.from('job_photos' as any) as any).select('*').eq('user_id', user.id),
+      document_counters: () => (supabase.from('document_counters' as any) as any).select('*').eq('user_id', user.id),
+      workers: () => (supabase.from('workers' as any) as any).select('*').eq('user_id', user.id),
+      extracted_documents: () => (supabase.from('extracted_documents' as any) as any).select('*').eq('user_id', user.id),
     };
 
     const result: BackendDataset = {
@@ -223,6 +264,21 @@ async function collectFromBackend(): Promise<BackendDataset | null> {
       signatures: [],
       decision_trackers: [],
       expenses: [],
+      scanned_invoices: [],
+      gobd_audit_log: [],
+      projects: [],
+      purchase_orders: [],
+      regulated_submissions: [],
+      accountant_handovers: [],
+      customer_questions: [],
+      job_photos: [],
+      document_counters: [],
+      workers: [],
+      extracted_documents: [],
+      extracted_line_items: [],
+      decision_items: [],
+      decision_submissions: [],
+      decision_activities: [],
       fetched_at: new Date().toISOString(),
       incomplete_tables: [],
     };
@@ -244,6 +300,34 @@ async function collectFromBackend(): Promise<BackendDataset | null> {
       }),
     );
 
+    // Second pass: rows owned through a parent, fetched by the parent ids in
+    // chunks (a long `.in()` list overflows the URL). A parent that could not
+    // be read makes its children incomplete too — never an empty "success".
+    const byParent = async (key: keyof BackendDataset, table: string, column: string, parent: keyof BackendDataset) => {
+      if (result.incomplete_tables.includes(String(parent))) {
+        result.incomplete_tables.push(String(key));
+        return;
+      }
+      const ids = (result[parent] as Array<{ id: string }>).map((r) => r.id);
+      const rows: unknown[] = [];
+      try {
+        for (let i = 0; i < ids.length; i += 100) {
+          const chunk = ids.slice(i, i + 100);
+          rows.push(...await selectAllPages<unknown>(() =>
+            (supabase.from(table as any) as any).select('*').in(column, chunk).order('id', { ascending: true })));
+        }
+        (result as unknown as Record<string, unknown>)[key] = rows;
+      } catch {
+        result.incomplete_tables.push(String(key));
+      }
+    };
+    await Promise.all([
+      byParent('extracted_line_items', 'extracted_line_items', 'document_id', 'extracted_documents'),
+      byParent('decision_items', 'decision_items', 'tracker_id', 'decision_trackers'),
+      byParent('decision_submissions', 'decision_submissions', 'tracker_id', 'decision_trackers'),
+      byParent('decision_activities', 'decision_activities', 'tracker_id', 'decision_trackers'),
+    ]);
+
     return result;
   } catch {
     return null;
@@ -262,15 +346,29 @@ async function collectByKey(storageKey: string): Promise<unknown[]> {
 // Share helper
 // ---------------------------------------------------------------------------
 
+/**
+ * Hand the export over as a FILE. It went out as one share-sheet MESSAGE —
+ * which iOS saves as a .txt and Android carries in an intent, whose ~1 MB
+ * binder limit the largest accounts (the ones with the most to keep) exceed
+ * (review 2026-09-24). Same pattern as the e-invoice export.
+ */
 async function shareContent(
   content: string,
   title: string,
+  kind: 'json' | 'csv' = 'json',
 ): Promise<void> {
-  await Share.share(
-    Platform.OS === 'ios'
-      ? { message: content, title }
-      : { message: content, title },
-  );
+  const file = new File(Paths.cache, `${title}.${kind}`);
+  if (file.exists) file.delete();
+  file.write(content);
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(file.uri, {
+      mimeType: kind === 'json' ? 'application/json' : 'text/csv',
+      dialogTitle: title,
+      UTI: kind === 'json' ? 'public.json' : 'public.comma-separated-values-text',
+    });
+  } else {
+    await Share.share({ message: content, title });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -343,8 +441,11 @@ export async function exportAllData(
       content = sections.join('\n');
     }
 
-    await shareContent(content, title);
-    return { success: true, keyCount };
+    await shareContent(content, title, format);
+    // "Complete" = the backend answered and every table was read in full.
+    // Offline, this is the device cache only — not the business's records.
+    const complete = !!backendData && backendData.incomplete_tables.length === 0;
+    return { success: true, keyCount, complete };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Export failed';
     return { success: false, keyCount: 0, error: message };
@@ -373,7 +474,7 @@ export async function exportInvoices(
       content = arrayToCsv(flattened);
     }
 
-    await shareContent(content, `vasco-invoices-${todayKey()}`);
+    await shareContent(content, `vasco-invoices-${todayKey()}`, 'csv');
     return { success: true, keyCount: invoices.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Export failed';
@@ -403,7 +504,7 @@ export async function exportCustomers(
       content = arrayToCsv(flattened);
     }
 
-    await shareContent(content, `vasco-customers-${todayKey()}`);
+    await shareContent(content, `vasco-customers-${todayKey()}`, 'csv');
     return { success: true, keyCount: customers.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Export failed';
@@ -433,7 +534,7 @@ export async function exportJobs(
       content = arrayToCsv(flattened);
     }
 
-    await shareContent(content, `vasco-jobs-${todayKey()}`);
+    await shareContent(content, `vasco-jobs-${todayKey()}`, 'csv');
     return { success: true, keyCount: jobs.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Export failed';

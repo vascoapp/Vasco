@@ -45,6 +45,20 @@ const grSql = `select table_name as t, string_agg(privilege_type, ',') as p
 const grOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', grSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 const grants = {};
 for (const g of JSON.parse(grOut.slice(grOut.indexOf('{'))).rows) grants[g.t] = g.p.split(',').sort();
+// What happens to a public row when its auth user is deleted. SET NULL keeps
+// the row — the erasure worker must delete those itself (review 2026-09-24:
+// five tables kept free text past "everything is erased").
+const fkSql = `select c.conrelid::regclass::text as t, c.confdeltype as a
+  from pg_constraint c
+  where c.contype = 'f' and c.confrelid = 'auth.users'::regclass
+    and c.connamespace = 'public'::regnamespace`;
+const fkOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', fkSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const ACTION = { a: 'NO ACTION', r: 'RESTRICT', c: 'CASCADE', n: 'SET NULL', d: 'SET DEFAULT' };
+const authUserFks = {};
+for (const f of JSON.parse(fkOut.slice(fkOut.indexOf('{'))).rows) {
+  const t = f.t.replace(/^public\./, '');
+  (authUserFks[t] ??= []).push(ACTION[f.a] ?? f.a);
+}
 const file = new URL('../src/test-utils/schema.snapshot.json', import.meta.url);
-writeFileSync(file, JSON.stringify({ takenAt: new Date().toISOString().slice(0, 10), tables, functions, grants }, null, 1) + '\n');
+writeFileSync(file, JSON.stringify({ takenAt: new Date().toISOString().slice(0, 10), tables, functions, grants, authUserFks }, null, 1) + '\n');
 console.log(`schema snapshot: ${Object.keys(tables).length} tables, ${rows.length} columns, ${Object.keys(functions).length} functions, grants on ${Object.keys(grants).length} tables`);

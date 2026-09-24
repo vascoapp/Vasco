@@ -13,25 +13,7 @@ import { SafeArea } from '../../src/theme/spacing';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { DKLabel } from '../../src/components/shared/DKLabel';
-import { requestAccountDeletion } from '../../src/services/accountDeletionService';
 import { exportAllData } from '../../src/services/dataExportService';
-
-/**
- * The Supabase auth id, which is what `account_deletion_requests.user_id`
- * is keyed by — NOT the AuthContext user id (which may be a demo/mock user).
- * Returns null when there is no real session, so callers can refuse to claim
- * a deletion was scheduled.
- */
-async function resolveAuthUserId(): Promise<string | null> {
-  try {
-    const { supabase, isSupabaseConfigured } = await import('../../src/lib/supabase');
-    if (!isSupabaseConfigured) return null;
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    return authUser?.id ?? null;
-  } catch {
-    return null;
-  }
-}
 
 const APP_VERSION = '1.0.0';
 // Was the literal string 'March 2026', rendered verbatim to German, French,
@@ -150,7 +132,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
           'Under the EU General Data Protection Regulation (GDPR), you have the following rights — all implemented directly in the app:\n\n' +
           '\u2022 Right of access: View all your data in the app at any time\n' +
           '\u2022 Right to data portability: Export all your data (jobs, invoices, quotes, customers) as structured data using the "Export my data" button below\n' +
-          '\u2022 Right to erasure: Delete your account and all associated data using the "Delete my account" button below. Financial records subject to legal retention periods will be anonymized rather than deleted.\n' +
+          '\u2022 Right to erasure: Delete your account and all associated data using the "Delete my account" button below. Everything is erased, invoices included \u2014 download your records first (keeping them is your own duty; see Data Retention).\n' +
           '\u2022 Right to rectification: Edit any of your data directly in the app\n' +
           '\u2022 Right to restrict processing: Contact us at privacy@vascobuild.com\n' +
           '\u2022 Right to object: Opt out of analytics in your profile settings',
@@ -160,11 +142,13 @@ const LEGAL_SECTIONS: LegalSection[] = [
         headingDefault: 'Data Retention',
         contentKey: 'legal.dataRetentionContent',
         contentDefault:
-          '\u2022 Financial records (invoices, quotes, payments): 7 years minimum, as required by EU tax law (Belastingdienst NL, Finanzamt DE, HMRC UK, etc.)\n' +
-          '\u2022 Contract and job records: 7 years from completion\n' +
-          '\u2022 Customer data: Retained while your account is active, deleted within 30 days of account closure (except where linked to retained financial records)\n' +
-          '\u2022 Usage analytics: Anonymized and aggregated after 12 months\n' +
-          '\u2022 Photos and scans: Retained while your account is active, deleted within 30 days of account closure',
+          // Export, then delete (user's decision 2026-09-24): Vasco keeps
+          // nothing after account deletion; keeping invoices is the business's
+          // own duty. This used to promise 7-year retention by Vasco.
+          '\u2022 While your account is active: everything is kept until you delete it\n' +
+          '\u2022 When you delete your account: everything is erased within 30 days \u2014 customers, jobs, quotes, invoices, photos and scans. Only a minimal record that the deletion happened (no content) is kept for 3 years\n' +
+          '\u2022 Your own duty: invoices and accounting records must be kept by your business for the period your tax law requires (e.g. 7 years NL, 8 years DE for invoices, 10 years FR/IT, 6 years ES/UK). Download them before you delete your account\n' +
+          '\u2022 Usage analytics: anonymised after 12 months, deleted after 25 months',
       },
     ],
   },
@@ -265,7 +249,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
         contentKey: 'legal.legalBasisContent',
         contentDefault:
           '\u2022 Contract performance (Art. 6(1)(b) GDPR): Processing necessary to provide platform services\n' +
-          '\u2022 Legal obligation (Art. 6(1)(c) GDPR): Financial record retention per EU tax law\n' +
+          '\u2022 Legal obligation (Art. 6(1)(c) GDPR): Vasco\u2019s own accounting records for your subscription (your invoices to your customers are your records, not ours \u2014 see Data Retention)\n' +
           '\u2022 Legitimate interest (Art. 6(1)(f) GDPR): Service improvement via anonymized analytics\n' +
           '\u2022 Consent (Art. 6(1)(a) GDPR): Optional features like photo AI analysis (consent can be withdrawn at any time)',
       },
@@ -405,43 +389,9 @@ export default function LegalScreen() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      t('legal.deleteAccount', 'Delete my account'),
-      t('legal.deleteAccountWarning', 'This will permanently delete your account and all data. Financial records will be anonymized per EU retention law (7 years). This action cannot be undone.'),
-      [
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-        {
-          text: t('legal.deleteConfirm', 'Delete permanently'),
-          style: 'destructive',
-          onPress: async () => {
-            // GDPR Art. 17. This used to only show a confirmation Alert and log
-            // out — the contractor believed he had exercised erasure while his
-            // data sat untouched. Route through the real service so a
-            // deletion request is actually persisted for the backend worker.
-            const authId = await resolveAuthUserId();
-            const result = authId
-              ? await requestAccountDeletion(authId)
-              : { success: false, localCleared: false, serverRequested: false };
-
-            // Never claim deletion was scheduled if nothing reached the server.
-            if (!result.success || !result.serverRequested) {
-              Alert.alert(
-                t('legal.deletionFailed', 'Could not submit request'),
-                t('legal.deletionFailedDesc', 'Your request did not reach our servers. Check your internet connection and try again, or contact privacy@vascobuild.com.'),
-              );
-              return;
-            }
-            Alert.alert(
-              t('legal.deleteConfirmTitle', 'Account deletion requested'),
-              t('legal.deleteConfirmDesc', 'Your data will be removed within 30 days. You will receive a confirmation email.'),
-              [{ text: t('common.ok', 'OK'), onPress: () => { logout(); router.replace('/login'); } }],
-            );
-          },
-        },
-      ],
-    );
-  };
+  // One deletion flow for the whole app: export, then delete
+  // (app/contractor/delete-account.tsx, user's decision 2026-09-24).
+  const handleDeleteAccount = () => router.push('/contractor/delete-account' as any);
 
   return (
     <View style={styles.container}>

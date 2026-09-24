@@ -174,7 +174,6 @@
   "profile": {
     "vatNumber": "Sales tax number",
     "ibanFormatInvalid": "Bank account checksum invalid (check for typos)",
-    "retention": "Retention: Invoices 7 years, estimates 5 years (tax law)",
     "kvkNumber": "EIN Number",
     "vatScheme": "Sales tax scheme",
     "quoteTone": "Estimate tone"

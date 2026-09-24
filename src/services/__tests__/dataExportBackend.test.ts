@@ -49,15 +49,12 @@ jest.mock('../../lib/supabase', () => ({
 (globalThis as any).__mockBackend = mockBackend;
 
 let lastShare: { content: string; title: string } | null = null;
-jest.mock('react-native', () => ({
-  Share: {
-    share: async (opts: { message: string; title: string }) => {
-      lastShare = { content: opts.message, title: opts.title };
-      return { action: 'sharedAction' };
-    },
-  },
-  Platform: { OS: 'ios' },
+jest.mock('expo-file-system', () => ({
+  Paths: { cache: 'cache://' },
+  File: class { uri = 'cache://export'; exists = false; write(c: string) { lastShare = { content: c, title: 'file' }; } delete() {} },
 }));
+jest.mock('expo-sharing', () => ({ isAvailableAsync: async () => true, shareAsync: async () => undefined }));
+jest.mock('react-native', () => ({ Share: { share: async () => ({ action: 'sharedAction' }) }, Platform: { OS: 'ios' } }));
 
 import { exportAllData } from '../dataExportService';
 

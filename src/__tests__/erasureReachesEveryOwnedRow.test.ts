@@ -30,14 +30,15 @@ describe('the erasure worker names live tables and columns', () => {
     expect(bad).toEqual([]);
   });
 
-  it('every anonymised table and column exists', () => {
-    const bad: string[] = [];
-    for (const m of listOf('ANONYMISE_TABLES').matchAll(/table: '(\w+)', nullColumns: \[([^\]]*)\]/g)) {
-      const t = m[1];
-      if (!SNAP[t] || !('user_id' in SNAP[t])) bad.push(t);
-      for (const c of [...m[2].matchAll(/'(\w+)'/g)].map((x) => x[1])) if (!SNAP[t]?.[c]) bad.push(`${t}.${c}`);
-    }
-    expect(bad).toEqual([]);
+  // ON DELETE SET NULL survives the auth cascade: without an explicit delete
+  // the row stays, content and all, while every copy says "erased".
+  it('every table whose auth-user FK is SET NULL is hard-deleted', () => {
+    const fks = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/test-utils/schema.snapshot.json'), 'utf8')).authUserFks as Record<string, string[]>;
+    expect(Object.keys(fks).length).toBeGreaterThan(20);
+    const tables = new Set([...listOf('HARD_DELETE_TABLES').matchAll(/'(\w+)'/g)].map((m) => m[1]));
+    for (const m of SRC.matchAll(/\.from\('(\w+)'\)\.delete\(\)/g)) tables.add(m[1]);
+    const kept = Object.entries(fks).filter(([t, a]) => a.some((x) => x !== 'CASCADE') && !tables.has(t) && t !== 'account_deletion_requests').map(([t]) => t);
+    expect(kept).toEqual([]);
   });
 
   it('every delete/select/in on a named table uses a live column', () => {
@@ -55,3 +56,24 @@ describe('the erasure worker names live tables and columns', () => {
 it('the auth user is deleted only when every earlier step landed', () => {
   expect(SRC).toMatch(/if \(errors\.length === 0\) \{\s*const \{ error: userErr \} = await admin\.auth\.admin\.deleteUser/);
 });
+
+// EXPORT, THEN DELETE (user's decision 2026-09-24): Vasco keeps nothing but a
+// minimal record that the erasure happened. That record used to cascade away
+// with the user (migration 20260924000002).
+describe('export, then delete', () => {
+  const MIG = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20260924000002_erasure_record_survives.sql'), 'utf8');
+
+  it('only the erasure record stops cascading — everything else still goes with the user', () => {
+    expect(MIG).toContain('drop constraint if exists account_deletion_requests_user_id_fkey');
+    for (const fk of ['documents_user_id_fkey', 'line_items_user_id_fkey', 'gobd_audit_log_user_id_fkey']) {
+      expect(MIG).not.toContain(fk);
+    }
+    expect(SRC).not.toMatch(/ANONYMISE_TABLES|retain_until/);
+  });
+
+  it('the record is minimal: the free-text reason is cleared, and it ages out after 3 years', () => {
+    expect(SRC).toMatch(/status: 'done'[\s\S]{0,300}reason: null/);
+    expect(SRC).toMatch(/3 \* 365 \* 86_400_000[\s\S]{0,200}\.delete\(\)\.eq\('status', 'done'\)\.lt\('processed_at', cutoff\)/);
+  });
+});
+

@@ -21,10 +21,10 @@ Data subjects (your customers, employees, contacts) can exercise their GDPR righ
 - The contractor (data controller) will be notified of corrections
 
 ### Right to Erasure (Article 17)
-- In-app: Settings → Account → "Delete my account" inserts a row into `account_deletion_requests`. A background worker (`drain-account-deletions`, scheduled daily at 02:00 UTC) processes pending rows in batches of 50 — erases user-owned data, anonymises tax-retained rows (7-year retention per legal obligation), calls `auth.admin.deleteUser`, and marks the request `done`.
+- In-app: Profile → "Delete my account" opens one deletion screen. It first shows the contractor their OWN record-keeping duty (per country) and offers the records download; an acknowledgement is required before the request can be sent. The request is a row in `account_deletion_requests`; a background worker (`drain-account-deletions`, daily at 02:00 UTC and triggered immediately on request) erases all user-owned data — invoices included — calls `auth.admin.deleteUser`, and marks the request `done`. Only a minimal record that the erasure happened (no content, the free-text reason cleared) is kept, for 3 years.
 - Out-of-band: email privacy@vascobuild.com — same SLA.
 - Personal data will be deleted within 30 days.
-- **Exceptions:** Data required for legal obligations (invoices/tax records: 7 years), ongoing disputes, or legitimate business interests. Anonymised tax records carry no identifying personal data.
+- **Record keeping is the contractor's duty.** Invoices and accounting records must be kept by the contractor's business for the period its tax law requires; Vasco does not retain them after account deletion, which is why the export is offered first. Exceptions to erasure: ongoing disputes.
 - The contractor (controller) will be notified of deletion.
 
 ### Right to Data Portability (Article 20)

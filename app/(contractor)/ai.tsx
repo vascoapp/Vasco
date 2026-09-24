@@ -26,7 +26,6 @@ import { useFeatureFlag } from '../../src/services/featureFlagService';
 import { recordScreenVisit } from '../../src/intelligence/learningStorage';
 import { useAutomations, type AutomationContext } from '../../src/services/automationService';
 import { exportAllData } from '../../src/services/dataExportService';
-import { requestAccountDeletion } from '../../src/services/accountDeletionService';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { useMaintenanceOpportunities } from '../../src/services/maintenanceOpportunityService';
 import { useSubmissions } from '../../src/services/submissionStore';
@@ -313,42 +312,9 @@ export default function VascoScreen() {
       : t('profile.exportFailed'));
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      t('profile.deleteAccountConfirm'),
-      t('profile.deleteAccountMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('profile.deleteAccount'), style: 'destructive',
-          onPress: async () => {
-            // The THIRD entry point to account deletion, and the one that did
-            // not check. Its siblings (contractor/legal.tsx,
-            // contractor/profile.tsx) both refuse to claim unless
-            // `serverRequested` came back true; this one discarded the result
-            // and announced "Your account has been deleted" — for a GDPR
-            // Art. 17 request that may never have left the device, and which is
-            // a 30-day REQUEST even when it does (sweep 2026-09-18).
-            const result = user?.id
-              ? await requestAccountDeletion(user.id)
-              : { success: false, localCleared: false, serverRequested: false };
-            if (!result.success || !result.serverRequested) {
-              Alert.alert(
-                t('legal.deletionFailed', 'Could not submit request'),
-                t('legal.deletionFailedDesc', 'Your request did not reach our servers. Check your internet connection and try again, or contact privacy@vascobuild.com.'),
-              );
-              return;
-            }
-            Alert.alert(
-              t('legal.deleteConfirmTitle', 'Account deletion requested'),
-              t('legal.deleteConfirmDesc', 'Your data will be removed within 30 days. You will receive a confirmation email.'),
-            );
-            await logout();
-          },
-        },
-      ],
-    );
-  };
+  // One deletion flow for the whole app: export, then delete
+  // (app/contractor/delete-account.tsx, user's decision 2026-09-24).
+  const handleDeleteAccount = () => router.push('/contractor/delete-account' as any);
 
   const heroAction = proactiveActions[0];
   const restOfQueue = proactiveActions.slice(1);

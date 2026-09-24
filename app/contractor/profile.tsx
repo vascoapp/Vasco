@@ -327,60 +327,9 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      t('profile.deleteAccount', 'Delete my account'),
-      t('profile.deleteAccountWarning', 'This will permanently delete your account and all data. Financial records will be anonymized per EU retention law. This cannot be undone.'),
-      [
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-        {
-          text: t('profile.deleteConfirm', 'Delete permanently'),
-          style: 'destructive',
-          onPress: async () => {
-            // GDPR Art. 17: persist the deletion request so the backend worker
-            // erases the user's data within 30 days. If the insert fails we
-            // must NOT claim deletion was scheduled.
-            let submitted = true;
-            try {
-              const { supabase, isSupabaseConfigured } = await import('../../src/lib/supabase');
-              if (isSupabaseConfigured) {
-                const { data: { user: authUser } } = await supabase.auth.getUser();
-                if (authUser) {
-                  const { error: insErr } = await (supabase.from('account_deletion_requests' as any) as any)
-                    .insert({ user_id: authUser.id, status: 'pending' });
-                  if (insErr) {
-                    submitted = false;
-                  } else {
-                    // R66 round 41: fire-and-forget drain immediately so the
-                    // request processes within seconds (instead of waiting
-                    // for the daily cron). Same pattern as accountDeletionService.
-                    try { supabase.functions.invoke('drain-account-deletions', { body: {} }).catch(() => {}); } catch {}
-                  }
-                } else {
-                  submitted = false;
-                }
-              }
-              // Demo mode: no backend to call; local logout clears AsyncStorage.
-            } catch {
-              submitted = false;
-            }
-            if (!submitted) {
-              Alert.alert(
-                t('profile.deletionFailed', 'Could not submit request'),
-                t('profile.deletionFailedDesc', 'Your request did not reach our servers. Check your internet and try again, or contact support.'),
-              );
-              return;
-            }
-            Alert.alert(
-              t('profile.deletionScheduled', 'Account deletion requested'),
-              t('profile.deletionScheduledDesc', 'Your data will be removed within 30 days. You will receive a confirmation email.'),
-              [{ text: t('common.ok', 'OK'), onPress: () => { logout(); router.replace('/login'); } }],
-            );
-          },
-        },
-      ],
-    );
-  };
+  // One deletion flow for the whole app: export, then delete
+  // (app/contractor/delete-account.tsx, user's decision 2026-09-24).
+  const handleDeleteAccount = () => router.push('/contractor/delete-account' as any);
 
   return (
     <View style={styles.container}>

@@ -8,11 +8,15 @@
 //   2. Erases user-owned rows in tables where GDPR erasure applies:
 //        push_tokens, scanned_invoices, job_photos, customer_interactions,
 //        decision_submissions, customer_uploads (storage bucket).
-//   3. Anonymises rows EU tax law requires we retain for 7 years:
-//        invoices, quotes, jobs → customer/description NULLed, amounts kept.
-//   4. Calls auth.admin.deleteUser(user_id) — ON DELETE CASCADE sweeps the
-//      remaining user-scoped tables automatically.
-//   5. Flips status → 'done' with `processed_at` + processor_notes summary.
+//   3. Calls auth.admin.deleteUser(user_id) — ON DELETE CASCADE sweeps the
+//      remaining user-scoped tables, issued invoices INCLUDED.
+//   4. Flips status → 'done', clears the free-text reason. The request row no
+//      longer cascades (migration 20260924000002): it is the minimal record
+//      that the erasure happened, deleted after 3 years.
+//
+// EXPORT, THEN DELETE (user's decision, 2026-09-24): keeping invoices is the
+// CONTRACTOR's duty, not Vasco's. The app's delete-account screen makes them
+// download their records first; Vasco then keeps nothing.
 //
 // Failures: on error the row is flipped back to 'pending' with a note — the
 // next cron tick retries. We don't auto-retry in-process to keep the window
@@ -40,6 +44,14 @@ const HARD_DELETE_TABLES = [
   'pricing_intelligence',
   'affiliate_clicks',
   'contractor_pricing_calibration',
+  // FK to auth.users is ON DELETE SET NULL, so the cascade would KEEP these
+  // rows — with free text (job_description), event payloads and features —
+  // under a copy that says everything is erased (review 2026-09-24).
+  'analytics_events',
+  'data_events',
+  'job_embeddings',
+  'model_training_pairs',
+  'price_observations',
 ] as const;
 
 // Tables whose rows belong to the contractor through ANOTHER column — they
@@ -48,15 +60,11 @@ const HARD_DELETE_TABLES = [
 // erasure could ever be recorded as done (review 2026-09-24, checked against
 // the live schema snapshot). Each is resolved to ids before anything is gone.
 //   customer_questions     → contractor_user_id
+//   material_price_history → observed_by (SET NULL FK; carries a postcode)
 //   decision_submissions   → tracker_id ∈ the contractor's decision_trackers
 //   customer_interactions  → customer_id ∈ their customers, or quote_id ∈ their documents
 // Guard: src/__tests__/erasureReachesEveryOwnedRow.test.ts.
 
-// Tables we MUST retain (EU tax law — 7yr retention) but anonymise.
-// For each table: column(s) to NULL out.
-const ANONYMISE_TABLES: Array<{ table: string; nullColumns: string[] }> = [
-  { table: 'documents', nullColumns: ['notes', 'customer_id'] },
-];
 
 // Storage buckets to empty (best-effort; ignore missing objects).
 const STORAGE_BUCKETS_TO_EMPTY = ['customer-uploads', 'job-photos'] as const;
@@ -98,6 +106,11 @@ Deno.serve(async (req) => {
     .limit(50);
 
   if (pendingErr) return json({ error: pendingErr.message }, 500);
+  // Every run: erasure records are kept 3 years (accountability), then go.
+  const cutoff = new Date(Date.now() - 3 * 365 * 86_400_000).toISOString();
+  const { error: ageErr } = await admin.from('account_deletion_requests').delete().eq('status', 'done').lt('processed_at', cutoff);
+  if (ageErr) console.error(`drain-account-deletions: could not age out old erasure records: ${ageErr.message}`);
+
   if (!pending || pending.length === 0) return json({ processed: 0 });
 
   const results: Array<{ id: string; status: 'done' | 'failed'; note?: string }> = [];
@@ -118,10 +131,13 @@ Deno.serve(async (req) => {
     const errors: string[] = [];
 
     // Step 2a — rows owned through another column (resolve ids FIRST: the
-    // trackers, customers and documents go with the auth user in step 5).
+    // trackers, customers and documents go with the auth user in step 4).
     {
       const { error: qErr } = await admin.from('customer_questions').delete().eq('contractor_user_id', row.user_id);
       if (qErr) errors.push(`customer_questions: ${qErr.message}`);
+
+      const { error: mphErr } = await admin.from('material_price_history').delete().eq('observed_by', row.user_id);
+      if (mphErr) errors.push(`material_price_history: ${mphErr.message}`);
 
       const { data: trackers, error: trErr } = await admin.from('decision_trackers').select('id').eq('user_id', row.user_id);
       if (trErr) errors.push(`decision_trackers(lookup): ${trErr.message}`);
@@ -158,15 +174,7 @@ Deno.serve(async (req) => {
       if (error) errors.push(`${table}: ${error.message}`);
     }
 
-    // Step 3 — anonymise retained rows (documents etc.) owned by the user.
-    for (const { table, nullColumns } of ANONYMISE_TABLES) {
-      const patch: Record<string, null> = {};
-      for (const col of nullColumns) patch[col] = null;
-      const { error } = await admin.from(table).update(patch).eq('user_id', row.user_id);
-      if (error) errors.push(`${table}(anon): ${error.message}`);
-    }
-
-    // Step 4 — empty storage buckets (best-effort). The old flat
+    // Step 3 — empty storage buckets (best-effort). The old flat
     // list(user_id)+remove(`${user_id}/${name}`) matched NOTHING for either
     // bucket (GDPR Art. 17 violation — PII persisted after deletion):
     //   • job-photos keys are NESTED: <user_id>/<job_id>/<file> — list(user_id)
@@ -205,18 +213,23 @@ Deno.serve(async (req) => {
       errors.push(`storage(customer-uploads): ${(e as Error).message}`);
     }
 
-    // Step 5 — delete the auth user last. ON DELETE CASCADE handles
+    // Step 4 — delete the auth user last. ON DELETE CASCADE handles
     // remaining tables that reference auth.users(id).
-    // ONLY when every step above landed. account_deletion_requests.user_id is
-    // ON DELETE CASCADE, so deleting the user deletes THIS REQUEST ROW too:
-    // run after a partial failure, the rollback below would match no row and
-    // the unfinished erasure would never be retried (review 2026-09-24).
+    // ONLY when every step above landed: a partial erasure is rolled back to
+    // `pending` and retried, never finished by the cascade (review 2026-09-24).
+    // The request row itself no longer cascades (20260924000002 dropped its
+    // FK) — it is the erasure record. 🔴 That migration must be APPLIED before
+    // this worker is deployed, or the record vanishes with the user.
     if (errors.length === 0) {
       const { error: userErr } = await admin.auth.admin.deleteUser(row.user_id);
-      if (userErr) errors.push(`auth.deleteUser: ${userErr.message}`);
+      // Already gone (removed from the dashboard or by hand): the goal is
+      // reached. Since the request row no longer cascades, treating this as a
+      // failure would retry it on every tick, forever (review 2026-09-24).
+      const alreadyGone = !!userErr && ((userErr as { status?: number }).status === 404 || (userErr as { code?: string }).code === 'user_not_found');
+      if (userErr && !alreadyGone) errors.push(`auth.deleteUser: ${userErr.message}`);
     }
 
-    // Step 6 — finalise the request row.
+    // Step 5 — finalise the request row.
     //
     // Everything above is irreversible: rows hard-deleted, buckets emptied,
     // the auth user gone. These two writes are the ONLY record of that, and
@@ -233,15 +246,15 @@ Deno.serve(async (req) => {
         .update({
           status: 'done',
           processed_at: new Date().toISOString(),
-          processor_notes: `hard_deleted=${HARD_DELETE_TABLES.length} anon=${ANONYMISE_TABLES.length} buckets=${STORAGE_BUCKETS_TO_EMPTY.length}`,
+          processor_notes: `hard_deleted=${HARD_DELETE_TABLES.length} buckets=${STORAGE_BUCKETS_TO_EMPTY.length}`,
+          reason: null, // free text the user typed — not part of the minimal record
         })
         .eq('id', row.id)
         .select('id');
-      // 0 rows = the request row went with the user (FK ON DELETE CASCADE):
-      // the erasure happened and its completion record did not survive it.
-      // 🔴 Open decision: keep the record where the cascade cannot reach it.
+      // 0 rows = the completion record did not land (the row no longer
+      // cascades with the user since 20260924000002, so this is a real loss).
       if (!doneErr && (!doneRows || doneRows.length === 0)) {
-        console.error(`drain-account-deletions: ERASURE COMPLETED for request ${row.id} (user ${row.user_id}); the request row was removed by the auth cascade, so no completion record exists.`);
+        console.error(`drain-account-deletions: ERASURE COMPLETED for request ${row.id} (user ${row.user_id}) but no completion record was written.`);
       }
       if (doneErr) {
         console.error(`drain-account-deletions: ERASURE COMPLETED for request ${row.id} (user ${row.user_id}) but the completion record was NOT written:`, doneErr.message);
