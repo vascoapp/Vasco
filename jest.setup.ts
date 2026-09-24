@@ -142,28 +142,13 @@ jest.mock('./src/lib/supabase', () => ({
 // ---------------------------------------------------------------------------
 // Misc service mocks used transitively
 // ---------------------------------------------------------------------------
-jest.mock('./src/services/invoiceScanService', () => ({
-  getScanHistory: jest.fn(() => Promise.resolve([])),
-  getFirstScanInsights: jest.fn(() => Promise.resolve(null)),
-}));
+// invoiceScanService is NOT stubbed (removed 2026-09-24, convergence plan P0):
+// an empty scan history in every test hid the photo → price pipeline.
 
-jest.mock('./src/services/cohortBenchmarkService', () => ({
-  getTradeBaselines: jest.fn(() => Promise.resolve(null)),
-  // Stubbed alongside getTradeBaselines so suites that transitively import
-  // this module (quoteOptimizerService) do not hit `is not a function` on a
-  // partially-mocked module. Tests that need the real matching behaviour
-  // unmock this module explicitly.
-  getCohortBenchmarks: jest.fn(() =>
-    Promise.resolve({
-      materialBenchmarks: [],
-      tradeBenchmarks: [],
-      lastSync: new Date().toISOString(),
-      contractorsInCohort: 0,
-    }),
-  ),
-  findBenchmark: jest.fn(() => null),
-}));
+// cohortBenchmarkService is NOT stubbed (removed 2026-09-24, convergence plan
+// P0): an empty cohort in every test hid the cross-contractor pricing moat.
 
-jest.mock('./src/intelligence/tradeContext', () => ({
-  getCustomerIntelligence: jest.fn(() => null),
-}));
+// tradeContext is NOT stubbed (removed 2026-09-24, convergence plan P0). Its
+// getCustomerIntelligence returned null in every test, so no test had ever
+// seen the customer context line on a queue card — which is how it stayed
+// English on every market. A test that needs it inert mocks it itself.
