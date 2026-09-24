@@ -22,6 +22,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthProvider, useAuth } from '../AuthContext';
 
 // ─── DEMO_MODE: force true so demo accounts are accepted ──────────────────
+// This suite tests DEMO mode — no backend. It inherited that from the global
+// "not configured" stub until the fake backend replaced it (P0.3); say it.
+jest.mock('../../lib/supabase', () => ({
+  supabase: { auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), signOut: async () => ({ error: null }) } },
+  isSupabaseConfigured: false,
+}));
 jest.mock('../../config/demo', () => ({
   __esModule: true,
   DEMO_MODE: true,

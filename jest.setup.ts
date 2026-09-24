@@ -93,20 +93,17 @@ jest.mock('react-native/Libraries/Share/Share', () => ({
 // ---------------------------------------------------------------------------
 // Supabase mock
 // ---------------------------------------------------------------------------
-jest.mock('./src/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn(() => Promise.resolve({ data: null, error: null })),
-    })),
-    rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
-  },
-  isSupabaseConfigured: false,
-}));
+// ---------------------------------------------------------------------------
+// Backend — the FAKE Supabase (convergence plan P0.3, 2026-09-24)
+// ---------------------------------------------------------------------------
+// Was a stub that said "not configured", so every data path ran on fixtures
+// or on mocks that accepted any payload. Now: configured, NOBODY signed in,
+// backed by an in-memory PostgREST that rejects what production rejects
+// (unknown column, missing NOT NULL, 1000-row cap, RLS) against a snapshot of
+// the live schema. A test that needs a session builds its own:
+//   jest.mock('<rel>/lib/supabase', () => require('<rel>/test-utils/fakeSupabase').fakeSupabaseModule({ userId: 'u1' }));
+// A test of DEMO mode (backend absent) must say so with its own mock.
+jest.mock('./src/lib/supabase', () => require('./src/test-utils/fakeSupabase').fakeSupabaseModule({ userId: null }));
 
 // ---------------------------------------------------------------------------
 // Misc service mocks used transitively

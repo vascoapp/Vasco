@@ -42,7 +42,7 @@ coming back. The count stays high for four reasons:
 
 Tracked weekly in `memory/sweep-2026-09-23-classes.md` (metrics section).
 
-## P0 — Remove the harness's blind spots (started 2026-09-24)
+## P0 — Remove the harness's blind spots (started 2026-09-24; P0.1 + P0.3 DONE same day)
 
 The highest leverage: one change here covers every test and every class at
 once. Rule for each stub: **remove it, run the suite, triage every new
@@ -64,6 +64,14 @@ failure**:
   - a string literal in stored copy (queue cards, pushes, PDFs, inbox);
   - `catch {}` around a write;
   - `ok` read without the payload.
+- **Done 2026-09-24.** Real i18n found a live defect straight away: Dutch
+  customers got legacy automation texts, and the appointment SMS was just
+  "Morgen". The fake backend (`src/test-utils/fakeSupabase.ts`, schema
+  snapshot of 92 tables / 1,105 columns, `npm run schema:snapshot`) is now
+  the global default: configured, nobody signed in. Every update mapper is
+  checked against the live columns. **Next:** run the screen-walk flows on
+  the fake with a signed-in contractor, so AppState's inline create payloads
+  hit the schema too.
 - **P0.3 Fake backend for unit tests.** An in-memory PostgREST fake that
   enforces what production enforces:
   - `max_rows = 1000`;
@@ -130,3 +138,4 @@ Sweep only on the core surface, money/legal/customer-facing first.
 | Date | Global app-logic stubs | Unit files with real i18n | Unreachable files | HIGH found in core-surface sweep |
 |---|---|---|---|---|
 | 2026-09-24 | 5 | 4 / 302 | not measured | — |
+| 2026-09-24 (eve) | 0 (tradeContext, cohort, scan, i18n removed; backend = fake with live schema) | all (real i18n global) | not measured | — |

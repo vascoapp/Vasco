@@ -1,0 +1,6078 @@
+{
+ "takenAt": "2026-09-24",
+ "tables": {
+  "account_deletion_requests": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "requested_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "reason": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'pending'::text"
+   },
+   "processed_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "processor_notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "accountant_handovers": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "access_code": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "label": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "business_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "period_start": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "period_end": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "payload": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "expires_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "(now() + '180 days'::interval)"
+   },
+   "revoked_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "last_viewed_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "view_count": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   }
+  },
+  "accounting_loops": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "invoice_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "payment_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "external_invoice_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "current_stage": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "amounts": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{\"paid\": 0, \"agreed\": 0, \"quoted\": 0, \"invoiced\": 0}'::jsonb"
+   },
+   "history": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "affiliate_clicks": {
+   "id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "supplier_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "clicked_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "converted": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "order_value": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "commission": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "estimated_commission": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "ai_models": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "model_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "model_version": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "algorithm": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "feature_columns": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "ARRAY"
+   },
+   "target_column": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "training_samples": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "accuracy": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "mae": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "rmse": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "r_squared": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "model_weights": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "model_blob_path": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "is_active": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "trained_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "activated_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "retired_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   }
+  },
+  "ai_predictions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "model_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "prediction_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "predicted_value": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "confidence": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "input_features": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "actual_value": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "error": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "error_percent": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "resolved_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "job_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "invoice_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "ai_rate_limit": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "window_start": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "count": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "app_config": {
+   "key": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "value": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "description": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "business_events": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "event_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "entity_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "entity_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "payload": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "session_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "screen_context": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "business_settings": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "business_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "kvk_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "vat_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "address": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "email": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "phone": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "logo_url": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "iban": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "bic": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "postcode": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "city": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "website": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "invoice_prefix": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'INV'::text"
+   },
+   "quote_prefix": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'Q'::text"
+   },
+   "default_payment_terms": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "14"
+   },
+   "quote_tone": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'friendly'::text"
+   },
+   "vat_scheme": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "business_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "team_size": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "registration_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "licenses": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "state": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "routing_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "bank_account_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "enabled_payment_methods": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "province": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "fiscal_regime": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "person_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "vat_basis": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "filing_period": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "tva_sur_les_debits": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   }
+  },
+  "calibration_entries": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "generator_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "predicted_value": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "actual_value": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "is_accurate": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "tolerance_pct": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "resolved_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "context": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "churn_winback_log": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "variant": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "locale": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "days_since_activity": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "success": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "true"
+   },
+   "error": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "sent_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "cohort_benchmarks": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "metric": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "period": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "sample_size": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "p25": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "median": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "p75": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "mean": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "stddev": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "computed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "cohort_weekly_stats": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "week_key": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "avg_hourly_rate": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "median_hourly_rate": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "avg_quote_acceptance_rate": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "avg_margin_percent": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "avg_job_duration_ratio": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "avg_jobs_per_week": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "avg_dso": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "avg_material_cost_ratio": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "contractor_count": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "data_points": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "computed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "contractor_pricing_calibration": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "median_price_vs_cohort_pct": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "acceptance_rate_vs_cohort_pct": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "margin_vs_cohort_pct": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "sample_size": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "cohort_sample_size": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "confidence": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "real",
+    "default": "0.0"
+   },
+   "computed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "contractor_skill_profiles": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "pricing_accuracy": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "50"
+   },
+   "duration_accuracy": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "50"
+   },
+   "customer_retention": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "50"
+   },
+   "payment_collection": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "50"
+   },
+   "material_efficiency": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "50"
+   },
+   "quote_win_rate": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "50"
+   },
+   "overall_score": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "50"
+   },
+   "tier": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'developing'::text"
+   },
+   "score_trend": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'stable'::text"
+   },
+   "data_points": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "confidence": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "real",
+    "default": "0.0"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "cron_http_calls": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "bigint",
+    "default": "nextval('cron_http_calls_id_seq'::regclass)"
+   },
+   "jobname": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "request_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "bigint"
+   },
+   "sent_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "status_code": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "error_msg": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "timed_out": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "resolved_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   }
+  },
+  "customer_embeddings": {
+   "customer_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "embedding": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "USER-DEFINED"
+   },
+   "source_text": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "embedded_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "customer_interactions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quote_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "data": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "ip_hash": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "flagged": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   }
+  },
+  "customer_payment_patterns": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "customer_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_region": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "relationship_months": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "invoice_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "invoice_amount": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "invoice_date": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "due_date": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "payment_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "days_to_payment": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "was_overdue": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "reminders_sent": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "payment_method": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "customer_portal_events": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "portal_token": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "contractor_user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "decision_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "event_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "duration_ms": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "metadata": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "customer_questions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "tracker_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "tracker_access_token": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "contractor_user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "question": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "question_lang": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'nl'::text"
+   },
+   "stakes": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'unknown'::text"
+   },
+   "ai_reply_draft": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "ai_reply_confidence": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "ai_reply_reason": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "approved_reply": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "approved_by": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "approved_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "auto_sent": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "sent_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'pending'::text"
+   },
+   "asked_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "customers": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "email": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "phone": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "address": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "city": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "postcode": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "province": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "vat_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "tax_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "einvoice_routing": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "einvoice_email": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "data_events": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "session_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "event_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "context": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "payload": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "entities": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "decision_activities": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "tracker_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "activity_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "item_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "metadata": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "decision_items": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "tracker_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "category": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "label": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "help_text": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "input_type": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'select'::text"
+   },
+   "options": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "is_required": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "true"
+   },
+   "due_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "sort_order": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "decision_submissions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "tracker_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "item_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "submitted_by": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'customer'::text"
+   },
+   "value": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "photos": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "ARRAY"
+   },
+   "linked_product_url": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "time_to_decide_seconds": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "submitted_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "decision_timing_aggregates": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "decision_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "total_submissions": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "avg_days_to_decide": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "median_days_to_decide": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "overdue_count": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "reminder_responsive_count": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "last_updated": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "decision_trackers": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "access_code": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "template_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'active'::text"
+   },
+   "total_items": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "completed_items": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "customer_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_phone": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_email": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "project_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "project_start_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "quote_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "deposit_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "expires_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "payment_link": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "payment_status": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "document_counters": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "doc_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "current_number": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "bigint",
+    "default": "0"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "documents": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "doc_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "source_document_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "document_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "issue_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "due_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "sent_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "paid_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "total_amount": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "payment_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "payment_method": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "payment_provider": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "scope_text": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "deleted_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "delivery_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "project_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "billing_term_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "retention_amount": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "is_retention_release": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "change_order_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "einvoice_submitted": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "title": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "decision_item_ids": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "ARRAY"
+   },
+   "operation_nature": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "delivery_address": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "embeddings": {
+   "id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "item_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "title": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "description": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "''::text"
+   },
+   "embedding": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "USER-DEFINED"
+   },
+   "metadata": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "entities": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "entity_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "aliases": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "ARRAY",
+    "default": "'{}'::text[]"
+   },
+   "attributes": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "stats": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "confidence": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "1.0"
+   },
+   "sources": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "ARRAY",
+    "default": "'{}'::text[]"
+   },
+   "embedding_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "entity_relationships": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "source_entity_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "target_entity_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "relationship_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "strength": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0.5"
+   },
+   "attributes": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "first_seen": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "last_seen": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "occurrences": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "1"
+   }
+  },
+  "eve_telemetry": {
+   "id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "auth.uid()"
+   },
+   "action_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "agent_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "entity_key": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "outcome": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "meta": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "expenses": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "description": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "category": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "amount": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "vat_amount": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "vat_rate": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "expense_date": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "supplier": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "receipt_url": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "job_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_title": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "deductible": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "true"
+   },
+   "deduction_percentage": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "100"
+   },
+   "notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "extracted_documents": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "source_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "source_uri": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "doc_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "document_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "document_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "total_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "vat_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "currency": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'EUR'::text"
+   },
+   "confidence": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "raw_text": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "extracted_json": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'pending'::text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "extracted_line_items": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "document_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "description": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quantity": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "1"
+   },
+   "unit_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "total_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "unit": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "brand": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "category": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "article_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "confidence": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "feature_flags": {
+   "key": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'GLOBAL'::text"
+   },
+   "enabled": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "rollout_percent": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "description": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "feedback_weights": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "feedback_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "segment_key": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'default'::text"
+   },
+   "observations": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "generator_dismissals": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "generator_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "insight_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "screen": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "reason": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "dismissed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "gobd_audit_log": {
+   "id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "auth.uid()"
+   },
+   "entry_index": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "ref": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "content_hash": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "prev_hash": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "signed_at": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "metadata": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "insight_interactions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "insight_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "generator_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "action": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "screen_context": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "category": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "dwell_time_ms": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "outcome": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "snooze_until": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "integration_connections": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "provider": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "provider_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "is_connected": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "config": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "last_sync_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "invoice_outcomes": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "invoice_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "amount": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "issued_at": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "due_at": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "paid_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "days_to_payment": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "is_overdue": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "job_duration_data": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'NL'::text"
+   },
+   "job_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "estimated_hours": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "estimated_days": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "actual_hours": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "actual_days": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "duration_ratio": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "property_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "property_age_years": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "job_complexity": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "weather_impact": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "material_delays": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "scope_changes": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "crew_size": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "1"
+   },
+   "used_subcontractor": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "started_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "completed_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "job_embeddings": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'NL'::text"
+   },
+   "job_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "job_description": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "job_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "embedding": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "USER-DEFINED"
+   },
+   "actual_cost": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "actual_hours": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "margin_percent": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "customer_satisfaction": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "job_materials": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "material_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "quantity": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "1"
+   },
+   "unit": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'piece'::text"
+   },
+   "unit_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "total_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "supplier_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'planned'::text"
+   },
+   "notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "ordered_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "delivered_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "job_outcomes": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "job_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "estimated_hours": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "actual_hours": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "estimated_cost": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "actual_cost": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "margin_percent": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "completed_at": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "postcode": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "job_photos": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "storage_path": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "caption": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "kind": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'during'::text"
+   },
+   "taken_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "job_quality_signals": {
+   "job_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "paid_on_time": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "customer_review_score": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "customer_review_text": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "referral_generated": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "rebook_within_180d": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "composite_score": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "jobs": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "title": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "description": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'active'::text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "address_street": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "address_city": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "address_postcode": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "address_country": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'NL'::text"
+   },
+   "address_access_notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "address_parking_notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "scheduled_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "scheduled_start_time": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "scheduled_end_time": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "estimated_duration": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "quoted_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "agreed_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "priority": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'normal'::text"
+   },
+   "rooms_areas": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "ARRAY"
+   },
+   "specifications": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "site_contact": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "site_phone": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "completed_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "project_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "signature_svg": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_signoff_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "time_entries": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "assigned_worker_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "leads": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'new'::text"
+   },
+   "source": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'manual'::text"
+   },
+   "customer_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_phone": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_email": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_description": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "estimated_value": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "source_quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "contacted_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "converted_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   }
+  },
+  "learning_profiles": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "role": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "profile_data": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "schema_version": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "2"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "line_items": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "document_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "description": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quantity": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "1"
+   },
+   "unit_price": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "total_price": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "position": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "vat_rate": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   }
+  },
+  "material_canonical_aliases": {
+   "variant_key": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "canonical_key": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "source": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "confidence": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "rationale": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "material_catalog": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "brand": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "category": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'general'::text"
+   },
+   "subcategory": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "sku": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "ean": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "manufacturer_code": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "base_unit": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'piece'::text"
+   },
+   "unit_conversions": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "aliases": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "ARRAY",
+    "default": "'{}'::text[]"
+   },
+   "specifications": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "demand_pattern": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'steady'::text"
+   },
+   "avg_monthly_usage": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "reorder_point": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "material_embeddings": {
+   "material_key": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "embedding": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "USER-DEFINED"
+   },
+   "source_text": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "embedded_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "material_price_history": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'NL'::text"
+   },
+   "material_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "material_category": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "brand": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "ean_code": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "unit": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "price_excl_vat": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "currency": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'EUR'::text"
+   },
+   "vat_rate": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "real",
+    "default": "21.0"
+   },
+   "in_stock": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "lead_time_days": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "minimum_order_qty": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "is_promotion": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "observed_by": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "source": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "observed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "postcode": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "canonical_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "ml_capacity_overrun_predictions": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "horizon_days": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "overrun_probability": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "predicted_overrun_days": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "features": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "computed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "ml_cashflow_gap_predictions": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "horizon_days": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "predicted_gap_eur": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "confidence": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "features": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "computed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "ml_material_price_forecasts": {
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "material_category": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "forecast_horizon_days": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "predicted_price_change_pct": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "confidence": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "observation_count": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "bigint"
+   },
+   "computed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "ml_supplier_leadtime_predictions": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "supplier_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "predicted_delay_days": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "delay_probability": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "confidence": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "computed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "moat_schema_metadata": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "table_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "column_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "business_meaning": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "data_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "unit": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "valid_range": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "example_value": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "is_pii": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "model_predictions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "model_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "model_version": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "input": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "prediction": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "confidence": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "explanation": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "ARRAY"
+   },
+   "event_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "was_correct": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "error_magnitude": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "model_training_pairs": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "model_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "features": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "target": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "target_label": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "source": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "weight": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "1.0"
+   },
+   "recorded_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "photo_analyses": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "job_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "storage_path": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "detected_rooms": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "ARRAY"
+   },
+   "detected_materials": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "estimated_complexity": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "estimated_duration_hours": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "estimated_cost_eur": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "raw_response": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "analyzed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "price_observations": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "material_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "material_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "price": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "currency": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'EUR'::text"
+   },
+   "unit": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "in_stock": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "lead_time_days": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "observed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "source": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'unknown'::text"
+   },
+   "confidence": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "1.0"
+   },
+   "is_sale": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "sale_end_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "regular_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "stock_level": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "min_quantity": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "bulk_pricing": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "pricing_intelligence": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'NL'::text"
+   },
+   "job_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "line_description": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quoted_unit_price": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "quoted_quantity": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "quoted_total": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "vat_rate": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "real",
+    "default": "21.0"
+   },
+   "was_accepted": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "boolean"
+   },
+   "accepted_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "actual_cost": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "actual_hours": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "margin_percent": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "customer_type": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "region": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "season": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quoted_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "accepted_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "completed_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "decline_reason": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "time_to_decision_hours": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "reminder_count_before_decision": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "counter_offer_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "contractor_segment": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "postcode": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "sent_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "sent_at_hour": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "smallint"
+   },
+   "sent_at_dow": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "smallint"
+   }
+  },
+  "projects": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "description": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'planning'::text"
+   },
+   "start_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "target_end_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "actual_end_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "total_budget": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "total_quoted": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "total_invoiced": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "total_paid": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "address": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "milestones": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "billing_terms": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "retention_percent": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "change_orders": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   }
+  },
+  "purchase_orders": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "supplier_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "items": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "total": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'draft'::text"
+   },
+   "external_ref": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "external_provider": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "submitted_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "push_notification_log": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "notif_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "entity_key": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "title": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "body": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "success": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "true"
+   },
+   "error": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "sent_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "push_tokens": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "device_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "token": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "platform": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "app_version": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "quote_acceptance_links": {
+   "token": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "auth.uid()"
+   },
+   "quote_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "customer_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "customer_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "quote_amount": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "quote_description": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'pending'::text"
+   },
+   "decline_reason": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "responded_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "expires_at": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "withdrawal_ack_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   }
+  },
+  "quote_line_deltas": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "line_item_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "sku": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "description": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "original_qty": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "new_qty": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "original_unit_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "new_unit_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "source": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "postcode": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "reason_code": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "free_text_reason": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "quote_line_embeddings": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "line_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "embedding": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "USER-DEFINED"
+   },
+   "source_text": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "embedded_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "referral_attributions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "referrer_user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "referred_user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "code": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'pending'::text"
+   },
+   "attributed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "activated_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "credited_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   }
+  },
+  "referral_codes": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "code": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "regional_preference_aggregates": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "region": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "trade": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "decision_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "chosen_value": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "chosen_label": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "decision_count": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "contractor_count": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "last_updated": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "regulated_submissions": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "channel": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "subject_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "state": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'draft'::text"
+   },
+   "idempotency_key": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "provider_ref": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supersedes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "authority_code": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "last_detail": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "attempts": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "scanned_invoices": {
+   "id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "document_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_address": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "supplier_vat": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "document_number": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "document_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "subtotal": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "vat_amount": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "total": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "currency": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'EUR'::text"
+   },
+   "payment_terms": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "confidence": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "line_items": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'[]'::jsonb"
+   },
+   "image_path": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "scanned_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "signatures": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "job_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "quote_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "invoice_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "contractor_user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "signer_name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "signer_role": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'customer'::text"
+   },
+   "signature_svg": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_agent": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "ip_hash": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "signed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "subscription_audit": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "bigint",
+    "default": "nextval('subscription_audit_id_seq'::regclass)"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "old_tier": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "new_tier": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "old_status": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "new_status": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "external_provider": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "changed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "subscription_credits": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "months_free": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "1"
+   },
+   "source_type": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'referral'::text"
+   },
+   "source_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "granted_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "redeemed_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "notes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "subscriptions": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "tier": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "billing_cycle": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'monthly'::text"
+   },
+   "status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'active'::text"
+   },
+   "trial_ends_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "current_period_ends_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "external_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "external_provider": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "supplier_connections": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "supplier_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "access_token": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "refresh_token": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "expires_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "scopes": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "account_reference": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "connected_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "suppliers": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "account_status": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'active'::text"
+   },
+   "credit_terms": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "discount_tier": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "reliability_score": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "50"
+   },
+   "avg_lead_time_days": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "on_time_delivery_rate": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "quality_score": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "avg_price_vs_market": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "price_consistency": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "total_spend": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "total_orders": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "last_order_date": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "api_enabled": {
+    "nullable": true,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "catalog_url": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "training_examples": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "model_type": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "features": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "target": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "actual_outcome": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "prediction_accuracy": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "weight": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "1.0"
+   },
+   "source": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'app'::text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "ts_daily_business_metrics": {
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "day": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "date"
+   },
+   "quotes_sent": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "quotes_accepted": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "invoices_sent": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "invoices_paid": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "total_quoted_eur": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   },
+   "total_paid_eur": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "numeric",
+    "default": "0"
+   }
+  },
+  "watchdog_runs": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "bigint",
+    "default": "nextval('watchdog_runs_id_seq'::regclass)"
+   },
+   "ran_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "window_start": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "window_end": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "ok": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "true"
+   },
+   "delivered": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "severity": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "issue_count": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
+   },
+   "duration_ms": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "integer"
+   },
+   "degraded": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "ARRAY",
+    "default": "'{}'::text[]"
+   },
+   "summary": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "error": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   }
+  },
+  "webhook_idempotency": {
+   "provider": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "event_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "processed_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
+  "workers": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "role": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "text",
+    "default": "'tech'::text"
+   },
+   "email": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "phone": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "hourly_cost": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "numeric"
+   },
+   "is_active": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "true"
+   },
+   "color": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  }
+ }
+}
