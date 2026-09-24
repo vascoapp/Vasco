@@ -19,8 +19,10 @@ let mockAuthed: string | null = 'aaaaaaaa-1111-4111-8111-000000000001';
 let mockCountry: string | undefined = 'DE';
 jest.mock('../src/services/accountDeletionService', () => ({ requestAccountDeletion: (...a: any[]) => (mockRequest as any)(...a) }));
 jest.mock('../src/services/dataExportService', () => ({ exportAllData: (...a: any[]) => (mockExport as any)(...a) }));
+const mockArchive = jest.fn(async (): Promise<any> => ({ ok: true, invoiceCount: 2, pdfFailed: [], xmlMissing: [], complete: true }));
+jest.mock('../src/services/recordsArchiveService', () => ({ exportRecordsArchive: (...a: any[]) => (mockArchive as any)(...a) }));
 jest.mock('../src/lib/currentUser', () => ({ ...jest.requireActual('../src/lib/currentUser'), getAuthedUserId: () => mockAuthed }));
-jest.mock('../src/state/AppState', () => ({ useAppState: () => ({ businessProfile: { country: mockCountry } }) }));
+jest.mock('../src/state/AppState', () => ({ useAppState: () => ({ businessProfile: { country: mockCountry }, invoices: [], lineItems: {}, customers: [], jobs: [] }) }));
 jest.mock('../src/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'x', email: 'a@b.de' }, logout: jest.fn() }) }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), push: jest.fn(), replace: jest.fn() }) }));
 
@@ -110,6 +112,43 @@ it('a complete export is reported; an incomplete one is not — it says it faile
     tree.unmount();
   }
   alert.mockRestore();
+});
+
+it('the invoices archive: created, partial (warns), no-format only (no warning), failed', async () => {
+  const ARCH = /download all invoices/i;
+  const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  const press = async () => {
+    const tree = await render();
+    await act(async () => { await button(tree.root, ARCH).props.onPress(); });
+    return tree;
+  };
+
+  let tree = await press();
+  expect(mockArchive).toHaveBeenCalledWith(expect.objectContaining({ country: 'DE' }));
+  expect(texts(tree.root)).toMatch(/invoices archive created/i);
+  expect(alert).not.toHaveBeenCalled();
+  tree.unmount();
+
+  // A PDF that failed or an e-invoice missing details is a gap to fix → warn.
+  mockArchive.mockImplementationOnce(async () => ({ ok: true, invoiceCount: 3, pdfFailed: ['RE-1'], xmlMissing: [], complete: false }));
+  tree = await press();
+  expect(alert).toHaveBeenCalledTimes(1);
+  expect(String(alert.mock.calls[0][0])).toMatch(/3 invoices exported, but some documents are missing/);
+  alert.mockClear();
+  tree.unmount();
+
+  // No e-invoice format in this country (UK) is not a gap.
+  mockArchive.mockImplementationOnce(async () => ({ ok: true, invoiceCount: 1, pdfFailed: [], xmlMissing: [{ number: 'INV-1', reason: 'x', kind: 'noFormat' }], complete: true }));
+  tree = await press();
+  expect(alert).not.toHaveBeenCalled();
+  tree.unmount();
+
+  mockArchive.mockImplementationOnce(async () => ({ ok: false, invoiceCount: 0, pdfFailed: [], xmlMissing: [], complete: false }));
+  tree = await press();
+  expect(String(alert.mock.calls[0][0])).toMatch(/could not be created/);
+  expect(texts(tree.root)).not.toMatch(/invoices archive created/i);
+  alert.mockRestore();
+  tree.unmount();
 });
 
 it('no other screen can start a deletion', () => {

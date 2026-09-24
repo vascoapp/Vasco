@@ -7211,6 +7211,12 @@
     "exportAll": "Alle meine Daten herunterladen",
     "exported": "Export erstellt – bewahren Sie die Datei auf",
     "exportFailed": "Der Download wurde nicht abgeschlossen. Versuchen Sie es vor dem Löschen erneut.",
+    "invoicesArchive": "Alle Rechnungen herunterladen (PDF + E-Rechnung)",
+    "invoicesArchiveDone": "Rechnungsarchiv erstellt – bewahren Sie die Datei auf",
+    "invoicesArchiveFailed": "Das Rechnungsarchiv konnte nicht erstellt werden. Versuchen Sie es erneut.",
+    "invoicesArchiveProgress": "Rechnung {{done}} von {{total}} …",
+    "invoicesArchivePartial_one": "{{count}} Rechnung exportiert, aber einige Dokumente fehlen – README.txt im Archiv nennt sie.",
+    "invoicesArchivePartial_other": "{{count}} Rechnungen exportiert, aber einige Dokumente fehlen – README.txt im Archiv nennt sie.",
     "reports": "Buchhaltungsberichte",
     "ack": "Ich habe meine Unterlagen heruntergeladen und weiß, dass ich sie selbst aufbewahren muss.",
     "deleteBtn": "Mein Konto endgültig löschen",
@@ -7221,5 +7227,16 @@
     "failedBody": "Ihre Anfrage hat unsere Server nicht erreicht. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
     "doneTitle": "Löschung beantragt",
     "doneBody": "Ihre Daten werden innerhalb von 30 Tagen gelöscht."
+  },
+  "recordsArchive": {
+    "readmeTitle": "Rechnungen — aus Vasco exportiert am {{date}}",
+    "readmeIntro": "Jede ausgestellte Rechnung als PDF und, wo Ihr Land ein Format hat, als E-Rechnung — neu erstellt aus Ihren aktuellen Angaben. Haben sich Ihre Angaben seitdem geändert, sind die tatsächlich versendeten Rechnungen die Originale.",
+    "readmeCount": "Ausgestellte Rechnungen: {{count}}",
+    "readmePdfFailed": "PDF konnte nicht erstellt werden (öffnen Sie die Rechnung in der App und exportieren Sie sie dort):",
+    "readmeXmlMissing": "Keine E-Rechnung in diesem Archiv:",
+    "xmlMissingFields": "fehlende Angaben: {{fields}}",
+    "xmlNoFormat": "kein E-Rechnungsformat für dieses Land",
+    "buyerAddress": "Ort und Postleitzahl des Kunden",
+    "noProfile": "Ihre Unternehmensangaben"
   }
 }

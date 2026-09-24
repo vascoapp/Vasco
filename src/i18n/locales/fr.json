@@ -7211,6 +7211,12 @@
     "exportAll": "Télécharger toutes mes données",
     "exported": "Export créé — conservez le fichier",
     "exportFailed": "Le téléchargement n’a pas abouti. Réessayez avant de supprimer.",
+    "invoicesArchive": "Télécharger toutes les factures (PDF + facture électronique)",
+    "invoicesArchiveDone": "Archive des factures créée — conservez le fichier",
+    "invoicesArchiveFailed": "L’archive des factures n’a pas pu être créée. Réessayez.",
+    "invoicesArchiveProgress": "Facture {{done}} sur {{total}}…",
+    "invoicesArchivePartial_one": "{{count}} facture exportée, mais certains documents manquent — le fichier README.txt de l’archive les liste.",
+    "invoicesArchivePartial_other": "{{count}} factures exportées, mais certains documents manquent — le fichier README.txt de l’archive les liste.",
     "reports": "Rapports comptables",
     "ack": "J’ai téléchargé mes documents et je sais que je dois les conserver moi-même.",
     "deleteBtn": "Supprimer définitivement mon compte",
@@ -7221,5 +7227,16 @@
     "failedBody": "Votre demande n’a pas atteint nos serveurs. Vérifiez votre connexion internet et réessayez.",
     "doneTitle": "Suppression demandée",
     "doneBody": "Vos données seront effacées sous 30 jours."
+  },
+  "recordsArchive": {
+    "readmeTitle": "Factures — exportées de Vasco le {{date}}",
+    "readmeIntro": "Chaque facture émise en PDF, et en facture électronique lorsque votre pays a un format — régénérée à partir de vos informations actuelles. Si vos informations ont changé depuis, les factures réellement envoyées sont les originaux.",
+    "readmeCount": "Factures émises : {{count}}",
+    "readmePdfFailed": "Le PDF n’a pas pu être créé (ouvrez la facture dans l’application et exportez-la) :",
+    "readmeXmlMissing": "Pas de facture électronique dans cette archive :",
+    "xmlMissingFields": "informations manquantes : {{fields}}",
+    "xmlNoFormat": "pas de format de facture électronique pour ce pays",
+    "buyerAddress": "ville et code postal du client",
+    "noProfile": "les informations de votre entreprise"
   }
 }

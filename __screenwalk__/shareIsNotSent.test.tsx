@@ -43,6 +43,7 @@ const SKIP = ['node_modules', '__tests__', '__screenwalk__', 'test-utils'];
 const NO_CONSEQUENCE: Record<string, string> = {
   // ── Exports: a copy of data the contractor is already looking at. ──────────
   'app/contractor/reports.tsx': 'CSV/PDF of a report already on screen. No state write.',
+  'src/services/recordsArchiveService.ts': 'ZIP of the contractor\'s own invoices before account deletion. Nothing is marked sent; the screen says "created — save the file", never "saved".',
   'app/contractor/vat-and-audit.tsx': 'Audit-trail dump. The only Alert is in the catch (an error path).',
   'app/contractor/vat-prep.tsx': 'VAT-prep export. Alert is the catch branch.',
   'app/(contractor)/besparen.tsx': 'Shares a savings summary already on screen.',

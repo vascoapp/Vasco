@@ -7211,6 +7211,12 @@
     "exportAll": "Descargar todos mis datos",
     "exported": "Exportación creada: guarda el archivo",
     "exportFailed": "La descarga no se completó. Vuelve a intentarlo antes de eliminar.",
+    "invoicesArchive": "Descargar todas las facturas (PDF + factura electrónica)",
+    "invoicesArchiveDone": "Archivo de facturas creado: guarda el archivo",
+    "invoicesArchiveFailed": "No se pudo crear el archivo de facturas. Inténtalo de nuevo.",
+    "invoicesArchiveProgress": "Factura {{done}} de {{total}}…",
+    "invoicesArchivePartial_one": "{{count}} factura exportada, pero faltan algunos documentos: README.txt en el archivo los enumera.",
+    "invoicesArchivePartial_other": "{{count}} facturas exportadas, pero faltan algunos documentos: README.txt en el archivo los enumera.",
     "reports": "Informes contables",
     "ack": "He descargado mis registros y sé que debo conservarlos yo.",
     "deleteBtn": "Eliminar mi cuenta definitivamente",
@@ -7221,5 +7227,16 @@
     "failedBody": "Tu solicitud no llegó a nuestros servidores. Comprueba tu conexión a internet y vuelve a intentarlo.",
     "doneTitle": "Eliminación solicitada",
     "doneBody": "Tus datos se borrarán en un plazo de 30 días."
+  },
+  "recordsArchive": {
+    "readmeTitle": "Facturas — exportadas desde Vasco el {{date}}",
+    "readmeIntro": "Cada factura emitida en PDF, y como factura electrónica cuando tu país tiene un formato — generada de nuevo con tus datos actuales. Si tus datos han cambiado desde entonces, las facturas que enviaste son los originales.",
+    "readmeCount": "Facturas emitidas: {{count}}",
+    "readmePdfFailed": "No se pudo crear el PDF (abre la factura en la app y expórtala allí):",
+    "readmeXmlMissing": "Sin factura electrónica en este archivo:",
+    "xmlMissingFields": "faltan datos: {{fields}}",
+    "xmlNoFormat": "no hay formato de factura electrónica para este país",
+    "buyerAddress": "ciudad y código postal del cliente",
+    "noProfile": "los datos de tu empresa"
   }
 }

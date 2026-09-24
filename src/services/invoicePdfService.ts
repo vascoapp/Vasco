@@ -701,35 +701,7 @@ export async function generateInvoicePdf(
     };
   },
 ): Promise<void> {
-  let html = buildInvoiceHtml(
-    invoice,
-    businessProfile?.businessName ?? '',
-    businessProfile?.address ?? '',
-    businessProfile?.kvkNumber ?? '',
-    businessProfile?.vatNumber ?? '',
-    paymentUrl,
-    businessProfile?.language,
-    businessProfile?.country,
-    businessProfile?.iban,
-    options?.showPoweredBy,
-    businessProfile?.insuranceRef,
-    businessProfile?.vatScheme,
-    businessProfile?.routingNumber,
-    businessProfile?.bankAccountNumber,
-    options?.frMentions,
-  );
-
-  // R301: embed signature when customer signed off on the linked job.
-  // Inserted before the closing </body> tag so it appears at the end of
-  // the document, after totals. R66r55: shape updated to match the new
-  // signatureHtmlBlock signature (takes signatureSvg directly, no
-  // SignatureRecord wrapping). Legal text now resolved from the
-  // 'handover' context in the contractor's language.
-  if (options?.customerSignature) {
-    html = html.replace('</body>', `${await signOffBlock(options.customerSignature, businessProfile?.language)}</body>`);
-  }
-
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  const uri = await renderInvoicePdfFile(invoice, businessProfile, paymentUrl, options);
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(uri, {
@@ -803,27 +775,7 @@ export async function buildInvoicePdfBase64(
   },
 ): Promise<string | null> {
   try {
-    let html = buildInvoiceHtml(
-      invoice,
-      businessProfile?.businessName ?? '',
-      businessProfile?.address ?? '',
-      businessProfile?.kvkNumber ?? '',
-      businessProfile?.vatNumber ?? '',
-      paymentUrl,
-      businessProfile?.language,
-      businessProfile?.country,
-      businessProfile?.iban,
-      options?.showPoweredBy,
-      businessProfile?.insuranceRef,
-      businessProfile?.vatScheme,
-      businessProfile?.routingNumber,
-      businessProfile?.bankAccountNumber,
-      options?.frMentions,
-    );
-    if (options?.customerSignature) {
-      html = html.replace('</body>', `${await signOffBlock(options.customerSignature, businessProfile?.language)}</body>`);
-    }
-    const { uri } = await Print.printToFileAsync({ html });
+    const uri = await renderInvoicePdfFile(invoice, businessProfile, paymentUrl, options);
     const file = new File(uri);
     const base64 = await file.base64();
     return base64;
@@ -831,4 +783,44 @@ export async function buildInvoicePdfBase64(
     logWarn('invoicePdfService', `buildInvoicePdfBase64 failed: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
+}
+
+type PdfProfile = Parameters<typeof generateInvoicePdf>[1];
+type PdfOptions = Parameters<typeof generateInvoicePdf>[3];
+
+/**
+ * The ONE invoice-PDF renderer: HTML, the customer's sign-off, print to a
+ * file. Viewing, emailing and the records archive all go through it — there
+ * were two identical copies of this body before the archive would have added
+ * a third (2026-09-24). Returns the file's uri; throws on failure.
+ */
+export async function renderInvoicePdfFile(
+  invoice: AutoInvoice,
+  businessProfile?: PdfProfile,
+  paymentUrl?: string,
+  options?: PdfOptions,
+): Promise<string> {
+  let html = buildInvoiceHtml(
+    invoice,
+    businessProfile?.businessName ?? '',
+    businessProfile?.address ?? '',
+    businessProfile?.kvkNumber ?? '',
+    businessProfile?.vatNumber ?? '',
+    paymentUrl,
+    businessProfile?.language,
+    businessProfile?.country,
+    businessProfile?.iban,
+    options?.showPoweredBy,
+    businessProfile?.insuranceRef,
+    businessProfile?.vatScheme,
+    businessProfile?.routingNumber,
+    businessProfile?.bankAccountNumber,
+    options?.frMentions,
+  );
+  // The customer's sign-off, in the INVOICE's language, before </body>.
+  if (options?.customerSignature) {
+    html = html.replace('</body>', `${await signOffBlock(options.customerSignature, businessProfile?.language)}</body>`);
+  }
+  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  return uri;
 }

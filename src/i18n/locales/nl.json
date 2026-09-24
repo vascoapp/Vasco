@@ -7211,6 +7211,12 @@
     "exportAll": "Al mijn gegevens downloaden",
     "exported": "Export gemaakt — bewaar het bestand",
     "exportFailed": "Het downloaden is niet gelukt. Probeer het opnieuw voordat je verwijdert.",
+    "invoicesArchive": "Alle facturen downloaden (pdf + e-factuur)",
+    "invoicesArchiveDone": "Facturenarchief gemaakt — bewaar het bestand",
+    "invoicesArchiveFailed": "Het facturenarchief kon niet worden gemaakt. Probeer het opnieuw.",
+    "invoicesArchiveProgress": "Factuur {{done}} van {{total}}…",
+    "invoicesArchivePartial_one": "{{count}} factuur geëxporteerd, maar er ontbreken documenten — README.txt in het archief noemt ze.",
+    "invoicesArchivePartial_other": "{{count}} facturen geëxporteerd, maar er ontbreken documenten — README.txt in het archief noemt ze.",
     "reports": "Boekhoudrapporten",
     "ack": "Ik heb mijn administratie gedownload en weet dat ik die zelf moet bewaren.",
     "deleteBtn": "Mijn account definitief verwijderen",
@@ -7221,5 +7227,16 @@
     "failedBody": "Je verzoek heeft onze servers niet bereikt. Controleer je internetverbinding en probeer het opnieuw.",
     "doneTitle": "Verwijdering aangevraagd",
     "doneBody": "Je gegevens worden binnen 30 dagen gewist."
+  },
+  "recordsArchive": {
+    "readmeTitle": "Facturen — geëxporteerd uit Vasco op {{date}}",
+    "readmeIntro": "Elke uitgegeven factuur als pdf, en als e-factuur waar je land een formaat heeft — opnieuw gemaakt met je huidige gegevens. Zijn je gegevens sindsdien gewijzigd, dan zijn de facturen die je echt hebt verstuurd de originelen.",
+    "readmeCount": "Uitgegeven facturen: {{count}}",
+    "readmePdfFailed": "Pdf kon niet worden gemaakt (open de factuur in de app en exporteer hem daar):",
+    "readmeXmlMissing": "Geen e-factuur in dit archief:",
+    "xmlMissingFields": "ontbrekende gegevens: {{fields}}",
+    "xmlNoFormat": "geen e-factuurformaat voor dit land",
+    "buyerAddress": "plaats en postcode van de klant",
+    "noProfile": "je bedrijfsgegevens"
   }
 }

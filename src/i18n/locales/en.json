@@ -7211,6 +7211,12 @@
     "exportAll": "Download all my data",
     "exported": "Export created — save the file",
     "exportFailed": "The download did not complete. Try again before deleting.",
+    "invoicesArchive": "Download all invoices (PDF + e-invoice)",
+    "invoicesArchiveDone": "Invoices archive created — save the file",
+    "invoicesArchiveFailed": "The invoices archive could not be created. Try again.",
+    "invoicesArchiveProgress": "Invoice {{done}} of {{total}}…",
+    "invoicesArchivePartial_one": "{{count}} invoice exported, but some documents are missing — README.txt in the archive lists them.",
+    "invoicesArchivePartial_other": "{{count}} invoices exported, but some documents are missing — README.txt in the archive lists them.",
     "reports": "Accounting reports",
     "ack": "I have downloaded my records and I know I must keep them myself.",
     "deleteBtn": "Delete my account permanently",
@@ -7221,5 +7227,16 @@
     "failedBody": "Your request did not reach our servers. Check your internet connection and try again.",
     "doneTitle": "Account deletion requested",
     "doneBody": "Your data will be erased within 30 days."
+  },
+  "recordsArchive": {
+    "readmeTitle": "Invoices — exported from Vasco on {{date}}",
+    "readmeIntro": "Each issued invoice as a PDF, and as an e-invoice where your country has a format — regenerated from your current details. If your details changed since, the invoices you actually sent are the originals.",
+    "readmeCount": "Issued invoices: {{count}}",
+    "readmePdfFailed": "PDF could not be created (open the invoice in the app and export it there):",
+    "readmeXmlMissing": "No e-invoice in this archive:",
+    "xmlMissingFields": "missing details: {{fields}}",
+    "xmlNoFormat": "no e-invoice format for this country",
+    "buyerAddress": "customer city and post code",
+    "noProfile": "your business details"
   }
 }

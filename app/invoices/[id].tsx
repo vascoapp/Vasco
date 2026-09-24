@@ -28,7 +28,8 @@ import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceS
 import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
 import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { computeLateFee, disclosureLineLocalized, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
-import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML, type EInvoiceData } from '../../src/integrations/einvoice';
+import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML } from '../../src/integrations/einvoice';
+import { buildEInvoiceData, buildEInvoiceSource as buildEInvoiceSourceFrom, invoicePdfExtras } from '../../src/domain/invoiceDocuments';
 import { Share as RNShare } from 'react-native';
 // react-native's Share ignores `url` on Android (message/title only), so the
 // e-invoice XML exports below silently shared nothing there — and because it
@@ -37,12 +38,11 @@ import { Share as RNShare } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
 import { checkInvoiceReadiness } from '../../src/utils/businessProfileValidation';
-import { isSmallBusinessExempt, getEffectiveVatRate, documentVatBreakdown } from '../../src/domain/business';
+import { getEffectiveVatRate, documentVatBreakdown } from '../../src/domain/business';
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer } from '../../src/domain/customers';
-import { customerSignOffFor } from '../../src/domain/signOff';
 import { amountPayableNow } from '../../src/domain/documents';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
@@ -284,6 +284,11 @@ export default function InvoiceDetailScreen() {
 
   // The PDF input for THIS invoice: the lines on screen (the stored ones, or
   // the single line synthesised above), the customer record, one VAT rule.
+  // What every document of this invoice is built from — the lines ON SCREEN.
+  const invoiceDocInputs = () => ({
+    invoice, lines: localItems, customers, businessProfile, country, effectiveRate,
+  });
+
   const pdfForThisInvoice = () => pdfInvoiceFromRecord({
     invoice,
     lines: localItems,
@@ -533,19 +538,18 @@ export default function InvoiceDetailScreen() {
     // in-memory list no real flow fills, so this attachment was never added (#339).
     const autoInvForPdf = pdfForThisInvoice();
     if (autoInvForPdf) {
-      const linkedJob = (invoice as any).jobId
-        ? jobs.find((j: any) => j.id === (invoice as any).jobId)
-        : null;
-      const customerSignature = customerSignOffFor(linkedJob, customers as any, invoice as any);
-      const enriched: typeof autoInvForPdf = {
-        ...autoInvForPdf,
-        deliveryDate: linkedJob?.completedAt ? new Date(linkedJob.completedAt) : autoInvForPdf.deliveryDate,
-      };
+      // The SAME extras as the viewed PDF. This path used to drop the French
+      // 2026 mentions and the persisted delivery date, so the customer was
+      // emailed a different document from the one the contractor checked.
+      const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
       const built = await buildInvoicePdfBase64(
-        enriched,
+        { ...autoInvForPdf, deliveryDate: extras.deliveryDate ?? autoInvForPdf.deliveryDate },
         businessProfile,
         paymentUrl,
-        customerSignature ? { customerSignature } : undefined,
+        {
+          ...(extras.customerSignature ? { customerSignature: extras.customerSignature } : {}),
+          frMentions: extras.frMentions,
+        },
       );
       pdfBase64 = built ?? undefined;
     }
@@ -613,38 +617,19 @@ export default function InvoiceDetailScreen() {
     // empty in-memory service, so the PDF button did nothing after its haptic.
     const autoInv = pdfForThisInvoice();
     if (autoInv) {
-      // R303: embed customer-handover signature when the linked job has one
-      // captured. Same pattern as facturen.tsx PDF button (R301).
-      const linkedJob = (invoice as any).jobId
-        ? jobs.find((j: any) => j.id === (invoice as any).jobId)
-        : null;
-      const customerSignature = customerSignOffFor(linkedJob, customers as any, invoice as any);
-      // R66 round 34: enrich with leveringsdatum from the linked job's
-      // completedAt. Cloned (not mutated) so the cached AutoInvoice in
-      // invoiceAutomationService stays untouched between renders.
-      const enriched: typeof autoInv = {
-        ...autoInv,
-        // R66 round 47: prefer the persisted documents.delivery_date (hydrated
-        // via mapper into invoice.deliveryDate) over FE-derived from the
-        // linked job. The persisted value is the snapshot at invoice-create
-        // time and survives if the linked job is later deleted.
-        deliveryDate: (invoice as any).deliveryDate
-          ? new Date((invoice as any).deliveryDate)
-          : linkedJob?.completedAt
-            ? new Date(linkedJob.completedAt)
-            : autoInv.deliveryDate,
-      };
-      await generateInvoicePdf(enriched, businessProfile, undefined, {
-        ...(customerSignature ? { customerSignature } : {}),
-        // FR 2026 mentions. Each fact prints a line only when it exists; the
-        // buyer's SIREN is derived from their own VAT number.
-        frMentions: {
-          buyerVatId: invoiceCustomer?.vatId,
-          operationNature: (invoice as any).operationNature,
-          deliveryAddress: (invoice as any).deliveryAddress,
-          tvaSurLesDebits: businessProfile?.tvaSurLesDebits,
+      // Delivery date (persisted first, then the job), the customer's
+      // sign-off and the FR 2026 mentions — shared with the email and the
+      // records archive (src/domain/invoiceDocuments.ts).
+      const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
+      await generateInvoicePdf(
+        { ...autoInv, deliveryDate: extras.deliveryDate ?? autoInv.deliveryDate },
+        businessProfile,
+        undefined,
+        {
+          ...(extras.customerSignature ? { customerSignature: extras.customerSignature } : {}),
+          frMentions: extras.frMentions,
         },
-      });
+      );
     }
   };
 
@@ -758,65 +743,9 @@ export default function InvoiceDetailScreen() {
         return;
       }
     } catch {}
-    const currency = country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR';
-    // Per-line rates again — this is the copy that reaches a TAX AUTHORITY.
-    // `effectiveRate * 100` stamped the country standard onto every line, so a
-    // reduced-rate invoice would have been FILED at the standard rate.
-    const vatAmount = vatBreakdown.vat;
-    const data: EInvoiceData = {
-      sellerName: (businessProfile as any)?.businessName ?? 'Vasco',
-      sellerAddress: (businessProfile as any)?.address ?? '',
-      sellerVatId: businessProfile?.vatNumber ?? '',
-      // XRechnung needs all of these and the generator can only emit what it
-      // is given. BR-DE-5/6/7 (contact) and BR-DE-8/9 (address detail) are
-      // rejections at the buyer's gateway, not warnings — see
-      // src/integrations/einvoice.ts. checkInvoiceReadiness now requires them
-      // for DE so the contractor is asked before they export, not after the
-      // invoice bounces.
-      sellerCity: (businessProfile as any)?.city,
-      sellerPostalCode: (businessProfile as any)?.postcode,
-      sellerCountry: country,
-      sellerContactName: (businessProfile as any)?.businessName,
-      sellerPhone: (businessProfile as any)?.phone,
-      sellerEmail: (businessProfile as any)?.email,
-      // The buyer's legal name on a structured e-invoice — an id here is a
-      // rejected submission, not a cosmetic slip.
-      buyerName: invoiceCustomerName,
-      buyerAddress: (invoice as any).customerAddress ?? '',
-      // Was `(invoice as any).customerCity` / `.customerPostcode` — fields
-      // that existed nowhere, so they were undefined on every invoice and the
-      // elements were simply omitted. XRechnung BR-DE-8/9 require both, which
-      // means every German invoice this app has ever produced was invalid on
-      // the buyer address alone. Now read from the customer record
-      // (migration 20260819000010).
-      buyerCity: invoiceCustomer?.city,
-      buyerPostalCode: invoiceCustomer?.postcode,
-      buyerCountry: invoiceCustomer?.country ?? country,
-      buyerVatId: invoiceCustomer?.vatId ?? (invoice as any).customerVatId,
-      invoiceNumber: (invoice as any).reference ?? invoice.id,
-      invoiceDate: (invoice.sentAt ?? invoice.createdAt ?? invoice.deliveryDate ?? new Date().toISOString()).slice(0, 10),
-      dueDate: (invoice.dueDate ?? new Date(Date.now() + (invoice.dueInDays || 14) * 24 * 60 * 60 * 1000).toISOString()).slice(0, 10),
-      currency,
-      lineItems: localItems.map((li: EditableLineItem) => ({
-        description: li.description,
-        quantity: li.quantity,
-        unitCode: 'piece',
-        unitPrice: li.unitPrice,
-        vatRate: li.vatRate ?? effectiveRate * 100,
-        vatAmount: li.quantity * li.unitPrice * ((li.vatRate ?? effectiveRate * 100) / 100),
-        lineTotal: li.quantity * li.unitPrice,
-      })),
-      totalNet: subtotal,
-      totalVat: vatAmount,
-      totalGross: total,
-      // Decides `E` (the SELLER is under a small-business scheme, with the
-      // statute cited) vs `Z` (a zero-rated supply). Every 0% line used to be
-      // exported as E with the German § 19 reason, whoever the seller was.
-      sellerVatExempt: isSmallBusinessExempt(businessProfile),
-      iban: (businessProfile as any)?.iban,
-      bic: (businessProfile as any)?.bic,
-      paymentReference: (invoice as any).reference ?? invoice.id,
-    };
+    // One builder for every path (src/domain/invoiceDocuments.ts): per-line
+    // rates, the resolved buyer name, BR-DE contact + address fields.
+    const data = buildEInvoiceData(invoiceDocInputs());
     // The gate above already resolves FR to `facturx`, but the generator did
     // not: a French contractor got `generateZUGFeRDXML`, whose guideline URN is
     // the bare `urn:cen.eu:en16931:2017`. A Factur-X validator reads exactly
@@ -833,63 +762,9 @@ export default function InvoiceDetailScreen() {
     await shareEInvoiceThenConfirm(xml, filename, effectiveFormat);
   };
 
-  // R302: ES Facturae 3.2.2 export. Mandatory in Spain for B2G + large B2B.
-  // EInvoiceData → FacturaeInvoice mapper. Many Spanish-specific fields
-  // (province, NIF, person type, regime fiscal) aren't on the businessProfile
-  // today — sensible defaults applied; user can extend businessProfile schema
-  // if they want richer XML.
-  /**
-   * The neutral model both country mappers take. Built once so ES and IT
-   * cannot drift apart — which is exactly what happened before: each handler
-   * assembled its own `const data: any` and one of them (IT) did not match the
-   * generator at all, while the other (ES) matched the shape but filled the
-   * buyer's NIF, city, post code and province with empty strings.
-   */
-  const buildEInvoiceSource = (): import('../../src/integrations/einvoiceMapping').EInvoiceSource => ({
-    seller: {
-      name: (businessProfile as any)?.businessName ?? '',
-      vatId: businessProfile?.vatNumber,
-      taxId: (businessProfile as any)?.registrationNumber,
-      address: (businessProfile as any)?.address,
-      city: (businessProfile as any)?.city,
-      postcode: (businessProfile as any)?.postcode,
-      province: (businessProfile as any)?.province,
-      country: country,
-      fiscalRegime: (businessProfile as any)?.fiscalRegime,
-      personType: (businessProfile as any)?.personType,
-      email: (businessProfile as any)?.email,
-      phone: (businessProfile as any)?.phone,
-      iban: (businessProfile as any)?.iban,
-    },
-    buyer: {
-      name: invoice?.customer ?? '',
-      vatId: invoiceCustomer?.vatId,
-      taxId: invoiceCustomer?.taxId,
-      address: invoiceCustomer?.address,
-      city: invoiceCustomer?.city,
-      postcode: invoiceCustomer?.postcode,
-      province: invoiceCustomer?.province,
-      country: invoiceCustomer?.country ?? country,
-      einvoiceRouting: invoiceCustomer?.einvoiceRouting,
-      einvoiceEmail: invoiceCustomer?.einvoiceEmail,
-    },
-    invoiceNumber: (invoice as any)?.reference ?? invoice?.id ?? '',
-    invoiceDate: (invoice?.sentAt ?? invoice?.createdAt ?? invoice?.deliveryDate ?? new Date().toISOString()).slice(0, 10),
-    dueDate: (invoice?.dueDate ?? new Date(Date.now() + ((invoice?.dueInDays ?? 14) * 24 * 60 * 60 * 1000)).toISOString()).slice(0, 10),
-    currency: country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR',
-    // Each line keeps ITS agreed rate. This feeds FatturaPA and Facturae — a
-    // wrong AliquotaIVA here is a wrong rate filed with SDI, which accepts it.
-    lines: localItems.map((li: EditableLineItem) => ({
-      description: li.description,
-      quantity: li.quantity,
-      unitPrice: li.unitPrice,
-      lineTotal: li.quantity * li.unitPrice,
-      vatRate: li.vatRate ?? effectiveRate * 100,
-    })),
-    totalNet: subtotal,
-    totalVat: vatBreakdown.vat,
-    totalGross: vatBreakdown.gross,
-  });
+  // ES Facturae / IT FatturaPA: both mappers take the one neutral source, so
+  // they cannot drift apart (they did — see src/domain/invoiceDocuments.ts).
+  const buildEInvoiceSource = () => buildEInvoiceSourceFrom(invoiceDocInputs());
 
   /**
    * One place that turns "we are missing fields" into something a contractor

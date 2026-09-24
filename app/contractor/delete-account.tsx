@@ -23,6 +23,7 @@ import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { exportAllData } from '../../src/services/dataExportService';
+import { exportRecordsArchive } from '../../src/services/recordsArchiveService';
 import { requestAccountDeletion } from '../../src/services/accountDeletionService';
 import { invoiceRetentionYears } from '../../src/domain/recordRetention';
 import { getAuthedUserId } from '../../src/lib/currentUser';
@@ -31,9 +32,13 @@ export default function DeleteAccountScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { businessProfile } = useAppState();
+  const { businessProfile, invoices, lineItems, customers, jobs } = useAppState();
   const [exported, setExported] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [archived, setArchived] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  // Each PDF is rendered in turn — a long history takes minutes, so say where it is.
+  const [archiveProgress, setArchiveProgress] = useState<{ done: number; total: number } | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -50,6 +55,29 @@ export default function DeleteAccountScreen() {
       else Alert.alert(t('accountDeletion.exportFailed'));
     } finally {
       setExporting(false);
+    }
+  };
+
+  // The invoices THEMSELVES — PDF as the customer received it + the market's
+  // e-invoice — which the JSON export above does not give an accountant.
+  const handleInvoicesArchive = async () => {
+    setArchiving(true);
+    try {
+      const result = await exportRecordsArchive({
+        invoices, lineItems: lineItems as any, customers, jobs: jobs as any, businessProfile,
+        // Profile first, account as fallback; unknown → no format, never a default.
+        country: businessProfile?.country ?? user?.country ?? '',
+        t: (key, fallback, opts) => t(key, { defaultValue: fallback, ...opts }),
+        onProgress: (done, total) => setArchiveProgress({ done, total }),
+      });
+      const gaps = result.pdfFailed.length + result.xmlMissing.filter((m) => m.kind !== 'noFormat').length;
+      if (!result.ok) Alert.alert(t('accountDeletion.invoicesArchiveFailed'));
+      else if (gaps > 0) Alert.alert(t('accountDeletion.invoicesArchivePartial', { count: result.invoiceCount }));
+      // Created, even if a gap is listed: the file exists and says what it lacks.
+      if (result.ok) setArchived(true);
+    } finally {
+      setArchiving(false);
+      setArchiveProgress(null);
     }
   };
 
@@ -103,6 +131,20 @@ export default function DeleteAccountScreen() {
             <Ionicons name={exported ? 'checkmark-circle' : 'download-outline'} size={18} color={Palette.white} />
             <Text style={styles.primaryBtnText}>
               {exported ? t('accountDeletion.exported') : t('accountDeletion.exportAll')}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.secondaryBtn, archiving && styles.disabled]}
+            onPress={handleInvoicesArchive}
+            disabled={archiving}
+            accessibilityRole="button"
+            accessibilityState={{ busy: archiving }}
+          >
+            <Ionicons name={archived ? 'checkmark-circle' : 'documents-outline'} size={18} color={Palette.hermesOrange} />
+            <Text style={styles.secondaryBtnText}>
+              {archiveProgress
+                ? t('accountDeletion.invoicesArchiveProgress', archiveProgress)
+                : archived ? t('accountDeletion.invoicesArchiveDone') : t('accountDeletion.invoicesArchive')}
             </Text>
           </Pressable>
           <Pressable

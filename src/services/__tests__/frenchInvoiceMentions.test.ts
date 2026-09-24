@@ -105,8 +105,20 @@ describe('the invoice carries the facts end to end (rule #8)', () => {
   });
 
   it('and the PDF is given them at every call site', () => {
-    for (const rel of ['app/invoices/[id].tsx', 'app/(contractor)/facturen.tsx']) {
-      expect({ rel, wired: /frMentions: \{/.test(read(rel)) }).toEqual({ rel, wired: true });
+    // Every PDF call site passes the SHARED extras; the one builder fills them
+    // (src/domain/invoiceDocuments.ts — there were three private copies, and
+    // the emailed PDF had lost the mentions, 2026-09-24).
+    // EVERY call in each file, not "any one": the screen has two (view + email),
+    // and the email one is the copy that lost the mentions (review, L6).
+    for (const rel of ['app/invoices/[id].tsx', 'app/(contractor)/facturen.tsx', 'src/services/recordsArchiveService.ts']) {
+      const src = read(rel);
+      const calls = (src.match(/(?:generateInvoicePdf|buildInvoicePdfBase64|renderInvoicePdfFile)\(\s*\n?[^)]/g) ?? []).length;
+      const wired = (src.match(/frMentions: extras\.frMentions/g) ?? []).length;
+      expect({ rel, calls: calls > 0, wiredEvery: wired === calls }).toEqual({ rel, calls: true, wiredEvery: true });
+    }
+    const builder = read('src/domain/invoiceDocuments.ts');
+    for (const fact of ['buyerVatId', 'operationNature', 'deliveryAddress', 'tvaSurLesDebits']) {
+      expect({ fact, built: new RegExp(`frMentions: \\{[\\s\\S]*${fact}`).test(builder) }).toEqual({ fact, built: true });
     }
   });
 

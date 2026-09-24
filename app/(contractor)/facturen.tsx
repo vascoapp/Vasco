@@ -45,7 +45,7 @@ import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/
 import { documentNumber, amountPayableNow } from '../../src/domain/documents';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { findDocumentCustomer } from '../../src/domain/customers';
-import { customerSignOffFor } from '../../src/domain/signOff';
+import { invoicePdfExtras } from '../../src/domain/invoiceDocuments';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 import { getEffectiveVatRate } from '../../src/domain/business';
 import { overdueReminderMessage } from '../../src/services/overdueReminderMessage';
@@ -478,34 +478,20 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         amount: amountPayableNow(invoice),
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
-                      // R301: embed customer-handover signature on the invoice
-                      // PDF when the linked job has one captured.
-                      const linkedJob = (invoice as any).jobId
-                        ? jobs.find((j: any) => j.id === (invoice as any).jobId)
-                        : null;
-                      const customerSignature = customerSignOffFor(linkedJob, customers as any, invoice as any);
-                      // R66 round 34: leveringsdatum from linked job's
-                      // completedAt. Cloned, not mutated.
-                      const enriched: typeof autoInv = {
-                        ...autoInv,
-                        // R66 round 47: prefer persisted documents.delivery_date
-                        // (hydrated into invoice.deliveryDate via mapper) over
-                        // FE-derive from linked job — survives job deletion.
-                        deliveryDate: (invoice as any).deliveryDate
-                          ? new Date((invoice as any).deliveryDate)
-                          : linkedJob?.completedAt
-                            ? new Date(linkedJob.completedAt)
-                            : autoInv.deliveryDate,
-                      };
-                      await generateInvoicePdf(enriched, businessProfile, link?.url, {
-                        ...(customerSignature ? { customerSignature } : {}),
-                        frMentions: {
-                          buyerVatId: findDocumentCustomer(customers, invoice)?.vatId,
-                          operationNature: (invoice as any).operationNature,
-                          deliveryAddress: (invoice as any).deliveryAddress,
-                          tvaSurLesDebits: businessProfile?.tvaSurLesDebits,
+                      // Delivery date, the customer's sign-off and the FR 2026
+                      // mentions — the same extras as the invoice screen and the
+                      // email (src/domain/invoiceDocuments.ts); this was the third
+                      // private copy.
+                      const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
+                      await generateInvoicePdf(
+                        { ...autoInv, deliveryDate: extras.deliveryDate ?? autoInv.deliveryDate },
+                        businessProfile,
+                        link?.url,
+                        {
+                          ...(extras.customerSignature ? { customerSignature: extras.customerSignature } : {}),
+                          frMentions: extras.frMentions,
                         },
-                      });
+                      );
                     }
                   }}
                 >
