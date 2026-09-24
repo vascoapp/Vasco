@@ -59,7 +59,7 @@ describe('an irreversible external step reports what it could not record', () =>
   it('drain-account-deletions: both finalisation writes are read', () => {
     const SRC = read('supabase/functions/drain-account-deletions/index.ts');
     // Success path: the GDPR completion record.
-    expect(SRC).toMatch(/const \{ error: doneErr \} = await admin/);
+    expect(SRC).toMatch(/const \{ data: doneRows, error: doneErr \} = await admin/);
     // Failure path: the lock rollback that makes the next tick retry at all.
     expect(SRC).toMatch(/const \{ error: rollbackErr \} = await admin/);
     expect(SRC).toMatch(/STRANDED in processing/);

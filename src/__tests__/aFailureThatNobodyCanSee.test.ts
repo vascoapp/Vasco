@@ -52,8 +52,10 @@ describe('a side effect that fires once per payment says when it did not', () =>
   it('a non-2xx from the receipt or push call is not read as success', () => {
     // `fetch` only rejects on a transport failure — a 500 from Resend is a
     // perfectly fine Response, so the old bare `catch {}` saw nothing.
-    expect(SRC).toMatch(/const receiptRes = await fetch\(/);
-    expect(SRC).toMatch(/if \(!receiptRes\.ok\)/);
+    // The "receipt" went through send-invoice, which 401s on a service key and
+    // would, if its auth were "fixed", email an invoice and re-mark the PAID
+    // invoice as sent. It must not come back until a real receipt exists.
+    expect(SRC).not.toMatch(/functions\/v1\/send-invoice/);
     expect(SRC).toMatch(/const pushRes = await fetch\(/);
     // HTTP status AND the body: `{ ok: true, sent: 0 }` is no delivery (B4).
     expect(SRC).toMatch(/if \(!pushRes\.ok \|\| !outcome\.delivered\)/);

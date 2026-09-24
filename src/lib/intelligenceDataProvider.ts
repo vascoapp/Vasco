@@ -187,6 +187,25 @@ export async function loadAllFeedbackWeights(): Promise<
 }
 
 // ── Calibration ──────────────────────────────────────────────
+// The LIVE table is 001_intelligence_tables.sql's: `context` (jsonb),
+// `is_accurate`, `created_at`. 20260213000003 declared another shape
+// (`prediction`, `predicted_at`, `accurate`) with CREATE TABLE IF NOT EXISTS
+// — a no-op on a table that already existed — and this code was written
+// against THAT one. Every insert was PGRST204, every resolve too, and both
+// reads 42703: generator calibration never stored a single entry. Found by
+// the fake backend's schema net (convergence plan P0.3, 2026-09-24).
+
+/** A live row, in the shape the calibration callers read. */
+function fromCalibrationRow(row: any) {
+  return {
+    ...row,
+    prediction: row?.context?.prediction ?? null,
+    // Stored as text; '' means "no number was predicted".
+    predicted_value: row?.predicted_value == null || row.predicted_value === '' ? null : Number(row.predicted_value),
+    predicted_at: row?.created_at ?? null,
+    accurate: row?.is_accurate ?? null,
+  };
+}
 
 export async function insertCalibrationEntry(entry: {
   generator_id: string;
@@ -196,7 +215,14 @@ export async function insertCalibrationEntry(entry: {
   if (!isSupabaseConfigured) return null;
   const userId = await getUserId();
   const { data, error } = await from('calibration_entries')
-    .insert({ ...entry, user_id: userId, predicted_at: new Date().toISOString() } as any)
+    .insert({
+      user_id: userId,
+      generator_id: entry.generator_id,
+      // `text NOT NULL` in the live table: a prediction without a number
+      // (a quote sent before it had an amount) was a 23502 and no row.
+      predicted_value: entry.predicted_value != null ? String(entry.predicted_value) : '',
+      context: { prediction: entry.prediction },
+    } as any)
     .select('id')
     .single();
   if (error) { logWarn('IntelDP', `insertCalibration: ${error.message}`); return null; }
@@ -218,7 +244,7 @@ export async function resolveCalibrationEntry(
     .update({
       actual_value: actualValue,
       resolved_at: new Date().toISOString(),
-      accurate,
+      is_accurate: accurate,
     })
     .eq('id', entryId);
   if (error) logWarn('IntelDP', `resolveCalibrationEntry ${entryId}: ${error.message}`);
@@ -232,15 +258,15 @@ export async function getCalibrationEntriesByGenerator(
   let q = from('calibration_entries')
     .select('*')
     .eq('generator_id', generatorId)
-    .order('predicted_at', { ascending: false });
+    .order('created_at', { ascending: false });
   if (options?.unresolvedOnly) q = q.is('resolved_at', null);
   if (options?.maxAgeDays) {
     const since = new Date(Date.now() - options.maxAgeDays * 86_400_000).toISOString();
-    q = q.gte('predicted_at', since);
+    q = q.gte('created_at', since);
   }
   const { data, error } = await q;
   if (error) { logWarn('IntelDP', `getCalibration: ${error.message}`); return []; }
-  return data ?? [];
+  return (data ?? []).map(fromCalibrationRow);
 }
 
 export async function getAllCalibrationScores(): Promise<
@@ -248,15 +274,15 @@ export async function getAllCalibrationScores(): Promise<
 > {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await from('calibration_entries')
-    .select('generator_id, resolved_at, accurate');
-  if (error) { return []; }
+    .select('generator_id, resolved_at, is_accurate');
+  if (error) { logWarn('IntelDP', `getAllCalibrationScores: ${error.message}`); return []; }
 
   const byGen = new Map<string, { total: number; resolved: number; accurate: number }>();
   for (const row of data ?? []) {
     const g = byGen.get(row.generator_id) || { total: 0, resolved: 0, accurate: 0 };
     g.total++;
     if (row.resolved_at) g.resolved++;
-    if (row.accurate) g.accurate++;
+    if (row.is_accurate) g.accurate++;
     byGen.set(row.generator_id, g);
   }
 

@@ -47,3 +47,13 @@ describe('inbox entries are copy, not literals', () => {
     }
   });
 });
+
+// The deposit checkout description is read by the CUSTOMER on the payment
+// page. It was the Dutch literal "Aanbetaling" in every market, UK/US too.
+describe('the deposit checkout is described in the contractor language', () => {
+  it('uses the copy key, never a Dutch literal', () => {
+    const src = stripComments(readFileSync(join(__dirname, '../AppState.tsx'), 'utf8'));
+    expect(src).not.toMatch(/description:\s*`Aanbetaling/);
+    expect(src).toMatch(/appI18n\.t\('decisionPortal\.deposit'/);
+  });
+});

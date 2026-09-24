@@ -244,11 +244,14 @@ Deno.serve(async (req) => {
   let dedupeFailures = 0;
 
   for (const userId of userIds) {
-    // Rate-limit: skip if any push sent to this user in the last 24h.
+    // Rate-limit: skip if a push REACHED this user in the last 24h. Counting
+    // every row let an undelivered pack push (no device, success=false)
+    // silence the day's money digest (review 2026-09-24).
     const { count: recentPushes } = await admin
       .from('push_notification_log')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
+      .eq('success', true)
       .gte('sent_at', dayAgoIso);
     if ((recentPushes ?? 0) > 0) {
       results.push({ userId, decision: 'skip', delivery: 'rate-limited' });
@@ -288,7 +291,7 @@ Deno.serve(async (req) => {
     }
 
     // 2. Fetch state.
-    const [overdue, queue, staling, tomorrow] = await Promise.all([
+    const [overdue, staling, tomorrow] = await Promise.all([
       admin.from('documents')
         .select('total_amount')
         .eq('user_id', userId)
@@ -297,10 +300,6 @@ Deno.serve(async (req) => {
         // returned zero rows. Overdue = sent (not paid) with a past due_date.
         .eq('status', 'sent')
         .lt('due_date', new Date().toISOString().slice(0, 10)),
-      admin.from('ai_queue_items')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('status', 'pending'),
       admin.from('documents')
         .select('id, created_at')
         .eq('user_id', userId)
@@ -322,7 +321,10 @@ Deno.serve(async (req) => {
     const decision = pickDailyPush({
       overdueInvoiceCount: overdueRows.length,
       overdueInvoiceAmount: overdueAmount,
-      queuePendingCount: queue.count ?? 0,
+      // The action queue lives ON THE DEVICE (AsyncStorage); the server cannot
+      // count it. This queried `ai_queue_items`, a table that does not exist —
+      // 42P01 every run, read as 0 (live-schema column scan, 2026-09-24).
+      queuePendingCount: 0,
       stalingQuoteCount: (staling.data ?? []).length,
       jobsTomorrowCount: tomorrow.count ?? 0,
       expiringLicense,

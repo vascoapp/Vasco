@@ -75,7 +75,7 @@ failure**:
 - **P0.3 Fake backend for unit tests.** An in-memory PostgREST fake that
   enforces what production enforces:
   - `max_rows = 1000`;
-  - column names from `database.types.ts`, so unknown columns are rejected;
+  - column names from a snapshot of the LIVE schema, so unknown columns are rejected;
   - NOT NULL columns;
   - rows owned by the signed-in user.
 

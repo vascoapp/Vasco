@@ -22,10 +22,11 @@
 // templates + dedup. The push itself uses pack-aware copy so the
 // contractor knows what they'll see when they open.
 //
-// Rate-limit: max 1 pack-tick push per contractor per day, gated by
-// push_notification_log (notif_type='pack_incasso_*'). Independent of
-// daily-push-digest's own 1/day cap so the two can coexist (a contractor
-// may receive both if both fire — acceptable noise for the value).
+// Rate-limit: max 1 pack-tick push per contractor per tick (enforced by
+// `pushedThisTick`, priority incasso > quotes > jobs) and a 24h dedupe per
+// step via push_notification_log. daily-push-digest (18:00) skips anyone a
+// push REACHED in the last 24h, so on a day a pack push lands the digest
+// stays quiet.
 //
 // Schedule: 0 9 * * *  (09:00 UTC = 10/11 CET morning, before contractor
 // reaches their first job site so the push lands during planning time).
@@ -48,58 +49,63 @@ type JobStep = 'survey_7' | 'maintenance_335' | 'maintenance_365';
 interface InvoiceRow {
   id: string;
   user_id: string;
-  number: string | null;
-  amount: number | null;
-  total: number | null;
   customer_id: string | null;
-  customer_name: string | null;
   status: string | null;
   due_date: string | null;
   sent_at: string | null;
 }
 
-const PUSH_COPY: Record<Locale, Record<IncassoStep, { title: string; body: (n: number) => string }>> = {
+// Contractor-facing push copy (DE/FR formal, NL/ES/IT informal). Every body is
+// an explicit singular/plural pair: the old `${n} Auftrag${n>1?'aufträge':''}`
+// rendered "2 Auftragaufträge", and several languages disagreed in number
+// ("2 lavori completato", "2 facturen vervalt"). The push only OPENS the app —
+// it says what is ready, never "tap to send", and claims nothing we have not
+// measured (review 2026-09-24).
+type Copy = { title: string; body: (n: number) => string };
+const pl = (one: string, other: string) => (n: number) => (n === 1 ? one : other).replace('{n}', String(n));
+
+const PUSH_COPY: Record<Locale, Record<IncassoStep, Copy>> = {
   en: {
-    pre_due: { title: 'Invoice due in 3 days', body: (n) => `${n} invoice${n > 1 ? 's' : ''} due soon. Vasco prepared a pre-reminder.` },
-    overdue_3: { title: 'Friendly reminder ready', body: (n) => `${n} invoice${n > 1 ? 's' : ''} 3 days overdue. Tap to send.` },
-    overdue_7: { title: 'Reminder ready', body: (n) => `${n} invoice${n > 1 ? 's' : ''} 7 days overdue. Vasco wrote the chase.` },
-    overdue_14: { title: 'Statutory reminder ready', body: (n) => `${n} invoice${n > 1 ? 's' : ''} 14 days overdue. Includes EU 2011/7/EU disclosure.` },
-    overdue_30: { title: 'Final notice ready', body: (n) => `${n} invoice${n > 1 ? 's' : ''} 30 days overdue. Last warning before debt collection.` },
+    pre_due: { title: 'Invoice due soon', body: pl('1 invoice is due in 3 days. A reminder is ready.', '{n} invoices are due in 3 days. Reminders are ready.') },
+    overdue_3: { title: 'Friendly reminder ready', body: pl('1 invoice is 3 days overdue. A reminder is ready in the app.', '{n} invoices are 3 days overdue. Reminders are ready in the app.') },
+    overdue_7: { title: 'Reminder ready', body: pl('1 invoice is 7 days overdue. A reminder is ready in the app.', '{n} invoices are 7 days overdue. Reminders are ready in the app.') },
+    overdue_14: { title: 'Formal reminder ready', body: pl('1 invoice is 14 days overdue. A formal reminder with statutory interest is ready.', '{n} invoices are 14 days overdue. Formal reminders with statutory interest are ready.') },
+    overdue_30: { title: 'Final notice ready', body: pl('1 invoice is 30 days overdue. A final notice is ready.', '{n} invoices are 30 days overdue. Final notices are ready.') },
   },
   nl: {
-    pre_due: { title: 'Factuur vervalt binnenkort', body: (n) => `${n} factu${n > 1 ? 'ren' : 'ur'} vervalt over 3 dagen. Vasco heeft een pre-herinnering klaarstaan.` },
-    overdue_3: { title: 'Vriendelijke herinnering klaar', body: (n) => `${n} factu${n > 1 ? 'ren' : 'ur'} 3 dagen achterstallig. Tik om te versturen.` },
-    overdue_7: { title: 'Herinnering klaar', body: (n) => `${n} factu${n > 1 ? 'ren' : 'ur'} 7 dagen achterstallig. Vasco heeft de tekst klaar.` },
-    overdue_14: { title: 'Wettelijke aanmaning klaar', body: (n) => `${n} factu${n > 1 ? 'ren' : 'ur'} 14 dagen achterstallig. Met EU 2011/7/EU disclosure.` },
-    overdue_30: { title: 'Laatste herinnering klaar', body: (n) => `${n} factu${n > 1 ? 'ren' : 'ur'} 30 dagen achterstallig. Laatste waarschuwing voor incasso.` },
+    pre_due: { title: 'Factuur vervalt binnenkort', body: pl('1 factuur vervalt over 3 dagen. Er staat een herinnering klaar.', '{n} facturen vervallen over 3 dagen. Er staan herinneringen klaar.') },
+    overdue_3: { title: 'Vriendelijke herinnering klaar', body: pl('1 factuur is 3 dagen te laat. Er staat een herinnering klaar in de app.', '{n} facturen zijn 3 dagen te laat. Er staan herinneringen klaar in de app.') },
+    overdue_7: { title: 'Herinnering klaar', body: pl('1 factuur is 7 dagen te laat. Er staat een herinnering klaar in de app.', '{n} facturen zijn 7 dagen te laat. Er staan herinneringen klaar in de app.') },
+    overdue_14: { title: 'Aanmaning klaar', body: pl('1 factuur is 14 dagen te laat. Er staat een aanmaning met wettelijke handelsrente klaar.', '{n} facturen zijn 14 dagen te laat. Er staan aanmaningen met wettelijke handelsrente klaar.') },
+    overdue_30: { title: 'Laatste herinnering klaar', body: pl('1 factuur is 30 dagen te laat. Er staat een laatste herinnering klaar.', '{n} facturen zijn 30 dagen te laat. Er staan laatste herinneringen klaar.') },
   },
   de: {
-    pre_due: { title: 'Rechnung läuft bald ab', body: (n) => `${n} Rechnung${n > 1 ? 'en' : ''} fällig in 3 Tagen. Vasco hat eine Vorab-Erinnerung vorbereitet.` },
-    overdue_3: { title: 'Freundliche Erinnerung bereit', body: (n) => `${n} Rechnung${n > 1 ? 'en' : ''} 3 Tage überfällig. Tippen zum Senden.` },
-    overdue_7: { title: 'Erinnerung bereit', body: (n) => `${n} Rechnung${n > 1 ? 'en' : ''} 7 Tage überfällig. Text liegt bereit.` },
-    overdue_14: { title: 'Mahnung bereit', body: (n) => `${n} Rechnung${n > 1 ? 'en' : ''} 14 Tage überfällig. Mit EU 2011/7/EU-Hinweis.` },
-    overdue_30: { title: 'Letzte Mahnung bereit', body: (n) => `${n} Rechnung${n > 1 ? 'en' : ''} 30 Tage überfällig. Letzte Warnung vor Inkasso.` },
+    pre_due: { title: 'Rechnung bald fällig', body: pl('1 Rechnung ist in 3 Tagen fällig. Eine Erinnerung liegt bereit.', '{n} Rechnungen sind in 3 Tagen fällig. Erinnerungen liegen bereit.') },
+    overdue_3: { title: 'Freundliche Erinnerung bereit', body: pl('1 Rechnung ist 3 Tage überfällig. Eine Erinnerung liegt in der App bereit.', '{n} Rechnungen sind 3 Tage überfällig. Erinnerungen liegen in der App bereit.') },
+    overdue_7: { title: 'Erinnerung bereit', body: pl('1 Rechnung ist 7 Tage überfällig. Eine Erinnerung liegt in der App bereit.', '{n} Rechnungen sind 7 Tage überfällig. Erinnerungen liegen in der App bereit.') },
+    overdue_14: { title: 'Mahnung bereit', body: pl('1 Rechnung ist 14 Tage überfällig. Eine Mahnung mit Verzugszinsen liegt bereit.', '{n} Rechnungen sind 14 Tage überfällig. Mahnungen mit Verzugszinsen liegen bereit.') },
+    overdue_30: { title: 'Letzte Mahnung bereit', body: pl('1 Rechnung ist 30 Tage überfällig. Eine letzte Mahnung liegt bereit.', '{n} Rechnungen sind 30 Tage überfällig. Letzte Mahnungen liegen bereit.') },
   },
   fr: {
-    pre_due: { title: 'Facture à échéance proche', body: (n) => `${n} facture${n > 1 ? 's' : ''} à échéance dans 3 jours. Pré-rappel prêt.` },
-    overdue_3: { title: 'Rappel amical prêt', body: (n) => `${n} facture${n > 1 ? 's' : ''} en retard de 3 jours. Tapez pour envoyer.` },
-    overdue_7: { title: 'Relance prête', body: (n) => `${n} facture${n > 1 ? 's' : ''} en retard de 7 jours. Texte prêt.` },
-    overdue_14: { title: 'Mise en demeure prête', body: (n) => `${n} facture${n > 1 ? 's' : ''} en retard de 14 jours. Avec mention Directive UE 2011/7/UE.` },
-    overdue_30: { title: 'Dernière relance prête', body: (n) => `${n} facture${n > 1 ? 's' : ''} en retard de 30 jours. Dernier avis avant recouvrement.` },
+    pre_due: { title: 'Facture bientôt échue', body: pl('1 facture arrive à échéance dans 3 jours. Un rappel est prêt.', '{n} factures arrivent à échéance dans 3 jours. Des rappels sont prêts.') },
+    overdue_3: { title: 'Rappel amical prêt', body: pl('1 facture a 3 jours de retard. Un rappel vous attend dans l’app.', '{n} factures ont 3 jours de retard. Des rappels vous attendent dans l’app.') },
+    overdue_7: { title: 'Relance prête', body: pl('1 facture a 7 jours de retard. Une relance vous attend dans l’app.', '{n} factures ont 7 jours de retard. Des relances vous attendent dans l’app.') },
+    overdue_14: { title: 'Relance formelle prête', body: pl('1 facture a 14 jours de retard. Une relance avec intérêts de retard est prête.', '{n} factures ont 14 jours de retard. Des relances avec intérêts de retard sont prêtes.') },
+    overdue_30: { title: 'Dernière relance prête', body: pl('1 facture a 30 jours de retard. Une dernière relance est prête.', '{n} factures ont 30 jours de retard. De dernières relances sont prêtes.') },
   },
   es: {
-    pre_due: { title: 'Factura vence pronto', body: (n) => `${n} factura${n > 1 ? 's' : ''} vence en 3 días. Pre-recordatorio listo.` },
-    overdue_3: { title: 'Recordatorio amable listo', body: (n) => `${n} factura${n > 1 ? 's' : ''} 3 días vencidas. Toca para enviar.` },
-    overdue_7: { title: 'Recordatorio listo', body: (n) => `${n} factura${n > 1 ? 's' : ''} 7 días vencidas. Texto preparado.` },
-    overdue_14: { title: 'Recordatorio legal listo', body: (n) => `${n} factura${n > 1 ? 's' : ''} 14 días vencidas. Con Directiva UE 2011/7/UE.` },
-    overdue_30: { title: 'Aviso final listo', body: (n) => `${n} factura${n > 1 ? 's' : ''} 30 días vencidas. Último aviso antes del recobro.` },
+    pre_due: { title: 'Factura a punto de vencer', body: pl('1 factura vence en 3 días. Tienes un recordatorio listo.', '{n} facturas vencen en 3 días. Tienes recordatorios listos.') },
+    overdue_3: { title: 'Recordatorio amable listo', body: pl('1 factura lleva 3 días vencida. Tienes un recordatorio listo en la app.', '{n} facturas llevan 3 días vencidas. Tienes recordatorios listos en la app.') },
+    overdue_7: { title: 'Recordatorio listo', body: pl('1 factura lleva 7 días vencida. Tienes un recordatorio listo en la app.', '{n} facturas llevan 7 días vencidas. Tienes recordatorios listos en la app.') },
+    overdue_14: { title: 'Requerimiento listo', body: pl('1 factura lleva 14 días vencida. Tienes un requerimiento con intereses de demora listo.', '{n} facturas llevan 14 días vencidas. Tienes requerimientos con intereses de demora listos.') },
+    overdue_30: { title: 'Aviso final listo', body: pl('1 factura lleva 30 días vencida. Tienes un aviso final listo.', '{n} facturas llevan 30 días vencidas. Tienes avisos finales listos.') },
   },
   it: {
-    pre_due: { title: 'Fattura in scadenza', body: (n) => `${n} fattur${n > 1 ? 'e' : 'a'} scade tra 3 giorni. Pre-promemoria pronto.` },
-    overdue_3: { title: 'Promemoria amichevole pronto', body: (n) => `${n} fattur${n > 1 ? 'e' : 'a'} in ritardo di 3 giorni. Tocca per inviare.` },
-    overdue_7: { title: 'Sollecito pronto', body: (n) => `${n} fattur${n > 1 ? 'e' : 'a'} in ritardo di 7 giorni. Testo pronto.` },
-    overdue_14: { title: 'Sollecito legale pronto', body: (n) => `${n} fattur${n > 1 ? 'e' : 'a'} in ritardo di 14 giorni. Con Direttiva UE 2011/7/UE.` },
-    overdue_30: { title: 'Avviso finale pronto', body: (n) => `${n} fattur${n > 1 ? 'e' : 'a'} in ritardo di 30 giorni. Ultimo avviso prima del recupero.` },
+    pre_due: { title: 'Fattura in scadenza', body: pl('1 fattura scade tra 3 giorni. Hai un promemoria pronto.', '{n} fatture scadono tra 3 giorni. Hai dei promemoria pronti.') },
+    overdue_3: { title: 'Promemoria gentile pronto', body: pl('1 fattura è in ritardo di 3 giorni. Hai un promemoria pronto nell’app.', '{n} fatture sono in ritardo di 3 giorni. Hai dei promemoria pronti nell’app.') },
+    overdue_7: { title: 'Sollecito pronto', body: pl('1 fattura è in ritardo di 7 giorni. Hai un sollecito pronto nell’app.', '{n} fatture sono in ritardo di 7 giorni. Hai dei solleciti pronti nell’app.') },
+    overdue_14: { title: 'Sollecito formale pronto', body: pl('1 fattura è in ritardo di 14 giorni. Hai un sollecito con interessi di mora pronto.', '{n} fatture sono in ritardo di 14 giorni. Hai dei solleciti con interessi di mora pronti.') },
+    overdue_30: { title: 'Ultimo avviso pronto', body: pl('1 fattura è in ritardo di 30 giorni. Hai un ultimo avviso pronto.', '{n} fatture sono in ritardo di 30 giorni. Hai degli avvisi finali pronti.') },
   },
 };
 
@@ -115,67 +121,65 @@ function localeFor(country: string | null | undefined): Locale {
 }
 
 // R66r49 #7: Quote followup push copy. 3d + 7d after quote sent.
-const QUOTE_PUSH: Record<Locale, Record<QuoteStep, { title: string; body: (n: number) => string }>> = {
+const QUOTE_PUSH: Record<Locale, Record<QuoteStep, Copy>> = {
   en: {
-    sent_3: { title: 'Quote followup ready', body: (n) => `${n} quote${n > 1 ? 's' : ''} sent 3 days ago. Vasco prepared a "did you get a chance to look?" nudge.` },
-    sent_7: { title: 'Quote expiring soon', body: (n) => `${n} quote${n > 1 ? 's' : ''} sent 7 days ago. A reminder now often unsticks them.` },
+    sent_3: { title: 'Quote follow-up ready', body: pl('1 quote was sent 3 days ago. A follow-up is ready.', '{n} quotes were sent 3 days ago. Follow-ups are ready.') },
+    sent_7: { title: 'Quote follow-up ready', body: pl('1 quote was sent 7 days ago with no answer yet. A reminder is ready.', '{n} quotes were sent 7 days ago with no answer yet. Reminders are ready.') },
   },
   nl: {
-    sent_3: { title: 'Offerte-opvolging klaar', body: (n) => `${n} offerte${n > 1 ? 's' : ''} 3 dagen geleden verstuurd. Vasco heeft een nudge klaarstaan.` },
-    sent_7: { title: 'Offerte verloopt binnenkort', body: (n) => `${n} offerte${n > 1 ? 's' : ''} 7 dagen geleden verstuurd. Een herinnering helpt vaak.` },
+    sent_3: { title: 'Offerte-opvolging klaar', body: pl('1 offerte is 3 dagen geleden verstuurd. Er staat een opvolging klaar.', '{n} offertes zijn 3 dagen geleden verstuurd. Er staan opvolgingen klaar.') },
+    sent_7: { title: 'Offerte-opvolging klaar', body: pl('1 offerte is 7 dagen geleden verstuurd, nog geen reactie. Er staat een herinnering klaar.', '{n} offertes zijn 7 dagen geleden verstuurd, nog geen reactie. Er staan herinneringen klaar.') },
   },
   de: {
-    sent_3: { title: 'Angebots-Nachfass bereit', body: (n) => `${n} Angebot${n > 1 ? 'e' : ''} vor 3 Tagen versendet. Erinnerung liegt bereit.` },
-    sent_7: { title: 'Angebot läuft bald ab', body: (n) => `${n} Angebot${n > 1 ? 'e' : ''} vor 7 Tagen versendet. Eine Erinnerung hilft oft.` },
+    sent_3: { title: 'Angebots-Nachfassen bereit', body: pl('1 Angebot wurde vor 3 Tagen versendet. Eine Nachfrage liegt bereit.', '{n} Angebote wurden vor 3 Tagen versendet. Nachfragen liegen bereit.') },
+    sent_7: { title: 'Angebots-Nachfassen bereit', body: pl('1 Angebot wurde vor 7 Tagen versendet, noch ohne Antwort. Eine Erinnerung liegt bereit.', '{n} Angebote wurden vor 7 Tagen versendet, noch ohne Antwort. Erinnerungen liegen bereit.') },
   },
   fr: {
-    sent_3: { title: 'Relance devis prête', body: (n) => `${n} devis envoyé${n > 1 ? 's' : ''} il y a 3 jours. Une relance est prête.` },
-    sent_7: { title: 'Devis bientôt expiré', body: (n) => `${n} devis envoyé${n > 1 ? 's' : ''} il y a 7 jours. Une relance débloque souvent.` },
+    sent_3: { title: 'Relance de devis prête', body: pl('1 devis a été envoyé il y a 3 jours. Une relance est prête.', '{n} devis ont été envoyés il y a 3 jours. Des relances sont prêtes.') },
+    sent_7: { title: 'Relance de devis prête', body: pl('1 devis a été envoyé il y a 7 jours, toujours sans réponse. Un rappel est prêt.', '{n} devis ont été envoyés il y a 7 jours, toujours sans réponse. Des rappels sont prêts.') },
   },
   es: {
-    sent_3: { title: 'Seguimiento de presupuesto listo', body: (n) => `${n} presupuesto${n > 1 ? 's' : ''} enviado hace 3 días. Recordatorio listo.` },
-    sent_7: { title: 'Presupuesto pronto a vencer', body: (n) => `${n} presupuesto${n > 1 ? 's' : ''} enviado hace 7 días. Un recordatorio suele desbloquear.` },
+    sent_3: { title: 'Seguimiento de presupuesto listo', body: pl('1 presupuesto se envió hace 3 días. Tienes un seguimiento listo.', '{n} presupuestos se enviaron hace 3 días. Tienes seguimientos listos.') },
+    sent_7: { title: 'Seguimiento de presupuesto listo', body: pl('1 presupuesto se envió hace 7 días y aún no hay respuesta. Tienes un recordatorio listo.', '{n} presupuestos se enviaron hace 7 días y aún no hay respuesta. Tienes recordatorios listos.') },
   },
   it: {
-    sent_3: { title: 'Sollecito preventivo pronto', body: (n) => `${n} preventiv${n > 1 ? 'i' : 'o'} inviato 3 giorni fa. Nudge pronto.` },
-    sent_7: { title: 'Preventivo in scadenza', body: (n) => `${n} preventiv${n > 1 ? 'i' : 'o'} inviato 7 giorni fa. Un sollecito spesso sblocca.` },
+    sent_3: { title: 'Sollecito per preventivo pronto', body: pl('1 preventivo è stato inviato 3 giorni fa. Hai un sollecito pronto.', '{n} preventivi sono stati inviati 3 giorni fa. Hai dei solleciti pronti.') },
+    sent_7: { title: 'Sollecito per preventivo pronto', body: pl('1 preventivo è stato inviato 7 giorni fa, ancora senza risposta. Hai un promemoria pronto.', '{n} preventivi sono stati inviati 7 giorni fa, ancora senza risposta. Hai dei promemoria pronti.') },
   },
 };
 
-// R66r49 #8: Job-completion-keyed push copy. Survey at +7d (Oplevering Pakket
-// pack), pre-maintenance reminder at +335d (Onderhoud Herinnering pack
-// step 0), maintenance followup at +365d (step 1). All three are
-// server-side because contractors won't have the app open on those days.
-const JOB_PUSH: Record<Locale, Record<JobStep, { title: string; body: (n: number) => string }>> = {
+// R66r49 #8: Job-completion-keyed push copy. Survey at +7d, pre-maintenance
+// reminder at +335d, maintenance follow-up at +365d.
+const JOB_PUSH: Record<Locale, Record<JobStep, Copy>> = {
   en: {
-    survey_7: { title: 'Satisfaction survey ready', body: (n) => `${n} job${n > 1 ? 's' : ''} completed a week ago. A short review request often unlocks a Google review.` },
-    maintenance_335: { title: 'Annual maintenance — pre-reminder', body: (n) => `${n} job${n > 1 ? 's' : ''} are nearly a year old. Vasco prepared a friendly maintenance check-in.` },
-    maintenance_365: { title: 'Annual maintenance follow-up', body: (n) => `${n} customer${n > 1 ? 's' : ''} you served a year ago — a maintenance reminder is ready to send.` },
+    survey_7: { title: 'Review request ready', body: pl('1 job was completed a week ago. A review request is ready.', '{n} jobs were completed a week ago. Review requests are ready.') },
+    maintenance_335: { title: 'Annual maintenance coming up', body: pl('1 job is almost a year old. A maintenance message is ready.', '{n} jobs are almost a year old. Maintenance messages are ready.') },
+    maintenance_365: { title: 'Annual maintenance due', body: pl('1 job was completed a year ago. A maintenance reminder is ready.', '{n} jobs were completed a year ago. Maintenance reminders are ready.') },
   },
   nl: {
-    survey_7: { title: 'Tevredenheidsverzoek klaar', body: (n) => `${n} klus${n > 1 ? 'sen' : ''} een week geleden afgerond. Een korte review-vraag levert vaak een Google review op.` },
-    maintenance_335: { title: 'Jaarlijks onderhoud — vooraankondiging', body: (n) => `${n} klus${n > 1 ? 'sen' : ''} bijna een jaar oud. Vasco heeft een onderhoudsbericht klaarstaan.` },
-    maintenance_365: { title: 'Jaarlijks onderhoud — opvolger', body: (n) => `${n} klant${n > 1 ? 'en' : ''} van een jaar geleden — onderhoudsherinnering klaar om te sturen.` },
+    survey_7: { title: 'Review-verzoek klaar', body: pl('1 klus is een week geleden afgerond. Er staat een review-verzoek klaar.', '{n} klussen zijn een week geleden afgerond. Er staan review-verzoeken klaar.') },
+    maintenance_335: { title: 'Jaarlijks onderhoud komt eraan', body: pl('1 klus is bijna een jaar oud. Er staat een onderhoudsbericht klaar.', '{n} klussen zijn bijna een jaar oud. Er staan onderhoudsberichten klaar.') },
+    maintenance_365: { title: 'Jaarlijks onderhoud', body: pl('1 klus is een jaar geleden afgerond. Er staat een onderhoudsherinnering klaar.', '{n} klussen zijn een jaar geleden afgerond. Er staan onderhoudsherinneringen klaar.') },
   },
   de: {
-    survey_7: { title: 'Bewertungsanfrage bereit', body: (n) => `${n} Auftrag${n > 1 ? 'aufträge' : ''} vor einer Woche abgeschlossen. Eine kurze Bewertungsbitte führt oft zu einer Google-Rezension.` },
-    maintenance_335: { title: 'Jahreswartung — Vorankündigung', body: (n) => `${n} Auftrag${n > 1 ? 'aufträge' : ''} fast ein Jahr alt. Wartungs-Check-in liegt bereit.` },
-    maintenance_365: { title: 'Jahreswartung — Nachfass', body: (n) => `${n} Kund${n > 1 ? 'en' : 'e'} von vor einem Jahr — Wartungserinnerung bereit.` },
+    survey_7: { title: 'Bewertungsanfrage bereit', body: pl('1 Auftrag wurde vor einer Woche abgeschlossen. Eine Bewertungsanfrage liegt bereit.', '{n} Aufträge wurden vor einer Woche abgeschlossen. Bewertungsanfragen liegen bereit.') },
+    maintenance_335: { title: 'Jahreswartung steht an', body: pl('1 Auftrag ist fast ein Jahr alt. Eine Wartungsnachricht liegt bereit.', '{n} Aufträge sind fast ein Jahr alt. Wartungsnachrichten liegen bereit.') },
+    maintenance_365: { title: 'Jahreswartung fällig', body: pl('1 Auftrag wurde vor einem Jahr abgeschlossen. Eine Wartungserinnerung liegt bereit.', '{n} Aufträge wurden vor einem Jahr abgeschlossen. Wartungserinnerungen liegen bereit.') },
   },
   fr: {
-    survey_7: { title: 'Demande d\'avis prête', body: (n) => `${n} chantier${n > 1 ? 's' : ''} terminé il y a une semaine. Une demande d\'avis débouche souvent sur un avis Google.` },
-    maintenance_335: { title: 'Entretien annuel — pré-rappel', body: (n) => `${n} chantier${n > 1 ? 's' : ''} a presque un an. Un message d\'entretien est prêt.` },
-    maintenance_365: { title: 'Entretien annuel — relance', body: (n) => `${n} client${n > 1 ? 's' : ''} d\'il y a un an — rappel d\'entretien prêt à envoyer.` },
+    survey_7: { title: 'Demande d’avis prête', body: pl('1 chantier a été terminé il y a une semaine. Une demande d’avis est prête.', '{n} chantiers ont été terminés il y a une semaine. Des demandes d’avis sont prêtes.') },
+    maintenance_335: { title: 'Entretien annuel à venir', body: pl('1 chantier a presque un an. Un message d’entretien est prêt.', '{n} chantiers ont presque un an. Des messages d’entretien sont prêts.') },
+    maintenance_365: { title: 'Entretien annuel', body: pl('1 chantier a été terminé il y a un an. Un rappel d’entretien est prêt.', '{n} chantiers ont été terminés il y a un an. Des rappels d’entretien sont prêts.') },
   },
   es: {
-    survey_7: { title: 'Encuesta de satisfacción lista', body: (n) => `${n} trabajo${n > 1 ? 's' : ''} terminado hace una semana. Una pequeña petición de reseña suele conseguir una en Google.` },
-    maintenance_335: { title: 'Mantenimiento anual — pre-aviso', body: (n) => `${n} trabajo${n > 1 ? 's' : ''} casi cumplen un año. Mensaje de mantenimiento listo.` },
-    maintenance_365: { title: 'Mantenimiento anual — seguimiento', body: (n) => `${n} cliente${n > 1 ? 's' : ''} de hace un año — recordatorio de mantenimiento listo.` },
+    survey_7: { title: 'Petición de reseña lista', body: pl('1 trabajo se terminó hace una semana. Tienes una petición de reseña lista.', '{n} trabajos se terminaron hace una semana. Tienes peticiones de reseña listas.') },
+    maintenance_335: { title: 'Mantenimiento anual próximo', body: pl('1 trabajo cumple casi un año. Tienes un mensaje de mantenimiento listo.', '{n} trabajos cumplen casi un año. Tienes mensajes de mantenimiento listos.') },
+    maintenance_365: { title: 'Mantenimiento anual', body: pl('1 trabajo se terminó hace un año. Tienes un recordatorio de mantenimiento listo.', '{n} trabajos se terminaron hace un año. Tienes recordatorios de mantenimiento listos.') },
   },
   it: {
-    survey_7: { title: 'Richiesta recensione pronta', body: (n) => `${n} lavor${n > 1 ? 'i' : 'o'} completato una settimana fa. Una breve richiesta spesso porta a una recensione Google.` },
-    maintenance_335: { title: 'Manutenzione annuale — preavviso', body: (n) => `${n} lavor${n > 1 ? 'i' : 'o'} ha quasi un anno. Messaggio di manutenzione pronto.` },
-    maintenance_365: { title: 'Manutenzione annuale — sollecito', body: (n) => `${n} client${n > 1 ? 'i' : 'e'} di un anno fa — promemoria di manutenzione pronto.` },
+    survey_7: { title: 'Richiesta di recensione pronta', body: pl('1 lavoro è stato completato una settimana fa. Hai una richiesta di recensione pronta.', '{n} lavori sono stati completati una settimana fa. Hai delle richieste di recensione pronte.') },
+    maintenance_335: { title: 'Manutenzione annuale in arrivo', body: pl('1 lavoro ha quasi un anno. Hai un messaggio di manutenzione pronto.', '{n} lavori hanno quasi un anno. Hai dei messaggi di manutenzione pronti.') },
+    maintenance_365: { title: 'Manutenzione annuale', body: pl('1 lavoro è stato completato un anno fa. Hai un promemoria di manutenzione pronto.', '{n} lavori sono stati completati un anno fa. Hai dei promemoria di manutenzione pronti.') },
   },
 };
 
@@ -273,25 +277,55 @@ Deno.serve(async (req) => {
 
   for (const userId of userIds) {
     try {
+      // The contractor's country picks the push language — from the business
+      // profile, which outranks the account (CLAUDE.md). It used to be read off
+      // `documents.country`, a column that does not exist.
+      const { data: settings } = await admin
+        .from('business_settings')
+        .select('country')
+        .eq('user_id', userId)
+        .maybeSingle();
+      const country: string | null = (settings as any)?.country ?? null;
+
+      // Each pack is its own block: "nothing to do" for one must not end the
+      // others. A bare `continue` here skipped the quote and job packs for every
+      // contractor without an overdue invoice (live-schema scan follow-up).
+      // Shared by all three packs below (were block-local to the first).
+      const sinceIso = new Date(nowMs - 24 * 60 * 60 * 1000).toISOString();
+      const locale = localeFor(country);
+
+      // At most ONE pack push per contractor per tick (the header's contract;
+      // with three independent blocks up to five could fire). Order is the
+      // priority: money owed, then quotes waiting, then jobs.
+      let pushedThisTick = false;
+
+      incasso: {
       // Pull this user's open invoices from documents (status sent or overdue).
-      const { data: invoices } = await admin
+      // ONLY live columns: this select named number/amount/total/customer_name/
+      // country, none of which exist, so it failed with 42703 on every tick and
+      // — its error unread — looked like "no open invoices": the dunning pack
+      // never pushed once (live-schema column scan, convergence plan P0.3).
+      const { data: invoices, error: invErr } = await admin
         .from('documents')
-        .select('id, user_id, number, amount, total, customer_id, customer_name, status, due_date, sent_at, country')
+        .select('id, user_id, customer_id, status, due_date, sent_at')
         .eq('user_id', userId)
         .eq('doc_type', 'invoice')
-        .in('status', ['sent', 'overdue']);
+        .in('status', ['sent', 'overdue'])
+        .is('deleted_at', null); // a deleted invoice is chased by nobody
+      if (invErr) {
+        errors.push({ userId, error: `invoices: ${invErr.message}` });
+        break incasso;
+      }
 
       const stepCounts = new Map<IncassoStep, number>();
-      let country: string | null = null;
       for (const inv of (invoices as any[]) ?? []) {
         const step = classifyInvoice(inv as InvoiceRow, nowMs);
         if (!step) continue;
         stepCounts.set(step, (stepCounts.get(step) ?? 0) + 1);
-        country = country ?? inv.country ?? null;
       }
       if (stepCounts.size === 0) {
         skipped++;
-        continue;
+        break incasso;
       }
 
       // Pick the most-urgent step that has matches (30 > 14 > 7 > 3 > pre_due).
@@ -299,12 +333,11 @@ Deno.serve(async (req) => {
       const step = priority.find((s) => stepCounts.has(s));
       if (!step) {
         skipped++;
-        continue;
+        break incasso;
       }
       const count = stepCounts.get(step) ?? 0;
 
       // Dedupe via push_notification_log: skip if same (notif_type, user) fired today.
-      const sinceIso = new Date(nowMs - 24 * 60 * 60 * 1000).toISOString();
       const notifType = `pack_incasso_${step}`;
       const { data: recent } = await admin
         .from('push_notification_log')
@@ -315,10 +348,9 @@ Deno.serve(async (req) => {
         .limit(1);
       if (recent && recent.length > 0) {
         skipped++;
-        continue;
+        break incasso;
       }
 
-      const locale = localeFor(country);
       const copy = PUSH_COPY[locale][step];
 
       // Fan out via send-push (already deployed). Deep-link to /(contractor)/geld
@@ -355,26 +387,35 @@ Deno.serve(async (req) => {
         console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${incassoLogErr.message}) — this step can repeat`);
       }
 
-      if (sendJsonOutcome.delivered) pushed++;
+      if (sendJsonOutcome.delivered) { pushed++; pushedThisTick = true; }
       else errors.push({ userId, error: sendJsonOutcome.error ?? 'send-push failed' });
 
+      }
+
+      quotes: {
+        if (pushedThisTick) break quotes;
       // ─── Quote followup pack (R66r49 #7) ─────────────────────────────────
       // Same dedup contract as Incasso (24h same-type-key window via
       // push_notification_log). Independent rate limit — a contractor with
       // overdue invoices AND staling quotes can receive both pushes today.
-      const { data: quotes } = await admin
+      const { data: quotes, error: quoteErr } = await admin
         .from('documents')
-        .select('id, user_id, status, sent_at, customer_id, country')
+        .select('id, user_id, status, sent_at, customer_id')
         .eq('user_id', userId)
         .eq('doc_type', 'quote')
-        .eq('status', 'sent');
+        .eq('status', 'sent')
+        .is('deleted_at', null);
 
+      if (quoteErr) {
+        errors.push({ userId, error: `quotes: ${quoteErr.message}` });
+        break quotes;
+      }
       const quoteCounts = new Map<QuoteStep, number>();
       for (const q of (quotes as any[]) ?? []) {
         const qstep = classifyQuote(q as QuoteRow, nowMs);
         if (qstep) quoteCounts.set(qstep, (quoteCounts.get(qstep) ?? 0) + 1);
       }
-      if (quoteCounts.size === 0) continue;
+      if (quoteCounts.size === 0) break quotes;
 
       // Prefer 7d push over 3d when both have matches — older = more urgent.
       const qStep: QuoteStep = quoteCounts.has('sent_7') ? 'sent_7' : 'sent_3';
@@ -388,7 +429,7 @@ Deno.serve(async (req) => {
         .eq('notif_type', qNotifType)
         .gte('sent_at', sinceIso)
         .limit(1);
-      if (qRecent && qRecent.length > 0) continue;
+      if (qRecent && qRecent.length > 0) break quotes;
 
       const qCopy = QUOTE_PUSH[locale][qStep];
       const qSend = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
@@ -423,20 +464,23 @@ Deno.serve(async (req) => {
         console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${followupLogErr.message}) — this step can repeat`);
       }
 
-      if (qSendJsonOutcome.delivered) pushed++;
+      if (qSendJsonOutcome.delivered) { pushed++; pushedThisTick = true; }
       else errors.push({ userId, error: `quote: ${qSendJsonOutcome.error}` });
+
+      }
 
       // ─── Job-completion packs (R66r49 #8) ──────────────────────────────
       // Handover-survey at +7d, maintenance pre-reminder at +335d,
       // maintenance follow-up at +365d. Each step is independently
       // rate-limited (different `notif_type` keys). All three derive from
       // the same `jobs` table query so we fetch once.
-      const { data: jobs } = await admin
+      const { data: jobs, error: jobsErr } = await admin
         .from('jobs')
         .select('id, user_id, status, completed_at, customer_id')
         .eq('user_id', userId)
         .in('status', ['completed', 'gereed']);
 
+      if (jobsErr) errors.push({ userId, error: `jobs: ${jobsErr.message}` });
       const jobStepCounts = new Map<JobStep, number>();
       for (const job of (jobs as any[]) ?? []) {
         const js = classifyJob(job as JobRow, nowMs);
@@ -449,6 +493,7 @@ Deno.serve(async (req) => {
       // (less likely to fire again).
       const jobOrder: JobStep[] = ['maintenance_365', 'maintenance_335', 'survey_7'];
       for (const jStep of jobOrder) {
+        if (pushedThisTick) break;
         const jCount = jobStepCounts.get(jStep);
         if (!jCount) continue;
 
@@ -498,7 +543,7 @@ Deno.serve(async (req) => {
           console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${milestoneLogErr.message}) — this step can repeat`);
         }
 
-        if (jSendJsonOutcome.delivered) pushed++;
+        if (jSendJsonOutcome.delivered) { pushed++; pushedThisTick = true; }
         else errors.push({ userId, error: `${jStep}: ${jSendJsonOutcome.error}` });
       }
     } catch (err) {

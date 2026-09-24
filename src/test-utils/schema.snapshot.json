@@ -3913,6 +3913,83 @@
     "default": "now()"
    }
   },
+  "material_price_benchmarks": {
+   "trade": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "cohort_key": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "material_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "material_category": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "unit": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "avg_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "median_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "p25_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "p75_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "min_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "max_price": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "sample_size": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "bigint"
+   },
+   "contractor_count": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "bigint"
+   },
+   "last_observed": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   }
+  },
   "material_price_history": {
    "id": {
     "nullable": false,
@@ -4532,6 +4609,58 @@
     "hasDefault": true,
     "type": "timestamp with time zone",
     "default": "now()"
+   }
+  },
+  "price_references": {
+   "user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "material_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "material_name": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "avg_price_30d": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "double precision"
+   },
+   "avg_price_90d": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "double precision"
+   },
+   "min_price_30d": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "max_price_30d": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "real"
+   },
+   "volatility": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "double precision"
+   },
+   "observation_count": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "bigint"
+   },
+   "last_observed_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
    }
   },
   "pricing_intelligence": {
@@ -6074,5 +6203,1672 @@
     "default": "now()"
    }
   }
+ },
+ "functions": {
+  "on_quote_accepted_refresh_cohort": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "compute_job_quality_score": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "query_winrate_distribution": [
+   {
+    "args": [
+     "p_trade",
+     "p_country"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_customer_quality_weight": [
+   {
+    "args": [
+     "p_customer_id"
+    ],
+    "required": [
+     "p_customer_id"
+    ]
+   }
+  ],
+  "match_similar_customers": [
+   {
+    "args": [
+     "p_user_id",
+     "p_query_text",
+     "p_limit"
+    ],
+    "required": [
+     "p_user_id",
+     "p_query_text"
+    ]
+   }
+  ],
+  "refresh_generator_approval_rates": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_quote_line_recommendations": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_existing_descriptions",
+     "p_limit"
+    ],
+    "required": [
+     "p_trade",
+     "p_country",
+     "p_existing_descriptions"
+    ]
+   }
+  ],
+  "refresh_intelligence_aggregates": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "restore_subscription_credits": [
+   {
+    "args": [
+     "p_consumed_ids"
+    ],
+    "required": [
+     "p_consumed_ids"
+    ]
+   }
+  ],
+  "watchdog_snapshot": [
+   {
+    "args": [
+     "p_since"
+    ],
+    "required": [
+     "p_since"
+    ]
+   }
+  ],
+  "get_time_of_day_payment_timing": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "leads_touch_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "workers_touch_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_expiring_licenses": [
+   {
+    "args": [
+     "p_days_ahead"
+    ],
+    "required": []
+   }
+  ],
+  "peek_document_counter": [
+   {
+    "args": [
+     "p_doc_type"
+    ],
+    "required": [
+     "p_doc_type"
+    ]
+   }
+  ],
+  "query_margin_trend": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "projects_set_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "match_similar_items": [
+   {
+    "args": [
+     "query_embedding",
+     "match_type",
+     "match_count"
+    ],
+    "required": [
+     "query_embedding",
+     "match_type"
+    ]
+   }
+  ],
+  "vector_avg": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_combine": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "array_to_vector": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_to_float4": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "ivfflathandler": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "hnswhandler": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "ivfflat_halfvec_support": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "ivfflat_bit_support": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "hnsw_halfvec_support": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "hnsw_bit_support": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "hnsw_sparsevec_support": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_in": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_out": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_typmod_in": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_recv": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_send": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "l2_distance": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "inner_product": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "cosine_distance": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "l1_distance": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_dims": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "l2_norm": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "l2_normalize": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "binary_quantize": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "subvector": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_add": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_sub": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_mul": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_concat": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_lt": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_le": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_eq": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_in": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_out": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_typmod_in": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_recv": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_send": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_norm": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_add": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_sub": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_mul": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_concat": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_lt": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_le": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_eq": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_ne": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_ge": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_gt": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_cmp": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_l2_squared_distance": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_negative_inner_product": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_spherical_distance": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_accum": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_ne": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_ge": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_gt": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_cmp": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_l2_squared_distance": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_negative_inner_product": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_spherical_distance": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_accum": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_avg": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_combine": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_to_vector": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_to_halfvec": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "array_to_halfvec": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_to_float4": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "hamming_distance": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "jaccard_distance": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_in": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_out": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_typmod_in": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_recv": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_send": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_lt": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_le": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_eq": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_ne": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_ge": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_gt": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_cmp": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_l2_squared_distance": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_negative_inner_product": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "vector_to_sparsevec": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_to_vector": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "halfvec_to_sparsevec": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "sparsevec_to_halfvec": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "array_to_sparsevec": [
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   },
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_credits_summary": [
+   {
+    "args": [
+     "p_user_id"
+    ],
+    "required": [
+     "p_user_id"
+    ]
+   }
+  ],
+  "set_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "enforce_quote_interaction_cap": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "set_feature_flags_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "set_push_tokens_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "set_subscriptions_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "consume_subscription_credits": [
+   {
+    "args": [
+     "p_user_id",
+     "p_max_months"
+    ],
+    "required": [
+     "p_user_id"
+    ]
+   }
+  ],
+  "compute_contractor_calibration": [
+   {
+    "args": [
+     "p_user_id",
+     "p_trade",
+     "p_country"
+    ],
+    "required": [
+     "p_user_id",
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "attribute_referral": [
+   {
+    "args": [
+     "p_code",
+     "p_new_user_id"
+    ],
+    "required": [
+     "p_code",
+     "p_new_user_id"
+    ]
+   }
+  ],
+  "bump_daily_metric_on_event": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_cohort_cost_variance": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_job_type",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "compute_cohort_benchmarks": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_metric",
+     "p_period"
+    ],
+    "required": [
+     "p_trade",
+     "p_country",
+     "p_metric",
+     "p_period"
+    ]
+   }
+  ],
+  "compute_weekly_cohort_stats": [
+   {
+    "args": [
+     "p_week_key"
+    ],
+    "required": []
+   }
+  ],
+  "describe_moat_schema": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_cohort_accept_lag": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_customer_type",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_customer_question_status": [
+   {
+    "args": [
+     "p_access_token",
+     "p_question_id"
+    ],
+    "required": [
+     "p_access_token",
+     "p_question_id"
+    ]
+   }
+  ],
+  "get_cohort_dso": [
+   {
+    "args": [
+     "p_country",
+     "p_customer_type",
+     "p_months"
+    ],
+    "required": [
+     "p_country"
+    ]
+   }
+  ],
+  "get_cohort_job_duration": [
+   {
+    "args": [
+     "p_trade",
+     "p_job_type",
+     "p_months"
+    ],
+    "required": [
+     "p_trade"
+    ]
+   }
+  ],
+  "get_cohort_overdue_rate": [
+   {
+    "args": [
+     "p_country",
+     "p_customer_type",
+     "p_months"
+    ],
+    "required": [
+     "p_country"
+    ]
+   }
+  ],
+  "get_contractor_calibration": [
+   {
+    "args": [
+     "p_user_id",
+     "p_trade",
+     "p_country"
+    ],
+    "required": [
+     "p_user_id",
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_crew_utilization_stats": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_months"
+    ],
+    "required": []
+   }
+  ],
+  "get_cron_health": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_cron_runs_since": [
+   {
+    "args": [
+     "p_since"
+    ],
+    "required": [
+     "p_since"
+    ]
+   }
+  ],
+  "get_decision_timing": [
+   {
+    "args": [
+     "p_decision_type"
+    ],
+    "required": [
+     "p_decision_type"
+    ]
+   }
+  ],
+  "get_global_generator_rates": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_lead_source_stats": [
+   {
+    "args": [
+     "p_source",
+     "p_trade",
+     "p_country",
+     "p_months"
+    ],
+    "required": [
+     "p_source"
+    ]
+   }
+  ],
+  "get_line_adjustments_batch": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_descriptions"
+    ],
+    "required": [
+     "p_trade",
+     "p_country",
+     "p_descriptions"
+    ]
+   }
+  ],
+  "get_line_item_edit_distribution": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_description_like"
+    ],
+    "required": [
+     "p_trade",
+     "p_country",
+     "p_description_like"
+    ]
+   }
+  ],
+  "get_margin_drift": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_recent_days",
+     "p_baseline_days",
+     "p_min_drift_pp"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_photo_analysis_cohort": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_complexity"
+    ],
+    "required": [
+     "p_trade"
+    ]
+   }
+  ],
+  "get_material_drift": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_recent_days",
+     "p_baseline_days",
+     "p_min_drift_pct"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_material_seasonal_pattern": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_material_name",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_or_create_referral_code": [
+   {
+    "args": [
+     "p_user_id"
+    ],
+    "required": [
+     "p_user_id"
+    ]
+   }
+  ],
+  "on_invoice_sent_activate_referral": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_postcode_cohort_stats": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_postcode_prefix",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country",
+     "p_postcode_prefix"
+    ]
+   }
+  ],
+  "get_portal_by_access_code": [
+   {
+    "args": [
+     "p_access_code"
+    ],
+    "required": [
+     "p_access_code"
+    ]
+   }
+  ],
+  "get_quote_engagement": [
+   {
+    "args": [
+     "p_quote_id"
+    ],
+    "required": [
+     "p_quote_id"
+    ]
+   }
+  ],
+  "get_quote_engagement_features": [
+   {
+    "args": [
+     "p_quote_id"
+    ],
+    "required": [
+     "p_quote_id"
+    ]
+   }
+  ],
+  "get_quote_win_model": [
+   {
+    "args": [
+     "p_trade",
+     "p_country"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_referral_summary": [
+   {
+    "args": [
+     "p_user_id"
+    ],
+    "required": [
+     "p_user_id"
+    ]
+   }
+  ],
+  "get_regional_preferences": [
+   {
+    "args": [
+     "p_region",
+     "p_trade",
+     "p_decision_type"
+    ],
+    "required": [
+     "p_region",
+     "p_trade",
+     "p_decision_type"
+    ]
+   }
+  ],
+  "get_quote_win_training_data": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_seasonal_pattern": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_signup_cohort_retention": [
+   {
+    "args": [
+     "p_weeks_back",
+     "p_max_week_offset",
+     "p_country",
+     "p_trade"
+    ],
+    "required": []
+   }
+  ],
+  "get_supplier_leadtime_drift": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_recent_days",
+     "p_baseline_days",
+     "p_min_drift_days"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_time_of_day_acceptance": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_trade_pricing_stats": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_job_type",
+     "p_months"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "log_subscription_change": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "next_document_number": [
+   {
+    "args": [
+     "p_doc_type"
+    ],
+    "required": [
+     "p_doc_type"
+    ]
+   }
+  ],
+  "match_similar_materials": [
+   {
+    "args": [
+     "p_query_key",
+     "p_limit"
+    ],
+    "required": [
+     "p_query_key"
+    ]
+   }
+  ],
+  "on_quote_outcome_refresh_calibration": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "predict_customer_dso": [
+   {
+    "args": [
+     "p_user_id",
+     "p_customer_id"
+    ],
+    "required": [
+     "p_user_id",
+     "p_customer_id"
+    ]
+   }
+  ],
+  "query_daily_metrics": [
+   {
+    "args": [
+     "p_user_id",
+     "p_days"
+    ],
+    "required": [
+     "p_user_id"
+    ]
+   }
+  ],
+  "save_quote_win_model": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_weights",
+     "p_training_samples",
+     "p_accuracy"
+    ],
+    "required": [
+     "p_trade",
+     "p_country",
+     "p_weights",
+     "p_training_samples",
+     "p_accuracy"
+    ]
+   }
+  ],
+  "upsert_decision_timing": [
+   {
+    "args": [
+     "p_decision_type",
+     "p_days_to_decide",
+     "p_was_overdue",
+     "p_reminder_responsive"
+    ],
+    "required": [
+     "p_decision_type",
+     "p_days_to_decide",
+     "p_was_overdue",
+     "p_reminder_responsive"
+    ]
+   }
+  ],
+  "upsert_regional_preference": [
+   {
+    "args": [
+     "p_region",
+     "p_trade",
+     "p_decision_type",
+     "p_chosen_value",
+     "p_chosen_label",
+     "p_contractor_id"
+    ],
+    "required": [
+     "p_region",
+     "p_trade",
+     "p_decision_type",
+     "p_chosen_value"
+    ]
+   }
+  ],
+  "write_signature_via_portal": [
+   {
+    "args": [
+     "p_access_code",
+     "p_signer_name",
+     "p_signer_role",
+     "p_signature_svg",
+     "p_user_agent"
+    ],
+    "required": [
+     "p_access_code",
+     "p_signer_name",
+     "p_signer_role",
+     "p_signature_svg",
+     "p_user_agent"
+    ]
+   }
+  ],
+  "write_training_pair": [
+   {
+    "args": [
+     "p_model_name",
+     "p_user_id",
+     "p_trade",
+     "p_country",
+     "p_features",
+     "p_target",
+     "p_target_label",
+     "p_source",
+     "p_weight"
+    ],
+    "required": [
+     "p_model_name",
+     "p_user_id",
+     "p_trade",
+     "p_country",
+     "p_features",
+     "p_target",
+     "p_target_label",
+     "p_source"
+    ]
+   }
+  ],
+  "get_accountant_handover": [
+   {
+    "args": [
+     "p_access_code"
+    ],
+    "required": [
+     "p_access_code"
+    ]
+   }
+  ],
+  "set_document_counter": [
+   {
+    "args": [
+     "p_doc_type",
+     "p_next_number"
+    ],
+    "required": [
+     "p_doc_type",
+     "p_next_number"
+    ]
+   }
+  ],
+  "get_material_cohort_stats": [
+   {
+    "args": [
+     "p_trade",
+     "p_country",
+     "p_material_name",
+     "p_limit"
+    ],
+    "required": [
+     "p_trade",
+     "p_country"
+    ]
+   }
+  ],
+  "get_sub_k_cohort_candidates": [
+   {
+    "args": [
+     "p_k"
+    ],
+    "required": []
+   }
+  ],
+  "list_public_routines": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "list_public_columns": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "update_tracker_progress": [
+   {
+    "args": [
+     "p_tracker_id"
+    ],
+    "required": [
+     "p_tracker_id"
+    ]
+   }
+  ],
+  "submit_decision_via_portal": [
+   {
+    "args": [
+     "p_access_code",
+     "p_item_id",
+     "p_value",
+     "p_notes",
+     "p_photos",
+     "p_linked_product_url",
+     "p_time_to_decide_seconds"
+    ],
+    "required": [
+     "p_access_code",
+     "p_item_id",
+     "p_value"
+    ]
+   }
+  ],
+  "get_acceptance_link_by_token": [
+   {
+    "args": [
+     "p_token"
+    ],
+    "required": [
+     "p_token"
+    ]
+   }
+  ],
+  "record_portal_event": [
+   {
+    "args": [
+     "p_access_code",
+     "p_event_type",
+     "p_decision_id",
+     "p_quote_id",
+     "p_duration_ms",
+     "p_metadata"
+    ],
+    "required": [
+     "p_access_code",
+     "p_event_type"
+    ]
+   }
+  ],
+  "log_portal_activity": [
+   {
+    "args": [
+     "p_access_code",
+     "p_activity_type",
+     "p_item_id",
+     "p_metadata"
+    ],
+    "required": [
+     "p_access_code",
+     "p_activity_type"
+    ]
+   }
+  ],
+  "list_public_column_meta": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "decide_acceptance_link": [
+   {
+    "args": [
+     "p_token",
+     "p_decision",
+     "p_reason",
+     "p_withdrawal_ack"
+    ],
+    "required": [
+     "p_token",
+     "p_decision"
+    ]
+   }
+  ],
+  "reconcile_cron_http_outcomes": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "get_cron_http_failures": [
+   {
+    "args": [
+     "p_since"
+    ],
+    "required": [
+     "p_since"
+    ]
+   }
+  ],
+  "grant_referral_credits": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "match_similar_jobs": [
+   {
+    "args": [
+     "query_embedding",
+     "match_trade",
+     "match_country",
+     "match_threshold",
+     "match_count"
+    ],
+    "required": [
+     "query_embedding",
+     "match_trade"
+    ]
+   }
+  ],
+  "get_my_price_pairs": [
+   {
+    "args": [
+     "p_limit"
+    ],
+    "required": []
+   }
+  ]
  }
 }

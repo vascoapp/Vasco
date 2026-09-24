@@ -59,7 +59,10 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!supabaseUrl || !serviceKey || !anthropicKey) {
+    // No AI key is a supported state (production today): the question is
+    // still stored, as `pending`, for the contractor to answer. Requiring the
+    // key here returned 500 for EVERY customer question (review 2026-09-24).
+    if (!supabaseUrl || !serviceKey) {
       return json({ ok: false, error: 'Server misconfigured' }, 500);
     }
 
@@ -91,26 +94,34 @@ Deno.serve(async (req) => {
     }
 
     // ─── Resolve tracker → contractor_user_id ──────────────────────────────
-    // The decision_trackers table (or decision_submissions) should carry the
-    // contractor's user_id. We look up via decision_submissions where the
-    // tracker_id matches trackerAccessToken (tokens ARE tracker ids in Vasco).
-    const { data: trackerRow } = await supabase
-      .from('decision_submissions')
-      .select('tracker_id, user_id')
-      .eq('tracker_id', trackerAccessToken)
-      .order('submitted_at', { ascending: false })
-      .limit(1)
+    // The portal sends the tracker's ACCESS CODE (get_portal_by_access_code
+    // returns it as `accessToken`). The owner is decision_trackers.user_id.
+    // This read `decision_submissions.user_id` — a column that does not exist
+    // — so every question was stored with contractor_user_id NULL, and the
+    // contractor's app (which reads `.eq('contractor_user_id', me)`) never
+    // saw one (live-schema column scan, convergence plan P0.3, 2026-09-24).
+    const { data: tracker, error: trackerErr } = await supabase
+      .from('decision_trackers')
+      .select('id, user_id, expires_at, status')
+      .eq('access_code', trackerAccessToken)
       .maybeSingle();
-    const contractorUserId = (trackerRow as any)?.user_id ?? null;
+    if (trackerErr) return json({ ok: false, error: 'Internal error' }, 500);
+    if (!tracker || (tracker as any).status === 'expired' || (tracker.expires_at && Date.parse(tracker.expires_at) < Date.now())) {
+      // A question nobody can answer is worse than a clear "no": refuse.
+      return json({ ok: false, error: 'Unknown or expired portal link' }, 404);
+    }
+    const contractorUserId: string | null = (tracker as any).user_id ?? null;
+    const trackerId: string = String((tracker as any).id);
 
     // ─── AI classify + draft ───────────────────────────────────────────────
     const prompt = buildPrompt(trimmed, language, customerName, context);
-    const aiResult = await classifyWithClaude(prompt, anthropicKey);
+    const aiResult = anthropicKey ? await classifyWithClaude(prompt, anthropicKey) : null;
     if (!aiResult) {
       // Fall through to a pending row so the contractor sees the question even
       // if AI is offline. No auto-reply.
       return await insertAndReturn(supabase, {
         trackerAccessToken,
+        trackerId,
         contractorUserId,
         question: trimmed,
         language,
@@ -120,6 +131,7 @@ Deno.serve(async (req) => {
 
     return await insertAndReturn(supabase, {
       trackerAccessToken,
+      trackerId,
       contractorUserId,
       question: trimmed,
       language,
@@ -224,13 +236,14 @@ async function insertAndReturn(
   supabase: any,
   args: {
     trackerAccessToken: string;
+    trackerId: string;
     contractorUserId: string | null;
     question: string;
     language: string;
     aiResult: AIClassification | null;
   },
 ) {
-  const { trackerAccessToken, contractorUserId, question, language, aiResult } = args;
+  const { trackerAccessToken, trackerId, contractorUserId, question, language, aiResult } = args;
 
   // Safety gate: only auto-send when AI explicitly picks "low" AND confidence
   // is above 0.75. Everything else waits on contractor approval.
@@ -239,7 +252,7 @@ async function insertAndReturn(
     && aiResult.confidence >= 0.75;
 
   const row = {
-    tracker_id: trackerAccessToken,
+    tracker_id: trackerId,
     tracker_access_token: trackerAccessToken,
     contractor_user_id: contractorUserId,
     question,

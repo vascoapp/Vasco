@@ -94,6 +94,18 @@ describe('fakeSupabase', () => {
     expect((await f.client.rpc('next_document_number', { p_doc_type: 'invoice' })).data).toBe('RE-0001');
   });
 
+  it('a live RPC called with the wrong ARGUMENT name → PGRST202 (#355: every week)', async () => {
+    const f = createFakeSupabase();
+    expect((await f.client.rpc('get_my_price_pairs', { limit: 10 })).error?.code).toBe('PGRST202');
+    const ok = await f.client.rpc('get_my_price_pairs', { p_limit: 10 });
+    expect(ok.error).toBeNull(); // live, unregistered → empty success
+    expect((await f.client.rpc('next_document_number', {})).error?.code).toBe('PGRST202'); // required arg missing
+    // An undefined value is dropped by JSON.stringify — so it is "missing" too.
+    expect((await f.client.rpc('next_document_number', { p_doc_type: undefined })).error?.code).toBe('PGRST202');
+    // Stubbing a function that does not exist live must be deliberate.
+    expect(() => f.rpc('next_documnet_number', () => ({ data: 1, error: null }))).toThrow(/misspelt/);
+  });
+
   it('embeds a parent with !inner, like loadLineItems reads documents', async () => {
     const f = createFakeSupabase();
     f.seed('documents', [{ id: 'aaaaaaaa-0000-4000-8000-000000000001', doc_type: 'invoice', status: 'sent', document_number: 'RE-1' }]);

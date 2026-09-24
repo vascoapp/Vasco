@@ -18,7 +18,8 @@
  *   - NOT NULL column left null          → 23502
  *   - a row owned by another user        → 42501 on write; invisible on read
  *   - at most MAX_ROWS rows per response (unranged too)
- *   - unknown RPC                        → PGRST202
+ *   - unknown RPC, or a live RPC called with the wrong ARGUMENT names → PGRST202
+ *     (a live RPC with no registered handler answers { data: null, error: null })
  *   - .single() on 0 or >1 rows          → PGRST116
  *
  * Use (jest hoists jest.mock above every const, so build it IN the factory):
@@ -32,6 +33,16 @@ type Column = { nullable: boolean; hasDefault: boolean; type: string; default?: 
 type TableSchema = Record<string, Column>;
 
 const TABLES = (schema as { tables: Record<string, TableSchema> }).tables;
+type FnSig = { args: string[]; required: string[] };
+const FUNCTIONS = ((schema as any).functions ?? {}) as Record<string, FnSig[]>;
+
+/** Does a live overload accept exactly these argument names? (PostgREST rule) */
+function rpcMatches(name: string, args: Record<string, unknown>): boolean {
+  // JSON.stringify drops `undefined` — PostgREST never sees those keys.
+  const given = Object.entries(args ?? {}).filter(([, v]) => v !== undefined).map(([k]) => k);
+  return (FUNCTIONS[name] ?? []).some((sig) =>
+    given.every((a) => sig.args.includes(a)) && sig.required.every((r) => given.includes(r)));
+}
 export const MAX_ROWS = 1000;
 
 export interface PgError { code: string; message: string }
@@ -339,10 +350,17 @@ export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean
   const client = {
     from: (t: string) => builder(t),
     rpc: async (name: string, args?: any): Promise<Result> => {
-      const h = rpcs[name];
-      calls.push({ table: `rpc:${name}`, op: 'rpc', payload: args });
-      if (!h) return { data: null, error: err('PGRST202', `Could not find the function public.${name} in the schema cache`) };
-      return h(args ?? {});
+      const h: ((a: any) => Result | Promise<Result>) | undefined = rpcs[name];
+      const exists = rpcMatches(name, args ?? {});
+      // A handler for a function NOT in the live schema is a test-only stub; allow it.
+      const testOnly = name in rpcs && !(name in FUNCTIONS);
+      if (!exists && !testOnly) {
+        const e = err('PGRST202', `Could not find the function public.${name}(${Object.keys(args ?? {}).join(', ')}) in the schema cache`);
+        calls.push({ table: `rpc:${name}`, op: 'rpc', payload: args, error: e });
+        return { data: null, error: e };
+      }
+      calls.push({ table: `rpc:${name}`, op: 'rpc', payload: args, error: null });
+      return h ? h(args ?? {}) : { data: null, error: null };
     },
     auth: {
       getUser: async () => ({ data: { user: userId ? { id: userId } : null }, error: null }),
@@ -386,7 +404,14 @@ export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean
         rowsOf(t).push(c.row!);
       }
     },
-    rpc(name: string, handler: (args: any) => Result | Promise<Result>) { rpcs[name] = handler; },
+    /** Register a handler. Stubbing a function that does NOT exist live needs
+     *  `{ testOnly: true }` — otherwise a misspelt RPC name would stay green. */
+    rpc(name: string, handler: (args: any) => Result | Promise<Result>, opts?: { testOnly?: boolean }) {
+      if (!(name in FUNCTIONS) && !opts?.testOnly) {
+        throw new Error(`fakeSupabase: no live function public.${name} — misspelt? (pass { testOnly: true } to stub one on purpose)`);
+      }
+      rpcs[name] = handler;
+    },
     calls,
     setUser(id: string | null) { userId = id; },
     reset() { for (const k of Object.keys(db)) delete db[k]; calls.length = 0; },

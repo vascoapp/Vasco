@@ -794,11 +794,23 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
     // Decouples training data from live event tables — the schema can
     // evolve without breaking historical training reproducibility.
     try {
-      const { data: piRow } = await (supabase.from as any)('pricing_intelligence')
-        .select('trade, country, total_amount, customer_type, contractor_segment, line_count, quoted_at')
+      // pricing_intelligence holds ONE ROW PER QUOTE LINE (quoted_total per
+      // line). This selected `total_amount` and `line_count` — columns that do
+      // not exist — with maybeSingle(), so it failed on every quote (42703,
+      // and PGRST116 for any multi-line quote) and the training pair was
+      // never written (live-schema column scan, 2026-09-24). Aggregate here.
+      const { data: piRows } = await (supabase.from as any)('pricing_intelligence')
+        .select('trade, country, quoted_total, customer_type, contractor_segment, quoted_at')
         .eq('quote_id', quoteId)
-        .eq('user_id', userId)
-        .maybeSingle();
+        .eq('user_id', userId);
+      const lines = Array.isArray(piRows) ? piRows : [];
+      const piRow = lines.length > 0
+        ? {
+            ...lines[0],
+            total_amount: lines.reduce((sum: number, r: any) => sum + (Number(r.quoted_total) || 0), 0),
+            line_count: lines.length,
+          }
+        : null;
       if (piRow) {
         // R242: enrich training features with portal engagement signals.
         // The quote-win retrain learns "high engagement → high accept" patterns

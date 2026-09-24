@@ -31,7 +31,7 @@
 // =============================================================================
 
 import { useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -62,7 +62,7 @@ const US_STATES = listUsStates();
 export default function LicensesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { businessProfile, updateBusinessProfile } = useAppState();
+  const { businessProfile, updateBusinessProfile, profileLoaded } = useAppState();
 
   const licenses = useMemo(
     () => (businessProfile as { licenses?: ContractorLicense[] })?.licenses ?? [],
@@ -87,7 +87,12 @@ export default function LicensesScreen() {
   const isUs = businessProfile?.country === 'US';
   const defaultState = businessProfile?.country ?? '';
 
+  // Every write sends the WHOLE list, built from what is on screen. Before
+  // the profile loads that is [], so adding one license replaced the stored
+  // list (sweep 2026-09-23, D4b). The list below is not shown — and so cannot
+  // be edited — until the profile is the contractor's own; this is the belt.
   const persist = async (next: ContractorLicense[]) => {
+    if (!profileLoaded) return;
     await updateBusinessProfile({ licenses: next } as Partial<typeof businessProfile>);
   };
 
@@ -140,7 +145,9 @@ export default function LicensesScreen() {
         <View style={{ width: 26 }} />
       </View>
 
-      {(
+      {!profileLoaded ? (
+        <ActivityIndicator style={{ marginTop: GRID.xl }} color={Palette.hermesOrange} />
+      ) : (
         <ScrollView contentContainerStyle={{ padding: GRID.lg, paddingBottom: GRID.xl * 2 }}>
           {licenses.length === 0 ? (
             <View style={styles.emptyContainer}>

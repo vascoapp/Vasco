@@ -35,15 +35,22 @@ const HARD_DELETE_TABLES = [
   'push_tokens',
   'scanned_invoices',
   'job_photos',
-  'customer_interactions',
-  'decision_submissions',
   'quote_line_deltas',
   'customer_payment_patterns',
   'pricing_intelligence',
   'affiliate_clicks',
-  'customer_questions',
   'contractor_pricing_calibration',
 ] as const;
+
+// Tables whose rows belong to the contractor through ANOTHER column — they
+// have no `user_id`, so `.eq('user_id', …)` was a permanent error on every
+// run: each request was rolled back to `pending` and retried forever, and no
+// erasure could ever be recorded as done (review 2026-09-24, checked against
+// the live schema snapshot). Each is resolved to ids before anything is gone.
+//   customer_questions     → contractor_user_id
+//   decision_submissions   → tracker_id ∈ the contractor's decision_trackers
+//   customer_interactions  → customer_id ∈ their customers, or quote_id ∈ their documents
+// Guard: src/__tests__/erasureReachesEveryOwnedRow.test.ts.
 
 // Tables we MUST retain (EU tax law — 7yr retention) but anonymise.
 // For each table: column(s) to NULL out.
@@ -110,7 +117,42 @@ Deno.serve(async (req) => {
 
     const errors: string[] = [];
 
-    // Step 2 — hard-delete user-owned rows.
+    // Step 2a — rows owned through another column (resolve ids FIRST: the
+    // trackers, customers and documents go with the auth user in step 5).
+    {
+      const { error: qErr } = await admin.from('customer_questions').delete().eq('contractor_user_id', row.user_id);
+      if (qErr) errors.push(`customer_questions: ${qErr.message}`);
+
+      const { data: trackers, error: trErr } = await admin.from('decision_trackers').select('id').eq('user_id', row.user_id);
+      if (trErr) errors.push(`decision_trackers(lookup): ${trErr.message}`);
+      const trackerIds = (trackers ?? []).map((t: { id: string }) => String(t.id));
+      if (trackerIds.length > 0) {
+        const { error } = await admin.from('decision_submissions').delete().in('tracker_id', trackerIds);
+        if (error) errors.push(`decision_submissions: ${error.message}`);
+      }
+
+      const { data: custs, error: cErr } = await admin.from('customers').select('id').eq('user_id', row.user_id);
+      const { data: docs, error: dErr } = await admin.from('documents').select('id').eq('user_id', row.user_id);
+      if (cErr || dErr) errors.push(`customer_interactions(lookup): ${(cErr ?? dErr)!.message}`);
+      // PostgREST returns at most 1000 rows; a larger account is erased in
+      // more than one run (the request stays pending until nothing is left).
+      if ((custs ?? []).length >= 1000 || (docs ?? []).length >= 1000) errors.push('customer_interactions: more than 1000 customers/documents — continuing next run');
+      const customerIds = (custs ?? []).map((c: { id: string }) => c.id);
+      const docIds = (docs ?? []).map((d: { id: string }) => d.id);
+      // In chunks: a long `.in()` list overflows the request URL, and
+      // customer_interactions has no FK, so the auth cascade would not clean
+      // up what an oversized request failed to delete (review 2026-09-24).
+      for (let i = 0; i < customerIds.length; i += 100) {
+        const { error } = await admin.from('customer_interactions').delete().in('customer_id', customerIds.slice(i, i + 100));
+        if (error) errors.push(`customer_interactions(customer): ${error.message}`);
+      }
+      for (let i = 0; i < docIds.length; i += 100) {
+        const { error } = await admin.from('customer_interactions').delete().in('quote_id', docIds.slice(i, i + 100));
+        if (error) errors.push(`customer_interactions(quote): ${error.message}`);
+      }
+    }
+
+    // Step 2b — hard-delete rows keyed by user_id.
     for (const table of HARD_DELETE_TABLES) {
       const { error } = await admin.from(table).delete().eq('user_id', row.user_id);
       if (error) errors.push(`${table}: ${error.message}`);
@@ -165,8 +207,14 @@ Deno.serve(async (req) => {
 
     // Step 5 — delete the auth user last. ON DELETE CASCADE handles
     // remaining tables that reference auth.users(id).
-    const { error: userErr } = await admin.auth.admin.deleteUser(row.user_id);
-    if (userErr) errors.push(`auth.deleteUser: ${userErr.message}`);
+    // ONLY when every step above landed. account_deletion_requests.user_id is
+    // ON DELETE CASCADE, so deleting the user deletes THIS REQUEST ROW too:
+    // run after a partial failure, the rollback below would match no row and
+    // the unfinished erasure would never be retried (review 2026-09-24).
+    if (errors.length === 0) {
+      const { error: userErr } = await admin.auth.admin.deleteUser(row.user_id);
+      if (userErr) errors.push(`auth.deleteUser: ${userErr.message}`);
+    }
 
     // Step 6 — finalise the request row.
     //
@@ -180,14 +228,21 @@ Deno.serve(async (req) => {
     // does not land, the erasure is permanently half-done and never retried
     // (#352).
     if (errors.length === 0) {
-      const { error: doneErr } = await admin
+      const { data: doneRows, error: doneErr } = await admin
         .from('account_deletion_requests')
         .update({
           status: 'done',
           processed_at: new Date().toISOString(),
           processor_notes: `hard_deleted=${HARD_DELETE_TABLES.length} anon=${ANONYMISE_TABLES.length} buckets=${STORAGE_BUCKETS_TO_EMPTY.length}`,
         })
-        .eq('id', row.id);
+        .eq('id', row.id)
+        .select('id');
+      // 0 rows = the request row went with the user (FK ON DELETE CASCADE):
+      // the erasure happened and its completion record did not survive it.
+      // 🔴 Open decision: keep the record where the cascade cannot reach it.
+      if (!doneErr && (!doneRows || doneRows.length === 0)) {
+        console.error(`drain-account-deletions: ERASURE COMPLETED for request ${row.id} (user ${row.user_id}); the request row was removed by the auth cascade, so no completion record exists.`);
+      }
       if (doneErr) {
         console.error(`drain-account-deletions: ERASURE COMPLETED for request ${row.id} (user ${row.user_id}) but the completion record was NOT written:`, doneErr.message);
         results.push({ id: row.id, status: 'done', note: `completion record not written: ${doneErr.message}` });

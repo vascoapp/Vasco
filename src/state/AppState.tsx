@@ -5009,6 +5009,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       // customer portal's pay CTA lights up. Contractor-initiated (EVE-safe).
       requestTrackerDeposit: async (accessCode, amount) => {
         const country = getCurrentCountry();
+        // Shown to the CUSTOMER on the checkout page. It was the Dutch literal
+        // "Aanbetaling" for every market — UK and US customers included.
+        const depositLabel = `${appI18n.t('decisionPortal.deposit', 'Deposit')} — ${accessCode}`;
         let checkoutUrl = '';
         // R311: must use createPaymentLink (returns a shareable URL) — NOT the
         // legacy createStripePayment/createMolliePayment stubs. Stripe's stub
@@ -5020,7 +5023,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const res = await createPaymentLink({
             invoiceId: `deposit-${accessCode}`,
             amount,
-            description: `Aanbetaling — ${accessCode}`,
+            description: depositLabel,
             currency: country === 'US' ? 'USD' : 'GBP',
             metadata: { trackerAccessCode: accessCode },
           });
@@ -5031,7 +5034,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const res = await createPaymentLink({
             invoiceId: `deposit-${accessCode}`,
             amount,
-            description: `Aanbetaling — ${accessCode}`,
+            description: depositLabel,
             customerCountry: country,
             metadata: { trackerAccessCode: accessCode },
           });
