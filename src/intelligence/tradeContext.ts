@@ -7,6 +7,7 @@
 
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { formatMoney } from '../i18n/formatting';
+import i18n from '../i18n/i18n';
 
 // ---------------------------------------------------------------------------
 // Trade terminology per country
@@ -740,26 +741,28 @@ export function getCustomerIntelligence(
     .sort((a: any, b: any) => (b.completedAt || b.lastUpdated || '').localeCompare(a.completedAt || a.lastUpdated || ''));
   const lastJobDate = completedJobs[0]?.completedAt || completedJobs[0]?.lastUpdated;
 
-  // Context line — the one-liner summary
+  // Context line — the one-liner summary. Shown on queue cards and stored in
+  // their preparedData, so it follows the i18n language (settled by
+  // populateQueue before it calls this). It was English on every market (E4).
   const parts: string[] = [];
   if (isRepeatCustomer) {
-    parts.push(`Repeat customer`);
+    parts.push(i18n.t('aiQueue.ctx.repeat'));
   }
   if (lifetimeValue > 0) {
     parts.push(formatMoney(lifetimeValue));
   }
   if (jobCount > 0) {
-    parts.push(`${jobCount} job${jobCount !== 1 ? 's' : ''}`);
+    parts.push(i18n.t('aiQueue.ctx.jobs', { count: jobCount }));
   }
   if (avgDSO > 0) {
-    parts.push(`pays in ${avgDSO}d`);
+    parts.push(i18n.t('aiQueue.ctx.paysIn', { days: avgDSO }));
   }
   if (escalationNeeded) {
-    parts.push(`${overdueInvoices.length} overdue — escalation needed`);
+    parts.push(i18n.t('aiQueue.ctx.escalate', { count: overdueInvoices.length }));
   } else if (paymentReliability === 'excellent') {
-    parts.push(`excellent payer`);
+    parts.push(i18n.t('aiQueue.ctx.excellent'));
   } else if (paymentReliability === 'poor') {
-    parts.push(`slow payer`);
+    parts.push(i18n.t('aiQueue.ctx.slow'));
   }
 
   const contextLine = parts.length > 0 ? parts.join(', ') : '';

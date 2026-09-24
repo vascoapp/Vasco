@@ -10,6 +10,7 @@ import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { customerSignOffFor } from '../../src/domain/signOff';
 import { getEffectiveVatRate } from '../../src/domain/business';
 import { generateInvoicePdf } from '../../src/services/invoicePdfService';
 import { useAppState } from '../../src/state/AppState';
@@ -72,13 +73,7 @@ export default function PdfModal() {
         const linkedJob = (invoice as any).jobId
           ? jobs.find((j: any) => j.id === (invoice as any).jobId)
           : null;
-        const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
-          ? {
-              svgDataUri: linkedJob.signatureSvg,
-              signedAt: linkedJob.customerSignoffAt,
-              signerName: invoice.customerName ?? 'Customer',
-            }
-          : undefined;
+        const customerSignature = customerSignOffFor(linkedJob, customers as any, invoice as any);
         // R66 round 47: prefer persisted documents.delivery_date (hydrated
         // into AppState invoice.deliveryDate via mapper) over FE-derive from
         // linked job. AutoInvoice in-memory store doesn't hydrate from BE

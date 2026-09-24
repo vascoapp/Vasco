@@ -55,7 +55,8 @@ describe('a side effect that fires once per payment says when it did not', () =>
     expect(SRC).toMatch(/const receiptRes = await fetch\(/);
     expect(SRC).toMatch(/if \(!receiptRes\.ok\)/);
     expect(SRC).toMatch(/const pushRes = await fetch\(/);
-    expect(SRC).toMatch(/if \(!pushRes\.ok\)/);
+    // HTTP status AND the body: `{ ok: true, sent: 0 }` is no delivery (B4).
+    expect(SRC).toMatch(/if \(!pushRes\.ok \|\| !outcome\.delivered\)/);
     expect(SRC).not.toMatch(/\} catch \{\}/);
   });
 });
@@ -139,5 +140,28 @@ describe('the services that had a dead catch now read the error', () => {
   it('reason codes: the annotation failure is logged like its neighbours', () => {
     const SRC = read('src/services/reasonCodeService.ts');
     expect(SRC).toMatch(/annotation not persisted for delta/);
+  });
+});
+
+// B4 (sweep 2026-09-23): send-push says `{ ok: true, sent: 0 }` when the
+// contractor has no device. Callers read `ok` alone, so the push log recorded
+// success and the digests counted sends that reached nobody.
+describe('a push is delivered only when a device took it', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const FN = path.join(__dirname, '../../supabase/functions');
+  const callers = [...fs.readdirSync(FN)].flatMap((d: string) => {
+    const f = path.join(FN, d, 'index.ts');
+    return fs.existsSync(f) ? [f] : [];
+  }).concat([path.join(FN, '_shared/paid-side-effects.ts')])
+    .filter((f: string) => !f.includes('/send-push/') && fs.readFileSync(f, 'utf8').includes('/functions/v1/send-push'));
+
+  it('finds the callers', () => { expect(callers.length).toBeGreaterThanOrEqual(3); });
+
+  it.each(callers.map((f: string) => [path.relative(FN, f), f]))('%s reads the outcome through pushOutcome', (_rel, f) => {
+    const src = fs.readFileSync(f as string, 'utf8');
+    const sends = (src.match(/\/functions\/v1\/send-push/g) ?? []).length;
+    expect((src.match(/pushOutcome\(/g) ?? []).length).toBeGreaterThanOrEqual(sends);
+    expect(src).not.toMatch(/\w*[sS]end\w*Json\?\.ok\b/);
   });
 });

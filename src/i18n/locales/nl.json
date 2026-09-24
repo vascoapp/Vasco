@@ -399,13 +399,10 @@
     "missingItems": "Ontbreekt voor compliance",
     "captureSignature": "Handtekening vastleggen",
     "customerSignature": "Handtekening klant",
-    "customerSignatureDesc": "Vraag de klant hieronder te tekenen om het werk af te ronden.",
+    "customerSignatureDesc": "Vraag de klant hieronder te tekenen om te bevestigen dat het werk klaar is.",
     "signaturesSectionLabel": "Handtekeningen",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "Postcodegebied: {{price}}/u mediaan · {{accept}}% acceptatie · {{n}} offertes",
-    "requestSignature": "Vraag aan klant",
-    "signatureRequestTitle": "Aftekenverzoek",
-    "signatureRequestBody": "Hoi {{customer}}, teken het uitgevoerde werk voor \"{{job}}\" af: vascobuild.com/sign/{{ref}}",
     "customer": "klant",
     "photos": {
       "title": "Foto's",
@@ -429,7 +426,6 @@
     "youLabel": "Jij",
     "activityClockedIn": "Ingeklokt",
     "activityClockedOut": "Uitgeklokt ({{hours}}u)",
-    "activitySignatureRequested": "Aftekenlink verzonden naar {{customer}}",
     "hours": "Uren",
     "customers": "Klanten",
     "loadingActivity": "Activiteit laden...",
@@ -556,7 +552,6 @@
     "statusLead": "Lead",
     "notScheduled": "Niet ingepland",
     "signOffFirst": "Eerst laten aftekenen",
-    "signOffHow": "Hoe wil je de handtekening ophalen?",
     "lifecycleStageLabel": "Fase",
     "stageOf": "{{step}} van {{total}}",
     "markOrdered": "Markeer als besteld"
@@ -1673,7 +1668,15 @@
     "certExpiringTitle": "Certificaat verloopt",
     "certExpiringBody_one": "{{name}} verloopt over {{count}} dag.",
     "certExpiringBody_other": "{{name}} verloopt over {{count}} dagen.",
-    "certFallback": "Certificaat"
+    "certFallback": "Certificaat",
+    "log": {
+      "jobCompletedTitle": "Klus afgerond",
+      "jobCompletedBody": "\"{{job}}\" is afgerond. Maak nu de factuur.",
+      "quoteSentTitle": "Offerte verstuurd",
+      "quoteSentBody": "Offerte voor {{customer}} verstuurd. Opvolging over 3 dagen ingepland.",
+      "invoiceSentTitle": "Factuur verstuurd",
+      "invoiceSentBody": "Factuur {{number}} staat op verstuurd. Deel de pdf met je klant."
+    }
   },
   "insurance": {
     "claimRecorded": "Claim vastgelegd",
@@ -2058,7 +2061,38 @@
     "qualityTitle": "{{title}} — klusfeedback",
     "rateJob": "Klus beoordelen",
     "qualityDesc": "Leg vast of deze klant op tijd betaalde, een review achterliet, je aanbeval of opnieuw boekte.",
-    "qualityImpact": "Maakt je offertevoorspellingen scherper"
+    "qualityImpact": "Maakt je offertevoorspellingen scherper",
+    "why": {
+      "invoiceJob": "Klus afgerond. Wie snel factureert, krijgt eerder betaald.",
+      "overdueWithContext": "{{customer}} — {{context}}. Een herinnering nu houdt de factuur in beeld.",
+      "overdue": "{{amount}} achterstallig. Een herinnering nu houdt de factuur in beeld.",
+      "quoteFollowUp": "Offerte verstuurd, nog geen reactie. Even navragen houdt hem onder de aandacht.",
+      "dailyUpdate": "Je hebt vandaag {{hours}} u op deze klus geschreven. Een korte update houdt de klant op de hoogte.",
+      "lateFee": "{{days}} dagen te laat. EU-richtlijn 2011/7/EU geeft je recht op {{rate}}% wettelijke handelsrente ({{interest}}) + {{fee}} vaste incassovergoeding.",
+      "quoteExpiry": "Offerte verloopt op {{date}}. Een herinnering vóór die tijd helpt de klant beslissen.",
+      "materials": "Klus start binnen 3 dagen. Bestel nu, zodat het materiaal op tijd is.",
+      "maintenance": "\"{{job}}\" is {{months}} maanden geleden afgerond. Een onderhoudsbezoek houdt {{customer}} als klant.",
+      "recurring": "Terugkerend contract \"{{title}}\" ({{cadence}}). Goedkeuren maakt de volgende klus aan.",
+      "review": "7 dagen na betaling — een goed moment om om een review te vragen.",
+      "priceAbove": "{{item}} kost {{price}} — {{pct}}% boven het marktgemiddelde van {{avg}}.",
+      "priceCheaper": "{{supplier}} is goedkoper.",
+      "export_one": "{{count}} betaalde factuur staat nog niet in je boekhouding. Exporteer nu om bij te blijven.",
+      "export_other": "{{count}} betaalde facturen staan nog niet in je boekhouding. Exporteer nu om bij te blijven.",
+      "certRenewal_one": "Verloopt morgen. Begin nu met verlengen om een gat te voorkomen.",
+      "certRenewal_other": "Verloopt over {{count}} dagen. Begin nu met verlengen om een gat te voorkomen.",
+      "handover_one": "Klus net afgerond. Een opleverpakket ({{count}} foto, {{hours}} u geschreven) legt het werk vast voor de klant.",
+      "handover_other": "Klus net afgerond. Een opleverpakket ({{count}} foto’s, {{hours}} u geschreven) legt het werk vast voor de klant.",
+      "lateFeeUK": "{{days}} dagen te laat. De Late Payment of Commercial Debts (Interest) Act 1998 geeft je recht op {{rate}}% wettelijke rente ({{interest}}) + {{fee}} vaste vergoeding."
+    },
+    "ctx": {
+      "repeat": "Vaste klant",
+      "jobs_one": "{{count}} klus",
+      "jobs_other": "{{count}} klussen",
+      "paysIn": "betaalt in {{days}} d",
+      "escalate": "{{count}} te laat — opschalen nodig",
+      "excellent": "betaalt uitstekend",
+      "slow": "betaalt traag"
+    }
   },
   "workflow": {
     "send": "Verstuur",
@@ -7157,5 +7191,30 @@
     "frDebitsSection": "TVA sur les débits (FR)",
     "frDebitsLabel": "Ik heb gekozen voor btw op basis van facturatie (débits)",
     "frDebitsHint": "De bijbehorende vermelding komt op uw facturen te staan."
+  },
+  "complianceAgent": {
+    "expiredTitle": "{{name}} is verlopen",
+    "expiredDesc": "Verlopen op {{date}}. Verleng voordat je werk factureert waarvoor dit nodig is.",
+    "d1Title": "{{name}} verloopt morgen",
+    "d1Desc": "Laatste kans — verloopt op {{date}}.",
+    "d7Title": "{{name}} verloopt binnen 7 dagen",
+    "d7Desc": "Verloopt op {{date}}. Begin nu met verlengen.",
+    "d14Title": "{{name}} verloopt binnen 2 weken",
+    "d14Desc": "Verloopt op {{date}}. Plan de verlenging nu in.",
+    "d30Title": "{{name}}: verlengen kan nu",
+    "d30Desc": "Verloopt op {{date}} — herinneringen voor verlengen staan in de app.",
+    "renew": "Verlengen",
+    "impactExpired": "Kritiek — verlopen",
+    "impactD1": "Verloopt morgen",
+    "impactD7": "Nog minder dan 7 dagen",
+    "impactWindow": "Verlengen kan nu",
+    "insurance": {
+      "liability": "Aansprakelijkheidsverzekering",
+      "professional": "Beroepsaansprakelijkheidsverzekering",
+      "vehicle": "Autoverzekering",
+      "equipment": "Materieelverzekering",
+      "workers_comp": "Ongevallenverzekering personeel",
+      "property": "Opstalverzekering"
+    }
   }
 }

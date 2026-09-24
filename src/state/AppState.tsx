@@ -13,7 +13,7 @@ import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, grossFromN
 import { Customer, findDocumentCustomer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
-import { Invoice, Quote, documentNumber, invoiceAlreadyBillingDecisionItems } from '../domain/documents';
+import { Invoice, Quote, documentNumber, invoiceAlreadyBillingDecisionItems, amountPayableNow } from '../domain/documents';
 import { completionStampFor } from '../domain/jobs';
 import { Job, JobStatus, JobPriority } from '../domain/jobs';
 import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
@@ -280,6 +280,14 @@ const useSeedData = USE_SEED_DATA;
  * (`{ isComplete, completenessPercent }`) — written by builds before
  * 2026-09-24 — is not the contractor's profile and must not mark it loaded.
  */
+/** Who a contractor-side push names: the customer, else the localized word. */
+export function pushCustomerName(
+  customers: ReadonlyArray<Customer>,
+  doc: { customerId?: string | null; customer?: string | null } | null | undefined,
+): string {
+  return findDocumentCustomer(customers, doc)?.name || appI18n.t('common.customer', 'Customer');
+}
+
 export function isOwnProfile(p: Record<string, unknown>): boolean {
   return Object.keys(p).some((k) => k !== 'isComplete' && k !== 'completenessPercent');
 }
@@ -2059,7 +2067,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (status === 'completed') {
           trackEvent('job_completed', { jobId: id }).catch(() => {});
           const completedJob = jobs.find(j => j.id === id);
-          fireNotification('schedule_change', 'medium', 'Job completed', `"${completedJob?.title || id}" marked as completed. Create invoice next.`, `/contractor/job/${id}`);
+          // Stored in the inbox as written — English literals on every market
+          // until 2026-09-24 (E4). No title → the localized word, never the id.
+          fireNotification('schedule_change', 'medium', appI18n.t('notifications.log.jobCompletedTitle'), appI18n.t('notifications.log.jobCompletedBody', { job: completedJob?.title || appI18n.t('common.project', 'Project') }), `/contractor/job/${id}`);
         }
         return { warnings: collectedWarnings };
       },
@@ -2190,11 +2200,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               .catch(() => {});
           }).catch(() => {});
         }
-        scheduleQuoteFollowUp({ quoteId: id, customerName: 'Klant', daysAfterSent: 3 }).catch(() => {});
+        // The customer's NAME. This was the literal 'Klant', so every
+        // contractor in every language was told to "follow up with Klant"
+        // (sweep 2026-09-23, E3).
+        scheduleQuoteFollowUp({ quoteId: id, customerName: pushCustomerName(customers, quotes.find((q) => q.id === id)), daysAfterSent: 3 }).catch(() => {});
         trackEvent('quote_sent', { quoteId: id }).catch(() => {});
         markStepComplete('first_quote_sent').catch(() => {});
         const sentQuote = quotes.find(q => q.id === id);
-        fireNotification('approval_request', 'medium', 'Quote sent', `Quote for ${sentQuote?.customer || id} sent. Follow-up scheduled in 3 days.`, `/(contractor)/facturen`);
+        // `sentQuote.customer || id` put a customer id, or the quote id, in
+        // the sentence (#214 shape; E4).
+        fireNotification('approval_request', 'medium', appI18n.t('notifications.log.quoteSentTitle'), appI18n.t('notifications.log.quoteSentBody', { customer: pushCustomerName(customers, sentQuote) }), `/(contractor)/facturen`);
       },
       /**
        * Record that an e-invoice XML was generated and shared for this invoice.
@@ -2257,7 +2272,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             logWarn('AppState', `markInvoiceSent persist failed: ${err}`)
           );
         }
-        schedulePaymentReminder({ invoiceId: id, customerName: 'Klant', amount: invoice?.amount ?? 0, daysUntilDue: 14 }).catch(() => {});
+        // Name, not 'Klant' (E3); what is owed now, not the gross (#354).
+        schedulePaymentReminder({ invoiceId: id, customerName: pushCustomerName(customers, invoice), amount: invoice ? amountPayableNow(invoice as any) : 0, daysUntilDue: 14 }).catch(() => {});
         // R25: queue customer-facing invoice_sent notice (closes R3 deferral —
         // markInvoiceSent previously fired only the contractor-side push
         // reminder, no draft for the customer). Approve → opens Share sheet.
@@ -2310,7 +2326,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             body: t('packDiscovery.incasso.body', 'Vasco can chase this invoice automatically at +3, +7, +14 and +30 days.'),
           });
         }).catch(() => {});
-        fireNotification('overdue_invoice', 'medium', 'Invoice sent', `Invoice marked as sent. Share the PDF with your customer.`, `/(contractor)/facturen`);
+        fireNotification('overdue_invoice', 'medium', appI18n.t('notifications.log.invoiceSentTitle'), appI18n.t('notifications.log.invoiceSentBody', { number: invoice ? documentNumber(invoice) : '' }), `/(contractor)/facturen`);
       },
       markInvoicePaid: (id) => {
         const paidInv = invoices.find((i) => i.id === id);

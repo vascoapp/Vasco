@@ -403,9 +403,6 @@
     "signaturesSectionLabel": "Signatures",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "Postcode area: {{price}}/h median · {{accept}}% accept · {{n}} quotes",
-    "requestSignature": "Request from customer",
-    "signatureRequestTitle": "Sign-off request",
-    "signatureRequestBody": "Hi {{customer}}, please sign off on the completed work for \"{{job}}\": vascobuild.com/sign/{{ref}}",
     "customer": "customer",
     "photos": {
       "title": "Photos",
@@ -429,7 +426,6 @@
     "youLabel": "You",
     "activityClockedIn": "Clocked in",
     "activityClockedOut": "Clocked out ({{hours}}h)",
-    "activitySignatureRequested": "Sign-off link sent to {{customer}}",
     "hours": "Hours",
     "customers": "Customers",
     "loadingActivity": "Loading activity...",
@@ -556,7 +552,6 @@
     "statusLead": "Lead",
     "notScheduled": "Not scheduled",
     "signOffFirst": "Get sign-off first",
-    "signOffHow": "How do you want the sign-off?",
     "lifecycleStageLabel": "Stage",
     "stageOf": "{{step}} of {{total}}",
     "markOrdered": "Mark as ordered"
@@ -1389,7 +1384,15 @@
     "certExpiringTitle": "Certificate expiring",
     "certExpiringBody_one": "{{name}} expires in {{count}} day.",
     "certExpiringBody_other": "{{name}} expires in {{count}} days.",
-    "certFallback": "Certificate"
+    "certFallback": "Certificate",
+    "log": {
+      "jobCompletedTitle": "Job completed",
+      "jobCompletedBody": "\"{{job}}\" is marked as completed. Create the invoice next.",
+      "quoteSentTitle": "Quote sent",
+      "quoteSentBody": "Quote for {{customer}} sent. Follow-up scheduled in 3 days.",
+      "invoiceSentTitle": "Invoice sent",
+      "invoiceSentBody": "Invoice {{number}} is marked as sent. Share the PDF with your customer."
+    }
   },
   "insurance": {
     "claimRecorded": "Claim recorded",
@@ -2058,7 +2061,38 @@
     "qualityTitle": "{{title}} — job feedback",
     "rateJob": "Rate job",
     "qualityDesc": "Record whether this customer paid on time, left a review, referred you, or rebooked.",
-    "qualityImpact": "Sharpens your quote predictions"
+    "qualityImpact": "Sharpens your quote predictions",
+    "why": {
+      "invoiceJob": "Job completed. Invoicing while the work is fresh gets you paid sooner.",
+      "overdueWithContext": "{{customer}} — {{context}}. A reminder now keeps the invoice in view.",
+      "overdue": "{{amount}} overdue. A reminder now keeps the invoice in view.",
+      "quoteFollowUp": "Quote sent, no response yet. A short follow-up keeps it on the customer’s mind.",
+      "dailyUpdate": "You logged {{hours}} h on this job today. A short update keeps the customer informed.",
+      "lateFee": "{{days}} days overdue. EU Directive 2011/7/EU entitles you to {{rate}}% statutory interest ({{interest}}) + {{fee}} fixed recovery fee.",
+      "quoteExpiry": "Quote expires on {{date}}. A reminder before then helps the customer decide.",
+      "materials": "Job starts within 3 days. Order now so the materials arrive in time.",
+      "maintenance": "\"{{job}}\" was completed {{months}} months ago. A maintenance visit keeps {{customer}} coming back.",
+      "recurring": "Recurring contract \"{{title}}\" ({{cadence}}). Approving creates the next job.",
+      "review": "7 days since payment — a good moment to ask for a review.",
+      "priceAbove": "{{item}} costs {{price}} — {{pct}}% above the market average of {{avg}}.",
+      "priceCheaper": "{{supplier}} is cheaper.",
+      "export_one": "{{count}} paid invoice is not in your accounting system yet. Export now to keep your books current.",
+      "export_other": "{{count}} paid invoices are not in your accounting system yet. Export now to keep your books current.",
+      "certRenewal_one": "Expires tomorrow. Start the renewal now to avoid a gap.",
+      "certRenewal_other": "Expires in {{count}} days. Start the renewal now to avoid a gap.",
+      "handover_one": "Job recently completed. A handover package ({{count}} photo, {{hours}} h logged) documents the work for the customer.",
+      "handover_other": "Job recently completed. A handover package ({{count}} photos, {{hours}} h logged) documents the work for the customer.",
+      "lateFeeUK": "{{days}} days overdue. The Late Payment of Commercial Debts (Interest) Act 1998 entitles you to {{rate}}% statutory interest ({{interest}}) + {{fee}} fixed compensation."
+    },
+    "ctx": {
+      "repeat": "Repeat customer",
+      "jobs_one": "{{count}} job",
+      "jobs_other": "{{count}} jobs",
+      "paysIn": "pays in {{days}} d",
+      "escalate": "{{count}} overdue — escalation needed",
+      "excellent": "excellent payer",
+      "slow": "slow payer"
+    }
   },
   "workflow": {
     "send": "Send",
@@ -7157,5 +7191,30 @@
     "frDebitsSection": "VAT on debits (FR)",
     "frDebitsLabel": "I have opted to account for VAT on debits",
     "frDebitsHint": "The corresponding mention will be printed on your invoices."
+  },
+  "complianceAgent": {
+    "expiredTitle": "{{name}} has expired",
+    "expiredDesc": "Expired on {{date}}. Renew it before you invoice work that requires it.",
+    "d1Title": "{{name}} expires tomorrow",
+    "d1Desc": "Last chance — expires on {{date}}.",
+    "d7Title": "{{name}} expires in under 7 days",
+    "d7Desc": "Expires on {{date}}. Start the renewal now.",
+    "d14Title": "{{name}} expires in under 2 weeks",
+    "d14Desc": "Expires on {{date}}. Consider starting the renewal now.",
+    "d30Title": "{{name}}: renewal window open",
+    "d30Desc": "Expires on {{date}} — renewal reminders are in the app.",
+    "renew": "Renew",
+    "impactExpired": "Critical — expired",
+    "impactD1": "Expires tomorrow",
+    "impactD7": "Under 7 days left",
+    "impactWindow": "Renewal window open",
+    "insurance": {
+      "liability": "Liability insurance",
+      "professional": "Professional liability insurance",
+      "vehicle": "Vehicle insurance",
+      "equipment": "Equipment insurance",
+      "workers_comp": "Workers' compensation insurance",
+      "property": "Property insurance"
+    }
   }
 }

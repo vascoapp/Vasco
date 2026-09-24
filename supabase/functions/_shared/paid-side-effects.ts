@@ -8,6 +8,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { pushOutcome } from './pushOutcome.ts';
 
 export async function dispatchPaidSideEffects(
   supabaseUrl: string,
@@ -127,8 +128,9 @@ export async function dispatchPaidSideEffects(
         data: { type: 'invoice_paid', invoiceId },
       }),
     });
-    if (!pushRes.ok) {
-      console.error(`payment-received push NOT sent for invoice ${invoiceId}: ${pushRes.status}`);
+    const outcome = pushOutcome(await pushRes.json().catch(() => null));
+    if (!pushRes.ok || !outcome.delivered) {
+      console.error(`payment-received push NOT delivered for invoice ${invoiceId}: ${pushRes.status} ${outcome.error ?? ''}`);
     }
   } catch (err) {
     console.error(`payment-received push request failed for invoice ${invoiceId}:`, String(err));

@@ -20,6 +20,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { pushOutcome } from '../_shared/pushOutcome.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -362,7 +363,11 @@ Deno.serve(async (req) => {
           data: { type: decision.type, entityKey: decision.entityKey },
         }),
       });
+      // HTTP 200 with `sent: 0` is a contractor with no device — not a
+      // delivery (B4). Read the body, not just the status.
+      const outcome = pushOutcome(await res.json().catch(() => null));
       if (!res.ok) { success = false; err = `send-push ${res.status}`; }
+      else if (!outcome.delivered) { success = false; err = outcome.error; }
     } catch (e) {
       success = false;
       err = (e as Error).message;

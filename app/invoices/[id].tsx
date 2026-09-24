@@ -42,6 +42,7 @@ import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { customerSignOffFor } from '../../src/domain/signOff';
 import { amountPayableNow } from '../../src/domain/documents';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
@@ -535,13 +536,7 @@ export default function InvoiceDetailScreen() {
       const linkedJob = (invoice as any).jobId
         ? jobs.find((j: any) => j.id === (invoice as any).jobId)
         : null;
-      const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
-        ? {
-            svgDataUri: linkedJob.signatureSvg,
-            signedAt: linkedJob.customerSignoffAt,
-            signerName: linkedJob.customerId ?? 'Customer',
-          }
-        : undefined;
+      const customerSignature = customerSignOffFor(linkedJob, customers as any, invoice as any);
       const enriched: typeof autoInvForPdf = {
         ...autoInvForPdf,
         deliveryDate: linkedJob?.completedAt ? new Date(linkedJob.completedAt) : autoInvForPdf.deliveryDate,
@@ -623,13 +618,7 @@ export default function InvoiceDetailScreen() {
       const linkedJob = (invoice as any).jobId
         ? jobs.find((j: any) => j.id === (invoice as any).jobId)
         : null;
-      const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
-        ? {
-            svgDataUri: linkedJob.signatureSvg,
-            signedAt: linkedJob.customerSignoffAt,
-            signerName: linkedJob.customerId ?? 'Customer',
-          }
-        : undefined;
+      const customerSignature = customerSignOffFor(linkedJob, customers as any, invoice as any);
       // R66 round 34: enrich with leveringsdatum from the linked job's
       // completedAt. Cloned (not mutated) so the cached AutoInvoice in
       // invoiceAutomationService stays untouched between renders.

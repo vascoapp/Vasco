@@ -45,6 +45,7 @@ import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/
 import { documentNumber, amountPayableNow } from '../../src/domain/documents';
 import { wasShareDismissed } from '../../src/utils/shareOutcome';
 import { findDocumentCustomer } from '../../src/domain/customers';
+import { customerSignOffFor } from '../../src/domain/signOff';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 import { getEffectiveVatRate } from '../../src/domain/business';
 import { overdueReminderMessage } from '../../src/services/overdueReminderMessage';
@@ -482,13 +483,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       const linkedJob = (invoice as any).jobId
                         ? jobs.find((j: any) => j.id === (invoice as any).jobId)
                         : null;
-                      const customerSignature = linkedJob?.signatureSvg && linkedJob?.customerSignoffAt
-                        ? {
-                            svgDataUri: linkedJob.signatureSvg,
-                            signedAt: linkedJob.customerSignoffAt,
-                            signerName: linkedJob.customerId ?? 'Customer',
-                          }
-                        : undefined;
+                      const customerSignature = customerSignOffFor(linkedJob, customers as any, invoice as any);
                       // R66 round 34: leveringsdatum from linked job's
                       // completedAt. Cloned, not mutated.
                       const enriched: typeof autoInv = {

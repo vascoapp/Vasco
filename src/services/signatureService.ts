@@ -159,6 +159,7 @@ export type SignatureContext =
   | 'quote_acceptance'
   | 'invoice_acknowledgement'
   | 'job_closeout'
+  | 'job_completed'
   | 'handover'
   | 'change_order';
 
@@ -186,6 +187,18 @@ const LEGAL_TEXTS: Record<SignatureContext, Record<string, string>> = {
     fr: 'Je confirme que les travaux ont été réalisés de manière satisfaisante.',
     es: 'Confirmo que los trabajos se han completado satisfactoriamente.',
     it: 'Confermo che i lavori sono stati completati in modo soddisfacente.',
+  },
+  // What the in-app sign-off actually asks: that the work is COMPLETED.
+  // job_closeout adds "satisfactorily", which in DE/NL construction law reads
+  // as acceptance without reservation (Abnahme / oplevering zonder
+  // voorbehoud) — more than the customer was asked (review 2026-09-24).
+  job_completed: {
+    en: 'I confirm that the work has been completed.',
+    nl: 'Ik bevestig dat de werkzaamheden zijn afgerond.',
+    de: 'Ich bestätige, dass die Arbeiten abgeschlossen wurden.',
+    fr: 'Je confirme que les travaux ont été achevés.',
+    es: 'Confirmo que los trabajos se han terminado.',
+    it: 'Confermo che i lavori sono stati completati.',
   },
   handover: {
     en: 'I confirm receipt of the completed work, including all documentation and keys.',
@@ -226,10 +239,13 @@ export function signatureHtmlBlock(
     signedAt?: string;
     signerRole?: SignerRole;
     legalText?: string;
+    /** Document language for the role label; the raw enum printed "customer"
+     *  on a German invoice (E1). */
+    language?: string;
   },
 ): string {
   const signedAtLabel = args.signedAt ? formatDateShortAuto(new Date(args.signedAt)) : '';
-  const role = args.signerRole ?? 'customer';
+  const role = signerRoleLabel(args.signerRole ?? 'customer', args.language);
   // SVG embeds inline; base64 PNG would also work via data: URI but
   // SignaturePad in this app already produces SVG markup.
   const safeSvg = args.signatureSvg.startsWith('data:')
@@ -251,6 +267,20 @@ export function signatureHtmlBlock(
       </div>
     </div>
   `;
+}
+
+const SIGNER_ROLE_LABELS: Record<string, Record<SignerRole, string>> = {
+  en: { customer: 'Customer', site_lead: 'Site lead', inspector: 'Inspector', subcontractor: 'Subcontractor', other: 'Other' },
+  nl: { customer: 'Klant', site_lead: 'Uitvoerder', inspector: 'Inspecteur', subcontractor: 'Onderaannemer', other: 'Overig' },
+  de: { customer: 'Kunde', site_lead: 'Bauleitung', inspector: 'Prüfer', subcontractor: 'Subunternehmer', other: 'Sonstige' },
+  fr: { customer: 'Client', site_lead: 'Chef de chantier', inspector: 'Inspecteur', subcontractor: 'Sous-traitant', other: 'Autre' },
+  es: { customer: 'Cliente', site_lead: 'Jefe de obra', inspector: 'Inspector', subcontractor: 'Subcontratista', other: 'Otro' },
+  it: { customer: 'Cliente', site_lead: 'Capocantiere', inspector: 'Ispettore', subcontractor: 'Subappaltatore', other: 'Altro' },
+};
+
+export function signerRoleLabel(role: SignerRole, language?: string): string {
+  const lang = (language ?? 'en').slice(0, 2);
+  return (SIGNER_ROLE_LABELS[lang] ?? SIGNER_ROLE_LABELS.en)[role] ?? SIGNER_ROLE_LABELS.en[role];
 }
 
 function escapeHtml(s: string): string {

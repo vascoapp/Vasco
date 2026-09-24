@@ -1481,50 +1481,11 @@ export default function JobDetailPage() {
                   }
                   setJobCompleted(true);
                 };
-                // R267: digital-signature now has 3 paths — capture in-app,
-                // request from customer remotely, or skip when not required.
-                const requestRemoteSignature = async () => {
-                  try {
-                    const customerLabel = job.customerName || t('jobs.customer', 'customer');
-                    const messageBody = t(
-                      'jobs.signatureRequestBody',
-                      'Hi {{customer}}, please sign off on the completed work for "{{job}}": vascobuild.com/sign/{{ref}}',
-                      { customer: customerLabel, job: job.projectName || 'the project', ref: id },
-                    );
-                    const res = await Share.share({
-                      message: messageBody,
-                      title: t('jobs.signatureRequestTitle', 'Sign-off request'),
-                    });
-                    // A backed-out sheet resolves; it must not log "sent" (B2).
-                    if (wasShareDismissed(res)) return;
-                    addActivityEntry(id || '', 'signature_requested', t('jobs.activitySignatureRequested', { defaultValue: 'Sign-off link sent to {{customer}}', customer: customerLabel })).catch(() => {});
-                  } catch {}
-                };
-                // Four buttons — cancel, capture, request, complete — when a
-                // sign-off was outstanding. Android renders THREE and drops
-                // the rest, and the one that fell off the end was
-                // **Complete**: the primary action of the button the
-                // contractor had just pressed. Split into two ≤3-button
-                // steps so every path survives on both platforms, and so the
-                // checklist warning stays attached to the confirmation it
-                // belongs to rather than becoming a menu with no message.
-                const askHowToSignOff = () => {
-                  Alert.alert(
-                    t('jobs.customerSignature', 'Customer signature'),
-                    t('jobs.signOffHow', 'How do you want the sign-off?'),
-                    [
-                      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-                      {
-                        text: t('jobs.captureSignature', 'Capture signature'),
-                        onPress: () => setSignatureModal({ visible: true, onSigned: doComplete }),
-                      },
-                      {
-                        text: t('jobs.requestSignature', 'Request from customer'),
-                        onPress: requestRemoteSignature,
-                      },
-                    ],
-                  );
-                };
+                // Sign-off is captured IN THE APP. A "Request from customer"
+                // option shared `vascobuild.com/sign/<job id>` — a route that
+                // has never existed, keyed on a guessable id — and logged the
+                // link as sent (sweep 2026-09-23, B2). A remote sign-off page
+                // needs a per-job token and an anon capability RPC first.
                 Alert.alert(
                   t('jobs.completeJob', 'Complete job'),
                   t('jobs.completeJobConfirm', 'Are you sure you want to complete this job?') + checklistWarning,
@@ -1532,7 +1493,7 @@ export default function JobDetailPage() {
                     { text: t('common.cancel', 'Cancel'), style: 'cancel' },
                     ...(needsSignoff ? [{
                       text: t('jobs.signOffFirst', 'Get sign-off first'),
-                      onPress: askHowToSignOff,
+                      onPress: () => setSignatureModal({ visible: true, onSigned: doComplete }),
                     }] : []),
                     { text: t('jobs.complete', 'Complete'), onPress: doComplete },
                   ],

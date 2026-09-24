@@ -399,13 +399,10 @@
     "missingItems": "Fehlend für Compliance",
     "captureSignature": "Unterschrift aufnehmen",
     "customerSignature": "Kundenunterschrift",
-    "customerSignatureDesc": "Bitte den Kunden, unten zu unterschreiben, um die Arbeit zu bestätigen.",
+    "customerSignatureDesc": "Bitten Sie den Kunden, unten zu unterschreiben, um den Abschluss der Arbeiten zu bestätigen.",
     "signaturesSectionLabel": "Unterschriften",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "PLZ-Gebiet: {{price}}/Std. Median · {{accept}}% Annahme · {{n}} Angebote",
-    "requestSignature": "Vom Kunden anfordern",
-    "signatureRequestTitle": "Abnahmeanfrage",
-    "signatureRequestBody": "Hi {{customer}}, bitte die abgeschlossene Arbeit für \"{{job}}\" abnehmen: vascobuild.com/sign/{{ref}}",
     "customer": "Kunde",
     "photos": {
       "title": "Fotos",
@@ -429,7 +426,6 @@
     "youLabel": "Sie",
     "activityClockedIn": "Eingestempelt",
     "activityClockedOut": "Ausgestempelt ({{hours}}h)",
-    "activitySignatureRequested": "Unterschriftslink an {{customer}} gesendet",
     "hours": "Stunden",
     "customers": "Kunden",
     "loadingActivity": "Aktivität wird geladen...",
@@ -556,7 +552,6 @@
     "statusLead": "Anfrage",
     "notScheduled": "Nicht geplant",
     "signOffFirst": "Erst abzeichnen lassen",
-    "signOffHow": "Wie soll die Unterschrift eingeholt werden?",
     "lifecycleStageLabel": "Phase",
     "stageOf": "{{step}} von {{total}}",
     "markOrdered": "Als bestellt markieren"
@@ -1389,7 +1384,15 @@
     "certExpiringTitle": "Zertifikat läuft ab",
     "certExpiringBody_one": "{{name}} läuft in {{count}} Tag ab.",
     "certExpiringBody_other": "{{name}} läuft in {{count}} Tagen ab.",
-    "certFallback": "Zertifikat"
+    "certFallback": "Zertifikat",
+    "log": {
+      "jobCompletedTitle": "Auftrag abgeschlossen",
+      "jobCompletedBody": "„{{job}}“ ist als abgeschlossen markiert. Erstellen Sie als Nächstes die Rechnung.",
+      "quoteSentTitle": "Angebot versendet",
+      "quoteSentBody": "Angebot für {{customer}} versendet. Nachfassen in 3 Tagen geplant.",
+      "invoiceSentTitle": "Rechnung versendet",
+      "invoiceSentBody": "Rechnung {{number}} ist als versendet markiert. Teilen Sie das PDF mit Ihrem Kunden."
+    }
   },
   "insurance": {
     "claimRecorded": "Schaden erfasst",
@@ -2058,7 +2061,38 @@
     "qualityTitle": "{{title}} — Auftragsfeedback",
     "rateJob": "Auftrag bewerten",
     "qualityDesc": "Halten Sie fest, ob dieser Kunde pünktlich gezahlt, bewertet, Sie empfohlen oder erneut gebucht hat.",
-    "qualityImpact": "Schärft Ihre Angebotsprognosen"
+    "qualityImpact": "Schärft Ihre Angebotsprognosen",
+    "why": {
+      "invoiceJob": "Auftrag abgeschlossen. Wer zeitnah abrechnet, wird früher bezahlt.",
+      "overdueWithContext": "{{customer}} — {{context}}. Eine Erinnerung jetzt hält die Rechnung im Blick.",
+      "overdue": "{{amount}} überfällig. Eine Erinnerung jetzt hält die Rechnung im Blick.",
+      "quoteFollowUp": "Angebot versendet, noch keine Antwort. Kurzes Nachfassen hält es im Blick.",
+      "dailyUpdate": "Sie haben heute {{hours}} Std. für diesen Auftrag erfasst. Ein kurzes Update hält den Kunden informiert.",
+      "lateFee": "{{days}} Tage überfällig. Die EU-Richtlinie 2011/7/EU gibt Ihnen Anspruch auf {{rate}} % Verzugszinsen ({{interest}}) + {{fee}} Verzugspauschale.",
+      "quoteExpiry": "Das Angebot läuft am {{date}} ab. Eine Erinnerung vorher hilft dem Kunden bei der Entscheidung.",
+      "materials": "Der Auftrag beginnt in 3 Tagen. Bestellen Sie jetzt, damit das Material rechtzeitig da ist.",
+      "maintenance": "„{{job}}“ für {{customer}} wurde vor {{months}} Monaten abgeschlossen. Ein Wartungstermin stärkt die Kundenbindung.",
+      "recurring": "Wiederkehrender Vertrag „{{title}}“ ({{cadence}}). Mit der Freigabe wird der nächste Auftrag angelegt.",
+      "review": "7 Tage nach der Zahlung — ein guter Zeitpunkt, um um eine Bewertung zu bitten.",
+      "priceAbove": "{{item}} kostet {{price}} — {{pct}} % über dem Marktdurchschnitt von {{avg}}.",
+      "priceCheaper": "{{supplier}} ist günstiger.",
+      "export_one": "{{count}} bezahlte Rechnung ist noch nicht in Ihrer Buchhaltung. Exportieren Sie jetzt, um aktuell zu bleiben.",
+      "export_other": "{{count}} bezahlte Rechnungen sind noch nicht in Ihrer Buchhaltung. Exportieren Sie jetzt, um aktuell zu bleiben.",
+      "certRenewal_one": "Läuft morgen ab. Beginnen Sie jetzt mit der Verlängerung, um eine Lücke zu vermeiden.",
+      "certRenewal_other": "Läuft in {{count}} Tagen ab. Beginnen Sie jetzt mit der Verlängerung, um eine Lücke zu vermeiden.",
+      "handover_one": "Auftrag kürzlich abgeschlossen. Ein Übergabepaket ({{count}} Foto, {{hours}} Std. erfasst) dokumentiert die Arbeit für den Kunden.",
+      "handover_other": "Auftrag kürzlich abgeschlossen. Ein Übergabepaket ({{count}} Fotos, {{hours}} Std. erfasst) dokumentiert die Arbeit für den Kunden.",
+      "lateFeeUK": "{{days}} Tage überfällig. Der Late Payment of Commercial Debts (Interest) Act 1998 gibt Ihnen Anspruch auf {{rate}} % Verzugszinsen ({{interest}}) + {{fee}} Pauschale."
+    },
+    "ctx": {
+      "repeat": "Stammkunde",
+      "jobs_one": "{{count}} Auftrag",
+      "jobs_other": "{{count}} Aufträge",
+      "paysIn": "zahlt nach Ø {{days}} Tagen",
+      "escalate": "{{count}} überfällig — Eskalation nötig",
+      "excellent": "zahlt zuverlässig",
+      "slow": "zahlt langsam"
+    }
   },
   "workflow": {
     "send": "Senden",
@@ -7157,5 +7191,30 @@
     "frDebitsSection": "TVA sur les débits (FR)",
     "frDebitsLabel": "Ich habe zur Besteuerung nach vereinbarten Entgelten (débits) optiert",
     "frDebitsHint": "Der entsprechende Hinweis wird auf Ihren Rechnungen gedruckt."
+  },
+  "complianceAgent": {
+    "expiredTitle": "{{name}} ist abgelaufen",
+    "expiredDesc": "Abgelaufen am {{date}}. Verlängern Sie, bevor Sie Arbeiten abrechnen, die dies erfordern.",
+    "d1Title": "{{name}} läuft morgen ab",
+    "d1Desc": "Letzte Gelegenheit — läuft am {{date}} ab.",
+    "d7Title": "{{name}} läuft in weniger als 7 Tagen ab",
+    "d7Desc": "Läuft am {{date}} ab. Beginnen Sie jetzt mit der Verlängerung.",
+    "d14Title": "{{name}} läuft in weniger als 2 Wochen ab",
+    "d14Desc": "Läuft am {{date}} ab. Planen Sie die Verlängerung jetzt ein.",
+    "d30Title": "{{name}}: Verlängerung jetzt möglich",
+    "d30Desc": "Läuft am {{date}} ab — Erinnerungen zur Verlängerung finden Sie in der App.",
+    "renew": "Verlängern",
+    "impactExpired": "Kritisch — abgelaufen",
+    "impactD1": "Läuft morgen ab",
+    "impactD7": "Weniger als 7 Tage",
+    "impactWindow": "Verlängerung möglich",
+    "insurance": {
+      "liability": "Betriebshaftpflichtversicherung",
+      "professional": "Berufshaftpflichtversicherung",
+      "vehicle": "Kfz-Versicherung",
+      "equipment": "Geräteversicherung",
+      "workers_comp": "Unfallversicherung",
+      "property": "Gebäudeversicherung"
+    }
   }
 }

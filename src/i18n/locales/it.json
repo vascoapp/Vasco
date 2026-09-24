@@ -403,9 +403,6 @@
     "signaturesSectionLabel": "Firme",
     "qualityFeedback": "Feedback",
     "postcodeCohort": "CAP: {{price}}/h mediana · {{accept}}% accettazione · {{n}} preventivi",
-    "requestSignature": "Richiedi al cliente",
-    "signatureRequestTitle": "Richiesta firma",
-    "signatureRequestBody": "Ciao {{customer}}, firma la ricezione del lavoro \"{{job}}\": vascobuild.com/sign/{{ref}}",
     "customer": "cliente",
     "photos": {
       "title": "Foto",
@@ -429,7 +426,6 @@
     "youLabel": "Tu",
     "activityClockedIn": "Timbratura entrata",
     "activityClockedOut": "Timbratura uscita ({{hours}}h)",
-    "activitySignatureRequested": "Link di firma inviato a {{customer}}",
     "hours": "Ore",
     "customers": "Clienti",
     "loadingActivity": "Caricamento attività...",
@@ -556,7 +552,6 @@
     "statusLead": "Opportunità",
     "notScheduled": "Non pianificato",
     "signOffFirst": "Fai firmare prima",
-    "signOffHow": "Come vuoi ottenere la firma?",
     "lifecycleStageLabel": "Fase",
     "stageOf": "{{step}} di {{total}}",
     "markOrdered": "Segna come ordinato"
@@ -1389,7 +1384,15 @@
     "certExpiringTitle": "Certificato in scadenza",
     "certExpiringBody_one": "{{name}} scade tra {{count}} giorno.",
     "certExpiringBody_other": "{{name}} scade tra {{count}} giorni.",
-    "certFallback": "Certificato"
+    "certFallback": "Certificato",
+    "log": {
+      "jobCompletedTitle": "Lavoro completato",
+      "jobCompletedBody": "\"{{job}}\" è segnato come completato. Ora crea la fattura.",
+      "quoteSentTitle": "Preventivo inviato",
+      "quoteSentBody": "Preventivo per {{customer}} inviato. Promemoria tra 3 giorni.",
+      "invoiceSentTitle": "Fattura inviata",
+      "invoiceSentBody": "La fattura {{number}} è segnata come inviata. Condividi il PDF con il cliente."
+    }
   },
   "insurance": {
     "claimRecorded": "Sinistro registrato",
@@ -2058,7 +2061,38 @@
     "qualityTitle": "{{title}} — feedback sul lavoro",
     "rateJob": "Valuta lavoro",
     "qualityDesc": "Registra se questo cliente ha pagato in tempo, lasciato una recensione, ti ha segnalato o ha riprenotato.",
-    "qualityImpact": "Affina le tue previsioni sui preventivi"
+    "qualityImpact": "Affina le tue previsioni sui preventivi",
+    "why": {
+      "invoiceJob": "Lavoro completato. Fatturare subito significa essere pagati prima.",
+      "overdueWithContext": "{{customer}} — {{context}}. Un promemoria ora tiene la fattura in evidenza.",
+      "overdue": "{{amount}} scaduto. Un promemoria ora tiene la fattura in evidenza.",
+      "quoteFollowUp": "Preventivo inviato, ancora nessuna risposta. Un breve promemoria lo tiene presente.",
+      "dailyUpdate": "Oggi hai registrato {{hours}} h su questo lavoro. Un breve aggiornamento tiene informato il cliente.",
+      "lateFee": "{{days}} giorni di ritardo. La direttiva UE 2011/7/UE ti dà diritto al {{rate}}% di interessi di mora ({{interest}}) + {{fee}} di risarcimento forfettario.",
+      "quoteExpiry": "Il preventivo scade il {{date}}. Un promemoria prima aiuta il cliente a decidere.",
+      "materials": "Il lavoro inizia entro 3 giorni. Ordina ora perché il materiale arrivi in tempo.",
+      "maintenance": "\"{{job}}\" è stato completato {{months}} mesi fa. Una manutenzione fidelizza {{customer}}.",
+      "recurring": "Contratto ricorrente \"{{title}}\" ({{cadence}}). Approvando si crea il prossimo lavoro.",
+      "review": "7 giorni dopo il pagamento — un buon momento per chiedere una recensione.",
+      "priceAbove": "{{item}} costa {{price}} — {{pct}}% sopra la media di mercato di {{avg}}.",
+      "priceCheaper": "{{supplier}} costa meno.",
+      "export_one": "{{count}} fattura pagata non è ancora nella tua contabilità. Esporta ora per restare aggiornato.",
+      "export_other": "{{count}} fatture pagate non sono ancora nella tua contabilità. Esporta ora per restare aggiornato.",
+      "certRenewal_one": "Scade domani. Avvia ora il rinnovo per evitare interruzioni.",
+      "certRenewal_other": "Scade tra {{count}} giorni. Avvia ora il rinnovo per evitare interruzioni.",
+      "handover_one": "Lavoro appena completato. Un pacchetto di consegna ({{count}} foto, {{hours}} h registrate) documenta il lavoro per il cliente.",
+      "handover_other": "Lavoro appena completato. Un pacchetto di consegna ({{count}} foto, {{hours}} h registrate) documenta il lavoro per il cliente.",
+      "lateFeeUK": "{{days}} giorni di ritardo. Il Late Payment of Commercial Debts (Interest) Act 1998 ti dà diritto al {{rate}}% di interessi legali ({{interest}}) + {{fee}} di risarcimento forfettario."
+    },
+    "ctx": {
+      "repeat": "Cliente abituale",
+      "jobs_one": "{{count}} lavoro",
+      "jobs_other": "{{count}} lavori",
+      "paysIn": "paga in {{days}} gg",
+      "escalate": "{{count}} scadute — serve un sollecito deciso",
+      "excellent": "ottimo pagatore",
+      "slow": "paga lentamente"
+    }
   },
   "workflow": {
     "send": "Invia",
@@ -7157,5 +7191,30 @@
     "frDebitsSection": "IVA sui debiti (FR)",
     "frDebitsLabel": "Ho optato per l'IVA secondo i debiti",
     "frDebitsHint": "La menzione corrispondente sarà stampata sulle tue fatture."
+  },
+  "complianceAgent": {
+    "expiredTitle": "{{name}}: scadenza superata",
+    "expiredDesc": "Scadenza superata il {{date}}. Rinnova prima di fatturare lavori che ne dipendono.",
+    "d1Title": "{{name}}: scade domani",
+    "d1Desc": "Ultima occasione — scade il {{date}}.",
+    "d7Title": "{{name}}: scade tra meno di 7 giorni",
+    "d7Desc": "Scade il {{date}}. Avvia ora il rinnovo.",
+    "d14Title": "{{name}}: scade tra meno di 2 settimane",
+    "d14Desc": "Scade il {{date}}. Conviene avviare il rinnovo adesso.",
+    "d30Title": "{{name}}: puoi già rinnovare",
+    "d30Desc": "Scade il {{date}} — trovi i promemoria di rinnovo nell'app.",
+    "renew": "Rinnova",
+    "impactExpired": "Critico — scaduto",
+    "impactD1": "Scade domani",
+    "impactD7": "Meno di 7 giorni",
+    "impactWindow": "Puoi già rinnovare",
+    "insurance": {
+      "liability": "Assicurazione RC",
+      "professional": "Assicurazione RC professionale",
+      "vehicle": "Assicurazione veicolo",
+      "equipment": "Assicurazione attrezzature",
+      "workers_comp": "Assicurazione infortuni",
+      "property": "Assicurazione fabbricato"
+    }
   }
 }

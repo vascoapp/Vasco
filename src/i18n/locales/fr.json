@@ -403,9 +403,6 @@
     "signaturesSectionLabel": "Signatures",
     "qualityFeedback": "Avis",
     "postcodeCohort": "Code postal : {{price}}/h médian · {{accept}}% acceptation · {{n}} devis",
-    "requestSignature": "Demander au client",
-    "signatureRequestTitle": "Demande de signature",
-    "signatureRequestBody": "Bonjour {{customer}}, signez la réception des travaux pour \"{{job}}\" : vascobuild.com/sign/{{ref}}",
     "customer": "client",
     "photos": {
       "title": "Photos",
@@ -429,7 +426,6 @@
     "youLabel": "Vous",
     "activityClockedIn": "Pointé",
     "activityClockedOut": "Sortie ({{hours}}h)",
-    "activitySignatureRequested": "Lien de signature envoyé à {{customer}}",
     "hours": "Heures",
     "customers": "Clients",
     "loadingActivity": "Chargement de l'activité...",
@@ -556,7 +552,6 @@
     "statusLead": "Piste",
     "notScheduled": "Non planifié",
     "signOffFirst": "Faire signer d'abord",
-    "signOffHow": "Comment voulez-vous obtenir la signature ?",
     "lifecycleStageLabel": "Étape",
     "stageOf": "{{step}} sur {{total}}",
     "markOrdered": "Marquer comme commandé"
@@ -1389,7 +1384,15 @@
     "certExpiringTitle": "Certificat expirant",
     "certExpiringBody_one": "{{name}} expire dans {{count}} jour.",
     "certExpiringBody_other": "{{name}} expire dans {{count}} jours.",
-    "certFallback": "Certificat"
+    "certFallback": "Certificat",
+    "log": {
+      "jobCompletedTitle": "Chantier terminé",
+      "jobCompletedBody": "« {{job}} » est marqué comme terminé. Créez maintenant la facture.",
+      "quoteSentTitle": "Devis envoyé",
+      "quoteSentBody": "Devis pour {{customer}} envoyé. Relance prévue dans 3 jours.",
+      "invoiceSentTitle": "Facture envoyée",
+      "invoiceSentBody": "La facture {{number}} est marquée comme envoyée. Partagez le PDF avec votre client."
+    }
   },
   "insurance": {
     "claimRecorded": "Sinistre enregistré",
@@ -2058,7 +2061,38 @@
     "qualityTitle": "{{title}} — retour sur le chantier",
     "rateJob": "Évaluer le chantier",
     "qualityDesc": "Notez si ce client a payé à temps, laissé un avis, vous a recommandé ou refait appel à vous.",
-    "qualityImpact": "Affine vos prévisions de devis"
+    "qualityImpact": "Affine vos prévisions de devis",
+    "why": {
+      "invoiceJob": "Chantier terminé. Facturer rapidement, c’est être payé plus tôt.",
+      "overdueWithContext": "{{customer}} — {{context}}. Un rappel maintenant garde la facture en tête.",
+      "overdue": "{{amount}} en retard. Un rappel maintenant garde la facture en tête.",
+      "quoteFollowUp": "Devis envoyé, pas encore de réponse. Une courte relance le garde en tête du client.",
+      "dailyUpdate": "Vous avez saisi {{hours}} h sur ce chantier aujourd’hui. Un court point tient le client informé.",
+      "lateFee": "{{days}} jours de retard. La directive UE 2011/7/UE vous donne droit à {{rate}} % d’intérêts de retard ({{interest}}) + {{fee}} d’indemnité forfaitaire de recouvrement.",
+      "quoteExpiry": "Le devis expire le {{date}}. Un rappel avant aide le client à se décider.",
+      "materials": "Le chantier commence dans 3 jours. Commandez maintenant pour recevoir le matériel à temps.",
+      "maintenance": "« {{job}} » a été terminé il y a {{months}} mois. Une visite d’entretien fidélise {{customer}}.",
+      "recurring": "Contrat récurrent « {{title}} » ({{cadence}}). Valider crée le prochain chantier.",
+      "review": "7 jours après le paiement — un bon moment pour demander un avis.",
+      "priceAbove": "{{item}} coûte {{price}} — {{pct}} % au-dessus de la moyenne du marché ({{avg}}).",
+      "priceCheaper": "{{supplier}} est moins cher.",
+      "export_one": "{{count}} facture payée n’est pas encore dans votre comptabilité. Exportez maintenant pour rester à jour.",
+      "export_other": "{{count}} factures payées ne sont pas encore dans votre comptabilité. Exportez maintenant pour rester à jour.",
+      "certRenewal_one": "Expire demain. Lancez le renouvellement maintenant pour éviter une interruption.",
+      "certRenewal_other": "Expire dans {{count}} jours. Lancez le renouvellement maintenant pour éviter une interruption.",
+      "handover_one": "Chantier récemment terminé. Un dossier de remise ({{count}} photo, {{hours}} h saisies) documente les travaux pour le client.",
+      "handover_other": "Chantier récemment terminé. Un dossier de remise ({{count}} photos, {{hours}} h saisies) documente les travaux pour le client.",
+      "lateFeeUK": "{{days}} jours de retard. Le Late Payment of Commercial Debts (Interest) Act 1998 vous donne droit à {{rate}} % d’intérêts légaux ({{interest}}) + {{fee}} d’indemnité forfaitaire."
+    },
+    "ctx": {
+      "repeat": "Client fidèle",
+      "jobs_one": "{{count}} chantier",
+      "jobs_other": "{{count}} chantiers",
+      "paysIn": "paie en {{days}} j",
+      "escalate": "{{count}} en retard — relance ferme nécessaire",
+      "excellent": "excellent payeur",
+      "slow": "paie lentement"
+    }
   },
   "workflow": {
     "send": "Envoyer",
@@ -7157,5 +7191,30 @@
     "frDebitsSection": "TVA sur les débits",
     "frDebitsLabel": "J'ai opté pour le paiement de la TVA d'après les débits",
     "frDebitsHint": "La mention correspondante sera imprimée sur vos factures."
+  },
+  "complianceAgent": {
+    "expiredTitle": "{{name}} a expiré",
+    "expiredDesc": "Échéance dépassée le {{date}}. À renouveler avant de facturer des travaux qui en dépendent.",
+    "d1Title": "{{name}} expire demain",
+    "d1Desc": "Dernière chance — expire le {{date}}.",
+    "d7Title": "{{name}} expire dans moins de 7 jours",
+    "d7Desc": "Expire le {{date}}. Lancez le renouvellement maintenant.",
+    "d14Title": "{{name}} expire dans moins de 2 semaines",
+    "d14Desc": "Expire le {{date}}. Pensez à lancer le renouvellement dès maintenant.",
+    "d30Title": "{{name}} : renouvellement possible",
+    "d30Desc": "Expire le {{date}} — des rappels de renouvellement sont disponibles dans l'app.",
+    "renew": "Renouveler",
+    "impactExpired": "Critique — expiré",
+    "impactD1": "Expire demain",
+    "impactD7": "Moins de 7 jours",
+    "impactWindow": "Renouvellement possible",
+    "insurance": {
+      "liability": "Assurance responsabilité civile",
+      "professional": "Assurance RC professionnelle",
+      "vehicle": "Assurance véhicule",
+      "equipment": "Assurance matériel",
+      "workers_comp": "Assurance accidents du travail",
+      "property": "Assurance multirisque"
+    }
   }
 }

@@ -97,12 +97,27 @@ describe('toE164', () => {
     expect(toE164('612 345 678', 'ES')).toBe('34612345678');
   });
 
-  it('IT: leading 0 → +39 country code prepended', () => {
-    expect(toE164('0612345678', 'IT')).toBe('39612345678');
+  it('IT: the leading 0 is KEPT — Rome is +39 06…, not +39 6…', () => {
+    expect(toE164('06 1234 5678', 'IT')).toBe('390612345678');
+    expect(toE164('347 123 4567', 'IT')).toBe('393471234567'); // mobile
+    expect(toE164('+39 06 1234 5678', 'IT')).toBe('390612345678');
   });
 
-  it('default to NL when no country provided', () => {
-    expect(toE164('06 12 34 56 78')).toBe('31612345678');
+  it('unknown country: a national number gets NO link (it was dialled as Dutch — D3)', () => {
+    expect(toE164('0151 23456789')).toBeNull();
+    expect(toE164('06 12 34 56 78')).toBeNull();
+  });
+
+  it('a number written with + is international for EVERY country (review 2026-09-24)', () => {
+    expect(toE164('+31 6 12345678', 'IT')).toBe('31612345678');   // Dutch customer, Italian contractor
+    expect(toE164('+49 89 12345', 'DE')).toBe('498912345');        // short German number
+    expect(toE164('+39 06 123456', 'IT')).toBe('3906123456');      // short Italian landline
+    expect(toE164('0031 6 12345678', 'IT')).toBe('31612345678');
+  });
+
+  it('unknown country: an international number still works', () => {
+    expect(toE164('+49 151 23456789')).toBe('4915123456789');
+    expect(toE164('0049 151 23456789')).toBe('4915123456789');
   });
 
   it('returns null for empty / whitespace / undefined', () => {

@@ -15,6 +15,7 @@ import { DEMO_MODE } from '../config/demo';
 import { vatRateGroups } from '../domain/business';
 import type { Country } from '../context/AuthContext';
 import { logWarn } from '../utils/errorHandler';
+import { signatureHtmlBlock, getLegalText } from './signatureService';
 
 // ── Number formatting ────────────────────────────────────
 
@@ -725,15 +726,7 @@ export async function generateInvoicePdf(
   // SignatureRecord wrapping). Legal text now resolved from the
   // 'handover' context in the contractor's language.
   if (options?.customerSignature) {
-    const { signatureHtmlBlock, getLegalText } = await import('./signatureService');
-    const block = signatureHtmlBlock({
-      signatureSvg: options.customerSignature.svgDataUri,
-      signerName: options.customerSignature.signerName,
-      signerRole: 'customer',
-      signedAt: options.customerSignature.signedAt,
-      legalText: getLegalText('handover', options.customerSignature.language ?? 'en'),
-    });
-    html = html.replace('</body>', `${block}</body>`);
+    html = html.replace('</body>', `${await signOffBlock(options.customerSignature, businessProfile?.language)}</body>`);
   }
 
   const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -745,6 +738,28 @@ export async function generateInvoicePdf(
       UTI: 'com.adobe.pdf',
     });
   }
+}
+
+/**
+ * The customer's sign-off under an invoice, in the INVOICE's language.
+ * No caller passed a language, so the text was English on every market's PDF;
+ * and it quoted the 'handover' wording ("including all documentation and
+ * keys") while the customer signed the in-app "confirm the work is
+ * completed" — job_completed is exactly that, with no "satisfactorily" (E1).
+ */
+export async function signOffBlock(
+  sig: { svgDataUri: string; signedAt: string; signerName: string; language?: string },
+  documentLanguage?: string,
+): Promise<string> {
+  const language = sig.language ?? documentLanguage ?? 'en';
+  return signatureHtmlBlock({
+    signatureSvg: sig.svgDataUri,
+    signerName: sig.signerName,
+    signerRole: 'customer',
+    signedAt: sig.signedAt,
+    language,
+    legalText: getLegalText('job_completed', language),
+  });
 }
 
 // R66 round 36: PDF base64 builder for invoice email attachments. Pre-R36
@@ -806,15 +821,7 @@ export async function buildInvoicePdfBase64(
       options?.frMentions,
     );
     if (options?.customerSignature) {
-      const { signatureHtmlBlock, getLegalText } = await import('./signatureService');
-      const block = signatureHtmlBlock({
-        signatureSvg: options.customerSignature.svgDataUri,
-        signerName: options.customerSignature.signerName,
-        signerRole: 'customer',
-        signedAt: options.customerSignature.signedAt,
-        legalText: getLegalText('handover', options.customerSignature.language ?? 'en'),
-      });
-      html = html.replace('</body>', `${block}</body>`);
+      html = html.replace('</body>', `${await signOffBlock(options.customerSignature, businessProfile?.language)}</body>`);
     }
     const { uri } = await Print.printToFileAsync({ html });
     const file = new File(uri);

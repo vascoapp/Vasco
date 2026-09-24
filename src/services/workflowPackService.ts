@@ -956,11 +956,23 @@ export function toE164(phone: string | undefined, contractorCountry?: string): s
   if (!phone) return null;
   let digits = phone.replace(/\D+/g, '');
   if (!digits) return null;
-  const dial = COUNTRY_DIAL[contractorCountry ?? 'NL'] ?? '31';
-  if (digits.startsWith('00')) digits = digits.slice(2);            // 0031… → 31…
-  else if (digits.startsWith('0')) digits = dial + digits.slice(1); // 0612… → 3161…
-  else if (!digits.startsWith(dial) && digits.length <= 10) digits = dial + digits;
-  return digits;
+  // Written with + or 00: already international, whatever the contractor's
+  // country — an Italian contractor's Dutch customer (+31…) must not become
+  // +39 31…, and a short +49 89 12345 must not get a second 49 (review
+  // 2026-09-24).
+  if (phone.trim().startsWith('+')) return digits;
+  if (digits.startsWith('00')) return digits.slice(2);               // 0031… → 31…
+  // Unknown country: a national number cannot be dialled — it used to be
+  // read as DUTCH, so a German customer's 0151… became +31 151… (sweep
+  // 2026-09-23, D3). Length cannot tell: a German national number is 12 digits.
+  const dial = contractorCountry ? COUNTRY_DIAL[contractorCountry] : undefined;
+  if (!dial) return null;
+  // Typed without + but with the country code (long enough to be one).
+  if (digits.startsWith(dial) && digits.length > 10) return digits;
+  // Italian numbers KEEP their leading 0 after +39 (Rome is +39 06…).
+  if (contractorCountry === 'IT') return dial + digits;
+  if (digits.startsWith('0')) return dial + digits.slice(1);          // 0612… → 3161…
+  return digits.length <= 10 ? dial + digits : digits;
 }
 
 /** @internal exported for unit testing — see workflowPackHelpers.test.ts */
@@ -1119,7 +1131,8 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
           let affiliateUrl: string | undefined;
           if ((step.channel === 'sms' || step.channel === 'email') && match.customerId) {
             const cust = context.customers?.find((c) => c.id === match.customerId);
-            const e164 = toE164(cust?.phone, country);
+            // The real country, not the NL-defaulted one above (D3).
+            const e164 = toE164(cust?.phone, getCurrentCountry() ?? undefined);
             if (e164) affiliateUrl = buildWhatsAppUrl(e164, resolved);
           }
 
@@ -1392,7 +1405,10 @@ function matchTrigger(
     case 'job_created': {
       // Permit-check pack — fires on newly-created jobs (created within 2d window).
       const targetAge = step.delayDays * dayMs;
-      const permitCountry = getCurrentCountry() ?? 'NL';
+      // Unknown country: no permit card. `?? 'NL'` handed a German plumber the
+      // Dutch permit list (CLAUDE.md: skip, never default; D3).
+      const permitCountry = getCurrentCountry();
+      if (!permitCountry) break;
       for (const job of ctx.jobs) {
         if (!job) continue;
         const createdAt = new Date((job as any).createdAt || job.lastUpdated || '').getTime();

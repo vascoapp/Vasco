@@ -23,6 +23,8 @@ import { complianceService, type License, type Certification, type InsurancePoli
 import { addToQueue } from './aiActionQueueService';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { formatDateShortAuto } from '../i18n/formatting';
+import i18n from '../i18n/i18n';
+import { applySavedLanguage, applySavedCountry } from '../i18n/savedLanguage';
 
 const LAST_RUN_KEY = '@vasco_compliance_agent_last_run';
 const LAST_RESULT_KEY = '@vasco_compliance_agent_last_result';
@@ -62,35 +64,27 @@ function severityForStage(stage: ExpiryStage): ComplianceAlert['severity'] {
   }
 }
 
+/**
+ * Alert + queue-card copy. Resolved here and then STORED, so the language must
+ * be the contractor's before this runs (scan awaits applySavedLanguage). It
+ * was English literals for every market (sweep 2026-09-23, E2).
+ */
 function describeStage(stage: ExpiryStage, name: string, expiryDate: Date): { title: string; description: string } {
-  const dateStr = formatDateShortAuto(expiryDate);
-  switch (stage) {
-    case 'expired':
-      return {
-        title: `${name} expired`,
-        description: `Expired on ${dateStr}. Renew before sending new invoices for work that requires this credential.`,
-      };
-    case 'D-1':
-      return {
-        title: `${name} expires tomorrow`,
-        description: `Last chance — expires ${dateStr}.`,
-      };
-    case 'D-7':
-      return {
-        title: `${name} expires in under 7 days`,
-        description: `Expires ${dateStr}. Renewal typically takes 2-5 working days.`,
-      };
-    case 'D-14':
-      return {
-        title: `${name} expires in under 2 weeks`,
-        description: `Expires ${dateStr}. Consider booking renewal now.`,
-      };
-    case 'D-30':
-      return {
-        title: `${name} renewal window open`,
-        description: `Expires ${dateStr} — renewal reminders available in the app.`,
-      };
-  }
+  const date = formatDateShortAuto(expiryDate);
+  const key = stage === 'expired' ? 'expired' : stage === 'D-1' ? 'd1' : stage === 'D-7' ? 'd7' : stage === 'D-14' ? 'd14' : 'd30';
+  return {
+    title: i18n.t(`complianceAgent.${key}Title`, { name }),
+    description: i18n.t(`complianceAgent.${key}Desc`, { date }),
+  };
+}
+
+function impactFor(stage: ExpiryStage): string {
+  return i18n.t(
+    stage === 'expired' ? 'complianceAgent.impactExpired'
+      : stage === 'D-1' ? 'complianceAgent.impactD1'
+        : stage === 'D-7' ? 'complianceAgent.impactD7'
+          : 'complianceAgent.impactWindow',
+  );
 }
 
 // ─── Idempotency: compose an alert id from (itemType, itemId, stage) ────────
@@ -124,6 +118,11 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
       }
     } catch {}
   }
+
+  // The copy below is stored — settle the contractor's language and country
+  // (currency/date format) before the first t() (CLAUDE.md, #210/#362).
+  await applySavedLanguage();
+  await applySavedCountry();
 
   const licenses = complianceService.getLicenses();
   const certs = complianceService.getCertifications();
@@ -197,12 +196,8 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
             stage,
             renewalUrl,
           },
-          actionLabel: 'Renew',
-          estimatedImpact: stage === 'expired'
-            ? 'Critical — cannot invoice without this'
-            : stage === 'D-1' ? 'Expires tomorrow'
-              : stage === 'D-7' ? 'Under 7 days left'
-                : 'Renewal window open',
+          actionLabel: i18n.t('complianceAgent.renew'),
+          estimatedImpact: impactFor(stage),
           expiresAt: new Date(expiryDate.getTime() + 7 * MS_PER_DAY).toISOString(),
           entityKey: `compliance:${itemType}:${itemId}`,
           sourceGeneratorId: 'compliance-agent',
@@ -219,7 +214,8 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
     await emit('certification', cert.id, cert.name, new Date(cert.expiryDate));
   }
   for (const p of policies) {
-    await emit('insurance', p.id, `${p.type} insurance`, new Date(p.endDate));
+    // The policy type is an enum ('workers_comp'); it printed raw.
+    await emit('insurance', p.id, i18n.t(`complianceAgent.insurance.${p.type}`, { defaultValue: String(p.type) }), new Date(p.endDate));
   }
 
   // Persist run metadata

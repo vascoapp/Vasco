@@ -933,7 +933,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       description: `${t('aiQueue.jobCompleted')} · ${amountStr}`,
       preparedData: {
         jobId: job.id, amount: job.quotedAmount, customer: job.customerId,
-        reasoning: `Job completed. Invoice promptly to maintain cash flow — average time-to-invoice for your trade is 2 days.`,
+        reasoning: t('aiQueue.why.invoiceJob'),
       },
       actionLabel: t('aiQueue.createInvoice'),
       estimatedImpact: t('aiQueue.revenueAmount', { amount: amountStr }),
@@ -960,8 +960,9 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
         invoiceId: inv.id, amount: inv.amount, customer: inv.customer,
         ...(custIntel?.contextLine ? { customerContext: custIntel.contextLine } : {}),
         reasoning: custIntel?.contextLine
-          ? `${inv.customer || 'Customer'} — ${custIntel.contextLine}. A timely reminder improves collection.`
-          : `${amountStr} overdue. Sending a reminder now increases chance of payment this week.`,
+          // The customer's NAME (`inv.customer` is an id on half the corpus, #214).
+          ? t('aiQueue.why.overdueWithContext', { customer: findDocumentCustomer((context.customers ?? []) as Array<{ id: string; name: string }>, inv as any)?.name || t('common.customer', 'Customer'), context: custIntel.contextLine })
+          : t('aiQueue.why.overdue', { amount: amountStr }),
       },
       actionLabel: t('aiQueue.sendReminder'),
       estimatedImpact: t('aiQueue.speedsUpPayment'),
@@ -984,7 +985,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       preparedData: {
         quoteId: quote.id, customer: quote.customer, amount: quote.amount,
         ...(followupIntel?.contextLine ? { customerContext: followupIntel.contextLine } : {}),
-        reasoning: `Quote sent but no response yet. Following up increases acceptance rate by ~20%.`,
+        reasoning: t('aiQueue.why.quoteFollowUp'),
       },
       actionLabel: t('aiQueue.sendFollowUp'),
       estimatedImpact: t('aiQueue.increasesAcceptance'),
@@ -1020,7 +1021,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       description: `${cust?.name || ''} · ${hours.toFixed(1)}h`,
       preparedData: {
         jobId: job.id, customerId: job.customerId, template: message, hours,
-        reasoning: `You logged ${hours.toFixed(1)}h on this job today. Customers who receive daily updates rate satisfaction 40% higher.`,
+        reasoning: t('aiQueue.why.dailyUpdate', { hours: hours.toFixed(1) }),
       },
       actionLabel: t('common.send', 'Verstuur'),
       estimatedImpact: t('automation.customerSatisfaction', 'Customer satisfaction'),
@@ -1077,7 +1078,8 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
         disclosureLine: feeBreakdown.disclosureLine,
         newTotal: (inv.amount || 0) + lateFee,
         customer: inv.customer,
-        reasoning: `${daysOverdue} days overdue. EU Directive 2011/7/EU entitles you to ${formatLateFeeRate(feeBreakdown.effectiveRatePct, feeCountry!)}% statutory interest (${formatMoney2(interest)}) + ${formatMoney(recoveryFee)} fixed recovery fee.`,
+        // UK law is the 1998 Late Payment Act, not the EU directive (review).
+        reasoning: t(feeCountry === 'UK' ? 'aiQueue.why.lateFeeUK' : 'aiQueue.why.lateFee', { days: daysOverdue, rate: formatLateFeeRate(feeBreakdown.effectiveRatePct, feeCountry!), interest: formatMoney2(interest), fee: formatMoney(recoveryFee) }),
       },
       actionLabel: t('automation.regenerate', 'Regenerate'),
       estimatedImpact: formatMoney2((inv.amount || 0) + lateFee),
@@ -1109,7 +1111,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       description: `${formatMoney((q.amount ?? 0))} · ${expiryDate}`,
       preparedData: {
         quoteId: q.id, customerId: q.customerId, template: message,
-        reasoning: `Quote expires on ${expiryDate}. A gentle reminder before expiry converts 30% more quotes.`,
+        reasoning: t('aiQueue.why.quoteExpiry', { date: expiryDate }),
       },
       actionLabel: t('common.send', 'Verstuur'),
       estimatedImpact: t('automation.recoverRevenue', 'Recover revenue'),
@@ -1137,7 +1139,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       description: `${materials.length} items · ${formatMoney(totalCost)}`,
       preparedData: {
         jobId: job.id, materials, totalCost, materialList,
-        reasoning: `Job starts within 3 days. Order now to ensure delivery in time — typical supplier lead time is 1-2 days.`,
+        reasoning: t('aiQueue.why.materials'),
       },
       actionLabel: t('automation.orderMaterials', 'Order materials'),
       estimatedImpact: t('automation.preventsDelay', 'Prevents delay'),
@@ -1194,7 +1196,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
         totalHours: hours,
         materials: job.materials ?? [],
         customerName: cust?.name,
-        reasoning: `Job recently completed. Sending a professional handover package (${photos} photos, ${hours.toFixed(1)}h logged) builds trust and prompts referrals.`,
+        reasoning: t('aiQueue.why.handover', { count: photos, hours: hours.toFixed(1) }),
       },
       actionLabel: t('automation.sendHandover', 'Send handover'),
       estimatedImpact: t('automation.professionalFinish', 'Professional finish'),
@@ -1217,7 +1219,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       description: cert.issuedBy || cert.authority || '',
       preparedData: {
         certId: cert.id, name: cert.name, expiryDate: cert.expiryDate, renewalUrl: cert.renewalUrl,
-        reasoning: `Expires in ${daysLeft} days. Renewal typically takes 5-10 business days — start now to avoid a compliance gap.`,
+        reasoning: t('aiQueue.why.certRenewal', { count: daysLeft }),
       },
       actionLabel: t('automation.renew', 'Renew'),
       estimatedImpact: t('automation.staysCompliant', 'Stays compliant'),
@@ -1248,7 +1250,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       }),
       preparedData: {
         jobId: job.id, customerId: job.customerId, customerName: cust?.name, jobTitle: job.title, monthsAgo,
-        reasoning: `"${job.title || ''}" was completed ${monthsAgo} months ago. Annual maintenance keeps ${cust?.name || 'the customer'} loyal and generates recurring revenue.`,
+        reasoning: t('aiQueue.why.maintenance', { job: job.title || '', months: monthsAgo, customer: cust?.name || t('common.customer', 'Customer') }),
       },
       actionLabel: t('automation.scheduleMaintenance', 'Schedule'),
       estimatedImpact: t('automation.recurringRevenue', 'Recurring revenue'),
@@ -1284,7 +1286,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
           jobTitle: t2.title,
           estimatedDuration: t2.estimatedDurationHours,
           estimatedAmount: t2.estimatedAmount,
-          reasoning: `Recurring contract "${t2.title}" — cadence ${t2.cadence}. Approving creates the next job and bumps lastRunDate.`,
+          reasoning: t('aiQueue.why.recurring', { title: t2.title, cadence: t(`recurring.${t2.cadence}`, { defaultValue: t2.cadence }) }),
         },
         actionLabel: t('automation.scheduleMaintenance', 'Schedule'),
         estimatedImpact: t('automation.recurringRevenue', 'Recurring revenue'),
@@ -1317,7 +1319,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       preparedData: {
         invoiceId: inv.id, customerId: inv.customerId, template: message,
         ...(satIntel?.contextLine ? { customerContext: satIntel.contextLine } : {}),
-        reasoning: `7 days since payment — the ideal moment to ask for feedback. Satisfied customers are 3x more likely to refer.`,
+        reasoning: t('aiQueue.why.review'),
       },
       actionLabel: t('common.send', 'Verstuur'),
       estimatedImpact: t('automation.buildsReputation', 'Builds reputation'),
@@ -1595,7 +1597,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       description: `${formatMoney(totalAmount)} ${t('automation.revenue', 'revenue')}`,
       preparedData: {
         invoiceIds: unexportedPaid.map((i: any) => i.id), count: unexportedPaid.length, totalAmount,
-        reasoning: `${unexportedPaid.length} paid invoices not yet in your accounting system. Export now to keep books current.`,
+        reasoning: t('aiQueue.why.export', { count: unexportedPaid.length }), // _one/_other
       },
       actionLabel: t('automation.export', 'Export'),
       estimatedImpact: t('automation.savesAdmin', 'Saves admin time'),
@@ -1659,7 +1661,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
             savings: item.savings,
             cheaperSupplier: item.cheaperSupplier,
             priceVsMarket: item.priceVsMarket,
-            reasoning: `${item.name} costs ${formatMoney(item.scannedPrice)} — ${pctAbove}% above the market average of ${formatMoney(item.marketAvg)}. ${item.cheaperSupplier ? `${item.cheaperSupplier} offers better rates.` : 'Switching suppliers could save significantly.'}`,
+            reasoning: [
+              t('aiQueue.why.priceAbove', { item: item.name, price: formatMoney(item.scannedPrice), pct: pctAbove, avg: formatMoney(item.marketAvg) }),
+              item.cheaperSupplier ? t('aiQueue.why.priceCheaper', { supplier: item.cheaperSupplier }) : '',
+            ].filter(Boolean).join(' '),
           },
           actionLabel: t('automation.compareSuppliers', 'Compare'),
           estimatedImpact: `${formatMoney(item.savings)} ${t('automation.savings', 'savings')}`,

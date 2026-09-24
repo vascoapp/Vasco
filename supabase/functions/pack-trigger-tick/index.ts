@@ -32,6 +32,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { pushOutcome } from '../_shared/pushOutcome.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -336,6 +337,7 @@ Deno.serve(async (req) => {
         }),
       });
       const sendJson = await sendRes.json().catch(() => ({}));
+      const sendJsonOutcome = pushOutcome(sendJson);
 
       // The dedupe row for this pack step: the 24-hour lookup above reads it,
       // so a dropped row lets the same automation nudge fire again on the
@@ -346,15 +348,15 @@ Deno.serve(async (req) => {
         entity_key: step,
         title: copy.title,
         body: copy.body(count),
-        success: !!sendJson?.ok,
-        error: sendJson?.ok ? null : (sendJson?.error ?? 'unknown'),
+        success: sendJsonOutcome.delivered,
+        error: sendJsonOutcome.error,
       });
       if (incassoLogErr) {
         console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${incassoLogErr.message}) — this step can repeat`);
       }
 
-      if (sendJson?.ok) pushed++;
-      else errors.push({ userId, error: sendJson?.error ?? 'send-push failed' });
+      if (sendJsonOutcome.delivered) pushed++;
+      else errors.push({ userId, error: sendJsonOutcome.error ?? 'send-push failed' });
 
       // ─── Quote followup pack (R66r49 #7) ─────────────────────────────────
       // Same dedup contract as Incasso (24h same-type-key window via
@@ -403,6 +405,7 @@ Deno.serve(async (req) => {
         }),
       });
       const qSendJson = await qSend.json().catch(() => ({}));
+      const qSendJsonOutcome = pushOutcome(qSendJson);
 
       // The dedupe row for this pack step: the 24-hour lookup above reads it,
       // so a dropped row lets the same automation nudge fire again on the
@@ -413,15 +416,15 @@ Deno.serve(async (req) => {
         entity_key: qStep,
         title: qCopy.title,
         body: qCopy.body(qCount),
-        success: !!qSendJson?.ok,
-        error: qSendJson?.ok ? null : (qSendJson?.error ?? 'unknown'),
+        success: qSendJsonOutcome.delivered,
+        error: qSendJsonOutcome.error,
       });
       if (followupLogErr) {
         console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${followupLogErr.message}) — this step can repeat`);
       }
 
-      if (qSendJson?.ok) pushed++;
-      else errors.push({ userId, error: qSendJson?.error ?? 'quote send-push failed' });
+      if (qSendJsonOutcome.delivered) pushed++;
+      else errors.push({ userId, error: `quote: ${qSendJsonOutcome.error}` });
 
       // ─── Job-completion packs (R66r49 #8) ──────────────────────────────
       // Handover-survey at +7d, maintenance pre-reminder at +335d,
@@ -477,6 +480,7 @@ Deno.serve(async (req) => {
           }),
         });
         const jSendJson = await jSend.json().catch(() => ({}));
+        const jSendJsonOutcome = pushOutcome(jSendJson);
 
         // The dedupe row for this pack step: the 24-hour lookup above reads it,
         // so a dropped row lets the same automation nudge fire again on the
@@ -487,15 +491,15 @@ Deno.serve(async (req) => {
           entity_key: jStep,
           title: jCopy.title,
           body: jCopy.body(jCount),
-          success: !!jSendJson?.ok,
-          error: jSendJson?.ok ? null : (jSendJson?.error ?? 'unknown'),
+          success: jSendJsonOutcome.delivered,
+          error: jSendJsonOutcome.error,
         });
         if (milestoneLogErr) {
           console.error(`pack-trigger-tick: push sent but the dedupe row was not written (${milestoneLogErr.message}) — this step can repeat`);
         }
 
-        if (jSendJson?.ok) pushed++;
-        else errors.push({ userId, error: jSendJson?.error ?? `${jStep} send-push failed` });
+        if (jSendJsonOutcome.delivered) pushed++;
+        else errors.push({ userId, error: `${jStep}: ${jSendJsonOutcome.error}` });
       }
     } catch (err) {
       errors.push({ userId, error: String(err) });
