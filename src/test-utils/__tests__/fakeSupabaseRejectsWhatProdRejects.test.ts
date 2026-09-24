@@ -114,4 +114,16 @@ describe('fakeSupabase', () => {
     expect(r.error).toBeNull();
     expect(r.data![0].documents.document_number).toBe('RE-1');
   });
+
+  it('a privilege the role lacks → 42501, like PostgREST (review H1)', async () => {
+    const f = createFakeSupabase();
+    // analytics_events: authenticated has INSERT only.
+    expect((await f.client.from('analytics_events').insert({ id: 'e1', name: 'x', timestamp: new Date().toISOString() })).error).toBeNull();
+    const up = await f.client.from('analytics_events').upsert({ id: 'e2', name: 'x', timestamp: new Date().toISOString() }, { onConflict: 'id', ignoreDuplicates: true });
+    expect(up.error?.code).toBe('42501'); // ON CONFLICT needs SELECT
+    expect((await f.client.from('analytics_events').select('id')).error?.code).toBe('42501');
+    // Signed out = anon: no table privileges at all.
+    const anon = createFakeSupabase({ userId: null });
+    expect((await anon.client.from('customers').select('id')).error?.code).toBe('42501');
+  });
 });

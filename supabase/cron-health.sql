@@ -22,6 +22,7 @@ declare
   -- Keep in step with cron.sql. `cronExpectationsMatchCronSql` in the jest
   -- suite fails when these disagree, in either direction.
   expected text[] := array[
+    'vasco-analytics-aging',
     'vasco-churn-winback',
     'vasco-daily-push-digest',
     'vasco-drain-account-deletions',

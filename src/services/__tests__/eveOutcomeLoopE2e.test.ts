@@ -17,6 +17,8 @@ let mockCountry: string | null = 'NL';
 
 jest.mock('../../lib/currentUser', () => ({
   getCurrentUserId: () => 'user-eve',
+  // Signed in as the same user the events belong to (flushToCloud owner check).
+  getAuthedUserId: () => 'user-eve',
   getCurrentTrade: () => mockTrade,
   getCurrentCountry: () => mockCountry,
 }));

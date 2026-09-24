@@ -356,6 +356,14 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
 - **Inkoop = supplier invoices in, price intelligence out** (rebuilt #364).
   Do not re-add Herbestellen / Leveranciers / Voorraad / stock figures until
   something WRITES inventory — they were fed only by a test seed.
+- **Dormant code is GATED, not deleted** (user's call, 2026-09-24): ~30% of
+  the code no signed-in contractor can reach stays for future extensions.
+  `src/config/dormant.ts` lists the gated routes (the root layout redirects
+  them, deep links included); `src/config/dormant.files.json` is the
+  generated manifest (`node scripts/reachability.mjs --write-manifest`) that
+  sweeps and guards SKIP. Guard `dormantStaysDormant`: a dormant file wired
+  back in must leave the list on purpose, and new unreachable code must be
+  added on purpose. Do not sweep or fix dormant code — un-gate it first.
 - **Embeddings are DARK in production** — no OPENAI/VOYAGE key.
   `EMBEDDINGS_ENABLED` (`src/config/ai.ts`, off) gates every call to
   `generate-embedding` / `embed-text`; semantic search falls back to its

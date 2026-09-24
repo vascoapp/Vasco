@@ -4,7 +4,14 @@
 
 **243 of 819 files — 88,143 of 289,047 lines (30%) — cannot be reached by a signed-in contractor.** Every sweep so far has spent time on some of it.
 
-## 🔴 Your decision: delete, quarantine, or keep each group
+## ✅ Decided 2026-09-24: GATE, don't delete
+Kept for future extensions. `src/config/dormant.ts` gates the routes (the
+root layout redirects them, deep links included) and
+`src/config/dormant.files.json` lists the files sweeps and guards skip.
+Guard: `dormantStaysDormant` (both directions). The table below is what is
+gated.
+
+## The groups (were: delete, quarantine, or keep)
 
 Recommendation: **delete** the groups marked ✂️ (no one can open them; git keeps the history), **keep** the ones marked 🔒 with a reason.
 

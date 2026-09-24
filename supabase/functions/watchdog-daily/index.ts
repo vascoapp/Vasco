@@ -121,6 +121,7 @@ function sectionOk(s: unknown): s is Record<string, unknown> {
  * one nothing checked for.
  */
 const EXPECTED_CRON_JOBS = [
+  'vasco-analytics-aging',
   'vasco-churn-winback',
   'vasco-daily-push-digest',
   'vasco-drain-account-deletions',

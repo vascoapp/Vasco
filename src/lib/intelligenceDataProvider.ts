@@ -273,6 +273,8 @@ export async function getAllCalibrationScores(): Promise<
   { generator_id: string; total: number; resolved: number; accurate: number; rate: number }[]
 > {
   if (!isSupabaseConfigured) return [];
+  // Signed out: the table is not readable (anon has no grant) — skip.
+  try { await getUserId(); } catch { return []; }
   const { data, error } = await from('calibration_entries')
     .select('generator_id, resolved_at, is_accurate');
   if (error) { logWarn('IntelDP', `getAllCalibrationScores: ${error.message}`); return []; }

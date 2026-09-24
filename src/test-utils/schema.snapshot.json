@@ -454,6 +454,65 @@
     "default": "now()"
    }
   },
+  "analytics_events": {
+   "id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "name": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "properties": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "jsonb",
+    "default": "'{}'::jsonb"
+   },
+   "user_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "user_role": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "country": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "session_id": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "platform": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "platform_version": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "timestamp": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
   "app_config": {
    "key": {
     "nullable": false,
@@ -7847,6 +7906,14 @@
     "required": []
    }
   ],
+  "get_analytics_summary": [
+   {
+    "args": [
+     "p_days"
+    ],
+    "required": []
+   }
+  ],
   "match_similar_jobs": [
    {
     "args": [
@@ -7869,6 +7936,563 @@
     ],
     "required": []
    }
+  ]
+ },
+ "grants": {
+  "account_deletion_requests": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "accountant_handovers": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "accounting_loops": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "affiliate_clicks": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ai_models": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ai_predictions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ai_rate_limit": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "analytics_events": [
+   "INSERT"
+  ],
+  "app_config": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "business_events": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "business_settings": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "calibration_entries": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "churn_winback_log": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "cohort_benchmarks": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "cohort_weekly_stats": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "contractor_pricing_calibration": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "contractor_skill_profiles": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "cron_http_calls": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "customer_embeddings": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "customer_interactions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "customer_payment_patterns": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "customer_portal_events": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "customer_questions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "customers": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "data_events": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "decision_activities": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "decision_items": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "decision_submissions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "decision_timing_aggregates": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "decision_trackers": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "document_counters": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "documents": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "embeddings": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "entities": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "entity_relationships": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "eve_telemetry": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "expenses": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "extracted_documents": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "extracted_line_items": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "feature_flags": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "feedback_weights": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "generator_dismissals": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "gobd_audit_log": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "insight_interactions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "integration_connections": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "invoice_outcomes": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "job_duration_data": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "job_embeddings": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "job_materials": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "job_outcomes": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "job_photos": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "job_quality_signals": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "jobs": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "leads": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "learning_profiles": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "line_items": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "material_canonical_aliases": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "material_catalog": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "material_embeddings": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "material_price_benchmarks": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "material_price_history": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ml_capacity_overrun_predictions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ml_cashflow_gap_predictions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ml_material_price_forecasts": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ml_supplier_leadtime_predictions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "moat_schema_metadata": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "model_predictions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "model_training_pairs": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "photo_analyses": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "price_observations": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "pricing_intelligence": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "projects": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "purchase_orders": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "push_notification_log": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "push_tokens": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "quote_acceptance_links": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "quote_line_deltas": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "quote_line_embeddings": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "referral_attributions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "referral_codes": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "regional_preference_aggregates": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "regulated_submissions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "scanned_invoices": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "signatures": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "subscription_audit": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "subscription_credits": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "subscriptions": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "supplier_connections": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "suppliers": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "training_examples": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "ts_daily_business_metrics": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "watchdog_runs": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "workers": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
   ]
  }
 }

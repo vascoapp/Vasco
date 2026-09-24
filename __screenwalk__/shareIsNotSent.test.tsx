@@ -52,22 +52,16 @@ const NO_CONSEQUENCE: Record<string, string> = {
   'app/contractor/message-templates.tsx': 'Shares a template body for the contractor to reuse.',
   'app/contractor/repeat-work.tsx': 'Shares a maintenance list. Alert is the catch branch.',
   'app/contractor/referrals.tsx': 'Shares a referral link; the `refresh()` after it re-reads state rather than asserting a send.',
-  'src/services/budgetPdfService.ts': 'PDF generator — hands the file over, records nothing.',
   'src/services/invoicePdfService.ts': 'PDF generator — records nothing.',
   'src/services/quotePdfService.ts': 'PDF generator — records nothing.',
   'src/services/financialReportService.ts': 'Report generator — records nothing.',
   'src/services/vatPrepExportService.ts': 'Export generator — records nothing.',
   'src/services/dataExportService.ts': 'GDPR data export — records nothing.',
-  'src/services/receiptShareService.ts': 'Receipt image share — records nothing.',
   'src/services/calendarExportService.ts': 'ICS export. Alert is the catch branch.',
-  'src/components/contractor/ShareQuoteButton.tsx': 'Only `setBusy(false)` follows — a spinner, not a claim.',
   'src/components/contractor/ShareDecisionTracker.tsx': 'Three shares; every Alert is a catch-branch fallback that shows the link so the contractor can copy it manually. `setLinkCopied` is UI feedback for the copy, not the send.',
   'src/components/shared/ErrorBoundary.tsx': 'Shares a crash report. No product state.',
   'app/contractor/material-search.tsx': 'The purchase orders are created BEFORE the share; the share is a receipt of work already done, so cancelling it must not undo them.',
 
-  // ── Watch item, deliberately not "fixed" ──────────────────────────────────
-  'src/components/shared/VascoCard.tsx':
-    'Fires a "did it work?" feedback prompt on a timer after sharing, so it also asks after a dismissed sheet. It records the contractor ANSWER, not the send, so a cancelled share produces a slightly silly question rather than a false record. Left alone rather than guarded because the honest fix is to not ask at all when dismissed, and that is a UX call.',
 };
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -119,7 +113,10 @@ function callEnd(src: string, open: number): number {
 
 describe('a cancelled share is not a send', () => {
   const files = ROOTS.flatMap((r) => walk(path.join(ROOT, r)));
+  // Dormant code (src/config/dormant.ts — gated, kept, not swept) is skipped.
+  const DORMANT = new Set<string>(JSON.parse(fs.readFileSync(path.join(ROOT, 'src/config/dormant.files.json'), 'utf8')).files);
   const sharing = files
+    .filter((f) => !DORMANT.has(path.relative(ROOT, f)))
     .filter((f) => SHARES.test(readOrEmpty(f)))
     .map((f) => path.relative(ROOT, f));
 

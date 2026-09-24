@@ -21,6 +21,9 @@
  *   - unknown RPC, or a live RPC called with the wrong ARGUMENT names → PGRST202
  *     (a live RPC with no registered handler answers { data: null, error: null })
  *   - .single() on 0 or >1 rows          → PGRST116
+ *   - a privilege the role lacks         → 42501 (signed in = `authenticated`
+ *     with the LIVE grants; signed out = `anon`, which has none). PostgREST
+ *     needs SELECT for any returned rows and for an upsert's ON CONFLICT.
  *
  * Use (jest hoists jest.mock above every const, so build it IN the factory):
  *   jest.mock('../lib/supabase', () => require('../test-utils/fakeSupabase').fakeSupabaseModule());
@@ -35,6 +38,8 @@ type TableSchema = Record<string, Column>;
 const TABLES = (schema as { tables: Record<string, TableSchema> }).tables;
 type FnSig = { args: string[]; required: string[] };
 const FUNCTIONS = ((schema as any).functions ?? {}) as Record<string, FnSig[]>;
+/** Table privileges of the `authenticated` role, live. `anon` has none (schema lock v1.17). */
+const GRANTS = ((schema as any).grants ?? {}) as Record<string, string[]>;
 
 /** Does a live overload accept exactly these argument names? (PostgREST rule) */
 function rpcMatches(name: string, args: Record<string, unknown>): boolean {
@@ -95,12 +100,13 @@ function splitSelect(sel: string): string[] {
   return parts;
 }
 
-export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean } = {}) {
+export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean; grants?: boolean } = {}) {
   const db: Record<string, Row[]> = {};
   const rpcs: Record<string, (args: any) => Result | Promise<Result>> = {};
   const calls: FakeCall[] = [];
   let userId: string | null = opts.userId === undefined ? '11111111-1111-4111-8111-111111111111' : opts.userId;
   const rls = opts.rls ?? true;
+  const enforceGrants = opts.grants ?? true;
   let seqN = 0;
   const seq = () => ++seqN;
 
@@ -266,6 +272,17 @@ export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean
       const badFilter = checkColumns(t, st.filters.map((f) => f.col).concat(st.order.map((o) => o.col)), '42703');
       if (badFilter) return done({ data: null, error: badFilter });
       const match = (r: Row) => visible(t, r) && st.filters.every((f) => f.fn(r[f.col]));
+      if (enforceGrants) {
+        const have = new Set(userId ? GRANTS[t] ?? [] : []);
+        const need = new Set<string>();
+        if (st.op === 'select' || st.returning) need.add('SELECT');
+        if (st.op === 'insert') need.add('INSERT');
+        if (st.op === 'upsert') { need.add('INSERT'); need.add('SELECT'); if (!st.ignoreDuplicates) need.add('UPDATE'); }
+        if (st.op === 'update') { need.add('UPDATE'); if (st.filters.length) need.add('SELECT'); }
+        if (st.op === 'delete') { need.add('DELETE'); if (st.filters.length) need.add('SELECT'); }
+        const missing = [...need].filter((n) => !have.has(n));
+        if (missing.length) return done({ data: null, error: err('42501', `permission denied for table ${t} (${userId ? 'authenticated' : 'anon'} lacks ${missing.join(', ')})`) });
+      }
       let affected: Row[] = [];
 
       if (st.op === 'insert' || st.op === 'upsert') {

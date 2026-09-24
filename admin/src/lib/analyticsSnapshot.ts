@@ -33,28 +33,21 @@ export async function fetchAnalyticsSnapshot(): Promise<AnalyticsSnapshot> {
   if (!supabase) return empty(false);
 
   try {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data } = await supabase
-      .from("analytics_events")
-      .select("name, user_context")
-      .gte("timestamp", since);
-
-    const rows = (data ?? []) as Array<{ name: string; user_context: { userId?: string } | null }>;
-    const byName = new Map<string, number>();
-    const userIds = new Set<string>();
-    for (const r of rows) {
-      byName.set(r.name, (byName.get(r.name) ?? 0) + 1);
-      if (r.user_context?.userId) userIds.add(r.user_context.userId);
-    }
-    const topEvents = [...byName.entries()]
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
+    // Aggregates only (migration 20260924000001): the table is not readable
+    // from a browser, and it used to be read here as `analytics_events` with a
+    // `user_context` column — a table that did not exist, with a column the
+    // app never wrote. The admin dashboard showed nothing, forever.
+    // service_role only (20260924000003) — this browser client cannot read it
+    // until the admin has real server-side auth. Say so: `live: false`, never
+    // zeros dressed as live numbers.
+    const { data, error } = await supabase.rpc("get_analytics_summary", { p_days: 30 });
+    if (error || !data) return empty(false);
+    const summary = (data ?? { total: 0, top: [], distinctUsers: 0 }) as { total: number; top: Array<{ name: string; count: number }>; distinctUsers: number };
 
     return {
-      totalEventsLast30d: rows.length,
-      uniqueUsersLast30d: userIds.size,
-      topEvents,
+      totalEventsLast30d: summary.total ?? 0,
+      uniqueUsersLast30d: summary.distinctUsers ?? 0,
+      topEvents: summary.top ?? [],
       live: true,
       fetchedAt: new Date().toISOString(),
     };

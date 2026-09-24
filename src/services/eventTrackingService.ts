@@ -12,6 +12,8 @@ import { Platform } from 'react-native';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { addBreadcrumb } from '../lib/errorReporting';
 import { consentService } from './consentService';
+import { getAuthedUserId } from '../lib/currentUser';
+import { isUuid } from '../lib/idShape';
 
 const EVENTS_STORAGE_KEY = '@vasco_analytics_events';
 const SESSION_STORAGE_KEY = '@vasco_analytics_session';
@@ -256,6 +258,9 @@ export async function getEventCount(name: EventName): Promise<number> {
  */
 export async function flushEvents(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
+  // The table is insert-only for SIGNED-IN users (migration 20260924000001).
+  const authed = getAuthedUserId();
+  if (!authed) return 0;
 
   const events = await loadEvents();
   const unflushed = events.filter((e) => !e.flushed);
@@ -272,7 +277,11 @@ export async function flushEvents(): Promise<number> {
       id: e.id,
       name: e.name,
       properties: e.properties,
-      user_id: e.userContext?.userId ?? null,
+      // Only this user's own uuid. A demo/placeholder id is not a uuid (22P02
+      // fails the whole batch), and an event recorded under a PREVIOUS
+      // account would fail the own-events policy forever — both are sent
+      // anonymous instead.
+      user_id: isUuid(e.userContext?.userId) && e.userContext?.userId === authed ? e.userContext!.userId : null,
       user_role: e.userContext?.role ?? null,
       country: e.userContext?.country ?? null,
       session_id: e.sessionId,
@@ -282,16 +291,27 @@ export async function flushEvents(): Promise<number> {
     }));
 
     try {
+      // A plain INSERT: the table grants signed-in users INSERT only, and an
+      // upsert's ON CONFLICT needs SELECT — it was 42501 on every flush
+      // (review 2026-09-24, H1; the fake backend now models grants).
       const { error } = await supabase
         .from('analytics_events' as never)
         .insert(rows as never);
 
       if (!error) {
-        // Mark batch as flushed
-        for (const event of batch) {
-          event.flushed = true;
-        }
+        for (const event of batch) event.flushed = true;
         flushedCount += batch.length;
+      } else if ((error as { code?: string }).code === '23505') {
+        // Ids are minted on the device: a batch retried after a partial
+        // success hits rows that already landed. Send one by one; a
+        // duplicate IS a delivered event.
+        for (let j = 0; j < batch.length; j++) {
+          const { error: rowErr } = await supabase.from('analytics_events' as never).insert(rows[j] as never);
+          if (!rowErr || (rowErr as { code?: string }).code === '23505') {
+            batch[j].flushed = true;
+            flushedCount += 1;
+          }
+        }
       }
     } catch {
       // Network error — stop flushing, retry later

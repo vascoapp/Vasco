@@ -13,6 +13,8 @@
 import { evaluateTriggers, pickTemplateForLocale, resolveTemplate, DEFAULT_PACKS } from '../workflowPackService';
 import { addToQueue } from '../aiActionQueueService';
 
+// The backend session must agree with who the app thinks is signed in.
+jest.mock('../../lib/supabase', () => require('../../test-utils/fakeSupabase').fakeSupabaseModule({ userId: 'u1' }));
 jest.mock('../../lib/currentUser', () => ({
   getAuthedUserId: () => 'u1',
   getCurrentUserId: () => 'u1',

@@ -7,7 +7,7 @@
 
 import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getCurrentTrade, getCurrentCountry } from '../lib/currentUser';
+import { getCurrentTrade, getCurrentCountry, getAuthedUserId } from '../lib/currentUser';
 import { subscribeIdRemap, type IdRemapEvent } from '../services/idRemapBus';
 // Dependency-free pure module — safe to import from the collector with no cycle.
 import { canonicalMaterialKey } from '../services/materialNormalization';
@@ -962,6 +962,11 @@ async function enqueueLocally(event: QueuedEvent): Promise<void> {
 
 async function flushToCloud(userId: string): Promise<void> {
   if (!isSupabaseConfigured) return;
+  // Only the signed-in owner of these events can write them (RLS + the
+  // authenticated grant). Signed out, or signed in as someone else, every
+  // row would be refused; they stay queued for when their owner is back
+  // (found by the fake backend's grant model, 2026-09-24).
+  if (getAuthedUserId() !== userId) return;
 
   try {
     const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);

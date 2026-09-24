@@ -284,3 +284,14 @@ select cron.schedule(
     select public.reconcile_cron_http_outcomes();
   $$
 );
+
+-- 2026-09-24 — privacy promise: usage analytics are anonymised after 12
+-- months (legal screen). Strips user/session/country/role from older events
+-- and deletes after 25 months. Pure SQL, no network.
+select cron.schedule(
+  'vasco-analytics-aging',
+  '15 2 * * *',
+  $$
+    select public.age_analytics_events();
+  $$
+);

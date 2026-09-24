@@ -36,6 +36,15 @@ for (const f of JSON.parse(fnOut.slice(fnOut.indexOf('{'))).rows) {
   const required = names.slice(0, f.n - (f.d ?? 0));
   (functions[f.name] ??= []).push({ args: names, required });  // overloads
 }
+// What a signed-in user may do per table. PostgREST needs SELECT for any
+// `.select()` AND for an upsert's ON CONFLICT target — a table granted INSERT
+// only rejects `upsert(onConflict)` with 42501 (review 2026-09-24, H1).
+const grSql = `select table_name as t, string_agg(privilege_type, ',') as p
+  from information_schema.role_table_grants
+  where table_schema = 'public' and grantee = 'authenticated' group by table_name`;
+const grOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', grSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const grants = {};
+for (const g of JSON.parse(grOut.slice(grOut.indexOf('{'))).rows) grants[g.t] = g.p.split(',').sort();
 const file = new URL('../src/test-utils/schema.snapshot.json', import.meta.url);
-writeFileSync(file, JSON.stringify({ takenAt: new Date().toISOString().slice(0, 10), tables, functions }, null, 1) + '\n');
-console.log(`schema snapshot: ${Object.keys(tables).length} tables, ${rows.length} columns, ${Object.keys(functions).length} functions`);
+writeFileSync(file, JSON.stringify({ takenAt: new Date().toISOString().slice(0, 10), tables, functions, grants }, null, 1) + '\n');
+console.log(`schema snapshot: ${Object.keys(tables).length} tables, ${rows.length} columns, ${Object.keys(functions).length} functions, grants on ${Object.keys(grants).length} tables`);

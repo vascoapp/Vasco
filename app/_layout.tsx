@@ -37,6 +37,7 @@ import { startAutoSync, stopAutoSync } from '../src/intelligence/cloudSync';
 import { startEventFlushing, stopEventFlushing } from '../src/intelligence/dataCollector';
 import { getPushTokenIfGranted, refreshPushTokenIfStale, syncBadgeWithUnread } from '../src/services/pushNotificationService';
 import { startBackgroundJobScheduler, stopBackgroundJobScheduler } from '../src/intelligence/backgroundJobScheduler';
+import { isDormantRoute } from '../src/config/dormant';
 import { getWeatherForecast } from '../src/services/weatherService';
 import * as Notifications from 'expo-notifications';
 
@@ -404,7 +405,8 @@ function RootLayoutNav() {
       // /sitelead/* from reaching half-finished surfaces post-auth. Forces
       // contractor home regardless of how user arrived.
       isAuthenticated &&
-      (segments[0] === 'worker' || segments[0] === '(tabs)' || segments[0] === 'sitelead')
+      // Dormant surfaces (src/config/dormant.ts) — kept, gated, not deleted.
+      isDormantRoute(segments as string[])
     ) {
       router.replace('/(contractor)');
     }

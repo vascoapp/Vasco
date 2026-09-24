@@ -26,9 +26,6 @@ const SNAP = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/test-utils/schema.s
 
 /** Known, each with its reason. A stale entry fails — this list only shrinks. */
 const KNOWN: Record<string, string> = {
-  'src/services/emailImportService.ts: TABLE user_settings': 'Service has zero callers — P1 deletion candidate.',
-  'src/services/emailImportService.ts: TABLE email_imports': 'Same dead service.',
-  'src/services/eventTrackingService.ts: TABLE analytics_events': '🔴 DECISION: no such table — product analytics have never reached the backend (admin analyticsSnapshot reads it too). Create it or remove tracking.',
   'supabase/functions/train-extra-models/index.ts: material_price_history.user_id': 'Sweep C5 (open): train-extra-models queries columns that do not exist.',
   'supabase/functions/train-extra-models/index.ts: material_price_history.total_price': 'Sweep C5.',
   'supabase/functions/train-extra-models/index.ts: material_price_history.delivery_days': 'Sweep C5.',
@@ -87,7 +84,10 @@ function scan(rel: string, src: string): string[] {
 }
 
 describe('queries name live tables and columns', () => {
-  const files = ['app', 'src', 'supabase/functions'].flatMap((d) => walk(path.join(ROOT, d)));
+  // Dormant code (src/config/dormant.ts — gated, kept, not swept) is skipped.
+  const DORMANT = new Set<string>(JSON.parse(fs.readFileSync(path.join(ROOT, 'src/config/dormant.files.json'), 'utf8')).files);
+  const files = ['app', 'src', 'supabase/functions'].flatMap((d) => walk(path.join(ROOT, d)))
+    .filter((f) => !DORMANT.has(path.relative(ROOT, f)));
   const found = new Set(files.flatMap((f) => scan(path.relative(ROOT, f), stripComments(fs.readFileSync(f, 'utf8')))));
 
   it('no query names a table or column production does not have', () => {

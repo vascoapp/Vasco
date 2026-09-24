@@ -15,6 +15,8 @@
 
 jest.mock('../../lib/currentUser', () => ({
   getCurrentUserId: () => 'user-abc',
+  // Signed in as the same user the events belong to (flushToCloud owner check).
+  getAuthedUserId: () => 'user-abc',
   getCurrentTrade: () => 'painting',
   getCurrentCountry: () => 'DE',
 }));
