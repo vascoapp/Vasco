@@ -15,6 +15,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { selectAllPages } from '../_shared/paging.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -145,16 +146,22 @@ Deno.serve(async (req) => {
 
   try {
     // 1. List every (trade, country) cohort with quotes in the last 12 months.
-    const { data: cohorts, error: cohortsErr } = await admin
-      .from('pricing_intelligence')
-      .select('trade, country')
-      .gte('quoted_at', new Date(Date.now() - 365 * 86400000).toISOString())
-      .not('trade', 'is', null)
-      .not('country', 'is', null);
-
-    if (cohortsErr) {
-      summary.errors.push(`list cohorts: ${cohortsErr.message}`);
-    } else if (cohorts) {
+    // Paged: PostgREST caps every response at 1000 rows, so a cohort whose
+    // quotes all sat past the first 1000 was never retrained (sweep C6).
+    let cohorts: Array<{ trade: string | null; country: string | null }> | null = null;
+    try {
+      const read = await selectAllPages<{ trade: string | null; country: string | null }>(() => admin
+        .from('pricing_intelligence')
+        .select('id, trade, country')
+        .gte('quoted_at', new Date(Date.now() - 365 * 86400000).toISOString())
+        .not('trade', 'is', null)
+        .not('country', 'is', null));
+      if (read.truncated) summary.errors.push('list cohorts: truncated — some cohorts not retrained');
+      cohorts = read.rows;
+    } catch (err) {
+      summary.errors.push(`list cohorts: ${String(err)}`);
+    }
+    if (cohorts) {
       // Dedupe (trade, country) pairs in JS — Supabase JS lacks GROUP BY.
       const seen = new Set<string>();
       const pairs: Array<{ trade: string; country: string }> = [];
@@ -174,14 +181,20 @@ Deno.serve(async (req) => {
           // live event schema). Fall back to the raw RPC if pairs table is
           // empty for this cohort — historical bootstrap path.
           let rows: TrainingRow[] = [];
-          const { data: pairRows } = await admin
+          const { data: pairRows, error: pairErr } = await admin
             .from('model_training_pairs')
             .select('features, target')
             .eq('model_name', 'quote_win')
             .eq('trade', trade)
             .eq('country', country)
             .gte('recorded_at', new Date(Date.now() - 365 * 86400000).toISOString())
-            .limit(5000);
+            // The most RECENT 1000. `.limit(5000)` asked for more but PostgREST
+            // caps at 1000 and, unordered, returned an arbitrary 1000 (sweep C6).
+            .order('recorded_at', { ascending: false })
+            .range(0, 999);
+          // A failed read is not "no pairs": falling through would train from
+          // the raw RPC and report success.
+          if (pairErr) throw new Error(`model_training_pairs: ${pairErr.message}`);
           if (pairRows && pairRows.length >= 20) {
             rows = (pairRows as Array<{ features: any; target: number }>).map((r) => ({
               total_amount: Number(r.features?.total_amount) || 0,
