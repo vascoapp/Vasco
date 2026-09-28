@@ -1,5 +1,7 @@
 // Decision Tracker - Help contractors guide customers through project decisions
 // Reduces delays, improves customer experience, builds repeat business
+import { getCurrentCountry } from '../../lib/currentUser';
+import { sendWhatsApp } from '../../services/whatsappService';
 import { useState, useEffect, useMemo } from 'react';
 import {
   Alert,
@@ -426,10 +428,8 @@ export function DecisionTrackerDetail({
     const message = generateReminderMessage(tracker.customerName, itemNames);
 
     if (channel === 'whatsapp' && tracker.customerPhone) {
-      const url = `whatsapp://send?phone=${tracker.customerPhone.replace(/\s/g, '')}&text=${encodeURIComponent(message)}`;
-      Linking.openURL(url).catch(() => {
-        Alert.alert(t('common.error', 'Error'), t('dt.openWhatsappFailed', 'Could not open WhatsApp'));
-      });
+      // wa.me (works with or without the app) — sendWhatsApp says so if it cannot.
+      void sendWhatsApp(tracker.customerPhone, message, getCurrentCountry() ?? undefined);
     } else if (channel === 'sms' && tracker.customerPhone) {
       const url = `sms:${tracker.customerPhone}?body=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() => {

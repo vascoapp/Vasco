@@ -10,6 +10,7 @@
 // hash-chained log of all invoice lifecycle events with verify + export.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -69,7 +70,7 @@ export default function VatAndAuditScreen() {
         title: t(country === 'DE' ? 'audit.exportTitleGobd' : 'audit.exportTitle', 'Vasco audit trail'),
       });
     } catch (e) {
-      Alert.alert('Export failed', String((e as Error).message ?? e));
+      Alert.alert(t('audit.exportFailed', 'Export failed'), friendlyError(e, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
     }
   };
 
@@ -77,11 +78,14 @@ export default function VatAndAuditScreen() {
     const v = await verifyAuditTrail();
     setVerification(v);
     hapticSuccess();
+    // Plain words, in the contractor's language: this said "2 entries — chain
+    // unbroken." / "Chain broken at index 3 — prevHash chain broken" in
+    // English on every market (emulator walk 2026-09-28).
     Alert.alert(
-      v.valid ? '✓ Audit trail valid' : '✗ Audit trail tampered',
+      v.valid ? t('audit.verifyOkTitle', 'Your records are intact') : t('audit.verifyBrokenTitle', 'A record was changed'),
       v.valid
-        ? `${v.totalEntries} entries — chain unbroken.`
-        : `Chain broken at index ${v.brokenAtIndex} — ${v.brokenReason}`,
+        ? t('audit.verifyOkBody', { defaultValue: 'All {{count}} records are unchanged since they were saved.', count: v.totalEntries })
+        : t('audit.verifyBrokenBody', { defaultValue: 'Record {{n}} was changed after it was saved. Show this to your accountant.', n: (v.brokenAtIndex ?? 0) + 1 }),
     );
   };
 

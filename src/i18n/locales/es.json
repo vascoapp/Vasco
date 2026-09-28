@@ -87,7 +87,8 @@
     "previous": "Anterior",
     "share": "Compartir",
     "options": "Opciones",
-    "automatedFollowUps": "Recordatorios y seguimientos preparados"
+    "automatedFollowUps": "Recordatorios y seguimientos preparados",
+    "didNotWork": "No ha funcionado. Inténtalo de nuevo en un momento."
   },
   "tabs": {
     "today": "Hoy",
@@ -640,7 +641,11 @@
     "renewAction": "Renovar",
     "workBlocked_one": "{{count}} tipo de trabajo bloqueado",
     "workBlocked_other": "{{count}} tipos de trabajo bloqueados",
-    "scoreUnknown": "Aún no hay nada registrado"
+    "scoreUnknown": "Aún no hay nada registrado",
+    "vatNumberLabel": "NIF-IVA",
+    "notEntered": "Aún no indicado",
+    "fromProfile": "De su perfil de empresa",
+    "enterNumber": "Indicar"
   },
   "billing": {
     "upgradeRequired": "Actualización necesaria",
@@ -928,7 +933,8 @@
     "natureMixed": "Operación mixta",
     "natureUnset": "Por indicar",
     "deliveryAddress": "Dirección de entrega (si difiere)",
-    "deliveryAddressPlaceholder": "Dejar vacío si coincide con la de facturación"
+    "deliveryAddressPlaceholder": "Dejar vacío si coincide con la de facturación",
+    "sendFailedUnknown": "inténtalo más tarde"
   },
   "expenses": {
     "title": "Gastos",
@@ -1392,6 +1398,18 @@
       "quoteSentBody": "Presupuesto para {{customer}} enviado. Seguimiento programado en 3 días.",
       "invoiceSentTitle": "Factura enviada",
       "invoiceSentBody": "La factura {{number}} está marcada como enviada. Comparte el PDF con tu cliente."
+    },
+    "action": {
+      "viewInvoices": "Ver facturas",
+      "sendReminder": "Enviar recordatorio",
+      "viewSchedule": "Ver planificación",
+      "viewTeam": "Ver equipo",
+      "review": "Revisar",
+      "viewPermits": "Ver permisos",
+      "viewDeliveries": "Ver entregas",
+      "viewCerts": "Ver certificados",
+      "viewInvoice": "Ver factura",
+      "viewCustomer": "Ver cliente"
     }
   },
   "insurance": {
@@ -1994,7 +2012,11 @@
     "similarPastJobs": "Trabajos anteriores similares",
     "reusePastJob": "Reutilizar el trabajo {{title}}",
     "prefilledFromPhotosBy": "Prerrellenado con fotos de {{name}}: {{count}}",
-    "prefilledFromPhotos": "Prerrellenado con fotos del cliente: {{count}}"
+    "prefilledFromPhotos": "Prerrellenado con fotos del cliente: {{count}}",
+    "pdfSentTitle": "¿Se ha enviado el presupuesto?",
+    "pdfSentBody": "Vasco no puede ver si ha compartido el PDF. Márquelo como enviado cuando su cliente lo tenga.",
+    "pdfSentNo": "Todavía no",
+    "pdfSentYes": "Sí, enviado"
   },
   "queue": {
     "lowWinTitle": "Baja probabilidad · {{customer}}",
@@ -2540,10 +2562,10 @@
     "subtitle": "Sincroniza automáticamente facturas, contactos y pagos con tu contabilidad",
     "configNeededTitle": "Configuración necesaria",
     "configNeededMsg": "Las credenciales de la API de Moneybird aún no están configuradas. Contacta con soporte.",
-    "connect": "Conectar Moneybird",
+    "connect": "Conectar",
     "connecting": "Conectando...",
     "connected": "Conectado a Moneybird",
-    "connectionFailed": "Error de conexión",
+    "connectionFailed": "Moneybird no acepta este código. Cópialo de nuevo e inténtalo otra vez.",
     "connectionFailedTitle": "Error de conexión",
     "connectedSuccess": "¡Conectado!",
     "connectingToMoneybird": "Conectando con Moneybird...",
@@ -2576,8 +2598,17 @@
     "disconnect": "Desconectar",
     "disconnectDesc": "Eliminar conexión con Moneybird",
     "stateMismatch": "Falló la validación de seguridad. Inténtalo de nuevo.",
-    "noAdministration": "No se encontró ninguna administración para este token — comprueba el ID de administración",
-    "connectionUnreachable": "Moneybird no disponible — inténtalo de nuevo"
+    "noAdministration": "Este código no tiene ninguna administración. Crea primero una en Moneybird.",
+    "connectionUnreachable": "Moneybird no disponible — inténtalo de nuevo",
+    "stepsTitle": "Conecta Moneybird en 3 pasos",
+    "step1": "Abre Moneybird e inicia sesión.",
+    "step2": "Crea allí una clave nueva — llámala Vasco — y copia el código.",
+    "step3": "Vuelve, mantén el dedo en la casilla de abajo, toca Pegar — y después Conectar.",
+    "openMoneybird": "Abrir Moneybird",
+    "codeLabel": "Tu código de Moneybird",
+    "codePlaceholder": "Pega aquí tu código",
+    "pickHint": "Tu Moneybird tiene más de una administración. ¿Cuál es la de esta empresa?",
+    "pickTitle": "Elige tu administración"
   },
   "contractor": {
     "customers": {
@@ -2680,8 +2711,8 @@
     "marketEstimate": "Estimación de mercado",
     "compare": "Comparar precios",
     "addToOrder": "Añadir al pedido",
-    "supplierPrices": "Precios de proveedores",
-    "bestPrice": "Mejor precio",
+    "supplierPrices": "Precios orientativos",
+    "bestPrice": "Más bajo",
     "vsLowest": "vs más bajo",
     "save": "Ahorrar",
     "noCompareData": "No hay comparación de precios disponible para este artículo",
@@ -2700,12 +2731,14 @@
     "aiScannedInsight": "{{count}} resultados según tu historial de facturas. Precio medio: {{price}}",
     "aiMarketInsight": "Mostrando precios de mercado de {{country}} de {{suppliers}}. Escanea facturas de proveedores para obtener tus precios reales.",
     "searchError": "No se pudieron buscar materiales. Comprueba tu conexión e inténtalo de nuevo.",
-    "topSuppliers": "Mejores proveedores de tu zona",
+    "topSuppliers": "Grandes mayoristas",
     "orderReview": "Revisión del pedido",
     "sendOrder": "Enviar pedido al proveedor",
     "reviewOrder": "Revisar pedido",
     "poTotal_one": "{{count}} pedido de compra creado",
-    "poTotal_other": "{{count}} pedidos de compra creados"
+    "poTotal_other": "{{count}} pedidos de compra creados",
+    "indicativeNote": "Cifras de mercado, no un presupuesto — pide el precio real a tu proveedor.",
+    "tradeMenu": "Oficio"
   },
   "dt": {
     "active": "Activo",
@@ -2778,13 +2811,23 @@
     "edit": "Editar plantilla",
     "new": "Nueva plantilla",
     "titlePlaceholder": "Nombre de la plantilla",
-    "bodyPlaceholder": "Cuerpo del mensaje. Usa {{customer}}, {{amount}}, {{date}}, {{jobTitle}} como variables.",
+    "bodyPlaceholder": "Tu mensaje. Toca una palabra de abajo para añadirla — se rellena al enviar.",
     "cat_reminder": "Recordatorio",
     "cat_follow-up": "Seguimiento",
     "cat_confirmation": "Confirmación",
     "cat_thank-you": "Agradecimiento",
     "cat_custom": "Personalizada",
-    "category": "Categoría"
+    "category": "Categoría",
+    "token": {
+      "customer": "cliente",
+      "amount": "importe",
+      "date": "fecha",
+      "jobTitle": "trabajo",
+      "invoiceId": "número de factura",
+      "daysOverdue": "días de retraso",
+      "contractorName": "tu nombre"
+    },
+    "categoryMenu": "Categoría"
   },
   "dk": {
     "tabs": {
@@ -3406,7 +3449,12 @@
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Registro de auditoría Vasco",
     "exportTitleGobd": "Vasco GoBD audit trail",
-    "screenTitle": "IVA y auditoría"
+    "screenTitle": "IVA y auditoría",
+    "exportFailed": "Error al exportar",
+    "verifyOkTitle": "Tus registros están intactos",
+    "verifyBrokenTitle": "Se ha modificado un registro",
+    "verifyOkBody": "Los {{count}} registros no han cambiado desde que se guardaron.",
+    "verifyBrokenBody": "El registro {{n}} se modificó después de guardarse. Enséñaselo a tu gestor."
   },
   "savings": {
     "trendSegment": "+{{trend}}% de tendencia",
@@ -3436,7 +3484,7 @@
       "materialsDesc": "Ahorros rápidos: {{suppliers}}",
       "materialsEmpty": "Aún no hay quick wins de proveedores"
     },
-    "scanFirstInvoice": "Escanee su primera factura de proveedor para iniciar la inteligencia de precios.",
+    "addFirstInvoice": "Añada su primera factura de proveedor para iniciar la inteligencia de precios",
     "allGoodDesc": "Vasco escanea continuamente tus gastos y los precios de mercado. Cuando haya algo que ahorrar, lo verás aquí.",
     "banner": {
       "hero": "Vasco te ha ahorrado {{hours}}h y {{money}} este mes",
@@ -4479,17 +4527,25 @@
     "connecting": "Conectando…",
     "connected": "Conectado",
     "connectAndTest": "Conectar y probar",
-    "connectionFailed": "Conexión fallida — comprueba tu clave API",
+    "connectionFailed": "Mollie no acepta este código. Cópialo de nuevo en Mollie e inténtalo otra vez.",
     "paymentMethods": "Métodos de pago",
-    "invalidKeyTitle": "Clave inválida",
-    "invalidKeyDesc": "Las claves API de Mollie empiezan por \"live_\" o \"test_\"",
+    "invalidKeyTitle": "Este código no parece correcto",
+    "invalidKeyDesc": "El código de Mollie empieza por live_ (o test_ para probar). Cópialo de nuevo en Mollie y pégalo aquí.",
     "consentTitle": "Consentimiento necesario",
     "consentDesc": "Vasco procesa datos de pago vía Mollie. Al conectar aceptas compartir datos de facturación con Mollie para el procesamiento de pagos.",
     "consentAccept": "Aceptar y conectar",
     "pciCompliance": "Todos los pagos cumplen PCI DSS vía Mollie",
     "disconnect": "Desconectar",
     "disconnectConfirmTitle": "¿Desconectar Mollie?",
-    "disconnectConfirmDesc": "Tu clave API se eliminará de este dispositivo. Los enlaces de pago existentes seguirán funcionando, pero no podrás crear nuevos hasta que te vuelvas a conectar."
+    "disconnectConfirmDesc": "Tu clave API se eliminará de este dispositivo. Los enlaces de pago existentes seguirán funcionando, pero no podrás crear nuevos hasta que te vuelvas a conectar.",
+    "stepsTitle": "Conecta Mollie en 3 pasos",
+    "step1": "Abre Mollie e inicia sesión. ¿Aún no tienes cuenta? Puedes crearla gratis allí.",
+    "step2": "Copia el código que empieza por live_",
+    "step3": "Vuelve, mantén el dedo en la casilla de abajo, toca Pegar — y después Conectar.",
+    "openMollie": "Abrir Mollie",
+    "codeLabel": "Tu código de Mollie",
+    "codePlaceholder": "Pega aquí tu código",
+    "connect": "Conectar"
   },
   "stripe": {
     "title": "Stripe Payments",
@@ -4500,17 +4556,25 @@
     "connecting": "Conectando…",
     "connected": "Conectado",
     "connectAndTest": "Conectar y probar",
-    "connectionFailed": "Conexión fallida — comprueba tu clave secreta",
+    "connectionFailed": "Stripe no acepta esta clave. Cópiala de nuevo en Stripe e inténtalo otra vez.",
     "paymentMethods": "Métodos de pago",
-    "invalidKeyTitle": "Clave no válida",
-    "invalidKeyDesc": "Las claves secretas de Stripe empiezan con \"sk_live_\" o \"sk_test_\"",
+    "invalidKeyTitle": "Esta clave no parece correcta",
+    "invalidKeyDesc": "La clave secreta de Stripe empieza por sk_live_ (o sk_test_ para probar). Cópiala de nuevo en Stripe y pégala aquí.",
     "consentTitle": "Consentimiento necesario",
     "consentDesc": "Vasco procesa datos de pago vía Stripe. Al conectar aceptas compartir datos de facturación con Stripe para el procesamiento de pagos.",
     "consentAccept": "Aceptar y conectar",
     "pciCompliance": "Todos los pagos cumplen PCI DSS vía Stripe",
     "disconnect": "Desconectar",
     "disconnectConfirmTitle": "¿Desconectar Stripe?",
-    "disconnectConfirmDesc": "Tu clave secreta se eliminará de este dispositivo. Los enlaces de pago existentes seguirán funcionando, pero no podrás crear nuevos hasta que te vuelvas a conectar."
+    "disconnectConfirmDesc": "Tu clave secreta se eliminará de este dispositivo. Los enlaces de pago existentes seguirán funcionando, pero no podrás crear nuevos hasta que te vuelvas a conectar.",
+    "stepsTitle": "Conecta Stripe en 3 pasos",
+    "step1": "Abre Stripe e inicia sesión. ¿Aún no tienes cuenta? Puedes crearla gratis allí.",
+    "step2": "Copia la clave secreta — el código que empieza por sk_live_",
+    "step3": "Vuelve, mantén el dedo en la casilla de abajo, toca Pegar — y después Conectar.",
+    "openStripe": "Abrir Stripe",
+    "codeLabel": "Tu clave de Stripe",
+    "codePlaceholder": "Pega aquí tu clave",
+    "connect": "Conectar"
   },
   "quoteNew": {
     "customerAndJob": "Cliente y trabajo",
@@ -4713,7 +4777,9 @@
     "shareAccountant": "Enviar a la gestoría",
     "accountantSeat": "Dar acceso continuo al asesor",
     "unsupportedTitle": "Declaración de IVA no disponible aquí",
-    "unsupportedBody": "Vasco prepara la BTW-aangifte neerlandesa y la UStVA alemana. Puede seguir exportando sus facturas y gastos desde Finanzas para su asesor."
+    "unsupportedBody": "Vasco prepara la BTW-aangifte neerlandesa y la UStVA alemana. Puede seguir exportando sus facturas y gastos desde Finanzas para su asesor.",
+    "needCountry": "Indica primero tu país — Vasco prepara la declaración para Países Bajos y Alemania.",
+    "setCountry": "Elegir país"
   },
   "automations": {
     "healthNew": "NUEVO",
@@ -4804,7 +4870,9 @@
       "general": "General"
     },
     "indexBasis": "Índice ({{country}}) · base {{baseYear}}=100",
-    "baselineNote": "Cifras generales del sector: aún hay pocos profesionales en tu región para un benchmark propio."
+    "baselineNote": "Cifras generales del sector: aún hay pocos profesionales en tu región para un benchmark propio.",
+    "ownPricesTitle": "Tus propios precios",
+    "ownPricesDesc": "Añade tus facturas de proveedores y compara lo que pagas con el mercado."
   },
   "pdfModal": {
     "labelInvoice": "Factura",
@@ -7226,7 +7294,11 @@
     "failedTitle": "Solicitud no enviada",
     "failedBody": "Tu solicitud no llegó a nuestros servidores. Comprueba tu conexión a internet y vuelve a intentarlo.",
     "doneTitle": "Eliminación solicitada",
-    "doneBody": "Tus datos se borrarán en un plazo de 30 días."
+    "doneBody": "Tus datos se borrarán en un plazo de 30 días.",
+    "exportFailedTitle": "Error en la descarga",
+    "exportIncompleteTitle": "Descarga incompleta",
+    "exportIncomplete": "No se han podido obtener todos tus datos — comprueba la conexión e inténtalo de nuevo antes de eliminar.",
+    "invoicesArchiveFailedTitle": "Archivo no creado"
   },
   "recordsArchive": {
     "readmeTitle": "Facturas — exportadas desde Vasco el {{date}}",

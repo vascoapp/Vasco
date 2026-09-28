@@ -87,7 +87,8 @@
     "previous": "Zurück",
     "share": "Teilen",
     "options": "Optionen",
-    "automatedFollowUps": "Vorbereitete Erinnerungen und Nachfassen"
+    "automatedFollowUps": "Vorbereitete Erinnerungen und Nachfassen",
+    "didNotWork": "Das hat nicht geklappt. Bitte versuchen Sie es gleich noch einmal."
   },
   "tabs": {
     "today": "Heute",
@@ -640,7 +641,11 @@
     "renewAction": "Erneuern",
     "workBlocked_one": "{{count}} Arbeitstyp blockiert",
     "workBlocked_other": "{{count}} Arbeitstypen blockiert",
-    "scoreUnknown": "Noch nichts erfasst"
+    "scoreUnknown": "Noch nichts erfasst",
+    "vatNumberLabel": "USt-IdNr.",
+    "notEntered": "Noch nicht eingetragen",
+    "fromProfile": "Aus Ihrem Unternehmensprofil",
+    "enterNumber": "Eintragen"
   },
   "billing": {
     "upgradeRequired": "Upgrade erforderlich",
@@ -928,7 +933,8 @@
     "natureMixed": "Gemischter Umsatz",
     "natureUnset": "Noch anzugeben",
     "deliveryAddress": "Lieferadresse (falls abweichend)",
-    "deliveryAddressPlaceholder": "Leer lassen, wenn identisch mit der Rechnungsadresse"
+    "deliveryAddressPlaceholder": "Leer lassen, wenn identisch mit der Rechnungsadresse",
+    "sendFailedUnknown": "bitte versuchen Sie es später erneut"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1392,6 +1398,18 @@
       "quoteSentBody": "Angebot für {{customer}} versendet. Nachfassen in 3 Tagen geplant.",
       "invoiceSentTitle": "Rechnung versendet",
       "invoiceSentBody": "Rechnung {{number}} ist als versendet markiert. Teilen Sie das PDF mit Ihrem Kunden."
+    },
+    "action": {
+      "viewInvoices": "Rechnungen ansehen",
+      "sendReminder": "Erinnerung senden",
+      "viewSchedule": "Planung ansehen",
+      "viewTeam": "Team ansehen",
+      "review": "Prüfen",
+      "viewPermits": "Genehmigungen ansehen",
+      "viewDeliveries": "Lieferungen ansehen",
+      "viewCerts": "Zertifikate ansehen",
+      "viewInvoice": "Rechnung ansehen",
+      "viewCustomer": "Kunden ansehen"
     }
   },
   "insurance": {
@@ -1994,7 +2012,11 @@
     "similarPastJobs": "Ähnliche frühere Aufträge",
     "reusePastJob": "Früheren Auftrag {{title}} wiederverwenden",
     "prefilledFromPhotosBy": "Vorausgefüllt aus Fotos von {{name}}: {{count}}",
-    "prefilledFromPhotos": "Vorausgefüllt aus Kundenfotos: {{count}}"
+    "prefilledFromPhotos": "Vorausgefüllt aus Kundenfotos: {{count}}",
+    "pdfSentTitle": "Ist das Angebot raus?",
+    "pdfSentBody": "Vasco kann nicht sehen, ob Sie das PDF geteilt haben. Markieren Sie es als versendet, sobald Ihr Kunde es hat.",
+    "pdfSentNo": "Noch nicht",
+    "pdfSentYes": "Ja, versendet"
   },
   "queue": {
     "lowWinTitle": "Geringe Gewinnchance · {{customer}}",
@@ -2540,10 +2562,10 @@
     "subtitle": "Rechnungen, Kontakte und Zahlungen automatisch mit Ihrer Buchhaltung synchronisieren",
     "configNeededTitle": "Konfiguration erforderlich",
     "configNeededMsg": "Moneybird API-Zugangsdaten sind noch nicht konfiguriert. Bitte kontaktieren Sie den Support.",
-    "connect": "Moneybird verbinden",
+    "connect": "Verbinden",
     "connecting": "Verbinde...",
     "connected": "Mit Moneybird verbunden",
-    "connectionFailed": "Verbindung fehlgeschlagen",
+    "connectionFailed": "Moneybird akzeptiert diesen Code nicht. Kopieren Sie ihn erneut und versuchen Sie es noch einmal.",
     "connectionFailedTitle": "Verbindung fehlgeschlagen",
     "connectedSuccess": "Verbunden!",
     "connectingToMoneybird": "Verbinde mit Moneybird...",
@@ -2576,8 +2598,17 @@
     "disconnect": "Trennen",
     "disconnectDesc": "Moneybird-Verbindung entfernen",
     "stateMismatch": "Sicherheitsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-    "noAdministration": "Keine Verwaltung zu diesem Token gefunden — prüfen Sie die Verwaltungs-ID",
-    "connectionUnreachable": "Moneybird nicht erreichbar — bitte erneut versuchen"
+    "noAdministration": "Zu diesem Code gehört keine Verwaltung. Legen Sie zuerst eine in Moneybird an.",
+    "connectionUnreachable": "Moneybird nicht erreichbar — bitte erneut versuchen",
+    "stepsTitle": "Moneybird in 3 Schritten verbinden",
+    "step1": "Öffnen Sie Moneybird und melden Sie sich an.",
+    "step2": "Legen Sie dort einen neuen Schlüssel an — Name: Vasco — und kopieren Sie den Code.",
+    "step3": "Kommen Sie zurück, halten Sie den Finger in das Feld unten, tippen Sie auf Einfügen — dann auf Verbinden.",
+    "openMoneybird": "Moneybird öffnen",
+    "codeLabel": "Ihr Moneybird-Code",
+    "codePlaceholder": "Code hier einfügen",
+    "pickHint": "Ihr Moneybird hat mehr als eine Verwaltung. Welche gehört zu diesem Betrieb?",
+    "pickTitle": "Verwaltung wählen"
   },
   "contractor": {
     "customers": {
@@ -2680,8 +2711,8 @@
     "marketEstimate": "Marktschätzung",
     "compare": "Preise vergleichen",
     "addToOrder": "Zur Bestellung hinzufügen",
-    "supplierPrices": "Lieferantenpreise",
-    "bestPrice": "Bester Preis",
+    "supplierPrices": "Richtpreise",
+    "bestPrice": "Günstigster",
     "vsLowest": "vs günstigster",
     "save": "Sparen",
     "noCompareData": "Kein Preisvergleich für diesen Artikel verfügbar",
@@ -2700,12 +2731,14 @@
     "aiScannedInsight": "{{count}} Ergebnisse basierend auf Ihrer Rechnungshistorie. Durchschnittspreis: {{price}}",
     "aiMarketInsight": "Zeigt Marktpreise für {{country}} von {{suppliers}}. Scannen Sie Lieferantenrechnungen, um Ihre tatsächlichen Preise zu erhalten.",
     "searchError": "Materialien konnten nicht durchsucht werden. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-    "topSuppliers": "Top-Lieferanten in Ihrer Nähe",
+    "topSuppliers": "Große Großhändler",
     "orderReview": "Bestellprüfung",
     "sendOrder": "Bestellung an Lieferanten senden",
     "reviewOrder": "Bestellung prüfen",
     "poTotal_one": "{{count}} Bestellung erstellt",
-    "poTotal_other": "{{count}} Bestellungen erstellt"
+    "poTotal_other": "{{count}} Bestellungen erstellt",
+    "indicativeNote": "Marktzahlen, kein Angebot — fragen Sie Ihren Lieferanten nach dem echten Preis.",
+    "tradeMenu": "Gewerk"
   },
   "dt": {
     "active": "Aktiv",
@@ -2778,13 +2811,23 @@
     "edit": "Vorlage bearbeiten",
     "new": "Neue Vorlage",
     "titlePlaceholder": "Vorlagenname",
-    "bodyPlaceholder": "Nachrichtentext. Verwenden Sie {{customer}}, {{amount}}, {{date}}, {{jobTitle}} für Variablen.",
+    "bodyPlaceholder": "Ihre Nachricht. Tippen Sie unten auf ein Wort, um es einzufügen — es wird beim Senden ausgefüllt.",
     "cat_reminder": "Erinnerung",
     "cat_follow-up": "Nachfassen",
     "cat_confirmation": "Bestätigung",
     "cat_thank-you": "Dankeschön",
     "cat_custom": "Eigene",
-    "category": "Kategorie"
+    "category": "Kategorie",
+    "token": {
+      "customer": "Kunde",
+      "amount": "Betrag",
+      "date": "Datum",
+      "jobTitle": "Auftrag",
+      "invoiceId": "Rechnungsnummer",
+      "daysOverdue": "Tage überfällig",
+      "contractorName": "Ihr Name"
+    },
+    "categoryMenu": "Kategorie"
   },
   "dk": {
     "tabs": {
@@ -3261,7 +3304,12 @@
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco Audit-Trail",
     "exportTitleGobd": "Vasco GoBD audit trail",
-    "screenTitle": "USt & Audit"
+    "screenTitle": "USt & Audit",
+    "exportFailed": "Export fehlgeschlagen",
+    "verifyOkTitle": "Ihre Aufzeichnungen sind unverändert",
+    "verifyBrokenTitle": "Ein Eintrag wurde geändert",
+    "verifyOkBody": "Alle {{count}} Einträge sind seit dem Speichern unverändert.",
+    "verifyBrokenBody": "Eintrag {{n}} wurde nach dem Speichern geändert. Zeigen Sie dies Ihrem Steuerberater."
   },
   "recurring": {
     "title": "WARTUNG",
@@ -3436,7 +3484,7 @@
       "materialsDesc": "Quick Wins: {{suppliers}}",
       "materialsEmpty": "Noch keine Lieferanten-Quick-Wins"
     },
-    "scanFirstInvoice": "Scannen Sie Ihre erste Lieferantenrechnung, um die Preisintelligenz zu starten.",
+    "addFirstInvoice": "Fügen Sie Ihre erste Lieferantenrechnung hinzu, um die Preisintelligenz zu starten",
     "allGoodDesc": "Vasco scannt kontinuierlich Ihre Ausgaben und Marktpreise. Sobald es etwas zu sparen gibt, sehen Sie es hier.",
     "banner": {
       "hero": "Vasco hat Ihnen diesen Monat {{hours}} Std. und {{money}} gespart",
@@ -4479,17 +4527,25 @@
     "connecting": "Verbindung wird hergestellt…",
     "connected": "Verbunden",
     "connectAndTest": "Verbinden & testen",
-    "connectionFailed": "Verbindung fehlgeschlagen — API-Schlüssel prüfen",
+    "connectionFailed": "Mollie akzeptiert diesen Code nicht. Kopieren Sie ihn erneut in Mollie und versuchen Sie es noch einmal.",
     "paymentMethods": "Zahlungsmethoden",
-    "invalidKeyTitle": "Ungültiger Schlüssel",
-    "invalidKeyDesc": "Mollie API-Keys beginnen mit \"live_\" oder \"test_\"",
+    "invalidKeyTitle": "Dieser Code stimmt nicht",
+    "invalidKeyDesc": "Der Mollie-Code beginnt mit live_ (oder test_ zum Ausprobieren). Kopieren Sie ihn erneut in Mollie und fügen Sie ihn hier ein.",
     "consentTitle": "Zustimmung erforderlich",
     "consentDesc": "Vasco verarbeitet Zahlungsdaten über Mollie. Mit der Verbindung stimmen Sie zu, Rechnungsdaten zur Zahlungsabwicklung an Mollie weiterzugeben.",
     "consentAccept": "Zustimmen & verbinden",
     "pciCompliance": "Alle Zahlungen sind PCI-DSS-konform über Mollie",
     "disconnect": "Trennen",
     "disconnectConfirmTitle": "Mollie trennen?",
-    "disconnectConfirmDesc": "Ihr API-Schlüssel wird von diesem Gerät entfernt. Bestehende Zahlungslinks funktionieren weiter, aber Sie können keine neuen erstellen, bis Sie sich erneut verbinden."
+    "disconnectConfirmDesc": "Ihr API-Schlüssel wird von diesem Gerät entfernt. Bestehende Zahlungslinks funktionieren weiter, aber Sie können keine neuen erstellen, bis Sie sich erneut verbinden.",
+    "stepsTitle": "Mollie in 3 Schritten verbinden",
+    "step1": "Öffnen Sie Mollie und melden Sie sich an. Noch kein Konto? Das legen Sie dort kostenlos an.",
+    "step2": "Kopieren Sie den Code, der mit live_ beginnt",
+    "step3": "Kommen Sie zurück, halten Sie den Finger in das Feld unten, tippen Sie auf Einfügen — dann auf Verbinden.",
+    "openMollie": "Mollie öffnen",
+    "codeLabel": "Ihr Mollie-Code",
+    "codePlaceholder": "Code hier einfügen",
+    "connect": "Verbinden"
   },
   "stripe": {
     "title": "Stripe Payments",
@@ -4500,17 +4556,25 @@
     "connecting": "Verbinden…",
     "connected": "Verbunden",
     "connectAndTest": "Verbinden & testen",
-    "connectionFailed": "Verbindung fehlgeschlagen — prüfen Sie Ihren Secret Key",
+    "connectionFailed": "Stripe akzeptiert diesen Schlüssel nicht. Kopieren Sie ihn erneut in Stripe und versuchen Sie es noch einmal.",
     "paymentMethods": "Zahlungsmethoden",
-    "invalidKeyTitle": "Ungültiger Schlüssel",
-    "invalidKeyDesc": "Stripe Secret Keys beginnen mit \"sk_live_\" oder \"sk_test_\"",
+    "invalidKeyTitle": "Dieser Schlüssel stimmt nicht",
+    "invalidKeyDesc": "Der geheime Stripe-Schlüssel beginnt mit sk_live_ (oder sk_test_ zum Ausprobieren). Kopieren Sie ihn erneut in Stripe und fügen Sie ihn hier ein.",
     "consentTitle": "Zustimmung erforderlich",
     "consentDesc": "Vasco verarbeitet Zahlungsdaten über Stripe. Mit der Verbindung stimmen Sie zu, Rechnungsdaten zur Zahlungsabwicklung an Stripe weiterzugeben.",
     "consentAccept": "Zustimmen & verbinden",
     "pciCompliance": "Alle Zahlungen sind PCI-DSS-konform über Stripe",
     "disconnect": "Trennen",
     "disconnectConfirmTitle": "Stripe trennen?",
-    "disconnectConfirmDesc": "Ihr Secret Key wird von diesem Gerät entfernt. Bestehende Zahlungslinks funktionieren weiter, aber Sie können keine neuen erstellen, bis Sie sich erneut verbinden."
+    "disconnectConfirmDesc": "Ihr Secret Key wird von diesem Gerät entfernt. Bestehende Zahlungslinks funktionieren weiter, aber Sie können keine neuen erstellen, bis Sie sich erneut verbinden.",
+    "stepsTitle": "Stripe in 3 Schritten verbinden",
+    "step1": "Öffnen Sie Stripe und melden Sie sich an. Noch kein Konto? Das legen Sie dort kostenlos an.",
+    "step2": "Kopieren Sie den geheimen Schlüssel — den Code, der mit sk_live_ beginnt",
+    "step3": "Kommen Sie zurück, halten Sie den Finger in das Feld unten, tippen Sie auf Einfügen — dann auf Verbinden.",
+    "openStripe": "Stripe öffnen",
+    "codeLabel": "Ihr Stripe-Schlüssel",
+    "codePlaceholder": "Schlüssel hier einfügen",
+    "connect": "Verbinden"
   },
   "quoteNew": {
     "customerAndJob": "Kunde & Auftrag",
@@ -4713,7 +4777,9 @@
     "shareAccountant": "An Steuerberater senden",
     "accountantSeat": "Steuerberater dauerhaften Zugang geben",
     "unsupportedTitle": "USt-Voranmeldung hier nicht verfügbar",
-    "unsupportedBody": "Vasco bereitet die niederländische BTW-aangifte und die deutsche USt-Voranmeldung vor. Ihre Rechnungen und Ausgaben exportieren Sie weiterhin unter Finanzen für Ihre Steuerberatung."
+    "unsupportedBody": "Vasco bereitet die niederländische BTW-aangifte und die deutsche USt-Voranmeldung vor. Ihre Rechnungen und Ausgaben exportieren Sie weiterhin unter Finanzen für Ihre Steuerberatung.",
+    "needCountry": "Stellen Sie zuerst Ihr Land ein — Vasco bereitet die Anmeldung für die Niederlande und Deutschland vor.",
+    "setCountry": "Land einstellen"
   },
   "automations": {
     "healthNew": "NEU",
@@ -4804,7 +4870,9 @@
       "general": "Allgemein"
     },
     "indexBasis": "Index ({{country}}) · Basis {{baseYear}}=100",
-    "baselineNote": "Allgemeine Branchenwerte — noch zu wenige Handwerker in Ihrer Region für einen eigenen Benchmark."
+    "baselineNote": "Allgemeine Branchenwerte — noch zu wenige Handwerker in Ihrer Region für einen eigenen Benchmark.",
+    "ownPricesTitle": "Ihre eigenen Preise",
+    "ownPricesDesc": "Fügen Sie Ihre Lieferantenrechnungen hinzu und sehen Sie, was Sie im Vergleich zum Markt zahlen."
   },
   "pdfModal": {
     "labelInvoice": "Rechnung",
@@ -7226,7 +7294,11 @@
     "failedTitle": "Anfrage nicht gesendet",
     "failedBody": "Ihre Anfrage hat unsere Server nicht erreicht. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
     "doneTitle": "Löschung beantragt",
-    "doneBody": "Ihre Daten werden innerhalb von 30 Tagen gelöscht."
+    "doneBody": "Ihre Daten werden innerhalb von 30 Tagen gelöscht.",
+    "exportFailedTitle": "Download fehlgeschlagen",
+    "exportIncompleteTitle": "Download unvollständig",
+    "exportIncomplete": "Nicht alle Ihre Daten konnten abgerufen werden — prüfen Sie Ihre Verbindung und versuchen Sie es erneut, bevor Sie löschen.",
+    "invoicesArchiveFailedTitle": "Archiv nicht erstellt"
   },
   "recordsArchive": {
     "readmeTitle": "Rechnungen — aus Vasco exportiert am {{date}}",

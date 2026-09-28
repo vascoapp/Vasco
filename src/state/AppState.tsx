@@ -3459,16 +3459,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // bills what the job recorded: hours logged against it and materials
         // fitted. See `jobBillingBasis`.
         const jobVatRate = getEffectiveVatRate(businessProfile);
-        let hourlyChargeRate = (businessProfile as { hourlyRate?: number } | undefined)?.hourlyRate;
-        try {
-          const { loadPricebook } = await import('../services/pricebookService');
-          const hourly = (await loadPricebook())
-            .filter(e => e.pricingType === 'hourly' && (e.basePrice ?? 0) > 0)
-            .sort((a, b) => (b.usageCount ?? 0) - (a.usageCount ?? 0))[0];
-          if (hourly) hourlyChargeRate = hourly.basePrice;
-        } catch {
-          // Price list unreadable — fall through to the profile rate.
-        }
+        const hourlyChargeRate = await (await import('../services/hourlyRate')).resolveHourlyChargeRate(businessProfile);
         const billing = jobBillingBasis({
           job,
           quoteLines: job.quoteId ? (lineItems[job.quoteId] ?? []) : [],

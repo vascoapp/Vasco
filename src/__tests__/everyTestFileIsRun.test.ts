@@ -65,9 +65,13 @@ describe('no test file is orphaned', () => {
       .filter((a) => a && !a.startsWith('-') && a !== 'deno' && a !== 'test')
       .map((a) => a.replace(/\/$/, ''));
 
+    const adminPkg = JSON.parse(read('admin/package.json') || '{}');
+    const adminScripts = Object.values<string>(adminPkg.scripts ?? {}).join(' ');
     const orphans = files.filter((f) => {
       if (f.includes('__tests__')) return false;        // jest.config.js
       if (f.includes('__screenwalk__')) return false;   // jest.screens.config.js
+      // admin/ runs its own node --test scripts (admin/package.json, CI admin job).
+      if (f.startsWith('admin/') && adminScripts.includes(f.slice('admin/'.length))) return false;
       return !edgeRoots.some((r) => r && f.startsWith(r));
     });
 

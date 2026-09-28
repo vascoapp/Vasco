@@ -2,6 +2,7 @@
 // SHARE QUOTE BUTTON — mints a signed portal URL and opens the Share sheet
 // =============================================================================
 
+import { friendlyError } from '../../utils/friendlyError';
 import { useState } from 'react';
 import { Pressable, Text, StyleSheet, Share, Alert, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -26,7 +27,7 @@ export function ShareQuoteButton({ quoteId, customerName, label }: Props) {
     try {
       const result = await signQuoteLink(quoteId);
       if (!result.ok || !result.url) {
-        Alert.alert(t('shareQuote.failTitle'), result.error ?? t('shareQuote.failBody'));
+        Alert.alert(t('shareQuote.failTitle'), friendlyError(result.error, t('shareQuote.failBody')));
         return;
       }
       const greeting = customerName ? t('shareQuote.greeting', { name: customerName }) : '';

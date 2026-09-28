@@ -407,6 +407,10 @@ export interface QuietHoursConfig {
 }
 
 export interface PushNotificationAction {
+  /** i18n key under `notifications.action.*`, resolved where it is SHOWN —
+   *  the English `label` below rendered as-is ("Send reminder" on a Dutch
+   *  screen, emulator walk 2026-09-28). `label` is only the fallback. */
+  key: string;
   label: string;
   route: string;
   icon: string; // Ionicons name
@@ -428,56 +432,56 @@ const TYPE_ROUTES: Record<NotificationType, { groupRoute: string; actions: PushN
   overdue_invoice: {
     groupRoute: '/(contractor)/geld',
     actions: [
-      { label: 'View invoices', route: '/(contractor)/geld', icon: 'document-text' },
-      { label: 'Send reminder', route: '/contractor/payments', icon: 'send' },
+      { key: 'viewInvoices', label: 'View invoices', route: '/(contractor)/geld', icon: 'document-text' },
+      { key: 'sendReminder', label: 'Send reminder', route: '/contractor/payments', icon: 'send' },
     ],
   },
   schedule_change: {
     groupRoute: '/(contractor)/werk',
     actions: [
-      { label: 'View schedule', route: '/(contractor)/werk', icon: 'calendar' },
+      { key: 'viewSchedule', label: 'View schedule', route: '/(contractor)/werk', icon: 'calendar' },
     ],
   },
   team_assignment: {
-    groupRoute: '/(contractor)/klanten',
+    groupRoute: '/(contractor)/bedrijf',
     actions: [
-      { label: 'View team', route: '/(contractor)/klanten', icon: 'people' },
+      { key: 'viewTeam', label: 'View team', route: '/(contractor)/bedrijf', icon: 'people' },
     ],
   },
   approval_request: {
-    groupRoute: '/(contractor)/vasco',
+    groupRoute: '/(contractor)/ai',
     actions: [
-      { label: 'Review', route: '/(contractor)/vasco', icon: 'shield-checkmark' },
+      { key: 'review', label: 'Review', route: '/(contractor)/ai', icon: 'shield-checkmark' },
     ],
   },
   permit_update: {
     groupRoute: '/contractor/permits',
     actions: [
-      { label: 'View permits', route: '/contractor/permits', icon: 'document-text' },
+      { key: 'viewPermits', label: 'View permits', route: '/contractor/permits', icon: 'document-text' },
     ],
   },
   delivery_update: {
     groupRoute: '/(contractor)/werk',
     actions: [
-      { label: 'View deliveries', route: '/(contractor)/werk', icon: 'cube' },
+      { key: 'viewDeliveries', label: 'View deliveries', route: '/(contractor)/werk', icon: 'cube' },
     ],
   },
   credential_expiry: {
     groupRoute: '/(contractor)/certificaten',
     actions: [
-      { label: 'View certs', route: '/(contractor)/certificaten', icon: 'ribbon' },
+      { key: 'viewCerts', label: 'View certs', route: '/(contractor)/certificaten', icon: 'ribbon' },
     ],
   },
   invoice_paid: {
     groupRoute: '/(contractor)/geld',
     actions: [
-      { label: 'View invoice', route: '/(contractor)/geld', icon: 'cash' },
+      { key: 'viewInvoice', label: 'View invoice', route: '/(contractor)/geld', icon: 'cash' },
     ],
   },
   customer_interaction: {
-    groupRoute: '/(contractor)/klanten',
+    groupRoute: '/(contractor)/bedrijf',
     actions: [
-      { label: 'View customer', route: '/(contractor)/klanten', icon: 'people' },
+      { key: 'viewCustomer', label: 'View customer', route: '/(contractor)/bedrijf', icon: 'people' },
     ],
   },
   general: {

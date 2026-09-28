@@ -26,10 +26,6 @@ const SNAP = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/test-utils/schema.s
 
 /** Known, each with its reason. A stale entry fails — this list only shrinks. */
 const KNOWN: Record<string, string> = {
-  'supabase/functions/train-extra-models/index.ts: material_price_history.user_id': 'Sweep C5 (open): train-extra-models queries columns that do not exist.',
-  'supabase/functions/train-extra-models/index.ts: material_price_history.total_price': 'Sweep C5.',
-  'supabase/functions/train-extra-models/index.ts: material_price_history.delivery_days': 'Sweep C5.',
-  'supabase/functions/train-extra-models/index.ts: material_price_history.unit_price': 'Sweep C5.',
 };
 
 function walk(dir: string, out: string[] = []): string[] {

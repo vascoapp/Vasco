@@ -5,6 +5,9 @@
 // Generates access codes and shareable links
 // =============================================================================
 
+import { getCurrentCountry } from '../../lib/currentUser';
+import { sendWhatsApp } from '../../services/whatsappService';
+import { friendlyError } from '../../utils/friendlyError';
 import { useState, useCallback } from 'react';
 import {
   ActivityIndicator,
@@ -77,7 +80,7 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
     } catch (e) {
       Alert.alert(
         t('common.error', 'Error'),
-        e instanceof Error ? e.message : t('share.depositFailed', 'Could not create the payment link.'),
+        friendlyError(e, t('share.depositFailed', 'Could not create the payment link.')),
       );
     } finally {
       setCreatingLink(false);
@@ -134,14 +137,8 @@ export function ShareDecisionTracker({ tracker, onClose }: ShareDecisionTrackerP
   }, [shareUrl, t]);
 
   const handleShareWhatsApp = () => {
-    const phone = tracker.customerPhone?.replace(/\s/g, '') || '';
-    const url = phone
-      ? `whatsapp://send?phone=${phone}&text=${encodeURIComponent(shareMessage)}`
-      : `whatsapp://send?text=${encodeURIComponent(shareMessage)}`;
-
-    Linking.openURL(url).catch(() => {
-      Alert.alert(t('common.error', 'Error'), t('share.couldNotOpenWhatsApp', 'Could not open WhatsApp'));
-    });
+    // wa.me (works with or without the app); no number → the contractor picks.
+    void sendWhatsApp(tracker.customerPhone, shareMessage, getCurrentCountry() ?? undefined);
   };
 
   const handleShareSMS = () => {

@@ -104,7 +104,9 @@ describe('the connect screen is wired to the integration', () => {
   });
 
   it('only reports success when the call succeeded', () => {
-    const handler = src.slice(src.indexOf('const handleTest'), src.indexOf('const handleDisconnect'));
+    // Success is reported in connectTo (handleTest lists administrations first,
+    // then connects the one there is — or the one picked by name).
+    const handler = src.slice(src.indexOf('const connectTo'), src.indexOf('const handleTest'));
     const success = handler.indexOf("setTestResult('success')");
     expect(success).toBeGreaterThan(-1);
     // Everything before the success line must include the guard that returns.

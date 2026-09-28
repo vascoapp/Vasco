@@ -17,11 +17,11 @@ import {
   Modal,
   Linking,
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
-import { PAGE_BG, TYPE, GRID, RADIUS } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE, GRID, RADIUS, TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
@@ -40,9 +40,11 @@ import {
   InsurancePolicy,
 } from '../../src/services/complianceService';
 import { useAuditFindings } from '../../src/services/auditorService';
-import { useKvKRegistration, useBtwRegistration } from '../../src/services/dutchComplianceService';
+import { useKvKRegistration } from '../../src/services/dutchComplianceService';
 import { governmentPortalsFor } from '../../src/config/governmentPortals';
 import { useTranslation } from 'react-i18next';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -152,16 +154,16 @@ function ComplianceScoreRing({ score, size = 100 }: { score: number | null; size
   };
 
   return (
-    <View style={[styles.scoreRing, { width: size, height: size }]}>
-      <View style={[styles.scoreRingInner, { borderColor: getScoreColor() }]}>
-        <Text style={[styles.scoreValue, { color: getScoreColor() }]}>{score === null ? '—' : score}</Text>
-        <Text
-          style={styles.scoreLabel}
-          numberOfLines={3}
-          adjustsFontSizeToFit
-          minimumFontScale={0.8}
-        >{getScoreLabel()}</Text>
+    // The label sits UNDER the ring: inside a 90pt circle Android broke
+    // "Nog niets bijgehouden" mid-word ("Nog niets b / ijgehouden") — emulator
+    // walk 2026-09-28. adjustsFontSizeToFit does not stop a word-break there.
+    <View style={{ alignItems: 'center', width: size + 24 }}>
+      <View style={[styles.scoreRing, { width: size, height: size }]}>
+        <View style={[styles.scoreRingInner, { borderColor: getScoreColor() }]}>
+          <Text style={[styles.scoreValue, { color: getScoreColor() }]}>{score === null ? '—' : score}</Text>
+        </View>
       </View>
+      <Text style={[styles.scoreLabel, { marginTop: 6 }]} numberOfLines={2}>{getScoreLabel()}</Text>
     </View>
   );
 }
@@ -282,7 +284,8 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
           </Text>
         </View>
 
-        {(item.status === 'expired' || item.status === 'expiring_soon' || item.status === 'cancelled') && (
+        {/* Hidden until built — it only said "Coming soon" (DORMANT_CONTROLS). */}
+        {DORMANT_CONTROLS.complianceItemEditing && (item.status === 'expired' || item.status === 'expiring_soon' || item.status === 'cancelled') && (
           <Pressable style={styles.renewButton} onPress={() => Alert.alert(t('compliance.renew', 'Renew'), t('common.comingSoon', 'Coming soon'))} accessibilityRole="button" accessibilityLabel={`${t('compliance.renew', 'Renew')} ${item.name}`}>
             <Ionicons name="refresh" size={14} color={Palette.hermesOrange} />
             <Text style={styles.renewButtonText}>{t('compliance.renew', 'Vernieuw')}</Text>
@@ -351,6 +354,8 @@ export default function CertificatenScreen() {
   // Profile first (#218): this chooses which government portals are linked,
   // and an account with no country sent a German contractor to KVK, RDW and
   // the Belastingdienst.
+  const countryKnown = businessProfile?.country ?? user?.country;
+  // Unknown country: no NL Registraties block (it used to default to NL).
   const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   const portals = governmentPortalsFor(country);
   const { t } = useTranslation();
@@ -367,8 +372,9 @@ export default function CertificatenScreen() {
   const stats = useComplianceStats();
   const calendar = useExpiryCalendar(6);
   const { findings: auditFindings } = useAuditFindings('contractor');
-  const { kvk, verify: verifyKvK } = useKvKRegistration();
-  const { btw } = useBtwRegistration();
+  // KvK/BTW numbers come from the business profile now; only the (gated)
+  // verify action still needs the service.
+  const { verify: verifyKvK } = useKvKRegistration();
   const [kvkVerifying, setKvkVerifying] = useState(false);
 
   // Combine items for unified view
@@ -472,19 +478,15 @@ export default function CertificatenScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: t('compliance.title', 'Certificaten & Compliance'),
-          headerStyle: { backgroundColor: SemanticColors.surfacePrimary },
-          headerTintColor: SemanticColors.textPrimary,
-          headerShadowVisible: false,
-        }}
-      />
+      {/* A drill-down: back + title. The tab navigator's own header had no
+          back control, so the only way out was the tab bar. */}
+      <DKScreenHeader title={t('compliance.title', 'Certificaten & Compliance')} />
 
       {/* Tabs */}
       <View style={styles.tabBar}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
+        {/* Wraps, never scrolls sideways: the scroller clipped "Verzekeringen"
+            and hid "Vergunningen" past the edge (CLAUDE.md chip-strip rule). */}
+        <View style={styles.tabScroll}>
           <TabButton
             id="overview"
             label={t('compliance.tabOverview', 'Overzicht')}
@@ -513,7 +515,7 @@ export default function CertificatenScreen() {
             isActive={activeTab === 'licenses'}
             onPress={() => setActiveTab('licenses')}
           />
-        </ScrollView>
+        </View>
       </View>
 
       <ScrollView
@@ -578,62 +580,66 @@ export default function CertificatenScreen() {
                 them, and unlike the portals there is no ready sibling to point
                 at. Gated rather than faked: a verification badge that verifies
                 nothing is worse than no badge. */}
-            {country === 'NL' && (
+            {countryKnown === 'NL' && (
             <View style={styles.verificationSection}>
               <Text style={styles.sectionTitle}>{t('compliance.registrations', 'Registraties')}</Text>
-              {/* KvK Row */}
-              <View style={styles.verificationRow}>
-                <View style={[styles.verificationIcon, { backgroundColor: kvk.verificationStatus === 'verified' ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackWarningBg }]}>
-                  <Ionicons name="business" size={18} color={kvk.verificationStatus === 'verified' ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning} />
+              {/* KvK + BTW come from the BUSINESS PROFILE (#218) — what the
+                  contractor entered. This read dutchComplianceService's own
+                  record, which nothing fills: a contractor with both numbers
+                  in their profile saw "KvK —" and "BTW Inactief". There is no
+                  KvK/VIES lookup, so nothing here claims "verified"; the
+                  Controleer button is gated (DORMANT_CONTROLS.kvkVerification). */}
+              {([
+                { key: 'kvk', label: 'KvK', icon: 'business' as IconName, value: businessProfile?.kvkNumber?.trim() },
+                { key: 'btw', label: t('compliance.vatNumberLabel', 'BTW-nummer'), icon: 'receipt' as IconName, value: businessProfile?.vatNumber?.trim() },
+              ]).map((row) => (
+                <View key={row.key} style={styles.verificationRow}>
+                  <View style={[styles.verificationIcon, { backgroundColor: row.value ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackWarningBg }]}>
+                    <Ionicons name={row.icon} size={18} color={row.value ? SemanticColors.feedbackSuccess : SemanticColors.feedbackWarning} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.verificationLabel}>{row.label}</Text>
+                    <Text style={styles.verificationValue}>{row.value || t('compliance.notEntered', 'Nog niet ingevuld')}</Text>
+                    {row.value ? (
+                      <Text style={styles.verificationMeta}>{t('compliance.fromProfile', 'Uit je bedrijfsprofiel')}</Text>
+                    ) : null}
+                  </View>
+                  {!row.value && (
+                    <Pressable
+                      style={styles.verifyButton}
+                      onPress={() => router.push('/(modals)/business-settings' as any)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${t('compliance.enterNumber', 'Invullen')} ${row.label}`}
+                    >
+                      <Ionicons name="create-outline" size={14} color={Palette.hermesOrange} />
+                      <Text style={styles.verifyButtonText}>{t('compliance.enterNumber', 'Invullen')}</Text>
+                    </Pressable>
+                  )}
+                  {DORMANT_CONTROLS.kvkVerification && row.key === 'kvk' && row.value && (
+                    <Pressable
+                      style={[styles.verifyButton, kvkVerifying && { opacity: 0.5 }]}
+                      disabled={kvkVerifying}
+                      onPress={async () => {
+                        setKvkVerifying(true);
+                        try { await verifyKvK(); } finally { setKvkVerifying(false); }
+                      }}
+                    >
+                      <Ionicons name="shield-checkmark" size={14} color={Palette.hermesOrange} />
+                      <Text style={styles.verifyButtonText}>{kvkVerifying ? t('compliance.checking', 'Bezig...') : t('compliance.checkKvK', 'Controleer')}</Text>
+                    </Pressable>
+                  )}
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.verificationLabel}>KvK</Text>
-                  <Text style={styles.verificationValue}>{kvk.kvkNumber} — {kvk.businessName}</Text>
-                  <Text style={styles.verificationMeta}>
-                    {kvk.verificationStatus === 'verified'
-                      ? t('compliance.verified', 'Geverifieerd')
-                      : t('compliance.unverified', 'Niet geverifieerd')}
-                    {kvk.lastVerified ? ` · ${formatDayMonthAuto(new Date(kvk.lastVerified))}` : ''}
-                  </Text>
-                </View>
-                <Pressable
-                  style={[styles.verifyButton, kvkVerifying && { opacity: 0.5 }]}
-                  disabled={kvkVerifying}
-                  onPress={async () => {
-                    setKvkVerifying(true);
-                    try { await verifyKvK(); } finally { setKvkVerifying(false); }
-                  }}
-                >
-                  <Ionicons name="shield-checkmark" size={14} color={Palette.hermesOrange} />
-                  <Text style={styles.verifyButtonText}>{kvkVerifying ? t('compliance.checking', 'Bezig...') : t('compliance.checkKvK', 'Controleer')}</Text>
-                </Pressable>
-              </View>
-              {/* BTW Row */}
-              <View style={styles.verificationRow}>
-                <View style={[styles.verificationIcon, { backgroundColor: btw.isActive ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
-                  <Ionicons name="receipt" size={18} color={btw.isActive ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.verificationLabel}>BTW</Text>
-                  <Text style={styles.verificationValue}>{btw.btwNumber}</Text>
-                  <Text style={styles.verificationMeta}>
-                    {btw.isActive ? t('compliance.active', 'Actief') : t('compliance.inactive', 'Inactief')}
-                    {btw.viesVerified ? ` · VIES ${t('compliance.verified', 'Geverifieerd')}` : ''}
-                    {btw.nextFilingDeadline ? ` · ${t('compliance.nextFiling', 'Aangifte')}: ${formatDayMonthAuto(new Date(btw.nextFilingDeadline))}` : ''}
-                  </Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: btw.isActive ? SemanticColors.feedbackSuccessBg : SemanticColors.feedbackErrorBg }]}>
-                  <Ionicons name={btw.isActive ? 'checkmark' : 'close'} size={16} color={btw.isActive ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError} />
-                </View>
-              </View>
+              ))}
             </View>
             )}
 
-            {/* Quick Add Button */}
+            {/* Quick Add — hidden until built (it only said "Coming soon"). */}
+            {DORMANT_CONTROLS.complianceItemEditing && (
             <Pressable style={styles.addButton} onPress={() => Alert.alert(t('compliance.addCertificate', 'Add certificate'), t('common.comingSoon', 'Coming soon'))}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
               <Text style={styles.addButtonText} numberOfLines={1}>{t('compliance.addCertificate', 'Certificaat toevoegen')}</Text>
             </Pressable>
+            )}
           </>
         )}
 
@@ -688,13 +694,16 @@ export default function CertificatenScreen() {
               <View style={styles.emptyState}>
                 <Ionicons name="document-outline" size={48} color={SemanticColors.textTertiary} />
                 <Text style={styles.emptyStateText}>{t('compliance.noItemsFound', 'Geen items gevonden')}</Text>
+                {DORMANT_CONTROLS.complianceItemEditing && (
                 <Pressable style={styles.emptyStateButton} onPress={() => Alert.alert(t('compliance.add', 'Add'), t('common.comingSoon', 'Coming soon'))}>
                   <Text style={styles.emptyStateButtonText} numberOfLines={1}>{t('compliance.add', 'Voeg toe')}</Text>
                 </Pressable>
+                )}
               </View>
             )}
 
-            {/* Add Button */}
+            {/* Add Button — hidden until built (it only said "Coming soon"). */}
+            {DORMANT_CONTROLS.complianceItemEditing && (
             <Pressable style={styles.addButton} onPress={() => Alert.alert(
               activeTab === 'certificates' ? t('compliance.addCertificate', 'Add certificate')
                 : activeTab === 'insurance' ? t('compliance.addInsurance', 'Add insurance')
@@ -708,6 +717,7 @@ export default function CertificatenScreen() {
                 {activeTab === 'licenses' && t('compliance.addLicense', 'Vergunning toevoegen')}
               </Text>
             </Pressable>
+            )}
           </>
         )}
 
@@ -814,11 +824,13 @@ export default function CertificatenScreen() {
                     <Text style={styles.modalButtonText}>{t('compliance.viewDocument', 'Document bekijken')}</Text>
                   </Pressable>
                 )}
+                {DORMANT_CONTROLS.complianceItemEditing && (
                 <Pressable style={styles.modalButton} onPress={() => Alert.alert(t('compliance.share', 'Share'), t('common.comingSoon', 'Coming soon'))}>
                   <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
                   <Text style={styles.modalButtonText}>{t('compliance.share', 'Delen')}</Text>
                 </Pressable>
-                {(selectedItem.status === 'expired' || selectedItem.status === 'expiring_soon' || selectedItem.status === 'cancelled') && (
+                )}
+                {DORMANT_CONTROLS.complianceItemEditing && (selectedItem.status === 'expired' || selectedItem.status === 'expiring_soon' || selectedItem.status === 'cancelled') && (
                   <Pressable style={[styles.modalButton, styles.modalButtonPrimary]} onPress={() => Alert.alert(t('compliance.renewAction', 'Renew'), t('common.comingSoon', 'Coming soon'))}>
                     <Ionicons name="refresh" size={20} color="#fff" />
                     <Text style={[styles.modalButtonText, { color: '#fff' }]}>{t('compliance.renewAction', 'Vernieuwen')}</Text>
@@ -848,6 +860,8 @@ const styles = StyleSheet.create({
     borderBottomColor: SemanticColors.borderDefault,
   },
   tabScroll: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingHorizontal: GRID.md,
     paddingVertical: GRID.sm,
     gap: GRID.sm,
@@ -877,7 +891,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SafeArea.content,
-    paddingVertical: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: TAB_BAR_CLEARANCE,
     gap: Spacing.md,
   },
 

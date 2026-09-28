@@ -42,7 +42,6 @@ const SKIP = ['node_modules', '__tests__', '__screenwalk__'];
 const FILTERS_AND_TABS: Record<string, string> = {
   'app/contractor/projects.tsx :: setStatusFilter': 'Alle / Lopend / Afgerond — a filter, and the rule names this exact case as correct.',
   'app/contractor/quote-templates.tsx :: setSelectedCategory': 'Filters the template LIST. The template\'s own category is a form field and is a DKMenu.',
-  'app/contractor/message-templates.tsx :: setSelectedCategory': 'Same: the list filter. The editor\'s category picker below it is a DKMenu.',
   'app/contractor/expenses.tsx :: setSelectedCategory': 'Filters the expense list. The expense FORM\'s category is a DKMenu (fixed 2026-08-24).',
   // reports.tsx :: setSelectedMonth was classified here as "a month scrubber". Reversed
   // 2026-09-14 on device evidence: the strip showed Jan–Jul and hid the SELECTED

@@ -21,6 +21,7 @@ export const DORMANT_ROUTES: Record<string, string> = {
   hub: 'Portfolio hub (materials, suppliers, …) — contractor + aannemer only for now.',
   'contractor/closeout': 'Superseded by the job completion flow.',
   'contractor/ai-assistant': 'Nothing links to it.',
+  'contractor/ai-chat': 'Kantoorhulp chat agent — suppressed by the user 2026-09-28 (emulator walk); its chip was already off (office_bot flag, 2026-07-20), this also stops deep links.',
   'contractor/handover': 'HandoverPackBuilder mints invented URLs — needs real pages first.',
   '(modals)/ingestion': 'Only linked from (tabs)/tools.',
   '(modals)/insights': 'Only linked from dormant screens.',
@@ -33,3 +34,21 @@ export function isDormantRoute(segments: readonly string[]): boolean {
   const path = segments.join('/');
   return Object.keys(DORMANT_ROUTES).some((p) => path === p || path.startsWith(`${p}/`));
 }
+
+/**
+ * Controls that exist in code but have nothing behind them yet — HIDDEN, not
+ * deleted (user's decision 2026-09-28, emulator walk: "hide until built").
+ * A control shown to a contractor must do what it says; a "Coming soon"
+ * alert or a verify button with no API is a dead end. Flip one to `true` in
+ * the change that builds what it needs.
+ */
+export const DORMANT_CONTROLS = {
+  /** Add / renew / share certificates, insurance and permits on Certificaten:
+   *  no writer exists — every one showed a "Coming soon" alert. */
+  complianceItemEditing: false,
+  /** KvK "Controleer": no KvK API is connected; the check could only say so. */
+  kvkVerification: false,
+  /** Profile → Integrations rows with no connect flow (Xero UK/US, QuickBooks
+   *  US): a tap only said "Coming soon". Shown again once a flow exists. */
+  integrationsWithoutFlow: false,
+} as const;

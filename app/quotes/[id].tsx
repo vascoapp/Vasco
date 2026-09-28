@@ -6,6 +6,7 @@
 // Functions preserved from prior implementation.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
@@ -172,7 +173,7 @@ export default function QuoteDetailScreen() {
     // R66 NL launch: thread vatScheme so KOR / Kleinunternehmer contractors get
     // 0% VAT + the legal note, matching the invoice PDF (R251).
     // R66 round 11: Print.printToFileAsync can throw; without a catch the press
-    // did nothing and the quote stayed 'draft'. markQuoteSent only runs on success.
+    // did nothing and the quote stayed 'draft'.
     try {
       await generateQuotePdf(
         pdfData,
@@ -182,11 +183,26 @@ export default function QuoteDetailScreen() {
         businessProfile.vatNumber,
         { vatScheme: businessProfile.vatScheme },
       );
-      markQuoteSent(quote.id);
+      // The share sheet closing says nothing: expo-sharing resolves the same
+      // whether the PDF went out or the contractor backed out. The link path
+      // below checks `wasShareDismissed`; this one marked every PDF share
+      // "sent" — a quote the customer never had, with a follow-up clock
+      // running (emulator walk 2026-09-28). Status follows the artefact, never
+      // the button (#197/#339), so ask — once, and only for a draft.
+      if (quote.status === 'draft') {
+        Alert.alert(
+          t('quotes.pdfSentTitle', 'Did the quote go out?'),
+          t('quotes.pdfSentBody', 'Vasco cannot see whether you shared the PDF. Mark it sent once your customer has it.'),
+          [
+            { text: t('quotes.pdfSentNo', 'Not yet'), style: 'cancel' },
+            { text: t('quotes.pdfSentYes', 'Yes, sent'), onPress: () => markQuoteSent(quote.id) },
+          ],
+        );
+      }
     } catch (err: any) {
       Alert.alert(
         t('quotes.shareFailedTitle', 'Could not share quote'),
-        err?.message ?? t('quotes.shareFailedBody', 'Please retry. If this persists, the PDF could not be generated on this device.'),
+        friendlyError(err, t('quotes.shareFailedBody', 'Please retry. If this persists, the PDF could not be generated on this device.')),
       );
     }
   };
@@ -268,7 +284,7 @@ export default function QuoteDetailScreen() {
                 );
               }
             } catch (err: any) {
-              Alert.alert(t('common.error', 'Error'), err?.message || t('quotes.conversionFailed', 'Could not convert quote to job.'));
+              Alert.alert(t('common.error', 'Error'), friendlyError(err, t('quotes.conversionFailed', 'Could not convert quote to job.')));
             }
           },
         },

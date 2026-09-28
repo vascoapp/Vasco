@@ -2,6 +2,7 @@
 // PROFIEL - Contractor Profile & Settings Page
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -38,6 +39,7 @@ import { businessTypeLabel } from '../../src/data/businessTypes';
 import { retentionPeriodsFor } from '../../src/data/retentionPeriods';
 import { getProvidersForCountry } from '../../src/integrations/accounting';
 import { getPaymentProviderForCountry } from '../../src/config/paymentMethods';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -146,7 +148,7 @@ export default function ProfileScreen() {
       if (!result.ok) {
         Alert.alert(
           t('profile.upgradeError', 'Could not start upgrade'),
-          result.error ?? t('profile.upgradeErrorDesc', 'Please try again or contact support.'),
+          friendlyError(result.error, t('profile.upgradeErrorDesc', 'Please try again or contact support.')),
         );
       } else {
         const fresh = await loadSubscription();
@@ -175,7 +177,7 @@ export default function ProfileScreen() {
       if (!result.ok) {
         Alert.alert(
           t('profile.manageSubError', 'Could not open billing portal'),
-          result.error ?? t('profile.upgradeErrorDesc', 'Please try again or contact support.'),
+          friendlyError(result.error, t('profile.upgradeErrorDesc', 'Please try again or contact support.')),
         );
       }
     } finally {
@@ -661,7 +663,9 @@ export default function ProfileScreen() {
         <View style={styles.sectionWrap}>
           <DKLabel style={styles.sectionLabel}>{t('profile.integrations', 'INTEGRATIONS')}</DKLabel>
           <View style={styles.card}>
-            {integrations.map((item, idx) => (
+            {/* A row with no connect flow only said "Coming soon" — hidden until
+                built (DORMANT_CONTROLS.integrationsWithoutFlow, 2026-09-28). */}
+            {integrations.filter((item) => item.route || DORMANT_CONTROLS.integrationsWithoutFlow).map((item, idx) => (
               <Pressable
                 key={item.id}
                 style={[styles.row, idx > 0 && styles.rowBorder]}

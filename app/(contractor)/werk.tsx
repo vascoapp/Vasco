@@ -6,6 +6,7 @@
 // content · sticky gradient FAB. Functions preserved from legacy screen.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, RefreshControl,
@@ -519,7 +520,7 @@ export default function WerkScreen() {
                       + `\n\n${t('schedule.openDragToApply', 'Open the drag schedule to apply this order.')}`;
                     Alert.alert(t('schedule.optimizedTitle', 'Optimized route'), summary);
                   } catch (e) {
-                    Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), String((e as Error).message ?? e));
+                    Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), friendlyError(e, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
                   }
                 }}
               >

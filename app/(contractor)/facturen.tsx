@@ -4,6 +4,7 @@
 // Clean invoice management with integrated financial auditing
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   View,
@@ -20,7 +21,7 @@ import {
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
-import { PAGE_BG, GRID, RADIUS, TYPE } from '../../src/theme/tabStyles';
+import { PAGE_BG, GRID, RADIUS, TYPE, TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { useCashFlow, type Invoice } from '../../src/services/cashFlowService';
 import { ContractorDashboardHeader } from '../../src/components/contractor/ContractorDashboardHeader';
@@ -983,7 +984,7 @@ export default function FacturenScreen() {
                             } catch (err: any) {
                               Alert.alert(
                                 t('invoices.invoiceCreateFailedTitle', 'Could not create invoice'),
-                                err?.message ?? t('invoices.invoiceCreateFailedBody', 'Please retry or open the job to fix missing fields.'),
+                                friendlyError(err, t('invoices.invoiceCreateFailedBody', 'Please retry or open the job to fix missing fields.')),
                               );
                             }
                           },
@@ -1010,7 +1011,7 @@ export default function FacturenScreen() {
                             } catch (err: any) {
                               Alert.alert(
                                 t('invoices.invoiceCreateFailedTitle', 'Could not create invoice'),
-                                err?.message ?? t('invoices.invoiceCreateFailedBody', 'Please retry or open the job to fix missing fields.'),
+                                friendlyError(err, t('invoices.invoiceCreateFailedBody', 'Please retry or open the job to fix missing fields.')),
                               );
                             }
                           },
@@ -1392,7 +1393,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SafeArea.content,
-    paddingVertical: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: TAB_BAR_CLEARANCE,
     gap: Spacing.md,
   },
 

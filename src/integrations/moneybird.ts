@@ -259,6 +259,39 @@ export async function exchangeCodeForToken(
 // ---------------------------------------------------------------------------
 
 /**
+ * The administrations a personal token can see — with NAMES, so a
+ * contractor with several (e.g. a bookkeeper's) picks one by name instead of
+ * typing an "administratie-ID" (emulator walk 2026-09-28: too technical).
+ */
+export async function listAdministrationsForToken(accessToken: string): Promise<
+  { ok: true; admins: Array<{ id: string; name: string }> } | { ok: false; reason: 'invalid_token' | 'network' }
+> {
+  const token = accessToken.trim();
+  if (!token) return { ok: false, reason: 'invalid_token' };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`${API_BASE}/administrations.json`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (res.status === 401 || res.status === 403) return { ok: false, reason: 'invalid_token' };
+    if (!res.ok) return { ok: false, reason: 'network' };
+    const rows = ((await res.json()) ?? []) as Array<{ id?: string | number; name?: string }>;
+    return {
+      ok: true,
+      admins: rows
+        .filter((a) => a?.id != null)
+        .map((a) => ({ id: String(a.id), name: (a.name ?? '').trim() || String(a.id) })),
+    };
+  } catch {
+    clearTimeout(timeout);
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/**
  * Moneybird's other credential: a personal API token the contractor copies out
  * of their own Moneybird account. It is the only flow the connect screen offers
  * (there is no registered OAuth client), and it never expires — so it carries no

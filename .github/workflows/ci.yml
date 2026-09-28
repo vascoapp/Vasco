@@ -46,7 +46,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 22: `npm run test:auth` uses node --experimental-strip-types (>= 22.6).
+          node-version: 22
           cache: npm
           cache-dependency-path: admin/package-lock.json
 
@@ -55,6 +56,9 @@ jobs:
 
       - name: Type-check admin
         run: npx tsc --noEmit
+
+      - name: Admin sign-in tests
+        run: npm run test:auth
 
       - name: Build admin
         run: npm run build

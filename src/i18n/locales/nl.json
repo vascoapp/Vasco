@@ -87,7 +87,8 @@
     "previous": "Vorige",
     "share": "Delen",
     "options": "Opties",
-    "automatedFollowUps": "Voorbereide herinneringen en opvolging"
+    "automatedFollowUps": "Voorbereide herinneringen en opvolging",
+    "didNotWork": "Dat lukte niet. Probeer het zo nog eens."
   },
   "tabs": {
     "today": "Vandaag",
@@ -640,7 +641,11 @@
     "renewAction": "Vernieuwen",
     "workBlocked_one": "{{count}} type werk geblokkeerd",
     "workBlocked_other": "{{count}} types werk geblokkeerd",
-    "scoreUnknown": "Nog niets bijgehouden"
+    "scoreUnknown": "Nog niets bijgehouden",
+    "vatNumberLabel": "BTW-nummer",
+    "notEntered": "Nog niet ingevuld",
+    "fromProfile": "Uit je bedrijfsprofiel",
+    "enterNumber": "Invullen"
   },
   "billing": {
     "upgradeRequired": "Upgrade nodig",
@@ -928,7 +933,8 @@
     "natureMixed": "Gemengde transactie",
     "natureUnset": "Nog opgeven",
     "deliveryAddress": "Afleveradres (indien afwijkend)",
-    "deliveryAddressPlaceholder": "Leeg laten als gelijk aan het factuuradres"
+    "deliveryAddressPlaceholder": "Leeg laten als gelijk aan het factuuradres",
+    "sendFailedUnknown": "probeer het later opnieuw"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1676,6 +1682,18 @@
       "quoteSentBody": "Offerte voor {{customer}} verstuurd. Opvolging over 3 dagen ingepland.",
       "invoiceSentTitle": "Factuur verstuurd",
       "invoiceSentBody": "Factuur {{number}} staat op verstuurd. Deel de pdf met je klant."
+    },
+    "action": {
+      "viewInvoices": "Facturen bekijken",
+      "sendReminder": "Herinnering sturen",
+      "viewSchedule": "Planning bekijken",
+      "viewTeam": "Team bekijken",
+      "review": "Bekijken",
+      "viewPermits": "Vergunningen bekijken",
+      "viewDeliveries": "Leveringen bekijken",
+      "viewCerts": "Certificaten bekijken",
+      "viewInvoice": "Factuur bekijken",
+      "viewCustomer": "Klant bekijken"
     }
   },
   "insurance": {
@@ -1994,7 +2012,11 @@
     "similarPastJobs": "Vergelijkbare eerdere klussen",
     "reusePastJob": "Eerdere klus {{title}} hergebruiken",
     "prefilledFromPhotosBy": "Vooraf ingevuld uit foto's van {{name}}: {{count}}",
-    "prefilledFromPhotos": "Vooraf ingevuld uit foto's van de klant: {{count}}"
+    "prefilledFromPhotos": "Vooraf ingevuld uit foto's van de klant: {{count}}",
+    "pdfSentTitle": "Is de offerte verstuurd?",
+    "pdfSentBody": "Vasco kan niet zien of je de PDF hebt gedeeld. Markeer hem als verstuurd zodra je klant hem heeft.",
+    "pdfSentNo": "Nog niet",
+    "pdfSentYes": "Ja, verstuurd"
   },
   "queue": {
     "lowWinTitle": "Lage winkans · {{customer}}",
@@ -2540,10 +2562,10 @@
     "subtitle": "Synchroniseer facturen, contacten en betalingen automatisch met je boekhouding",
     "configNeededTitle": "Configuratie nodig",
     "configNeededMsg": "Moneybird API-gegevens zijn nog niet geconfigureerd. Neem contact op met support.",
-    "connect": "Koppel Moneybird",
+    "connect": "Koppelen",
     "connecting": "Verbinden...",
     "connected": "Verbonden met Moneybird",
-    "connectionFailed": "Verbinding mislukt",
+    "connectionFailed": "Moneybird accepteert deze code niet. Kopieer hem opnieuw en probeer het nog eens.",
     "connectionFailedTitle": "Verbinding mislukt",
     "connectedSuccess": "Verbonden!",
     "connectingToMoneybird": "Verbinden met Moneybird...",
@@ -2576,8 +2598,17 @@
     "disconnect": "Ontkoppelen",
     "disconnectDesc": "Moneybird-verbinding verwijderen",
     "stateMismatch": "Beveiligingscontrole mislukt. Probeer het opnieuw.",
-    "noAdministration": "Geen administratie gevonden bij dit token — controleer het administratie-ID",
-    "connectionUnreachable": "Moneybird niet bereikbaar — probeer het opnieuw"
+    "noAdministration": "Er hoort geen administratie bij deze code. Maak eerst een administratie aan in Moneybird.",
+    "connectionUnreachable": "Moneybird niet bereikbaar — probeer het opnieuw",
+    "stepsTitle": "Moneybird koppelen in 3 stappen",
+    "step1": "Open Moneybird en log in.",
+    "step2": "Maak daar een nieuwe sleutel aan — noem hem Vasco — en kopieer de code.",
+    "step3": "Kom terug, houd je vinger in het vak hieronder, tik op Plakken — en dan op Koppelen.",
+    "openMoneybird": "Open Moneybird",
+    "codeLabel": "Je Moneybird-code",
+    "codePlaceholder": "Plak hier je code",
+    "pickHint": "Je Moneybird heeft meer dan één administratie. Welke hoort bij dit bedrijf?",
+    "pickTitle": "Kies je administratie"
   },
   "contractor": {
     "customers": {
@@ -2680,8 +2711,8 @@
     "marketEstimate": "Marktschatting",
     "compare": "Prijzen vergelijken",
     "addToOrder": "Toevoegen aan bestelling",
-    "supplierPrices": "Leveranciersprijzen",
-    "bestPrice": "Beste prijs",
+    "supplierPrices": "Indicatieve prijzen",
+    "bestPrice": "Laagste",
     "vsLowest": "vs laagste",
     "save": "Bespaar",
     "noCompareData": "Geen prijsvergelijking beschikbaar voor dit artikel",
@@ -2700,12 +2731,14 @@
     "aiScannedInsight": "{{count}} resultaten op basis van je factuurgeschiedenis. Gemiddelde prijs: {{price}}",
     "aiMarketInsight": "Toont marktprijzen voor {{country}} van {{suppliers}}. Scan leveranciersfacturen om je echte prijzen te zien.",
     "searchError": "Kon materialen niet zoeken. Controleer je verbinding en probeer het opnieuw.",
-    "topSuppliers": "Beste leveranciers in jouw omgeving",
+    "topSuppliers": "Grote groothandels",
     "orderReview": "Bestelling controleren",
     "sendOrder": "Bestelling naar leverancier sturen",
     "reviewOrder": "Bestelling bekijken",
     "poTotal_one": "{{count}} inkooporder aangemaakt",
-    "poTotal_other": "{{count}} inkooporders aangemaakt"
+    "poTotal_other": "{{count}} inkooporders aangemaakt",
+    "indicativeNote": "Marktcijfers, geen offerte — vraag je leverancier om de echte prijs.",
+    "tradeMenu": "Vak"
   },
   "dt": {
     "active": "Actief",
@@ -2778,13 +2811,23 @@
     "edit": "Sjabloon bewerken",
     "new": "Nieuw sjabloon",
     "titlePlaceholder": "Sjabloonnaam",
-    "bodyPlaceholder": "Berichttekst. Gebruik {{customer}}, {{amount}}, {{date}}, {{jobTitle}} voor variabelen.",
+    "bodyPlaceholder": "Je bericht. Tik hieronder op een woord om het toe te voegen — het wordt ingevuld bij het versturen.",
     "cat_reminder": "Herinnering",
     "cat_follow-up": "Opvolging",
     "cat_confirmation": "Bevestiging",
     "cat_thank-you": "Bedankt",
     "cat_custom": "Eigen",
-    "category": "Categorie"
+    "category": "Categorie",
+    "token": {
+      "customer": "klant",
+      "amount": "bedrag",
+      "date": "datum",
+      "jobTitle": "klus",
+      "invoiceId": "factuurnummer",
+      "daysOverdue": "dagen te laat",
+      "contractorName": "jouw naam"
+    },
+    "categoryMenu": "Categorie"
   },
   "dk": {
     "tabs": {
@@ -3261,7 +3304,12 @@
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco audit-spoor",
     "exportTitleGobd": "Vasco GoBD audit trail",
-    "screenTitle": "BTW & audit"
+    "screenTitle": "BTW & audit",
+    "exportFailed": "Exporteren mislukt",
+    "verifyOkTitle": "Je administratie klopt",
+    "verifyBrokenTitle": "Er is iets gewijzigd",
+    "verifyOkBody": "Alle {{count}} boekingen zijn onveranderd sinds ze zijn vastgelegd.",
+    "verifyBrokenBody": "Boeking {{n}} is gewijzigd nadat hij was vastgelegd. Laat dit aan je boekhouder zien."
   },
   "recurring": {
     "title": "ONDERHOUD",
@@ -3436,7 +3484,7 @@
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "Nog geen quick wins bij leveranciers"
     },
-    "scanFirstInvoice": "Scan je eerste leveranciersfactuur om prijsintelligentie te starten.",
+    "addFirstInvoice": "Voeg je eerste leveranciersfactuur toe om prijsintelligentie te starten",
     "allGoodDesc": "Vasco scant continu je uitgaven en marktprijzen. Zodra er iets te besparen valt, zie je het hier.",
     "banner": {
       "hero": "Vasco bespaarde je deze maand {{hours}}u en {{money}}",
@@ -4536,17 +4584,25 @@
     "connecting": "Verbinden…",
     "connected": "Verbonden",
     "connectAndTest": "Verbinden & testen",
-    "connectionFailed": "Verbinding mislukt — controleer je API-sleutel",
+    "connectionFailed": "Mollie accepteert deze code niet. Kopieer hem opnieuw in Mollie en probeer het nog eens.",
     "paymentMethods": "Betaalmethoden",
-    "invalidKeyTitle": "Ongeldige sleutel",
-    "invalidKeyDesc": "Mollie API-keys beginnen met \"live_\" of \"test_\"",
+    "invalidKeyTitle": "Deze code klopt niet",
+    "invalidKeyDesc": "De Mollie-code begint met live_ (of test_ om te proberen). Kopieer hem opnieuw in Mollie en plak hem hier.",
     "consentTitle": "Toestemming vereist",
     "consentDesc": "Vasco verwerkt betalingsgegevens via Mollie. Door te verbinden ga je akkoord met het delen van factuurgegevens met Mollie voor betalingsverwerking.",
     "consentAccept": "Akkoord & verbinden",
     "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Mollie",
     "disconnect": "Loskoppelen",
     "disconnectConfirmTitle": "Mollie loskoppelen?",
-    "disconnectConfirmDesc": "Je API-sleutel wordt van dit apparaat verwijderd. Bestaande betaallinks blijven werken, maar je kunt geen nieuwe aanmaken totdat je opnieuw verbindt."
+    "disconnectConfirmDesc": "Je API-sleutel wordt van dit apparaat verwijderd. Bestaande betaallinks blijven werken, maar je kunt geen nieuwe aanmaken totdat je opnieuw verbindt.",
+    "stepsTitle": "Mollie koppelen in 3 stappen",
+    "step1": "Open Mollie en log in. Nog geen account? Die maak je daar gratis aan.",
+    "step2": "Kopieer de code die begint met live_",
+    "step3": "Kom terug, houd je vinger in het vak hieronder, tik op Plakken — en dan op Koppelen.",
+    "openMollie": "Open Mollie",
+    "codeLabel": "Je Mollie-code",
+    "codePlaceholder": "Plak hier je code",
+    "connect": "Koppelen"
   },
   "stripe": {
     "title": "Stripe Payments",
@@ -4557,17 +4613,25 @@
     "connecting": "Verbinden…",
     "connected": "Verbonden",
     "connectAndTest": "Verbinden & testen",
-    "connectionFailed": "Verbinding mislukt — controleer je secret key",
+    "connectionFailed": "Stripe accepteert deze sleutel niet. Kopieer hem opnieuw in Stripe en probeer het nog eens.",
     "paymentMethods": "Betaalmethoden",
-    "invalidKeyTitle": "Ongeldige sleutel",
-    "invalidKeyDesc": "Stripe secret keys beginnen met \"sk_live_\" of \"sk_test_\"",
+    "invalidKeyTitle": "Deze sleutel klopt niet",
+    "invalidKeyDesc": "De geheime Stripe-sleutel begint met sk_live_ (of sk_test_ om te proberen). Kopieer hem opnieuw in Stripe en plak hem hier.",
     "consentTitle": "Toestemming vereist",
     "consentDesc": "Vasco verwerkt betalingsgegevens via Stripe. Door te verbinden ga je akkoord met het delen van factuurgegevens met Stripe voor betalingsverwerking.",
     "consentAccept": "Akkoord & verbinden",
     "pciCompliance": "Alle betalingen zijn PCI DSS-compliant via Stripe",
     "disconnect": "Loskoppelen",
     "disconnectConfirmTitle": "Stripe loskoppelen?",
-    "disconnectConfirmDesc": "Je secret key wordt van dit apparaat verwijderd. Bestaande betaallinks blijven werken, maar je kunt geen nieuwe aanmaken totdat je opnieuw verbindt."
+    "disconnectConfirmDesc": "Je secret key wordt van dit apparaat verwijderd. Bestaande betaallinks blijven werken, maar je kunt geen nieuwe aanmaken totdat je opnieuw verbindt.",
+    "stepsTitle": "Stripe koppelen in 3 stappen",
+    "step1": "Open Stripe en log in. Nog geen account? Die maak je daar gratis aan.",
+    "step2": "Kopieer de geheime sleutel — de code die begint met sk_live_",
+    "step3": "Kom terug, houd je vinger in het vak hieronder, tik op Plakken — en dan op Koppelen.",
+    "openStripe": "Open Stripe",
+    "codeLabel": "Je Stripe-sleutel",
+    "codePlaceholder": "Plak hier je sleutel",
+    "connect": "Koppelen"
   },
   "quoteNew": {
     "customerAndJob": "Klant & klus",
@@ -4770,7 +4834,9 @@
     "shareAccountant": "Naar boekhouder sturen",
     "accountantSeat": "Accountant doorlopend toegang geven",
     "unsupportedTitle": "Btw-aangifte hier niet beschikbaar",
-    "unsupportedBody": "Vasco bereidt de Nederlandse btw-aangifte en de Duitse USt-Voranmeldung voor. Uw facturen en uitgaven exporteert u gewoon via Geld voor uw boekhouder."
+    "unsupportedBody": "Vasco bereidt de Nederlandse btw-aangifte en de Duitse USt-Voranmeldung voor. Je facturen en uitgaven exporteer je gewoon via Geld voor je boekhouder.",
+    "needCountry": "Stel eerst je land in — Vasco bereidt de aangifte voor Nederland en Duitsland voor.",
+    "setCountry": "Land instellen"
   },
   "market": {
     "noBenchmarksDesc": "Meer data nodig voor benchmarks",
@@ -4804,7 +4870,9 @@
       "general": "Algemeen"
     },
     "indexBasis": "Index ({{country}}) · basis {{baseYear}}=100",
-    "baselineNote": "Algemene branchecijfers — nog te weinig vakmensen in je regio voor een eigen benchmark."
+    "baselineNote": "Algemene branchecijfers — nog te weinig vakmensen in je regio voor een eigen benchmark.",
+    "ownPricesTitle": "Je eigen prijzen",
+    "ownPricesDesc": "Voeg je leveranciersfacturen toe en zie wat jij betaalt tegenover de markt."
   },
   "pdfModal": {
     "labelInvoice": "Factuur",
@@ -7226,7 +7294,11 @@
     "failedTitle": "Verzoek niet verstuurd",
     "failedBody": "Je verzoek heeft onze servers niet bereikt. Controleer je internetverbinding en probeer het opnieuw.",
     "doneTitle": "Verwijdering aangevraagd",
-    "doneBody": "Je gegevens worden binnen 30 dagen gewist."
+    "doneBody": "Je gegevens worden binnen 30 dagen gewist.",
+    "exportFailedTitle": "Download mislukt",
+    "exportIncompleteTitle": "Download niet compleet",
+    "exportIncomplete": "Niet al je gegevens konden worden opgehaald — controleer je verbinding en probeer het opnieuw voordat je verwijdert.",
+    "invoicesArchiveFailedTitle": "Archief niet gemaakt"
   },
   "recordsArchive": {
     "readmeTitle": "Facturen — geëxporteerd uit Vasco op {{date}}",

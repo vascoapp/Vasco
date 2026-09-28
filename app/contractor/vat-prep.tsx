@@ -7,6 +7,8 @@
 // taxpayer or a certified intermediary can legally file.
 // =============================================================================
 
+import { useAuth } from '../../src/context/AuthContext';
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -54,7 +56,11 @@ export default function VatPrepScreen() {
   // rubriek labels, nl-NL money and an "Open DigiD" button — because every
   // other country was coerced to NL (sweep 2026-09-17). The card is gated now,
   // and this screen refuses instead of guessing.
-  const profileCountry = businessProfile?.country;
+  // Profile first, account as fallback (#218). The profile alone left the
+  // demo NL contractor — country on the ACCOUNT — reading "not available here"
+  // over "Vasco prepares the Dutch BTW-aangifte" (emulator walk 2026-09-28).
+  const { user } = useAuth();
+  const profileCountry = businessProfile?.country ?? user?.country;
   const vatReturnSupported = profileCountry === 'NL' || profileCountry === 'DE';
   const country: 'NL' | 'DE' = profileCountry === 'DE' ? 'DE' : 'NL';
   const draft: VatReturnDraft = useMemo(() => {
@@ -113,7 +119,7 @@ export default function VatPrepScreen() {
       const text = formatHandoverText(handover, (n) => formatCurrency(n, country));
       await Share.share({ message: text });
     } catch (err) {
-      Alert.alert(t('common.error', 'Error'), String((err as Error)?.message ?? err));
+      Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
     }
   };
 
@@ -133,7 +139,7 @@ export default function VatPrepScreen() {
         label: t('vatPrep.shareSummary', 'Share summary'),
         onPress: () => {
           shareVatSummary(draft, businessName).catch((err) => {
-            Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
+            Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
           });
         },
       },
@@ -169,7 +175,7 @@ export default function VatPrepScreen() {
         label: t('vatPrep.sharePdf', 'Share PDF'),
         onPress: () => {
           shareVatPdf(draft, businessName).catch((err) => {
-            Alert.alert(t('common.error', 'Error'), String(err?.message ?? err));
+            Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
           });
         },
       },
@@ -210,10 +216,24 @@ export default function VatPrepScreen() {
             <Text style={styles.title}>{t('vatPrep.unsupportedTitle', 'VAT return not available here')}</Text>
           </View>
         </View>
-        <View style={{ padding: 20 }}>
+        <View style={{ padding: 20, gap: 12 }}>
+          {/* Unknown country: ask for it (never guess, CLAUDE.md). Another
+              country: say what Vasco does prepare. */}
           <Text style={styles.subtitle}>
-            {t('vatPrep.unsupportedBody', 'Vasco prepares the Dutch BTW-aangifte and the German UStVA. Your invoices and expenses are still exported from Finance for your accountant.')}
+            {profileCountry
+              ? t('vatPrep.unsupportedBody', 'Vasco prepares the Dutch BTW-aangifte and the German UStVA. Your invoices and expenses are still exported from Finance for your accountant.')
+              : t('vatPrep.needCountry', 'Set your country first — Vasco prepares the return for the Netherlands and Germany.')}
           </Text>
+          {!profileCountry && (
+            <Pressable
+              onPress={() => router.push('/(modals)/business-settings' as any)}
+              accessibilityRole="button"
+              testID="vatprep-set-country"
+              style={{ alignSelf: 'flex-start', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, borderWidth: 1, borderColor: Palette.hermesOrange }}
+            >
+              <Text style={{ color: Palette.hermesOrange, fontFamily: 'Inter_600SemiBold' }}>{t('vatPrep.setCountry', 'Set country')}</Text>
+            </Pressable>
+          )}
         </View>
       </SafeAreaView>
     );

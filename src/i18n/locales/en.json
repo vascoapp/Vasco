@@ -87,7 +87,8 @@
     "previous": "Previous",
     "share": "Share",
     "options": "Options",
-    "automatedFollowUps": "Prepared reminders and follow-ups"
+    "automatedFollowUps": "Prepared reminders and follow-ups",
+    "didNotWork": "That didn't work. Please try again in a moment."
   },
   "tabs": {
     "today": "Today",
@@ -640,7 +641,11 @@
     "renewAction": "Renew",
     "workBlocked_one": "{{count}} type of work blocked",
     "workBlocked_other": "{{count}} types of work blocked",
-    "scoreUnknown": "Nothing tracked yet"
+    "scoreUnknown": "Nothing tracked yet",
+    "vatNumberLabel": "VAT number",
+    "notEntered": "Not entered yet",
+    "fromProfile": "From your business profile",
+    "enterNumber": "Enter"
   },
   "billing": {
     "upgradeRequired": "Upgrade required",
@@ -928,7 +933,8 @@
     "natureMixed": "Mixed operation",
     "natureUnset": "To be stated",
     "deliveryAddress": "Delivery address (if different)",
-    "deliveryAddressPlaceholder": "Leave empty if the same as the billing address"
+    "deliveryAddressPlaceholder": "Leave empty if the same as the billing address",
+    "sendFailedUnknown": "please try again later"
   },
   "expenses": {
     "title": "Expenses",
@@ -1392,6 +1398,18 @@
       "quoteSentBody": "Quote for {{customer}} sent. Follow-up scheduled in 3 days.",
       "invoiceSentTitle": "Invoice sent",
       "invoiceSentBody": "Invoice {{number}} is marked as sent. Share the PDF with your customer."
+    },
+    "action": {
+      "viewInvoices": "View invoices",
+      "sendReminder": "Send reminder",
+      "viewSchedule": "View schedule",
+      "viewTeam": "View team",
+      "review": "Review",
+      "viewPermits": "View permits",
+      "viewDeliveries": "View deliveries",
+      "viewCerts": "View certificates",
+      "viewInvoice": "View invoice",
+      "viewCustomer": "View customer"
     }
   },
   "insurance": {
@@ -1994,7 +2012,11 @@
     "similarPastJobs": "Similar past jobs",
     "reusePastJob": "Reuse past job {{title}}",
     "prefilledFromPhotosBy": "Prefilled from photos sent by {{name}}: {{count}}",
-    "prefilledFromPhotos": "Prefilled from customer photos: {{count}}"
+    "prefilledFromPhotos": "Prefilled from customer photos: {{count}}",
+    "pdfSentTitle": "Did the quote go out?",
+    "pdfSentBody": "Vasco cannot see whether you shared the PDF. Mark it sent once your customer has it.",
+    "pdfSentNo": "Not yet",
+    "pdfSentYes": "Yes, sent"
   },
   "queue": {
     "lowWinTitle": "Low win chance · {{customer}}",
@@ -2540,10 +2562,10 @@
     "subtitle": "Automatically sync invoices, contacts and payments with your accounting",
     "configNeededTitle": "Configuration needed",
     "configNeededMsg": "Moneybird API credentials are not yet configured. Please contact support.",
-    "connect": "Connect Moneybird",
+    "connect": "Connect",
     "connecting": "Connecting...",
     "connected": "Connected to Moneybird",
-    "connectionFailed": "Connection failed",
+    "connectionFailed": "Moneybird did not accept this code. Copy it again and try once more.",
     "connectionFailedTitle": "Connection failed",
     "connectedSuccess": "Connected!",
     "connectingToMoneybird": "Connecting to Moneybird...",
@@ -2576,8 +2598,17 @@
     "disconnect": "Disconnect",
     "disconnectDesc": "Remove Moneybird connection",
     "stateMismatch": "Security validation failed. Please try again.",
-    "noAdministration": "No administration found for this token — check the administration ID",
-    "connectionUnreachable": "Moneybird unreachable — please try again"
+    "noAdministration": "There is no administration behind this code. Create one in Moneybird first.",
+    "connectionUnreachable": "Moneybird unreachable — please try again",
+    "stepsTitle": "Connect Moneybird in 3 steps",
+    "step1": "Open Moneybird and log in.",
+    "step2": "Create a new key there — call it Vasco — and copy the code.",
+    "step3": "Come back, hold your finger in the box below, tap Paste — then Connect.",
+    "openMoneybird": "Open Moneybird",
+    "codeLabel": "Your Moneybird code",
+    "codePlaceholder": "Paste your code here",
+    "pickHint": "Your Moneybird has more than one administration. Which one is this business?",
+    "pickTitle": "Choose your administration"
   },
   "contractor": {
     "customers": {
@@ -2680,8 +2711,8 @@
     "marketEstimate": "Market estimate",
     "compare": "Compare prices",
     "addToOrder": "Add to order",
-    "supplierPrices": "Supplier prices",
-    "bestPrice": "Best price",
+    "supplierPrices": "Indicative prices",
+    "bestPrice": "Lowest",
     "vsLowest": "vs lowest",
     "save": "Save",
     "noCompareData": "No price comparison available for this item",
@@ -2700,12 +2731,14 @@
     "aiScannedInsight": "{{count}} results based on your invoice history. Average price: {{price}}",
     "aiMarketInsight": "Showing {{country}} market prices from {{suppliers}}. Scan supplier invoices to get your real prices.",
     "searchError": "Could not search materials. Please check your connection and try again.",
-    "topSuppliers": "Top suppliers in your area",
+    "topSuppliers": "Major wholesalers",
     "orderReview": "Order review",
     "sendOrder": "Send order to supplier",
     "reviewOrder": "Review order",
     "poTotal_one": "{{count}} purchase order created",
-    "poTotal_other": "{{count}} purchase orders created"
+    "poTotal_other": "{{count}} purchase orders created",
+    "indicativeNote": "Market figures, not a quote — ask your supplier for the real price.",
+    "tradeMenu": "Trade"
   },
   "dt": {
     "active": "Active",
@@ -2778,13 +2811,23 @@
     "edit": "Edit Template",
     "new": "New Template",
     "titlePlaceholder": "Template name",
-    "bodyPlaceholder": "Message body. Use {{customer}}, {{amount}}, {{date}}, {{jobTitle}} for variables.",
+    "bodyPlaceholder": "Your message. Tap a word below to add it — it is filled in when you send.",
     "cat_reminder": "Reminder",
     "cat_follow-up": "Follow-up",
     "cat_confirmation": "Confirmation",
     "cat_thank-you": "Thank you",
     "cat_custom": "Custom",
-    "category": "Category"
+    "category": "Category",
+    "token": {
+      "customer": "customer",
+      "amount": "amount",
+      "date": "date",
+      "jobTitle": "job",
+      "invoiceId": "invoice number",
+      "daysOverdue": "days late",
+      "contractorName": "your name"
+    },
+    "categoryMenu": "Category"
   },
   "dk": {
     "tabs": {
@@ -3261,7 +3304,12 @@
     "sectionTitleGobd": "GoBD Audit-Trail",
     "exportTitle": "Vasco audit trail",
     "exportTitleGobd": "Vasco GoBD audit trail",
-    "screenTitle": "VAT & audit"
+    "screenTitle": "VAT & audit",
+    "exportFailed": "Export failed",
+    "verifyOkTitle": "Your records are intact",
+    "verifyBrokenTitle": "A record was changed",
+    "verifyOkBody": "All {{count}} records are unchanged since they were saved.",
+    "verifyBrokenBody": "Record {{n}} was changed after it was saved. Show this to your accountant."
   },
   "recurring": {
     "title": "MAINTENANCE",
@@ -3436,7 +3484,7 @@
       "materialsDesc": "Quick wins: {{suppliers}}",
       "materialsEmpty": "No supplier quick-wins yet"
     },
-    "scanFirstInvoice": "Scan your first supplier invoice to start price intelligence.",
+    "addFirstInvoice": "Add your first supplier invoice to start price intelligence",
     "allGoodDesc": "Vasco continuously scans your spend and market prices. When there's something to save, you'll see it here.",
     "banner": {
       "hero": "Vasco saved you {{hours}}h and {{money}} this month",
@@ -4479,17 +4527,25 @@
     "connecting": "Connecting…",
     "connected": "Connected",
     "connectAndTest": "Connect & test",
-    "connectionFailed": "Connection failed — check your API key",
+    "connectionFailed": "Mollie did not accept this code. Copy it again in Mollie and try once more.",
     "paymentMethods": "Payment methods",
-    "invalidKeyTitle": "Invalid key",
-    "invalidKeyDesc": "Mollie API keys start with \"live_\" or \"test_\"",
+    "invalidKeyTitle": "That code doesn’t look right",
+    "invalidKeyDesc": "The Mollie code starts with live_ (or test_ for trying things out). Copy it again in Mollie and paste it here.",
     "consentTitle": "Consent required",
     "consentDesc": "Vasco processes payment data via Mollie. By connecting you agree to share invoice data with Mollie for payment processing.",
     "consentAccept": "Agree & connect",
     "pciCompliance": "All payments are PCI DSS compliant via Mollie",
     "disconnect": "Disconnect",
     "disconnectConfirmTitle": "Disconnect Mollie?",
-    "disconnectConfirmDesc": "Your API key will be removed from this device. Existing payment links continue to work, but you won’t be able to create new ones until you reconnect."
+    "disconnectConfirmDesc": "Your API key will be removed from this device. Existing payment links continue to work, but you won’t be able to create new ones until you reconnect.",
+    "stepsTitle": "Connect Mollie in 3 steps",
+    "step1": "Open Mollie and log in. No account yet? You can create one for free there.",
+    "step2": "Copy the code that starts with live_",
+    "step3": "Come back, hold your finger in the box below, tap Paste — then Connect.",
+    "openMollie": "Open Mollie",
+    "codeLabel": "Your Mollie code",
+    "codePlaceholder": "Paste your code here",
+    "connect": "Connect"
   },
   "stripe": {
     "title": "Stripe Payments",
@@ -4500,17 +4556,25 @@
     "connecting": "Connecting…",
     "connected": "Connected",
     "connectAndTest": "Connect & test",
-    "connectionFailed": "Connection failed — check your secret key",
+    "connectionFailed": "Stripe did not accept this key. Copy it again in Stripe and try once more.",
     "paymentMethods": "Payment methods",
-    "invalidKeyTitle": "Invalid key",
-    "invalidKeyDesc": "Stripe secret keys start with \"sk_live_\" or \"sk_test_\"",
+    "invalidKeyTitle": "That key doesn’t look right",
+    "invalidKeyDesc": "The Stripe secret key starts with sk_live_ (or sk_test_ for trying things out). Copy it again in Stripe and paste it here.",
     "consentTitle": "Consent required",
     "consentDesc": "Vasco processes payment data via Stripe. By connecting you agree to share invoice data with Stripe for payment processing.",
     "consentAccept": "Agree & connect",
     "pciCompliance": "All payments are PCI DSS compliant via Stripe",
     "disconnect": "Disconnect",
     "disconnectConfirmTitle": "Disconnect Stripe?",
-    "disconnectConfirmDesc": "Your secret key will be removed from this device. Existing payment links continue to work, but you won’t be able to create new ones until you reconnect."
+    "disconnectConfirmDesc": "Your secret key will be removed from this device. Existing payment links continue to work, but you won’t be able to create new ones until you reconnect.",
+    "stepsTitle": "Connect Stripe in 3 steps",
+    "step1": "Open Stripe and log in. No account yet? You can create one for free there.",
+    "step2": "Copy the secret key — the code that starts with sk_live_",
+    "step3": "Come back, hold your finger in the box below, tap Paste — then Connect.",
+    "openStripe": "Open Stripe",
+    "codeLabel": "Your Stripe key",
+    "codePlaceholder": "Paste your key here",
+    "connect": "Connect"
   },
   "quoteNew": {
     "customerAndJob": "Customer & job",
@@ -4713,7 +4777,9 @@
     "shareAccountant": "Send to accountant",
     "accountantSeat": "Give accountant ongoing access",
     "unsupportedTitle": "VAT return not available here",
-    "unsupportedBody": "Vasco prepares the Dutch BTW-aangifte and the German UStVA. Your invoices and expenses are still exported from Finance for your accountant."
+    "unsupportedBody": "Vasco prepares the Dutch BTW-aangifte and the German UStVA. Your invoices and expenses are still exported from Finance for your accountant.",
+    "needCountry": "Set your country first — Vasco prepares the return for the Netherlands and Germany.",
+    "setCountry": "Set country"
   },
   "automations": {
     "healthNew": "NEW",
@@ -4804,7 +4870,9 @@
       "general": "General"
     },
     "indexBasis": "Index ({{country}}) · base {{baseYear}}=100",
-    "baselineNote": "General industry figures — too few tradespeople in your region for your own benchmark yet."
+    "baselineNote": "General industry figures — too few tradespeople in your region for your own benchmark yet.",
+    "ownPricesTitle": "Your own prices",
+    "ownPricesDesc": "Add your supplier invoices and see what you pay compared with the market."
   },
   "pdfModal": {
     "labelInvoice": "Invoice",
@@ -7226,7 +7294,11 @@
     "failedTitle": "Could not submit request",
     "failedBody": "Your request did not reach our servers. Check your internet connection and try again.",
     "doneTitle": "Account deletion requested",
-    "doneBody": "Your data will be erased within 30 days."
+    "doneBody": "Your data will be erased within 30 days.",
+    "exportFailedTitle": "Download failed",
+    "exportIncompleteTitle": "Download not complete",
+    "exportIncomplete": "Not all of your data could be fetched — check your connection and try again before you delete.",
+    "invoicesArchiveFailedTitle": "Archive not made"
   },
   "recordsArchive": {
     "readmeTitle": "Invoices — exported from Vasco on {{date}}",

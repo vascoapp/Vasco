@@ -62,8 +62,11 @@ export function CashFlowForecastCard({ invoices, startingBalance, country = 'NL'
   return (
     <Pressable
       onPress={onPress}
+      disabled={!onPress}
       style={s.card}
-      accessibilityRole="button"
+      // Only a button when it goes somewhere — a screen reader announced a
+      // "button" that did nothing.
+      accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={t('cashflow.forecastTitle', 'Cash flow — next 30 days')}
     >
       <View style={s.header}>

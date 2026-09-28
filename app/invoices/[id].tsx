@@ -2,6 +2,7 @@
 // INVOICE DETAIL — Pro-grade, fully editable invoice view
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
@@ -383,7 +384,7 @@ export default function InvoiceDetailScreen() {
       hapticError();
       Alert.alert(
         t('paymentAlerts.paymentLinkFailedTitle'),
-        err instanceof Error && err.message ? err.message : t('paymentAlerts.paymentLinkFailedBody'),
+        friendlyError(err, t('paymentAlerts.paymentLinkFailedBody')),
       );
     }
   };
@@ -399,7 +400,7 @@ export default function InvoiceDetailScreen() {
       hapticError();
       Alert.alert(
         t('paymentAlerts.moneybirdFailedTitle'),
-        err instanceof Error && err.message ? err.message : t('paymentAlerts.moneybirdFailedBody'),
+        friendlyError(err, t('paymentAlerts.moneybirdFailedBody')),
       );
     }
   };
@@ -587,7 +588,7 @@ export default function InvoiceDetailScreen() {
         t('invoices.sendFailedTitle', 'Email not sent'),
         t('invoices.sendFailedDesc', {
           defaultValue: 'Marked as sent locally, but the email could not be delivered: {{error}}',
-          error: result.error ?? 'unknown',
+          error: friendlyError(result.error, t('invoices.sendFailedUnknown', 'please try again later')),
         }),
       );
     }

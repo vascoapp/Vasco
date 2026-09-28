@@ -6,6 +6,7 @@
 // tab-driven content · gradient CTAs. Functions preserved from legacy screen.
 // =============================================================================
 
+import { TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -638,7 +639,7 @@ function CustomerRow({ name, meta, onPress, borderBottom, inCard }: { name: stri
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 20, gap: 14 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: TAB_BAR_CLEARANCE, gap: 14 },
 
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
   title: { fontFamily: DK.type.display900, fontSize: 28, color: DK.colors.text, letterSpacing: -0.8 },

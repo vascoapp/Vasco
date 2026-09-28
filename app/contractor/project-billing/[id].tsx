@@ -17,6 +17,7 @@
 //    blocker with the fix attached, not as a quiet disabled button.
 // =============================================================================
 
+import { friendlyError } from '../../../src/utils/friendlyError';
 import { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -259,7 +260,7 @@ export default function ProjectBillingScreen() {
       await addRetentionReleaseInvoice(project.id);
       hapticSuccess();
     } catch (err) {
-      Alert.alert(t('common.error', 'Error'), String(err instanceof Error ? err.message : err));
+      Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
     }
   };
 
@@ -277,7 +278,7 @@ export default function ProjectBillingScreen() {
       await addTermInvoice(project.id, term.id);
       hapticSuccess();
     } catch (err) {
-      Alert.alert(t('common.error', 'Error'), String(err instanceof Error ? err.message : err));
+      Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
     }
   };
 
@@ -296,7 +297,7 @@ export default function ProjectBillingScreen() {
       await addChangeOrderInvoice(project.id, order.id);
       hapticSuccess();
     } catch (err) {
-      Alert.alert(t('common.error', 'Error'), String(err instanceof Error ? err.message : err));
+      Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
     }
   };
 

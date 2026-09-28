@@ -1,6 +1,7 @@
 // IntegratedPayments.tsx - iDEAL/Mollie Integration for Dutch Contractors
 // Quick payment links, reminders, and payment tracking
 
+import { friendlyError } from '../../utils/friendlyError';
 import React, { useState, useMemo } from 'react';
 import { documentNumber } from '../../domain/documents';
 import { DEMO_MODE } from '../../config/demo';
@@ -540,9 +541,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
     } catch (err) {
       Alert.alert(
         t('paymentAlerts.paymentLinkFailedTitle', 'Payment link failed'),
-        err instanceof Error && err.message
-          ? err.message
-          : t('paymentAlerts.paymentLinkFailedBody', 'Please retry or check your payment provider settings.'),
+        friendlyError(err, t('paymentAlerts.paymentLinkFailedBody', 'Please retry or check your payment provider settings.')),
       );
     }
   };

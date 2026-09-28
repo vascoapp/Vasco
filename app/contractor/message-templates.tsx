@@ -2,6 +2,7 @@
 // MESSAGE TEMPLATES — CRUD screen for pre-built + custom message templates
 // =============================================================================
 
+import { tokensToWords, wordsToTokens, type TemplateToken } from '../../src/utils/templateTokens';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
@@ -61,6 +62,7 @@ const ALL_CATEGORIES: TemplateCategory[] = ['reminder', 'follow-up', 'confirmati
 
 export default function MessageTemplatesScreen() {
   const { t } = useTranslation();
+  const tokenLabel = useCallback((k: TemplateToken) => t(`templates.token.${k}`, k), [t]);
   // Android: a Modal is its own window and never gets the activity's
   // adjustResize, so KeyboardAvoidingView cannot move this sheet. The
   // keyboard height has to pad it directly (useKeyboardInset, #339).
@@ -110,30 +112,32 @@ export default function MessageTemplatesScreen() {
   const handleEdit = useCallback((template: MessageTemplate) => {
     setEditingTemplate(template);
     setEditorTitle(template.title);
-    setEditorBody(template.body);
+    setEditorBody(tokensToWords(template.body, tokenLabel));
     setEditorCategory(template.category);
     setShowEditor(true);
-  }, []);
+  }, [tokenLabel]);
 
   // Save from editor
   const handleSave = useCallback(async () => {
-    if (!editorTitle.trim() || !editorBody.trim()) {
+    // Shown as words ("[klant]"), stored as the tokens resolveTemplate fills.
+    const body = wordsToTokens(editorBody.trim(), tokenLabel);
+    if (!editorTitle.trim() || !body) {
       Alert.alert(t('common.error', 'Error'), t('templates.fillAllFields', 'Please fill in title and body'));
       return;
     }
     if (editingTemplate && !editingTemplate.isBuiltIn) {
       await updateTemplate(editingTemplate.id, {
         title: editorTitle.trim(),
-        body: editorBody.trim(),
+        body,
         category: editorCategory,
       });
     } else {
-      await createTemplate(editorTitle.trim(), editorBody.trim(), editorCategory);
+      await createTemplate(editorTitle.trim(), body, editorCategory);
     }
     setShowEditor(false);
     hapticSuccess();
     await loadTemplates();
-  }, [editingTemplate, editorTitle, editorBody, editorCategory, loadTemplates, t]);
+  }, [editingTemplate, editorTitle, editorBody, editorCategory, loadTemplates, t, tokenLabel]);
 
   // Delete template
   const handleDelete = useCallback((template: MessageTemplate) => {
@@ -177,9 +181,11 @@ export default function MessageTemplatesScreen() {
       ? resolveTemplate(template, { contractorName } as TemplateContext)
       : template.body;
     try {
-      await Share.share({ message: body, title: template.title });
+      // "[klant]" in the shared text, not "{{customer}}": the builder fills it
+      // in WhatsApp/mail, and the words say what goes there.
+      await Share.share({ message: tokensToWords(body, tokenLabel), title: template.title });
     } catch {}
-  }, [user?.name]);
+  }, [user?.name, tokenLabel]);
 
   return (
     <View style={styles.container}>
@@ -194,33 +200,34 @@ export default function MessageTemplatesScreen() {
         </Pressable>
       </View>
 
-      {/* Category filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollContent} style={styles.filterScroll}>
-        <Pressable
-          style={[styles.filterChip, selectedCategory === 'all' && styles.filterChipActive]}
-          onPress={() => setSelectedCategory('all')}
-        >
-          <Text style={[styles.filterChipText, selectedCategory === 'all' && styles.filterChipTextActive]}>
-            {t('templates.all', 'All')}
-          </Text>
-        </Pressable>
-        {ALL_CATEGORIES.map((cat) => {
-          const config = CATEGORY_CONFIG[cat];
-          const isActive = selectedCategory === cat;
-          return (
-            <Pressable
-              key={cat}
-              style={[styles.filterChip, isActive && styles.filterChipActive]}
-              onPress={() => setSelectedCategory(cat)}
-            >
-              <Ionicons name={config.icon} size={14} color={isActive ? Palette.hermesOrange : SemanticColors.textTertiary} />
-              <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-                {t(`templates.cat_${cat}`, config.label)}
+      {/* Category = one choice → a menu (CLAUDE.md). The sideways strip hid
+          "Bedankt" and "Eigen" past the edge. */}
+      <View style={[styles.filterScroll, styles.filterScrollContent]}>
+        <DKMenu
+          accessibilityLabel={t('templates.categoryMenu', 'Category')}
+          items={[
+            { key: 'all', label: t('templates.all', 'All'), selected: selectedCategory === 'all', onPress: () => setSelectedCategory('all') },
+            ...ALL_CATEGORIES.map((cat) => ({
+              key: cat,
+              label: t(`templates.cat_${cat}`, CATEGORY_CONFIG[cat].label),
+              icon: CATEGORY_CONFIG[cat].icon,
+              selected: selectedCategory === cat,
+              onPress: () => setSelectedCategory(cat),
+            })),
+          ]}
+          renderAnchor={(open) => (
+            <Pressable style={[styles.filterChip, styles.filterChipActive, { alignSelf: 'flex-start' }]} onPress={open} accessibilityRole="button" testID="templates-category-menu">
+              {selectedCategory !== 'all' && (
+                <Ionicons name={CATEGORY_CONFIG[selectedCategory as TemplateCategory].icon} size={14} color={Palette.hermesOrange} />
+              )}
+              <Text style={[styles.filterChipText, styles.filterChipTextActive]}>
+                {selectedCategory === 'all' ? t('templates.all', 'All') : t(`templates.cat_${selectedCategory}`, CATEGORY_CONFIG[selectedCategory as TemplateCategory].label)}
               </Text>
+              <Ionicons name="chevron-down" size={14} color={Palette.hermesOrange} />
             </Pressable>
-          );
-        })}
-      </ScrollView>
+          )}
+        />
+      </View>
 
       {/* Template list */}
       <ScrollView
@@ -262,7 +269,7 @@ export default function MessageTemplatesScreen() {
                       )}
                     </View>
                     <Text style={styles.templatePreview} numberOfLines={2}>
-                      {template.body}
+                      {tokensToWords(template.body, tokenLabel)}
                     </Text>
                   </View>
                   <Pressable
@@ -352,13 +359,15 @@ export default function MessageTemplatesScreen() {
 
             {/* Variable hints */}
             <View style={styles.varHintRow}>
-              {['{{customer}}', '{{amount}}', '{{date}}', '{{jobTitle}}'].map((v) => (
+              {(['customer', 'amount', 'date', 'jobTitle'] as const).map((k) => (
                 <Pressable
-                  key={v}
+                  key={k}
                   style={styles.varHint}
-                  onPress={() => setEditorBody(prev => prev + v)}
+                  onPress={() => setEditorBody(prev => prev + `[${tokenLabel(k)}]`)}
+                  accessibilityRole="button"
+                  testID={`template-insert-${k}`}
                 >
-                  <Text style={styles.varHintText}>{v}</Text>
+                  <Text style={styles.varHintText}>{`+ ${tokenLabel(k)}`}</Text>
                 </Pressable>
               ))}
             </View>

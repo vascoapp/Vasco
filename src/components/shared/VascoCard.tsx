@@ -5,6 +5,7 @@
 // Collapsed: smart summary with top priority. Expanded: briefing + queue + insight.
 // =============================================================================
 
+import { getCurrentCountry } from '../../lib/currentUser';
 import { useState } from 'react';
 import { formatTimeAuto } from '../../i18n/formatting';
 import { View, Text, StyleSheet, Pressable, TextInput, Share, ActivityIndicator, Alert } from 'react-native';
@@ -518,7 +519,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
             accessibilityLabel={t('a11y.sendViaWhatsApp', 'Send via WhatsApp')}
             onPress={async () => {
               const { sendWhatsApp } = await import('../../services/whatsappService');
-              await sendWhatsApp(item.preparedData!.customerPhone as string, editText || (item.preparedData?.template as string) || item.description);
+              await sendWhatsApp(item.preparedData!.customerPhone as string, editText || (item.preparedData?.template as string) || item.description, getCurrentCountry() ?? undefined);
               hapticSuccess();
               onApprove();
             }}

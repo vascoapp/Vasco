@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, Pressable, Alert } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Pressable, Alert, Linking, ScrollView } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Screen } from '../../src/components/Screen';
 import { SemanticColors, Palette } from '../../src/theme/colors';
@@ -10,19 +10,14 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../../src/config/paymentMethods';
 import { consentService } from '../../src/services/consentService';
-import { VASCO_FEE_DISCLOSURE } from '../../src/services/paymentMarginService';
-import i18n from '../../src/i18n/i18n';
 import { useTranslation } from 'react-i18next';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 
-type LocaleKey = keyof typeof VASCO_FEE_DISCLOSURE;
-function feeDisclosureForLocale(): string {
-  const lang = (i18n.language ?? 'en').slice(0, 2).toLowerCase();
-  const valid: LocaleKey[] = ['en', 'nl', 'de', 'fr', 'es', 'it'];
-  return VASCO_FEE_DISCLOSURE[(valid.includes(lang as LocaleKey) ? lang : 'en') as LocaleKey];
-}
+// Where Stripe shows the key to copy (after logging in).
+const STRIPE_KEYS_URL = 'https://dashboard.stripe.com/apikeys';
 
 export default function StripeConnectModal() {
-  const { connectStripe, disconnectStripe, stripeConnected } = useAppState();
+  const { connectStripe, disconnectStripe, stripeConnected, businessProfile } = useAppState();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [apiKey, setApiKey] = useState('');
@@ -31,10 +26,11 @@ export default function StripeConnectModal() {
 
   // Country-specific payment methods. Defaults to UK for this modal but
   // respects the user's actual country (Stripe is multi-country).
-  const paymentMethods = getPaymentDisplayForCountry(user?.country ?? 'UK');
+  const paymentMethods = getPaymentDisplayForCountry(businessProfile?.country ?? user?.country ?? 'UK');
 
   const handleTest = async () => {
-    if (!apiKey.startsWith('sk_live_') && !apiKey.startsWith('sk_test_')) {
+    const key = apiKey.trim();
+    if (!key.startsWith('sk_live_') && !key.startsWith('sk_test_')) {
       Alert.alert(
         t('stripe.invalidKeyTitle', 'Invalid key'),
         t('stripe.invalidKeyDesc', 'Stripe secret keys start with "sk_live_" or "sk_test_"'),
@@ -89,7 +85,7 @@ export default function StripeConnectModal() {
     setTestResult(null);
 
     try {
-      await saveStripeConfig({ apiKey });
+      await saveStripeConfig({ apiKey: apiKey.trim() });
       // R66r57: validateConnection() actually hits /v1/balance instead of
       // just checking SecureStore. Pre-r57 a typo'd sk_live_xxx would
       // show "Connected ✓" and fail at first payment-link mint.
@@ -110,48 +106,60 @@ export default function StripeConnectModal() {
 
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>
-      <View style={styles.container}>
-        <Text style={styles.title}>{t('stripe.title', 'Stripe Payments')}</Text>
+      {/* Back + title: this modal had no way out but the OS gesture. */}
+      <DKScreenHeader title={t('stripe.title', 'Stripe Payments')} />
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.subtitle}>
           {t('stripe.subtitle', 'Receive payments via card, Apple Pay, Google Pay and more')}
         </Text>
 
-        {/* R66r54: Vasco platform-fee disclosure mirrors the Mollie modal.
-            1% on payments received. Required to surface in plain language
-            wherever the contractor connects a payment provider. */}
-        <View style={styles.feeNotice}>
-          <Ionicons name="information-circle-outline" size={16} color={SemanticColors.textTertiary} />
-          <Text style={styles.feeNoticeText}>{feeDisclosureForLocale()}</Text>
-        </View>
+        {/* Plain steps for a builder, the same as Mollie (emulator walk
+            2026-09-28). The "Vasco charges x% commission" notice is gone:
+            Vasco charges nothing here — memory/payments-monetization-2026-08.md. */}
+        {!stripeConnected && (
+          <View style={styles.steps} testID="stripe-steps">
+            <Text style={styles.stepsTitle}>{t('stripe.stepsTitle', 'Connect Stripe in 3 steps')}</Text>
+            {[
+              t('stripe.step1', 'Open Stripe and log in. No account yet? You can create one for free there.'),
+              t('stripe.step2', 'Copy the secret key — the code that starts with sk_live_'),
+              t('stripe.step3', 'Come back, hold your finger in the box below, tap Paste — then Connect.'),
+            ].map((text, i) => (
+              <View key={i} style={styles.stepRow}>
+                <View style={styles.stepNum}><Text style={styles.stepNumText}>{i + 1}</Text></View>
+                <Text style={styles.stepText}>{text}</Text>
+              </View>
+            ))}
+            <Pressable style={styles.openBtn} onPress={() => Linking.openURL(STRIPE_KEYS_URL)} accessibilityRole="link" testID="stripe-open">
+              <Ionicons name="open-outline" size={16} color={Palette.hermesOrange} />
+              <Text style={styles.openText}>{t('stripe.openStripe', 'Open Stripe')}</Text>
+            </Pressable>
+          </View>
+        )}
 
-        {/* API Key Input */}
         <View style={styles.inputSection}>
-          <Text style={styles.label}>{t('stripe.apiKeyLabel', 'Secret key')}</Text>
+          <Text style={styles.label}>{t('stripe.codeLabel', 'Your Stripe key')}</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
-              placeholder={t('stripe.apiKeyPlaceholder', 'sk_live_xxxx or sk_test_xxxx')}
+              placeholder={t('stripe.codePlaceholder', 'Paste your key here')}
               placeholderTextColor={SemanticColors.placeholder}
               value={apiKey}
               onChangeText={setApiKey}
               autoCapitalize="none"
               autoCorrect={false}
               secureTextEntry={apiKey.length > 10}
+              testID="stripe-code"
             />
             {testResult === 'success' && (
               <Ionicons name="checkmark-circle" size={22} color={SemanticColors.feedbackSuccess} />
             )}
           </View>
-          <Text style={styles.hint}>
-            {t('stripe.apiKeyHint', 'Find your secret key in Stripe Dashboard → Developers → API keys')}
-          </Text>
         </View>
 
-        {/* Test + Connect Button */}
         <Pressable
           style={[styles.connectBtn, stripeConnected && styles.connectedBtn]}
           onPress={handleTest}
-          disabled={testing || apiKey.length < 10}
+          disabled={testing || apiKey.trim().length < 10}
         >
           {testing ? (
             <Text style={styles.connectBtnText}>{t('stripe.connecting', 'Connecting…')}</Text>
@@ -161,7 +169,7 @@ export default function StripeConnectModal() {
               <Text style={[styles.connectBtnText, { color: SemanticColors.feedbackSuccess }]}>{t('stripe.connected', 'Connected')}</Text>
             </>
           ) : (
-            <Text style={styles.connectBtnText}>{t('stripe.connectAndTest', 'Connect & test')}</Text>
+            <Text style={styles.connectBtnText}>{t('stripe.connect', 'Connect')}</Text>
           )}
         </Pressable>
 
@@ -207,33 +215,32 @@ export default function StripeConnectModal() {
             </View>
           )}
         </View>
-      </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: Spacing.lg, gap: Spacing.md },
-  title: { fontSize: 22, fontFamily: 'Archivo_800ExtraBold', color: SemanticColors.textPrimary },
-  subtitle: { fontSize: 14, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
-  feeNotice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
+  container: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: Spacing.xl * 2 },
+  steps: {
+    gap: 10, padding: 14, borderRadius: 12,
     backgroundColor: SemanticColors.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: SemanticColors.borderDefault,
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 4,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
-  feeNoticeText: {
-    flex: 1,
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
-    color: SemanticColors.textSecondary,
-    lineHeight: 16,
+  stepsTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary },
+  stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  stepNum: {
+    width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Palette.hermesOrange + '22',
   },
+  stepNumText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: Palette.hermesOrange },
+  stepText: { flex: 1, fontSize: 14, lineHeight: 20, fontFamily: 'Inter_400Regular', color: SemanticColors.textPrimary },
+  openBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    borderWidth: 1, borderColor: Palette.hermesOrange, borderRadius: 10, paddingVertical: 10, marginTop: 2,
+  },
+  openText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: Palette.hermesOrange },
+  subtitle: { fontSize: 14, fontFamily: 'Inter_400Regular', color: SemanticColors.textSecondary },
   inputSection: { gap: 6 },
   label: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -242,7 +249,6 @@ const styles = StyleSheet.create({
     padding: 14, fontSize: 15, fontFamily: 'Inter_400Regular', color: SemanticColors.textPrimary,
     borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
-  hint: { fontSize: 12, fontFamily: 'Inter_400Regular', color: SemanticColors.textTertiary },
   connectBtn: {
     backgroundColor: Palette.hermesOrange, borderRadius: 12, padding: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

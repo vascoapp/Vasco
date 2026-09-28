@@ -52,7 +52,11 @@ export default function DeleteAccountScreen() {
       // Only a COMPLETE export counts: offline it is the device cache only,
       // and a table that could not be read is a record the business lacks.
       if (result.success && result.complete) setExported(true);
-      else Alert.alert(t('accountDeletion.exportFailed'));
+      // A short TITLE and the explanation as the BODY: the whole sentence sat
+      // in the title slot, which Android cuts at two lines ("…voordat je v…",
+      // emulator walk 2026-09-28). And say which happened: nothing, or not all.
+      else if (result.success) Alert.alert(t('accountDeletion.exportIncompleteTitle'), t('accountDeletion.exportIncomplete'));
+      else Alert.alert(t('accountDeletion.exportFailedTitle'), t('accountDeletion.exportFailed'));
     } finally {
       setExporting(false);
     }
@@ -71,7 +75,7 @@ export default function DeleteAccountScreen() {
         onProgress: (done, total) => setArchiveProgress({ done, total }),
       });
       const gaps = result.pdfFailed.length + result.xmlMissing.filter((m) => m.kind !== 'noFormat').length;
-      if (!result.ok) Alert.alert(t('accountDeletion.invoicesArchiveFailed'));
+      if (!result.ok) Alert.alert(t('accountDeletion.invoicesArchiveFailedTitle'), t('accountDeletion.invoicesArchiveFailed'));
       else if (gaps > 0) Alert.alert(t('accountDeletion.invoicesArchivePartial', { count: result.invoiceCount }));
       // Created, even if a gap is listed: the file exists and says what it lacks.
       if (result.ok) setArchived(true);

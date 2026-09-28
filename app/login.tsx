@@ -456,7 +456,7 @@ export default function LoginScreen() {
                             const keys = await AsyncStorage.getAllKeys();
                             const vascoKeys = keys.filter((k: string) => k.startsWith('@vasco_'));
                             if (vascoKeys.length > 0) await AsyncStorage.multiRemove(vascoKeys);
-                            Alert.alert(t('auth.dataReset', '{{count}} items cleared. Log in again for fresh data.', { count: vascoKeys.length }));
+                            Alert.alert(t('auth.resetDemoData', 'Reset demo data'), t('auth.dataReset', '{{count}} items cleared. Log in again for fresh data.', { count: vascoKeys.length }));
                           },
                         },
                       ],

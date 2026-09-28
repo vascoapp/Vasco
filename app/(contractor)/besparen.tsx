@@ -21,7 +21,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { SafeArea } from '../../src/theme/spacing';
-import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE, RADIUS, GRID, TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
 import { useActionLedger } from '../../src/services/actionLedgerService';
 import { usePredictiveSavings } from '../../src/services/predictiveSavingsService';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -369,10 +369,22 @@ export default function BesparenScreen() {
                 <Text style={s.moatStatLabel}>{t('savings.suppliersCompared', 'leveranciers vergeleken')}</Text>
               </View>
             </View>
+            {/* The instruction IS the way there: it was plain text telling the
+                contractor to "scan" an invoice, with nothing to tap — and the
+                photo scan is dark in production (#364). Inkoop reads supplier
+                invoices (e-invoice always; photo only when vision is live).
+                Emulator walk 2026-09-28. */}
             {moatStats.scans === 0 && (
-              <Text style={s.moatHint}>
-                {t('savings.scanFirstInvoice', 'Scan je eerste leveranciersfactuur om prijsintelligentie te starten')}
-              </Text>
+              <Pressable
+                onPress={() => router.push('/contractor/inkoop' as any)}
+                accessibilityRole="button"
+                hitSlop={8}
+                testID="savings-add-first-invoice"
+              >
+                <Text style={s.moatHint}>
+                  {t('savings.addFirstInvoice', 'Add your first supplier invoice to start price intelligence')} →
+                </Text>
+              </Pressable>
             )}
           </View>
         </FadeIn>
@@ -417,7 +429,7 @@ const s = StyleSheet.create({
 
   // Scroll
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.md },
+  scrollContent: { paddingHorizontal: SafeArea.side, paddingBottom: TAB_BAR_CLEARANCE, gap: GRID.md },
 
   // Summary card
   summaryCard: {

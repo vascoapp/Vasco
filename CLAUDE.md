@@ -43,7 +43,7 @@ src/
                               # `upgradeTo` so a payer is never read as a lapsed
                               # trial. All three move together — see learnings #300,
                               # where each fix in the chain created the next bug.
-    paymentMarginService.ts   # FEE DISCLOSURE WIRED (R66r49 #14) / COLLECTION PENDING — 1% flat disclosure surfaces in Mollie connect modal in 6 locales. Actual fee collection (Stripe Connect / Mollie Partner config) is operator-side, not a code bug.
+    paymentMarginService.ts   # DEAD: the tier commission must NOT ship (memory/payments-monetization-2026-08.md). The "Vasco rekent 3.5% commissie" notice was REMOVED from the Mollie + Stripe screens 2026-09-28 — Vasco charges nothing there (the contractor's own account). Never re-add a fee claim without a fee.
     supplierBacklinkService.ts # 16 EU suppliers, affiliate links, commission tracking
     complianceGatingService.ts # E-invoice format gating, 6 country compliance packs
     eveAgentService.ts        # EVE 3-agent model: Agent (execution), Auditor (compliance), Analyst (intelligence)

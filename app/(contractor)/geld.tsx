@@ -78,10 +78,9 @@ export default function GeldScreen() {
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>('all');
   const [invoiceSort, setInvoiceSort] = useState<SortMode>('date-desc');
   const [quoteSort, setQuoteSort] = useState<SortMode>('date-desc');
-  const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const [showInvoiceFilterModal, setShowInvoiceFilterModal] = useState(false);
   const [showQuoteFilterModal, setShowQuoteFilterModal] = useState(false);
-  const { invoices, quotes, jobs, projects, markInvoiceSent, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
+  const { invoices, quotes, jobs, projects, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
   const { user } = useAuth();
   const fin = useFinancialAnalysis();
   const aiQueue = useAIQueue({ jobs, invoices, quotes });
@@ -378,7 +377,13 @@ export default function GeldScreen() {
         {/* ─── CASHFLOW FORECAST (embedded self-styled component) ─── */}
         {/* R300: ML cashflow-gap prediction banner — hidden when low confidence or small gap */}
         <CashflowGapPredictionCard />
-        <CashFlowForecastCard invoices={invoices as any} country={(businessProfile?.country as any) ?? 'NL'} />
+        <CashFlowForecastCard
+          invoices={invoices as any}
+          country={(businessProfile?.country as any) ?? 'NL'}
+          // The card is a button (role + chevron); without this it did nothing
+          // (emulator crawl 2026-09-28). The full forecast lives on its own screen.
+          onPress={() => router.push('/contractor/cashflow' as any)}
+        />
 
         {/* ─── FINANCIAL AI QUEUE (was VascoCard) ─── */}
         {(financialQueue.length > 0 || topInsight) && (
@@ -456,16 +461,19 @@ export default function GeldScreen() {
                 <Text style={s.docAmount}>{formatCurrency(doc.amount)}</Text>
                 {doc.status === 'draft' && (
                   <Pressable
-                    style={[s.sendBtn, sendingInvoiceId === doc.id && { opacity: 0.5 }]}
-                    disabled={sendingInvoiceId === doc.id}
+                    style={s.sendBtn}
+                    // Opens the invoice, where Versturen really sends: readiness
+                    // checks, the customer's email from their record, their
+                    // language. This button used to call markInvoiceSent and
+                    // then say "share the PDF yourself" — the status claimed a
+                    // send that never happened and started the overdue clock
+                    // (emulator walk 2026-09-28).
                     onPress={(e) => {
                       e.stopPropagation?.();
-                      if (sendingInvoiceId) return;
-                      setSendingInvoiceId(doc.id);
-                      try { hapticSuccess(); markInvoiceSent(doc.id); Alert.alert(t('invoices.markedAsSent', 'Invoice marked as sent'), t('invoices.markedAsSentDesc', 'Share the PDF with your customer via the share button on the invoice detail screen.')); }
-                      finally { setSendingInvoiceId(null); }
+                      router.push(`/invoices/${doc.id}` as any);
                     }}
                     hitSlop={6}
+                    testID={`geld-send-${doc.id}`}
                    accessibilityRole="button" accessibilityLabel={t('common.send', 'Send')}>
                     <Ionicons name="send" size={12} color="#FFFFFF" />
                   </Pressable>

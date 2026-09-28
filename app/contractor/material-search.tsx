@@ -5,6 +5,8 @@
 // create purchase orders grouped by supplier, and share with suppliers.
 // =============================================================================
 
+import { DK } from '../../src/theme/draftkings';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   View,
@@ -345,25 +347,6 @@ export default function MaterialSearchScreen() {
   // Render helpers
   // ---------------------------------------------------------------------------
 
-  const renderTradeChip = useCallback(({ key, labelKey, icon }: typeof TRADE_FILTERS[number]) => {
-    const active = tradeFilter === key;
-    return (
-      <Pressable
-        key={key}
-        style={[styles.chip, active && styles.chipActive]}
-        onPress={() => handleTradeFilter(key)}
-        accessibilityRole="button"
-        accessibilityState={{ selected: active }}
-        accessibilityLabel={t(labelKey, key)}
-      >
-        <Ionicons name={icon} size={14} color={active ? '#fff' : SemanticColors.textSecondary} />
-        <Text style={[styles.chipText, active && styles.chipTextActive]}>
-          {t(labelKey, key)}
-        </Text>
-      </Pressable>
-    );
-  }, [tradeFilter, handleTradeFilter, t]);
-
   const renderResultItem = useCallback(({ item }: { item: CatalogItem }) => {
     const isScanned = item.description?.includes('Real price');
     const isExpanded = expandedCompare === item.articleNumber;
@@ -442,8 +425,12 @@ export default function MaterialSearchScreen() {
                 <ActivityIndicator size="small" color={Palette.hermesOrange} style={{ paddingVertical: GRID.sm }} />
               ) : priceCheck && priceCheck.prices.length > 0 ? (
                 <>
+                  {/* Baseline figures, not quotes from these suppliers — say so. */}
                   <Text style={styles.comparePanelTitle}>
-                    {t('materialSearch.supplierPrices', 'Supplier prices')}
+                    {t('materialSearch.supplierPrices', 'Indicative prices')}
+                  </Text>
+                  <Text style={styles.compareEmpty}>
+                    {t('materialSearch.indicativeNote', 'Market figures, not a quote — ask your supplier for the real price.')}
                   </Text>
                   {priceCheck.prices.slice(0, 4).map((sp, idx) => {
                     const isCheapest = sp.supplierId === priceCheck.cheapest && priceCheck.prices.length > 1;
@@ -518,23 +505,27 @@ export default function MaterialSearchScreen() {
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('materialSearch.title', 'Find Materials')}</Text>
-        <Pressable
-          onPress={() => {
-            if (cart.length > 0) setShowCart(!showCart);
-          }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('materialSearch.cart', 'Cart')}
-        >
-          <View>
-            <Ionicons name="cart-outline" size={24} color={SemanticColors.textPrimary} />
-            {cartCount > 0 && (
+        {/* Only when there is something in it: an empty cart icon was a button
+            that did nothing (emulator walk 2026-09-28). The spacer keeps the
+            title centred. */}
+        {cart.length > 0 ? (
+          <Pressable
+            onPress={() => setShowCart(!showCart)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('materialSearch.cart', 'Cart')}
+            testID="material-cart"
+          >
+            <View>
+              <Ionicons name="cart-outline" size={24} color={SemanticColors.textPrimary} />
               <View style={styles.cartBadge}>
                 <Text style={styles.cartBadgeText}>{cartCount}</Text>
               </View>
-            )}
-          </View>
-        </Pressable>
+            </View>
+          </Pressable>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       {/* Search bar */}
@@ -559,15 +550,28 @@ export default function MaterialSearchScreen() {
         </View>
       </View>
 
-      {/* Trade filter chips */}
+      {/* One trade at a time = a menu, never a sideways chip strip (CLAUDE.md):
+          the strip hid "Schilderwerk" and "Timmerwerk" past the edge. */}
       <View style={styles.chipRow}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={TRADE_FILTERS}
-          keyExtractor={(item) => item.key}
-          renderItem={({ item }) => renderTradeChip(item)}
-          contentContainerStyle={styles.chipContent}
+        <DKMenu
+          accessibilityLabel={t('materialSearch.tradeMenu', 'Trade')}
+          items={TRADE_FILTERS.map((f) => ({
+            key: f.key,
+            label: t(f.labelKey, f.key),
+            icon: f.icon,
+            selected: tradeFilter === f.key,
+            onPress: () => handleTradeFilter(f.key),
+          }))}
+          renderAnchor={(open) => {
+            const cur = TRADE_FILTERS.find((f) => f.key === tradeFilter) ?? TRADE_FILTERS[0];
+            return (
+              <Pressable style={[styles.chip, styles.chipActive, { alignSelf: 'flex-start' }]} onPress={open} accessibilityRole="button" testID="material-trade-menu">
+                <Ionicons name={cur.icon} size={14} color={DK.colors.text} />
+                <Text style={[styles.chipText, styles.chipTextActive]}>{t(cur.labelKey, cur.key)}</Text>
+                <Ionicons name="chevron-down" size={14} color={DK.colors.text} />
+              </Pressable>
+            );
+          }}
         />
       </View>
 

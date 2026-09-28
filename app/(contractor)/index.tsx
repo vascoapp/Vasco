@@ -12,6 +12,8 @@
 // No new sections added. Only visual treatment swapped to DraftKings rhythm.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
+import { TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
 import { useMemo, useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, StatusBar, Alert, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -153,7 +155,7 @@ export default function VandaagDK() {
       if (item) await executeApprovedQueueItem(item, { router }, { alreadyShared: false });
     } catch (e) {
       hapticWarning();
-      Alert.alert(t('dk.empty.noExtraActions', 'Action failed'), String((e as Error).message ?? e));
+      Alert.alert(t('dk.empty.noExtraActions', 'Action failed'), friendlyError(e, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
     }
   }, [aiQueue, router, t]);
 
@@ -533,7 +535,7 @@ function JobRow({ job, onPress }: { job: ScheduledJob; onPress: () => void }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: DK.colors.bg },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: TAB_BAR_CLEARANCE },
 
   // ─── First-login simplified hero ──────────────────────────────────
   firstTimeHero: {

@@ -4,6 +4,7 @@
 // Full-page clock in/out, daily entries, job-linked time tracking
 // =============================================================================
 
+import { resolveHourlyChargeRate } from '../../src/services/hourlyRate';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
@@ -217,6 +218,13 @@ export default function TimesheetScreen() {
     : activeTab === 'week' ? weekEntries
     : monthEntries;
 
+  const [hourlyRate, setHourlyRate] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    resolveHourlyChargeRate(businessProfile).then((r) => { if (alive) setHourlyRate(r); });
+    return () => { alive = false; };
+  }, [businessProfile]);
+
   const displayHours = activeTab === 'vandaag' ? todayHours
     : activeTab === 'week' ? weekHours
     : monthHours;
@@ -235,9 +243,14 @@ export default function TimesheetScreen() {
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>{t('timesheet.title', 'Urenregistratie')}</Text>
-          <Text style={styles.headerSubtitle}>
-            {hoursLabel(todayHours)} {t('timesheet.today', 'vandaag')} · {hoursLabel(weekHours)} {t('timesheet.thisWeek', 'deze week')}
-          </Text>
+          {/* Only when there are hours: "0,0u vandaag · 0,0u deze week" above a
+              "0,0u / 0 / € 0" card above "Geen registraties" said nothing three
+              times (emulator walk 2026-09-28). */}
+          {(todayHours > 0 || weekHours > 0) && (
+            <Text style={styles.headerSubtitle}>
+              {hoursLabel(todayHours)} {t('timesheet.today', 'vandaag')} · {hoursLabel(weekHours)} {t('timesheet.thisWeek', 'deze week')}
+            </Text>
+          )}
         </View>
       </View>
 
@@ -305,7 +318,8 @@ export default function TimesheetScreen() {
         ))}
       </View>
 
-      {/* Summary */}
+      {/* Summary — only with entries; the empty state below says the rest. */}
+      {displayEntries.length > 0 && (
       <View style={styles.summaryBar}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>{hoursLabel(displayHours)}</Text>
@@ -316,14 +330,21 @@ export default function TimesheetScreen() {
           <Text style={styles.summaryValue}>{displayEntries.length}</Text>
           <Text style={styles.summaryLabel}>{t('timesheet.entries', 'Registraties')}</Text>
         </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>
-            {formatCurrency0(displayHours * 55, country)}
-          </Text>
-          <Text style={styles.summaryLabel}>{t('timesheet.value', 'Waarde')}</Text>
-        </View>
+        {/* Value at the contractor's OWN rate — never an invented one (it was
+            a literal ×55). No rate on file → no value shown. */}
+        {hourlyRate !== undefined && (
+          <>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue} testID="timesheet-value">
+                {formatCurrency0(displayHours * hourlyRate, country)}
+              </Text>
+              <Text style={styles.summaryLabel}>{t('timesheet.value', 'Waarde')}</Text>
+            </View>
+          </>
+        )}
       </View>
+      )}
 
       {/* Entries */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />}>

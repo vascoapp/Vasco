@@ -5,6 +5,7 @@
 // client contact, notes, material predictions, and upsell opportunities
 // =============================================================================
 
+import { friendlyError } from '../../../src/utils/friendlyError';
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import {
   View,
@@ -227,7 +228,7 @@ export default function JobDetailPage() {
         // like the tap did nothing; say why, then let them fix it here.
         Alert.alert(
           t('jobs.invoiceFailedTitle', 'Could not create the invoice'),
-          err instanceof Error ? err.message : String(err),
+          friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")),
         );
       }
     })();
@@ -898,7 +899,7 @@ export default function JobDetailPage() {
                       } catch (err) {
                         Alert.alert(
                           t('jobs.invoiceFailedTitle', 'Could not create the invoice'),
-                          err instanceof Error ? err.message : String(err),
+                          friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")),
                         );
                       }
                       return;
@@ -1539,7 +1540,7 @@ export default function JobDetailPage() {
               } catch (err) {
                 Alert.alert(
                   t('jobs.invoiceFailedTitle', 'Could not create the invoice'),
-                  err instanceof Error ? err.message : String(err),
+                  friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")),
                 );
                 return;
               }

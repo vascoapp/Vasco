@@ -6,13 +6,14 @@
 // overflow caused by late decisions.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Palette, SemanticColors } from '../../src/theme/colors';
-import { PAGE_BG, TYPE, RADIUS } from '../../src/theme/tabStyles';
+import { PAGE_BG, TYPE, RADIUS, TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { useRouter } from 'expo-router';
 import { statuteSuffix } from '../../src/domain/extraWorkLaw';
@@ -430,7 +431,7 @@ export default function KeuzeScreen() {
             } catch (err) {
               Alert.alert(
                 t('decisions.billUpgradesFailed', 'Could not create the invoice'),
-                err instanceof Error ? err.message : String(err),
+                friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")),
               );
             }
           },
@@ -500,7 +501,8 @@ export default function KeuzeScreen() {
       </View>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1 }}
+        // Clear the absolute tab bar or the last tracker sits under it.
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: TAB_BAR_CLEARANCE }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.hermesOrange} />

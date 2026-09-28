@@ -3,6 +3,7 @@
 // R270: smart-reply chips above the action buttons (Google-Inbox style).
 // =============================================================================
 
+import { sendWhatsApp } from '../../../src/services/whatsappService';
 import { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -116,7 +117,11 @@ export default function CustomerDetailScreen() {
     recordTap(reply.id).catch(() => {});
     const body = encodeURIComponent(reply.body);
     if (reply.channel === 'whatsapp' && customer?.phone) {
-      Linking.openURL(`whatsapp://send?phone=${customer.phone.replace(/\s/g, '')}&text=${body}`).catch(() => {});
+      // wa.me via sendWhatsApp: `whatsapp://` did nothing (silently) on a
+      // phone without WhatsApp — emulator walk 2026-09-28.
+      // No NL default here: an unknown country must open the contact picker,
+      // never dial a national number as Dutch (CLAUDE.md; review 2026-09-28).
+      void sendWhatsApp(customer.phone, reply.body, businessProfile?.country ?? user?.country);
     } else if (reply.channel === 'sms' && customer?.phone) {
       Linking.openURL(`sms:${customer.phone}?body=${body}`).catch(() => {});
     } else if (reply.channel === 'email' && customer?.email) {

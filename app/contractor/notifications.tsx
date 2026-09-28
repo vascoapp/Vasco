@@ -213,10 +213,10 @@ export default function NotificationsScreen() {
                   style={s.groupActionBtn}
                   onPress={() => router.push(action.route as any)}
                   accessibilityRole="button"
-                  accessibilityLabel={action.label}
+                  accessibilityLabel={t(`notifications.action.${action.key}`, action.label)}
                 >
                   <Ionicons name={action.icon as IconName} size={14} color={Palette.hermesOrange} />
-                  <Text style={s.groupActionText}>{action.label}</Text>
+                  <Text style={s.groupActionText}>{t(`notifications.action.${action.key}`, action.label)}</Text>
                 </Pressable>
               ))}
             </View>

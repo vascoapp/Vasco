@@ -476,3 +476,14 @@ export const tabStyles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
 });
+
+/**
+ * Bottom padding for a scrolling screen inside the contractor tab group. The
+ * tab bar there is `position: 'absolute'` (app/(contractor)/_layout.tsx:
+ * 54pt + the device's bottom inset), so content scrolls UNDER it: a screen
+ * that pads less than the bar can never lift its last element into view.
+ * Certificaten's last portal (Inspectie SZW) sat under the bar at full scroll
+ * and could not be tapped — emulator walk 2026-09-28. Guard:
+ * src/__tests__/tabScreensClearTheTabBar.test.ts.
+ */
+export const TAB_BAR_CLEARANCE = 140;

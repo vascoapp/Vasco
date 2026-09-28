@@ -5,25 +5,24 @@
 import { Linking, Alert } from 'react-native';
 import i18n from '../i18n/i18n';
 import { formatMoney2 } from '../i18n/formatting';
+import { toE164 } from '../utils/phone';
 
-/** Open WhatsApp with a pre-filled message to a phone number */
-export async function sendWhatsApp(phone: string, message: string): Promise<boolean> {
-  // Clean phone: remove spaces, dashes. Ensure starts with country code
-  const cleaned = phone.replace(/[\s\-().]/g, '');
-  const number = cleaned.startsWith('+') ? cleaned.substring(1) : cleaned;
-
+/**
+ * Open WhatsApp with a pre-filled message. `https://wa.me/…` works whether or
+ * not the app is installed (the web page hands over to it); `whatsapp://`
+ * failed silently on phones without WhatsApp and three screens swallowed the
+ * error, so a tap did nothing (emulator walk 2026-09-28).
+ *
+ * A national number is made international with the contractor's country
+ * (`toE164`). If that is impossible (country unknown), WhatsApp still opens
+ * with the text and the contractor picks the contact — never a wrong number.
+ */
+export async function sendWhatsApp(phone: string | undefined, message: string, contractorCountry?: string): Promise<boolean> {
+  const e164 = toE164(phone, contractorCountry);
   const encoded = encodeURIComponent(message);
-  const url = `whatsapp://send?phone=${number}&text=${encoded}`;
-  const webUrl = `https://wa.me/${number}?text=${encoded}`;
-
+  const url = e164 ? `https://wa.me/${e164}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
   try {
-    const canOpen = await Linking.canOpenURL(url);
-    if (canOpen) {
-      await Linking.openURL(url);
-      return true;
-    }
-    // Fallback to web URL (works on web + when app not installed)
-    await Linking.openURL(webUrl);
+    await Linking.openURL(url);
     return true;
   } catch {
     Alert.alert('WhatsApp', i18n.t('whatsapp.openFailed', 'Could not open WhatsApp. Make sure it is installed.'));

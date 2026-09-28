@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
@@ -327,7 +328,7 @@ function BusinessSettingsForm() {
       } else {
         // The BE's message names the current position, which is the part the
         // contractor needs — "failed" alone leaves them guessing.
-        Alert.alert(t('settings.counterRefused', 'Cannot move numbering backwards'), res.message);
+        Alert.alert(t('settings.counterRefused', 'Cannot move numbering backwards'), friendlyError(res.message, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
       }
     } finally {
       setCounterBusy(false);
@@ -389,7 +390,7 @@ function BusinessSettingsForm() {
         if (!res.ok) {
           // Refused (the series never moves backwards) — say so and stay on the
           // screen rather than leaving with the number unchanged and unmentioned.
-          Alert.alert(t('settings.counterRefused', 'Cannot move numbering backwards'), res.message);
+          Alert.alert(t('settings.counterRefused', 'Cannot move numbering backwards'), friendlyError(res.message, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
           return;
         }
         loadedCounter.current = String(res.next);

@@ -24,6 +24,7 @@
 // SlotPicker below.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -735,7 +736,7 @@ export default function DragScheduleScreen() {
             // R254: optimize today's job order via the new scheduler. Uses
             // postcode-prefix proximity for distance + priority weighting.
             if (schedule.length < 2) {
-              Alert.alert(t('schedule.optimizeNeedTwo', 'Need at least 2 jobs to optimize'));
+              Alert.alert(t('schedule.optimize', 'Optimize'), t('schedule.optimizeNeedTwo', 'Need at least 2 jobs to optimize'));
               return;
             }
             try {
@@ -849,7 +850,7 @@ export default function DragScheduleScreen() {
               Alert.alert(t('schedule.optimizedTitle', 'Route optimized'), summary + '\n\n' + t('schedule.optimizedApplied', 'Applied to today\'s schedule.'));
             } catch (e) {
               hapticWarning();
-              Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), String((e as Error).message ?? e));
+              Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), friendlyError(e, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
             }
           }}
           style={styles.exportButton}
@@ -1179,7 +1180,11 @@ export default function DragScheduleScreen() {
                       top: 2 + (job.startHour - Math.floor(job.startHour)) * SLOT_HEIGHT,
                     }]}
                     onLongPress={() => handleRemoveFromSchedule(job.jobId)}
-                    onPress={() => Alert.alert(job.title, `${job.customerName}\n${hoursToHM(job.startHour)} – ${hoursToHM(job.startHour + job.duration)}\n${t('schedule.longPressToRemove', 'Houd ingedrukt om te verwijderen')}`)}
+                    // Tap opens the job. It raised an Alert repeating the title,
+                    // customer and time already on the block — "details" that
+                    // led nowhere (emulator walk 2026-09-28).
+                    onPress={() => router.push(`/contractor/job/${job.jobId}` as any)}
+                    testID={`schedule-block-${job.jobId}`}
                     accessibilityRole="button"
                     accessibilityLabel={`${job.title}, ${job.customerName}, ${hoursToHM(job.startHour)} – ${hoursToHM(job.startHour + job.duration)}`}
                     accessibilityHint={t('a11y.jobCardHint', 'Tap for details, long press to remove')}

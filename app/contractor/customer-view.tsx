@@ -368,9 +368,17 @@ export default function CustomerViewScreen() {
             {(tier as any).recommended && (
               <View style={s.recBadge}><Text style={s.recBadgeText}>{t('customerView.recommended', 'Recommended')}</Text></View>
             )}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View>
-                <Text style={s.tierLabel}>{tier.label}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                {/* The tick sits IN the flow, before the name. Absolutely
+                    placed top-right it covered the price ("€ 5.800,0✓") and
+                    the Aanbevolen ribbon — emulator walk 2026-09-28. */}
+                <View style={s.tierLabelRow}>
+                  {selectedTier === tier.id && (
+                    <Ionicons name="checkmark-circle" size={20} color={Palette.hermesOrange} testID="tier-selected-tick" />
+                  )}
+                  <Text style={s.tierLabel}>{tier.label}</Text>
+                </View>
                 <Text style={s.tierDesc}>{tier.description}</Text>
               </View>
               <Text style={s.tierPrice}>{fmt(tier.total)}</Text>
@@ -381,11 +389,6 @@ export default function CustomerViewScreen() {
                 <Text style={s.featureText}>{f}</Text>
               </View>
             ))}
-            {selectedTier === tier.id && (
-              <View style={s.selectedCheck}>
-                <Ionicons name="checkmark-circle" size={22} color={Palette.hermesOrange} />
-              </View>
-            )}
           </Pressable>
         ))}
 
@@ -537,7 +540,7 @@ const s = StyleSheet.create({
   tierPrice: { fontSize: 22, fontFamily: TYPE.displayFamily, color: Palette.hermesOrange },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   featureText: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textPrimary },
-  selectedCheck: { position: 'absolute', top: 12, right: 12 },
+  tierLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 
   // Decision section
   decisionSection: { gap: GRID.sm },

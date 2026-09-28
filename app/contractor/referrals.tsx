@@ -6,6 +6,7 @@
 // open the native share sheet with a pre-filled message.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { View, Text, StyleSheet, Pressable, ScrollView, Share, Alert } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -41,7 +42,7 @@ export default function ReferralsScreen() {
     } catch (e) {
       Alert.alert(
         t('referrals.shareErrorTitle', 'Share failed'),
-        (e as Error)?.message ?? String(e),
+        friendlyError(e, t('common.didNotWork', "That didn't work. Please try again in a moment.")),
       );
     }
   };

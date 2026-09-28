@@ -145,7 +145,10 @@ it('the invoices archive: created, partial (warns), no-format only (no warning),
 
   mockArchive.mockImplementationOnce(async () => ({ ok: false, invoiceCount: 0, pdfFailed: [], xmlMissing: [], complete: false }));
   tree = await press();
-  expect(String(alert.mock.calls[0][0])).toMatch(/could not be created/);
+  // Short title, explanation in the BODY — a sentence in the title slot is
+  // cut at two lines on Android (alertTitlesFitAndroid, 2026-09-28).
+  expect(String(alert.mock.calls[0][1])).toMatch(/could not be created/);
+  expect(String(alert.mock.calls[0][0]).length).toBeLessThanOrEqual(40);
   expect(texts(tree.root)).not.toMatch(/invoices archive created/i);
   alert.mockRestore();
   tree.unmount();

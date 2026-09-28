@@ -4,6 +4,7 @@
 // Warranty tracking, claims management, and expiration alerts
 // =============================================================================
 
+import { DK } from '../../theme/draftkings';
 import React, { useState } from 'react';
 import {
   View,
@@ -42,23 +43,23 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const getConfig = () => {
     switch (status) {
       case 'active':
-        return { label: t('warranty.badgeActive', 'Active'), color: Palette.green500, bg: 'rgba(34, 197, 94, 0.15)' };
+        return { label: t('warranty.badgeActive', 'Active'), color: DK.colors.success, bg: DK.colors.success + '22' };
       case 'expiring_soon':
-        return { label: t('warranty.badgeExpiring', 'Expiring'), color: Palette.orange500, bg: Palette.orange100 };
+        return { label: t('warranty.badgeExpiring', 'Expiring'), color: DK.colors.highlight, bg: DK.colors.highlight + '22' };
       case 'expired':
-        return { label: t('warranty.badgeExpired', 'Expired'), color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
+        return { label: t('warranty.badgeExpired', 'Expired'), color: DK.colors.danger, bg: DK.colors.danger + '22' };
       case 'draft':
       case 'submitted':
       case 'under_review':
-        return { label: t('warranty.statusPending', 'In review'), color: Palette.yellow600, bg: 'rgba(234, 179, 8, 0.15)' };
+        return { label: t('warranty.statusPending', 'In review'), color: DK.colors.highlight, bg: DK.colors.highlight + '22' };
       case 'approved':
-        return { label: t('warranty.statusApproved', 'Approved'), color: Palette.green500, bg: 'rgba(34, 197, 94, 0.15)' };
+        return { label: t('warranty.statusApproved', 'Approved'), color: DK.colors.success, bg: DK.colors.success + '22' };
       case 'denied':
-        return { label: t('warranty.statusRejected', 'Denied'), color: Palette.red500, bg: 'rgba(239, 68, 68, 0.15)' };
+        return { label: t('warranty.statusRejected', 'Denied'), color: DK.colors.danger, bg: DK.colors.danger + '22' };
       case 'completed':
-        return { label: t('warranty.statusCompleted', 'Completed'), color: Palette.blue500, bg: 'rgba(59, 130, 246, 0.15)' };
+        return { label: t('warranty.statusCompleted', 'Completed'), color: DK.colors.textMuted, bg: DK.colors.panel2 };
       default:
-        return { label: status, color: Palette.gray500, bg: Palette.gray100 };
+        return { label: status, color: DK.colors.textMuted, bg: DK.colors.panel2 };
     }
   };
 
@@ -83,10 +84,10 @@ const WarrantyCard: React.FC<{
   );
 
   const getExpiryColor = () => {
-    if (daysUntilExpiry < 0) return Palette.red500;
-    if (daysUntilExpiry < 30) return Palette.orange500;
-    if (daysUntilExpiry < 90) return Palette.yellow600;
-    return Palette.green500;
+    // A date far off is not a success — only a coming or passed expiry gets a colour.
+    if (daysUntilExpiry < 0) return DK.colors.danger;
+    if (daysUntilExpiry < 90) return DK.colors.highlight;
+    return DK.colors.textMuted;
   };
 
   return (
@@ -154,7 +155,7 @@ const WarrantyCard: React.FC<{
               <Text style={styles.coverageTitle}>{t('warranty.coverage', 'Coverage')}</Text>
               {warranty.coverage.map((item, index) => (
                 <View key={index} style={styles.coverageItem}>
-                  <Ionicons name="checkmark-circle" size={16} color={Palette.green500} />
+                  <Ionicons name="checkmark-circle" size={16} color={DK.colors.success} />
                   <Text style={styles.coverageText}>{item}</Text>
                 </View>
               ))}
@@ -337,19 +338,19 @@ export const WarrantyManager: React.FC = () => {
                 icon="shield-checkmark-outline"
                 label={t('warranty.statActive', 'Active')}
                 value={stats.activeWarranties}
-                color={Palette.green500}
+                color={DK.colors.success}
               />
               <StatCard
                 icon="warning-outline"
                 label={t('warranty.statExpiringSoon', 'Expiring soon')}
                 value={stats.expiringThisMonth}
-                color={Palette.orange500}
+                color={DK.colors.highlight}
               />
               <StatCard
                 icon="document-text-outline"
                 label={t('warranty.statClaims', 'Claims')}
                 value={stats.openClaims}
-                color={Palette.blue500}
+                color={DK.colors.accent}
               />
             </View>
 
@@ -379,7 +380,7 @@ export const WarrantyManager: React.FC = () => {
         return (
           <View style={styles.tabContent}>
             <View style={styles.alertBanner}>
-              <Ionicons name="alert-circle" size={24} color={Palette.orange500} />
+              <Ionicons name="alert-circle" size={24} color={DK.colors.highlight} />
               <View style={styles.alertContent}>
                 <Text style={styles.alertTitle}>{t('warranty.expiringTitle', 'Warranties Expiring Soon')}</Text>
                 <Text style={styles.alertText}>
@@ -390,7 +391,7 @@ export const WarrantyManager: React.FC = () => {
 
             {expiringWarranties.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="checkmark-circle-outline" size={48} color={Palette.green500} />
+                <Ionicons name="checkmark-circle-outline" size={48} color={DK.colors.success} />
                 <Text style={styles.emptyText}>{t('warranty.noExpiring', 'No warranties expiring soon')}</Text>
               </View>
             ) : (
@@ -471,7 +472,7 @@ export const WarrantyManager: React.FC = () => {
             <Ionicons
               name={tab.icon as keyof typeof Ionicons.glyphMap}
               size={18}
-              color={activeTab === tab.key ? SemanticColors.actionPrimary : SemanticColors.textSecondary}
+              color={activeTab === tab.key ? DK.colors.bg : SemanticColors.textSecondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
               {tab.label}
@@ -518,9 +519,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Same strip as the other screens: page background, panel tabs, the
+  // active one solid accent. It sat on a lighter band with a brownish
+  // active tab (emulator walk 2026-09-28: "color is strange").
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SemanticColors.surfacePrimary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
@@ -532,12 +535,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: RADIUS.sm,
-    backgroundColor: SemanticColors.surfaceBackground,
+    borderRadius: DK.radius.button,
+    backgroundColor: DK.colors.panel,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
     gap: 6,
   },
   tabActive: {
-    backgroundColor: SemanticColors.actionPrimary + '15',
+    backgroundColor: DK.colors.accent,
+    borderColor: DK.colors.accent,
   },
   tabText: {
     fontSize: TYPE.captionSize,
@@ -545,7 +551,7 @@ const styles = StyleSheet.create({
     color: SemanticColors.textSecondary,
   },
   tabTextActive: {
-    color: SemanticColors.actionPrimary,
+    color: DK.colors.bg,
   },
   content: {
     flex: 1,
@@ -748,12 +754,12 @@ const styles = StyleSheet.create({
   alertBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.orange50,
+    backgroundColor: DK.colors.panel2,
     borderRadius: RADIUS.md,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: Palette.orange200,
+    borderColor: DK.colors.highlight + '55',
   },
   alertContent: {
     marginLeft: 12,
@@ -762,11 +768,11 @@ const styles = StyleSheet.create({
   alertTitle: {
     fontSize: TYPE.titleSize,
     fontFamily: TYPE.titleFamily,
-    color: Palette.orange700,
+    color: DK.colors.text,
   },
   alertText: {
     fontSize: TYPE.bodySize - 1,
-    color: Palette.orange600,
+    color: DK.colors.textMuted,
     marginTop: 2,
   },
   claimsHeader: {

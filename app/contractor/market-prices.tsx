@@ -43,7 +43,8 @@ export default function MarketPricesScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { businessProfile } = useAppState();
-  const trade = user?.trade ?? 'general';
+  // Profile first, account as fallback (#218) — the trade picks the benchmarks.
+  const trade = businessProfile?.trade ?? user?.trade ?? 'general';
   // Profile first, account as fallback (#218): a contractor who set UK in
   // their profile was formatted in euros while the account still said NL.
   const country = (businessProfile?.country ?? user?.country ?? 'NL');
@@ -72,7 +73,7 @@ export default function MarketPricesScreen() {
   }, [t]);
 
   const { benchmarks, loading: benchLoading } = useCohortBenchmarks(trade, country);
-  const { data: index, loading: indexLoading } = usePriceIndex(country);
+  const { data: index } = usePriceIndex(country);
   const [recommendations, setRecommendations] = useState<PriceRecommendation[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -87,6 +88,15 @@ export default function MarketPricesScreen() {
     ]).finally(() => { setRefreshing(false); hapticSuccess(); });
   };
 
+  // Only the contractor's own trade. Below the cohort threshold the service
+  // falls back to the baselines of EVERY trade, and the screen listed six
+  // unnamed rows of hourly rate / margin / acceptance / DSO — no way to tell
+  // which was yours (emulator walk 2026-09-28, "too cluttered").
+  const ownTradeRows = useMemo(
+    () => (benchmarks?.tradeBenchmarks ?? []).filter((tb) => !!trade && tb.trade === trade),
+    [benchmarks, trade],
+  );
+
   const topBenchmarks = useMemo(() =>
     (benchmarks?.materialBenchmarks ?? []).slice(0, 8),
     [benchmarks]
@@ -100,7 +110,13 @@ export default function MarketPricesScreen() {
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.headerTitle}>{t('market.title', 'Marktprijzen')}</Text>
-          <Text style={styles.headerSub}>{t('market.contractorsInRegion', { defaultValue: '{{count}} aannemers in jouw regio', count: benchmarks?.contractorsInCohort ?? 0 })}</Text>
+          {/* Only a number worth reading: below the k-anonymity threshold (5)
+              there is no regional cohort, and "0 aannemers in jouw regio" was
+              one more line of nothing (user, emulator walk 2026-09-28: "too
+              cluttered"; CLAUDE.md: a card whose number is zero is not a card). */}
+          {(benchmarks?.contractorsInCohort ?? 0) >= 5 && (
+            <Text style={styles.headerSub}>{t('market.contractorsInRegion', { defaultValue: '{{count}} aannemers in jouw regio', count: benchmarks?.contractorsInCohort ?? 0 })}</Text>
+          )}
         </View>
       </View>
 
@@ -155,10 +171,10 @@ export default function MarketPricesScreen() {
         )}
 
         {/* Price Recommendations */}
+        {recommendations.length > 0 && (
         <FadeIn delay={100}>
           <Text style={styles.sectionTitle}>{t('market.purchaseAdvice', 'Inkoopadvies')}</Text>
-          {recommendations.length > 0 ? (
-            recommendations.slice(0, 5).map((rec, i) => {
+          {recommendations.slice(0, 5).map((rec, i) => {
               const action = ACTION_ICONS[rec.action];
               const trend = TREND_ICONS[rec.trend];
               return (
@@ -188,21 +204,15 @@ export default function MarketPricesScreen() {
                   </View>
                 </View>
               );
-            })
-          ) : (
-            <View style={styles.sectionEmpty}>
-              <Ionicons name="receipt-outline" size={48} color={SemanticColors.textTertiary} />
-              <Text style={styles.sectionEmptyTitle}>{t('market.noRecommendations', 'Geen aanbevelingen')}</Text>
-              <Text style={styles.sectionEmptyDesc}>{t('market.noRecommendationsDesc', 'Scan leveranciersfacturen om gepersonaliseerde prijsaanbevelingen te krijgen')}</Text>
-            </View>
-          )}
+            })}
         </FadeIn>
+        )}
 
         {/* Material Benchmarks */}
+        {topBenchmarks.length > 0 && (
         <FadeIn delay={200}>
           <Text style={styles.sectionTitle}>{t('market.materialPrices', 'Materiaalprijzen')}{topBenchmarks.length > 0 ? ` (${topBenchmarks.length})` : ''}</Text>
-          {topBenchmarks.length > 0 ? (
-            topBenchmarks.map((bm, i) => {
+          {topBenchmarks.map((bm, i) => {
               // R11.4: hide the trend icon when there's no real signal.
               // The cloud RPC currently doesn't populate priceChange30d/
               // priceChange90d/volatility — they default to 0/'stable'.
@@ -235,18 +245,12 @@ export default function MarketPricesScreen() {
                 <Text style={styles.bmMeta}>{bm.sampleSize} {t('market.dataPoints', 'datapunten')} · {categoryLabel(bm.category)}</Text>
               </View>
               );
-            })
-          ) : (
-            <View style={styles.sectionEmpty}>
-              <Ionicons name="analytics-outline" size={48} color={SemanticColors.textTertiary} />
-              <Text style={styles.sectionEmptyTitle}>{t('market.noBenchmarks', 'Meer data nodig')}</Text>
-              <Text style={styles.sectionEmptyDesc}>{t('market.noBenchmarksDesc', 'Meer data nodig voor benchmarks')}</Text>
-            </View>
-          )}
+            })}
         </FadeIn>
+        )}
 
         {/* Trade Benchmarks */}
-        {benchmarks?.tradeBenchmarks && benchmarks.tradeBenchmarks.length > 0 && (
+        {ownTradeRows.length > 0 && (
           <FadeIn delay={300}>
             <Text style={styles.sectionTitle}>{t('market.marketAverages', 'Marktgemiddelden')}</Text>
             {/* Below the k-anonymity threshold getCohortBenchmarks falls back to
@@ -257,7 +261,7 @@ export default function MarketPricesScreen() {
             {(benchmarks?.contractorsInCohort ?? 0) < 5 && (
               <Text style={styles.sectionEmptyDesc}>{t('market.baselineNote')}</Text>
             )}
-            {benchmarks.tradeBenchmarks.map((tb, i) => (
+            {ownTradeRows.map((tb, i) => (
               <View key={i} style={styles.card}>
                 <View style={styles.tradeRow}>
                   <View style={styles.tradeStat}>
@@ -285,14 +289,27 @@ export default function MarketPricesScreen() {
           </FadeIn>
         )}
 
-        {/* Empty state */}
-        {!benchLoading && !indexLoading && topBenchmarks.length === 0 && recommendations.length === 0 && (
+        {/* ONE way forward instead of four stacked empty states ("Geen
+            aanbevelingen", "Meer data nodig", "nog te weinig vakmensen",
+            "Nog geen marktdata"). Personal prices come from the contractor's
+            own supplier invoices, which Inkoop reads. */}
+        {/* Waits for the benchmarks only — the cost index is a separate
+            request, and a hung index must not hide the way forward. */}
+        {!benchLoading && topBenchmarks.length === 0 && recommendations.length === 0 && (
           <FadeIn delay={0}>
-            <View style={styles.empty}>
-              <Ionicons name="analytics-outline" size={48} color={SemanticColors.textTertiary} />
-              <Text style={styles.emptyTitle}>{t('market.noDataYet', 'Nog geen marktdata')}</Text>
-              <Text style={styles.emptyDesc}>{t('market.noDataDesc', 'Scan leveranciersfacturen of maak offertes aan om prijsinzichten te krijgen')}</Text>
-            </View>
+            <Pressable
+              style={styles.ownPrices}
+              onPress={() => router.push('/contractor/inkoop' as any)}
+              accessibilityRole="button"
+              testID="market-own-prices"
+            >
+              <Ionicons name="receipt-outline" size={22} color={Palette.hermesOrange} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ownPricesTitle}>{t('market.ownPricesTitle', 'Your own prices')}</Text>
+                <Text style={styles.ownPricesDesc}>{t('market.ownPricesDesc', 'Add your supplier invoices and see what you pay compared with the market.')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={SemanticColors.textTertiary} />
+            </Pressable>
           </FadeIn>
         )}
 
@@ -309,6 +326,13 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: SafeArea.side, gap: GRID.md },
+  ownPrices: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16,
+    borderRadius: RADIUS.lg, backgroundColor: SemanticColors.surfacePrimary,
+    borderWidth: 1, borderColor: SemanticColors.borderDefault,
+  },
+  ownPricesTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
+  ownPricesDesc: { fontSize: TYPE.captionSize, fontFamily: TYPE.captionFamily, color: SemanticColors.textSecondary, marginTop: 2 },
   sectionTitle: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, letterSpacing: TYPE.sectionTracking, marginTop: GRID.sm },
   card: { backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.lg, padding: 16, gap: 8 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

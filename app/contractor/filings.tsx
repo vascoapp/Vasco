@@ -17,6 +17,7 @@
 // not be.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useCallback } from 'react';
 import { documentNumber } from '../../src/domain/documents';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
@@ -97,7 +98,7 @@ export default function FilingsScreen() {
             if (!res.ok) {
               // The state machine refused it — surface why rather than
               // silently doing nothing.
-              Alert.alert(t('filings.cannotChange', 'Cannot change this filing'), res.error ?? '');
+              Alert.alert(t('filings.cannotChange', 'Cannot change this filing'), friendlyError(res.error, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
               return;
             }
             hapticSuccess();

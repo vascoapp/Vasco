@@ -9,6 +9,7 @@
 // drag-edit applies the optimized order.
 // =============================================================================
 
+import { friendlyError } from '../../src/utils/friendlyError';
 import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -87,7 +88,7 @@ export default function WeeklyOverviewScreen() {
 
   const handleOptimize = async (bucket: DayBucket) => {
     if (bucket.jobs.length < 2) {
-      Alert.alert(t('schedule.optimizeNeedTwo', 'Need at least 2 jobs to optimize'));
+      Alert.alert(t('schedule.optimize', 'Optimize'), t('schedule.optimizeNeedTwo', 'Need at least 2 jobs to optimize'));
       return;
     }
     try {
@@ -122,7 +123,7 @@ export default function WeeklyOverviewScreen() {
       if (optimized.warnings.length > 0) lines.push('', '⚠ ' + optimized.warnings.join('; '));
       Alert.alert(t('schedule.optimizedTitle', 'Optimized route'), lines.join('\n'));
     } catch (e) {
-      Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), String((e as Error).message ?? e));
+      Alert.alert(t('schedule.optimizeFailed', 'Optimization failed'), friendlyError(e, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
     }
   };
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { friendlyError } from '../src/utils/friendlyError';
 import {
   Image,
   KeyboardAvoidingView,
@@ -75,7 +76,7 @@ export default function ForgotPasswordScreen() {
           t('auth.resetRateLimited', 'Too many requests. Please wait a minute and try again.'),
         );
       } else {
-        Alert.alert(t('common.error', 'Error'), error.message);
+        Alert.alert(t('common.error', 'Error'), friendlyError(error, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
       }
     } else {
       setSent(true);
