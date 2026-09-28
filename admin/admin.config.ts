@@ -19,7 +19,8 @@ export const APP_CONFIG = {
   },
 
   // ─── Auth ──────────────────────────────────────────────────────────────
-  adminPin: "2026",
+  // No PIN: sign-in is an emailed code for the ADMIN_EMAILS allow-list,
+  // checked on the server (src/lib/server/adminSession.ts).
 
   // ─── Supabase ──────────────────────────────────────────────────────────
   supabase: {

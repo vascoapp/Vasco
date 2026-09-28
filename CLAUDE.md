@@ -58,7 +58,8 @@ src/
   theme/              # tabStyles.ts (shared tokens) + draftkings.ts (DK Sunset Slate tokens) + colors.ts (semantic aliases)
 admin/                # Web admin dashboard (Next.js 16 + Tailwind v4)
   admin.config.ts     # All configuration (branding, funnel, pods, modules)
-  src/app/admin/      # AdminShell (PIN auth) + AdminTabs (sidebar routing)
+  src/app/admin/      # AdminShell (email-code sign-in, allow-list) + AdminTabs (sidebar routing)
+  src/lib/server/     # adminSession (signed cookies, ADMIN_EMAILS) — server only
   src/components/     # 19 dashboard components (13 Admin* + 3 Vasco-specific + DeveloperHub + DemoBanner)
     VascoOverview     # Platform overview: users, MRR, markets, trades
     VascoKPIDashboard # Funnel, financials, revenue timeline, market table
@@ -83,7 +84,10 @@ docs/                 # Strategy documents
 npx expo start                    # Start dev server
 npx expo start --port 8083       # Start on alternate port
 npx tsc --noEmit | grep "^app/"  # Check for TS errors (app/ only)
-cd admin && npm run dev           # Start admin dashboard (localhost:3000/admin, PIN: 2026)
+cd admin && ADMIN_EMAILS=you@x.com ADMIN_SESSION_SECRET=$(openssl rand -hex 32) npx next dev -p 3005
+                                  # admin at :3005/admin (3000 = CollectAI). No PIN:
+                                  # sign-in code prints to the dev log without RESEND_API_KEY.
+cd admin && npm run test:auth     # admin sign-in tests (node --test)
 cd admin && npx tsc --noEmit     # Check admin TS errors
 
 # Audits — run these BEFORE building on a field or mounting a component

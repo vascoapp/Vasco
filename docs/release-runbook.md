@@ -109,10 +109,15 @@ EXPO_PUBLIC_DEMO_MODE=false
 ```bash
 cd admin
 vercel link
-vercel env add EXPO_PUBLIC_ADMIN_PIN  # production
-vercel env add NEXT_PUBLIC_ADMIN_PIN  # preview
+# Admin sign-in = emailed code to an allow-listed address (no PIN any more).
+vercel env add ADMIN_EMAILS           # comma-separated allow-list
+vercel env add ADMIN_SESSION_SECRET   # openssl rand -hex 32  (≥ 32 chars)
+vercel env add RESEND_API_KEY         # sends the sign-in code
 vercel --prod
 ```
+
+Removing an address from `ADMIN_EMAILS` (and redeploying) locks it out on its
+next request; rotating `ADMIN_SESSION_SECRET` signs everyone out.
 
 Point `admin.vascobuild.com` DNS CNAME at the Vercel project. Privacy + terms
 pages live at `/legal/privacy-policy` and `/legal/terms-of-service`.
