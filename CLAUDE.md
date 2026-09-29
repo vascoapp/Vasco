@@ -442,6 +442,38 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   check is deferred, say so out loud — "still owed: the device pass" is what
   preceded learnings #343, where a fix broke ten screens that were working.
 - Always update memory .md files after completing work
+- **Emulator-walk rules (2026-09-28/29, `memory/emulator-walk-2026-09-28.md`)** —
+  every one has a guard; use the helper, never the old shape:
+  - **Errors in an Alert go through `friendlyError(err, fallback)`**
+    (`src/utils/friendlyError.ts`): our own reasons stay, machine text
+    ("Edge Function returned a non-2xx…") becomes the localized fallback.
+    Guard `alertsShowNoMachineErrors`. A sentence is never an Alert TITLE
+    (Android cuts it at 2 lines) — short title + body, `alertTitlesFitAndroid`.
+  - **Back buttons call `goBack(router)`** (`src/utils/goBack.ts`), never a
+    bare `router.back()`: a screen opened from a push/link has no history.
+  - **Scroll content in `app/(contractor)/` pads `TAB_BAR_CLEARANCE`** — the
+    tab bar is `position: 'absolute'`; guard `tabScreensClearTheTabBar`.
+  - **A control with nothing behind it is hidden, not "Coming soon"** —
+    `DORMANT_CONTROLS` in `src/config/dormant.ts` (user: hide until built).
+  - **WhatsApp = `sendWhatsApp(phone, text, country)`** → `https://wa.me/…`
+    with `toE164` (`src/utils/phone.ts`); `whatsapp://` fails silently
+    without the app. Unknown country → contact picker, never a guessed +31.
+  - **Hours are valued at `resolveHourlyChargeRate(profile)`**
+    (`src/services/hourlyRate.ts`) or not at all — never a literal rate.
+  - **Template variables are shown as words** (`[klant]`) and stored as
+    tokens (`{{customer}}`) — `src/utils/templateTokens.ts`.
+  - **A status write needs the artefact**: don't mark a document "sent" on a
+    button tap or a share sheet that may have been dismissed — ask, or open
+    the real send flow.
+  - **Generator copy with `{{count}}` needs a `<key>_one`** when it can be 1
+    (`gt()` picks it) — "1 facturen" shipped.
+  - **Colours are DK tokens only** — no `Palette.<hue>NNN`, no hex, no
+    `feedbackInfo` blue on the dark UI (Garantie + templates were on the
+    retired light palette; guards `warrantyUsesDkPalette`,
+    `templatesUseDkPalette`).
+  - Connect screens (Mollie/Stripe/Moneybird) speak builder, not developer:
+    numbered steps + "Open …" button; never "API key", "live_xxxx",
+    "administratie-ID"; never a fee claim without a fee.
 
 ## Demo Accounts (any password)
 - `contractor@vasco.dev` — Solo contractor
