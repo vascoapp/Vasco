@@ -31,7 +31,7 @@ import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/int
 import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { documentVatBreakdown, getEffectiveVatRate } from '../../src/domain/business';
-import { formatCurrency as fmtCurrency, formatDate as fmtDate } from '../../src/i18n/formatting';
+import { formatCurrency as fmtCurrency, formatDate as fmtDate, formatQuantity } from '../../src/i18n/formatting';
 import { findDocumentCustomer } from '../../src/domain/customers';
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
@@ -457,7 +457,7 @@ export default function QuoteDetailScreen() {
               <Text style={styles.lineText} numberOfLines={3}>{item.description}</Text>
               <View style={styles.lineNumbers}>
                 <Text style={styles.lineTextMuted} numberOfLines={1}>
-                  {item.quantity} × {formatCurrency(item.unitPrice)}
+                  {formatQuantity(item.quantity)} × {formatCurrency(item.unitPrice)}
                 </Text>
                 <Text style={styles.lineText} numberOfLines={1}>
                   {formatCurrency(item.unitPrice * item.quantity)}

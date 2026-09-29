@@ -48,7 +48,7 @@ import { shareOutcome, confirmShareSent } from '../../src/utils/shareOutcome';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { invoicePdfExtras } from '../../src/domain/invoiceDocuments';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
-import { getEffectiveVatRate } from '../../src/domain/business';
+import { getEffectiveVatRate, grossFromDocumentLines } from '../../src/domain/business';
 import { overdueReminderMessage } from '../../src/services/overdueReminderMessage';
 import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { daysOverdue } from '../../src/utils/invoiceDue';
@@ -553,16 +553,24 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
 function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { businessProfile } = useAppState();
+  const { businessProfile, lineItems } = useAppState();
   const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
-  const getStatusConfig = (status: QuoteStatus) => {
+  // Every status is named: 'draft' and 'expired' fell through to "Verstuurd",
+  // so a concept never sent read as sent in the list while its own screen
+  // said CONCEPT (walk, 2026-09-29).
+  const getStatusConfig = (status: QuoteStatus | 'viewed') => {
     switch (status) {
+      case 'draft':
+        return { label: t('invoices.quoteDraft', 'Draft'), color: SemanticColors.textSecondary, icon: 'document-outline' as IconName };
+      case 'expired':
+        return { label: t('invoices.quoteExpired', 'Expired'), color: SemanticColors.textSecondary, icon: 'time-outline' as IconName };
       case 'viewed':
         return { label: t('invoices.quoteViewed', 'Bekeken'), color: Palette.hermesOrange, icon: 'eye' as IconName };
       case 'accepted':
         return { label: t('invoices.quoteAccepted', 'Geaccepteerd'), color: SemanticColors.feedbackSuccess, icon: 'checkmark-circle' as IconName };
       case 'rejected':
         return { label: t('invoices.quoteRejected', 'Afgewezen'), color: SemanticColors.feedbackError, icon: 'close-circle' as IconName };
+      case 'sent':
       default:
         return { label: t('invoices.quoteSent', 'Verstuurd'), color: SemanticColors.feedbackInfo, icon: 'paper-plane' as IconName };
     }
@@ -579,7 +587,10 @@ function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
         <Text style={styles.quoteTitle} numberOfLines={1}>{quote.title}</Text>
       </View>
       <View style={styles.quoteRight}>
-        <Text style={styles.quoteAmount}>{formatCurrency(quote.total, country)}</Text>
+        {/* The GROSS total, as the quote's own screen and the invoice made
+            from it show it — `quote.total` is NET (#241) and the list read
+            € 443,63 beside a quote whose screen said € 536,79. */}
+        <Text style={styles.quoteAmount}>{formatCurrency(grossFromDocumentLines(quote.total, lineItems[quote.id], getEffectiveVatRate(businessProfile)), country)}</Text>
         <Text style={[styles.quoteStatus, { color: status.color }]}>{status.label}</Text>
       </View>
     </Pressable>

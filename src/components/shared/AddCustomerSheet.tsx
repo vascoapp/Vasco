@@ -30,7 +30,7 @@ import { useAppState } from '../../state/AppState';
 import { useAuth } from '../../context/AuthContext';
 import { hapticSuccess } from '../../utils/haptics';
 import { useKeyboardInset } from '../../hooks/useKeyboardInset';
-import { isValidEmail, isValidPhone, sanitizeInput } from '../../utils/validation';
+import { isValidEmail, isValidPhone, isValidVATNumber, sanitizeInput } from '../../utils/validation';
 import { findDuplicates } from '../../services/customerDedupService';
 import { logError } from '../../utils/errorHandler';
 import type { Customer } from '../../domain/customers';
@@ -133,6 +133,18 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
       Alert.alert(t('common.error', 'Error'), t('validation.invalidPhone', 'Please enter a valid phone number'));
       return;
     }
+    // The buyer's VAT id is printed on every B2B invoice and carried in the
+    // e-invoice; a malformed one gets the document rejected. "NL12" saved
+    // without a word (walk, 2026-09-29). Same rule as the contractor's own
+    // (businessProfileValidation), and only for what was typed.
+    const cleanVat = sanitizeInput(vatId).toUpperCase();
+    if (cleanVat && changed(cleanVat, customer?.vatId) && !isValidVATNumber(cleanVat)) {
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('profile.vatFormatInvalid', { example: ex.vat, defaultValue: 'VAT number format invalid (expected e.g. {{example}})' }),
+      );
+      return;
+    }
     const structured = {
       postcode: sanitizeInput(postcode),
       city: sanitizeInput(city),
@@ -219,7 +231,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     }
     await commit();
   }, [name, email, phone, address, postcode, city, vatId, province, taxId, sdiCode, pec, saving, customer,
-    needsProvince, isItaly, customers, addCustomer, updateCustomer, onAdded, onSaved, onClose, router, t]);
+    needsProvince, isItaly, customers, addCustomer, updateCustomer, onAdded, onSaved, onClose, router, t, ex.vat]);
 
   const disabled = !name.trim() || saving;
 

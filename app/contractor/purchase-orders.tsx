@@ -16,7 +16,7 @@ import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { usePurchaseOrders, usePOStats, type PurchaseOrder, type POStatus } from '../../src/services/purchaseOrderService';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency, formatCurrency0, compactCurrency, type Country, formatDayMonthAuto } from '../../src/i18n/formatting';
+import { formatCurrency, formatCurrency0, compactCurrency, type Country, formatDayMonthAuto, formatQuantity } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
@@ -125,7 +125,7 @@ export default function PurchaseOrdersScreen() {
             text: t('purchaseOrders.submit', 'Versturen'),
             onPress: async () => {
               const lines = order.items
-                .map((i) => `• ${i.quantity} × ${i.description}`)
+                .map((i) => `• ${formatQuantity(i.quantity)} × ${i.description}`)
                 .join('\n');
               const message = t('purchaseOrders.shareBody', {
                 defaultValue: '{{po}} — order for {{supplier}}\n\n{{lines}}\n\nTotal: {{total}}',
@@ -269,7 +269,7 @@ export default function PurchaseOrdersScreen() {
                   {order.items.map(item => (
                     <View key={item.id} style={styles.lineItem}>
                       <Text style={styles.lineDesc} numberOfLines={1}>{item.description}</Text>
-                      <Text style={styles.lineQty}>{item.quantity} {item.unit}</Text>
+                      <Text style={styles.lineQty}>{formatQuantity(item.quantity)} {item.unit}</Text>
                       <Text style={styles.lineTotal}>{formatCurrency(item.total, country)}</Text>
                     </View>
                   ))}

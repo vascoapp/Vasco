@@ -19,7 +19,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
-import { formatCurrency, formatCurrency0, type Country } from '../../i18n/formatting';
+import { formatCurrency, formatCurrency0, type Country, formatQuantity } from '../../i18n/formatting';
 import { Spacing } from '../../theme/spacing';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { getCurrentTrade, getCurrentCountry, getCurrentVatScheme, getCurrentUserId } from '../../lib/currentUser';
@@ -692,7 +692,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
                 <Pressable onPress={() => updateQuantity(item.id, -0.5)} style={styles.qtyBtn} accessibilityRole="button" accessibilityLabel={t('common.remove', 'Remove')}>
                   <Ionicons name="remove" size={14} color={SemanticColors.textPrimary} />
                 </Pressable>
-                <Text style={styles.qtyText}>{item.suggestedQuantity} {item.unit}</Text>
+                <Text style={styles.qtyText}>{formatQuantity(item.suggestedQuantity)} {item.unit}</Text>
                 <Pressable onPress={() => updateQuantity(item.id, 0.5)} style={styles.qtyBtn} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
                   <Ionicons name="add" size={14} color={SemanticColors.textPrimary} />
                 </Pressable>

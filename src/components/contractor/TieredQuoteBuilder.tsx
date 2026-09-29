@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { DK } from '../../theme/draftkings';
-import { formatCurrency, type Country, currencySymbol } from '../../i18n/formatting';
+import { formatCurrency, formatNumber, type Country, currencySymbol } from '../../i18n/formatting';
 import { Spacing, SafeArea } from '../../theme/spacing';
 import type { Customer } from '../../types/contractor';
 import type { TieredQuote, QuoteTier, PricebookItem } from '../../types/contractor-features';
@@ -634,6 +634,31 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     } as PricebookItem;
     addService(item);
     setCustomName(''); setCustomPrice(''); setCustomUnit(defaultUnit);
+  };
+
+  // A typed quantity is committed when the field is left, not per keystroke:
+  // clearing it to type "45" passes through 0 (which REMOVES the line), and
+  // "4" on the way to "45" would already trigger the reason prompt below
+  // (walk, 2026-09-29 — 45 m² took 44 taps on "+").
+  const typedQtyRef = useRef<Map<string, number>>(new Map());
+  const commitTypedQuantity = (itemId: string) => {
+    const n = typedQtyRef.current.get(itemId);
+    typedQtyRef.current.delete(itemId);
+    if (n !== undefined && n > 0) updateQuantity(itemId, n);
+  };
+  // "Bekijk offerte" sits outside the ScrollView: tapping it does not blur the
+  // field being typed in, so anything still pending is applied here, in ONE
+  // update (updateQuantity reads `selectedServices` directly, so calling it in
+  // a loop would keep only the last line).
+  const commitAllTypedQuantities = () => {
+    const pending = typedQtyRef.current;
+    if (pending.size === 0) return;
+    const next = new Map(pending);
+    pending.clear();
+    setSelectedServices((prev) => prev.map((sv) => {
+      const n = next.get(sv.item.id);
+      return n !== undefined && n > 0 ? { ...sv, quantity: n } : sv;
+    }));
   };
 
   const updateQuantity = (itemId: string, qty: number) => {
@@ -1455,7 +1480,15 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                       <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity - 1)} accessibilityRole="button" accessibilityLabel={t('common.remove', 'Remove')}>
                         <Ionicons name="remove" size={18} color={SemanticColors.textPrimary} />
                       </Pressable>
-                      <Text style={s.qtyText}>{sv.quantity}</Text>
+                      <DecimalInput
+                        style={s.qtyInput}
+                        value={sv.quantity}
+                        onChangeValue={(n) => { typedQtyRef.current.set(sv.item.id, n); }}
+                        onBlur={() => commitTypedQuantity(sv.item.id)}
+                        onSubmitEditing={() => commitTypedQuantity(sv.item.id)}
+                        selectTextOnFocus
+                        accessibilityLabel={t('quotes.quantity', 'Quantity')}
+                      />
                       <Pressable style={s.qtyBtn} onPress={() => updateQuantity(sv.item.id, sv.quantity + 1)} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
                         <Ionicons name="add" size={18} color={SemanticColors.textPrimary} />
                       </Pressable>
@@ -1512,7 +1545,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         {selectedServices.length > 0 && (
           <View style={s.bottom}>
             <Text style={s.bottomSummary}>{t('quotes.bottomSummary', '{{count}} services · {{total}} (standard)', { count: selectedServices.length, total: fmt(tiers[1].total) })}</Text>
-            <Pressable style={s.nextBtn} onPress={() => { hapticSuccess(); setStep('preview'); }}>
+            <Pressable style={s.nextBtn} onPress={() => { commitAllTypedQuantities(); hapticSuccess(); setStep('preview'); }}>
               <Text style={s.nextBtnText}>{t('quotes.reviewQuote', 'Review quote')}</Text>
               <Ionicons name="arrow-forward" size={18} color={Palette.white} />
             </Pressable>
@@ -1643,6 +1676,20 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // =========================================================================
   // STEP 2: PREVIEW — Vasco insights inline before sending
   // =========================================================================
+  // The advice card rendered its title with every row empty ("Vasco advies"
+  // and nothing under it — walk, 2026-09-29). It shows only when one of its
+  // rows will; keep this in step with the rows below. Not a hook.
+  const adviceBenchmark = cohort?.tradeBenchmarks?.find(b => b.trade === trade && b.country === country);
+  const adviceSeason = acceptanceDeltaVsBest(seasonalBundle);
+  const hasVascoAdvice =
+    calibratableServices.length > 0
+    || (!!priceSuggestion && (priceSuggestion.suggestedPrice ?? 0) > 0)
+    || (!!winPrediction && winPrediction.confidence >= QUOTE_WIN_MIN_DISPLAY_CONFIDENCE)
+    || (!!adviceBenchmark && adviceBenchmark.sampleSize >= 1)
+    || !!timeOfDayHint
+    || (!!calibration && calibration.medianPriceVsCohortPct !== null && calibration.confidence >= 0.3)
+    || (!!adviceSeason && adviceSeason.deltaPp >= 10);
+
   return (
     <View style={s.container}>
       <View style={s.header}>
@@ -1657,6 +1704,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
 
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Vasco insights — inline in preview (not cluttering build step) */}
+        {hasVascoAdvice && (
         <View style={s.vascoCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="flash" size={16} color={Palette.hermesOrange} />
@@ -1867,6 +1915,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             );
           })()}
         </View>
+        )}
 
         {/* R66r59: reduced-VAT opt-in. Visible only when the contractor's
             country HAS a construction-relevant reduced rate — NL 9%, and
@@ -1991,7 +2040,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                         whenever Basic or Premium was the package being sent.
                         Read the price off the tier itself. */}
                     <Text style={s.servicePrice}>
-                      {sv.quantity} × {fmt(
+                      {formatNumber(sv.quantity, country as Country)} × {fmt(
                         sendTier.lineItems.find(li => li.pricebookItemId === sv.item.id)?.unitPrice
                         ?? sv.item.basePrice,
                       )}
@@ -2339,6 +2388,12 @@ const s = StyleSheet.create({
   // 36 pt: the 28 pt steppers were small targets on a site with gloves on.
   qtyBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: SemanticColors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' },
   qtyText: { fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary, minWidth: 28, textAlign: 'center' },
+  // Typed quantity (45 m², 12,5 m): same look as the old number, but a field.
+  qtyInput: {
+    fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary,
+    minWidth: 48, textAlign: 'center', paddingVertical: GRID.xs, paddingHorizontal: GRID.xs,
+    borderRadius: RADIUS.sm, backgroundColor: SemanticColors.surfaceSecondary,
+  },
 
   // Templates
   saveTemplateRow: {

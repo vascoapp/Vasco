@@ -2,6 +2,8 @@
 // CUSTOMER DEDUP — detects near-duplicates before a second record is created
 // =============================================================================
 
+import appI18n from '../i18n/i18n';
+import { formatPercentValue } from '../i18n/formatting';
 import type { Customer } from '../types/contractor';
 
 export interface DuplicateCandidate {
@@ -47,29 +49,31 @@ export function findDuplicates(
 
   return existing
     .map((c) => {
+      // In the contractor's language: shown in the duplicate dialog, which
+      // read "Identical name" to a Dutch contractor (walk, 2026-09-29).
       const reasons: string[] = [];
       let score = 0;
 
       if (inEmail && c.email && c.email.toLowerCase().trim() === inEmail) {
         score += 0.8;
-        reasons.push('Same email');
+        reasons.push(appI18n.t('customersModal.dupSameEmail', 'Same email'));
       }
       if (inPhone && normalizePhone(c.phone) === inPhone) {
         score += 0.7;
-        reasons.push('Same phone number');
+        reasons.push(appI18n.t('customersModal.dupSamePhone', 'Same phone number'));
       }
       const otherName = normalizeName(c.name);
       if (otherName && inName) {
         if (otherName === inName) {
           score += 0.5;
-          reasons.push('Identical name');
+          reasons.push(appI18n.t('customersModal.dupSameName', 'Identical name'));
         } else {
           const dist = levenshtein(otherName, inName);
           const maxLen = Math.max(otherName.length, inName.length);
           const similarity = 1 - dist / Math.max(1, maxLen);
           if (similarity > 0.85) {
             score += similarity * 0.4;
-            reasons.push(`Similar name (${Math.round(similarity * 100)}%)`);
+            reasons.push(appI18n.t('customersModal.dupSimilarName', { percent: formatPercentValue(Math.round(similarity * 100)), defaultValue: 'Similar name ({{percent}})' }));
           }
         }
       }

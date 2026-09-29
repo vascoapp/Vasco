@@ -140,7 +140,7 @@ const LABELS: Record<string, QuoteLabels> = {
   fr: {
     title: 'Devis', quoteNumber: 'Devis n°', from: 'De', to: 'Etabli pour',
     issueDate: 'Date', validUntil: 'Valable jusqu\'au', jobRef: 'Chantier',
-    description: 'Description', quantity: 'Qte', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
+    description: 'Description', quantity: 'Qté', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
     subtotal: 'Sous-total', vatAmount: 'TVA', total: 'Total TTC',
     notes: 'Remarques', terms: 'Conditions generales',
     validityMsg: 'Ce devis est valable jusqu\'au',
@@ -151,7 +151,7 @@ const LABELS: Record<string, QuoteLabels> = {
   es: {
     title: 'Presupuesto', quoteNumber: 'Presupuesto n°', from: 'De', to: 'Preparado para',
     issueDate: 'Fecha', validUntil: 'Valido hasta', jobRef: 'Proyecto',
-    description: 'Descripcion', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
+    description: 'Descripción', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
     subtotal: 'Subtotal', vatAmount: 'IVA', total: 'Total',
     notes: 'Notas', terms: 'Terminos y Condiciones',
     validityMsg: 'Este presupuesto es valido hasta',
@@ -227,9 +227,9 @@ function buildQuoteHtml(
   const lineItemRows = quote.lineItems.map(item => `
     <tr>
       <td class="item-desc">${escapeHtml(item.description)}</td>
-      <td class="item-num">${item.quantity}</td>
+      <td class="item-num">${item.quantity.toLocaleString(locale || 'en', { maximumFractionDigits: 3 })}</td>
       <td class="item-num">${curr}${fmt(item.unitPrice, locale)}</td>
-      <td class="item-num">${isSmallBusinessExempt ? '0%' : item.vatRate + '%'}</td>
+      <td class="item-num">${isSmallBusinessExempt ? '0%' : item.vatRate.toLocaleString(locale || 'en', { maximumFractionDigits: 3 }) + '%'}</td>
       <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
     </tr>`).join('\n');
 
@@ -244,7 +244,7 @@ function buildQuoteHtml(
   }
   const vatRows = Array.from(vatByRate.entries())
     .sort((a, b) => a[0] - b[0])
-    .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${rate}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)
+    .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${Number(rate).toLocaleString(locale || 'en', { maximumFractionDigits: 3 })}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)
     .join('\n');
 
   // Tiered options (if present)

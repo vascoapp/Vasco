@@ -26,7 +26,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import { Spacing } from '../../theme/spacing';
-import { formatCurrency } from '../../i18n/formatting';
+import { formatCurrency, formatQuantity } from '../../i18n/formatting';
 import {
   invoiceExtractor,
   ExtractedInvoice,
@@ -602,7 +602,7 @@ function LineItemRow({ item, index }: { item: ExtractedLineItem; index: number }
           </Text>
           <View style={styles.lineItemDetails}>
             <Text style={styles.lineItemQty}>
-              {item.quantity} {item.unit}
+              {formatQuantity(item.quantity)} {item.unit}
             </Text>
             <Text style={styles.lineItemUnitPrice}>
               x {formatCurrency(item.unitPrice)}

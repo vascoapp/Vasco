@@ -13,7 +13,7 @@ import { useQuoteTemplates, TEMPLATE_CATEGORIES, localizeTemplate, localizeCateg
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { formatCurrency, formatQuantity } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -175,7 +175,7 @@ export default function QuoteTemplatesScreen() {
                     {localized.displayItems.map((item, idx) => (
                       <View key={idx} style={styles.itemRow}>
                         <Text style={styles.itemDesc} numberOfLines={1}>{item.description}</Text>
-                        <Text style={styles.itemQty}>{item.quantity} {item.unit}</Text>
+                        <Text style={styles.itemQty}>{formatQuantity(item.quantity)} {item.unit}</Text>
                         <Text style={styles.itemPrice}>{fmt(item.quantity * item.unitPrice)}</Text>
                       </View>
                     ))}

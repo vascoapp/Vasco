@@ -7,6 +7,7 @@
  * strong typographic hierarchy, Hermes Orange accent.
  */
 
+import { formatQuantity } from '../i18n/formatting';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { File } from 'expo-file-system';
@@ -18,6 +19,20 @@ import { logWarn } from '../utils/errorHandler';
 import { signatureHtmlBlock, getLegalText } from './signatureService';
 
 // ── Number formatting ────────────────────────────────────
+
+/** Free text in the HTML: an "&" or "<" in a name or line broke the invoice
+ *  document (the quote PDF escaped, this one did not — walk, 2026-09-29). */
+function escapeHtml(s: string | null | undefined): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+/** "45,5" / "5,5%" in the document's locale, not "45.5" / "5.5%". */
+const qty = (n: number, locale?: string) =>
+  n.toLocaleString(locale || 'en', { maximumFractionDigits: 3 });
 
 const fmt = (n: number, locale?: string) =>
   n.toLocaleString(locale || 'en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -130,7 +145,7 @@ const LABELS: Record<string, DocLabels> = {
   fr: {
     title: 'Facture', invoiceNumber: 'Facture n°', from: 'De', to: 'A',
     issueDate: 'Date de facture', dueDate: 'Date d\'echeance', deliveryDate: 'Date de prestation',
-    description: 'Description', quantity: 'Qte', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
+    description: 'Description', quantity: 'Qté', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
     subtotal: 'Sous-total', vatAmount: 'TVA', total: 'Total TTC',
     paymentInfo: 'Informations de paiement', paymentInstruction: 'Merci de regler avant la date d\'echeance.',
     paymentReference: 'Reference', payOnline: 'Payer en Ligne', poweredBy: 'Propulse par Vasco',
@@ -140,7 +155,7 @@ const LABELS: Record<string, DocLabels> = {
   es: {
     title: 'Factura', invoiceNumber: 'Factura n°', from: 'De', to: 'Para',
     issueDate: 'Fecha de factura', dueDate: 'Fecha de vencimiento', deliveryDate: 'Fecha de prestación',
-    description: 'Descripcion', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
+    description: 'Descripción', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
     subtotal: 'Subtotal', vatAmount: 'IVA', total: 'Total',
     paymentInfo: 'Informacion de pago', paymentInstruction: 'Por favor pague antes de la fecha de vencimiento.',
     paymentReference: 'Referencia', payOnline: 'Pagar en Linea', poweredBy: 'Desarrollado por Vasco',
@@ -334,10 +349,10 @@ function buildInvoiceHtml(
 
   const lineItemRows = invoice.lineItems.map(item => `
     <tr>
-      <td class="item-desc">${item.description}</td>
-      <td class="item-num">${item.quantity}</td>
+      <td class="item-desc">${escapeHtml(item.description)}</td>
+      <td class="item-num">${qty(item.quantity, locale)}</td>
       <td class="item-num">${curr}${fmt(item.unitPrice, locale)}</td>
-      <td class="item-num">${isSmallBusinessExempt ? '0%' : item.vatRate + '%'}</td>
+      <td class="item-num">${isSmallBusinessExempt ? '0%' : qty(item.vatRate, locale) + '%'}</td>
       <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
     </tr>`).join('\n');
 
@@ -366,7 +381,7 @@ function buildInvoiceHtml(
     ? `<div class="summary-row"><span>${L.vatAmount}</span><span>${curr}${fmt(0, locale)}</span></div>`
     : Array.from(vatByRate.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${rate}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)
+        .map(([rate, amount]) => `<div class="summary-row"><span>${L.vatAmount} ${qty(Number(rate), locale)}%</span><span>${curr}${fmt(amount, locale)}</span></div>`)
         .join('\n');
 
   return `<!DOCTYPE html>
@@ -504,9 +519,9 @@ function buildInvoiceHtml(
   </div>
   <div class="addr-block">
     <div class="addr-label">${L.to}</div>
-    <div class="addr-name">${invoice.customerName}</div>
-    <div class="addr-detail">${invoice.customerAddress}</div>
-    ${invoice.customerEmail ? `<div class="addr-detail">${invoice.customerEmail}</div>` : ''}
+    <div class="addr-name">${escapeHtml(invoice.customerName)}</div>
+    <div class="addr-detail">${escapeHtml(invoice.customerAddress)}</div>
+    ${invoice.customerEmail ? `<div class="addr-detail">${escapeHtml(invoice.customerEmail)}</div>` : ''}
   </div>
 </div>
 
@@ -577,7 +592,7 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
 
 <!-- Footer -->
 <div class="doc-footer">
-  <div>${businessName}${businessAddress ? ' · ' + businessAddress : ''}</div>
+  <div>${escapeHtml(businessName)}${businessAddress ? ' · ' + escapeHtml(businessAddress) : ''}</div>
   ${(() => {
     const parts: string[] = [];
     if (kvkNumber) parts.push(`${registrationLabel(country)}: ${kvkNumber}`);
@@ -628,7 +643,7 @@ export function buildInvoiceShareText(
   const dateLocale = country === 'US' ? 'en-US' : undefined;
 
   const lines = invoice.lineItems.map(li =>
-    `• ${li.description}: ${li.quantity}x ${curr}${fmt(li.unitPrice)} = ${curr}${fmt(li.quantity * li.unitPrice)}`,
+    `• ${li.description}: ${formatQuantity(li.quantity)}x ${curr}${fmt(li.unitPrice)} = ${curr}${fmt(li.quantity * li.unitPrice)}`,
   ).join('\n');
 
   const parts = [

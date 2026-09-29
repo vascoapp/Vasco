@@ -20,7 +20,7 @@ import { recordHandover, channelForCountry } from '../../src/services/submission
 import { hapticError, hapticSuccess } from '../../src/utils/haptics';
 import { generateInvoicePdf, buildInvoicePdfBase64 } from '../../src/services/invoicePdfService';
 import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../../src/config/paymentMethods';
-import { formatCurrency, formatDate, formatDateShort, formatDayMonth } from '../../src/i18n/formatting';
+import { formatCurrency, formatDate, formatDateShort, formatDayMonth, formatQuantity } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import {
   getCustomerPaymentPreference,
@@ -924,7 +924,10 @@ export default function InvoiceDetailScreen() {
           {/* Label by document reference or customer — NEVER invoice.id. The
               row id ("inv-seed-1") is internal and meaningless to a contractor;
               it was rendering as the screen title. */}
-          <Text style={styles.headerTitle}>
+          {/* Two lines at most, shrinking to fit: a long customer name in
+              spaced capitals broke MID-WORD ("AANN / EMERSBEDRIJF", walk
+              2026-09-29) — RN only breaks inside a word that cannot fit. */}
+          <Text style={styles.headerTitle} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.55}>
             {t('invoices.invoice', 'Invoice')}
             {(invoice.reference || invoice.customerName || invoiceCustomerName)
               ? ` ${invoice.reference || invoice.customerName || invoiceCustomerName}`
@@ -1071,7 +1074,9 @@ export default function InvoiceDetailScreen() {
           {editingItems && (
             <View style={styles.lineHeaderRow}>
               <Text style={[styles.lineHeaderText, { flex: 2 }]}>{t('invoices.description', 'Description')}</Text>
-              <Text style={[styles.lineHeaderText, { width: 40, textAlign: 'center' }]}>{t('invoices.qty', 'Qty')}</Text>
+              {/* 56, with the input below: "AANTAL" broke into "AANTA / L" at 40
+                  (walk, 2026-09-29) and "12,125" did not fit the field. */}
+              <Text style={[styles.lineHeaderText, { width: 56, textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{t('invoices.qty', 'Qty')}</Text>
               <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.unitPrice', 'Price')}</Text>
               <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.total', 'Total')}</Text>
             </View>
@@ -1090,7 +1095,7 @@ export default function InvoiceDetailScreen() {
                     placeholderTextColor={SemanticColors.placeholder}
                   />
                   <DecimalInput
-                    style={[styles.lineInput, { width: 40, textAlign: 'center' }]}
+                    style={[styles.lineInput, { width: 56, textAlign: 'center' }]}
                     value={item.quantity}
                     onChangeValue={(n) => handleUpdateItem(item.id, 'quantity', n)}
                     country={country as Country}
@@ -1124,7 +1129,7 @@ export default function InvoiceDetailScreen() {
                   <Text style={styles.lineText} numberOfLines={3}>{item.description}</Text>
                   <View style={styles.lineNumbers}>
                     <Text style={styles.lineTextMuted} numberOfLines={1}>
-                      {item.quantity} × {formatCurrency(item.unitPrice, country)}
+                      {formatQuantity(item.quantity)} × {formatCurrency(item.unitPrice, country)}
                     </Text>
                     <Text style={styles.lineText} numberOfLines={1}>
                       {formatCurrency(item.quantity * item.unitPrice, country)}

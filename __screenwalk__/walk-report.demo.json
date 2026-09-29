@@ -222,7 +222,7 @@
    "mounted": true,
    "error": null,
    "texts": [
-    "DINSDAG 29 SEP",
+    "WOENSDAG 30 SEP",
     "Goedenavond",
     ".",
     "",
@@ -1918,7 +1918,7 @@
    "texts": [
     "",
     "Dagplanning",
-    "dinsdag 29 september",
+    "woensdag 30 september",
     "",
     "Exporteer",
     "Bezetting",
@@ -2075,8 +2075,8 @@
     "Op de factuurdatum",
     "Standaard (factuurstelsel). De btw is verschuldigd in het tijdvak van de factuur, ook als de klant nog niet betaald heeft.",
     "Als de klant betaalt",
-    "Kasstelsel. Alleen als u daarvoor in aanmerking komt.",
-    "HOE VAAK U AANGIFTE DOET",
+    "Kasstelsel. Alleen als je daarvoor in aanmerking komt.",
+    "HOE VAAK JE AANGIFTE DOET",
     "Maandelijks",
     "Per kwartaal",
     "Jaarlijks",
@@ -2096,7 +2096,7 @@
     "Terug",
     "BTW-regeling",
     "Wanneer de btw verschuldigd is",
-    "Hoe vaak u aangifte doet",
+    "Hoe vaak je aangifte doet",
     "Audit-spoor"
    ]
   },

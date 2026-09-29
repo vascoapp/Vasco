@@ -211,6 +211,21 @@ export function formatDecimal1(n: number, country: Country = 'NL'): string {
 }
 
 /**
+ * A quantity — "45,5" m², "2,25" uur — in the contractor's market. `${q}`
+ * printed "45.5 × € 9,75" on a Dutch quote, invoice and PDF (walk,
+ * 2026-09-29). Up to 3 decimals, none added: 45 stays "45".
+ */
+export function formatQuantity(n: number, countryArg?: Country): string {
+  const country = countryArg ?? ((getCurrentCountry() as Country) ?? 'NL');
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  try {
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(n);
+  } catch {
+    return String(n);
+  }
+}
+
+/**
  * A percentage the contractor typed or chose — "30,5%" in NL, "30,5 %" in
  * FR/DE (Intl's own spacing), "30.5%" in UK/US. Takes 30.5, not 0.305.
  *

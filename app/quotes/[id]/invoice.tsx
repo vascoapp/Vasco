@@ -12,7 +12,7 @@ import { Spacing } from '../../../src/theme/spacing';
 import { Typography } from '../../../src/theme/typography';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
-import { formatCurrency, type Country } from '../../../src/i18n/formatting';
+import { formatCurrency, type Country, formatQuantity } from '../../../src/i18n/formatting';
 import { logError } from '../../../src/utils/errorHandler';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 import { findDocumentCustomer } from '../../../src/domain/customers';
@@ -128,7 +128,7 @@ export default function InvoiceFromQuoteScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={Typography.body}>{item.description}</Text>
                   <Text style={Typography.muted}>
-                    {item.quantity} × {formatCurrency(item.unitPrice, country)}
+                    {formatQuantity(item.quantity)} × {formatCurrency(item.unitPrice, country)}
                   </Text>
                 </View>
                 <Text style={Typography.body}>
