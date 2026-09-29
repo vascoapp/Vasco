@@ -5,6 +5,7 @@
 // (before/during/after/defect/handover) and delete stale ones.
 // =============================================================================
 
+import { goBack } from '../../../../src/utils/goBack';
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -163,7 +164,7 @@ export default function JobPhotosScreen() {
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.title}>{t('jobs.photos.title', 'Photos')}</Text>

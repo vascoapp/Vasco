@@ -2,6 +2,7 @@
 // LEGAL — Terms of Service, Privacy Policy, Data Processing, Compliance
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -397,7 +398,7 @@ export default function LegalScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backButton} accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('legal.title', 'Legal')}</Text>

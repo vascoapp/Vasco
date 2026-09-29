@@ -16,6 +16,7 @@
 // a route name. It offers the two things they can do — go back, or go home.
 // =============================================================================
 
+import { goBack } from '../src/utils/goBack';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -64,7 +65,7 @@ export default function NotFoundScreen() {
           {router.canGoBack() && (
             <Pressable
               style={styles.secondary}
-              onPress={() => router.back()}
+              onPress={() => goBack(router)}
               accessibilityRole="button"
              accessibilityLabel={t('common.back', 'Back')}>
               <Ionicons name="chevron-back" size={16} color={DK.colors.textMuted} />

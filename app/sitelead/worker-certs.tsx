@@ -5,6 +5,7 @@
 // Site lead can verify certs before assigning workers to tasks
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useMemo, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -96,7 +97,7 @@ export default function WorkerCertsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>

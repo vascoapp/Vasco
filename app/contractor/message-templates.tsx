@@ -2,6 +2,8 @@
 // MESSAGE TEMPLATES — CRUD screen for pre-built + custom message templates
 // =============================================================================
 
+import { DK } from '../../src/theme/draftkings';
+import { goBack } from '../../src/utils/goBack';
 import { tokensToWords, wordsToTokens, type TemplateToken } from '../../src/utils/templateTokens';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -48,9 +50,9 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 const CATEGORY_CONFIG: Record<TemplateCategory, { label: string; icon: IconName; color: string }> = {
   reminder: { label: 'Reminder', icon: 'alarm-outline', color: SemanticColors.feedbackWarning },
-  'follow-up': { label: 'Follow-up', icon: 'chatbubble-outline', color: '#3B82F6' },
+  'follow-up': { label: 'Follow-up', icon: 'chatbubble-outline', color: DK.colors.accent },
   confirmation: { label: 'Confirmation', icon: 'checkmark-circle-outline', color: SemanticColors.feedbackSuccess },
-  'thank-you': { label: 'Thank you', icon: 'heart-outline', color: '#EC4899' },
+  'thank-you': { label: 'Thank you', icon: 'heart-outline', color: DK.colors.primary },
   custom: { label: 'Custom', icon: 'create-outline', color: Palette.hermesOrange },
 };
 
@@ -191,7 +193,7 @@ export default function MessageTemplatesScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('templates.title', 'Message Templates')}</Text>
@@ -506,12 +508,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: GRID.xs,
-    backgroundColor: SemanticColors.feedbackInfoBg,
+    backgroundColor: DK.colors.panel2,
   },
   builtInBadgeText: {
     fontSize: 10,
     fontFamily: TYPE.labelFamily,
-    color: SemanticColors.feedbackInfo,
+    color: DK.colors.textMuted,
   },
   templatePreview: {
     fontSize: TYPE.captionSize,
@@ -656,6 +658,6 @@ const styles = StyleSheet.create({
   modalSubmitText: {
     fontSize: TYPE.titleSize,
     fontFamily: TYPE.titleFamily,
-    color: '#fff',
+    color: DK.colors.text,
   },
 });

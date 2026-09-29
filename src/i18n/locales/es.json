@@ -2446,7 +2446,15 @@
       "years_other": "{{count}} años"
     },
     "billedYearly": "{{price}} facturados al año",
-    "retentionLine": "{{title}}: {{periods}}"
+    "retentionLine": "{{title}}: {{periods}}",
+    "businessName": "Nombre de la empresa",
+    "vatNumberBtw": "Número de BTW",
+    "registrationHrb": "Número HRB",
+    "vatNumberUst": "USt-IdNr (NIF-IVA)",
+    "registrationSiret": "SIRET",
+    "vatNumberTva": "Número de IVA (TVA)",
+    "vatNumberPiva": "Partita IVA",
+    "registrationCoNo": "Company number (Companies House)"
   },
   "search": {
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",
@@ -4548,7 +4556,7 @@
     "connect": "Conectar"
   },
   "stripe": {
-    "title": "Stripe Payments",
+    "title": "Pagos Stripe",
     "subtitle": "Recibe pagos con tarjeta, Apple Pay, Google Pay y más",
     "apiKeyLabel": "Clave secreta",
     "apiKeyPlaceholder": "sk_live_xxxx o sk_test_xxxx",
@@ -5845,7 +5853,8 @@
     "savedBody": "Valoración de calidad del trabajo registrada.",
     "errorTitle": "Error",
     "errorBody": "No se pudo guardar. Inténtelo de nuevo.",
-    "errorJobPending": "Este trabajo aún no se ha guardado — inténtalo de nuevo en un momento."
+    "errorJobPending": "Este trabajo aún no se ha guardado — inténtalo de nuevo en un momento.",
+    "savedOfflineBody": "Guardado en este teléfono — se envía en cuanto vuelvas a tener conexión."
   },
   "customerTag": {
     "vip": "VIP",

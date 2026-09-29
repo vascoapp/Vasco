@@ -24,6 +24,7 @@
 // SlotPicker below.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
@@ -720,7 +721,7 @@ export default function DragScheduleScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, minWidth: 0 }}>

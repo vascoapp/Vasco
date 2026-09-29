@@ -5,6 +5,7 @@
 // No CRM dashboards, no metrics grids — just contacts.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
@@ -95,7 +96,7 @@ export default function CustomerPhonebookScreen() {
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={12} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>{t('contractor.customers.title', 'Customers')}</Text>

@@ -30,6 +30,7 @@
 // expiry warnings.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -133,7 +134,7 @@ export default function LicensesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={26} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>

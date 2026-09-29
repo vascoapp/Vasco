@@ -2446,7 +2446,15 @@
       "years_other": "{{count}} ans"
     },
     "billedYearly": "{{price}} facturés par an",
-    "retentionLine": "{{title}} : {{periods}}"
+    "retentionLine": "{{title}} : {{periods}}",
+    "businessName": "Nom de l’entreprise",
+    "vatNumberBtw": "Numéro de BTW",
+    "registrationHrb": "Numéro HRB",
+    "vatNumberUst": "USt-IdNr (n° de TVA)",
+    "registrationSiret": "SIRET",
+    "vatNumberTva": "Numéro de TVA",
+    "vatNumberPiva": "Partita IVA",
+    "registrationCoNo": "Company number (Companies House)"
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",
@@ -4548,7 +4556,7 @@
     "connect": "Connecter"
   },
   "stripe": {
-    "title": "Stripe Payments",
+    "title": "Paiements Stripe",
     "subtitle": "Recevez des paiements par carte, Apple Pay, Google Pay et plus",
     "apiKeyLabel": "Clé secrète",
     "apiKeyPlaceholder": "sk_live_xxxx ou sk_test_xxxx",
@@ -5845,7 +5853,8 @@
     "savedBody": "Retour sur la qualité du chantier enregistré.",
     "errorTitle": "Erreur",
     "errorBody": "Échec de l'enregistrement. Réessayez.",
-    "errorJobPending": "Ce chantier n'est pas encore enregistré — réessayez dans un instant."
+    "errorJobPending": "Ce chantier n'est pas encore enregistré — réessayez dans un instant.",
+    "savedOfflineBody": "Enregistré sur ce téléphone — envoyé dès que vous êtes de nouveau en ligne."
   },
   "customerTag": {
     "vip": "VIP",

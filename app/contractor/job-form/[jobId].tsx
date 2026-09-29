@@ -7,6 +7,7 @@
 // might not reach before the phone locks.
 // =============================================================================
 
+import { goBack } from '../../../src/utils/goBack';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { parseDecimalInput } from '../../../src/utils/decimalInput';
@@ -141,7 +142,7 @@ export default function JobFormScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>

@@ -16,6 +16,7 @@
 // summing as zero.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -99,7 +100,7 @@ export default function PayrollScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>

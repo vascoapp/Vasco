@@ -2,6 +2,7 @@
 // MY SCHEDULE — Worker's daily assigned jobs with clock in/out
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useMemo, useCallback } from 'react';
 import {
   View,
@@ -161,7 +162,7 @@ export default function MyScheduleScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('worker.mySchedule', 'My Schedule')}</Text>

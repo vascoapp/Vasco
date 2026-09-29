@@ -2,6 +2,7 @@
 // PROJECTS — Multi-trade project management for aannemers
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -217,7 +218,7 @@ export default function ProjectsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('contractor.projects.title', 'Projects')}</Text>

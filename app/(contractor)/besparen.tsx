@@ -5,6 +5,7 @@
 // Summary → actionable queue → done.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -212,7 +213,7 @@ export default function BesparenScreen() {
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={12} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>{t('savings.title', 'Besparen')}</Text>

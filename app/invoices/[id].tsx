@@ -2,6 +2,7 @@
 // INVOICE DETAIL — Pro-grade, fully editable invoice view
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -251,7 +252,7 @@ export default function InvoiceDetailScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.headerBar}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('invoices.notFound', 'Invoice not found')}</Text>
@@ -916,7 +917,7 @@ export default function InvoiceDetailScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerBar}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>

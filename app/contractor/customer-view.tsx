@@ -5,6 +5,7 @@
 // ALL interactions captured for data moat (AsyncStorage + Supabase-ready).
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Linking } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -328,7 +329,7 @@ export default function CustomerViewScreen() {
               // be in touch" would be the lie that matters most on this screen.
               : t('customerView.acceptedNotDeliveredDesc', 'Your acceptance is saved on this device, but we could not reach {{business}}. Please contact them to confirm.', { business: quote.businessName })}
           </Text>
-          <Pressable style={s.successBtn} onPress={() => router.back()}>
+          <Pressable style={s.successBtn} onPress={() => goBack(router)}>
             <Text style={s.successBtnText}>{t('common.close', 'Close')}</Text>
           </Pressable>
         </View>
@@ -339,7 +340,7 @@ export default function CustomerViewScreen() {
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={s.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>

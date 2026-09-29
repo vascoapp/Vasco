@@ -5,6 +5,7 @@
 // Data from: cohort benchmarks, price indexes, scan history, supplier catalogs.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -105,7 +106,7 @@ export default function MarketPricesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>

@@ -6,6 +6,7 @@
 // route to /onboarding for the 14-step Cal-AI-style setup.
 // =============================================================================
 
+import { goBack } from '../src/utils/goBack';
 import { LinkedSentence, slot } from '../src/components/shared/LinkedSentence';
 import { useEffect, useState } from 'react';
 import {
@@ -163,7 +164,7 @@ export default function SignupScreen() {
         >
           <FadeIn delay={0}>
             <View style={styles.header}>
-              <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backIconBtn} accessibilityRole="button" accessibilityLabel={t('auth.backToLogin', 'Back to login')}>
+              <Pressable onPress={() => goBack(router)} hitSlop={12} style={styles.backIconBtn} accessibilityRole="button" accessibilityLabel={t('auth.backToLogin', 'Back to login')}>
                 <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
               </Pressable>
               <View style={styles.markWrap}>

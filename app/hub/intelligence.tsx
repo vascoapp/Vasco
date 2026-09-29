@@ -1,4 +1,5 @@
 // Hub: Data Intelligence — Contractor ingestion overview
+import { goBack } from '../../src/utils/goBack';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -79,7 +80,7 @@ export default function IntelligenceHubScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable style={styles.backButton} onPress={() => goBack(router)} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <View style={{ flex: 1 }}>

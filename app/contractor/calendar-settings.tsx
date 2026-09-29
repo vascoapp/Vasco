@@ -2,6 +2,7 @@
 // CALENDAR SETTINGS — Sync jobs to device calendar
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -76,7 +77,7 @@ export default function CalendarSettingsScreen() {
     return (
       <View style={s.container}>
         <View style={s.header}>
-          <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={s.headerTitle}>{t('calendar.settings', 'Calendar Settings')}</Text>
@@ -93,7 +94,7 @@ export default function CalendarSettingsScreen() {
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>{t('calendar.settings', 'Calendar Settings')}</Text>

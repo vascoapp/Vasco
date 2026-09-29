@@ -4,6 +4,7 @@
 // Create, track, and manage purchase orders for jobs
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Share } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -85,7 +86,7 @@ export default function PurchaseOrdersScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable onPress={() => goBack(router)} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
@@ -157,7 +158,7 @@ export default function PurchaseOrdersScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>

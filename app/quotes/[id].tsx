@@ -6,6 +6,7 @@
 // Functions preserved from prior implementation.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
@@ -320,7 +321,7 @@ export default function QuoteDetailScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header bar with status pill (matches invoice/[id].tsx) */}
       <View style={styles.headerBar}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>

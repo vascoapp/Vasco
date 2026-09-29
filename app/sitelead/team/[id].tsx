@@ -1,4 +1,5 @@
 import React from 'react';
+import { goBack } from '../../../src/utils/goBack';
 import {
   View,
   Text,
@@ -196,7 +197,7 @@ export default function TeamPlanningScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => goBack(router)}
             style={styles.backButton}
             accessibilityRole="button"
             accessibilityLabel={t('common.back', 'Back')}

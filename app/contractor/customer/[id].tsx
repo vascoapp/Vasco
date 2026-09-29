@@ -3,6 +3,7 @@
 // R270: smart-reply chips above the action buttons (Google-Inbox style).
 // =============================================================================
 
+import { goBack } from '../../../src/utils/goBack';
 import { sendWhatsApp } from '../../../src/services/whatsappService';
 import { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
@@ -142,7 +143,7 @@ export default function CustomerDetailScreen() {
     return (
       <View style={s.container}>
         <View style={s.header}>
-          <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={s.headerTitle}>{t('customer.notFound', 'Customer not found')}</Text>
@@ -154,7 +155,7 @@ export default function CustomerDetailScreen() {
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>

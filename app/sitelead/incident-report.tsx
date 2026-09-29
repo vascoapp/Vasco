@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { goBack } from '../../src/utils/goBack';
 import {
   View,
   Text,
@@ -139,7 +140,7 @@ export default function IncidentReportScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('sitelead.incidentReport', 'Report Incident')}</Text>

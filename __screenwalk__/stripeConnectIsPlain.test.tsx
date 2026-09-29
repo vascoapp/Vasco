@@ -37,6 +37,9 @@ it('shows three plain steps and no developer jargon or fee', async () => {
   const { tree, texts } = await mount();
   const all = texts.join(' | ');
   expect(all).toContain(m.stepsTitle);
+  // The title was 'Stripe Payments' in every language (emulator walk 2026-09-29).
+  expect(all).toContain(m.title.toUpperCase());
+  expect(m.title).not.toBe('Stripe Payments');
   for (const k of ['step1', 'step2', 'step3']) expect(all).toContain(m[k]);
   expect(all).not.toMatch(/API|Developers|sk_live_xxxx|commissie|[0-9][.,]?[0-9]?\s?%/i);
   const input = tree.root.findAll((n: any) => n.props?.testID === 'stripe-code' && n.props?.placeholder)[0];

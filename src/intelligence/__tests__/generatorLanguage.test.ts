@@ -57,7 +57,7 @@ describe('gt', () => {
   it('falls back to English for an unknown language', () => {
     // Cast deliberately — this is the shape the old code produced.
     const bogus = gt('fin_overdue_title', 'pt' as never, { count: 1, amount: '€1' });
-    expect(bogus).toBe('1 invoices overdue: €1');
+    expect(bogus).toBe('1 invoice overdue: €1'); // English, and singular for one
   });
 
   it('every entry carries all six locales, so the fallback is only for bad tags', () => {

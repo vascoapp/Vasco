@@ -2446,7 +2446,15 @@
       "years_other": "{{count}} Jahre"
     },
     "billedYearly": "{{price}} jährlich abgerechnet",
-    "retentionLine": "{{title}}: {{periods}}"
+    "retentionLine": "{{title}}: {{periods}}",
+    "businessName": "Firmenname",
+    "vatNumberBtw": "BTW-Nummer",
+    "registrationHrb": "Handelsregisternummer (HRB)",
+    "vatNumberUst": "USt-IdNr.",
+    "registrationSiret": "SIRET",
+    "vatNumberTva": "USt-IdNr. (TVA)",
+    "vatNumberPiva": "Partita IVA",
+    "registrationCoNo": "Company Number (Companies House)"
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
@@ -4548,7 +4556,7 @@
     "connect": "Verbinden"
   },
   "stripe": {
-    "title": "Stripe Payments",
+    "title": "Stripe Zahlungen",
     "subtitle": "Zahlungen per Karte, Apple Pay, Google Pay und mehr empfangen",
     "apiKeyLabel": "Secret Key",
     "apiKeyPlaceholder": "sk_live_xxxx oder sk_test_xxxx",
@@ -5845,7 +5853,8 @@
     "savedBody": "Feedback zur Auftragsqualität erfasst.",
     "errorTitle": "Fehler",
     "errorBody": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-    "errorJobPending": "Dieser Auftrag wurde noch nicht gespeichert — bitte gleich erneut versuchen."
+    "errorJobPending": "Dieser Auftrag wurde noch nicht gespeichert — bitte gleich erneut versuchen.",
+    "savedOfflineBody": "Auf diesem Telefon gespeichert — wird gesendet, sobald Sie wieder online sind."
   },
   "customerTag": {
     "vip": "VIP",

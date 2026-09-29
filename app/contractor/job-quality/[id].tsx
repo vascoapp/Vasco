@@ -65,7 +65,11 @@ export default function JobQualityScreen() {
         return;
       }
       hapticSuccess();
-      Alert.alert(t('jobQuality.savedTitle', 'Saved'), t('jobQuality.savedBody', 'Job quality feedback recorded.'));
+      if (res.queued) {
+        Alert.alert(t('jobQuality.savedTitle', 'Saved'), t('jobQuality.savedOfflineBody', 'Saved on this phone — it is sent as soon as you are back online.'));
+      } else {
+        Alert.alert(t('jobQuality.savedTitle', 'Saved'), t('jobQuality.savedBody', 'Job quality feedback recorded.'));
+      }
       router.back();
     } catch {
       Alert.alert(t('jobQuality.errorTitle', 'Error'), t('jobQuality.errorBody', 'Could not save. Try again.'));

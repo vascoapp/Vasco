@@ -4,6 +4,7 @@
 // Entry point for customers to access their decision portal.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState } from 'react';
 import { Image, View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,7 +45,7 @@ export default function CustomerLandingScreen() {
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={s.inner} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={s.topRow}>
-          <Pressable style={s.backBtn} onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable style={s.backBtn} onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={22} color={DK.colors.text} />
           </Pressable>
           <CustomerLanguageSwitcher compact />

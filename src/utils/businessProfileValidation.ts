@@ -17,7 +17,7 @@ type Country = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK' | 'US';
 export interface ProfileReadiness {
   ready: boolean;
   missing: string[];        // Translation keys (use with i18n.t)
-  missingLabels: string[];  // Fallback English labels
+  missingLabels: string[];  // Localized labels (English only as the fallback)
   // R66 round 39: format errors are distinct from "missing". A contractor
   // who typed "123.456.789.B.01" passed the non-empty check pre-R39 — but
   // that BTW is malformed (correct: "NL123456789B01") and Belastingdienst
@@ -103,7 +103,10 @@ export function checkInvoiceReadiness(profile: BusinessProfile): ProfileReadines
   for (const f of fields) {
     if (!has(f.get(profile))) {
       missing.push(f.key);
-      missingLabels.push(f.label);
+      // In the contractor's language: the English labels were shown as-is in
+      // a Dutch alert ("• Business name • Business address", emulator walk
+      // 2026-09-28). `label` is only the fallback.
+      missingLabels.push(i18n.t(f.key, { defaultValue: f.label }));
     }
   }
   // R66 round 39: format validation. Pre-R39 only checked non-empty —

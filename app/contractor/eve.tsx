@@ -7,6 +7,7 @@
 // useAIQueue hook so behavior matches Vandaag + AI tab exactly.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -58,7 +59,7 @@ export default function EveDashboardScreen() {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={DK.colors.text} />
         </Pressable>
         <View>

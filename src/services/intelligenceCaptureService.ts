@@ -196,7 +196,8 @@ export interface JobQualityInput {
  * the form said "Saved" for a write that never landed (#339).
  */
 export type JobQualityWriteResult =
-  | { ok: true }
+  /** `queued`: no network — kept in the offline write queue, sent on reconnect. */
+  | { ok: true; queued?: boolean }
   | { ok: false; reason: 'offline' | 'no-session' | 'job-not-saved' | 'rejected'; message?: string };
 
 export async function upsertJobQualitySignal(input: JobQualityInput): Promise<JobQualityWriteResult> {
@@ -217,25 +218,39 @@ export async function upsertJobQualitySignal(input: JobQualityInput): Promise<Jo
     );
     return { ok: false, reason: 'job-not-saved' };
   }
+  // ONE payload for the online write and the queued replay (the offline
+  // queue's parity rule — memory/offline-queue-and-utc-dates.md).
+  const payload = {
+    job_id: input.jobId,
+    user_id: userId,
+    customer_id: nullifyTempId(input.customerId),
+    paid_on_time: input.paidOnTime ?? null,
+    customer_review_score: input.customerReviewScore ?? null,
+    customer_review_text: input.customerReviewText ?? null,
+    referral_generated: input.referralGenerated ?? false,
+    rebook_within_180d: input.rebookWithin180d ?? false,
+  };
+  // No network is not a refusal: keep the feedback and send it on reconnect.
+  // It used to answer "Opslaan mislukt" and drop what the contractor typed
+  // (emulator walk 2026-09-29). A real rejection (a code) stays an error.
+  // Lazy: loading the queue at import time pulled its session-reset hook into
+  // every consumer of this module (and broke thin test mocks).
+  const offlineQueue = () => require('./offlineWriteQueue') as typeof import('./offlineWriteQueue');
+  const queue = async () => {
+    await offlineQueue().queueWrite({ table: 'job_quality_signals', op: 'upsert', payload });
+    return { ok: true as const, queued: true };
+  };
   try {
-    const { error } = await (supabase.from as any)('job_quality_signals').upsert({
-      job_id: input.jobId,
-      user_id: userId,
-      customer_id: nullifyTempId(input.customerId),
-      paid_on_time: input.paidOnTime ?? null,
-      customer_review_score: input.customerReviewScore ?? null,
-      customer_review_text: input.customerReviewText ?? null,
-      referral_generated: input.referralGenerated ?? false,
-      rebook_within_180d: input.rebookWithin180d ?? false,
-    });
+    const { error } = await (supabase.from as any)('job_quality_signals').upsert(payload);
     if (error) {
+      if (offlineQueue().isTransientWriteError(error)) return await queue();
       await logIntelligenceWriteFailure('job_quality_signals.upsert', userId, error);
       return { ok: false, reason: 'rejected', message: error.message };
     }
     return { ok: true };
   } catch (err) {
-    await logIntelligenceWriteFailure('job_quality_signals.upsert', userId, err);
-    return { ok: false, reason: 'rejected', message: err instanceof Error ? err.message : undefined };
+    // A thrown fetch is the network, not the server.
+    return await queue();
   }
 }
 

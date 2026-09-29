@@ -2,6 +2,7 @@
 // PROFIEL - Contractor Profile & Settings Page
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Share, Platform } from 'react-native';
@@ -337,7 +338,7 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('profile.title', 'Profile')}</Text>

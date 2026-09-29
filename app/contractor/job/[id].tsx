@@ -5,6 +5,7 @@
 // client contact, notes, material predictions, and upsell opportunities
 // =============================================================================
 
+import { goBack } from '../../../src/utils/goBack';
 import { friendlyError } from '../../../src/utils/friendlyError';
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import {
@@ -340,7 +341,7 @@ export default function JobDetailPage() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('jobs.notFound', 'Job not found')}</Text>
@@ -478,7 +479,7 @@ export default function JobDetailPage() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{job.projectName}</Text>

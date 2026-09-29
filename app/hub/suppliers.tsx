@@ -1,4 +1,5 @@
 // Hub: Leveranciers — Supplier performance dashboard
+import { goBack } from '../../src/utils/goBack';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -214,7 +215,7 @@ export default function SuppliersHubScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable style={styles.backButton} onPress={() => goBack(router)} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
         <View style={{ flex: 1 }}>

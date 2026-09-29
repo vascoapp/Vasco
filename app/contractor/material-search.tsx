@@ -5,6 +5,7 @@
 // create purchase orders grouped by supplier, and share with suppliers.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { DK } from '../../src/theme/draftkings';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
@@ -501,7 +502,7 @@ export default function MaterialSearchScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('materialSearch.title', 'Find Materials')}</Text>

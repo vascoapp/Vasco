@@ -14,6 +14,7 @@
 // Empty state encourages either manual lead entry or web-form embed.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -178,7 +179,7 @@ export default function PipelineScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={26} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('pipeline.title', 'Pipeline')}</Text>

@@ -14,6 +14,7 @@
 // approves).
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -210,7 +211,7 @@ export default function AiChatScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={26} color={SemanticColors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('aiChat.title', 'Office manager')}</Text>

@@ -4,6 +4,7 @@
 // Full-page clock in/out, daily entries, job-linked time tracking
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { resolveHourlyChargeRate } from '../../src/services/hourlyRate';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
@@ -238,7 +239,7 @@ export default function TimesheetScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={styles.headerCenter}>

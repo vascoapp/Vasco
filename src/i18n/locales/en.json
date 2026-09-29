@@ -2446,7 +2446,15 @@
       "years_other": "{{count}} years"
     },
     "billedYearly": "{{price}} billed yearly",
-    "retentionLine": "{{title}}: {{periods}}"
+    "retentionLine": "{{title}}: {{periods}}",
+    "businessName": "Business name",
+    "vatNumberBtw": "BTW number",
+    "registrationHrb": "HRB number",
+    "vatNumberUst": "USt-IdNr (VAT ID)",
+    "registrationSiret": "SIRET",
+    "vatNumberTva": "VAT number (TVA)",
+    "vatNumberPiva": "Partita IVA",
+    "registrationCoNo": "Company number"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -5845,7 +5853,8 @@
     "savedBody": "Job quality feedback recorded.",
     "errorTitle": "Error",
     "errorBody": "Could not save. Try again.",
-    "errorJobPending": "This job has not finished saving yet — try again in a moment."
+    "errorJobPending": "This job has not finished saving yet — try again in a moment.",
+    "savedOfflineBody": "Saved on this phone — it is sent as soon as you are back online."
   },
   "customerTag": {
     "vip": "VIP",

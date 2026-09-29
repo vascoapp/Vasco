@@ -7,6 +7,7 @@
 // taxpayer or a certified intermediary can legally file.
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useAuth } from '../../src/context/AuthContext';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useMemo, useState } from 'react';
@@ -209,7 +210,7 @@ export default function VatPrepScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable onPress={() => goBack(router)} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
           </Pressable>
           <View style={{ flex: 1 }}>
@@ -242,7 +243,7 @@ export default function VatPrepScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>

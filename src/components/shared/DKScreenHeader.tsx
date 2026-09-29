@@ -1,6 +1,7 @@
 // Shared DraftKings-style screen header for drill-down screens.
 // Back button (left, dark panel circle) · uppercase Archivo 900 title · optional right actions.
 
+import { goBack } from '../../utils/goBack';
 import { Pressable, Text, View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -28,7 +29,7 @@ interface Props {
 export function DKScreenHeader({ title, subtitle, onBack, actions, containerStyle }: Props) {
   const router = useRouter();
   const { t } = useTranslation();
-  const handleBack = onBack ?? (() => router.back());
+  const handleBack = onBack ?? (() => goBack(router));
   return (
     <SafeAreaView edges={['top']} style={[{ backgroundColor: DK.colors.bg }, containerStyle]}>
       <View style={styles.bar}>

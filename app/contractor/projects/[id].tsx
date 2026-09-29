@@ -2,6 +2,7 @@
 // PROJECT DETAIL — View/manage a multi-trade project
 // =============================================================================
 
+import { goBack } from '../../../src/utils/goBack';
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -246,7 +247,7 @@ export default function ProjectDetailScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+          <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
             <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('project.notFound')}</Text>
@@ -258,7 +259,7 @@ export default function ProjectDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
+        <Pressable onPress={() => goBack(router)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
           <Ionicons name="chevron-back" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>

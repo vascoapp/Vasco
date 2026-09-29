@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { goBack } from '../src/utils/goBack';
 import { friendlyError } from '../src/utils/friendlyError';
 import {
   Image,
@@ -96,7 +97,7 @@ export default function ForgotPasswordScreen() {
           </Text>
           <Pressable
             style={styles.backBtn}
-            onPress={() => router.back()}
+            onPress={() => goBack(router)}
             accessibilityRole="button"
             accessibilityLabel={t('auth.backToLogin', 'Back to login')}
           >
@@ -115,7 +116,7 @@ export default function ForgotPasswordScreen() {
       >
         <View style={styles.header}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => goBack(router)}
             style={styles.closeBtn}
             accessibilityRole="button"
             accessibilityLabel={t('common.back', 'Back')}

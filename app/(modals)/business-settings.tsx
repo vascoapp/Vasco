@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { goBack } from '../../src/utils/goBack';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
@@ -71,7 +72,7 @@ export default function BusinessSettingsScreen() {
     <Screen>
       <View style={[styles.container, styles.headerRow]}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBack(router)}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel={t('common.back', 'Back')}
@@ -459,7 +460,7 @@ function BusinessSettingsForm() {
               from a push) were stuck. */}
           <View style={styles.headerRow}>
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => goBack(router)}
               hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel={t('common.back', 'Back')}

@@ -2,6 +2,7 @@
 // MONEYBIRD AUTH — OAuth2 flow via expo-web-browser
 // =============================================================================
 
+import { goBack } from '../../src/utils/goBack';
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -78,7 +79,7 @@ export default function MoneybirdAuthScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
+        <Pressable onPress={() => goBack(router)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
           <Ionicons name="close" size={24} color={SemanticColors.textPrimary} />
         </Pressable>
       </View>

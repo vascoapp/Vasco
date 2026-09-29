@@ -251,11 +251,14 @@ interface ApplyResult {
  * that never got an answer — offline, DNS, timeout, 5xx gateway — has none, or
  * says so in its message. Only a rejection may count toward giving up.
  */
-function failed(error: any): ApplyResult {
+export function isTransientWriteError(error: any): boolean {
   const code = String(error?.code ?? '');
   const msg = String(error?.message ?? error ?? '');
-  const transient = !code || /network|fetch|timed? ?out|timeout|abort|offline|ECONN|ENOTFOUND|5\d\d/i.test(msg);
-  return { ok: false, transient };
+  return !code || /network|fetch|timed? ?out|timeout|abort|offline|ECONN|ENOTFOUND|5\d\d/i.test(msg);
+}
+
+function failed(error: any): ApplyResult {
+  return { ok: false, transient: isTransientWriteError(error) };
 }
 
 async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>, pendingInsertIds: Set<string> = new Set()): Promise<ApplyResult> {

@@ -85,8 +85,11 @@ const TRANSLATIONS: Record<string, TranslationMap> = {
 
   // ===== EVIDENCE TEMPLATES =====
   evidence_based_on_invoices: { nl: 'Op basis van {{count}} facturen', en: 'Based on {{count}} invoices', de: 'Basierend auf {{count}} Rechnungen', fr: 'Sur la base de {{count}} factures', es: 'Basado en {{count}} facturas', it: 'Basato su {{count}} fatture' },
+  evidence_based_on_invoices_one: { nl: 'Op basis van 1 factuur', en: 'Based on 1 invoice', de: 'Basierend auf 1 Rechnung', fr: 'Sur la base d’1 facture', es: 'Basado en 1 factura', it: 'Basato su 1 fattura' },
   evidence_based_on_jobs: { nl: 'Op basis van {{count}} klussen', en: 'Based on {{count}} jobs', de: 'Basierend auf {{count}} Aufträgen', fr: 'Sur la base de {{count}} travaux', es: 'Basado en {{count}} trabajos', it: 'Basato su {{count}} lavori' },
+  evidence_based_on_jobs_one: { nl: 'Op basis van 1 klus', en: 'Based on 1 job', de: 'Basierend auf 1 Auftrag', fr: 'Sur la base d’1 chantier', es: 'Basado en 1 trabajo', it: 'Basato su 1 lavoro' },
   evidence_based_on_reports: { nl: 'Op basis van {{count}} dagrapporten', en: 'Based on {{count}} daily reports', de: 'Basierend auf {{count}} Tagesberichten', fr: 'Sur la base de {{count}} rapports', es: 'Basado en {{count}} informes', it: 'Basato su {{count}} rapporti' },
+  evidence_based_on_reports_one: { nl: 'Op basis van 1 dagrapport', en: 'Based on 1 daily report', de: 'Basierend auf 1 Tagesbericht', fr: 'Sur la base d’1 rapport', es: 'Basado en 1 informe', it: 'Basato su 1 rapporto' },
   evidence_based_on_certs: { nl: 'Op basis van je certificatenregister', en: 'Based on your certificate register', de: 'Basierend auf Ihrem Zertifikatsregister', fr: 'Sur la base de votre registre de certificats', es: 'Basado en su registro de certificados', it: 'Basato sul registro dei certificati' },
 
   // ===== ACTION LABELS =====
@@ -206,6 +209,7 @@ const TRANSLATIONS: Record<string, TranslationMap> = {
   fin_revenue_growth_title: { nl: 'Omzet steeg {{pct}}% deze maand', en: 'Revenue grew {{pct}}% this month', de: 'Umsatz stieg {{pct}}% diesen Monat', fr: 'Le chiffre d\'affaires a augmenté de {{pct}}% ce mois', es: 'Los ingresos crecieron {{pct}}% este mes', it: 'Il fatturato è cresciuto del {{pct}}% questo mese' },
   fin_revenue_decline_title: { nl: 'Omzet daalde {{pct}}% deze maand', en: 'Revenue declined {{pct}}% this month', de: 'Umsatz sank {{pct}}% diesen Monat', fr: 'Le chiffre d\'affaires a baissé de {{pct}}% ce mois', es: 'Los ingresos cayeron {{pct}}% este mes', it: 'Il fatturato è diminuito del {{pct}}% questo mese' },
   fin_overdue_title: { nl: '{{count}} facturen achterstallig: {{amount}}', en: '{{count}} invoices overdue: {{amount}}', de: '{{count}} Rechnungen überfällig: {{amount}}', fr: '{{count}} factures en retard : {{amount}}', es: '{{count}} facturas vencidas: {{amount}}', it: '{{count}} fatture scadute: {{amount}}' },
+  fin_overdue_title_one: { nl: '1 factuur achterstallig: {{amount}}', en: '1 invoice overdue: {{amount}}', de: '1 Rechnung überfällig: {{amount}}', fr: '1 facture en retard : {{amount}}', es: '1 factura vencida: {{amount}}', it: '1 fattura scaduta: {{amount}}' },
   fin_concentration_title: { nl: 'Klantrisico: {{pct}}% omzet van {{name}}', en: 'Client risk: {{pct}}% revenue from {{name}}', de: 'Kundenrisiko: {{pct}}% Umsatz von {{name}}', fr: 'Risque client : {{pct}}% du CA de {{name}}', es: 'Riesgo de cliente: {{pct}}% ingresos de {{name}}', it: 'Rischio cliente: {{pct}}% fatturato da {{name}}' },
   fin_cashflow_negative_title: { nl: 'Negatieve cashflow verwacht volgende maand', en: 'Negative cashflow expected next month', de: 'Negativer Cashflow nächsten Monat erwartet', fr: 'Flux de trésorerie négatif attendu le mois prochain', es: 'Flujo de caja negativo esperado el próximo mes', it: 'Flusso di cassa negativo previsto il prossimo mese' },
   fin_winrate_drop_title: { nl: 'Offerte-succesratio gedaald naar {{pct}}%', en: 'Quote win rate dropped to {{pct}}%', de: 'Angebotsgewinnrate auf {{pct}}% gefallen', fr: 'Taux de réussite des devis tombé à {{pct}}%', es: 'Tasa de éxito de presupuestos cayó a {{pct}}%', it: 'Tasso di successo preventivi sceso al {{pct}}%' },
@@ -214,6 +218,7 @@ const TRANSLATIONS: Record<string, TranslationMap> = {
   // totaling €800. DSO: 15 days.") while its title already went through gt(),
   // so the Geld card rendered a Dutch heading over an English sentence.
   fin_overdue_message: { nl: '{{count}} facturen open voor {{amount}}. Gemiddelde betaaltermijn: {{days}} dagen.', en: '{{count}} invoices overdue totalling {{amount}}. Average payment time: {{days}} days.', de: '{{count}} Rechnungen offen über {{amount}}. Durchschnittliche Zahlungsfrist: {{days}} Tage.', fr: '{{count}} factures impayées pour {{amount}}. Délai de paiement moyen : {{days}} jours.', es: '{{count}} facturas pendientes por {{amount}}. Plazo medio de pago: {{days}} días.', it: '{{count}} fatture da incassare per {{amount}}. Tempo medio di pagamento: {{days}} giorni.' },
+  fin_overdue_message_one: { nl: '1 factuur open voor {{amount}}. Gemiddelde betaaltermijn: {{days}} dagen.', en: '1 invoice overdue for {{amount}}. Average payment time: {{days}} days.', de: '1 Rechnung offen über {{amount}}. Durchschnittliche Zahlungsfrist: {{days}} Tage.', fr: '1 facture impayée pour {{amount}}. Délai de paiement moyen : {{days}} jours.', es: '1 factura pendiente por {{amount}}. Plazo medio de pago: {{days}} días.', it: '1 fattura da incassare per {{amount}}. Tempo medio di pagamento: {{days}} giorni.' },
   fin_overdue_metric: { nl: 'Achterstallig', en: 'Overdue', de: 'Überfällig', fr: 'En retard', es: 'Vencido', it: 'Scaduto' },
   fin_overdue_detail_item: { nl: '{{customer}}: {{amount}} ({{days}}d te laat)', en: '{{customer}}: {{amount}} ({{days}}d overdue)', de: '{{customer}}: {{amount}} ({{days}}T überfällig)', fr: '{{customer}} : {{amount}} ({{days}}j de retard)', es: '{{customer}}: {{amount}} ({{days}}d de retraso)', it: '{{customer}}: {{amount}} ({{days}}g di ritardo)' },
   // cross-sell was fully hardcoded ENGLISH on a contractor-scoped generator
@@ -614,7 +619,10 @@ export function toGeneratorLanguage(tag: string | null | undefined): GeneratorLa
 }
 
 export function gt(key: string, language: GeneratorLanguage, params?: Record<string, string | number>): string {
-  const entry = TRANSLATIONS[key];
+  // Singular when there is one: "1 facturen achterstallig" read on Geld
+  // (emulator walk 2026-09-29). A `<key>_one` variant wins for count === 1.
+  const oneKey = params && Number(params.count) === 1 ? `${key}_one` : null;
+  const entry = (oneKey && TRANSLATIONS[oneKey]) || TRANSLATIONS[key];
   if (!entry) return key; // key not found — return key itself as fallback
 
   // Falls back to ENGLISH, not Dutch. All 428 entries carry all six locales, so

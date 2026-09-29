@@ -2446,7 +2446,15 @@
       "years_other": "{{count}} jaar"
     },
     "billedYearly": "{{price}} per jaar gefactureerd",
-    "retentionLine": "{{title}}: {{periods}}"
+    "retentionLine": "{{title}}: {{periods}}",
+    "businessName": "Bedrijfsnaam",
+    "vatNumberBtw": "BTW-nummer",
+    "registrationHrb": "HRB-nummer",
+    "vatNumberUst": "USt-IdNr (btw-id)",
+    "registrationSiret": "SIRET",
+    "vatNumberTva": "Btw-nummer (TVA)",
+    "vatNumberPiva": "Partita IVA",
+    "registrationCoNo": "Bedrijfsnummer (Companies House)"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -4605,7 +4613,7 @@
     "connect": "Koppelen"
   },
   "stripe": {
-    "title": "Stripe Payments",
+    "title": "Stripe betalingen",
     "subtitle": "Ontvang betalingen via creditcard, Apple Pay, Google Pay en meer",
     "apiKeyLabel": "Secret key",
     "apiKeyPlaceholder": "sk_live_xxxx of sk_test_xxxx",
@@ -5250,7 +5258,7 @@
     "detailsBtn": "Details",
     "daysAgoFiled": "{{count}} dagen geleden ingediend",
     "statActive": "Actief",
-    "statExpiringSoon": "Verloopt Binnenkort",
+    "statExpiringSoon": "Verloopt binnenkort",
     "statClaims": "Claims",
     "statInReview": "In behandeling",
     "statThisMonth": "Deze maand",
@@ -5845,7 +5853,8 @@
     "savedBody": "Feedback over kluskwaliteit vastgelegd.",
     "errorTitle": "Fout",
     "errorBody": "Opslaan mislukt. Probeer het opnieuw.",
-    "errorJobPending": "Deze klus is nog niet opgeslagen — probeer het zo opnieuw."
+    "errorJobPending": "Deze klus is nog niet opgeslagen — probeer het zo opnieuw.",
+    "savedOfflineBody": "Opgeslagen op je telefoon — wordt verstuurd zodra je weer verbinding hebt."
   },
   "customerTag": {
     "vip": "VIP",
