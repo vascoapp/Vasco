@@ -5998,8 +5998,12 @@
     "recordWarning": "Registra l'avviso",
     "warnedOn": "Avvisato il {{date}}",
     "markApproved": "Cliente approvato",
+    "confirmApprovedTitle": "Accordo del cliente?",
+    "confirmApprovedBody": "Registrare che il cliente ha accettato «{{title}}» per {{amount}}? Si aggiunge al valore del progetto e non si può annullare.",
+    "confirmApprovedYes": "Sì, accettato",
     "reduction": "Minor lavoro",
     "termTitlePlaceholder": "Es. Inizio lavori",
+    "changeOrderTitlePlaceholder": "Es. Prese aggiuntive in cucina",
     "percentLabel": "Percentuale",
     "amountLabel": "Importo",
     "retentionLabel": "Ritenuta %",
@@ -7334,5 +7338,32 @@
     "xmlNoFormat": "nessun formato di fattura elettronica per questo paese",
     "buyerAddress": "città e CAP del cliente",
     "noProfile": "i dati della tua azienda"
+  },
+  "billingProblem": {
+    "term": {
+      "retentionRange": "La ritenuta deve essere tra 0% e 100% (ora {{percent}}).",
+      "negative": "La rata «{{title}}» è negativa.",
+      "empty": "La rata «{{title}}» non fattura nulla.",
+      "duplicatePosition": "Due rate occupano la posizione {{position}}.",
+      "unknownMilestone": "La rata «{{title}}» attende una milestone che non esiste più.",
+      "over100": "Le rate fatturano il {{percent}} del contratto: più dell'intero.",
+      "fixedOverContract": "Le rate fisse ammontano a {{fixed}}, più del valore del contratto di {{value}}."
+    },
+    "retention": {
+      "nothingHeld": "Su questo progetto non viene trattenuto nulla.",
+      "notComplete": "La ritenuta si svincola alla consegna; questo progetto non è ancora finito.",
+      "termsUnbilled_one": "{{count}} rata non è ancora fatturata: fatturala prima.",
+      "termsUnbilled_other": "{{count}} rate non sono ancora fatturate: fatturale prima."
+    },
+    "co": {
+      "alreadyBilled": "«{{title}}» è già stato fatturato.",
+      "declined": "Il cliente ha rifiutato «{{title}}».",
+      "notApproved": "Il cliente non ha ancora approvato «{{title}}».",
+      "noAmount": "«{{title}}» non ha un importo.",
+      "notWarned": "Non risulta che il cliente sia stato avvisato del costo extra di «{{title}}»{{statute}}. Registra l'avviso prima di fatturare.",
+      "approvedNotWarned": "«{{title}}» è approvato, ma l'avviso di prezzo non è registrato{{statute}}.",
+      "duplicatePosition": "Due lavori extra occupano la posizione {{position}}.",
+      "belowZero": "Le riduzioni superano il valore del contratto: il progetto varrebbe meno di niente."
+    }
   }
 }

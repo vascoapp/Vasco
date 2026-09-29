@@ -5998,8 +5998,12 @@
     "recordWarning": "Hinweis festhalten",
     "warnedOn": "Gewarnt am {{date}}",
     "markApproved": "Kunde einverstanden",
+    "confirmApprovedTitle": "Kunde einverstanden?",
+    "confirmApprovedBody": "Festhalten, dass der Kunde „{{title}}“ für {{amount}} zugestimmt hat? Das fließt in den Projektwert ein und kann nicht rückgängig gemacht werden.",
+    "confirmApprovedYes": "Ja, zugestimmt",
     "reduction": "Minderleistung",
     "termTitlePlaceholder": "z. B. Arbeitsbeginn",
+    "changeOrderTitlePlaceholder": "z. B. Zusätzliche Steckdosen Küche",
     "percentLabel": "Prozentsatz",
     "amountLabel": "Betrag",
     "retentionLabel": "Einbehalt %",
@@ -7334,5 +7338,32 @@
     "xmlNoFormat": "kein E-Rechnungsformat für dieses Land",
     "buyerAddress": "Ort und Postleitzahl des Kunden",
     "noProfile": "Ihre Unternehmensangaben"
+  },
+  "billingProblem": {
+    "term": {
+      "retentionRange": "Der Einbehalt muss zwischen 0 % und 100 % liegen (jetzt {{percent}}).",
+      "negative": "Abschlag „{{title}}“ ist negativ.",
+      "empty": "Abschlag „{{title}}“ berechnet nichts.",
+      "duplicatePosition": "Zwei Abschläge stehen an Position {{position}}.",
+      "unknownMilestone": "Abschlag „{{title}}“ wartet auf einen Meilenstein, den es nicht mehr gibt.",
+      "over100": "Die Abschläge berechnen {{percent}} des Auftrags — mehr als das Ganze.",
+      "fixedOverContract": "Die festen Abschläge ergeben {{fixed}}, mehr als der Auftragswert von {{value}}."
+    },
+    "retention": {
+      "nothingHeld": "Bei diesem Projekt wird nichts einbehalten.",
+      "notComplete": "Der Einbehalt wird bei der Abnahme frei; dieses Projekt ist noch nicht fertig.",
+      "termsUnbilled_one": "{{count}} Abschlag ist noch nicht berechnet — stellen Sie ihn zuerst in Rechnung.",
+      "termsUnbilled_other": "{{count}} Abschläge sind noch nicht berechnet — stellen Sie diese zuerst in Rechnung."
+    },
+    "co": {
+      "alreadyBilled": "„{{title}}“ wurde bereits berechnet.",
+      "declined": "„{{title}}“ wurde vom Kunden abgelehnt.",
+      "notApproved": "Der Kunde hat „{{title}}“ noch nicht freigegeben.",
+      "noAmount": "„{{title}}“ hat keinen Betrag.",
+      "notWarned": "Es ist nicht festgehalten, dass der Kunde auf die Mehrkosten von „{{title}}“ hingewiesen wurde{{statute}}. Halten Sie den Hinweis fest, bevor Sie abrechnen.",
+      "approvedNotWarned": "„{{title}}“ ist freigegeben, aber der Preishinweis ist nicht festgehalten{{statute}}.",
+      "duplicatePosition": "Zwei Nachträge stehen an Position {{position}}.",
+      "belowZero": "Die Minderleistungen übersteigen den Auftragswert — das Projekt wäre weniger als nichts wert."
+    }
   }
 }

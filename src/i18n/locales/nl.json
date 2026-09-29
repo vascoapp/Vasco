@@ -5998,8 +5998,12 @@
     "recordWarning": "Waarschuwing vastleggen",
     "warnedOn": "Gewaarschuwd op {{date}}",
     "markApproved": "Akkoord van klant",
+    "confirmApprovedTitle": "Klant akkoord?",
+    "confirmApprovedBody": "Vastleggen dat de klant akkoord gaf op “{{title}}” voor {{amount}}? Dit telt mee in de projectwaarde en kan niet ongedaan worden.",
+    "confirmApprovedYes": "Ja, akkoord",
     "reduction": "Minderwerk",
     "termTitlePlaceholder": "Bijv. Start werkzaamheden",
+    "changeOrderTitlePlaceholder": "Bijv. Extra stopcontacten keuken",
     "percentLabel": "Percentage",
     "amountLabel": "Bedrag",
     "retentionLabel": "Retentie %",
@@ -7334,5 +7338,32 @@
     "xmlNoFormat": "geen e-factuurformaat voor dit land",
     "buyerAddress": "plaats en postcode van de klant",
     "noProfile": "je bedrijfsgegevens"
+  },
+  "billingProblem": {
+    "term": {
+      "retentionRange": "Retentie moet tussen 0% en 100% liggen (nu {{percent}}).",
+      "negative": "Termijn “{{title}}” is negatief.",
+      "empty": "Termijn “{{title}}” factureert niets.",
+      "duplicatePosition": "Twee termijnen staan op positie {{position}}.",
+      "unknownMilestone": "Termijn “{{title}}” wacht op een mijlpaal die niet meer bestaat.",
+      "over100": "De termijnen factureren {{percent}} van het contract — meer dan het geheel.",
+      "fixedOverContract": "De vaste termijnen komen op {{fixed}}, meer dan de contractwaarde van {{value}}."
+    },
+    "retention": {
+      "nothingHeld": "Er wordt op dit project niets ingehouden.",
+      "notComplete": "Retentie komt vrij bij de oplevering; dit project is nog niet klaar.",
+      "termsUnbilled_one": "{{count}} termijn is nog niet gefactureerd — factureer die eerst.",
+      "termsUnbilled_other": "{{count}} termijnen zijn nog niet gefactureerd — factureer die eerst."
+    },
+    "co": {
+      "alreadyBilled": "“{{title}}” is al gefactureerd.",
+      "declined": "“{{title}}” is door de klant afgewezen.",
+      "notApproved": "De klant heeft “{{title}}” nog niet goedgekeurd.",
+      "noAmount": "“{{title}}” heeft geen bedrag.",
+      "notWarned": "Er is niet vastgelegd dat de klant gewaarschuwd is dat “{{title}}” meer kost{{statute}}. Leg de waarschuwing vast voordat je factureert.",
+      "approvedNotWarned": "“{{title}}” is goedgekeurd, maar de prijswaarschuwing is niet vastgelegd{{statute}}.",
+      "duplicatePosition": "Twee meerwerkposten staan op positie {{position}}.",
+      "belowZero": "De minderwerkposten zijn hoger dan de contractwaarde — het project zou minder dan niets waard zijn."
+    }
   }
 }

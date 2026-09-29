@@ -15,7 +15,7 @@ import { useExpenses, useExpenseStats, EXPENSE_CATEGORIES, type ExpenseCategory 
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { getVATRate, purchaseVatRates } from '../../src/constants/taxRates';
-import { formatCurrency, formatDayMonthAuto } from '../../src/i18n/formatting';
+import { formatCurrency, formatDayMonthAuto, formatPercentValue } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
@@ -338,7 +338,7 @@ export default function ExpensesScreen() {
                 <Text style={styles.expenseAmount}>{formatCurrency(expense.amount, country)}</Text>
                 {expense.deductible && (
                   <View style={styles.deductBadge}>
-                    <Text style={styles.deductText}>{expense.deductionPercentage}% {t('expenses.deduction', 'aftrek')}</Text>
+                    <Text style={styles.deductText}>{formatPercentValue(expense.deductionPercentage)} {t('expenses.deduction', 'aftrek')}</Text>
                   </View>
                 )}
               </View>

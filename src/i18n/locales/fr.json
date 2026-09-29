@@ -5998,8 +5998,12 @@
     "recordWarning": "Consigner l'avertissement",
     "warnedOn": "Averti le {{date}}",
     "markApproved": "Accord du client",
+    "confirmApprovedTitle": "Accord du client ?",
+    "confirmApprovedBody": "Enregistrer l'accord du client pour « {{title}} » à {{amount}} ? Cela s'ajoute à la valeur du projet et ne peut pas être annulé.",
+    "confirmApprovedYes": "Oui, accordé",
     "reduction": "Moins-value",
     "termTitlePlaceholder": "Ex. Début des travaux",
+    "changeOrderTitlePlaceholder": "Ex. Prises supplémentaires cuisine",
     "percentLabel": "Pourcentage",
     "amountLabel": "Montant",
     "retentionLabel": "Retenue %",
@@ -7334,5 +7338,32 @@
     "xmlNoFormat": "pas de format de facture électronique pour ce pays",
     "buyerAddress": "ville et code postal du client",
     "noProfile": "les informations de votre entreprise"
+  },
+  "billingProblem": {
+    "term": {
+      "retentionRange": "La retenue doit être comprise entre 0 % et 100 % (actuellement {{percent}}).",
+      "negative": "L'échéance « {{title}} » est négative.",
+      "empty": "L'échéance « {{title}} » ne facture rien.",
+      "duplicatePosition": "Deux échéances occupent la position {{position}}.",
+      "unknownMilestone": "L'échéance « {{title}} » attend un jalon qui n'existe plus.",
+      "over100": "Les échéances facturent {{percent}} du contrat — plus que la totalité.",
+      "fixedOverContract": "Les échéances fixes totalisent {{fixed}}, plus que la valeur du contrat de {{value}}."
+    },
+    "retention": {
+      "nothingHeld": "Rien n'est retenu sur ce projet.",
+      "notComplete": "La retenue est libérée à la réception ; ce projet n'est pas encore terminé.",
+      "termsUnbilled_one": "{{count}} échéance n'est pas encore facturée — facturez-la d'abord.",
+      "termsUnbilled_other": "{{count}} échéances ne sont pas encore facturées — facturez-les d'abord."
+    },
+    "co": {
+      "alreadyBilled": "« {{title}} » a déjà été facturé.",
+      "declined": "« {{title}} » a été refusé par le client.",
+      "notApproved": "Le client n'a pas encore approuvé « {{title}} ».",
+      "noAmount": "« {{title}} » n'a pas de montant.",
+      "notWarned": "Rien n'indique que le client a été prévenu du surcoût de « {{title}} »{{statute}}. Enregistrez l'avertissement avant de facturer.",
+      "approvedNotWarned": "« {{title}} » est approuvé, mais l'avertissement de prix n'est pas enregistré{{statute}}.",
+      "duplicatePosition": "Deux travaux supplémentaires occupent la position {{position}}.",
+      "belowZero": "Les moins-values dépassent la valeur du contrat — le projet vaudrait moins que rien."
+    }
   }
 }

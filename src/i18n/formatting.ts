@@ -210,6 +210,23 @@ export function formatDecimal1(n: number, country: Country = 'NL'): string {
   }
 }
 
+/**
+ * A percentage the contractor typed or chose — "30,5%" in NL, "30,5 %" in
+ * FR/DE (Intl's own spacing), "30.5%" in UK/US. Takes 30.5, not 0.305.
+ *
+ * `${x}%` printed "30.5%" on a Dutch billing instalment (aannemer walk,
+ * 2026-09-29): the same point-vs-comma trap as formatDecimal1.
+ */
+export function formatPercentValue(value: number, countryArg?: Country): string {
+  const country = countryArg ?? ((getCurrentCountry() as Country) ?? 'NL');
+  const { locale } = COUNTRY_CONFIG[country] ?? COUNTRY_CONFIG.NL;
+  try {
+    return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(value / 100);
+  } catch {
+    return `${value}%`;
+  }
+}
+
 /** Whole-currency formatter (0 decimals) — right symbol + locale grouping.
  *  NL €1.234 · UK £1,234 · US $1,234. Use for compact amount displays that
  *  shouldn't show cents. narrowSymbol with a fallback for older Intl builds. */

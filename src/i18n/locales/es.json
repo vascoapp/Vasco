@@ -5998,8 +5998,12 @@
     "recordWarning": "Registrar aviso",
     "warnedOn": "Avisado el {{date}}",
     "markApproved": "Cliente aprobó",
+    "confirmApprovedTitle": "¿Acuerdo del cliente?",
+    "confirmApprovedBody": "¿Registrar que el cliente aceptó «{{title}}» por {{amount}}? Se suma al valor del proyecto y no se puede deshacer.",
+    "confirmApprovedYes": "Sí, aceptado",
     "reduction": "Reducción",
     "termTitlePlaceholder": "P. ej. Inicio de obra",
+    "changeOrderTitlePlaceholder": "Ej. Enchufes adicionales en la cocina",
     "percentLabel": "Porcentaje",
     "amountLabel": "Importe",
     "retentionLabel": "Retención %",
@@ -7334,5 +7338,32 @@
     "xmlNoFormat": "no hay formato de factura electrónica para este país",
     "buyerAddress": "ciudad y código postal del cliente",
     "noProfile": "los datos de tu empresa"
+  },
+  "billingProblem": {
+    "term": {
+      "retentionRange": "La retención debe estar entre el 0 % y el 100 % (ahora {{percent}}).",
+      "negative": "El plazo «{{title}}» es negativo.",
+      "empty": "El plazo «{{title}}» no factura nada.",
+      "duplicatePosition": "Dos plazos ocupan la posición {{position}}.",
+      "unknownMilestone": "El plazo «{{title}}» espera un hito que ya no existe.",
+      "over100": "Los plazos facturan el {{percent}} del contrato: más que el total.",
+      "fixedOverContract": "Los plazos fijos suman {{fixed}}, más que el valor del contrato de {{value}}."
+    },
+    "retention": {
+      "nothingHeld": "No se retiene nada en este proyecto.",
+      "notComplete": "La retención se libera en la entrega; este proyecto aún no ha terminado.",
+      "termsUnbilled_one": "{{count}} plazo aún no se ha facturado: factúrelo primero.",
+      "termsUnbilled_other": "{{count}} plazos aún no se han facturado: factúrelos primero."
+    },
+    "co": {
+      "alreadyBilled": "«{{title}}» ya se ha facturado.",
+      "declined": "El cliente rechazó «{{title}}».",
+      "notApproved": "El cliente aún no ha aprobado «{{title}}».",
+      "noAmount": "«{{title}}» no tiene importe.",
+      "notWarned": "No consta que se avisara al cliente del coste adicional de «{{title}}»{{statute}}. Registre el aviso antes de facturarlo.",
+      "approvedNotWarned": "«{{title}}» está aprobado, pero no consta el aviso de precio{{statute}}.",
+      "duplicatePosition": "Dos trabajos adicionales ocupan la posición {{position}}.",
+      "belowZero": "Las reducciones superan el valor del contrato: el proyecto valdría menos que nada."
+    }
   }
 }

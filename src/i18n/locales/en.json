@@ -5998,8 +5998,12 @@
     "recordWarning": "Record warning",
     "warnedOn": "Warned on {{date}}",
     "markApproved": "Customer approved",
+    "confirmApprovedTitle": "Customer agreed?",
+    "confirmApprovedBody": "Record that the customer agreed to “{{title}}” for {{amount}}? This adds it to the project value and cannot be undone.",
+    "confirmApprovedYes": "Yes, agreed",
     "reduction": "Reduction",
     "termTitlePlaceholder": "E.g. Start of work",
+    "changeOrderTitlePlaceholder": "E.g. Extra sockets in the kitchen",
     "percentLabel": "Percentage",
     "amountLabel": "Amount",
     "retentionLabel": "Retention %",
@@ -7334,5 +7338,32 @@
     "xmlNoFormat": "no e-invoice format for this country",
     "buyerAddress": "customer city and post code",
     "noProfile": "your business details"
+  },
+  "billingProblem": {
+    "term": {
+      "retentionRange": "Retention must be between 0% and 100% (now {{percent}}).",
+      "negative": "Instalment “{{title}}” is negative.",
+      "empty": "Instalment “{{title}}” bills nothing.",
+      "duplicatePosition": "Two instalments share position {{position}}.",
+      "unknownMilestone": "Instalment “{{title}}” waits for a milestone that no longer exists.",
+      "over100": "The instalments bill {{percent}} of the contract — more than all of it.",
+      "fixedOverContract": "The fixed instalments total {{fixed}}, more than the contract value of {{value}}."
+    },
+    "retention": {
+      "nothingHeld": "Nothing is being withheld on this project.",
+      "notComplete": "Retention is released at handover; this project is not finished yet.",
+      "termsUnbilled_one": "{{count}} instalment is still unbilled — invoice it before releasing the retention.",
+      "termsUnbilled_other": "{{count}} instalments are still unbilled — invoice those before releasing the retention."
+    },
+    "co": {
+      "alreadyBilled": "“{{title}}” has already been billed.",
+      "declined": "“{{title}}” was declined by the customer.",
+      "notApproved": "“{{title}}” has not been approved by the customer yet.",
+      "noAmount": "“{{title}}” has no amount.",
+      "notWarned": "There is no record that the customer was warned “{{title}}” costs extra{{statute}}. Record the warning before billing it.",
+      "approvedNotWarned": "“{{title}}” is approved, but there is no record of the price warning{{statute}}.",
+      "duplicatePosition": "Two extra-work items share position {{position}}.",
+      "belowZero": "The reductions exceed the contract value — the project would be worth less than nothing."
+    }
   }
 }

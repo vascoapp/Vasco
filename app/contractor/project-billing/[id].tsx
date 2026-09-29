@@ -17,6 +17,7 @@
 //    blocker with the fix attached, not as a quiet disabled button.
 // =============================================================================
 
+import { billingProblemText } from '../../../src/services/billingProblemText';
 import { goBack } from '../../../src/utils/goBack';
 import { friendlyError } from '../../../src/utils/friendlyError';
 import { useMemo, useState, useCallback } from 'react';
@@ -31,7 +32,7 @@ import { SafeArea } from '../../../src/theme/spacing';
 import { useAppState } from '../../../src/state/AppState';
 import { useAuth } from '../../../src/context/AuthContext';
 import { statuteSuffix } from '../../../src/domain/extraWorkLaw';
-import { formatCurrency, type Country, formatDateShortAuto } from '../../../src/i18n/formatting';
+import { formatCurrency, type Country, formatDateShortAuto, formatPercentValue } from '../../../src/i18n/formatting';
 import { hapticSuccess } from '../../../src/utils/haptics';
 import { FadeIn } from '../../../src/components/shared/FadeIn';
 import {
@@ -254,7 +255,7 @@ export default function ProjectBillingScreen() {
   const releaseRetention = async () => {
     const gate = canReleaseRetention(project, progress.retentionHeld);
     if (!gate.allowed) {
-      Alert.alert(t('projectBilling.releaseBlocked', 'Not releasable yet'), gate.reason);
+      Alert.alert(t('projectBilling.releaseBlocked', 'Not releasable yet'), billingProblemText(gate));
       return;
     }
     try {
@@ -290,7 +291,7 @@ export default function ProjectBillingScreen() {
         gate.needsWarning
           ? t('projectBilling.warningMissing', 'Customer not warned about the price increase')
           : t('common.error', 'Error'),
-        gate.reason,
+        billingProblemText(gate),
       );
       return;
     }
@@ -347,7 +348,7 @@ export default function ProjectBillingScreen() {
             >
               <Ionicons name="options-outline" size={14} color={SemanticColors.textSecondary} />
               <Text style={styles.retentionRateText}>
-                {t('projectBilling.retentionRate', 'Retention')}: {Number(project.retentionPercent ?? 0)}%
+                {t('projectBilling.retentionRate', 'Retention')}: {formatPercentValue(Number(project.retentionPercent ?? 0))}
               </Text>
               <Text style={styles.retentionEditText}>
                 {t('projectBilling.change', 'Change')}
@@ -383,7 +384,7 @@ export default function ProjectBillingScreen() {
         {scheduleErrors.length > 0 && (
           <View style={styles.errorCard}>
             <Ionicons name="warning-outline" size={16} color={SemanticColors.feedbackError} />
-            <Text style={styles.errorText}>{scheduleErrors[0].message}</Text>
+            <Text style={styles.errorText}>{billingProblemText(scheduleErrors[0])}</Text>
           </View>
         )}
 
@@ -405,7 +406,7 @@ export default function ProjectBillingScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{term.title}</Text>
                   <Text style={styles.rowMeta}>
-                    {term.basis === 'percent' ? `${term.percent}% · ` : ''}
+                    {term.basis === 'percent' ? `${formatPercentValue(term.percent ?? 0)} · ` : ''}
                     {t(TERM_STATUS_KEY[term.status], term.status)}
                     {nextTerm?.id === term.id ? ` · ${t('projectBilling.nextUp', 'Next up')}` : ''}
                   </Text>
@@ -474,7 +475,7 @@ export default function ProjectBillingScreen() {
         {changeOrderErrors.length > 0 && (
           <View style={styles.errorCard}>
             <Ionicons name="warning-outline" size={16} color={SemanticColors.feedbackError} />
-            <Text style={styles.errorText}>{changeOrderErrors[0].message}</Text>
+            <Text style={styles.errorText}>{billingProblemText(changeOrderErrors[0])}</Text>
           </View>
         )}
 
@@ -524,8 +525,25 @@ export default function ProjectBillingScreen() {
                   {(order.status === 'draft' || order.status === 'proposed') && (
                     <Pressable
                       style={styles.linkBtn}
+                      // Recording the CUSTOMER's agreement is irreversible and
+                      // moves the project value, so it takes two taps and the
+                      // confirm restates the amount (walk, 2026-09-29).
                       onPress={() =>
-                        patchOrder(order.id, { status: 'approved', approvedAt: new Date().toISOString() })
+                        Alert.alert(
+                          t('projectBilling.confirmApprovedTitle', 'Customer agreed?'),
+                          t('projectBilling.confirmApprovedBody', {
+                            title: order.title,
+                            amount: money(order.amount),
+                            defaultValue: 'Record that the customer agreed to “{{title}}” for {{amount}}? This adds it to the project value and cannot be undone.',
+                          }),
+                          [
+                            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                            {
+                              text: t('projectBilling.confirmApprovedYes', 'Yes, agreed'),
+                              onPress: () => patchOrder(order.id, { status: 'approved', approvedAt: new Date().toISOString() }),
+                            },
+                          ],
+                        )
                       }
                     >
                       <Text style={styles.linkBtnText}>
@@ -647,7 +665,7 @@ export default function ProjectBillingScreen() {
               style={styles.input}
               value={coTitle}
               onChangeText={setCoTitle}
-              placeholder={t('projectBilling.termTitlePlaceholder', 'E.g. Extra sockets')}
+              placeholder={t('projectBilling.changeOrderTitlePlaceholder', 'E.g. Extra sockets in the kitchen')}
               placeholderTextColor={SemanticColors.placeholder}
             />
             <TextInput

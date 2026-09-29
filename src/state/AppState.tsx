@@ -3834,7 +3834,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // cheaper to stop here than to credit-note it later.
         const scheduleErrors = validateBillingSchedule(project);
         if (scheduleErrors.length > 0) {
-          throw new Error(`Billing schedule is invalid: ${scheduleErrors[0].message}`);
+          // Localized: this reaches the contractor through friendlyError.
+          throw new Error(require('../services/billingProblemText').billingProblemText(scheduleErrors[0]));
         }
 
         // ── net (contract) → gross (document) ────────────────────────────
@@ -3992,7 +3993,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // Includes the art. 7:755 warning check: billing meerwerk the
           // customer was never warned about is how a contractor ends up unable
           // to collect it.
-          throw new Error(gate.reason ?? 'This change order cannot be billed');
+          throw new Error(require('../services/billingProblemText').billingProblemText(gate) || 'This change order cannot be billed');
         }
 
         // `ProjectChangeOrder.amount` is signed and, per its own doc comment,
@@ -4116,7 +4117,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         ]);
         const held = retentionHeld(projectId, invoices);
         const gate = canReleaseRetention(project, held);
-        if (!gate.allowed) throw new Error(gate.reason ?? 'Retention cannot be released yet');
+        if (!gate.allowed) throw new Error(require('../services/billingProblemText').billingProblemText(gate) || 'Retention cannot be released yet');
 
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = dueDateOnTerms();

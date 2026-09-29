@@ -82,8 +82,15 @@ export interface BillingScheduleError {
     | 'empty_term'
     | 'negative_amount';
   message: string;
+  /** Stable key under `billingProblem.*` + raw params — the screen renders it
+   *  in the contractor's language (billingProblemText); `message` is English
+   *  for logs and tests (walk, 2026-09-29). */
+  i18nKey?: string;
+  params?: BillingProblemParams;
   termId?: string;
 }
+
+export type BillingProblemParams = Record<string, string | number>;
 
 /**
  * Guard rails on a schedule before it can be used.
@@ -102,6 +109,7 @@ export function validateBillingSchedule(
     errors.push({
       code: 'retention_out_of_range',
       message: `Retention must be between 0 and 100, got ${retention}`,
+      i18nKey: 'term.retentionRange', params: { percent: retention },
     });
   }
 
@@ -114,19 +122,19 @@ export function validateBillingSchedule(
     if (term.basis === 'percent') {
       const pct = Number(term.percent ?? 0);
       if (pct < 0) {
-        errors.push({ code: 'negative_amount', message: `Term "${term.title}" has a negative percent`, termId: term.id });
+        errors.push({ code: 'negative_amount', message: `Term "${term.title}" has a negative percent`, i18nKey: 'term.negative', params: { title: term.title }, termId: term.id });
       }
       if (pct === 0) {
-        errors.push({ code: 'empty_term', message: `Term "${term.title}" bills nothing`, termId: term.id });
+        errors.push({ code: 'empty_term', message: `Term "${term.title}" bills nothing`, i18nKey: 'term.empty', params: { title: term.title }, termId: term.id });
       }
       percentTotal += pct;
     } else {
       const amt = Number(term.amount ?? 0);
       if (amt < 0) {
-        errors.push({ code: 'negative_amount', message: `Term "${term.title}" has a negative amount`, termId: term.id });
+        errors.push({ code: 'negative_amount', message: `Term "${term.title}" has a negative amount`, i18nKey: 'term.negative', params: { title: term.title }, termId: term.id });
       }
       if (amt === 0) {
-        errors.push({ code: 'empty_term', message: `Term "${term.title}" bills nothing`, termId: term.id });
+        errors.push({ code: 'empty_term', message: `Term "${term.title}" bills nothing`, i18nKey: 'term.empty', params: { title: term.title }, termId: term.id });
       }
       fixedTotal += amt;
     }
@@ -135,6 +143,7 @@ export function validateBillingSchedule(
       errors.push({
         code: 'duplicate_sort_order',
         message: `Two terms share position ${term.sortOrder}; the billing order would be undefined`,
+        i18nKey: 'term.duplicatePosition', params: { position: term.sortOrder },
         termId: term.id,
       });
     }
@@ -146,6 +155,7 @@ export function validateBillingSchedule(
       errors.push({
         code: 'unknown_milestone',
         message: `Term "${term.title}" is triggered by a milestone that no longer exists`,
+        i18nKey: 'term.unknownMilestone', params: { title: term.title },
         termId: term.id,
       });
     }
@@ -157,6 +167,7 @@ export function validateBillingSchedule(
     errors.push({
       code: 'percent_over_100',
       message: `Terms bill ${round2(percentTotal)}% of the contract, more than the whole of it`,
+      i18nKey: 'term.over100', params: { percent: round2(percentTotal) },
     });
   }
 
@@ -165,6 +176,7 @@ export function validateBillingSchedule(
     errors.push({
       code: 'fixed_over_contract',
       message: `Fixed terms total ${round2(fixedTotal)}, more than the contract value ${round2(value)}`,
+      i18nKey: 'term.fixedOverContract', params: { fixed: round2(fixedTotal), value: round2(value) },
     });
   }
 
@@ -285,12 +297,12 @@ export function retentionHeld(projectId: string, invoices: Invoice[]): number {
 export function canReleaseRetention(
   project: Pick<Project, 'status' | 'billingTerms'>,
   heldAmount: number,
-): { allowed: boolean; reason?: string } {
+): { allowed: boolean; reason?: string; i18nKey?: string; params?: BillingProblemParams } {
   if (heldAmount <= 0) {
-    return { allowed: false, reason: 'Nothing is being withheld on this project' };
+    return { allowed: false, reason: 'Nothing is being withheld on this project', i18nKey: 'retention.nothingHeld' };
   }
   if (project.status !== 'completed') {
-    return { allowed: false, reason: 'Retention is released at oplevering; this project is not complete' };
+    return { allowed: false, reason: 'Retention is released at oplevering; this project is not complete', i18nKey: 'retention.notComplete' };
   }
   const unbilled = (project.billingTerms ?? []).filter(
     (t) => t.status !== 'invoiced' && t.status !== 'paid',
@@ -299,6 +311,7 @@ export function canReleaseRetention(
     return {
       allowed: false,
       reason: `${unbilled.length} term(s) are still unbilled; invoice those before releasing retention`,
+      i18nKey: 'retention.termsUnbilled', params: { count: unbilled.length },
     };
   }
   return { allowed: true };
@@ -344,6 +357,8 @@ export interface ChangeOrderGate {
   reason?: string;
   /** Set when the block is the art. 7:755 warning, so the UI can offer to send it. */
   needsWarning?: boolean;
+  i18nKey?: string;
+  params?: BillingProblemParams;
 }
 
 /**
@@ -361,21 +376,22 @@ export interface ChangeOrderGate {
  */
 export function canInvoiceChangeOrder(order: ProjectChangeOrder): ChangeOrderGate {
   if (order.status === 'invoiced') {
-    return { allowed: false, reason: `"${order.title}" has already been billed` };
+    return { allowed: false, reason: `"${order.title}" has already been billed`, i18nKey: 'co.alreadyBilled', params: { title: order.title } };
   }
   if (order.status === 'rejected') {
-    return { allowed: false, reason: `"${order.title}" was declined by the customer` };
+    return { allowed: false, reason: `"${order.title}" was declined by the customer`, i18nKey: 'co.declined', params: { title: order.title } };
   }
   if (order.status !== 'approved') {
-    return { allowed: false, reason: `"${order.title}" has not been approved by the customer yet` };
+    return { allowed: false, reason: `"${order.title}" has not been approved by the customer yet`, i18nKey: 'co.notApproved', params: { title: order.title } };
   }
   if (Number(order.amount ?? 0) === 0) {
-    return { allowed: false, reason: `"${order.title}" has no amount` };
+    return { allowed: false, reason: `"${order.title}" has no amount`, i18nKey: 'co.noAmount', params: { title: order.title } };
   }
   if (Number(order.amount) > 0 && !order.warnedAt) {
     return {
       allowed: false,
       needsWarning: true,
+      i18nKey: 'co.notWarned', params: { title: order.title },
       reason:
         `"${order.title}" has no record of the customer being warned that this ` +
         `carried a price increase (art. 7:755 BW). Record the warning before billing it.`,
@@ -387,6 +403,8 @@ export function canInvoiceChangeOrder(order: ProjectChangeOrder): ChangeOrderGat
 export interface ChangeOrderError {
   code: 'no_amount' | 'approved_without_warning' | 'duplicate_sort_order' | 'reduces_below_zero';
   message: string;
+  i18nKey?: string;
+  params?: BillingProblemParams;
   changeOrderId?: string;
 }
 
@@ -399,7 +417,7 @@ export function validateChangeOrders(
 
   for (const order of orders) {
     if (Number(order.amount ?? 0) === 0) {
-      errors.push({ code: 'no_amount', message: `"${order.title}" has no amount`, changeOrderId: order.id });
+      errors.push({ code: 'no_amount', message: `"${order.title}" has no amount`, i18nKey: 'co.noAmount', params: { title: order.title }, changeOrderId: order.id });
     }
     // Surfaced as a warning-level problem at approval time rather than only at
     // billing time, so the contractor can still send the notice while the work
@@ -408,6 +426,7 @@ export function validateChangeOrders(
       errors.push({
         code: 'approved_without_warning',
         message: `"${order.title}" is approved but has no record of the price warning (art. 7:755 BW)`,
+        i18nKey: 'co.approvedNotWarned', params: { title: order.title },
         changeOrderId: order.id,
       });
     }
@@ -415,6 +434,7 @@ export function validateChangeOrders(
       errors.push({
         code: 'duplicate_sort_order',
         message: `Two change orders share position ${order.sortOrder}`,
+        i18nKey: 'co.duplicatePosition', params: { position: order.sortOrder },
         changeOrderId: order.id,
       });
     }
@@ -427,6 +447,7 @@ export function validateChangeOrders(
     errors.push({
       code: 'reduces_below_zero',
       message: 'Reductions exceed the contract value, leaving the project worth less than nothing',
+      i18nKey: 'co.belowZero',
     });
   }
 
