@@ -219,6 +219,19 @@ export function getSelectableVatRates(country: BusinessProfile['country']): numb
   return rates.filter((r): r is number => r !== null && r > 0);
 }
 
+/**
+ * The rates a contractor in this market may charge, under the market's own tax
+ * name — "20% / 10% / 5,5% / 0% (TVA)". The VAT settings screen read the
+ * English "Standard rate per country" to every FR/ES/IT contractor (walk
+ * 2026-09-29). An unknown country gets no line rather than a guess.
+ */
+const TAX_NAME: Record<string, string> = { FR: 'TVA', ES: 'IVA', IT: 'IVA', UK: 'VAT' };
+export function standardRatesLine(country: string | undefined): string {
+  if (!country || !TAX_NAME[country]) return '';
+  const pct = (r: number) => `${String(r).replace('.', country === 'UK' ? '.' : ',')}%`;
+  return `${[...getSelectableVatRates(country as BusinessProfile['country']), 0].map(pct).join(' / ')} (${TAX_NAME[country]})`;
+}
+
 export function getVatExemptionNote(country: string | undefined, vatScheme: VatScheme | undefined): string | null {
   if (vatScheme === 'small_business_NL_KOR') {
     return 'BTW niet van toepassing — kleineondernemersregeling (KOR).';

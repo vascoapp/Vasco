@@ -82,6 +82,9 @@
     "moreOptions": "Weitere Optionen",
     "eInvoicing": "E-Rechnung (XRechnung, ZUGFeRD)",
     "perHour": "{{rate}}/Std.",
+    "daysCompact": "{{count}} T.",
+    "hoursCompact": "{{count}} Std.",
+    "expired": "Abgelaufen",
     "call": "Anrufen",
     "email": "E-Mail senden",
     "previous": "Zurück",
@@ -827,6 +830,7 @@
     "sendReminders": "Erinnerungen senden",
     "remindersSentBulk": "{{sent}} Erinnerungen gesendet, {{skipped}} übersprungen.",
     "dsoLabel": "Tage Außenstandsdauer",
+    "payTimeShort": "Zahldauer",
     "target": "Ziel",
     "previous": "Vorherige",
     "industry": "Branche",
@@ -2362,7 +2366,7 @@
     "exportSuccess": "Daten erfolgreich exportiert ({{count}} Einträge)",
     "exportFailed": "Export fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "accountDeleted": "Ihr Konto wurde gelöscht.",
-    "contractorScore": "Auftragnehmer-Score",
+    "contractorScore": "Zuverlässigkeits-Score",
     "completionRate": "Abschlussrate",
     "onTimeRate": "Pünktlichkeitsrate",
     "repeatCustomers": "Stammkunden",
@@ -3118,7 +3122,7 @@
     "leadTime": "{{days}} Tage Lieferzeit",
     "weAccept": "Wir akzeptieren",
     "demoPaymentTitle": "Demo-Modus",
-    "demoPaymentBody": "Im Live-Modus öffnet dies das Mollie-Checkout Ihres Auftragnehmers mit den konfigurierten Zahlungsmethoden (iDEAL, Karte, Banküberweisung).",
+    "demoPaymentBody": "Im Live-Modus öffnet dies das Mollie-Checkout Ihres Auftragnehmers mit den konfigurierten Zahlungsmethoden (Karte, Banküberweisung, Apple Pay usw.).",
     "accessTitle": "Projekt-Auswahl",
     "accessSubtitle": "Geben Sie den Code ein, den Sie von Ihrem Auftragnehmer erhalten haben",
     "accessHelp": "Keinen Code? Bitten Sie Ihren Auftragnehmer um einen Zugangslink.",
@@ -4456,6 +4460,7 @@
     }
   },
   "workflowPacks": {
+    "cardTitle": "{{pack}}: {{subject}}",
     "incasso": {
       "name": "Automatisches Mahnwesen",
       "description": "Automatische Zahlungserinnerungen nach 3, 7, 14 und 30 Tagen",
@@ -4528,7 +4533,7 @@
   },
   "mollie": {
     "title": "Mollie Zahlungen",
-    "subtitle": "Zahlungen via iDEAL, Kreditkarte und mehr empfangen",
+    "subtitle": "Zahlungen per Karte, Überweisung und mehr empfangen",
     "apiKeyLabel": "API-Schlüssel",
     "apiKeyPlaceholder": "live_xxxx oder test_xxxx",
     "apiKeyHint": "Finden Sie Ihren API-Key im Mollie-Dashboard → Developers → API keys",
@@ -4963,7 +4968,8 @@
     "invalidAmountBody": "Bitte geben Sie den gewünschten Anzahlungsbetrag ein.",
     "depositRequested": "Zahlungslink hinzugefügt",
     "depositRequestedBody": "Ihr Kunde sieht jetzt einen Bezahlen-Button in seinem Portal.",
-    "depositFailed": "Zahlungslink konnte nicht erstellt werden."
+    "depositFailed": "Zahlungslink konnte nicht erstellt werden.",
+    "depositNotSaved": "Der Zahlungslink wurde erstellt, konnte aber nicht zum Portal hinzugefügt werden. Bitte versuchen Sie es erneut."
   },
   "photos": {
     "cameraAccess": "Kamerazugriff erforderlich",
@@ -6154,10 +6160,10 @@
     "waitsForHint": "Wenn diese sich verzögern, wird dieser Meilenstein als blockiert gemeldet und nicht nur als unbesetzt."
   },
   "ledger": {
-    "didThisMonth_one": "Vasco hat {{count}} Aktion ausgeführt",
-    "didThisMonth_other": "Vasco hat {{count}} Aktionen ausgeführt",
+    "didThisMonth_one": "Sie haben {{count}} Aktion freigegeben",
+    "didThisMonth_other": "Sie haben {{count}} Aktionen freigegeben",
     "sub": "Diesen Monat — ansehen, welche",
-    "sectionTitle": "Was Vasco erledigt hat",
+    "sectionTitle": "Von Ihnen freigegeben, von Vasco erledigt",
     "confirmed_one": "{{count}} Kunde hat geantwortet",
     "confirmed_other": "{{count}} Kunden haben geantwortet",
     "empty": "Diesen Monat noch nichts freigegeben. Von Ihnen freigegebene Aktionen erscheinen hier.",

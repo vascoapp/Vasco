@@ -256,7 +256,7 @@ export default function BesparenScreen() {
                   is not, so we state the former. */}
               {ledger.total > 0 && (
                 <Text style={s.summarySaved}>
-                  {t('ledger.didThisMonth', { count: ledger.total, defaultValue: 'Vasco carried out {{count}} actions' })}
+                  {t('ledger.didThisMonth', { count: ledger.total, defaultValue: 'You approved {{count}} actions' })}
                 </Text>
               )}
             </View>
@@ -317,7 +317,7 @@ export default function BesparenScreen() {
         {ledger.total > 0 && (
           <FadeIn delay={120}>
             <View style={s.ledgerCard}>
-              <Text style={s.ledgerTitle}>{t('ledger.sectionTitle', 'What Vasco did')}</Text>
+              <Text style={s.ledgerTitle}>{t('ledger.sectionTitle', 'Approved by you, done by Vasco')}</Text>
               {ledger.byFamily.map((f) => (
                 <View key={f.family} style={s.ledgerRow}>
                   <Text style={s.ledgerRowLabel} numberOfLines={1}>

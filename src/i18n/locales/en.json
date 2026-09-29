@@ -82,6 +82,9 @@
     "moreOptions": "More options",
     "eInvoicing": "E-invoicing (XRechnung, Peppol)",
     "perHour": "{{rate}}/h",
+    "daysCompact": "{{count}}d",
+    "hoursCompact": "{{count}}h",
+    "expired": "Expired",
     "call": "Call",
     "email": "Email",
     "previous": "Previous",
@@ -827,6 +830,7 @@
     "sendReminders": "Send reminders",
     "remindersSentBulk": "Sent {{sent}} reminders, {{skipped}} skipped.",
     "dsoLabel": "Days Sales Outstanding",
+    "payTimeShort": "Time to pay",
     "target": "Target",
     "previous": "Previous",
     "industry": "Industry",
@@ -2362,7 +2366,7 @@
     "exportSuccess": "Data exported successfully ({{count}} items)",
     "exportFailed": "Export failed. Please try again.",
     "accountDeleted": "Your account has been deleted.",
-    "contractorScore": "Contractor Score",
+    "contractorScore": "Reliability score",
     "completionRate": "Completion rate",
     "onTimeRate": "On-time rate",
     "repeatCustomers": "Repeat customers",
@@ -3118,7 +3122,7 @@
     "leadTime": "{{days}} day delivery",
     "weAccept": "We accept",
     "demoPaymentTitle": "Demo mode",
-    "demoPaymentBody": "In live mode this opens your contractor's Mollie checkout with the configured payment methods (iDEAL, card, Apple Pay, etc.).",
+    "demoPaymentBody": "In live mode this opens your contractor's Mollie checkout with the configured payment methods (card, bank transfer, Apple Pay, etc.).",
     "accessTitle": "Project choices",
     "accessSubtitle": "Enter the code you received from your contractor",
     "accessHelp": "No code? Ask your contractor for an access link.",
@@ -4456,6 +4460,7 @@
     }
   },
   "workflowPacks": {
+    "cardTitle": "{{pack}}: {{subject}}",
     "incasso": {
       "name": "Automatic Collections",
       "description": "Automatic payment reminders after 3, 7, 14 and 30 days",
@@ -4528,7 +4533,7 @@
   },
   "mollie": {
     "title": "Mollie Payments",
-    "subtitle": "Receive payments via iDEAL, credit card and more",
+    "subtitle": "Receive payments by card, bank transfer and more",
     "apiKeyLabel": "API key",
     "apiKeyPlaceholder": "live_xxxx or test_xxxx",
     "apiKeyHint": "Find your API key in Mollie Dashboard → Developers → API keys",
@@ -4963,7 +4968,8 @@
     "invalidAmountBody": "Please enter the deposit amount you want to request.",
     "depositRequested": "Payment link added",
     "depositRequestedBody": "Your customer will now see a Pay button in their portal.",
-    "depositFailed": "Could not create the payment link."
+    "depositFailed": "Could not create the payment link.",
+    "depositNotSaved": "The payment link was created but could not be added to the portal. Try again."
   },
   "photos": {
     "cameraAccess": "Camera access required",
@@ -6154,10 +6160,10 @@
     "waitsForHint": "When these run late, this milestone is reported as blocked instead of just unstaffed."
   },
   "ledger": {
-    "didThisMonth_one": "Vasco carried out {{count}} action",
-    "didThisMonth_other": "Vasco carried out {{count}} actions",
+    "didThisMonth_one": "You approved {{count}} action",
+    "didThisMonth_other": "You approved {{count}} actions",
     "sub": "This month — see what",
-    "sectionTitle": "What Vasco did",
+    "sectionTitle": "Approved by you, done by Vasco",
     "confirmed_one": "{{count}} customer replied",
     "confirmed_other": "{{count}} customers replied",
     "empty": "Nothing approved yet this month. Actions you approve appear here.",

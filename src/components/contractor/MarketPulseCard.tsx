@@ -164,8 +164,8 @@ function LagRow({ lag }: { lag: CohortAcceptLag }) {
   const { t } = useTranslation();
   const medianHours = lag.medianHours ?? 0;
   const label = medianHours < 48
-    ? `${Math.round(medianHours)}h`
-    : `${Math.round(medianHours / 24)}d`;
+    ? t('common.hoursCompact', { count: Math.round(medianHours), defaultValue: '{{count}}h' })
+    : t('common.daysCompact', { count: Math.round(medianHours / 24), defaultValue: '{{count}}d' });
   return (
     <View style={s.row}>
       <View style={{ flex: 1 }}>

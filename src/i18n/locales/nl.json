@@ -82,6 +82,9 @@
     "moreOptions": "Meer opties",
     "eInvoicing": "E-facturatie (Peppol, XRechnung)",
     "perHour": "{{rate}}/u",
+    "daysCompact": "{{count}}d",
+    "hoursCompact": "{{count}}u",
+    "expired": "Verlopen",
     "call": "Bellen",
     "email": "E-mailen",
     "previous": "Vorige",
@@ -827,6 +830,7 @@
     "sendReminders": "Herinneringen versturen",
     "remindersSentBulk": "{{sent}} herinneringen verstuurd, {{skipped}} overgeslagen.",
     "dsoLabel": "Dagen openstaande vorderingen",
+    "payTimeShort": "Betaaltijd",
     "target": "Doel",
     "previous": "Vorige",
     "industry": "Branche",
@@ -2362,7 +2366,7 @@
     "exportSuccess": "Gegevens succesvol geëxporteerd ({{count}} items)",
     "exportFailed": "Export mislukt. Probeer het opnieuw.",
     "accountDeleted": "Je account is verwijderd.",
-    "contractorScore": "Aannemer Score",
+    "contractorScore": "Betrouwbaarheidsscore",
     "completionRate": "Voltooiingspercentage",
     "onTimeRate": "Op-tijd percentage",
     "repeatCustomers": "Terugkerende klanten",
@@ -4513,6 +4517,7 @@
     }
   },
   "workflowPacks": {
+    "cardTitle": "{{pack}}: {{subject}}",
     "incasso": {
       "name": "Incasso Automatisch",
       "description": "Automatische betaalherinneringen na 3, 7, 14 en 30 dagen",
@@ -4963,7 +4968,8 @@
     "invalidAmountBody": "Vul het bedrag in dat je als aanbetaling wilt aanvragen.",
     "depositRequested": "Betaallink toegevoegd",
     "depositRequestedBody": "Je klant ziet nu een Betaal-knop in zijn portaal.",
-    "depositFailed": "De betaallink kon niet worden aangemaakt."
+    "depositFailed": "De betaallink kon niet worden aangemaakt.",
+    "depositNotSaved": "De betaallink is aangemaakt maar kon niet aan het portaal worden toegevoegd. Probeer het opnieuw."
   },
   "photos": {
     "cameraAccess": "Cameratoegang vereist",
@@ -6154,10 +6160,10 @@
     "waitsForHint": "Als deze uitlopen, wordt deze mijlpaal als geblokkeerd gemeld in plaats van alleen onbezet."
   },
   "ledger": {
-    "didThisMonth_one": "Vasco voerde {{count}} actie uit",
-    "didThisMonth_other": "Vasco voerde {{count}} acties uit",
+    "didThisMonth_one": "Je keurde {{count}} actie goed",
+    "didThisMonth_other": "Je keurde {{count}} acties goed",
     "sub": "Deze maand — bekijk wat",
-    "sectionTitle": "Wat Vasco deed",
+    "sectionTitle": "Door jou goedgekeurd, door Vasco gedaan",
     "confirmed_one": "{{count}} klant reageerde",
     "confirmed_other": "{{count}} klanten reageerden",
     "empty": "Deze maand nog niets goedgekeurd. Acties die je goedkeurt verschijnen hier.",

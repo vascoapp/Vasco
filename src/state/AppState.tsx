@@ -5062,7 +5062,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             currency: country === 'US' ? 'USD' : 'GBP',
             metadata: { trackerAccessCode: accessCode },
           });
-          if (!res?.url) throw new Error('Stripe payment link creation failed');
+          if (!res?.url) throw new Error(appI18n.t('share.depositFailed', 'Could not create the payment link.'));
           checkoutUrl = res.url;
         } else {
           const { createPaymentLink } = await import('../integrations/mollie');
@@ -5073,13 +5073,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             customerCountry: country,
             metadata: { trackerAccessCode: accessCode },
           });
-          if (!res?.url) throw new Error('Mollie payment link creation failed');
+          if (!res?.url) throw new Error(appI18n.t('share.depositFailed', 'Could not create the payment link.'));
           checkoutUrl = res.url;
         }
         const { setTrackerPayment } = await import('../services/decisionTrackerService');
         const stored = await setTrackerPayment({ accessCode, paymentLink: checkoutUrl, paymentStatus: 'pending', depositAmount: amount });
         if (!stored) {
-          throw new Error('Payment link created but could not be saved to the tracker. Try again.');
+          throw new Error(appI18n.t('share.depositNotSaved', 'The payment link was created but could not be added to the portal. Try again.'));
         }
         return checkoutUrl;
       },

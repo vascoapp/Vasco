@@ -106,6 +106,7 @@ const CustomerCard: React.FC<{
   customer: CustomerProfile;
   onView: () => void;
 }> = ({ customer, onView }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const daysSinceContact = Math.floor(
@@ -147,7 +148,7 @@ const CustomerCard: React.FC<{
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{daysSinceContact}d</Text>
+          <Text style={styles.statValue}>{t('common.daysCompact', { count: daysSinceContact, defaultValue: '{{count}}d' })}</Text>
           <Text style={styles.statLabel}>Laatste contact</Text>
         </View>
       </View>

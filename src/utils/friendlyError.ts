@@ -21,7 +21,8 @@ const MACHINE = [
   // English internals thrown by our own services / Supabase auth (review
   // 2026-09-28) — translate at the throw site when one of these needs to be seen.
   /->|\bnot found\b|illegal transition|refusing to|returned$|invalid login credentials|for security purposes|has already been invoiced|is invalid:/i, /\b(status|HTTP)\s*(code\s*)?\d{3}\b/i,
-  /server misconfigured|not configured|missing auth|price id/i, /\[object /, /^Error:/, /stack|at .*\(.*:\d+:\d+\)/,
+  /server misconfigured|not configured|missing auth|price id/i,
+  /not authenticated|unknown action type|\bAPI response\b/i, /\[object /, /^Error:/, /stack|at .*\(.*:\d+:\d+\)/,
 ];
 
 /** True when `message` is machine text, not something written for a person. */

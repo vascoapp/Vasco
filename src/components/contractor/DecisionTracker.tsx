@@ -436,7 +436,7 @@ export function DecisionTrackerDetail({
         Alert.alert(t('common.error', 'Error'), t('dt.openSmsFailed', 'Could not open SMS'));
       });
     } else if (channel === 'email' && tracker.customerEmail) {
-      const subject = t('dt.decisionsNeeded', { template: tracker.templateName });
+      const subject = t('dt.decisionsNeeded', { template: localizeTemplateName(tracker.templateId, tracker.templateName, t) });
       const url = `mailto:${tracker.customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() => {
         Alert.alert(t('common.error', 'Error'), t('dt.openEmailFailed', 'Could not open email'));

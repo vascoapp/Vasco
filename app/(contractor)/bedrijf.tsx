@@ -26,6 +26,7 @@ import { formatAmount } from '../../src/utils/formatAmount';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
+import { localizeTemplateName } from '../../src/services/decisionCatalogI18n';
 
 // R113 versioned this to `_v2` to escape a poisoned v1 cache that held
 // auto-seeded fake trackers. But NOTHING EVER WROTE `_v2` — every writer
@@ -44,6 +45,8 @@ interface TrackerData {
   id: string;
   customerName: string;
   project: string;
+  /** Stable catalogue id — the name is resolved at RENDER time (CLAUDE.md). */
+  templateId?: string;
   totalDecisions: number;
   decided: number;
   overdue: number;
@@ -65,6 +68,7 @@ function toTrackerData(raw: any): TrackerData {
     id: String(raw?.id ?? ''),
     customerName: raw?.customerName ?? '',
     project: raw?.templateName ?? raw?.project ?? '',
+    templateId: typeof raw?.templateId === 'string' ? raw.templateId : undefined,
     totalDecisions: total,
     decided,
     overdue: Number(raw?.overdueCount ?? raw?.overdue) || 0,
@@ -402,7 +406,7 @@ export default function BedrijfScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={s.trackerName}>{tracker.customerName}</Text>
-                        <Text style={s.trackerProject}>{tracker.project}</Text>
+                        <Text style={s.trackerProject}>{localizeTemplateName(tracker.templateId, tracker.project, t)}</Text>
                       </View>
                       <View style={s.trackerCount}>
                         <Text style={s.trackerCountText}>{tracker.decided}/{tracker.totalDecisions}</Text>
@@ -560,7 +564,7 @@ function HeroFeatureCard({ feature, onPress, onRemind }: { feature: HeroFeature;
             </View>
 
             <Text style={heroStyles.title} numberOfLines={2}>{feature.tracker.customerName}</Text>
-            <Text style={heroStyles.subtitle} numberOfLines={1}>{feature.tracker.project}</Text>
+            <Text style={heroStyles.subtitle} numberOfLines={1}>{localizeTemplateName(feature.tracker.templateId, feature.tracker.project, t)}</Text>
             <View style={{ height: 20 }} />
             <View style={heroStyles.ctaRow}>
               <Pressable style={heroStyles.remindBtn} onPress={() => onRemind(feature.tracker.id)}>

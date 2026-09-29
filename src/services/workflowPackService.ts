@@ -1111,7 +1111,11 @@ export async function evaluateTriggers(context: TriggerContext): Promise<number>
 
           const id = await addToQueue({
             type: mapActionToQueueType(step.action),
-            title: `${resolvePackName(pack)}: ${match.label || ''}`,
+            // French sets a space before the colon; an empty label is no
+            // subject at all, not "Relances de paiement: " (walk 2026-09-29).
+            title: match.label
+              ? i18n.t('workflowPacks.cardTitle', { pack: resolvePackName(pack), subject: match.label, defaultValue: '{{pack}}: {{subject}}' })
+              : resolvePackName(pack),
             // Cut at a word: this is a preview of a message the contractor is
             // about to send, and a mid-word cut reads as a broken draft. The
             // full text rides along on preparedData.template below.

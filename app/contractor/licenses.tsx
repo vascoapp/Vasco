@@ -208,6 +208,7 @@ export default function LicensesScreen() {
 }
 
 function ExpiryPill({ severity, days }: { severity: 'expired' | 'urgent' | 'soon'; days: number }) {
+  const { t } = useTranslation();
   const palette = {
     expired: { bg: '#7F1D1D', fg: '#FECACA' },
     urgent: { bg: '#9A3412', fg: '#FED7AA' },
@@ -216,7 +217,7 @@ function ExpiryPill({ severity, days }: { severity: 'expired' | 'urgent' | 'soon
   return (
     <View style={[styles.pill, { backgroundColor: palette.bg }]}>
       <Text style={[styles.pillText, { color: palette.fg }]}>
-        {severity === 'expired' ? 'EXPIRED' : `${days}d`}
+        {severity === 'expired' ? t('common.expired', 'Expired').toUpperCase() : t('common.daysCompact', { count: days, defaultValue: '{{count}}d' })}
       </Text>
     </View>
   );

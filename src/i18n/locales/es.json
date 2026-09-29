@@ -82,6 +82,9 @@
     "moreOptions": "Más opciones",
     "eInvoicing": "Facturación electrónica (Facturae)",
     "perHour": "{{rate}}/h",
+    "daysCompact": "{{count}} d",
+    "hoursCompact": "{{count}} h",
+    "expired": "Caducado",
     "call": "Llamar",
     "email": "Enviar correo",
     "previous": "Anterior",
@@ -827,6 +830,7 @@
     "sendReminders": "Enviar recordatorios",
     "remindersSentBulk": "{{sent}} recordatorios enviados, {{skipped}} omitidos.",
     "dsoLabel": "Días de cobro pendientes",
+    "payTimeShort": "Plazo medio",
     "target": "Objetivo",
     "previous": "Anterior",
     "industry": "Sector",
@@ -2362,7 +2366,7 @@
     "exportSuccess": "Datos exportados correctamente ({{count}} elementos)",
     "exportFailed": "Error al exportar. Inténtalo de nuevo.",
     "accountDeleted": "Tu cuenta ha sido eliminada.",
-    "contractorScore": "Puntuación del contratista",
+    "contractorScore": "Índice de fiabilidad",
     "completionRate": "Tasa de finalización",
     "onTimeRate": "Tasa de puntualidad",
     "repeatCustomers": "Clientes recurrentes",
@@ -3118,7 +3122,7 @@
     "leadTime": "{{days}} días de entrega",
     "weAccept": "Aceptamos",
     "demoPaymentTitle": "Modo demo",
-    "demoPaymentBody": "En modo live, esto abre el checkout de Mollie de tu contratista con los métodos de pago configurados (iDEAL, tarjeta, Apple Pay, etc.).",
+    "demoPaymentBody": "En modo live, esto abre el checkout de Mollie de tu contratista con los métodos de pago configurados (tarjeta, transferencia, Apple Pay, etc.).",
     "accessTitle": "Opciones del proyecto",
     "accessSubtitle": "Introduce el código que recibiste de tu contratista",
     "accessHelp": "¿No tienes código? Pídele a tu contratista un enlace de acceso.",
@@ -4456,6 +4460,7 @@
     }
   },
   "workflowPacks": {
+    "cardTitle": "{{pack}}: {{subject}}",
     "incasso": {
       "name": "Cobros automáticos",
       "description": "Recordatorios de pago automáticos a los 3, 7, 14 y 30 días",
@@ -4528,7 +4533,7 @@
   },
   "mollie": {
     "title": "Pagos Mollie",
-    "subtitle": "Recibe pagos vía iDEAL, tarjeta de crédito y más",
+    "subtitle": "Recibe pagos con tarjeta, transferencia y más",
     "apiKeyLabel": "Clave API",
     "apiKeyPlaceholder": "live_xxxx o test_xxxx",
     "apiKeyHint": "Encuentra tu clave API en Mollie Dashboard → Developers → API keys",
@@ -4963,7 +4968,8 @@
     "invalidAmountBody": "Introduce el importe del anticipo que quieres solicitar.",
     "depositRequested": "Enlace de pago añadido",
     "depositRequestedBody": "Tu cliente verá ahora un botón de Pagar en su portal.",
-    "depositFailed": "No se pudo crear el enlace de pago."
+    "depositFailed": "No se pudo crear el enlace de pago.",
+    "depositNotSaved": "El enlace de pago se creó, pero no se pudo añadir al portal. Inténtelo de nuevo."
   },
   "photos": {
     "cameraAccess": "Se necesita acceso a la cámara",
@@ -6154,10 +6160,10 @@
     "waitsForHint": "Si estos se retrasan, este hito se marca como bloqueado en lugar de solo sin personal."
   },
   "ledger": {
-    "didThisMonth_one": "Vasco realizó {{count}} acción",
-    "didThisMonth_other": "Vasco realizó {{count}} acciones",
+    "didThisMonth_one": "Aprobó {{count}} acción",
+    "didThisMonth_other": "Aprobó {{count}} acciones",
     "sub": "Este mes — ver cuáles",
-    "sectionTitle": "Lo que hizo Vasco",
+    "sectionTitle": "Aprobado por usted, hecho por Vasco",
     "confirmed_one": "{{count}} cliente respondió",
     "confirmed_other": "{{count}} clientes respondieron",
     "empty": "Nada aprobado este mes. Las acciones que apruebes aparecen aquí.",

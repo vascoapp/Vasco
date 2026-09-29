@@ -29,7 +29,7 @@ import {
   type AuditVerificationResult,
 } from '../../src/services/gobdAuditTrailService';
 import { hapticSuccess } from '../../src/utils/haptics';
-import type { VatScheme } from '../../src/domain/business';
+import { standardRatesLine, type VatScheme } from '../../src/domain/business';
 import { suggestVatScheme } from '../../src/services/vatSchemeAdvisor';
 
 export default function VatAndAuditScreen() {
@@ -98,7 +98,7 @@ export default function VatAndAuditScreen() {
         ? '21% / 9% / 0% (BTW-plichtig)'
         : country === 'DE'
           ? '19% / 7% / 0% (Umsatzsteuer)'
-          : 'Standard rate per country',
+          : standardRatesLine(country),
       visible: true,
     },
     {

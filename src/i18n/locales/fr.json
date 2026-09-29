@@ -82,6 +82,9 @@
     "moreOptions": "Plus d'options",
     "eInvoicing": "Facturation électronique (Factur-X)",
     "perHour": "{{rate}}/h",
+    "daysCompact": "{{count}} j",
+    "hoursCompact": "{{count}} h",
+    "expired": "Expiré",
     "call": "Appeler",
     "email": "Envoyer un e-mail",
     "previous": "Précédent",
@@ -827,6 +830,7 @@
     "sendReminders": "Envoyer des relances",
     "remindersSentBulk": "{{sent}} relances envoyées, {{skipped}} ignorées.",
     "dsoLabel": "Délai moyen de paiement (DSO)",
+    "payTimeShort": "Délai moyen",
     "target": "Objectif",
     "previous": "Précédent",
     "industry": "Secteur",
@@ -2362,7 +2366,7 @@
     "exportSuccess": "Données exportées avec succès ({{count}} éléments)",
     "exportFailed": "Échec de l'export. Veuillez réessayer.",
     "accountDeleted": "Votre compte a été supprimé.",
-    "contractorScore": "Score artisan",
+    "contractorScore": "Score de fiabilité",
     "completionRate": "Taux de réalisation",
     "onTimeRate": "Taux de ponctualité",
     "repeatCustomers": "Clients récurrents",
@@ -3118,7 +3122,7 @@
     "leadTime": "{{days}} jours de livraison",
     "weAccept": "Nous acceptons",
     "demoPaymentTitle": "Mode démo",
-    "demoPaymentBody": "En mode live, ceci ouvre le checkout Mollie de votre artisan avec les méthodes de paiement configurées (iDEAL, carte, Apple Pay, etc.).",
+    "demoPaymentBody": "En mode live, ceci ouvre le checkout Mollie de votre artisan avec les méthodes de paiement configurées (carte, virement, Apple Pay, etc.).",
     "accessTitle": "Choix du projet",
     "accessSubtitle": "Entrez le code reçu de votre artisan",
     "accessHelp": "Pas de code ? Demandez à votre artisan un lien d'accès.",
@@ -4456,6 +4460,7 @@
     }
   },
   "workflowPacks": {
+    "cardTitle": "{{pack}} : {{subject}}",
     "incasso": {
       "name": "Relances de paiement",
       "description": "Rappels de paiement automatiques après 3, 7, 14 et 30 jours",
@@ -4528,7 +4533,7 @@
   },
   "mollie": {
     "title": "Paiements Mollie",
-    "subtitle": "Recevez des paiements via iDEAL, carte bancaire et plus",
+    "subtitle": "Recevez des paiements par carte, virement et plus",
     "apiKeyLabel": "Clé API",
     "apiKeyPlaceholder": "live_xxxx ou test_xxxx",
     "apiKeyHint": "Trouvez votre clé API dans le Dashboard Mollie → Developers → API keys",
@@ -4963,7 +4968,8 @@
     "invalidAmountBody": "Veuillez saisir le montant de l'acompte à demander.",
     "depositRequested": "Lien de paiement ajouté",
     "depositRequestedBody": "Votre client verra désormais un bouton Payer dans son portail.",
-    "depositFailed": "Impossible de créer le lien de paiement."
+    "depositFailed": "Impossible de créer le lien de paiement.",
+    "depositNotSaved": "Le lien de paiement a été créé mais n'a pas pu être ajouté au portail. Réessayez."
   },
   "photos": {
     "cameraAccess": "Accès caméra requis",
@@ -6154,10 +6160,10 @@
     "waitsForHint": "Si celles-ci prennent du retard, ce jalon est signalé comme bloqué et non simplement comme non staffé."
   },
   "ledger": {
-    "didThisMonth_one": "Vasco a effectué {{count}} action",
-    "didThisMonth_other": "Vasco a effectué {{count}} actions",
+    "didThisMonth_one": "Vous avez approuvé {{count}} action",
+    "didThisMonth_other": "Vous avez approuvé {{count}} actions",
     "sub": "Ce mois-ci — voir lesquelles",
-    "sectionTitle": "Ce que Vasco a fait",
+    "sectionTitle": "Approuvé par vous, fait par Vasco",
     "confirmed_one": "{{count}} client a répondu",
     "confirmed_other": "{{count}} clients ont répondu",
     "empty": "Rien d'approuvé ce mois-ci. Les actions que vous approuvez apparaissent ici.",

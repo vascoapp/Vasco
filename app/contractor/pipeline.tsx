@@ -281,7 +281,7 @@ export default function PipelineScreen() {
           ) : null}
           <View style={styles.cardFoot}>
             <Text style={styles.cardValue}>{formatLeadValue(dragging.estimatedValue, country)}</Text>
-            <Text style={styles.cardAge}>{daysSince(dragging.createdAt)}d</Text>
+            <Text style={styles.cardAge}>{t('common.daysCompact', { count: daysSince(dragging.createdAt), defaultValue: '{{count}}d' })}</Text>
           </View>
         </Animated.View>
       ) : null}
@@ -448,7 +448,7 @@ function LeadCard({
             ) : null}
             <View style={styles.cardFoot}>
               <Text style={styles.cardValue}>{formatLeadValue(lead.estimatedValue, country)}</Text>
-              <Text style={styles.cardAge}>{daysSince(lead.createdAt)}d</Text>
+              <Text style={styles.cardAge}>{t('common.daysCompact', { count: daysSince(lead.createdAt), defaultValue: '{{count}}d' })}</Text>
             </View>
           </Animated.View>
         );

@@ -361,7 +361,7 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <View style={styles.scoreHeader}>
               <Ionicons name="trophy" size={20} color={Palette.hermesOrange} />
-              <Text style={styles.scoreTitle}>{t('profile.contractorScore', 'Contractor Score')}</Text>
+              <Text style={styles.scoreTitle}>{t('profile.contractorScore', 'Reliability score')}</Text>
               <Text style={styles.scoreValue}>
                 {contractorScore.score === null ? '—' : `${contractorScore.score}/100`}
               </Text>

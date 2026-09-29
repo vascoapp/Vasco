@@ -109,7 +109,7 @@ export default function MollieConnectModal() {
       <DKScreenHeader title={t('mollie.title', 'Mollie Payments')} />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.subtitle}>
-          {t('mollie.subtitle', 'Receive payments via iDEAL, credit card and more')}
+          {t('mollie.subtitle', 'Receive payments by card, bank transfer and more')}
         </Text>
 
         {/* Written for a builder, not a developer (user, emulator walk

@@ -281,8 +281,8 @@ export default function MarketPricesScreen() {
                   </View>
                   <View style={styles.tradeDivider} />
                   <View style={styles.tradeStat}>
-                    <Text style={styles.tradeValue}>{tb.avgDSO}d</Text>
-                    <Text style={styles.tradeLabel}>DSO</Text>
+                    <Text style={styles.tradeValue}>{t('common.daysCompact', { count: tb.avgDSO, defaultValue: '{{count}}d' })}</Text>
+                    <Text style={styles.tradeLabel}>{t('invoices.payTimeShort', 'Time to pay')}</Text>
                   </View>
                 </View>
               </View>

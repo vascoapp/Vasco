@@ -705,7 +705,7 @@ function PaymentSection({ portalData, accentColor, onActivityLog, onToast }: Pay
     // (which 404s in the browser). In live mode the contractor's
     // real Mollie checkout opens.
     if (portalData.paymentLink.includes('example-session-id')) {
-      onToast?.('info', t('decisionPortal.demoPaymentBody', 'In live mode this opens your contractor\'s Mollie checkout with the configured payment methods (iDEAL, card, Apple Pay, etc.).'));
+      onToast?.('info', t('decisionPortal.demoPaymentBody', 'In live mode this opens your contractor\'s Mollie checkout with the configured payment methods (card, bank transfer, Apple Pay, etc.).'));
       return;
     }
     onActivityLog?.('payment_started', {

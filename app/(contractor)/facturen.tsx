@@ -749,7 +749,7 @@ export default function FacturenScreen() {
             // (#218). `user?.country ?? 'NL'` skipped the profile and pinned
             // anyone without one to Dutch convention.
             { icon: 'receipt', value: formatCurrency(pendingValue), label: t('invoices.outstanding', 'Openstaand') },
-            { icon: 'timer', value: `${dso.currentDSO}d`, label: 'DSO', color: dso.trend === 'worsening' ? SemanticColors.feedbackError : dso.trend === 'improving' ? SemanticColors.feedbackSuccess : undefined },
+            { icon: 'timer', value: t('payments.days', { count: dso.currentDSO, defaultValue: '{{count}} days' }), label: t('invoices.payTimeShort', 'Time to pay'), color: dso.trend === 'worsening' ? SemanticColors.feedbackError : dso.trend === 'improving' ? SemanticColors.feedbackSuccess : undefined },
             { icon: 'document-text', value: String(quotes.length), label: t('invoices.quotes', 'Offertes'), color: Palette.hermesOrange },
           ]}
         />
@@ -1134,13 +1134,13 @@ export default function FacturenScreen() {
             {/* DSO Card */}
             <View style={styles.dsoCard}>
               <View style={styles.dsoMain}>
-                <Text style={styles.dsoValue}>{dso.currentDSO}d</Text>
-                <Text style={styles.dsoLabel}>{t('invoices.dsoLabel', 'Days Sales Outstanding')}</Text>
+                <Text style={styles.dsoValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{t('payments.days', { count: dso.currentDSO, defaultValue: '{{count}} days' })}</Text>
+                <Text style={styles.dsoLabel}>{t('payments.avgDaysToPay', 'Avg. days to pay')}</Text>
               </View>
               <View style={styles.dsoDetails}>
                 <View style={styles.dsoDetailItem}>
                   <Text style={styles.dsoDetailLabel}>{t('invoices.target', 'Doel')}</Text>
-                  <Text style={styles.dsoDetailValue}>{dso.targetDSO}d</Text>
+                  <Text style={styles.dsoDetailValue}>{t('payments.days', { count: dso.targetDSO, defaultValue: '{{count}} days' })}</Text>
                 </View>
                 {/* Omitted, not repeated. With no paid invoice in the prior
                     30–90d window there is no previous DSO, and the old
@@ -1148,12 +1148,12 @@ export default function FacturenScreen() {
                 {dso.previousDSO !== null && (
                   <View style={styles.dsoDetailItem}>
                     <Text style={styles.dsoDetailLabel}>{t('invoices.previous', 'Vorige')}</Text>
-                    <Text style={styles.dsoDetailValue}>{dso.previousDSO}d</Text>
+                    <Text style={styles.dsoDetailValue}>{t('payments.days', { count: dso.previousDSO, defaultValue: '{{count}} days' })}</Text>
                   </View>
                 )}
                 <View style={styles.dsoDetailItem}>
                   <Text style={styles.dsoDetailLabel}>{t('invoices.industry', 'Branche')}</Text>
-                  <Text style={styles.dsoDetailValue}>{dso.industryAverage}d</Text>
+                  <Text style={styles.dsoDetailValue}>{t('payments.days', { count: dso.industryAverage, defaultValue: '{{count}} days' })}</Text>
                 </View>
               </View>
             </View>

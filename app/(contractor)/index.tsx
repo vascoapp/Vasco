@@ -396,7 +396,7 @@ export default function VandaagDK() {
               <Ionicons name="checkmark-done" size={16} color={DK.colors.success} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.savingsTitle}>{t('ledger.didThisMonth', { count: ledger.total, defaultValue: 'Vasco carried out {{count}} actions' }).toUpperCase()}</Text>
+              <Text style={styles.savingsTitle}>{t('ledger.didThisMonth', { count: ledger.total, defaultValue: 'You approved {{count}} actions' }).toUpperCase()}</Text>
               <Text style={styles.savingsSub} numberOfLines={1}>
                 {ledger.confirmed > 0
                   ? t('ledger.confirmed', { count: ledger.confirmed, defaultValue: '{{count}} customers replied' })
