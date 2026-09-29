@@ -99,7 +99,8 @@ describe('the dunning ladder does not invent a send', () => {
     const handler = screen.slice(at, screen.indexOf('</Pressable>', at));
     expect(handler).toMatch(/overdueReminderMessage\(/);
     expect(handler).toMatch(/Share\.share\(/);
-    expect(handler).toMatch(/wasShareDismissed\(res\)|dismissedAction/);
+    // Android never reports a dismissal: the claim waits for iOS's word (2026-09-29).
+    expect(handler).toMatch(/shareOutcome\(res\) === 'shared'/);
   });
 });
 
@@ -151,7 +152,8 @@ describe('an order is sent by the contractor, and survives a restart', () => {
     const at = screen.indexOf("case 'draft':");
     const block = screen.slice(at, screen.indexOf("case 'confirmed'", at));
     expect(block).toMatch(/Share\.share\(/);
-    expect(block).toMatch(/dismissedAction/);
+    // A record: confirmShareSent asks on Android, where a dismissal is invisible.
+    expect(block).toMatch(/if \(await confirmShareSent\(res\)\) submit\(order\.id\)/);
     // The status must not flip on the bare press any more.
     expect(block).not.toMatch(/onPress: \(\) => submit\(order\.id\)/);
   });

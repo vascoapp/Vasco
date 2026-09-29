@@ -8,7 +8,7 @@
 import { Linking, Share } from 'react-native';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { renderTemplate, hasConsent, type Locale } from './whatsappTemplateService';
-import { wasShareDismissed } from '../utils/shareOutcome';
+import { confirmShareSent } from '../utils/shareOutcome';
 
 // ============================================
 // TYPES
@@ -284,7 +284,8 @@ class ReputationService {
         // so `delivered` used to be set for a request the customer never got —
         // and `delivered` is what the caller and `trackUserAction` record.
         const res = await Share.share({ message: text, title: `${businessName} — review` });
-        if (!wasShareDismissed(res)) {
+        // Android never reports a dismissal — confirmShareSent asks there.
+        if (await confirmShareSent(res)) {
           channel = 'share';
           delivered = true;
         }

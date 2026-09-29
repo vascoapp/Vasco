@@ -28,7 +28,7 @@
 import { Share, Linking } from 'react-native';
 import type { Router } from 'expo-router';
 import type { QueueItem, QueueItemType } from './aiActionQueueService';
-import { wasShareDismissed } from '../utils/shareOutcome';
+import { confirmShareSent, askWasSent } from '../utils/shareOutcome';
 
 export interface ExecutorDeps {
   router: Router;
@@ -88,6 +88,19 @@ export async function executeApprovedQueueItem(
   options: { alreadyShared?: boolean } = {},
 ): Promise<ExecutionResult> {
   const result = await runExecution(item, deps, options);
+  // approveItem has ALREADY retired the card (status 'approved', and an
+  // approved chase suppresses a new one for 3 days). A send that did not
+  // happen — dismissed, "not yet", WhatsApp not confirmed, share failed —
+  // must put it back, or the reminder is gone without ever going out
+  // (review 2026-09-29).
+  if (!result.executed && (result.via === 'share' || result.via === 'link')) {
+    try {
+      // Lazy require, not import(): jest cannot run a dynamic import, and a
+      // swallowed failure here would make the re-open untestable.
+      const { reopenItem } = require('./aiActionQueueService') as typeof import('./aiActionQueueService');
+      await reopenItem(item.id);
+    } catch { /* worst case the card stays retired, as before */ }
+  }
   // Tell the action ledger what actually fired. approveItem has already
   // recorded the approval; this is what makes it COUNTABLE — an approval whose
   // execution never reported back is deliberately not counted as work done.
@@ -130,26 +143,29 @@ async function runExecution(
   // Shareable types — VascoCard typically opens Share before approve. Vandaag's
   // InlineQueueRow does NOT, so we must fire it here when alreadyShared is false.
   if (isShareableQueueType(item.type)) {
-    // R39: schedule a "Did the customer respond?" follow-up push 4 days
-    // later. Tap → opens AI tab where contractor confirms Yes/No →
-    // recordOutcome fires. Was the EVE-gap-1 deferral: VascoCard's
-    // followup alert only mounted on enterprise SiteLeadDashboard so
-    // contractors never got the high-quality positive/negative outcome
-    // signal. Fire-and-forget — the push registration may fail silently
-    // (e.g. no push permission), the share itself still proceeds.
-    try {
-      const customerName = (data.customerName as string)
-        || (item.title.match(/:\s*(.+)$/)?.[1] ?? '');
-      const { scheduleOutcomeFollowup } = await import('./pushNotificationService');
-      scheduleOutcomeFollowup({
-        itemId: item.id,
-        itemType: item.type,
-        customerName,
-        daysAfter: 4,
-      }).catch(() => {});
-    } catch {}
+    // R39: a "Did the customer respond?" follow-up push 4 days later. Tap →
+    // AI tab → contractor confirms Yes/No → recordOutcome fires. Scheduled
+    // only for a send that HAPPENED — it used to be scheduled before the
+    // share, so a backed-out chase still asked, four days on, whether the
+    // customer had replied to something they never got (review 2026-09-29).
+    // Fire-and-forget: push registration may fail silently.
+    const sent = (result: ExecutionResult): ExecutionResult => {
+      try {
+        const customerName = (data.customerName as string)
+          || (item.title.match(/:\s*(.+)$/)?.[1] ?? '');
+        import('./pushNotificationService')
+          .then(({ scheduleOutcomeFollowup }) => scheduleOutcomeFollowup({
+            itemId: item.id,
+            itemType: item.type,
+            customerName,
+            daysAfter: 4,
+          }))
+          .catch(() => {});
+      } catch {}
+      return result;
+    };
     if (options.alreadyShared) {
-      return { executed: true, via: 'noop', detail: 'share already fired upstream' };
+      return sent({ executed: true, via: 'noop', detail: 'share already fired upstream' });
     }
     // R66r49 #6: WhatsApp deep-link preferred when affiliateUrl is a wa.me URL.
     // workflowPackService attaches `affiliateUrl: https://wa.me/{e164}?text=...`
@@ -157,11 +173,18 @@ async function runExecution(
     // text pre-filled — vs. 3 taps through the iOS share sheet.
     const waUrl = data.affiliateUrl as string | undefined;
     if (waUrl && waUrl.startsWith('https://wa.me/')) {
+      let opened = false;
       try {
         await Linking.openURL(waUrl);
-        return { executed: true, via: 'link', detail: 'wa.me' };
+        opened = true;
       } catch {
         // Fall through to Share if WA isn't installed.
+      }
+      if (opened) {
+        // Opening WhatsApp is not sending: neither platform reports whether the
+        // message went, so the contractor is asked (review 2026-09-29).
+        if (!(await askWasSent())) return { executed: false, via: 'link', detail: 'not confirmed' };
+        return sent({ executed: true, via: 'link', detail: 'wa.me' });
       }
     }
     const message = (data.template as string)
@@ -171,18 +194,15 @@ async function runExecution(
       return { executed: false, via: 'noop', detail: 'no shareable text' };
     }
     try {
-      // `Share.share` RESOLVES with `dismissedAction` — it does not throw — so
-      // `executed: true` used to be returned for a sheet the contractor backed
-      // out of. The caller marks the queue item DONE on that, which is how a
-      // payment chase disappears from the queue without ever being sent.
-      //
-      // This is the same defect that was fixed in `actionExecutor` (R71,
-      // ai.tsx, bedrijf) and never carried across to its twin here.
+      // `Share.share` RESOLVES with `dismissedAction` — it does not throw — and
+      // on Android it never reports a dismissal at all; confirmShareSent asks
+      // there. A result of executed:false re-opens the card (see
+      // executeApprovedQueueItem) — the approval alone must not retire it.
       const res = await Share.share({ message, title: item.title });
-      if (wasShareDismissed(res)) {
+      if (!(await confirmShareSent(res))) {
         return { executed: false, via: 'share', detail: 'dismissed' };
       }
-      return { executed: true, via: 'share' };
+      return sent({ executed: true, via: 'share' });
     } catch (e) {
       return { executed: false, via: 'share', detail: String(e) };
     }

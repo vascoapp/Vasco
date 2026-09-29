@@ -22,6 +22,7 @@ import { FadeIn } from '../../src/components/shared/FadeIn';
 import { EmptyState } from '../../src/components/shared/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { useProcurementAgent, type MaterialNeed } from '../../src/services/procurementAgentService';
+import { confirmShareSent } from '../../src/utils/shareOutcome';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -135,8 +136,9 @@ export default function PurchaseOrdersScreen() {
               });
               try {
                 const res = await Share.share({ message, title: order.poNumber });
-                // Only record it as sent when the sheet was not dismissed.
-                if (res.action !== Share.dismissedAction) submit(order.id);
+                // Only record it as sent when it went out. Android never
+                // reports a dismissal — confirmShareSent asks there.
+                if (await confirmShareSent(res)) submit(order.id);
               } catch {
                 // Sharing unavailable — leave it a draft rather than claim it went.
               }

@@ -197,12 +197,14 @@ export function VascoInsightCard({
     if (insightAction && insightAction.type) {
       import('../../intelligence/actionExecutor').then(({ executeActionWithConfirmation }) => {
         executeActionWithConfirmation(insightAction, insight.id, generatorId, (result) => {
+          // Acted = it happened. A cancelled confirm, a dismissed share or an
+          // Android "not yet" leaves the card actionable (review 2026-09-29).
+          if (result.success) setActedOn(true);
           if (result.success && result.data?.route) {
             router.push(result.data.route as any);
           }
         });
       }).catch(() => {});
-      setActedOn(true);
       return;
     }
 

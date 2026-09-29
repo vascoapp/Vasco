@@ -704,6 +704,27 @@ export async function clearQueue(): Promise<void> {
   } catch { /* the next populate will simply re-add on top */ }
 }
 
+/**
+ * Put an approved item back to pending. For a send that did not happen after
+ * the approval (share dismissed / "not yet" / WhatsApp not confirmed): the
+ * approval had already retired the card, and an approved collections card
+ * suppresses a new one for 3 days — so the chase vanished unsent. The action
+ * ledger keeps the approval but counts only executed work, so this does not
+ * inflate "Vasco did N".
+ */
+export async function reopenItem(itemId: string): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const items: QueueItem[] = raw ? JSON.parse(raw) : [];
+    const item = items.find((i) => i.id === itemId);
+    if (!item || item.status !== 'approved') return;
+    item.status = 'pending';
+    delete (item as { resolvedAt?: string }).resolvedAt;
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+    notifyQueueChanged();
+  } catch { /* the card stays retired — no worse than before */ }
+}
+
 export async function rejectItem(itemId: string): Promise<void> {
   if (itemId.startsWith('cq:')) {
     const questionId = questionIdFromQueueItemId(itemId);

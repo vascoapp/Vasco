@@ -148,11 +148,15 @@ export default function VandaagDK() {
   const handleApprove = useCallback(async (id: string) => {
     try {
       const item = await aiQueue.approve(id);
-      hapticSuccess();
       // R286: actually execute the action. InlineQueueRow doesn't render
       // VascoCard's Share-sheet path, so shareable items wouldn't have
       // dispatched yet — alreadyShared:false lets the executor fire Share.
-      if (item) await executeApprovedQueueItem(item, { router }, { alreadyShared: false });
+      // Success is felt only for what happened: a "not yet" re-opens the card
+      // and must not have buzzed first (review 2026-09-29).
+      if (item) {
+        const r = await executeApprovedQueueItem(item, { router }, { alreadyShared: false });
+        if (r.executed) hapticSuccess();
+      }
     } catch (e) {
       hapticWarning();
       Alert.alert(t('dk.empty.noExtraActions', 'Action failed'), friendlyError(e, t('common.didNotWork', "That didn't work. Please try again in a moment.")));

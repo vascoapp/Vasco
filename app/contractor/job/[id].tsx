@@ -56,7 +56,7 @@ import { tradeMismatch } from '../../../src/services/crewAssignment';
 import { makeEntityLabels } from '../../../src/i18n/entityLabels';
 import { formatCurrency, formatCurrency0, formatTime } from '../../../src/i18n/formatting';
 import type { Country } from '../../../src/i18n/formatting';
-import { wasShareDismissed } from '../../../src/utils/shareOutcome';
+import { shareOutcome } from '../../../src/utils/shareOutcome';
 import { ensureCanCreate } from '../../../src/services/tierGatePrompt';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -390,7 +390,8 @@ export default function JobDetailPage() {
       // so this was a false signal rather than a false record, but it is the
       // same class that has bitten this repo three times.
       const res = await Share.share({ message: text, title: t('jobs.onMyWay', 'On my way') });
-      if (wasShareDismissed(res)) return;
+      // A claim only where the platform can tell (Android never says).
+      if (shareOutcome(res) !== 'shared') return;
       hapticSuccess();
     } catch {}
   };

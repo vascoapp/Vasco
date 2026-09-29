@@ -44,7 +44,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber, amountPayableNow } from '../../src/domain/documents';
-import { wasShareDismissed } from '../../src/utils/shareOutcome';
+import { shareOutcome, confirmShareSent } from '../../src/utils/shareOutcome';
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { invoicePdfExtras } from '../../src/domain/invoiceDocuments';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
@@ -429,7 +429,8 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         business: businessProfile?.businessName || user?.company || '',
                       });
                       const res = await Share.share({ message: msg, title: t('invoices.sendReminder', 'Herinnering') });
-                      if (!wasShareDismissed(res)) hapticSuccess();
+                      // A claim only where the platform can tell (not Android).
+                      if (shareOutcome(res) === 'shared') hapticSuccess();
                     }
                   }}
                 >
@@ -1100,7 +1101,10 @@ export default function FacturenScreen() {
                               const res = await Share.share({ message: text, title: t('invoices.sendReminder', 'Herinnering') });
                               // Backing out of the sheet RESOLVES, it does not
                               // throw — it was counted as a reminder sent (B3).
-                              if (wasShareDismissed(res)) { skipped++; continue; }
+                              // Android reports nothing and resolves as the
+                              // chooser OPENS, so this loop opened every
+                              // chooser at once; asking serialises it too.
+                              if (!(await confirmShareSent(res))) { skipped++; continue; }
                               sent++;
                             } catch {
                               skipped++;
@@ -1121,7 +1125,7 @@ export default function FacturenScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.overdueBannerTitle} numberOfLines={1}>{t('invoices.sendReminder', 'Stuur Herinnering')}</Text>
                   <Text style={styles.overdueBannerSub} numberOfLines={1}>
-                    {formatCurrency(overdueValue, country)} verlopen · {overdueInvoices.length} facturen
+                    {t('invoices.overdueBannerSub', { amount: formatCurrency(overdueValue, country), count: overdueInvoices.length, defaultValue: '{{amount}} overdue · {{count}} invoices' })}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Palette.white} />
@@ -1235,8 +1239,8 @@ export default function FacturenScreen() {
                           business: businessProfile?.businessName || user?.company || '',
                         });
                         const res = await Share.share({ message: msg, title: t('invoices.sendReminder', 'Herinnering') });
-                        // Only claim it when the sheet was not dismissed.
-                        if (!wasShareDismissed(res)) {
+                        // Only claim it where the platform can tell (not Android).
+                        if (shareOutcome(res) === 'shared') {
                           hapticSuccess();
                           setToast({ visible: true, message: t('invoices.reminderSentTo', 'Herinnering verstuurd naar {{name}}.', { name: seq.customerName }) });
                         }

@@ -67,5 +67,14 @@ module.exports = {
     '<rootDir>/__screenwalk__/flowLeadCreateQuote.test.tsx',
     '<rootDir>/__screenwalk__/flowQuoteSendKeepsAccepted.test.tsx',
     '<rootDir>/__screenwalk__/flowQuoteSendMarksSent.test.tsx',
+    // Emulator-walk regressions (2026-09-28) that stand on demo rows — a
+    // draft invoice, a scheduled day, a quote to share. Fixture-dependent.
+    '<rootDir>/__screenwalk__/geldSendOpensTheInvoice.test.tsx',
+    '<rootDir>/__screenwalk__/scheduleTapOpensJob.test.tsx',
+    '<rootDir>/__screenwalk__/flowQuotePdfAsksBeforeSent.test.tsx',
+    // ...and two that assert the Dutch demo ACCOUNT. The generic prod user has
+    // no country, where "set your country first" IS the correct rendering.
+    '<rootDir>/__screenwalk__/certificatenShowsOnlyWhatWorks.test.tsx',
+    '<rootDir>/__screenwalk__/vatPrepCountryFromAccount.test.tsx',
   ],
 };

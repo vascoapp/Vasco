@@ -1,9 +1,15 @@
 import { BusinessProfile } from '../domain/business';
 
-// Default/empty seed — used for fresh accounts.
+// Default seed for the Dutch demo accounts (DEMO_MODE only — AppState seeds
+// `{ isComplete: false }` in production). Deliberately incomplete, so Vandaag
+// shows "Maak je bedrijfsprofiel af" — but it carries the country: the profile
+// outranks the account, and without it `getEffectiveVatRate` found no rate and
+// the Dutch demo's Geld tab computed net revenue at 0% VAT (net = gross), while
+// every other market's seed had its country (aannemer walk, 2026-09-29).
 export const businessProfile: BusinessProfile = {
   isComplete: false,
   completenessPercent: 60,
+  country: 'NL',
 };
 
 // R78 US foundation: seed business profile for contractor@vasco.us.dev so

@@ -18,7 +18,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share } from 'react-native';
-import { wasShareDismissed } from '../utils/shareOutcome';
+import { confirmShareSent, shareOutcome } from '../utils/shareOutcome';
 import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -336,7 +336,7 @@ export async function shareQuoteWithAcceptanceLink(quote: {
   amount: number;
   description?: string;
   job?: string;
-}): Promise<{ url: string; shared: boolean }> {
+}, opts: { askIfUnknown?: boolean } = {}): Promise<{ url: string; shared: boolean }> {
   const t = i18n.t.bind(i18n);
   const { url } = await createAcceptanceLink(quote);
 
@@ -361,7 +361,10 @@ export async function shareQuoteWithAcceptanceLink(quote: {
   let shared = false;
   try {
     const res = await Share.share({ message, title: t('approval.quoteTitle', 'Quote') });
-    shared = !wasShareDismissed(res);
+    // Android never reports a dismissal — confirmShareSent asks there. The
+    // caller passes askIfUnknown:false when the answer changes nothing (an
+    // accepted quote re-shared): then only the platform's own word counts.
+    shared = opts.askIfUnknown === false ? shareOutcome(res) === 'shared' : await confirmShareSent(res);
   } catch {}
 
   return { url, shared };

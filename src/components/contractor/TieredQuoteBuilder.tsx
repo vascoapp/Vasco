@@ -1289,7 +1289,12 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary }}>{rec.description}</Text>
                     <Text style={{ fontSize: TYPE.tinySize, fontFamily: TYPE.tinyFamily, color: SemanticColors.textSecondary }}>
-                      {formatCurrency(rec.suggestedUnitPrice, country as Country)} · {Math.round(rec.recommendationRate * 100)}% van vergelijkbare offertes · {rec.contractorCount} aannemers
+                      {t('quotes.peerRecLine', {
+                        price: formatCurrency(rec.suggestedUnitPrice, country as Country),
+                        rate: Math.round(rec.recommendationRate * 100),
+                        count: rec.contractorCount,
+                        defaultValue: '{{price}} · in {{rate}}% of similar quotes · {{count}} tradespeople',
+                      })}
                     </Text>
                   </View>
                 </Pressable>

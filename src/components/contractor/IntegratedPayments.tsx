@@ -35,6 +35,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getPaymentDisplayForCountry, getPaymentProviderForCountry, paymentMethodLabel } from '../../config/paymentMethods';
 import { formatCurrency, formatCurrency0, type Country, formatDateShortAuto } from '../../i18n/formatting';
 import { daysUntilDue as daysUntilDueOf, isPastDue } from '../../utils/invoiceDue';
+import { shareOutcome } from '../../utils/shareOutcome';
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
   platform: 'ios' as const,
@@ -554,7 +555,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
   const handleCopyLink = async (url: string) => {
     try {
       const res = await Share.share({ message: url, url });
-      if (res.action !== Share.dismissedAction) hapticSuccess();
+      if (shareOutcome(res) === 'shared') hapticSuccess();
     } catch {
       // Sharing unavailable: show the link so it can still be read off screen.
       Alert.alert(t('paymentAlerts.linkTitle', 'Payment link'), url);

@@ -17,6 +17,11 @@ const APP = path.join(__dirname, '..', 'app');
 const SCREENS: { id: string; file: string; params?: Record<string, string> }[] = [
   { id: 'werk (projects tab)', file: '(contractor)/werk.tsx' },
   { id: 'vandaag', file: '(contractor)/index.tsx' },
+  // Each branches on isAannemer and was only ever walked as the solo
+  // contractor (Projectboek on Geld, the aannemer queue on AI) — 2026-09-29.
+  { id: 'geld', file: '(contractor)/geld.tsx' },
+  { id: 'facturen', file: '(contractor)/facturen.tsx' },
+  { id: 'ai', file: '(contractor)/ai.tsx' },
   { id: 'projects', file: 'contractor/projects.tsx' },
   { id: 'projects/[id]', file: 'contractor/projects/[id].tsx', params: { id: 'proj-seed-1' } },
   { id: 'project-billing/[id]', file: 'contractor/project-billing/[id].tsx', params: { id: 'proj-seed-1' } },

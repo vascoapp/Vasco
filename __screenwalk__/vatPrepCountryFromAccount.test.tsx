@@ -25,5 +25,14 @@ describe('vat prep, NL contractor without a profile country', () => {
     expect(texts).not.toContain(v.unsupportedTitle);
     expect(texts).not.toContain(v.needCountry);
     teardown(r);
+
+    // The NL demo seed now carries its country (2026-09-29), so the render
+    // above no longer exercises the ACCOUNT fallback by itself. Pin it: a
+    // profile without a country must still fall back to the account.
+    const fs = require('fs');
+    const path = require('path');
+    const { stripComments } = require('../src/utils/stripComments');
+    const src = stripComments(fs.readFileSync(path.join(__dirname, '../app/contractor/vat-prep.tsx'), 'utf8'));
+    expect(src).toMatch(/businessProfile\?\.country\s*\?\?\s*user\?\.country/);
   });
 });

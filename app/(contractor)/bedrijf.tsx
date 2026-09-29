@@ -27,6 +27,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DKLabel } from '../../src/components/shared/DKLabel';
 import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
 import { localizeTemplateName } from '../../src/services/decisionCatalogI18n';
+import { confirmShareSent } from '../../src/utils/shareOutcome';
 
 // R113 versioned this to `_v2` to escape a poisoned v1 cache that held
 // auto-seeded fake trackers. But NOTHING EVER WROTE `_v2` — every writer
@@ -154,7 +155,8 @@ export default function BedrijfScreen() {
       // Cancelling the share sheet must NOT record a reminder as sent — the
       // customer never received anything, and the row would then claim it did.
       // Same guard as ai.tsx:254; this was the third unguarded Share in the app.
-      if (result.action === Share.dismissedAction) return;
+      // Android never reports a dismissal — confirmShareSent asks there.
+      if (!(await confirmShareSent(result))) return;
       // 'Just now' was a hardcoded English string written into STATE and
       // rendered verbatim, so it showed English in all six locales.
       setTrackers(prev => prev.map(tr => tr.id === trackerId

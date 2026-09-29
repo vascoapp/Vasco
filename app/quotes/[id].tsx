@@ -25,7 +25,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
 import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
-import { wasShareDismissed } from '../../src/utils/shareOutcome';
+import { confirmShareSent } from '../../src/utils/shareOutcome';
 import { signQuoteLink } from '../../src/services/publicQuotePortalService';
 import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/intelligenceCaptureService';
 import { isDemoMode } from '../../src/context/AuthContext';
@@ -186,7 +186,7 @@ export default function QuoteDetailScreen() {
       );
       // The share sheet closing says nothing: expo-sharing resolves the same
       // whether the PDF went out or the contractor backed out. The link path
-      // below checks `wasShareDismissed`; this one marked every PDF share
+      // below checks `confirmShareSent`; this one marked every PDF share
       // "sent" — a quote the customer never had, with a follow-up clock
       // running (emulator walk 2026-09-28). Status follows the artefact, never
       // the button (#197/#339), so ask — once, and only for a draft.
@@ -222,6 +222,10 @@ export default function QuoteDetailScreen() {
   const shareCustomerLink = async () => {
     if (sharingLink) return;
     setSharingLink(true);
+    // markQuoteSent changes only a draft (→ sent) or a sent quote (timestamp).
+    // For any other status the "did it go out?" answer changes nothing, so
+    // Android is not asked (review 2026-09-29).
+    const statusCanChange = quote.status === 'draft' || quote.status === 'sent';
     try {
       const signed = await signQuoteLink(quote.id);
       if (signed.ok && signed.url) {
@@ -233,7 +237,8 @@ export default function QuoteDetailScreen() {
         });
         // Backing out of the share sheet is not sending. Status follows the
         // artefact, never the button (#197 / #339).
-        if (!wasShareDismissed(res)) markQuoteSent(quote.id);
+        // Android never reports a dismissal — confirmShareSent asks there.
+        if (statusCanChange && await confirmShareSent(res)) markQuoteSent(quote.id);
         return;
       }
       const fallback = await shareQuoteWithAcceptanceLink({
@@ -246,8 +251,8 @@ export default function QuoteDetailScreen() {
         // must name the total that will be invoiced.
         id: quote.id, customer: quote.customer, customerName: customerDisplayName,
         amount: total, job: quote.job,
-      });
-      if (fallback.shared) markQuoteSent(quote.id);
+      }, { askIfUnknown: statusCanChange });
+      if (statusCanChange && fallback.shared) markQuoteSent(quote.id);
       if (isDemoMode) {
         Alert.alert(
           t('quotes.demoMode', 'Demo mode'),

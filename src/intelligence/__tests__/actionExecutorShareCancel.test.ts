@@ -28,8 +28,12 @@ jest.mock('react-native', () => ({
     dismissedAction: 'dismissedAction',
     sharedAction: 'sharedAction',
   },
-  Alert: { alert: jest.fn() },
+  Alert: { alert: (...a: unknown[]) => mockAlert(...a) },
+  // iOS reports a dismissal; Android never does (see the Android block below).
+  Platform: { get OS() { return mockOS.value; } },
 }));
+const mockAlert = jest.fn();
+const mockOS = { value: 'ios' };
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(async () => null),
   setItem: jest.fn(async () => undefined),
@@ -74,6 +78,26 @@ describe('send_reminder', () => {
     mockShare.mockRejectedValue(new Error('no share sheet'));
     const r = await executeAction(reminder as never, 'i1', 'g1');
     expect(r.success).toBe(false);
+  });
+
+  // Android resolves 'sharedAction' even for a backed-out chooser (RN docs),
+  // so "sharedAction" proves nothing there: the contractor is asked.
+  describe('on Android', () => {
+    beforeEach(() => { mockOS.value = 'android'; mockShare.mockResolvedValue({ action: 'sharedAction' }); });
+    afterEach(() => { mockOS.value = 'ios'; });
+
+    it('does not report a reminder sent when the contractor says "not yet"', async () => {
+      mockAlert.mockImplementation((_t: unknown, _b: unknown, buttons: any[]) => buttons[0].onPress());
+      const r = await executeAction(reminder as never, 'i1', 'g1');
+      expect(mockAlert).toHaveBeenCalledTimes(1);
+      expect(r.success).toBe(false);
+    });
+
+    it('reports it once the contractor confirms', async () => {
+      mockAlert.mockImplementation((_t: unknown, _b: unknown, buttons: any[]) => buttons[1].onPress());
+      const r = await executeAction(reminder as never, 'i1', 'g1');
+      expect(r.success).toBe(true);
+    });
   });
 });
 

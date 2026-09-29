@@ -121,11 +121,13 @@ describe('a cancelled share is not a send', () => {
     .filter((f) => SHARES.test(readOrEmpty(f)))
     .map((f) => path.relative(ROOT, f));
 
-  // Guarded = checks the outcome, either through the shared helper (preferred,
-  // src/utils/shareOutcome.ts) or by naming the constant directly.
+  // Guarded = checks the outcome through src/utils/shareOutcome.ts —
+  // `confirmShareSent` for a record, `shareOutcome` for a claim (both know
+  // Android never reports a dismissal, 2026-09-29) — or the older helper /
+  // constant, which the shareOutcome.test repo guard now limits to one file.
   const unguarded = sharing.filter((f) => {
     const src = readOrEmpty(path.join(ROOT, f));
-    return !src.includes('wasShareDismissed') && !src.includes('dismissedAction');
+    return !/confirmShareSent\(|shareOutcome\(|wasShareDismissed|dismissedAction/.test(src);
   });
 
   it('has no unguarded, unclassified share', () => {

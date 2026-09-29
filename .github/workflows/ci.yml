@@ -89,6 +89,29 @@ jobs:
       - name: Audit production deps (runtime-scoped)
         run: npm run audit:runtime
 
+  # Both postures of the headless screen walk (fake backend, no secrets).
+  # Neither ran in CI, so `walk:prod` sat red for a day after five demo-fixture
+  # suites were added without an exclusion (2026-09-29, walk ledger W51).
+  screen-walk:
+    name: Screen walk (demo + prod posture)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Walk (DEMO_MODE on)
+        run: npm run walk -- --ci
+
+      - name: Walk (production posture)
+        run: npm run walk:prod -- --ci
+
   unit-tests:
     name: Jest unit tests
     runs-on: ubuntu-latest

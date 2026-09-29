@@ -32,6 +32,7 @@ import { useMaintenanceOpportunities } from '../../src/services/maintenanceOppor
 import { useSubmissions } from '../../src/services/submissionStore';
 import { formatMoney2, formatDecimal1, type Country } from '../../src/i18n/formatting';
 import { daysUntilDue } from '../../src/utils/invoiceDue';
+import { confirmShareSent } from '../../src/utils/shareOutcome';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabKey = 'queue' | 'insights' | 'more';
@@ -97,6 +98,9 @@ export default function VascoScreen() {
   const aiQueue = useAIQueue({ jobs, invoices, quotes });
   const [refreshing, setRefreshing] = useState(false);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
+  // Dismissed is not done: "N actions completed" counted every dismissal
+  // (2026-09-29). Both hide the card; only `actioned` is counted.
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   // The edit the contractor typed, PER action. "Done" only closed the editor
@@ -271,9 +275,9 @@ export default function VascoScreen() {
 
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     return actions
-      .filter(a => !actioned.has(a.id))
+      .filter(a => !actioned.has(a.id) && !dismissed.has(a.id))
       .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-  }, [jobs, invoices, quotes, customers, aiQueue.items, actioned, t]);
+  }, [jobs, invoices, quotes, customers, aiQueue.items, actioned, dismissed, t]);
 
   const handleAction = async (action: ProactiveAction) => {
     hapticSuccess();
@@ -287,7 +291,8 @@ export default function VascoScreen() {
           // still cleared the reminder from the queue — the contractor thought
           // a payment chase had gone out when nothing was sent.
           const result = await Share.share({ message: text });
-          if (result.action === Share.dismissedAction) return;
+          // Android never reports a dismissal — confirmShareSent asks there.
+          if (!(await confirmShareSent(result))) return;
         }
       } catch {
         return; // share failed — keep the action so it can be retried
@@ -297,14 +302,18 @@ export default function VascoScreen() {
     } else if (action.actionType === 'approve') {
       // R286: close the loop — actually execute the action after approval.
       const item = await aiQueue.approve(action.id);
-      if (item) await executeApprovedQueueItem(item, { router }, { alreadyShared: false });
+      if (item) {
+        const r = await executeApprovedQueueItem(item, { router }, { alreadyShared: false });
+        // Not sent → the executor re-opened the card; don't hide or count it.
+        if (!r.executed && (r.via === 'share' || r.via === 'link')) return;
+      }
     }
     setActioned(prev => new Set(prev).add(action.id));
     setEditingId(null);
     setEditText('');
   };
 
-  const handleDismiss = (id: string) => setActioned(prev => new Set(prev).add(id));
+  const handleDismiss = (id: string) => setDismissed(prev => new Set(prev).add(id));
 
   const handleExportData = async () => {
     const result = await exportAllData('json', { userId: user?.id, email: user?.email });

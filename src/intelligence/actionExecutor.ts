@@ -15,6 +15,7 @@ import i18n from '../i18n/i18n';
 
 import type { InsightAction, InsightActionType } from './generators/types';
 import { formatMoney2, formatMoney } from '../i18n/formatting';
+import { confirmShareSent } from '../utils/shareOutcome';
 
 const ACTION_LOG_KEY = '@vasco_action_log';
 const MAX_ACTION_LOG = 200;
@@ -85,7 +86,8 @@ const handlers: Record<InsightActionType, ActionHandler> = {
       // `action.shareCancelled` string right there shows the intent was always
       // to handle this; only the mechanism was wrong.
       const res = await Share.share({ message: text, title: t('action.reminderTitle', 'Payment reminder') });
-      if (res.action === Share.dismissedAction) {
+      // Android never reports a dismissal — confirmShareSent asks there.
+      if (!(await confirmShareSent(res))) {
         return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
       }
       return { success: true, message: t('action.reminderSent', { defaultValue: 'Reminder sent for {{amount}}', amount: formatMoney2(amount || 0) }) };
@@ -163,7 +165,7 @@ const handlers: Record<InsightActionType, ActionHandler> = {
     });
     try {
       const res = await Share.share({ message: text, title: t('action.followupTitle', 'Quote follow-up') });
-      if (res.action === Share.dismissedAction) {
+      if (!(await confirmShareSent(res))) {
         return { success: false, message: t('action.shareCancelled', 'Share cancelled') };
       }
       return { success: true, message: t('action.followupSent', 'Follow-up sent') };

@@ -16,6 +16,9 @@ jest.mock('react-native', () => ({
     canOpenURL: jest.fn().mockResolvedValue(true),
   },
   Share: { share: jest.fn().mockResolvedValue(undefined) },
+  // iOS: the sheet's own result decides (shareOutcome.test covers Android).
+  Platform: { OS: 'ios' },
+  Alert: { alert: jest.fn() },
 }));
 
 jest.mock('../../intelligence/intelligenceEngine', () => ({

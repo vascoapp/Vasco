@@ -415,12 +415,15 @@ export default function GeldScreen() {
                 </Pressable>
                 <Pressable
                   onPress={async () => {
-                    hapticSuccess();
                     // R286: actually fire the action after approval. Geld's
                     // queue rows don't render VascoCard, so shareable items
-                    // need the executor to open the Share sheet too.
+                    // need the executor to open the Share sheet too. Success
+                    // is felt only for what happened (review 2026-09-29).
                     const approved = await aiQueue.approve(item.id);
-                    if (approved) await executeApprovedQueueItem(approved, { router }, { alreadyShared: false });
+                    if (approved) {
+                      const r = await executeApprovedQueueItem(approved, { router }, { alreadyShared: false });
+                      if (r.executed) hapticSuccess();
+                    }
                   }}
                   style={s.vascoQueueApprove}
                 >
@@ -582,7 +585,7 @@ export default function GeldScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <DKLabel style={s.vatTitle}>{t('dk.money.purchasing', 'Purchasing')}</DKLabel>
-              <Text style={s.vatSub}>{t('dk.money.purchasingSub', 'Receipt scanner, reorders, supplier prices.')}</Text>
+              <Text style={s.vatSub}>{t('dk.money.purchasingSub', 'Read supplier invoices, track your prices.')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={DK.colors.textMuted} />
           </Pressable>

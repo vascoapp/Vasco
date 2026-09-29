@@ -17,7 +17,13 @@ import type { QueueItem } from '../aiActionQueueService';
 jest.mock('react-native', () => ({
   Share: { share: jest.fn().mockResolvedValue(undefined) },
   Linking: { openURL: jest.fn().mockResolvedValue(undefined) },
+  // iOS: the sheet's own result decides (shareOutcome.test covers Android).
+  Platform: { OS: 'ios' },
+  Alert: { alert: (...a: unknown[]) => mockAlert(...a) },
 }));
+const mockAlert = jest.fn();
+const mockReopen = jest.fn(async (_id: string) => undefined);
+jest.mock('../aiActionQueueService', () => ({ reopenItem: (id: string) => mockReopen(id) }));
 
 const makeItem = (overrides: Partial<QueueItem>): QueueItem => ({
   id: 'q-test',
@@ -251,5 +257,47 @@ describe('taxPrepPeriod', () => {
   });
   it('a card without a quarter keeps the old default', () => {
     expect(taxPrepPeriod(undefined, new Date(2026, 8, 22))).toBe('previous');
+  });
+});
+
+// Review 2026-09-29: callers approve BEFORE executing, and approveItem retires
+// the card (and suppresses a new chase for 3 days). A send that did not happen
+// must put it back. Opening WhatsApp is not sending either — neither platform
+// reports it, so the contractor is asked.
+describe('a send that did not happen re-opens the card', () => {
+  const reminder = () => makeItem({ id: 'q-rem', type: 'draft_reminder', preparedData: { template: 'Beste klant…' } });
+
+  it('re-opens after a dismissed share sheet', async () => {
+    (Share.share as jest.Mock).mockResolvedValueOnce({ action: 'dismissedAction' });
+    const r = await executeApprovedQueueItem(reminder(), { router: makeRouter() });
+    expect(r.executed).toBe(false);
+    expect(mockReopen).toHaveBeenCalledWith('q-rem');
+  });
+
+  it('does not re-open a send that happened', async () => {
+    (Share.share as jest.Mock).mockResolvedValueOnce({ action: 'sharedAction' });
+    const r = await executeApprovedQueueItem(reminder(), { router: makeRouter() });
+    expect(r.executed).toBe(true);
+    expect(mockReopen).not.toHaveBeenCalled();
+  });
+
+  it('does not re-open a navigate action', async () => {
+    await executeApprovedQueueItem(makeItem({ type: 'draft_invoice', preparedData: { jobId: 'j1' } }), { router: makeRouter() });
+    expect(mockReopen).not.toHaveBeenCalled();
+  });
+
+  it('WhatsApp opened is asked about — "not yet" re-opens, "yes" records', async () => {
+    const wa = () => makeItem({ id: 'q-wa', type: 'draft_reminder', preparedData: { template: 'x', affiliateUrl: 'https://wa.me/31612345678?text=x' } });
+    mockAlert.mockImplementationOnce((_t: unknown, _b: unknown, buttons: any[]) => buttons[0].onPress());
+    const no = await executeApprovedQueueItem(wa(), { router: makeRouter() });
+    expect(Linking.openURL).toHaveBeenCalledWith('https://wa.me/31612345678?text=x');
+    expect(no).toMatchObject({ executed: false, via: 'link' });
+    expect(mockReopen).toHaveBeenCalledWith('q-wa');
+
+    mockReopen.mockClear();
+    mockAlert.mockImplementationOnce((_t: unknown, _b: unknown, buttons: any[]) => buttons[1].onPress());
+    const yes = await executeApprovedQueueItem(wa(), { router: makeRouter() });
+    expect(yes).toMatchObject({ executed: true, via: 'link' });
+    expect(mockReopen).not.toHaveBeenCalled();
   });
 });
