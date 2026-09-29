@@ -31,6 +31,7 @@ jest.mock('react-native', () => ({
   Alert: { alert: (...a: unknown[]) => mockAlert(...a) },
   // iOS reports a dismissal; Android never does (see the Android block below).
   Platform: { get OS() { return mockOS.value; } },
+  AppState: { currentState: 'active', addEventListener: () => ({ remove: () => undefined }) },
 }));
 const mockAlert = jest.fn();
 const mockOS = { value: 'ios' };

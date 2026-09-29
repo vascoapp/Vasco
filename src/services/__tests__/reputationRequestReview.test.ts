@@ -18,6 +18,7 @@ jest.mock('react-native', () => ({
   Share: { share: jest.fn().mockResolvedValue(undefined) },
   // iOS: the sheet's own result decides (shareOutcome.test covers Android).
   Platform: { OS: 'ios' },
+  AppState: { currentState: 'active', addEventListener: () => ({ remove: () => undefined }) },
   Alert: { alert: jest.fn() },
 }));
 

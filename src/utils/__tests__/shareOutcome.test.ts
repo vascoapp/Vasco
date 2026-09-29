@@ -38,13 +38,23 @@ describe('wasShareDismissed', () => {
 // 2026-09-29: a backed-out share advanced the reminder queue and submitted a
 // purchase order. A claim waits for iOS's word; a record asks on Android.
 // ---------------------------------------------------------------------------
-import { Alert, Platform } from 'react-native';
-import { shareOutcome, confirmShareSent } from '../shareOutcome';
+import { Alert, AppState, Platform } from 'react-native';
+import { shareOutcome, confirmShareSent, whenInForeground } from '../shareOutcome';
+
+// The app is in front unless a test says otherwise; the listener is captured
+// so a test can bring the app back.
+let appState = 'active';
+let appListener: ((s: string) => void) | null = null;
+Object.defineProperty(AppState, 'currentState', { configurable: true, get: () => appState });
+jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, fn: (s: string) => void) => {
+  appListener = fn;
+  return { remove: () => { appListener = null; } };
+}) as any);
 
 describe('shareOutcome / confirmShareSent', () => {
   const setOS = (os: string) => Object.defineProperty(Platform, 'OS', { configurable: true, get: () => os });
   const realOS = Platform.OS;
-  afterEach(() => { setOS(realOS); jest.restoreAllMocks(); });
+  afterEach(() => { setOS(realOS); jest.restoreAllMocks(); appState = 'active'; });
 
   it('iOS: the sheet is the answer, nobody is asked', async () => {
     setOS('ios');
@@ -173,4 +183,54 @@ describe('claims wait for the send', () => {
       expect(src.slice(at, at + 200)).toMatch(/if \(r\.executed\) hapticSuccess\(\)/);
     },
   );
+});
+
+// RN 0.81 Android loses an Alert raised while the activity is paused (its
+// DialogModule re-creates the helper that parks it). The question must wait
+// for the app to be in front again — found on the emulator, 2026-09-29.
+describe('whenInForeground', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => { jest.useRealTimers(); appState = 'active'; });
+
+  it('waits while the app is in the background, resolves once it is active', async () => {
+    jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, fn: (s: string) => void) => {
+      appListener = fn;
+      return { remove: () => { appListener = null; } };
+    }) as any);
+    appState = 'background';
+    let done = false;
+    whenInForeground().then(() => { done = true; });
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(done).toBe(false);          // still in the chooser / WhatsApp
+    appState = 'active';
+    appListener?.('active');
+    await jest.advanceTimersByTimeAsync(300);
+    expect(done).toBe(true);
+  });
+
+  it('the Android question is not raised until the app is back', async () => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, get: () => 'android' });
+    jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, fn: (s: string) => void) => {
+      appListener = fn;
+      return { remove: () => { appListener = null; } };
+    }) as any);
+    const ask = jest.spyOn(Alert, 'alert').mockImplementation((_t, _b, buttons) => { buttons?.[1]?.onPress?.(); });
+    appState = 'background';
+    const answer = confirmShareSent({ action: 'sharedAction' });
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(ask).not.toHaveBeenCalled();   // would be lost by RN while paused
+    appState = 'active';
+    appListener?.('active');
+    await jest.advanceTimersByTimeAsync(300);
+    expect(ask).toHaveBeenCalledTimes(1);
+    expect(await answer).toBe(true);
+    Object.defineProperty(Platform, 'OS', { configurable: true, get: () => 'ios' });
+  });
+
+  it('does not wait when the app never left', async () => {
+    let done = false;
+    whenInForeground().then(() => { done = true; });
+    await jest.advanceTimersByTimeAsync(700);
+    expect(done).toBe(true);
+  });
 });

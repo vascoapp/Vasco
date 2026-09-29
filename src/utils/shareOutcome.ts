@@ -24,7 +24,7 @@
  * backed-out reminder advanced the queue, a purchase order went "submitted".
  * Use `shareOutcome` for a claim and `confirmShareSent` for a record.
  */
-import { Alert, Platform } from 'react-native';
+import { Alert, AppState, Platform } from 'react-native';
 import appI18n from '../i18n/i18n';
 
 export const SHARE_DISMISSED = 'dismissedAction';
@@ -62,7 +62,8 @@ export function confirmShareSent(result: unknown): Promise<boolean> {
  * Ask the contractor whether it went out. For hand-offs no platform reports
  * on — a share on Android, or opening WhatsApp / mail on either platform.
  */
-export function askWasSent(): Promise<boolean> {
+export async function askWasSent(): Promise<boolean> {
+  await whenInForeground();
   return new Promise((resolve) => {
     let settled = false;
     const settle = (sent: boolean) => { if (!settled) { settled = true; resolve(sent); } };
@@ -75,5 +76,32 @@ export function askWasSent(): Promise<boolean> {
       ],
       { cancelable: true, onDismiss: () => settle(false) },
     );
+  });
+}
+
+/**
+ * Resolve once Vasco is in the foreground again.
+ *
+ * ⚠️ React Native 0.81, Android: an Alert raised while the activity is PAUSED
+ * is lost for good — DialogModule parks it on a FragmentManagerHelper that its
+ * getter re-creates on every access, so onHostResume looks on a fresh, empty
+ * one and the callback never fires. The share chooser (and WhatsApp, Chrome…)
+ * pauses us, and `Share.share` resolves as the chooser OPENS — so the question
+ * vanished, the promise hung, and nothing was recorded or re-opened (emulator,
+ * 2026-09-29). Wait a beat for the hand-off to take the screen, then for the
+ * app to be active; AppState flips on the same onHostPause/onHostResume.
+ */
+export function whenInForeground(settleMs = 600): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (AppState.currentState === 'active') { resolve(); return; }
+      const sub = AppState.addEventListener('change', (state) => {
+        if (state !== 'active') return;
+        sub.remove();
+        // onHostResume sets DialogModule's foreground flag in the same pass
+        // that emits 'active'; let it land before the Alert goes out.
+        setTimeout(resolve, 250);
+      });
+    }, settleMs);
   });
 }
