@@ -1078,7 +1078,10 @@ export default function InvoiceDetailScreen() {
                   (walk, 2026-09-29) and "12,125" did not fit the field. */}
               <Text style={[styles.lineHeaderText, { width: 56, textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{t('invoices.qty', 'Qty')}</Text>
               <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.unitPrice', 'Price')}</Text>
-              <Text style={[styles.lineHeaderText, { width: 82, textAlign: 'right' }]} numberOfLines={1}>{t('invoices.total', 'Total')}</Text>
+              {/* Over the delete button — the edit row has no line total, so a
+                  "TOTAAL" header here labelled nothing (walk, 2026-09-29). The
+                  Totalen card below updates as the lines are typed. */}
+              <View style={{ width: 24 }} />
             </View>
           )}
 
