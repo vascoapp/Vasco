@@ -1738,7 +1738,8 @@
     "noJobsWithMaterials": "No jobs with materials found. Add materials to a job first.",
     "selectJob": "Select a job to create a purchase order from its materials list",
     "poCreated": "PO Created",
-    "poCreatedDesc": "PO created for \"{{title}}\" with {{count}} materials",
+    "poCreatedDesc_one": "{{title}} created with {{count}} material",
+    "poCreatedDesc_other": "{{title}} created with {{count}} materials",
     "emptyTitle": "No purchase orders yet",
     "emptyDesc": "Create your first order, or let Vasco suggest materials from your planned jobs.",
     "teamOnlyTitle": "For teams and contractors",
@@ -5585,6 +5586,7 @@
     "email": "Email",
     "phone": "Phone",
     "trade": "Trade specialty",
+    "tradePlaceholder": "E.g. tiling, electrical",
     "hourlyCost": "Hourly cost to you ($)",
     "active": "Active on payroll",
     "roles": {

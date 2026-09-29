@@ -10,6 +10,9 @@
 // flows through Job.assignedWorkerId on the job-detail screen.
 // =============================================================================
 
+import { getCurrentCountry } from '../../src/lib/currentUser';
+import { contactExamples } from '../../src/utils/contactExamples';
+import { DKMenu } from '../../src/components/shared/DKMenu';
 import { goBack } from '../../src/utils/goBack';
 import { useState } from 'react';
 import {
@@ -241,6 +244,8 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
   const { user } = useAuth();
   const [name, setName] = useState(original?.name ?? '');
   const [role, setRole] = useState<WorkerRole>(original?.role ?? 'tech');
+  // Placeholders in the contractor's market (profile first, account second).
+  const ex = contactExamples(getCurrentCountry() ?? '');
   const [email, setEmail] = useState(original?.email ?? '');
   const [phone, setPhone] = useState(original?.phone ?? '');
   const [trade, setTrade] = useState(original?.trade ?? '');
@@ -281,43 +286,46 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: GRID.lg }}>
+        {/* "handled": with the keyboard up, the first tap outside a field was
+            spent closing it — picking "Voorman" right after typing the name
+            silently kept "Monteur" (walk, 2026-09-29). */}
+        <ScrollView contentContainerStyle={{ padding: GRID.lg }} keyboardShouldPersistTaps="handled">
           <Text style={styles.label}>{t('crew.name', 'Name *')}</Text>
           <TextInput value={name} onChangeText={setName} placeholder={t('crew.namePlaceholder', 'Name')} placeholderTextColor={SemanticColors.placeholder} style={styles.input} />
 
           <Text style={styles.label}>{t('crew.role', 'Role')}</Text>
-          <View style={styles.roleGrid}>
-            {ROLES.map((r) => {
-              const selected = role === r;
-              return (
-                <Pressable
-                  key={r}
-                  onPress={() => setRole(r)}
-                  style={[styles.roleChip, selected && styles.roleChipSelected]}
-                >
-                  <Text style={[styles.roleChipText, selected && styles.roleChipTextSelected]}>
-                    {roleLabel(t, r)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          {/* One of five is a choice — a menu, not chips (CLAUDE.md). */}
+          <DKMenu
+            accessibilityLabel={t('crew.role', 'Role')}
+            items={ROLES.map((r) => ({
+              key: r,
+              label: roleLabel(t, r),
+              selected: role === r,
+              onPress: () => setRole(r),
+            }))}
+            renderAnchor={(open) => (
+              <Pressable onPress={open} style={[styles.input, styles.roleAnchor]} accessibilityRole="button">
+                <Text style={styles.roleAnchorText} numberOfLines={1}>{roleLabel(t, role)}</Text>
+                <Ionicons name="chevron-down" size={16} color={SemanticColors.textSecondary} />
+              </Pressable>
+            )}
+          />
 
           <Text style={styles.label}>{t('crew.email', 'Email')}</Text>
-          <TextInput value={email} onChangeText={setEmail} placeholder="mike@example.com" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="email-address" autoCapitalize="none" />
+          <TextInput value={email} onChangeText={setEmail} placeholder={ex.email} placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="email-address" autoCapitalize="none" />
 
           <Text style={styles.label}>{t('crew.phone', 'Phone')}</Text>
-          <TextInput value={phone} onChangeText={setPhone} placeholder="+1 555 0123" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="phone-pad" />
+          <TextInput value={phone} onChangeText={setPhone} placeholder={ex.phone} placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="phone-pad" />
 
           <Text style={styles.label}>{t('crew.trade', 'Trade specialty')}</Text>
-          <TextInput value={trade} onChangeText={setTrade} placeholder="HVAC / electrical / plumbing…" placeholderTextColor={SemanticColors.placeholder} style={styles.input} />
+          <TextInput value={trade} onChangeText={setTrade} placeholder={t('crew.tradePlaceholder', 'E.g. tiling, electrical')} placeholderTextColor={SemanticColors.placeholder} style={styles.input} />
 
           <Text style={styles.label}>{t('crew.hourlyCostSym', 'Hourly cost to you ({{sym}})', { sym: currencySymbol(user?.country as never) })}</Text>
-          <DecimalInput value={hourlyCost} onChangeValue={setHourlyCost} money placeholder="35" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="numeric" />
+          <DecimalInput value={hourlyCost} onChangeValue={setHourlyCost} money blankWhenZero placeholder="35" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="numeric" />
 
           <View style={styles.activeRow}>
             <Text style={styles.activeLabel}>{t('crew.active', 'Active on payroll')}</Text>
-            <Switch value={isActive} onValueChange={setIsActive} trackColor={{ true: DK.colors.accent }} />
+            <Switch value={isActive} onValueChange={setIsActive} trackColor={{ true: DK.colors.accent }} thumbColor={DK.colors.text} />
           </View>
 
           {original && onDelete ? (
@@ -404,15 +412,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: GRID.md, paddingVertical: GRID.sm,
     fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary,
   },
-  roleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID.sm },
-  roleChip: {
-    paddingHorizontal: GRID.md, paddingVertical: GRID.sm,
-    borderRadius: RADIUS.md, backgroundColor: SemanticColors.surfacePrimary,
-    borderWidth: 1, borderColor: SemanticColors.borderDefault,
-  },
-  roleChipSelected: { borderColor: DK.colors.accent, backgroundColor: `${DK.colors.accent}22` },
-  roleChipText: { fontSize: TYPE.bodySize, fontFamily: TYPE.labelFamily, color: SemanticColors.textPrimary },
-  roleChipTextSelected: { color: DK.colors.accent, fontFamily: TYPE.titleFamily },
+  roleAnchor: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: GRID.sm },
+  roleAnchorText: { flex: 1, fontSize: TYPE.bodySize, color: SemanticColors.textPrimary },
   activeRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginTop: GRID.lg, paddingVertical: GRID.sm,

@@ -360,7 +360,7 @@ Totaal:                                   €217,70`);
   }
 
   return (
-    <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+    <ScrollView keyboardShouldPersistTaps="handled" style={styles.content} contentContainerStyle={styles.contentContainer}>
       {/* Capture Options */}
       <View style={styles.captureOptions}>
         <Pressable style={styles.captureOption} onPress={onTakePhoto}>

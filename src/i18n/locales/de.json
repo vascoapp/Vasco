@@ -1738,7 +1738,8 @@
     "noJobsWithMaterials": "Keine Aufträge mit Materialien gefunden. Fügen Sie zuerst Materialien zu einem Auftrag hinzu.",
     "selectJob": "Wählen Sie einen Auftrag, um aus dessen Materialliste eine Bestellung zu erstellen",
     "poCreated": "Bestellung erstellt",
-    "poCreatedDesc": "Bestellung für \"{{title}}\" mit {{count}} Materialien erstellt",
+    "poCreatedDesc_one": "{{title}} mit {{count}} Material erstellt",
+    "poCreatedDesc_other": "{{title}} mit {{count}} Materialien erstellt",
     "emptyTitle": "Noch keine Bestellungen",
     "emptyDesc": "Erstellen Sie Ihre erste Bestellung oder lassen Sie Vasco Materialien aus Ihren geplanten Aufträgen vorschlagen.",
     "teamOnlyTitle": "Für Teams und Generalunternehmer",
@@ -5585,6 +5586,7 @@
     "email": "E-Mail",
     "phone": "Telefon",
     "trade": "Fachgebiet",
+    "tradePlaceholder": "z. B. Fliesen, Elektro",
     "hourlyCost": "Stundenkosten für Sie ($)",
     "active": "Aktiv auf der Gehaltsliste",
     "roles": {

@@ -349,7 +349,7 @@ export default function CustomerViewScreen() {
         </View>
       </View>
 
-      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Business + greeting */}
         <View style={s.bizCard}>
           <View style={s.bizBar} />

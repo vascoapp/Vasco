@@ -271,7 +271,7 @@ function LicenseModal({ visible, original, onClose, onSave, onDelete, isUs, defa
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: GRID.lg }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: GRID.lg }}>
           {/* Type picker */}
           <Text style={styles.label}>{t('licenses.type', 'License type')}</Text>
           <View style={styles.typeGrid}>

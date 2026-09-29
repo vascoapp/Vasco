@@ -1738,7 +1738,8 @@
     "noJobsWithMaterials": "No se encontraron trabajos con materiales. Añade materiales a un trabajo primero.",
     "selectJob": "Selecciona un trabajo para crear un pedido de compra con su lista de materiales",
     "poCreated": "Pedido creado",
-    "poCreatedDesc": "Pedido creado para \"{{title}}\" con {{count}} materiales",
+    "poCreatedDesc_one": "{{title}} creado con {{count}} material",
+    "poCreatedDesc_other": "{{title}} creado con {{count}} materiales",
     "emptyTitle": "Aún no hay pedidos",
     "emptyDesc": "Crea tu primer pedido, o deja que Vasco sugiera materiales a partir de tus trabajos planificados.",
     "teamOnlyTitle": "Para equipos y contratistas",
@@ -5585,6 +5586,7 @@
     "email": "Correo electrónico",
     "phone": "Teléfono",
     "trade": "Especialidad",
+    "tradePlaceholder": "Ej. alicatado, electricidad",
     "hourlyCost": "Coste por hora para ti ($)",
     "active": "Activo en nómina",
     "roles": {

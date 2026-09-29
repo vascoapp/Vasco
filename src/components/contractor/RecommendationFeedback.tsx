@@ -261,7 +261,7 @@ export function RecommendationFeedbackCard({
             <View style={{ width: 40 }} />
           </View>
 
-          <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalContentInner}>
+          <ScrollView keyboardShouldPersistTaps="handled" style={styles.modalContent} contentContainerStyle={styles.modalContentInner}>
             {/* Context info */}
             <View style={styles.contextCard}>
               <View style={[styles.typeIcon, { backgroundColor: config.color + '15' }]}>

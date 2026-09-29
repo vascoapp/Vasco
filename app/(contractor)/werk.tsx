@@ -6,6 +6,7 @@
 // content · sticky gradient FAB. Functions preserved from legacy screen.
 // =============================================================================
 
+import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
@@ -72,6 +73,7 @@ export default function WerkScreen() {
   // three dead call/WhatsApp/mail buttons, the customer's own screen never
   // counted the job, and invoicing it had nobody to bill. Pick the customer here.
   const [newJobCustomerId, setNewJobCustomerId] = useState<string | null>(null);
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
   const [tab, setTab] = useState<TabKey>('today');
   // LOCAL date, not UTC. `todayKey()` returns the
@@ -278,6 +280,15 @@ export default function WerkScreen() {
                 emphasis: true,
                 onPress: () => setNewJobCustomerId(null),
               },
+              // A new job is often for a new customer — add them without
+              // leaving the sheet (walk, 2026-09-29).
+              {
+                key: '__new__',
+                label: t('customers.addNew', 'Add new customer'),
+                icon: 'person-add-outline' as const,
+                emphasis: true,
+                onPress: () => setShowAddCustomer(true),
+              },
               ...(customers as { id: string; name: string; phone?: string }[]).map((c) => ({
                 key: c.id,
                 label: c.name,
@@ -349,6 +360,12 @@ export default function WerkScreen() {
         </Pressable>
       </Pressable>
     </KeyboardAvoidingView>
+    {/* Inside the sheet's Modal so it stacks on iOS too. */}
+    <AddCustomerSheet
+      visible={showAddCustomer}
+      onClose={() => setShowAddCustomer(false)}
+      onAdded={(id) => setNewJobCustomerId(id)}
+    />
   </Modal>
   );
 

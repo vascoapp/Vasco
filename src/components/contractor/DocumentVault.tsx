@@ -138,7 +138,7 @@ export function DocumentVault() {
   };
 
   const renderAllTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+    <ScrollView keyboardShouldPersistTaps="handled" style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {/* Search */}
       <View style={styles.searchBar}>
         <Ionicons name="search-outline" size={20} color={SemanticColors.textSecondary} />

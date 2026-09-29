@@ -938,7 +938,7 @@ export default function InvoiceDetailScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* R66r44 DK polish — invoice hero with gradient backdrop + amber glow */}
         <View style={styles.heroCard}>
           <LinearGradient

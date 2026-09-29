@@ -27,18 +27,23 @@ type Props = Omit<TextInputProps, 'value' | 'onChangeText' | 'defaultValue'> & {
   maxDecimals?: number;
   /** An amount: a fractional value always shows cents ("185,50"). */
   money?: boolean;
+  /** 0 means "not entered yet": show the placeholder, not a "0" the contractor
+   *  must delete first (crew hourly cost, walk 2026-09-29). Opt-in, because
+   *  elsewhere 0 is a real value (a 0% rate). */
+  blankWhenZero?: boolean;
 };
 
-export function DecimalInput({ value, onChangeValue, country, maxDecimals = 2, money = false, onFocus, onBlur, ...rest }: Props) {
+export function DecimalInput({ value, onChangeValue, country, maxDecimals = 2, money = false, blankWhenZero = false, onFocus, onBlur, ...rest }: Props) {
   const c = country ?? ((getCurrentCountry() as Country) || 'NL');
   // null = not being edited → render the number itself.
   const [text, setText] = useState<string | null>(null);
+  const shown = (n: number) => (blankWhenZero && n === 0 ? '' : formatDecimalInput(n, c, maxDecimals, money));
   return (
     <TextInput
       keyboardType="decimal-pad"
       {...rest}
-      value={text ?? formatDecimalInput(value, c, maxDecimals, money)}
-      onFocus={(e) => { setText(formatDecimalInput(value, c, maxDecimals, money)); onFocus?.(e); }}
+      value={text ?? shown(value)}
+      onFocus={(e) => { setText(shown(value)); onFocus?.(e); }}
       onChangeText={(v) => { setText(v); onChangeValue(parseDecimalInput(v, c) ?? 0); }}
       onBlur={(e) => { setText(null); onBlur?.(e); }}
     />

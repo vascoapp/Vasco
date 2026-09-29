@@ -1485,7 +1485,8 @@
     "noJobsWithMaterials": "Geen klussen met materialen gevonden. Voeg eerst materialen toe aan een klus.",
     "selectJob": "Selecteer een klus om een inkooporder aan te maken op basis van de materialenlijst",
     "poCreated": "Inkooporder aangemaakt",
-    "poCreatedDesc": "Inkooporder aangemaakt voor \"{{title}}\" met {{count}} materialen",
+    "poCreatedDesc_one": "{{title}} aangemaakt met {{count}} materiaal",
+    "poCreatedDesc_other": "{{title}} aangemaakt met {{count}} materialen",
     "emptyTitle": "Nog geen inkooporders",
     "emptyDesc": "Maak je eerste inkooporder, of laat Vasco materialen voorstellen op basis van je geplande klussen.",
     "teamOnlyTitle": "Voor teams en aannemers",
@@ -5585,6 +5586,7 @@
     "email": "E-mail",
     "phone": "Telefoon",
     "trade": "Vakspecialisatie",
+    "tradePlaceholder": "Bijv. tegelwerk, elektra",
     "hourlyCost": "Uurkosten voor jou ($)",
     "active": "Actief op de loonlijst",
     "roles": {

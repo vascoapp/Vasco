@@ -83,7 +83,7 @@ export default function JobQualityScreen() {
       {/* DKScreenHeader/DKLabel uppercase their own text, so these strings
           stay natural-case — that also gives VoiceOver a readable label. */}
       <DKScreenHeader title={t('jobQuality.title', 'Job quality')} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <DKLabel style={styles.section}>{t('jobQuality.paidOnTime', 'Paid on time?')}</DKLabel>
         <View style={styles.row}>
           <Pill label={yesLabel} active={paidOnTime === true} onPress={() => setPaidOnTime(true)} />

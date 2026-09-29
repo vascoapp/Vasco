@@ -1738,7 +1738,8 @@
     "noJobsWithMaterials": "Aucun chantier avec matériaux trouvé. Ajoutez d'abord des matériaux à un chantier.",
     "selectJob": "Sélectionnez un chantier pour créer un bon de commande à partir de sa liste de matériaux",
     "poCreated": "Bon de commande créé",
-    "poCreatedDesc": "Bon de commande créé pour « {{title}} » avec {{count}} matériaux",
+    "poCreatedDesc_one": "{{title}} créé avec {{count}} matériau",
+    "poCreatedDesc_other": "{{title}} créé avec {{count}} matériaux",
     "emptyTitle": "Aucune commande pour le moment",
     "emptyDesc": "Créez votre première commande, ou laissez Vasco suggérer des matériaux à partir de vos chantiers planifiés.",
     "teamOnlyTitle": "Pour les équipes et les entrepreneurs",
@@ -5585,6 +5586,7 @@
     "email": "E-mail",
     "phone": "Téléphone",
     "trade": "Spécialité métier",
+    "tradePlaceholder": "Ex. carrelage, électricité",
     "hourlyCost": "Coût horaire pour vous ($)",
     "active": "Actif sur la paie",
     "roles": {

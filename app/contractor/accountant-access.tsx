@@ -170,7 +170,7 @@ export default function AccountantAccessScreen() {
   return (
     <View style={styles.container}>
       <DKScreenHeader title={t('accountantAccess.title', 'Accountant access')} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <Text style={styles.intro}>
           {t(
             'accountantAccess.intro',

@@ -2,6 +2,7 @@
 // PROJECTS — Multi-trade project management for aannemers
 // =============================================================================
 
+import { AddCustomerSheet } from '../../src/components/shared/AddCustomerSheet';
 import { goBack } from '../../src/utils/goBack';
 import { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
@@ -57,6 +58,7 @@ export default function ProjectsScreen() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newCustomerId, setNewCustomerId] = useState('');
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [newBudget, setNewBudget] = useState('');
   const [newRetention, setNewRetention] = useState('');
   const [newTemplate, setNewTemplate] = useState<string | null>(null);
@@ -315,13 +317,24 @@ export default function ProjectsScreen() {
                   right edge. See DKMenu. */}
               <DKMenu
                 accessibilityLabel={t('contractor.projects.pickCustomer', 'Customer')}
-                items={customers.map(c => ({
-                  key: c.id,
-                  label: c.name,
-                  icon: 'person-outline' as const,
-                  selected: newCustomerId === c.id,
-                  onPress: () => setNewCustomerId(newCustomerId === c.id ? '' : c.id),
-                }))}
+                // A project is usually for a NEW client: offer to add one here
+                // rather than send the aannemer out of the form (walk, 2026-09-29).
+                items={[
+                  {
+                    key: '__new__',
+                    label: t('customers.addNew', 'Add new customer'),
+                    icon: 'person-add-outline' as const,
+                    emphasis: true,
+                    onPress: () => setShowAddCustomer(true),
+                  },
+                  ...customers.map(c => ({
+                    key: c.id,
+                    label: c.name,
+                    icon: 'person-outline' as const,
+                    selected: newCustomerId === c.id,
+                    onPress: () => setNewCustomerId(newCustomerId === c.id ? '' : c.id),
+                  })),
+                ]}
                 renderAnchor={(open) => (
                   <Pressable style={styles.pickerAnchor} onPress={open} accessibilityRole="button">
                     <Text style={styles.pickerAnchorText} numberOfLines={1}>
@@ -417,6 +430,12 @@ export default function ProjectsScreen() {
           </Pressable>
           </KeyboardAvoidingView>
         </Pressable>
+        {/* Inside the form's Modal so it stacks on iOS too. */}
+        <AddCustomerSheet
+          visible={showAddCustomer}
+          onClose={() => setShowAddCustomer(false)}
+          onAdded={(id) => setNewCustomerId(id)}
+        />
       </Modal>
     </View>
   );

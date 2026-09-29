@@ -168,7 +168,7 @@ export default function ServiceAgreementsScreen() {
         </Pressable>
       </View>
 
-      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Revenue KPIs */}
         <FadeIn delay={0}>
           <View style={s.kpiRow}>

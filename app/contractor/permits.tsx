@@ -350,7 +350,7 @@ export default function PermitsScreen() {
         </Pressable>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {activeTab === 'overzicht' ? (
           /* Overview Tab */
           <View style={{ gap: 6 }}>

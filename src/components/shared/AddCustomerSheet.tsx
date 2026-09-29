@@ -17,6 +17,7 @@
 // a capped sheet needs a ScrollView, not padding).
 // =============================================================================
 
+import { contactExamples } from '../../utils/contactExamples';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Modal, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -46,18 +47,6 @@ interface Props {
   onSaved?: () => void;
 }
 
-/** Example values per market, shown as placeholders (not as defaults). */
-function examples(country: string) {
-  const pick = <T,>(m: Record<string, T>, fallback: T): T => m[country] ?? fallback;
-  return {
-    email: pick({ US: 'info@example.com', UK: 'info@example.co.uk', DE: 'info@beispiel.de', FR: 'info@exemple.fr', ES: 'info@ejemplo.es', IT: 'info@esempio.it' }, 'info@dejong.nl'),
-    phone: pick({ US: '(555) 123-4567', UK: '+44 20 7946 0958', DE: '+49 30 12345678', FR: '+33 6 12 34 56 78', ES: '+34 600 123 456', IT: '+39 333 1234567' }, '+31 6 12345678'),
-    address: pick({ US: '123 Main St', UK: '10 Downing Street', DE: 'Unter den Linden 1', FR: '1 rue de Rivoli', ES: 'Calle Mayor 1', IT: 'Via Roma 1' }, 'Keizersgracht 100'),
-    postcode: pick({ NL: '1012 AB', DE: '10115', FR: '75001', ES: '28001', IT: '20100', UK: 'SW1A 1AA' }, '78701'),
-    city: pick({ DE: 'Berlin', FR: 'Paris', ES: 'Madrid', IT: 'Milano', UK: 'London', US: 'Austin' }, 'Amsterdam'),
-    vat: pick({ DE: 'DE123456789', FR: 'FR12345678901', ES: 'ESB12345678', IT: 'IT12345678901', UK: 'GB123456789' }, 'NL123456789B01'),
-  };
-}
 
 /**
  * Module-level on purpose. Declared inside the component it would be a NEW
@@ -83,7 +72,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
   const country = businessProfile?.country ?? user?.country ?? 'NL';
   const needsProvince = country === 'ES' || country === 'IT';
   const isItaly = country === 'IT';
-  const ex = examples(country);
+  const ex = contactExamples(country);
   const editing = !!customer;
 
   const [name, setName] = useState('');

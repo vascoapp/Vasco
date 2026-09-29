@@ -372,7 +372,7 @@ export default function VascoScreen() {
         </View>
       </SafeAreaView>
 
-      <ScrollView
+      <ScrollView keyboardShouldPersistTaps="handled"
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}

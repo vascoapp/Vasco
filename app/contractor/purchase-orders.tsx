@@ -369,7 +369,7 @@ export default function PurchaseOrdersScreen() {
               // Name the ORDER, not just the job: the contractor now has a row
               // in the list above and needs to know which one it is.
               t('purchaseOrders.poCreatedDesc', {
-                defaultValue: 'PO created for "{{title}}" with {{count}} materials',
+                defaultValue: '{{title}} created with {{count}} materials',
                 title: order.poNumber,
                 count: mats.length,
               }),
