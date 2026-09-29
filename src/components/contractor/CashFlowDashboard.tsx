@@ -4,6 +4,7 @@
 // Financial overview with forecasting, invoice management, and insights
 // =============================================================================
 
+import { ModalSafeArea } from '../shared/ModalSafeArea';
 import React, { useState } from 'react';
 import {
   View,
@@ -539,6 +540,7 @@ export function CashFlowDashboard() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowInvoiceModal(false)}
       >
+        <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Pressable onPress={() => setShowInvoiceModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
@@ -610,6 +612,7 @@ export function CashFlowDashboard() {
             </ScrollView>
           )}
         </View>
+        </ModalSafeArea>
       </Modal>
     </View>
   );

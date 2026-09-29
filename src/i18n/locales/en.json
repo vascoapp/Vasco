@@ -2191,6 +2191,7 @@
     "milestoneTitlePlaceholder": "e.g. Rough-in complete",
     "milestoneWeek": "Week of the project",
     "milestoneTrade": "Which trade",
+    "noTrade": "No particular trade",
     "milestoneTradeHint": "Used to warn you when the week arrives with nobody of that trade booked.",
     "weekEarlier": "One week earlier",
     "weekLater": "One week later",

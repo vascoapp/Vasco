@@ -2191,6 +2191,7 @@
     "milestoneTitlePlaceholder": "p. ej. Obra bruta terminada",
     "milestoneWeek": "Semana del proyecto",
     "milestoneTrade": "Qué oficio",
+    "noTrade": "Ningún oficio concreto",
     "milestoneTradeHint": "Sirve para avisarte cuando llegue la semana y no haya nadie de ese oficio asignado.",
     "weekEarlier": "Una semana antes",
     "weekLater": "Una semana después",

@@ -5,6 +5,7 @@
 // Every interaction teaches the system and improves future recommendations
 // =============================================================================
 
+import { ModalSafeArea } from '../shared/ModalSafeArea';
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -247,6 +248,7 @@ export function RecommendationFeedbackCard({
         presentationStyle="pageSheet"
         onRequestClose={() => setShowFeedbackModal(false)}
       >
+        <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
         <View style={styles.modalContainer}>
           {/* Modal Header */}
           <View style={styles.modalHeader}>
@@ -362,6 +364,7 @@ export function RecommendationFeedbackCard({
             </View>
           </View>
         </View>
+        </ModalSafeArea>
       </Modal>
     </>
   );

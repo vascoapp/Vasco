@@ -51,4 +51,10 @@ export const DORMANT_CONTROLS = {
   /** Profile → Integrations rows with no connect flow (Xero UK/US, QuickBooks
    *  US): a tap only said "Coming soon". Shown again once a flow exists. */
   integrationsWithoutFlow: false,
+  /** The "Werfacties" tiles on an aannemer's project (dispatch, daily report,
+   *  defects, inspection, incident, safety) push to `sitelead/*`, which is a
+   *  DORMANT route: every tap bounced the aannemer back to Vandaag (aannemer
+   *  walk, 2026-09-29). Shown again when those screens are un-gated for the
+   *  aannemer — a product decision, pending. */
+  projectSiteOps: false,
 } as const;

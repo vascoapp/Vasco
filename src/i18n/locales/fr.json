@@ -2191,6 +2191,7 @@
     "milestoneTitlePlaceholder": "ex. Gros œuvre terminé",
     "milestoneWeek": "Semaine du projet",
     "milestoneTrade": "Quel corps de métier",
+    "noTrade": "Aucun corps de métier précis",
     "milestoneTradeHint": "Nous vous avertissons lorsque la semaine arrive sans personne de ce corps de métier planifié.",
     "weekEarlier": "Une semaine plus tôt",
     "weekLater": "Une semaine plus tard",

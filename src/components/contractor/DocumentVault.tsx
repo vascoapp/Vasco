@@ -4,6 +4,7 @@
 // Secure document management with smart categorization and sharing
 // =============================================================================
 
+import { ModalSafeArea } from '../shared/ModalSafeArea';
 import React, { useState } from 'react';
 import {
   View,
@@ -372,6 +373,7 @@ export function DocumentVault() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowDocumentModal(false)}
       >
+        <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Pressable onPress={() => setShowDocumentModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
@@ -450,6 +452,7 @@ export function DocumentVault() {
             </ScrollView>
           )}
         </View>
+        </ModalSafeArea>
       </Modal>
     </View>
   );

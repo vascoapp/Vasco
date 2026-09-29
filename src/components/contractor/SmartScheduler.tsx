@@ -4,6 +4,7 @@
 // AI-powered scheduling with weather awareness and route optimization
 // =============================================================================
 
+import { ModalSafeArea } from '../shared/ModalSafeArea';
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -369,6 +370,7 @@ export function SmartScheduler() {
       presentationStyle="pageSheet"
       onRequestClose={() => setShowOptimizations(false)}
     >
+      <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <Pressable onPress={() => setShowOptimizations(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
@@ -403,6 +405,7 @@ export function SmartScheduler() {
           ))}
         </ScrollView>
       </View>
+      </ModalSafeArea>
     </Modal>
   );
 
@@ -413,6 +416,7 @@ export function SmartScheduler() {
       presentationStyle="pageSheet"
       onRequestClose={() => setShowJobModal(false)}
     >
+      <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <Pressable onPress={() => setShowJobModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
@@ -506,6 +510,7 @@ export function SmartScheduler() {
           </ScrollView>
         )}
       </View>
+      </ModalSafeArea>
     </Modal>
   );
 

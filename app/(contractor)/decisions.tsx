@@ -6,6 +6,7 @@
 // overflow caused by late decisions.
 // =============================================================================
 
+import { ModalSafeArea } from '../../src/components/shared/ModalSafeArea';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Modal, Alert, Pressable } from 'react-native';
@@ -647,12 +648,14 @@ export default function KeuzeScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowShareModal(false)}
       >
+        <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
         {selectedTracker && (
           <ShareDecisionTracker
             tracker={selectedTracker}
             onClose={() => setShowShareModal(false)}
           />
         )}
+        </ModalSafeArea>
       </Modal>
     </SafeAreaView>
   );

@@ -5,6 +5,7 @@
 // Integrates: complianceService, auditorService, AI-powered insights
 // =============================================================================
 
+import { ModalSafeArea } from '../../src/components/shared/ModalSafeArea';
 import { useState, useMemo } from 'react';
 import {
   Alert,
@@ -762,6 +763,7 @@ export default function CertificatenScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setSelectedItem(null)}
       >
+        <ModalSafeArea backgroundColor={PAGE_BG}>
         {selectedItem && (
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
@@ -840,6 +842,7 @@ export default function CertificatenScreen() {
             </ScrollView>
           </View>
         )}
+        </ModalSafeArea>
       </Modal>
     </View>
   );

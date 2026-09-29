@@ -4,6 +4,7 @@
 // Comprehensive compliance and regulatory management interface
 // =============================================================================
 
+import { ModalSafeArea } from '../shared/ModalSafeArea';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -733,6 +734,7 @@ export function ComplianceCenter() {
       presentationStyle="pageSheet"
       onRequestClose={() => setShowLicenseModal(false)}
     >
+      <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <Pressable onPress={() => setShowLicenseModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
@@ -824,6 +826,7 @@ export function ComplianceCenter() {
           </ScrollView>
         )}
       </View>
+      </ModalSafeArea>
     </Modal>
   );
 
@@ -834,6 +837,7 @@ export function ComplianceCenter() {
       presentationStyle="pageSheet"
       onRequestClose={() => setShowUpdateModal(false)}
     >
+      <ModalSafeArea backgroundColor={SemanticColors.surfaceBackground}>
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <Pressable onPress={() => setShowUpdateModal(false)} accessibilityRole="button" accessibilityLabel={t('common.close', 'Close')}>
@@ -910,6 +914,7 @@ export function ComplianceCenter() {
           </ScrollView>
         )}
       </View>
+      </ModalSafeArea>
     </Modal>
   );
 

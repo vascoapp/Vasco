@@ -38,8 +38,14 @@ describe('activeProjectService', () => {
   });
 });
 
-describe('site-lead generators registered for contractor role', () => {
-  test('crew-performance, defect-cluster, cert-renewal, incident-trend all include contractor', async () => {
+// Was: "all include contractor" — the plan to show aannemers site-lead
+// insights. Since `sitelead/*` was gated (2026-09-24) those insights could only
+// be buttons into a dormant route, so the role was removed (2026-09-29). It
+// comes back together with DORMANT_CONTROLS.projectSiteOps, when the site-lead
+// screens are un-gated for the aannemer. Guard for the general rule:
+// src/__tests__/contractorInsightsRouteToLiveScreens.test.ts.
+describe('site-lead generators stay off the contractor while sitelead/* is dormant', () => {
+  test('crew-performance, defect-cluster, cert-renewal, incident-trend exclude contractor', async () => {
     const mod = require('../../intelligence/generators');
     const reg = mod.GENERATOR_REGISTRY ?? mod.default?.GENERATOR_REGISTRY;
     if (!reg) return;
@@ -47,7 +53,7 @@ describe('site-lead generators registered for contractor role', () => {
     for (const id of ids) {
       const entry = reg.find((r: any) => r.id === id);
       expect(entry).toBeDefined();
-      expect(entry.roles).toContain('contractor');
+      expect(entry.roles).not.toContain('contractor');
     }
   });
 });

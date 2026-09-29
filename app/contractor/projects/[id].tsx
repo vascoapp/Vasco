@@ -2,6 +2,8 @@
 // PROJECT DETAIL — View/manage a multi-trade project
 // =============================================================================
 
+import { DORMANT_CONTROLS } from '../../../src/config/dormant';
+import { ModalSafeArea } from '../../../src/components/shared/ModalSafeArea';
 import { goBack } from '../../../src/utils/goBack';
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, RefreshControl, Modal, TextInput } from 'react-native';
@@ -436,7 +438,10 @@ export default function ProjectDetailScreen() {
         </FadeIn>
         )}
 
-        {/* Wires the existing site-lead drill-downs into the contractor view. */}
+        {/* Wires the site-lead drill-downs into the aannemer's project. Those
+            routes are DORMANT (src/config/dormant.ts), so the tiles are hidden
+            until they are un-gated — each tap bounced to Vandaag (2026-09-29). */}
+        {DORMANT_CONTROLS.projectSiteOps && (
         <FadeIn delay={150}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('project.siteOps', 'Site operations')}</Text>
@@ -468,6 +473,7 @@ export default function ProjectDetailScreen() {
             </View>
           </View>
         </FadeIn>
+        )}
 
         {/* Milestones placeholder */}
         <FadeIn delay={200}>
@@ -773,6 +779,7 @@ function MilestoneModal({ state, allMilestones, onClose, onSave, onDelete }: Mil
 
   return (
     <Modal visible={state !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <ModalSafeArea backgroundColor={PAGE_BG}>
       <View style={styles.modalRoot}>
         <View style={styles.modalHead}>
           <Pressable onPress={onClose} hitSlop={8}>
@@ -822,19 +829,34 @@ function MilestoneModal({ state, allMilestones, onClose, onSave, onDelete }: Mil
               with no trade is deliberately never reported as a staffing gap,
               so leaving it blank is a real choice, not an unfinished form. */}
           <Text style={styles.fieldLabel}>{t('project.milestoneTrade', 'Which trade')}</Text>
-          <View style={styles.tradeWrap}>
-            {MILESTONE_TRADES.map(slug => (
-              <Pressable
-                key={slug}
-                onPress={() => setTrade(trade === slug ? undefined : slug)}
-                style={[styles.tradeChip, trade === slug && styles.tradeChipOn]}
-              >
-                <Text style={[styles.tradeChipText, trade === slug && styles.tradeChipTextOn]}>
-                  {tradeLabel(slug)}
+          {/* One of 14 is a choice, so a menu (CLAUDE.md) — the chip grid gave
+              no sign a tap had registered (aannemer walk, 2026-09-29). */}
+          <DKMenu
+            accessibilityLabel={t('project.milestoneTrade', 'Which trade')}
+            items={[
+              {
+                key: '__none__',
+                label: t('project.noTrade', 'No particular trade'),
+                selected: trade === undefined,
+                emphasis: true,
+                onPress: () => setTrade(undefined),
+              },
+              ...MILESTONE_TRADES.map((slug) => ({
+                key: slug,
+                label: tradeLabel(slug),
+                selected: trade === slug,
+                onPress: () => setTrade(slug),
+              })),
+            ]}
+            renderAnchor={(open) => (
+              <Pressable onPress={open} style={[styles.input, styles.tradeAnchor]} accessibilityRole="button">
+                <Text style={[styles.tradeAnchorText, !trade && { color: SemanticColors.placeholder }]} numberOfLines={1}>
+                  {trade ? tradeLabel(trade) : t('project.noTrade', 'No particular trade')}
                 </Text>
+                <Ionicons name="chevron-down" size={16} color={SemanticColors.textSecondary} />
               </Pressable>
-            ))}
-          </View>
+            )}
+          />
           <Text style={styles.fieldHint}>{t('project.milestoneTradeHint', 'Used to warn you when the week arrives with nobody of that trade booked.')}</Text>
 
           {/* The handover. `weekNumber` alone cannot say this: it is an
@@ -881,6 +903,7 @@ function MilestoneModal({ state, allMilestones, onClose, onSave, onDelete }: Mil
           ) : null}
         </ScrollView>
       </View>
+      </ModalSafeArea>
     </Modal>
   );
 }
@@ -1021,14 +1044,8 @@ const styles = StyleSheet.create({
     backgroundColor: SemanticColors.surfacePrimary, borderWidth: 1, borderColor: SemanticColors.borderDefault,
   },
   weekValue: { flex: 1, textAlign: 'center', fontSize: TYPE.titleSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  tradeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID.xs },
-  tradeChip: {
-    paddingHorizontal: GRID.md, paddingVertical: 8, borderRadius: RADIUS.full,
-    backgroundColor: SemanticColors.surfacePrimary, borderWidth: 1, borderColor: SemanticColors.borderDefault,
-  },
-  tradeChipOn: { backgroundColor: Palette.hermesOrange, borderColor: Palette.hermesOrange },
-  tradeChipText: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary },
-  tradeChipTextOn: { color: '#fff', fontFamily: TYPE.labelFamily },
+  tradeAnchor: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: GRID.sm },
+  tradeAnchorText: { flex: 1, fontSize: TYPE.bodySize, color: SemanticColors.textPrimary },
   deleteBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.sm,
     marginTop: GRID.xl, paddingVertical: 12, borderRadius: RADIUS.md,

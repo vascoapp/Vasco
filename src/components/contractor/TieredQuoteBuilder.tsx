@@ -5,6 +5,7 @@
 // Step 2: Preview tiers + Vasco AI (calibration, pricing, tips) → send
 // =============================================================================
 
+import { ModalSafeArea } from '../shared/ModalSafeArea';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toTrade, type Trade } from '../../config/tradeFeatures';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
@@ -1600,6 +1601,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         </Modal>
 
         <Modal visible={showAIQuote} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowAIQuote(false)}>
+          <ModalSafeArea backgroundColor={PAGE_BG}>
           <AIQuoteFromPhoto
             onCreateQuote={(items) => {
               const mapped = items.filter(i => i.selected).map(item => ({
@@ -1617,6 +1619,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             }}
             onClose={() => setShowAIQuote(false)}
           />
+          </ModalSafeArea>
         </Modal>
 
         {/* Reason-code sheet — fires after edits to AI-prefilled lines */}

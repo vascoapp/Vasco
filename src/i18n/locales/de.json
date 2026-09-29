@@ -2191,6 +2191,7 @@
     "milestoneTitlePlaceholder": "z. B. Rohbau fertig",
     "milestoneWeek": "Projektwoche",
     "milestoneTrade": "Welches Gewerk",
+    "noTrade": "Kein bestimmtes Gewerk",
     "milestoneTradeHint": "Damit warnen wir Sie, wenn die Woche beginnt und niemand aus diesem Gewerk eingeplant ist.",
     "weekEarlier": "Eine Woche früher",
     "weekLater": "Eine Woche später",
