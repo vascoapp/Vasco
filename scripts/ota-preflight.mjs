@@ -626,6 +626,14 @@ const SAME_WORD_OK = new Set([
   // is what is printed on the document they are looking for. Translating them
   // would be actively wrong, not lazy.
   'NIF / CIF', 'Partita IVA',
+  // E-invoice standards per market on the legal screen (2026-09-30): the
+  // registered names of the formats and networks — Factur-X, Facturae, Peppol
+  // BIS, Chorus Pro, FACe — are the same in every language.
+  'Factur-X · Peppol BIS 3.0 · Chorus Pro (B2G).', 'Facturae (B2G, FACe) · Peppol BIS 3.0.',
+  'Peppol BIS 3.0 (NHS via NHS Shared Business Services).',
+  // The same word in French and Dutch ("Contact"), French ("date"), and the
+  // Dutch imperative "Open" before a brand on the connect screens.
+  'Contact', 'date', 'Open Mollie', 'Open Stripe', 'Open Moneybird',
   // Genuinely the same word in French as in English.
   'Province',
   'SIRET', 'Partita IVA', 'Codice Fiscale', 'IBAN', 'BIC / SWIFT', 'RAMS',
