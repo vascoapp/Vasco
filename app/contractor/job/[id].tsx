@@ -1360,7 +1360,7 @@ export default function JobDetailPage() {
           <Pressable
             style={styles.actionSecondary}
             accessibilityRole="button"
-            accessibilityLabel={`${t('jobs.photo', 'Take photo')}${photoCount > 0 ? `, ${photoCount} photos taken` : ''}`}
+            accessibilityLabel={`${t('jobs.photo', 'Take photo')}${photoCount > 0 ? `, ${t('a11y.photosTaken', { count: photoCount })}` : ''}`}
             onPress={() => {
               hapticSuccess();
               router.push(`/contractor/job/${job.id}/photos` as any);

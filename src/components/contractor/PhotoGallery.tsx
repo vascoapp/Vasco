@@ -131,7 +131,7 @@ export function PhotoGallery({ photos, jobTitle, onAddPhoto }: PhotoGalleryProps
               setSelectedPhoto(photo);
             }}
             accessibilityRole="image"
-            accessibilityLabel={`${photo.label || 'progress'} photo from ${photo.date}`}
+            accessibilityLabel={t('a11y.photoFrom', { label: photo.label || t('a11y.progressPhoto', 'Progress'), date: photo.date })}
           >
             <Image source={{ uri: photo.uri }} style={styles.thumb} resizeMode="cover" />
             {/* Date overlay */}

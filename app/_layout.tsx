@@ -1,6 +1,6 @@
 import '../src/i18n/i18n';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Inter_400Regular,
@@ -296,10 +296,16 @@ function RootLayoutNav() {
   }, [segments, isAuthenticated, user?.role]);
 
   // Track if the navigator has mounted — navigation before mount crashes Expo Router
-  const navigationReady = useRef(false);
+  // STATE, not a ref: the auth guard below must RE-RUN when the Stack becomes
+  // ready. As a ref, flipping it re-rendered nothing — when auth finished
+  // hydrating inside these 100 ms (fast with no session), the guard's only
+  // run returned early and never ran again, so a signed-out deep link opened
+  // the screen: an invoice with cached data, in the device language (walk,
+  // 2026-09-30).
+  const [navigationReady, setNavigationReady] = useState(false);
   useEffect(() => {
     // Small delay to ensure Stack is mounted before navigating
-    const timer = setTimeout(() => { navigationReady.current = true; }, 100);
+    const timer = setTimeout(() => { setNavigationReady(true); }, 100);
     return () => clearTimeout(timer);
   }, []);
 
@@ -315,7 +321,7 @@ function RootLayoutNav() {
   const logoutRedirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!navigationReady.current) return;
+    if (!navigationReady) return;
     // R66 round 42: don't make routing decisions while auth is still
     // hydrating — the cold-start getSession() takes 50-200ms and pre-R42
     // we'd flash `/login` then redirect back to `/(contractor)` once the
@@ -410,7 +416,7 @@ function RootLayoutNav() {
     ) {
       router.replace('/(contractor)');
     }
-  }, [isAuthenticated, user, segments, isAuthHydrating]);
+  }, [isAuthenticated, user, segments, isAuthHydrating, navigationReady]);
 
   return (
     // Wraps the WHOLE Stack, so it reaches every screen AND the tab bars

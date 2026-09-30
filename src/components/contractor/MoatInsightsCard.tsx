@@ -111,7 +111,7 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
       style={styles.card}
       onPress={() => router.push('/contractor/market-insights' as any)}
       accessibilityRole="link"
-      accessibilityLabel={`Market insights for ${effectiveTrade} in ${effectiveCountry}. Tap for full breakdown.`}
+      accessibilityLabel={t('a11y.marketInsights', { trade: effectiveTrade, country: effectiveCountry })}
     >
       <View style={styles.headerRow}>
         <DKLabel style={styles.title}>MARKT &amp; PRESTATIE</DKLabel>

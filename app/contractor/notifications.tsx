@@ -118,7 +118,7 @@ export default function NotificationsScreen() {
         style={({ pressed }) => [s.card, !notif.read && s.cardUnread, pressed && { opacity: 0.9 }]}
         onPress={() => handlePress(notif)}
         accessibilityRole="button"
-        accessibilityLabel={`${notif.title}, ${notif.body}${!notif.read ? ', unread' : ''}`}
+        accessibilityLabel={`${notif.title}, ${notif.body}${!notif.read ? `, ${t('notifications.unread', 'unread')}` : ''}`}
       >
         {!notif.read && <View style={[s.cardAccent, { backgroundColor: conf.color }]} />}
         <View style={[s.iconWrap, { backgroundColor: conf.color + '12' }]}>
@@ -178,7 +178,7 @@ export default function NotificationsScreen() {
             style={({ pressed }) => [s.groupedHeader, pressed && { opacity: 0.9 }]}
             onPress={() => toggleGroup(group.type)}
             accessibilityRole="button"
-            accessibilityLabel={`${group.groupTitle}, ${unreadCount} unread. ${group.isExpanded ? 'Collapse' : 'Expand'}`}
+            accessibilityLabel={`${t('a11y.groupUnread', { title: group.groupTitle, count: unreadCount })}. ${group.isExpanded ? t('a11y.tapToCollapse', 'Collapse') : t('a11y.tapToExpand', 'Expand')}`}
           >
             <View style={[s.iconWrap, { backgroundColor: conf.color + '12' }]}>
               <Ionicons name={conf.icon} size={18} color={conf.color} />

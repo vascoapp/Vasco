@@ -223,7 +223,7 @@
    "error": null,
    "texts": [
     "WOENSDAG 30 SEP",
-    "Goedenavond",
+    "Goedemiddag",
     ".",
     "",
     "",
@@ -708,9 +708,9 @@
    "a11y": [
     "Terug",
     "JOUW AI-TEAM",
-    "Vasco Agent, 0 pending actions",
-    "Vasco Auditor, 0 pending actions",
-    "Vasco Analyst, 0 pending actions",
+    "Vasco Agent, 0 acties wachten",
+    "Vasco Auditor, 0 acties wachten",
+    "Vasco Analyst, 0 acties wachten",
     "OVER VASCO"
    ]
   },

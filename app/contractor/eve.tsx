@@ -81,7 +81,7 @@ export default function EveDashboardScreen() {
               onPress={() => setSelectedAgent(isSelected ? null : type)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={`${config.name}, ${count} pending actions`}
+              accessibilityLabel={t('a11y.agentPending', { name: config.name, count })}
             >
               <View style={[styles.agentIcon, { backgroundColor: config.color + '22', borderColor: config.color + '88' }]}>
                 <Ionicons name={config.icon as IconName} size={22} color={config.color} />

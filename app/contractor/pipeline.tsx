@@ -434,7 +434,7 @@ function LeadCard({
             {...panResponder.panHandlers}
             style={[styles.card, isDragging && styles.cardSourceDimmed]}
             accessibilityRole="button"
-            accessibilityLabel={`${lead.customerName}, long-press to drag, tap to edit`}
+            accessibilityLabel={t('a11y.leadCard', { name: lead.customerName })}
             accessibilityActions={[{ name: 'longpress', label: 'Move to another column' }]}
             onAccessibilityAction={(e) => {
               if (e.nativeEvent.actionName === 'longpress') openMenuRef.current();
