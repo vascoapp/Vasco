@@ -942,7 +942,11 @@
     "natureUnset": "Nog opgeven",
     "deliveryAddress": "Afleveradres (indien afwijkend)",
     "deliveryAddressPlaceholder": "Leeg laten als gelijk aan het factuuradres",
-    "sendFailedUnknown": "probeer het later opnieuw"
+    "sendFailedUnknown": "probeer het later opnieuw",
+    "noEmailNothingSent": "Er is niets verstuurd. Voeg het e-mailadres van de klant toe, of deel de pdf zelf.",
+    "reminderSentTitle": "Herinnering verstuurd",
+    "sendFailedNothingChanged": "De e-mail kon niet worden afgeleverd, er is niets gewijzigd: {{error}}",
+    "resendInvoice": "Factuur opnieuw versturen"
   },
   "expenses": {
     "title": "Uitgaven",

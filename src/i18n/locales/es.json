@@ -942,7 +942,11 @@
     "natureUnset": "Por indicar",
     "deliveryAddress": "Dirección de entrega (si difiere)",
     "deliveryAddressPlaceholder": "Dejar vacío si coincide con la de facturación",
-    "sendFailedUnknown": "inténtalo más tarde"
+    "sendFailedUnknown": "inténtalo más tarde",
+    "noEmailNothingSent": "No se ha enviado nada. Añade el correo del cliente o comparte tú mismo el PDF.",
+    "reminderSentTitle": "Recordatorio enviado",
+    "sendFailedNothingChanged": "No se pudo entregar el correo, no se ha cambiado nada: {{error}}",
+    "resendInvoice": "Reenviar factura"
   },
   "expenses": {
     "title": "Gastos",

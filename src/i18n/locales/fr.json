@@ -942,7 +942,11 @@
     "natureUnset": "À préciser",
     "deliveryAddress": "Adresse de livraison (si différente)",
     "deliveryAddressPlaceholder": "Laisser vide si identique à la facturation",
-    "sendFailedUnknown": "réessayez plus tard"
+    "sendFailedUnknown": "réessayez plus tard",
+    "noEmailNothingSent": "Rien n'a été envoyé. Ajoutez l'e-mail du client ou partagez vous-même le PDF.",
+    "reminderSentTitle": "Relance envoyée",
+    "sendFailedNothingChanged": "L'e-mail n'a pas pu être remis, rien n'a été modifié : {{error}}",
+    "resendInvoice": "Renvoyer la facture"
   },
   "expenses": {
     "title": "Dépenses",

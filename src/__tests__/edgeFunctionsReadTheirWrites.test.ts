@@ -77,6 +77,28 @@ describe('send-invoice tells the truth about a status it could not write', () =>
     expect(response).toMatch(/ok: true/);
   });
 
+  // The same function sends REMINDERS for invoices already out: an unfiltered
+  // update re-stamped sent_at on each one (the dunning clock restarted) and
+  // turned a PAID invoice back into `sent` (2026-09-30).
+  // The app sends the DOCUMENT NUMBER as the id; `documents.id` is a uuid, so
+  // `.eq('id', invoiceId)` answered "Invoice not found" for every real send
+  // (R57's dual route, never carried into this function; review 2026-09-30).
+  it('finds the invoice by its number, scoped to the caller', () => {
+    expect(SEND).not.toMatch(/\.eq\('id', invoiceId\)/);
+    expect(SEND).toMatch(/\.eq\(byUuid \? 'id' : 'document_number', invoiceId\)/);
+    // Service role: RLS does not scope it, and a number is unique per user only.
+    const lookup = SEND.slice(SEND.indexOf('const { data: invoice, error: invErr }'), SEND.indexOf('if (invErr'));
+    expect(lookup).toMatch(/\.eq\('user_id', user\.id\)/);
+    // The status write targets the row it found.
+    expect(SEND).toMatch(/\.eq\('id', invoice\.id\)/);
+  });
+
+  it('only a draft becomes sent', () => {
+    const update = block.slice(block.indexOf(".update({ status: 'sent'"), block.indexOf('if (statusError)'));
+    expect(update).toMatch(/\.update\(\{ status: 'sent', sent_at: /);
+    expect(update).toMatch(/\.eq\('status', 'draft'\)/);
+  });
+
   it('reports the split state instead of hiding it', () => {
     expect(block).toMatch(/statusUpdated: !statusError/);
     expect(block).toMatch(/warning: `Email sent, but the invoice status was not recorded/);

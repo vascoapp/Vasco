@@ -27,6 +27,7 @@ import {
   getPaymentMethodLabel,
 } from '../../src/services/customerPaymentPreferenceService';
 import { sendInvoice as sendInvoiceEmail } from '../../src/services/sendInvoiceService';
+import { gateReminderSend } from '../../src/services/reminderGate';
 import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
 import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { computeLateFee, disclosureLineLocalized, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
@@ -47,7 +48,7 @@ import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow 
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { amountPayableNow } from '../../src/domain/documents';
 import { DKMenu } from '../../src/components/shared/DKMenu';
-import { wasShareDismissed } from '../../src/utils/shareOutcome';
+import { wasShareDismissed, askWasSent } from '../../src/utils/shareOutcome';
 import { DecimalInput } from '../../src/components/shared/DecimalInput';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 // `invoice.dueInDays` is a STORED SNAPSHOT written once and never recomputed,
@@ -238,6 +239,9 @@ export default function InvoiceDetailScreen() {
   // invoice), so the effect calls them through a ref assigned there.
   const submitFiredRef = useRef(false);
   const fireSubmitRef = useRef<(() => Promise<void>) | null>(null);
+  // Building the PDF takes seconds; a second tap meanwhile emailed the
+  // customer twice (review, 2026-09-30).
+  const sendingRef = useRef(false);
   useEffect(() => {
     if (submitFiredRef.current) return;
     if (submit !== 'einvoice') return;
@@ -426,7 +430,24 @@ export default function InvoiceDetailScreen() {
     );
   };
 
+  // ONE button, two jobs, and neither is "mark as sent". A DRAFT is emailed and
+  // becomes sent only once the email went out; anything already out gets a
+  // REMINDER and keeps its status. It used to mark every invoice sent first —
+  // on an overdue one that reset sent_at and "due in 14 days" (the overdue
+  // clock restarted, a new payment push, an "invoice sent" notice), on a paid
+  // one it flipped paid back to sent, and with no address or a failed email it
+  // still said "sent" (emulator, 2026-09-30).
   const handleMarkSent = async () => {
+    if (invoice.status === 'paid' || sendingRef.current) return;
+    sendingRef.current = true;
+    try {
+      await sendOrRemind();
+    } finally {
+      sendingRef.current = false;
+    }
+  };
+  const sendOrRemind = async () => {
+    const firstSend = invoice.status === 'draft';
     // Legal gate: invoice must carry country-required fields (KvK/HRB/SIRET,
     // VAT ID, etc.) or it's non-compliant. Block send until profile complete.
     const readiness = checkInvoiceReadiness(businessProfile);
@@ -460,16 +481,27 @@ export default function InvoiceDetailScreen() {
     // `applySavedLanguage` resolves profile-first (#218).
     const language = messageLocale() as 'en' | 'nl' | 'de' | 'fr' | 'es' | 'it';
 
-    // Optimistic local update
-    markInvoiceSent(invoice.id);
-    hapticSuccess();
-
     if (!customerEmail) {
       Alert.alert(
         t('invoices.noEmail', 'No customer email'),
-        t('invoices.noEmailDesc', 'Marked as sent locally. Add the customer email to send the invoice automatically next time.'),
+        t('invoices.noEmailNothingSent', "Nothing was sent. Add the customer's email address, or share the PDF yourself."),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          { text: t('invoices.viewSharePdf', 'View & share PDF'), onPress: () => { void handleViewPdf(); } },
+        ],
       );
       return;
+    }
+    // A reminder is a reminder wherever it starts: already paid is refused
+    // here as on the Facturen list (R287).
+    // The customer's tag (VIP / inactive confirmations) the same way Facturen
+    // scores it. The count stays 0: no reminder sent from here is recorded.
+    if (!firstSend) {
+      const { scoreCustomer } = require('../../src/services/customerTaggingService');
+      const tag = invoiceCustomer
+        ? scoreCustomer({ customer: invoiceCustomer, jobs: jobs as any, invoices: invoices as any }).tag
+        : undefined;
+      if (!(await gateReminderSend(invoice, 0, tag))) return;
     }
 
     const paymentUrl = lastMolliePayment?.invoiceId === invoice.id ? lastMolliePayment.checkoutUrl : undefined;
@@ -482,7 +514,11 @@ export default function InvoiceDetailScreen() {
     const daysOverdue = Math.abs(Math.min(0, daysUntilDue(invoice) ?? 0));
     let subject: string | undefined;
     let bodyOverride: string | undefined;
-    if (daysOverdue >= 3) {
+    // Only for an invoice that went OUT. A draft created weeks ago carries a
+    // due date already past, and its first send went as a FINAL notice with
+    // late-fee claims on a document the customer had never seen (review,
+    // 2026-09-30).
+    if (!firstSend && daysOverdue >= 3) {
       // Key the dunning cadence on a STABLE identity, so the same customer
       // does not get two independent escalation ladders depending on which
       // shape their invoices happen to carry.
@@ -565,6 +601,11 @@ export default function InvoiceDetailScreen() {
       bodyOverride,
       pdfBase64,
     });
+    // Status follows the artefact: only a first send that REACHED the customer
+    // makes the invoice sent. The customer has it even when the server could
+    // not record that, so the local status is true either way.
+    if (result.ok && firstSend) markInvoiceSent(invoice.id, { delivered: true });
+    if (result.ok) hapticSuccess();
     if (result.ok && result.statusUpdated === false) {
       // The customer HAS the invoice; only the server-side status write was
       // refused. Saying "sent" plainly would invite a second send to the same
@@ -576,7 +617,8 @@ export default function InvoiceDetailScreen() {
           email: customerEmail,
         }),
       );
-    } else if (result.ok) {
+    } else if (result.ok && (firstSend || !bodyOverride)) {
+      // Only a dunning text is a reminder; before it, the invoice went again.
       Alert.alert(
         t('invoices.sentTitle', 'Invoice sent'),
         t('invoices.sentDesc', {
@@ -584,11 +626,16 @@ export default function InvoiceDetailScreen() {
           email: customerEmail,
         }),
       );
+    } else if (result.ok) {
+      Alert.alert(
+        t('invoices.reminderSentTitle', 'Reminder sent'),
+        t('invoices.reminderSentTo', { defaultValue: 'Reminder sent to {{name}}.', name: invoiceCustomerName || customerEmail }),
+      );
     } else {
       Alert.alert(
         t('invoices.sendFailedTitle', 'Email not sent'),
-        t('invoices.sendFailedDesc', {
-          defaultValue: 'Marked as sent locally, but the email could not be delivered: {{error}}',
+        t('invoices.sendFailedNothingChanged', {
+          defaultValue: 'The email could not be delivered, so nothing has changed: {{error}}',
           error: friendlyError(result.error, t('invoices.sendFailedUnknown', 'please try again later')),
         }),
       );
@@ -632,6 +679,12 @@ export default function InvoiceDetailScreen() {
           frMentions: extras.frMentions,
         },
       );
+      // The contractor's own send — WhatsApp, mail, print — is the only way
+      // an invoice without a customer email goes out, and nothing can see it.
+      // Without this, such an invoice stayed a draft forever: not outstanding,
+      // never overdue, never reminded (review, 2026-09-30). Ask, once, for a
+      // draft; askWasSent waits until Vasco is in front again (#377).
+      if (invoice.status === 'draft' && (await askWasSent())) markInvoiceSent(invoice.id, { delivered: true });
     }
   };
 
@@ -1354,16 +1407,23 @@ export default function InvoiceDetailScreen() {
               border
             />
           )}
-          {/* R300: was mislabeled "Send reminder" but onPress fires
-              handleMarkSent (marks the invoice as sent, no reminder).
-              Real reminder send lives on the facturen list per-row button
-              with R287's gateReminderSend gate. */}
-          <ActionRow
-            icon="send-outline"
-            label={t('invoices.markAsSent', 'Mark as sent')}
-            onPress={handleMarkSent}
-            border
-          />
+          {/* It EMAILS the customer — so it says so: "Send invoice" on a
+              draft, "Send reminder" once it is out, nothing once paid.
+              "Mark as sent" described neither (2026-09-30). */}
+          {invoice.status !== 'paid' && (
+            <ActionRow
+              icon="send-outline"
+              label={invoice.status === 'draft'
+                ? t('invoices.sendInvoice', 'Send invoice')
+                // The same threshold the handler uses to pick the dunning
+                // text: before it, the customer gets the invoice again.
+                : (dueIn ?? 0) <= -3
+                  ? t('invoices.sendReminder', 'Send reminder')
+                  : t('invoices.resendInvoice', 'Send invoice again')}
+              onPress={handleMarkSent}
+              border
+            />
+          )}
           {invoice.status !== 'paid' && (
             <ActionRow
               icon="checkmark-circle-outline"

@@ -130,12 +130,22 @@ Deno.serve(async (req) => {
     // Canonical store is `documents` (doc_type='invoice') — there is no
     // `invoices` table, so this fn previously 404'd on every send. Only
     // id/user_id/document_number are actually used below.
+    //
+    // The app's invoice id IS the document number ("RE-2026-0087") — the
+    // mapper shows `document_number ?? id` — and `documents.id` is a uuid, so
+    // `.eq('id', invoiceId)` failed the cast and every real send returned
+    // "Invoice not found" (review, 2026-09-30). The client fixed this in R57
+    // (`documentMatchColumn`); this function never had. A number is unique
+    // per contractor only, and this client is the SERVICE role — RLS does not
+    // scope it — so that route is pinned to the caller.
+    const byUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(invoiceId);
     const { data: invoice, error: invErr } = await admin
       .from('documents')
       .select('id, document_number, user_id')
-      .eq('id', invoiceId)
+      .eq(byUuid ? 'id' : 'document_number', invoiceId)
       .eq('doc_type', 'invoice')
-      .single();
+      .eq('user_id', user.id)
+      .maybeSingle();
     if (invErr || !invoice) {
       return new Response(JSON.stringify({ ok: false, error: 'Invoice not found' }), {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -217,11 +227,18 @@ Deno.serve(async (req) => {
     // resolves with `{ error }` and nothing read it: the invoice stayed a draft
     // in the database, the dunning clock never started, and the contractor was
     // told it went out.
+    //
+    // Only a DRAFT becomes sent. This function also sends REMINDERS for
+    // invoices already out, and the unfiltered update re-stamped `sent_at`
+    // (what DSO, ageing and the dunning clock count from) on every one — and
+    // turned a PAID invoice back into `sent` (2026-09-30). Zero rows matched is
+    // the right outcome for those, not an error.
     const { error: statusError } = await admin
       .from('documents')
       .update({ status: 'sent', sent_at: new Date().toISOString() })
-      .eq('id', invoiceId)
-      .eq('doc_type', 'invoice');
+      .eq('id', invoice.id)
+      .eq('doc_type', 'invoice')
+      .eq('status', 'draft');
     if (statusError) {
       console.error(`send-invoice: email delivered but status not recorded for ${invoiceId}:`, statusError.message);
     }

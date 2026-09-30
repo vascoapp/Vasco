@@ -64,7 +64,11 @@ describe('offline queue payload parity', () => {
     // Named explicitly because these two are the reason the check exists, and a
     // regex refactor that stopped matching them would otherwise pass silently.
     for (const [fn, col] of [['markInvoiceSent', 'sent_at'], ['markInvoicePaid', 'paid_at']]) {
-      const body = SRC.slice(SRC.indexOf(`${fn}: (id) =>`), SRC.indexOf(`${fn}: (id) =>`) + 2400);
+      // The IMPLEMENTATION's arrow, whatever its parameters (markInvoiceSent
+      // gained an options argument) — not the type declaration above it.
+      const at = SRC.search(new RegExp(`${fn}: \\(id(, opts)?\\) =>`));
+      expect(at).toBeGreaterThan(-1);
+      const body = SRC.slice(at, at + 2400);
       expect(body).toContain('persistOrQueue');
       const queued = body.slice(body.indexOf('payload:'), body.indexOf('payload:') + 120);
       expect(`${fn} queued payload: ${queued}`).toContain(col);

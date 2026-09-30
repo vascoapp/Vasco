@@ -204,7 +204,9 @@ type AppState = {
   addExtractedDoc: (doc: ExtractedDocument) => void;
   applySuggestedPrice: (quoteId: string, description: string, unitPrice: number) => void;
   markQuoteSent: (id: string) => void;
-  markInvoiceSent: (id: string) => void;
+  /** `delivered`: the customer already HAS it (emailed, or shared by the
+   *  contractor) — no customer notice is queued to send it again. */
+  markInvoiceSent: (id: string, opts?: { delivered?: boolean }) => void;
   markInvoicePaid: (id: string) => void;
   addQuote: (customer: string, job: string, items: QuoteLineItem[]) => Promise<string>;
   addInvoice: (sourceQuoteId: string) => Promise<string>;
@@ -2323,7 +2325,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ).catch((err) => logWarn('AppState', `markEInvoiceSubmitted persist failed: ${err}`));
         }
       },
-      markInvoiceSent: (id) => {
+      markInvoiceSent: (id, opts) => {
         const invoice = invoices.find((inv) => inv.id === id);
         // One timestamp, used by BOTH the online call and the queued payload.
         // Two `new Date()` calls would drift, and the queued one would be the
@@ -2331,7 +2333,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const sentAt = new Date().toISOString();
         setInvoices((prev) =>
           prev.map((inv) =>
-            inv.id === id ? { ...inv, status: 'sent', dueInDays: 14 } : inv
+            // sentAt too: the timeline's "sent to customer" date was blank
+            // until the next refresh (review, 2026-09-30).
+            inv.id === id ? { ...inv, status: 'sent', dueInDays: 14, sentAt } : inv
           )
         );
         if (isSupabaseConfigured) {
@@ -2356,7 +2360,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // R25: queue customer-facing invoice_sent notice (closes R3 deferral —
         // markInvoiceSent previously fired only the contractor-side push
         // reminder, no draft for the customer). Approve → opens Share sheet.
-        if (invoice) {
+        // Not when the customer already has it: after the email, or the
+        // contractor's own share, this queued the same invoice a second time.
+        if (invoice && !opts?.delivered) {
           const customerRow = findDocumentCustomer(customers, invoice);
           import('../services/aiActionQueueService').then(({ queueInvoiceSentNotice }) =>
             queueInvoiceSentNotice({

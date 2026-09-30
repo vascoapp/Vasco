@@ -62,6 +62,11 @@ module.exports = {
     // posture, which is correct. The production half of the switch (AuthContext
     // handover) is proved in src/context/__tests__/AuthContext.test.tsx.
     '<rootDir>/__screenwalk__/accountSwitchKeepsNoData.test.tsx',
+    // Seed local invoices (RE-R-*, RE-D-*) — replaced by the empty server
+    // truth in this posture before the flow starts; proved in `walk`.
+    '<rootDir>/__screenwalk__/flowInvoiceReminderKeepsStatus.test.tsx',
+    '<rootDir>/__screenwalk__/flowInvoiceSendMarksOnlyWhatWentOut.test.tsx',
+    '<rootDir>/__screenwalk__/flowInvoicePdfShareAsksBeforeSent.test.tsx',
     // Local-fixture flows (see above).
     '<rootDir>/__screenwalk__/customerDetailDocuments.test.tsx',
     '<rootDir>/__screenwalk__/flowCustomerEdit.test.tsx',
