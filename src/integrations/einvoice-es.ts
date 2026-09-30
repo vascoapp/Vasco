@@ -1,3 +1,4 @@
+import { round2 } from '../domain/business';
 // =============================================================================
 // E-INVOICE SERVICE — Facturae 3.2.2 + VeriFactu (Spanish standard)
 // =============================================================================
@@ -292,7 +293,6 @@ export function generateVerifactuQR(data: FacturaeInvoice): string {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * The taxable base and the tax PER RATE, from the lines as PRINTED.

@@ -30,6 +30,7 @@
 // =============================================================================
 
 import type { CISPayment, CISMonthlyReturn } from '../types/uk-compliance';
+import { round2 } from '../domain/business';
 
 export type CisSeverity = 'fatal' | 'warning';
 
@@ -62,7 +63,6 @@ function finite(n: unknown): n is number {
   return typeof n === 'number' && Number.isFinite(n);
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 // ---------------------------------------------------------------------------
 // Payment-level

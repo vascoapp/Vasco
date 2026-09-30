@@ -75,7 +75,8 @@ export function invoiceBuyerName(invoice: Invoice, customers: ReadonlyArray<Cust
 function totals(inp: InvoiceDocInputs) {
   const subtotal = inp.lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0);
   const b = documentVatBreakdown(subtotal, inp.lines, Math.round(inp.effectiveRate * 100));
-  return { subtotal, vat: b.vat, gross: b.gross };
+  // b.net, not the raw sum: the lines in cents, as printed and as the XML states (#360).
+  return { subtotal: b.net, vat: b.vat, gross: b.gross };
 }
 
 const currencyFor = (country: string) => (country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR');

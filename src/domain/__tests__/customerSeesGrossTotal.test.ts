@@ -49,7 +49,14 @@ describe('the customer is shown the gross total', () => {
     expect(fn).toMatch(/total:\s*grossTotal/);
     expect(fn).toMatch(/quote_amount:\s*grossTotal/);
     // ...and the breakdown, so the page can show WHY the total is what it is.
-    expect(fn).toMatch(/subtotal:\s*netTotal/);
+    // The net is the SHARED rule's (lines in cents, #360) — the one the app's
+    // suite proves equal to documentVatBreakdown (portalTotalsMatchTheApp).
+    expect(fn).toMatch(/subtotal:\s*totals\.net/);
+    expect(fn).toMatch(/const totals = quoteTotals\(/);
+    // A Kleinunternehmer / KOR contractor's customer is shown NO VAT — the
+    // scheme is read and zeroes the rate, as isSmallBusinessExempt does.
+    expect(fn).toMatch(/select\('[^']*\bvat_scheme\b/);
+    expect(fn).toMatch(/const standardRate = exempt \? 0 :/);
     expect(fn).toMatch(/vatAmount/);
   });
 

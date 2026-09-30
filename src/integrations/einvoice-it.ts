@@ -1,3 +1,4 @@
+import { round2 } from '../domain/business';
 // =============================================================================
 // E-INVOICE SERVICE — FatturaPA (Italian SDI format)
 // =============================================================================
@@ -380,7 +381,6 @@ ${vatSummary}
 // Helpers
 // ---------------------------------------------------------------------------
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * Imponibile + imposta from the lines AS PRINTED. `ImportoTotaleDocumento` used

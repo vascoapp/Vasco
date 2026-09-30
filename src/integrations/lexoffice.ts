@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
+import { documentVatBreakdown } from '../domain/business';
 
 const STORAGE_KEY = 'vasco_lexoffice';
 const LEGACY_KEY = '@vasco_lexoffice';
@@ -164,20 +165,20 @@ export function vascoToLexofficeInvoice(invoice: {
         taxRatePercentage: li.vatRate,
       },
     })),
-    // Three sums of the same lines, each rounded independently by the
-    // receiver, do not have to agree: ONE line of € 1,50 at 19 % gives
-    // net 1,50 + tax 0,28 = 1,78 while the gross sum rounds to 1,79. The tax
-    // is DERIVED from the two rounded figures instead, so net + tax === gross
-    // by construction — the same rule `documentVatBreakdown` follows and the
-    // one #345 imposed on the three XML exporters (#354).
+    // THE document rule (`documentVatBreakdown`): lines in cents, VAT per rate
+    // on their sum (EN 16931, #360). This had its own three sums — net once,
+    // gross summed per line unrounded — and claimed to follow that rule while
+    // landing a cent away from the PDF and the XRechnung (review 2026-09-30).
+    // Fallback = the HIGHEST line rate: a 0 fallback means "no VAT at all" to
+    // the breakdown, so a leading 0 % line must not be the one that decides.
     totalPrice: (() => {
-      const round2 = (n: number) => Math.round(n * 100) / 100;
-      const net = round2(invoice.lineItems.reduce((s, li) => s + li.unitPrice * li.quantity, 0));
-      const gross = round2(invoice.lineItems.reduce((s, li) => s + li.unitPrice * li.quantity * (1 + li.vatRate / 100), 0));
+      const lines = invoice.lineItems.map((li) => ({ quantity: li.quantity, unitPrice: li.unitPrice, vatRate: li.vatRate }));
+      const raw = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+      const b = documentVatBreakdown(raw, lines, Math.max(0, ...lines.map((l) => l.vatRate)));
       return {
-        totalNetAmount: net,
-        totalGrossAmount: gross,
-        totalTaxAmount: round2(gross - net),
+        totalNetAmount: b.net,
+        totalGrossAmount: b.gross,
+        totalTaxAmount: b.vat,
         currency: 'EUR' as const,
       };
     })(),

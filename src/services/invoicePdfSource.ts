@@ -15,7 +15,7 @@
 // =============================================================================
 
 import { documentNumber } from '../domain/documents';
-import { documentVatBreakdown } from '../domain/business';
+import { documentVatBreakdown, round2 } from '../domain/business';
 import { parseCalendarDay } from '../utils/dateKey';
 import type { AutoInvoice, InvoiceLineItem } from './invoiceAutomationService';
 
@@ -64,7 +64,6 @@ export interface PdfSourceCustomer {
   city?: string | null;
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export function pdfInvoiceFromRecord(args: {
   invoice: PdfSourceInvoice;

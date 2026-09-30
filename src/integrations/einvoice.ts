@@ -1,3 +1,4 @@
+import { round2 } from '../domain/business';
 // =============================================================================
 // E-INVOICE SERVICE — XRechnung + ZUGFeRD + Peppol
 // =============================================================================
@@ -140,7 +141,6 @@ export const UNIT_CODES: Record<string, string> = {
  * src/integrations/__tests__/xrechnungValidity.test.ts.
  */
 /** Cents. Line and header amounts must agree to the cent (BR-CO-10). */
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * Tax category for a rate. `S` is "standard rated" and a receiver rejects it at

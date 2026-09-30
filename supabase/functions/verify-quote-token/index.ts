@@ -12,6 +12,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { quoteTotals } from '../_shared/documentTotals.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -160,7 +161,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await admin
       .from('business_settings')
-      .select('business_name, phone, email, country')
+      .select('business_name, phone, email, country, vat_scheme')
       .eq('user_id', quote.user_id)
       .maybeSingle();
 
@@ -183,7 +184,11 @@ Deno.serve(async (req) => {
     // An unknown country adds NO tax rather than the Dutch rate: showing a
     // customer a total inflated by a tax nobody charged is the worse failure
     // (#339). Mirrors `getVATRate` in src/constants/taxRates.ts.
-    const standardRate = VAT_RATES[profile?.country ?? ''] ?? 0;
+    // A Kleinunternehmer (§19 UStG) or KOR seller charges no VAT: rate 0, as
+    // the app's getEffectiveVatRate / isSmallBusinessExempt.
+    const exempt = profile?.vat_scheme === 'small_business_NL_KOR'
+      || profile?.vat_scheme === 'small_business_DE_kleinunternehmer';
+    const standardRate = exempt ? 0 : (VAT_RATES[profile?.country ?? ''] ?? 0);
     const netTotal = Number(quote.total_amount) || 0;
 
     // The quote's OWN agreed rates outrank the country standard — mirrors
@@ -192,28 +197,18 @@ Deno.serve(async (req) => {
     // page would show 20% TVA on a renovation quoted at the 10% reduced rate,
     // and then be invoiced 10%: the page and the invoice disagreeing again, one
     // step further out than the bug this whole block was added to fix.
-    // Kept in step by hand — an edge function cannot import from `src/`.
+    // An edge function cannot import from `src/`: the rule lives in
+    // _shared/documentTotals.ts, which the app's tests import instead.
     const rated = (lines ?? []).filter(
       (l: { vat_rate?: number | null }) => l.vat_rate !== null && l.vat_rate !== undefined && Number.isFinite(Number(l.vat_rate)),
     );
-    const lineNet = rated.reduce(
-      (sum: number, l: { quantity?: number | null; unit_price?: number | null }) =>
-        sum + (Number(l.quantity) || 0) * (Number(l.unit_price) || 0), 0);
-    let vatAmount: number;
-    if (rated.length > 0 && rated.length === (lines ?? []).length && Math.abs(lineNet - netTotal) <= 0.01) {
-      // Every line rated and reconciling — sum them, so a MIXED-rate quote
-      // (labour at one rate, materials at another) is exact rather than blended.
-      vatAmount = Math.round(rated.reduce(
-        (sum: number, l: { quantity?: number | null; unit_price?: number | null; vat_rate?: number | null }) =>
-          sum + (Number(l.quantity) || 0) * (Number(l.unit_price) || 0) * (Number(l.vat_rate) / 100), 0) * 100) / 100;
-    } else {
-      const rates = Array.from(new Set(rated.map((l: { vat_rate?: number | null }) => Number(l.vat_rate))));
-      const rate = rated.length > 0 && rated.length === (lines ?? []).length && rates.length === 1
-        ? rates[0] / 100
-        : standardRate;
-      vatAmount = Math.round(netTotal * rate * 100) / 100;
-    }
-    const grossTotal = Math.round((netTotal + vatAmount) * 100) / 100;
+    // The app's own rule (lines in cents, VAT per rate on their sum — #360),
+    // from ONE module the app's test suite also imports: the hand-kept copy
+    // that stood here drifted, and the customer accepted a cent less than the
+    // invoice they were sent (review, 2026-09-30).
+    const totals = quoteTotals({ netTotal, lines, standardRate });
+    const vatAmount = totals.vat;
+    const grossTotal = totals.gross;
     // The rate is for the LABEL only ("USt. (19%)"). A mixed-rate quote has no
     // single rate, so it is reported as null and the page omits the percentage
     // rather than printing an averaged one — "TVA (13,8%)" is a number that
@@ -286,7 +281,7 @@ Deno.serve(async (req) => {
       quote: {
         id: quote.id,
         reference: quote.document_number,
-        subtotal: netTotal,
+        subtotal: totals.net,
         vatRate,
         vatAmount,
         total: grossTotal,

@@ -7,6 +7,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { round2 } from '../domain/business';
 
 const STORAGE_KEY = '@vasco_datev';
 const API_BASE = 'https://api.datev.de/platform';
@@ -22,7 +23,6 @@ export interface DATEVConfig {
   expiresAt: number;
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export interface DATEVBookingRecord {
   belegdatum: string;        // Document date (DDMM)

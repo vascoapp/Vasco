@@ -150,7 +150,9 @@ export default function QuoteDetailScreen() {
     // receives, while the screen beside it read € 8.228,00 — and `markQuoteSent`
     // then recorded it as sent (#354).
     const items = displayLineItems;
-    const sub = subtotal;
+    // The subtotal the lines print (each in cents) — the same net the VAT
+    // rows and the Total are built on, and the XRechnung states (#360).
+    const sub = vatBreakdown.net;
     const bd = vatBreakdown;
     const vpct = vatRatePct;
     const vamt = vatAmount;
@@ -469,7 +471,7 @@ export default function QuoteDetailScreen() {
           <View style={styles.totalSection}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>{t('quotes.subtotal', 'Subtotal')}</Text>
-              <Text style={styles.totalValue}>{formatCurrency(subtotal)}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(vatBreakdown.net)}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>

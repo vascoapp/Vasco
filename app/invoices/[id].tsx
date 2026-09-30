@@ -1222,7 +1222,7 @@ export default function InvoiceDetailScreen() {
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>{t('invoices.subtotal', 'Subtotal')}</Text>
-            <Text style={styles.totalValue}>{formatCurrency(subtotal, country)}</Text>
+            <Text style={styles.totalValue}>{formatCurrency(vatBreakdown.net, country)}</Text>
           </View>
           <View style={styles.totalRow}>
             {/* The "(21%)" was literal, next to a figure computed at the

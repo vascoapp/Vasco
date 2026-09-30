@@ -8,7 +8,7 @@
 import { localDateKey } from '../utils/dateKey';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { getCurrentCountry } from '../lib/currentUser';
-import { getStandardVatRate, type BusinessProfile } from '../domain/business';
+import { getStandardVatRate, type BusinessProfile, round2 } from '../domain/business';
 
 // ============================================
 // TYPES
@@ -813,7 +813,6 @@ export const supplierIntegrationService = new SupplierIntegrationService();
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
 /** Money is cents. */
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export function useSuppliers(filter?: { status?: Supplier['integrationStatus']; category?: string }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>(() =>

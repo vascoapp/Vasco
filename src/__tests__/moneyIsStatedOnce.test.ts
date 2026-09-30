@@ -46,7 +46,11 @@ describe('the quote PDF prints what the screen shows', () => {
     // A quote with no STORED lines still has an amount; the screen synthesises
     // one line for it and the PDF used to print an empty table and € 0,00.
     expect(body).toMatch(/const items = displayLineItems;/);
-    expect(body).toMatch(/const sub = subtotal;/);
+    // The subtotal is the breakdown's net — the lines in cents, the base of the
+    // VAT rows and of the XRechnung (#360) — and the screen prints the same one.
+    expect(body).toMatch(/const sub = vatBreakdown\.net;/);
+    expect(SRC).toMatch(/formatCurrency\(vatBreakdown\.net\)/);
+    expect(SRC).toMatch(/const vatBreakdown = documentVatBreakdown\(subtotal, displayLineItems,/);
     expect(body).not.toMatch(/lineItems\[quote\.id\]/);
   });
 });

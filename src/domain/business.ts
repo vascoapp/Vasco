@@ -335,10 +335,15 @@ export function vatRateGroups(
   if (fallbackVatRatePercent === 0) return [];
   const all = lines ?? [];
   const rated = all.filter((l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate));
-  const wholeDocument = (ratePct: number): VatRateGroup[] =>
-    ratePct === 0
-      ? []
-      : [{ ratePct, net: round2(netAmount), vat: round2(netAmount * (ratePct / 100)) }];
+  // The same base `documentNet` prints: the lines in cents when they are the
+  // amount. VAT on the unrounded amount here, beside a rounded net there, made
+  // a document with unrated lines print a VAT row a cent off its own Total
+  // (review, 2026-09-30).
+  const wholeDocument = (ratePct: number): VatRateGroup[] => {
+    if (ratePct === 0) return [];
+    const base = documentNet(netAmount, lines);
+    return [{ ratePct, net: base, vat: round2(base * (ratePct / 100)) }];
+  };
 
   // No usable line rates: the profile's rate on the whole amount.
   if (rated.length === 0 || rated.length !== all.length) return wholeDocument(fallbackVatRatePercent);
@@ -352,15 +357,37 @@ export function vatRateGroups(
     return wholeDocument(rates.length === 1 ? rates[0] : fallbackVatRatePercent);
   }
 
+  // EN 16931: a line's net IS its amount in cents (BT-131), the rate's base
+  // is the sum of those (BT-116), and its VAT is that base × rate (BT-117).
+  // The e-invoice has always done this; the PDF, the screen and the stored
+  // total took VAT on the UNROUNDED sum, so one invoice could state VAT
+  // 48,62 on paper and 48,63 in its XRechnung (#360, closed 2026-09-30).
   return rates
     .map((ratePct) => {
-      const net = rated
+      const net = round2(rated
         .filter((l) => l.vatRate === ratePct)
-        .reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-      return { ratePct, net: round2(net), vat: round2(net * (ratePct / 100)) };
+        .reduce((s, l) => s + round2(l.quantity * l.unitPrice), 0));
+      return { ratePct, net, vat: round2(net * (ratePct / 100)) };
     })
     .filter((g) => g.net !== 0 || g.vat !== 0)
     .sort((a, b) => b.ratePct - a.ratePct);
+}
+
+/**
+ * The document's net as the lines print it: each line in cents, summed — when
+ * the lines ARE the amount. Otherwise (a discount, a hand-edited total, no
+ * lines) the amount itself. Rounding the unrounded sum instead let two lines
+ * of € 0,125 print € 0,13 + € 0,13 above a subtotal of € 0,25.
+ */
+export function documentNet(
+  netAmount: number,
+  lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
+): number {
+  const all = lines ?? [];
+  if (all.length === 0) return round2(netAmount);
+  const raw = all.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+  if (Math.abs(raw - netAmount) > 0.01) return round2(netAmount);
+  return round2(all.reduce((s, l) => s + round2(l.quantity * l.unitPrice), 0));
 }
 
 export function documentVatBreakdown(
@@ -368,7 +395,7 @@ export function documentVatBreakdown(
   lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
   fallbackVatRatePercent: number,
 ): { net: number; vat: number; gross: number; ratePct: number | null; groups: VatRateGroup[] } {
-  const net = round2(netAmount);
+  const net = documentNet(netAmount, lines);
   // ONE computation feeds all three figures AND the per-rate rows a document
   // prints, so `net + Σ rows === gross` by construction (#354).
   const groups = vatRateGroups(netAmount, lines, fallbackVatRatePercent);
@@ -392,9 +419,10 @@ export function grossFromDocumentLines(
   lines: Array<{ quantity: number; unitPrice: number; vatRate?: number }> | undefined,
   fallbackVatRatePercent: number,
 ): number {
-  if (fallbackVatRatePercent === 0) return round2(netAmount);
+  const net = documentNet(netAmount, lines);
+  if (fallbackVatRatePercent === 0) return net;
   const groups = vatRateGroups(netAmount, lines, fallbackVatRatePercent);
-  return round2(round2(netAmount) + groups.reduce((s, g) => s + g.vat, 0));
+  return round2(net + groups.reduce((s, g) => s + g.vat, 0));
 }
 
 export function grossFromNet(netAmount: number, vatRatePercent: number): number {

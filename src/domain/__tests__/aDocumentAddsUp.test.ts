@@ -14,6 +14,15 @@
 //    `0.28499999999999998`, so € 1,50 at 19 % rounded to € 0,28 where the
 //    exact 0,285 rounds up to € 0,29.
 import { documentVatBreakdown, grossFromDocumentLines, vatRateGroups, round2 } from '../business';
+import { generateXRechnungXML, type EInvoiceData } from '../../integrations/einvoice';
+
+const XML_BASE: Omit<EInvoiceData, 'lineItems' | 'totalNet' | 'totalVat' | 'totalGross'> = {
+  sellerName: 'Elektro Meyer GmbH', sellerAddress: 'Hauptstraße 14', sellerVatId: 'DE123456789',
+  sellerCity: 'Berlin', sellerPostalCode: '10115', sellerContactName: 'Jörg Meyer',
+  sellerPhone: '+49 30 1234567', sellerEmail: 'buchhaltung@elektro-meyer.de', sellerVatExempt: false,
+  buyerName: 'Bäckerei Schmidt', buyerAddress: 'Marktplatz 3', buyerCity: 'Berlin', buyerPostalCode: '10178',
+  invoiceNumber: 'R-2026-0042', invoiceDate: '2026-08-19', dueDate: '2026-09-18', currency: 'EUR',
+} as any;
 
 const line = (quantity: number, unitPrice: number, vatRate?: number) => ({ quantity, unitPrice, vatRate });
 
@@ -170,15 +179,13 @@ describe('the invariant holds for documents nobody wrote a case for', () => {
     expect(failures.slice(0, 3)).toEqual([]);
   });
 
-  // ⚠️ The contract #354 established is `net + Σ rows === gross`, and VAT is
-  // taken on the UNROUNDED line sum. So a printed row's VAT is not always its
-  // printed (rounded) net times its rate — e.g. a 21 % group whose lines sum to
-  // 231,5476 prints net 231,55 and VAT 48,62, while 231,55 × 21 % is 48,63.
-  // Both conventions are defensible (VAT on the true base vs VAT on the base of
-  // record) and the difference is at most a cent, but only one of them lets a
-  // reader re-derive the row. That is an OPEN DECISION, not a defect — see
-  // learnings #360 — so this asserts the contract as it actually stands.
-  it('every rate group is its own UNROUNDED net times its own rate, to the cent', () => {
+  // #360, closed 2026-09-30: VAT used to be taken on the UNROUNDED line sum, so
+  // a 21 % group summing to 231,5476 printed net 231,55 / VAT 48,62 while its
+  // XRechnung — which follows EN 16931: line nets in cents (BT-131), their sum
+  // (BT-116), × rate (BT-117) — stated 48,63. Paper and XML disagreed by a
+  // cent on one invoice. The standard decides; every row is now re-derivable
+  // from what it prints.
+  it('every rate group is its printed net times its rate, to the cent', () => {
     const rand = rng(31337);
     const failures: unknown[] = [];
     for (let i = 0; i < 3000; i++) {
@@ -190,17 +197,77 @@ describe('the invariant holds for documents nobody wrote a case for', () => {
       }));
       const netAmount = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
       for (const g of vatRateGroups(netAmount, lines, fallback)) {
-        const unrounded = lines
-          .filter((l) => l.vatRate === g.ratePct)
-          .reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
-        // Only meaningful when the groups came from the lines themselves; a
-        // whole-document fallback group is taken on the amount, not the lines.
-        const fromLines = round2(unrounded) === g.net;
-        if (fromLines && g.vat !== round2(unrounded * (g.ratePct / 100))) {
-          failures.push({ i, g, unrounded });
-        }
+        if (g.vat !== round2(g.net * (g.ratePct / 100))) failures.push({ i, g });
       }
+      // And the printed LINES add up to the printed subtotal.
+      const printedLines = round2(lines.reduce((s, l) => s + round2(l.quantity * l.unitPrice), 0));
+      if (documentVatBreakdown(netAmount, lines, fallback).net !== printedLines) failures.push({ i, printedLines });
     }
     expect(failures.slice(0, 3)).toEqual([]);
+  });
+
+  // Review 2026-09-30: lines WITHOUT a rate took VAT on the unrounded amount
+  // while the net was the lines in cents; the invoice PDF fills the rate in
+  // and regroups, so its VAT row missed its own Total by a cent (1.5 × 149,56
+  // + 2.5 × 138,19 at 19 % printed 569,82 + 108,27 = 678,08). Quote lines are
+  // stored unrated, so every quote-made invoice went through here.
+  it('unrated lines: what is stored = what the PDF prints after filling the rate in, 20000 documents', () => {
+    const rand = rng(90210);
+    const failures: unknown[] = [];
+    for (let i = 0; i < 20000; i++) {
+      const rate = RATES[1 + Math.floor(rand() * (RATES.length - 1))];
+      const lines = Array.from({ length: 1 + Math.floor(rand() * 4) }, () => ({
+        quantity: Math.round(rand() * 900) / 100,
+        unitPrice: Math.round(rand() * 20000) / 100,
+      }));
+      const netAmount = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+      const stored = grossFromDocumentLines(netAmount, lines, rate);
+      const b = documentVatBreakdown(netAmount, lines, rate);
+      const rated = lines.map((l) => ({ ...l, vatRate: rate }));
+      const pdfVat = round2(vatRateGroups(netAmount, rated, rate).reduce((s, g) => s + g.vat, 0));
+      if (stored !== b.gross || pdfVat !== b.vat || round2(b.net + pdfVat) !== stored) {
+        failures.push({ i, rate, lines, stored, gross: b.gross, vat: b.vat, pdfVat });
+      }
+    }
+    expect(failures.slice(0, 2)).toEqual([]);
+  });
+
+  it('the PDF states what the XRechnung states, 3000 documents', () => {
+    const rand = rng(4242);
+    const failures: unknown[] = [];
+    const amount = (xml: string, tag: string) => Number(xml.match(new RegExp(`<cbc:${tag}[^>]*>([-\\d.]+)<`))![1]);
+    for (let i = 0; i < 3000; i++) {
+      const lines = Array.from({ length: 1 + Math.floor(rand() * 5) }, () => ({
+        quantity: Math.round(rand() * 900) / 100,
+        unitPrice: Math.round(rand() * 20000) / 100,
+        vatRate: [19, 7][Math.floor(rand() * 2)],
+      }));
+      const netAmount = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+      const b = documentVatBreakdown(netAmount, lines, 19);
+      const xml = generateXRechnungXML({
+        ...XML_BASE,
+        lineItems: lines.map((l, n) => ({
+          description: `L${n}`, quantity: l.quantity, unitCode: 'stuk', unitPrice: l.unitPrice,
+          vatRate: l.vatRate, vatAmount: 0, lineTotal: l.quantity * l.unitPrice,
+        })),
+        totalNet: b.net, totalVat: b.vat, totalGross: b.gross,
+      });
+      const perRate = [...xml.matchAll(/<cac:TaxSubtotal>[\s\S]*?<cbc:TaxAmount[^>]*>([-\d.]+)<[\s\S]*?<cbc:Percent>([\d.]+)</g)]
+        .map((m) => ({ ratePct: Number(m[2]), vat: Number(m[1]) }))
+        // A category used only by a zero-amount line: the XML must still list
+        // it (EN 16931 wants a breakdown per category used), the PDF prints no
+        // "VAT 19 %: 0,00" row. Only the amounts have to agree.
+        .filter((r) => r.vat !== 0)
+        .sort((a, c) => c.ratePct - a.ratePct);
+      const ours = b.groups.map((g) => ({ ratePct: g.ratePct, vat: g.vat }));
+      if (
+        amount(xml, 'TaxExclusiveAmount') !== b.net
+        || amount(xml, 'TaxInclusiveAmount') !== b.gross
+        || JSON.stringify(perRate) !== JSON.stringify(ours)
+      ) {
+        failures.push({ i, lines, b, xmlNet: amount(xml, 'TaxExclusiveAmount'), xmlGross: amount(xml, 'TaxInclusiveAmount'), perRate });
+      }
+    }
+    expect(failures.slice(0, 2)).toEqual([]);
   });
 });
