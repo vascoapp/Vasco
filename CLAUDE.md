@@ -88,6 +88,7 @@ cd admin && ADMIN_EMAILS=you@x.com ADMIN_SESSION_SECRET=$(openssl rand -hex 32) 
                                   # admin at :3005/admin (3000 = CollectAI). No PIN:
                                   # sign-in code prints to the dev log without RESEND_API_KEY.
 cd admin && npm run test:auth     # admin sign-in tests (node --test)
+cd admin && npm run test:legal    # privacy/terms served per language (?lang=, Accept-Language)
 cd admin && npx tsc --noEmit     # Check admin TS errors
 
 # Audits — run these BEFORE building on a field or mounting a component
@@ -135,6 +136,18 @@ npm run smoke:customer                 # the CUSTOMER path — anon key, NO sess
                                        # one-line "fix" is a GRANT that leaks
                                        # every quote token on the platform.
 npm run smoke:endpoints                # edge fns + RLS + anon surface + drift
+npm run check:send-invoice             # LIVE: sending an invoice works — by document
+                                       # NUMBER, reminder keeps sent_at, paid stays
+                                       # paid, other user 404. Mail → Resend's test
+                                       # inbox only. It 404'd on EVERY real send
+                                       # until 2026-09-30, hidden by an optimistic
+                                       # "mark sent" (learnings #379).
+npm run check:portal-totals            # LIVE: the customer's quote page states the
+                                       # APP's net/VAT/total (hard-coded, not
+                                       # recomputed), incl. Kleinunternehmer = no VAT.
+npm run check:push-owner               # LIVE: a push token belongs to ONE account
+                                       # (the previous contractor's pushes stopped
+                                       # reaching a shared phone, 2026-09-30).
 npm run check:insertable               # can the app actually INSERT into every
                                        # table it writes to, as an owner under
                                        # RLS — and does any writer NAME every
@@ -346,6 +359,33 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   the app keeps its secondary grey. User's call, 2026-09-22. ⚠️ The ACTIVE
   `SemanticColors` is `DKTheme` in `colors.ts` — add new tokens THERE.
   Guard: `formsAndMenusAreReadable`.
+- **ONE rounding rule for money: `round2` in `src/utils/round2.ts`** (a leaf
+  module; `domain/business.ts` re-exports it). Never a private copy, never an
+  inline `Math.round(x * 100) / 100` on a money path — both lose 0,285 → 0,28
+  and round negatives the wrong way. Guard `oneRoundingRule` (named AND inline).
+  #354 fixed it in one file while ten copies kept the bug (#380).
+- **VAT follows EN 16931 everywhere**: a line's net is its amount in cents,
+  VAT per rate on the sum of those (`vatRateGroups` / `documentNet`). The PDF,
+  the screen, the stored total, the XRechnung and the customer portal state the
+  same cent — property tests `aDocumentAddsUp` (PDF == XML) and
+  `portalTotalsMatchTheApp`. A line WITHOUT a rate is a line at the document's
+  rate (the DB stores it so). A document's fallback rate is
+  `documentFallbackRate` (highest line rate), never `lineItems[0]?.vatRate ?? 0`.
+- **A rule both the app and an edge function need lives in
+  `supabase/functions/_shared/` as pure TypeScript that jest imports** — never
+  "kept in step by hand" (the portal's copy drifted; the customer accepted a
+  cent less than the invoice). See `_shared/documentTotals.ts`.
+- **Status follows the artefact, for invoices too**: `markInvoiceSent` only
+  behind a delivered email or a confirmed share (guard
+  `invoiceSentOnlyWithAnArtefact`). The invoice button says what it does —
+  Send invoice / Send reminder / Send invoice again / nothing when paid.
+- **An account switch is a logout, then a login** (`handOverFrom` in
+  `sessionCleanup`): a direct A→B sign-in kept A's data and could heal A's lines
+  into B's backend (#378). Server-side, a push token belongs to one account.
+- **Privacy + terms exist in all six languages** — app (`legal.*` keys) and
+  web (`content/legal/<lang>/`, both trees identical; guard
+  `legalTextsInEveryLanguage`). English prevails; a change to the English text
+  must be re-translated in the same change.
 - **A success message waits for the write it announces.** "N imported",
   "Prices added" and "Saved" are claims about rows. A writer that swallows
   its errors must RETURN whether it landed (`emitMaterialPurchased` → boolean,
