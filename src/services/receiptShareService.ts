@@ -11,6 +11,7 @@ import * as Print from 'expo-print';
 // so the receipt PDF was never attached there — and the call still resolved,
 // so this returned { ok: true } on a share that shared nothing.
 import * as Sharing from 'expo-sharing';
+import { nameThePdf } from '../utils/namedPdf';
 import type { Invoice } from '../domain/documents';
 import { formatCurrency, type Country } from '../i18n/formatting';
 
@@ -87,7 +88,8 @@ function html(args: ReceiptArgs): string {
 
 export async function shareReceipt(args: ReceiptArgs): Promise<{ ok: boolean; uri?: string; error?: string }> {
   try {
-    const { uri } = await Print.printToFileAsync({ html: html(args) });
+    const { uri: printed } = await Print.printToFileAsync({ html: html(args) });
+    const uri = nameThePdf(printed, `${HEADINGS[args.locale ?? 'nl'] ?? 'Receipt'} ${args.invoice.id}`);
     if (!(await Sharing.isAvailableAsync())) {
       return { ok: false, uri, error: 'Sharing is not available on this device' };
     }

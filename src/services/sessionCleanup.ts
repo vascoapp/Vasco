@@ -77,6 +77,30 @@ export async function clearUserScopedStorage(outgoingUserId?: string | null): Pr
 }
 
 /**
+ * A DIFFERENT contractor replacing the signed-in one with no logout between
+ * (an auth link for another account, a demo switch) — the logout wipe, but
+ * as a barrier. The wipe lists the keys, then removes them: anything the new
+ * contractor writes in between (their profile, stamped by AuthContext's
+ * restore effect in the same commit) is deleted with the previous one's
+ * (review, 2026-09-30). Everything that writes for the new contractor awaits
+ * `handoverSettled()` first.
+ */
+let pendingHandover: Promise<void> | null = null;
+
+export function handOverFrom(previousUserId: string): Promise<void> {
+  const wipe = clearUserScopedStorage(previousUserId).finally(() => {
+    if (pendingHandover === wipe) pendingHandover = null;
+  });
+  pendingHandover = wipe;
+  return wipe;
+}
+
+/** The handover in progress, if any — null when there is nothing to wait for. */
+export function handoverSettled(): Promise<void> | null {
+  return pendingHandover;
+}
+
+/**
  * Sign-in. The device-owned data belongs to whoever last used the phone; a
  * DIFFERENT contractor must never see it — nor have its queued writes sent
  * under their session. Same user: kept. Returns true once this user owns it.

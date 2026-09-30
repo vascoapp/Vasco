@@ -6,6 +6,7 @@
 
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { nameThePdf } from '../utils/namedPdf';
 import { DEMO_MODE } from '../config/demo';
 import type { Country } from '../context/AuthContext';
 import { vatRateGroups } from '../domain/business';
@@ -507,7 +508,8 @@ export async function generateQuotePdf(
     options?.language, options?.country, options?.phone, options?.email,
     options?.showPoweredBy, options?.vatScheme,
   );
-  const { uri } = await Print.printToFileAsync({ html, width: 595, height: 842 });
+  const { uri: printed } = await Print.printToFileAsync({ html, width: 595, height: 842 });
+  const uri = nameThePdf(printed, quote.quoteNumber);
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(uri, {

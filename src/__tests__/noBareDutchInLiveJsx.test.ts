@@ -5,12 +5,14 @@
 // six components (ComplianceCenter, CustomerInsights, DocumentVault,
 // LeadGeneration, MarketIntelligence, RouteOptimizer) carry the shape but are
 // mounted nowhere — fix them when one is mounted.
+// Tax words too: "BTW {rate}%" sat on every market's purchase-order totals
+// below the fold, where the 2026-09-30 screenshot pass could not see it.
 import fs from 'fs';
 import path from 'path';
 import { stripComments } from '../utils/stripComments';
 
 const ROOT = path.resolve(__dirname, '../..');
-const WORDS = /\b(verlopen|facturen|factuur|klussen|offertes|offerte|dagen|klanten|openstaand|betaald|toevoegen|opslaan|annuleren|vandaag|aannemers|vakmensen)\b/i;
+const WORDS = /\b(verlopen|facturen|factuur|klussen|offertes|offerte|dagen|klanten|openstaand|betaald|toevoegen|opslaan|annuleren|vandaag|aannemers|vakmensen|btw|subtotaal|totaal)\b/i;
 
 import manifest from '../config/dormant.files.json';
 

@@ -841,9 +841,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // quotes / invoices in the React tree until refreshData() re-hydrates.
   // Listens to the currentUser pub/sub set by AuthContext.setCurrentUser.
   useEffect(() => {
+    // True once a logout / account switch has wiped the seeded arrays. The
+    // Dutch demo is the STATE-INIT seed, so unlike DE/FR/ES/IT nothing put it
+    // back: after a wipe the NL demo came up empty — or, before AuthContext
+    // handed a switch over like a logout, still holding the previous market's
+    // quotes (emulator, 2026-09-30).
+    let wipedSinceInit = false;
     const unsub = subscribeUserChange((userId) => {
       userGenerationRef.current += 1;
       if (userId === null) {
+        wipedSinceInit = true;
         // Logged out — wipe in-memory arrays. AsyncStorage already cleared
         // by sessionCleanup.clearUserScopedStorage() in AuthContext.logout.
         setQuotes([]);
@@ -878,6 +885,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // Profile, Business Details, and Notifications.
         if (useSeedData && getCurrentCountry() === 'US') {
           setBusinessProfile(US_BUSINESS_PROFILE);
+          setProfileLoaded(true);
           setCustomers(US_SEED_CUSTOMERS);
           setJobs(US_SEED_JOBS);
         }
@@ -893,6 +901,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // same way US_SEED_* already was.
         if (useSeedData && getCurrentCountry() === 'DE') {
           setBusinessProfile(DE_BUSINESS_PROFILE);
+          setProfileLoaded(true);
           setCustomers(DE_SEED_CUSTOMERS);
           setJobs(DE_SEED_JOBS);
           // Jobs+customers alone was a half fix: invoices and quotes carry
@@ -931,9 +940,35 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ES: { profile: ES_BUSINESS_PROFILE, customers: ES_SEED_CUSTOMERS, jobs: ES_SEED_JOBS, invoices: esInvoices, quotes: esQuotes },
           IT: { profile: IT_BUSINESS_PROFILE, customers: IT_SEED_CUSTOMERS, jobs: IT_SEED_JOBS, invoices: itInvoices, quotes: itQuotes },
         };
-        const walkSeed = walkSeeds[getCurrentCountry() ?? ''];
+        const seededCountry = getCurrentCountry() ?? '';
+        const walkSeed = walkSeeds[seededCountry];
+        // Only after a wipe: on a cold start the demo's own edits were just
+        // hydrated from storage, and re-seeding would throw them away. Only a
+        // DEMO account (ids like `user-cfo-001`; a real one is a UUID):
+        // `useSeedData` is also on in every dev build, where a real account's
+        // first refresh would take the seed's line items for its own offline
+        // orphans. Every store the wipe emptied that has a seeded initialiser
+        // comes back — Projects is the aannemer's surface, and without
+        // `profileLoaded` business settings spun forever and the scheduler
+        // never ran (review, 2026-09-30).
+        const isDemoAccount = !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(userId);
+        if (useSeedData && isDemoAccount && wipedSinceInit && !walkSeed && seededCountry !== 'DE' && seededCountry !== 'US') {
+          setBusinessProfile(initialBusinessProfile);
+          setProfileLoaded(true);
+          setCustomers(SEED_CUSTOMERS);
+          setJobs(SEED_JOBS);
+          setInvoices(initialInvoices);
+          setQuotes(initialQuotes);
+          setLineItems(initialLineItems);
+          setMaterials(SEED_MATERIALS);
+          setSuppliers(SEED_SUPPLIERS);
+          setJobMaterialsMap(SEED_JOB_MATERIALS);
+          setProjects(SEED_PROJECTS);
+        }
+        wipedSinceInit = false;
         if (useSeedData && walkSeed) {
           setBusinessProfile(walkSeed.profile);
+          setProfileLoaded(true);
           setCustomers(walkSeed.customers);
           setJobs(walkSeed.jobs);
           // Documents carry their own denormalised customer/job strings, so

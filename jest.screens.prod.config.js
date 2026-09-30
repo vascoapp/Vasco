@@ -58,6 +58,10 @@ module.exports = {
     '<rootDir>/__screenwalk__/euIT.test.tsx',
     '<rootDir>/__screenwalk__/handwerker.test.tsx',
     '<rootDir>/__screenwalk__/aannemer.test.tsx',
+    // Switches between DEMO accounts (IT → NL) — demo login is refused in this
+    // posture, which is correct. The production half of the switch (AuthContext
+    // handover) is proved in src/context/__tests__/AuthContext.test.tsx.
+    '<rootDir>/__screenwalk__/accountSwitchKeepsNoData.test.tsx',
     // Local-fixture flows (see above).
     '<rootDir>/__screenwalk__/customerDetailDocuments.test.tsx',
     '<rootDir>/__screenwalk__/flowCustomerEdit.test.tsx',

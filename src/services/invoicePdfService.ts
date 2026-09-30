@@ -16,6 +16,7 @@ import { DEMO_MODE } from '../config/demo';
 import { vatRateGroups } from '../domain/business';
 import type { Country } from '../context/AuthContext';
 import { logWarn } from '../utils/errorHandler';
+import { nameThePdf } from '../utils/namedPdf';
 import { signatureHtmlBlock, getLegalText } from './signatureService';
 
 // ── Number formatting ────────────────────────────────────
@@ -716,7 +717,7 @@ export async function generateInvoicePdf(
     };
   },
 ): Promise<void> {
-  const uri = await renderInvoicePdfFile(invoice, businessProfile, paymentUrl, options);
+  const uri = nameThePdf(await renderInvoicePdfFile(invoice, businessProfile, paymentUrl, options), invoice.invoiceNumber);
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(uri, {

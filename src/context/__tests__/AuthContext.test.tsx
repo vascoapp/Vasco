@@ -56,15 +56,29 @@ jest.mock('../../services/eventTrackingService', () => ({
   clearUserContext: () => mockClearUserContext(),
   flushEvents: jest.fn(() => Promise.resolve()),
 }));
+// Stateful: logout reads who is leaving (A4), and a sign-in reads who is
+// being replaced — a stub that always answered made every login a switch.
+let mockPublishedId: string | null = null;
 jest.mock('../../lib/currentUser', () => ({
-  setCurrentUser: (v: unknown) => mockSetCurrentUser(v),
-  // logout reads who is leaving, so their device-only data stays theirs (A4).
-  getAuthedUserId: () => 'user-leaving',
+  setCurrentUser: (v: { id: string } | null) => { mockPublishedId = v?.id ?? null; mockSetCurrentUser(v); },
+  getAuthedUserId: () => mockPublishedId,
 }));
-jest.mock('../../services/sessionCleanup', () => ({
-  clearUserScopedStorage: jest.fn(() => Promise.resolve()),
-  claimDeviceData: jest.fn(() => Promise.resolve(true)),
-}));
+// handOverFrom mirrors the real one (sessionCleanupHandover.test.ts proves
+// that against storage): the wipe IS the barrier handoverSettled returns.
+jest.mock('../../services/sessionCleanup', () => {
+  const clearUserScopedStorage = jest.fn((_id?: string | null) => Promise.resolve());
+  let pending: Promise<void> | null = null;
+  return {
+    clearUserScopedStorage,
+    claimDeviceData: jest.fn(() => Promise.resolve(true)),
+    handOverFrom: (previous: string) => {
+      const wipe: Promise<void> = clearUserScopedStorage(previous).finally(() => { if (pending === wipe) pending = null; });
+      pending = wipe;
+      return wipe;
+    },
+    handoverSettled: () => pending,
+  };
+});
 jest.mock('../../services/pushNotificationService', () => ({
   unregisterPushToken: jest.fn(() => Promise.resolve()),
 }));
@@ -97,6 +111,8 @@ beforeEach(async () => {
   mockStopEventFlushing.mockClear();
   mockClearUserContext.mockClear();
   mockSetCurrentUser.mockClear();
+  mockPublishedId = null;
+  require('../../services/sessionCleanup').clearUserScopedStorage.mockClear();
   await AsyncStorage.clear();
 });
 
@@ -182,6 +198,7 @@ describe('AuthContext.logout', () => {
       await captured!.login('contractor@vasco.dev', 'review');
     });
     expect(captured!.user).not.toBeNull();
+    const leaving = captured!.user!.id;
 
     await TestRenderer.act(async () => {
       await captured!.logout();
@@ -196,7 +213,94 @@ describe('AuthContext.logout', () => {
     expect(mockStopEventFlushing).toHaveBeenCalled();
     // Logout names who is leaving, so their device-only data stays theirs (A4).
     const { clearUserScopedStorage } = require('../../services/sessionCleanup');
-    expect(clearUserScopedStorage).toHaveBeenCalledWith('user-leaving');
+    expect(clearUserScopedStorage).toHaveBeenCalledWith(leaving);
+  });
+
+  // An email-confirm / recovery link for ANOTHER account opened while signed
+  // in (auth/callback sets its session), or a demo switch: no logout between.
+  // Only `null` wiped AppState, so the next contractor's refresh ran on the
+  // previous one's arrays and sent their line items to the new backend
+  // (emulator, 2026-09-30).
+  test('a different user replacing the signed-in one is handed over like a logout', async () => {
+    await mountProvider();
+    await TestRenderer.act(async () => {
+      await captured!.login('contractor@vasco.dev', 'review');
+    });
+    const first = captured!.user!.id;
+    const { clearUserScopedStorage } = require('../../services/sessionCleanup');
+    mockSetCurrentUser.mockClear();
+    mockStopAutoSync.mockClear();
+
+    await TestRenderer.act(async () => {
+      await captured!.login('aannemer@vasco.dev', 'review');
+    });
+    const second = captured!.user!.id;
+    expect(second).not.toBe(first);
+
+    const published = mockSetCurrentUser.mock.calls.map(([v]) => (v ? v.id : null));
+    // null FIRST — AppState's wipe — then the new contractor, never A→B.
+    expect(published).toEqual([null, second]);
+    expect(clearUserScopedStorage).toHaveBeenCalledWith(first);
+    const clearedAt = clearUserScopedStorage.mock.invocationCallOrder.at(-1);
+    const secondAt = mockSetCurrentUser.mock.invocationCallOrder.at(-1);
+    expect(clearedAt!).toBeLessThan(secondAt!);
+    expect(mockStopAutoSync).toHaveBeenCalled();
+  });
+
+  // The review's race: the new contractor's country arrives (effect re-run)
+  // while the previous one's wipe is still going. The re-run used to see
+  // `null` and publish at once, so the wipe ran on after the new contractor
+  // had started writing.
+  test('a re-run during the wipe waits for it, then publishes the new user once', async () => {
+    await mountProvider();
+    await TestRenderer.act(async () => {
+      await captured!.login('contractor@vasco.dev', 'review');
+    });
+    const { clearUserScopedStorage } = require('../../services/sessionCleanup');
+    let finishWipe: () => void = () => {};
+    // Like the real wipe: the key LIST is taken at the start, the removal
+    // happens at the end — so a profile written in between is deleted.
+    clearUserScopedStorage.mockImplementationOnce(async () => {
+      const listed = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith('@vasco_'));
+      await new Promise<void>((r) => { finishWipe = r; });
+      await AsyncStorage.multiRemove(listed);
+    });
+    mockSetCurrentUser.mockClear();
+
+    await TestRenderer.act(async () => {
+      await captured!.login('aannemer@vasco.dev', 'review');
+    });
+    const second = captured!.user!.id;
+    await TestRenderer.act(async () => {
+      captured!.updateUser({ country: 'DE' } as any);
+    });
+    // Still wiping: nobody is published yet.
+    expect(mockSetCurrentUser.mock.calls.map(([v]) => (v ? v.id : null))).toEqual([null]);
+
+    await TestRenderer.act(async () => { finishWipe(); await Promise.resolve(); });
+    const published = mockSetCurrentUser.mock.calls.map(([v]) => (v ? v.id : null));
+    expect(published[0]).toBeNull();
+    expect(published.slice(1).every((id) => id === second)).toBe(true);
+    expect(published.length).toBeGreaterThan(1);
+    // The new contractor's profile was written AFTER the wipe, so it is still
+    // there — language/country fall back to the device without it (#210).
+    await TestRenderer.act(async () => { for (let i = 0; i < 5; i++) await Promise.resolve(); });
+    const saved = JSON.parse((await AsyncStorage.getItem('@vasco_user_profile')) ?? 'null');
+    expect(saved?.userId).toBe(second);
+  });
+
+  test('the same user re-published (profile edit) is not a switch', async () => {
+    await mountProvider();
+    await TestRenderer.act(async () => {
+      await captured!.login('contractor@vasco.dev', 'review');
+    });
+    const { clearUserScopedStorage } = require('../../services/sessionCleanup');
+    mockSetCurrentUser.mockClear();
+    await TestRenderer.act(async () => {
+      captured!.updateUser({ country: 'DE' } as any);
+    });
+    expect(mockSetCurrentUser.mock.calls.map(([v]) => (v ? v.id : null))).not.toContain(null);
+    expect(clearUserScopedStorage).not.toHaveBeenCalled();
   });
 });
 

@@ -33,6 +33,13 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
       });
       return Promise.resolve();
     }),
+    // Missing until 2026-09-30: `clearUserScopedStorage` threw into its own
+    // catch on `multiRemove` and every logout / account-switch wipe was a
+    // silent no-op under jest.
+    multiRemove: jest.fn((keys: string[]) => {
+      keys.forEach((k) => { delete mockStore[k]; });
+      return Promise.resolve();
+    }),
   },
 }));
 

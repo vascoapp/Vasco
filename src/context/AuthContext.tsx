@@ -8,7 +8,7 @@ import { DEMO_MODE } from '../config/demo';
 import { logWarn } from '../utils/errorHandler';
 import { withTimeout } from '../utils/withTimeout';
 import { setCurrentUser, getAuthedUserId } from '../lib/currentUser';
-import { clearUserScopedStorage, claimDeviceData } from '../services/sessionCleanup';
+import { clearUserScopedStorage, claimDeviceData, handOverFrom, handoverSettled } from '../services/sessionCleanup';
 import { recordLogin as recordActivationLogin } from '../services/activationMilestonesService';
 import { addBreadcrumb } from '../lib/errorReporting';
 import { setAccountLanguage } from '../i18n/savedLanguage';
@@ -679,13 +679,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const country = user.country;
       const trade = (user as any).trade as string | undefined;
       const role = user.role === 'site-lead' ? 'sitelead' : (user.role ?? 'contractor');
-      setCurrentUser({ id: user.id, country, trade });
-      // Device-only data (pricebook, agreements, templates, unsynced writes and
-      // photos) is kept at logout; a DIFFERENT contractor signing in wipes it,
-      // the same one keeps it (sweep 2026-09-23, A4).
-      void claimDeviceData(user.id).catch(() => {});
-      startEventFlushing(user.id);
-      startAutoSync(user.id, role, trade, country);
+      const publish = () => {
+        setCurrentUser({ id: user.id, country, trade });
+        // Device-only data (pricebook, agreements, templates, unsynced writes and
+        // photos) is kept at logout; a DIFFERENT contractor signing in wipes it,
+        // the same one keeps it (sweep 2026-09-23, A4).
+        void claimDeviceData(user.id).catch(() => {});
+        startEventFlushing(user.id);
+        startAutoSync(user.id, role, trade, country);
+      };
+      // A DIFFERENT contractor replacing the signed-in one with no logout in
+      // between — an email-confirm / recovery link for another account opened
+      // on this phone (auth/callback sets its session), or a demo switch. Only
+      // `null` wiped anything, so the next refresh ran with the previous
+      // contractor's arrays still in state: their pending documents were kept,
+      // and their line items looked like offline orphans of the new account and
+      // were SENT to its backend (emulator, 2026-09-30: the Dutch demo showed
+      // the Italian account's quotes). Leave exactly as a logout leaves.
+      const previous = getAuthedUserId();
+      if (previous && previous !== user.id) {
+        stopEventFlushing();
+        stopAutoSync();
+        clearUserContext();
+        setCurrentUser(null);
+        void handOverFrom(previous);
+      }
+      // A re-run while the wipe is still going (country/trade/role arriving)
+      // waits for the SAME wipe — publishing early let it delete what the new
+      // contractor had just written.
+      const handover = handoverSettled();
+      if (handover) {
+        let live = true;
+        void handover.catch(() => {}).finally(() => { if (live) publish(); });
+        return () => { live = false; };
+      }
+      publish();
     } else {
       setCurrentUser(null);
       stopEventFlushing();
@@ -725,6 +753,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       onboardingComplete: user.onboardingComplete,
     };
     (async () => {
+      // An account switch is still wiping the previous contractor's keys; a
+      // profile read or written before it lands is read from, or deleted
+      // with, theirs (review, 2026-09-30).
+      await handoverSettled()?.catch(() => {});
       let savedLang: string | undefined;
       let hadProfile = false;
       try {

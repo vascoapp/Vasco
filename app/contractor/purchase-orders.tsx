@@ -280,7 +280,7 @@ export default function PurchaseOrdersScreen() {
                     <Text style={styles.totalsValue}>{formatCurrency(order.subtotal, country)}</Text>
                   </View>
                   <View style={styles.totalsRow}>
-                    <Text style={styles.totalsLabel}>BTW {order.vatRate}%</Text>
+                    <Text style={styles.totalsLabel}>{`${t('invoices.vat', 'VAT')} ${order.vatRate}%`}</Text>
                     <Text style={styles.totalsValue}>{formatCurrency(order.vatAmount, country)}</Text>
                   </View>
                   <View style={[styles.totalsRow, styles.totalsFinal]}>
