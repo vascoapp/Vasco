@@ -86,6 +86,15 @@ run('sending a draft invoice', () => {
     expect(queue.filter((q: any) => q.entityKey === 'invoice_sent:RE-D-1')).toEqual([]);
     teardown(ok);
 
+    // The send THROWS (PDF build, late-fee maths): an alert, still a draft —
+    // and the button is released, which the double tap below relies on.
+    mockSend.mockImplementationOnce(async () => { throw new Error('boom'); });
+    const threw = await walkScreen(InvoiceScreen(), { settlePasses: 14, params: { id: 'RE-D-3' } });
+    await pressSend((threw.tree as any).root);
+    expect(mockSend).toHaveBeenCalledTimes(3);
+    expect((await stored('RE-D-3')).status).toBe('draft');
+    teardown(threw);
+
     // Two taps while the PDF builds: ONE email.
     const twice = await walkScreen(InvoiceScreen(), { settlePasses: 14, params: { id: 'RE-D-3' } });
     const root = (twice.tree as any).root;
@@ -97,7 +106,7 @@ run('sending a draft invoice', () => {
     const btn = all.filter((n: any) => !all.some((o: any) => o !== n && o.findAll((c: any) => c === n, { deep: true }).length > 0))[0];
     await act(async () => { await Promise.all([btn.props.onPress(), btn.props.onPress()]); });
     await settle();
-    expect(mockSend).toHaveBeenCalledTimes(3);
+    expect(mockSend).toHaveBeenCalledTimes(4);
     teardown(twice);
   });
 });

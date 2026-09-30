@@ -442,6 +442,16 @@ export default function InvoiceDetailScreen() {
     sendingRef.current = true;
     try {
       await sendOrRemind();
+    } catch (err) {
+      // The PDF build, the late-fee maths or the customer scoring threw before
+      // anything was sent: the tap used to end in silence (review, 2026-09-30).
+      Alert.alert(
+        t('invoices.sendFailedTitle', 'Email not sent'),
+        t('invoices.sendFailedNothingChanged', {
+          defaultValue: 'The email could not be delivered, so nothing has changed: {{error}}',
+          error: friendlyError(err, t('invoices.sendFailedUnknown', 'please try again later')),
+        }),
+      );
     } finally {
       sendingRef.current = false;
     }
