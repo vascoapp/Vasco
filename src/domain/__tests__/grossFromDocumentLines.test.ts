@@ -39,10 +39,17 @@ describe('grossFromDocumentLines', () => {
     expect(grossFromDocumentLines(1000, undefined, 20)).toBeCloseTo(1200, 2);
   });
 
-  it('falls back when only SOME lines carry a rate', () => {
-    // A half-rated document is not evidence of an agreed rate.
+  it('a line without a rate is a line at the document\'s rate (M12, closed 2026-09-30)', () => {
+    // This used to gross the WHOLE document at the fallback — "a half-rated
+    // document is not evidence of an agreed rate" (#249). But every line is
+    // STORED as `vat_rate ?? effective rate`, so after a reload the same quote
+    // was 600 @ 10 % + 400 @ 20 % = 1.140, its XRechnung and the customer's
+    // page said so too, and only the phone's first copy said 1.200. The
+    // money sweep logged that as M12; the persisted record decides.
     expect(grossFromDocumentLines(1000, [line(600, 10), line(400, undefined)], 20))
-      .toBeCloseTo(1200, 2);
+      .toBeCloseTo(1140, 2);
+    expect(grossFromDocumentLines(1000, [line(600, 10), line(400, 20)], 20))
+      .toBeCloseTo(grossFromDocumentLines(1000, [line(600, 10), line(400, undefined)], 20), 2);
   });
 
   it('falls back on mixed rates that do not reconcile with the total', () => {

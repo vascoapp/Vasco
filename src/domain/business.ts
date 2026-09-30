@@ -334,7 +334,13 @@ export function vatRateGroups(
 ): VatRateGroup[] {
   if (fallbackVatRatePercent === 0) return [];
   const all = lines ?? [];
-  const rated = all.filter((l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate));
+  // A line without a rate IS a line at the document's rate — exactly what
+  // the database stores for it (`vat_rate ?? effective rate` at every line
+  // write). Sending a partly-rated document to the whole-document path priced
+  // it one way on the phone and another after a reload, and differently again
+  // on the customer's page (review, 2026-09-30).
+  const rated = all.map((l) =>
+    typeof l.vatRate === 'number' && Number.isFinite(l.vatRate) ? l : { ...l, vatRate: fallbackVatRatePercent });
   // The same base `documentNet` prints: the lines in cents when they are the
   // amount. VAT on the unrounded amount here, beside a rounded net there, made
   // a document with unrated lines print a VAT row a cent off its own Total
@@ -345,8 +351,8 @@ export function vatRateGroups(
     return [{ ratePct, net: base, vat: round2(base * (ratePct / 100)) }];
   };
 
-  // No usable line rates: the profile's rate on the whole amount.
-  if (rated.length === 0 || rated.length !== all.length) return wholeDocument(fallbackVatRatePercent);
+  // No lines: the profile's rate on the whole amount.
+  if (rated.length === 0) return wholeDocument(fallbackVatRatePercent);
 
   const lineNet = rated.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
   const rates = Array.from(new Set(rated.map((l) => l.vatRate as number)));

@@ -45,22 +45,28 @@ export function quoteTotals(args: {
   // (review, 2026-09-30).
   if (args.standardRate === 0) return { net, vat: 0, gross: net };
 
-  const isRated = (l: TotalsLine) =>
-    l.vat_rate !== null && l.vat_rate !== undefined && Number.isFinite(Number(l.vat_rate));
-  const allRated = lines.length > 0 && lines.every(isRated);
+  // A line without a rate is a line at the document's rate — as the app
+  // treats it and as the database stores it (review, 2026-09-30).
+  const rateOf = (l: TotalsLine) =>
+    l.vat_rate !== null && l.vat_rate !== undefined && Number.isFinite(Number(l.vat_rate))
+      ? Number(l.vat_rate)
+      // 0.07 × 100 is 7.000000000000001: without normalising, an unrated line
+      // formed its own "7 %" group beside the explicit 7 % lines and each was
+      // rounded separately — a cent off the app (property test, 2026-09-30).
+      : Number((args.standardRate * 100).toPrecision(12));
 
   let vat: number;
-  if (allRated && reconciles) {
+  if (lines.length > 0 && reconciles) {
     // One VAT per rate, on that rate's lines in cents (EN 16931 BT-116/117).
     const byRate = new Map<number, number>();
     for (const l of lines) {
-      const r = Number(l.vat_rate);
+      const r = rateOf(l);
       byRate.set(r, (byRate.get(r) ?? 0) + round2(amount(l)));
     }
     vat = round2([...byRate.entries()].reduce((s, [r, base]) => s + round2(round2(base) * (r / 100)), 0));
   } else {
-    const rates = Array.from(new Set(lines.filter(isRated).map((l) => Number(l.vat_rate))));
-    const rate = allRated && rates.length === 1 ? rates[0] / 100 : args.standardRate;
+    const rates = Array.from(new Set(lines.map(rateOf)));
+    const rate = lines.length > 0 && rates.length === 1 ? rates[0] / 100 : args.standardRate;
     vat = round2(net * rate);
   }
   return { net, vat, gross: round2(net + vat) };
