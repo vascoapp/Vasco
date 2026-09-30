@@ -52,7 +52,8 @@
     "check:strip": "STRIP_SCAN=1 jest src/utils/__tests__/stripComments.test.ts",
     "schema:snapshot": "node scripts/schema-snapshot.mjs",
     "audit:reach": "node scripts/reachability.mjs",
-    "check:send-invoice": "node scripts/check-send-invoice.mjs"
+    "check:send-invoice": "node scripts/check-send-invoice.mjs",
+    "check:portal-totals": "node scripts/check-portal-totals.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
