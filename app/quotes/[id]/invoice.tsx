@@ -22,7 +22,7 @@ export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { quotes, lineItems, addInvoice, markInvoiceSent, invoices, customers, businessProfile } = useAppState();
+  const { quotes, lineItems, addInvoice, invoices, customers, businessProfile } = useAppState();
   const { user } = useAuth();
   // Profile first, account as fallback (#218): a contractor who set UK in
   // their profile was formatted in euros while the account still said NL.
@@ -60,12 +60,12 @@ export default function InvoiceFromQuoteScreen() {
     }
   }, [id, addInvoice, router, t]);
 
-  const handleMarkSent = useCallback(() => {
-    if (invoiceId) {
-      markInvoiceSent(invoiceId);
-      router.replace(`/invoices/${invoiceId}`);
-    }
-  }, [invoiceId, markInvoiceSent, router]);
+  // Opens the invoice's own send flow — email, or the PDF with "did it go
+  // out?". This was "Mark sent", which marked a draft nobody had received
+  // and started its payment clock (2026-09-30; status follows the artefact).
+  const handleSend = useCallback(() => {
+    if (invoiceId) router.replace(`/invoices/${invoiceId}`);
+  }, [invoiceId, router]);
 
   if (!quote) {
     return (
@@ -188,7 +188,7 @@ export default function InvoiceFromQuoteScreen() {
                 // "PDF support is coming soon" branch for a real invoice.
                 onPress={() => router.push(`/(modals)/pdf?source=invoice&id=${encodeURIComponent(invoiceId)}` as any)}
               />
-              <PrimaryButton label={t('quoteToInvoice.markSent')} onPress={handleMarkSent} />
+              <PrimaryButton label={t('invoices.sendInvoice', 'Send invoice')} onPress={handleSend} />
             </>
           )}
         </View>
