@@ -946,7 +946,9 @@
     "noEmailNothingSent": "Rien n'a été envoyé. Ajoutez l'e-mail du client ou partagez vous-même le PDF.",
     "reminderSentTitle": "Relance envoyée",
     "sendFailedNothingChanged": "L'e-mail n'a pas pu être remis, rien n'a été modifié : {{error}}",
-    "resendInvoice": "Renvoyer la facture"
+    "resendInvoice": "Renvoyer la facture",
+    "notSyncedTitle": "Pas encore synchronisée",
+    "notSyncedBody": "Cette facture a été créée hors ligne et n'est pas encore sur le serveur. Connectez-vous à Internet, patientez un instant et réessayez — rien n'a été envoyé."
   },
   "expenses": {
     "title": "Dépenses",

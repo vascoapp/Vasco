@@ -946,7 +946,9 @@
     "noEmailNothingSent": "No se ha enviado nada. Añade el correo del cliente o comparte tú mismo el PDF.",
     "reminderSentTitle": "Recordatorio enviado",
     "sendFailedNothingChanged": "No se pudo entregar el correo, no se ha cambiado nada: {{error}}",
-    "resendInvoice": "Reenviar factura"
+    "resendInvoice": "Reenviar factura",
+    "notSyncedTitle": "Aún no sincronizada",
+    "notSyncedBody": "Esta factura se creó sin conexión y todavía no ha llegado al servidor. Conéctate a internet, espera un momento y vuelve a intentarlo: no se ha enviado nada."
   },
   "expenses": {
     "title": "Gastos",

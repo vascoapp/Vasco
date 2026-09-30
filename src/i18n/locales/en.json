@@ -946,7 +946,9 @@
     "noEmailNothingSent": "Nothing was sent. Add the customer's email address, or share the PDF yourself.",
     "reminderSentTitle": "Reminder sent",
     "sendFailedNothingChanged": "The email could not be delivered, so nothing has changed: {{error}}",
-    "resendInvoice": "Send invoice again"
+    "resendInvoice": "Send invoice again",
+    "notSyncedTitle": "Not synced yet",
+    "notSyncedBody": "This invoice was created offline and has not reached the server yet. Connect to the internet, wait a moment and try again — nothing has been sent."
   },
   "expenses": {
     "title": "Expenses",

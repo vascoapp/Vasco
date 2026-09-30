@@ -502,6 +502,17 @@ export default function InvoiceDetailScreen() {
       );
       return;
     }
+    // Created offline and still queued: the server has no such invoice yet, so
+    // the email could only fail with "please try again later" — true, but it
+    // never said WHY or what to do (review, 2026-09-30).
+    const { pendingDocumentNumbers } = await import('../../src/services/offlineWriteQueue');
+    if ((await pendingDocumentNumbers()).has(invoice.id)) {
+      Alert.alert(
+        t('invoices.notSyncedTitle', 'Not synced yet'),
+        t('invoices.notSyncedBody', 'This invoice was created offline and has not reached the server yet. Connect to the internet, wait a moment and try again — nothing has been sent.'),
+      );
+      return;
+    }
     // A reminder is a reminder wherever it starts: already paid is refused
     // here as on the Facturen list (R287).
     // The customer's tag (VIP / inactive confirmations) the same way Facturen

@@ -946,7 +946,9 @@
     "noEmailNothingSent": "Non è stato inviato nulla. Aggiungi l'email del cliente o condividi tu il PDF.",
     "reminderSentTitle": "Sollecito inviato",
     "sendFailedNothingChanged": "Non è stato possibile consegnare l'email, non è cambiato nulla: {{error}}",
-    "resendInvoice": "Invia di nuovo la fattura"
+    "resendInvoice": "Invia di nuovo la fattura",
+    "notSyncedTitle": "Non ancora sincronizzata",
+    "notSyncedBody": "Questa fattura è stata creata offline e non è ancora arrivata al server. Connettiti a internet, attendi un momento e riprova: non è stato inviato nulla."
   },
   "expenses": {
     "title": "Spese",

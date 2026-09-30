@@ -946,7 +946,9 @@
     "noEmailNothingSent": "Es wurde nichts gesendet. Fügen Sie die E-Mail-Adresse des Kunden hinzu oder teilen Sie das PDF selbst.",
     "reminderSentTitle": "Erinnerung gesendet",
     "sendFailedNothingChanged": "Die E-Mail konnte nicht zugestellt werden, es wurde nichts geändert: {{error}}",
-    "resendInvoice": "Rechnung erneut senden"
+    "resendInvoice": "Rechnung erneut senden",
+    "notSyncedTitle": "Noch nicht synchronisiert",
+    "notSyncedBody": "Diese Rechnung wurde offline erstellt und ist noch nicht auf dem Server. Verbinden Sie sich mit dem Internet, warten Sie einen Moment und versuchen Sie es erneut — es wurde nichts gesendet."
   },
   "expenses": {
     "title": "Ausgaben",

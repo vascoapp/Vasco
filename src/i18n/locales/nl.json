@@ -946,7 +946,9 @@
     "noEmailNothingSent": "Er is niets verstuurd. Voeg het e-mailadres van de klant toe, of deel de pdf zelf.",
     "reminderSentTitle": "Herinnering verstuurd",
     "sendFailedNothingChanged": "De e-mail kon niet worden afgeleverd, er is niets gewijzigd: {{error}}",
-    "resendInvoice": "Factuur opnieuw versturen"
+    "resendInvoice": "Factuur opnieuw versturen",
+    "notSyncedTitle": "Nog niet gesynchroniseerd",
+    "notSyncedBody": "Deze factuur is offline gemaakt en staat nog niet op de server. Maak verbinding met internet, wacht even en probeer het opnieuw — er is niets verstuurd."
   },
   "expenses": {
     "title": "Uitgaven",
