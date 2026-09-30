@@ -31,6 +31,7 @@
 import type { Invoice } from '../domain/documents';
 import { documentNumber } from '../domain/documents';
 import type { Submission } from './submissionLifecycle';
+import { round2 } from '../utils/round2';
 
 export interface HandoverInvoice {
   reference: string;
@@ -120,7 +121,7 @@ export function buildAccountantHandover(input: {
     periodEnd,
     invoices,
     totals: {
-      invoiced: Math.round(invoices.reduce((s, i) => s + i.amount, 0) * 100) / 100,
+      invoiced: round2(invoices.reduce((s, i) => s + i.amount, 0)),
       count: invoices.length,
     },
     notFiled: invoices.filter((i) => i.filing === 'rejected' || i.filing === 'failed'),

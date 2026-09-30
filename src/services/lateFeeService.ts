@@ -22,6 +22,7 @@
 // =============================================================================
 
 import { COUNTRY_CONFIG, formatCurrency } from '../i18n/formatting';
+import { round2 } from '../utils/round2';
 
 export type LateFeeCountry = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
 export type CustomerType = 'business' | 'consumer';
@@ -172,9 +173,9 @@ export function computeLateFee(input: LateFeeInput): LateFeeBreakdown {
   }
 
   const interestRaw = input.invoiceAmount * (effectiveRatePct / 100) * (input.daysOverdue / 365);
-  const interest = Math.round(interestRaw * 100) / 100;
+  const interest = round2(interestRaw);
   const recoveryFee = fixedRecoveryFee(input.country, input.invoiceAmount);
-  const totalOwedIncludingFees = Math.round((input.invoiceAmount + interest + recoveryFee) * 100) / 100;
+  const totalOwedIncludingFees = round2(input.invoiceAmount + interest + recoveryFee);
 
   const rate = formatLateFeeRate(effectiveRatePct, input.country);
   const interestStr = formatCurrency(interest, input.country);

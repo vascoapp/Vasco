@@ -34,6 +34,7 @@
 // =============================================================================
 
 import { localDateKey, startOfWeek } from '../utils/dateKey';
+import { round2 } from '../utils/round2';
 
 export interface PayrollTimeEntry {
   date: string;
@@ -144,13 +145,13 @@ export function buildPayroll(args: {
     // hours still happened, so they get a line rather than vanishing.
     const name = key ? worker?.name ?? contractorName : contractorName;
     const hourlyCost = key ? worker?.hourlyCost : contractorHourlyCost;
-    const hours = Math.round(row.hours * 100) / 100;
+    const hours = round2(row.hours);
     lines.push({
       workerId: key || null,
       name,
       hours,
       hourlyCost,
-      cost: typeof hourlyCost === 'number' ? Math.round(hours * hourlyCost * 100) / 100 : undefined,
+      cost: typeof hourlyCost === 'number' ? round2(hours * hourlyCost) : undefined,
       jobCount: row.jobs.size,
       isInactive: Boolean(key && worker && !worker.isActive),
     });
@@ -162,9 +163,9 @@ export function buildPayroll(args: {
   const unpriced = lines.filter((l) => l.cost === undefined);
   return {
     lines,
-    totalHours: Math.round(lines.reduce((s, l) => s + l.hours, 0) * 100) / 100,
-    knownCost: Math.round(lines.reduce((s, l) => s + (l.cost ?? 0), 0) * 100) / 100,
+    totalHours: round2(lines.reduce((s, l) => s + l.hours, 0)),
+    knownCost: round2(lines.reduce((s, l) => s + (l.cost ?? 0), 0)),
     unpricedCount: unpriced.length,
-    unpricedHours: Math.round(unpriced.reduce((s, l) => s + l.hours, 0) * 100) / 100,
+    unpricedHours: round2(unpriced.reduce((s, l) => s + l.hours, 0)),
   };
 }

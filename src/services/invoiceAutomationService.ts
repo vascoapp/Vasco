@@ -6,6 +6,7 @@
 
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { registerSingletonReset } from './singletonReset';
+import { round2 } from '../utils/round2';
 
 // =============================================================================
 // TYPES
@@ -188,7 +189,7 @@ class InvoiceAutomationService {
       id: `inv-${Date.now()}`, invoiceNumber: `F${new Date().getFullYear()}-${String(this.invoiceCounter).padStart(4, '0')}`,
       jobId, customerId, customerName, customerEmail, customerAddress,
       issueDate: new Date(), dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      status: 'draft', lineItems, subtotal, vatAmount: Math.round(vatAmount * 100) / 100, total: Math.round((subtotal + vatAmount) * 100) / 100,
+      status: 'draft', lineItems, subtotal, vatAmount: round2(vatAmount), total: round2(subtotal + vatAmount),
       paidAmount: 0, payments: [], reminders: [],
     };
     this.invoices.unshift(invoice);

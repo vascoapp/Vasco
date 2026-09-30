@@ -14,6 +14,7 @@ import { MS_PER_DAY } from '../utils/timeConstants';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
 import type { ExpenseRow } from '../lib/database.types';
+import { round2 } from '../utils/round2';
 
 // R44: persistence — expenses are an in-memory singleton + now AsyncStorage
 // for cross-restart durability. Without this every contractor lost all
@@ -323,7 +324,7 @@ class ExpenseService {
       totalThisMonth: thisMonth.reduce((sum, e) => sum + e.amount, 0),
       totalThisYear: thisYear.reduce((sum, e) => sum + e.amount, 0),
       deductibleThisYear: Math.round(deductible),
-      vatReclaimable: Math.round(vatReclaim * 100) / 100,
+      vatReclaimable: round2(vatReclaim),
       byCategory: Array.from(catMap.entries())
         .map(([category, data]) => ({ category, ...data }))
         .sort((a, b) => b.amount - a.amount),

@@ -15,6 +15,7 @@ import { getCurrentUserId, getCurrentCountry, getCurrentTrade } from '../lib/cur
 import { logWarn } from '../utils/errorHandler';
 import { verifyExtractedInvoice, summariseVerification } from './extractionVerification';
 import { todayKey } from '../utils/dateKey';
+import { round2 } from '../utils/round2';
 
 const SCAN_HISTORY_KEY = '@vasco_invoice_scans';
 const RATE_LIMIT_KEY = '@vasco_last_invoice_scan';
@@ -391,7 +392,7 @@ export async function getPriceRecommendations(): Promise<PriceRecommendation[]> 
       trend = secondAvg > firstAvg * 1.05 ? 'rising' : secondAvg < firstAvg * 0.95 ? 'falling' : 'stable';
     }
 
-    const savingsPotential = Math.round((current.price - lowest.price) * 100) / 100;
+    const savingsPotential = round2(current.price - lowest.price);
 
     let action: PriceRecommendation['action'] = 'buy_now';
     let reason = 'Prijs is stabiel en marktconform';
@@ -410,7 +411,7 @@ export async function getPriceRecommendations(): Promise<PriceRecommendation[]> 
     recommendations.push({
       materialName: name,
       currentPrice: current.price,
-      avgPrice: Math.round(avg * 100) / 100,
+      avgPrice: round2(avg),
       lowestPrice: lowest.price,
       lowestSupplier: lowest.supplier,
       savingsPotential,
@@ -516,7 +517,7 @@ export function getFirstScanInsights(scannedItems: ScannedLineItem[], trade: str
     if (!match) continue;
 
     const priceVsMarket = item.unitPrice / match.avgPrice;
-    const savings = Math.round((item.unitPrice - match.avgPrice) * item.quantity * 100) / 100;
+    const savings = round2((item.unitPrice - match.avgPrice) * item.quantity);
 
     insights.push({
       name: item.description,
@@ -524,7 +525,7 @@ export function getFirstScanInsights(scannedItems: ScannedLineItem[], trade: str
       marketAvg: match.avgPrice,
       savings: Math.max(0, savings),
       cheaperSupplier: match.cheaperSupplier,
-      priceVsMarket: Math.round(priceVsMarket * 100) / 100,
+      priceVsMarket: round2(priceVsMarket),
     });
   }
 

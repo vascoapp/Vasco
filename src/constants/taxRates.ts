@@ -1,4 +1,5 @@
 import { logWarn } from '../utils/errorHandler';
+import { round2 } from '../utils/round2';
 
 export const VAT_RATES: Record<string, number> = {
   NL: 0.21,
@@ -70,10 +71,10 @@ export function purchaseVatRates(country: string): number[] {
 }
 
 export function calculateVAT(amount: number, country: string): number {
-  return Math.round(amount * getVATRate(country) * 100) / 100;
+  return round2(amount * getVATRate(country));
 }
 
 export function extractVATFromGross(grossAmount: number, country: string): number {
   const rate = getVATRate(country);
-  return Math.round(grossAmount * (rate / (1 + rate)) * 100) / 100;
+  return round2(grossAmount * (rate / (1 + rate)));
 }

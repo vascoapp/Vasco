@@ -72,7 +72,8 @@ describe('calibration adjusts the line it came from', () => {
     const apply = src.slice(src.indexOf('s.vascoApply'), src.indexOf('s.vascoSkip'));
     expect(apply).toMatch(/pricingType === 'hourly'/);
     expect(apply).not.toMatch(/Math\.ceil/);
-    expect(apply).toMatch(/Math\.round\(sv\.quantity \* cal\.combinedMultiplier \* 100\) \/ 100/);
+    // To the hundredth (the shared round2 since 2026-09-30), never up to whole hours.
+    expect(apply).toMatch(/round2\(sv\.quantity \* cal\.combinedMultiplier\)/);
   });
 
   it('is not offered when it would change nothing', () => {

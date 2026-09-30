@@ -117,6 +117,9 @@ export function isSmallBusinessExempt(profile: { vatScheme?: VatScheme }): boole
       || profile.vatScheme === 'small_business_DE_kleinunternehmer';
 }
 
+import { round2 } from '../utils/round2';
+export { round2 };
+
 // R66r50: country-aware standard VAT rates for EU6. Pre-R66r50 the codebase
 // hardcoded 21 (NL) across quote builder, photo-quote, invoice import, cohort
 // writes, and Moneybird export — DE/FR/ES/IT/UK contractors got NL rate.
@@ -306,23 +309,8 @@ export function getVatExemptionNote(country: string | undefined, vatScheme: VatS
  * than print the blended average: "BTW (13,8%)" is a number that appears on no
  * invoice and in no tax table. The AMOUNT is exact either way.
  */
-/**
- * Money to the cent, corrected for float REPRESENTATION.
- *
- * `1.5 * 0.19` is `0.28499999999999998`, so a plain `Math.round(n * 100) / 100`
- * gives € 0,28 where the exact decimal 0,285 rounds up to € 0,29 — a cent of
- * VAT lost on an amount as ordinary as € 1,50 at 19 %. Normalising to twelve
- * significant digits first restores the value the arithmetic actually means
- * before rounding it (#354).
- */
-export function round2(n: number): number {
-  if (!Number.isFinite(n)) return n;
-  // Half away from zero — commercial rounding. `Math.round` rounds half toward
-  // +∞, which sends a credit note's −0,285 to −0,28 while +0,285 goes to
-  // +0,29: the same amount rounded two different ways depending on its sign.
-  const cents = Math.round(Number((Math.abs(n) * 100).toPrecision(12)));
-  return (n < 0 ? -cents : cents) / 100;
-}
+// round2 lives in src/utils/round2.ts — a leaf module, so taxRates.ts (which
+// this file imports) can use it without an import cycle. Re-exported here.
 
 /** One VAT rate on a document, with the net it applies to and the tax due. */
 export interface VatRateGroup {

@@ -118,6 +118,7 @@ import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
 import { fkOrNull, queueFkRepairs, queueRowFkRepairs } from '../services/fkRepair';
 import { ensureCanCreate, ensureCanUsePaymentLink } from '../services/tierGatePrompt';
+import { round2 } from '../utils/round2';
 
 export type ContractorMetrics = {
   revenueThisMonth: number;
@@ -3748,14 +3749,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             number: documentNumber(alreadyBilled),
           }));
         }
-        const net = Math.round(lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0) * 100) / 100;
+        const net = round2(lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0));
         if (net <= 0) {
           // A pure credit belongs on a credit note, which this app does not
           // issue yet — refusing beats raising an invoice for a negative sum.
           throw new Error(appI18n.t('decisions.upgradesNotPositive', 'These choices come to zero or less, so there is nothing to invoice.'));
         }
         const vatRate = getEffectiveVatRate(businessProfile);
-        const amount = Math.round(net * (1 + vatRate / 100) * 100) / 100;
+        const amount = round2(net * (1 + vatRate / 100));
 
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = dueDateOnTerms();

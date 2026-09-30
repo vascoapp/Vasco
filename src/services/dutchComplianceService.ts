@@ -225,9 +225,9 @@ export function calculateLatePaymentInterest(
   const dailyRate = annualRate / 365;
   const interest = amount * dailyRate * daysOverdue;
   return {
-    interest: Math.round(interest * 100) / 100,
+    interest: round2(interest),
     dailyRate: Math.round(dailyRate * 10000) / 10000,
-    total: Math.round((amount + interest) * 100) / 100,
+    total: round2(amount + interest),
   };
 }
 

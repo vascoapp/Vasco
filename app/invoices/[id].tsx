@@ -57,6 +57,7 @@ import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 // `dueDate`; this one — the screen the contractor actually opens — did not.
 import { daysUntilDue } from '../../src/utils/invoiceDue';
 import { ensureCanUsePaymentLink } from '../../src/services/tierGatePrompt';
+import { round2 } from '../../src/utils/round2';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -360,7 +361,7 @@ export default function InvoiceDetailScreen() {
     const finalTotal = documentVatBreakdown(
       newTotal, localItems, Math.round(effectiveRate * 100),
     ).gross;
-    updateInvoice(invoice.id, { amount: Math.round(finalTotal * 100) / 100 });
+    updateInvoice(invoice.id, { amount: round2(finalTotal) });
     setEditingItems(false);
     hapticSuccess();
   };

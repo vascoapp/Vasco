@@ -36,6 +36,7 @@ import {
   type PricebookCategory,
   type PricebookPricingType,
 } from '../../../src/services/pricebookService';
+import { round2 } from '../../../src/utils/round2';
 
 const CATEGORIES: PricebookCategory[] = [
   'callout',
@@ -157,7 +158,7 @@ export default function PricebookEditorScreen() {
     if (suggested === null) return;
     // Round to cents — an un-rounded 83.33333 on a customer quote reads as a
     // machine, not a price.
-    setPriceText(String(Math.round(suggested * 100) / 100));
+    setPriceText(String(round2(suggested)));
   };
 
   return (

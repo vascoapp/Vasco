@@ -24,6 +24,7 @@ import { localDateKey } from '../utils/dateKey';
 import type { Invoice, Quote } from '../domain/documents';
 import { isSmallBusinessExempt, type VatScheme } from '../domain/business';
 import { parseCalendarDay } from '../utils/dateKey';
+import { round2 } from '../utils/round2';
 
 export type VatRateNL = 21 | 9 | 0;
 export type VatClassNL =
@@ -324,8 +325,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
       sourceId: inv.id,
       description: `${inv.customer ?? '(unknown)'} — ${inv.job ?? ''}`.trim(),
       date: invDate,
-      netAmount: Math.round(net * 100) / 100,
-      vatAmount: Math.round(vat * 100) / 100,
+      netAmount: round2(net),
+      vatAmount: round2(vat),
       vatRate: rate,
       classification,
       confidence,
@@ -351,8 +352,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
       sourceId: exp.id,
       description: exp.description,
       date: exp.date,
-      netAmount: Math.round(net * 100) / 100,
-      vatAmount: Math.round(vat * 100) / 100,
+      netAmount: round2(net),
+      vatAmount: round2(vat),
       vatRate: rate,
       classification,
       confidence,
@@ -388,8 +389,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
   }
   for (const k of Object.keys(rollups)) {
     rollups[k] = {
-      net: Math.round(rollups[k].net * 100) / 100,
-      vat: Math.round(rollups[k].vat * 100) / 100,
+      net: round2(rollups[k].net),
+      vat: round2(rollups[k].vat),
     };
   }
 
@@ -399,7 +400,7 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
        + rollups.rubriek_1e.vat + rollups.rubriek_2a.vat + rollups.rubriek_3a.vat
        + rollups.rubriek_3b.vat + rollups.rubriek_4a.vat);
   const totalInputVat = isDE ? rollups.kz_66.vat : rollups.rubriek_5b.vat;
-  const netPayable = Math.round((totalOutputVat - totalInputVat) * 100) / 100;
+  const netPayable = round2(totalOutputVat - totalInputVat);
 
   // YoY variance alert
   let yoyVariancePct: number | null = null;
@@ -435,8 +436,8 @@ export function prepareVatReturn(input: VatPrepInput): VatReturnDraft {
     rubriek_4a: rollups.rubriek_4a,
     rubriek_5b: rollups.rubriek_5b,
     rollups,
-    totalOutputVat: Math.round(totalOutputVat * 100) / 100,
-    totalInputVat: Math.round(totalInputVat * 100) / 100,
+    totalOutputVat: round2(totalOutputVat),
+    totalInputVat: round2(totalInputVat),
     netPayable,
     lowConfidenceLines,
     yoyVariancePct,

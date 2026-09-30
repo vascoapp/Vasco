@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { TFunction } from 'i18next';
+import { round2 } from '../utils/round2';
 
 /**
  * The three package names and their bullet points.
@@ -58,7 +59,7 @@ export const TIER_MULTIPLIER: Record<TierKey, number> = { good: 1, better: 1, be
  */
 export function tierUnitPrice(basePrice: number, tier: TierKey, variantPrice?: number): number {
   if (typeof variantPrice === 'number') return variantPrice;
-  return Math.round(basePrice * TIER_MULTIPLIER[tier] * 100) / 100;
+  return round2(basePrice * TIER_MULTIPLIER[tier]);
 }
 
 const STORAGE_KEY = '@vasco_quote_tier_presets';

@@ -1,6 +1,7 @@
 import type { Job } from '../domain/jobs';
 import { grossFromDocumentLines } from '../domain/business';
 import type { JobMaterial, Material } from '../domain/materials';
+import { round2 } from '../utils/round2';
 
 /**
  * What a finished job can be billed for.
@@ -78,8 +79,8 @@ export interface BillingLabels {
 export function loggedHours(job: Pick<Job, 'timeEntries' | 'actualHours'>): number {
   const entries = job.timeEntries ?? [];
   const fromEntries = entries.reduce((sum, e) => sum + (e.hours ?? 0), 0);
-  if (fromEntries > 0) return Math.round(fromEntries * 100) / 100;
-  return Math.round((job.actualHours ?? 0) * 100) / 100;
+  if (fromEntries > 0) return round2(fromEntries);
+  return round2(job.actualHours ?? 0);
 }
 
 /**
@@ -163,14 +164,14 @@ export function jobBillingBasis(args: {
           description: job.title,
           quantity: 1,
           // Already net (see `agreedAmount`). The caller grosses the lines up.
-          unitPrice: Math.round(agreed * 100) / 100,
+          unitPrice: round2(agreed),
         }];
-    const net = Math.round(lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0) * 100) / 100;
+    const net = round2(lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0));
     return { lineItems: lines, netAmount: net, agreedAmount: agreed, source: 'quote', unpricedHours: 0, workRecord };
   }
 
   const { lineItems, unpricedHours } = buildJobActualLines(job, jobMaterials, catalog, hourlyRate, labels);
-  const netAmount = Math.round(lineItems.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0) * 100) / 100;
+  const netAmount = round2(lineItems.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0));
   // Lines that add up to nothing are not an invoice. The case that reaches
   // here is real: hours logged, no rate anywhere to price them at. Reporting
   // 'none' with `unpricedHours` set lets the caller say WHICH of the two

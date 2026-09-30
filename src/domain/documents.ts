@@ -1,3 +1,4 @@
+import { round2 } from '../utils/round2';
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue';
 
@@ -186,5 +187,5 @@ export function amountPayableNow(
   invoice: { amount: number; retentionAmount?: number | null },
 ): number {
   const held = invoice.retentionAmount ?? 0;
-  return Math.round(Math.max(0, invoice.amount - held) * 100) / 100;
+  return round2(Math.max(0, invoice.amount - held));
 }

@@ -64,6 +64,7 @@ import { isSmallBusinessExempt, getStandardVatRate, getReducedVatRate, getSelect
 import { localDateKey } from '../../utils/dateKey';
 import { parseDecimalInput } from '../../utils/decimalInput';
 import { DecimalInput } from '../shared/DecimalInput';
+import { round2 } from '../../utils/round2';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 // =============================================================================
@@ -1731,7 +1732,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                     if (!cal || cal.combinedMultiplier <= 1 || !isHourly) return sv;
                     // Keep the halves: `Math.ceil` turned 2,5 h × 1,1 into 3 h,
                     // which is a bigger adjustment than the calibration asked for.
-                    return { ...sv, quantity: Math.round(sv.quantity * cal.combinedMultiplier * 100) / 100 };
+                    return { ...sv, quantity: round2(sv.quantity * cal.combinedMultiplier) };
                   }));
                   setCalibrationApplied(true);
                 }}>

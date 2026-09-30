@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { registerSingletonReset } from './singletonReset';
 import { getCurrentCountry } from '../lib/currentUser';
 import { getStandardVatRate, type BusinessProfile } from '../domain/business';
+import { round2 } from '../utils/round2';
 
 // =============================================================================
 // TYPES
@@ -240,7 +241,7 @@ class PurchaseOrderService {
     const subtotal = lineItems.reduce((sum, li) => sum + li.total, 0);
     // R66r51: country-aware VAT (was NL 21% hardcoded).
     const vatRate = getStandardVatRate((getCurrentCountry() as BusinessProfile['country']) ?? 'NL');
-    const vatAmount = Math.round(subtotal * vatRate / 100 * 100) / 100;
+    const vatAmount = round2(subtotal * vatRate / 100);
 
     const order: PurchaseOrder = {
       id: `po-${Date.now()}`,
@@ -252,7 +253,7 @@ class PurchaseOrderService {
       subtotal,
       vatRate,
       vatAmount,
-      total: Math.round((subtotal + vatAmount) * 100) / 100,
+      total: round2(subtotal + vatAmount),
       jobId,
       jobTitle,
       notes,
