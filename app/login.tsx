@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { legalUrl } from '../src/utils/legalLinks';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth, ROLE_CONFIGS, type UserRole } from '../src/context/AuthContext';
@@ -52,7 +53,7 @@ const getRouteForEmail = (email: string) => {
 };
 
 export default function LoginScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // R188: prefill from `?email=` so /signup → "Sign in instead" lands on this
   // screen with the email already typed. Saves users a re-entry on the most
   // common confused-signup path.
@@ -487,11 +488,11 @@ export default function LoginScreen() {
               links={{
                 terms: {
                   label: t('legal.termsOfService', 'Terms'),
-                  onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms'),
+                  onPress: () => Linking.openURL(legalUrl('terms', i18n.language)),
                 },
                 privacy: {
                   label: t('legal.privacyPolicy', 'Privacy Policy'),
-                  onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy'),
+                  onPress: () => Linking.openURL(legalUrl('privacy', i18n.language)),
                 },
               }}
             />

@@ -8,7 +8,8 @@
     "start": "next start",
     "check:validator": "tsx scripts/check-validator.ts",
     "check:portalCatalog": "npx --yes tsx scripts/check-portal-catalog.ts",
-    "test:auth": "node --test --experimental-strip-types src/lib/server/adminSession.test.ts"
+    "test:auth": "node --test --experimental-strip-types src/lib/server/adminSession.test.ts",
+    "test:legal": "node --test --experimental-strip-types src/lib/legalContent.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",

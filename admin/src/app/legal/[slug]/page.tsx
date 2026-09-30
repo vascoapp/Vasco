@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { legalTitle, renderLegalPage, type LegalSlug } from "@/lib/legalContent";
+import {
+  legalLanguages,
+  legalTitle,
+  pickLegalLang,
+  renderLegalPage,
+  type LegalSlug,
+} from "@/lib/legalContent";
+
+const LANG_NAMES = { en: "English", nl: "Nederlands", de: "Deutsch", fr: "Français", es: "Español", it: "Italiano" } as const;
 
 const VALID_SLUGS: LegalSlug[] = [
   "privacy-policy",
@@ -18,14 +27,17 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const lang = pickLegalLang((await searchParams).lang, (await headers()).get("accept-language"));
   if (!VALID_SLUGS.includes(slug as LegalSlug)) {
     return { title: "Legal" };
   }
-  const title = legalTitle(slug as LegalSlug);
+  const title = legalTitle(slug as LegalSlug, legalLanguages(slug as LegalSlug).includes(lang) ? lang : "en");
   return {
     // Root layout applies template "%s — Vasco" — do not repeat the suffix.
     title,
@@ -35,13 +47,19 @@ export async function generateMetadata({
 
 export default async function LegalPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const { slug } = await params;
   if (!VALID_SLUGS.includes(slug as LegalSlug)) notFound();
 
-  const html = await renderLegalPage(slug as LegalSlug);
+  // The reader is a contractor OR their customer, in any of six markets:
+  // ?lang= (the app passes its language), else the browser's, else English.
+  const wanted = pickLegalLang((await searchParams).lang, (await headers()).get("accept-language"));
+  const { html, lang } = await renderLegalPage(slug as LegalSlug, wanted);
+  const languages = legalLanguages(slug as LegalSlug);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -49,8 +67,24 @@ export default async function LegalPage({
         <a href="/" className="text-zinc-500 hover:text-zinc-900">
           ← Vasco
         </a>
+        {languages.length > 1 && (
+          <span className="float-right space-x-3">
+            {languages.map((l) => (
+              <a
+                key={l}
+                href={`/legal/${slug}?lang=${l}`}
+                hrefLang={l}
+                aria-current={l === lang ? "page" : undefined}
+                className={l === lang ? "font-semibold text-zinc-900" : "text-zinc-500 hover:text-zinc-900"}
+              >
+                {LANG_NAMES[l]}
+              </a>
+            ))}
+          </span>
+        )}
       </nav>
       <article
+        lang={lang}
         className="prose prose-zinc max-w-none prose-headings:font-semibold prose-a:text-[#F97316]"
         dangerouslySetInnerHTML={{ __html: html }}
       />

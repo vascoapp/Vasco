@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { legalUrl } from '../src/utils/legalLinks';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '../src/context/AuthContext';
 import { DEMO_MODE } from '../src/config/demo';
@@ -36,7 +37,7 @@ import {
 } from '../src/services/referralAttributionService';
 
 export default function SignupScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
@@ -238,11 +239,11 @@ export default function SignupScreen() {
                   links={{
                     terms: {
                       label: t('legal.termsOfService', 'Terms'),
-                      onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://vascobuild.com/terms'),
+                      onPress: () => Linking.openURL(legalUrl('terms', i18n.language)),
                     },
                     privacy: {
                       label: t('legal.privacyPolicy', 'Privacy Policy'),
-                      onPress: () => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://vascobuild.com/privacy'),
+                      onPress: () => Linking.openURL(legalUrl('privacy', i18n.language)),
                     },
                   }}
                 />
