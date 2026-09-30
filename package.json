@@ -53,7 +53,8 @@
     "schema:snapshot": "node scripts/schema-snapshot.mjs",
     "audit:reach": "node scripts/reachability.mjs",
     "check:send-invoice": "node scripts/check-send-invoice.mjs",
-    "check:portal-totals": "node scripts/check-portal-totals.mjs"
+    "check:portal-totals": "node scripts/check-portal-totals.mjs",
+    "check:push-owner": "node scripts/check-push-owner.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
