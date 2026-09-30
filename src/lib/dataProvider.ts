@@ -221,7 +221,10 @@ export async function listLineItems(documentId: string): Promise<LineItemRow[]> 
  * load and must never be the reason a cold start fails.
  */
 export async function healOrphanLineItems(
-  byDocumentNumber: Record<string, { description: string; quantity: number; unitPrice: number }[]>,
+  byDocumentNumber: Record<string, { description: string; quantity: number; unitPrice: number; vatRate?: number }[]>,
+  /** The contractor's effective rate — what every other line writer stamps
+   *  on a line that carries none. */
+  fallbackVatRatePercent: number | null,
 ): Promise<number> {
   const numbers = Object.keys(byDocumentNumber);
   if (!isSupabaseConfigured || numbers.length === 0) return 0;
@@ -244,6 +247,10 @@ export async function healOrphanLineItems(
           unit_price: it.unitPrice,
           total_price: it.unitPrice * it.quantity,
           position: idx,
+          // The rate travelled nowhere: an offline NL quote with 9 % labour
+          // was healed with vat_rate NULL, and the portal, the XRechnung and
+          // the next reload all billed it at 21 % (review, 2026-09-30).
+          vat_rate: typeof it.vatRate === 'number' && Number.isFinite(it.vatRate) ? it.vatRate : fallbackVatRatePercent,
         })));
         healed += 1;
       } catch { /* one document failing must not stop the rest */ }
@@ -256,7 +263,7 @@ export async function healOrphanLineItems(
 
 export async function upsertLineItems(
   documentId: string,
-  items: { description: string; quantity?: number; unit_price?: number; total_price?: number; position?: number }[],
+  items: { description: string; quantity?: number; unit_price?: number; total_price?: number; position?: number; vat_rate?: number | null }[],
 ): Promise<LineItemRow[]> {
   const userId = await getUserId();
   const rows = items.map((item) => ({

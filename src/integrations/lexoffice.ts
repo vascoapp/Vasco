@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
-import { documentVatBreakdown } from '../domain/business';
+import { documentVatBreakdown, documentFallbackRate } from '../domain/business';
 
 const STORAGE_KEY = 'vasco_lexoffice';
 const LEGACY_KEY = '@vasco_lexoffice';
@@ -174,7 +174,7 @@ export function vascoToLexofficeInvoice(invoice: {
     totalPrice: (() => {
       const lines = invoice.lineItems.map((li) => ({ quantity: li.quantity, unitPrice: li.unitPrice, vatRate: li.vatRate }));
       const raw = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-      const b = documentVatBreakdown(raw, lines, Math.max(0, ...lines.map((l) => l.vatRate)));
+      const b = documentVatBreakdown(raw, lines, documentFallbackRate(lines));
       return {
         totalNetAmount: b.net,
         totalGrossAmount: b.gross,

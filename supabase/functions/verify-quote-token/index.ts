@@ -199,9 +199,6 @@ Deno.serve(async (req) => {
     // step further out than the bug this whole block was added to fix.
     // An edge function cannot import from `src/`: the rule lives in
     // _shared/documentTotals.ts, which the app's tests import instead.
-    const rated = (lines ?? []).filter(
-      (l: { vat_rate?: number | null }) => l.vat_rate !== null && l.vat_rate !== undefined && Number.isFinite(Number(l.vat_rate)),
-    );
     // The app's own rule (lines in cents, VAT per rate on their sum — #360),
     // from ONE module the app's test suite also imports: the hand-kept copy
     // that stood here drifted, and the customer accepted a cent less than the
@@ -213,14 +210,7 @@ Deno.serve(async (req) => {
     // single rate, so it is reported as null and the page omits the percentage
     // rather than printing an averaged one — "TVA (13,8%)" is a number that
     // appears on no invoice and in no tax table.
-    const allRates = Array.from(new Set(
-      (lines ?? []).map((l: { vat_rate?: number | null }) => Number(l.vat_rate)),
-    ));
-    const hasSingleRate = rated.length > 0
-      && rated.length === (lines ?? []).length
-      && allRates.length === 1
-      && Number.isFinite(allRates[0]);
-    const vatRate = hasSingleRate ? allRates[0] / 100 : (rated.length === 0 ? standardRate : null);
+    const vatRate = totals.ratePct === null ? null : totals.ratePct / 100;
 
     // ── An acceptance capability for the customer holding this link ──────
     //

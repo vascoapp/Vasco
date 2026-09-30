@@ -68,8 +68,15 @@ describe('the customer is shown the gross total', () => {
     const fn = read('supabase/functions/verify-quote-token/index.ts');
     expect(fn).toMatch(/vat_rate/);                 // it must ASK for the rates
     expect(fn).toMatch(/standardRate/);             // the country rate is the fallback, not the answer
-    // A mixed-rate quote reports no single rate rather than an averaged one.
-    expect(fn).toMatch(/hasSingleRate/);
+    // A mixed-rate quote reports no single rate rather than an averaged one —
+    // the label comes from the shared module's groups (portalTotalsMatchTheApp).
+    expect(fn).toMatch(/const vatRate = totals\.ratePct === null \? null : totals\.ratePct \/ 100;/);
+  });
+
+  it('the customer page prints a reduced rate with its decimal (5,5 %, not 6 %)', () => {
+    const page = read('admin/src/app/quote/[id]/page.tsx');
+    expect(page).not.toMatch(/Math\.round\(quote\.vatRate \* 100\)/);
+    expect(page).toMatch(/maximumFractionDigits: 2 \}\)\.format\(Number\(\(quote\.vatRate \* 100\)/);
   });
 
   it('the edge function VAT table matches the app VAT table', () => {

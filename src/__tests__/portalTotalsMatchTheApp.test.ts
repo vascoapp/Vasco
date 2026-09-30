@@ -24,7 +24,7 @@ it('the review\'s own example', () => {
   ];
   const net = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
   const app = documentVatBreakdown(net, lines.map((l) => ({ quantity: l.quantity, unitPrice: l.unit_price, vatRate: l.vat_rate })), 19);
-  expect(quoteTotals({ netTotal: round2(net), lines, standardRate: 0.19 })).toEqual({ net: app.net, vat: app.vat, gross: app.gross });
+  expect(quoteTotals({ netTotal: round2(net), lines, standardRate: 0.19 })).toEqual({ net: app.net, vat: app.vat, gross: app.gross, ratePct: 19 });
 });
 
 it('the portal and the app state the same quote the same way, 20000 quotes', () => {
@@ -49,8 +49,12 @@ it('the portal and the app state the same quote the same way, 20000 quotes', () 
       standard,
     );
     const portal = quoteTotals({ netTotal, lines, standardRate: standard / 100 });
-    if (portal.net !== app.net || portal.vat !== app.vat || portal.gross !== app.gross) {
-      failures.push({ i, standard, mode, lines, netTotal, app: { net: app.net, vat: app.vat, gross: app.gross }, portal });
+    // The label: one rate, or none when the document mixes them — the app's
+    // `ratePct` answers the same question (null on a mixed document).
+    const appLabel = standard === 0 ? 0 : app.ratePct;
+    const labelDiffers = app.groups.length > 0 && portal.ratePct !== appLabel;
+    if (portal.net !== app.net || portal.vat !== app.vat || portal.gross !== app.gross || labelDiffers) {
+      failures.push({ i, standard, mode, lines, netTotal, app: { net: app.net, vat: app.vat, gross: app.gross, ratePct: app.ratePct }, portal });
     }
   }
   expect(failures.slice(0, 2)).toEqual([]);

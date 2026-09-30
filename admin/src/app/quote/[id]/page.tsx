@@ -430,7 +430,8 @@ export default function PublicQuotePortal({ params }: PageProps) {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid #2A3038' }}>
                         <span style={{ fontSize: 13, color: '#9CA3AF' }}>
-                          {copy.vat}{quote.vatRate != null ? ` (${Math.round(quote.vatRate * 100)}%)` : ''}
+                          {/* Not Math.round: a French 5,5 % renovation read "TVA (6%)" (review 2026-09-30). */}
+                          {copy.vat}{quote.vatRate != null ? ` (${new Intl.NumberFormat(LANG_LOCALE[lang], { maximumFractionDigits: 2 }).format(Number((quote.vatRate * 100).toPrecision(12)))}%)` : ''}
                         </span>
                         <span style={{ fontSize: 14, color: '#D1D5DB', whiteSpace: 'nowrap' }}>{money.format(quote.vatAmount)}</span>
                       </div>

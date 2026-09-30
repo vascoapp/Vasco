@@ -9,7 +9,7 @@ import { PropsWithChildren, createContext, useCallback, useContext, useEffect, u
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Domain types
-import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, grossFromNet, grossFromDocumentLines } from '../domain/business';
+import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, storedLineVatRate, grossFromNet, grossFromDocumentLines } from '../domain/business';
 import { Customer, findDocumentCustomer } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
@@ -696,7 +696,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
         if (Object.keys(orphans).length > 0) {
           import('../lib/dataProvider')
-            .then((m) => m.healOrphanLineItems(orphans))
+            .then((m) => m.healOrphanLineItems(orphans, storedLineVatRate(bp)))
             .then((n) => { if (n > 0) logWarn('AppState', `healed line items for ${n} document(s) created offline`); })
             .catch(() => {});
         }

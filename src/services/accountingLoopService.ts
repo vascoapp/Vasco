@@ -12,7 +12,7 @@ import { exportInvoice, syncPaymentStatus } from '../integrations/accounting';
 import { createPaymentLink } from '../integrations/mollie';
 import type { UnifiedInvoice, UnifiedLineItem } from '../integrations/accounting';
 import { MS_PER_DAY } from '../utils/timeConstants';
-import { vatRateGroups, round2 } from '../domain/business';
+import { documentFallbackRate, documentVatBreakdown } from '../domain/business';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -176,16 +176,13 @@ export async function executeStageAction(
           // correct figures are € 133,70 net, € 28,08 VAT, € 161,78 gross
           // (#354).
           ...(() => {
-            const groups = vatRateGroups(
+            const lines = lineItems.map((li) => ({ quantity: 1, unitPrice: li.totalExclVat, vatRate: li.vatRate }));
+            const b = documentVatBreakdown(
               lineItems.reduce((s, li) => s + li.totalExclVat, 0),
-              lineItems.map((li) => ({ quantity: 1, unitPrice: li.totalExclVat, vatRate: li.vatRate })),
-              lineItems[0]?.vatRate ?? 0,
+              lines,
+              documentFallbackRate(lines),
             );
-            const totalExclVat = round2(lineItems.reduce((s, li) => s + li.totalExclVat, 0));
-            return {
-              totalExclVat,
-              totalInclVat: round2(totalExclVat + groups.reduce((sum, g) => sum + g.vat, 0)),
-            };
+            return { totalExclVat: b.net, totalInclVat: b.gross };
           })(),
         };
 

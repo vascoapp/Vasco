@@ -133,6 +133,20 @@ export function getStandardVatRate(country: BusinessProfile['country']): number 
   return Math.round(getVATRateDecimal(country ?? '') * 100);
 }
 
+/**
+ * The rate to STORE on a line that carries none. 0 only for a real exemption
+ * (KOR / Kleinunternehmer); null while the country is unknown. getEffectiveVatRate
+ * answers 0 for both, and the offline heal froze a first-day quote's lines at
+ * 0 % before the profile had synced (review, 2026-09-30) — NULL keeps them
+ * following the document's rate once it is known.
+ */
+export function storedLineVatRate(profile: { country?: BusinessProfile['country']; vatScheme?: VatScheme } | null | undefined): number | null {
+  if (!profile) return null;
+  if (isSmallBusinessExempt(profile)) return 0;
+  const rate = getStandardVatRate(profile.country);
+  return rate > 0 ? rate : null;
+}
+
 export function getEffectiveVatRate(profile: { country?: BusinessProfile['country']; vatScheme?: VatScheme }): number {
   if (isSmallBusinessExempt(profile)) return 0;
   return getStandardVatRate(profile.country);
@@ -394,6 +408,18 @@ export function documentNet(
   const raw = all.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
   if (Math.abs(raw - netAmount) > 0.01) return round2(netAmount);
   return round2(all.reduce((s, l) => s + round2(l.quantity * l.unitPrice), 0));
+}
+
+/**
+ * The rate a document falls back to when its lines are all rated anyway: the
+ * HIGHEST line rate. `lineItems[0]?.vatRate` was the idiom at three call
+ * sites, and a fallback of 0 means "no VAT at all" to `vatRateGroups` — so a
+ * document whose FIRST line was 0 % printed no VAT rows under a Total that
+ * included VAT, and the bookkeeping export sent VAT 0 (review, 2026-09-30).
+ */
+export function documentFallbackRate(lines: ReadonlyArray<{ vatRate?: number }> | undefined, otherwise = 0): number {
+  const rates = (lines ?? []).map((l) => l.vatRate).filter((r): r is number => typeof r === 'number' && Number.isFinite(r));
+  return rates.length > 0 ? Math.max(...rates) : otherwise;
 }
 
 export function documentVatBreakdown(

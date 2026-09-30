@@ -31,7 +31,13 @@ export function quoteTotals(args: {
   lines: TotalsLine[] | null | undefined;
   /** Fractional (0.19), the rate for a quote whose lines do not say. */
   standardRate: number;
-}): { net: number; vat: number; gross: number } {
+}): {
+  net: number; vat: number; gross: number;
+  /** For the LABEL ("USt. (19 %)"): the one rate of the document, or null
+   *  when it mixes rates — never an average. From the same filled-in rates
+   *  the VAT is computed with, so label and total cannot disagree. */
+  ratePct: number | null;
+} {
   const lines = args.lines ?? [];
   const amount = (l: TotalsLine) => (Number(l.quantity) || 0) * (Number(l.unit_price) || 0);
   const raw = lines.reduce((s, l) => s + amount(l), 0);
@@ -43,7 +49,7 @@ export function quoteTotals(args: {
   // `vatRateGroups` returns no groups before it looks at a line. The portal
   // showed a KOR contractor's customer 19 % VAT the invoice never charged
   // (review, 2026-09-30).
-  if (args.standardRate === 0) return { net, vat: 0, gross: net };
+  if (args.standardRate === 0) return { net, vat: 0, gross: net, ratePct: 0 };
 
   // A line without a rate is a line at the document's rate — as the app
   // treats it and as the database stores it (review, 2026-09-30).
@@ -55,7 +61,9 @@ export function quoteTotals(args: {
       // rounded separately — a cent off the app (property test, 2026-09-30).
       : Number((args.standardRate * 100).toPrecision(12));
 
-  let vat: number;
+  // The per-rate groups, exactly as `vatRateGroups` forms them — the VAT is
+  // their sum and the LABEL is their one rate (or none), as the app's ratePct.
+  let groups: Array<{ ratePct: number; base: number; vat: number }>;
   if (lines.length > 0 && reconciles) {
     // One VAT per rate, on that rate's lines in cents (EN 16931 BT-116/117).
     const byRate = new Map<number, number>();
@@ -63,11 +71,20 @@ export function quoteTotals(args: {
       const r = rateOf(l);
       byRate.set(r, (byRate.get(r) ?? 0) + round2(amount(l)));
     }
-    vat = round2([...byRate.entries()].reduce((s, [r, base]) => s + round2(round2(base) * (r / 100)), 0));
+    groups = [...byRate.entries()]
+      .map(([r, base]) => ({ ratePct: r, base: round2(base), vat: round2(round2(base) * (r / 100)) }))
+      .filter((g) => g.base !== 0 || g.vat !== 0);
   } else {
+    // Lines that do not add up to the amount (or none): one rate, on the amount.
     const rates = Array.from(new Set(lines.map(rateOf)));
-    const rate = lines.length > 0 && rates.length === 1 ? rates[0] / 100 : args.standardRate;
-    vat = round2(net * rate);
+    const ratePct = lines.length > 0 && rates.length === 1
+      ? rates[0]
+      : Number((args.standardRate * 100).toPrecision(12));
+    groups = ratePct === 0 ? [] : [{ ratePct, base: net, vat: round2(net * (ratePct / 100)) }];
   }
-  return { net, vat, gross: round2(net + vat) };
+  const vat = round2(groups.reduce((s, g) => s + g.vat, 0));
+  const ratePct = groups.length === 1
+    ? groups[0].ratePct
+    : groups.length === 0 ? Number((args.standardRate * 100).toPrecision(12)) : null;
+  return { net, vat, gross: round2(net + vat), ratePct };
 }

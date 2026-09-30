@@ -9,7 +9,7 @@ import * as Sharing from 'expo-sharing';
 import { nameThePdf } from '../utils/namedPdf';
 import { DEMO_MODE } from '../config/demo';
 import type { Country } from '../context/AuthContext';
-import { vatRateGroups } from '../domain/business';
+import { vatRateGroups, documentFallbackRate } from '../domain/business';
 
 const fmt = (n: number, locale?: string) =>
   n.toLocaleString(locale || 'en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -238,7 +238,7 @@ function buildQuoteHtml(
   // Total agree — see the note in `invoicePdfService` (#354). A quote the
   // customer accepts becomes the invoice they are billed from; it has to add
   // up in both documents.
-  const documentRate = quote.lineItems[0]?.vatRate ?? 0;
+  const documentRate = documentFallbackRate(quote.lineItems);
   const vatByRate = new Map<number, number>();
   for (const group of vatRateGroups(quote.subtotal, quote.lineItems, documentRate)) {
     vatByRate.set(group.ratePct, group.vat);

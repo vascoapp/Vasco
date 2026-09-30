@@ -13,7 +13,7 @@ import * as Sharing from 'expo-sharing';
 import { File } from 'expo-file-system';
 import type { AutoInvoice } from './invoiceAutomationService';
 import { DEMO_MODE } from '../config/demo';
-import { vatRateGroups } from '../domain/business';
+import { vatRateGroups, documentFallbackRate } from '../domain/business';
 import type { Country } from '../context/AuthContext';
 import { logWarn } from '../utils/errorHandler';
 import { nameThePdf } from '../utils/namedPdf';
@@ -371,7 +371,7 @@ function buildInvoiceHtml(
   // Every AutoInvoice line carries its own rate, so the fallback only matters
   // if the subtotal has drifted from the lines (a discount, a hand-edited
   // total) — in which case the document's own single rate is the right answer.
-  const documentRate = invoice.lineItems[0]?.vatRate ?? 0;
+  const documentRate = documentFallbackRate(invoice.lineItems);
   const vatByRate = new Map<number, number>();
   if (!isSmallBusinessExempt) {
     for (const group of vatRateGroups(invoice.subtotal, invoice.lineItems, documentRate)) {
