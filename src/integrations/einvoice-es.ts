@@ -116,6 +116,28 @@ export const IVA_RATES = {
 // Generate Facturae 3.2.2 XML
 // ---------------------------------------------------------------------------
 
+/**
+ * A person in Facturae is Name + FirstSurname (+ SecondSurname) — the schema
+ * requires FirstSurname, and we sent the whole name as <Name> (official
+ * Facturae 3.2.2 schema, 2026-10-01). Spanish names are given name(s) then two
+ * surnames: "María José García López" → María José / García / López. Null when
+ * the name cannot be split honestly (one word) — the mapper refuses then.
+ */
+export function splitSpanishName(full: string): { name: string; firstSurname: string; secondSurname?: string } | null {
+  const t = String(full ?? '').trim().split(/\s+/).filter(Boolean);
+  if (t.length < 2) return null;
+  if (t.length === 2) return { name: t[0], firstSurname: t[1] };
+  return { name: t.slice(0, -2).join(' '), firstSurname: t[t.length - 2], secondSurname: t[t.length - 1] };
+}
+
+const individualXml = (full: string): string => {
+  const n = splitSpanishName(full);
+  if (!n) return `<Name>${escapeXml(full)}</Name>`;
+  return `<Name>${escapeXml(n.name)}</Name>
+        <FirstSurname>${escapeXml(n.firstSurname)}</FirstSurname>${n.secondSurname ? `
+        <SecondSurname>${escapeXml(n.secondSurname)}</SecondSurname>` : ''}`;
+};
+
 export function generateFacturaeXml(data: FacturaeInvoice): string {
   const version = data.schemaVersion ?? '3.2.2';
   const ns = `http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml`;
@@ -194,7 +216,7 @@ export function generateFacturaeXml(data: FacturaeInvoice): string {
         ${data.sellerPersonType === 'J'
           ? `<CorporateName>${escapeXml(data.sellerName)}</CorporateName>${data.sellerTradeName ? `
         <TradeName>${escapeXml(data.sellerTradeName)}</TradeName>` : ''}`
-          : `<Name>${escapeXml(data.sellerName)}</Name>`}
+          : individualXml(data.sellerName)}
         <AddressInSpain>
           <Address>${escapeXml(data.sellerAddress)}</Address>
           <PostCode>${escapeXml(data.sellerPostalCode)}</PostCode>
@@ -213,7 +235,7 @@ export function generateFacturaeXml(data: FacturaeInvoice): string {
       <${data.buyerPersonType === 'J' ? 'LegalEntity' : 'Individual'}>
         ${data.buyerPersonType === 'J'
           ? `<CorporateName>${escapeXml(data.buyerName)}</CorporateName>`
-          : `<Name>${escapeXml(data.buyerName)}</Name>`}
+          : individualXml(data.buyerName)}
         <AddressInSpain>
           <Address>${escapeXml(data.buyerAddress)}</Address>
           <PostCode>${escapeXml(data.buyerPostalCode)}</PostCode>

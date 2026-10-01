@@ -24,6 +24,7 @@
 import type { FatturaPA, FatturaPALineItem, RegimeFiscale } from './einvoice-it';
 import { marcaDaBolloDue, MARCA_DA_BOLLO_EUR } from './einvoice-it';
 import type { FacturaeInvoice, FacturaeLineItem, PersonTypeCode, RegimeFiscal } from './einvoice-es';
+import { splitSpanishName } from './einvoice-es';
 
 /** What every screen already has: the invoice, its lines, and both parties. */
 export interface EInvoiceSource {
@@ -254,6 +255,9 @@ export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> 
   // Facturae states F or J explicitly on both parties; a sole trader and a
   // company are not distinguishable from anything else the app stores.
   need(missing, src.seller.personType, 'profile.personType', 'profile');
+  // A person is Name + FirstSurname in Facturae; a one-word name cannot be
+  // split honestly, so it is asked for rather than guessed.
+  if (src.seller.personType === 'F' && !splitSpanishName(src.seller.name)) missing.push({ key: 'profile.nameWithSurname', where: 'profile' });
 
   const buyerNif = src.buyer.vatId ?? src.buyer.taxId;
   need(missing, buyerNif, 'customer.vatOrTaxId', 'customer');
@@ -261,6 +265,9 @@ export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> 
   need(missing, src.buyer.city, 'customer.city', 'customer');
   need(missing, src.buyer.postcode, 'customer.postcode', 'customer');
   need(missing, src.buyer.province, 'customer.province', 'customer');
+  if (buyerNif && !/^[A-Za-z]/.test(String(buyerNif)) && !splitSpanishName(src.buyer.name)) {
+    missing.push({ key: 'customer.nameWithSurname', where: 'customer' });
+  }
 
   if (missing.length > 0) return { ok: false, missing };
 

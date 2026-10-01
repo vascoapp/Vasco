@@ -2473,7 +2473,8 @@
     "registrationSiret": "SIRET",
     "vatNumberTva": "Btw-nummer (TVA)",
     "vatNumberPiva": "Partita IVA",
-    "registrationCoNo": "Bedrijfsnummer (Companies House)"
+    "registrationCoNo": "Bedrijfsnummer (Companies House)",
+    "nameWithSurname": "Volledige naam met achternaam (bijv. Lucía Navarro Gómez)"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -3634,7 +3635,8 @@
     "city": "Plaats",
     "postcode": "Postcode",
     "province": "Provincie",
-    "editDetails": "Gegevens wijzigen"
+    "editDetails": "Gegevens wijzigen",
+    "nameWithSurname": "Volledige naam van de klant met achternaam"
   },
   "inbox": {
     "fromCustomer": "Van klant",

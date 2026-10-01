@@ -2473,7 +2473,8 @@
     "registrationSiret": "SIRET",
     "vatNumberTva": "Partita IVA (TVA)",
     "vatNumberPiva": "Partita IVA",
-    "registrationCoNo": "Company number (Companies House)"
+    "registrationCoNo": "Company number (Companies House)",
+    "nameWithSurname": "Nome completo con cognome (es. Lucía Navarro Gómez)"
   },
   "search": {
     "placeholder": "Cerca in lavori, preventivi, fatture e clienti",
@@ -3634,7 +3635,8 @@
     "city": "Città",
     "postcode": "CAP",
     "province": "Provincia",
-    "editDetails": "Modifica dati"
+    "editDetails": "Modifica dati",
+    "nameWithSurname": "Nome completo del cliente con cognome"
   },
   "inbox": {
     "fromCustomer": "Dal cliente",

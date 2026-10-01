@@ -218,6 +218,11 @@ export const IVA_RATES_IT = {
 // Generate FatturaPA XML (v1.2)
 // ---------------------------------------------------------------------------
 
+// DettaglioPagamento follows the XSD order: ModalitaPagamento,
+// DataScadenzaPagamento, ImportoPagamento, IBAN. The due date sat after the
+// amount — the official FatturaPA 1.2.2 schema rejected every invoice with a
+// due date (2026-10-01), and SDI refuses a schema-invalid file (00200).
+// Guard: npm run check:einvoice-schemas.
 export function generateFatturaPAXml(data: FatturaPA): string {
   const seller = data.cedentePrestatore;
   const buyer = data.cessionarioCommittente;
@@ -297,9 +302,9 @@ export function generateFatturaPAXml(data: FatturaPA): string {
       <DatiPagamento>
         <CondizioniPagamento>${data.condizioniPagamento}</CondizioniPagamento>
         <DettaglioPagamento>
-          <ModalitaPagamento>${data.modalitaPagamento ?? 'MP05'}</ModalitaPagamento>
-          <ImportoPagamento>${data.totalGross.toFixed(2)}</ImportoPagamento>${data.dataScadenzaPagamento ? `
-          <DataScadenzaPagamento>${data.dataScadenzaPagamento}</DataScadenzaPagamento>` : ''}${data.iban ? `
+          <ModalitaPagamento>${data.modalitaPagamento ?? 'MP05'}</ModalitaPagamento>${data.dataScadenzaPagamento ? `
+          <DataScadenzaPagamento>${data.dataScadenzaPagamento}</DataScadenzaPagamento>` : ''}
+          <ImportoPagamento>${data.totalGross.toFixed(2)}</ImportoPagamento>${data.iban ? `
           <IBAN>${escapeXml(data.iban)}</IBAN>` : ''}
         </DettaglioPagamento>
       </DatiPagamento>` : '';
