@@ -7,7 +7,7 @@ import { friendlyError } from '../../src/utils/friendlyError';
 import { logWarn } from '../../src/utils/errorHandler';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
@@ -245,6 +245,11 @@ export default function InvoiceDetailScreen() {
   // Building the PDF takes seconds; a second tap meanwhile emailed the
   // customer twice (review, 2026-09-30).
   const sendingRef = useRef(false);
+  // The ZUGFeRD / Factur-X hybrid is built ON the device (pdf-lib + whole
+  // fonts): ~20 s on the emulator, with nothing on screen — a contractor taps
+  // again and gets a second file (device pass, 2026-10-02). Busy row + guard.
+  const hybridRef = useRef(false);
+  const [hybridBusy, setHybridBusy] = useState(false);
   // Whether the send WILL be a dunning reminder — the same question the
   // handler asks (≥ 3 days overdue AND a cadence step for this customer). The
   // label read only the days, so a customer whose cadence override delays
@@ -894,33 +899,42 @@ export default function InvoiceDetailScreen() {
     // reached it; it now shares the hybrid from src/integrations/pdfA3Invoice.ts,
     // which veraPDF and Mustang accept (npm run check:pdfa3). Built in JS on the device: no
     // server round-trip, no native module. Named by the document number.
-    let hybrid: { bytes: Uint8Array; xml: string };
+    if (hybridRef.current) return;
+    hybridRef.current = true;
+    setHybridBusy(true);
     try {
-      const { buildPdfA3Invoice } = await import('../../src/integrations/pdfA3Invoice');
-      const { loadPdfA3Fonts } = await import('../../src/services/pdfA3Fonts');
-      const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
-      hybrid = await buildPdfA3Invoice(data, {
-        profile: isFacturX ? 'facturx' : 'zugferd',
-        // The app's ACTIVE language — profile first, account second (#218).
-        // `BusinessProfile` has no language field; reading one is always 'en'.
-        language: messageLocale(),
-        fonts: await loadPdfA3Fonts(),
-        // The same statutory text the printed PDF carries (§ 14b UStG; FR
-        // L441-10/D441-5 + the 2026 reform mentions).
-        mentions: [
-          ...legalMentions(country),
-          ...(country === 'FR' ? frenchInvoiceMentions2026(extras.frMentions) : []),
-        ],
-      });
-    } catch (err) {
-      logWarn('einvoiceHybrid', `build failed: ${err instanceof Error ? err.message : String(err)}`);
-      Alert.alert(
-        t('einvoice.hybridFailedTitle', 'E-invoice not created'),
-        t('einvoice.hybridFailedBody', 'The e-invoice PDF could not be created. Nothing was shared — please try again.'),
-      );
-      return;
+      let hybrid: { bytes: Uint8Array; xml: string };
+      try {
+        const { buildPdfA3Invoice } = await import('../../src/integrations/pdfA3Invoice');
+        const { loadPdfA3Fonts } = await import('../../src/services/pdfA3Fonts');
+        const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
+        hybrid = await buildPdfA3Invoice(data, {
+          profile: isFacturX ? 'facturx' : 'zugferd',
+          // The app's ACTIVE language — profile first, account second (#218).
+          // `BusinessProfile` has no language field; reading one is always 'en'.
+          language: messageLocale(),
+          fonts: await loadPdfA3Fonts(),
+          // The same statutory text the printed PDF carries (§ 14b UStG; FR
+          // L441-10/D441-5 + the 2026 reform mentions).
+          mentions: [
+            ...legalMentions(country),
+            ...(country === 'FR' ? frenchInvoiceMentions2026(extras.frMentions) : []),
+          ],
+        });
+      } catch (err) {
+        logWarn('einvoiceHybrid', `build failed: ${err instanceof Error ? err.message : String(err)}`);
+        Alert.alert(
+          t('einvoice.hybridFailedTitle', 'E-invoice not created'),
+          t('einvoice.hybridFailedBody', 'The e-invoice PDF could not be created. Nothing was shared — please try again.'),
+        );
+        return;
+      }
+      setHybridBusy(false);
+      await shareEInvoiceThenConfirm(hybrid.xml, pdfFileName(data.invoiceNumber), effectiveFormat, hybrid.bytes);
+    } finally {
+      hybridRef.current = false;
+      setHybridBusy(false);
     }
-    await shareEInvoiceThenConfirm(hybrid.xml, pdfFileName(data.invoiceNumber), effectiveFormat, hybrid.bytes);
   };
 
   // ES Facturae / IT FatturaPA: both mappers take the one neutral source, so
@@ -1576,6 +1590,7 @@ export default function InvoiceDetailScreen() {
               icon="document-attach-outline"
               label={t('invoices.exportZugferd', 'Export ZUGFeRD (PDF)')}
               onPress={() => handleExportEInvoice('ZUGFeRD')}
+              busy={hybridBusy}
               border
             />
           )}
@@ -1584,6 +1599,7 @@ export default function InvoiceDetailScreen() {
               icon="document-attach-outline"
               label={t('invoices.exportFacturX', 'Export Factur-X (PDF)')}
               onPress={() => handleExportEInvoice('ZUGFeRD')}
+              busy={hybridBusy}
               border
             />
           )}
@@ -1864,12 +1880,14 @@ export default function InvoiceDetailScreen() {
 }
 
 // Action row component
-function ActionRow({ icon, label, onPress, border, accent }: {
+function ActionRow({ icon, label, onPress, border, accent, busy }: {
   icon: IconName;
   label: string;
   onPress: () => void;
   border?: boolean;
   accent?: boolean;
+  /** Work in progress: a spinner instead of the chevron, and no second tap. */
+  busy?: boolean;
 }) {
   // R66r44 DK polish — accent rows ("Mark as paid", primary CTAs) get the
   // DK gradient + amber glow treatment so they read as load-bearing actions
@@ -1889,12 +1907,19 @@ function ActionRow({ icon, label, onPress, border, accent }: {
     );
   }
   return (
-    <Pressable style={[styles.actionRow, border && styles.actionRowBorder]} onPress={onPress}>
+    <Pressable
+      style={[styles.actionRow, border && styles.actionRowBorder]}
+      onPress={onPress}
+      disabled={busy}
+      accessibilityState={{ busy: !!busy, disabled: !!busy }}
+    >
       <View style={styles.actionIcon}>
         <Ionicons name={icon} size={18} color={SemanticColors.textSecondary} />
       </View>
       <Text style={styles.actionLabel}>{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />
+      {busy
+        ? <ActivityIndicator size="small" color={DK.colors.accent} testID="action-row-busy" />
+        : <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />}
     </Pressable>
   );
 }
