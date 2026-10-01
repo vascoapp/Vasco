@@ -8,7 +8,8 @@
  * to it yields a file that LOOKS like a ZUGFeRD and fails PDF/A validation.
  * Everything a PDF/A-3b needs is written here explicitly:
  *
- *   · every font embedded (subset) — Inter, read by the caller as bytes;
+ *   · every font embedded WHOLE — Inter, read by the caller as bytes (see
+ *     the note at embedFont: the subset drew blank glyphs and passed PDF/A);
  *   · DeviceRGB only, under an sRGB OutputIntent with the ICC profile embedded
  *     (srgbIccProfile.ts, CC0);
  *   · XMP metadata: pdfaid part 3 / conformance B, the Factur-X `fx:` schema
@@ -136,8 +137,14 @@ export async function buildPdfA3Invoice(
 
   const doc = await PDFDocument.create({ updateMetadata: false });
   doc.registerFontkit(fontkit);
-  const regular = await doc.embedFont(opts.fonts.regular, { subset: true });
-  const bold = await doc.embedFont(opts.fonts.bold, { subset: true });
+  // NOT subset. pdf-lib's fontkit subset of Inter kept the glyph ids and lost
+  // the outlines: "RECHNUNG" rendered as "EC", and veraPDF + Mustang both
+  // called that file compliant — PDF/A checks that a font is embedded, not
+  // that it draws (2026-10-01, caught by rendering the sample). Whole fonts
+  // cost ~400 KB per invoice. Guard: pdfA3HybridInvoice "every glyph … has an
+  // outline".
+  const regular = await doc.embedFont(opts.fonts.regular, { subset: false });
+  const bold = await doc.embedFont(opts.fonts.bold, { subset: false });
 
   const title = `${L.title} ${data.invoiceNumber}`;
   const author = clean(data.sellerName);
@@ -369,15 +376,23 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
   y -= 34;
 
   // Line table.
-  const cols = { desc: MARGIN, qty: MARGIN + width * 0.58, price: MARGIN + width * 0.75, vat: MARGIN + width * 0.84, amount: A4[0] - MARGIN };
-  const descW = width * 0.55;
+  // Right edges of the numeric columns. Sized for the WIDEST labels (French:
+  // "Prix unitaire HT", "Montant HT"), which collided at the first render.
+  const cols = {
+    desc: MARGIN + 4,
+    qty: MARGIN + width * 0.56,
+    price: MARGIN + width * 0.74,
+    vat: MARGIN + width * 0.83,
+    amount: A4[0] - MARGIN - 4,
+  };
+  const descW = width * 0.48;
   const tableHeader = () => {
     page.drawRectangle({ x: MARGIN, y: y - 5, width, height: 18, color: rgb(0.96, 0.96, 0.97) });
-    text(L.description, cols.desc + 4, y, 8, bold, MUTED);
-    right(L.quantity, cols.qty + 40, y, 8, bold, MUTED);
-    right(L.unitPrice, cols.vat - 8, y, 8, bold, MUTED);
-    right(L.vatRate, cols.vat + 30, y, 8, bold, MUTED);
-    right(L.amount, cols.amount - 4, y, 8, bold, MUTED);
+    text(L.description, cols.desc, y, 8, bold, MUTED);
+    right(L.quantity, cols.qty, y, 8, bold, MUTED);
+    right(L.unitPrice, cols.price, y, 8, bold, MUTED);
+    right(L.vatRate, cols.vat, y, 8, bold, MUTED);
+    right(L.amount, cols.amount, y, 8, bold, MUTED);
     y -= 20;
   };
   const newPage = () => {
@@ -392,11 +407,11 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
     const descLines = wrap(li.description, regular, 9.5, descW);
     const h = descLines.length * 12.5 + 6;
     if (y - h < MARGIN + 40) newPage();
-    descLines.forEach((w, i) => text(w, cols.desc + 4, y - i * 12.5, 9.5));
-    right(formatNumber(li.quantity, r.lang, 0, 3), cols.qty + 40, y, 9.5);
-    right(money(li.unitPrice), cols.vat - 8, y, 9.5);
-    right(`${formatNumber(li.vatRate, r.lang, 0, 2)} %`, cols.vat + 30, y, 9.5);
-    right(money(round2(li.lineTotal)), cols.amount - 4, y, 9.5);
+    descLines.forEach((w, i) => text(w, cols.desc, y - i * 12.5, 9.5));
+    right(formatNumber(li.quantity, r.lang, 0, 3), cols.qty, y, 9.5);
+    right(money(li.unitPrice), cols.price, y, 9.5);
+    right(`${formatNumber(li.vatRate, r.lang, 0, 2)} %`, cols.vat, y, 9.5);
+    right(money(round2(li.lineTotal)), cols.amount, y, 9.5);
     y -= h;
     page.drawLine({ start: { x: MARGIN, y: y + 7 }, end: { x: A4[0] - MARGIN, y: y + 7 }, thickness: 0.5, color: RULE });
   }
@@ -411,7 +426,7 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
   const labelX = MARGIN + width * 0.5;
   const row = (k: string, v: string, font: PDFFont = regular, size = 9.5) => {
     text(k, labelX, y, size, font);
-    right(v, cols.amount - 4, y, size, font);
+    right(v, cols.amount, y, size, font);
     y -= size + 6;
   };
   row(L.net, money(totals.net));

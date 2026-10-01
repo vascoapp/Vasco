@@ -35,6 +35,7 @@ import {
 import { generateCIIXML, generateFacturXXML, type EInvoiceData } from '../einvoice';
 import { documentFallbackRate, documentVatBreakdown } from '../../domain/business';
 import { SRGB_ICC_BASE64 } from '../srgbIccProfile';
+import fontkit from '@pdf-lib/fontkit';
 
 const font = (w: string) => new Uint8Array(fs.readFileSync(path.join(
   __dirname, '..', '..', '..', 'node_modules', '@expo-google-fonts', 'inter', w, `Inter_${w}.ttf`)));
@@ -185,6 +186,51 @@ describe('PDF/A-3b hybrid — structure', () => {
     expect(xmp).toContain(`<pdf:Producer>${doc.getProducer()}</pdf:Producer>`);
     expect(xmp).toContain('<xmp:CreateDate>2026-09-30T10:00:00Z</xmp:CreateDate>');
     expect(doc.getCreationDate()?.toISOString()).toBe('2026-09-30T10:00:00.000Z');
+  });
+
+  it('every glyph the page draws has an outline in the embedded font program', () => {
+    // veraPDF AND Mustang called the first version compliant while most of its
+    // text did not render: pdf-lib's fontkit SUBSET of Inter kept the glyph ids
+    // and lost the outlines ("RECHNUNG" drew as "EC"). PDF/A checks that a
+    // font is embedded, not that it draws. This reads each embedded program
+    // back and asks every drawn glyph for its path.
+    let checked = 0;
+    for (const page of doc.getPages()) {
+      const fontsDict = page.node.Resources()!.lookup(PDFName.of('Font'), PDFDict);
+      const programs = new Map<string, any>();
+      const cmaps = new Map<string, Map<string, string>>();
+      for (const [name, ref] of fontsDict.entries()) {
+        const f = doc.context.lookup(ref as PDFRef, PDFDict);
+        const cid = f.lookup(PDFName.of('DescendantFonts'), PDFArray).lookup(0, PDFDict);
+        const file = cid.lookup(PDFName.of('FontDescriptor'), PDFDict).lookup(PDFName.of('FontFile2'), PDFStream);
+        programs.set(name.asString(), fontkit.create(Buffer.from(bytesOf(file))));
+        const m = new Map<string, string>();
+        for (const [, code, uni] of latin(bytesOf(f.lookup(PDFName.of('ToUnicode'), PDFStream))).matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
+          m.set(code.toUpperCase().padStart(4, '0'), String.fromCharCode(parseInt(uni.slice(0, 4), 16)));
+        }
+        cmaps.set(name.asString(), m);
+      }
+      const contents = page.node.Contents();
+      const streams = contents instanceof PDFArray
+        ? contents.asArray().map((r) => doc.context.lookup(r as PDFRef, PDFStream))
+        : [contents as PDFStream];
+      for (const s of streams) {
+        let fontName = '';
+        for (const tok of latin(bytesOf(s)).matchAll(/(\/\S+)\s+[\d.]+\s+Tf|<([0-9A-Fa-f]*)>\s*Tj/g)) {
+          if (tok[1]) { fontName = tok[1]; continue; }
+          const program = programs.get(fontName);
+          for (let i = 0; i < tok[2].length; i += 4) {
+            const code = tok[2].slice(i, i + 4).toUpperCase();
+            const ch = cmaps.get(fontName)?.get(code) ?? '';
+            if (/\s/.test(ch) || ch === '') continue;
+            const glyph = program.getGlyph(parseInt(code, 16));
+            expect([ch, glyph.path.commands.length > 0]).toEqual([ch, true]);
+            checked++;
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
   });
 
   it('embeds every font it uses (FontFile2)', () => {

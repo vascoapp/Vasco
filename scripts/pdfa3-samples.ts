@@ -54,6 +54,10 @@ const cases: Array<[string, 'DE' | 'FR', HybridProfile, string, any]> = [
     { description: 'Fachbuch „Sanitärtechnik“', quantity: 1.125, unitCode: 'stuk', unitPrice: 9.99, vatRate: 7 }], { sellerVatExempt: false }, 19)],
   ['zugferd-kleinunternehmer', 'DE', 'zugferd', 'de', data('DE', [
     { description: 'Wartung Heizung', quantity: 2.5, unitCode: 'uur', unitPrice: 48, vatRate: 0 }], { sellerVatExempt: true }, 0)],
+  // Multi-page: the table breaks, the header row repeats, the totals block
+  // moves to a page with room, every page carries the footer.
+  ['zugferd-multipage', 'DE', 'zugferd', 'de', data('DE', Array.from({ length: 40 }, (_, i) => (
+    { description: `Position ${i + 1}: Montage Heizkörperventil inkl. Material`, quantity: 1 + (i % 3) * 0.5, unitCode: 'stuk', unitPrice: 17.49 + i, vatRate: i % 5 === 0 ? 7 : 19 })), { sellerVatExempt: false }, 19)],
   ['facturx-single-20', 'FR', 'facturx', 'fr', data('FR', [
     { description: 'Remplacement chauffe-eau', quantity: 1, unitCode: 'stuk', unitPrice: 1890, vatRate: 20 }], { sellerVatExempt: false }, 20)],
   ['facturx-mixed-subcent', 'FR', 'facturx', 'fr', data('FR', [
