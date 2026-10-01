@@ -321,13 +321,13 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
                     {t('customersModal.dir3Hint', 'Public body: invoices go through FACe and need its three DIR3 codes. The body gives them to you (on the order or contract).')}
                   </Text>
                   <Field label={t('customer.dir3OficinaContable', 'DIR3 – Oficina contable (accounting office)')}>
-                    <TextInput style={s.input} value={dir3Oc} onChangeText={setDir3Oc} autoCapitalize="characters" autoCorrect={false} maxLength={12} placeholder="L01280796" placeholderTextColor={SemanticColors.placeholder} />
+                    <TextInput style={s.input} value={dir3Oc} onChangeText={setDir3Oc} autoCapitalize="characters" autoCorrect={false} maxLength={16} placeholder="L01280796" placeholderTextColor={SemanticColors.placeholder} />
                   </Field>
                   <Field label={t('customer.dir3OrganoGestor', 'DIR3 – Órgano gestor (managing body)')}>
-                    <TextInput style={s.input} value={dir3Og} onChangeText={setDir3Og} autoCapitalize="characters" autoCorrect={false} maxLength={12} placeholder="L01280796" placeholderTextColor={SemanticColors.placeholder} />
+                    <TextInput style={s.input} value={dir3Og} onChangeText={setDir3Og} autoCapitalize="characters" autoCorrect={false} maxLength={16} placeholder="L01280796" placeholderTextColor={SemanticColors.placeholder} />
                   </Field>
                   <Field label={t('customer.dir3UnidadTramitadora', 'DIR3 – Unidad tramitadora (processing unit)')}>
-                    <TextInput style={s.input} value={dir3Ut} onChangeText={setDir3Ut} autoCapitalize="characters" autoCorrect={false} maxLength={12} placeholder="LA0002878" placeholderTextColor={SemanticColors.placeholder} />
+                    <TextInput style={s.input} value={dir3Ut} onChangeText={setDir3Ut} autoCapitalize="characters" autoCorrect={false} maxLength={16} placeholder="LA0002878" placeholderTextColor={SemanticColors.placeholder} />
                   </Field>
                 </>
               )}
