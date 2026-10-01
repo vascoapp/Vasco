@@ -145,6 +145,13 @@ npm run check:send-invoice             # LIVE: sending an invoice works — by d
 npm run check:portal-totals            # LIVE: the customer's quote page states the
                                        # APP's net/VAT/total (hard-coded, not
                                        # recomputed), incl. Kleinunternehmer = no VAT.
+npm run check:kosit                    # THE OFFICIAL XRechnung validator (KoSIT +
+                                       # XRechnung 3.0 rules) over our generators'
+                                       # output; needs JAVA_HOME=/usr/local/opt/
+                                       # openjdk@17. It rejected EVERY XRechnung we
+                                       # made until 2026-10-01 while our own
+                                       # validator passed them. Run it after ANY
+                                       # change to src/integrations/einvoice.ts.
 npm run check:push-owner               # LIVE: a push token belongs to ONE account
                                        # (the previous contractor's pushes stopped
                                        # reaching a shared phone, 2026-09-30).
