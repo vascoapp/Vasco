@@ -152,6 +152,12 @@ npm run check:kosit                    # THE OFFICIAL XRechnung validator (KoSIT
                                        # made until 2026-10-01 while our own
                                        # validator passed them. Run it after ANY
                                        # change to src/integrations/einvoice.ts.
+npm run check:einvoice-schemas         # Italy (FatturaPA 1.2.2) + Spain (Facturae
+                                       # 3.2.2) against their OFFICIAL XSDs (xmllint),
+                                       # built through the real mapper path. Both
+                                       # failed on first run (IT element order; ES
+                                       # surnames). Schema = gate one; SDI/FACe value
+                                       # rules are not run.
 npm run check:push-owner               # LIVE: a push token belongs to ONE account
                                        # (the previous contractor's pushes stopped
                                        # reaching a shared phone, 2026-09-30).
