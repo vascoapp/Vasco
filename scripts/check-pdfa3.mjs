@@ -111,7 +111,7 @@ for (const f of files) {
   }
 
   const ok = veraOk && mustangOk;
-  console.log(`${ok ? "✅" : "❌"} ${f.padEnd(30)} veraPDF ${veraOk ? "compliant" : "NOT compliant"} · Mustang ${overall ?? "no verdict"} (pdf ${pdfPart ?? "?"}, xml ${xmlPart ?? "?"}, profile ${profile})`);
+  console.log(`${ok ? "✅" : "❌"} ${f.padEnd(30)} veraPDF ${veraOk ? "compliant" : "NOT compliant"} · Mustang summary ${overall ?? "none"} (pdf ${pdfPart ?? "?"}, xml ${xmlPart ?? "?"}, profile ${profile})`);
   for (const r of [...new Set(ok ? notes : reasons)]) console.log(`     ${r}`);
   if (!ok) failed++;
 }

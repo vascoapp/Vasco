@@ -4,6 +4,7 @@
 
 import { goBack } from '../../src/utils/goBack';
 import { friendlyError } from '../../src/utils/friendlyError';
+import { logWarn } from '../../src/utils/errorHandler';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
@@ -18,7 +19,8 @@ import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { recordHandover, channelForCountry } from '../../src/services/submissionStore';
 import { hapticError, hapticSuccess } from '../../src/utils/haptics';
-import { generateInvoicePdf, buildInvoicePdfBase64 } from '../../src/services/invoicePdfService';
+import { generateInvoicePdf, buildInvoicePdfBase64, legalMentions, frenchInvoiceMentions2026 } from '../../src/services/invoicePdfService';
+import { pdfFileName } from '../../src/utils/namedPdf';
 import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel } from '../../src/config/paymentMethods';
 import { formatCurrency, formatDate, formatDateShort, formatDayMonth, formatQuantity } from '../../src/i18n/formatting';
 import type { Country } from '../../src/i18n/formatting';
@@ -31,7 +33,7 @@ import { gateReminderSend } from '../../src/services/reminderGate';
 import { effectiveStep, renderReminder } from '../../src/services/reminderCadenceService';
 import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { computeLateFee, disclosureLineLocalized, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
-import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML } from '../../src/integrations/einvoice';
+import { generateXRechnungXML } from '../../src/integrations/einvoice';
 import { buildEInvoiceData, buildEInvoiceSource as buildEInvoiceSourceFrom, invoicePdfExtras } from '../../src/domain/invoiceDocuments';
 import { Share as RNShare } from 'react-native';
 // react-native's Share ignores `url` on Android (message/title only), so the
@@ -778,9 +780,29 @@ export default function InvoiceDetailScreen() {
    * we ask. Same shape as insurance.tsx, which stopped claiming a claim had
    * reached an insurer it never contacted.
    */
-  const shareEInvoiceThenConfirm = async (xml: string, filename: string, format: string) => {
+  const shareEInvoiceThenConfirm = async (xml: string, filename: string, format: string, pdf?: Uint8Array) => {
     let dismissed = false;
-    try {
+    if (pdf) {
+      // The ZUGFeRD / Factur-X hybrid: the PDF IS the e-invoice. There is no
+      // honest text fallback — sharing the bare XML here would hand over a
+      // different document than the button promised — so a failure says so
+      // and records nothing.
+      try {
+        const file = new File(Paths.cache, filename);
+        if (file.exists) file.delete();
+        file.create();
+        file.write(pdf);
+        if (!(await Sharing.isAvailableAsync())) throw new Error('no share sheet');
+        await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', dialogTitle: filename, UTI: 'com.adobe.pdf' });
+      } catch (err) {
+        logWarn('einvoiceHybrid', `share failed: ${err instanceof Error ? err.message : String(err)}`);
+        Alert.alert(
+          t('einvoice.hybridFailedTitle', 'E-invoice not created'),
+          t('einvoice.hybridFailedBody', 'The e-invoice PDF could not be created. Nothing was shared — please try again.'),
+        );
+        return;
+      }
+    } else try {
       const file = new File(Paths.cache, filename);
       file.write(xml);
       if (await Sharing.isAvailableAsync()) {
@@ -861,15 +883,44 @@ export default function InvoiceDetailScreen() {
     // the bare `urn:cen.eu:en16931:2017`. A Factur-X validator reads exactly
     // that element, so the file France was handed was not a Factur-X invoice.
     const isFacturX = format !== 'XRechnung' && country === 'FR';
-    const xml = format === 'XRechnung'
-      ? generateXRechnungXML(data)
-      : isFacturX
-        ? generateFacturXXML(data)
-        : generateZUGFeRDXML(data);
     const effectiveFormat = isFacturX ? 'Factur-X' : format;
-    const filename = `${data.invoiceNumber}-${effectiveFormat.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.xml`;
-
-    await shareEInvoiceThenConfirm(xml, filename, effectiveFormat);
+    if (format === 'XRechnung') {
+      const xml = generateXRechnungXML(data);
+      await shareEInvoiceThenConfirm(xml, `${data.invoiceNumber}-xrechnung.xml`, effectiveFormat);
+      return;
+    }
+    // ZUGFeRD / Factur-X ARE a PDF/A-3 with the CII embedded — the format is the
+    // container. Until 2026-10-01 this branch produced bare CII and no button
+    // reached it; it now shares the hybrid from src/integrations/pdfA3Invoice.ts,
+    // which veraPDF and Mustang accept (npm run check:pdfa3). Built in JS on the device: no
+    // server round-trip, no native module. Named by the document number.
+    let hybrid: { bytes: Uint8Array; xml: string };
+    try {
+      const { buildPdfA3Invoice } = await import('../../src/integrations/pdfA3Invoice');
+      const { loadPdfA3Fonts } = await import('../../src/services/pdfA3Fonts');
+      const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
+      hybrid = await buildPdfA3Invoice(data, {
+        profile: isFacturX ? 'facturx' : 'zugferd',
+        // The app's ACTIVE language — profile first, account second (#218).
+        // `BusinessProfile` has no language field; reading one is always 'en'.
+        language: messageLocale(),
+        fonts: await loadPdfA3Fonts(),
+        // The same statutory text the printed PDF carries (§ 14b UStG; FR
+        // L441-10/D441-5 + the 2026 reform mentions).
+        mentions: [
+          ...legalMentions(country),
+          ...(country === 'FR' ? frenchInvoiceMentions2026(extras.frMentions) : []),
+        ],
+      });
+    } catch (err) {
+      logWarn('einvoiceHybrid', `build failed: ${err instanceof Error ? err.message : String(err)}`);
+      Alert.alert(
+        t('einvoice.hybridFailedTitle', 'E-invoice not created'),
+        t('einvoice.hybridFailedBody', 'The e-invoice PDF could not be created. Nothing was shared — please try again.'),
+      );
+      return;
+    }
+    await shareEInvoiceThenConfirm(hybrid.xml, pdfFileName(data.invoiceNumber), effectiveFormat, hybrid.bytes);
   };
 
   // ES Facturae / IT FatturaPA: both mappers take the one neutral source, so
@@ -1050,6 +1101,8 @@ export default function InvoiceDetailScreen() {
       if (country === 'ES') return await handleExportFacturae();
       if (country === 'IT') return await handleExportFatturaPA();
       if (country === 'DE') return await handleExportEInvoice('XRechnung');
+      // France: the Factur-X hybrid (PDF/A-3 + CII), validated by Mustang.
+      if (country === 'FR') return await handleExportEInvoice('ZUGFeRD');
       // Everyone else exports NOTHING, and says so.
       //
       // This used to fall through to XRechnung for "DE / NL / FR / UK /
@@ -1472,16 +1525,32 @@ export default function InvoiceDetailScreen() {
               : router.push('/(modals)/business-settings' as any)}
             border
           />
-          {/* R289: FR Factur-X button removed until proper FacturXInvoice
-              mapping lands. Previously labelled "Factur-X" but called
-              generateZUGFeRDXML — produced legally wrong German XML for
-              French B2G/B2B. ES/IT formats also gap (Facturae, FatturaPA
-              generators exist but no UI mapper). See DORMANT_AUDIT.md R4. */}
+          {/* R289 removed the Factur-X button because it produced German XML.
+              Restored 2026-10-01 together with ZUGFeRD: both now share the
+              PDF/A-3 hybrid (pdfA3Invoice.ts) that veraPDF + Mustang accept —
+              before that there was nothing a button could honestly call a
+              ZUGFeRD or Factur-X invoice. XRechnung stays the UBL XML. */}
           {country === 'DE' && (
             <ActionRow
               icon="code-slash-outline"
               label={t('invoices.exportXRechnung', 'Export XRechnung (XML)')}
               onPress={() => handleExportEInvoice('XRechnung')}
+              border
+            />
+          )}
+          {country === 'DE' && (
+            <ActionRow
+              icon="document-attach-outline"
+              label={t('invoices.exportZugferd', 'Export ZUGFeRD (PDF)')}
+              onPress={() => handleExportEInvoice('ZUGFeRD')}
+              border
+            />
+          )}
+          {country === 'FR' && (
+            <ActionRow
+              icon="document-attach-outline"
+              label={t('invoices.exportFacturX', 'Export Factur-X (PDF)')}
+              onPress={() => handleExportEInvoice('ZUGFeRD')}
               border
             />
           )}

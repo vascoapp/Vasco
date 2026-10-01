@@ -880,6 +880,8 @@
     "connectMollie": "Mollie koppelen",
     "exportMoneybird": "Exporteren naar Moneybird",
     "exportXRechnung": "XRechnung exporteren (XML)",
+    "exportZugferd": "ZUGFeRD exporteren (pdf)",
+    "exportFacturX": "Factur-X exporteren (pdf)",
     "exportFacturae": "Facturae exporteren (XML)",
     "exportFatturaPA": "FatturaPA exporteren (XML)",
     "markAsSent": "Markeren als verzonden",
@@ -7333,7 +7335,9 @@
     "filedYes": "Ja, ingediend",
     "filedNotYet": "Nog niet",
     "buyerAddressMissingTitle": "E-mailadres van de klant nodig",
-    "buyerAddressMissingBody": "Een XRechnung moet het elektronische adres van de klant bevatten. Voeg een e-mailadres toe aan deze klant en exporteer opnieuw."
+    "buyerAddressMissingBody": "Een XRechnung moet het elektronische adres van de klant bevatten. Voeg een e-mailadres toe aan deze klant en exporteer opnieuw.",
+    "hybridFailedTitle": "E-factuur niet gemaakt",
+    "hybridFailedBody": "De e-factuur-pdf kon niet worden gemaakt. Er is niets gedeeld — probeer het opnieuw."
   },
   "einvoiceRules": {
     "title": "Bestand zou worden geweigerd",

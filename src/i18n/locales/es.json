@@ -880,6 +880,8 @@
     "connectMollie": "Conectar Mollie",
     "exportMoneybird": "Exportar a Moneybird",
     "exportXRechnung": "Exportar XRechnung (XML)",
+    "exportZugferd": "Exportar ZUGFeRD (PDF)",
+    "exportFacturX": "Exportar Factur-X (PDF)",
     "exportFacturae": "Exportar Facturae (XML)",
     "exportFatturaPA": "Exportar FatturaPA (XML)",
     "markAsSent": "Marcar como enviada",
@@ -6391,7 +6393,9 @@
     "filedYes": "Sí, presentada",
     "filedNotYet": "Todavía no",
     "buyerAddressMissingTitle": "Falta el correo del cliente",
-    "buyerAddressMissingBody": "Una XRechnung debe incluir la dirección electrónica del cliente. Añade un correo a este cliente y vuelve a exportar."
+    "buyerAddressMissingBody": "Una XRechnung debe incluir la dirección electrónica del cliente. Añade un correo a este cliente y vuelve a exportar.",
+    "hybridFailedTitle": "Factura electrónica no creada",
+    "hybridFailedBody": "No se pudo crear el PDF de la factura electrónica. No se ha compartido nada; inténtelo de nuevo."
   },
   "einvoiceRules": {
     "title": "El archivo sería rechazado",
