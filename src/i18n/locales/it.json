@@ -7514,7 +7514,7 @@
     "nif": "NIF",
     "expires": "Valido fino al",
     "issuer": "Emesso da",
-    "file": "File",
+    "file": "File selezionato",
     "password": "Password del certificato",
     "passwordPlaceholder": "Password del file .p12",
     "confirmImport": "Importa",

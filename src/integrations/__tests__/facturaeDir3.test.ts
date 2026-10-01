@@ -76,6 +76,10 @@ it('customer columns: camelCase ↔ snake_case in both directions (5-file rule)'
   expect(customerUpdatesToRowPayload({ dir3OrganoGestor: '' })).toEqual({ dir3_organo_gestor: '' });
   const c = customerRowToCustomer({ id: 'c', user_id: 'u', name: 'X', email: null, phone: null, address: null, city: null, postcode: null, country: null, province: null,
     vat_id: null, tax_id: 'P2807900B', einvoice_routing: null, einvoice_email: null,
-    dir3_oficina_contable: 'L01280796', dir3_organo_gestor: 'L01280796', dir3_unidad_tramitadora: null, created_at: '', updated_at: '' });
-  expect([c.dir3OficinaContable, c.dir3OrganoGestor, c.dir3UnidadTramitadora]).toEqual(['L01280796', 'L01280796', undefined]);
+    dir3_oficina_contable: 'L01280796', dir3_organo_gestor: 'E04921901', dir3_unidad_tramitadora: 'LA0002878', created_at: '', updated_at: '' });
+  expect([c.dir3OficinaContable, c.dir3OrganoGestor, c.dir3UnidadTramitadora]).toEqual(['L01280796', 'E04921901', 'LA0002878']);
+  const empty = customerRowToCustomer({ id: 'c', user_id: 'u', name: 'X', email: null, phone: null, address: null, city: null, postcode: null, country: null, province: null,
+    vat_id: null, tax_id: null, einvoice_routing: null, einvoice_email: null,
+    dir3_oficina_contable: null, dir3_organo_gestor: null, dir3_unidad_tramitadora: null, created_at: '', updated_at: '' });
+  expect(empty.dir3UnidadTramitadora).toBeUndefined();
 });

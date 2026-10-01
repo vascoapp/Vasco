@@ -27,6 +27,12 @@ describe('a good certificate', () => {
     expect(new Date(r.info.notAfter).getTime()).toBe(Math.floor(rep.cert.validity.notAfter.getTime() / 1000) * 1000);
   });
 
+  it('the entity NIF comes from organizationIdentifier even when the CN names only the person', () => {
+    const repPlainCn = makeTestCertificate({ person: '12345678Z', entity: 'B12345674', cn: 'PEDRO RUIZ - 12345678Z' });
+    expect(certificateNifs(repPlainCn.cert)).toEqual(['12345678Z', 'B12345674']);
+    expect(readSigningCertificate(repPlainCn.p12Binary, repPlainCn.password, 'B12345674', NOW)).toMatchObject({ ok: true, info: { nif: 'B12345674' } });
+  });
+
   it('what it hands over signs, and the signature verifies', () => {
     const r = readSigningCertificate(rep.p12Binary, rep.password, 'B12345674', NOW);
     if (!r.ok) throw new Error(r.problem);
