@@ -41,7 +41,7 @@ export interface CertificateInfo {
   serialNumber: string;
 }
 
-export type CertificateProblem = 'unreadable' | 'noKey' | 'notRsa' | 'expired' | 'notYetValid' | 'noNif' | 'nifMismatch';
+export type CertificateProblem = 'unreadable' | 'noKey' | 'notRsa' | 'expired' | 'notYetValid' | 'noNif' | 'nifMismatch' | 'cannotSign';
 
 export type CertificateReadResult =
   | { ok: true; material: SigningMaterial; info: CertificateInfo }
@@ -83,6 +83,13 @@ const infoOf = (cert: forge.pki.Certificate): CertificateInfo => ({
   serialNumber: cert.serialNumber,
 });
 
+/** keyUsage permits a signature: digitalSignature or nonRepudiation. No
+ *  keyUsage extension at all = unrestricted (RFC 5280 §4.2.1.3). */
+function maySign(cert: forge.pki.Certificate): boolean {
+  const ku = cert.getExtension('keyUsage') as { digitalSignature?: boolean; nonRepudiation?: boolean } | null;
+  return !ku || !!ku.digitalSignature || !!ku.nonRepudiation;
+}
+
 /**
  * Reads a PKCS#12 (binary string, one char per byte) with its password.
  * `sellerNif` and `now` judge it for signing Facturae as that seller.
@@ -101,14 +108,26 @@ export function readSigningCertificate(p12Binary: string, password: string, sell
   const certs = (p12.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag] ?? [])
     .map((b) => b.cert).filter((c): c is forge.pki.Certificate => !!c);
   // A key bag whose key forge could not decode (EC, or an unsupported cipher) has no .key.
-  const key = keyBags.map((b) => b.key).find((k) => !!k) as forge.pki.rsa.PrivateKey | undefined;
-  if (!key) {
+  const keys = keyBags.map((b) => b.key).filter((k) => !!k) as forge.pki.rsa.PrivateKey[];
+  if (keys.length === 0) {
     const anyKeyBag = keyBags.length > 0;
     return { ok: false, problem: anyKeyBag ? 'notRsa' : 'noKey', info: certs[0] ? infoOf(certs[0]) : undefined };
   }
-  if (!key.n) return { ok: false, problem: 'notRsa' };
-  const signer = certs.find((c) => (c.publicKey as forge.pki.rsa.PublicKey).n?.compareTo(key.n) === 0);
-  if (!signer) return { ok: false, problem: 'noKey' };
+  const rsaKeys = keys.filter((k) => !!k.n);
+  if (rsaKeys.length === 0) return { ok: false, problem: 'notRsa' };
+  // The (key, certificate) PAIR — not the first key: a file can carry several
+  // keys, and the first one need not have its certificate here (security
+  // review, 2026-10-02). A pair whose certificate may sign comes first.
+  const pairs = rsaKeys.flatMap((k) => certs
+    .filter((c) => (c.publicKey as forge.pki.rsa.PublicKey).n?.compareTo(k.n) === 0)
+    .map((c) => ({ key: k, signer: c })));
+  if (pairs.length === 0) return { ok: false, problem: 'noKey' };
+  const pair = pairs.find((p) => maySign(p.signer)) ?? pairs[0];
+  const key = pair.key;
+  const signer = pair.signer;
+  // An authentication-only certificate (keyUsage without digitalSignature or
+  // nonRepudiation) would sign here and be rejected by FACe / @firma later.
+  if (!maySign(signer)) return { ok: false, problem: 'cannotSign', info: infoOf(signer) };
   const info = infoOf(signer);
   if (now.getTime() > signer.validity.notAfter.getTime()) return { ok: false, problem: 'expired', info };
   if (now.getTime() < signer.validity.notBefore.getTime()) return { ok: false, problem: 'notYetValid', info };

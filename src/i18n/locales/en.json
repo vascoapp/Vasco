@@ -7532,7 +7532,8 @@
       "notYetValid": "This certificate is not valid until {{date}}.",
       "noNif": "This certificate carries no Spanish NIF.",
       "nifMismatch": "This certificate does not carry your business's NIF ({{nif}}). An invoice must be signed by its issuer — check the NIF/CIF in your business profile or import your own certificate.",
-      "noSellerNif": "Enter your NIF/CIF in your business profile first."
+      "noSellerNif": "Enter your NIF/CIF in your business profile first.",
+      "cannotSign": "This certificate is not for signing (it is only for logging in). Import the certificate your provider issued for electronic signatures."
     }
   }
 }

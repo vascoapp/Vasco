@@ -95,20 +95,47 @@ export const certificateStorageSupported = (): boolean => Platform.OS === 'ios' 
  */
 export async function saveSigningCertificate(owner: string, material: SigningMaterial, info: CertificateInfo): Promise<boolean> {
   if (!owner || !certificateStorageSupported()) return false;
+  const { SecureStore, file, getRandomBytes } = await deps();
+  const opts = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY };
+  // A REPLACE must not destroy the certificate that works: the key used to be
+  // overwritten first, so a failed file write left the old file unreadable
+  // (security review, 2026-10-02). Keep both old halves (the file is
+  // ciphertext) and put them back if any step — or the read-back — fails.
+  let prevKey: string | null = null;
+  let prevBlob: string | null = null;
   try {
-    const { SecureStore, file, getRandomBytes } = await deps();
+    prevKey = await SecureStore.getItemAsync(KEYCHAIN_KEY);
+    prevBlob = file.exists ? await file.text() : null;
+  } catch { /* unreadable old state: nothing worth restoring */ }
+  const restore = async () => {
+    try {
+      if (prevKey && prevBlob !== null) {
+        await SecureStore.setItemAsync(KEYCHAIN_KEY, prevKey, opts);
+        if (file.exists) file.delete();
+        file.create();
+        file.write(prevBlob);
+      } else {
+        await SecureStore.deleteItemAsync(KEYCHAIN_KEY);
+        if (file.exists) file.delete();
+      }
+    } catch { /* best effort */ }
+  };
+  try {
     const key = bytesToBinary(getRandomBytes(32));
     const iv = bytesToBinary(getRandomBytes(12));
     const record: StoredCertificate = { owner, material, info, importedAt: new Date().toISOString() };
     const blob = sealJson(record, key, iv);
-    await SecureStore.setItemAsync(KEYCHAIN_KEY, forge.util.encode64(key), { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY });
+    await SecureStore.setItemAsync(KEYCHAIN_KEY, forge.util.encode64(key), opts);
     if (file.exists) file.delete();
     file.create();
     file.write(JSON.stringify(blob));
     const back = await loadSigningCertificate(owner);
-    return !!back && back.info.serialNumber === info.serialNumber;
+    const ok = !!back && back.info.serialNumber === info.serialNumber;
+    if (!ok) await restore();
+    return ok;
   } catch (err) {
     logWarn('SigningCertificate', `save failed: ${(err as Error)?.name ?? 'error'}`);
+    await restore();
     return false;
   }
 }

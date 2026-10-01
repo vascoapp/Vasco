@@ -7532,7 +7532,8 @@
       "notYetValid": "Dit certificaat is pas geldig vanaf {{date}}.",
       "noNif": "Dit certificaat bevat geen Spaans NIF.",
       "nifMismatch": "Dit certificaat bevat niet het NIF van uw bedrijf ({{nif}}). Een factuur moet door de uitgever worden ondertekend — controleer het NIF/CIF in uw bedrijfsprofiel of importeer uw eigen certificaat.",
-      "noSellerNif": "Vul eerst uw NIF/CIF in uw bedrijfsprofiel in."
+      "noSellerNif": "Vul eerst uw NIF/CIF in uw bedrijfsprofiel in.",
+      "cannotSign": "Dit certificaat is niet bedoeld om te ondertekenen (alleen om in te loggen). Importeer het certificaat dat je aanbieder voor elektronische handtekeningen heeft uitgegeven."
     }
   }
 }

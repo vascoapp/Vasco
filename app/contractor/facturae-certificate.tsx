@@ -14,7 +14,7 @@
 // a public-body invoice needs a signature and none is stored.
 // =============================================================================
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -47,22 +47,35 @@ export default function FacturaeCertificateScreen() {
   const sellerNif = sellerNifOf(businessProfile as any);
   const owner = user?.id ?? '';
 
-  const [stored, setStored] = useState<StoredCertificate | null>(null);
+  // What the screen SHOWS — never the private key: the decrypted PEM sat in
+  // React state for as long as the screen was open (security review,
+  // 2026-10-02). The chain is enough to judge it again.
+  const [stored, setStored] = useState<{ info: StoredCertificate['info']; certificatesDer: string[] } | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [picked, setPicked] = useState<{ uri: string; name: string } | null>(null);
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    setStored(await loadSigningCertificate(owner));
+    const rec = await loadSigningCertificate(owner);
+    setStored(rec ? { info: rec.info, certificatesDer: rec.material.certificatesDer } : null);
     setLoaded(true);
   }, [owner]);
   useEffect(() => { void refresh(); }, [refresh]);
+  // The picker's cache copy holds the (password-protected) key: removed on a
+  // re-pick and when the screen goes, not only on success or Cancel.
+  const pickedRef = useRef<string | null>(null);
+  const dropPickedCopy = (uri: string | null) => {
+    try { if (uri) { const f = new ExpoFile(uri); if (f.exists) f.delete(); } } catch {}
+  };
+  useEffect(() => () => dropPickedCopy(pickedRef.current), []);
 
   const pick = async () => {
     try {
       const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
       if (res.canceled || !res.assets?.[0]) return;
+      dropPickedCopy(pickedRef.current);
+      pickedRef.current = res.assets[0].uri;
       setPicked({ uri: res.assets[0].uri, name: res.assets[0].name ?? '' });
       setPassword('');
     } catch {
@@ -72,7 +85,8 @@ export default function FacturaeCertificateScreen() {
 
   const cancelImport = () => {
     // The copy the picker made in the cache holds the key (password-protected).
-    try { if (picked) { const f = new ExpoFile(picked.uri); if (f.exists) f.delete(); } } catch {}
+    dropPickedCopy(picked?.uri ?? null);
+    pickedRef.current = null;
     setPicked(null);
     setPassword('');
   };
@@ -132,7 +146,7 @@ export default function FacturaeCertificateScreen() {
 
   // A stored certificate is judged again: it can have expired since, or the
   // profile's NIF can have changed.
-  const judged = stored ? judgeStoredCertificate(stored.material, sellerNif) : null;
+  const judged = stored ? judgeStoredCertificate({ privateKeyPem: '', certificatesDer: stored.certificatesDer }, sellerNif) : null;
 
   return (
     <View style={styles.container}>

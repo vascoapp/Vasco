@@ -7532,7 +7532,8 @@
       "notYetValid": "Este certificado no es válido hasta el {{date}}.",
       "noNif": "Este certificado no contiene un NIF español.",
       "nifMismatch": "Este certificado no contiene el NIF de tu empresa ({{nif}}). Una factura debe firmarla su emisor: revisa el NIF/CIF en tu perfil de empresa o importa tu propio certificado.",
-      "noSellerNif": "Introduce primero tu NIF/CIF en tu perfil de empresa."
+      "noSellerNif": "Introduce primero tu NIF/CIF en tu perfil de empresa.",
+      "cannotSign": "Este certificado no sirve para firmar (solo para identificarse). Importa el certificado que tu proveedor emitió para la firma electrónica."
     }
   }
 }

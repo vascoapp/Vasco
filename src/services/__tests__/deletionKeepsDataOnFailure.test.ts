@@ -26,6 +26,14 @@ jest.mock('../../lib/supabase', () => ({
   },
 }));
 
+// The Facturae signing certificate is device-owned (kept across a same-user
+// logout), so the deletion must remove it itself (security review 2026-10-02).
+const mockRemoveCert = jest.fn(async () => undefined);
+jest.mock('../signingCertificateStore', () => ({
+  ...jest.requireActual('../signingCertificateStore'),
+  removeSigningCertificate: () => mockRemoveCert(),
+}));
+
 import { requestAccountDeletion } from '../accountDeletionService';
 
 describe('account deletion keeps the phone when the request failed', () => {
@@ -42,5 +50,15 @@ describe('account deletion keeps the phone when the request failed', () => {
     const r = await requestAccountDeletion('11111111-1111-1111-1111-111111111111');
     expect(r.serverRequested).toBe(true);
     expect(mockStore.has('@vasco_offline_writes')).toBe(false);
+  });
+
+  it('a deletion that reached the server removes the signing certificate; a failed one does not', async () => {
+    mockRemoveCert.mockClear();
+    mockInsertError = { code: 'PGRST301', message: 'offline' };
+    await requestAccountDeletion('11111111-1111-1111-1111-111111111111');
+    expect(mockRemoveCert).not.toHaveBeenCalled();
+    mockInsertError = null;
+    await requestAccountDeletion('11111111-1111-1111-1111-111111111111');
+    expect(mockRemoveCert).toHaveBeenCalledTimes(1);
   });
 });

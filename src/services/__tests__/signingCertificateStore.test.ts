@@ -9,6 +9,7 @@ import { makeTestCertificate } from '../../test-utils/testCertificates';
 
 const mockDisk = new Map<string, string>();
 const mockKeychain = new Map<string, string>();
+let mockFailNextWrite = false;
 jest.mock('expo-secure-store', () => ({
   WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'wutdo',
   setItemAsync: jest.fn(async (k: string, v: string) => { mockKeychain.set(k, v); }),
@@ -21,7 +22,7 @@ jest.mock('expo-file-system', () => {
     constructor(dir: string, name: string) { this.path = `${dir}/${name}`; }
     get exists() { return mockDisk.has(this.path); }
     create() { mockDisk.set(this.path, ''); }
-    write(s: string) { mockDisk.set(this.path, s); }
+    write(s: string) { if (mockFailNextWrite) { mockFailNextWrite = false; throw new Error('disk full'); } mockDisk.set(this.path, s); }
     async text() { return mockDisk.get(this.path) ?? ''; }
     delete() { mockDisk.delete(this.path); }
   }
@@ -100,4 +101,14 @@ it('a DIFFERENT contractor signing in on the phone removes it (claimDeviceData);
   await claimDeviceData('user-b');
   expect(mockDisk.size).toBe(0);
   expect(mockKeychain.size).toBe(0);
+});
+
+it('a replace that fails keeps the certificate that worked (security review 2026-10-02)', async () => {
+  expect(await saveSigningCertificate('user-a', C.material, INFO)).toBe(true);
+  const D = makeTestCertificate({ person: '87654321X', entity: 'B12345674' });
+  mockFailNextWrite = true;
+  expect(await saveSigningCertificate('user-a', D.material, { ...INFO, serialNumber: D.cert.serialNumber })).toBe(false);
+  const back = await loadSigningCertificate('user-a');
+  expect(back?.info.serialNumber).toBe(C.cert.serialNumber);
+  expect(back?.material.privateKeyPem).toBe(C.material.privateKeyPem);
 });

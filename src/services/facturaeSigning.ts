@@ -63,6 +63,7 @@ export function certificateProblemText(t: TFunction | ((k: string, o?: any) => s
     case 'expired': return tt('facturaeCertificate.problem.expired', { date: date(info?.notAfter), defaultValue: 'This certificate expired on {{date}}.' });
     case 'notYetValid': return tt('facturaeCertificate.problem.notYetValid', { date: date(info?.notBefore), defaultValue: 'This certificate is not valid until {{date}}.' });
     case 'noNif': return tt('facturaeCertificate.problem.noNif', 'This certificate carries no Spanish NIF.');
+    case 'cannotSign': return tt('facturaeCertificate.problem.cannotSign', 'This certificate is not for signing (it is only for logging in). Import the certificate your provider issued for electronic signatures.');
     case 'nifMismatch': return tt('facturaeCertificate.problem.nifMismatch', { nif: nif ?? '—', defaultValue: 'This certificate does not carry your business\'s NIF ({{nif}}). An invoice must be signed by its issuer — check the NIF/CIF in your business profile or import your own certificate.' });
   }
 }

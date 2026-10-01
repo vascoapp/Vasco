@@ -91,3 +91,19 @@ it('stored material is judged again at signing time: expiry since import, a chan
   expect(judgeStoredCertificate(c.material, 'B87654323', NOW)).toMatchObject({ ok: false, problem: 'nifMismatch' });
   expect(judgeStoredCertificate({ ...c.material, certificatesDer: [forge.util.encode64('junk')] }, 'B12345674', NOW)).toMatchObject({ ok: false, problem: 'unreadable' });
 });
+
+// Security review, 2026-10-02.
+describe('which certificate may sign', () => {
+  it('an authentication-only certificate (keyUsage without signature) is refused at import', () => {
+    const auth = makeTestCertificate({ entity: 'B12345674', keyUsage: { keyEncipherment: true } });
+    expect(readSigningCertificate(auth.p12Binary, auth.password, 'B12345674', NOW)).toMatchObject({ ok: false, problem: 'cannotSign' });
+    const sig = makeTestCertificate({ entity: 'B12345674', keyUsage: { digitalSignature: true, nonRepudiation: true } });
+    expect(readSigningCertificate(sig.p12Binary, sig.password, 'B12345674', NOW)).toMatchObject({ ok: true });
+  });
+  it('a file whose FIRST key has no certificate still yields the key that does', () => {
+    const two = makeTestCertificate({ entity: 'B12345674', strayKeyFirst: true });
+    const r = readSigningCertificate(two.p12Binary, two.password, 'B12345674', NOW);
+    expect(r).toMatchObject({ ok: true });
+    expect((r as any).material.privateKeyPem).toBe(forge.pki.privateKeyInfoToPem(forge.pki.wrapRsaPrivateKey(forge.pki.privateKeyToAsn1(forge.pki.privateKeyFromPem(two.material.privateKeyPem)))));
+  });
+});

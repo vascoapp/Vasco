@@ -7532,7 +7532,8 @@
       "notYetValid": "Dieses Zertifikat ist erst ab dem {{date}} gültig.",
       "noNif": "Dieses Zertifikat enthält keine spanische NIF.",
       "nifMismatch": "Dieses Zertifikat enthält nicht die NIF Ihres Unternehmens ({{nif}}). Eine Rechnung muss von ihrem Aussteller signiert sein — prüfen Sie die NIF/CIF in Ihrem Unternehmensprofil oder importieren Sie Ihr eigenes Zertifikat.",
-      "noSellerNif": "Tragen Sie zuerst Ihre NIF/CIF in Ihrem Unternehmensprofil ein."
+      "noSellerNif": "Tragen Sie zuerst Ihre NIF/CIF in Ihrem Unternehmensprofil ein.",
+      "cannotSign": "Dieses Zertifikat ist nicht zum Signieren bestimmt (nur zur Anmeldung). Importieren Sie das Zertifikat, das Ihr Anbieter für elektronische Signaturen ausgestellt hat."
     }
   }
 }

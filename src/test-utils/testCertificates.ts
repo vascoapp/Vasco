@@ -27,6 +27,10 @@ export function makeTestCertificate(opts: {
   password?: string;
   p12Algorithm?: '3des' | 'aes256';
   withKey?: boolean;
+  /** keyUsage extension; omitted = none (unrestricted). */
+  keyUsage?: { digitalSignature?: boolean; nonRepudiation?: boolean; keyEncipherment?: boolean };
+  /** Put an UNRELATED private key (no certificate here) before the real one. */
+  strayKeyFirst?: boolean;
 } = {}): TestCertificate {
   const keys = testKeyPair();
   const cert = forge.pki.createCertificate();
@@ -40,9 +44,21 @@ export function makeTestCertificate(opts: {
   subject.push({ shortName: 'CN', value: opts.cn ?? `TEST ONLY ${opts.person ?? ''}${opts.entity ? ` (R: ${opts.entity})` : ''}`.trim() });
   cert.setSubject(subject);
   cert.setIssuer([{ shortName: 'C', value: 'ES' }, { shortName: 'O', value: 'VASCO TEST ONLY' }, { shortName: 'CN', value: 'VASCO TEST CA - NOT TRUSTED' }]);
+  if (opts.keyUsage) cert.setExtensions([{ name: 'keyUsage', critical: true, ...opts.keyUsage }]);
   cert.sign(keys.privateKey, forge.md.sha256.create());
   const password = opts.password ?? 'test-only-pw';
-  const p12 = forge.pkcs12.toPkcs12Asn1(opts.withKey === false ? null : keys.privateKey, [cert], password, { algorithm: opts.p12Algorithm ?? 'aes256' });
+  let p12 = forge.pkcs12.toPkcs12Asn1(opts.withKey === false ? null : keys.privateKey, [cert], password, { algorithm: opts.p12Algorithm ?? 'aes256' });
+  if (opts.strayKeyFirst) {
+    // Two MAC-less containers, their AuthenticatedSafe contents concatenated:
+    // stray key first, then the real key + certificate.
+    const stray = forge.pki.rsa.generateKeyPair({ bits: 1024, e: 0x10001 }).privateKey;
+    const a = forge.pkcs12.toPkcs12Asn1(stray, null as any, password, { algorithm: 'aes256', useMac: false });
+    const b = forge.pkcs12.toPkcs12Asn1(keys.privateKey, [cert], password, { algorithm: opts.p12Algorithm ?? 'aes256', useMac: false });
+    const inner = (pfx: any) => forge.asn1.fromDer(pfx.value[1].value[1].value[0].value);
+    const merged = forge.asn1.create(forge.asn1.Class.UNIVERSAL, forge.asn1.Type.SEQUENCE, true, [...inner(a).value, ...inner(b).value] as any);
+    (b as any).value[1].value[1].value[0].value = forge.asn1.toDer(merged).getBytes();
+    p12 = b;
+  }
   const certDer = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
   return {
     cert,

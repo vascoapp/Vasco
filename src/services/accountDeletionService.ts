@@ -89,6 +89,22 @@ export async function clearAllLocalData(): Promise<{ cleared: number }> {
     }
   }
 
+  // 2b. The Facturae SIGNING certificate (encrypted key file + its keychain
+  // key). It is device-owned — kept across a same-user logout — so nothing
+  // else removes it: after an erasure it stayed on the phone, the keychain
+  // item even surviving an uninstall on iOS (security review, 2026-10-02).
+  // (require, not import(): as in sessionCleanup, it must also run where
+  // dynamic import is off — there, import() threw into the catch and the
+  // certificate silently stayed.)
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { removeSigningCertificate } = require('./signingCertificateStore') as typeof import('./signingCertificateStore');
+    await removeSigningCertificate();
+    cleared += 1;
+  } catch (error) {
+    logWarn('AccountDeletion', `signing certificate not removed: ${error instanceof Error ? error.name : 'error'}`);
+  }
+
   // 3. Sign out from Supabase (clears session tokens)
   if (isSupabaseConfigured) {
     try {
