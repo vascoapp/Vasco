@@ -16,7 +16,8 @@ module.exports = {
   // It belongs with the walk suites, but running it inside `npm run walk` turned
   // the gate everyone runs constantly from ~5 minutes into far longer. It has
   // its own script — `npm run walk:wiring` — so the fast gate stays fast.
-  testPathIgnorePatterns: ['/node_modules/', 'pressableIsWired'],
+  testPathIgnorePatterns: ['/node_modules/', 'pressableIsWired', '/\\.claude/'],
+  modulePathIgnorePatterns: ['<rootDir>/\\.claude/'],
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@supabase/.*|i18next|react-i18next)',
   ],

@@ -184,6 +184,10 @@ npm run check:rpcs                     # calls every set-returning plpgsql RPC
                                        # checked when a statement RUNS. ⚠️ An
                                        # early return hides the main query; seed
                                        # rows in a rolled-back txn for that. #361
+npm run check:catalog-import           # DATANORM price lists dedupe on the SERVER
+                                       # (`import_catalog_prices`): same list
+                                       # skipped, a rise written, users isolated.
+                                       # The app keeps no import state (#386).
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
 
 # Store + ops gates.

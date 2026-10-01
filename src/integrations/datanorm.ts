@@ -9,12 +9,9 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { emitMaterialPurchased } from '../intelligence/dataCollector';
+import { canonicalMaterialKey } from '../services/materialNormalization';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { getAuthedUserId } from '../lib/currentUser';
 import { logWarn } from '../utils/errorHandler';
-
-const IMPORTED_KEY = '@vasco_datanorm_imported';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -263,137 +260,34 @@ export function parseDateanormV5(text: string): DatanormArticle[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Feed parsed DATANORM articles into the Vasco pricing database.
- * Each article is emitted as a material_purchased event so the intelligence
- * engine can track supplier prices.
+ * Feed parsed DATANORM articles into the contractor's price history.
+ *
+ * The SERVER decides what is new (`import_catalog_prices`, migration
+ * 20261001000002): a price row is written only where it differs from the
+ * contractor's newest one for that supplier + article, and the catalogue row
+ * and the price row of a batch land in one transaction.
+ *
+ * It used to be decided here, from "the price each article was last imported
+ * at" kept in AsyncStorage (#363 → #366 → C4). A wholesaler list is 100k+
+ * articles ≈ 3 MB of that map against Android's ~6 MB AsyncStorage TOTAL —
+ * a full store fails every setItem, the offline queue's included — and it
+ * lived on one phone, so another device wrote the whole list again. Each
+ * article also cost ~5 requests (catalogue lookup + insert, price insert, a
+ * `material_purchased` event nothing reads; a list price is not a purchase):
+ * half a million round trips for one list.
  */
-// Per contractor. One device-wide set meant a second account on the phone
-// skipped everything the first had imported — and every article imported
-// under the old 'datanorm-import' id (whose price rows all FAILED) stayed
-// marked done, so a re-import could never backfill them (review, #363).
-const importedKeyFor = (userId: string) => `${IMPORTED_KEY}:${userId || 'anon'}`;
+// The old local map, removed on the next import to give the space back.
+const IMPORTED_KEY_PREFIX = '@vasco_datanorm_imported';
 
-// What was last imported, per supplier + article: the PRICE. Two defects in
-// the flat set this replaces (sweep 2026-09-23, C4):
-//  - it held every price ever seen, so a list that went A → B → back to A
-//    skipped the return to A and the price watch never saw the drop;
-//  - it was ONE blob per contractor, one entry per article per price. A large
-//    wholesaler list is 100k+ articles, and Android AsyncStorage cannot read a
-//    value much past 2 MB — the read failed, the set came back empty, and the
-//    next import wrote every price again as a new day, which hides a real rise
-//    (the watch compares the two latest days).
-// Now: one map per supplier, split into bounded chunks.
-const CHUNK = 20_000; // ~20k × ~30 bytes ≈ 600 KB per value
-type LastPrices = Map<string, number>;
-const supplierKey = (userId: string, supplierId: string) => `${importedKeyFor(userId)}:s:${supplierId}`;
+/** Articles per request: ~150 KB of JSON, well under the server's 5,000 cap. */
+export const CATALOG_BATCH = 1000;
 
-async function readChunks(base: string): Promise<LastPrices> {
-  const out: LastPrices = new Map();
-  const count = Number(await AsyncStorage.getItem(base)) || 0;
-  for (let i = 0; i < count; i++) {
-    const raw = await AsyncStorage.getItem(`${base}:${i}`);
-    for (const [art, price] of Object.entries(raw ? JSON.parse(raw) as Record<string, number> : {})) out.set(art, price);
-  }
-  return out;
-}
-
-async function writeChunks(base: string, prices: LastPrices): Promise<void> {
-  const entries = [...prices.entries()];
-  const count = Math.ceil(entries.length / CHUNK);
-  for (let i = 0; i < count; i++) {
-    await AsyncStorage.setItem(`${base}:${i}`, JSON.stringify(Object.fromEntries(entries.slice(i * CHUNK, (i + 1) * CHUNK))));
-  }
-  await AsyncStorage.setItem(base, String(count));
-}
-
-/** Fold the old flat set (`supplier:article:price`) into per-supplier maps, once. */
-async function migrateLegacySet(userId: string): Promise<void> {
-  let raw: string | null = null;
+async function dropLocalImportState(): Promise<void> {
   try {
-    raw = await AsyncStorage.getItem(importedKeyFor(userId));
-  } catch {
-    // Too big to read — nothing can be carried, and leaving it would hold
-    // megabytes of Android's ~6 MB AsyncStorage total forever (review
-    // 2026-09-24). A full store fails EVERY setItem, the offline queue's too.
-    await AsyncStorage.removeItem(importedKeyFor(userId)).catch(() => {});
-    return;
-  }
-  if (raw == null) return;
-  const bySupplier = new Map<string, LastPrices>();
-  try {
-    for (const entry of JSON.parse(raw) as string[]) {
-      // Entries without a price predate #366 and cannot say what was imported;
-      // dropping them costs at most one same-price observation.
-      const m = /^(.*):([^:]+):([^:]+)$/.exec(entry);
-      const price = m ? Number(m[3]) : NaN;
-      if (!m || !Number.isFinite(price)) continue;
-      if (!bySupplier.has(m[1])) bySupplier.set(m[1], new Map());
-      bySupplier.get(m[1])!.set(m[2], price); // insertion order = import order: last wins
-    }
-  } catch { /* unparseable: nothing to carry */ }
-  for (const [supplierId, prices] of bySupplier) {
-    const base = supplierKey(userId, supplierId);
-    const existing = await readChunks(base).catch(() => new Map() as LastPrices);
-    await writeChunks(base, new Map([...prices, ...existing]));
-  }
-  await AsyncStorage.removeItem(importedKeyFor(userId));
-}
-
-async function loadLastPrices(userId: string, supplierId: string): Promise<LastPrices> {
-  try {
-    await migrateLegacySet(userId);
-    return await readChunks(supplierKey(userId, supplierId));
+    const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(IMPORTED_KEY_PREFIX));
+    if (keys.length) await AsyncStorage.multiRemove(keys);
   } catch (e) {
-    // Bounded chunks make this corruption, not size. Worst case: one repeat
-    // observation per article on this import.
-    logWarn('datanorm', `import state unreadable: ${e}`);
-    return new Map();
-  }
-}
-
-async function saveLastPrices(userId: string, supplierId: string, prices: LastPrices): Promise<void> {
-  try {
-    await writeChunks(supplierKey(userId, supplierId), prices);
-  } catch (e) {
-    logWarn('datanorm', `import state not saved: ${e}`);
-  }
-}
-
-// R12.3: write each imported article to material_catalog so it surfaces in
-// the AddJobMaterialModal picker. Idempotent: if the (user_id, manufacturer_code)
-// row already exists, swallow the unique-violation. Best-effort — failure here
-// doesn't abort the moat write.
-async function upsertMaterialCatalogRow(args: {
-  name: string;
-  manufacturerCode: string;
-  unit: string;
-  category: string;
-}): Promise<'inserted' | 'exists' | 'failed'> {
-  // Says what happened. It returned void and swallowed every error, so the
-  // import counted an article "imported" whether or not a row landed (#363).
-  if (!isSupabaseConfigured) return 'failed';
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return 'failed';
-    // Check existence first (manufacturer_code isn't a unique index, so we
-    // emulate upsert manually to keep this safe across users).
-    const { data: existing } = await (supabase
-      .from('material_catalog' as any) as any)
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('manufacturer_code', args.manufacturerCode)
-      .maybeSingle();
-    if (existing?.id) return 'exists';
-    const { error } = await (supabase.from('material_catalog' as any) as any).insert({
-      user_id: user.id,
-      name: args.name.slice(0, 200),
-      manufacturer_code: args.manufacturerCode,
-      base_unit: args.unit || 'piece',
-      category: args.category || 'general',
-    });
-    return error ? 'failed' : 'inserted';
-  } catch {
-    return 'failed';
+    logWarn('datanorm', `old import state not removed: ${e}`);
   }
 }
 
@@ -404,89 +298,78 @@ export async function importDatanormToMoat(
     supplierName?: string;
     trade?: string;
     country?: string;
-    userId?: string;
   },
 ): Promise<{ imported: number; skipped: number; failed: number }> {
-  // The signed-in contractor. This defaulted to the string 'datanorm-import',
-  // which material_price_history.observed_by (uuid, FK → auth.users) rejects:
-  // every price row failed, silently, while the screen said "imported" (#363).
-  const userId = options?.userId ?? getAuthedUserId() ?? '';
   const supplierName = options?.supplierName ?? supplierId;
   const trade = options?.trade ?? 'general';
   const country = options?.country ?? 'NL';
 
-  // The price each article was last imported at, for this supplier.
-  const lastPrices = await loadLastPrices(userId, supplierId);
+  await dropLocalImportState();
 
-  let imported = 0;
+  // Rows the server could never take are skipped here, so "failed" means only
+  // "did not land — import again".
   let skipped = 0;
-  let failed = 0;
-
+  const items: Array<{ a: string; n: string; u: string; p: number; k: string }> = [];
   for (const article of articles) {
-    if (!article.articleNumber || article.unitPrice <= 0) {
+    // DATANORM prices are EUR net (see DatanormArticle.unitPrice). Four
+    // decimals: a price per 100 divided down can have more, and a JSON number
+    // in exponent form ("1e-7") is not a price the server accepts.
+    const price = Number.isFinite(article.unitPrice) ? Number(article.unitPrice.toFixed(4)) : 0;
+    if (!article.articleNumber || !(price > 0)) {
       skipped++;
       continue;
     }
-
-    // Skip only when the price is the one LAST imported. Next year's list from
-    // the same wholesaler (same supplier id — the file name's year is
-    // stripped) must write its new prices (review #366), and a price that goes
-    // back to an earlier value is a change too (C4).
-    if (lastPrices.get(article.articleNumber) === article.unitPrice) {
-      skipped++;
-      continue;
-    }
-
-    try {
-      const fullName = article.extendedDescription
-        ? `${article.description} — ${article.extendedDescription}`
-        : article.description;
-      // Catalogue row FIRST: it is what the contractor sees (the material
-      // picker), so it decides "imported". The price row is written only after
-      // it, and an article is marked done only when BOTH landed — a retry of a
-      // half-landed article re-writes only what is missing. Writing the price
-      // row first duplicated it on every "import again to retry" whenever the
-      // catalogue insert failed, in the one table that cannot be cleaned (#363).
-      const landed = await upsertMaterialCatalogRow({
-        name: fullName,
-        manufacturerCode: article.articleNumber,
-        unit: article.unit,
-        category: trade,
-      });
-      if (landed === 'failed') {
-        failed++;
-        continue;
-      }
-      // No signed-in contractor: the price row has no one to attribute it to
-      // (the FK would reject it), so there is nothing to write or retry.
-      const priceLanded = !userId || await emitMaterialPurchased(userId, {
-        materialName: fullName,
-        supplierId,
-        supplierName,
-        price: article.unitPrice,
-        quantity: article.packageSize || 1,
-        unit: article.unit,
-        trade,
-        country,
-        // R283: catalog imports self-attribute as 'catalog'.
-        source: 'catalog',
-      });
-      // The price row is what the price watch reads, so an article whose price
-      // did not land is NOT imported: it counts as failed, stays out of the
-      // dedupe set, and "import again" re-writes only the price (the catalogue
-      // row then already exists) — review #366.
-      if (priceLanded) {
-        lastPrices.set(article.articleNumber, article.unitPrice);
-        imported++;
-      } else {
-        failed++;
-      }
-    } catch {
-      failed++;
-    }
+    const name = article.extendedDescription
+      ? `${article.description} — ${article.extendedDescription}`
+      : article.description;
+    items.push({
+      a: article.articleNumber,
+      n: name,
+      u: article.unit,
+      p: price,
+      // The same key every other price row gets: supplier-namespaced article
+      // number, so the price watch pairs this year's list with last year's.
+      k: canonicalMaterialKey({ description: name, articleNumber: article.articleNumber, supplierId, unit: article.unit }).key,
+    });
   }
 
-  await saveLastPrices(userId, supplierId, lastPrices);
+  let imported = 0;
+  let failed = 0;
+  // No backend: nothing can land. Not "imported".
+  if (!isSupabaseConfigured) return { imported: 0, skipped, failed: items.length };
+
+  let failedInARow = 0;
+  for (let i = 0; i < items.length; i += CATALOG_BATCH) {
+    const batch = items.slice(i, i + CATALOG_BATCH);
+    // A session that expired or a network that is gone fails every batch: a
+    // 100k list would sit behind the spinner for 100 failing requests. Two in
+    // a row → the rest is "not saved, import again" (review 2026-10-01).
+    if (failedInARow >= 2) {
+      failed += batch.length;
+      continue;
+    }
+    try {
+      const { data, error } = await (supabase.rpc as any)('import_catalog_prices', {
+        p_supplier_id: supplierId,
+        p_supplier_name: supplierName,
+        p_trade: trade,
+        p_country: country,
+        p_currency: 'EUR',
+        p_items: batch,
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (error || !row || typeof row.imported !== 'number') throw error ?? new Error('no result');
+      imported += row.imported;
+      skipped += row.skipped;
+      failedInARow = 0;
+    } catch (e) {
+      failedInARow++;
+      // The batch is one transaction: nothing of it landed, and importing the
+      // file again writes exactly what is still missing.
+      logWarn('datanorm', `batch ${i / CATALOG_BATCH} not saved: ${e}`);
+      failed += batch.length;
+    }
+  }
 
   return { imported, skipped, failed };
 }

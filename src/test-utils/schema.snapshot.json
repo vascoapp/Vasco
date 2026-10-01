@@ -1,5 +1,5 @@
 {
- "takenAt": "2026-09-24",
+ "takenAt": "2026-10-01",
  "tables": {
   "account_deletion_requests": {
    "id": {
@@ -6264,6 +6264,12 @@
   }
  },
  "functions": {
+  "push_tokens_one_owner": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
   "on_quote_accepted_refresh_cohort": [
    {
     "args": [],
@@ -6274,6 +6280,26 @@
    {
     "args": [],
     "required": []
+   }
+  ],
+  "import_catalog_prices": [
+   {
+    "args": [
+     "p_supplier_id",
+     "p_supplier_name",
+     "p_trade",
+     "p_country",
+     "p_currency",
+     "p_items"
+    ],
+    "required": [
+     "p_supplier_id",
+     "p_supplier_name",
+     "p_trade",
+     "p_country",
+     "p_currency",
+     "p_items"
+    ]
    }
   ],
   "query_winrate_distribution": [

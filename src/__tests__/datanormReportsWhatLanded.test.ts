@@ -1,149 +1,121 @@
 /**
- * A DATANORM import says how many articles actually LANDED, and attributes
- * price rows to the signed-in contractor.
+ * A DATANORM import says how many articles actually LANDED — and the server,
+ * not the phone, decides what is new (migration 20261001000002).
  *
- * It defaulted observed_by to the string 'datanorm-import' — which the uuid FK
- * rejects — and counted every article "imported" whatever the writes did, so
- * the Inkoop screen reported success over zero rows. A failed article was also
- * added to the local dedupe set, so a retry skipped it forever (#363).
+ * History: it attributed price rows to the string 'datanorm-import' and counted
+ * every article "imported" whatever the writes did (#363); then a local
+ * "last price per article" map decided what was new (#366, C4) — 3 MB per
+ * wholesaler list against Android's ~6 MB AsyncStorage TOTAL, where a full
+ * store fails every setItem, the offline queue's included. The server's own
+ * behaviour (dedupe, last occurrence wins, atomic batch) is proven live by
+ * `npm run check:catalog-import`; this file pins the app's half.
  */
-const mockInserts: Array<{ table: string; payload: any }> = [];
-let mockCatalogError: any = null;
-const mockMoatInsert = jest.fn(async (..._a: any[]) => true);
-
-jest.mock('../lib/supabase', () => ({
-  isSupabaseConfigured: true,
-  supabase: {
-    auth: { getUser: async () => ({ data: { user: { id: '11111111-1111-1111-1111-111111111111' } } }) },
-    from: (table: string) => ({
-      select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) }),
-      insert: async (payload: any) => {
-        mockInserts.push({ table, payload });
-        return table === 'material_catalog' ? { error: mockCatalogError } : { error: null };
-      },
-    }),
-  },
-}));
+jest.mock('../lib/supabase', () =>
+  require('../test-utils/fakeSupabase').fakeSupabaseModule({ userId: '11111111-1111-1111-1111-111111111111' }));
 jest.mock('../lib/currentUser', () => ({
   getAuthedUserId: () => '11111111-1111-1111-1111-111111111111',
   getCurrentUserId: () => '11111111-1111-1111-1111-111111111111',
   getCurrentCountry: () => 'DE',
 }));
-jest.mock('../intelligence/dataCollector', () => ({
-  emitMaterialPurchased: (...a: any[]) => (mockMoatInsert as any)(...a),
-}));
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { importDatanormToMoat } from '../integrations/datanorm';
+import { importDatanormToMoat, CATALOG_BATCH } from '../integrations/datanorm';
 
-const article = (n: string) => ({
-  articleNumber: n, description: `Kupferrohr ${n}`, unitPrice: 12.5, unit: 'm', packageSize: 1,
+const fake = (require('../lib/supabase') as any).__fake;
+
+const article = (n: string, unitPrice = 12.5) => ({
+  articleNumber: n, description: `Kupferrohr ${n}`, unitPrice, unit: 'm', packageSize: 1,
 } as any);
 
-describe('DATANORM import reports what landed', () => {
-  beforeEach(async () => {
-    mockInserts.length = 0;
-    mockCatalogError = null;
-    mockMoatInsert.mockClear();
-    await AsyncStorage.clear();
-  });
+// The server, as far as the app can tell: last price per canonical key.
+let server: Map<string, number>;
+let failBatch: number | null;
+const batches = () => fake.calls.filter((c: any) => c.table === 'rpc:import_catalog_prices');
 
-  it('attributes price rows to the signed-in contractor, never a placeholder string', async () => {
-    await importDatanormToMoat([article('A1')], 'richter');
-    expect(mockMoatInsert).toHaveBeenCalledTimes(1);
-    expect((mockMoatInsert.mock.calls[0] as any[])[0]).toBe('11111111-1111-1111-1111-111111111111');
-  });
-
-  it('counts a failed catalogue write as failed, not imported', async () => {
-    mockCatalogError = { message: 'network' };
-    const r = await importDatanormToMoat([article('B1'), article('B2')], 'richter');
-    expect(r).toEqual({ imported: 0, skipped: 0, failed: 2 });
-    // ...and writes NO price row: the old order wrote it first, so every
-    // "import again to retry" duplicated it in material_price_history.
-    expect(mockMoatInsert).not.toHaveBeenCalled();
-  });
-
-  it('retries only the price row when that is what failed', async () => {
-    mockMoatInsert.mockResolvedValueOnce(false);
-    const first = await importDatanormToMoat([article('D1')], 'richter');
-    // Its price row did not land: failed, not imported (review #366).
-    expect(first).toMatchObject({ imported: 0, failed: 1 });
-    const again = await importDatanormToMoat([article('D1')], 'richter');
-    // Not skipped as a duplicate: its price row never landed.
-    expect(again.skipped).toBe(0);
-    expect(mockMoatInsert).toHaveBeenCalledTimes(2);
-  });
-
-  it("next year's list at a new price is recorded, not skipped as a duplicate", async () => {
-    await importDatanormToMoat([article('E1')], 'richter');
-    const nextYear = await importDatanormToMoat([{ ...article('E1'), unitPrice: 13.5 }], 'richter');
-    expect(nextYear).toEqual({ imported: 1, skipped: 0, failed: 0 });
-    const sameAgain = await importDatanormToMoat([{ ...article('E1'), unitPrice: 13.5 }], 'richter');
-    expect(sameAgain.skipped).toBe(1);
-  });
-
-  it('retries a failed article next time instead of skipping it as a duplicate', async () => {
-    mockCatalogError = { message: 'network' };
-    await importDatanormToMoat([article('C1')], 'richter');
-    mockCatalogError = null;
-    const r = await importDatanormToMoat([article('C1')], 'richter');
-    expect(r).toEqual({ imported: 1, skipped: 0, failed: 0 });
+beforeEach(async () => {
+  await AsyncStorage.clear();
+  fake.reset();
+  server = new Map();
+  failBatch = null;
+  let n = 0;
+  fake.rpc('import_catalog_prices', (args: any) => {
+    if (failBatch === n++) return { data: null, error: { code: '08006', message: 'connection lost' } };
+    let imported = 0;
+    for (const it of args.p_items) {
+      if (server.get(it.k) !== it.p) { server.set(it.k, it.p); imported++; }
+    }
+    return { data: [{ imported, skipped: args.p_items.length - imported }], error: null };
   });
 });
 
-// Sweep 2026-09-23, C4.
-describe('DATANORM import state', () => {
-  beforeEach(async () => {
-    mockInserts.length = 0;
-    mockCatalogError = null;
-    mockMoatInsert.mockClear();
-    await AsyncStorage.clear();
+describe('DATANORM import, deduplicated on the server', () => {
+  it('sends the list in bounded batches to the live function, with its real argument names', async () => {
+    const list = Array.from({ length: 2 * CATALOG_BATCH + 500 }, (_, i) => article(`ART-${i}`));
+    const r = await importDatanormToMoat(list, 'richter', { supplierName: 'Richter', trade: 'plumbing', country: 'DE' });
+    expect(r).toEqual({ imported: list.length, skipped: 0, failed: 0 });
+    // The fake answers PGRST202 to a misspelt argument, which would count as failed.
+    expect(batches().map((c: any) => c.payload.p_items.length)).toEqual([CATALOG_BATCH, CATALOG_BATCH, 500]);
+    expect(batches()[0].payload).toMatchObject({ p_supplier_id: 'richter', p_supplier_name: 'Richter', p_trade: 'plumbing', p_country: 'DE', p_currency: 'EUR' });
   });
 
-  it('a price that goes back to an earlier value is recorded (A → B → A)', async () => {
-    await importDatanormToMoat([article('F1')], 'richter');                          // 12.50
-    await importDatanormToMoat([{ ...article('F1'), unitPrice: 13.5 }], 'richter'); // 13.50
-    const back = await importDatanormToMoat([article('F1')], 'richter');             // 12.50 again
-    expect(back).toEqual({ imported: 1, skipped: 0, failed: 0 });
-    expect(mockMoatInsert).toHaveBeenCalledTimes(3);
+  it('keys each article by supplier + article number, as every other price row', async () => {
+    await importDatanormToMoat([{ ...article('AB-123'), extendedDescription: '15 mm' }], 'richter');
+    expect(batches()[0].payload.p_items[0]).toEqual({ a: 'AB-123', n: 'Kupferrohr AB-123 — 15 mm', u: 'm', p: 12.5, k: 'art:richter:ab-123' });
   });
 
-  it('a 100k-article list never stores one value past ~1 MB (Android reads fail near 2 MB)', async () => {
-    const many = Array.from({ length: 100_000 }, (_, i) => ({ ...article(`ART-${String(i).padStart(8, '0')}`), unitPrice: 1234.56 }));
-    await importDatanormToMoat(many, 'gc_gruppe_grosshandel');
-    const keys = await AsyncStorage.getAllKeys();
-    const values = await AsyncStorage.multiGet(keys);
-    const biggest = Math.max(...values.map(([, v]) => (v ?? '').length));
-    expect(biggest).toBeLessThan(1_000_000);
-    // ...and the whole list reads back: the same file again skips everything.
-    mockMoatInsert.mockClear();
-    const again = await importDatanormToMoat(many, 'gc_gruppe_grosshandel');
-    expect(again.skipped).toBe(100_000);
-    expect(mockMoatInsert).not.toHaveBeenCalled();
+  it("reports the server's verdict: the same list again is all skipped, next year's price is imported", async () => {
+    await importDatanormToMoat([article('E1'), article('E2')], 'richter');
+    expect(await importDatanormToMoat([article('E1'), article('E2')], 'richter')).toEqual({ imported: 0, skipped: 2, failed: 0 });
+    expect(await importDatanormToMoat([article('E1', 13.5), article('E2')], 'richter')).toEqual({ imported: 1, skipped: 1, failed: 0 });
+  });
+
+  it('counts a batch that did not land as failed — and only that batch', async () => {
+    failBatch = 1;
+    const list = Array.from({ length: CATALOG_BATCH + 10 }, (_, i) => article(`F-${i}`));
+    const r = await importDatanormToMoat(list, 'richter');
+    expect(r).toEqual({ imported: CATALOG_BATCH, skipped: 0, failed: 10 });
+    // Importing again writes exactly what is still missing.
+    expect(await importDatanormToMoat(list, 'richter')).toEqual({ imported: 10, skipped: CATALOG_BATCH, failed: 0 });
+  });
+
+  it('stops calling after two failed batches in a row (expired session, no network)', async () => {
+    fake.rpc('import_catalog_prices', () => ({ data: null, error: { code: '42501', message: 'permission denied' } }));
+    const list = Array.from({ length: 10 * CATALOG_BATCH }, (_, i) => article(`G-${i}`));
+    const r = await importDatanormToMoat(list, 'richter');
+    expect(r).toEqual({ imported: 0, skipped: 0, failed: list.length });
+    expect(batches()).toHaveLength(2);
+  });
+
+  it('skips rows without an article number or a price before sending them', async () => {
+    const r = await importDatanormToMoat([article(''), article('Z0', 0), article('Z1', NaN), article('OK1')], 'richter');
+    expect(r).toEqual({ imported: 1, skipped: 3, failed: 0 });
+    expect(batches()[0].payload.p_items.map((i: any) => i.a)).toEqual(['OK1']);
+  });
+
+  it('sends prices to four decimals — never in exponent form, which the server rejects', async () => {
+    const r = await importDatanormToMoat([article('TINY', 0.00001234), article('PER100', 0.123456)], 'richter');
+    expect(r).toEqual({ imported: 1, skipped: 1, failed: 0 });
+    expect(batches()[0].payload.p_items.map((i: any) => JSON.stringify(i.p))).toEqual(['0.1235']);
+  });
+});
+
+describe('the phone keeps nothing', () => {
+  it('a 100k-article list writes nothing to AsyncStorage', async () => {
+    const many = Array.from({ length: 100_000 }, (_, i) => article(`ART-${String(i).padStart(8, '0')}`, 1234.56));
+    const r = await importDatanormToMoat(many, 'gc_gruppe_grosshandel');
+    expect(r.imported).toBe(100_000);
+    expect(await AsyncStorage.getAllKeys()).toEqual([]);
   }, 60_000);
 
-  it('carries the old flat set over, so an upgrade does not re-import everything', async () => {
-    await AsyncStorage.setItem('@vasco_datanorm_imported:11111111-1111-1111-1111-111111111111',
-      JSON.stringify(['richter:G1:12.5', 'richter:G2', 'other:G1:9']));
-    const r = await importDatanormToMoat([article('G1'), article('G2')], 'richter');
-    // G1 at 12.50 was imported before; G2 had no recorded price, so it is written.
-    expect(r).toEqual({ imported: 1, skipped: 1, failed: 0 });
-    expect(await AsyncStorage.getItem('@vasco_datanorm_imported:11111111-1111-1111-1111-111111111111')).toBeNull();
-    // The other supplier's entry survived the migration.
-    const other = await importDatanormToMoat([{ ...article('G1'), unitPrice: 9 }], 'other');
-    expect(other.skipped).toBe(1);
-  });
-});
-
-describe('an unreadable legacy set', () => {
-  it('is deleted, not kept holding storage forever', async () => {
-    await AsyncStorage.clear();
-    const KEY = '@vasco_datanorm_imported:11111111-1111-1111-1111-111111111111';
-    await AsyncStorage.setItem(KEY, '["x"]');
-    // The legacy read is the first getItem of the import; only it fails.
-    (AsyncStorage.getItem as jest.Mock).mockImplementationOnce(async () => { throw new Error('Row too big to fit into CursorWindow'); });
-    const r = await importDatanormToMoat([article('H1')], 'richter');
-    expect(r.imported).toBe(1);
-    expect(await AsyncStorage.getAllKeys()).not.toContain(KEY);
+  it("gives the old local map's space back", async () => {
+    const U = '11111111-1111-1111-1111-111111111111';
+    await AsyncStorage.multiSet([
+      [`@vasco_datanorm_imported:${U}`, '["richter:A:1"]'],
+      [`@vasco_datanorm_imported:${U}:s:richter`, '1'],
+      [`@vasco_datanorm_imported:${U}:s:richter:0`, '{"A":1}'],
+      ['@vasco_invoices', '[]'],
+    ]);
+    await importDatanormToMoat([article('A')], 'richter');
+    expect(await AsyncStorage.getAllKeys()).toEqual(['@vasco_invoices']);
   });
 });
