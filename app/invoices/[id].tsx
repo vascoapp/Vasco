@@ -995,6 +995,37 @@ export default function InvoiceDetailScreen() {
     return true;
   };
 
+  /**
+   * After the errors: the WARNINGS the contractor can act on (user decision
+   * 2026-10-01 — show them before export). Resolves true to go on. Three
+   * buttons at most (Android drops the rest): cancel, the screen that fixes
+   * it, export anyway.
+   */
+  const confirmRuleWarnings = (lines: string[], fixWhere: 'profile' | 'customer' | undefined): Promise<boolean> => {
+    if (lines.length === 0) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      const fix = fixWhere === 'profile'
+        ? { text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => { resolve(false); router.push('/(modals)/business-settings' as any); } }
+        : fixWhere === 'customer' && invoiceCustomer
+          ? { text: t('invoices.einvoiceFixCustomer', 'Open customer details'), onPress: () => { resolve(false); router.push({ pathname: '/(modals)/customers', params: { id: invoiceCustomer.id } } as any); } }
+          : null;
+      Alert.alert(
+        t('einvoiceRules.warningTitle', 'Check before sending'),
+        `${t('einvoiceRules.warningBody', 'The file can be created, but:')}\n\n• ${lines.join('\n• ')}`,
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel', onPress: () => resolve(false) },
+          ...(fix ? [fix] : []),
+          { text: t('einvoiceRules.exportAnyway', 'Export anyway'), onPress: () => resolve(true) },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) },
+      );
+    });
+  };
+  const warningFixWhere = (findings: import('../../src/integrations/einvoiceValueRules').RuleFinding[]): 'profile' | 'customer' | undefined => {
+    const ws = findings.filter((f) => f.severity === 'warning' && f.where !== 'vasco');
+    return ws.some((f) => f.where === 'profile') ? 'profile' : ws.some((f) => f.where === 'customer') ? 'customer' : undefined;
+  };
+
   const handleExportFacturae = async () => {
     try {
       const { loadSubscription } = await import('../../src/services/subscriptionService');
@@ -1028,12 +1059,13 @@ export default function InvoiceDetailScreen() {
     // Gate two: Orden HAP/1650/2015 Anexo II (FACe / registro contable) on the
     // bytes about to leave — including a public-body buyer, which FACe only
     // accepts signed and with DIR3 codes that Vasco cannot add.
-    const { checkFacturae, blockingFindingLines } = await import('../../src/integrations/einvoiceValueRules');
+    const { checkFacturae, blockingFindingLines, warningFindingLines } = await import('../../src/integrations/einvoiceValueRules');
     const findings = checkFacturae(xml);
     // FACe only rejects what is sent TO a public body; for a business buyer
     // the file is refused because its recipient would reject it.
     const facBuyer = findings.some((f) => f.key === 'publicBuyerES' && f.severity === 'error');
     if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), facBuyer ? 'FACe' : t('einvoiceRules.recipient', 'The recipient'))) return;
+    if (!(await confirmRuleWarnings(warningFindingLines(findings, t as any), warningFixWhere(findings)))) return;
     const filename = `${invoiceNumber}-facturae.xml`;
     // The comment that used to sit here said recording at queue approval "would
     // mark unfiled invoices as filed" — right, and recording on the share had
@@ -1072,9 +1104,10 @@ export default function InvoiceDetailScreen() {
     const xml = generateFatturaPAXml(data);
     // Gate two: SDI's value rules (Elenco controlli v2.0) on the bytes about to
     // leave. A discarded file was never legally issued, so it is not handed over.
-    const { checkFatturaPA, blockingFindingLines, fatturaPaFileName } = await import('../../src/integrations/einvoiceValueRules');
-    const findings = checkFatturaPA(xml);
+    const { checkFatturaPA, blockingFindingLines, warningFindingLines, fatturaPaFileName } = await import('../../src/integrations/einvoiceValueRules');
+    const findings = checkFatturaPA(xml, { sellerIsPerson: businessProfile?.personType === 'F' });
     if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), 'SDI')) return;
+    if (!(await confirmRuleWarnings(warningFindingLines(findings, t as any), warningFixWhere(findings)))) return;
     // SdI specifiche §2.2: IT<transmitter id>_<progressive>.xml, never reused —
     // a file named after the invoice number is discarded on its name (00001).
     const filename = fatturaPaFileName('IT', fatturaTransmitterId(data));

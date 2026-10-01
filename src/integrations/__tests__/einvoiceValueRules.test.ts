@@ -15,7 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import { DOMParser } from '@xmldom/xmldom';
-import { checkFatturaPA, checkFacturae, fatturaPaFileName, isValidFatturaPaFileName, blockingFindingLines, RULE_KEYS, type RuleFinding } from '../einvoiceValueRules';
+import { checkFatturaPA, checkFacturae, fatturaPaFileName, isValidFatturaPaFileName, blockingFindingLines, warningFindingLines, RULE_KEYS, type RuleFinding } from '../einvoiceValueRules';
 import { isValidPartitaIva, isValidCodiceFiscale, checkSpanishTaxId, spanishPersonType, isSpanishPublicBodyNif } from '../fiscalIds';
 import { parseXml, type XmlNode } from '../miniXml';
 import { decimalText, moneyText, latin1Text } from '../einvoiceText';
@@ -164,6 +164,29 @@ describe('einvoiceText', () => {
 // ---------------------------------------------------------------------------
 // ITALY
 // ---------------------------------------------------------------------------
+describe('FatturaPA — a sole trader without a codice fiscale is warned (2026-10-01)', () => {
+  const person = (taxId?: string) => itXml({ seller: { ...itSrc().seller, name: 'Mario Rossi', personType: 'F', taxId } as any }).xml;
+  it('warns (profile) when the person has no codice fiscale, and not once they have one', () => {
+    const without = checkFatturaPA(person(undefined), { today: TODAY, sellerIsPerson: true });
+    expect(codes(without)).toEqual([]);
+    expect(without.filter((f) => f.code === 'CF-SELLER')).toEqual([expect.objectContaining({ severity: 'warning', where: 'profile', key: 'sellerCodiceFiscale' })]);
+    const withCf = person('RSSMRA80A01H501U');
+    expect(checkFatturaPA(withCf, { today: TODAY, sellerIsPerson: true }).filter((f) => f.code === 'CF-SELLER')).toEqual([]);
+    expect(withCf).toMatch(/<IdTrasmittente>\s*<IdPaese>IT<\/IdPaese>\s*<IdCodice>RSSMRA80A01H501U<\/IdCodice>/);
+  });
+  it('a company is not asked for one', () => {
+    expect(checkFatturaPA(itXml().xml, { today: TODAY }).filter((f) => f.code === 'CF-SELLER')).toEqual([]);
+  });
+  it('the warning lines leave out what only Vasco can fix', () => {
+    const fs_: RuleFinding[] = [
+      { code: 'CF-SELLER', severity: 'warning', where: 'profile', key: 'sellerCodiceFiscale', message: 'm' },
+      { code: '00422', severity: 'warning', where: 'vasco', key: 'internal', message: 'm' },
+      { code: '00305', severity: 'error', where: 'customer', key: 'taxIdBuyer', message: 'm' },
+    ];
+    expect(warningFindingLines(fs_, ((k: string) => k) as any)).toEqual(['einvoiceRules.sellerCodiceFiscale (CF-SELLER)']);
+  });
+});
+
 describe('FatturaPA — our invoices pass SDI', () => {
   it('mixed rates, sub-cent quantities: no errors, no warnings', () => {
     const f = checkFatturaPA(itXml().xml, { today: TODAY });
@@ -212,6 +235,9 @@ describe('FatturaPA — our invoices pass SDI', () => {
     const f = checkFatturaPA(itXml({ lines: [line('Lavori', 1, 100, 22), line('Spese', 1, 15.5, 0)] }).xml, { today: TODAY });
     expect(codes(f)).toEqual([]);
     expect(codes(f, 'warning')).toEqual(['NATURA-REGIME']);
+    // …which the contractor cannot fix (no per-line nature), so it is not put
+    // to them before every export (review 2026-10-01).
+    expect(warningFindingLines(f, ((k: string) => k) as any)).toEqual([]);
   });
   it('the file name follows SdI §2.2 and changes every second (00001/00002)', () => {
     const a = fatturaPaFileName('IT', '01234567897', new Date('2026-10-01T10:00:00Z'));
@@ -327,6 +353,19 @@ describe('Facturae — each Anexo II rule catches its defect', () => {
   });
 });
 
+describe('Facturae — a person/company mismatch is said plainly (review 2026-10-01)', () => {
+  it('own sentence, not "nothing was shared, report to support", and shown before export', () => {
+    const f = checkFacturae(esXml({ seller: { ...esSrc().seller, name: 'Lucía Navarro Gómez', taxId: '12345678Z', personType: 'J' } as any }).xml, { today: TODAY });
+    const ptc = f.filter((x) => x.code === 'FACTURAE-PTC');
+    expect(ptc).toEqual([expect.objectContaining({ severity: 'warning', where: 'profile', key: 'personTypeSeller' })]);
+    expect(warningFindingLines(f, ((k: string) => k) as any)).toContain('einvoiceRules.personTypeSeller (FACTURAE-PTC)');
+  });
+  it('an `internal` finding is never put to the contractor as a warning', () => {
+    const fs_: RuleFinding[] = [{ code: 'X', severity: 'warning', where: 'profile', key: 'internal', message: 'm' }];
+    expect(warningFindingLines(fs_, ((k: string) => k) as any)).toEqual([]);
+  });
+});
+
 describe('Facturae — a Q buyer is not assumed to be a FACe administration (review 2026-10-01)', () => {
   it('Q (public-law body, e.g. a chamber of commerce): warned, not refused; P and S: refused', () => {
     const q = checkFacturae(esXml({ buyer: { ...esSrc().buyer, name: 'Cámara de Comercio', vatId: undefined, taxId: 'Q2826000H' } }).xml, { today: TODAY });
@@ -375,7 +414,7 @@ it('the invoice screen checks the rules before sharing an IT/ES file, and names 
   };
   for (const [handler, check] of [['handleExportFatturaPA', 'checkFatturaPA'], ['handleExportFacturae', 'checkFacturae']] as const) {
     const b = body(handler);
-    const checked = b.indexOf(`${check}(xml)`);
+    const checked = b.search(new RegExp(`${check}\\(xml[,)]`));
     const refused = b.indexOf('if (refuseOnRuleErrors(');
     const shared = b.indexOf('await shareEInvoiceThenConfirm(');
     expect([handler, checked > -1, refused > checked, shared > refused]).toEqual([handler, true, true, true]);

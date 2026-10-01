@@ -246,7 +246,7 @@
       "companyNumber": "N° entreprise UK",
       "ein": "EIN",
       "stateLicense": "Licence d'État",
-      "codiceFiscale": "Code fiscal italien",
+      "codiceFiscale": "Codice Fiscale",
       "state": "État"
     },
     "selectLanguage": "Choisissez votre langue",
@@ -5642,7 +5642,8 @@
     "invalidPhone": "Veuillez saisir un numéro de téléphone valide",
     "invalidKvK": "Le numéro KvK doit comporter 8 chiffres",
     "invalidVAT": "Veuillez saisir un numéro de TVA valide (ex. NL123456789B01)",
-    "invalidIBAN": "Veuillez saisir un IBAN valide (ex. NL91 ABNA 0417 1643 00)"
+    "invalidIBAN": "Veuillez saisir un IBAN valide (ex. NL91 ABNA 0417 1643 00)",
+    "invalidCodiceFiscale": "Veuillez saisir un codice fiscale valide (16 caractères, ou 11 chiffres pour une société)."
   },
   "crew": {
     "deleteWithJobs": "{{name}} a {{count}} chantiers ouverts assignés. Retirer quand même ? Les chantiers seront désassignés.",
@@ -6425,7 +6426,13 @@
     "naturaRegime": "Une ligne à 0 % est déclarée « non soumise » (N2.2), ce qui correspond au régime forfaitaire. Sous {{value}}, vérifiez s'il s'agit d'une autoliquidation ou d'une exonération.",
     "regimeCharges": "Sous {{value}}, aucune TVA n'est normalement facturée, mais une ligne en comporte.",
     "unsignedB2B": "Ce fichier Facturae n'est pas signé : valable entre entreprises, non accepté par FACe.",
-    "recipient": "Le destinataire"
+    "recipient": "Le destinataire",
+    "sellerCodiceFiscale": "Ajoutez votre codice fiscale dans votre profil d’entreprise — pour un entrepreneur individuel, ce n’est pas la Partita IVA, et SDI identifie l’expéditeur grâce à lui.",
+    "warningTitle": "À vérifier avant l’envoi",
+    "warningBody": "Le fichier peut être créé, mais :",
+    "exportAnyway": "Exporter quand même",
+    "personTypeSeller": "Votre NIF ne correspond pas à « personne ou société » dans votre profil d’entreprise — veuillez vérifier.",
+    "personTypeBuyer": "Le NIF du client ne correspond pas à « personne ou société » dans ses coordonnées — veuillez vérifier."
   },
   "decisionCatalog": {
     "categories": {

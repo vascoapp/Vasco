@@ -67,3 +67,12 @@ it('"due on receipt" (0 days) is filed as due that day, not 14 days later', () =
   expect(buildEInvoiceData(inputs({ invoice: inv0 })).dueDate).toBe(today);
   expect(buildEInvoiceSource(inputs({ invoice: inv0 })).dueDate).toBe(today);
 });
+
+// User decision 2026-10-01: an Italian contractor's codice fiscale has its own
+// field — the IT registration field is the REA (Camera di Commercio).
+it('IT: the seller tax id is the codice fiscale field, the REA only as a fallback; ES keeps its NIF', () => {
+  const bp = { businessName: 'Mario Rossi', vatNumber: 'IT09876543210', registrationNumber: 'REA MI-1234567', country: 'IT' };
+  expect(buildEInvoiceSource(inputs({ businessProfile: { ...bp, taxCode: 'RSSMRA80A01H501U' } })).seller.taxId).toBe('RSSMRA80A01H501U');
+  expect(buildEInvoiceSource(inputs({ businessProfile: bp })).seller.taxId).toBe('REA MI-1234567');
+  expect(buildEInvoiceSource(inputs({ country: 'ES', businessProfile: { registrationNumber: 'B12345674', taxCode: 'X', country: 'ES' } })).seller.taxId).toBe('B12345674');
+});

@@ -5642,7 +5642,8 @@
     "invalidPhone": "Voer een geldig telefoonnummer in",
     "invalidKvK": "KvK-nummer moet 8 cijfers bevatten",
     "invalidVAT": "Voer een geldig btw-nummer in (bijv. NL123456789B01)",
-    "invalidIBAN": "Voer een geldig IBAN in (bijv. NL91 ABNA 0417 1643 00)"
+    "invalidIBAN": "Voer een geldig IBAN in (bijv. NL91 ABNA 0417 1643 00)",
+    "invalidCodiceFiscale": "Vul een geldige codice fiscale in (16 tekens, of 11 cijfers voor een bedrijf)."
   },
   "crew": {
     "deleteWithJobs": "{{name}} heeft {{count}} openstaande klussen toegewezen. Toch verwijderen? De klussen worden ontkoppeld.",
@@ -7367,7 +7368,13 @@
     "naturaRegime": "Een regel van 0 % staat als \"niet belast\" (N2.2), wat bij de forfaitaire regeling hoort. Controleer onder {{value}} of het verlegd of vrijgesteld is.",
     "regimeCharges": "Onder {{value}} wordt normaal geen btw gerekend, maar een regel bevat btw.",
     "unsignedB2B": "Dit Facturae-bestand is niet ondertekend: geldig tussen bedrijven, niet geaccepteerd door FACe.",
-    "recipient": "De ontvanger"
+    "recipient": "De ontvanger",
+    "sellerCodiceFiscale": "Vul je codice fiscale in bij je bedrijfsprofiel — voor een eenmanszaak is dat niet de Partita IVA, en SDI herkent de afzender daaraan.",
+    "warningTitle": "Controleer voor verzenden",
+    "warningBody": "Het bestand kan worden gemaakt, maar:",
+    "exportAnyway": "Toch exporteren",
+    "personTypeSeller": "Je NIF past niet bij ‘persoon of bedrijf’ in je bedrijfsprofiel — controleer dit.",
+    "personTypeBuyer": "De NIF van de klant past niet bij ‘persoon of bedrijf’ in de klantgegevens — controleer dit."
   },
   "vatBasis": {
     "section": "Wanneer de btw verschuldigd is",

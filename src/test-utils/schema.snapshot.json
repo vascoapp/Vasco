@@ -789,6 +789,11 @@
     "nullable": true,
     "hasDefault": false,
     "type": "boolean"
+   },
+   "tax_code": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
    }
   },
   "calibration_entries": {
@@ -6282,26 +6287,6 @@
     "required": []
    }
   ],
-  "import_catalog_prices": [
-   {
-    "args": [
-     "p_supplier_id",
-     "p_supplier_name",
-     "p_trade",
-     "p_country",
-     "p_currency",
-     "p_items"
-    ],
-    "required": [
-     "p_supplier_id",
-     "p_supplier_name",
-     "p_trade",
-     "p_country",
-     "p_currency",
-     "p_items"
-    ]
-   }
-  ],
   "query_winrate_distribution": [
    {
     "args": [
@@ -6424,6 +6409,26 @@
     ],
     "required": [
      "p_doc_type"
+    ]
+   }
+  ],
+  "import_catalog_prices": [
+   {
+    "args": [
+     "p_supplier_id",
+     "p_supplier_name",
+     "p_trade",
+     "p_country",
+     "p_currency",
+     "p_items"
+    ],
+    "required": [
+     "p_supplier_id",
+     "p_supplier_name",
+     "p_trade",
+     "p_country",
+     "p_currency",
+     "p_items"
     ]
    }
   ],

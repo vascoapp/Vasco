@@ -246,7 +246,7 @@
       "companyNumber": "Companies House",
       "ein": "EIN",
       "stateLicense": "Bundesstaat-Lizenz",
-      "codiceFiscale": "Steuernummer (IT)",
+      "codiceFiscale": "Codice Fiscale",
       "state": "Bundesstaat"
     },
     "selectLanguage": "Sprache wählen",
@@ -5642,7 +5642,8 @@
     "invalidPhone": "Bitte geben Sie eine gültige Telefonnummer ein",
     "invalidKvK": "Die KvK-Nummer muss 8 Ziffern haben",
     "invalidVAT": "Bitte geben Sie eine gültige USt-IdNr. ein (z. B. NL123456789B01)",
-    "invalidIBAN": "Bitte geben Sie eine gültige IBAN ein (z. B. NL91 ABNA 0417 1643 00)"
+    "invalidIBAN": "Bitte geben Sie eine gültige IBAN ein (z. B. NL91 ABNA 0417 1643 00)",
+    "invalidCodiceFiscale": "Bitte geben Sie einen gültigen Codice fiscale ein (16 Zeichen, bei Unternehmen 11 Ziffern)."
   },
   "crew": {
     "deleteWithJobs": "{{name}} sind {{count}} offene Aufträge zugewiesen. Trotzdem entfernen? Die Aufträge werden freigegeben.",
@@ -7367,7 +7368,13 @@
     "naturaRegime": "Eine 0-%-Position ist als „nicht steuerbar“ (N2.2) angegeben, was zur Pauschalregelung passt. Prüfen Sie unter {{value}}, ob es sich um Reverse Charge oder eine Steuerbefreiung handelt.",
     "regimeCharges": "Unter {{value}} wird normalerweise keine MwSt. berechnet, aber eine Position enthält MwSt.",
     "unsignedB2B": "Diese Facturae-Datei ist nicht signiert: gültig zwischen Unternehmen, von FACe nicht akzeptiert.",
-    "recipient": "Der Empfänger"
+    "recipient": "Der Empfänger",
+    "sellerCodiceFiscale": "Tragen Sie Ihren Codice fiscale im Unternehmensprofil ein — bei Einzelunternehmern ist er nicht die Partita IVA, und SDI erkennt den Absender daran.",
+    "warningTitle": "Vor dem Versand prüfen",
+    "warningBody": "Die Datei kann erstellt werden, aber:",
+    "exportAnyway": "Trotzdem exportieren",
+    "personTypeSeller": "Ihre NIF passt nicht zu „Person oder Unternehmen“ in Ihrem Unternehmensprofil — bitte prüfen Sie das.",
+    "personTypeBuyer": "Die NIF des Kunden passt nicht zu „Person oder Unternehmen“ in den Kundendaten — bitte prüfen Sie das."
   },
   "vatBasis": {
     "section": "Wann die USt entsteht",

@@ -246,7 +246,7 @@
       "companyNumber": "Nº empresa UK",
       "ein": "EIN",
       "stateLicense": "Licencia estatal",
-      "codiceFiscale": "Código Fiscal italiano",
+      "codiceFiscale": "Codice Fiscale",
       "state": "Estado"
     },
     "selectLanguage": "Elige tu idioma",
@@ -5642,7 +5642,8 @@
     "invalidPhone": "Introduce un número de teléfono válido",
     "invalidKvK": "El número KvK debe tener 8 dígitos",
     "invalidVAT": "Introduce un número de IVA válido (p. ej. NL123456789B01)",
-    "invalidIBAN": "Introduce un IBAN válido (p. ej. NL91 ABNA 0417 1643 00)"
+    "invalidIBAN": "Introduce un IBAN válido (p. ej. NL91 ABNA 0417 1643 00)",
+    "invalidCodiceFiscale": "Introduce un codice fiscale válido (16 caracteres, o 11 dígitos para una empresa)."
   },
   "crew": {
     "deleteWithJobs": "{{name}} tiene {{count}} obras abiertas asignadas. ¿Quitarlo igualmente? Las obras quedarán sin asignar.",
@@ -6425,7 +6426,13 @@
     "naturaRegime": "Una línea al 0 % figura como «no sujeta» (N2.2), propio del régimen forfettario. Con {{value}}, compruebe si es inversión del sujeto pasivo o exención.",
     "regimeCharges": "Con {{value}} normalmente no se repercute IVA, pero una línea lo incluye.",
     "unsignedB2B": "Este archivo Facturae no está firmado: válido entre empresas, no aceptado por FACe.",
-    "recipient": "El destinatario"
+    "recipient": "El destinatario",
+    "sellerCodiceFiscale": "Añade tu codice fiscale en tu perfil de empresa — para un autónomo no es la Partita IVA, y SDI identifica al remitente con él.",
+    "warningTitle": "Revisa antes de enviar",
+    "warningBody": "El archivo se puede crear, pero:",
+    "exportAnyway": "Exportar de todos modos",
+    "personTypeSeller": "Tu NIF no coincide con «persona o empresa» en tu perfil de empresa — revísalo.",
+    "personTypeBuyer": "El NIF del cliente no coincide con «persona o empresa» en sus datos — revísalo."
   },
   "decisionCatalog": {
     "categories": {

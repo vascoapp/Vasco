@@ -153,7 +153,11 @@ export function buildEInvoiceSource(inp: InvoiceDocInputs): EInvoiceSource {
     seller: {
       name: bp.businessName ?? '',
       vatId: bp.vatNumber,
-      taxId: bp.registrationNumber,
+      // ES: the NIF lives in registrationNumber. IT: the codice fiscale has its
+      // own field (taxCode) — registrationNumber is the REA there; it stays the
+      // fallback for a CF typed into it before the field existed (the mapper
+      // writes only a VALID codice fiscale).
+      taxId: (inp.country === 'IT' && bp.taxCode) ? bp.taxCode : bp.registrationNumber,
       address: bp.address,
       city: bp.city,
       postcode: bp.postcode,

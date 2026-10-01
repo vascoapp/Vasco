@@ -1,0 +1,15 @@
+-- =============================================================================
+-- business_settings.tax_code — the seller's own tax code, country-interpreted.
+-- =============================================================================
+-- IT: the CODICE FISCALE. For a ditta individuale it is the owner's personal
+-- 16-character code and differs from the Partita IVA. FatturaPA carries it as
+-- CedentePrestatore/DatiAnagrafici/CodiceFiscale and SdI wants it as the
+-- transmitter id (IdTrasmittente/IdCodice). The app never asked for it: the
+-- Italian "registration" field is the REA (Camera di Commercio), so a sole
+-- trader's invoices fell back to the Partita IVA (user decision 2026-10-01:
+-- add the field).
+-- Not `kvk_number`: the quote PDF prints that slot under the country's
+-- registration label ("REA" for Italy), so a codice fiscale there would print
+-- as an REA number.
+-- =============================================================================
+alter table public.business_settings add column if not exists tax_code text;

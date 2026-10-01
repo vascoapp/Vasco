@@ -29,6 +29,8 @@ export type BusinessSettingsRow = {
   province: string | null;
   fiscal_regime: string | null;
   person_type: string | null;
+  // Migration 20261001000010 — IT codice fiscale (country-interpreted).
+  tax_code: string | null;
   website: string | null;
   invoice_prefix: string | null;
   quote_prefix: string | null;

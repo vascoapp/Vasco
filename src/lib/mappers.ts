@@ -134,6 +134,7 @@ export function businessSettingsToProfile(row: BusinessSettingsRow | null): Busi
     province: row.province ?? undefined,
     fiscalRegime: row.fiscal_regime ?? undefined,
     personType: (row.person_type as 'F' | 'J' | null) ?? undefined,
+    taxCode: row.tax_code ?? undefined,
     website: row.website ?? undefined,
     invoicePrefix: row.invoice_prefix ?? undefined,
     quotePrefix: row.quote_prefix ?? undefined,

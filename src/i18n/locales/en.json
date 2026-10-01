@@ -5642,7 +5642,8 @@
     "invalidPhone": "Please enter a valid phone number",
     "invalidKvK": "KvK number must be 8 digits",
     "invalidVAT": "Please enter a valid VAT number (e.g. NL123456789B01)",
-    "invalidIBAN": "Please enter a valid IBAN (e.g. NL91 ABNA 0417 1643 00)"
+    "invalidIBAN": "Please enter a valid IBAN (e.g. NL91 ABNA 0417 1643 00)",
+    "invalidCodiceFiscale": "Please enter a valid codice fiscale (16 characters, or 11 digits for a company)."
   },
   "crew": {
     "deleteWithJobs": "{{name}} has {{count}} open jobs assigned. Remove anyway? Jobs will be unassigned.",
@@ -7367,7 +7368,13 @@
     "naturaRegime": "A 0 % line is declared as \"not subject\" (N2.2), which fits the flat-rate regime. Under {{value}} check whether it is reverse charge or exempt instead.",
     "regimeCharges": "Under {{value}} no VAT is normally charged, but a line carries VAT.",
     "unsignedB2B": "This Facturae file is not signed: valid between businesses, not accepted by FACe.",
-    "recipient": "The recipient"
+    "recipient": "The recipient",
+    "sellerCodiceFiscale": "Add your codice fiscale in your business profile — for a sole trader it is not the Partita IVA, and SDI identifies the sender by it.",
+    "warningTitle": "Check before sending",
+    "warningBody": "The file can be created, but:",
+    "exportAnyway": "Export anyway",
+    "personTypeSeller": "Your NIF does not match “person or company” in your business profile — please check it.",
+    "personTypeBuyer": "The customer's NIF does not match “person or company” in their details — please check it."
   },
   "vatBasis": {
     "section": "When VAT is due",

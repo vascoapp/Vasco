@@ -106,6 +106,10 @@ export type BusinessProfile = {
   /** 'F' natural person / 'J' legal person. Facturae requires it explicitly;
    *  it also decides Nome+Cognome vs Denominazione in FatturaPA. */
   personType?: 'F' | 'J';
+  /** The seller's own tax code, country-interpreted. IT: the CODICE FISCALE
+   *  (a sole trader's personal 16-character code ≠ the Partita IVA) —
+   *  FatturaPA CedentePrestatore/CodiceFiscale and IdTrasmittente. */
+  taxCode?: string;
   website?: string;
   invoicePrefix?: string;
   quotePrefix?: string;

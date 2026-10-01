@@ -50,7 +50,7 @@ const press = async (root: any) => {
 };
 
 run('FatturaPA export behind the SDI value rules', () => {
-  it('refuses a file SDI would reject, shares one it would accept', async () => {
+  it('refuses a file SDI would reject, asks about a warning, shares one it would accept', async () => {
     await AsyncStorage.clear();
     await AsyncStorage.setItem('@vasco_seed_version', '2026-03-25-v4');
     await AsyncStorage.setItem('@vasco_business_profile', JSON.stringify({ ...IT_BUSINESS_PROFILE, country: 'IT', language: 'nl' }));
@@ -71,11 +71,32 @@ run('FatturaPA export behind the SDI value rules', () => {
     expect(shared()).toBe(0);
     expect(alert.mock.calls.some((c) => c[0] === TITLE)).toBe(true);
 
-    mockFindings.current = [{ code: 'W1', severity: 'warning', key: 'x', params: {}, where: 'document', message: 'x' }];
+    // A warning the contractor can act on is SHOWN first (user decision
+    // 2026-10-01): Cancel shares nothing, "Export anyway" shares.
+    const er = (nl as any).einvoiceRules;
+    const answer = async (label: string) => {
+      const pressing = press((r.tree as any).root);
+      await settle();
+      const call = alert.mock.calls.find((c) => c[0] === er.warningTitle);
+      expect(call).toBeDefined();
+      const buttons = call![2] as Array<{ text: string; onPress?: () => void }>;
+      expect(buttons.length).toBeLessThanOrEqual(3);
+      await act(async () => { buttons.find((b) => b.text === label)!.onPress!(); });
+      await pressing;
+      alert.mockClear();
+    };
+    mockFindings.current = [{ code: 'CF-SELLER', severity: 'warning', key: 'sellerCodiceFiscale', params: {}, where: 'profile', message: 'x' }];
     alert.mockClear();
-    await press((r.tree as any).root);
+    await answer((nl as any).common.cancel);
+    expect(shared()).toBe(0);
+    await answer(er.exportAnyway);
     expect(shared()).toBe(1);
-    expect(alert.mock.calls.some((c) => c[0] === TITLE)).toBe(false);
+
+    // What only Vasco can fix is not put to the contractor: straight through.
+    mockFindings.current = [{ code: '00422', severity: 'warning', key: 'internal', params: {}, where: 'vasco', message: 'x' }];
+    await press((r.tree as any).root);
+    expect(shared()).toBe(2);
+    expect(alert.mock.calls.some((c) => c[0] === TITLE || c[0] === er.warningTitle)).toBe(false);
     alert.mockRestore();
     rnShare.mockRestore();
     teardown(r);

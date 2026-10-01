@@ -3111,6 +3111,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (updates.province !== undefined) dbUpdates.province = updates.province || null;
           if (updates.fiscalRegime !== undefined) dbUpdates.fiscal_regime = updates.fiscalRegime || null;
           if (updates.personType !== undefined) dbUpdates.person_type = updates.personType || null;
+          if (updates.taxCode !== undefined) dbUpdates.tax_code = updates.taxCode || null;
           if (updates.website !== undefined) dbUpdates.website = updates.website || null;
           if (updates.invoicePrefix !== undefined) dbUpdates.invoice_prefix = updates.invoicePrefix || null;
           if (updates.quotePrefix !== undefined) dbUpdates.quote_prefix = updates.quotePrefix || null;

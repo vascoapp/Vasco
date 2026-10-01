@@ -33,6 +33,7 @@ import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { STRIPE_METHODS_UK, STRIPE_METHODS_US } from '../../src/config/paymentMethods';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { REGIMI_FISCALI } from '../../src/data/fiscalRegimes';
+import { isValidCodiceFiscale } from '../../src/integrations/fiscalIds';
 
 type FieldDef = {
   label: string;
@@ -132,6 +133,8 @@ function BusinessSettingsForm() {
   const [province, setProvince] = useState(businessProfile.province ?? '');
   const [personType, setPersonType] = useState<'F' | 'J' | undefined>(businessProfile.personType);
   const [fiscalRegime, setFiscalRegime] = useState(businessProfile.fiscalRegime ?? '');
+  // IT codice fiscale — its own field: the IT registration field is the REA.
+  const [taxCode, setTaxCode] = useState(businessProfile.taxCode ?? '');
   const needsProvince = country === 'ES' || country === 'IT';
   const selectedRegime = REGIMI_FISCALI.find((r) => r.code === fiscalRegime);
   const [email, setEmail] = useState(businessProfile.email ?? '');
@@ -210,6 +213,9 @@ function BusinessSettingsForm() {
           return [
             { label: t('onboarding.fields.partitaIva', 'Partita IVA'), value: vatNumber, onChange: setVatNumber, placeholder: 'IT12345678901' },
             { label: t('onboarding.fields.cameraCommercio', 'Camera di Commercio'), value: registrationNumber, onChange: setRegistrationNumber, placeholder: 'REA MI-1234567' },
+            // A sole trader's personal code ≠ the Partita IVA; SdI's
+            // transmitter id and the CedentePrestatore carry it.
+            { label: t('onboarding.fields.codiceFiscale', 'Codice Fiscale'), value: taxCode, onChange: setTaxCode, placeholder: 'RSSMRA80A01H501U' },
           ];
         default:
           return [];
@@ -281,7 +287,7 @@ function BusinessSettingsForm() {
     }];
 
     return [...common, ...countryFields, ...contactFields, ...paymentFields, ...termsField];
-  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, t]);
+  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, taxCode, address, postcode, city, province, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, t]);
 
   // Show where the series actually stands. Uses the read-only peek RPC: a
   // settings screen must not consume an invoice number just by being opened.
@@ -374,6 +380,16 @@ function BusinessSettingsForm() {
       Alert.alert(t('common.error', 'Error'), t('validation.invalidIBAN', 'Please enter a valid IBAN (e.g. NL91 ABNA 0417 1643 00)'));
       return;
     }
+    // A codice fiscale with a wrong check letter is refused by SdI (00302 for
+    // the cedente, 00300 as transmitter) on every invoice — say so now, not at
+    // the first export. A company's own codice fiscale is its 11 digits: a
+    // 16-character code there is a PERSON's (e.g. the legal representative's)
+    // and would be filed as the company's (review 2026-10-01).
+    const cleanTaxCode = sanitizeInput(taxCode).replace(/\s/g, '').toUpperCase();
+    if (country === 'IT' && cleanTaxCode && (!isValidCodiceFiscale(cleanTaxCode) || (personType === 'J' && !/^\d{11}$/.test(cleanTaxCode)))) {
+      Alert.alert(t('common.error', 'Error'), t('validation.invalidCodiceFiscale', 'Please enter a valid codice fiscale (16 characters, or 11 digits for a company).'));
+      return;
+    }
 
     setSaving(true);
     try {
@@ -405,7 +421,7 @@ function BusinessSettingsForm() {
         postcode: sanitizeInput(postcode).trim(),
         city: sanitizeInput(city).trim(),
         ...(needsProvince ? { province: sanitizeInput(province).trim(), personType } : {}),
-        ...(country === 'IT' ? { fiscalRegime } : {}),
+        ...(country === 'IT' ? { fiscalRegime, taxCode: cleanTaxCode } : {}),
         email: cleanEmail.trim(),
         phone: cleanPhone.trim(),
         // R66 NL launch: persist IBAN + BIC so the invoice PDF can render
@@ -442,7 +458,7 @@ function BusinessSettingsForm() {
     } finally {
       setSaving(false);
     }
-  }, [businessName, kvkNumber, vatNumber, registrationNumber, address, postcode, city, province, personType, fiscalRegime, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, country, enabledPaymentMethods, invoicePrefix, quotePrefix, nextInvoiceNo, updateBusinessProfile, router, t]);
+  }, [businessName, kvkNumber, vatNumber, registrationNumber, taxCode, address, postcode, city, province, personType, fiscalRegime, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, country, enabledPaymentMethods, invoicePrefix, quotePrefix, nextInvoiceNo, updateBusinessProfile, router, t]);
 
   const filled = fields.filter((f) => f.value.trim()).length;
   const percent = Math.round((filled / fields.length) * 100);

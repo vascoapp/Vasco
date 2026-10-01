@@ -5642,7 +5642,8 @@
     "invalidPhone": "Inserisci un numero di telefono valido",
     "invalidKvK": "Il numero KvK deve avere 8 cifre",
     "invalidVAT": "Inserisci una partita IVA valida (es. NL123456789B01)",
-    "invalidIBAN": "Inserisci un IBAN valido (es. NL91 ABNA 0417 1643 00)"
+    "invalidIBAN": "Inserisci un IBAN valido (es. NL91 ABNA 0417 1643 00)",
+    "invalidCodiceFiscale": "Inserisci un codice fiscale valido (16 caratteri, oppure 11 cifre per una società)."
   },
   "crew": {
     "deleteWithJobs": "{{name}} ha {{count}} lavori aperti assegnati. Rimuovere comunque? I lavori verranno deassegnati.",
@@ -6425,7 +6426,13 @@
     "naturaRegime": "Una riga allo 0 % è indicata come \"non soggetta\" (N2.2), tipica del regime forfettario. Con {{value}} verifica se si tratta di inversione contabile o di operazione esente.",
     "regimeCharges": "Con {{value}} di norma non si addebita IVA, ma una riga la contiene.",
     "unsignedB2B": "Questo file Facturae non è firmato: valido tra imprese, non accettato da FACe.",
-    "recipient": "Il destinatario"
+    "recipient": "Il destinatario",
+    "sellerCodiceFiscale": "Aggiungi il tuo codice fiscale nel profilo aziendale — per una ditta individuale non coincide con la Partita IVA, e lo SDI identifica il trasmittente con esso.",
+    "warningTitle": "Controlla prima dell’invio",
+    "warningBody": "Il file può essere creato, ma:",
+    "exportAnyway": "Esporta comunque",
+    "personTypeSeller": "Il tuo NIF non corrisponde a «persona o società» nel profilo aziendale — controllalo.",
+    "personTypeBuyer": "Il NIF del cliente non corrisponde a «persona o società» nei suoi dati — controllalo."
   },
   "decisionCatalog": {
     "categories": {

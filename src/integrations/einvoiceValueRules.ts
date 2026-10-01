@@ -62,6 +62,7 @@ export const RULE_KEYS = [
   'provinceSeller', 'provinceBuyer', 'routingCode', 'publicBuyerIT', 'publicBuyerES', 'pec', 'characters',
   'tooLong', 'futureDate', 'invoiceNumber', 'samePartyId', 'description', 'nameWithSurnameSeller',
   'nameWithSurnameBuyer', 'iban', 'bollo', 'naturaRegime', 'regimeCharges', 'unsignedB2B',
+  'sellerCodiceFiscale', 'personTypeSeller', 'personTypeBuyer',
 ] as const;
 export type RuleKey = typeof RULE_KEYS[number];
 
@@ -80,6 +81,9 @@ export interface RuleFinding {
 export interface RuleOptions {
   /** YYYY-MM-DD the file is checked "as of" (SDI 00403 / HAP II.7). Default: today. */
   today?: string;
+  /** The seller is a natural person (profile personType 'F'). Our FatturaPA
+   *  names every seller by Denominazione, so the XML alone cannot say. */
+  sellerIsPerson?: boolean;
 }
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -102,6 +106,19 @@ type Translate = (key: string, opts?: Record<string, unknown>) => string;
  */
 export function blockingFindingLines(fs: RuleFinding[], t: Translate): string[] {
   const lines = blockingFindings(fs).map((f) =>
+    `${t(`einvoiceRules.${f.key}`, { ...(f.params ?? {}), code: f.params?.code ?? f.code, defaultValue: f.message })} (${f.code})`);
+  return [...new Set(lines)];
+}
+
+/**
+ * Warnings the CONTRACTOR can act on, as sentences — shown before the file is
+ * handed over, with "export anyway" (user decision 2026-10-01). Findings Vasco
+ * itself must fix (`where: 'vasco'`: a total within SDI's tolerance, …) are
+ * not theirs to act on and are left out.
+ */
+export function warningFindingLines(fs: RuleFinding[], t: Translate): string[] {
+  // `internal` is never theirs either: its sentence says nothing was shared.
+  const lines = fs.filter((f) => f.severity === 'warning' && f.where !== 'vasco' && f.key !== 'internal').map((f) =>
     `${t(`einvoiceRules.${f.key}`, { ...(f.params ?? {}), code: f.params?.code ?? f.code, defaultValue: f.message })} (${f.code})`);
   return [...new Set(lines)];
 }
@@ -209,6 +226,14 @@ export function checkFatturaPA(xml: string, opts: RuleOptions = {}): RuleFinding
   const cedCf = textAt(cedAna, 'CodiceFiscale');
   if (cedCf !== undefined && !isValidCodiceFiscale(cedCf)) {
     push('00302', 'error', 'profile', 'taxIdSeller', `cedente CodiceFiscale "${cedCf}" is not a valid codice fiscale`, { value: cedCf });
+  }
+  // A sole trader (Anagrafica Nome/Cognome) without their codice fiscale: SdI
+  // takes the transmitter id from it (Allegato A §2.1.1) and Vasco falls back
+  // to the Partita IVA, which is not the same code for a person. Not a
+  // documented scarto, so a warning — but one the contractor can fix in their
+  // profile (user decision 2026-10-01: add the field).
+  if (cedCf === undefined && (opts.sellerIsPerson || textAt(cedAna, 'Anagrafica/Nome') !== undefined)) {
+    push('CF-SELLER', 'warning', 'profile', 'sellerCodiceFiscale', 'cedente is a person without CodiceFiscale; IdTrasmittente falls back to the partita IVA');
   }
   const regime = textAt(cedAna, 'RegimeFiscale') ?? '';
 
@@ -418,7 +443,10 @@ export function checkFatturaPA(xml: string, opts: RuleOptions = {}): RuleFinding
     // line is more often reverse charge (N6.x, e.g. N6.3 subappalto edilizia)
     // or exempt (N4) — a fact about the transaction Vasco does not hold.
     if (anyN22 && regime !== 'RF19' && regime !== 'RF02') {
-      push('NATURA-REGIME', 'warning', 'invoice', 'naturaRegime', `Natura N2.2 on an invoice under ${regime}`, { value: regime });
+      // `vasco`: the contractor cannot fix it — writing N6.x needs a per-line
+      // nature Vasco does not ask for — so it is not put to them on every
+      // export (review 2026-10-01). Still reported by check:einvoice-rules.
+      push('NATURA-REGIME', 'warning', 'vasco', 'naturaRegime', `Natura N2.2 on an invoice under ${regime}`, { value: regime });
     }
     if (anyPositiveRate && (regime === 'RF19' || regime === 'RF02')) {
       push('NATURA-REGIME', 'warning', 'invoice', 'regimeCharges', `${regime} with IVA charged on a line`, { value: regime });
@@ -480,7 +508,9 @@ export function checkFacturae(xml: string, opts: RuleOptions = {}): RuleFinding[
     if (ptc === 'J' && !textAt(le, 'CorporateName')) push('HAP1650-II.5e', 'error', where, 'internal', 'legal entity without CorporateName', { code: 'HAP1650-II.5e' });
     // Not in Anexo II, but a person filed as a company (or vice versa) is wrong data.
     if (check.kind && ((check.kind === 'ENTITY') !== (ptc === 'J'))) {
-      push('FACTURAE-PTC', 'warning', where, 'internal', `PersonTypeCode ${ptc} for a ${check.kind} NIF`, { code: 'PersonTypeCode' });
+      // Its own sentence: it is shown before export with "Export anyway", and
+      // `internal` says "nothing was shared, report to support" (review 2026-10-01).
+      push('FACTURAE-PTC', 'warning', where, (`personType${sfx}` as const), `PersonTypeCode ${ptc} for a ${check.kind} NIF`, { code: 'PersonTypeCode' });
     }
     const block = ind ?? le;
     const addr = at(block, 'AddressInSpain');
