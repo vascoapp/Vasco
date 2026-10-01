@@ -32,3 +32,24 @@ it('French invoice: 5,5% renovation rate', async () => {
   expect(captured).toMatch(/5,5%/);
   expect(captured).not.toMatch(/5\.5%/);
 });
+
+// The tests above pass `language`, a field the app's BusinessProfile does not
+// have — so they were green while every real PDF came out in English
+// (2026-10-02). The real shape: no language; the app's active one decides.
+it('with the profile the app really passes (no language), the PDF is in the app language', async () => {
+  const i18n = require('../i18n/i18n').default;
+  const before = i18n.language;
+  try {
+    await i18n.changeLanguage('de');
+    await renderInvoicePdfFile(invoice(19), { businessName: 'Müller Sanitär', country: 'DE' } as any);
+    expect(captured).toContain('Rechnung');
+    expect(captured).toMatch(/>Fälligkeitsdatum</);
+    expect(captured).not.toMatch(/>Invoice</);
+    await i18n.changeLanguage('fr');
+    await renderInvoicePdfFile(invoice(20), { businessName: 'Artisan', country: 'FR' } as any);
+    expect(captured).toContain('Facture');
+    expect(captured).toMatch(/échéance/);
+  } finally {
+    await i18n.changeLanguage(before);
+  }
+});

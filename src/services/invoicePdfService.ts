@@ -19,6 +19,7 @@ import { logWarn } from '../utils/errorHandler';
 import { nameThePdf } from '../utils/namedPdf';
 import { FR_STATUTORY_NOTES } from '../integrations/einvoice';
 import { signatureHtmlBlock, getLegalText } from './signatureService';
+import { messageLocale } from './whatsappTemplateService';
 
 // ── Number formatting ────────────────────────────────────
 
@@ -130,44 +131,44 @@ const LABELS: Record<string, DocLabels> = {
     description: 'Omschrijving', quantity: 'Aantal', unitPrice: 'Prijs', vat: 'BTW', amount: 'Bedrag',
     subtotal: 'Subtotaal', vatAmount: 'BTW', total: 'Totaal',
     paymentInfo: 'Betalingsinformatie', paymentInstruction: 'Gelieve binnen de vervaldatum te betalen.',
-    paymentReference: 'Referentie', payOnline: 'Betaal Online', poweredBy: 'Mogelijk gemaakt door Vasco',
+    paymentReference: 'Referentie', payOnline: 'Betaal online', poweredBy: 'Mogelijk gemaakt door Vasco',
     status: { draft: 'CONCEPT', sent: 'VERZONDEN', paid: 'BETAALD', overdue: 'VERLOPEN' },
     bankDetails: 'Bankgegevens',
   },
   de: {
     title: 'Rechnung', invoiceNumber: 'Rechnungsnr.', from: 'Von', to: 'An',
-    issueDate: 'Rechnungsdatum', dueDate: 'Falligkeitsdatum', deliveryDate: 'Leistungsdatum',
+    issueDate: 'Rechnungsdatum', dueDate: 'Fälligkeitsdatum', deliveryDate: 'Leistungsdatum',
     description: 'Beschreibung', quantity: 'Menge', unitPrice: 'Preis', vat: 'USt', amount: 'Betrag',
     subtotal: 'Zwischensumme', vatAmount: 'USt', total: 'Gesamtbetrag',
-    paymentInfo: 'Zahlungsinformationen', paymentInstruction: 'Bitte zahlen Sie bis zum Falligkeitsdatum.',
-    paymentReference: 'Referenz', payOnline: 'Online Bezahlen', poweredBy: 'Betrieben von Vasco',
-    status: { draft: 'ENTWURF', sent: 'GESENDET', paid: 'BEZAHLT', overdue: 'UBERFÄLLIG' },
+    paymentInfo: 'Zahlungsinformationen', paymentInstruction: 'Bitte zahlen Sie bis zum Fälligkeitsdatum.',
+    paymentReference: 'Referenz', payOnline: 'Online bezahlen', poweredBy: 'Betrieben von Vasco',
+    status: { draft: 'ENTWURF', sent: 'GESENDET', paid: 'BEZAHLT', overdue: 'ÜBERFÄLLIG' },
     bankDetails: 'Bankverbindung',
   },
   fr: {
-    title: 'Facture', invoiceNumber: 'Facture n°', from: 'De', to: 'A',
-    issueDate: 'Date de facture', dueDate: 'Date d\'echeance', deliveryDate: 'Date de prestation',
+    title: 'Facture', invoiceNumber: 'Facture n°', from: 'De', to: 'À',
+    issueDate: 'Date de facture', dueDate: 'Date d\'échéance', deliveryDate: 'Date de prestation',
     description: 'Description', quantity: 'Qté', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
     subtotal: 'Sous-total', vatAmount: 'TVA', total: 'Total TTC',
-    paymentInfo: 'Informations de paiement', paymentInstruction: 'Merci de regler avant la date d\'echeance.',
-    paymentReference: 'Reference', payOnline: 'Payer en Ligne', poweredBy: 'Propulse par Vasco',
-    status: { draft: 'BROUILLON', sent: 'ENVOYEE', paid: 'PAYEE', overdue: 'EN RETARD' },
-    bankDetails: 'Coordonnees bancaires',
+    paymentInfo: 'Informations de paiement', paymentInstruction: 'Merci de régler avant la date d\'échéance.',
+    paymentReference: 'Référence', payOnline: 'Payer en ligne', poweredBy: 'Propulsé par Vasco',
+    status: { draft: 'BROUILLON', sent: 'ENVOYÉE', paid: 'PAYÉE', overdue: 'EN RETARD' },
+    bankDetails: 'Coordonnées bancaires',
   },
   es: {
     title: 'Factura', invoiceNumber: 'Factura n°', from: 'De', to: 'Para',
     issueDate: 'Fecha de factura', dueDate: 'Fecha de vencimiento', deliveryDate: 'Fecha de prestación',
     description: 'Descripción', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
     subtotal: 'Subtotal', vatAmount: 'IVA', total: 'Total',
-    paymentInfo: 'Informacion de pago', paymentInstruction: 'Por favor pague antes de la fecha de vencimiento.',
-    paymentReference: 'Referencia', payOnline: 'Pagar en Linea', poweredBy: 'Desarrollado por Vasco',
+    paymentInfo: 'Información de pago', paymentInstruction: 'Por favor pague antes de la fecha de vencimiento.',
+    paymentReference: 'Referencia', payOnline: 'Pagar en línea', poweredBy: 'Desarrollado por Vasco',
     status: { draft: 'BORRADOR', sent: 'ENVIADA', paid: 'PAGADA', overdue: 'VENCIDA' },
     bankDetails: 'Datos bancarios',
   },
   it: {
     title: 'Fattura', invoiceNumber: 'Fattura n°', from: 'Da', to: 'A',
     issueDate: 'Data fattura', dueDate: 'Data di scadenza', deliveryDate: 'Data della prestazione',
-    description: 'Descrizione', quantity: 'Qta', unitPrice: 'Prezzo', vat: 'IVA', amount: 'Importo',
+    description: 'Descrizione', quantity: 'Qtà', unitPrice: 'Prezzo', vat: 'IVA', amount: 'Importo',
     subtotal: 'Subtotale', vatAmount: 'IVA', total: 'Totale',
     paymentInfo: 'Informazioni di pagamento', paymentInstruction: 'Si prega di pagare entro la data di scadenza.',
     paymentReference: 'Riferimento', payOnline: 'Paga Online', poweredBy: 'Offerto da Vasco',
@@ -815,6 +816,12 @@ export async function renderInvoicePdfFile(
   paymentUrl?: string,
   options?: PdfOptions,
 ): Promise<string> {
+  // The language the contractor runs the app in (profile first, account
+  // second — `applySavedLanguage`), as the customer messages use. Every caller
+  // passes the AppState profile, which has NO `language` field, so this was
+  // undefined and EVERY invoice PDF — viewed, emailed, archived — came out in
+  // English (found 2026-10-01, fixed 2026-10-02). An explicit one still wins.
+  const language = businessProfile?.language ?? messageLocale();
   let html = buildInvoiceHtml(
     invoice,
     businessProfile?.businessName ?? '',
@@ -822,7 +829,7 @@ export async function renderInvoicePdfFile(
     businessProfile?.kvkNumber ?? '',
     businessProfile?.vatNumber ?? '',
     paymentUrl,
-    businessProfile?.language,
+    language,
     businessProfile?.country,
     businessProfile?.iban,
     options?.showPoweredBy,
@@ -834,7 +841,7 @@ export async function renderInvoicePdfFile(
   );
   // The customer's sign-off, in the INVOICE's language, before </body>.
   if (options?.customerSignature) {
-    html = html.replace('</body>', `${await signOffBlock(options.customerSignature, businessProfile?.language)}</body>`);
+    html = html.replace('</body>', `${await signOffBlock(options.customerSignature, language)}</body>`);
   }
   const { uri } = await Print.printToFileAsync({ html, base64: false });
   return uri;

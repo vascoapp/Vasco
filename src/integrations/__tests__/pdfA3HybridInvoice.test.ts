@@ -275,6 +275,16 @@ describe('PDF/A-3b hybrid — the page states the XML\'s money', () => {
     expect(xml).toBe(profile === 'facturx' ? generateFacturXXML(data) : generateCIIXML(data));
   });
 
+  it('prints post code and city once — not again when the address line already has them', async () => {
+    const one = pageText((await make('zugferd', invoice('DE', [{ description: 'Wartung', quantity: 1, unitPrice: 48, vatRate: 19 }],
+      { sellerAddress: 'Aachener Straße 128, 50674 Köln', sellerPostalCode: '50674', sellerCity: 'Köln' }), 'de')).doc);
+    expect(one.split('50674').length - 1).toBe(1);
+    // A plain street line still gets its post code and city.
+    const two = pageText((await make('zugferd', invoice('DE', [{ description: 'Wartung', quantity: 1, unitPrice: 48, vatRate: 19 }]), 'de')).doc);
+    expect(two).toContain('50667 Köln');
+    expect(two).toContain('50676 Köln');
+  });
+
   it('prints the exemption reason on a small-business invoice', async () => {
     const { doc } = await make('zugferd', invoice('DE', [{ description: 'Wartung', quantity: 1, unitPrice: 48, vatRate: 0 }], { sellerVatExempt: true }), 'de');
     expect(pageText(doc)).toContain('§ 19 UStG');

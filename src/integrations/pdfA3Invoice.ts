@@ -342,14 +342,14 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
     return yy;
   };
   const sellerLines = [
-    data.sellerName, data.sellerAddress, joinNonEmpty([data.sellerPostalCode, data.sellerCity], ' '),
+    data.sellerName, data.sellerAddress, postalLine(data.sellerAddress, data.sellerPostalCode, data.sellerCity),
     data.sellerCountry ?? '',
     data.sellerVatId ? `${L.vatId}: ${data.sellerVatId}` : '',
     data.sellerTaxNumber ? `${L.taxNumber}: ${data.sellerTaxNumber}` : '',
     data.sellerPhone ?? '', data.sellerEmail ?? '',
   ];
   const buyerLines = [
-    data.buyerName, data.buyerAddress, joinNonEmpty([data.buyerPostalCode, data.buyerCity], ' '),
+    data.buyerName, data.buyerAddress, postalLine(data.buyerAddress, data.buyerPostalCode, data.buyerCity),
     data.buyerCountry ?? '',
     data.buyerVatId ? `${L.vatId}: ${data.buyerVatId}` : '',
     data.leitwegId ? `Leitweg-ID: ${data.leitwegId}` : '',
@@ -581,6 +581,21 @@ function formatDate(iso: string, lang: HybridLanguage): string {
 
 function formatIban(iban: string): string {
   return iban.replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim();
+}
+
+/**
+ * "50674 Köln" under the address — unless the address line already says it.
+ * Onboarding stores ONE address line ("Aachener Straße 128, 50674 Köln") and
+ * settings the post code and city beside it, so the page printed both
+ * (device pass, 2026-10-02). Only the printed page: the XML keeps the
+ * structured fields.
+ */
+function postalLine(address: string | undefined, postcode: string | undefined, city: string | undefined): string {
+  const line = joinNonEmpty([postcode, city], ' ');
+  if (!line) return '';
+  const a = (address ?? '').toLowerCase();
+  const has = (v: string | undefined) => !v || a.includes(v.trim().toLowerCase());
+  return has(postcode) && has(city) ? '' : line;
 }
 
 function joinNonEmpty(parts: Array<string | undefined>, sep: string): string {
