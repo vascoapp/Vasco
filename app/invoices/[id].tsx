@@ -243,6 +243,26 @@ export default function InvoiceDetailScreen() {
   // Building the PDF takes seconds; a second tap meanwhile emailed the
   // customer twice (review, 2026-09-30).
   const sendingRef = useRef(false);
+  // Whether the send WILL be a dunning reminder — the same question the
+  // handler asks (≥ 3 days overdue AND a cadence step for this customer). The
+  // label read only the days, so a customer whose cadence override delays
+  // reminders saw "Send reminder" and was sent the plain invoice (review,
+  // 2026-09-30). Async (the override is stored), hence state; above the early
+  // return (#338).
+  const [sendsReminder, setSendsReminder] = useState(false);
+  const reminderCustomerKey = invoiceCustomer?.id ?? (invoice as any)?.customer ?? '';
+  useEffect(() => {
+    let live = true;
+    const overdue = invoice ? Math.abs(Math.min(0, daysUntilDue(invoice) ?? 0)) : 0;
+    if (!invoice || invoice.status === 'draft' || invoice.status === 'paid' || overdue < 3) {
+      setSendsReminder(false);
+      return;
+    }
+    effectiveStep(reminderCustomerKey, overdue)
+      .then((step) => { if (live) setSendsReminder(!!step); })
+      .catch(() => { if (live) setSendsReminder(false); });
+    return () => { live = false; };
+  }, [invoice?.id, invoice?.status, invoice?.dueDate, invoice?.dueInDays, reminderCustomerKey]);
   useEffect(() => {
     if (submitFiredRef.current) return;
     if (submit !== 'einvoice') return;
@@ -518,7 +538,9 @@ export default function InvoiceDetailScreen() {
     // here as on the Facturen list (R287).
     // The customer's tag (VIP / inactive confirmations) the same way Facturen
     // scores it. The count stays 0: no reminder sent from here is recorded.
-    if (!firstSend) {
+    // Only a REMINDER is gated (VIP / inactive confirmations, "Send reminder
+    // to VIP?"): a plain resend before the cadence starts is not one.
+    if (!firstSend && sendsReminder) {
       const { scoreCustomer } = require('../../src/services/customerTaggingService');
       const tag = invoiceCustomer
         ? scoreCustomer({ customer: invoiceCustomer, jobs: jobs as any, invoices: invoices as any }).tag
@@ -1448,9 +1470,9 @@ export default function InvoiceDetailScreen() {
               icon="send-outline"
               label={invoice.status === 'draft'
                 ? t('invoices.sendInvoice', 'Send invoice')
-                // The same threshold the handler uses to pick the dunning
-                // text: before it, the customer gets the invoice again.
-                : (dueIn ?? 0) <= -3
+                // The same answer the handler reaches (sendsReminder above):
+                // otherwise the customer gets the invoice again.
+                : sendsReminder
                   ? t('invoices.sendReminder', 'Send reminder')
                   : t('invoices.resendInvoice', 'Send invoice again')}
               onPress={handleMarkSent}

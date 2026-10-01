@@ -68,6 +68,7 @@ module.exports = {
     '<rootDir>/__screenwalk__/flowInvoiceSendMarksOnlyWhatWentOut.test.tsx',
     '<rootDir>/__screenwalk__/flowInvoicePdfShareAsksBeforeSent.test.tsx',
     '<rootDir>/__screenwalk__/flowInvoiceNotSyncedSaysSo.test.tsx',
+    '<rootDir>/__screenwalk__/flowInvoiceLabelFollowsCadence.test.tsx',
     // Local-fixture flows (see above).
     '<rootDir>/__screenwalk__/customerDetailDocuments.test.tsx',
     '<rootDir>/__screenwalk__/flowCustomerEdit.test.tsx',
