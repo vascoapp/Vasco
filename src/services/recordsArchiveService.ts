@@ -39,6 +39,7 @@ import { checkInvoiceReadiness } from '../utils/businessProfileValidation';
 import { safeZipName, utf8, StoredZipWriter } from '../utils/storedZip';
 import { logWarn } from '../utils/errorHandler';
 import { localDateKey } from '../utils/dateKey';
+import { withTimeout } from '../utils/withTimeout';
 
 type Translate = (key: string, fallback: string, opts?: Record<string, unknown>) => string;
 
@@ -54,6 +55,11 @@ export interface RecordsArchiveInput {
   now?: Date;
   /** Called after each invoice: rendering a long history takes minutes. */
   onProgress?: (done: number, total: number) => void;
+  /** Per-invoice PDF render limit. A render that never settles hung the whole
+   *  export on a device (emulator, 2026-10-01: stuck at "invoice 2 of 3", no
+   *  error, the contractor about to delete their account) — now that invoice is
+   *  a named gap and the archive completes. Tests pass a small value. */
+  pdfTimeoutMs?: number;
 }
 
 export interface RecordsArchiveResult {
@@ -153,7 +159,7 @@ export async function buildRecordsArchive(
         fallbackDescription: t('invoices.services', 'Services rendered'),
       });
       const extras = invoicePdfExtras({ invoice, customers: input.customers, jobs: input.jobs, businessProfile: input.businessProfile });
-      const uri = await renderInvoicePdfFile(
+      const uri = await withTimeout(renderInvoicePdfFile(
         { ...autoInv, deliveryDate: extras.deliveryDate ?? autoInv.deliveryDate },
         input.businessProfile as any,
         undefined,
@@ -161,7 +167,7 @@ export async function buildRecordsArchive(
           ...(extras.customerSignature ? { customerSignature: extras.customerSignature } : {}),
           frMentions: extras.frMentions,
         },
-      );
+      ), input.pdfTimeoutMs ?? 45_000, `PDF ${number}`);
       const file = new File(uri);
       add(`${base}.pdf`, await file.bytes());
       try { file.delete(); } catch { /* a cache file; the OS reclaims it */ }

@@ -13,11 +13,14 @@ import { execFileSync } from 'child_process';
 
 let mockZip: Uint8Array | null = null;
 let mockPrintFails = new Set<string>();
+// A render that never settles — what a device did once (2026-10-01).
+let mockPrintHangs = new Set<string>();
 let mockPrinted: string[] = [];
 jest.mock('expo-print', () => ({
   printToFileAsync: async ({ html }: { html: string }) => {
     const hit = [...mockPrintFails].find((n) => html.includes(n));
     if (hit) throw new Error('print failed');
+    if ([...mockPrintHangs].some((n) => html.includes(n))) return new Promise(() => {});
     mockPrinted.push(html);
     return { uri: `file:///cache/p${mockPrinted.length}.pdf` };
   },
@@ -69,7 +72,7 @@ const bpDE = { businessName: 'Sanitär Becker GmbH', registrationNumber: 'HRB 12
 const customers = [{ id: 'c1', name: 'Familie Müller', city: 'Köln', postcode: '50667', country: 'DE', email: 'familie.mueller@example.de' }] as any;
 const inv = (id: string, status: string, extra: any = {}) => ({ id, customer: 'Familie Müller', customerId: 'c1', job: 'Bad', amount: 119, status, dueInDays: 14, createdAt: '2026-09-01T10:00:00Z', ...extra });
 
-beforeEach(() => { mockZip = null; mockPrintFails = new Set(); mockPrinted = []; });
+beforeEach(() => { mockZip = null; mockPrintFails = new Set(); mockPrintHangs = new Set(); mockPrinted = []; });
 
 (hasUnzip ? it : it.skip)('every issued invoice as PDF + XRechnung; drafts are not issued documents', async () => {
   const r = await exportRecordsArchive({
@@ -169,4 +172,20 @@ it('without a business profile the e-invoice is withheld and named, and the rate
   expect(r.xmlMissing[0].reason).toMatch(/your business details/);
   // The synthesised line: 119 gross at DE 19% is 100 net, not 119 at 0%.
   expect(mockPrinted[0]).toMatch(/100[,.]00/);
+});
+
+// On the emulator the export once stuck at "invoice 2 of 3" for minutes — a PDF
+// render that never settled, no error, a spinner forever, while the contractor
+// was about to delete their account. A stuck render is now a named gap.
+(hasUnzip ? it : it.skip)('a PDF render that never finishes is a named gap, and the archive still completes', async () => {
+  mockPrintHangs.add('RE-2026-0002');
+  const r = await exportRecordsArchive({
+    invoices: [inv('RE-2026-0001', 'sent'), inv('RE-2026-0002', 'sent')] as any,
+    lineItems: {}, customers, jobs: [], businessProfile: bpDE, country: 'DE', t, pdfTimeoutMs: 50,
+  });
+  expect(r.ok).toBe(true);
+  expect(r.pdfFailed).toEqual(['RE-2026-0002']);
+  const { names } = unzipList(mockZip!);
+  expect(names).toContain('invoices/RE-2026-0001.pdf');
+  expect(names).not.toContain('invoices/RE-2026-0002.pdf');
 });
