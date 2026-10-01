@@ -33,8 +33,11 @@ type Register = 'formal' | 'informal';
  * both sides instead.
  */
 const L = 'A-Za-z\u00C0-\u024F';
+// Digits too: a pronoun is never glued to a number — "DIR3" (the Spanish
+// public-body directory) is not the German "dir" (2026-10-01).
+const W = `${L}0-9`;
 function words(...forms: string[]): RegExp {
-  return new RegExp(`(?<![${L}])(?:${forms.join('|')})(?![${L}])`, 'i');
+  return new RegExp(`(?<![${W}])(?:${forms.join('|')})(?![${W}])`, 'i');
 }
 
 /** Pronoun/possessive markers that identify the register a string is written in. */
