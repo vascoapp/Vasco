@@ -1,4 +1,5 @@
 import { round2 } from '../domain/business';
+import { decimalText, moneyText } from './einvoiceText';
 // =============================================================================
 // E-INVOICE SERVICE — Facturae 3.2.2 + VeriFactu (Spanish standard)
 // =============================================================================
@@ -148,30 +149,40 @@ export function generateFacturaeXml(data: FacturaeInvoice): string {
   const totals = facturaeTaxTotals(data.lineItems);
   // Build tax withholdings (IRPF)
   const taxWithholdings = buildTaxWithholdings(data.lineItems);
+  // ONE document total for the invoice, its installment and the batch header.
+  // The batch and the installment printed `data.totalGross` (the screen's
+  // figure) beside an InvoiceTotal computed here; Facturae defines the batch
+  // TotalInvoicesAmount as Σ InvoiceTotal, so two sources is one too many.
+  const invoiceTotal = round2(totals.base + totals.tax - data.totalIrpf);
 
+  // Orden HAP/1650/2015 Anexo II 6a: TotalCost = round2(Quantity ×
+  // UnitPriceWithoutTax) — computed by FACe from THESE printed figures. With
+  // `toFixed(2)` a 1,333 h line printed 1.33 × 55 = 73.15 against 73.32, and
+  // `toFixed` on the raw float printed 73.31 where round2 (and the tax block)
+  // said 73.32, so TotalGrossAmount ≠ Σ GrossAmount (6b). Both rejected.
   const invoiceLinesXml = data.lineItems.map((li, idx) => {
     const irpfXml = li.irpfRate && li.irpfAmount ? `
               <WithholdingsAndCharges>
                 <Charge>
                   <ChargeReason>IRPF</ChargeReason>
                   <ChargeRate>${li.irpfRate.toFixed(2)}</ChargeRate>
-                  <ChargeAmount>${li.irpfAmount.toFixed(2)}</ChargeAmount>
+                  <ChargeAmount>${moneyText(li.irpfAmount)}</ChargeAmount>
                 </Charge>
               </WithholdingsAndCharges>` : '';
 
     return `
             <InvoiceLine>
               <ItemDescription>${escapeXml(li.description)}</ItemDescription>
-              <Quantity>${li.quantity.toFixed(2)}</Quantity>
-              <UnitPriceWithoutTax>${li.unitPrice.toFixed(6)}</UnitPriceWithoutTax>
-              <TotalCost>${li.lineTotal.toFixed(2)}</TotalCost>
-              <GrossAmount>${li.lineTotal.toFixed(2)}</GrossAmount>${irpfXml}
+              <Quantity>${decimalText(li.quantity)}</Quantity>
+              <UnitPriceWithoutTax>${decimalText(li.unitPrice)}</UnitPriceWithoutTax>
+              <TotalCost>${moneyText(li.lineTotal)}</TotalCost>
+              <GrossAmount>${moneyText(li.lineTotal)}</GrossAmount>${irpfXml}
               <TaxesOutputs>
                 <Tax>
                   <TaxTypeCode>01</TaxTypeCode>
                   <TaxRate>${li.ivaRate.toFixed(2)}</TaxRate>
-                  <TaxableBase><TotalAmount>${li.lineTotal.toFixed(2)}</TotalAmount></TaxableBase>
-                  <TaxAmount><TotalAmount>${li.ivaAmount.toFixed(2)}</TotalAmount></TaxAmount>
+                  <TaxableBase><TotalAmount>${moneyText(li.lineTotal)}</TotalAmount></TaxableBase>
+                  <TaxAmount><TotalAmount>${moneyText(li.ivaAmount)}</TotalAmount></TaxAmount>
                 </Tax>
               </TaxesOutputs>
             </InvoiceLine>`;
@@ -181,7 +192,7 @@ export function generateFacturaeXml(data: FacturaeInvoice): string {
           <PaymentDetails>
             <Installment>
               <InstallmentDueDate>${data.dueDate}</InstallmentDueDate>
-              <InstallmentAmount>${data.totalGross.toFixed(2)}</InstallmentAmount>
+              <InstallmentAmount>${invoiceTotal.toFixed(2)}</InstallmentAmount>
               <PaymentMeans>${data.paymentMethod ?? '04'}</PaymentMeans>
               <AccountToBeCredited>
                 <IBAN>${escapeXml(data.iban)}</IBAN>${data.bic ? `
@@ -199,9 +210,9 @@ export function generateFacturaeXml(data: FacturaeInvoice): string {
     <Batch>
       <BatchIdentifier>${escapeXml(data.sellerNif + data.invoiceNumber)}</BatchIdentifier>
       <InvoicesCount>1</InvoicesCount>
-      <TotalInvoicesAmount><TotalAmount>${data.totalGross.toFixed(2)}</TotalAmount></TotalInvoicesAmount>
-      <TotalOutstandingAmount><TotalAmount>${data.totalGross.toFixed(2)}</TotalAmount></TotalOutstandingAmount>
-      <TotalExecutableAmount><TotalAmount>${data.totalGross.toFixed(2)}</TotalAmount></TotalExecutableAmount>
+      <TotalInvoicesAmount><TotalAmount>${invoiceTotal.toFixed(2)}</TotalAmount></TotalInvoicesAmount>
+      <TotalOutstandingAmount><TotalAmount>${invoiceTotal.toFixed(2)}</TotalAmount></TotalOutstandingAmount>
+      <TotalExecutableAmount><TotalAmount>${invoiceTotal.toFixed(2)}</TotalAmount></TotalExecutableAmount>
       <InvoiceCurrencyCode>${data.currency}</InvoiceCurrencyCode>
     </Batch>
   </FileHeader>
@@ -271,9 +282,9 @@ ${taxWithholdings}
         <TotalGrossAmountBeforeTaxes>${totals.base.toFixed(2)}</TotalGrossAmountBeforeTaxes>
         <TotalTaxOutputs>${totals.tax.toFixed(2)}</TotalTaxOutputs>
         <TotalTaxesWithheld>${data.totalIrpf.toFixed(2)}</TotalTaxesWithheld>
-        <InvoiceTotal>${round2(totals.base + totals.tax - data.totalIrpf).toFixed(2)}</InvoiceTotal>
-        <TotalOutstandingAmount>${round2(totals.base + totals.tax - data.totalIrpf).toFixed(2)}</TotalOutstandingAmount>
-        <TotalExecutableAmount>${round2(totals.base + totals.tax - data.totalIrpf).toFixed(2)}</TotalExecutableAmount>
+        <InvoiceTotal>${invoiceTotal.toFixed(2)}</InvoiceTotal>
+        <TotalOutstandingAmount>${invoiceTotal.toFixed(2)}</TotalOutstandingAmount>
+        <TotalExecutableAmount>${invoiceTotal.toFixed(2)}</TotalExecutableAmount>
       </InvoiceTotals>
       <Items>
         ${invoiceLinesXml}
@@ -329,7 +340,7 @@ export function generateVerifactuQR(data: FacturaeInvoice): string {
 export function facturaeTaxGroups(items: FacturaeLineItem[]): Array<{ rate: number; base: number; tax: number }> {
   const bases: Record<number, number> = {};
   for (const item of items) {
-    // The ROUNDED line total: each line prints `lineTotal.toFixed(2)`, so the
+    // The ROUNDED line total: each line prints round2(lineTotal), so the
     // taxable base must add up the same figures the receiver re-adds.
     bases[item.ivaRate] = round2((bases[item.ivaRate] ?? 0) + round2(item.lineTotal));
   }
@@ -367,8 +378,8 @@ function buildTaxWithholdings(items: FacturaeLineItem[]): string {
       if (!groups[item.irpfRate]) {
         groups[item.irpfRate] = { basisAmount: 0, taxAmount: 0 };
       }
-      groups[item.irpfRate].basisAmount += item.lineTotal;
-      groups[item.irpfRate].taxAmount += item.irpfAmount;
+      groups[item.irpfRate].basisAmount = round2(groups[item.irpfRate].basisAmount + round2(item.lineTotal));
+      groups[item.irpfRate].taxAmount = round2(groups[item.irpfRate].taxAmount + round2(item.irpfAmount));
     }
   }
 

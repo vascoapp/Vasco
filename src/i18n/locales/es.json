@@ -6393,6 +6393,35 @@
     "buyerAddressMissingTitle": "Falta el correo del cliente",
     "buyerAddressMissingBody": "Una XRechnung debe incluir la dirección electrónica del cliente. Añade un correo a este cliente y vuelve a exportar."
   },
+  "einvoiceRules": {
+    "title": "El archivo sería rechazado",
+    "body": "{{authority}} rechazaría este archivo, por eso Vasco no lo ha creado:",
+    "taxIdSeller": "Su número fiscal {{value}} no es válido (el carácter de control no coincide).",
+    "taxIdBuyer": "El número fiscal del cliente {{value}} no es válido (el carácter de control no coincide).",
+    "taxIdBuyerMissing": "El cliente necesita un NIF-IVA o un código fiscal.",
+    "postcodeSeller": "Su código postal {{value}} debe tener 5 dígitos.",
+    "postcodeBuyer": "El código postal del cliente {{value}} debe tener 5 dígitos.",
+    "provinceSeller": "Su provincia debe ser el código de 2 letras (p. ej. MI), no «{{value}}».",
+    "provinceBuyer": "La provincia del cliente debe ser el código de 2 letras (p. ej. MI), no «{{value}}».",
+    "routingCode": "El código destinatario SDI del cliente {{value}} no es válido: debe tener 7 letras o dígitos.",
+    "publicBuyerIT": "Este cliente es una administración pública. Las facturas a organismos públicos deben ir firmadas electrónicamente, y Vasco aún no puede hacerlo.",
+    "publicBuyerES": "Este cliente es un organismo público. Las facturas a organismos públicos se presentan en FACe con firma electrónica y códigos DIR3, que Vasco aún no puede añadir.",
+    "pec": "La dirección PEC del cliente {{value}} no se puede usar.",
+    "characters": "{{field}} contiene caracteres que este formato no admite: {{value}}",
+    "tooLong": "{{field}} es demasiado largo (máximo {{max}} caracteres).",
+    "futureDate": "La fecha de la factura {{value}} es futura.",
+    "invoiceNumber": "El número de factura {{value}} no se acepta (debe contener un dígito y tener como máximo 20 caracteres).",
+    "samePartyId": "Su NIF y el del cliente son iguales ({{value}}).",
+    "description": "Cada línea de la factura necesita una descripción.",
+    "nameWithSurnameSeller": "Su nombre necesita nombre y primer apellido.",
+    "nameWithSurnameBuyer": "El nombre del cliente necesita nombre y primer apellido.",
+    "iban": "Su IBAN {{value}} no es válido.",
+    "internal": "Vasco ha generado importes incoherentes para esta factura (regla {{code}}). No se ha compartido nada; comuníquelo al soporte.",
+    "bollo": "El importe fuera del IVA supera 77,47 €: se debe un impuesto de timbre (marca da bollo) de 2,00 €.",
+    "naturaRegime": "Una línea al 0 % figura como «no sujeta» (N2.2), propio del régimen forfettario. Con {{value}}, compruebe si es inversión del sujeto pasivo o exención.",
+    "regimeCharges": "Con {{value}} normalmente no se repercute IVA, pero una línea lo incluye.",
+    "unsignedB2B": "Este archivo Facturae no está firmado: válido entre empresas, no aceptado por FACe."
+  },
   "decisionCatalog": {
     "categories": {
       "cat_bath_electrical": {
@@ -7411,6 +7440,7 @@
     "readmePdfFailed": "No se pudo crear el PDF (abre la factura en la app y expórtala allí):",
     "readmeXmlMissing": "Sin factura electrónica en este archivo:",
     "xmlMissingFields": "faltan datos: {{fields}}",
+    "xmlRejected": "sería rechazada por {{authority}} ({{codes}})",
     "xmlNoFormat": "no hay formato de factura electrónica para este país",
     "buyerAddress": "ciudad y código postal del cliente",
     "noProfile": "los datos de tu empresa",

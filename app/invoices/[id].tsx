@@ -911,6 +911,39 @@ export default function InvoiceDetailScreen() {
     );
   };
 
+  /**
+   * The second gate after the mapper: the VALUE rules SDI / FACe apply on top
+   * of the schema (src/integrations/einvoiceValueRules.ts). An error-level
+   * finding means the authority would reject the file — and in Italy a
+   * rejected invoice was never issued — so nothing is shared; the contractor
+   * gets the reasons, each with the official code, and the screen to fix it.
+   * Returns true when the export was stopped.
+   */
+  const refuseOnRuleErrors = (
+    findings: import('../../src/integrations/einvoiceValueRules').RuleFinding[],
+    lines: string[],
+    authority: string,
+  ): boolean => {
+    const errors = findings.filter((f) => f.severity === 'error');
+    if (errors.length === 0) return false;
+    const fixProfile = errors.some((f) => f.where === 'profile');
+    const fixCustomer = errors.some((f) => f.where === 'customer') && !!invoiceCustomer;
+    Alert.alert(
+      t('einvoiceRules.title', 'File would be rejected'),
+      `${t('einvoiceRules.body', { authority, defaultValue: '{{authority}} would reject this file, so Vasco did not create it:' })}\n\n• ${lines.join('\n• ')}`,
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        ...(fixProfile
+          ? [{ text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => router.push('/(modals)/business-settings' as any) }]
+          : []),
+        ...(fixCustomer && invoiceCustomer
+          ? [{ text: t('invoices.einvoiceFixCustomer', 'Open customer details'), onPress: () => router.push({ pathname: '/(modals)/customers', params: { id: invoiceCustomer.id } } as any) }]
+          : []),
+      ],
+    );
+    return true;
+  };
+
   const handleExportFacturae = async () => {
     try {
       const { loadSubscription } = await import('../../src/services/subscriptionService');
@@ -941,6 +974,12 @@ export default function InvoiceDetailScreen() {
     if (!mapped.ok) { reportMissing(mapped.missing); return; }
     const data = mapped.document;
     const xml = generateFacturaeXml(data);
+    // Gate two: Orden HAP/1650/2015 Anexo II (FACe / registro contable) on the
+    // bytes about to leave — including a public-body buyer, which FACe only
+    // accepts signed and with DIR3 codes that Vasco cannot add.
+    const { checkFacturae, blockingFindingLines } = await import('../../src/integrations/einvoiceValueRules');
+    const findings = checkFacturae(xml);
+    if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), 'FACe')) return;
     const filename = `${invoiceNumber}-facturae.xml`;
     // The comment that used to sit here said recording at queue approval "would
     // mark unfiled invoices as filed" — right, and recording on the share had
@@ -968,9 +1007,8 @@ export default function InvoiceDetailScreen() {
         return;
       }
     } catch {}
-    const { generateFatturaPAXml } = await import('../../src/integrations/einvoice-it');
+    const { generateFatturaPAXml, fatturaTransmitterId } = await import('../../src/integrations/einvoice-it');
     const { toFatturaPA } = await import('../../src/integrations/einvoiceMapping');
-    const invoiceNumber = (invoice as any).reference ?? invoice.id;
     // The old block passed a flat object with `lineItems`, while the generator
     // reads `dettaglioLinee` off nested party objects — so this threw
     // "items is not iterable" on every tap, outside the try below.
@@ -978,7 +1016,14 @@ export default function InvoiceDetailScreen() {
     if (!mapped.ok) { reportMissing(mapped.missing); return; }
     const data = mapped.document;
     const xml = generateFatturaPAXml(data);
-    const filename = `${invoiceNumber}-fatturapa.xml`;
+    // Gate two: SDI's value rules (Elenco controlli v2.0) on the bytes about to
+    // leave. A discarded file was never legally issued, so it is not handed over.
+    const { checkFatturaPA, blockingFindingLines, fatturaPaFileName } = await import('../../src/integrations/einvoiceValueRules');
+    const findings = checkFatturaPA(xml);
+    if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), 'SDI')) return;
+    // SdI specifiche §2.2: IT<transmitter id>_<progressive>.xml, never reused —
+    // a file named after the invoice number is discarded on its name (00001).
+    const filename = fatturaPaFileName('IT', fatturaTransmitterId(data));
     // The comment that used to sit here said recording at queue approval "would
     // mark unfiled invoices as filed" — right, and recording on the share had
     // the same fault one step later. See shareEInvoiceThenConfirm.

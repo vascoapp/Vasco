@@ -1,4 +1,5 @@
 import { round2 } from '../domain/business';
+import { decimalText, moneyText, latin1Text } from './einvoiceText';
 // =============================================================================
 // E-INVOICE SERVICE — FatturaPA (Italian SDI format)
 // =============================================================================
@@ -245,15 +246,19 @@ export function generateFatturaPAXml(data: FatturaPA): string {
     ),
   };
 
-  // Build line items (DettaglioLinee)
+  // Build line items (DettaglioLinee). SDI 00423 recomputes PrezzoUnitario ×
+  // Quantita from THESE printed figures (± 0,01): with `toFixed(2)` a 1,333 h
+  // line printed 1.33 × 55.00 = 73.15 against a total of 73.32 and the file was
+  // discarded. Up to 8 decimals is what the schema allows; PrezzoTotale goes
+  // through round2 — the same cent the DatiRiepilogo below adds up.
   const dettaglioXml = data.dettaglioLinee.map((li, idx) => `
         <DettaglioLinee>
           <NumeroLinea>${idx + 1}</NumeroLinea>
           <Descrizione>${escapeXml(li.descrizione)}</Descrizione>
-          <Quantita>${li.quantita.toFixed(2)}</Quantita>${li.unitaMisura ? `
+          <Quantita>${decimalText(li.quantita)}</Quantita>${li.unitaMisura ? `
           <UnitaMisura>${escapeXml(li.unitaMisura)}</UnitaMisura>` : ''}
-          <PrezzoUnitario>${li.prezzoUnitario.toFixed(2)}</PrezzoUnitario>
-          <PrezzoTotale>${li.prezzoTotale.toFixed(2)}</PrezzoTotale>
+          <PrezzoUnitario>${decimalText(li.prezzoUnitario)}</PrezzoUnitario>
+          <PrezzoTotale>${moneyText(li.prezzoTotale)}</PrezzoTotale>
           <AliquotaIVA>${li.aliquotaIva.toFixed(2)}</AliquotaIVA>${li.natura ? `
           <Natura>${li.natura}</Natura>` : ''}
         </DettaglioLinee>`).join('');
@@ -304,7 +309,7 @@ export function generateFatturaPAXml(data: FatturaPA): string {
         <DettaglioPagamento>
           <ModalitaPagamento>${data.modalitaPagamento ?? 'MP05'}</ModalitaPagamento>${data.dataScadenzaPagamento ? `
           <DataScadenzaPagamento>${data.dataScadenzaPagamento}</DataScadenzaPagamento>` : ''}
-          <ImportoPagamento>${data.totalGross.toFixed(2)}</ImportoPagamento>${data.iban ? `
+          <ImportoPagamento>${fatturaTotals.gross.toFixed(2)}</ImportoPagamento>${data.iban ? `
           <IBAN>${escapeXml(data.iban)}</IBAN>` : ''}
         </DettaglioPagamento>
       </DatiPagamento>` : '';
@@ -318,7 +323,7 @@ export function generateFatturaPAXml(data: FatturaPA): string {
     <DatiTrasmissione>
       <IdTrasmittente>
         <IdPaese>IT</IdPaese>
-        <IdCodice>${escapeXml(seller.partitaIva)}</IdCodice>
+        <IdCodice>${escapeXml(fatturaTransmitterId(data))}</IdCodice>
       </IdTrasmittente>
       <ProgressivoInvio>${escapeXml(data.progressivoInvio)}</ProgressivoInvio>
       <FormatoTrasmissione>${data.formatoTrasmissione}</FormatoTrasmissione>
@@ -386,12 +391,26 @@ ${vatSummary}
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * IdTrasmittente/IdCodice. For a transmitter established in Italy it IS the
+ * codice fiscale (Allegato A 1.9.1 §2.1.1; SDI checks it in the Anagrafe
+ * Tributaria as a codice fiscale, 00300). A company's codice fiscale is
+ * usually its 11-digit number; a sole trader's is the 16-character personal
+ * code, which differs from their partita IVA — so the codice fiscale wins
+ * when we have one. The same id names the file (SdI specifiche §2.2).
+ */
+export function fatturaTransmitterId(data: Pick<FatturaPA, 'cedentePrestatore'>): string {
+  return data.cedentePrestatore.codiceFiscale || data.cedentePrestatore.partitaIva;
+}
+
 
 /**
  * Imponibile + imposta from the lines AS PRINTED. `ImportoTotaleDocumento` used
  * to be `data.totalGross` — a third number, computed by the screen — beside a
- * DatiRiepilogo summed independently; SdI rejects a document whose total does
- * not follow from its summary (scarto 00423).
+ * DatiRiepilogo summed independently. (Corrected 2026-10-01 against the Elenco
+ * controlli v2.0: SDI does not discard on ImportoTotaleDocumento — 00423 is
+ * PrezzoTotale per line — but a total that does not follow from its summary is
+ * still a wrong document, and ImportoPagamento now states the same figure.)
  */
 export function fatturaDocumentTotals(items: Array<{ prezzoTotale: number; aliquotaIva: number }>): { net: number; tax: number; gross: number } {
   const groups: Record<number, number> = {};
@@ -430,10 +449,9 @@ function buildDatiRiepilogo(
         natura: item.natura,
       };
     }
-    // The lines print `prezzoTotale.toFixed(2)`, so the summary has to add up
-    // the SAME rounded figures — SdI rejects a document whose
-    // ImportoTotaleDocumento does not follow from its DatiRiepilogo (00423) —
-    // and the tax is levied once on the resulting imponibile.
+    // The lines print round2(prezzoTotale), so the summary adds up the SAME
+    // rounded figures (SDI 00422: Σ ImponibileImporto = Σ PrezzoTotale per
+    // rate) and the tax is levied once on the resulting imponibile (00421).
     groups[key].imponibile = round2(groups[key].imponibile + round2(item.prezzoTotale));
   }
   for (const g of Object.values(groups)) {
@@ -452,8 +470,10 @@ function buildDatiRiepilogo(
       </DatiRiepilogo>`).join('\n');
 }
 
+// FatturaPA text is Latin-1 only (String…LatinType): typographic quotes and
+// dashes are respelled first, see einvoiceText.ts.
 function escapeXml(str: string): string {
-  return str
+  return latin1Text(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

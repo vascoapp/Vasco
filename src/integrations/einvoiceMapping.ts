@@ -25,6 +25,8 @@ import type { FatturaPA, FatturaPALineItem, RegimeFiscale } from './einvoice-it'
 import { marcaDaBolloDue, MARCA_DA_BOLLO_EUR } from './einvoice-it';
 import type { FacturaeInvoice, FacturaeLineItem, PersonTypeCode, RegimeFiscal } from './einvoice-es';
 import { splitSpanishName } from './einvoice-es';
+import { isValidCodiceFiscale, checkSpanishTaxId, spanishPersonType } from './fiscalIds';
+import { round2 } from '../utils/round2';
 
 /** What every screen already has: the invoice, its lines, and both parties. */
 export interface EInvoiceSource {
@@ -166,15 +168,27 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
 
   if (missing.length > 0) return { ok: false, missing };
 
+  // Quantita is unsigned in the schema ([0-9]{1,12}\.[0-9]{2,8}); a credit
+  // line entered as −1 × 50 is written 1 × −50 — the same line total, the
+  // sign where FatturaPA allows it (PrezzoUnitario).
   const dettaglioLinee: FatturaPALineItem[] = src.lines.map((l) => ({
     descrizione: l.description,
-    quantita: l.quantity,
+    quantita: Math.abs(l.quantity),
     unitaMisura: l.unit,
-    prezzoUnitario: l.unitPrice,
+    prezzoUnitario: l.quantity < 0 ? -l.unitPrice : l.unitPrice,
     prezzoTotale: l.lineTotal,
     aliquotaIva: l.vatRate,
     natura: naturaFor(l.vatRate),
   }));
+  // The profile field that lands in `taxId` is, for Italy, labelled "Camera di
+  // Commercio" (placeholder "REA MI-1234567") — it was written verbatim as the
+  // seller's <CodiceFiscale>, which is [A-Z0-9]{11,16}: schema-invalid (SDI
+  // 00200) for every contractor who filled it in. Only a real codice fiscale
+  // is a codice fiscale; anything else is left out rather than mislabelled.
+  const sellerCf = (src.seller.taxId ?? '').trim().toUpperCase().replace(/\s/g, '');
+  const sellerCodiceFiscale = isValidCodiceFiscale(sellerCf) ? sellerCf : undefined;
+  // SDI codes are upper-case [A-Z0-9]; a pasted lower-case code is the same code.
+  const codiceDestinatario = routing ? routing.toUpperCase().replace(/\s/g, '') : '0000000';
 
   // An Italian invoice whose IVA-exempt amount exceeds € 77,47 legally requires
   // a € 2,00 marca da bollo, and nothing used to set it — every such invoice
@@ -198,12 +212,12 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
       // Max 10 chars, unique per transmission. The invoice number is unique
       // per contractor already and is what they will quote when chasing it.
       progressivoInvio: src.invoiceNumber.replace(/[^A-Za-z0-9]/g, '').slice(-10) || '1',
-      codiceDestinatario: routing || '0000000',
+      codiceDestinatario,
       ...(bolloDue ? { bolloVirtuale: true, importoBollo: MARCA_DA_BOLLO_EUR } : {}),
       cedentePrestatore: {
         denominazione: src.seller.name,
         partitaIva: bareFiscalCode(sellerVat, src.seller.country ?? 'IT') as string,
-        codiceFiscale: src.seller.taxId,
+        codiceFiscale: sellerCodiceFiscale,
         regimeFiscale: src.seller.fiscalRegime as RegimeFiscale,
         indirizzo: src.seller.address as string,
         cap: src.seller.postcode as string,
@@ -214,14 +228,14 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
       cessionarioCommittente: {
         denominazione: src.buyer.name,
         partitaIva: bareFiscalCode(src.buyer.vatId, src.buyer.country ?? 'IT'),
-        codiceFiscale: src.buyer.taxId,
+        codiceFiscale: src.buyer.taxId ? src.buyer.taxId.trim().toUpperCase().replace(/\s/g, '') : undefined,
         indirizzo: src.buyer.address as string,
         cap: src.buyer.postcode as string,
         comune: src.buyer.city as string,
         provincia: src.buyer.province as string,
         nazione: src.buyer.country ?? 'IT',
-        codiceDestinatario: routing || '0000000',
-        pec: src.buyer.einvoiceEmail,
+        codiceDestinatario,
+        pec: src.buyer.einvoiceEmail?.trim() || undefined,
       },
       tipoDocumento: 'TD01',
       numero: src.invoiceNumber,
@@ -243,10 +257,33 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
 // Spain — Facturae
 // ---------------------------------------------------------------------------
 
+/**
+ * A Spanish NIF as Facturae wants it on a DOMESTIC operation: without the "ES"
+ * VAT prefix (Facturae 3.2.2, TaxIdentificationNumber: the country letters
+ * precede the NIF only "en el caso de operaciones intracomunitarias"). An id
+ * that is not a well-formed Spanish NIF is passed through as typed — the value
+ * rules then name it (HAP/1650/2015 Anexo II 5b) rather than us guessing.
+ */
+function domesticNif(value: string | undefined): string | undefined {
+  if (!value) return value;
+  const c = checkSpanishTaxId(value);
+  return c.kind ? c.bare : value.trim().toUpperCase();
+}
+
+/**
+ * F or J from the NIF itself: a DNI (digits + letter), NIE (X/Y/Z…) or K/L/M
+ * NIF is a natural person, an entity letter (A–W) a legal person. "Starts with
+ * a letter ⇒ company" filed every NIE holder — and every DNI typed with its ES
+ * prefix — as a company.
+ */
+function buyerPersonTypeFor(nif: string | undefined): PersonTypeCode {
+  return spanishPersonType(nif) ?? (/^[A-Za-z]/.test(String(nif ?? '')) ? 'J' : 'F');
+}
+
 export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> {
   const missing: MissingField[] = [];
 
-  const sellerNif = src.seller.vatId ?? src.seller.taxId;
+  const sellerNif = domesticNif(src.seller.vatId ?? src.seller.taxId);
   need(missing, sellerNif, 'profile.vatNumberNif', 'profile');
   need(missing, src.seller.address, 'profile.address', 'profile');
   need(missing, src.seller.city, 'profile.city', 'profile');
@@ -259,13 +296,13 @@ export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> 
   // split honestly, so it is asked for rather than guessed.
   if (src.seller.personType === 'F' && !splitSpanishName(src.seller.name)) missing.push({ key: 'profile.nameWithSurname', where: 'profile' });
 
-  const buyerNif = src.buyer.vatId ?? src.buyer.taxId;
+  const buyerNif = domesticNif(src.buyer.vatId ?? src.buyer.taxId);
   need(missing, buyerNif, 'customer.vatOrTaxId', 'customer');
   need(missing, src.buyer.address, 'customer.address', 'customer');
   need(missing, src.buyer.city, 'customer.city', 'customer');
   need(missing, src.buyer.postcode, 'customer.postcode', 'customer');
   need(missing, src.buyer.province, 'customer.province', 'customer');
-  if (buyerNif && !/^[A-Za-z]/.test(String(buyerNif)) && !splitSpanishName(src.buyer.name)) {
+  if (buyerNif && buyerPersonTypeFor(buyerNif) === 'F' && !splitSpanishName(src.buyer.name)) {
     missing.push({ key: 'customer.nameWithSurname', where: 'customer' });
   }
 
@@ -280,7 +317,7 @@ export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> 
     // Per line, from that line's own rate — not the invoice total split
     // proportionally, which drifts by a cent on mixed-rate invoices and is
     // exactly what Facturae's arithmetic checks compare.
-    ivaAmount: Number((l.lineTotal * (l.vatRate / 100)).toFixed(2)),
+    ivaAmount: round2(l.lineTotal * (l.vatRate / 100)),
   }));
 
   return {
@@ -306,9 +343,7 @@ export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> 
       buyerPostalCode: src.buyer.postcode as string,
       buyerProvince: src.buyer.province as string,
       buyerCountry: 'ESP',
-      // A NIF starting with a letter is a company; a natural person's starts
-      // with a digit. That is the actual rule, not a guess.
-      buyerPersonType: /^[A-Za-z]/.test(String(buyerNif)) ? 'J' : 'F',
+      buyerPersonType: buyerPersonTypeFor(buyerNif),
       invoiceNumber: src.invoiceNumber,
       invoiceDate: src.invoiceDate,
       dueDate: src.dueDate,

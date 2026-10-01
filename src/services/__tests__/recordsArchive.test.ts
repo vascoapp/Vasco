@@ -163,6 +163,19 @@ it('UK has no e-invoice format — said, not silently skipped', async () => {
   ]);
 });
 
+// The archive runs the same second gate as the invoice screen: a FatturaPA SDI
+// would discard on its value rules is not "the e-invoice" of the invoice
+// (einvoiceValueRules.ts). Here: a customer partita IVA whose check digit is
+// wrong — SDI 00305 — while every field is present.
+it('an Italian e-invoice SDI would reject is withheld and named with the SDI code', async () => {
+  const bpIT = { businessName: 'Idraulica Bianchi S.r.l.', vatNumber: 'IT01234567897', registrationNumber: 'REA MI-1234567', address: 'Via Roma 10', city: 'Milano', postcode: '20121', province: 'MI', country: 'IT', fiscalRegime: 'RF01', email: 'info@bianchi.it', phone: '+39 02 1234567', iban: 'IT60X0542811101000000123456' } as any;
+  const buyer = (vatId: string) => [{ id: 'c1', name: 'Familie Müller', vatId, address: 'Corso Italia 5', city: 'Torino', postcode: '10121', province: 'TO', country: 'IT', einvoiceRouting: 'ABCDEF1' }] as any;
+  const ok = await exportRecordsArchive({ invoices: [inv('FT-2026-0001', 'sent')] as any, lineItems: {}, customers: buyer('IT09876543217'), jobs: [], businessProfile: bpIT, country: 'IT', t });
+  expect(ok.xmlMissing).toEqual([]);
+  const bad = await exportRecordsArchive({ invoices: [inv('FT-2026-0001', 'sent')] as any, lineItems: {}, customers: buyer('IT09876543210'), jobs: [], businessProfile: bpIT, country: 'IT', t });
+  expect(bad.xmlMissing).toEqual([{ number: 'FT-2026-0001', kind: 'fields', reason: 'would be rejected by SDI (00305)' }]);
+});
+
 it('without a business profile the e-invoice is withheld and named, and the rate is the country standard', async () => {
   const r = await exportRecordsArchive({
     invoices: [inv('RE-9', 'sent')] as any, lineItems: {}, customers, jobs: [],

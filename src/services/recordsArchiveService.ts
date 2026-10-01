@@ -35,6 +35,7 @@ import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML } from '..
 import { toFacturae, toFatturaPA } from '../integrations/einvoiceMapping';
 import { generateFacturaeXml } from '../integrations/einvoice-es';
 import { generateFatturaPAXml } from '../integrations/einvoice-it';
+import { checkFacturae, checkFatturaPA, blockingFindings } from '../integrations/einvoiceValueRules';
 import { checkInvoiceReadiness } from '../utils/businessProfileValidation';
 import { safeZipName, utf8, StoredZipWriter } from '../utils/storedZip';
 import { logWarn } from '../utils/errorHandler';
@@ -87,9 +88,21 @@ function eInvoiceFor(inp: InvoiceDocInputs, sellerMissing: string[], t: Translat
   if (c === 'ES' || c === 'IT') {
     const mapped = c === 'ES' ? toFacturae(buildEInvoiceSource(inp)) : toFatturaPA(buildEInvoiceSource(inp));
     if (!mapped.ok) return missing(mapped.missing.map((m) => t(m.key, m.key.split('.').pop() ?? m.key)));
-    return c === 'ES'
-      ? { suffix: 'facturae', xml: generateFacturaeXml(mapped.document as any) }
-      : { suffix: 'fatturapa', xml: generateFatturaPAXml(mapped.document as any) };
+    const xml = c === 'ES' ? generateFacturaeXml(mapped.document as any) : generateFatturaPAXml(mapped.document as any);
+    // The same second gate as the invoice screen: a file SDI / FACe would
+    // reject on their value rules is not "the e-invoice" of this invoice — it
+    // is withheld and named with the official codes, like a missing field.
+    const errors = blockingFindings(c === 'ES' ? checkFacturae(xml) : checkFatturaPA(xml));
+    if (errors.length) {
+      return {
+        kind: 'fields',
+        reason: t('recordsArchive.xmlRejected', 'would be rejected by {{authority}} ({{codes}})', {
+          authority: c === 'ES' ? 'FACe' : 'SDI',
+          codes: [...new Set(errors.map((e) => e.code))].join(', '),
+        }),
+      };
+    }
+    return { suffix: c === 'ES' ? 'facturae' : 'fatturapa', xml };
   }
   if (c !== 'DE' && c !== 'FR' && !EU_CII.has(c)) {
     return { kind: 'noFormat', reason: t('recordsArchive.xmlNoFormat', 'no e-invoice format for this country') };

@@ -57,7 +57,8 @@
     "check:push-owner": "node scripts/check-push-owner.mjs",
     "check:catalog-import": "node scripts/check-catalog-import.mjs",
     "check:kosit": "node scripts/check-kosit.mjs",
-    "check:einvoice-schemas": "node scripts/check-einvoice-schemas.mjs"
+    "check:einvoice-schemas": "node scripts/check-einvoice-schemas.mjs",
+    "check:einvoice-rules": "node scripts/check-einvoice-rules.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
