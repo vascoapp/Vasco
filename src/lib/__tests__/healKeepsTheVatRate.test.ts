@@ -6,6 +6,9 @@
 // with 9 % labour was stored with vat_rate NULL and the customer's page, the
 // XRechnung and the next reload all billed it at 21 % (review, 2026-09-30).
 const upserted: any[] = [];
+// Lines the "server" already holds per document — the heal must not double them.
+const mockExisting: Record<string, number> = {};
+const mockUpsertOpts: any[] = [];
 jest.mock('../supabase', () => ({
   isSupabaseConfigured: true,
   supabase: {
@@ -15,13 +18,21 @@ jest.mock('../supabase', () => ({
         return { select: () => ({ in: async () => ({ data: [{ id: 'doc-1', document_number: 'OF-2026-0001' }], error: null }) }) };
       }
       return {
-        upsert: (rows: any[]) => { upserted.push(...rows); return { select: async () => ({ data: rows, error: null }) }; },
+        select: () => ({ eq: (_c: string, id: string) => ({ limit: async () => ({ data: Array.from({ length: mockExisting[id] ?? 0 }, (_, i) => ({ id: `l${i}` })), error: null }) }) }),
+        upsert: (rows: any[], opts?: any) => {
+          mockUpsertOpts.push(opts);
+          upserted.push(...rows);
+          for (const r of rows) mockExisting[r.document_id] = (mockExisting[r.document_id] ?? 0) + 1;
+          return { select: async () => ({ data: rows, error: null }) };
+        },
       };
     },
   },
 }));
 
 import { healOrphanLineItems } from '../dataProvider';
+
+beforeEach(() => { upserted.length = 0; for (const k of Object.keys(mockExisting)) delete mockExisting[k]; });
 
 it('keeps each line\'s own rate, and stamps the effective rate where a line has none', async () => {
   const healed = await healOrphanLineItems({
@@ -60,4 +71,29 @@ describe('what the refresh passes as the fallback (review 2026-09-30)', () => {
     const src = stripComments(fs.readFileSync(path.resolve(__dirname, '../../state/AppState.tsx'), 'utf8'));
     expect(src).toMatch(/healOrphanLineItems\(orphans, storedLineVatRate\(bp\)\)/);
   });
+});
+
+// React may run the updater that triggers the heal twice, and two refreshes
+// can overlap: upsertLineItems has no ids, so each extra run inserted a second
+// set of lines (review, 2026-09-30).
+it('two heals at once write the lines ONCE', async () => {
+  const orphan = { 'OF-2026-0001': [{ description: 'Arbeid', quantity: 4, unitPrice: 55, vatRate: 9 }] };
+  await Promise.all([healOrphanLineItems(orphan, 21), healOrphanLineItems(orphan, 21)]);
+  expect(upserted).toHaveLength(1);
+});
+
+it('a document that already has lines on the server is not written again', async () => {
+  mockExisting['doc-1'] = 2;
+  const n = await healOrphanLineItems({ 'OF-2026-0001': [{ description: 'Arbeid', quantity: 4, unitPrice: 55 }] }, 21);
+  expect(n).toBe(0);
+  expect(upserted).toHaveLength(0);
+});
+
+// The database's unique (document_id, position) index is the last word: the
+// heal inserts with ON CONFLICT DO NOTHING (proven on prod 2026-10-01: two
+// heals → one set; a plain duplicate insert → 23505).
+it('the heal asks the database to ignore a line already at that position', async () => {
+  mockUpsertOpts.length = 0;
+  await healOrphanLineItems({ 'OF-2026-0001': [{ description: 'Arbeid', quantity: 4, unitPrice: 55 }] }, 21);
+  expect(mockUpsertOpts[0]).toEqual({ onConflict: 'document_id,position', ignoreDuplicates: true });
 });

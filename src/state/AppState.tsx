@@ -695,6 +695,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             orphans[docNumber] = items;
           }
         }
+        // A side effect inside an updater React may run twice: the heal is
+        // idempotent at the write (in-flight set + existing-lines check).
         if (Object.keys(orphans).length > 0) {
           import('../lib/dataProvider')
             .then((m) => m.healOrphanLineItems(orphans, storedLineVatRate(bp)))

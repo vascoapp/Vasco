@@ -220,6 +220,15 @@ export async function listLineItems(documentId: string): Promise<LineItemRow[]> 
  * Returns the number of documents healed. Best-effort by design: this runs on
  * load and must never be the reason a cold start fails.
  */
+/**
+ * Documents a heal is writing RIGHT NOW. The heal is triggered from inside a
+ * React state updater, which React may run more than once (StrictMode, update
+ * rebasing), and two refreshes can overlap — and `upsertLineItems` sends rows
+ * without ids, so a second run INSERTS a second set of lines (review,
+ * 2026-09-30). Idempotent here, at the write, whoever calls it.
+ */
+const healingDocuments = new Set<string>();
+
 export async function healOrphanLineItems(
   byDocumentNumber: Record<string, { description: string; quantity: number; unitPrice: number; vatRate?: number }[]>,
   /** The contractor's effective rate — what every other line writer stamps
@@ -240,7 +249,17 @@ export async function healOrphanLineItems(
     for (const row of data as Array<{ id: string; document_number: string }>) {
       const items = byDocumentNumber[row.document_number];
       if (!items?.length) continue;
+      if (healingDocuments.has(row.id)) continue;
+      healingDocuments.add(row.id);
       try {
+        // Already has lines (an earlier heal landed, or another device sent
+        // them): it is not an orphan any more — writing again would double it.
+        const { data: existing, error: existingErr } = await supabase
+          .from('line_items')
+          .select('id')
+          .eq('document_id', row.id)
+          .limit(1);
+        if (existingErr || (existing && existing.length > 0)) continue;
         await upsertLineItems(row.id, items.map((it, idx) => ({
           description: it.description,
           quantity: it.quantity,
@@ -251,9 +270,11 @@ export async function healOrphanLineItems(
           // was healed with vat_rate NULL, and the portal, the XRechnung and
           // the next reload all billed it at 21 % (review, 2026-09-30).
           vat_rate: typeof it.vatRate === 'number' && Number.isFinite(it.vatRate) ? it.vatRate : fallbackVatRatePercent,
-        })));
+        })), { ignoreExisting: true });
         healed += 1;
-      } catch { /* one document failing must not stop the rest */ }
+      } catch { /* one document failing must not stop the rest */ } finally {
+        healingDocuments.delete(row.id);
+      }
     }
     return healed;
   } catch {
@@ -264,6 +285,9 @@ export async function healOrphanLineItems(
 export async function upsertLineItems(
   documentId: string,
   items: { description: string; quantity?: number; unit_price?: number; total_price?: number; position?: number; vat_rate?: number | null }[],
+  /** The heal: a line already at that position wins, silently (unique index
+   *  line_items_document_position_uq). Everyone else wants an error. */
+  opts: { ignoreExisting?: boolean } = {},
 ): Promise<LineItemRow[]> {
   const userId = await getUserId();
   const rows = items.map((item) => ({
@@ -274,7 +298,7 @@ export async function upsertLineItems(
 
   const { data, error } = await supabase
     .from('line_items')
-    .upsert(rows as any)
+    .upsert(rows as any, opts.ignoreExisting ? { onConflict: 'document_id,position', ignoreDuplicates: true } : undefined)
     .select();
 
   if (error) throw error;
