@@ -165,6 +165,13 @@ npm run check:einvoice-rules           # SDI (Elenco controlli v2.0) + FACe (Ord
                                        # records archive (einvoiceValueRules.ts).
                                        # Our own output broke 00423/HAP 6a (2-dec
                                        # quantities) until 2026-10-01.
+npm run check:pdfa3                    # ZUGFeRD/Factur-X PDF/A-3 hybrids against
+                                       # veraPDF 1.30.2 + Mustang 2.26.0 (Java 17,
+                                       # ~/.cache/vasco-pdfa). Both validators PASSED
+                                       # a PDF whose text did not render — also LOOK
+                                       # at the page. Built on the device (pdf-lib):
+                                       # ~20 s on the emulator, so the row shows a
+                                       # spinner (#388).
 npm run check:push-owner               # LIVE: a push token belongs to ONE account
                                        # (the previous contractor's pushes stopped
                                        # reaching a shared phone, 2026-09-30).
