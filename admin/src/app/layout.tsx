@@ -1,18 +1,31 @@
 import type { Metadata } from "next";
-import { Archivo, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const archivo = Archivo({
-  subsets: ["latin"],
+// Self-hosted, not next/font/google: that downloads the fonts from Google on
+// EVERY build, and a network hiccup failed the CI admin build ("next/font/google
+// queries have exactly one entry", 2026-09-24 and 09-30) — red runs that said
+// nothing about the code. Same families and weights as before (OFL, licences
+// beside the files), copied from the app's @expo-google-fonts packages.
+const archivo = localFont({
+  src: [
+    { path: "./fonts/Archivo_600SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "./fonts/Archivo_700Bold.ttf", weight: "700", style: "normal" },
+    { path: "./fonts/Archivo_800ExtraBold.ttf", weight: "800", style: "normal" },
+    { path: "./fonts/Archivo_900Black.ttf", weight: "900", style: "normal" },
+  ],
   variable: "--font-archivo",
-  weight: ["600", "700", "800", "900"],
   display: "swap",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: [
+    { path: "./fonts/Inter_400Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/Inter_500Medium.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/Inter_600SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "./fonts/Inter_700Bold.ttf", weight: "700", style: "normal" },
+  ],
   variable: "--font-inter",
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
