@@ -46,7 +46,8 @@
 
 import { round2 } from '../utils/round2';
 import { parseXml, kids, at, textAt, type XmlNode } from './miniXml';
-import { isValidPartitaIva, isValidCodiceFiscale, checkSpanishTaxId, isSpanishPublicBodyNif } from './fiscalIds';
+import { isValidPartitaIva, isValidCodiceFiscale, checkSpanishTaxId, isSpanishPublicBodyNif, isFaceOnlyNif, isValidDir3Code } from './fiscalIds';
+import { facturaeSignatureStructure } from './facturaeSignature';
 
 export type RuleSeverity = 'error' | 'warning' | 'info';
 /** Who can fix it: the contractor's profile, the customer record, the invoice, or Vasco itself. */
@@ -63,6 +64,7 @@ export const RULE_KEYS = [
   'tooLong', 'futureDate', 'invoiceNumber', 'samePartyId', 'description', 'nameWithSurnameSeller',
   'nameWithSurnameBuyer', 'iban', 'bollo', 'naturaRegime', 'regimeCharges', 'unsignedB2B',
   'sellerCodiceFiscale', 'personTypeSeller', 'personTypeBuyer',
+  'publicBuyerDir3ES', 'signatureInvalid',
 ] as const;
 export type RuleKey = typeof RULE_KEYS[number];
 
@@ -537,20 +539,37 @@ export function checkFacturae(xml: string, opts: RuleOptions = {}): RuleFinding[
   // 5f — seller and buyer NIF differ.
   if (seller.bare && seller.bare === buyer.bare) push('HAP1650-II.5f', 'error', 'customer', 'samePartyId', `seller and buyer share NIF ${seller.bare}`, { value: seller.bare });
 
+  // The signature, when there is one, must BE a Facturae v3.1 XAdES-EPES —
+  // structurally (enveloped, the invoice + SignedProperties + KeyInfo signed,
+  // SigningTime, the policy id with its registered digest, one ClaimedRole).
+  // A malformed signature is never fine, whoever the buyer. Whether it VERIFIES
+  // (digests, RSA, certificate chain) is the validator's job:
+  // verifyFacturaeSignature in jest, EU DSS in npm run check:facturae-signature.
+  const sig = signed ? facturaeSignatureStructure(xml) : undefined;
+  const signatureOk = !!sig && sig.enveloped && sig.problems.length === 0;
+  if (sig && !signatureOk) {
+    push('HAP1650-II.2', 'error', 'vasco', 'signatureInvalid', `signature is not a Facturae v3.1 XAdES-EPES: ${sig.problems.join('; ')}`, { code: 'HAP1650-II.2' });
+  }
+
   // B2G — Ley 25/2013: a public body receives through FACe, which validates the
   // Facturae signature policy (HAP II.2) and three DIR3 centres (HAP II.8).
+  // P (local) and S (State) are FACe administrations: refused. Q also covers
+  // public-law bodies outside Ley 25/2013 (chambers of commerce, professional
+  // colleges), for which an unsigned B2B Facturae is valid: warned, not refused
+  // (review 2026-10-01).
   const buyerTin = textAt(at(buyerEl, 'TaxIdentification'), 'TaxIdentificationNumber');
   if (isSpanishPublicBodyNif(buyerTin)) {
-    const roles = new Set(kids(at(buyerEl, 'AdministrativeCentres'), 'AdministrativeCentre').map((c) => textAt(c, 'RoleTypeCode')));
-    const dir3 = ['01', '02', '03'].every((r) => roles.has(r));
-    if (!signed || !dir3) {
-      // P (local) and S (State) are FACe administrations. Q also covers
-      // public-law bodies outside Ley 25/2013 (chambers of commerce,
-      // professional colleges), for which an unsigned B2B Facturae is valid:
-      // a warning, not a refusal (review 2026-10-01).
-      const facOnly = /^(ES)?[PS]/.test((buyerTin ?? '').toUpperCase().replace(/[\s.-]/g, ''));
-      push('HAP1650-II.2/II.8', facOnly ? 'error' : 'warning', 'customer', 'publicBuyerES',
-        `buyer ${buyerTin} is a public body: FACe requires the Facturae signature policy (${signed ? 'present' : 'absent'}) and DIR3 roles 01/02/03 (${dir3 ? 'present' : 'absent'})`, { value: buyerTin ?? '' });
+    const severity: RuleSeverity = isFaceOnlyNif(buyerTin) ? 'error' : 'warning';
+    if (!signed) {
+      push('HAP1650-II.2', severity, 'profile', 'publicBuyerES',
+        `buyer ${buyerTin} is a public body: FACe only accepts a Facturae signed under the Facturae v3.1 policy`, { value: buyerTin ?? '' });
+    }
+    const centres = kids(at(buyerEl, 'AdministrativeCentres'), 'AdministrativeCentre');
+    const byRole = (r: string) => centres.find((c) => textAt(c, 'RoleTypeCode') === r && isValidDir3Code(textAt(c, 'CentreCode')));
+    const absent = ['01', '02', '03'].filter((r) => !byRole(r));
+    if (absent.length) {
+      push('HAP1650-II.8', severity, 'customer', 'publicBuyerDir3ES',
+        `buyer ${buyerTin} is a public body: FACe needs DIR3 centres for roles 01/02/03 (missing or not DIR3-shaped: ${absent.join(', ')})`, { value: buyerTin ?? '' });
     }
   } else if (!signed) {
     // RD 1619/2012 art. 10: between businesses the authenticity of origin may

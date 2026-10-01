@@ -3638,7 +3638,10 @@
     "postcode": "Post code",
     "province": "Province",
     "editDetails": "Edit details",
-    "nameWithSurname": "Customer's full name with surname"
+    "nameWithSurname": "Customer's full name with surname",
+    "dir3OficinaContable": "DIR3 – Oficina contable (accounting office)",
+    "dir3OrganoGestor": "DIR3 – Órgano gestor (managing body)",
+    "dir3UnidadTramitadora": "DIR3 – Unidad tramitadora (processing unit)"
   },
   "inbox": {
     "fromCustomer": "From customer",
@@ -4995,7 +4998,9 @@
     "fieldProvince": "Province",
     "fieldTaxIdIt": "Codice fiscale (Italy)",
     "fieldSdiCode": "SDI recipient code (Italy)",
-    "fieldPec": "PEC address (Italy)"
+    "fieldPec": "PEC address (Italy)",
+    "dir3Hint": "Public body: invoices go through FACe and need its three DIR3 codes. The body gives them to you (on the order or contract).",
+    "dir3Invalid": "A DIR3 code has 9 letters and digits and starts with a letter (e.g. {{example}})."
   },
   "aiChat": {
     "welcome": "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.",
@@ -7352,7 +7357,7 @@
     "provinceBuyer": "The customer's province must be the 2-letter code (e.g. MI), not \"{{value}}\".",
     "routingCode": "The customer's SDI recipient code {{value}} is not valid: it must be 7 letters or digits.",
     "publicBuyerIT": "This customer is a public administration. Invoices to public bodies must be digitally signed, which Vasco cannot do yet.",
-    "publicBuyerES": "This customer is a public body. Invoices to public bodies go through FACe with a digital signature and DIR3 office codes, which Vasco cannot add yet.",
+    "publicBuyerES": "This customer is a public body: FACe only accepts a Facturae signed with your digital certificate.",
     "pec": "The customer's PEC address {{value}} cannot be used.",
     "characters": "{{field}} contains characters this format does not allow: {{value}}",
     "tooLong": "{{field}} is too long (at most {{max}} characters).",
@@ -7374,7 +7379,9 @@
     "warningBody": "The file can be created, but:",
     "exportAnyway": "Export anyway",
     "personTypeSeller": "Your NIF does not match “person or company” in your business profile — please check it.",
-    "personTypeBuyer": "The customer's NIF does not match “person or company” in their details — please check it."
+    "personTypeBuyer": "The customer's NIF does not match “person or company” in their details — please check it.",
+    "publicBuyerDir3ES": "This customer is a public body: FACe needs its three DIR3 codes (accounting office, managing body, processing unit). Add them to the customer.",
+    "signatureInvalid": "The signature on this file is not a valid Facturae signature."
   },
   "vatBasis": {
     "section": "When VAT is due",
@@ -7483,6 +7490,49 @@
       "approvedNotWarned": "“{{title}}” is approved, but there is no record of the price warning{{statute}}.",
       "duplicatePosition": "Two extra-work items share position {{position}}.",
       "belowZero": "The reductions exceed the contract value — the project would be worth less than nothing."
+    }
+  },
+  "facturaeSign": {
+    "certNeededTitle": "Certificate needed",
+    "certNeededBody": "Invoices to public bodies go through FACe and must be signed with your digital certificate (for example the FNMT one). Import it once, then export again.",
+    "openCertificate": "Open certificate",
+    "certProblemTitle": "Certificate problem",
+    "signFailed": "Vasco could not sign the file with this certificate. Import it again; if that does not help, contact support."
+  },
+  "facturaeCertificate": {
+    "title": "Signing certificate",
+    "entry": "Signing certificate (FACe)",
+    "entryAction": "Manage certificate",
+    "intro": "Spanish public bodies only accept invoices through FACe that are signed with your digital certificate (FNMT or another qualified certificate). Import your .p12 / .pfx file once; Vasco then signs every Facturae with it.",
+    "none": "No certificate yet",
+    "import": "Import certificate (.p12 / .pfx)",
+    "replace": "Replace certificate",
+    "remove": "Remove certificate",
+    "removeTitle": "Remove certificate?",
+    "removeBody": "Vasco can no longer sign invoices to public bodies until you import it again.",
+    "removeFailed": "The certificate could not be removed. Try again.",
+    "nif": "NIF",
+    "expires": "Valid until",
+    "issuer": "Issued by",
+    "file": "File",
+    "password": "Certificate password",
+    "passwordPlaceholder": "Password of the .p12 file",
+    "confirmImport": "Import",
+    "pickFailed": "The file could not be opened.",
+    "problemTitle": "Certificate not imported",
+    "saveFailed": "The certificate could not be stored on this phone. Try again.",
+    "imported": "Certificate imported",
+    "importedBody": "Facturae invoices are now signed with this certificate.",
+    "storageNote": "The certificate is kept encrypted on this phone only, protected by the device keychain, and never leaves it. Vasco does not keep its password. Signing in with another account on this phone removes it.",
+    "problem": {
+      "unreadable": "Wrong password, or not a .p12 / .pfx certificate file.",
+      "noKey": "This file has no private key. Export the certificate together with its private key (.p12 / .pfx).",
+      "notRsa": "This certificate uses a key type the Facturae signature policy does not accept (RSA is required).",
+      "expired": "This certificate expired on {{date}}.",
+      "notYetValid": "This certificate is not valid until {{date}}.",
+      "noNif": "This certificate carries no Spanish NIF.",
+      "nifMismatch": "This certificate does not carry your business's NIF ({{nif}}). An invoice must be signed by its issuer — check the NIF/CIF in your business profile or import your own certificate.",
+      "noSellerNif": "Enter your NIF/CIF in your business profile first."
     }
   }
 }

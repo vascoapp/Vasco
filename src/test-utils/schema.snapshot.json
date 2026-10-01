@@ -1624,6 +1624,21 @@
     "nullable": true,
     "hasDefault": false,
     "type": "text"
+   },
+   "dir3_oficina_contable": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "dir3_organo_gestor": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "dir3_unidad_tramitadora": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
    }
   },
   "data_events": {

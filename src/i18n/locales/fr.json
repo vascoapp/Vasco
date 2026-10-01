@@ -3638,7 +3638,10 @@
     "postcode": "Code postal",
     "province": "Province",
     "editDetails": "Modifier les coordonnées",
-    "nameWithSurname": "Nom complet du client avec nom de famille"
+    "nameWithSurname": "Nom complet du client avec nom de famille",
+    "dir3OficinaContable": "DIR3 – Oficina contable (service comptable)",
+    "dir3OrganoGestor": "DIR3 – Órgano gestor (organe gestionnaire)",
+    "dir3UnidadTramitadora": "DIR3 – Unidad tramitadora (unité de traitement)"
   },
   "inbox": {
     "fromCustomer": "Du client",
@@ -4995,7 +4998,9 @@
     "fieldProvince": "Province",
     "fieldTaxIdIt": "Codice fiscale (Italie)",
     "fieldSdiCode": "Code destinataire SDI (Italie)",
-    "fieldPec": "Adresse PEC (Italie)"
+    "fieldPec": "Adresse PEC (Italie)",
+    "dir3Hint": "Organisme public : les factures passent par FACe et exigent ses trois codes DIR3. L’organisme vous les communique (sur la commande ou le contrat).",
+    "dir3Invalid": "Un code DIR3 compte 9 lettres et chiffres et commence par une lettre (p. ex. {{example}})."
   },
   "aiChat": {
     "welcome": "Bonjour ! Je suis votre assistant bureau. Demandez-moi de facturer un client, planifier un chantier ou vérifier vos chiffres.",
@@ -6410,7 +6415,7 @@
     "provinceBuyer": "La province du client doit être le code à 2 lettres (ex. MI), et non « {{value}} ».",
     "routingCode": "Le code destinataire SDI du client {{value}} n'est pas valide : il doit comporter 7 lettres ou chiffres.",
     "publicBuyerIT": "Ce client est une administration publique. Les factures aux organismes publics doivent être signées électroniquement, ce que Vasco ne sait pas encore faire.",
-    "publicBuyerES": "Ce client est un organisme public. Les factures aux organismes publics passent par FACe avec une signature électronique et des codes DIR3 que Vasco ne peut pas encore ajouter.",
+    "publicBuyerES": "Ce client est un organisme public : FACe n’accepte qu’une Facturae signée avec votre certificat numérique.",
     "pec": "L'adresse PEC du client {{value}} ne peut pas être utilisée.",
     "characters": "{{field}} contient des caractères que ce format n'autorise pas : {{value}}",
     "tooLong": "{{field}} est trop long ({{max}} caractères au maximum).",
@@ -6432,7 +6437,9 @@
     "warningBody": "Le fichier peut être créé, mais :",
     "exportAnyway": "Exporter quand même",
     "personTypeSeller": "Votre NIF ne correspond pas à « personne ou société » dans votre profil d’entreprise — veuillez vérifier.",
-    "personTypeBuyer": "Le NIF du client ne correspond pas à « personne ou société » dans ses coordonnées — veuillez vérifier."
+    "personTypeBuyer": "Le NIF du client ne correspond pas à « personne ou société » dans ses coordonnées — veuillez vérifier.",
+    "publicBuyerDir3ES": "Ce client est un organisme public : FACe exige ses trois codes DIR3 (service comptable, organe gestionnaire, unité de traitement). Ajoutez-les au client.",
+    "signatureInvalid": "La signature de ce fichier n’est pas une signature Facturae valide."
   },
   "decisionCatalog": {
     "categories": {
@@ -7483,6 +7490,49 @@
       "approvedNotWarned": "« {{title}} » est approuvé, mais l'avertissement de prix n'est pas enregistré{{statute}}.",
       "duplicatePosition": "Deux travaux supplémentaires occupent la position {{position}}.",
       "belowZero": "Les moins-values dépassent la valeur du contrat — le projet vaudrait moins que rien."
+    }
+  },
+  "facturaeSign": {
+    "certNeededTitle": "Certificat requis",
+    "certNeededBody": "Les factures aux organismes publics passent par FACe et doivent être signées avec votre certificat numérique (par exemple celui de la FNMT). Importez-le une fois, puis exportez à nouveau.",
+    "openCertificate": "Ouvrir le certificat",
+    "certProblemTitle": "Problème de certificat",
+    "signFailed": "Vasco n’a pas pu signer le fichier avec ce certificat. Importez-le à nouveau ; si cela ne suffit pas, contactez le support."
+  },
+  "facturaeCertificate": {
+    "title": "Certificat de signature",
+    "entry": "Certificat de signature (FACe)",
+    "entryAction": "Gérer le certificat",
+    "intro": "Les organismes publics espagnols n’acceptent via FACe que des factures signées avec votre certificat numérique (FNMT ou autre certificat qualifié). Importez votre fichier .p12 / .pfx une fois ; Vasco signe ensuite chaque Facturae avec.",
+    "none": "Aucun certificat pour l’instant",
+    "import": "Importer le certificat (.p12 / .pfx)",
+    "replace": "Remplacer le certificat",
+    "remove": "Supprimer le certificat",
+    "removeTitle": "Supprimer le certificat ?",
+    "removeBody": "Vasco ne pourra plus signer les factures aux organismes publics tant que vous ne l’aurez pas réimporté.",
+    "removeFailed": "Le certificat n’a pas pu être supprimé. Réessayez.",
+    "nif": "NIF",
+    "expires": "Valable jusqu’au",
+    "issuer": "Émis par",
+    "file": "Fichier",
+    "password": "Mot de passe du certificat",
+    "passwordPlaceholder": "Mot de passe du fichier .p12",
+    "confirmImport": "Importer",
+    "pickFailed": "Le fichier n’a pas pu être ouvert.",
+    "problemTitle": "Certificat non importé",
+    "saveFailed": "Le certificat n’a pas pu être enregistré sur ce téléphone. Réessayez.",
+    "imported": "Certificat importé",
+    "importedBody": "Les factures Facturae sont désormais signées avec ce certificat.",
+    "storageNote": "Le certificat est conservé chiffré sur ce téléphone uniquement, protégé par le trousseau de l’appareil, et ne le quitte jamais. Vasco ne garde pas son mot de passe. Se connecter avec un autre compte sur ce téléphone le supprime.",
+    "problem": {
+      "unreadable": "Mot de passe incorrect, ou ce n’est pas un fichier de certificat .p12 / .pfx.",
+      "noKey": "Ce fichier ne contient pas de clé privée. Exportez le certificat avec sa clé privée (.p12 / .pfx).",
+      "notRsa": "Ce certificat utilise un type de clé que la politique de signature Facturae n’accepte pas (RSA requis).",
+      "expired": "Ce certificat a expiré le {{date}}.",
+      "notYetValid": "Ce certificat n’est valable qu’à partir du {{date}}.",
+      "noNif": "Ce certificat ne contient pas de NIF espagnol.",
+      "nifMismatch": "Ce certificat ne contient pas le NIF de votre entreprise ({{nif}}). Une facture doit être signée par son émetteur — vérifiez le NIF/CIF dans votre profil d’entreprise ou importez votre propre certificat.",
+      "noSellerNif": "Saisissez d’abord votre NIF/CIF dans votre profil d’entreprise."
     }
   }
 }

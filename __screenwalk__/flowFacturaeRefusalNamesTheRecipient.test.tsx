@@ -69,7 +69,7 @@ run('Facturae refusal names who would reject it', () => {
     await press((r.tree as any).root);
     expect(bodyOf().startsWith(BODY.replace('{{authority}}', RECIPIENT))).toBe(true);
 
-    mockFindings.current = [{ code: 'HAP1650-II.2/II.8', severity: 'error', key: 'publicBuyerES', params: {}, where: 'customer', message: 'x' }];
+    mockFindings.current = [{ code: 'HAP1650-II.2', severity: 'error', key: 'publicBuyerES', params: {}, where: 'customer', message: 'x' }];
     alert.mockClear();
     await press((r.tree as any).root);
     expect(bodyOf().startsWith(BODY.replace('{{authority}}', 'FACe'))).toBe(true);

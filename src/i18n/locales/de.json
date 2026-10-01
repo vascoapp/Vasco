@@ -3638,7 +3638,10 @@
     "postcode": "PLZ",
     "province": "Provinz",
     "editDetails": "Daten bearbeiten",
-    "nameWithSurname": "Vollständiger Name des Kunden mit Nachname"
+    "nameWithSurname": "Vollständiger Name des Kunden mit Nachname",
+    "dir3OficinaContable": "DIR3 – Oficina contable (Buchhaltungsstelle)",
+    "dir3OrganoGestor": "DIR3 – Órgano gestor (verwaltende Stelle)",
+    "dir3UnidadTramitadora": "DIR3 – Unidad tramitadora (bearbeitende Stelle)"
   },
   "inbox": {
     "fromCustomer": "Vom Kunden",
@@ -4995,7 +4998,9 @@
     "fieldProvince": "Provinz",
     "fieldTaxIdIt": "Codice fiscale (Italien)",
     "fieldSdiCode": "SDI-Empfängercode (Italien)",
-    "fieldPec": "PEC-Adresse (Italien)"
+    "fieldPec": "PEC-Adresse (Italien)",
+    "dir3Hint": "Öffentliche Stelle: Rechnungen laufen über FACe und brauchen ihre drei DIR3-Codes. Die Stelle teilt sie Ihnen mit (im Auftrag oder Vertrag).",
+    "dir3Invalid": "Ein DIR3-Code hat 9 Buchstaben und Ziffern und beginnt mit einem Buchstaben (z. B. {{example}})."
   },
   "aiChat": {
     "welcome": "Hi! Ich bin Ihre Büroassistenz. Bitten Sie mich, eine Rechnung zu erstellen, einen Auftrag zu planen oder Zahlen zu prüfen.",
@@ -7352,7 +7357,7 @@
     "provinceBuyer": "Die Provinz des Kunden muss das Kürzel aus 2 Buchstaben sein (z. B. MI), nicht „{{value}}“.",
     "routingCode": "Der SDI-Empfängercode des Kunden {{value}} ist ungültig: Er muss aus 7 Buchstaben oder Ziffern bestehen.",
     "publicBuyerIT": "Dieser Kunde ist eine öffentliche Verwaltung. Rechnungen an öffentliche Stellen müssen digital signiert sein – das kann Vasco noch nicht.",
-    "publicBuyerES": "Dieser Kunde ist eine öffentliche Stelle. Rechnungen an öffentliche Stellen laufen über FACe mit digitaler Signatur und DIR3-Codes, die Vasco noch nicht hinzufügen kann.",
+    "publicBuyerES": "Dieser Kunde ist eine öffentliche Stelle: FACe akzeptiert nur eine Facturae, die mit Ihrem digitalen Zertifikat signiert ist.",
     "pec": "Die PEC-Adresse des Kunden {{value}} kann nicht verwendet werden.",
     "characters": "{{field}} enthält Zeichen, die dieses Format nicht zulässt: {{value}}",
     "tooLong": "{{field}} ist zu lang (höchstens {{max}} Zeichen).",
@@ -7374,7 +7379,9 @@
     "warningBody": "Die Datei kann erstellt werden, aber:",
     "exportAnyway": "Trotzdem exportieren",
     "personTypeSeller": "Ihre NIF passt nicht zu „Person oder Unternehmen“ in Ihrem Unternehmensprofil — bitte prüfen Sie das.",
-    "personTypeBuyer": "Die NIF des Kunden passt nicht zu „Person oder Unternehmen“ in den Kundendaten — bitte prüfen Sie das."
+    "personTypeBuyer": "Die NIF des Kunden passt nicht zu „Person oder Unternehmen“ in den Kundendaten — bitte prüfen Sie das.",
+    "publicBuyerDir3ES": "Dieser Kunde ist eine öffentliche Stelle: FACe braucht ihre drei DIR3-Codes (Buchhaltungsstelle, verwaltende Stelle, bearbeitende Stelle). Ergänzen Sie sie beim Kunden.",
+    "signatureInvalid": "Die Signatur dieser Datei ist keine gültige Facturae-Signatur."
   },
   "vatBasis": {
     "section": "Wann die USt entsteht",
@@ -7483,6 +7490,49 @@
       "approvedNotWarned": "„{{title}}“ ist freigegeben, aber der Preishinweis ist nicht festgehalten{{statute}}.",
       "duplicatePosition": "Zwei Nachträge stehen an Position {{position}}.",
       "belowZero": "Die Minderleistungen übersteigen den Auftragswert — das Projekt wäre weniger als nichts wert."
+    }
+  },
+  "facturaeSign": {
+    "certNeededTitle": "Zertifikat nötig",
+    "certNeededBody": "Rechnungen an öffentliche Stellen laufen über FACe und müssen mit Ihrem digitalen Zertifikat signiert sein (zum Beispiel dem der FNMT). Importieren Sie es einmalig und exportieren Sie dann erneut.",
+    "openCertificate": "Zertifikat öffnen",
+    "certProblemTitle": "Problem mit dem Zertifikat",
+    "signFailed": "Vasco konnte die Datei mit diesem Zertifikat nicht signieren. Importieren Sie es erneut; hilft das nicht, wenden Sie sich an den Support."
+  },
+  "facturaeCertificate": {
+    "title": "Signaturzertifikat",
+    "entry": "Signaturzertifikat (FACe)",
+    "entryAction": "Zertifikat verwalten",
+    "intro": "Spanische öffentliche Stellen akzeptieren über FACe nur Rechnungen, die mit Ihrem digitalen Zertifikat signiert sind (FNMT oder ein anderes qualifiziertes Zertifikat). Importieren Sie Ihre .p12- / .pfx-Datei einmalig; Vasco signiert dann jede Facturae damit.",
+    "none": "Noch kein Zertifikat",
+    "import": "Zertifikat importieren (.p12 / .pfx)",
+    "replace": "Zertifikat ersetzen",
+    "remove": "Zertifikat entfernen",
+    "removeTitle": "Zertifikat entfernen?",
+    "removeBody": "Vasco kann Rechnungen an öffentliche Stellen erst wieder signieren, wenn Sie es erneut importieren.",
+    "removeFailed": "Das Zertifikat konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+    "nif": "NIF",
+    "expires": "Gültig bis",
+    "issuer": "Ausgestellt von",
+    "file": "Datei",
+    "password": "Passwort des Zertifikats",
+    "passwordPlaceholder": "Passwort der .p12-Datei",
+    "confirmImport": "Importieren",
+    "pickFailed": "Die Datei konnte nicht geöffnet werden.",
+    "problemTitle": "Zertifikat nicht importiert",
+    "saveFailed": "Das Zertifikat konnte auf diesem Telefon nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    "imported": "Zertifikat importiert",
+    "importedBody": "Facturae-Rechnungen werden jetzt mit diesem Zertifikat signiert.",
+    "storageNote": "Das Zertifikat wird verschlüsselt nur auf diesem Telefon gespeichert, durch den Schlüsselbund des Geräts geschützt, und verlässt es nie. Vasco speichert das Passwort nicht. Eine Anmeldung mit einem anderen Konto auf diesem Telefon entfernt es.",
+    "problem": {
+      "unreadable": "Falsches Passwort oder keine .p12- / .pfx-Zertifikatsdatei.",
+      "noKey": "Diese Datei enthält keinen privaten Schlüssel. Exportieren Sie das Zertifikat zusammen mit dem privaten Schlüssel (.p12 / .pfx).",
+      "notRsa": "Dieses Zertifikat verwendet einen Schlüsseltyp, den die Facturae-Signaturrichtlinie nicht akzeptiert (RSA erforderlich).",
+      "expired": "Dieses Zertifikat ist am {{date}} abgelaufen.",
+      "notYetValid": "Dieses Zertifikat ist erst ab dem {{date}} gültig.",
+      "noNif": "Dieses Zertifikat enthält keine spanische NIF.",
+      "nifMismatch": "Dieses Zertifikat enthält nicht die NIF Ihres Unternehmens ({{nif}}). Eine Rechnung muss von ihrem Aussteller signiert sein — prüfen Sie die NIF/CIF in Ihrem Unternehmensprofil oder importieren Sie Ihr eigenes Zertifikat.",
+      "noSellerNif": "Tragen Sie zuerst Ihre NIF/CIF in Ihrem Unternehmensprofil ein."
     }
   }
 }

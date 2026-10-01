@@ -16,6 +16,8 @@ import { buildEInvoiceSource } from '../src/domain/invoiceDocuments';
 import { toFatturaPA, toFacturae } from '../src/integrations/einvoiceMapping';
 import { generateFatturaPAXml } from '../src/integrations/einvoice-it';
 import { generateFacturaeXml } from '../src/integrations/einvoice-es';
+import { signFacturae, type SigningMaterial } from '../src/integrations/facturaeSignature';
+import * as forge from 'node-forge';
 
 const OUT = process.argv[2];
 type Line = { description: string; quantity: number; unitPrice: number; vatRate: number };
@@ -30,7 +32,10 @@ const IT_CONSUMER = { name: 'Mario Rossi', taxId: 'rssmra80a01h501u', address: '
 const ES_SELLER = { businessName: 'Fontanería Ruiz S.L.', registrationNumber: 'B12345674', address: 'Calle Mayor 1', city: 'Madrid', postcode: '28013', province: 'Madrid', country: 'ES', personType: 'J', email: 'info@ruiz.es', iban: 'ES9121000418450200051332' };
 const ES_BUYER = { name: 'Panadería Navarro S.L.', vatId: 'ESB87654323', taxId: 'B87654323', address: 'Calle Sol 3', city: 'Sevilla', postcode: '41001', province: 'Sevilla', country: 'ES' };
 
-type Case = { name: string; fmt: 'it' | 'es'; inp: ReturnType<typeof inputs>; expect?: string[] };
+const ES_PUBLIC_BODY = { ...ES_BUYER, name: 'Ayuntamiento de Madrid', vatId: undefined, taxId: 'P2807900B',
+  dir3OficinaContable: 'L01280796', dir3OrganoGestor: 'L01280796', dir3UnidadTramitadora: 'LA0002878' };
+
+type Case = { name: string; fmt: 'it' | 'es'; inp: ReturnType<typeof inputs>; expect?: string[]; sign?: boolean };
 const cases: Case[] = [
   { name: 'it-b2b-mixed', fmt: 'it', inp: inputs('IT', IT_SELLER, IT_BUYER, [
     { description: 'Manodopera', quantity: 1.333, unitPrice: 55, vatRate: 22 },
@@ -88,22 +93,77 @@ const cases: Case[] = [
     // unit price with many decimals (invoiceLinesFor).
     { description: 'Trabajos', quantity: 1, unitPrice: 1000 / 1.21, vatRate: 21 },
   ], 0.21) },
-  // REFUSAL — a public body (NIF P…) receives through FACe: signature + DIR3.
-  { name: 'es-refuse-public-body', fmt: 'es', expect: ['HAP1650-II.2/II.8'], inp: inputs('ES', ES_SELLER, { ...ES_BUYER, name: 'Ayuntamiento de Madrid', vatId: undefined, taxId: 'P2807900B' }, [
+  // REFUSAL — a public body (NIF P…) receives through FACe: DIR3 codes present,
+  // but UNSIGNED → the value rules refuse (HAP II.2).
+  { name: 'es-refuse-public-body-unsigned', fmt: 'es', expect: ['HAP1650-II.2'], inp: inputs('ES', ES_SELLER, ES_PUBLIC_BODY, [
     { description: 'Mantenimiento', quantity: 1, unitPrice: 500, vatRate: 21 },
   ], 0.21) },
+  // FACe, SIGNED (XAdES-EPES, Facturae policy v3.1) with DIR3 centres — the
+  // schema must accept ds:Signature (xmldsig resolved from the local copy).
+  { name: 'es-b2g-signed', fmt: 'es', sign: true, inp: inputs('ES', ES_SELLER, ES_PUBLIC_BODY, [
+    { description: 'Mantenimiento fontanería', quantity: 1.333, unitPrice: 55, vatRate: 21 },
+    { description: 'Reforma aseos', quantity: 1, unitPrice: 300, vatRate: 10 },
+  ], 0.21) },
+  // A Q body (may be outside FACe) unsigned and without DIR3: warnings, not refused.
+  { name: 'es-q-unsigned', fmt: 'es', inp: inputs('ES', ES_SELLER, { ...ES_BUYER, name: 'Cámara de Comercio', vatId: undefined, taxId: 'Q2826000H' }, [
+    { description: 'Revisión', quantity: 1, unitPrice: 120, vatRate: 21 },
+  ], 0.21) },
 ];
+// The MAPPER refuses these (asks for the field before any file exists).
+const mapperRefusals: Array<{ name: string; inp: ReturnType<typeof inputs>; missing: string[] }> = [
+  { name: 'es-public-body-without-dir3', missing: ['customer.dir3OficinaContable', 'customer.dir3OrganoGestor', 'customer.dir3UnidadTramitadora'],
+    inp: inputs('ES', ES_SELLER, { ...ES_PUBLIC_BODY, dir3OficinaContable: undefined, dir3OrganoGestor: undefined, dir3UnidadTramitadora: undefined }, [
+      { description: 'Mantenimiento', quantity: 1, unitPrice: 500, vatRate: 21 },
+    ], 0.21) },
+  { name: 'es-public-body-bad-dir3', missing: ['customer.dir3UnidadTramitadora'],
+    inp: inputs('ES', ES_SELLER, { ...ES_PUBLIC_BODY, dir3UnidadTramitadora: 'LA00028' }, [
+      { description: 'Mantenimiento', quantity: 1, unitPrice: 500, vatRate: 21 },
+    ], 0.21) },
+];
+
+/**
+ * A throwaway signing certificate made in-process (node-forge), FNMT-shaped
+ * (serialNumber IDCES-…, organizationIdentifier VATES-<the seller's CIF>).
+ * Only to put a REAL XAdES signature in front of the XSD here; the signature
+ * itself is judged by EU DSS in npm run check:facturae-signature.
+ */
+function throwawayMaterial(): SigningMaterial {
+  const keys = forge.pki.rsa.generateKeyPair({ bits: 2048, e: 0x10001 });
+  const cert = forge.pki.createCertificate();
+  cert.publicKey = keys.publicKey;
+  cert.serialNumber = '01';
+  cert.validity.notBefore = new Date(Date.now() - 60_000);
+  cert.validity.notAfter = new Date(Date.now() + 86_400_000);
+  const name = [{ shortName: 'C', value: 'ES' }, { type: '2.5.4.97', value: 'VATES-B12345674' }, { type: '2.5.4.5', value: 'IDCES-12345678Z' }, { shortName: 'CN', value: 'TEST ONLY 12345678Z (R: B12345674)' }];
+  cert.setSubject(name);
+  cert.setIssuer(name);
+  cert.sign(keys.privateKey, forge.md.sha256.create());
+  return {
+    privateKeyPem: forge.pki.privateKeyToPem(keys.privateKey),
+    certificatesDer: [forge.util.encode64(forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes())],
+  };
+}
 
 let refused = 0;
 const expected: Record<string, string[]> = {};
-for (const { name, fmt, inp, expect } of cases) {
+let material: SigningMaterial | undefined;
+for (const { name, fmt, inp, expect, sign } of cases) {
   const src = buildEInvoiceSource(inp);
   const r = fmt === 'it' ? toFatturaPA(src) : toFacturae(src);
   if (!r.ok) { console.log(`REFUSED ${name}: ${JSON.stringify(r.missing)}`); refused++; continue; }
-  const xml = fmt === 'it' ? generateFatturaPAXml(r.document as any) : generateFacturaeXml(r.document as any);
+  let xml = fmt === 'it' ? generateFatturaPAXml(r.document as any) : generateFacturaeXml(r.document as any);
+  if (sign) xml = signFacturae(xml, (material ??= throwawayMaterial()));
   writeFileSync(`${OUT}/${name}.xml`, xml);
   if (expect) expected[`${name}.xml`] = expect;
 }
+for (const { name, inp, missing } of mapperRefusals) {
+  const r = toFacturae(buildEInvoiceSource(inp));
+  const got = r.ok ? [] : r.missing.map((m) => m.key).sort();
+  if (got.join() !== [...missing].sort().join()) {
+    console.log(`MAPPER ${name}: expected refusal [${missing.join(', ')}], got ${r.ok ? 'a document' : `[${got.join(', ')}]`}`);
+    refused++;
+  } else console.log(`refused by the mapper as expected: ${name} [${got.join(', ')}]`);
+}
 writeFileSync(`${OUT}/expected.json`, JSON.stringify(expected, null, 2));
-console.log(`written ${cases.length - refused}${refused ? `, refused ${refused}` : ''}`);
+console.log(`written ${cases.length} cases${refused ? `, ${refused} not as expected` : ''}`);
 if (refused) process.exit(2);

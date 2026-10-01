@@ -1069,18 +1069,48 @@ export default function InvoiceDetailScreen() {
     const mapped = toFacturae(buildEInvoiceSource());
     if (!mapped.ok) { reportMissing(mapped.missing); return; }
     const data = mapped.document;
-    const xml = generateFacturaeXml(data);
+    // The signature (XAdES-EPES, Facturae policy v3.1) with the contractor's
+    // own certificate — required for a public body (FACe), used for everyone
+    // else when one is stored (src/services/facturaeSigning.ts). The DIR3
+    // centres are already in `data`: the mapper refused above without them.
+    const { signFacturaeForExport, sellerNifOf, certificateProblemText } = await import('../../src/services/facturaeSigning');
+    const signing = await signFacturaeForExport(generateFacturaeXml(data), {
+      buyerNif: data.buyerNif, sellerNif: sellerNifOf(businessProfile as any), owner: user?.id,
+    });
+    const openCertificate = { text: t('facturaeSign.openCertificate', 'Open certificate'), onPress: () => router.push('/contractor/facturae-certificate' as any) };
+    if (signing.kind === 'needCertificate') {
+      Alert.alert(
+        t('facturaeSign.certNeededTitle', 'Certificate needed'),
+        t('facturaeSign.certNeededBody', 'Invoices to public bodies go through FACe and must be signed with your digital certificate (for example the FNMT one). Import it once, then export again.'),
+        [{ text: t('common.cancel', 'Cancel'), style: 'cancel' }, openCertificate],
+      );
+      return;
+    }
+    if (signing.kind === 'certificateProblem') {
+      Alert.alert(
+        t('facturaeSign.certProblemTitle', 'Certificate problem'),
+        certificateProblemText(t, signing.problem, signing.info, sellerNifOf(businessProfile as any)),
+        [{ text: t('common.cancel', 'Cancel'), style: 'cancel' }, openCertificate],
+      );
+      return;
+    }
+    if (signing.kind === 'failed') {
+      Alert.alert(t('facturaeSign.certProblemTitle', 'Certificate problem'), t('facturaeSign.signFailed', 'Vasco could not sign the file with this certificate. Import it again; if that does not help, contact support.'));
+      return;
+    }
+    const xml = signing.xml;
     // Gate two: Orden HAP/1650/2015 Anexo II (FACe / registro contable) on the
-    // bytes about to leave — including a public-body buyer, which FACe only
-    // accepts signed and with DIR3 codes that Vasco cannot add.
+    // bytes about to leave — including a public-body buyer (signature present
+    // and structurally a Facturae XAdES-EPES, DIR3 roles 01/02/03).
     const { checkFacturae, blockingFindingLines, warningFindingLines } = await import('../../src/integrations/einvoiceValueRules');
     const findings = checkFacturae(xml);
     // FACe only rejects what is sent TO a public body; for a business buyer
     // the file is refused because its recipient would reject it.
-    const facBuyer = findings.some((f) => f.key === 'publicBuyerES' && f.severity === 'error');
+    const facBuyer = findings.some((f) => (f.key === 'publicBuyerES' || f.key === 'publicBuyerDir3ES') && f.severity === 'error');
     if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), facBuyer ? 'FACe' : t('einvoiceRules.recipient', 'The recipient'))) return;
     if (!(await confirmRuleWarnings(warningFindingLines(findings, t as any), warningFixWhere(findings)))) return;
-    const filename = `${invoiceNumber}-facturae.xml`;
+    // A signed Facturae is a .xsig (what FACe's upload expects); unsigned stays .xml.
+    const filename = `${invoiceNumber}-facturae.${signing.kind === 'signed' ? 'xsig' : 'xml'}`;
     // The comment that used to sit here said recording at queue approval "would
     // mark unfiled invoices as filed" — right, and recording on the share had
     // the same fault one step later. See shareEInvoiceThenConfirm.

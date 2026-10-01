@@ -56,6 +56,12 @@ export interface FacturaeInvoice {
   buyerProvince: string;
   buyerCountry: string;
   buyerPersonType: PersonTypeCode;
+  /**
+   * FACe (B2G): the public body's three DIR3 centres — 01 Oficina contable,
+   * 02 Órgano gestor, 03 Unidad tramitadora (HAP/1650/2015 Anexo II.8).
+   * Absent for a business buyer.
+   */
+  buyerAdministrativeCentres?: FacturaeAdministrativeCentre[];
 
   // Invoice
   invoiceNumber: string;
@@ -82,6 +88,19 @@ export interface FacturaeInvoice {
   // VeriFactu
   verifactuEnabled?: boolean;
 }
+
+export type Dir3Role = '01' | '02' | '03';
+export interface FacturaeAdministrativeCentre {
+  /** DIR3 code, 9 characters (e.g. L01280796). */
+  code: string;
+  role: Dir3Role;
+}
+/** What FACe calls each role; written as CentreDescription. */
+export const DIR3_ROLE_NAMES: Record<Dir3Role, string> = {
+  '01': 'Oficina contable',
+  '02': 'Órgano gestor',
+  '03': 'Unidad tramitadora',
+};
 
 export interface FacturaeLineItem {
   description: string;
@@ -138,6 +157,33 @@ const individualXml = (full: string): string => {
         <FirstSurname>${escapeXml(n.firstSurname)}</FirstSurname>${n.secondSurname ? `
         <SecondSurname>${escapeXml(n.secondSurname)}</SecondSurname>` : ''}`;
 };
+
+/**
+ * BuyerParty/AdministrativeCentres (Facturae 3.2.2 BusinessType: after
+ * TaxIdentification and PartyIdentification, before LegalEntity/Individual).
+ * Per centre the schema order is CentreCode, RoleTypeCode, …, then a REQUIRED
+ * address choice, …, CentreDescription. The centres sit at the body's own
+ * address — the one on the invoice.
+ */
+function administrativeCentresXml(data: FacturaeInvoice): string {
+  const centres = data.buyerAdministrativeCentres ?? [];
+  if (centres.length === 0) return '';
+  return `
+      <AdministrativeCentres>${centres.map((c) => `
+        <AdministrativeCentre>
+          <CentreCode>${escapeXml(c.code)}</CentreCode>
+          <RoleTypeCode>${c.role}</RoleTypeCode>
+          <AddressInSpain>
+            <Address>${escapeXml(data.buyerAddress)}</Address>
+            <PostCode>${escapeXml(data.buyerPostalCode)}</PostCode>
+            <Town>${escapeXml(data.buyerCity)}</Town>
+            <Province>${escapeXml(data.buyerProvince)}</Province>
+            <CountryCode>${data.buyerCountry}</CountryCode>
+          </AddressInSpain>
+          <CentreDescription>${DIR3_ROLE_NAMES[c.role]}</CentreDescription>
+        </AdministrativeCentre>`).join('')}
+      </AdministrativeCentres>`;
+}
 
 export function generateFacturaeXml(data: FacturaeInvoice): string {
   const version = data.schemaVersion ?? '3.2.2';
@@ -242,7 +288,7 @@ export function generateFacturaeXml(data: FacturaeInvoice): string {
         <PersonTypeCode>${data.buyerPersonType}</PersonTypeCode>
         <ResidenceTypeCode>R</ResidenceTypeCode>
         <TaxIdentificationNumber>${escapeXml(data.buyerNif)}</TaxIdentificationNumber>
-      </TaxIdentification>
+      </TaxIdentification>${administrativeCentresXml(data)}
       <${data.buyerPersonType === 'J' ? 'LegalEntity' : 'Individual'}>
         ${data.buyerPersonType === 'J'
           ? `<CorporateName>${escapeXml(data.buyerName)}</CorporateName>`

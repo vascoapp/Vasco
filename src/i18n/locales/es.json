@@ -3638,7 +3638,10 @@
     "postcode": "Código postal",
     "province": "Provincia",
     "editDetails": "Editar datos",
-    "nameWithSurname": "Nombre completo del cliente con apellidos"
+    "nameWithSurname": "Nombre completo del cliente con apellidos",
+    "dir3OficinaContable": "DIR3 – Oficina contable",
+    "dir3OrganoGestor": "DIR3 – Órgano gestor",
+    "dir3UnidadTramitadora": "DIR3 – Unidad tramitadora"
   },
   "inbox": {
     "fromCustomer": "Del cliente",
@@ -4995,7 +4998,9 @@
     "fieldProvince": "Provincia",
     "fieldTaxIdIt": "Codice fiscale (Italia)",
     "fieldSdiCode": "Código destinatario SDI (Italia)",
-    "fieldPec": "Dirección PEC (Italia)"
+    "fieldPec": "Dirección PEC (Italia)",
+    "dir3Hint": "Administración pública: las facturas van por FACe y necesitan sus tres códigos DIR3. La administración te los facilita (en el pedido o el contrato).",
+    "dir3Invalid": "Un código DIR3 tiene 9 letras y cifras y empieza por una letra (p. ej. {{example}})."
   },
   "aiChat": {
     "welcome": "¡Hola! Soy tu asistente de oficina. Pídeme que facture a un cliente, programe un trabajo o revise tus números.",
@@ -6410,7 +6415,7 @@
     "provinceBuyer": "La provincia del cliente debe ser el código de 2 letras (p. ej. MI), no «{{value}}».",
     "routingCode": "El código destinatario SDI del cliente {{value}} no es válido: debe tener 7 letras o dígitos.",
     "publicBuyerIT": "Este cliente es una administración pública. Las facturas a organismos públicos deben ir firmadas electrónicamente, y Vasco aún no puede hacerlo.",
-    "publicBuyerES": "Este cliente es un organismo público. Las facturas a organismos públicos se presentan en FACe con firma electrónica y códigos DIR3, que Vasco aún no puede añadir.",
+    "publicBuyerES": "Este cliente es una administración pública: FACe solo acepta una Facturae firmada con tu certificado digital.",
     "pec": "La dirección PEC del cliente {{value}} no se puede usar.",
     "characters": "{{field}} contiene caracteres que este formato no admite: {{value}}",
     "tooLong": "{{field}} es demasiado largo (máximo {{max}} caracteres).",
@@ -6432,7 +6437,9 @@
     "warningBody": "El archivo se puede crear, pero:",
     "exportAnyway": "Exportar de todos modos",
     "personTypeSeller": "Tu NIF no coincide con «persona o empresa» en tu perfil de empresa — revísalo.",
-    "personTypeBuyer": "El NIF del cliente no coincide con «persona o empresa» en sus datos — revísalo."
+    "personTypeBuyer": "El NIF del cliente no coincide con «persona o empresa» en sus datos — revísalo.",
+    "publicBuyerDir3ES": "Este cliente es una administración pública: FACe necesita sus tres códigos DIR3 (oficina contable, órgano gestor, unidad tramitadora). Añádelos al cliente.",
+    "signatureInvalid": "La firma de este fichero no es una firma Facturae válida."
   },
   "decisionCatalog": {
     "categories": {
@@ -7483,6 +7490,49 @@
       "approvedNotWarned": "«{{title}}» está aprobado, pero no consta el aviso de precio{{statute}}.",
       "duplicatePosition": "Dos trabajos adicionales ocupan la posición {{position}}.",
       "belowZero": "Las reducciones superan el valor del contrato: el proyecto valdría menos que nada."
+    }
+  },
+  "facturaeSign": {
+    "certNeededTitle": "Certificado necesario",
+    "certNeededBody": "Las facturas a administraciones públicas van por FACe y deben firmarse con tu certificado digital (por ejemplo, el de la FNMT). Impórtalo una vez y vuelve a exportar.",
+    "openCertificate": "Abrir certificado",
+    "certProblemTitle": "Problema con el certificado",
+    "signFailed": "Vasco no ha podido firmar el fichero con este certificado. Vuelve a importarlo; si no se soluciona, contacta con soporte."
+  },
+  "facturaeCertificate": {
+    "title": "Certificado de firma",
+    "entry": "Certificado de firma (FACe)",
+    "entryAction": "Gestionar certificado",
+    "intro": "Las administraciones públicas españolas solo aceptan por FACe facturas firmadas con tu certificado digital (FNMT u otro certificado cualificado). Importa tu fichero .p12 / .pfx una vez; Vasco firmará con él cada Facturae.",
+    "none": "Todavía no hay certificado",
+    "import": "Importar certificado (.p12 / .pfx)",
+    "replace": "Sustituir certificado",
+    "remove": "Eliminar certificado",
+    "removeTitle": "¿Eliminar el certificado?",
+    "removeBody": "Vasco no podrá firmar facturas a administraciones públicas hasta que lo vuelvas a importar.",
+    "removeFailed": "No se ha podido eliminar el certificado. Inténtalo de nuevo.",
+    "nif": "NIF",
+    "expires": "Válido hasta",
+    "issuer": "Emitido por",
+    "file": "Fichero",
+    "password": "Contraseña del certificado",
+    "passwordPlaceholder": "Contraseña del fichero .p12",
+    "confirmImport": "Importar",
+    "pickFailed": "No se ha podido abrir el fichero.",
+    "problemTitle": "Certificado no importado",
+    "saveFailed": "No se ha podido guardar el certificado en este teléfono. Inténtalo de nuevo.",
+    "imported": "Certificado importado",
+    "importedBody": "Las facturas Facturae se firman ahora con este certificado.",
+    "storageNote": "El certificado se guarda cifrado solo en este teléfono, protegido por el llavero del dispositivo, y nunca sale de él. Vasco no guarda la contraseña. Iniciar sesión con otra cuenta en este teléfono lo elimina.",
+    "problem": {
+      "unreadable": "Contraseña incorrecta, o no es un fichero de certificado .p12 / .pfx.",
+      "noKey": "Este fichero no contiene la clave privada. Exporta el certificado junto con su clave privada (.p12 / .pfx).",
+      "notRsa": "Este certificado usa un tipo de clave que la política de firma de Facturae no admite (se requiere RSA).",
+      "expired": "Este certificado caducó el {{date}}.",
+      "notYetValid": "Este certificado no es válido hasta el {{date}}.",
+      "noNif": "Este certificado no contiene un NIF español.",
+      "nifMismatch": "Este certificado no contiene el NIF de tu empresa ({{nif}}). Una factura debe firmarla su emisor: revisa el NIF/CIF en tu perfil de empresa o importa tu propio certificado.",
+      "noSellerNif": "Introduce primero tu NIF/CIF en tu perfil de empresa."
     }
   }
 }

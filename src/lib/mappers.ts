@@ -190,6 +190,9 @@ export function customerUpdatesToRowPayload(updates: Partial<Customer>): Record<
     ['city', 'city'], ['postcode', 'postcode'], ['country', 'country'],
     ['province', 'province'], ['vatId', 'vat_id'], ['taxId', 'tax_id'],
     ['einvoiceRouting', 'einvoice_routing'], ['einvoiceEmail', 'einvoice_email'],
+    // Migration 20261001000011 — FACe's three DIR3 centres.
+    ['dir3OficinaContable', 'dir3_oficina_contable'], ['dir3OrganoGestor', 'dir3_organo_gestor'],
+    ['dir3UnidadTramitadora', 'dir3_unidad_tramitadora'],
   ];
   for (const [from, to] of map) {
     if (updates[from] !== undefined) out[to] = updates[from];
@@ -215,6 +218,9 @@ export function customerRowToCustomer(row: CustomerRow): Customer {
     taxId: row.tax_id ?? undefined,
     einvoiceRouting: row.einvoice_routing ?? undefined,
     einvoiceEmail: row.einvoice_email ?? undefined,
+    dir3OficinaContable: row.dir3_oficina_contable ?? undefined,
+    dir3OrganoGestor: row.dir3_organo_gestor ?? undefined,
+    dir3UnidadTramitadora: row.dir3_unidad_tramitadora ?? undefined,
     createdAt: row.created_at,
   };
 }

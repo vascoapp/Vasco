@@ -3638,7 +3638,10 @@
     "postcode": "CAP",
     "province": "Provincia",
     "editDetails": "Modifica dati",
-    "nameWithSurname": "Nome completo del cliente con cognome"
+    "nameWithSurname": "Nome completo del cliente con cognome",
+    "dir3OficinaContable": "DIR3 – Oficina contable (ufficio contabile)",
+    "dir3OrganoGestor": "DIR3 – Órgano gestor (organo di gestione)",
+    "dir3UnidadTramitadora": "DIR3 – Unidad tramitadora (unità di trattamento)"
   },
   "inbox": {
     "fromCustomer": "Dal cliente",
@@ -4995,7 +4998,9 @@
     "fieldProvince": "Provincia (sigla)",
     "fieldTaxIdIt": "Codice fiscale",
     "fieldSdiCode": "Codice destinatario SDI",
-    "fieldPec": "Indirizzo PEC"
+    "fieldPec": "Indirizzo PEC",
+    "dir3Hint": "Ente pubblico: le fatture passano da FACe e richiedono i suoi tre codici DIR3. L’ente te li comunica (sull’ordine o sul contratto).",
+    "dir3Invalid": "Un codice DIR3 ha 9 lettere e cifre e inizia con una lettera (es. {{example}})."
   },
   "aiChat": {
     "welcome": "Ciao! Sono il tuo assistente d'ufficio. Chiedimi di fatturare un cliente, pianificare un lavoro o controllare i tuoi numeri.",
@@ -6410,7 +6415,7 @@
     "provinceBuyer": "La provincia del cliente deve essere la sigla di 2 lettere (es. MI), non \"{{value}}\".",
     "routingCode": "Il codice destinatario SDI del cliente {{value}} non è valido: deve essere di 7 lettere o cifre.",
     "publicBuyerIT": "Questo cliente è una pubblica amministrazione. Le fatture alla PA devono essere firmate digitalmente (FPA12) e Vasco non può ancora farlo.",
-    "publicBuyerES": "Questo cliente è un ente pubblico spagnolo. Le fatture agli enti pubblici passano da FACe con firma digitale e codici DIR3, che Vasco non può ancora aggiungere.",
+    "publicBuyerES": "Questo cliente è un ente pubblico: FACe accetta solo una Facturae firmata con il tuo certificato digitale.",
     "pec": "L'indirizzo PEC del cliente {{value}} non può essere usato.",
     "characters": "{{field}} contiene caratteri non ammessi da questo formato: {{value}}",
     "tooLong": "{{field}} è troppo lungo (massimo {{max}} caratteri).",
@@ -6432,7 +6437,9 @@
     "warningBody": "Il file può essere creato, ma:",
     "exportAnyway": "Esporta comunque",
     "personTypeSeller": "Il tuo NIF non corrisponde a «persona o società» nel profilo aziendale — controllalo.",
-    "personTypeBuyer": "Il NIF del cliente non corrisponde a «persona o società» nei suoi dati — controllalo."
+    "personTypeBuyer": "Il NIF del cliente non corrisponde a «persona o società» nei suoi dati — controllalo.",
+    "publicBuyerDir3ES": "Questo cliente è un ente pubblico: FACe richiede i suoi tre codici DIR3 (ufficio contabile, organo di gestione, unità di trattamento). Aggiungili al cliente.",
+    "signatureInvalid": "La firma di questo file non è una firma Facturae valida."
   },
   "decisionCatalog": {
     "categories": {
@@ -7483,6 +7490,49 @@
       "approvedNotWarned": "«{{title}}» è approvato, ma l'avviso di prezzo non è registrato{{statute}}.",
       "duplicatePosition": "Due lavori extra occupano la posizione {{position}}.",
       "belowZero": "Le riduzioni superano il valore del contratto: il progetto varrebbe meno di niente."
+    }
+  },
+  "facturaeSign": {
+    "certNeededTitle": "Certificato necessario",
+    "certNeededBody": "Le fatture agli enti pubblici passano da FACe e devono essere firmate con il tuo certificato digitale (ad esempio quello della FNMT). Importalo una volta, poi esporta di nuovo.",
+    "openCertificate": "Apri certificato",
+    "certProblemTitle": "Problema con il certificato",
+    "signFailed": "Vasco non è riuscito a firmare il file con questo certificato. Importalo di nuovo; se non basta, contatta l’assistenza."
+  },
+  "facturaeCertificate": {
+    "title": "Certificato di firma",
+    "entry": "Certificato di firma (FACe)",
+    "entryAction": "Gestisci certificato",
+    "intro": "Gli enti pubblici spagnoli accettano tramite FACe solo fatture firmate con il tuo certificato digitale (FNMT o un altro certificato qualificato). Importa il file .p12 / .pfx una volta; Vasco firmerà poi ogni Facturae.",
+    "none": "Nessun certificato ancora",
+    "import": "Importa certificato (.p12 / .pfx)",
+    "replace": "Sostituisci certificato",
+    "remove": "Rimuovi certificato",
+    "removeTitle": "Rimuovere il certificato?",
+    "removeBody": "Vasco non potrà più firmare fatture agli enti pubblici finché non lo importerai di nuovo.",
+    "removeFailed": "Non è stato possibile rimuovere il certificato. Riprova.",
+    "nif": "NIF",
+    "expires": "Valido fino al",
+    "issuer": "Emesso da",
+    "file": "File",
+    "password": "Password del certificato",
+    "passwordPlaceholder": "Password del file .p12",
+    "confirmImport": "Importa",
+    "pickFailed": "Non è stato possibile aprire il file.",
+    "problemTitle": "Certificato non importato",
+    "saveFailed": "Non è stato possibile salvare il certificato su questo telefono. Riprova.",
+    "imported": "Certificato importato",
+    "importedBody": "Le fatture Facturae vengono ora firmate con questo certificato.",
+    "storageNote": "Il certificato è conservato cifrato solo su questo telefono, protetto dal portachiavi del dispositivo, e non lo lascia mai. Vasco non conserva la password. Accedere con un altro account su questo telefono lo rimuove.",
+    "problem": {
+      "unreadable": "Password errata, oppure non è un file di certificato .p12 / .pfx.",
+      "noKey": "Questo file non contiene la chiave privata. Esporta il certificato insieme alla chiave privata (.p12 / .pfx).",
+      "notRsa": "Questo certificato usa un tipo di chiave che la politica di firma Facturae non accetta (è richiesto RSA).",
+      "expired": "Questo certificato è scaduto il {{date}}.",
+      "notYetValid": "Questo certificato è valido solo dal {{date}}.",
+      "noNif": "Questo certificato non contiene un NIF spagnolo.",
+      "nifMismatch": "Questo certificato non contiene il NIF della tua impresa ({{nif}}). Una fattura deve essere firmata dal suo emittente: controlla il NIF/CIF nel profilo aziendale o importa il tuo certificato.",
+      "noSellerNif": "Inserisci prima il tuo NIF/CIF nel profilo aziendale."
     }
   }
 }

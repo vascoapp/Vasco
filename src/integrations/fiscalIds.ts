@@ -145,3 +145,35 @@ export function isSpanishPublicBodyNif(value: string | null | undefined): boolea
   const c = checkSpanishTaxId(value);
   return c.kind === 'ENTITY' && 'PQS'.includes(c.bare[0]);
 }
+
+/**
+ * FACe only (P = local corporations, S = State organs). Q (public-law bodies)
+ * also covers chambers and professional colleges outside Ley 25/2013, for
+ * which an unsigned B2B Facturae is valid — so Q is "may be FACe": never
+ * refused, warned (review 2026-10-01).
+ */
+export function isFaceOnlyNif(value: string | null | undefined): boolean {
+  const c = checkSpanishTaxId(value);
+  return c.kind === 'ENTITY' && 'PS'.includes(c.bare[0]);
+}
+
+// ---------------------------------------------------------------------------
+// DIR3 — Directorio Común de Unidades Orgánicas y Oficinas
+// ---------------------------------------------------------------------------
+// A unit or office code is "un literal alfanumérico de 9 posiciones" whose
+// first letter names the administration (E State, A autonomous community,
+// L local, U university, I other institutions; the GE/EA/LA families and O
+// offices have the same 9-character shape) — DIR3 codification, summarised at
+// https://www.cecarm.com/emprendedor/estrategia/consultas-y-faqs/como-se-codifican-las-unidades-organicas-y-oficinas-del-dir3-3760
+// (fetched 2026-10-01). Examples: L01280796, E04921901. FACe needs three per
+// public-body invoice: Oficina contable (role 01), Órgano gestor (02), Unidad
+// tramitadora (03) — Orden HAP/1650/2015 Anexo II.8. Only the SHAPE is
+// checkable offline; whether a code exists and the three belong together is
+// FACe's lookup (named, never claimed).
+
+/** Upper-cased, without spaces/dots/dashes — what a contractor pastes from a PDF. */
+export const normalizeDir3 = (v: string | null | undefined): string => clean(v);
+
+export function isValidDir3Code(value: string | null | undefined): boolean {
+  return /^[A-Z][A-Z0-9]{8}$/.test(normalizeDir3(value));
+}

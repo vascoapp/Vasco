@@ -51,6 +51,10 @@ const esSrc = (over: Partial<EInvoiceSource> = {}): EInvoiceSource => ({
   ...over,
 } as EInvoiceSource);
 
+/** A local corporation (NIF P…, FACe-only) WITH its three DIR3 centres. */
+const PUBLIC_BODY = () => ({ ...esSrc().buyer, name: 'Ayuntamiento de Madrid', vatId: undefined, taxId: 'P2807900B',
+  dir3OficinaContable: 'L01280796', dir3OrganoGestor: 'L01280796', dir3UnidadTramitadora: 'LA0002878' });
+
 const itXml = (over: Partial<EInvoiceSource> = {}) => {
   const r = toFatturaPA(itSrc(over));
   if (!r.ok) throw new Error(JSON.stringify(r.missing));
@@ -346,7 +350,10 @@ describe('Facturae — each Anexo II rule catches its defect', () => {
     ['FACTURAE-BATCH', () => mutate(base(), /<TotalInvoicesAmount><TotalAmount>[\d.]+</, '<TotalInvoicesAmount><TotalAmount>1.00<')],
     ['FACTURAE-3.1.5.7', () => mutate(base(), /<TotalTaxOutputs>[\d.]+</, '<TotalTaxOutputs>1.00<')],
     ['XSD', () => esXml({ buyer: { ...esSrc().buyer, postcode: '4100' } }).xml],
-    ['HAP1650-II.2/II.8', () => esXml({ buyer: { ...esSrc().buyer, name: 'Ayuntamiento de Madrid', vatId: undefined, taxId: 'P2807900B' } }).xml],
+    // A public body (P) with its DIR3 codes, but unsigned → II.2.
+    ['HAP1650-II.2', () => esXml({ buyer: PUBLIC_BODY() }).xml],
+    // …and a role-03 code that is not DIR3-shaped → II.8.
+    ['HAP1650-II.8', () => mutate(esXml({ buyer: PUBLIC_BODY() }).xml, '<CentreCode>LA0002878</CentreCode>', '<CentreCode>LA00</CentreCode>')],
   ];
   it.each(cases)('%s', (code, make) => {
     expect(codes(checkFacturae(make(), { today: TODAY }))).toContain(code);
@@ -370,9 +377,9 @@ describe('Facturae — a Q buyer is not assumed to be a FACe administration (rev
   it('Q (public-law body, e.g. a chamber of commerce): warned, not refused; P and S: refused', () => {
     const q = checkFacturae(esXml({ buyer: { ...esSrc().buyer, name: 'Cámara de Comercio', vatId: undefined, taxId: 'Q2826000H' } }).xml, { today: TODAY });
     expect(codes(q)).toEqual([]);
-    expect(codes(q, 'warning')).toContain('HAP1650-II.2/II.8');
-    const s = checkFacturae(esXml({ buyer: { ...esSrc().buyer, name: 'Ministerio', vatId: undefined, taxId: 'S2811001C' } }).xml, { today: TODAY });
-    expect(codes(s)).toContain('HAP1650-II.2/II.8');
+    expect(codes(q, 'warning')).toEqual(['HAP1650-II.2', 'HAP1650-II.8']);
+    const s = checkFacturae(esXml({ buyer: { ...PUBLIC_BODY(), name: 'Ministerio', taxId: 'S2811001C' } }).xml, { today: TODAY });
+    expect(codes(s)).toEqual(['HAP1650-II.2']);
   });
 });
 

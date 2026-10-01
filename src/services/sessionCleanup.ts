@@ -114,6 +114,15 @@ export async function claimDeviceData(userId: string): Promise<boolean> {
         const { clearAll } = await import('./pendingJobPhotosQueue');
         await clearAll(); // photo FILES as well as their index
       } catch {}
+      // The previous contractor's SIGNING certificate (Facturae / FACe): the
+      // next person on this phone must never be able to sign as them. It is
+      // also bound to its owner, so a load for anyone else returns nothing.
+      // (require, not import(): it must also run where dynamic import is off.)
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { removeSigningCertificate } = require('./signingCertificateStore') as typeof import('./signingCertificateStore');
+        await removeSigningCertificate();
+      } catch {}
       await AsyncStorage.multiRemove([...DEVICE_OWNED_KEYS]);
     }
     await AsyncStorage.setItem(DEVICE_DATA_OWNER_KEY, userId);

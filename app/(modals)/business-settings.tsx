@@ -543,6 +543,21 @@ function BusinessSettingsForm() {
                 />
               </View>
             )}
+            {/* Spain: the certificate that signs every Facturae — required by
+                FACe for public-body invoices (Orden HAP/1650/2015 Anexo II.2). */}
+            {country === 'ES' && (
+              <View style={styles.fieldColumn}>
+                <Text style={Typography.muted}>{t('facturaeCertificate.entry', 'Signing certificate (FACe)')}</Text>
+                <Pressable
+                  onPress={() => router.push('/contractor/facturae-certificate' as any)}
+                  style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+                  accessibilityRole="button"
+                >
+                  <Text style={{ color: SemanticColors.textPrimary }}>{t('facturaeCertificate.entryAction', 'Manage certificate')}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textSecondary} />
+                </Pressable>
+              </View>
+            )}
             {country === 'IT' && (
               <View style={styles.fieldColumn}>
                 <Text style={Typography.muted}>{t('profile.fiscalRegime', 'Tax regime')}</Text>

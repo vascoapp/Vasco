@@ -34,6 +34,7 @@ import { isValidEmail, isValidPhone, isValidVATNumber, sanitizeInput } from '../
 import { findDuplicates } from '../../services/customerDedupService';
 import { logError } from '../../utils/errorHandler';
 import type { Customer } from '../../domain/customers';
+import { isSpanishPublicBodyNif, isValidDir3Code, normalizeDir3 } from '../../integrations/fiscalIds';
 import { DKLabel } from './DKLabel';
 
 interface Props {
@@ -91,7 +92,14 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
   const [taxId, setTaxId] = useState('');
   const [sdiCode, setSdiCode] = useState('');
   const [pec, setPec] = useState('');
+  // Spain, public bodies (NIF P/Q/S): the three DIR3 centres FACe routes on.
+  const [dir3Oc, setDir3Oc] = useState('');
+  const [dir3Og, setDir3Og] = useState('');
+  const [dir3Ut, setDir3Ut] = useState('');
   const [saving, setSaving] = useState(false);
+  // Shown for a Spanish public-body NIF as it is typed — and whenever codes are
+  // already stored, so a wrong one can still be corrected or cleared.
+  const showDir3 = country === 'ES' && (isSpanishPublicBodyNif(vatId) || !!(dir3Oc || dir3Og || dir3Ut));
 
   // Prefill when editing — keyed on the id so a background refresh does not
   // overwrite what the contractor is typing.
@@ -108,12 +116,16 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     setTaxId(customer.taxId ?? '');
     setSdiCode(customer.einvoiceRouting ?? '');
     setPec(customer.einvoiceEmail ?? '');
+    setDir3Oc(customer.dir3OficinaContable ?? '');
+    setDir3Og(customer.dir3OrganoGestor ?? '');
+    setDir3Ut(customer.dir3UnidadTramitadora ?? '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customer?.id, visible]);
 
   const reset = () => {
     setName(''); setEmail(''); setPhone(''); setAddress(''); setPostcode(''); setCity('');
     setVatId(''); setProvince(''); setTaxId(''); setSdiCode(''); setPec('');
+    setDir3Oc(''); setDir3Og(''); setDir3Ut('');
   };
 
   const handleSave = useCallback(async () => {
@@ -145,6 +157,18 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
       );
       return;
     }
+    // DIR3: 9 characters, first a letter (L01280796). FACe looks the code up;
+    // a mistyped one is refused here, where it can still be fixed — the
+    // database also refuses the shape, and a write it refuses would sit in
+    // the offline queue for ever.
+    const dir3 = { dir3OficinaContable: normalizeDir3(dir3Oc), dir3OrganoGestor: normalizeDir3(dir3Og), dir3UnidadTramitadora: normalizeDir3(dir3Ut) };
+    if (showDir3 && Object.values(dir3).some((v) => v && !isValidDir3Code(v))) {
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('customersModal.dir3Invalid', { example: 'L01280796', defaultValue: 'A DIR3 code has 9 letters and digits and starts with a letter (e.g. {{example}}).' }),
+      );
+      return;
+    }
     const structured = {
       postcode: sanitizeInput(postcode),
       city: sanitizeInput(city),
@@ -155,6 +179,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
         einvoiceRouting: sanitizeInput(sdiCode).toUpperCase(),
         einvoiceEmail: sanitizeInput(pec),
       } : {}),
+      ...(showDir3 ? dir3 : {}),
     };
     const cleanAddress = sanitizeInput(address);
 
@@ -230,7 +255,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
       return;
     }
     await commit();
-  }, [name, email, phone, address, postcode, city, vatId, province, taxId, sdiCode, pec, saving, customer,
+  }, [name, email, phone, address, postcode, city, vatId, province, taxId, sdiCode, pec, dir3Oc, dir3Og, dir3Ut, showDir3, saving, customer,
     needsProvince, isItaly, customers, addCustomer, updateCustomer, onAdded, onSaved, onClose, router, t, ex.vat]);
 
   const disabled = !name.trim() || saving;
@@ -290,6 +315,22 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
                   </Field>
                 </>
               )}
+              {showDir3 && (
+                <>
+                  <Text style={s.hint}>
+                    {t('customersModal.dir3Hint', 'Public body: invoices go through FACe and need its three DIR3 codes. The body gives them to you (on the order or contract).')}
+                  </Text>
+                  <Field label={t('customer.dir3OficinaContable', 'DIR3 – Oficina contable (accounting office)')}>
+                    <TextInput style={s.input} value={dir3Oc} onChangeText={setDir3Oc} autoCapitalize="characters" autoCorrect={false} maxLength={12} placeholder="L01280796" placeholderTextColor={SemanticColors.placeholder} />
+                  </Field>
+                  <Field label={t('customer.dir3OrganoGestor', 'DIR3 – Órgano gestor (managing body)')}>
+                    <TextInput style={s.input} value={dir3Og} onChangeText={setDir3Og} autoCapitalize="characters" autoCorrect={false} maxLength={12} placeholder="L01280796" placeholderTextColor={SemanticColors.placeholder} />
+                  </Field>
+                  <Field label={t('customer.dir3UnidadTramitadora', 'DIR3 – Unidad tramitadora (processing unit)')}>
+                    <TextInput style={s.input} value={dir3Ut} onChangeText={setDir3Ut} autoCapitalize="characters" autoCorrect={false} maxLength={12} placeholder="LA0002878" placeholderTextColor={SemanticColors.placeholder} />
+                  </Field>
+                </>
+              )}
             </ScrollView>
             <Pressable style={[s.submit, disabled && { opacity: 0.5 }]} onPress={handleSave} disabled={disabled} accessibilityRole="button">
               <LinearGradient colors={[DK.colors.primaryDark, DK.colors.primary, DK.colors.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
@@ -324,6 +365,7 @@ const s = StyleSheet.create({
   // Form labels are WHITE (user, 2026-09-22) — and needed: "10115" alone reads
   // like a value, beside "Post code" it reads as an example.
   label: { fontFamily: DK.type.body500, fontSize: TYPE.labelSize, color: DK.colors.text },
+  hint: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.text, marginTop: GRID.xs },
   row: { flexDirection: 'row', gap: GRID.sm },
   input: {
     backgroundColor: DK.colors.panel2,

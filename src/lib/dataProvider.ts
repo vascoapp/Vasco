@@ -358,7 +358,8 @@ export async function listCustomers() {
 
 export async function createCustomer(customer: { name: string; email?: string; phone?: string; address?: string;
     city?: string; postcode?: string; country?: string; province?: string;
-    vat_id?: string; tax_id?: string; einvoice_routing?: string; einvoice_email?: string }) {
+    vat_id?: string; tax_id?: string; einvoice_routing?: string; einvoice_email?: string;
+    dir3_oficina_contable?: string; dir3_organo_gestor?: string; dir3_unidad_tramitadora?: string }) {
   const userId = await getUserId();
   const { data, error } = await supabase
     .from('customers')
@@ -372,7 +373,8 @@ export async function createCustomer(customer: { name: string; email?: string; p
 
 export async function updateCustomer(id: string, updates: { name?: string; email?: string; phone?: string; address?: string;
     city?: string; postcode?: string; country?: string; province?: string;
-    vat_id?: string; tax_id?: string; einvoice_routing?: string; einvoice_email?: string }) {
+    vat_id?: string; tax_id?: string; einvoice_routing?: string; einvoice_email?: string;
+    dir3_oficina_contable?: string; dir3_organo_gestor?: string; dir3_unidad_tramitadora?: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('customers') as any)
     .update(updates)

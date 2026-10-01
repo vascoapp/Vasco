@@ -23,9 +23,12 @@
 
 import type { FatturaPA, FatturaPALineItem, RegimeFiscale } from './einvoice-it';
 import { marcaDaBolloDue, MARCA_DA_BOLLO_EUR } from './einvoice-it';
-import type { FacturaeInvoice, FacturaeLineItem, PersonTypeCode, RegimeFiscal } from './einvoice-es';
+import type { FacturaeInvoice, FacturaeLineItem, PersonTypeCode, RegimeFiscal, FacturaeAdministrativeCentre, Dir3Role } from './einvoice-es';
 import { splitSpanishName } from './einvoice-es';
-import { isValidCodiceFiscale, checkSpanishTaxId, spanishPersonType } from './fiscalIds';
+import {
+  isValidCodiceFiscale, checkSpanishTaxId, spanishPersonType,
+  isSpanishPublicBodyNif, isFaceOnlyNif, isValidDir3Code, normalizeDir3,
+} from './fiscalIds';
 import { round2 } from '../utils/round2';
 
 /** What every screen already has: the invoice, its lines, and both parties. */
@@ -56,6 +59,10 @@ export interface EInvoiceSource {
     country?: string;
     einvoiceRouting?: string;
     einvoiceEmail?: string;
+    /** ES public body (FACe): the three DIR3 centres. */
+    dir3OficinaContable?: string;
+    dir3OrganoGestor?: string;
+    dir3UnidadTramitadora?: string;
   };
   invoiceNumber: string;
   invoiceDate: string;
@@ -280,6 +287,33 @@ function buyerPersonTypeFor(nif: string | undefined): PersonTypeCode {
   return spanishPersonType(nif) ?? (/^[A-Za-z]/.test(String(nif ?? '')) ? 'J' : 'F');
 }
 
+/**
+ * The DIR3 centres a public-body buyer needs (FACe, HAP/1650/2015 Anexo II.8).
+ * P/S (FACe-only) buyers: all three are REQUIRED — refused, by name, without
+ * them; a code that is not DIR3-shaped counts as missing (FACe would reject
+ * it). Q buyers (may be FACe, may be B2B): written when all three are there,
+ * asked for when only some are (half a routing is no routing). Any other
+ * buyer: none written.
+ */
+function buyerAdministrativeCentres(
+  buyer: EInvoiceSource['buyer'],
+  buyerNif: string | undefined,
+  missing: MissingField[],
+): FacturaeAdministrativeCentre[] {
+  if (!isSpanishPublicBodyNif(buyerNif)) return [];
+  const fields: Array<[Dir3Role, string | undefined, string]> = [
+    ['01', buyer.dir3OficinaContable, 'customer.dir3OficinaContable'],
+    ['02', buyer.dir3OrganoGestor, 'customer.dir3OrganoGestor'],
+    ['03', buyer.dir3UnidadTramitadora, 'customer.dir3UnidadTramitadora'],
+  ];
+  const given = fields.filter(([, v]) => normalizeDir3(v) !== '');
+  if (!isFaceOnlyNif(buyerNif) && given.length === 0) return [];
+  const bad = fields.filter(([, v]) => !isValidDir3Code(v));
+  for (const [, , key] of bad) missing.push({ key, where: 'customer' });
+  if (bad.length) return [];
+  return fields.map(([role, v]) => ({ role, code: normalizeDir3(v) }));
+}
+
 export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> {
   const missing: MissingField[] = [];
 
@@ -305,6 +339,7 @@ export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> 
   if (buyerNif && buyerPersonTypeFor(buyerNif) === 'F' && !splitSpanishName(src.buyer.name)) {
     missing.push({ key: 'customer.nameWithSurname', where: 'customer' });
   }
+  const centres = buyerAdministrativeCentres(src.buyer, buyerNif, missing);
 
   if (missing.length > 0) return { ok: false, missing };
 
@@ -344,6 +379,7 @@ export function toFacturae(src: EInvoiceSource): MappingResult<FacturaeInvoice> 
       buyerProvince: src.buyer.province as string,
       buyerCountry: 'ESP',
       buyerPersonType: buyerPersonTypeFor(buyerNif),
+      ...(centres.length ? { buyerAdministrativeCentres: centres } : {}),
       invoiceNumber: src.invoiceNumber,
       invoiceDate: src.invoiceDate,
       dueDate: src.dueDate,

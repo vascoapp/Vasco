@@ -85,6 +85,10 @@ export type CustomerRow = {
   tax_id: string | null;
   einvoice_routing: string | null;
   einvoice_email: string | null;
+  // Migration 20261001000011 — FACe (Spain, B2G): the buyer's DIR3 centres.
+  dir3_oficina_contable: string | null;
+  dir3_organo_gestor: string | null;
+  dir3_unidad_tramitadora: string | null;
   created_at: string;
   updated_at: string;
 };
