@@ -6420,7 +6420,8 @@
     "bollo": "El importe fuera del IVA supera 77,47 €: se debe un impuesto de timbre (marca da bollo) de 2,00 €.",
     "naturaRegime": "Una línea al 0 % figura como «no sujeta» (N2.2), propio del régimen forfettario. Con {{value}}, compruebe si es inversión del sujeto pasivo o exención.",
     "regimeCharges": "Con {{value}} normalmente no se repercute IVA, pero una línea lo incluye.",
-    "unsignedB2B": "Este archivo Facturae no está firmado: válido entre empresas, no aceptado por FACe."
+    "unsignedB2B": "Este archivo Facturae no está firmado: válido entre empresas, no aceptado por FACe.",
+    "recipient": "El destinatario"
   },
   "decisionCatalog": {
     "categories": {

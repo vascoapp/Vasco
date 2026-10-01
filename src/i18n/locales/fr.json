@@ -6420,7 +6420,8 @@
     "bollo": "Le montant hors TVA dépasse 77,47 € : un droit de timbre (marca da bollo) de 2,00 € est dû.",
     "naturaRegime": "Une ligne à 0 % est déclarée « non soumise » (N2.2), ce qui correspond au régime forfaitaire. Sous {{value}}, vérifiez s'il s'agit d'une autoliquidation ou d'une exonération.",
     "regimeCharges": "Sous {{value}}, aucune TVA n'est normalement facturée, mais une ligne en comporte.",
-    "unsignedB2B": "Ce fichier Facturae n'est pas signé : valable entre entreprises, non accepté par FACe."
+    "unsignedB2B": "Ce fichier Facturae n'est pas signé : valable entre entreprises, non accepté par FACe.",
+    "recipient": "Le destinataire"
   },
   "decisionCatalog": {
     "categories": {

@@ -514,7 +514,12 @@ export function checkFacturae(xml: string, opts: RuleOptions = {}): RuleFinding[
     const roles = new Set(kids(at(buyerEl, 'AdministrativeCentres'), 'AdministrativeCentre').map((c) => textAt(c, 'RoleTypeCode')));
     const dir3 = ['01', '02', '03'].every((r) => roles.has(r));
     if (!signed || !dir3) {
-      push('HAP1650-II.2/II.8', 'error', 'customer', 'publicBuyerES',
+      // P (local) and S (State) are FACe administrations. Q also covers
+      // public-law bodies outside Ley 25/2013 (chambers of commerce,
+      // professional colleges), for which an unsigned B2B Facturae is valid:
+      // a warning, not a refusal (review 2026-10-01).
+      const facOnly = /^(ES)?[PS]/.test((buyerTin ?? '').toUpperCase().replace(/[\s.-]/g, ''));
+      push('HAP1650-II.2/II.8', facOnly ? 'error' : 'warning', 'customer', 'publicBuyerES',
         `buyer ${buyerTin} is a public body: FACe requires the Facturae signature policy (${signed ? 'present' : 'absent'}) and DIR3 roles 01/02/03 (${dir3 ? 'present' : 'absent'})`, { value: buyerTin ?? '' });
     }
   } else if (!signed) {

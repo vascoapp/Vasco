@@ -979,7 +979,10 @@ export default function InvoiceDetailScreen() {
     // accepts signed and with DIR3 codes that Vasco cannot add.
     const { checkFacturae, blockingFindingLines } = await import('../../src/integrations/einvoiceValueRules');
     const findings = checkFacturae(xml);
-    if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), 'FACe')) return;
+    // FACe only rejects what is sent TO a public body; for a business buyer
+    // the file is refused because its recipient would reject it.
+    const facBuyer = findings.some((f) => f.key === 'publicBuyerES' && f.severity === 'error');
+    if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), facBuyer ? 'FACe' : t('einvoiceRules.recipient', 'The recipient'))) return;
     const filename = `${invoiceNumber}-facturae.xml`;
     // The comment that used to sit here said recording at queue approval "would
     // mark unfiled invoices as filed" — right, and recording on the share had

@@ -6420,7 +6420,8 @@
     "bollo": "L'importo fuori campo IVA supera 77,47 €: è dovuta la marca da bollo da 2,00 €.",
     "naturaRegime": "Una riga allo 0 % è indicata come \"non soggetta\" (N2.2), tipica del regime forfettario. Con {{value}} verifica se si tratta di inversione contabile o di operazione esente.",
     "regimeCharges": "Con {{value}} di norma non si addebita IVA, ma una riga la contiene.",
-    "unsignedB2B": "Questo file Facturae non è firmato: valido tra imprese, non accettato da FACe."
+    "unsignedB2B": "Questo file Facturae non è firmato: valido tra imprese, non accettato da FACe.",
+    "recipient": "Il destinatario"
   },
   "decisionCatalog": {
     "categories": {

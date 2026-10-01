@@ -7362,7 +7362,8 @@
     "bollo": "Der Betrag außerhalb der MwSt. übersteigt 77,47 €: Eine Stempelsteuer (marca da bollo) von 2,00 € ist fällig.",
     "naturaRegime": "Eine 0-%-Position ist als „nicht steuerbar“ (N2.2) angegeben, was zur Pauschalregelung passt. Prüfen Sie unter {{value}}, ob es sich um Reverse Charge oder eine Steuerbefreiung handelt.",
     "regimeCharges": "Unter {{value}} wird normalerweise keine MwSt. berechnet, aber eine Position enthält MwSt.",
-    "unsignedB2B": "Diese Facturae-Datei ist nicht signiert: gültig zwischen Unternehmen, von FACe nicht akzeptiert."
+    "unsignedB2B": "Diese Facturae-Datei ist nicht signiert: gültig zwischen Unternehmen, von FACe nicht akzeptiert.",
+    "recipient": "Der Empfänger"
   },
   "vatBasis": {
     "section": "Wann die USt entsteht",

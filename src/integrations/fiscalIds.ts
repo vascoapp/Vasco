@@ -92,6 +92,9 @@ export interface SpanishTaxIdCheck {
 export function checkSpanishTaxId(value: string | null | undefined): SpanishTaxIdCheck {
   let v = clean(value);
   if (/^ES[A-Z0-9]{9}$/.test(v)) v = v.slice(2);
+  // A DNI typed without its leading zero ("1234567L" is 01234567L) is still
+  // that DNI — refusing it blocked a valid invoice (review 2026-10-01).
+  if (/^\d{7}[A-Z]$/.test(v)) v = `0${v}`;
   const bare = v;
   if (/^\d{8}[A-Z]$/.test(v)) {
     return { valid: DNI_LETTERS[Number(v.slice(0, 8)) % 23] === v[8], kind: 'DNI', bare };
@@ -114,9 +117,11 @@ export function checkSpanishTaxId(value: string | null | undefined): SpanishTaxI
     const c = (10 - (sum % 10)) % 10;
     const asLetter = 'JABCDEFGHI'[c];
     const ctrl = v[8];
-    // Orden EHA/451/2008: entities whose letter is P, Q, R, S, N or W carry a
-    // letter; A, B, E, H a digit; the rest may use either.
-    const letterOnly = 'PQRSNW'.includes(v[0]);
+    // Established: P, Q, S carry a letter; A, B, E, H a digit. For R, N, W
+    // the letter-only rule is not firmly documented (python-stdnum accepts
+    // either), and a false refusal blocks a valid invoice — so either is
+    // accepted for the rest (review 2026-10-01).
+    const letterOnly = 'PQS'.includes(v[0]);
     const digitOnly = 'ABEH'.includes(v[0]);
     const valid = letterOnly ? ctrl === asLetter : digitOnly ? ctrl === String(c) : ctrl === String(c) || ctrl === asLetter;
     return { valid, kind: 'ENTITY', bare };

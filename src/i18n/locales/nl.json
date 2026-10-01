@@ -7362,7 +7362,8 @@
     "bollo": "Het bedrag buiten de btw is hoger dan € 77,47: er is € 2,00 zegelrecht (marca da bollo) verschuldigd.",
     "naturaRegime": "Een regel van 0 % staat als \"niet belast\" (N2.2), wat bij de forfaitaire regeling hoort. Controleer onder {{value}} of het verlegd of vrijgesteld is.",
     "regimeCharges": "Onder {{value}} wordt normaal geen btw gerekend, maar een regel bevat btw.",
-    "unsignedB2B": "Dit Facturae-bestand is niet ondertekend: geldig tussen bedrijven, niet geaccepteerd door FACe."
+    "unsignedB2B": "Dit Facturae-bestand is niet ondertekend: geldig tussen bedrijven, niet geaccepteerd door FACe.",
+    "recipient": "De ontvanger"
   },
   "vatBasis": {
     "section": "Wanneer de btw verschuldigd is",

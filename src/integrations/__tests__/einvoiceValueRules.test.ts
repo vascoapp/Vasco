@@ -99,6 +99,14 @@ describe('fiscal identifiers (00301/00302/00305/00306, HAP II.5b)', () => {
     expect(checkSpanishTaxId('P2807900B').valid).toBe(true);
     expect(checkSpanishTaxId('P28079002').valid).toBe(false);
     expect(checkSpanishTaxId('B1234567D').valid).toBe(false);
+    // Review 2026-10-01 — never refuse a valid id:
+    // a DNI typed without its leading zero is that DNI, written padded;
+    expect(checkSpanishTaxId('1234567L')).toMatchObject({ valid: true, kind: 'DNI', bare: '01234567L' });
+    // R/N/W may carry a digit OR a letter (only P/Q/S are letter-only).
+    expect(checkSpanishTaxId('R1234567D').valid).toBe(true);
+    expect(checkSpanishTaxId('R12345674').valid).toBe(true);
+    expect(checkSpanishTaxId('N12345674').valid).toBe(true);
+    expect(checkSpanishTaxId('Q12345674').valid).toBe(false);
     expect(spanishPersonType('ES12345678Z')).toBe('F');
     expect(spanishPersonType('X1234567L')).toBe('F');
     expect(spanishPersonType('B12345674')).toBe('J');
@@ -316,6 +324,16 @@ describe('Facturae — each Anexo II rule catches its defect', () => {
   ];
   it.each(cases)('%s', (code, make) => {
     expect(codes(checkFacturae(make(), { today: TODAY }))).toContain(code);
+  });
+});
+
+describe('Facturae — a Q buyer is not assumed to be a FACe administration (review 2026-10-01)', () => {
+  it('Q (public-law body, e.g. a chamber of commerce): warned, not refused; P and S: refused', () => {
+    const q = checkFacturae(esXml({ buyer: { ...esSrc().buyer, name: 'Cámara de Comercio', vatId: undefined, taxId: 'Q2826000H' } }).xml, { today: TODAY });
+    expect(codes(q)).toEqual([]);
+    expect(codes(q, 'warning')).toContain('HAP1650-II.2/II.8');
+    const s = checkFacturae(esXml({ buyer: { ...esSrc().buyer, name: 'Ministerio', vatId: undefined, taxId: 'S2811001C' } }).xml, { today: TODAY });
+    expect(codes(s)).toContain('HAP1650-II.2/II.8');
   });
 });
 

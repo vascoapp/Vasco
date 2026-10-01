@@ -156,8 +156,15 @@ npm run check:einvoice-schemas         # Italy (FatturaPA 1.2.2) + Spain (Factur
                                        # 3.2.2) against their OFFICIAL XSDs (xmllint),
                                        # built through the real mapper path. Both
                                        # failed on first run (IT element order; ES
-                                       # surnames). Schema = gate one; SDI/FACe value
-                                       # rules are not run.
+                                       # surnames). Schema = gate one; then the
+                                       # value rules below.
+npm run check:einvoice-rules           # SDI (Elenco controlli v2.0) + FACe (Orden
+                                       # HAP/1650/2015 Anexo II) VALUE rules, offline
+                                       # — no public validator exists. The same
+                                       # checks gate the app's IT/ES export and the
+                                       # records archive (einvoiceValueRules.ts).
+                                       # Our own output broke 00423/HAP 6a (2-dec
+                                       # quantities) until 2026-10-01.
 npm run check:push-owner               # LIVE: a push token belongs to ONE account
                                        # (the previous contractor's pushes stopped
                                        # reaching a shared phone, 2026-09-30).

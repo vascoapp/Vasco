@@ -21,7 +21,8 @@ import fs from 'fs';
 import path from 'path';
 
 const ROOT = path.resolve(__dirname, '../..');
-const SKIP_DIRS = new Set(['node_modules', '.git', '.expo', 'dist', 'build', 'ios', 'android', 'coverage']);
+// .claude: agent worktrees are whole copies of the repo, not our tests.
+const SKIP_DIRS = new Set(['node_modules', '.git', '.claude', '.expo', 'dist', 'build', 'ios', 'android', 'coverage']);
 
 function testFiles(dir: string, out: string[] = []): string[] {
   let entries: fs.Dirent[];

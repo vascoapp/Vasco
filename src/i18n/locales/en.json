@@ -7362,7 +7362,8 @@
     "bollo": "The amount outside VAT exceeds € 77.47: a € 2.00 stamp duty (marca da bollo) is due.",
     "naturaRegime": "A 0 % line is declared as \"not subject\" (N2.2), which fits the flat-rate regime. Under {{value}} check whether it is reverse charge or exempt instead.",
     "regimeCharges": "Under {{value}} no VAT is normally charged, but a line carries VAT.",
-    "unsignedB2B": "This Facturae file is not signed: valid between businesses, not accepted by FACe."
+    "unsignedB2B": "This Facturae file is not signed: valid between businesses, not accepted by FACe.",
+    "recipient": "The recipient"
   },
   "vatBasis": {
     "section": "When VAT is due",
