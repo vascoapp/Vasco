@@ -7329,7 +7329,9 @@
     "filedTitle": "Haben Sie sie eingereicht?",
     "filedBody": "Vasco erstellt die Datei — sie wird nicht an die Behörde übermittelt. Bestätigen Sie erst, wenn Sie {{format}} tatsächlich eingereicht haben.",
     "filedYes": "Ja, eingereicht",
-    "filedNotYet": "Noch nicht"
+    "filedNotYet": "Noch nicht",
+    "buyerAddressMissingTitle": "E-Mail-Adresse des Kunden fehlt",
+    "buyerAddressMissingBody": "Eine XRechnung muss die elektronische Adresse des Kunden enthalten. Ergänzen Sie beim Kunden eine E-Mail-Adresse und exportieren Sie erneut."
   },
   "vatBasis": {
     "section": "Wann die USt entsteht",
@@ -7409,7 +7411,8 @@
     "xmlMissingFields": "fehlende Angaben: {{fields}}",
     "xmlNoFormat": "kein E-Rechnungsformat für dieses Land",
     "buyerAddress": "Ort und Postleitzahl des Kunden",
-    "noProfile": "Ihre Unternehmensangaben"
+    "noProfile": "Ihre Unternehmensangaben",
+    "buyerEmail": "E-Mail-Adresse des Kunden"
   },
   "billingProblem": {
     "term": {

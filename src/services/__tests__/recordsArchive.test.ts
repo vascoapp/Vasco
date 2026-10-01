@@ -64,7 +64,9 @@ const unzipList = (zip: Uint8Array) => {
 
 // Complete for a German invoice (checkInvoiceReadiness): HRB included.
 const bpDE = { businessName: 'Sanitär Becker GmbH', registrationNumber: 'HRB 12345', vatNumber: 'DE123456789', country: 'DE', city: 'Köln', postcode: '50667', address: 'Ring 1', email: 'a@b.de', phone: '0221', iban: 'DE89370400440532013000' } as any;
-const customers = [{ id: 'c1', name: 'Familie Müller', city: 'Köln', postcode: '50667', country: 'DE' }] as any;
+// With an email: XRechnung 3.0 is rejected without the buyer's electronic
+// address (BT-49) — the official KoSIT validator, 2026-10-01.
+const customers = [{ id: 'c1', name: 'Familie Müller', city: 'Köln', postcode: '50667', country: 'DE', email: 'familie.mueller@example.de' }] as any;
 const inv = (id: string, status: string, extra: any = {}) => ({ id, customer: 'Familie Müller', customerId: 'c1', job: 'Bad', amount: 119, status, dueInDays: 14, createdAt: '2026-09-01T10:00:00Z', ...extra });
 
 beforeEach(() => { mockZip = null; mockPrintFails = new Set(); mockPrinted = []; });
@@ -125,10 +127,21 @@ it('UK has no e-invoice format — said, not silently skipped', async () => {
 (hasUnzip ? it : it.skip)('XRechnung only with the BR-DE details: a customer without city/post code gets the PDF and a README line', async () => {
   const r = await exportRecordsArchive({
     invoices: [inv('RE-2026-0001', 'sent')] as any, lineItems: {},
-    customers: [{ id: 'c1', name: 'Familie Müller' }] as any, jobs: [],
+    customers: [{ id: 'c1', name: 'Familie Müller', email: 'familie.mueller@example.de' }] as any, jobs: [],
     businessProfile: bpDE, country: 'DE', t,
   });
   expect(r.xmlMissing).toEqual([{ number: 'RE-2026-0001', kind: 'fields', reason: 'missing details: customer city and post code' }]);
+  const { names } = unzipList(mockZip!);
+  expect(names).toEqual(['README.txt', 'invoices/RE-2026-0001.pdf']);
+});
+
+(hasUnzip ? it : it.skip)('no customer email: the PDF, and the XRechnung withheld and named (BT-49)', async () => {
+  const r = await exportRecordsArchive({
+    invoices: [inv('RE-2026-0001', 'sent')] as any, lineItems: {},
+    customers: [{ id: 'c1', name: 'Familie Müller', city: 'Köln', postcode: '50667', country: 'DE' }] as any, jobs: [],
+    businessProfile: bpDE, country: 'DE', t,
+  });
+  expect(r.xmlMissing).toEqual([{ number: 'RE-2026-0001', kind: 'fields', reason: 'missing details: customer email address' }]);
   const { names } = unzipList(mockZip!);
   expect(names).toEqual(['README.txt', 'invoices/RE-2026-0001.pdf']);
 });

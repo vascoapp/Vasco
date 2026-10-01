@@ -823,6 +823,17 @@ export default function InvoiceDetailScreen() {
     // One builder for every path (src/domain/invoiceDocuments.ts): per-line
     // rates, the resolved buyer name, BR-DE contact + address fields.
     const data = buildEInvoiceData(invoiceDocInputs());
+    // XRechnung 3.0 rejects an invoice without the buyer's electronic address
+    // (BT-49, PEPPOL-EN16931-R010): the Leitweg-ID for a public buyer, else an
+    // email. Refuse with the fix rather than hand over a file the buyer's
+    // gateway bounces days later (official KoSIT validator, 2026-10-01).
+    if (format === 'XRechnung' && !data.leitwegId && !data.buyerEmail) {
+      Alert.alert(
+        t('einvoice.buyerAddressMissingTitle', 'Customer email needed'),
+        t('einvoice.buyerAddressMissingBody', 'An XRechnung must carry the customer\'s electronic address. Add an email address to this customer, then export again.'),
+      );
+      return;
+    }
     // The gate above already resolves FR to `facturx`, but the generator did
     // not: a French contractor got `generateZUGFeRDXML`, whose guideline URN is
     // the bare `urn:cen.eu:en16931:2017`. A Factur-X validator reads exactly

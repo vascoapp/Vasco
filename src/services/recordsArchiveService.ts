@@ -96,6 +96,9 @@ function eInvoiceFor(inp: InvoiceDocInputs, sellerMissing: string[], t: Translat
     const buyer = findDocumentCustomer(inp.customers, inp.invoice);
     // BR-DE-8/9: the buyer's city and post code.
     if (!buyer?.city || !buyer?.postcode) gaps.push(t('recordsArchive.buyerAddress', 'customer city and post code'));
+    // BT-49 (PEPPOL-EN16931-R010): XRechnung 3.0 is rejected without the
+    // buyer's electronic address — the official validator, 2026-10-01.
+    if (!buyer?.email && !(inp.invoice as any).customerEmail) gaps.push(t('recordsArchive.buyerEmail', 'customer email address'));
   }
   if (gaps.length) return missing(gaps);
   const data = buildEInvoiceData(inp);

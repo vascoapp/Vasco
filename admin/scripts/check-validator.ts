@@ -15,7 +15,12 @@ import { validateEInvoice, validateXmlString } from "../src/lib/einvoice-validat
 const parse = (xml: string) =>
   new DOMParser().parseFromString(xml, "application/xml") as unknown as Document;
 
-/** A structurally correct XRechnung whose arithmetic is consistent. */
+/**
+ * A structurally correct XRechnung 3.0 whose arithmetic is consistent. This
+ * fixture went stale when the validator learned BR-06/07/45 and BR-DE-5/6/7
+ * (2026-08-19) — the script was not in CI and `tsx` is not installed here, so
+ * nobody saw its "correct" invoice fail. Run: `npx --yes tsx scripts/check-validator.ts`.
+ */
 function invoice(opts: { lineNet?: number; stated?: number; vat?: number; gross?: number; payable?: number } = {}) {
   const lineNet = opts.lineNet ?? 100;
   const stated = opts.stated ?? lineNet;
@@ -26,7 +31,7 @@ function invoice(opts: { lineNet?: number; stated?: number; vat?: number; gross?
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
   xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
   xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
-  <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:xoev-de:kosit:standard:xrechnung_3.0</cbc:CustomizationID>
+  <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</cbc:CustomizationID>
   <cbc:ID>INV-1</cbc:ID>
   <cbc:IssueDate>2026-08-05</cbc:IssueDate>
   <cbc:DueDate>2026-08-19</cbc:DueDate>
@@ -35,13 +40,19 @@ function invoice(opts: { lineNet?: number; stated?: number; vat?: number; gross?
   <cbc:BuyerReference>04011000-12345-67</cbc:BuyerReference>
   <cac:AccountingSupplierParty><cac:Party>
     <cac:PartyName><cbc:Name>Klempner Meier</cbc:Name></cac:PartyName>
-    <cac:PostalAddress><cbc:StreetName>Hauptstr 1</cbc:StreetName><cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
+    <cac:PostalAddress><cbc:StreetName>Hauptstr 1</cbc:StreetName><cbc:CityName>Köln</cbc:CityName><cbc:PostalZone>50667</cbc:PostalZone><cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
+    <cac:PartyLegalEntity><cbc:RegistrationName>Klempner Meier</cbc:RegistrationName></cac:PartyLegalEntity>
+    <cac:Contact><cbc:Name>Max Meier</cbc:Name><cbc:Telephone>+49 221 123</cbc:Telephone><cbc:ElectronicMail>meier@example.de</cbc:ElectronicMail></cac:Contact>
   </cac:Party></cac:AccountingSupplierParty>
   <cac:AccountingCustomerParty><cac:Party>
     <cac:PartyName><cbc:Name>Kunde GmbH</cbc:Name></cac:PartyName>
-    <cac:PostalAddress><cbc:StreetName>Nebenstr 2</cbc:StreetName><cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
+    <cac:PostalAddress><cbc:StreetName>Nebenstr 2</cbc:StreetName><cbc:CityName>Köln</cbc:CityName><cbc:PostalZone>50676</cbc:PostalZone><cac:Country><cbc:IdentificationCode>DE</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
+    <cac:PartyLegalEntity><cbc:RegistrationName>Kunde GmbH</cbc:RegistrationName></cac:PartyLegalEntity>
   </cac:Party></cac:AccountingCustomerParty>
-  <cac:TaxTotal><cbc:TaxAmount currencyID="EUR">${vat.toFixed(2)}</cbc:TaxAmount></cac:TaxTotal>
+  <cac:TaxTotal><cbc:TaxAmount currencyID="EUR">${vat.toFixed(2)}</cbc:TaxAmount>
+    <cac:TaxSubtotal><cbc:TaxableAmount currencyID="EUR">${stated.toFixed(2)}</cbc:TaxableAmount><cbc:TaxAmount currencyID="EUR">${vat.toFixed(2)}</cbc:TaxAmount>
+      <cac:TaxCategory><cbc:ID>S</cbc:ID><cbc:Percent>21</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory></cac:TaxSubtotal>
+  </cac:TaxTotal>
   <cac:LegalMonetaryTotal>
     <cbc:LineExtensionAmount currencyID="EUR">${stated.toFixed(2)}</cbc:LineExtensionAmount>
     <cbc:TaxExclusiveAmount currencyID="EUR">${stated.toFixed(2)}</cbc:TaxExclusiveAmount>

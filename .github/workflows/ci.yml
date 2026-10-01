@@ -60,6 +60,15 @@ jobs:
       - name: Admin sign-in tests
         run: npm run test:auth
 
+      # The public e-invoice validator's own self-check, and the legal pages per
+      # language. The validator check went stale for six weeks because nothing
+      # ran it: its "correct" invoice failed BR-06/07/45 + BR-DE (2026-10-01).
+      - name: E-invoice validator self-check
+        run: npm run check:validator
+
+      - name: Legal pages per language
+        run: npm run test:legal
+
       - name: Build admin
         run: npm run build
         env:

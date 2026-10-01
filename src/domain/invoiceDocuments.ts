@@ -112,6 +112,9 @@ export function buildEInvoiceData(inp: InvoiceDocInputs): EInvoiceData {
     buyerPostalCode: customer?.postcode,
     buyerCountry: customer?.country ?? inp.country,
     buyerVatId: customer?.vatId ?? (inp.invoice as any).customerVatId,
+    // BT-49 (XRechnung 3.0 rejects without it) and BT-72 (never invented).
+    buyerEmail: customer?.email ?? (inp.invoice as any).customerEmail ?? undefined,
+    deliveryDate: inp.invoice.deliveryDate ?? undefined,
     invoiceNumber: invoiceNumberOf(inp.invoice),
     invoiceDate: issueDateOf(inp.invoice),
     dueDate: dueDateOf(inp.invoice),

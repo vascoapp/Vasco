@@ -225,6 +225,16 @@ export function validateEInvoice(doc: Document): ValidationResult {
   // Only applied when the document declares XRechnung. A plain EN 16931 or
   // Peppol invoice is not wrong for lacking these, and flagging it would be
   // the validator inventing a rule — the mirror of inventing compliance.
+  // The XRechnung 2.x-era namespace with a 3.0 suffix: KoSIT matches no
+  // scenario for it and rejects the invoice outright. Our own generator
+  // emitted exactly this until 2026-10-01, and this check passed it.
+  if ((customization ?? "").includes("urn:xoev-de:kosit:standard:xrechnung")) {
+    findings.push({
+      severity: "error", rule: "BT-24",
+      message: "Outdated XRechnung identifier (BT-24)",
+      hint: "XRechnung 3.0 is declared as urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0. The urn:xoev-de:kosit:standard:… form is from XRechnung 2.x; the official KoSIT validator and the federal portals reject it before checking anything else.",
+    });
+  }
   if ((customization ?? "").includes("xrechnung")) {
     req("BR-DE-15", "Buyer reference (BT-10)", childText(root, UBL_CBC, "BuyerReference"),
       "XRechnung makes BT-10 mandatory on EVERY invoice, not only B2G. For a public buyer it is the Leitweg-ID; for B2B it is any reference the buyer can match. Missing BT-10 is the single most common XRechnung rejection.");

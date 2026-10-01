@@ -6387,7 +6387,9 @@
     "filedTitle": "L'hai trasmessa?",
     "filedBody": "Vasco crea il file — non lo invia all'ente. Conferma solo dopo aver realmente trasmesso {{format}}.",
     "filedYes": "Sì, trasmessa",
-    "filedNotYet": "Non ancora"
+    "filedNotYet": "Non ancora",
+    "buyerAddressMissingTitle": "Serve l'email del cliente",
+    "buyerAddressMissingBody": "Una XRechnung deve contenere l'indirizzo elettronico del cliente. Aggiungi un indirizzo email a questo cliente ed esporta di nuovo."
   },
   "decisionCatalog": {
     "categories": {
@@ -7409,7 +7411,8 @@
     "xmlMissingFields": "dati mancanti: {{fields}}",
     "xmlNoFormat": "nessun formato di fattura elettronica per questo paese",
     "buyerAddress": "città e CAP del cliente",
-    "noProfile": "i dati della tua azienda"
+    "noProfile": "i dati della tua azienda",
+    "buyerEmail": "indirizzo email del cliente"
   },
   "billingProblem": {
     "term": {

@@ -32,6 +32,15 @@ export interface EInvoiceData {
   buyerName: string;
   buyerAddress: string;
   buyerVatId?: string;
+  /**
+   * BT-49, the buyer's ELECTRONIC ADDRESS — mandatory in XRechnung 3.0
+   * (PEPPOL-EN16931-R010). A public buyer's is its Leitweg-ID (scheme 0204);
+   * a business's is its email (scheme EM). Missing on every invoice until
+   * KoSIT said so (2026-10-01).
+   */
+  buyerEmail?: string;
+  /** BT-72, when the work was done. BR-DE-TMP-32 asks for it; never invented. */
+  deliveryDate?: string;
   buyerCity?: string;
   buyerPostalCode?: string;
   buyerCountry?: string;
@@ -179,6 +188,18 @@ export function exemptionReasonFor(country?: string): string {
   return EXEMPTION_REASON_BY_COUNTRY[country ?? 'DE'] ?? EXEMPTION_REASON_BY_COUNTRY.DE;
 }
 
+/**
+ * BT-24 for XRechnung 3.0. The `urn:xoev-de:kosit:standard:xrechnung_3.0`
+ * spelling this file emitted is the XRechnung 2.x-era namespace: KoSIT's own
+ * validator matched NO scenario for it and rejected every invoice before a
+ * single rule ran (official validator, 2026-10-01). Receivers that route on
+ * BT-24 — the federal ZRE/OZG-RE portals among them — do the same.
+ */
+export const XRECHNUNG_3_CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0';
+
+/** BT-23, the business process — mandatory in XRechnung 3.0 (PEPPOL-EN16931-R001). */
+export const XRECHNUNG_PROFILE_ID = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0';
+
 export function generateXRechnungXML(data: EInvoiceData): string {
   const cur = data.currency;
   const sellerCountry = data.sellerCountry ?? 'DE';
@@ -265,11 +286,20 @@ export function generateXRechnungXML(data: EInvoiceData): string {
           <cac:Country><cbc:IdentificationCode>${escapeXml(country)}</cbc:IdentificationCode></cac:Country>
         </cac:PostalAddress>`;
 
+  // BT-49: a public buyer is addressed by its Leitweg-ID (0204), anyone else
+  // by email (EM). XRechnung 3.0 rejects an invoice without it (R010).
+  const buyerEndpoint = data.leitwegId
+    ? `\n      <cbc:EndpointID schemeID="0204">${escapeXml(data.leitwegId)}</cbc:EndpointID>`
+    : data.buyerEmail
+      ? `\n      <cbc:EndpointID schemeID="EM">${escapeXml(data.buyerEmail)}</cbc:EndpointID>`
+      : '';
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
   xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
   xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
-  <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:xoev-de:kosit:standard:xrechnung_3.0</cbc:CustomizationID>
+  <cbc:CustomizationID>${XRECHNUNG_3_CUSTOMIZATION_ID}</cbc:CustomizationID>
+  <cbc:ProfileID>${XRECHNUNG_PROFILE_ID}</cbc:ProfileID>
   <cbc:ID>${escapeXml(data.invoiceNumber)}</cbc:ID>
   <cbc:IssueDate>${data.invoiceDate}</cbc:IssueDate>
   <cbc:DueDate>${data.dueDate}</cbc:DueDate>
@@ -277,7 +307,8 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   <cbc:DocumentCurrencyCode>${cur}</cbc:DocumentCurrencyCode>
   <cbc:BuyerReference>${escapeXml(buyerRef)}</cbc:BuyerReference>
   <cac:AccountingSupplierParty>
-    <cac:Party>
+    <cac:Party>${data.sellerEmail ? `
+      <cbc:EndpointID schemeID="EM">${escapeXml(data.sellerEmail)}</cbc:EndpointID>` : ''}
       <cac:PartyName><cbc:Name>${escapeXml(data.sellerName)}</cbc:Name></cac:PartyName>${addr(data.sellerAddress, data.sellerCity, data.sellerPostalCode, sellerCountry)}
       <cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(data.sellerVatId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>
       <cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(data.sellerName)}</cbc:RegistrationName></cac:PartyLegalEntity>
@@ -289,12 +320,13 @@ export function generateXRechnungXML(data: EInvoiceData): string {
     </cac:Party>
   </cac:AccountingSupplierParty>
   <cac:AccountingCustomerParty>
-    <cac:Party>
+    <cac:Party>${buyerEndpoint}
       <cac:PartyName><cbc:Name>${escapeXml(data.buyerName)}</cbc:Name></cac:PartyName>${addr(data.buyerAddress, data.buyerCity, data.buyerPostalCode, buyerCountry)}${data.buyerVatId ? `
       <cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(data.buyerVatId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>` : ''}
       <cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(data.buyerName)}</cbc:RegistrationName></cac:PartyLegalEntity>
     </cac:Party>
-  </cac:AccountingCustomerParty>
+  </cac:AccountingCustomerParty>${data.deliveryDate ? `
+  <cac:Delivery><cbc:ActualDeliveryDate>${escapeXml(data.deliveryDate.slice(0, 10))}</cbc:ActualDeliveryDate></cac:Delivery>` : ''}
   ${data.iban ? `<cac:PaymentMeans><cbc:PaymentMeansCode>58</cbc:PaymentMeansCode><cac:PayeeFinancialAccount><cbc:ID>${escapeXml(data.iban)}</cbc:ID></cac:PayeeFinancialAccount></cac:PaymentMeans>` : ''}
   <cac:TaxTotal>
     <cbc:TaxAmount currencyID="${cur}">${totalVat.toFixed(2)}</cbc:TaxAmount>${subtotals}

@@ -54,7 +54,8 @@
     "audit:reach": "node scripts/reachability.mjs",
     "check:send-invoice": "node scripts/check-send-invoice.mjs",
     "check:portal-totals": "node scripts/check-portal-totals.mjs",
-    "check:push-owner": "node scripts/check-push-owner.mjs"
+    "check:push-owner": "node scripts/check-push-owner.mjs",
+    "check:kosit": "node scripts/check-kosit.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",

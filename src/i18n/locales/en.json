@@ -7329,7 +7329,9 @@
     "filedTitle": "Did you file it?",
     "filedBody": "Vasco creates the file — it does not send it to the authority. Confirm only once you have actually filed {{format}}.",
     "filedYes": "Yes, filed",
-    "filedNotYet": "Not yet"
+    "filedNotYet": "Not yet",
+    "buyerAddressMissingTitle": "Customer email needed",
+    "buyerAddressMissingBody": "An XRechnung must carry the customer's electronic address. Add an email address to this customer, then export again."
   },
   "vatBasis": {
     "section": "When VAT is due",
@@ -7409,7 +7411,8 @@
     "xmlMissingFields": "missing details: {{fields}}",
     "xmlNoFormat": "no e-invoice format for this country",
     "buyerAddress": "customer city and post code",
-    "noProfile": "your business details"
+    "noProfile": "your business details",
+    "buyerEmail": "customer email address"
   },
   "billingProblem": {
     "term": {

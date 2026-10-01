@@ -7329,7 +7329,9 @@
     "filedTitle": "Heb je hem ingediend?",
     "filedBody": "Vasco maakt het bestand — het verstuurt niets naar de instantie. Bevestig pas als je {{format}} echt hebt ingediend.",
     "filedYes": "Ja, ingediend",
-    "filedNotYet": "Nog niet"
+    "filedNotYet": "Nog niet",
+    "buyerAddressMissingTitle": "E-mailadres van de klant nodig",
+    "buyerAddressMissingBody": "Een XRechnung moet het elektronische adres van de klant bevatten. Voeg een e-mailadres toe aan deze klant en exporteer opnieuw."
   },
   "vatBasis": {
     "section": "Wanneer de btw verschuldigd is",
@@ -7409,7 +7411,8 @@
     "xmlMissingFields": "ontbrekende gegevens: {{fields}}",
     "xmlNoFormat": "geen e-factuurformaat voor dit land",
     "buyerAddress": "plaats en postcode van de klant",
-    "noProfile": "je bedrijfsgegevens"
+    "noProfile": "je bedrijfsgegevens",
+    "buyerEmail": "e-mailadres van de klant"
   },
   "billingProblem": {
     "term": {
