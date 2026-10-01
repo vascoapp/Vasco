@@ -18,6 +18,12 @@ export interface EInvoiceData {
   sellerAddress: string;
   sellerVatId: string; // DE123456789
   sellerTaxNumber?: string;
+  /**
+   * BT-30, the seller's legal registration id, with its ISO 6523 scheme
+   * (`0002` = French SIREN). Only set where a market requires it (FR, BR-FR-10).
+   */
+  sellerLegalRegistrationId?: string;
+  sellerLegalRegistrationScheme?: string;
   /** BT-37/BT-38. XRechnung BR-DE rules make city and post code mandatory. */
   sellerCity?: string;
   sellerPostalCode?: string;
@@ -367,18 +373,54 @@ export function generateXRechnungXML(data: EInvoiceData): string {
  * rejects a correct document in the wrong order.
  */
 /**
- * Factur-X (FR) and ZUGFeRD (DE) are the same CII syntax, but they are NOT the
- * same document: a validator reads
- * `GuidelineSpecifiedDocumentContextParameter/ID` to decide which standard the
- * file claims to be. The bare `urn:cen.eu:en16931:2017` is neither profile, so
- * a French invoice carrying it fails Factur-X validation outright.
+ * BT-24 of a CII invoice (`GuidelineSpecifiedDocumentContextParameter/ID`).
+ *
+ * 🔴 Corrected 2026-10-01 by the official validator. Learnings #277 (2026-08-30)
+ * decided France needed `urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:en16931`
+ * and that the bare EN 16931 URN was "neither profile". Mustang 2.26.0 (the
+ * Factur-X/ZUGFeRD reference validator) rejected every French invoice carrying
+ * it: FX-SCH-A-000556 "Value of 'ram:ID' is not allowed". The Factur-X 1.0 /
+ * ZUGFeRD 2.x profile identifiers are:
+ *   MINIMUM   urn:factur-x.eu:1p0:minimum
+ *   BASIC WL  urn:factur-x.eu:1p0:basicwl
+ *   BASIC     urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:basic
+ *   EN 16931  urn:cen.eu:en16931:2017            <- ours, BOTH countries
+ *   EXTENDED  urn:cen.eu:en16931:2017#conformant#urn:factur-x.eu:1p0:extended
+ * Factur-X 1.0 and ZUGFeRD 2.x are the same standard at the EN 16931 profile;
+ * what makes the file Factur-X is the PDF/A-3 container and its XMP
+ * (src/integrations/pdfA3Invoice.ts), not a URN. #277's "same syntax is not
+ * same standard" was right as a shape and wrong on this fact — an identifier
+ * nobody had checked against the authority's tool, again (#383).
  */
 export const GUIDELINE_URNS = {
-  /** ZUGFeRD 2.x / EN 16931 comfort — the German default. */
+  /** ZUGFeRD 2.x / Factur-X 1.0, EN 16931 profile. */
   en16931: 'urn:cen.eu:en16931:2017',
-  /** Factur-X 1.0 EN 16931 profile — REQUIRED for the French mandate. */
-  facturx: 'urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:en16931',
+  /** Factur-X 1.0 EN 16931 — the SAME identifier (see above). */
+  facturx: 'urn:cen.eu:en16931:2017',
 } as const;
+
+/**
+ * The three payment mentions French law requires on every B2B invoice
+ * (Code de commerce L441-10 / D441-5), with the UNTDID 4451 subject codes the
+ * French 2026 reform schematron (BR-FR-05) looks for in BG-1 notes: PMD late-
+ * payment penalties, PMT recovery indemnity, AAB early-payment discount.
+ * ONE source for the printed PDF (invoicePdfService.legalMentions) and the XML.
+ */
+export const FR_STATUTORY_NOTES: ReadonlyArray<{ code: 'PMD' | 'PMT' | 'AAB'; text: string }> = [
+  { code: 'PMD', text: 'Pénalités de retard : taux directeur de la BCE majoré de 10 points, exigibles le jour suivant la date de règlement (art. L441-10 du Code de commerce).' },
+  { code: 'PMT', text: 'Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 € (art. D441-5 du Code de commerce).' },
+  { code: 'AAB', text: 'Escompte pour paiement anticipé : néant.' },
+];
+
+/**
+ * The 9-digit SIREN of a French business, from its SIRET (14 digits, SIREN
+ * first) or a bare SIREN. BT-30 on a French e-invoice (BR-FR-10). null for
+ * anything else — a partial legal identifier is worse than none.
+ */
+export function sirenFromSiret(registration?: string | null): string | null {
+  const digits = String(registration ?? '').replace(/\s/g, '');
+  return /^\d{14}$/.test(digits) || /^\d{9}$/.test(digits) ? digits.slice(0, 9) : null;
+}
 
 export function guidelineUrnForCountry(country?: string): string {
   return country === 'FR' ? GUIDELINE_URNS.facturx : GUIDELINE_URNS.en16931;
@@ -453,12 +495,21 @@ export function generateCIIXML(data: EInvoiceData): string {
       </ram:ApplicableTradeTax>`;
   }).join('');
 
+  // BG-1 notes. France: the statutory payment mentions, coded (BR-FR-05).
+  const notes = (sellerCountry === 'FR' ? FR_STATUTORY_NOTES : []).map((n) => `
+    <ram:IncludedNote>
+      <ram:Content>${escapeXml(n.text)}</ram:Content>
+      <ram:SubjectCode>${n.code}</ram:SubjectCode>
+    </ram:IncludedNote>`).join('');
+
   const party = (
     name: string, street: string, city: string | undefined, zip: string | undefined,
     country: string, vatId?: string, contactName?: string, phone?: string, email?: string,
+    electronicAddress?: string, legalId?: { id: string; scheme?: string },
   ) => `
         <ram:Name>${escapeXml(name)}</ram:Name>
-        <ram:SpecifiedLegalOrganization>
+        <ram:SpecifiedLegalOrganization>${legalId ? `
+          <ram:ID${legalId.scheme ? ` schemeID="${escapeXml(legalId.scheme)}"` : ''}>${escapeXml(legalId.id)}</ram:ID>` : ''}
           <ram:TradingBusinessName>${escapeXml(name)}</ram:TradingBusinessName>
         </ram:SpecifiedLegalOrganization>${contactName || phone || email ? `
         <ram:DefinedTradeContact>${contactName ? `
@@ -471,7 +522,10 @@ export function generateCIIXML(data: EInvoiceData): string {
           <ram:LineOne>${escapeXml(street)}</ram:LineOne>${city ? `
           <ram:CityName>${escapeXml(city)}</ram:CityName>` : ''}
           <ram:CountryID>${escapeXml(country)}</ram:CountryID>
-        </ram:PostalTradeAddress>${vatId ? `
+        </ram:PostalTradeAddress>${electronicAddress ? `
+        <ram:URIUniversalCommunication>
+          <ram:URIID schemeID="EM">${escapeXml(electronicAddress)}</ram:URIID>
+        </ram:URIUniversalCommunication>` : ''}${vatId ? `
         <ram:SpecifiedTaxRegistration>
           <ram:ID schemeID="VA">${escapeXml(vatId)}</ram:ID>
         </ram:SpecifiedTaxRegistration>` : ''}`;
@@ -490,7 +544,7 @@ export function generateCIIXML(data: EInvoiceData): string {
   <rsm:ExchangedDocument>
     <ram:ID>${escapeXml(data.invoiceNumber)}</ram:ID>
     <ram:TypeCode>380</ram:TypeCode>
-    <ram:IssueDateTime><udt:DateTimeString format="102">${d(data.invoiceDate)}</udt:DateTimeString></ram:IssueDateTime>
+    <ram:IssueDateTime><udt:DateTimeString format="102">${d(data.invoiceDate)}</udt:DateTimeString></ram:IssueDateTime>${notes}
   </rsm:ExchangedDocument>
   <rsm:SupplyChainTradeTransaction>${lines}
     <ram:ApplicableHeaderTradeAgreement>
@@ -498,14 +552,25 @@ export function generateCIIXML(data: EInvoiceData): string {
       <ram:SellerTradeParty>${party(
         data.sellerName, data.sellerAddress, data.sellerCity, data.sellerPostalCode,
         sellerCountry, data.sellerVatId, data.sellerContactName ?? data.sellerName,
-        data.sellerPhone, data.sellerEmail)}
+        data.sellerPhone, data.sellerEmail,
+        // BT-34 / BT-49, the parties' electronic addresses (EM = email). The
+        // French 2026 schematron requires both (BR-FR-13 / BR-FR-12); XRechnung
+        // 3.0 required the same in UBL (KoSIT, 2026-10-01).
+        data.sellerEmail,
+        data.sellerLegalRegistrationId
+          ? { id: data.sellerLegalRegistrationId, scheme: data.sellerLegalRegistrationScheme }
+          : undefined)}
       </ram:SellerTradeParty>
       <ram:BuyerTradeParty>${party(
         data.buyerName, data.buyerAddress, data.buyerCity, data.buyerPostalCode,
-        buyerCountry, data.buyerVatId)}
+        buyerCountry, data.buyerVatId, undefined, undefined, undefined, data.buyerEmail)}
       </ram:BuyerTradeParty>
     </ram:ApplicableHeaderTradeAgreement>
-    <ram:ApplicableHeaderTradeDelivery/>
+    <ram:ApplicableHeaderTradeDelivery>${data.deliveryDate ? `
+      <ram:ActualDeliverySupplyChainEvent>
+        <ram:OccurrenceDateTime><udt:DateTimeString format="102">${d(data.deliveryDate)}</udt:DateTimeString></ram:OccurrenceDateTime>
+      </ram:ActualDeliverySupplyChainEvent>` : ''}
+    </ram:ApplicableHeaderTradeDelivery>
     <ram:ApplicableHeaderTradeSettlement>
       <ram:InvoiceCurrencyCode>${cur}</ram:InvoiceCurrencyCode>${data.iban ? `
       <ram:SpecifiedTradeSettlementPaymentMeans>
@@ -540,9 +605,8 @@ export function generateZUGFeRDXML(data: EInvoiceData): string {
 /**
  * Factur-X — the SAME CII payload, carrying the French profile URN.
  *
- * ⚠️ This is the XML half only. A complete Factur-X invoice is a PDF/A-3 with
- * this file embedded as `factur-x.xml` (AFRelationship /Alternative). We do
- * not produce that container yet — see the note in einvoice-fr.ts.
+ * The XML half. The Factur-X document is the PDF/A-3 that embeds it as
+ * `factur-x.xml` — `buildPdfA3Invoice` in ./pdfA3Invoice.ts.
  */
 export function generateFacturXXML(data: EInvoiceData): string {
   return generateCIIXML({ ...data, sellerCountry: 'FR' });

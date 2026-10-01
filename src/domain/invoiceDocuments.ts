@@ -10,7 +10,7 @@
 //     delivery date that the VIEWED PDF carried.
 // The screen, the email path and the records archive all build from here.
 // =============================================================================
-import type { EInvoiceData } from '../integrations/einvoice';
+import { sirenFromSiret, type EInvoiceData } from '../integrations/einvoice';
 import type { EInvoiceSource } from '../integrations/einvoiceMapping';
 import type { BusinessProfile } from './business';
 import { isSmallBusinessExempt, documentVatBreakdown } from './business';
@@ -98,6 +98,11 @@ export function buildEInvoiceData(inp: InvoiceDocInputs): EInvoiceData {
     sellerName: bp.businessName ?? 'Vasco',
     sellerAddress: bp.address ?? '',
     sellerVatId: bp.vatNumber ?? '',
+    // BT-30. France requires the seller's SIREN (BR-FR-10) — the first nine
+    // digits of the SIRET the profile gate already demands.
+    ...(inp.country === 'FR' && sirenFromSiret(bp.registrationNumber ?? bp.kvkNumber)
+      ? { sellerLegalRegistrationId: sirenFromSiret(bp.registrationNumber ?? bp.kvkNumber)!, sellerLegalRegistrationScheme: '0002' }
+      : {}),
     // BR-DE-5/6/7 (contact) and BR-DE-8/9 (address detail) are rejections at
     // the buyer's gateway — see src/integrations/einvoice.ts.
     sellerCity: bp.city,

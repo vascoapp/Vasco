@@ -17,6 +17,7 @@ import { vatRateGroups, documentFallbackRate } from '../domain/business';
 import type { Country } from '../context/AuthContext';
 import { logWarn } from '../utils/errorHandler';
 import { nameThePdf } from '../utils/namedPdf';
+import { FR_STATUTORY_NOTES } from '../integrations/einvoice';
 import { signatureHtmlBlock, getLegalText } from './signatureService';
 
 // ── Number formatting ────────────────────────────────────
@@ -263,11 +264,9 @@ export function frenchInvoiceMentions2026(input: {
 export function legalMentions(country?: Country): string[] {
   switch (country) {
     case 'FR':
-      return [
-        'Pénalités de retard : taux directeur de la BCE majoré de 10 points, exigibles le jour suivant la date de règlement (art. L441-10 du Code de commerce).',
-        'Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 € (art. D441-5 du Code de commerce).',
-        'Escompte pour paiement anticipé : néant.',
-      ];
+      // The same three texts the Factur-X XML carries as coded BG-1 notes
+      // (PMD / PMT / AAB) — one source, so paper and XML cannot drift.
+      return FR_STATUTORY_NOTES.map((n) => n.text);
     case 'DE':
       return [
         'Als Privatperson sind Sie verpflichtet, diese Rechnung zwei Jahre aufzubewahren (§ 14b Abs. 1 Satz 5 UStG).',
