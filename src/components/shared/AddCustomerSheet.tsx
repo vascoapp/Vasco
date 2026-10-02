@@ -179,7 +179,13 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
         einvoiceRouting: sanitizeInput(sdiCode).toUpperCase(),
         einvoiceEmail: sanitizeInput(pec),
       } : {}),
-      ...(showDir3 ? dir3 : {}),
+      // Hidden (no longer a Spanish customer) but codes on file: CLEARED, so a
+      // stale DIR3 cannot ride along if the customer ever matches again
+      // (review 2026-10-02). '' is what the DB constraint and form accept.
+      ...(showDir3 ? dir3
+        : (customer?.dir3OficinaContable || customer?.dir3OrganoGestor || customer?.dir3UnidadTramitadora)
+          ? { dir3OficinaContable: '', dir3OrganoGestor: '', dir3UnidadTramitadora: '' }
+          : {}),
     };
     const cleanAddress = sanitizeInput(address);
 

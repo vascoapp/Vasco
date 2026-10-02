@@ -7497,7 +7497,8 @@
     "certNeededBody": "Rechnungen an öffentliche Stellen laufen über FACe und müssen mit Ihrem digitalen Zertifikat signiert sein (zum Beispiel dem der FNMT). Importieren Sie es einmalig und exportieren Sie dann erneut.",
     "openCertificate": "Zertifikat öffnen",
     "certProblemTitle": "Problem mit dem Zertifikat",
-    "signFailed": "Vasco konnte die Datei mit diesem Zertifikat nicht signieren. Importieren Sie es erneut; hilft das nicht, wenden Sie sich an den Support."
+    "signFailed": "Vasco konnte die Datei mit diesem Zertifikat nicht signieren. Importieren Sie es erneut; hilft das nicht, wenden Sie sich an den Support.",
+    "unsignedBecause": "Diese Datei ist NICHT signiert: {{reason}}"
   },
   "facturaeCertificate": {
     "title": "Signaturzertifikat",

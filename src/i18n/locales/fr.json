@@ -7497,7 +7497,8 @@
     "certNeededBody": "Les factures aux organismes publics passent par FACe et doivent être signées avec votre certificat numérique (par exemple celui de la FNMT). Importez-le une fois, puis exportez à nouveau.",
     "openCertificate": "Ouvrir le certificat",
     "certProblemTitle": "Problème de certificat",
-    "signFailed": "Vasco n’a pas pu signer le fichier avec ce certificat. Importez-le à nouveau ; si cela ne suffit pas, contactez le support."
+    "signFailed": "Vasco n’a pas pu signer le fichier avec ce certificat. Importez-le à nouveau ; si cela ne suffit pas, contactez le support.",
+    "unsignedBecause": "Ce fichier n’est PAS signé : {{reason}}"
   },
   "facturaeCertificate": {
     "title": "Certificat de signature",

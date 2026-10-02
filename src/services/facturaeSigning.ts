@@ -30,7 +30,9 @@ export const sellerNifOf = (bp: Record<string, any> | null | undefined): string 
 
 export type FacturaeSignOutcome =
   | { kind: 'signed'; xml: string; info: CertificateInfo }
-  | { kind: 'unsigned'; xml: string }
+  /** `because`: a certificate IS stored but cannot sign (expired, other NIF…)
+   *  — the contractor is told, not left to find out at the next FACe invoice. */
+  | { kind: 'unsigned'; xml: string; because?: { problem: CertificateProblem; info?: CertificateInfo } }
   | { kind: 'needCertificate' }
   | { kind: 'certificateProblem'; problem: CertificateProblem; info?: CertificateInfo }
   | { kind: 'failed' };
@@ -43,7 +45,11 @@ export async function signFacturaeForExport(
   const stored = await loadSigningCertificate(opts.owner);
   if (!stored) return required ? { kind: 'needCertificate' } : { kind: 'unsigned', xml };
   const judged = judgeStoredCertificate(stored.material, opts.sellerNif, opts.now);
-  if (!judged.ok) return required ? { kind: 'certificateProblem', problem: judged.problem, info: judged.info } : { kind: 'unsigned', xml };
+  if (!judged.ok) {
+    return required
+      ? { kind: 'certificateProblem', problem: judged.problem, info: judged.info }
+      : { kind: 'unsigned', xml, because: { problem: judged.problem, info: judged.info } };
+  }
   try {
     return { kind: 'signed', xml: signFacturae(xml, judged.material, { signingTime: opts.now }), info: judged.info };
   } catch (err) {

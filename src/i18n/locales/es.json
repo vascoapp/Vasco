@@ -7497,7 +7497,8 @@
     "certNeededBody": "Las facturas a administraciones públicas van por FACe y deben firmarse con tu certificado digital (por ejemplo, el de la FNMT). Impórtalo una vez y vuelve a exportar.",
     "openCertificate": "Abrir certificado",
     "certProblemTitle": "Problema con el certificado",
-    "signFailed": "Vasco no ha podido firmar el fichero con este certificado. Vuelve a importarlo; si no se soluciona, contacta con soporte."
+    "signFailed": "Vasco no ha podido firmar el fichero con este certificado. Vuelve a importarlo; si no se soluciona, contacta con soporte.",
+    "unsignedBecause": "Este archivo NO está firmado: {{reason}}"
   },
   "facturaeCertificate": {
     "title": "Certificado de firma",

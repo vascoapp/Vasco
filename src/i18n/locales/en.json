@@ -7497,7 +7497,8 @@
     "certNeededBody": "Invoices to public bodies go through FACe and must be signed with your digital certificate (for example the FNMT one). Import it once, then export again.",
     "openCertificate": "Open certificate",
     "certProblemTitle": "Certificate problem",
-    "signFailed": "Vasco could not sign the file with this certificate. Import it again; if that does not help, contact support."
+    "signFailed": "Vasco could not sign the file with this certificate. Import it again; if that does not help, contact support.",
+    "unsignedBecause": "This file is NOT signed: {{reason}}"
   },
   "facturaeCertificate": {
     "title": "Signing certificate",

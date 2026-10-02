@@ -7497,7 +7497,8 @@
     "certNeededBody": "Facturen aan overheidsinstanties gaan via FACe en moeten met uw digitale certificaat worden ondertekend (bijvoorbeeld dat van de FNMT). Importeer het eenmalig en exporteer daarna opnieuw.",
     "openCertificate": "Certificaat openen",
     "certProblemTitle": "Probleem met certificaat",
-    "signFailed": "Vasco kon het bestand niet met dit certificaat ondertekenen. Importeer het opnieuw; helpt dat niet, neem dan contact op met support."
+    "signFailed": "Vasco kon het bestand niet met dit certificaat ondertekenen. Importeer het opnieuw; helpt dat niet, neem dan contact op met support.",
+    "unsignedBecause": "Dit bestand is NIET ondertekend: {{reason}}"
   },
   "facturaeCertificate": {
     "title": "Ondertekeningscertificaat",

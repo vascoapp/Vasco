@@ -58,9 +58,9 @@ describe('business buyer, and Q bodies that may sit outside FACe', () => {
   it.each(['B87654323', 'Q2826000H'])('%s without a certificate → unsigned, untouched', async (nif) => {
     expect(await run(nif)).toEqual({ kind: 'unsigned', xml: XML });
   });
-  it('an expired certificate is not used, and does not block a B2B invoice', async () => {
+  it('an expired certificate is not used, does not block a B2B invoice — and says why (2026-10-02)', async () => {
     mockStored.current = store(expired);
-    expect(await run('B87654323')).toEqual({ kind: 'unsigned', xml: XML });
+    expect(await run('B87654323')).toMatchObject({ kind: 'unsigned', xml: XML, because: { problem: 'expired' } });
   });
   it('a usable certificate → signed (decision: sign when available)', async () => {
     mockStored.current = store(good);

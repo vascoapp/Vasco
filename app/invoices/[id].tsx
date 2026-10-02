@@ -1015,10 +1015,12 @@ export default function InvoiceDetailScreen() {
    * buttons at most (Android drops the rest): cancel, the screen that fixes
    * it, export anyway.
    */
-  const confirmRuleWarnings = (lines: string[], fixWhere: 'profile' | 'customer' | undefined): Promise<boolean> => {
+  const confirmRuleWarnings = (lines: string[], fixWhere: 'profile' | 'customer' | 'certificate' | undefined): Promise<boolean> => {
     if (lines.length === 0) return Promise.resolve(true);
     return new Promise((resolve) => {
-      const fix = fixWhere === 'profile'
+      const fix = fixWhere === 'certificate'
+        ? { text: t('facturaeSign.openCertificate', 'Open certificate'), onPress: () => { resolve(false); router.push('/contractor/facturae-certificate' as any); } }
+        : fixWhere === 'profile'
         ? { text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => { resolve(false); router.push('/(modals)/business-settings' as any); } }
         : fixWhere === 'customer' && invoiceCustomer
           ? { text: t('invoices.einvoiceFixCustomer', 'Open customer details'), onPress: () => { resolve(false); router.push({ pathname: '/(modals)/customers', params: { id: invoiceCustomer.id } } as any); } }
@@ -1108,7 +1110,14 @@ export default function InvoiceDetailScreen() {
     // the file is refused because its recipient would reject it.
     const facBuyer = findings.some((f) => (f.key === 'publicBuyerES' || f.key === 'publicBuyerDir3ES') && f.severity === 'error');
     if (refuseOnRuleErrors(findings, blockingFindingLines(findings, t as any), facBuyer ? 'FACe' : t('einvoiceRules.recipient', 'The recipient'))) return;
-    if (!(await confirmRuleWarnings(warningFindingLines(findings, t as any), warningFixWhere(findings)))) return;
+    // A stored certificate that cannot sign (expired, another NIF): this B2B
+    // file goes out UNSIGNED — say so here instead of silently (review
+    // 2026-10-02); the certificate screen is the fix.
+    const unsignedLine = signing.kind === 'unsigned' && signing.because
+      ? [t('facturaeSign.unsignedBecause', { reason: certificateProblemText(t, signing.because.problem, signing.because.info, sellerNifOf(businessProfile as any)), defaultValue: 'This file is NOT signed: {{reason}}' })]
+      : [];
+    const warnLines = [...unsignedLine, ...warningFindingLines(findings, t as any)];
+    if (!(await confirmRuleWarnings(warnLines, unsignedLine.length ? 'certificate' : warningFixWhere(findings)))) return;
     // A signed Facturae is a .xsig (what FACe's upload expects); unsigned stays .xml.
     const filename = `${invoiceNumber}-facturae.${signing.kind === 'signed' ? 'xsig' : 'xml'}`;
     // The comment that used to sit here said recording at queue approval "would
