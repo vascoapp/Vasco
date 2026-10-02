@@ -172,6 +172,11 @@ npm run check:pdfa3                    # ZUGFeRD/Factur-X PDF/A-3 hybrids agains
                                        # at the page. Built on the device (pdf-lib):
                                        # ~20 s on the emulator, so the row shows a
                                        # spinner (#388).
+npm run check:facturae-signature      # Spain B2G: signed Facturae (XAdES-EPES,
+                                       # policy 3.1) against EU DSS 6.5 (Java 17,
+                                       # ~/.cache/vasco-xades); a tampered file
+                                       # must fail. Crypto on device: verify with
+                                       # a temporary logcat bundle (#389).
 npm run check:push-owner               # LIVE: a push token belongs to ONE account
                                        # (the previous contractor's pushes stopped
                                        # reaching a shared phone, 2026-09-30).
@@ -443,6 +448,9 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   - A table whose FK to `auth.users` is NOT `CASCADE` survives the cascade:
     the worker must delete it explicitly. `npm run schema:snapshot` records
     `authUserFks`; guard `erasureReachesEveryOwnedRow` fails on a miss.
+  - The Facturae SIGNING CERTIFICATE is device-owned (survives a same-user
+    logout) — `clearAllLocalData` removes it on deletion; anything else
+    device-owned needs the same (#389).
   - A new owned table the contractor must keep → add it to the export
     (`dataExportService` BackendDataset; child tables via `byParent`).
   - Guards: `deleteAccountExportsFirst`, `deletionRequestLands` (live
