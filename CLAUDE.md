@@ -478,6 +478,15 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   R2026-08-22 it passed `customerId: null` and no screen could ever set it, so
   every job was customer-less while `job.customerId` had readers everywhere.
   ⚠️ The job DETAIL screen still cannot change it. #208.
+- **Money columns are `numeric`, never `real`/`double`** — totals and costs
+  `numeric(14,2)`, unit prices `numeric(14,4)`. REAL keeps ~6 digits: €12.345,67
+  came back €12.345,70 (#386, fixed #390). Ratios, hours, confidences may stay REAL.
+- **A view you (re)create in a migration states its privileges** (GRANT/REVOKE):
+  DROP + CREATE re-applies the project's DEFAULT grants, and a view runs with its
+  owner's rights (RLS does not apply) — `price_references` briefly exposed every
+  contractor's prices (#390). Guard `recreatedViewsStatePrivileges`. Changing a
+  column's type: keep dependent views' OUTPUT types (casts) and run the change in
+  a rolled-back txn on prod with a negative control first.
 - **A number the contractor TYPES goes through `parseDecimalInput`**
   (`src/utils/decimalInput.ts`), and an editable numeric field is a
   `DecimalInput` (`src/components/shared`), never `value={String(n)}`.
