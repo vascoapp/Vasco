@@ -1,5 +1,5 @@
 {
- "takenAt": "2026-10-01",
+ "takenAt": "2026-10-02",
  "tables": {
   "account_deletion_requests": {
    "id": {
@@ -1348,7 +1348,7 @@
    "invoice_amount": {
     "nullable": false,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "invoice_date": {
     "nullable": false,
@@ -2982,7 +2982,7 @@
    "amount": {
     "nullable": false,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "issued_at": {
     "nullable": false,
@@ -3178,7 +3178,7 @@
    "actual_cost": {
     "nullable": true,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "actual_hours": {
     "nullable": true,
@@ -3325,12 +3325,12 @@
    "estimated_cost": {
     "nullable": true,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "actual_cost": {
     "nullable": true,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "margin_percent": {
     "nullable": true,
@@ -4125,7 +4125,7 @@
    "price_excl_vat": {
     "nullable": false,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "currency": {
     "nullable": true,
@@ -4612,7 +4612,7 @@
    "price": {
     "nullable": false,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "currency": {
     "nullable": false,
@@ -4783,7 +4783,7 @@
    "quoted_unit_price": {
     "nullable": false,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "quoted_quantity": {
     "nullable": false,
@@ -4793,7 +4793,7 @@
    "quoted_total": {
     "nullable": false,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "vat_rate": {
     "nullable": true,
@@ -4809,12 +4809,12 @@
    "accepted_price": {
     "nullable": true,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "actual_cost": {
     "nullable": true,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "actual_hours": {
     "nullable": true,
@@ -4881,7 +4881,7 @@
    "counter_offer_amount": {
     "nullable": true,
     "hasDefault": false,
-    "type": "real"
+    "type": "numeric"
    },
    "contractor_segment": {
     "nullable": true,
@@ -6397,6 +6397,26 @@
     ]
    }
   ],
+  "import_catalog_prices": [
+   {
+    "args": [
+     "p_supplier_id",
+     "p_supplier_name",
+     "p_trade",
+     "p_country",
+     "p_currency",
+     "p_items"
+    ],
+    "required": [
+     "p_supplier_id",
+     "p_supplier_name",
+     "p_trade",
+     "p_country",
+     "p_currency",
+     "p_items"
+    ]
+   }
+  ],
   "leads_touch_updated_at": [
    {
     "args": [],
@@ -6424,26 +6444,6 @@
     ],
     "required": [
      "p_doc_type"
-    ]
-   }
-  ],
-  "import_catalog_prices": [
-   {
-    "args": [
-     "p_supplier_id",
-     "p_supplier_name",
-     "p_trade",
-     "p_country",
-     "p_currency",
-     "p_items"
-    ],
-    "required": [
-     "p_supplier_id",
-     "p_supplier_name",
-     "p_trade",
-     "p_country",
-     "p_currency",
-     "p_items"
     ]
    }
   ],
