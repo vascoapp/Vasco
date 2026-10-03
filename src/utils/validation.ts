@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { parseDecimalInput } from './decimalInput';
-import { checkSpanishTaxId } from '../integrations/fiscalIds';
+import { checkSpanishTaxId, isValidPartitaIva } from '../integrations/fiscalIds';
 
 export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -174,8 +174,66 @@ export function isValidVATNumber(vat: string): boolean {
  * same check the Facturae export gates on); every other country is unchanged.
  */
 export function isValidCustomerVatId(vat: string, contractorCountry: string | null | undefined): boolean {
-  if (isValidVATNumber(vat)) return true;
+  if (isValidVATNumber(normalizeCustomerVatId(vat, contractorCountry))) return true;
   return contractorCountry === 'ES' && checkSpanishTaxId(vat).valid;
+}
+
+/**
+ * How a customer's VAT id is STORED. An Italian partita IVA is written as 11
+ * bare digits on every Italian document, and an Italian contractor typing it
+ * that way was told "Formato N° IVA non valido" — so a reverse-charge (N6.x)
+ * invoice, which needs the buyer's partita IVA, could not be exported (device,
+ * 2026-10-03). For an Italian contractor a bare id that passes the real check
+ * digit gets the `IT` prefix, the canonical form every consumer (FatturaPA
+ * strips it again, the PDF, Peppol) already reads. Anything else is returned
+ * as typed. Spain keeps its bare NIF: Facturae carries it bare.
+ */
+export function normalizeCustomerVatId(vat: string, contractorCountry: string | null | undefined): string {
+  const v = bareItalianDigits(vat);
+  if (contractorCountry === 'IT' && isValidPartitaIva(v) && !/^[89]/.test(v)) return `IT${v}`;
+  return vat;
+}
+
+/**
+ * 11 bare digits starting with 8 or 9 that pass the check digit: the numeric
+ * codice fiscale of an entity WITHOUT a partita IVA (condominio, association,
+ * public body) — same shape and check digit as a partita IVA. Prefixing it
+ * would put a fake VAT id on the e-invoice and silence the N6 "buyer has no
+ * VAT id" warning (review, 2026-10-03). It belongs in the codice fiscale
+ * field; a real partita IVA starting with 8/9 can still be typed with "IT".
+ */
+export function looksLikeEntityCodiceFiscale(vat: string, contractorCountry: string | null | undefined): boolean {
+  const v = bareItalianDigits(vat);
+  return contractorCountry === 'IT' && /^[89]/.test(v) && isValidPartitaIva(v);
+}
+
+const bareItalianDigits = (vat: string): string => vat.trim().toUpperCase().replace(/[\s.\-/]/g, '');
+
+/**
+ * How the CONTRACTOR's own VAT id is stored — written the local way, kept in
+ * one canonical spelling. The everyday matrix (2026-10-03) found onboarding and
+ * business settings refusing an Italian partita IVA typed as 11 digits and a
+ * Spanish NIF typed without "ES" — how both markets write them — and settings
+ * storing whatever case and spacing was typed, which went raw into BT-31.
+ *  - IT: a bare id with a valid check digit (not 8/9-first, see
+ *    looksLikeEntityCodiceFiscale) → `IT` + 11 digits.
+ *  - ES: a bare NIF/CIF/NIE with a valid control character → `ES` + id. The
+ *    profile gate and the PDF read the prefixed form; Facturae strips it.
+ *  - Everything: upper case, no spaces/dots/hyphens ("de 136 695 976").
+ * Anything that is not a recognisable id is returned trimmed, so the caller's
+ * validator still refuses it with the same message as before.
+ */
+export function normalizeSellerVatId(vat: string, country: string | null | undefined): string {
+  const v = vat.trim().toUpperCase().replace(/[\s.\-/]/g, '');
+  if (!v) return '';
+  if (country === 'IT' && /^\d{11}$/.test(v) && isValidPartitaIva(v) && !/^[89]/.test(v)) return `IT${v}`;
+  if (country === 'ES' && !/^ES/.test(v)) { const es = checkSpanishTaxId(v); if (es.valid) return `ES${es.bare}`; }
+  return /^[A-Z]{2}[A-Z0-9]+$/.test(v) ? v : vat.trim();
+}
+
+/** The contractor's own VAT id, as typed: valid once normalised for their market. */
+export function isValidSellerVatId(vat: string, country: string | null | undefined): boolean {
+  return isValidVATNumber(normalizeSellerVatId(vat, country));
 }
 
 // R66 round 3: country-specific IBAN length + mod-97 checksum. Was a shape-

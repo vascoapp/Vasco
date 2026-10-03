@@ -448,7 +448,13 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
       result.invoice = inv;
       result.invoiceLines = (await read<Record<string, any[]>>('@vasco_line_items', {}))[invoiceId!] ?? null;
       // "Did it go out?" / "Did you file it?" — not yet: we only want the file.
-      rules = [{ title: /./, press: new RegExp(`^(${T('share.sentNo')}|${T('einvoice.filedNotYet')})$`) }];
+      // Germany asks for the date of the work before the first document — the
+      // contractor did the job today. Then "Did it go out?" / "Did you file
+      // it?" — not yet: we only want the file.
+      rules = [
+        { title: new RegExp(`^${T('invoices.serviceDateAskTitle')}$`), press: new RegExp(`^${T('invoices.serviceDateToday')}$`) },
+        { title: /./, press: new RegExp(`^(${T('share.sentNo')}|${T('einvoice.filedNotYet')})$`) },
+      ];
 
       const htmlBefore = capture().html.length;
       if (!(await pressText(root, T('invoices.viewSharePdf')))) step('View & share PDF', false, 'no button');

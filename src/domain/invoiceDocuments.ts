@@ -11,6 +11,7 @@
 // The screen, the email path and the records archive all build from here.
 // =============================================================================
 import { sirenFromSiret, type EInvoiceData } from '../integrations/einvoice';
+import { normalizeSellerVatId } from '../utils/validation';
 import type { EInvoiceSource } from '../integrations/einvoiceMapping';
 import type { BusinessProfile } from './business';
 import { isSmallBusinessExempt, documentVatBreakdown } from './business';
@@ -104,7 +105,9 @@ export function buildEInvoiceData(inp: InvoiceDocInputs): EInvoiceData {
   return {
     sellerName: bp.businessName ?? 'Vasco',
     sellerAddress: bp.address ?? '',
-    sellerVatId: bp.vatNumber ?? '',
+    // Canonical even for a profile saved before settings normalised it
+    // ("de 136 695 976" went raw into BT-31 — review, 2026-10-03).
+    sellerVatId: normalizeSellerVatId(bp.vatNumber ?? '', inp.country),
     // BT-30. France requires the seller's SIREN (BR-FR-10) — the first nine
     // digits of the SIRET the profile gate already demands.
     ...(inp.country === 'FR' && sirenFromSiret(bp.registrationNumber ?? bp.kvkNumber)
@@ -119,7 +122,11 @@ export function buildEInvoiceData(inp: InvoiceDocInputs): EInvoiceData {
     sellerPhone: bp.phone,
     sellerEmail: bp.email,
     buyerName: invoiceBuyerName(inp.invoice, inp.customers),
-    buyerAddress: (inp.invoice as any).customerAddress ?? '',
+    // The customer's street. This read `invoice.customerAddress` — a field the
+    // Invoice type does not have — so BT-50 was always empty and KoSIT rejected
+    // every XRechnung the app made (PEPPOL-EN16931-R008; everyday matrix,
+    // 2026-10-03). A legacy invoice that carries its own address still wins.
+    buyerAddress: (inp.invoice as any).customerAddress || customer?.address || '',
     buyerCity: customer?.city,
     buyerPostalCode: customer?.postcode,
     buyerCountry: customer?.country ?? inp.country,
@@ -159,8 +166,10 @@ export function buildEInvoiceSource(inp: InvoiceDocInputs): EInvoiceSource {
   return {
     seller: {
       name: bp.businessName ?? '',
-      vatId: bp.vatNumber,
-      // ES: the NIF lives in registrationNumber. IT: the codice fiscale has its
+      vatId: bp.vatNumber ? normalizeSellerVatId(bp.vatNumber, inp.country) : bp.vatNumber,
+      // ES: the NIF is `vatNumber` (business settings writes it there since
+      // 2026-10-03); registrationNumber is only the fallback for a NIF typed
+      // into the old field. IT: the codice fiscale has its
       // own field (taxCode) — registrationNumber is the REA there; it stays the
       // fallback for a CF typed into it before the field existed (the mapper
       // writes only a VALID codice fiscale).

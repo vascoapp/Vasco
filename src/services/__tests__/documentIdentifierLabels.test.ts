@@ -50,7 +50,6 @@ describe('registration vs VAT identifier labels', () => {
   it('Italy labels the REA as REA and the Partita IVA as P.IVA', () => {
     expect(tableOf(invoiceSrc, 'registrationLabel').IT).toBe('REA');
     expect(tableOf(invoiceSrc, 'vatLabel').IT).toBe('P.IVA');
-    expect(tableOf(quoteSrc, 'registrationLabel').IT).toBe('REA');
     expect(tableOf(quoteSrc, 'vatLabelFor').IT).toBe('P.IVA');
   });
 
@@ -64,10 +63,13 @@ describe('registration vs VAT identifier labels', () => {
     }
   });
 
-  it('the quote and the invoice agree on every country they both know', () => {
-    const a = tableOf(invoiceSrc, 'registrationLabel');
-    const b = tableOf(quoteSrc, 'registrationLabel');
-    for (const cc of Object.keys(b)) expect(b[cc]).toBe(a[cc]);
+  it('the quote takes its registration line from the invoice (one table, not two)', () => {
+    // The quote kept its own copy of the table and still printed a German
+    // Steuernummer as "HRB" after the invoice was fixed (review, 2026-10-03).
+    expect(quoteSrc).not.toMatch(/function registrationLabel\(/);
+    const screen = fs.readFileSync(path.resolve(__dirname, '../../../app/quotes/[id].tsx'), 'utf8');
+    expect(screen).toMatch(/registrationParts\(businessProfile\)/);
+    expect(screen).toMatch(/sellerAddressLine\(businessProfile\)/);
   });
 
   it('the six EU markets each have a registration label', () => {
@@ -99,7 +101,7 @@ describe('the registration slot is not labelled as the VAT identifier', () => {
   });
 
   it('never labels a registration number with a VAT identifier name', () => {
-    for (const [name, src] of [['invoice', invoiceSrc], ['quote', quoteSrc], ['profile', profileSrc]] as const) {
+    for (const [name, src] of [['invoice', invoiceSrc], ['profile', profileSrc]] as const) {
       const reg = name === 'profile' ? tableOf(src, 'getRegistrationLabel') : tableOf(src, 'registrationLabel');
       const vat = name === 'profile' ? tableOf(src, 'getVatLabel') : tableOf(src, 'vatLabel');
       // An empty table would pass every "not equal" below. Five, not six:

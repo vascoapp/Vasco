@@ -954,7 +954,14 @@
     "vatNatureMissing": "Riga {{line}} ({{description}}): IVA allo 0 % senza natura — sceglila (es. inversione contabile)",
     "vatNatureNotForRegime": "Riga {{line}} ({{description}}): {{nature}} non è ammessa con {{regime}} — scegli un'altra natura",
     "einvoiceMissingThisInvoice": "Questa fattura",
-    "einvoiceFixLines": "Modifica righe"
+    "einvoiceFixLines": "Modifica righe",
+    "serviceDate": "Data dei lavori",
+    "serviceDateNotSet": "Non indicata",
+    "serviceDatePrev": "Giorno precedente",
+    "serviceDateNext": "Giorno successivo",
+    "serviceDateToday": "Oggi",
+    "serviceDateAskTitle": "Data dei lavori",
+    "serviceDateAskBody": "Una fattura tedesca deve indicare quando sono stati eseguiti i lavori. Imposta la data in «Data dei lavori» su questa fattura, oppure scegli Oggi."
   },
   "expenses": {
     "title": "Spese",
@@ -5022,7 +5029,8 @@
     "fieldSdiCode": "Codice destinatario SDI",
     "fieldPec": "Indirizzo PEC",
     "dir3Hint": "Ente pubblico: le fatture passano da FACe e richiedono i suoi tre codici DIR3. L’ente te li comunica (sull’ordine o sul contratto).",
-    "dir3Invalid": "Un codice DIR3 ha 9 lettere e cifre e inizia con una lettera (es. {{example}})."
+    "dir3Invalid": "Un codice DIR3 ha 9 lettere e cifre e inizia con una lettera (es. {{example}}).",
+    "vatIsCodiceFiscale": "Sembra un codice fiscale (condominio, associazione). Inseriscilo in Codice fiscale; se è davvero una partita IVA, scrivi IT davanti."
   },
   "aiChat": {
     "welcome": "Ciao! Sono il tuo assistente d'ufficio. Chiedimi di fatturare un cliente, pianificare un lavoro o controllare i tuoi numeri.",

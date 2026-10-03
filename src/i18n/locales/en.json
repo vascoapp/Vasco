@@ -954,7 +954,14 @@
     "vatNatureMissing": "Line {{line}} ({{description}}): 0 % VAT without a reason — choose it (e.g. reverse charge)",
     "vatNatureNotForRegime": "Line {{line}} ({{description}}): {{nature}} cannot be used under {{regime}} — choose another reason",
     "einvoiceMissingThisInvoice": "This invoice",
-    "einvoiceFixLines": "Edit lines"
+    "einvoiceFixLines": "Edit lines",
+    "serviceDate": "Date of work",
+    "serviceDateNotSet": "Not set",
+    "serviceDatePrev": "Previous day",
+    "serviceDateNext": "Next day",
+    "serviceDateToday": "Today",
+    "serviceDateAskTitle": "Date of the work",
+    "serviceDateAskBody": "A German invoice must state when the work was done. Set the date under \"Date of work\" on this invoice, or choose Today."
   },
   "expenses": {
     "title": "Expenses",
@@ -5022,7 +5029,8 @@
     "fieldSdiCode": "SDI recipient code (Italy)",
     "fieldPec": "PEC address (Italy)",
     "dir3Hint": "Public body: invoices go through FACe and need its three DIR3 codes. The body gives them to you (on the order or contract).",
-    "dir3Invalid": "A DIR3 code has 9 letters and digits and starts with a letter (e.g. {{example}})."
+    "dir3Invalid": "A DIR3 code has 9 letters and digits and starts with a letter (e.g. {{example}}).",
+    "vatIsCodiceFiscale": "This looks like a codice fiscale (condominium, association). Enter it under Codice fiscale; if it really is a partita IVA, type IT in front."
   },
   "aiChat": {
     "welcome": "Hi! I'm your office manager. Ask me to invoice a customer, schedule a job, or check your numbers.",

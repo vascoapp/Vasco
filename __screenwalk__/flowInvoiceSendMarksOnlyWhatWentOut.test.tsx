@@ -48,12 +48,14 @@ run('sending a draft invoice', () => {
       { id: 'c-mail', name: 'Familie Schneider', email: 'schneider@example.de' },
       { id: 'c-nomail', name: 'Familie Ohnemail' },
     ]));
+    // deliveryDate: the date of the work is stated, so a German invoice does not
+    // stop to ask for it (flowGermanInvoiceAsksForTheServiceDate covers the ask).
     await AsyncStorage.setItem('@vasco_invoices', JSON.stringify([
       // Created weeks ago: its due date is already 30 days past.
-      { id: 'RE-D-1', customerId: 'c-mail', customer: 'Familie Schneider', job: 'Wartung', amount: 121, status: 'draft', dueInDays: 14,
+      { id: 'RE-D-1', customerId: 'c-mail', customer: 'Familie Schneider', job: 'Wartung', amount: 121, status: 'draft', dueInDays: 14, deliveryDate: '2026-09-30',
         dueDate: new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10) },
-      { id: 'RE-D-2', customerId: 'c-nomail', customer: 'Familie Ohnemail', job: 'Wartung', amount: 121, status: 'draft', dueInDays: 14 },
-      { id: 'RE-D-3', customerId: 'c-mail', customer: 'Familie Schneider', job: 'Wartung', amount: 121, status: 'draft', dueInDays: 14 },
+      { id: 'RE-D-2', customerId: 'c-nomail', customer: 'Familie Ohnemail', job: 'Wartung', amount: 121, status: 'draft', dueInDays: 14, deliveryDate: '2026-09-30' },
+      { id: 'RE-D-3', customerId: 'c-mail', customer: 'Familie Schneider', job: 'Wartung', amount: 121, status: 'draft', dueInDays: 14, deliveryDate: '2026-09-30' },
     ]));
 
     // No address: nothing sent, nothing marked.

@@ -218,8 +218,15 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
   }
   // Routing: a 7-char Codice Destinatario, or '0000000' plus a PEC address.
   // Without one of the two SDI cannot deliver it at all.
+  // A PRIVATE person (codice fiscale, no partita IVA) has neither: SDI delivers
+  // '0000000' to their cassetto fiscale (Provv. AdE 30 aprile 2018), and the
+  // mapper already writes that default. Refusing it made every Italian B2C
+  // e-invoice impossible (everyday matrix, 2026-10-03).
   const routing = src.buyer.einvoiceRouting?.trim();
-  if (!routing && !src.buyer.einvoiceEmail?.trim()) {
+  // Domestic only: a foreign buyer is routed XXXXXXX, which the routing
+  // check still has to reach.
+  const consumer = !src.buyer.vatId && !!src.buyer.taxId && (src.buyer.country ?? 'IT') === 'IT';
+  if (!routing && !src.buyer.einvoiceEmail?.trim() && !consumer) {
     missing.push({ key: 'customer.einvoiceRouting', where: 'customer' });
   }
 

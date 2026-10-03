@@ -59,7 +59,9 @@ export function getRequiredFields(country: Country | undefined): Array<{ key: st
       // system they cannot see, phrased as "BR-DE-6".
       return [
         ...base,
-        { key: 'profile.registrationHrb', label: 'HRB number',           get: (p) => p.registrationNumber ?? p.kvkNumber },
+        // `||`: clearing the HRB field writes '' — which `??` took as present,
+        // ignoring the Steuernummer beside it (review, 2026-10-03).
+        { key: 'profile.registrationHrb', label: 'HRB number',           get: (p) => p.registrationNumber || p.kvkNumber },
         { key: 'profile.vatNumberUst',    label: 'USt-IdNr',             get: (p) => p.vatNumber },
         { key: 'profile.city',            label: 'City',                 get: (p) => p.city },
         { key: 'profile.postcode',        label: 'Post code',            get: (p) => p.postcode },

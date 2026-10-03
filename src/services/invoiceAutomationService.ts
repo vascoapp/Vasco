@@ -21,6 +21,11 @@ export interface AutoInvoice {
   customerName: string;
   customerEmail?: string;
   customerAddress: string;
+  /** The buyer's VAT id and national tax id (codice fiscale, NIF of a person) —
+   *  printed under the buyer: art. 21 DPR 633/72 wants the buyer's partita IVA
+   *  or codice fiscale on every Italian invoice (everyday matrix, 2026-10-03). */
+  customerVatId?: string;
+  customerTaxId?: string;
   issueDate: Date;
   dueDate: Date;
   // R66 round 34: leveringsdatum / service performance date. NL Belastingdienst

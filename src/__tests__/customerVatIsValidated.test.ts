@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { stripComments } from '../utils/stripComments';
-import { isValidVATNumber, isValidCustomerVatId } from '../utils/validation';
+import { isValidVATNumber, isValidCustomerVatId, normalizeCustomerVatId, looksLikeEntityCodiceFiscale } from '../utils/validation';
 
 it('the verdicts the sheet relies on', () => {
   expect(isValidVATNumber('NL12')).toBe(false);
@@ -26,6 +26,32 @@ it('a Spanish customer\'s NIF without "ES" passes for a Spanish contractor — o
   expect(isValidCustomerVatId('NL12', 'NL')).toBe(false);
   expect(isValidCustomerVatId('NL123456789B01', 'NL')).toBe(true);
   expect(isValidCustomerVatId('DE12345678', 'DE')).toBe(false);
+});
+
+it('an Italian customer\'s bare partita IVA passes for an Italian contractor — on its check digit — and is stored with IT', () => {
+  expect(isValidCustomerVatId('01234567897', 'IT')).toBe(true);
+  expect(normalizeCustomerVatId('01234567897', 'IT')).toBe('IT01234567897');
+  expect(normalizeCustomerVatId(' 012 345 678 97 ', 'IT')).toBe('IT01234567897');
+  expect(isValidCustomerVatId('01234567896', 'IT')).toBe(false);  // wrong check digit
+  expect(isValidCustomerVatId('00000000000', 'IT')).toBe(false);  // never assigned
+  expect(isValidCustomerVatId('IT01234567897', 'IT')).toBe(true);
+  // Only for an Italian contractor; anything else is returned as typed.
+  expect(isValidCustomerVatId('01234567897', 'DE')).toBe(false);
+  expect(normalizeCustomerVatId('01234567897', 'DE')).toBe('01234567897');
+  expect(normalizeCustomerVatId('P2807900B', 'ES')).toBe('P2807900B');
+  expect(normalizeCustomerVatId('012-345-678/97', 'IT')).toBe('IT01234567897');
+});
+
+it('an 11-digit codice fiscale of a condominio / association (8 or 9 first) is NOT made into a partita IVA', () => {
+  // 93012345679 passes the same check digit — a fake IT VAT id on the e-invoice
+  // would also silence the N6 "buyer has no VAT id" warning (review 2026-10-03).
+  expect(normalizeCustomerVatId('93012345679', 'IT')).toBe('93012345679');
+  expect(isValidCustomerVatId('93012345679', 'IT')).toBe(false);
+  expect(looksLikeEntityCodiceFiscale('93012345679', 'IT')).toBe(true);
+  expect(looksLikeEntityCodiceFiscale('01234567897', 'IT')).toBe(false);
+  expect(looksLikeEntityCodiceFiscale('93012345679', 'DE')).toBe(false);
+  // A real partita IVA starting with 8/9 can still be typed with its prefix.
+  expect(isValidCustomerVatId('IT93012345679', 'IT')).toBe(true);
 });
 
 it('the sheet refuses a malformed VAT id before any write', () => {

@@ -30,7 +30,7 @@ import { useAppState } from '../../state/AppState';
 import { useAuth } from '../../context/AuthContext';
 import { hapticSuccess } from '../../utils/haptics';
 import { useKeyboardInset } from '../../hooks/useKeyboardInset';
-import { isValidEmail, isValidPhone, isValidCustomerVatId, sanitizeInput } from '../../utils/validation';
+import { isValidEmail, isValidPhone, isValidCustomerVatId, normalizeCustomerVatId, looksLikeEntityCodiceFiscale, sanitizeInput } from '../../utils/validation';
 import { findDuplicates } from '../../services/customerDedupService';
 import { logError } from '../../utils/errorHandler';
 import type { Customer } from '../../domain/customers';
@@ -149,7 +149,14 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     // e-invoice; a malformed one gets the document rejected. "NL12" saved
     // without a word (walk, 2026-09-29). Same rule as the contractor's own
     // (businessProfileValidation), and only for what was typed.
-    const cleanVat = sanitizeInput(vatId).toUpperCase();
+    const cleanVat = normalizeCustomerVatId(sanitizeInput(vatId).toUpperCase(), country);
+    if (cleanVat && changed(cleanVat, customer?.vatId) && looksLikeEntityCodiceFiscale(cleanVat, country)) {
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('customersModal.vatIsCodiceFiscale', { defaultValue: 'This looks like a codice fiscale (condominium, association). Enter it under Codice fiscale; if it really is a partita IVA, type IT in front.' }),
+      );
+      return;
+    }
     if (cleanVat && changed(cleanVat, customer?.vatId) && !isValidCustomerVatId(cleanVat, country)) {
       Alert.alert(
         t('common.error', 'Error'),
@@ -172,7 +179,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     const structured = {
       postcode: sanitizeInput(postcode),
       city: sanitizeInput(city),
-      vatId: sanitizeInput(vatId).toUpperCase(),
+      vatId: cleanVat,
       ...(needsProvince ? { province: sanitizeInput(province) } : {}),
       ...(isItaly ? {
         taxId: sanitizeInput(taxId).toUpperCase(),

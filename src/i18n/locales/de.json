@@ -954,7 +954,14 @@
     "vatNatureMissing": "Position {{line}} ({{description}}): 0 % MwSt. ohne Grund — bitte wählen Sie ihn (z. B. Reverse Charge)",
     "vatNatureNotForRegime": "Position {{line}} ({{description}}): {{nature}} ist unter {{regime}} nicht möglich — bitte wählen Sie einen anderen Grund",
     "einvoiceMissingThisInvoice": "Diese Rechnung",
-    "einvoiceFixLines": "Positionen bearbeiten"
+    "einvoiceFixLines": "Positionen bearbeiten",
+    "serviceDate": "Leistungsdatum",
+    "serviceDateNotSet": "Nicht angegeben",
+    "serviceDatePrev": "Vorheriger Tag",
+    "serviceDateNext": "Nächster Tag",
+    "serviceDateToday": "Heute",
+    "serviceDateAskTitle": "Leistungsdatum",
+    "serviceDateAskBody": "Eine Rechnung muss angeben, wann die Leistung erbracht wurde (§ 14 UStG). Bitte stellen Sie das Leistungsdatum auf dieser Rechnung ein oder wählen Sie Heute."
   },
   "expenses": {
     "title": "Ausgaben",
@@ -5022,7 +5029,8 @@
     "fieldSdiCode": "SDI-Empfängercode (Italien)",
     "fieldPec": "PEC-Adresse (Italien)",
     "dir3Hint": "Öffentliche Stelle: Rechnungen laufen über FACe und brauchen ihre drei DIR3-Codes. Die Stelle teilt sie Ihnen mit (im Auftrag oder Vertrag).",
-    "dir3Invalid": "Ein DIR3-Code hat 9 Buchstaben und Ziffern und beginnt mit einem Buchstaben (z. B. {{example}})."
+    "dir3Invalid": "Ein DIR3-Code hat 9 Buchstaben und Ziffern und beginnt mit einem Buchstaben (z. B. {{example}}).",
+    "vatIsCodiceFiscale": "Das sieht nach einem Codice fiscale aus (Eigentümergemeinschaft, Verein). Bitte unter Codice fiscale eintragen; ist es wirklich eine Partita IVA, stellen Sie IT voran."
   },
   "aiChat": {
     "welcome": "Hi! Ich bin Ihre Büroassistenz. Bitten Sie mich, eine Rechnung zu erstellen, einen Auftrag zu planen oder Zahlen zu prüfen.",

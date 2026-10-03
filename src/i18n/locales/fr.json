@@ -954,7 +954,14 @@
     "vatNatureMissing": "Ligne {{line}} ({{description}}) : TVA à 0 % sans motif — choisissez-le (p. ex. autoliquidation)",
     "vatNatureNotForRegime": "Ligne {{line}} ({{description}}) : {{nature}} est impossible sous {{regime}} — choisissez un autre motif",
     "einvoiceMissingThisInvoice": "Cette facture",
-    "einvoiceFixLines": "Modifier les lignes"
+    "einvoiceFixLines": "Modifier les lignes",
+    "serviceDate": "Date des travaux",
+    "serviceDateNotSet": "Non renseignée",
+    "serviceDatePrev": "Jour précédent",
+    "serviceDateNext": "Jour suivant",
+    "serviceDateToday": "Aujourd'hui",
+    "serviceDateAskTitle": "Date des travaux",
+    "serviceDateAskBody": "Une facture allemande doit indiquer la date des travaux. Indiquez-la sous « Date des travaux » sur cette facture, ou choisissez Aujourd'hui."
   },
   "expenses": {
     "title": "Dépenses",
@@ -5022,7 +5029,8 @@
     "fieldSdiCode": "Code destinataire SDI (Italie)",
     "fieldPec": "Adresse PEC (Italie)",
     "dir3Hint": "Organisme public : les factures passent par FACe et exigent ses trois codes DIR3. L’organisme vous les communique (sur la commande ou le contrat).",
-    "dir3Invalid": "Un code DIR3 compte 9 lettres et chiffres et commence par une lettre (p. ex. {{example}})."
+    "dir3Invalid": "Un code DIR3 compte 9 lettres et chiffres et commence par une lettre (p. ex. {{example}}).",
+    "vatIsCodiceFiscale": "Cela ressemble à un codice fiscale (copropriété, association). Saisissez-le sous Codice fiscale ; s'il s'agit vraiment d'une partita IVA, ajoutez IT devant."
   },
   "aiChat": {
     "welcome": "Bonjour ! Je suis votre assistant bureau. Demandez-moi de facturer un client, planifier un chantier ou vérifier vos chiffres.",

@@ -17,28 +17,10 @@ const fmt = (n: number, locale?: string) =>
 const getCurrencySymbol = (country?: Country): string =>
   country === 'UK' ? '£' : '€';
 
-// Country-specific business registration label — must match invoicePdfService
-// so a contractor's quote and invoice show the same id under the same name.
-// R66: Italy is the one that had to change. The REGISTRATION number an Italian
-// business quotes is its REA (Repertorio Economico Amministrativo, e.g.
-// "MI-1234567"); the P.IVA is the separate VAT identifier below. Labelling both
-// "P.IVA" printed the REA under the name of a number it is not — on the header
-// AND the footer of every Italian quote and invoice.
-function registrationLabel(country?: Country): string {
-  switch (country) {
-    case 'DE': return 'HRB';
-    case 'FR': return 'SIRET';
-    // The Spanish NIF is the VAT identifier, printed from `vatNumber` below.
-    // This slot holds what both writers put in it — the IAE activity code
-    // (onboarding's `iae` field, business settings' "IAE" input) — so labelling
-    // it "NIF" printed the activity code 5045 as the company's tax number.
-    case 'ES': return 'IAE';
-    case 'IT': return 'REA';
-    case 'UK': return 'Co. no.';
-    case 'NL':
-    default:   return 'KvK';
-  }
-}
+// The registration line comes ready-labelled from invoicePdfService's
+// `registrationParts` (the caller passes it), so a quote and an invoice can no
+// longer label the same number differently — this file kept its own copy of
+// the table, which still printed a German Steuernummer as "HRB" (2026-10-03).
 
 function vatLabelFor(country?: Country, fallback = 'VAT'): string {
   switch (country) {
@@ -197,6 +179,9 @@ function buildQuoteHtml(
   quote: QuotePdfData,
   businessName: string,
   businessAddress: string,
+  /** The seller's registration line, ALREADY labelled — `registrationParts`
+   *  (invoicePdfService) so the quote shows what the invoice shows. Printed
+   *  "HRB: <Steuernummer>" for German sole traders before 2026-10-03. */
   kvkNumber: string,
   vatNumber: string,
   language?: string,
@@ -407,7 +392,7 @@ function buildQuoteHtml(
     <div class="brand-mark">V</div>
     <div class="brand-name">${escapeHtml(businessName || 'Your Business')}</div>
     <div class="brand-detail">${escapeHtml(businessAddress || '')}</div>
-    ${kvkNumber ? `<div class="brand-detail">${registrationLabel(country)}: ${kvkNumber}</div>` : ''}
+    ${kvkNumber ? `<div class="brand-detail">${escapeHtml(kvkNumber)}</div>` : ''}
     ${vatNumber ? `<div class="brand-detail">${vatLabelFor(country, L.vat)}: ${vatNumber}</div>` : ''}
     ${phone ? `<div class="brand-detail">${phone}</div>` : ''}
     ${email ? `<div class="brand-detail">${email}</div>` : ''}

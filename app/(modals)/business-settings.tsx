@@ -27,7 +27,8 @@ import { PROVIDERS, getProvidersForCountry, type AccountingProvider } from '../.
 import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
-import { isValidEmail, isValidPhone, isValidKvKNumber, isValidVATNumber, isValidIBAN, sanitizeInput } from '../../src/utils/validation';
+import { isValidEmail, isValidPhone, isValidKvKNumber, isValidVATNumber, isValidIBAN, sanitizeInput, normalizeSellerVatId } from '../../src/utils/validation';
+import { contactExamples } from '../../src/utils/contactExamples';
 import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel, getPaymentProviderForCountry } from '../../src/config/paymentMethods';
 import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { STRIPE_METHODS_UK, STRIPE_METHODS_US } from '../../src/config/paymentMethods';
@@ -206,7 +207,10 @@ function BusinessSettingsForm() {
           ];
         case 'ES':
           return [
-            { label: t('onboarding.fields.nif', 'NIF/CIF'), value: registrationNumber, onChange: setRegistrationNumber, placeholder: '12345678A' },
+            // The NIF IS Spain's VAT identifier: the profile gate, the PDF and
+            // Facturae all read `vatNumber`. This field wrote `registrationNumber`,
+            // so an edited NIF reached none of them (sweep, 2026-10-03).
+            { label: t('onboarding.fields.nif', 'NIF/CIF'), value: vatNumber, onChange: setVatNumber, placeholder: '12345678A' },
             { label: t('onboarding.fields.iae', 'IAE'), value: kvkNumber, onChange: setKvkNumber, placeholder: '504.1' },
           ];
         case 'IT':
@@ -347,7 +351,10 @@ function BusinessSettingsForm() {
     const cleanEmail = sanitizeInput(email);
     const cleanPhone = sanitizeInput(phone);
     const cleanKvk = sanitizeInput(kvkNumber);
-    const cleanVat = sanitizeInput(vatNumber);
+    // Written the local way (a bare partita IVA / NIF, spaces, lower case),
+    // stored in one canonical spelling — the form the profile gate, the PDF
+    // and every e-invoice read (everyday matrix, 2026-10-03).
+    const cleanVat = normalizeSellerVatId(sanitizeInput(vatNumber), country);
     // R66: clean + validate IBAN/BIC. Strip spaces (visual grouping)
     // before validating since users typically paste with spaces in.
     const cleanIban = sanitizeInput(iban).replace(/\s/g, '').toUpperCase();
@@ -370,7 +377,9 @@ function BusinessSettingsForm() {
     }
     // Validate VAT number if provided
     if (cleanVat && !isValidVATNumber(cleanVat)) {
-      Alert.alert(t('common.error', 'Error'), t('validation.invalidVAT', 'Please enter a valid VAT number (e.g. NL123456789B01)'));
+      // The example is the contractor's OWN market's: an Italian was shown
+      // "es. NL123456789B01".
+      Alert.alert(t('common.error', 'Error'), t('profile.vatFormatInvalid', { example: contactExamples(country as any).vat, defaultValue: 'VAT number format invalid (expected e.g. {{example}})' }));
       return;
     }
     // R66 NL launch: validate IBAN — without this NL invoice PDFs

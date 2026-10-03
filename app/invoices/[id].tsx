@@ -35,6 +35,7 @@ import { messageLocale } from '../../src/services/whatsappTemplateService';
 import { computeLateFee, disclosureLineLocalized, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from '../../src/services/lateFeeService';
 import { generateXRechnungXML } from '../../src/integrations/einvoice';
 import { buildEInvoiceData, buildEInvoiceSource as buildEInvoiceSourceFrom, invoicePdfExtras } from '../../src/domain/invoiceDocuments';
+import { localDateKey, parseCalendarDay } from '../../src/utils/dateKey';
 import { Share as RNShare } from 'react-native';
 // react-native's Share ignores `url` on Android (message/title only), so the
 // e-invoice XML exports below silently shared nothing there — and because it
@@ -256,6 +257,9 @@ export default function InvoiceDetailScreen() {
   // fonts): ~20 s on the emulator, with nothing on screen — a contractor taps
   // again and gets a second file (device pass, 2026-10-02). Busy row + guard.
   const hybridRef = useRef(false);
+  // The service date the contractor just stated (ensureServiceDate), read by
+  // the document builders below until the stored invoice catches up.
+  const serviceDateRef = useRef<string | null>(null);
   const [hybridBusy, setHybridBusy] = useState(false);
   // Whether the send WILL be a dunning reminder — the same question the
   // handler asks (≥ 3 days overdue AND a cadence step for this customer). The
@@ -337,6 +341,42 @@ export default function InvoiceDetailScreen() {
     fallbackVatRatePercent: Math.round(effectiveRate * 100),
     fallbackDescription: t('invoices.services', 'Services rendered'),
   });
+
+  // ── Service date (Leistungsdatum) ────────────────────────────────────────
+  // Germany wants it on EVERY invoice (§ 14 Abs. 4 Nr. 6 UStG). It is the
+  // contractor's fact: stored on the invoice (documents.delivery_date), else
+  // the linked job's completion. The PDF used to state nothing, then — briefly
+  // — "entspricht dem Rechnungsdatum", which is false for work done earlier
+  // (everyday matrix + review, 2026-10-03). Now it is asked, never assumed.
+  const knownServiceDate = (): string | null => {
+    if (serviceDateRef.current) return serviceDateRef.current;
+    const d = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile }).deliveryDate;
+    return d ? localDateKey(d) : null;
+  };
+  const setServiceDate = (key: string) => {
+    serviceDateRef.current = key;
+    updateInvoice(invoice.id, { deliveryDate: key } as any);
+  };
+  /** false = the contractor cancelled; otherwise go on (with the date, if one is needed). */
+  const ensureServiceDate = (): Promise<boolean> => {
+    if (country !== 'DE' || knownServiceDate()) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      Alert.alert(
+        t('invoices.serviceDateAskTitle', 'Date of the work'),
+        t('invoices.serviceDateAskBody', 'A German invoice must state when the work was done. Set the date under "Date of work" on this invoice, or choose Today.'),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel', onPress: () => resolve(false) },
+          { text: t('invoices.serviceDateToday', 'Today'), onPress: () => { setServiceDate(localDateKey(new Date())); resolve(true); } },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) },
+      );
+    });
+  };
+  /** The service date for the documents built right now (fresh state may lag). */
+  const serviceDateForDocs = (): Date | undefined => {
+    const k = knownServiceDate();
+    return k ? (parseCalendarDay(k) ?? undefined) : undefined;
+  };
 
   // R66 round 13: handleSaveCustomer removed. The flow wrote the
   // customer's display NAME into the documents.customer_id UUID FK
@@ -483,7 +523,10 @@ export default function InvoiceDetailScreen() {
   // still said "sent" (emulator, 2026-09-30).
   const handleMarkSent = async () => {
     if (invoice.status === 'paid' || sendingRef.current) return;
+    // The lock FIRST: a second tap while the date question is open (or the
+    // PDF builds) must not send a second email (#363 guard; review 2026-10-03).
     sendingRef.current = true;
+    if (!(await ensureServiceDate())) { sendingRef.current = false; return; }
     try {
       await sendOrRemind();
     } catch (err) {
@@ -648,7 +691,7 @@ export default function InvoiceDetailScreen() {
       // emailed a different document from the one the contractor checked.
       const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
       const built = await buildInvoicePdfBase64(
-        { ...autoInvForPdf, deliveryDate: extras.deliveryDate ?? autoInvForPdf.deliveryDate },
+        { ...autoInvForPdf, deliveryDate: serviceDateForDocs() ?? extras.deliveryDate ?? autoInvForPdf.deliveryDate },
         businessProfile,
         paymentUrl,
         {
@@ -714,6 +757,7 @@ export default function InvoiceDetailScreen() {
     // even with empty businessName / KvK / BTW — that's a non-compliant
     // invoice (Belastingdienst Art. 35) which the contractor could share
     // before realizing the gap. The same gate already exists on handleMarkSent.
+    if (!(await ensureServiceDate())) return;
     const readiness = checkInvoiceReadiness(businessProfile);
     if (!readiness.ready) {
       hapticError();
@@ -738,7 +782,7 @@ export default function InvoiceDetailScreen() {
       // records archive (src/domain/invoiceDocuments.ts).
       const extras = invoicePdfExtras({ invoice, customers, jobs: jobs as any, businessProfile });
       await generateInvoicePdf(
-        { ...autoInv, deliveryDate: extras.deliveryDate ?? autoInv.deliveryDate },
+        { ...autoInv, deliveryDate: serviceDateForDocs() ?? extras.deliveryDate ?? autoInv.deliveryDate },
         businessProfile,
         undefined,
         {
@@ -887,7 +931,10 @@ export default function InvoiceDetailScreen() {
     } catch {}
     // One builder for every path (src/domain/invoiceDocuments.ts): per-line
     // rates, the resolved buyer name, BR-DE contact + address fields.
+    if (!(await ensureServiceDate())) return;
     const data = buildEInvoiceData(invoiceDocInputs());
+    // BT-72: the same date the PDF prints.
+    { const sd = knownServiceDate(); if (sd && !data.deliveryDate) data.deliveryDate = sd; }
     // XRechnung 3.0 rejects an invoice without the buyer's electronic address
     // (BT-49, PEPPOL-EN16931-R010): the Leitweg-ID for a public buyer, else an
     // email. Refuse with the fix rather than hand over a file the buyer's
@@ -1373,6 +1420,45 @@ export default function InvoiceDetailScreen() {
           <Text style={styles.customerName}>{invoiceCustomerName}</Text>
           <Text style={styles.customerJob}>{invoice.job}</Text>
         </View>
+
+        {/* Date of the work (Leistungsdatum). Stated by the contractor; a day
+            stepper as on the timesheet — never a future day. Editable while
+            the invoice is a draft. */}
+        {(() => {
+          const key = knownServiceDate();
+          const day = key ? parseCalendarDay(key) : null;
+          const today = localDateKey(new Date());
+          const step = (d: number) => {
+            const base = day ?? new Date();
+            const next = new Date(base.getFullYear(), base.getMonth(), base.getDate() + d);
+            const k = localDateKey(next);
+            if (k > today) return;
+            setServiceDate(k);
+          };
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Ionicons name="calendar-outline" size={18} color={Palette.hermesOrange} />
+                <Text style={styles.cardTitle}>{t('invoices.serviceDate', 'Date of work')}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.sm }}>
+                {invoice.status === 'draft' && (
+                  <Pressable onPress={() => step(-1)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('invoices.serviceDatePrev', 'Previous day')} testID="service-date-prev">
+                    <Ionicons name="chevron-back" size={20} color={SemanticColors.textPrimary} />
+                  </Pressable>
+                )}
+                <Text style={[styles.customerName, { flex: 1, textAlign: 'center' }, !day && { color: SemanticColors.placeholder }]} testID="service-date-value">
+                  {day ? formatDate(day, country as any) : t('invoices.serviceDateNotSet', 'Not set')}
+                </Text>
+                {invoice.status === 'draft' && (
+                  <Pressable onPress={() => (day ? step(1) : setServiceDate(today))} hitSlop={8} accessibilityRole="button" accessibilityLabel={day ? t('invoices.serviceDateNext', 'Next day') : t('invoices.serviceDateToday', 'Today')} testID="service-date-next">
+                    <Ionicons name={day ? 'chevron-forward' : 'today-outline'} size={20} color={SemanticColors.textPrimary} />
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          );
+        })()}
 
         {/* Line Items Section */}
         <View style={styles.card}>

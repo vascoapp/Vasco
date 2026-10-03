@@ -42,7 +42,7 @@ const US_STATE_OPTIONS = listUsStates();
 import { FadeIn } from '../src/components/shared/FadeIn';
 import { GradientButton } from '../src/components/shared/GradientButton';
 import { hapticSuccess } from '../src/utils/haptics';
-import { isValidKvKNumber, isValidVATNumber } from '../src/utils/validation';
+import { isValidKvKNumber, isValidSellerVatId, normalizeSellerVatId } from '../src/utils/validation';
 import { GRID, RADIUS, TYPE } from '../src/theme/tabStyles';
 import { TIERS, type SubscriptionTier } from '../src/services/subscriptionService';
 import { emitOnboardingCompleted } from '../src/intelligence/dataCollector';
@@ -112,28 +112,28 @@ type RegFieldDef = { key: string; i18nKey: string; validate?: RegFieldValidator;
 const REG_FIELDS: Record<Country, RegFieldDef[]> = {
   NL: [
     { key: 'kvk', i18nKey: 'onboarding.fields.kvk', validate: (v) => isValidKvKNumber(v.trim()), errorKey: 'profile.kvkFormatInvalid', placeholder: '12345678' },
-    { key: 'btw', i18nKey: 'onboarding.fields.btw', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'NL123456789B01' },
+    { key: 'btw', i18nKey: 'onboarding.fields.btw', validate: (v) => isValidSellerVatId(v, 'NL'), errorKey: 'profile.vatFormatInvalid', placeholder: 'NL123456789B01' },
   ],
   UK: [
     { key: 'companiesHouse', i18nKey: 'onboarding.fields.companiesHouse', placeholder: '01234567' },
-    { key: 'vatNumber', i18nKey: 'onboarding.fields.vatNumber', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'GB123456789' },
+    { key: 'vatNumber', i18nKey: 'onboarding.fields.vatNumber', validate: (v) => isValidSellerVatId(v, 'UK'), errorKey: 'profile.vatFormatInvalid', placeholder: 'GB123456789' },
     { key: 'paye', i18nKey: 'onboarding.fields.paye', placeholder: '123/AB12345' },
   ],
   DE: [
     { key: 'handelsregister', i18nKey: 'onboarding.fields.handelsregister', placeholder: 'HRB 12345' },
-    { key: 'ustId', i18nKey: 'onboarding.fields.ustId', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'DE123456789' },
+    { key: 'ustId', i18nKey: 'onboarding.fields.ustId', validate: (v) => isValidSellerVatId(v, 'DE'), errorKey: 'profile.vatFormatInvalid', placeholder: 'DE123456789' },
     { key: 'steuernummer', i18nKey: 'onboarding.fields.steuernummer', placeholder: '12/345/67890' },
   ],
   FR: [
     { key: 'siret', i18nKey: 'onboarding.fields.siret', placeholder: '123 456 789 00012' },
-    { key: 'tvaIntra', i18nKey: 'onboarding.fields.tvaIntra', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'FR12345678901' },
+    { key: 'tvaIntra', i18nKey: 'onboarding.fields.tvaIntra', validate: (v) => isValidSellerVatId(v, 'FR'), errorKey: 'profile.vatFormatInvalid', placeholder: 'FR12345678901' },
   ],
   ES: [
-    { key: 'nif', i18nKey: 'onboarding.fields.nif', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'ES12345678A' },
+    { key: 'nif', i18nKey: 'onboarding.fields.nif', validate: (v) => isValidSellerVatId(v, 'ES'), errorKey: 'profile.vatFormatInvalid', placeholder: 'ES12345678A' },
     { key: 'iae', i18nKey: 'onboarding.fields.iae', placeholder: '5045' },
   ],
   IT: [
-    { key: 'partitaIva', i18nKey: 'onboarding.fields.partitaIva', validate: (v) => isValidVATNumber(v.trim()), errorKey: 'profile.vatFormatInvalid', placeholder: 'IT12345678901' },
+    { key: 'partitaIva', i18nKey: 'onboarding.fields.partitaIva', validate: (v) => isValidSellerVatId(v, 'IT'), errorKey: 'profile.vatFormatInvalid', placeholder: 'IT12345678901' },
     { key: 'cameraCommercio', i18nKey: 'onboarding.fields.cameraCommercio', placeholder: 'MI-1234567' },
   ],
   // R74 US foundation: EIN (federal Employer Identification Number) is the
@@ -619,9 +619,16 @@ export default function OnboardingScreen() {
           teamSize: (teamSize as any) ?? undefined,
           vatScheme: vatSchemeToApply,
           businessName: regFields.businessName || regFields.companyName || regFields.tradeName,
-          kvkNumber: regFields[regRegKey] || regFields.kvk,
-          vatNumber: regFields[countryVatKey] || regFields.vatNumber,
-          registrationNumber: regFields[regRegKey] || regFields.registrationNumber,
+          // Germany keeps its two numbers apart, as business settings does: the
+          // Steuernummer in kvkNumber, the Handelsregister entry (most Handwerker
+          // have none) in registrationNumber. Onboarding wrote the HRB field
+          // into BOTH and dropped the Steuernummer, and the PDF then printed a
+          // Steuernummer typed later in settings as "HRB: 21/815/08150"
+          // (everyday matrix, 2026-10-03).
+          kvkNumber: country === 'DE' ? (regFields.steuernummer || undefined) : (regFields[regRegKey] || regFields.kvk),
+          // Written the local way (a bare partita IVA / NIF), stored canonical.
+          vatNumber: normalizeSellerVatId(regFields[countryVatKey] || regFields.vatNumber || '', country) || undefined,
+          registrationNumber: country === 'DE' ? (regFields.handelsregister || undefined) : (regFields[regRegKey] || regFields.registrationNumber),
           address: regFields.address || regFields.businessAddress,
         });
 

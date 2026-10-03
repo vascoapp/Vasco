@@ -65,6 +65,8 @@ export interface PdfSourceCustomer {
   address?: string;
   postcode?: string | null;
   city?: string | null;
+  vatId?: string | null;
+  taxId?: string | null;
 }
 
 
@@ -127,6 +129,8 @@ export function pdfInvoiceFromRecord(args: {
     customerName: customer?.name ?? invoice.customerName ?? invoice.customer ?? '',
     customerEmail: customer?.email || undefined,
     customerAddress,
+    ...(customer?.vatId ? { customerVatId: customer.vatId } : {}),
+    ...(customer?.taxId ? { customerTaxId: customer.taxId } : {}),
     issueDate,
     dueDate: due,
     // 'cancelled' exists only on the cash-flow shape; a cancelled invoice has

@@ -71,6 +71,8 @@ describe('no test file is orphaned', () => {
     const orphans = files.filter((f) => {
       if (f.includes('__tests__')) return false;        // jest.config.js
       if (f.includes('__screenwalk__')) return false;   // jest.screens.config.js
+      // jest.matrix.config.js — `npm run matrix`, the everyday baseline; only if wired.
+      if (f.startsWith('__matrix__/') && /jest\.matrix\.config\.js/.test(pkg.scripts?.['matrix:run'] ?? '')) return false;
       // admin/ runs its own node --test scripts (admin/package.json, CI admin job).
       if (f.startsWith('admin/') && adminScripts.includes(f.slice('admin/'.length))) return false;
       return !edgeRoots.some((r) => r && f.startsWith(r));

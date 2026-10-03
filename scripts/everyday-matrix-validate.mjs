@@ -65,6 +65,14 @@ for (const cell of cells) {
   // 1. The path through the screens.
   for (const s of res.steps ?? []) add("path", s.name, s.ok, [s.detail, ...(s.alerts ?? []).map((a) => `alert: ${a}`)].filter(Boolean).join(" | "));
 
+  // 1b. Onboarding stores each id where the documents read it (settings
+  // re-enters them afterwards, so the PDF alone would not show a wrong
+  // onboarding mapping).
+  const ob = res.profileAfterOnboarding ?? {};
+  const canon = (id) => (id?.alt ?? id?.native ?? "").replace(/\s/g, "").toUpperCase();
+  if (c.seller.vatId) add("path", "onboarding stores the VAT id canonical", ob.vatNumber === canon(c.seller.vatId), `stored ${ob.vatNumber}`);
+  if (c.market === "DE") add("path", "onboarding keeps Steuernummer and HRB apart", ob.kvkNumber === c.seller.taxId?.native && !ob.registrationNumber, `kvk=${ob.kvkNumber} reg=${ob.registrationNumber}`);
+
   // 2. The printed invoice (what the PDF renders).
   const htmlPath = path.join(dir, "invoice.html");
   if (c.formats.includes("pdf")) {
@@ -95,6 +103,10 @@ for (const cell of cells) {
       // The PDF the contractor shares IS the invoice the customer receives.
       add("pdf", "not stamped as a draft", !/\b(ENTWURF|BROUILLON|BOZZA|BORRADOR|CONCEPT|DRAFT)\b/.test(text), (text.match(/\b(ENTWURF|BROUILLON|BOZZA|BORRADOR|CONCEPT|DRAFT)\b/) ?? [""])[0]);
       if (c.market === "IT" && c.kind === "b2c" && c.buyer.taxId) add("pdf", "buyer codice fiscale (B2C)", contains(c.buyer.taxId.native));
+      // Art. 21 c.2 lett. f DPR 633/72: the buyer's partita IVA (business) on an Italian invoice.
+      if (c.market === "IT" && c.kind === "b2b" && c.buyer.vatId) add("pdf", "buyer partita IVA (art. 21 DPR 633/72)", contains(c.buyer.vatId.native));
+      // Art. 6 RD 1619/2012: a factura completa names the buyer's NIF.
+      if (c.market === "ES" && c.buyer.vatId) add("pdf", "buyer NIF (art. 6 RD 1619/2012)", contains(c.buyer.vatId.native));
       add("pdf", "invoice number", res.invoiceNumber && contains(res.invoiceNumber), res.invoiceNumber ?? "unknown");
       for (const l of c.lines) add("pdf", `line "${l.description}"`, contains(l.description));
       add("pdf", `net ${exp.net.toFixed(2)}`, hasMoney(text, exp.net));
@@ -151,6 +163,16 @@ for (const cell of cells) {
       add(fmt, "buyer street in the file", flatXml.includes(squash(c.buyer.street)));
       const sv = c.seller.vatId ? squash(c.seller.vatId.native).replace(/^(DE|FR|NL|GB|ES|IT)/, "") : null;
       if (sv) add(fmt, "seller VAT id in the file", flatXml.includes(sv), c.seller.vatId.native);
+      // DE: BT-72, the date of service, in the XML — the same day the PDF prints.
+      if (c.market === "DE" && fmt === "xrechnung") {
+        const bt72 = /<cbc:ActualDeliveryDate>([\d-]+)</.exec(xml)?.[1];
+        add(fmt, "date of service (BT-72) in the file", !!bt72, bt72 ?? "missing");
+        const html = existsSync(htmlPath) ? readFileSync(htmlPath, "utf8") : "";
+        if (bt72) {
+          const [y, m, d] = bt72.split("-").map(Number);
+          add(fmt, "PDF and XML state the same service date", html.includes(`${d}. `) && html.includes(String(y)) && /Leistungsdatum/.test(html), bt72);
+        }
+      }
     }
   }
   report.push({ cell, market: c.market, kind: c.kind, checks, ok: checks.length > 0 && checks.every((x) => x.ok) });

@@ -23,6 +23,7 @@ import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { sellerAddressLine, registrationParts } from '../../src/services/invoicePdfService';
 import { generateQuotePdf, type QuotePdfData } from '../../src/services/quotePdfService';
 import { shareQuoteWithAcceptanceLink } from '../../src/services/customerQuoteAcceptanceService';
 import { confirmShareSent } from '../../src/utils/shareOutcome';
@@ -181,8 +182,10 @@ export default function QuoteDetailScreen() {
       await generateQuotePdf(
         pdfData,
         businessProfile.businessName,
-        businessProfile.address,
-        businessProfile.kvkNumber,
+        // The same seller lines as the invoice: street + postcode + city, and
+        // the registration numbers under their own names (everyday matrix).
+        sellerAddressLine(businessProfile),
+        registrationParts(businessProfile).join(' · '),
         businessProfile.vatNumber,
         { vatScheme: businessProfile.vatScheme },
       );

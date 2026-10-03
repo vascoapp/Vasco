@@ -11,6 +11,7 @@ import { formatQuantity } from '../i18n/formatting';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { File } from 'expo-file-system';
+import { isOfflineMintedDocNumber } from '../lib/dataProvider';
 import type { AutoInvoice } from './invoiceAutomationService';
 import { DEMO_MODE } from '../config/demo';
 import { vatRateGroups, documentFallbackRate } from '../domain/business';
@@ -292,6 +293,63 @@ function statusColor(status: string): string {
   }
 }
 
+/**
+ * The seller's address as the law wants it — street AND postcode + city. The
+ * PDF printed `address` alone, which since #339 holds the street only, so every
+ * invoice in every market named the contractor without a town (everyday
+ * matrix, 2026-10-03). An older profile that typed the town into `address`
+ * ("Keizersgracht 100, Amsterdam") is not given it twice.
+ */
+export function sellerAddressLine(p: { address?: string; postcode?: string; city?: string; country?: Country } | undefined): string {
+  const street = (p?.address ?? '').trim();
+  const pc = (p?.postcode ?? '').trim();
+  const city = (p?.city ?? '').trim();
+  // Only when BOTH are already there (pdfA3Invoice.postalLine's rule): a city
+  // inside a street name ("Berliner Straße 12", "Via Roma 3") must not cost
+  // the address its town (review, 2026-10-03).
+  const a = street.toLowerCase();
+  const already = (!pc || a.includes(pc.toLowerCase())) && (!city || a.includes(city.toLowerCase()));
+  const tail = already ? '' : (p?.country === 'UK' ? [city, pc] : [pc, city]).filter(Boolean).join(' ');
+  return [street, tail].filter(Boolean).join(', ');
+}
+
+/**
+ * The registration line under the seller. Germany has two numbers and the PDF
+ * printed whatever sat in `kvkNumber` as "HRB" — where business settings keeps
+ * the STEUERNUMMER, so a sole trader's tax number appeared as a register entry
+ * (everyday matrix, 2026-10-03). HRB only from `registrationNumber` and only
+ * when it is one (HRA/HRB…); the Steuernummer under its own name.
+ */
+export function registrationParts(p: { kvkNumber?: string; registrationNumber?: string; country?: Country } | undefined): string[] {
+  const kvk = (p?.kvkNumber ?? '').trim();
+  if (p?.country !== 'DE') {
+    // Business settings edits SIRET / Companies House / REA in
+    // `registrationNumber`; `kvkNumber` is onboarding's copy, so an edited
+    // SIRET was never printed (review, 2026-10-03). NL (KvK) and ES (IAE) live
+    // in kvkNumber.
+    const own = p?.country === 'FR' || p?.country === 'UK' || p?.country === 'IT'
+      ? ((p?.registrationNumber ?? '').trim() || kvk)
+      : kvk;
+    return own ? [`${registrationLabel(p?.country)}: ${own}`] : [];
+  }
+  const reg = (p?.registrationNumber ?? '').trim();
+  const parts: string[] = [];
+  if (reg) parts.push(/^HR[AB]\b/i.test(reg) ? reg : `Handelsregister: ${reg}`);
+  // Onboarding used to copy the HRB entry into kvkNumber as well.
+  if (kvk && kvk !== reg && !/^HR[AB]\b/i.test(kvk)) parts.push(`Steuernummer: ${kvk}`);
+  return parts;
+}
+
+/** The buyer's VAT id / tax id, labelled the way the contractor's market labels them. */
+function buyerIdParts(invoice: AutoInvoice, country: Country | undefined, vatWord: string): string[] {
+  const parts: string[] = [];
+  if (invoice.customerVatId) parts.push(`${vatLabel(country, vatWord)}: ${escapeHtml(invoice.customerVatId)}`);
+  if (invoice.customerTaxId && invoice.customerTaxId !== invoice.customerVatId) {
+    parts.push(`${country === 'IT' ? 'C.F.' : country === 'ES' ? 'NIF' : country === 'DE' ? 'St.-Nr.' : 'Tax no.'}: ${escapeHtml(invoice.customerTaxId)}`);
+  }
+  return parts;
+}
+
 // ── HTML Template ────────────────────────────────────────
 
 function buildInvoiceHtml(
@@ -338,7 +396,11 @@ function buildInvoiceHtml(
   const deliveryDate = invoice.deliveryDate;
   const sameDay = deliveryDate
     && deliveryDate.toDateString() === invoice.issueDate.toDateString();
-  const deliveryDateLabel = deliveryDate && !sameDay
+  // Germany wants the date of service on EVERY invoice (§ 14 Abs. 4 Nr. 6
+  // UStG), not only when it differs. The date is the contractor's — the invoice
+  // screen asks for it before a German invoice leaves (ensureServiceDate);
+  // the PDF never states one nobody gave (review, 2026-10-03).
+  const deliveryDateLabel = deliveryDate && (!sameDay || country === 'DE')
     ? deliveryDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
 
@@ -360,7 +422,16 @@ function buildInvoiceHtml(
       <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
     </tr>`).join('\n');
 
-  const statusLabel = L.status[invoice.status] || L.status.draft;
+  // The PDF of a draft is what the contractor SENDS: it is the invoice, not a
+  // draft of one. It was stamped DRAFT/ENTWURF/BOZZA… on every invoice a
+  // contractor shared — the status only moves on after they confirm it went
+  // out (everyday matrix, 2026-10-03). Only facts the customer should read
+  // (paid, overdue) are stamped.
+  // …unless its number is still the offline placeholder (I-OFF-…), swapped for
+  // the real one when it syncs: that document is not final yet and says so.
+  const statusLabel = invoice.status === 'draft'
+    ? (isOfflineMintedDocNumber(invoice.invoiceNumber) ? L.status.draft : '')
+    : (L.status[invoice.status] || '');
   const sColor = statusColor(invoice.status);
 
   // VAT breakdown by rate — zero everything for small-business scheme.
@@ -503,14 +574,14 @@ function buildInvoiceHtml(
     <div class="brand-mark">V</div>
     <div class="brand-name">${businessName || 'Your Business'}</div>
     <div class="brand-address">${businessAddress || ''}</div>
-    ${kvkNumber ? `<div class="brand-address">${registrationLabel(country)}: ${kvkNumber}</div>` : ''}
+    ${kvkNumber ? `<div class="brand-address">${kvkNumber}</div>` : ''}
     ${vatNumber ? `<div class="brand-address">${vatLabel(country, L.vat)}: ${vatNumber}</div>` : ''}
     ${insuranceRef ? `<div class="insurance-ref">${insuranceRef}</div>` : ''}
   </div>
   <div class="doc-title-block">
     <div class="doc-title">${L.title}</div>
     <div class="doc-number">${invoice.invoiceNumber}</div>
-    <div class="doc-status">${statusLabel}</div>
+    ${statusLabel ? `<div class="doc-status">${statusLabel}</div>` : ''}
   </div>
 </div>
 
@@ -525,6 +596,7 @@ function buildInvoiceHtml(
     <div class="addr-label">${L.to}</div>
     <div class="addr-name">${escapeHtml(invoice.customerName)}</div>
     <div class="addr-detail">${escapeHtml(invoice.customerAddress)}</div>
+    ${buyerIdParts(invoice, country, L.vat).map((x) => `<div class="addr-detail">${x}</div>`).join('')}
     ${invoice.customerEmail ? `<div class="addr-detail">${escapeHtml(invoice.customerEmail)}</div>` : ''}
   </div>
 </div>
@@ -599,7 +671,7 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
   <div>${escapeHtml(businessName)}${businessAddress ? ' · ' + escapeHtml(businessAddress) : ''}</div>
   ${(() => {
     const parts: string[] = [];
-    if (kvkNumber) parts.push(`${registrationLabel(country)}: ${kvkNumber}`);
+    if (kvkNumber) parts.push(kvkNumber);
     if (vatNumber) parts.push(`${vatLabel(country, L.vat)}: ${vatNumber}`);
     return parts.length ? `<div style="margin-top:4px;font-size:10px;color:#6B7280">${parts.join(' · ')}</div>` : '';
   })()}
@@ -689,7 +761,10 @@ export async function generateInvoicePdf(
   businessProfile?: {
     businessName?: string;
     address?: string;
+    postcode?: string;
+    city?: string;
     kvkNumber?: string;
+    registrationNumber?: string;
     vatNumber?: string;
     iban?: string;
     // R75 US foundation: ACH details. Rendered in place of IBAN when country === 'US'.
@@ -835,8 +910,8 @@ export async function renderInvoicePdfFile(
   let html = buildInvoiceHtml(
     invoice,
     businessProfile?.businessName ?? '',
-    businessProfile?.address ?? '',
-    businessProfile?.kvkNumber ?? '',
+    sellerAddressLine(businessProfile),
+    registrationParts(businessProfile).join(' · '),
     businessProfile?.vatNumber ?? '',
     paymentUrl,
     language,

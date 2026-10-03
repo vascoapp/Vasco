@@ -45,8 +45,10 @@ run('ZUGFeRD export while the PDF builds', () => {
     await AsyncStorage.setItem('@vasco_seed_version', '2026-03-25-v4');
     await AsyncStorage.setItem('@vasco_business_profile', JSON.stringify({ ...DE_BUSINESS_PROFILE, country: 'DE', language: 'nl' }));
     await AsyncStorage.setItem('@vasco_customers', JSON.stringify([{ id: 'c-de', name: 'Stefan Weber', email: 'weber@example.de', address: 'Ring 1', postcode: '50667', city: 'Köln', country: 'DE' }]));
+    // deliveryDate: the date of the work is stated, so a German invoice does not
+    // stop to ask for it (flowGermanInvoiceAsksForTheServiceDate covers the ask).
     await AsyncStorage.setItem('@vasco_invoices', JSON.stringify([
-      { id: 'RE-Z-1', customerId: 'c-de', customer: 'Stefan Weber', job: 'Wartung', amount: 119, status: 'sent', dueInDays: 14 },
+      { id: 'RE-Z-1', customerId: 'c-de', customer: 'Stefan Weber', job: 'Wartung', amount: 119, status: 'sent', dueInDays: 14, deliveryDate: '2026-09-30' },
     ]));
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     const rnShare = jest.spyOn(Share, 'share').mockImplementation(async () => ({ action: 'dismissedAction' } as any));

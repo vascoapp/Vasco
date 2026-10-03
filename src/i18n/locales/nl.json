@@ -954,7 +954,14 @@
     "vatNatureMissing": "Regel {{line}} ({{description}}): 0 % btw zonder reden — kies die (bijv. btw verlegd)",
     "vatNatureNotForRegime": "Regel {{line}} ({{description}}): {{nature}} kan niet onder {{regime}} — kies een andere reden",
     "einvoiceMissingThisInvoice": "Deze factuur",
-    "einvoiceFixLines": "Regels bewerken"
+    "einvoiceFixLines": "Regels bewerken",
+    "serviceDate": "Datum werkzaamheden",
+    "serviceDateNotSet": "Niet ingevuld",
+    "serviceDatePrev": "Vorige dag",
+    "serviceDateNext": "Volgende dag",
+    "serviceDateToday": "Vandaag",
+    "serviceDateAskTitle": "Datum van het werk",
+    "serviceDateAskBody": "Een Duitse factuur moet vermelden wanneer het werk is gedaan. Stel de datum in bij \"Datum werkzaamheden\" op deze factuur, of kies Vandaag."
   },
   "expenses": {
     "title": "Uitgaven",
@@ -5022,7 +5029,8 @@
     "fieldSdiCode": "SDI-ontvangercode (Italië)",
     "fieldPec": "PEC-adres (Italië)",
     "dir3Hint": "Overheidsinstantie: facturen gaan via FACe en hebben haar drie DIR3-codes nodig. De instantie geeft ze u (op de opdracht of het contract).",
-    "dir3Invalid": "Een DIR3-code heeft 9 letters en cijfers en begint met een letter (bijv. {{example}})."
+    "dir3Invalid": "Een DIR3-code heeft 9 letters en cijfers en begint met een letter (bijv. {{example}}).",
+    "vatIsCodiceFiscale": "Dit lijkt een codice fiscale (VvE, vereniging). Vul het in bij Codice fiscale; is het echt een partita IVA, zet er dan IT voor."
   },
   "aiChat": {
     "welcome": "Hallo! Ik ben je kantoorhulp. Vraag me om een klant te factureren, een klus in te plannen of cijfers te checken.",

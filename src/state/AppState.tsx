@@ -2953,6 +2953,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // string would print an empty mention.
           if (updates.operationNature !== undefined) dbUpdates.operation_nature = updates.operationNature ?? null;
           if (updates.deliveryAddress !== undefined) dbUpdates.delivery_address = updates.deliveryAddress || null;
+          // The service date (Leistungsdatum) the contractor states on the
+          // invoice screen — a calendar day key. Never written before
+          // 2026-10-03: only an invoice made from a finished job had one.
+          if ((updates as any).deliveryDate !== undefined) dbUpdates.delivery_date = (updates as any).deliveryDate || null;
           if (Object.keys(dbUpdates).length > 0) {
             import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
               persistOrQueue('documents', 'update', () => updateDocument(id, dbUpdates), { rowId: id, payload: dbUpdates }),
