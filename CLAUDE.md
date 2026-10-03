@@ -433,6 +433,20 @@ Dark slate + sunset-orange ramp + amber highlights. Replaces the prior Wolt-insp
   `supabase/functions/_shared/` as pure TypeScript that jest imports** — never
   "kept in step by hand" (the portal's copy drifted; the customer accepted a
   cent less than the invoice). See `_shared/documentTotals.ts`.
+- **Vasco does not file tax returns** (user, 2026-10-03). `app/contractor/vat-prep.tsx`
+  is the VAT REPORT for all six markets (`src/services/vatReport.ts`): sales and
+  VAT per rate, purchases, balance, the documents behind them, and what is NOT
+  included — PDF/CSV for the accountant. Its figures are the groups the
+  invoice's own totals came from (`AutoInvoice.vatGroups`) — never recompute or
+  guess them. No box mapping, no "submit/file" button, no nil-return claim
+  outside NL/DE. The old `vatPrepService` and the accountant access/handover
+  screens stay dormant (user: keep them off). memory/vat-report-not-submissions.md.
+- **A legal statement is the contractor's fact, never a default.** A German
+  invoice asks for the date of the work before it leaves (`ensureServiceDate`
+  in `app/invoices/[id].tsx`), stores it (`documents.delivery_date`), prints it
+  and sends it as BT-72 — the PDF never claims "entspricht dem
+  Rechnungsdatum". Seller lines on every PDF come from `sellerAddressLine` /
+  `registrationParts` (invoicePdfService) — quote and invoice alike.
 - **Status follows the artefact, for invoices too**: `markInvoiceSent` only
   behind a delivered email or a confirmed share (guard
   `invoiceSentOnlyWithAnArtefact`). The invoice button says what it does —
