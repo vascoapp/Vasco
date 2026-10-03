@@ -26,7 +26,8 @@ import {
   workerRowToWorker,
 } from './mappers';
 import type { Quote, Invoice } from '../domain/documents';
-import type { QuoteLineItem } from '../domain/lineItems';
+import { lineVatNature, type QuoteLineItem } from '../domain/lineItems';
+import { isVatNature, type VatNature } from '../domain/vatNature';
 import type { BusinessProfile } from '../domain/business';
 import type { Customer } from '../domain/customers';
 import type { Job } from '../domain/jobs';
@@ -230,7 +231,7 @@ export async function listLineItems(documentId: string): Promise<LineItemRow[]> 
 const healingDocuments = new Set<string>();
 
 export async function healOrphanLineItems(
-  byDocumentNumber: Record<string, { description: string; quantity: number; unitPrice: number; vatRate?: number }[]>,
+  byDocumentNumber: Record<string, { description: string; quantity: number; unitPrice: number; vatRate?: number; vatNature?: VatNature }[]>,
   /** The contractor's effective rate — what every other line writer stamps
    *  on a line that carries none. */
   fallbackVatRatePercent: number | null,
@@ -276,6 +277,10 @@ export async function healOrphanLineItems(
           // was healed with vat_rate NULL, and the portal, the XRechnung and
           // the next reload all billed it at 21 % (review, 2026-09-30).
           vat_rate: typeof it.vatRate === 'number' && Number.isFinite(it.vatRate) ? it.vatRate : fallbackVatRatePercent,
+          // And the nature of a 0 % line with it — the same heal class: an
+          // offline Italian reverse-charge line would otherwise reach the
+          // backend as a bare 0 % and export refused (or as N2.2) elsewhere.
+          vat_nature: lineVatNature(it, fallbackVatRatePercent),
         })), { ignoreExisting: true });
         healed += 1;
       } catch { /* one document failing must not stop the rest */ } finally {
@@ -290,7 +295,7 @@ export async function healOrphanLineItems(
 
 export async function upsertLineItems(
   documentId: string,
-  items: { description: string; quantity?: number; unit_price?: number; total_price?: number; position?: number; vat_rate?: number | null }[],
+  items: { description: string; quantity?: number; unit_price?: number; total_price?: number; position?: number; vat_rate?: number | null; vat_nature?: VatNature | null }[],
   /** The heal: a line already at that position wins, silently (unique index
    *  line_items_document_position_uq). Everyone else wants an error. */
   opts: { ignoreExisting?: boolean } = {},
@@ -329,7 +334,7 @@ export async function upsertLineItems(
 export async function replaceLineItems(
   idOrNumber: string,
   docType: 'quote' | 'invoice',
-  items: { description: string; quantity: number; unit_price: number; total_price: number; position: number; vat_rate?: number }[],
+  items: { description: string; quantity: number; unit_price: number; total_price: number; position: number; vat_rate?: number; vat_nature?: VatNature | null }[],
 ): Promise<'replaced' | 'no-document' | 'no-session'> {
   const { data: auth } = await supabase.auth.getSession();
   if (!auth?.session) return 'no-session';
@@ -747,6 +752,9 @@ export async function loadLineItems(): Promise<Record<string, QuoteLineItem[]> |
       // back, so a mixed-rate quote (9% labour + 21% materials) came back from
       // a cold start with no per-line rates and was re-taxed at the profile's.
       ...(row.vat_rate != null ? { vatRate: Number(row.vat_rate) } : {}),
+      // Italy: the Natura of a 0 % line (migration 20261003000001) — the
+      // second read mapper, beside lineItemRowToQuoteLineItem.
+      ...(isVatNature(row.vat_nature) ? { vatNature: row.vat_nature } : {}),
     });
   }
   return grouped;

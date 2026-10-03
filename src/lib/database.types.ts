@@ -270,6 +270,9 @@ export type LineItemRow = {
   // deferred — pre-R47 only the in-memory AutoInvoice carried the rate;
   // mixed-rate NL plumbing/materials lost the distinction across cold start.
   vat_rate: number | null;
+  /** Italy: FatturaPA Natura of a 0 % line (N6.3 reverse charge …). NULL = none
+   *  stated. Migration 20261003000001; see src/domain/vatNature.ts. */
+  vat_nature: string | null;
   created_at: string;
   updated_at: string;
 };

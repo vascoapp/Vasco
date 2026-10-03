@@ -91,6 +91,21 @@ it('two heals at once write the lines ONCE', async () => {
   expect(upserted).toHaveLength(1);
 });
 
+// Italy (2026-10-03): the NATURE of a 0 % line is the same class of fact as
+// its rate — an offline reverse-charge line healed without it reaches the
+// backend as a bare 0 %, and every other device then refuses the FatturaPA.
+it('keeps a 0 % line\'s VAT nature, and never puts one on a rated line', async () => {
+  upserted.length = 0;
+  await healOrphanLineItems({
+    'OF-2026-0001': [
+      { description: 'Subappalto', quantity: 1, unitPrice: 900, vatRate: 0, vatNature: 'N6.3' },
+      { description: 'Noleggio', quantity: 1, unitPrice: 120, vatRate: 22, vatNature: 'N6.3' },
+      { description: 'Materiale', quantity: 1, unitPrice: 50 },
+    ],
+  }, 22);
+  expect(upserted.map((r) => [r.vat_rate, r.vat_nature])).toEqual([[0, 'N6.3'], [22, null], [22, null]]);
+});
+
 it('a document that already has lines on the server is not written again', async () => {
   mockExisting['doc-1'] = 2;
   const n = await healOrphanLineItems({ 'OF-2026-0001': [{ description: 'Arbeid', quantity: 4, unitPrice: 55 }] }, 21);

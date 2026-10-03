@@ -3835,6 +3835,11 @@
     "nullable": true,
     "hasDefault": false,
     "type": "numeric"
+   },
+   "vat_nature": {
+     "nullable": true,
+     "hasDefault": false,
+     "type": "text"
    }
   },
   "material_canonical_aliases": {

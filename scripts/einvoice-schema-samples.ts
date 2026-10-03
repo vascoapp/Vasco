@@ -18,9 +18,10 @@ import { generateFatturaPAXml } from '../src/integrations/einvoice-it';
 import { generateFacturaeXml } from '../src/integrations/einvoice-es';
 import { signFacturae, type SigningMaterial } from '../src/integrations/facturaeSignature';
 import * as forge from 'node-forge';
+import type { VatNature } from '../src/domain/vatNature';
 
 const OUT = process.argv[2];
-type Line = { description: string; quantity: number; unitPrice: number; vatRate: number };
+type Line = { description: string; quantity: number; unitPrice: number; vatRate: number; vatNature?: VatNature };
 const inputs = (country: string, profile: Record<string, unknown>, customer: Record<string, unknown>, lines: Line[], rate: number) => ({
   invoice: { id: `${country}-2026-0101`, customerId: 'c1', customer: String(customer.name), job: 'Lavori', amount: 0, status: 'sent', dueInDays: 30, sentAt: '2026-09-30T09:00:00Z' } as any,
   lines, customers: [{ id: 'c1', ...customer }] as any, businessProfile: profile as any, country, effectiveRate: rate,
@@ -60,11 +61,28 @@ const cases: Case[] = [
     { description: 'Prodotto agevolato', quantity: 1.5, unitPrice: 9.99, vatRate: 4 },
     { description: 'Storno acconto', quantity: -1, unitPrice: 20, vatRate: 22 },
   ], 0.22) },
-  // Ordinary regime with a 0 % line: accepted by SDI (warning NATURA-REGIME), not refused.
+  // Ordinary regime with a 0 % line whose nature the contractor stated: an
+  // expense paid in the customer's name is outside IVA (N1, art. 15).
   { name: 'it-ordinary-zero-line', fmt: 'it', inp: inputs('IT', IT_SELLER, IT_BUYER, [
     { description: 'Lavori', quantity: 1, unitPrice: 100, vatRate: 22 },
-    { description: 'Anticipazione spese', quantity: 1, unitPrice: 15.5, vatRate: 0 },
+    { description: 'Anticipazione spese', quantity: 1, unitPrice: 15.5, vatRate: 0, vatNature: 'N1' },
   ], 0.22) },
+  // Reverse charge (2026-10-03): a building subcontract (N6.3) and a
+  // completion service (N6.7) beside a 22 % line and an N1 expense — four
+  // DatiRiepilogo (00443/00444), each 0 % one with its RiferimentoNormativo,
+  // and no marca da bollo (reverse charge IS subject to IVA) although the 0 %
+  // amount is far above € 77,47.
+  { name: 'it-reverse-charge-edilizia', fmt: 'it', inp: inputs('IT', IT_SELLER, IT_BUYER, [
+    { description: 'Subappalto impianto idraulico cantiere Via Po', quantity: 1, unitPrice: 4250, vatRate: 0, vatNature: 'N6.3' },
+    { description: 'Completamento bagni', quantity: 12.5, unitPrice: 38.4, vatRate: 0, vatNature: 'N6.7' },
+    { description: 'Noleggio attrezzatura', quantity: 1, unitPrice: 120, vatRate: 22 },
+    { description: 'Diritti di segreteria anticipati', quantity: 1, unitPrice: 16, vatRate: 0, vatNature: 'N1' },
+  ], 0.22) },
+  // Forfettario: an unstated 0 % line is the franchise (N2.2), a stated N1 stays N1.
+  { name: 'it-forfettario-n1', fmt: 'it', inp: inputs('IT', { ...IT_SELLER, fiscalRegime: 'RF19' }, IT_BUYER, [
+    { description: 'Riparazione caldaia', quantity: 1, unitPrice: 60, vatRate: 0 },
+    { description: 'Marca da bollo pratica comunale', quantity: 1, unitPrice: 16, vatRate: 0, vatNature: 'N1' },
+  ], 0) },
   // REFUSALS — the file must not be handed over.
   { name: 'it-refuse-pa-office-code', fmt: 'it', expect: ['00427'], inp: inputs('IT', IT_SELLER, { ...IT_BUYER, einvoiceRouting: 'UFABCD' }, [
     { description: 'Lavori', quantity: 1, unitPrice: 100, vatRate: 22 },
@@ -110,7 +128,19 @@ const cases: Case[] = [
   ], 0.21) },
 ];
 // The MAPPER refuses these (asks for the field before any file exists).
-const mapperRefusals: Array<{ name: string; inp: ReturnType<typeof inputs>; missing: string[] }> = [
+const mapperRefusals: Array<{ name: string; fmt?: 'it' | 'es'; inp: ReturnType<typeof inputs>; missing: string[] }> = [
+  // Ordinary regime, a 0 % line with no stated nature: reverse charge, exempt
+  // or out of scope are different invoices in law — asked for, never guessed.
+  { name: 'it-ordinary-zero-line-without-nature', fmt: 'it', missing: ['invoices.vatNatureMissing'],
+    inp: inputs('IT', IT_SELLER, IT_BUYER, [
+      { description: 'Lavori', quantity: 1, unitPrice: 100, vatRate: 22 },
+      { description: 'Subappalto', quantity: 1, unitPrice: 900, vatRate: 0 },
+    ], 0.22) },
+  // A forfettario does not apply reverse charge as the supplier.
+  { name: 'it-forfettario-reverse-charge', fmt: 'it', missing: ['invoices.vatNatureNotForRegime'],
+    inp: inputs('IT', { ...IT_SELLER, fiscalRegime: 'RF19' }, IT_BUYER, [
+      { description: 'Subappalto', quantity: 1, unitPrice: 900, vatRate: 0, vatNature: 'N6.3' },
+    ], 0) },
   { name: 'es-public-body-without-dir3', missing: ['customer.dir3OficinaContable', 'customer.dir3OrganoGestor', 'customer.dir3UnidadTramitadora'],
     inp: inputs('ES', ES_SELLER, { ...ES_PUBLIC_BODY, dir3OficinaContable: undefined, dir3OrganoGestor: undefined, dir3UnidadTramitadora: undefined }, [
       { description: 'Mantenimiento', quantity: 1, unitPrice: 500, vatRate: 21 },
@@ -156,8 +186,8 @@ for (const { name, fmt, inp, expect, sign } of cases) {
   writeFileSync(`${OUT}/${name}.xml`, xml);
   if (expect) expected[`${name}.xml`] = expect;
 }
-for (const { name, inp, missing } of mapperRefusals) {
-  const r = toFacturae(buildEInvoiceSource(inp));
+for (const { name, fmt, inp, missing } of mapperRefusals) {
+  const r = fmt === 'it' ? toFatturaPA(buildEInvoiceSource(inp)) : toFacturae(buildEInvoiceSource(inp));
   const got = r.ok ? [] : r.missing.map((m) => m.key).sort();
   if (got.join() !== [...missing].sort().join()) {
     console.log(`MAPPER ${name}: expected refusal [${missing.join(', ')}], got ${r.ok ? 'a document' : `[${got.join(', ')}]`}`);

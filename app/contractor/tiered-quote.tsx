@@ -155,6 +155,10 @@ export default function TieredQuoteScreen() {
             // Dutch 9% quote was saved, exported and invoiced at 21% (#253's
             // shape, one screen further along).
             vatRate: item.vatRate ?? tier.vatRate,
+            // Italy: the reason a 0 % tier carries no IVA (reverse charge …)
+            // — dropped here, the invoice made from this quote would be
+            // refused at export or filed under the wrong legal basis.
+            ...((item.vatNature ?? tier.vatNature) ? { vatNature: item.vatNature ?? tier.vatNature } : {}),
           }));
           if (lineItems.length === 0) {
             Alert.alert(t('tieredQuote.error'), t('tieredQuote.noItems'));

@@ -9,16 +9,22 @@ import { decimalText, moneyText, latin1Text } from './einvoiceText';
 // =============================================================================
 
 /**
- * Is the € 2,00 marca da bollo due? Italian rule: an invoice whose IVA-exempt
- * / non-soggetto amount exceeds € 77,47.
+ * Is the € 2,00 marca da bollo due? Italian rule (DPR 642/1972, Tariffa parte
+ * I, art. 13 n. 1): an invoice whose amount NOT subject to IVA — excluded,
+ * non-soggetto, exempt, margin — exceeds € 77,47.
  *
- * Takes LINE TOTALS — the amount the rule is about — not unit prices.
+ * Takes LINE TOTALS — the amount the rule is about — not unit prices. A 0 %
+ * line with a known Natura counts only when that Natura is outside IVA (N1,
+ * N2.x, N4, N5): a reverse-charge line (N6.x) IS subject to IVA — the
+ * customer pays it — and carries no stamp; nor do exports / intra-EU supplies
+ * (N3.x). A 0 % line without a Natura counts, as it always did.
  */
+const BOLLO_NATURA = /^(N1|N2\.\d|N4|N5)$/;
 export function marcaDaBolloDue(
-  lines: { lineTotal: number; vatRate: number }[],
+  lines: { lineTotal: number; vatRate: number; natura?: string }[],
 ): boolean {
   const exemptTotal = lines
-    .filter((l) => l.vatRate === 0)
+    .filter((l) => l.vatRate === 0 && (l.natura === undefined || BOLLO_NATURA.test(l.natura)))
     .reduce((sum, l) => sum + l.lineTotal, 0);
   return exemptTotal > 77.47;
 }
@@ -137,6 +143,13 @@ export interface FatturaPALineItem {
   prezzoTotale: number;
   aliquotaIva: number; // 0 | 4 | 5 | 10 | 22
   natura?: NaturaEsenzione; // Required when aliquotaIva is 0
+  /**
+   * The norm behind the Natura — DatiRiepilogo/RiferimentoNormativo, which
+   * Allegato A 1.9.1 makes "obbligatorio nei casi di operazioni di cui
+   * all'elemento Natura" (String100LatinType). DettaglioLinee has no slot for
+   * it: it is written once per (AliquotaIVA, Natura) summary group.
+   */
+  riferimentoNormativo?: string;
 }
 
 export interface FatturaPA {
@@ -437,8 +450,12 @@ function buildDatiRiepilogo(
     imposta: number;
     aliquota: number;
     natura?: NaturaEsenzione;
+    riferimentoNormativo?: string;
   }> = {};
 
+  // One DatiRiepilogo per (AliquotaIVA, Natura): SDI checks each line's rate
+  // AND Natura has its summary (00443 / 00444), so a reverse-charge line and
+  // a forfettario line at 0 % are two summaries, not one.
   for (const item of items) {
     const key = `${item.aliquotaIva}_${item.natura ?? ''}`;
     if (!groups[key]) {
@@ -447,6 +464,7 @@ function buildDatiRiepilogo(
         imposta: 0,
         aliquota: item.aliquotaIva,
         natura: item.natura,
+        riferimentoNormativo: item.riferimentoNormativo,
       };
     }
     // The lines print round2(prezzoTotale), so the summary adds up the SAME
@@ -466,7 +484,8 @@ function buildDatiRiepilogo(
         <Natura>${g.natura}</Natura>` : ''}
         <ImponibileImporto>${g.imponibile.toFixed(2)}</ImponibileImporto>
         <Imposta>${g.imposta.toFixed(2)}</Imposta>
-        <EsigibilitaIVA>${esiCode}</EsigibilitaIVA>
+        <EsigibilitaIVA>${esiCode}</EsigibilitaIVA>${g.natura && g.riferimentoNormativo ? `
+        <RiferimentoNormativo>${escapeXml(g.riferimentoNormativo.slice(0, 100))}</RiferimentoNormativo>` : ''}
       </DatiRiepilogo>`).join('\n');
 }
 

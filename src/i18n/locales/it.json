@@ -950,7 +950,11 @@
     "sendFailedNothingChanged": "Non è stato possibile consegnare l'email, non è cambiato nulla: {{error}}",
     "resendInvoice": "Invia di nuovo la fattura",
     "notSyncedTitle": "Non ancora sincronizzata",
-    "notSyncedBody": "Questa fattura è stata creata offline e non è ancora arrivata al server. Connettiti a internet, attendi un momento e riprova: non è stato inviato nulla."
+    "notSyncedBody": "Questa fattura è stata creata offline e non è ancora arrivata al server. Connettiti a internet, attendi un momento e riprova: non è stato inviato nulla.",
+    "vatNatureMissing": "Riga {{line}} ({{description}}): IVA allo 0 % senza natura — sceglila (es. inversione contabile)",
+    "vatNatureNotForRegime": "Riga {{line}} ({{description}}): {{nature}} non è ammessa con {{regime}} — scegli un'altra natura",
+    "einvoiceMissingThisInvoice": "Questa fattura",
+    "einvoiceFixLines": "Modifica righe"
   },
   "expenses": {
     "title": "Spese",
@@ -6446,7 +6450,7 @@
     "iban": "Il tuo IBAN {{value}} non è valido.",
     "internal": "Vasco ha prodotto importi incoerenti per questa fattura (controllo {{code}}). Non è stato condiviso nulla: segnalalo all'assistenza.",
     "bollo": "L'importo fuori campo IVA supera 77,47 €: è dovuta la marca da bollo da 2,00 €.",
-    "naturaRegime": "Una riga allo 0 % è indicata come \"non soggetta\" (N2.2), tipica del regime forfettario. Con {{value}} verifica se si tratta di inversione contabile o di operazione esente.",
+    "naturaRegime": "Una riga allo 0 % è indicata come \"non soggetta\" (N2.2), tipica del regime forfettario. Con {{value}} scegli nelle righe della fattura la natura corretta (inversione contabile, esente …).",
     "regimeCharges": "Con {{value}} di norma non si addebita IVA, ma una riga la contiene.",
     "unsignedB2B": "Questo file Facturae non è firmato: valido tra imprese, non accettato da FACe.",
     "recipient": "Il destinatario",
@@ -6457,7 +6461,9 @@
     "personTypeSeller": "Il tuo NIF non corrisponde a «persona o società» nel profilo aziendale — controllalo.",
     "personTypeBuyer": "Il NIF del cliente non corrisponde a «persona o società» nei suoi dati — controllalo.",
     "publicBuyerDir3ES": "Questo cliente è un ente pubblico: FACe richiede i suoi tre codici DIR3 (ufficio contabile, organo di gestione, unità di trattamento). Aggiungili al cliente.",
-    "signatureInvalid": "La firma di questo file non è una firma Facturae valida."
+    "signatureInvalid": "La firma di questo file non è una firma Facturae valida.",
+    "reverseChargeRegime": "Con {{value}} non applichi l'inversione contabile come fornitore: la riga va indicata come \"non soggetta\" (N2.2).",
+    "reverseChargeBuyer": "L'inversione contabile richiede un cliente con partita IVA. Aggiungila al cliente oppure scegli un'altra natura per la riga."
   },
   "decisionCatalog": {
     "categories": {
@@ -7554,5 +7560,16 @@
       "noSellerNif": "Inserisci prima il tuo NIF/CIF nel profilo aziendale.",
       "cannotSign": "Questo certificato non è per la firma (solo per l’accesso). Importa il certificato che il tuo fornitore ha rilasciato per la firma elettronica."
     }
+  },
+  "vatNature": {
+    "menuLabel": "IVA di questa riga",
+    "choose": "0 % — scegli il motivo",
+    "rate": "IVA {{rate}} %",
+    "N1": "Esclusa – anticipazioni in nome del cliente (art. 15)",
+    "N2_1": "Non soggetta – artt. da 7 a 7-septies",
+    "N2_2": "Non soggetta – forfettario / minimi",
+    "N4": "Esente (art. 10)",
+    "N6_3": "Inversione contabile – subappalto edile",
+    "N6_7": "Inversione contabile – comparto edile"
   }
 }

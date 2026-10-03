@@ -1,6 +1,7 @@
 import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, JobRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, LeadRow } from './database.types';
 import type { Quote, Invoice } from '../domain/documents';
 import type { QuoteLineItem } from '../domain/lineItems';
+import { isVatNature } from '../domain/vatNature';
 import type { BusinessProfile } from '../domain/business';
 import type { Customer } from '../domain/customers';
 import type { Job, JobStatus, JobPriority } from '../domain/jobs';
@@ -98,6 +99,8 @@ export function lineItemRowToQuoteLineItem(row: LineItemRow): QuoteLineItem {
     // R66 round 47: hydrate per-line VAT rate from documents.line_items.vat_rate.
     // Survives cold start so mixed-rate quotes don't lose the per-line distinction.
     vatRate: row.vat_rate != null ? Number(row.vat_rate) : undefined,
+    // Italy: the Natura of a 0 % line (migration 20261003000001).
+    ...(isVatNature(row.vat_nature) ? { vatNature: row.vat_nature } : {}),
   };
 }
 

@@ -30,6 +30,7 @@ import {
   isSpanishPublicBodyNif, isFaceOnlyNif, isValidDir3Code, normalizeDir3,
 } from './fiscalIds';
 import { round2 } from '../utils/round2';
+import { defaultVatNature, offeredVatNatures, vatNatureLegalReference, type VatNature } from '../domain/vatNature';
 
 /** What every screen already has: the invoice, its lines, and both parties. */
 export interface EInvoiceSource {
@@ -75,6 +76,8 @@ export interface EInvoiceSource {
     lineTotal: number;
     vatRate: number;
     unit?: string;
+    /** Italy: the Natura of a 0 % line, as the contractor stated it. */
+    vatNature?: VatNature;
   }>;
   totalNet: number;
   totalVat: number;
@@ -85,8 +88,16 @@ export interface EInvoiceSource {
 export interface MissingField {
   /** i18n key for the label, e.g. 'profile.fiscalRegime'. */
   key: string;
-  /** Where they fix it — the screen decides how to route. */
-  where: 'profile' | 'customer';
+  /** Where they fix it — the screen decides how to route. `invoice`: a fact
+   *  about one of THIS invoice's lines (e.g. the VAT nature of a 0 % line). */
+  where: 'profile' | 'customer' | 'invoice';
+  /** Interpolation for the label — which line, for an `invoice` field. */
+  params?: Record<string, string>;
+}
+
+/** The contractor-facing label of a missing field, in every place that lists them. */
+export function missingFieldLabel(m: MissingField, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  return t(m.key, { ...(m.params ?? {}), defaultValue: m.key.split('.').pop() ?? m.key });
 }
 
 export type MappingResult<T> =
@@ -112,13 +123,41 @@ const need = (
  * ⚠️ Natura and AliquotaIVA are a matched pair, and SDI rejects on both sides:
  *   00400 — AliquotaIVA is 0 and Natura is absent
  *   00401 — Natura is present and AliquotaIVA is not 0
- * A zero-rated line therefore needs a reason code. N2.2 ("non soggette, altri
- * casi") is the honest catch-all for a trade invoice; anything more specific
- * (an export, a reverse charge) is a fact about the transaction that the app
- * does not know, so it is not guessed.
+ * A zero-rated line therefore needs a reason code, and since 2026-10-03 it is
+ * the one the contractor STATED on the line (line_items.vat_nature) — N6.3 for
+ * a building subcontract, N4 for an exempt supply… Until then every 0 % line
+ * was written N2.2 ("non soggette, altri casi"): right for a forfettario,
+ * wrong — and accepted by SDI — for an ordinary-regime reverse charge.
+ *
+ * No nature stated: N2.2 under RF19 / RF02 (there a 0 % line IS the
+ * franchise), otherwise REFUSED with the line named — a reverse charge, an
+ * exemption and an out-of-scope supply are different invoices in law, and
+ * picking one would be inventing it. A nature whose legal basis Vasco cannot
+ * state (RiferimentoNormativo) is refused the same way.
+ *
+ * Returns the line's Natura + reference, or null after recording the refusal.
  */
-function naturaFor(vatRate: number): FatturaPALineItem['natura'] {
-  return vatRate === 0 ? 'N2.2' : undefined;
+function naturaFor(
+  line: EInvoiceSource['lines'][number],
+  index: number,
+  regime: string | undefined,
+  missing: MissingField[],
+): Pick<FatturaPALineItem, 'natura' | 'riferimentoNormativo'> | null {
+  if (line.vatRate !== 0) return {};
+  const natura = line.vatNature ?? defaultVatNature(regime);
+  // Only what this regime may state: a forfettario's N6.3 has a legal basis
+  // in the abstract, but a forfettario does not apply reverse charge as the
+  // supplier (L. 190/2014) — the same list the line menu offers.
+  const riferimento = natura && offeredVatNatures(regime).includes(natura) ? vatNatureLegalReference(natura, regime) : null;
+  if (!natura || !riferimento) {
+    missing.push({
+      key: natura ? 'invoices.vatNatureNotForRegime' : 'invoices.vatNatureMissing',
+      where: 'invoice',
+      params: { line: String(index + 1), description: line.description, nature: natura ?? '', regime: regime ?? '' },
+    });
+    return null;
+  }
+  return { natura, riferimentoNormativo: riferimento };
 }
 
 /**
@@ -173,19 +212,26 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
     missing.push({ key: 'customer.einvoiceRouting', where: 'customer' });
   }
 
+  // The nature of every 0 % line, collected with the other gaps so the
+  // contractor sees the whole list once (only when the regime is known —
+  // the default depends on it, and the regime itself is already asked for).
+  const naturas = src.seller.fiscalRegime
+    ? src.lines.map((l, i) => naturaFor(l, i, src.seller.fiscalRegime, missing))
+    : [];
+
   if (missing.length > 0) return { ok: false, missing };
 
   // Quantita is unsigned in the schema ([0-9]{1,12}\.[0-9]{2,8}); a credit
   // line entered as −1 × 50 is written 1 × −50 — the same line total, the
   // sign where FatturaPA allows it (PrezzoUnitario).
-  const dettaglioLinee: FatturaPALineItem[] = src.lines.map((l) => ({
+  const dettaglioLinee: FatturaPALineItem[] = src.lines.map((l, i) => ({
     descrizione: l.description,
     quantita: Math.abs(l.quantity),
     unitaMisura: l.unit,
     prezzoUnitario: l.quantity < 0 ? -l.unitPrice : l.unitPrice,
     prezzoTotale: l.lineTotal,
     aliquotaIva: l.vatRate,
-    natura: naturaFor(l.vatRate),
+    ...naturas[i],
   }));
   // The profile field that lands in `taxId` is, for Italy, labelled "Camera di
   // Commercio" (placeholder "REA MI-1234567") — it was written verbatim as the
@@ -207,7 +253,7 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
   // separate flag (`bolloRicaricato`) and a pricing decision that has to show
   // as a visible line in all three artefacts first (#354).
   const bolloDue = marcaDaBolloDue(
-    src.lines.map((l) => ({ lineTotal: l.lineTotal, vatRate: l.vatRate })),
+    dettaglioLinee.map((l) => ({ lineTotal: l.prezzoTotale, vatRate: l.aliquotaIva, natura: l.natura })),
   );
 
   return {

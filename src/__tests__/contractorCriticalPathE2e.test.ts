@@ -288,6 +288,7 @@ describe('R66 round 49 — contractor critical path E2E', () => {
         total_price: 600,
         position: 0,
         vat_rate: null,
+        vat_nature: null,
         created_at: '2026-04-15T10:00:00Z',
         updated_at: '2026-04-15T10:00:00Z',
         ...overrides,

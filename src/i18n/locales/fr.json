@@ -950,7 +950,11 @@
     "sendFailedNothingChanged": "L'e-mail n'a pas pu être remis, rien n'a été modifié : {{error}}",
     "resendInvoice": "Renvoyer la facture",
     "notSyncedTitle": "Pas encore synchronisée",
-    "notSyncedBody": "Cette facture a été créée hors ligne et n'est pas encore sur le serveur. Connectez-vous à Internet, patientez un instant et réessayez — rien n'a été envoyé."
+    "notSyncedBody": "Cette facture a été créée hors ligne et n'est pas encore sur le serveur. Connectez-vous à Internet, patientez un instant et réessayez — rien n'a été envoyé.",
+    "vatNatureMissing": "Ligne {{line}} ({{description}}) : TVA à 0 % sans motif — choisissez-le (p. ex. autoliquidation)",
+    "vatNatureNotForRegime": "Ligne {{line}} ({{description}}) : {{nature}} est impossible sous {{regime}} — choisissez un autre motif",
+    "einvoiceMissingThisInvoice": "Cette facture",
+    "einvoiceFixLines": "Modifier les lignes"
   },
   "expenses": {
     "title": "Dépenses",
@@ -6446,7 +6450,7 @@
     "iban": "Votre IBAN {{value}} n'est pas valide.",
     "internal": "Vasco a produit des montants incohérents pour cette facture (règle {{code}}). Rien n'a été partagé — merci de le signaler au support.",
     "bollo": "Le montant hors TVA dépasse 77,47 € : un droit de timbre (marca da bollo) de 2,00 € est dû.",
-    "naturaRegime": "Une ligne à 0 % est déclarée « non soumise » (N2.2), ce qui correspond au régime forfaitaire. Sous {{value}}, vérifiez s'il s'agit d'une autoliquidation ou d'une exonération.",
+    "naturaRegime": "Une ligne à 0 % est déclarée « non soumise » (N2.2), ce qui correspond au régime forfaitaire. Sous {{value}}, choisissez le vrai motif de la ligne (autoliquidation, exonération …) dans les lignes de la facture.",
     "regimeCharges": "Sous {{value}}, aucune TVA n'est normalement facturée, mais une ligne en comporte.",
     "unsignedB2B": "Ce fichier Facturae n'est pas signé : valable entre entreprises, non accepté par FACe.",
     "recipient": "Le destinataire",
@@ -6457,7 +6461,9 @@
     "personTypeSeller": "Votre NIF ne correspond pas à « personne ou société » dans votre profil d’entreprise — veuillez vérifier.",
     "personTypeBuyer": "Le NIF du client ne correspond pas à « personne ou société » dans ses coordonnées — veuillez vérifier.",
     "publicBuyerDir3ES": "Ce client est un organisme public : FACe exige ses trois codes DIR3 (service comptable, organe gestionnaire, unité de traitement). Ajoutez-les au client.",
-    "signatureInvalid": "La signature de ce fichier n’est pas une signature Facturae valide."
+    "signatureInvalid": "La signature de ce fichier n’est pas une signature Facturae valide.",
+    "reverseChargeRegime": "Sous {{value}}, vous n'appliquez pas l'autoliquidation en tant que fournisseur : la ligne doit être « non soumise » (N2.2).",
+    "reverseChargeBuyer": "L'autoliquidation exige un client avec un numéro de TVA (partita IVA). Ajoutez-le au client, ou choisissez un autre motif pour la ligne."
   },
   "decisionCatalog": {
     "categories": {
@@ -7554,5 +7560,16 @@
       "noSellerNif": "Saisissez d’abord votre NIF/CIF dans votre profil d’entreprise.",
       "cannotSign": "Ce certificat ne sert pas à signer (seulement à se connecter). Importez le certificat que votre fournisseur a émis pour la signature électronique."
     }
+  },
+  "vatNature": {
+    "menuLabel": "TVA de cette ligne",
+    "choose": "0 % — choisir le motif",
+    "rate": "TVA {{rate}} %",
+    "N1": "Exclue – débours au nom du client (art. 15)",
+    "N2_1": "Non soumise – prestation hors d'Italie (art. 7)",
+    "N2_2": "Non soumise – régime forfaitaire / minimum",
+    "N4": "Exonérée (art. 10)",
+    "N6_3": "Autoliquidation – sous-traitance BTP",
+    "N6_7": "Autoliquidation – services du bâtiment"
   }
 }

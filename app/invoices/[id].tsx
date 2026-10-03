@@ -5,7 +5,7 @@
 import { goBack } from '../../src/utils/goBack';
 import { friendlyError } from '../../src/utils/friendlyError';
 import { logWarn } from '../../src/utils/errorHandler';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Fragment, useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -50,6 +50,9 @@ import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow 
 import { findDocumentCustomer } from '../../src/domain/customers';
 import { amountPayableNow } from '../../src/domain/documents';
 import { DKMenu } from '../../src/components/shared/DKMenu';
+import { LineVatMenu, lineVatLabel } from '../../src/components/contractor/LineVatMenu';
+import type { VatNature } from '../../src/domain/vatNature';
+import { missingFieldLabel, type MissingField } from '../../src/integrations/einvoiceMapping';
 import { wasShareDismissed, askWasSent } from '../../src/utils/shareOutcome';
 import { DecimalInput } from '../../src/components/shared/DecimalInput';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
@@ -75,6 +78,9 @@ interface EditableLineItem {
    * invoice's line items, so the value is there; this screen threw it away.
    */
   vatRate?: number;
+  /** Italy: why a 0 % line carries no IVA (FatturaPA Natura). Picked in the
+   *  line editor; dropped by every writer unless the line is at 0 %. */
+  vatNature?: VatNature;
 }
 
 const VAT_RATE = 0.21;
@@ -208,6 +214,7 @@ export default function InvoiceDetailScreen() {
           quantity: li.quantity,
           unitPrice: li.unitPrice,
           vatRate: li.vatRate,
+          ...(li.vatNature ? { vatNature: li.vatNature } : {}),
         })));
       } else {
         // Synthesize a single line item from total. Same NL-constant bug as
@@ -344,6 +351,14 @@ export default function InvoiceDetailScreen() {
     setLocalItems(prev => prev.map(item => (item.id === itemId ? { ...item, [field]: value } : item)));
   };
 
+  // Italy: a line's IVA is a rate OR a 0 % reason (LineVatMenu). Picking a
+  // rate clears the reason — a Natura on a rated line is SDI 00401.
+  const handleSetLineVat = (itemId: string, next: { vatRate: number; vatNature?: VatNature }) => {
+    setLocalItems(prev => prev.map(item => (item.id === itemId
+      ? { ...item, vatRate: next.vatRate, vatNature: next.vatRate === 0 ? next.vatNature : undefined }
+      : item)));
+  };
+
   const handleAddItem = () => {
     const newId = `item-${Date.now()}`;
     setLocalItems(prev => [...prev, { id: newId, description: '', quantity: 1, unitPrice: 0 }]);
@@ -367,6 +382,7 @@ export default function InvoiceDetailScreen() {
       quantity: li.quantity,
       unitPrice: li.unitPrice,
       ...(li.vatRate != null ? { vatRate: li.vatRate } : {}),
+      ...(li.vatNature ? { vatNature: li.vatNature } : {}),
     }))).finally(() => setSavingItems(false));
     if (!stored) {
       hapticError();
@@ -947,20 +963,42 @@ export default function InvoiceDetailScreen() {
    * tells them WHICH field and WHERE, instead of a silent no-op or an invoice
    * the authority rejects days later.
    */
-  const reportMissing = (missing: Array<{ key: string; where: 'profile' | 'customer' }>) => {
+  const reportMissing = (missing: MissingField[]) => {
     // Grouped by WHOSE detail is missing. A flat list read "• Provincia …
     // • Provincia" on a Spanish device — the contractor's own province and the
     // customer's, indistinguishable — above a single "Open business profile"
     // button that could fix only half of it.
-    const label = (m: { key: string }) => t(m.key, m.key.split('.').pop() ?? m.key);
+    const label = (m: MissingField) => missingFieldLabel(m, t as any);
     const group = (title: string, items: typeof missing) =>
       items.length ? `${title}\n• ${items.map(label).join('\n• ')}` : '';
     const ours = missing.filter((m) => m.where === 'profile');
     const theirs = missing.filter((m) => m.where === 'customer');
+    // A fact about one of THIS invoice's lines (the VAT nature of a 0 % line,
+    // Italy): fixed in the line editor, which a draft opens.
+    const lines = missing.filter((m) => m.where === 'invoice');
     const body = [
       group(t('invoices.einvoiceMissingYourBusiness', 'Your business'), ours),
       group(invoiceCustomerName || t('common.customer', 'Customer'), theirs),
+      group(t('invoices.einvoiceMissingThisInvoice', 'This invoice'), lines),
     ].filter(Boolean).join('\n\n');
+    if (lines.length) {
+      // Android shows three buttons at most: with lines to fix, the line
+      // editor takes the customer's slot (the customer's gaps stay listed).
+      Alert.alert(
+        t('invoices.einvoiceMissingTitle', 'Some details are missing'),
+        `${t('invoices.einvoiceMissingBody', 'This format needs a few more details before it can be sent:')}\n\n${body}`,
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          ...(ours.length
+            ? [{ text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => router.push('/(modals)/business-settings' as any) }]
+            : []),
+          ...(invoice.status === 'draft'
+            ? [{ text: t('invoices.einvoiceFixLines', 'Edit lines'), onPress: () => setEditingItems(true) }]
+            : []),
+        ],
+      );
+      return;
+    }
     Alert.alert(
       t('invoices.einvoiceMissingTitle', 'Some details are missing'),
       `${t('invoices.einvoiceMissingBody', 'This format needs a few more details before it can be sent:')}\n\n${body}`,
@@ -1382,7 +1420,8 @@ export default function InvoiceDetailScreen() {
 
           {/* Items */}
           {localItems.map((item) => (
-            <View key={item.id} style={editingItems ? styles.lineItemRow : styles.lineItemStack}>
+            <Fragment key={item.id}>
+            <View style={editingItems ? styles.lineItemRow : styles.lineItemStack}>
               {editingItems ? (
                 <>
                   <TextInput
@@ -1433,9 +1472,28 @@ export default function InvoiceDetailScreen() {
                       {formatCurrency(item.quantity * item.unitPrice, country)}
                     </Text>
                   </View>
+                  {/* Italy: the line's IVA — a reverse-charge line says so. */}
+                  {country === 'IT' && (
+                    <Text style={styles.lineTextMuted} numberOfLines={2}>
+                      {lineVatLabel(item, Math.round(effectiveRate * 100), t as any)}
+                    </Text>
+                  )}
                 </>
               )}
             </View>
+            {/* Italy, while editing: the line's IVA as a rate OR a 0 % reason
+                (FatturaPA Natura) — the only way to write a reverse-charge
+                line, and what the FatturaPA export asks for by line. */}
+            {editingItems && country === 'IT' && (
+              <LineVatMenu
+                country={country as any}
+                regime={businessProfile?.fiscalRegime}
+                line={item}
+                fallbackRatePct={Math.round(effectiveRate * 100)}
+                onChange={(next) => handleSetLineVat(item.id, next)}
+              />
+            )}
+            </Fragment>
           ))}
 
           {editingItems && (

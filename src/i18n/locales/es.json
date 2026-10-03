@@ -950,7 +950,11 @@
     "sendFailedNothingChanged": "No se pudo entregar el correo, no se ha cambiado nada: {{error}}",
     "resendInvoice": "Reenviar factura",
     "notSyncedTitle": "Aún no sincronizada",
-    "notSyncedBody": "Esta factura se creó sin conexión y todavía no ha llegado al servidor. Conéctate a internet, espera un momento y vuelve a intentarlo: no se ha enviado nada."
+    "notSyncedBody": "Esta factura se creó sin conexión y todavía no ha llegado al servidor. Conéctate a internet, espera un momento y vuelve a intentarlo: no se ha enviado nada.",
+    "vatNatureMissing": "Línea {{line}} ({{description}}): IVA al 0 % sin motivo — elíjalo (p. ej. inversión del sujeto pasivo)",
+    "vatNatureNotForRegime": "Línea {{line}} ({{description}}): {{nature}} no es posible con {{regime}} — elija otro motivo",
+    "einvoiceMissingThisInvoice": "Esta factura",
+    "einvoiceFixLines": "Editar líneas"
   },
   "expenses": {
     "title": "Gastos",
@@ -6446,7 +6450,7 @@
     "iban": "Su IBAN {{value}} no es válido.",
     "internal": "Vasco ha generado importes incoherentes para esta factura (regla {{code}}). No se ha compartido nada; comuníquelo al soporte.",
     "bollo": "El importe fuera del IVA supera 77,47 €: se debe un impuesto de timbre (marca da bollo) de 2,00 €.",
-    "naturaRegime": "Una línea al 0 % figura como «no sujeta» (N2.2), propio del régimen forfettario. Con {{value}}, compruebe si es inversión del sujeto pasivo o exención.",
+    "naturaRegime": "Una línea al 0 % figura como «no sujeta» (N2.2), propio del régimen forfettario. Con {{value}}, elija el motivo real de la línea (inversión del sujeto pasivo, exenta …) en las líneas de la factura.",
     "regimeCharges": "Con {{value}} normalmente no se repercute IVA, pero una línea lo incluye.",
     "unsignedB2B": "Este archivo Facturae no está firmado: válido entre empresas, no aceptado por FACe.",
     "recipient": "El destinatario",
@@ -6457,7 +6461,9 @@
     "personTypeSeller": "Tu NIF no coincide con «persona o empresa» en tu perfil de empresa — revísalo.",
     "personTypeBuyer": "El NIF del cliente no coincide con «persona o empresa» en sus datos — revísalo.",
     "publicBuyerDir3ES": "Este cliente es una administración pública: FACe necesita sus tres códigos DIR3 (oficina contable, órgano gestor, unidad tramitadora). Añádelos al cliente.",
-    "signatureInvalid": "La firma de este fichero no es una firma Facturae válida."
+    "signatureInvalid": "La firma de este fichero no es una firma Facturae válida.",
+    "reverseChargeRegime": "Con {{value}} no aplica la inversión del sujeto pasivo como proveedor: la línea debe ser «no sujeta» (N2.2).",
+    "reverseChargeBuyer": "La inversión del sujeto pasivo requiere un cliente con número de IVA (partita IVA). Añádalo al cliente o elija otro motivo para la línea."
   },
   "decisionCatalog": {
     "categories": {
@@ -7554,5 +7560,16 @@
       "noSellerNif": "Introduce primero tu NIF/CIF en tu perfil de empresa.",
       "cannotSign": "Este certificado no sirve para firmar (solo para identificarse). Importa el certificado que tu proveedor emitió para la firma electrónica."
     }
+  },
+  "vatNature": {
+    "menuLabel": "IVA de esta línea",
+    "choose": "0 % — elija el motivo",
+    "rate": "IVA {{rate}} %",
+    "N1": "Excluida – suplidos en nombre del cliente (art. 15)",
+    "N2_1": "No sujeta – prestada fuera de Italia (art. 7)",
+    "N2_2": "No sujeta – régimen forfettario / mínimos",
+    "N4": "Exenta (art. 10)",
+    "N6_3": "Inversión del sujeto pasivo – subcontrata de obra",
+    "N6_7": "Inversión del sujeto pasivo – servicios de construcción"
   }
 }

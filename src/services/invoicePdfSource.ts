@@ -18,12 +18,15 @@ import { documentNumber } from '../domain/documents';
 import { documentVatBreakdown, round2 } from '../domain/business';
 import { parseCalendarDay } from '../utils/dateKey';
 import type { AutoInvoice, InvoiceLineItem } from './invoiceAutomationService';
+import { lineVatNature } from '../domain/lineItems';
+import type { VatNature } from '../domain/vatNature';
 
 export interface PdfSourceLine {
   description: string;
   quantity: number;
   unitPrice: number;
   vatRate?: number;
+  vatNature?: VatNature;
 }
 
 /**
@@ -96,13 +99,18 @@ export function pdfInvoiceFromRecord(args: {
   const net = round2(source.reduce((s, li) => s + li.quantity * li.unitPrice, 0));
   const breakdown = documentVatBreakdown(net, source, fallbackVatRatePercent);
 
-  const lineItems: InvoiceLineItem[] = source.map((li) => ({
-    description: li.description,
-    quantity: li.quantity,
-    unitPrice: li.unitPrice,
-    vatRate: li.vatRate ?? fallbackVatRatePercent,
-    total: round2(li.quantity * li.unitPrice),
-  }));
+  const lineItems: InvoiceLineItem[] = source.map((li) => {
+    // Italy: carried to the PDF only where it means something (a 0 % line).
+    const vatNature = lineVatNature(li, fallbackVatRatePercent);
+    return {
+      description: li.description,
+      quantity: li.quantity,
+      unitPrice: li.unitPrice,
+      vatRate: li.vatRate ?? fallbackVatRatePercent,
+      total: round2(li.quantity * li.unitPrice),
+      ...(vatNature ? { vatNature } : {}),
+    };
+  });
 
   const issueDate = parseCalendarDay(invoice.sentAt ?? invoice.createdAt ?? null) ?? now;
   const due = parseCalendarDay(invoice.dueDate ?? null)

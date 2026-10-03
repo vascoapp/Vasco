@@ -1,3 +1,4 @@
+import type { VatNature } from '../domain/vatNature';
 // =============================================================================
 // INVOICE AUTOMATION SERVICE
 // =============================================================================
@@ -47,6 +48,9 @@ export interface InvoiceLineItem {
   unitPrice: number;
   vatRate: number;
   total: number;
+  /** Italy: the FatturaPA Natura of a 0 % line — printed beside its rate,
+   *  and its legal basis among the invoice's mentions. */
+  vatNature?: VatNature;
 }
 
 export interface PaymentRecord {

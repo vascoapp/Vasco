@@ -236,12 +236,17 @@ describe('FatturaPA — our invoices pass SDI', () => {
     expect(checkFatturaPA(at.xml, { today: TODAY })).toEqual([]);
   });
   it('N2.2 under an ordinary regime is a WARNING (accepted by SDI, maybe fiscally wrong), not a refusal', () => {
-    const f = checkFatturaPA(itXml({ lines: [line('Lavori', 1, 100, 22), line('Spese', 1, 15.5, 0)] }).xml, { today: TODAY });
+    // Our mapper no longer writes N2.2 under RF01 (it asks for the nature), so
+    // the file is a forfettario's with its regime changed — what another tool,
+    // or a profile edited after the lines, could hand over.
+    const forf = itXml({ seller: { ...itSrc().seller, fiscalRegime: 'RF19' }, lines: [line('Lavori', 1, 100, 22), line('Spese', 1, 15.5, 0)] }).xml;
+    const f = checkFatturaPA(forf.replace('<RegimeFiscale>RF19</RegimeFiscale>', '<RegimeFiscale>RF01</RegimeFiscale>'), { today: TODAY });
     expect(codes(f)).toEqual([]);
     expect(codes(f, 'warning')).toEqual(['NATURA-REGIME']);
-    // …which the contractor cannot fix (no per-line nature), so it is not put
-    // to them before every export (review 2026-10-01).
-    expect(warningFindingLines(f, ((k: string) => k) as any)).toEqual([]);
+    // …and since 2026-10-03 the contractor CAN fix it (the line's nature in
+    // the line editor), so it is put to them before the export.
+    expect(f.find((x) => x.key === 'naturaRegime')?.where).toBe('invoice');
+    expect(warningFindingLines(f, ((k: string) => k) as any)).toEqual(['einvoiceRules.naturaRegime (NATURA-REGIME)']);
   });
   it('the file name follows SdI §2.2 and changes every second (00001/00002)', () => {
     const a = fatturaPaFileName('IT', '01234567897', new Date('2026-10-01T10:00:00Z'));

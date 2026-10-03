@@ -1,3 +1,4 @@
+import type { VatNature } from '../domain/vatNature';
 // Extended Contractor Features - Pricebook, Smart Purchasing, Payments
 
 // ============================================
@@ -103,6 +104,8 @@ export interface QuoteTier {
   // Totals
   subtotal: number;
   vatRate: number;
+  /** Italy: why a 0 % quote carries no IVA (FatturaPA Natura, e.g. N6.3). */
+  vatNature?: VatNature;
   vatAmount: number;
   total: number;
 

@@ -19,7 +19,7 @@ import { Job, JobStatus, JobPriority } from '../domain/jobs';
 import { Material, JobMaterial, JobMaterialStatus, PriceObservation } from '../domain/materials';
 import { Supplier } from '../domain/suppliers';
 import { PriceRiskSignal } from '../domain/insights';
-import { QuoteLineItem } from '../domain/lineItems';
+import { QuoteLineItem, lineVatNature } from '../domain/lineItems';
 import type { Project, ProjectPnL } from '../types/project';
 import { ExtractedDocument } from '../ingestion/pdfSchema';
 import type { BudgetExtractionResult } from '../ingestion/budgetExtractor';
@@ -2642,6 +2642,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             total_price: item.unitPrice * item.quantity,
             position: idx,
             vat_rate: (item as any).vatRate ?? lineItemVatRate,
+            // Italy: the Natura of a 0 % line travels with its rate.
+            vat_nature: lineVatNature(item as QuoteLineItem, lineItemVatRate),
           }));
           try {
             const row = await withTimeout(createDocument(docPayload), 3000, 'addQuote');
@@ -2835,6 +2837,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   total_price: item.unitPrice * item.quantity,
                   position: idx,
                   vat_rate: (item as any).vatRate ?? invoiceLineVatRate,
+                  // The quote's reverse charge is the invoice's reverse charge.
+                  vat_nature: lineVatNature(item, invoiceLineVatRate),
                 })),
               );
             }
@@ -3010,6 +3014,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 total_price: li.unitPrice * li.quantity,
                 position: idx,
                 vat_rate: li.vatRate ?? fallbackRate,
+                vat_nature: lineVatNature(li, fallbackRate),
               }))),
               5000,
               'replaceInvoiceLines',
@@ -3690,6 +3695,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                     total_price: item.unitPrice * item.quantity,
                     position: idx,
                     vat_rate: (item as any).vatRate ?? invoiceLineVatRate,
+                    vat_nature: lineVatNature(item as QuoteLineItem, invoiceLineVatRate),
                   })),
                 ),
                 3000,
@@ -3836,6 +3842,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                   total_price: li.unitPrice * li.quantity,
                   position: idx,
                   vat_rate: vatRate,
+                  // Meerwerk lines state no VAT nature: NULL, so an Italian
+                  // export of a 0 % upgrade asks for it rather than assuming.
+                  vat_nature: lineVatNature({ vatRate }),
                 })),
               ),
               3000,

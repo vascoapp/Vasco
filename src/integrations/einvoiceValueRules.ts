@@ -64,7 +64,7 @@ export const RULE_KEYS = [
   'tooLong', 'futureDate', 'invoiceNumber', 'samePartyId', 'description', 'nameWithSurnameSeller',
   'nameWithSurnameBuyer', 'iban', 'bollo', 'naturaRegime', 'regimeCharges', 'unsignedB2B',
   'sellerCodiceFiscale', 'personTypeSeller', 'personTypeBuyer',
-  'publicBuyerDir3ES', 'signatureInvalid',
+  'publicBuyerDir3ES', 'signatureInvalid', 'reverseChargeRegime', 'reverseChargeBuyer',
 ] as const;
 export type RuleKey = typeof RULE_KEYS[number];
 
@@ -335,6 +335,7 @@ export function checkFatturaPA(xml: string, opts: RuleOptions = {}): RuleFinding
     let bolloBase = 0;
     let anyPositiveRate = false;
     let anyN22 = false;
+    let anyReverseCharge = false;
     for (const [idx, li] of kids(at(body, 'DatiBeniServizi'), 'DettaglioLinee').entries()) {
       const where = `DettaglioLinee ${idx + 1}`;
       const aliq = textAt(li, 'AliquotaIVA');
@@ -344,6 +345,7 @@ export function checkFatturaPA(xml: string, opts: RuleOptions = {}): RuleFinding
       if (nat !== undefined) naturasUsed.add(nat);
       if (num(aliq) > 0) anyPositiveRate = true;
       if (nat === 'N2.2') anyN22 = true;
+      if (nat !== undefined && /^N6\.\d$/.test(nat)) anyReverseCharge = true;
       latin1(textAt(li, 'Descrizione'), 'Descrizione', 1000, 'invoice');
       // 00423 — PrezzoTotale = (PrezzoUnitario ± sconti/maggiorazioni) × Quantita, ±0,01.
       const qty = textAt(li, 'Quantita') === undefined ? 1 : num(textAt(li, 'Quantita'));
@@ -392,6 +394,13 @@ export function checkFatturaPA(xml: string, opts: RuleOptions = {}): RuleFinding
       if (nat !== undefined && N_GENERIC.has(nat)) push('00445', 'error', 'vasco', 'internal', `${where}: generic Natura ${nat}`, { code: '00445' });
       // 00420 — reverse charge (N6.x) cannot be split payment (S).
       if (textAt(r, 'EsigibilitaIVA') === 'S' && nat !== undefined && /^N6/.test(nat)) push('00420', 'error', 'vasco', 'internal', `${where}: Natura ${nat} with EsigibilitaIVA S`, { code: '00420' });
+      // Allegato A 1.9.1, DatiRiepilogo/RiferimentoNormativo: "obbligatorio nei
+      // casi di operazioni di cui all'elemento Natura" — not a scarto, but an
+      // invoice without its legal basis (DPR 633/72 art. 21 c. 6). Ours
+      // always writes it, so a miss is Vasco's.
+      if (nat !== undefined && !textAt(r, 'RiferimentoNormativo')) {
+        push('A-2.2.2.8', 'warning', 'vasco', 'internal', `${where}: Natura ${nat} without RiferimentoNormativo`, { code: 'RiferimentoNormativo' });
+      }
       riepRates.add(rateKey(aliq));
       if (nat !== undefined) riepNature.add(nat);
       const imponibile = num(textAt(r, 'ImponibileImporto'));
@@ -443,12 +452,24 @@ export function checkFatturaPA(xml: string, opts: RuleOptions = {}): RuleFinding
     // Natura vs regime — accepted by SDI, fiscally a statement. N2.2 is what a
     // forfettario (RF19) or minimo (RF02) writes; on an ordinary regime a 0 %
     // line is more often reverse charge (N6.x, e.g. N6.3 subappalto edilizia)
-    // or exempt (N4) — a fact about the transaction Vasco does not hold.
+    // or exempt (N4).
     if (anyN22 && regime !== 'RF19' && regime !== 'RF02') {
-      // `vasco`: the contractor cannot fix it — writing N6.x needs a per-line
-      // nature Vasco does not ask for — so it is not put to them on every
-      // export (review 2026-10-01). Still reported by check:einvoice-rules.
-      push('NATURA-REGIME', 'warning', 'vasco', 'naturaRegime', `Natura N2.2 on an invoice under ${regime}`, { value: regime });
+      // `invoice` since 2026-10-03: the contractor states each 0 % line's
+      // nature in the line editor, so this is theirs to fix (it was `vasco`
+      // while Vasco wrote N2.2 on every 0 % line and nobody could change it).
+      push('NATURA-REGIME', 'warning', 'invoice', 'naturaRegime', `Natura N2.2 on an invoice under ${regime}`, { value: regime });
+    }
+    // A forfettario / minimo does not apply reverse charge as the SUPPLIER
+    // (L. 190/2014: no IVA is charged or accounted for; the customer
+    // integrates nothing) — the franchise line is N2.2.
+    if (anyReverseCharge && (regime === 'RF19' || regime === 'RF02')) {
+      push('NATURA-REGIME', 'warning', 'invoice', 'reverseChargeRegime', `reverse charge (N6.x) on an invoice under ${regime}`, { value: regime });
+    }
+    // Reverse charge moves the IVA to the CUSTOMER, who must be a taxable
+    // person (DPR 633/72 art. 17 c. 5–6) — identified by a partita IVA. A
+    // buyer with only a codice fiscale is a consumer: the IVA is the seller's.
+    if (anyReverseCharge && cesPiva === undefined) {
+      push('N6-BUYER', 'warning', 'customer', 'reverseChargeBuyer', 'reverse charge (N6.x) to a cessionario without IdFiscaleIVA');
     }
     if (anyPositiveRate && (regime === 'RF19' || regime === 'RF02')) {
       push('NATURA-REGIME', 'warning', 'invoice', 'regimeCharges', `${regime} with IVA charged on a line`, { value: regime });

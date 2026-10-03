@@ -20,6 +20,7 @@ import { nameThePdf } from '../utils/namedPdf';
 import { FR_STATUTORY_NOTES } from '../integrations/einvoice';
 import { signatureHtmlBlock, getLegalText } from './signatureService';
 import { messageLocale } from './whatsappTemplateService';
+import { vatNatureMentions } from '../domain/vatNature';
 
 // ── Number formatting ────────────────────────────────────
 
@@ -318,6 +319,8 @@ function buildInvoiceHtml(
     deliveryAddress?: string | null;
     tvaSurLesDebits?: boolean | null;
   },
+  /** IT RegimeFiscale (RF01, RF19 …) — decides the legal basis of a 0 % line. */
+  fiscalRegime?: string,
 ): string {
   const L = getLabels(language);
   const curr = getCurrencySymbol(country);
@@ -353,7 +356,7 @@ function buildInvoiceHtml(
       <td class="item-desc">${escapeHtml(item.description)}</td>
       <td class="item-num">${qty(item.quantity, locale)}</td>
       <td class="item-num">${curr}${fmt(item.unitPrice, locale)}</td>
-      <td class="item-num">${isSmallBusinessExempt ? '0%' : qty(item.vatRate, locale) + '%'}</td>
+      <td class="item-num">${isSmallBusinessExempt ? '0%' : qty(item.vatRate, locale) + '%'}${country === 'IT' && item.vatRate === 0 && item.vatNature ? ` ${item.vatNature}` : ''}</td>
       <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
     </tr>`).join('\n');
 
@@ -605,6 +608,11 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
     // then the standing ones (penalty rate, recovery indemnity).
     const mentions = [
       ...(country === 'FR' ? frenchInvoiceMentions2026(frMentions ?? {}) : []),
+      // Italy: why each 0 % line carries no IVA — "Inversione contabile ex
+      // art. 17, c. 6, lett. a), DPR 633/72" on a building subcontract
+      // (art. 17 c. 5 requires the annotation and the norm). The same text as
+      // the FatturaPA's RiferimentoNormativo.
+      ...(country === 'IT' ? vatNatureMentions(invoice.lineItems, fiscalRegime).map(escapeHtml) : []),
       ...legalMentions(country),
     ];
     return mentions.length
@@ -692,6 +700,8 @@ export async function generateInvoicePdf(
     language?: string;
     // R251: small-business scheme controls VAT rendering
     vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer';
+    // IT: RegimeFiscale — the legal basis printed for a 0 % line.
+    fiscalRegime?: string;
   },
   paymentUrl?: string,
   options?: {
@@ -838,6 +848,7 @@ export async function renderInvoicePdfFile(
     businessProfile?.routingNumber,
     businessProfile?.bankAccountNumber,
     options?.frMentions,
+    businessProfile?.fiscalRegime,
   );
   // The customer's sign-off, in the INVOICE's language, before </body>.
   if (options?.customerSignature) {

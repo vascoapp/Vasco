@@ -19,6 +19,8 @@ import { documentNumber } from './documents';
 import type { Customer } from './customers';
 import { findDocumentCustomer } from './customers';
 import { customerSignOffFor, type CustomerSignOff } from './signOff';
+import { lineVatNature } from './lineItems';
+import type { VatNature } from './vatNature';
 
 export interface InvoiceLine {
   id?: string;
@@ -26,6 +28,8 @@ export interface InvoiceLine {
   quantity: number;
   unitPrice: number;
   vatRate?: number;
+  /** Italy: the Natura of a 0 % line (src/domain/vatNature.ts). */
+  vatNature?: VatNature;
 }
 
 export interface InvoiceDocInputs {
@@ -57,6 +61,9 @@ export function invoiceLinesFor(
       quantity: li.quantity,
       unitPrice: li.unitPrice,
       vatRate: li.vatRate,
+      // Dropped here, the records archive's FatturaPA would refuse (or
+      // mis-declare) every reverse-charge line the screen exports fine.
+      ...(li.vatNature ? { vatNature: li.vatNature } : {}),
     }));
   }
   return [{
@@ -191,13 +198,19 @@ export function buildEInvoiceSource(inp: InvoiceDocInputs): EInvoiceSource {
     dueDate: dueDateOf(inp.invoice),
     currency: currencyFor(inp.country),
     // A wrong AliquotaIVA here is a wrong rate filed with SDI, which accepts it.
-    lines: inp.lines.map((li) => ({
-      description: li.description,
-      quantity: li.quantity,
-      unitPrice: li.unitPrice,
-      lineTotal: li.quantity * li.unitPrice,
-      vatRate: li.vatRate ?? inp.effectiveRate * 100,
-    })),
+    lines: inp.lines.map((li) => {
+      const vatRate = li.vatRate ?? inp.effectiveRate * 100;
+      // Only meaningful at 0 % — `lineVatNature` drops it on a rated line.
+      const vatNature = lineVatNature({ vatRate, vatNature: li.vatNature });
+      return {
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        lineTotal: li.quantity * li.unitPrice,
+        vatRate,
+        ...(vatNature ? { vatNature } : {}),
+      };
+    }),
     totalNet: t.subtotal,
     totalVat: t.vat,
     totalGross: t.gross,

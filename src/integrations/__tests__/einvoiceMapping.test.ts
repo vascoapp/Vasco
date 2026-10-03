@@ -68,12 +68,24 @@ describe('FatturaPA mapping', () => {
     expect(generateFatturaPAXml(r.document)).not.toContain('<Natura>');
   });
 
-  it('SDI 00400 — a zero-rated line carries a Natura', () => {
-    const zero = { ...IT, lines: [{ ...IT.lines[0], vatRate: 0 }], totalVat: 0, totalGross: 200 };
+  it('SDI 00400 — a zero-rated line carries the Natura the contractor stated', () => {
+    const zero = { ...IT, lines: [{ ...IT.lines[0], vatRate: 0, vatNature: 'N6.3' as const }], totalVat: 0, totalGross: 200 };
     const r = toFatturaPA(zero);
     if (!r.ok) throw new Error('expected ok');
-    expect(r.document.dettaglioLinee[0].natura).toBe('N2.2');
-    expect(generateFatturaPAXml(r.document)).toContain('<Natura>N2.2</Natura>');
+    expect(r.document.dettaglioLinee[0].natura).toBe('N6.3');
+    expect(generateFatturaPAXml(r.document)).toContain('<Natura>N6.3</Natura>');
+  });
+
+  it('SDI 00400 — under RF19 an unstated 0 % line is the franchise (N2.2); under RF01 it is ASKED for', () => {
+    const forf = toFatturaPA({ ...IT, seller: { ...IT.seller, fiscalRegime: 'RF19' }, lines: [{ ...IT.lines[0], vatRate: 0 }] });
+    if (!forf.ok) throw new Error('expected ok');
+    expect(forf.document.dettaglioLinee[0].natura).toBe('N2.2');
+    // RF01: reverse charge, exempt and out-of-scope are different invoices —
+    // until 2026-10-03 this wrote N2.2, which SDI accepted.
+    const ord = toFatturaPA({ ...IT, lines: [{ ...IT.lines[0], vatRate: 0 }] });
+    expect(ord.ok).toBe(false);
+    if (ord.ok) return;
+    expect(ord.missing).toEqual([{ key: 'invoices.vatNatureMissing', where: 'invoice', params: { line: '1', description: 'Riparazione caldaia', nature: '', regime: 'RF01' } }]);
   });
 
   it('refuses, naming the field, rather than defaulting the fiscal regime', () => {
@@ -175,7 +187,14 @@ describe('the marca da bollo is declared without moving the total', () => {
   // invoice went out without it (#354).
   const exempt = (lineTotal: number) => ({
     ...IT,
-    lines: [{ description: 'Prestazione esente', quantity: 1, unitPrice: lineTotal, lineTotal, vatRate: 0, unit: 'pz' }],
+    lines: [{ description: 'Prestazione esente', quantity: 1, unitPrice: lineTotal, lineTotal, vatRate: 0, unit: 'pz', vatNature: 'N4' as const }],
+  });
+
+  it('not on a REVERSE-CHARGE line, however large — it is subject to IVA, the customer pays it', () => {
+    const r = toFatturaPA({ ...IT, lines: [{ description: 'Subappalto', quantity: 1, unitPrice: 5000, lineTotal: 5000, vatRate: 0, vatNature: 'N6.3' }] });
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.document.bolloVirtuale).toBeUndefined();
+    expect(generateFatturaPAXml(r.document)).not.toContain('<DatiBollo>');
   });
 
   it('declares the stamp above the threshold', () => {

@@ -950,7 +950,11 @@
     "sendFailedNothingChanged": "De e-mail kon niet worden afgeleverd, er is niets gewijzigd: {{error}}",
     "resendInvoice": "Factuur opnieuw versturen",
     "notSyncedTitle": "Nog niet gesynchroniseerd",
-    "notSyncedBody": "Deze factuur is offline gemaakt en staat nog niet op de server. Maak verbinding met internet, wacht even en probeer het opnieuw — er is niets verstuurd."
+    "notSyncedBody": "Deze factuur is offline gemaakt en staat nog niet op de server. Maak verbinding met internet, wacht even en probeer het opnieuw — er is niets verstuurd.",
+    "vatNatureMissing": "Regel {{line}} ({{description}}): 0 % btw zonder reden — kies die (bijv. btw verlegd)",
+    "vatNatureNotForRegime": "Regel {{line}} ({{description}}): {{nature}} kan niet onder {{regime}} — kies een andere reden",
+    "einvoiceMissingThisInvoice": "Deze factuur",
+    "einvoiceFixLines": "Regels bewerken"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -7388,7 +7392,7 @@
     "iban": "Uw IBAN {{value}} is ongeldig.",
     "internal": "Vasco heeft voor deze factuur bedragen gemaakt die niet kloppen (regel {{code}}). Er is niets gedeeld — meld dit aan support.",
     "bollo": "Het bedrag buiten de btw is hoger dan € 77,47: er is € 2,00 zegelrecht (marca da bollo) verschuldigd.",
-    "naturaRegime": "Een regel van 0 % staat als \"niet belast\" (N2.2), wat bij de forfaitaire regeling hoort. Controleer onder {{value}} of het verlegd of vrijgesteld is.",
+    "naturaRegime": "Een 0 %-regel staat als \"niet belast\" (N2.2), wat bij de forfaitaire regeling past. Kies onder {{value}} bij de factuurregels de echte reden (btw verlegd, vrijgesteld …).",
     "regimeCharges": "Onder {{value}} wordt normaal geen btw gerekend, maar een regel bevat btw.",
     "unsignedB2B": "Dit Facturae-bestand is niet ondertekend: geldig tussen bedrijven, niet geaccepteerd door FACe.",
     "recipient": "De ontvanger",
@@ -7399,7 +7403,9 @@
     "personTypeSeller": "Je NIF past niet bij ‘persoon of bedrijf’ in je bedrijfsprofiel — controleer dit.",
     "personTypeBuyer": "De NIF van de klant past niet bij ‘persoon of bedrijf’ in de klantgegevens — controleer dit.",
     "publicBuyerDir3ES": "Deze klant is een overheidsinstantie: FACe heeft haar drie DIR3-codes nodig (boekhoudkantoor, beherend orgaan, behandelende eenheid). Voeg ze toe aan de klant.",
-    "signatureInvalid": "De handtekening op dit bestand is geen geldige Facturae-handtekening."
+    "signatureInvalid": "De handtekening op dit bestand is geen geldige Facturae-handtekening.",
+    "reverseChargeRegime": "Onder {{value}} past u als leverancier geen btw-verlegging toe: de regel hoort \"niet belast\" (N2.2) te zijn.",
+    "reverseChargeBuyer": "Btw verleggen kan alleen naar een klant met een btw-nummer (partita IVA). Vul het in bij de klant, of kies een andere reden voor de regel."
   },
   "vatBasis": {
     "section": "Wanneer de btw verschuldigd is",
@@ -7554,5 +7560,16 @@
       "noSellerNif": "Vul eerst uw NIF/CIF in uw bedrijfsprofiel in.",
       "cannotSign": "Dit certificaat is niet bedoeld om te ondertekenen (alleen om in te loggen). Importeer het certificaat dat je aanbieder voor elektronische handtekeningen heeft uitgegeven."
     }
+  },
+  "vatNature": {
+    "menuLabel": "Btw voor deze regel",
+    "choose": "0 % — kies waarom",
+    "rate": "{{rate}} % btw",
+    "N1": "Uitgesloten – voorschotten namens de klant (art. 15)",
+    "N2_1": "Niet belast – geleverd buiten Italië (art. 7)",
+    "N2_2": "Niet belast – forfaitaire / minimumregeling",
+    "N4": "Vrijgesteld (art. 10)",
+    "N6_3": "Btw verlegd – onderaanneming bouw",
+    "N6_7": "Btw verlegd – bouwdiensten"
   }
 }

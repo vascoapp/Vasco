@@ -950,7 +950,11 @@
     "sendFailedNothingChanged": "The email could not be delivered, so nothing has changed: {{error}}",
     "resendInvoice": "Send invoice again",
     "notSyncedTitle": "Not synced yet",
-    "notSyncedBody": "This invoice was created offline and has not reached the server yet. Connect to the internet, wait a moment and try again — nothing has been sent."
+    "notSyncedBody": "This invoice was created offline and has not reached the server yet. Connect to the internet, wait a moment and try again — nothing has been sent.",
+    "vatNatureMissing": "Line {{line}} ({{description}}): 0 % VAT without a reason — choose it (e.g. reverse charge)",
+    "vatNatureNotForRegime": "Line {{line}} ({{description}}): {{nature}} cannot be used under {{regime}} — choose another reason",
+    "einvoiceMissingThisInvoice": "This invoice",
+    "einvoiceFixLines": "Edit lines"
   },
   "expenses": {
     "title": "Expenses",
@@ -7388,7 +7392,7 @@
     "iban": "Your IBAN {{value}} is not valid.",
     "internal": "Vasco produced inconsistent figures for this invoice (rule {{code}}). Nothing was shared — please report this to support.",
     "bollo": "The amount outside VAT exceeds € 77.47: a € 2.00 stamp duty (marca da bollo) is due.",
-    "naturaRegime": "A 0 % line is declared as \"not subject\" (N2.2), which fits the flat-rate regime. Under {{value}} check whether it is reverse charge or exempt instead.",
+    "naturaRegime": "A 0 % line is declared as \"not subject\" (N2.2), which fits the flat-rate regime. Under {{value}} choose the line's real reason (reverse charge, exempt …) in the invoice lines.",
     "regimeCharges": "Under {{value}} no VAT is normally charged, but a line carries VAT.",
     "unsignedB2B": "This Facturae file is not signed: valid between businesses, not accepted by FACe.",
     "recipient": "The recipient",
@@ -7399,7 +7403,9 @@
     "personTypeSeller": "Your NIF does not match “person or company” in your business profile — please check it.",
     "personTypeBuyer": "The customer's NIF does not match “person or company” in their details — please check it.",
     "publicBuyerDir3ES": "This customer is a public body: FACe needs its three DIR3 codes (accounting office, managing body, processing unit). Add them to the customer.",
-    "signatureInvalid": "The signature on this file is not a valid Facturae signature."
+    "signatureInvalid": "The signature on this file is not a valid Facturae signature.",
+    "reverseChargeRegime": "Under {{value}} you do not apply reverse charge as the supplier: the line should be \"not subject\" (N2.2).",
+    "reverseChargeBuyer": "Reverse charge needs a customer with a VAT number (partita IVA). Add it to the customer, or choose another reason for the line."
   },
   "vatBasis": {
     "section": "When VAT is due",
@@ -7554,5 +7560,16 @@
       "noSellerNif": "Enter your NIF/CIF in your business profile first.",
       "cannotSign": "This certificate is not for signing (it is only for logging in). Import the certificate your provider issued for electronic signatures."
     }
+  },
+  "vatNature": {
+    "menuLabel": "VAT for this line",
+    "choose": "0 % — choose why",
+    "rate": "{{rate}} % VAT",
+    "N1": "Excluded – expenses paid in the customer's name (art. 15)",
+    "N2_1": "Not subject – supplied outside Italy (art. 7)",
+    "N2_2": "Not subject – flat-rate / minimum scheme",
+    "N4": "Exempt (art. 10)",
+    "N6_3": "Reverse charge – construction subcontract",
+    "N6_7": "Reverse charge – building services"
   }
 }

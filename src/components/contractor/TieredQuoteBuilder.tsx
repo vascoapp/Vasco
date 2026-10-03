@@ -11,6 +11,8 @@ import { toTrade, type Trade } from '../../config/tradeFeatures';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DKMenu } from '../shared/DKMenu';
+import { lineVatMenuItems, lineVatLabel } from './LineVatMenu';
+import type { VatNature } from '../../domain/vatNature';
 import { templateItemToBuilderLine, builderLinesToTemplateItems, type BuilderLine } from '../../services/templateLineMapping';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -246,6 +248,11 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // and an energy-renovation devis was overcharged by 4.5 points of VAT.
   // null = the standard rate.
   const [chosenVatRate, setChosenVatRate] = useState<number | null>(null);
+  // Italy: a quote at 0 % says WHY (FatturaPA Natura) — a subcontract for a
+  // building firm is reverse charge (N6.3), not "no VAT". Chosen in the same
+  // menu as the rate (LineVatMenu's items) and carried onto every line, so the
+  // invoice made from this quote exports with it. null = a rate, not a reason.
+  const [chosenVatNature, setChosenVatNature] = useState<VatNature | null>(null);
   const [step, setStep] = useState<'select' | 'preview'>('select');
   // The contractor's own package names + promises (localized defaults until
   // they edit them). `tierPresets` feeds calculateTiers below.
@@ -565,13 +572,14 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
       const exempt = isSmallBusinessExempt(bp);
       const effectiveVatRate = exempt
         ? 0
-        : (chosenVatRate ?? getStandardVatRate(country));
+        : chosenVatNature ? 0 : (chosenVatRate ?? getStandardVatRate(country));
       const vatAmount = subtotal * (effectiveVatRate / 100);
       return {
         tier: tierKey,
         name: tierPresets[tierKey].name,
         tagline: t(TIER_TAGLINE_KEY[tierKey].key, TIER_TAGLINE_KEY[tierKey].fallback),
         lineItems, subtotal, vatRate: effectiveVatRate, vatAmount, total: subtotal + vatAmount,
+        ...(!exempt && chosenVatNature ? { vatNature: chosenVatNature } : {}),
         // A pricebook variant that spells out what it includes beats the
         // contractor's generic package bullets; the presets are the fallback.
         features: features.length > 0 ? features.slice(0, 5) : tierPresets[tierKey].features,
@@ -1929,7 +1937,21 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         {selectableVatRates.length > 1 && !isSmallBusinessExempt(bp) && (
           <DKMenu
             accessibilityLabel={t('quotes.vatRateLabel', 'VAT rate')}
-            items={selectableVatRates.map((rate) => ({
+            items={country === 'IT'
+              // Italy: the rates AND the 0 % reasons the fiscal regime allows.
+              ? lineVatMenuItems({
+                country: country as any,
+                regime: bp?.fiscalRegime,
+                current: { vatRate: chosenVatNature ? 0 : (chosenVatRate ?? getStandardVatRate(country)), vatNature: chosenVatNature ?? undefined },
+                fallbackRatePct: getStandardVatRate(country),
+                onChange: (next) => {
+                  setChosenVatNature(next.vatNature ?? null);
+                  setChosenVatRate(next.vatRate === getStandardVatRate(country) ? null : next.vatRate);
+                  hapticSuccess();
+                },
+                t: t as any,
+              })
+              : selectableVatRates.map((rate) => ({
               key: String(rate),
               label: vatRateLabel(rate),
               selected: (chosenVatRate ?? getStandardVatRate(country)) === rate,
@@ -1946,7 +1968,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 <View style={{ flex: 1 }}>
                   <Text style={s.vatToggleTitle}>{t('quotes.vatRateLabel', 'VAT rate')}</Text>
                   <Text style={s.vatToggleSubtitle}>
-                    {vatRateLabel(chosenVatRate ?? getStandardVatRate(country))}
+                    {country === 'IT' && chosenVatNature
+                      ? lineVatLabel({ vatRate: 0, vatNature: chosenVatNature }, getStandardVatRate(country), t as any)
+                      : vatRateLabel(chosenVatRate ?? getStandardVatRate(country))}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={SemanticColors.textTertiary} />

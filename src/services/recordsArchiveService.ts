@@ -32,7 +32,7 @@ import {
 import { pdfInvoiceFromRecord } from './invoicePdfSource';
 import { renderInvoicePdfFile } from './invoicePdfService';
 import { generateXRechnungXML, generateZUGFeRDXML, generateFacturXXML } from '../integrations/einvoice';
-import { toFacturae, toFatturaPA } from '../integrations/einvoiceMapping';
+import { toFacturae, toFatturaPA, missingFieldLabel } from '../integrations/einvoiceMapping';
 import { generateFacturaeXml } from '../integrations/einvoice-es';
 import { generateFatturaPAXml } from '../integrations/einvoice-it';
 import { checkFacturae, checkFatturaPA, blockingFindings } from '../integrations/einvoiceValueRules';
@@ -87,7 +87,9 @@ function eInvoiceFor(inp: InvoiceDocInputs, sellerMissing: string[], t: Translat
 
   if (c === 'ES' || c === 'IT') {
     const mapped = c === 'ES' ? toFacturae(buildEInvoiceSource(inp)) : toFatturaPA(buildEInvoiceSource(inp));
-    if (!mapped.ok) return missing(mapped.missing.map((m) => t(m.key, m.key.split('.').pop() ?? m.key)));
+    // The same label the invoice screen shows — a line-level gap (Italy: the
+    // VAT nature of a 0 % line) names its line, not "{{line}}".
+    if (!mapped.ok) return missing(mapped.missing.map((m) => missingFieldLabel(m, (k, o) => t(k, String(o?.defaultValue ?? k), o))));
     const xml = c === 'ES' ? generateFacturaeXml(mapped.document as any) : generateFatturaPAXml(mapped.document as any);
     // The same second gate as the invoice screen: a file SDI / FACe would
     // reject on their value rules is not "the e-invoice" of this invoice — it

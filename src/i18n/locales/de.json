@@ -950,7 +950,11 @@
     "sendFailedNothingChanged": "Die E-Mail konnte nicht zugestellt werden, es wurde nichts geändert: {{error}}",
     "resendInvoice": "Rechnung erneut senden",
     "notSyncedTitle": "Noch nicht synchronisiert",
-    "notSyncedBody": "Diese Rechnung wurde offline erstellt und ist noch nicht auf dem Server. Verbinden Sie sich mit dem Internet, warten Sie einen Moment und versuchen Sie es erneut — es wurde nichts gesendet."
+    "notSyncedBody": "Diese Rechnung wurde offline erstellt und ist noch nicht auf dem Server. Verbinden Sie sich mit dem Internet, warten Sie einen Moment und versuchen Sie es erneut — es wurde nichts gesendet.",
+    "vatNatureMissing": "Position {{line}} ({{description}}): 0 % MwSt. ohne Grund — bitte wählen Sie ihn (z. B. Reverse Charge)",
+    "vatNatureNotForRegime": "Position {{line}} ({{description}}): {{nature}} ist unter {{regime}} nicht möglich — bitte wählen Sie einen anderen Grund",
+    "einvoiceMissingThisInvoice": "Diese Rechnung",
+    "einvoiceFixLines": "Positionen bearbeiten"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -7388,7 +7392,7 @@
     "iban": "Ihre IBAN {{value}} ist ungültig.",
     "internal": "Vasco hat für diese Rechnung widersprüchliche Beträge erzeugt (Regel {{code}}). Es wurde nichts geteilt – bitte melden Sie dies dem Support.",
     "bollo": "Der Betrag außerhalb der MwSt. übersteigt 77,47 €: Eine Stempelsteuer (marca da bollo) von 2,00 € ist fällig.",
-    "naturaRegime": "Eine 0-%-Position ist als „nicht steuerbar“ (N2.2) angegeben, was zur Pauschalregelung passt. Prüfen Sie unter {{value}}, ob es sich um Reverse Charge oder eine Steuerbefreiung handelt.",
+    "naturaRegime": "Eine 0-%-Position ist als „nicht steuerbar“ (N2.2) angegeben, was zur Pauschalregelung passt. Wählen Sie unter {{value}} bei den Rechnungspositionen den tatsächlichen Grund (Reverse Charge, steuerbefreit …).",
     "regimeCharges": "Unter {{value}} wird normalerweise keine MwSt. berechnet, aber eine Position enthält MwSt.",
     "unsignedB2B": "Diese Facturae-Datei ist nicht signiert: gültig zwischen Unternehmen, von FACe nicht akzeptiert.",
     "recipient": "Der Empfänger",
@@ -7399,7 +7403,9 @@
     "personTypeSeller": "Ihre NIF passt nicht zu „Person oder Unternehmen“ in Ihrem Unternehmensprofil — bitte prüfen Sie das.",
     "personTypeBuyer": "Die NIF des Kunden passt nicht zu „Person oder Unternehmen“ in den Kundendaten — bitte prüfen Sie das.",
     "publicBuyerDir3ES": "Dieser Kunde ist eine öffentliche Stelle: FACe braucht ihre drei DIR3-Codes (Buchhaltungsstelle, verwaltende Stelle, bearbeitende Stelle). Ergänzen Sie sie beim Kunden.",
-    "signatureInvalid": "Die Signatur dieser Datei ist keine gültige Facturae-Signatur."
+    "signatureInvalid": "Die Signatur dieser Datei ist keine gültige Facturae-Signatur.",
+    "reverseChargeRegime": "Unter {{value}} wenden Sie als Leistender kein Reverse Charge an: Die Position sollte „nicht steuerbar“ (N2.2) sein.",
+    "reverseChargeBuyer": "Reverse Charge setzt einen Kunden mit USt-IdNr. (Partita IVA) voraus. Ergänzen Sie diese beim Kunden oder wählen Sie einen anderen Grund für die Position."
   },
   "vatBasis": {
     "section": "Wann die USt entsteht",
@@ -7554,5 +7560,16 @@
       "noSellerNif": "Tragen Sie zuerst Ihre NIF/CIF in Ihrem Unternehmensprofil ein.",
       "cannotSign": "Dieses Zertifikat ist nicht zum Signieren bestimmt (nur zur Anmeldung). Importieren Sie das Zertifikat, das Ihr Anbieter für elektronische Signaturen ausgestellt hat."
     }
+  },
+  "vatNature": {
+    "menuLabel": "MwSt. für diese Position",
+    "choose": "0 % — Grund wählen",
+    "rate": "{{rate}} % MwSt.",
+    "N1": "Ausgeschlossen – Auslagen im Namen des Kunden (Art. 15)",
+    "N2_1": "Nicht steuerbar – Leistung außerhalb Italiens (Art. 7)",
+    "N2_2": "Nicht steuerbar – Pauschal- / Minimalregelung",
+    "N4": "Steuerbefreit (Art. 10)",
+    "N6_3": "Reverse Charge – Subunternehmer Bau",
+    "N6_7": "Reverse Charge – Bauleistungen"
   }
 }
