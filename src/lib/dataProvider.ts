@@ -234,19 +234,25 @@ export async function healOrphanLineItems(
   /** The contractor's effective rate — what every other line writer stamps
    *  on a line that carries none. */
   fallbackVatRatePercent: number | null,
+  /** What each number IS on this device. A quote and an invoice can share a
+   *  number (separate sequences, or typed by hand), and the lookup is by
+   *  number: without the type a quote's lines could be written onto the
+   *  same-numbered invoice. A number with no known type is not healed. */
+  docTypeByNumber: Record<string, 'quote' | 'invoice'>,
 ): Promise<number> {
-  const numbers = Object.keys(byDocumentNumber);
+  const numbers = Object.keys(byDocumentNumber).filter((n) => docTypeByNumber[n] === 'quote' || docTypeByNumber[n] === 'invoice');
   if (!isSupabaseConfigured || numbers.length === 0) return 0;
   try {
     // One round-trip for all of them: resolve document_number -> id.
     const { data, error } = await supabase
       .from('documents')
-      .select('id, document_number')
+      .select('id, document_number, doc_type')
       .in('document_number', numbers);
     if (error || !data) return 0;
 
     let healed = 0;
-    for (const row of data as Array<{ id: string; document_number: string }>) {
+    for (const row of data as Array<{ id: string; document_number: string; doc_type: string }>) {
+      if (row.doc_type !== docTypeByNumber[row.document_number]) continue;
       const items = byDocumentNumber[row.document_number];
       if (!items?.length) continue;
       if (healingDocuments.has(row.id)) continue;

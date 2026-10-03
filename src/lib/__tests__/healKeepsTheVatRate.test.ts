@@ -15,7 +15,12 @@ jest.mock('../supabase', () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'u-1' } } }) },
     from: (table: string) => {
       if (table === 'documents') {
-        return { select: () => ({ in: async () => ({ data: [{ id: 'doc-1', document_number: 'OF-2026-0001' }], error: null }) }) };
+        // A quote and an invoice that share a number (#384 open item): the
+        // heal must pick the one of the type the device holds.
+        return { select: () => ({ in: async () => ({ data: [
+          { id: 'doc-1', document_number: 'OF-2026-0001', doc_type: 'quote' },
+          { id: 'doc-inv', document_number: 'OF-2026-0001', doc_type: 'invoice' },
+        ], error: null }) }) };
       }
       return {
         select: () => ({ eq: (_c: string, id: string) => ({ limit: async () => ({ data: Array.from({ length: mockExisting[id] ?? 0 }, (_, i) => ({ id: `l${i}` })), error: null }) }) }),
@@ -30,7 +35,11 @@ jest.mock('../supabase', () => ({
   },
 }));
 
-import { healOrphanLineItems } from '../dataProvider';
+import { healOrphanLineItems as heal } from '../dataProvider';
+
+// The device holds OF-2026-0001 as a QUOTE unless a test says otherwise.
+const QUOTE = { 'OF-2026-0001': 'quote' as const };
+const healOrphanLineItems = (o: Parameters<typeof heal>[0], rate: number | null) => heal(o, rate, QUOTE);
 
 beforeEach(() => { upserted.length = 0; for (const k of Object.keys(mockExisting)) delete mockExisting[k]; });
 
@@ -69,7 +78,7 @@ describe('what the refresh passes as the fallback (review 2026-09-30)', () => {
     const path = require('path');
     const { stripComments } = require('../../utils/stripComments');
     const src = stripComments(fs.readFileSync(path.resolve(__dirname, '../../state/AppState.tsx'), 'utf8'));
-    expect(src).toMatch(/healOrphanLineItems\(orphans, storedLineVatRate\(bp\)\)/);
+    expect(src).toMatch(/healOrphanLineItems\(orphans, storedLineVatRate\(bp\), docTypes\)/);
   });
 });
 
@@ -96,4 +105,25 @@ it('the heal asks the database to ignore a line already at that position', async
   mockUpsertOpts.length = 0;
   await healOrphanLineItems({ 'OF-2026-0001': [{ description: 'Arbeid', quantity: 4, unitPrice: 55 }] }, 21);
   expect(mockUpsertOpts[0]).toEqual({ onConflict: 'document_id,position', ignoreDuplicates: true });
+});
+
+describe('a quote and an invoice with the same number (learnings #384, open item)', () => {
+  const orphan = { 'OF-2026-0001': [{ description: 'Arbeid', quantity: 4, unitPrice: 55, vatRate: 9 }] };
+
+  it('the lines go onto the document of the type the device holds — the invoice here', async () => {
+    const n = await heal(orphan, 21, { 'OF-2026-0001': 'invoice' });
+    expect(n).toBe(1);
+    expect(upserted.map((r) => r.document_id)).toEqual(['doc-inv']);
+  });
+
+  it('…and onto the quote when it is a quote, never both', async () => {
+    await heal(orphan, 21, { 'OF-2026-0001': 'quote' });
+    expect(upserted.map((r) => r.document_id)).toEqual(['doc-1']);
+  });
+
+  it('a number whose type the device does not know is not healed at all', async () => {
+    const n = await heal(orphan, 21, {});
+    expect(n).toBe(0);
+    expect(upserted).toHaveLength(0);
+  });
 });

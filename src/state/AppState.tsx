@@ -698,8 +698,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // A side effect inside an updater React may run twice: the heal is
         // idempotent at the write (in-flight set + existing-lines check).
         if (Object.keys(orphans).length > 0) {
+          // The heal resolves documents by NUMBER; a quote and an invoice can
+          // share one (#384, open item). An orphan is healed only onto the
+          // server document of the one type that number has — never while its
+          // own insert is still queued (the lines belong to THAT document, and
+          // a same-numbered one of the other type on the server is not it),
+          // and not at all when the server has both (the lines, keyed by
+          // number, cannot be told apart). The next refresh after the flush
+          // heals what was skipped.
+          const docTypes: Record<string, 'quote' | 'invoice'> = {};
+          const quoteNumbers = new Set((q ?? []).map((d) => d.id));
+          const invoiceNumbers = new Set((inv ?? []).map((d) => d.id));
+          for (const n of Object.keys(orphans)) {
+            if (pendingDocs.has(n)) continue;
+            if (quoteNumbers.has(n) !== invoiceNumbers.has(n)) docTypes[n] = quoteNumbers.has(n) ? 'quote' : 'invoice';
+          }
           import('../lib/dataProvider')
-            .then((m) => m.healOrphanLineItems(orphans, storedLineVatRate(bp)))
+            .then((m) => m.healOrphanLineItems(orphans, storedLineVatRate(bp), docTypes))
             .then((n) => { if (n > 0) logWarn('AppState', `healed line items for ${n} document(s) created offline`); })
             .catch(() => {});
         }
