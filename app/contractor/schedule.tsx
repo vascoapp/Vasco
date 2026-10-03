@@ -35,6 +35,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { PAGE_BG } from '../../src/theme/tabStyles';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
+import { DK } from '../../src/theme/draftkings';
 import { DKMenu, type DKMenuItem } from '../../src/components/shared/DKMenu';
 import { useAppState } from '../../src/state/AppState';
 import { slotHoursOr } from '../../src/utils/jobSlot';
@@ -284,7 +285,9 @@ interface ScheduledJob {
   site?: string;
 }
 
-const COLORS = [Palette.hermesOrange, '#3B82F6', '#10B981', '#EC4899', '#14B8A6', '#F97316', '#6366F1'];
+// DK categorical series (CLAUDE.md: DK tokens only — this was blue, pink,
+// teal and indigo on the dark UI).
+const COLORS = DK.colors.series;
 
 export default function DragScheduleScreen() {
   const { t } = useTranslation();

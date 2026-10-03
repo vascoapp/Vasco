@@ -337,7 +337,9 @@ export default function ProjectsScreen() {
                 ]}
                 renderAnchor={(open) => (
                   <Pressable style={styles.pickerAnchor} onPress={open} accessibilityRole="button">
-                    <Text style={styles.pickerAnchorText} numberOfLines={1}>
+                    {/* Nothing chosen yet → the placeholder colour, like every
+                        empty field (CLAUDE.md); white read as a chosen value. */}
+                    <Text style={[styles.pickerAnchorText, !customers.some(c => c.id === newCustomerId) && styles.pickerAnchorEmpty]} numberOfLines={1}>
                       {customers.find(c => c.id === newCustomerId)?.name
                         ?? t('contractor.projects.pickCustomer', 'Customer')}
                     </Text>
@@ -401,7 +403,7 @@ export default function ProjectsScreen() {
                 }))}
                 renderAnchor={(open) => (
                   <Pressable style={styles.pickerAnchor} onPress={open} accessibilityRole="button">
-                    <Text style={styles.pickerAnchorText} numberOfLines={1}>
+                    <Text style={[styles.pickerAnchorText, !newTemplate && styles.pickerAnchorEmpty]} numberOfLines={1}>
                       {newTemplate
                         ? t(`projectTemplate.name.${templateById(newTemplate)?.nameKey}`, '')
                         : t('projectTemplate.pick', 'Start from a trade sequence')}
@@ -482,6 +484,7 @@ const styles = StyleSheet.create({
   },
   // flex:1 so a long name truncates instead of pushing the chevron out.
   pickerAnchorText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
+  pickerAnchorEmpty: { color: SemanticColors.placeholder },
   templateHint: { fontSize: TYPE.labelSize, color: SemanticColors.textTertiary },
   createBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
 

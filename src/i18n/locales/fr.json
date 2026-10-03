@@ -1486,7 +1486,22 @@
     "chooseJob": "Choisir un chantier",
     "whichJob": "Sur quel chantier travaillez-vous ?",
     "withoutJob": "Sans chantier",
-    "exportPayroll": "Exporter pour la paie"
+    "exportPayroll": "Exporter pour la paie",
+    "edit": {
+      "open": "Modifier la saisie",
+      "add": "Ajouter des heures à la main",
+      "addTitle": "Ajouter des heures",
+      "title": "Modifier la saisie",
+      "date": "Jour",
+      "start": "Début",
+      "end": "Fin",
+      "job": "Chantier",
+      "delete": "Supprimer la saisie",
+      "deleteTitle": "Supprimer la saisie ?",
+      "deleteBody": "Ces heures sont retirées du chantier et de la paie.",
+      "invalidTitle": "Vérifiez les heures",
+      "invalidBody": "Saisissez une heure de début et de fin (ex. 07:30 et 16:00) ; la fin doit être après le début."
+    }
   },
   "sitelead": {
     "overview": "Vue d'ensemble",
@@ -2214,7 +2229,8 @@
     "noPromisedHandover": "Aucune date de réception promise",
     "setPromisedHandover": "Définir la date promise",
     "clearPromisedHandover": "Supprimer la date promise",
-    "weekOf": "semaine du {{date}}"
+    "weekOf": "semaine du {{date}}",
+    "noJobsForCustomer": "Aucun chantier en cours pour ce client. Créez d’abord un chantier pour ce client."
   },
   "projectTemplate": {
     "pick": "Partir d'une séquence de corps de métier",
@@ -2682,7 +2698,7 @@
       "projectNamePlaceholder": "Nom du projet",
       "customerNamePlaceholder": "Nom du client",
       "budgetPlaceholder": "Montant du budget",
-      "filterOpen": "En cours",
+      "filterOpen": "Ouverts",
       "filterDone": "Terminés",
       "retentionPlaceholder": "Retenue de garantie % (facultatif)",
       "retentionHint": "{{percent}}% retenus sur chaque situation jusqu’à la réception",
@@ -6139,7 +6155,9 @@
     "needName": "Donnez un nom au formulaire",
     "needField": "Ajoutez au moins un point",
     "startAnother": "Remplir un autre formulaire",
-    "completed": "Terminé"
+    "completed": "Terminé",
+    "trade": "Corps de métier",
+    "fieldType": "Type"
   },
   "repeatWork": {
     "title": "Travail récurrent",

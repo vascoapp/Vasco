@@ -1486,7 +1486,22 @@
     "chooseJob": "Choose job",
     "whichJob": "Which job are you working on?",
     "withoutJob": "Without job",
-    "exportPayroll": "Export for payroll"
+    "exportPayroll": "Export for payroll",
+    "edit": {
+      "open": "Edit entry",
+      "add": "Add hours by hand",
+      "addTitle": "Add hours",
+      "title": "Edit entry",
+      "date": "Day",
+      "start": "Start",
+      "end": "End",
+      "job": "Job",
+      "delete": "Delete entry",
+      "deleteTitle": "Delete entry?",
+      "deleteBody": "These hours are removed from the job and from payroll.",
+      "invalidTitle": "Check the times",
+      "invalidBody": "Enter a start and end time (e.g. 07:30 and 16:00); the end must be after the start."
+    }
   },
   "sitelead": {
     "overview": "Overview",
@@ -2214,7 +2229,8 @@
     "noPromisedHandover": "No handover date promised",
     "setPromisedHandover": "Set promised handover",
     "clearPromisedHandover": "Remove promised date",
-    "weekOf": "week of {{date}}"
+    "weekOf": "week of {{date}}",
+    "noJobsForCustomer": "There are no open jobs for this customer. Create the job for this customer first."
   },
   "projectTemplate": {
     "pick": "Start from a trade sequence",
@@ -6139,7 +6155,9 @@
     "needName": "Give the form a name",
     "needField": "Add at least one item",
     "startAnother": "Fill in another form",
-    "completed": "Completed"
+    "completed": "Completed",
+    "trade": "Trade",
+    "fieldType": "Type"
   },
   "repeatWork": {
     "title": "Repeat work",

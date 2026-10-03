@@ -23,6 +23,10 @@ export const DK = {
     highlight: '#F59E0B',
     success: '#10B981',
     danger: '#EF4444',
+    // Categorical colours for things that must be told apart (planner
+    // blocks per job/worker, crew roles) — the DK sunset ramp + its tints,
+    // never the retired blue/pink/indigo (aannemer walk 2026-10-03).
+    series: ['#F97316', '#F59E0B', '#10B981', '#FDBA74', '#FCD34D', '#C2410C', '#9CA3AF'] as readonly string[],
   },
   // Soft radius — user's choice from the lab
   radius: {

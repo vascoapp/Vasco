@@ -1486,7 +1486,22 @@
     "chooseJob": "Auftrag wählen",
     "whichJob": "An welchem Auftrag arbeiten Sie?",
     "withoutJob": "Ohne Auftrag",
-    "exportPayroll": "Für Lohnabrechnung exportieren"
+    "exportPayroll": "Für Lohnabrechnung exportieren",
+    "edit": {
+      "open": "Eintrag bearbeiten",
+      "add": "Stunden manuell hinzufügen",
+      "addTitle": "Stunden hinzufügen",
+      "title": "Eintrag bearbeiten",
+      "date": "Tag",
+      "start": "Beginn",
+      "end": "Ende",
+      "job": "Auftrag",
+      "delete": "Eintrag löschen",
+      "deleteTitle": "Eintrag löschen?",
+      "deleteBody": "Diese Stunden werden vom Auftrag und aus der Lohnabrechnung entfernt.",
+      "invalidTitle": "Zeiten prüfen",
+      "invalidBody": "Geben Sie eine Beginn- und Endzeit ein (z. B. 07:30 und 16:00); das Ende muss nach dem Beginn liegen."
+    }
   },
   "sitelead": {
     "overview": "Übersicht",
@@ -2214,7 +2229,8 @@
     "noPromisedHandover": "Kein Abnahmetermin zugesagt",
     "setPromisedHandover": "Abnahmetermin festlegen",
     "clearPromisedHandover": "Abnahmetermin entfernen",
-    "weekOf": "Woche vom {{date}}"
+    "weekOf": "Woche vom {{date}}",
+    "noJobsForCustomer": "Für diesen Kunden gibt es keine offenen Aufträge. Legen Sie zuerst einen Auftrag für diesen Kunden an."
   },
   "projectTemplate": {
     "pick": "Mit einer Gewerkefolge starten",
@@ -2682,7 +2698,7 @@
       "projectNamePlaceholder": "Projektname",
       "customerNamePlaceholder": "Kundenname",
       "budgetPlaceholder": "Budgetbetrag",
-      "filterOpen": "Laufend",
+      "filterOpen": "Offen",
       "filterDone": "Abgeschlossen",
       "retentionPlaceholder": "Sicherheitseinbehalt % (optional)",
       "retentionHint": "{{percent}}% werden je Rate bis zur Abnahme einbehalten",
@@ -6139,7 +6155,9 @@
     "needName": "Geben Sie dem Formular einen Namen",
     "needField": "Fügen Sie mindestens einen Punkt hinzu",
     "startAnother": "Weiteres Formular ausfüllen",
-    "completed": "Abgeschlossen"
+    "completed": "Abgeschlossen",
+    "trade": "Gewerk",
+    "fieldType": "Art"
   },
   "repeatWork": {
     "title": "Wiederkehrende Arbeiten",

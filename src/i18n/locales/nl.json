@@ -199,7 +199,7 @@
       "flooring": "Vloerenleggen",
       "insulation": "Isolatie",
       "solar": "Zonnepanelen",
-      "glazing": "Glasbewassing",
+      "glazing": "Glaszetten",
       "landscaping": "Hovenieren",
       "demolition": "Sloopwerk"
     },
@@ -1771,7 +1771,22 @@
     "chooseJob": "Klus kiezen",
     "whichJob": "Voor welke klus ga je werken?",
     "withoutJob": "Zonder klus",
-    "exportPayroll": "Exporteer voor verloning"
+    "exportPayroll": "Exporteer voor verloning",
+    "edit": {
+      "open": "Registratie bewerken",
+      "add": "Uren handmatig toevoegen",
+      "addTitle": "Uren toevoegen",
+      "title": "Registratie bewerken",
+      "date": "Dag",
+      "start": "Begin",
+      "end": "Eind",
+      "job": "Klus",
+      "delete": "Registratie verwijderen",
+      "deleteTitle": "Registratie verwijderen?",
+      "deleteBody": "Deze uren verdwijnen van de klus en uit de verloning.",
+      "invalidTitle": "Controleer de tijden",
+      "invalidBody": "Vul een begin- en eindtijd in (bijv. 07:30 en 16:00); de eindtijd moet na de begintijd liggen."
+    }
   },
   "money": {
     "outstanding": "Uitstaand",
@@ -2214,7 +2229,8 @@
     "noPromisedHandover": "Geen opleverdatum beloofd",
     "setPromisedHandover": "Opleverdatum vastleggen",
     "clearPromisedHandover": "Opleverdatum verwijderen",
-    "weekOf": "week van {{date}}"
+    "weekOf": "week van {{date}}",
+    "noJobsForCustomer": "Er zijn geen losse klussen voor deze klant. Maak eerst een klus aan voor deze klant."
   },
   "projectTemplate": {
     "pick": "Begin met een werkvolgorde",
@@ -2682,7 +2698,7 @@
       "projectNamePlaceholder": "Projectnaam",
       "customerNamePlaceholder": "Klantnaam",
       "budgetPlaceholder": "Budgetbedrag",
-      "filterOpen": "Lopend",
+      "filterOpen": "Open",
       "filterDone": "Afgerond",
       "retentionPlaceholder": "Retentie % (optioneel)",
       "retentionHint": "{{percent}}% ingehouden op elke termijn tot de oplevering",
@@ -6139,7 +6155,9 @@
     "needName": "Geef het formulier een naam",
     "needField": "Voeg minstens één punt toe",
     "startAnother": "Nog een formulier invullen",
-    "completed": "Afgerond"
+    "completed": "Afgerond",
+    "trade": "Vak",
+    "fieldType": "Soort"
   },
   "repeatWork": {
     "title": "Terugkerend werk",

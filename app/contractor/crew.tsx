@@ -59,9 +59,9 @@ const ROLES: WorkerRole[] = ['owner', 'lead_tech', 'tech', 'apprentice', 'subcon
 const ROLE_TONE: Record<WorkerRole, string> = {
   owner: DK.colors.accent,
   lead_tech: DK.colors.highlight,
-  tech: '#3B82F6',
-  apprentice: '#9CA3AF',
-  subcontractor: '#A78BFA',
+  tech: DK.colors.series[3],
+  apprentice: DK.colors.textMuted,
+  subcontractor: DK.colors.series[4],
 };
 
 export default function CrewScreen() {
@@ -422,8 +422,8 @@ const styles = StyleSheet.create({
   deleteBtn: {
     marginTop: GRID.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: GRID.sm, paddingVertical: GRID.md,
-    borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#7F1D1D',
+    borderRadius: RADIUS.lg, borderWidth: 1, borderColor: DK.colors.danger,
     backgroundColor: '#7F1D1D22',
   },
-  deleteBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: '#FECACA' },
+  deleteBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: DK.colors.danger },
 });

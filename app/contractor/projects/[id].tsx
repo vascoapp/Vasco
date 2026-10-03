@@ -75,7 +75,13 @@ export default function ProjectDetailScreen() {
     [project, invoices],
   );
   const projectJobs = useMemo(() => project ? jobs.filter(j => project.jobIds.includes(j.id)) : [], [project, jobs]);
-  const unassignedJobs = useMemo(() => jobs.filter(j => !projects.some(p => p.jobIds.includes(j.id))), [jobs, projects]);
+  // A project is ONE customer's: only that customer's jobs (or jobs with no
+  // customer on record) can join it. Any unassigned job was offered, so a
+  // different customer's job landed in this project's P&L and billing
+  // (aannemer walk, 2026-10-03).
+  const unassignedJobs = useMemo(() => jobs.filter(j =>
+    !projects.some(p => p.jobIds.includes(j.id))
+    && (!project?.customerId || !j.customerId || j.customerId === project.customerId)), [jobs, projects, project?.customerId]);
   const customer = useMemo(() => project ? customers.find(c => c.id === project.customerId) : null, [project, customers]);
 
   const onRefresh = useCallback(() => {
@@ -373,7 +379,9 @@ export default function ProjectDetailScreen() {
                       // Still an Alert when there is nothing to pick: that is a
                       // message, not a choice.
                       if (unassignedJobs.length === 0) {
-                        Alert.alert(t('project.noJobs'), t('project.allJobsAssigned'));
+                        Alert.alert(t('project.noJobs'), project?.customerId
+                          ? t('project.noJobsForCustomer', 'There are no open jobs for this customer. Create the job for this customer first.')
+                          : t('project.allJobsAssigned'));
                         return;
                       }
                       open();
@@ -428,8 +436,11 @@ export default function ProjectDetailScreen() {
                   // column, so it reads 0 however many instalments have been
                   // billed. Same computation the billing screen uses, so the two
                   // screens cannot disagree.
-                  invoiced: formatCurrency0(billing.invoiced, country),
-                  total: formatCurrency0(billing.contractValue, country),
+                  // In cents, as the billing screen it opens states them: a
+                  // € 15.250,50 contract read "€ 0 van € 15.251" here and
+                  // "€ 0,00 van € 15.250,50" one tap later (walk 2026-10-03).
+                  invoiced: formatCurrency(billing.invoiced, country),
+                  total: formatCurrency(billing.contractValue, country),
                 })}
               </Text>
             </View>

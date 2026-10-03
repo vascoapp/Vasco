@@ -1486,7 +1486,22 @@
     "chooseJob": "Elegir obra",
     "whichJob": "¿En qué obra estás trabajando?",
     "withoutJob": "Sin obra",
-    "exportPayroll": "Exportar para nómina"
+    "exportPayroll": "Exportar para nómina",
+    "edit": {
+      "open": "Editar registro",
+      "add": "Añadir horas a mano",
+      "addTitle": "Añadir horas",
+      "title": "Editar registro",
+      "date": "Día",
+      "start": "Inicio",
+      "end": "Fin",
+      "job": "Trabajo",
+      "delete": "Eliminar registro",
+      "deleteTitle": "¿Eliminar registro?",
+      "deleteBody": "Estas horas se quitan del trabajo y de la nómina.",
+      "invalidTitle": "Revisa las horas",
+      "invalidBody": "Indica una hora de inicio y de fin (p. ej. 07:30 y 16:00); el fin debe ser posterior al inicio."
+    }
   },
   "sitelead": {
     "overview": "Resumen",
@@ -2214,7 +2229,8 @@
     "noPromisedHandover": "Sin fecha de entrega prometida",
     "setPromisedHandover": "Fijar fecha prometida",
     "clearPromisedHandover": "Eliminar fecha prometida",
-    "weekOf": "semana del {{date}}"
+    "weekOf": "semana del {{date}}",
+    "noJobsForCustomer": "No hay trabajos abiertos para este cliente. Crea primero un trabajo para este cliente."
   },
   "projectTemplate": {
     "pick": "Empezar con una secuencia de oficios",
@@ -2682,7 +2698,7 @@
       "projectNamePlaceholder": "Nombre del proyecto",
       "customerNamePlaceholder": "Nombre del cliente",
       "budgetPlaceholder": "Importe del presupuesto",
-      "filterOpen": "En curso",
+      "filterOpen": "Abiertos",
       "filterDone": "Finalizados",
       "retentionPlaceholder": "Retención % (opcional)",
       "retentionHint": "{{percent}}% retenido en cada certificación hasta la entrega",
@@ -6139,7 +6155,9 @@
     "needName": "Ponle un nombre al formulario",
     "needField": "Añade al menos un punto",
     "startAnother": "Rellenar otro formulario",
-    "completed": "Finalizado"
+    "completed": "Finalizado",
+    "trade": "Oficio",
+    "fieldType": "Tipo"
   },
   "repeatWork": {
     "title": "Trabajo recurrente",

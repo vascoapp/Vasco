@@ -1486,7 +1486,22 @@
     "chooseJob": "Scegli cantiere",
     "whichJob": "Su quale cantiere stai lavorando?",
     "withoutJob": "Senza cantiere",
-    "exportPayroll": "Esporta per paghe"
+    "exportPayroll": "Esporta per paghe",
+    "edit": {
+      "open": "Modifica registrazione",
+      "add": "Aggiungi ore a mano",
+      "addTitle": "Aggiungi ore",
+      "title": "Modifica registrazione",
+      "date": "Giorno",
+      "start": "Inizio",
+      "end": "Fine",
+      "job": "Lavoro",
+      "delete": "Elimina registrazione",
+      "deleteTitle": "Eliminare la registrazione?",
+      "deleteBody": "Queste ore vengono tolte dal lavoro e dalle paghe.",
+      "invalidTitle": "Controlla gli orari",
+      "invalidBody": "Inserisci un orario di inizio e di fine (es. 07:30 e 16:00); la fine deve essere dopo l’inizio."
+    }
   },
   "sitelead": {
     "overview": "Panoramica",
@@ -2214,7 +2229,8 @@
     "noPromisedHandover": "Nessuna data di consegna promessa",
     "setPromisedHandover": "Imposta data promessa",
     "clearPromisedHandover": "Rimuovi data promessa",
-    "weekOf": "settimana del {{date}}"
+    "weekOf": "settimana del {{date}}",
+    "noJobsForCustomer": "Non ci sono lavori aperti per questo cliente. Crea prima un lavoro per questo cliente."
   },
   "projectTemplate": {
     "pick": "Parti da una sequenza di lavorazioni",
@@ -2682,7 +2698,7 @@
       "projectNamePlaceholder": "Nome progetto",
       "customerNamePlaceholder": "Nome cliente",
       "budgetPlaceholder": "Importo budget",
-      "filterOpen": "In corso",
+      "filterOpen": "Aperti",
       "filterDone": "Conclusi",
       "retentionPlaceholder": "Ritenuta a garanzia % (facoltativa)",
       "retentionHint": "{{percent}}% trattenuto su ogni acconto fino alla consegna",
@@ -6139,7 +6155,9 @@
     "needName": "Dai un nome al modulo",
     "needField": "Aggiungi almeno una voce",
     "startAnother": "Compila un altro modulo",
-    "completed": "Completato"
+    "completed": "Completato",
+    "trade": "Mestiere",
+    "fieldType": "Tipo"
   },
   "repeatWork": {
     "title": "Lavoro ricorrente",

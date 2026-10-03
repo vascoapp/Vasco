@@ -15,6 +15,8 @@ import {
   Pressable,
   Alert,
   RefreshControl,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +37,9 @@ import { recordMetricSnapshot } from '../../src/intelligence/learningStorage';
 import { getCurrentUserId } from '../../src/lib/currentUser';
 import { localDateKey } from '../../src/utils/dateKey';
 import { DKMenu } from '../../src/components/shared/DKMenu';
+import { hoursBetween, jobEntryPatches, parseClockTime, formatClockTime } from '../../src/services/timeEntryEdits';
+import { ModalSafeArea } from '../../src/components/shared/ModalSafeArea';
+import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
 // =============================================================================
 // TYPES
@@ -230,6 +235,57 @@ export default function TimesheetScreen() {
     : activeTab === 'week' ? weekHours
     : monthHours;
 
+  // ── Correcting hours (aannemer walk 2026-10-03) ─────────────────────────
+  // A forgotten clock-out ran on for hours and nothing could fix it, though
+  // these hours feed payroll, the job's labour cost and hours-based invoices.
+  // The sheet's inputs must clear the ANDROID keyboard inside a Modal (#339).
+  const kbInset = useKeyboardInset();
+  const [entryEdit, setEntryEdit] = useState<
+    { mode: 'new' | 'edit'; id: string; date: string; clockIn: string; clockOut: string; jobId?: string; breakMinutes: number } | null
+  >(null);
+  const openNewEntry = () => setEntryEdit({ mode: 'new', id: `te-${Date.now()}`, date: todayStr, clockIn: '', clockOut: '', jobId: undefined, breakMinutes: 0 });
+  const openEditEntry = (e: SoloTimeEntry) => setEntryEdit({
+    mode: 'edit', id: e.id, date: e.date, clockIn: e.clockIn, clockOut: e.clockOut ?? '', jobId: e.jobId, breakMinutes: e.breakMinutes ?? 0,
+  });
+  const applyJobPatches = (before: { id: string; jobId?: string } | null, after: Parameters<typeof jobEntryPatches>[2]) => {
+    for (const patch of jobEntryPatches(jobs as any, before, after)) {
+      updateJob(patch.jobId, { timeEntries: patch.timeEntries, actualHours: patch.actualHours } as any);
+    }
+  };
+  const saveEntryEdit = () => {
+    if (!entryEdit) return;
+    const a = parseClockTime(entryEdit.clockIn);
+    const b = parseClockTime(entryEdit.clockOut);
+    const hours = hoursBetween(entryEdit.clockIn, entryEdit.clockOut, entryEdit.breakMinutes);
+    if (a === null || b === null || hours === null) {
+      Alert.alert(t('timesheet.edit.invalidTitle', 'Check the times'), t('timesheet.edit.invalidBody', 'Enter a start and end time (e.g. 07:30 and 16:00); the end must be after the start.'));
+      return;
+    }
+    const job = entryEdit.jobId ? jobs.find((j: any) => j.id === entryEdit.jobId) : undefined;
+    const entry: SoloTimeEntry = {
+      id: entryEdit.id, date: entryEdit.date, clockIn: formatClockTime(a), clockOut: formatClockTime(b),
+      breakMinutes: entryEdit.breakMinutes, jobId: job?.id, jobTitle: job?.title, totalHours: hours,
+    };
+    const before = entryEdit.mode === 'edit' ? entries.find((e) => e.id === entryEdit.id) : undefined;
+    setEntries((prev) => entryEdit.mode === 'edit' ? prev.map((e) => (e.id === entry.id ? entry : e)) : [entry, ...prev]);
+    applyJobPatches(before ? { id: before.id, jobId: before.jobId } : null,
+      { id: entry.id, date: entry.date, hours, clockIn: entry.clockIn, clockOut: entry.clockOut, jobId: entry.jobId });
+    hapticSuccess();
+    setEntryEdit(null);
+  };
+  const deleteEntry = () => {
+    if (!entryEdit || entryEdit.mode !== 'edit') return;
+    const target = entries.find((e) => e.id === entryEdit.id);
+    Alert.alert(t('timesheet.edit.deleteTitle', 'Delete entry?'), t('timesheet.edit.deleteBody', 'These hours are removed from the job and from payroll.'), [
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      { text: t('common.delete', 'Delete'), style: 'destructive', onPress: () => {
+        setEntries((prev) => prev.filter((e) => e.id !== entryEdit.id));
+        if (target) applyJobPatches({ id: target.id, jobId: target.jobId }, null);
+        setEntryEdit(null);
+      } },
+    ]);
+  };
+
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return formatDayMonthAuto(d);
@@ -356,7 +412,14 @@ export default function TimesheetScreen() {
           </View>
         ) : (
           displayEntries.map(entry => (
-            <View key={entry.id} style={styles.entryCard}>
+            <Pressable
+              key={entry.id}
+              style={styles.entryCard}
+              onPress={() => openEditEntry(entry)}
+              accessibilityRole="button"
+              accessibilityLabel={t('timesheet.edit.open', 'Edit entry')}
+              testID={`time-entry-${entry.id}`}
+            >
               <View style={[styles.entryAccent, { backgroundColor: entry.jobTitle ? Palette.hermesOrange : SemanticColors.textTertiary }]} />
               <View style={styles.entryContent}>
                 <View style={styles.entryHeader}>
@@ -373,9 +436,13 @@ export default function TimesheetScreen() {
                   <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
                 )}
               </View>
-            </View>
+            </Pressable>
           ))
         )}
+        <Pressable style={styles.payrollLink} onPress={openNewEntry} accessibilityRole="button" testID="time-entry-add">
+          <Ionicons name="add" size={16} color={Palette.hermesOrange} />
+          <Text style={styles.payrollLinkText}>{t('timesheet.edit.add', 'Add hours by hand')}</Text>
+        </Pressable>
         {/* Payroll export link — aannemer / has-a-team only. A solo contractor
             has no payroll, and the screen behind this is backed by demo-only
             fixtures. Same R109 gate used elsewhere. */}
@@ -390,6 +457,69 @@ export default function TimesheetScreen() {
         ) : null}
         <View style={{ height: 40 }} />
       </ScrollView>
+      <Modal visible={entryEdit !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEntryEdit(null)}>
+        <ModalSafeArea backgroundColor={PAGE_BG}>
+          <View style={styles.sheetHeader}>
+            <Pressable onPress={() => setEntryEdit(null)} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.sheetCancel}>{t('common.cancel', 'Cancel')}</Text>
+            </Pressable>
+            <Text style={styles.sheetTitle}>
+              {entryEdit?.mode === 'new' ? t('timesheet.edit.addTitle', 'Add hours') : t('timesheet.edit.title', 'Edit entry')}
+            </Text>
+            <Pressable onPress={saveEntryEdit} hitSlop={8} accessibilityRole="button" testID="time-entry-save">
+              <Text style={styles.sheetSave}>{t('common.save', 'Save')}</Text>
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={[styles.sheetBody, kbInset ? { paddingBottom: kbInset + 16 } : null]} keyboardShouldPersistTaps="handled">
+            <Text style={styles.sheetLabel}>{t('timesheet.edit.date', 'Day')}</Text>
+            <Text style={styles.sheetValue}>{entryEdit ? formatDate(entryEdit.date) : ''}</Text>
+            <Text style={styles.sheetLabel}>{t('timesheet.edit.start', 'Start')}</Text>
+            <TextInput
+              style={styles.sheetInput}
+              value={entryEdit?.clockIn ?? ''}
+              onChangeText={(v) => entryEdit && setEntryEdit({ ...entryEdit, clockIn: v })}
+              placeholder="07:30"
+              placeholderTextColor={SemanticColors.placeholder}
+              keyboardType="numbers-and-punctuation"
+              testID="time-entry-start"
+            />
+            <Text style={styles.sheetLabel}>{t('timesheet.edit.end', 'End')}</Text>
+            <TextInput
+              style={styles.sheetInput}
+              value={entryEdit?.clockOut ?? ''}
+              onChangeText={(v) => entryEdit && setEntryEdit({ ...entryEdit, clockOut: v })}
+              placeholder="16:00"
+              placeholderTextColor={SemanticColors.placeholder}
+              keyboardType="numbers-and-punctuation"
+              testID="time-entry-end"
+            />
+            <Text style={styles.sheetLabel}>{t('timesheet.edit.job', 'Job')}</Text>
+            <DKMenu
+              accessibilityLabel={t('timesheet.edit.job', 'Job')}
+              items={[
+                { key: '__none__', label: t('timesheet.withoutJob', 'Without job'), selected: !entryEdit?.jobId, emphasis: true,
+                  onPress: () => entryEdit && setEntryEdit({ ...entryEdit, jobId: undefined }) },
+                ...jobs.filter((j: any) => j.status !== 'cancelled').map((j: any) => ({
+                  key: j.id, label: j.title, selected: entryEdit?.jobId === j.id,
+                  onPress: () => entryEdit && setEntryEdit({ ...entryEdit, jobId: j.id }),
+                })),
+              ]}
+              renderAnchor={(open) => (
+                <Pressable onPress={open} style={styles.sheetInput} accessibilityRole="button" testID="time-entry-job">
+                  <Text style={[styles.sheetValue, !entryEdit?.jobId && { color: SemanticColors.placeholder }]} numberOfLines={1}>
+                    {entryEdit?.jobId ? (jobs.find((j: any) => j.id === entryEdit.jobId)?.title ?? '') : t('timesheet.withoutJob', 'Without job')}
+                  </Text>
+                </Pressable>
+              )}
+            />
+            {entryEdit?.mode === 'edit' && (
+              <Pressable onPress={deleteEntry} style={styles.sheetDelete} accessibilityRole="button" testID="time-entry-delete">
+                <Text style={styles.sheetDeleteText}>{t('timesheet.edit.delete', 'Delete entry')}</Text>
+              </Pressable>
+            )}
+          </ScrollView>
+        </ModalSafeArea>
+      </Modal>
     </View>
   );
 }
@@ -455,6 +585,16 @@ const styles = StyleSheet.create({
     borderColor: SemanticColors.borderDefault,
   },
   entryAccent: { width: 3 },
+  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, paddingBottom: Spacing.sm, borderBottomWidth: 1, borderBottomColor: SemanticColors.borderDefault },
+  sheetTitle: { fontSize: TYPE.titleSize, fontFamily: 'Inter_700Bold', color: SemanticColors.textPrimary },
+  sheetCancel: { fontSize: TYPE.bodySize, fontFamily: 'Inter_500Medium', color: SemanticColors.textSecondary },
+  sheetSave: { fontSize: TYPE.bodySize, fontFamily: 'Inter_700Bold', color: Palette.hermesOrange },
+  sheetBody: { padding: Spacing.md, gap: Spacing.sm },
+  sheetLabel: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary, marginTop: Spacing.sm },
+  sheetValue: { fontSize: TYPE.bodySize, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary },
+  sheetInput: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, color: SemanticColors.textPrimary, fontSize: TYPE.bodySize },
+  sheetDelete: { marginTop: Spacing.lg, alignItems: 'center', padding: Spacing.md },
+  sheetDeleteText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError },
   entryContent: { flex: 1, padding: Spacing.sm, gap: 4 },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   entryTimeBlock: { flexDirection: 'row', alignItems: 'center', gap: 6 },

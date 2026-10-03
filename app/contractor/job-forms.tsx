@@ -22,6 +22,8 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { SafeArea } from '../../src/theme/spacing';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
+import { DKMenu } from '../../src/components/shared/DKMenu';
+import { makeEntityLabels } from '../../src/i18n/entityLabels';
 import {
   useJobFormTemplates,
   type JobFormTemplate,
@@ -35,10 +37,18 @@ const TYPE_KEYS: { type: JobFormFieldType; i18nKey: string; icon: string }[] = [
   { type: 'text', i18nKey: 'jobForms.typeText', icon: 'text-outline' },
 ];
 
+// The trades a form can be for — the onboarding slugs, which is what a job's
+// `trade` carries (templatesForJob matches on it). 'other' is not a trade.
+const FORM_TRADES = [
+  'plumbing', 'electrical', 'gas', 'carpentry', 'painting', 'tiling', 'plastering',
+  'flooring', 'roofing', 'insulation', 'glazing', 'solar', 'demolition', 'landscaping', 'general',
+] as const;
+
 export default function JobFormsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { templates, upsert, remove } = useJobFormTemplates();
+  const { tradeLabel } = makeEntityLabels(t);
 
   const [editing, setEditing] = useState<JobFormTemplate | null>(null);
   // The editor is reused for both; without this it always claimed "New form".
@@ -157,7 +167,7 @@ export default function JobFormsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{tpl.name}</Text>
                   <Text style={styles.rowMeta}>
-                    {tpl.trade || t('jobForms.tradeAny', 'All trades')} ·{' '}
+                    {tpl.trade ? tradeLabel(tpl.trade) : t('jobForms.tradeAny', 'All trades')} ·{' '}
                     {t('jobForms.fieldCount', { count: tpl.fields.length })}
                   </Text>
                 </View>
@@ -197,6 +207,30 @@ export default function JobFormsScreen() {
               placeholderTextColor={SemanticColors.placeholder}
             />
 
+            {/* Per-trade is the point of these forms (an aannemer runs several
+                trades), but nothing could set it: every form was "All trades"
+                (aannemer walk, 2026-10-03). One of N → a menu, never chips. */}
+            <Text style={styles.label}>{t('jobForms.trade', 'Trade')}</Text>
+            <DKMenu
+              accessibilityLabel={t('jobForms.trade', 'Trade')}
+              items={[
+                { key: '__all__', label: t('jobForms.tradeAny', 'All trades'), selected: !editing?.trade, emphasis: true,
+                  onPress: () => editing && setEditing({ ...editing, trade: undefined }) },
+                ...FORM_TRADES.map((slug) => ({
+                  key: slug, label: tradeLabel(slug), selected: editing?.trade === slug,
+                  onPress: () => editing && setEditing({ ...editing, trade: slug }),
+                })),
+              ]}
+              renderAnchor={(open) => (
+                <Pressable onPress={open} style={[styles.input, styles.menuAnchor]} accessibilityRole="button" testID="job-form-trade">
+                  <Text style={styles.menuAnchorText} numberOfLines={1}>
+                    {editing?.trade ? tradeLabel(editing.trade) : t('jobForms.tradeAny', 'All trades')}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
+                </Pressable>
+              )}
+            />
+
             <View style={styles.fieldsHeader}>
               <Text style={styles.label}>{t('jobForms.fields', 'Items')}</Text>
               <Pressable onPress={addField} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('common.add', 'Add')}>
@@ -219,19 +253,22 @@ export default function JobFormsScreen() {
                   </Pressable>
                 </View>
 
-                <View style={styles.typeRow}>
-                  {TYPE_KEYS.map((tk) => (
-                    <Pressable
-                      key={tk.type}
-                      style={[styles.typeChip, f.type === tk.type && styles.typeChipActive]}
-                      onPress={() => patchField(f.id, { type: tk.type })}
-                    >
-                      <Text style={[styles.typeChipText, f.type === tk.type && styles.typeChipTextActive]}>
-                        {t(tk.i18nKey, tk.type)}
+                {/* One of three is a choice → a menu (CLAUDE.md), not a chip row. */}
+                <DKMenu
+                  accessibilityLabel={t('jobForms.fieldType', 'Type')}
+                  items={TYPE_KEYS.map((tk) => ({
+                    key: tk.type, label: t(tk.i18nKey, tk.type), icon: tk.icon as any, selected: f.type === tk.type,
+                    onPress: () => patchField(f.id, { type: tk.type }),
+                  }))}
+                  renderAnchor={(open) => (
+                    <Pressable onPress={open} style={[styles.input, styles.menuAnchor]} accessibilityRole="button" testID={`job-form-type-${f.id}`}>
+                      <Text style={styles.menuAnchorText} numberOfLines={1}>
+                        {t(TYPE_KEYS.find((tk) => tk.type === f.type)?.i18nKey ?? 'jobForms.typeCheck', f.type)}
                       </Text>
+                      <Ionicons name="chevron-down" size={16} color={SemanticColors.textTertiary} />
                     </Pressable>
-                  ))}
-                </View>
+                  )}
+                />
 
                 <View style={styles.fieldBottomRow}>
                   {/* A reading without its unit is not a record — "1.8" of what? */}
@@ -270,6 +307,8 @@ export default function JobFormsScreen() {
 }
 
 const styles = StyleSheet.create({
+  menuAnchor: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: GRID.sm },
+  menuAnchorText: { flex: 1, fontSize: TYPE.bodySize, color: SemanticColors.textPrimary },
   container: { flex: 1, backgroundColor: PAGE_BG },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -315,14 +354,6 @@ const styles = StyleSheet.create({
   },
   fieldTopRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs },
   fieldLabelInput: { flex: 1, marginBottom: 0, backgroundColor: PAGE_BG },
-  typeRow: { flexDirection: 'row', gap: GRID.xs, marginTop: GRID.sm },
-  typeChip: {
-    paddingHorizontal: GRID.sm, paddingVertical: 5, borderRadius: RADIUS.sm,
-    backgroundColor: PAGE_BG,
-  },
-  typeChipActive: { backgroundColor: Palette.hermesOrange + '20' },
-  typeChipText: { fontSize: TYPE.labelSize, color: SemanticColors.textSecondary },
-  typeChipTextActive: { color: Palette.hermesOrange, fontFamily: 'Inter_600SemiBold' },
   fieldBottomRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, marginTop: GRID.sm },
   unitInput: { flex: 1, marginBottom: 0, backgroundColor: PAGE_BG, paddingVertical: 6 },
   requiredRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs, marginLeft: 'auto' },
