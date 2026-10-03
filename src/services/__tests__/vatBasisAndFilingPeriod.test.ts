@@ -79,15 +79,18 @@ describe('the screen passes both settings', () => {
   const path = require('path');
   const src = fs.readFileSync(path.resolve(__dirname, '../../../app/contractor/vat-prep.tsx'), 'utf8');
 
+  // The VAT report (2026-10-03) — same two settings, new screen.
   it('threads vatBasis and filingPeriod from the profile', () => {
     expect(src).toMatch(/vatBasis: businessProfile\?\.vatBasis/);
-    expect(src).toMatch(/vatPeriodFor\(businessProfile\?\.filingPeriod/);
+    expect(src).toMatch(/businessProfile\?\.filingPeriod === 'monthly'/);
   });
 
   it('re-computes when either changes', () => {
-    const deps = /\}, \[([^\]]*)\]\);/.exec(src.slice(src.indexOf('const draft')))?.[1] ?? '';
+    const deps = /\}\), \[([^\]]*)\]\);/.exec(src.slice(src.indexOf('const report')))?.[1] ?? '';
     expect(deps).toMatch(/vatBasis/);
-    expect(deps).toMatch(/filingPeriod/);
+    // The cadence decides the bounds, and the bounds are the dependency.
+    expect(deps).toMatch(/bounds\.start/);
+    expect(deps).toMatch(/bounds\.end/);
   });
 });
 

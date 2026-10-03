@@ -1437,16 +1437,15 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   }
 
   // ─── NEW: Tax prep reminder (quarter-end) ───
-  // ONLY where we can actually prepare a return. `prepareVatReturn` supports
-  // NL (BTW-aangifte) and DE (UStVA); the screen behind this card used to
-  // coerce every other country to NL, so a French contractor tapping it got a
-  // Dutch return with Dutch rubrieken and an "Open DigiD" button. The card is
-  // the gate — the screen is reachable from it without passing geld.tsx.
-  // Unknown country: no card (the #339 rule — skip, never default).
+  // Opens the VAT REPORT (2026-10-03) — the same for every market, so the
+  // card reaches all six. Unknown country: no card (the #339 rule — skip,
+  // never default).
   const month = new Date().getMonth();
   const day = new Date().getDate();
   const isQuarterEnd = (month === 2 || month === 5 || month === 8 || month === 11) && day >= 20;
-  const vatReturnSupported = context.country === 'NL' || context.country === 'DE';
+  // Every market now: the card opens the VAT REPORT (src/services/vatReport.ts),
+  // the same for all six — not a country return Vasco would have to model.
+  const vatReturnSupported = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'].includes(String(context.country));
   // "Also required with no invoices" is true in both markets this card reaches
   // — NL nihilaangifte, DE Nullmeldung for UStVA filers — but NOT for a
   // contractor who files no periodic return at all: KOR / Kleinunternehmer
@@ -1476,7 +1475,10 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'tax_prep',
       title: t('automation.taxPrep', { defaultValue: '{{quarter}} tax prep', quarter: quarterName }),
-      description: t('automation.taxPrepAlwaysRequired', 'Also required when you sent no invoices.'),
+      // The nil-return line is a claim about NL/DE periodic returns only.
+      description: context.country === 'NL' || context.country === 'DE'
+        ? t('automation.taxPrepAlwaysRequired', 'Also required when you sent no invoices.')
+        : t('automation.taxPrepReport', 'Your VAT report for this quarter, ready for your accountant.'),
       // The year pins which Q3 this is; the executor opens it (#365).
       preparedData: { quarter: quarterName, year: new Date().getFullYear() },
       actionLabel: t('automation.exportDocs', 'Export'),

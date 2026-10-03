@@ -120,6 +120,14 @@ for (const cell of cells) {
     }
   }
 
+  // 2b. The VAT report states this period's figures — the invoice's own.
+  if (res.vatReport) {
+    const v = res.vatReport;
+    add("vat-report", `sales net ${exp.net.toFixed(2)}`, hasMoney(v.salesNet ?? "", exp.net), v.salesNet);
+    add("vat-report", `sales VAT ${exp.vat.toFixed(2)}`, hasMoney(v.salesVat ?? "", exp.vat), v.salesVat);
+    add("vat-report", `balance ${exp.vat.toFixed(2)} (no purchases)`, hasMoney(v.balance ?? "", exp.vat), v.balance);
+  } else add("vat-report", "VAT report reached", false, "no figures recorded");
+
   // 3. E-invoices.
   const file = (name) => res.artefacts?.[name] ? path.join(dir, res.artefacts[name]) : null;
   for (const fmt of c.formats.filter((f) => f !== "pdf")) {

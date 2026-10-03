@@ -39,6 +39,9 @@ export interface AutoInvoice {
   subtotal: number;
   vatAmount: number;
   total: number;
+  /** The per-rate groups the totals were computed from (documentVatBreakdown) —
+   *  the VAT report reads these, never recomputes them. */
+  vatGroups?: Array<{ ratePct: number; net: number; vat: number }>;
   paidAmount: number;
   paymentMethod?: 'bank_transfer' | 'ideal' | 'card' | 'cash';
   paidDate?: Date;

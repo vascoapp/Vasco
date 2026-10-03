@@ -2448,7 +2448,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }).catch(() => {});
         setInvoices((prev) =>
           prev.map((invoice) =>
-            invoice.id === id ? { ...invoice, status: 'paid', dueInDays: 0 } : invoice
+            // paidAt locally too: the cash-basis VAT report dates a paid invoice by
+            // it, and only the backend row had it until a reload (review 2026-10-04).
+            invoice.id === id ? { ...invoice, status: 'paid', dueInDays: 0, paidAt } : invoice
           )
         );
         if (isSupabaseConfigured) {

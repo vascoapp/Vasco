@@ -532,8 +532,8 @@ export default function GeldScreen() {
           />
         )}
 
-        {/* ─── BTW-AANGIFTE (NL only) ─── */}
-        {(businessProfile?.country === 'NL' || businessProfile?.country === 'DE') && (
+        {/* ─── VAT REPORT — every market with a known country (never guessed) ─── */}
+        {!!businessProfile?.country && ['NL', 'DE', 'FR', 'ES', 'IT', 'UK'].includes(businessProfile.country) && (
           <Pressable
             testID="vat-prep-card"
             onPress={() => router.push('/contractor/vat-prep' as any)}

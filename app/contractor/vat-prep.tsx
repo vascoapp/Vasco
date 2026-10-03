@@ -1,240 +1,122 @@
 // =============================================================================
-// VAT PREP SCREEN — Dutch BTW quarterly return preparation
+// VAT REPORT — what the contractor hands their accountant (2026-10-03)
 // =============================================================================
-// Truewind-style "ready for review" UX. Contractor reviews the AI-classified
-// return, fixes low-confidence lines, then exports to Moneybird OR files
-// manually via Belastingdienst DigiD. We NEVER submit directly — only the
-// taxpayer or a certified intermediary can legally file.
+// User's decision: Vasco does not do tax returns. This screen shows a simple,
+// correct VAT report for a period — sales and VAT per rate, VAT on purchases,
+// the balance, the documents behind every figure, and what is NOT included —
+// exported as a PDF or a spreadsheet for the accountant, or typed into the tax
+// portal by the contractor. Every market, the same report.
+//
+// It replaces the "BTW-aangifte voorbereiding" (NL/DE only), which GUESSED
+// each invoice's rate from words in the job title and worked the VAT back
+// from the gross amount — so a mixed-rate invoice landed in one box at one
+// rate and the return could disagree with the invoices the customers had.
+// The figures here are the invoices' own (src/services/vatReport.ts).
 // =============================================================================
 
-import { goBack } from '../../src/utils/goBack';
-import { useAuth } from '../../src/context/AuthContext';
-import { friendlyError } from '../../src/utils/friendlyError';
-import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useAppState } from '../../src/state/AppState';
-import {
-  prepareVatReturn,
-  currentBtwPeriod,
-  vatPeriodFor,
-  previousBtwPeriod,
-  type VatReturnDraft,
-  type VatLine,
-} from '../../src/services/vatPrepService';
-import { formatVatClassification } from '../../src/services/vatPrepService';
-import { formatCurrency } from '../../src/i18n/formatting';
+import { useAuth } from '../../src/context/AuthContext';
 import { useExpenses } from '../../src/services/expenseService';
-import {
-  shareSummary as shareVatSummary,
-  sharePdf as shareVatPdf,
-  openDigiD as openDigiDPortal,
-} from '../../src/services/vatPrepExportService';
-import { DKMenu, type DKMenuItem } from '../../src/components/shared/DKMenu';
-import { SemanticColors, Palette } from '../../src/theme/colors';
+import { buildVatReport, reportPeriod, type VatReportRow } from '../../src/services/vatReport';
+import { rowLabel, shareVatReportCsv, shareVatReportPdf } from '../../src/services/vatReportExport';
+import { formatCurrency, type Country } from '../../src/i18n/formatting';
+import { getStandardVatRate } from '../../src/domain/business';
+import { friendlyError } from '../../src/utils/friendlyError';
+import { DKMenu } from '../../src/components/shared/DKMenu';
+import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
+import { DK } from '../../src/theme/draftkings';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 
-type PeriodChoice = 'current' | 'previous';
+type PeriodKey = 'previous' | 'current' | 'lastYear';
 
-export default function VatPrepScreen() {
+export default function VatReportScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { invoices, businessProfile } = useAppState();
-  const { expenses: rawExpenses } = useExpenses();
-  // R21: read `period` from queue executor when entered via tax_prep AI
-  // queue item. Defaults to 'previous' when not specified or invalid.
-  const { period: periodParam } = useLocalSearchParams<{ period?: string }>();
-  const initialPeriod: PeriodChoice = periodParam === 'current' ? 'current' : 'previous';
-  const [periodChoice, setPeriodChoice] = useState<PeriodChoice>(initialPeriod);
-
-  // R221: country gate — NL BTW and DE UStVA are the two returns this app can
-  // prepare. ⚠️ The comment here used to say geld.tsx had already gated entry.
-  // It had not: the AI queue's quarter-end `tax_prep` card pushes this route
-  // directly, so a French contractor landed on a **Dutch BTW-aangifte** —
-  // rubriek labels, nl-NL money and an "Open DigiD" button — because every
-  // other country was coerced to NL (sweep 2026-09-17). The card is gated now,
-  // and this screen refuses instead of guessing.
-  // Profile first, account as fallback (#218). The profile alone left the
-  // demo NL contractor — country on the ACCOUNT — reading "not available here"
-  // over "Vasco prepares the Dutch BTW-aangifte" (emulator walk 2026-09-28).
+  const { invoices, lineItems, customers, businessProfile } = useAppState();
+  const { expenses } = useExpenses();
   const { user } = useAuth();
-  const profileCountry = businessProfile?.country ?? user?.country;
-  const vatReturnSupported = profileCountry === 'NL' || profileCountry === 'DE';
-  const country: 'NL' | 'DE' = profileCountry === 'DE' ? 'DE' : 'NL';
-  const draft: VatReturnDraft = useMemo(() => {
-    // The contractor's own cadence: a monthly filer was always handed a
-    // quarter, because `filingPeriod` had nowhere to live until migration
-    // 20260917000003.
-    const bounds = vatPeriodFor(businessProfile?.filingPeriod, periodChoice);
-    return prepareVatReturn({
-      country,
-      // Ist-Versteuerung declares an invoice when it is PAID, not when it is
-      // issued — for a trade paid at 45 days that moves whole invoices between
-      // periods.
-      vatBasis: businessProfile?.vatBasis,
-      // §19 UStG / KOR: no output VAT and no input VAT. Without this the draft
-      // declared tax a Kleinunternehmer never charged (#339).
-      vatScheme: businessProfile?.vatScheme,
-      periodStart: bounds.periodStart,
-      periodEnd: bounds.periodEnd,
-      invoices: invoices as any,
-      expenses: rawExpenses.map((e) => ({
-        id: e.id,
-        description: e.description,
-        date: e.date instanceof Date ? e.date.toISOString() : String(e.date),
-        amount: e.amount + (e.vatAmount ?? 0),
-        vatRate: e.vatRate,
-        category: e.category,
-      })),
-    });
-  }, [country, businessProfile?.vatScheme, businessProfile?.vatBasis, businessProfile?.filingPeriod, periodChoice, invoices, rawExpenses]);
+  // Profile first, account second (#218) — and never a guessed one: an unknown
+  // country is asked for below (the money format and the fallback rate follow it).
+  const knownCountry = (businessProfile?.country ?? user?.country) as Country | undefined;
+  const country = (knownCountry ?? 'NL') as Country;
+  // The quarter-end card passes period=current|previous (queueItemExecutor).
+  const { period: periodParam } = useLocalSearchParams<{ period?: string }>();
+  const [periodKey, setPeriodKey] = useState<PeriodKey>(periodParam === 'current' ? 'current' : 'previous');
+  // A second push from the quarter card to a mounted screen carries a new period.
+  useEffect(() => {
+    if (periodParam === 'current' || periodParam === 'previous') setPeriodKey(periodParam);
+  }, [periodParam]);
+  const [busy, setBusy] = useState(false);
 
-  const lowConfLines = draft.lines.filter((l) => l.confidence < 0.75);
-  // Its twin: the rows the list below actually renders.
-  const confidentLines = draft.lines.filter((l) => l.confidence >= 0.75);
+  // The contractor's own cadence (profile `filingPeriod`), quarterly by default.
+  const cadence: 'month' | 'quarter' | 'year' =
+    businessProfile?.filingPeriod === 'monthly' ? 'month' : businessProfile?.filingPeriod === 'yearly' ? 'year' : 'quarter';
+  const periodLabel = (k: PeriodKey): string => {
+    if (k === 'lastYear') return t('vatReport.periodPrevY', 'Last year');
+    if (cadence === 'month') return k === 'current' ? t('vatReport.periodCurM', 'This month') : t('vatReport.periodPrevM', 'Last month');
+    if (cadence === 'year') return k === 'current' ? t('vatReport.periodCurY', 'This year') : t('vatReport.periodPrevY', 'Last year');
+    return k === 'current' ? t('vatReport.periodCurQ', 'This quarter') : t('vatReport.periodPrevQ', 'Last quarter');
+  };
+  const periodKeys: PeriodKey[] = cadence === 'year' ? ['previous', 'current'] : ['previous', 'current', 'lastYear'];
+  const bounds = periodKey === 'lastYear' ? reportPeriod('year', 'previous') : reportPeriod(cadence, periodKey);
 
-  /**
-   * Build and share the accountant handover for the period on screen.
-   *
-   * Reuses the same period bounds the VAT draft was built from, so the adviser
-   * cannot receive a filing summary covering a different quarter from the
-   * numbers beside it.
-   */
-  const shareAccountantHandover = async (businessName: string) => {
+  const report = useMemo(() => buildVatReport({
+    periodStart: bounds.start,
+    periodEnd: bounds.end,
+    vatBasis: businessProfile?.vatBasis,
+    vatScheme: businessProfile?.vatScheme,
+    standardRatePct: getStandardVatRate(country as any),
+    invoices: invoices as any,
+    lineItems: lineItems as any,
+    customers: customers as any,
+    expenses: expenses.map((e) => ({ id: e.id, description: e.description, supplier: e.supplier, amount: e.amount, vatAmount: e.vatAmount, vatRate: e.vatRate, date: e.date })),
+  }), [bounds.start, bounds.end, businessProfile?.vatBasis, businessProfile?.vatScheme, country, invoices, lineItems, customers, expenses]);
+
+  const money = (n: number) => formatCurrency(n, country);
+  const tt = (k: string, o?: Record<string, unknown>) => String(t(k, o as any));
+  const doExport = async (kind: 'pdf' | 'csv') => {
+    if (busy) return;
+    setBusy(true);
     try {
-      const [{ buildAccountantHandover, formatHandoverText }, { loadSubmissions }] = await Promise.all([
-        import('../../src/services/accountantHandoverService'),
-        import('../../src/services/submissionStore'),
-      ]);
-      const handover = buildAccountantHandover({
-        businessName,
-        country,
-        periodStart: draft.periodStart,
-        periodEnd: draft.periodEnd,
-        invoices: invoices as never,
-        submissions: await loadSubmissions(),
-      });
-      const text = formatHandoverText(handover, (n) => formatCurrency(n, country));
-      await Share.share({ message: text });
+      if (kind === 'pdf') await shareVatReportPdf(report, tt, money, businessProfile?.businessName ?? '');
+      // The accountant's Excel follows the MARKET, not this phone's language.
+      else await shareVatReportCsv(report, tt, country === 'UK' ? 'en' : 'eu');
     } catch (err) {
-      Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
+      Alert.alert(t('vatReport.exportFailed', 'Export not created'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
+    } finally {
+      setBusy(false);
     }
   };
 
-  // SIX options in an `Alert.alert`. Android renders THREE and silently drops
-  // the rest, so on the filing screen of the market this product is aimed at, a
-  // German contractor could reach "Share summary", "Send to accountant" and
-  // "Give accountant ongoing access" — and never **Share PDF** or **Open
-  // ELSTER**, which is the button that actually files the return. Picking one
-  // of N is a DKMenu (CLAUDE.md), and a menu also scrolls, so the list can grow
-  // without anyone having to remember the cap. #219/#221.
-  const exportMenuItems = (): DKMenuItem[] => {
-    const businessName = (businessProfile as any)?.businessName ?? 'Vasco';
-    return [
-      {
-        key: 'summary',
-        icon: 'share-outline',
-        label: t('vatPrep.shareSummary', 'Share summary'),
-        onPress: () => {
-          shareVatSummary(draft, businessName).catch((err) => {
-            Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
-          });
-        },
-      },
-      {
-        // The adviser-facing handover. Sits with the other share options
-        // because this is the moment the contractor is already thinking
-        // "send this to my bookkeeper" — and it carries the one thing no
-        // accounting package can tell them: which invoices the authority
-        // actually accepted.
-        key: 'accountant',
-        icon: 'person-outline',
-        label: t('vatPrep.shareAccountant', 'Send to accountant'),
-        onPress: () => { void shareAccountantHandover(businessName); },
-      },
-      {
-        // The standing version of the option above. Same moment of intent,
-        // but a seat the adviser can come back to during the filing week
-        // instead of a message they have to find again. Carries the period
-        // bounds so the seat covers the quarter on screen.
-        key: 'seat',
-        icon: 'key-outline',
-        label: t('vatPrep.accountantSeat', 'Give accountant ongoing access'),
-        onPress: () => {
-          router.push({
-            pathname: '/contractor/accountant-access',
-            params: { periodStart: draft.periodStart, periodEnd: draft.periodEnd },
-          } as never);
-        },
-      },
-      {
-        key: 'pdf',
-        icon: 'document-outline',
-        label: t('vatPrep.sharePdf', 'Share PDF'),
-        onPress: () => {
-          shareVatPdf(draft, businessName).catch((err) => {
-            Alert.alert(t('common.error', 'Error'), friendlyError(err, t('common.didNotWork', "That didn't work. Please try again in a moment.")));
-          });
-        },
-      },
-      {
-        // R11.2: button label + portal URL are country-aware. NL → DigiD/
-        // Belastingdienst, DE → ELSTER (BMF e-tax portal). Was always NL.
-        key: 'portal',
-        icon: 'open-outline',
-        emphasis: true,
-        label: country === 'DE' ? t('vatPrep.openElster', 'Open ELSTER') : t('vatPrep.openDigiD', 'Open DigiD'),
-        // Vasco prepares; the contractor files. Saying so beside the button
-        // is the whole point of the message the Alert used to carry.
-        detail: t('vatPrep.exportDesc', 'Vasco prepares the return — you submit via DigiD (Belastingdienst) or forward to your bookkeeper. This never auto-files.'),
-        onPress: async () => {
-          const ok = await openDigiDPortal(country);
-          if (!ok) {
-            Alert.alert(
-              t('vatPrep.cannotOpen', 'Cannot open portal'),
-              country === 'DE'
-                ? t('vatPrep.cannotOpenElsterDesc', 'Could not open ELSTER. Open elster.de in your browser.')
-                : t('vatPrep.cannotOpenDesc', 'Could not open the Belastingdienst portal. Open belastingdienst.nl in your browser.'),
-            );
-          }
-        },
-      },
-    ];
-  };
+  const RateRows = ({ rows }: { rows: VatReportRow[] }) => (
+    <>
+      {rows.map((r) => (
+        <View key={`${r.ratePct}-${r.nature ?? ''}`} style={styles.row}>
+          <Text style={styles.rowLabel}>{rowLabel(r, tt)}</Text>
+          <Text style={styles.rowNum}>{money(r.net)}</Text>
+          <Text style={styles.rowNum}>{money(r.vat)}</Text>
+        </View>
+      ))}
+    </>
+  );
+  const balanceToPay = report.balance >= 0;
 
   // Every hook above this line (#338).
-  if (!vatReturnSupported) {
+  if (!knownCountry) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <Pressable onPress={() => goBack(router)} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
-            <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
+        <DKScreenHeader title={t('vatReport.title', 'VAT report')} />
+        <View style={styles.scroll}>
+          <Text style={styles.note}>{t('vatPrep.needCountry', 'Set your country first.')}</Text>
+          <Pressable onPress={() => router.push('/(modals)/business-settings' as any)} style={styles.anchor} accessibilityRole="button" testID="vatprep-set-country">
+            <Text style={styles.anchorText}>{t('vatPrep.setCountry', 'Set country')}</Text>
           </Pressable>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{t('vatPrep.unsupportedTitle', 'VAT return not available here')}</Text>
-          </View>
-        </View>
-        <View style={{ padding: 20, gap: 12 }}>
-          {/* Unknown country: ask for it (never guess, CLAUDE.md). Another
-              country: say what Vasco does prepare. */}
-          <Text style={styles.subtitle}>
-            {profileCountry
-              ? t('vatPrep.unsupportedBody', 'Vasco prepares the Dutch BTW-aangifte and the German UStVA. Your invoices and expenses are still exported from Finance for your accountant.')
-              : t('vatPrep.needCountry', 'Set your country first — Vasco prepares the return for the Netherlands and Germany.')}
-          </Text>
-          {!profileCountry && (
-            <Pressable
-              onPress={() => router.push('/(modals)/business-settings' as any)}
-              accessibilityRole="button"
-              testID="vatprep-set-country"
-              style={{ alignSelf: 'flex-start', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, borderWidth: 1, borderColor: Palette.hermesOrange }}
-            >
-              <Text style={{ color: Palette.hermesOrange, fontFamily: 'Inter_600SemiBold' }}>{t('vatPrep.setCountry', 'Set country')}</Text>
-            </Pressable>
-          )}
         </View>
       </SafeAreaView>
     );
@@ -242,211 +124,164 @@ export default function VatPrepScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable onPress={() => goBack(router)} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back', 'Back')}>
-          <Ionicons name="chevron-back" size={22} color={SemanticColors.textPrimary} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{t('vatPrep.title', 'BTW-aangifte voorbereiding')}</Text>
-          <Text style={styles.subtitle}>{draft.period}</Text>
-        </View>
-      </View>
-
-      <View style={styles.periodRow}>
-        {(['previous', 'current'] as PeriodChoice[]).map((p) => (
-          <Pressable
-            key={p}
-            onPress={() => setPeriodChoice(p)}
-            style={[styles.periodChip, periodChoice === p && styles.periodChipActive]}
-          >
-            <Text style={[styles.periodChipText, periodChoice === p && styles.periodChipTextActive]}>
-              {p === 'previous' ? t('vatPrep.previousQuarter', 'Afgelopen kwartaal') : t('vatPrep.currentQuarter', 'Huidige kwartaal')}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
+      <DKScreenHeader title={t('vatReport.title', 'VAT report')} subtitle={t('vatReport.subtitle', 'For your accountant or the tax portal')} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Safety banner — AI prepares, human submits */}
-        <View style={styles.safetyBanner}>
-          <Ionicons name="shield-checkmark" size={16} color={SemanticColors.feedbackInfo} />
-          <Text style={styles.safetyText}>
-            {t('vatPrep.safetyBanner', 'Vasco bereidt je aangifte voor. Je dient zelf in via DigiD of je boekhouder — Vasco verstuurt nooit direct naar de Belastingdienst.')}
+        <View style={styles.periodRow}>
+          <DKMenu
+            accessibilityLabel={t('vatReport.period', 'Period')}
+            items={periodKeys.map((k) => ({ key: k, label: periodLabel(k), selected: k === periodKey, onPress: () => setPeriodKey(k) }))}
+            renderAnchor={(open) => (
+              <Pressable onPress={open} style={styles.anchor} accessibilityRole="button" testID="vat-report-period">
+                <Text style={styles.anchorText}>{periodLabel(periodKey)}</Text>
+                <Ionicons name="chevron-down" size={16} color={DK.colors.text} />
+              </Pressable>
+            )}
+          />
+          <Text style={styles.meta}>
+            {bounds.start} – {bounds.end} · {report.basis === 'cash' ? t('vatReport.basisCash', 'Counted on the payment date') : t('vatReport.basisInvoice', 'Counted on the invoice date')}
           </Text>
         </View>
 
-        {/* Warnings */}
-        {draft.warnings.map((w, i) => (
-          <View key={i} style={styles.warningCard}>
-            <Ionicons name="warning" size={14} color={SemanticColors.feedbackWarning} />
-            <Text style={styles.warningText}>{w}</Text>
-          </View>
-        ))}
+        {report.exempt && <Text style={styles.note}>{t('vatReport.exemptBody', 'Small-business scheme: you charge no VAT and reclaim none.')}</Text>}
 
-        {/* Totals */}
-        <View style={styles.totalsCard}>
-          <Text style={styles.totalsTitle}>{t('vatPrep.totals', 'Totalen')}</Text>
-          <View style={styles.totalsRow}>
-            <Text style={styles.totalsLabel}>{t('vatPrep.outputVat', 'Af te dragen BTW')}</Text>
-            <Text style={styles.totalsValue}>{formatCurrency(draft.totalOutputVat, country)}</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Text style={styles.cardTitle}>{t('vatReport.sales', 'Sales')}</Text>
+            <Text style={styles.colHead}>{t('vatReport.net', 'Net')}</Text>
+            <Text style={styles.colHead}>{t('vatReport.vat', 'VAT')}</Text>
           </View>
-          <View style={styles.totalsRow}>
-            <Text style={styles.totalsLabel}>{t('vatPrep.inputVat', 'Voorbelasting')}</Text>
-            <Text style={styles.totalsValue}>{formatCurrency(draft.totalInputVat, country)}</Text>
+          <RateRows rows={report.sales.rows} />
+          <View style={[styles.row, styles.totalRow]}>
+            <Text style={styles.rowLabel} />
+            <Text style={[styles.rowNum, styles.bold]} testID="vat-report-sales-net">{money(report.sales.net)}</Text>
+            <Text style={[styles.rowNum, styles.bold]} testID="vat-report-sales-vat">{money(report.sales.vat)}</Text>
           </View>
-          <View style={[styles.totalsRow, styles.totalsRowBig]}>
-            <Text style={styles.totalsLabelBig}>
-              {draft.netPayable >= 0 ? t('vatPrep.toPay', 'Te betalen') : t('vatPrep.refund', 'Terug te krijgen')}
-            </Text>
-            <Text style={[styles.totalsValueBig, { color: draft.netPayable >= 0 ? SemanticColors.feedbackError : SemanticColors.feedbackSuccess }]}>
-              {formatCurrency(Math.abs(draft.netPayable), country)}
-            </Text>
-          </View>
-          {draft.yoyVariancePct != null && (
-            <Text style={styles.totalsMeta}>
-              {draft.yoyVariancePct >= 0 ? '+' : ''}{Math.round(draft.yoyVariancePct)}% {t('vatPrep.vsLastYear', 'vs. zelfde kwartaal vorig jaar')}
-            </Text>
-          )}
         </View>
 
-        {/* Low-confidence review */}
-        {lowConfLines.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t('vatPrep.reviewNeeded', 'Te controleren')} ({lowConfLines.length})
-            </Text>
-            {lowConfLines.map((l) => <LineCard key={l.id} line={l} highlight country={country} />)}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Text style={styles.cardTitle}>{t('vatReport.purchases', 'Purchases')}</Text>
+            <Text style={styles.colHead}>{t('vatReport.net', 'Net')}</Text>
+            <Text style={styles.colHead}>{t('vatReport.vat', 'VAT')}</Text>
+          </View>
+          <RateRows rows={report.purchases.rows} />
+          <View style={[styles.row, styles.totalRow]}>
+            <Text style={styles.rowLabel} />
+            <Text style={[styles.rowNum, styles.bold]}>{money(report.purchases.net)}</Text>
+            <Text style={[styles.rowNum, styles.bold]} testID="vat-report-purchases-vat">{money(report.purchases.vat)}</Text>
+          </View>
+          <Text style={styles.meta}>{t('vatReport.purchasesSource', 'From the expenses you recorded. Supplier invoices you only scanned are not included.')}</Text>
+        </View>
+
+        <View style={[styles.card, styles.balanceCard]}>
+          <Text style={styles.cardTitle}>{t('vatReport.balance', 'Balance')}</Text>
+          <View style={styles.balanceRow}>
+            <Text style={styles.balanceLabel}>{balanceToPay ? t('vatReport.toPay', 'To pay') : t('vatReport.toReclaim', 'To reclaim')}</Text>
+            <Text style={styles.balanceValue} testID="vat-report-balance">{money(Math.abs(report.balance))}</Text>
+          </View>
+        </View>
+
+        {report.notIncluded.drafts.length > 0 && (
+          <View style={styles.attention}>
+            <Text style={styles.attentionTitle}>{t('vatReport.draftsTitle', 'Not included: drafts')} ({report.notIncluded.drafts.length})</Text>
+            <Text style={styles.note}>{t('vatReport.draftsBody', 'These invoices are still drafts. If you sent them, mark them as sent and they will count.')}</Text>
+            <Text style={styles.note}>{report.notIncluded.drafts.map((d) => d.number).join(', ')}</Text>
+          </View>
+        )}
+        {report.notIncluded.retentionReleases.length > 0 && (
+          <View style={styles.attention}>
+            <Text style={styles.attentionTitle}>{t('vatReport.retentionTitle', 'Not counted again: retention released')} ({report.notIncluded.retentionReleases.length})</Text>
+            <Text style={styles.note}>{t('vatReport.retentionBody', 'Withheld amounts paid out now. Their turnover and VAT were declared on the original invoices.')}</Text>
+          </View>
+        )}
+        {report.notIncluded.unpaidOnCashBasis.length > 0 && (
+          <View style={styles.attention}>
+            <Text style={styles.attentionTitle}>{t('vatReport.unpaidTitle', 'Not included: unpaid (cash basis)')} ({report.notIncluded.unpaidOnCashBasis.length})</Text>
+            <Text style={styles.note}>{t('vatReport.unpaidBody', 'You declare VAT when you are paid. These invoices count in the period they are paid.')}</Text>
           </View>
         )}
 
-        {/* All lines */}
-        <View style={styles.section}>
-          {/* The count must be of the rows RENDERED. Heading the list with
-              `draft.lines.length` while filtering to high-confidence rows meant
-              a contractor reconciling line-by-line before filing saw "Alle
-              regels (40)" over 34 rows whose VAT did not add up to the totals
-              card above — the difference being the six low-confidence lines
-              already listed under "Te controleren" (#354). */}
-          <Text style={styles.sectionTitle}>
-            {t('vatPrep.allLines', 'Alle regels')} ({confidentLines.length})
-          </Text>
-          {confidentLines.map((l) => <LineCard key={l.id} line={l} country={country} />)}
-        </View>
+        <Text style={styles.sectionTitle}>{t('vatReport.invoices', 'Invoices in this report')}</Text>
+        {report.sales.invoices.length === 0
+          ? <Text style={styles.note}>{t('vatReport.noInvoices', 'No invoices in this period.')}</Text>
+          : report.sales.invoices.map((i) => (
+            <View key={i.id} style={styles.docRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.docTitle}>{i.number} · {i.customer}</Text>
+                <Text style={styles.meta}>{i.date}</Text>
+              </View>
+              <Text style={styles.rowNum}>{money(i.net)}</Text>
+              <Text style={styles.rowNum}>{money(i.vat)}</Text>
+            </View>
+          ))}
+
+        <Text style={styles.sectionTitle}>{t('vatReport.purchasesList', 'Purchases in this report')}</Text>
+        {report.purchases.items.length === 0
+          ? <Text style={styles.note}>{t('vatReport.noPurchases', 'No purchases recorded in this period.')}</Text>
+          : report.purchases.items.map((p) => (
+            <View key={p.id} style={styles.docRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.docTitle}>{p.supplier ? `${p.supplier} · ` : ''}{p.description}</Text>
+                <Text style={styles.meta}>{p.date}</Text>
+              </View>
+              <Text style={styles.rowNum}>{money(p.net)}</Text>
+              <Text style={styles.rowNum}>{money(p.vat)}</Text>
+            </View>
+          ))}
+
+        <Text style={styles.disclaimer}>{t('vatReport.disclaimer', 'Vasco prepares this report from your invoices and receipts. You or your accountant file the VAT return. Reverse charge, cross-border work and private-use corrections are for your accountant.')}</Text>
 
         <DKMenu
-          accessibilityLabel={t('vatPrep.export', 'Exporteer voor aangifte')}
-          items={exportMenuItems()}
+          accessibilityLabel={t('vatReport.export', 'Export')}
+          items={[
+            { key: 'pdf', label: t('vatReport.exportPdf', 'Share as PDF'), onPress: () => { void doExport('pdf'); } },
+            { key: 'csv', label: t('vatReport.exportCsv', 'Share as spreadsheet (CSV)'), onPress: () => { void doExport('csv'); } },
+          ]}
           renderAnchor={(open) => (
-            <Pressable style={styles.exportBtn} onPress={open}>
-              <Ionicons name="share-outline" size={18} color={Palette.white} />
-              <Text style={styles.exportBtnText}>{t('vatPrep.export', 'Exporteer voor aangifte')}</Text>
+            <Pressable onPress={open} style={[styles.exportBtn, busy && { opacity: 0.6 }]} disabled={busy} accessibilityRole="button" testID="vat-report-export">
+              <Ionicons name="share-outline" size={18} color={DK.colors.text} />
+              <Text style={styles.exportText}>{t('vatReport.export', 'Export')}</Text>
             </Pressable>
           )}
         />
-
-        <View style={{ height: 80 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function LineCard({ line, highlight, country }: { line: VatLine; highlight?: boolean; country: 'NL' | 'DE' }) {
-  // R66 round 17: was 3 hardcoded Dutch strings (Factuur / Uitgave / Controleer)
-  // baked into a render path that the screen otherwise localizes via t().
-  // Non-NL contractors (DE/FR/ES/IT/EN) saw Dutch words on a localized screen.
-  const { t } = useTranslation();
-  return (
-    <View style={[styles.lineCard, highlight && styles.lineCardHighlight]}>
-      <View style={styles.lineHeader}>
-        <Text style={styles.lineDescription} numberOfLines={1}>{line.description}</Text>
-        <Text style={styles.lineVatAmount}>{formatCurrency(line.vatAmount, country)}</Text>
-      </View>
-      <View style={styles.lineMeta}>
-        <Text style={styles.lineMetaText}>
-          {line.sourceType === 'invoice_sent' ? t('vatPrep.lineInvoice', 'Invoice') : t('vatPrep.lineExpense', 'Expense')} · {line.vatRate}% · {formatVatClassification(line.classification)}
-        </Text>
-        {line.confidence < 0.75 && (
-          <View style={styles.confBadge}>
-            <Ionicons name="help-circle" size={11} color={SemanticColors.feedbackWarning} />
-            <Text style={styles.confBadgeText}>{t('vatPrep.checkLine', 'Check')}</Text>
-          </View>
-        )}
-      </View>
-      {line.warnings.length > 0 && (
-        <Text style={styles.lineWarning}>{line.warnings.join(' · ')}</Text>
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PAGE_BG },
-  header: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingHorizontal: GRID.md, paddingVertical: GRID.sm },
-  backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: SemanticColors.surfaceSecondary },
-  title: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
-  subtitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
-  periodRow: { flexDirection: 'row', gap: GRID.sm, paddingHorizontal: GRID.md, marginBottom: GRID.sm },
-  periodChip: { paddingHorizontal: GRID.md, paddingVertical: GRID.sm, borderRadius: RADIUS.full, backgroundColor: SemanticColors.surfaceSecondary },
-  periodChipActive: { backgroundColor: Palette.hermesOrange + '20' },
-  periodChipText: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textSecondary },
-  periodChipTextActive: { color: Palette.hermesOrange },
-  scroll: { padding: GRID.md, gap: GRID.md },
-  safetyBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: GRID.xs,
-    padding: GRID.sm, borderRadius: RADIUS.md,
-    backgroundColor: SemanticColors.feedbackInfo + '10',
+  scroll: { padding: GRID.md, gap: GRID.md, paddingBottom: GRID.xl * 2 },
+  periodRow: { gap: GRID.xs },
+  anchor: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: GRID.sm,
+    paddingVertical: GRID.sm, paddingHorizontal: GRID.md, borderRadius: RADIUS.md,
+    backgroundColor: DK.colors.panel, borderWidth: 1, borderColor: DK.colors.border,
   },
-  safetyText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackInfo, lineHeight: 18 },
-  warningCard: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: GRID.xs,
-    padding: GRID.sm, borderRadius: RADIUS.md,
-    backgroundColor: SemanticColors.feedbackWarning + '10',
-  },
-  warningText: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackWarning },
-  totalsCard: {
-    padding: GRID.md, borderRadius: RADIUS.lg,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderWidth: 1, borderColor: SemanticColors.borderMuted,
-    gap: GRID.xs,
-  },
-  totalsTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, marginBottom: GRID.xs },
-  totalsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  totalsRowBig: { marginTop: GRID.sm, paddingTop: GRID.sm, borderTopWidth: 1, borderTopColor: SemanticColors.borderMuted },
-  totalsLabel: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textSecondary },
-  totalsValue: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  totalsLabelBig: { fontSize: TYPE.bodySize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary },
-  totalsValueBig: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily },
-  totalsMeta: { fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary, marginTop: GRID.xs },
-  section: { gap: GRID.sm },
-  sectionTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: SemanticColors.textPrimary, marginBottom: 4 },
-  lineCard: {
-    padding: GRID.sm, borderRadius: RADIUS.md,
-    backgroundColor: SemanticColors.surfacePrimary,
-    borderWidth: 1, borderColor: SemanticColors.borderMuted,
-    gap: 4,
-  },
-  lineCardHighlight: { borderColor: SemanticColors.feedbackWarning + '60' },
-  lineHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: GRID.sm },
-  lineDescription: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  lineVatAmount: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: SemanticColors.textPrimary },
-  lineMeta: { flexDirection: 'row', alignItems: 'center', gap: GRID.xs },
-  lineMetaText: { fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textTertiary },
-  confBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 2,
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.sm,
-    backgroundColor: SemanticColors.feedbackWarning + '15',
-  },
-  confBadgeText: { fontSize: TYPE.tinySize, fontFamily: TYPE.titleFamily, color: SemanticColors.feedbackWarning },
-  lineWarning: { fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.feedbackWarning },
+  anchorText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: DK.colors.text },
+  meta: { fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: DK.colors.textMuted },
+  note: { fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: DK.colors.textMuted, lineHeight: 18 },
+  card: { padding: GRID.md, borderRadius: RADIUS.lg, backgroundColor: DK.colors.panel, borderWidth: 1, borderColor: DK.colors.border, gap: GRID.xs },
+  cardTitle: { flex: 1, fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: DK.colors.text },
+  colHead: { width: 96, textAlign: 'right', fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: DK.colors.textMuted },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
+  rowLabel: { flex: 1, fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
+  rowNum: { width: 96, textAlign: 'right', fontSize: TYPE.captionSize, fontFamily: TYPE.bodyFamily, color: DK.colors.text },
+  bold: { fontFamily: TYPE.titleFamily },
+  totalRow: { borderTopWidth: 1, borderTopColor: DK.colors.border, marginTop: GRID.xs, paddingTop: GRID.xs },
+  balanceCard: { borderColor: DK.colors.accent },
+  balanceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  balanceLabel: { fontSize: TYPE.bodySize, fontFamily: TYPE.sectionFamily, color: DK.colors.text },
+  balanceValue: { fontSize: TYPE.sectionSize, fontFamily: TYPE.sectionFamily, color: DK.colors.accent },
+  attention: { padding: GRID.sm, borderRadius: RADIUS.md, borderWidth: 1, borderColor: DK.colors.highlight, gap: 4 },
+  attentionTitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: DK.colors.highlight },
+  sectionTitle: { fontSize: TYPE.titleSize, fontFamily: TYPE.sectionFamily, color: DK.colors.text, marginTop: GRID.sm },
+  docRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: GRID.xs, borderBottomWidth: 1, borderBottomColor: DK.colors.border },
+  docTitle: { fontSize: TYPE.captionSize, fontFamily: TYPE.titleFamily, color: DK.colors.text },
+  disclaimer: { fontSize: TYPE.tinySize, fontFamily: TYPE.bodyFamily, color: DK.colors.textMuted, lineHeight: 16, marginTop: GRID.md },
   exportBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: GRID.xs,
-    paddingVertical: GRID.md, borderRadius: RADIUS.md,
-    backgroundColor: Palette.hermesOrange,
-    shadowColor: Palette.hermesOrange,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    elevation: 6,
+    paddingVertical: GRID.md, borderRadius: RADIUS.md, backgroundColor: DK.colors.primary,
   },
-  exportBtnText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: Palette.white },
+  exportText: { fontSize: TYPE.bodySize, fontFamily: TYPE.titleFamily, color: DK.colors.text },
 });

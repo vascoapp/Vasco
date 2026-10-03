@@ -308,6 +308,8 @@ it('the VAT-prep screen passes the contractor scheme to the draft', () => {
   const src: string = stripComments(
     fs.readFileSync(path.join(__dirname, '../../../app/contractor/vat-prep.tsx'), 'utf8'),
   );
-  const call = src.slice(src.indexOf('prepareVatReturn({'), src.indexOf('});', src.indexOf('prepareVatReturn({')));
+  // Since 2026-10-03 the screen builds the VAT REPORT (buildVatReport); the
+  // scheme must still reach it — KOR / Kleinunternehmer declare no VAT.
+  const call = src.slice(src.indexOf('buildVatReport({'), src.indexOf('})', src.indexOf('buildVatReport({')));
   expect(call).toMatch(/vatScheme:\s*businessProfile\?\.vatScheme/);
 });

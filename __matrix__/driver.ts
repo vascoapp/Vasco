@@ -34,6 +34,8 @@ interface AlertRule { title: RegExp; press: RegExp }
 
 const OUT = path.join(process.cwd(), '.matrix', 'out');
 const T = (key: string, opts?: any): string => String(i18n.t(key, opts));
+/** A translated string, safe inside a RegExp ("Wurde es gesendet?" ends in a quantifier). */
+const E = (key: string, opts?: any): string => T(key, opts).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 let alertLog: string[] = [];
 let rules: AlertRule[] = [];
@@ -290,7 +292,7 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
       const idFields = SETTINGS_FIELDS[market];
       for (const f of idFields) { const id = f.from(c); if (id) await fill(f.placeholder, id.native, f.what); }
       if (market === 'IT' || market === 'ES') {
-        const got = await pickMenuAfterLabel(root, T('profile.personType'), new RegExp(`^${T('settings.personNatural').replace(/[()]/g, '.')}$`));
+        const got = await pickMenuAfterLabel(root, T('profile.personType'), new RegExp(`^${E('settings.personNatural')}$`));
         step('settings: person type = individual', !!got && !got.startsWith('NO ITEM'), got ?? 'menu not found');
       }
       if (market === 'IT') {
@@ -390,9 +392,10 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
         step(`quote: VAT rate ${c.standardRate}%`, !!got && !got.startsWith('NO ITEM'), got ?? 'menu not found');
       }
       result.quoteReviewTexts = strings(root).filter((s) => /\d/.test(s)).slice(0, 60);
-      rules = [{ title: /./, press: new RegExp(`^(${T('tieredQuote.viewQuote')}|${T('common.continue', { defaultValue: 'Continue' })}|${T('quotes.sendAnyway', { defaultValue: 'Send anyway' })})$`, 'i') }];
+      rules = [{ title: /./, press: new RegExp(`^(${E('tieredQuote.viewQuote')}|${E('common.continue', { defaultValue: 'Continue' })}|${E('quotes.sendAnyway', { defaultValue: 'Send anyway' })})$`, 'i') }];
       const before = new Set((await read<any[]>('@vasco_quotes', [])).map((q) => q.id));
-      const create = pressables(root, new RegExp(`^${T('quotes.createPackage', { name: '.*', defaultValue: 'Create .* quote' }).replace(/\{\{.*?\}\}/g, '.*')}$`, 'i'));
+      // The package name varies: escape the text around it, then let it match anything.
+      const create = pressables(root, new RegExp(`^${E('quotes.createPackage', { name: '\u0000' }).replace('\u0000', '.*')}$`, 'i'));
       if (!create.length) return void step('quote: Create', false, 'no create button');
       await press(create[create.length - 1]); await settle(20);
       rules = [];
@@ -410,8 +413,8 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
       if (!step('quote screen mounts', !r.error, r.error?.message)) return;
       const root = (r.tree as any).root;
       rules = [
-        { title: new RegExp(`^${T('quotes.acceptQuote')}$`), press: new RegExp(`^${T('quotes.accept')}$`) },
-        { title: /./, press: new RegExp(`^${T('common.close', { defaultValue: 'Close' })}$`, 'i') },
+        { title: new RegExp(`^${E('quotes.acceptQuote')}$`), press: new RegExp(`^${E('quotes.accept')}$`) },
+        { title: /./, press: new RegExp(`^${E('common.close', { defaultValue: 'Close' })}$`, 'i') },
       ];
       const acc = byA11y(root, T('quotes.accept'));
       if (!acc.length) return void step('quote: Accept', false, 'no Accept tile');
@@ -452,8 +455,11 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
       // contractor did the job today. Then "Did it go out?" / "Did you file
       // it?" — not yet: we only want the file.
       rules = [
-        { title: new RegExp(`^${T('invoices.serviceDateAskTitle')}$`), press: new RegExp(`^${T('invoices.serviceDateToday')}$`) },
-        { title: /./, press: new RegExp(`^(${T('share.sentNo')}|${T('einvoice.filedNotYet')})$`) },
+        { title: new RegExp(`^${E('invoices.serviceDateAskTitle')}$`), press: new RegExp(`^${E('invoices.serviceDateToday')}$`) },
+        // The PDF went to the customer: "yes, sent" — so the invoice is issued
+        // and belongs in the VAT report (step 8). E-invoices: not filed by us.
+        { title: new RegExp(`^${E('share.sentTitle')}$`), press: new RegExp(`^${E('share.sentYes')}$`) },
+        { title: /./, press: new RegExp(`^(${E('share.sentNo')}|${E('einvoice.filedNotYet')})$`) },
       ];
 
       const htmlBefore = capture().html.length;
@@ -483,6 +489,23 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
       if (c.formats.includes('facturae')) await exportFile('facturae', T('invoices.exportFacturae'), (n) => /\.(xml|xsig)$/.test(n));
       if (c.formats.includes('fatturapa')) await exportFile('fatturapa', T('invoices.exportFatturaPA'), (n) => n.endsWith('.xml'));
       rules = [];
+      teardown(r);
+    }
+
+    // 8. THE VAT REPORT — this quarter, which now holds this one invoice.
+    {
+      const inv = (await read<any[]>('@vasco_invoices', [])).find((x) => x.id === invoiceId);
+      step('invoice is issued after "yes, sent"', !!inv && inv.status !== 'draft', `status=${inv?.status}`);
+      const r = await walk(require('../app/contractor/vat-prep').default, { as: 'contractor', language: c.language, settlePasses: 14, params: { period: 'current' } });
+      if (!step('VAT report mounts', !r.error, r.error?.message)) return;
+      const root = (r.tree as any).root;
+      const textOf = (id: string) => {
+        const n = root.findAll((x: any) => x.props?.testID === id, { deep: true })[0];
+        const ch = n?.props?.children;
+        return Array.isArray(ch) ? ch.join('') : String(ch ?? '');
+      };
+      result.vatReport = { salesNet: textOf('vat-report-sales-net'), salesVat: textOf('vat-report-sales-vat'), purchasesVat: textOf('vat-report-purchases-vat'), balance: textOf('vat-report-balance') };
+      step('VAT report shows figures', !!result.vatReport.salesVat, JSON.stringify(result.vatReport));
       teardown(r);
     }
   } catch (e) {

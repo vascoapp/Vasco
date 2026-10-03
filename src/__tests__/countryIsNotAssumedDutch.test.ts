@@ -17,14 +17,16 @@ import { stripComments } from '../utils/stripComments';
 const ROOT = path.resolve(__dirname, '../..');
 const read = (rel: string) => stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 
-describe('the VAT return refuses a market it cannot prepare', () => {
+describe('the VAT report never assumes a country', () => {
   const screen = read('app/contractor/vat-prep.tsx');
   const queue = read('src/services/aiActionQueueService.ts');
 
-  it('the screen refuses instead of coercing every country to NL', () => {
-    expect(screen).toMatch(/vatReturnSupported/);
-    expect(screen).toMatch(/if \(!vatReturnSupported\)/);
-    expect(screen).toMatch(/vatPrep\.unsupportedTitle/);
+  it('the screen asks for an unknown country instead of assuming NL', () => {
+    // Since 2026-10-03 the screen is the VAT REPORT for every market (no
+    // country return to refuse); what remains is: never guess the country.
+    expect(screen).toMatch(/if \(!knownCountry\)/);
+    expect(screen).toMatch(/vatPrep\.needCountry/);
+    expect(screen).not.toMatch(/user\?\.country \?\? 'NL'\)/);
   });
 
   it('the quarter-end card is only queued for a supported market', () => {
@@ -41,6 +43,8 @@ describe('the VAT return refuses a market it cannot prepare', () => {
     const at = queue.indexOf("type: 'tax_prep'");
     const card = queue.slice(at, queue.indexOf('});', at));
     expect(card).toMatch(/automation\.taxPrepAlwaysRequired/);
+    // …and that claim only where it is true (NL nihilaangifte, DE Nullmeldung).
+    expect(card).toMatch(/context\.country === 'NL' \|\| context\.country === 'DE'\s*\?\s*t\('automation\.taxPrepAlwaysRequired'/);
     expect(card).not.toMatch(/invoicesToExport|invoiceCount|paidInvoiceCount/);
   });
 
@@ -56,7 +60,7 @@ describe('the VAT return refuses a market it cannot prepare', () => {
     // vatCardWaitsForTheProfile.test.ts (this regex once passed on a gate
     // that never fired — D1).
     expect(before).toMatch(/vatExempt = !snap\.profileLoaded \|\|/);
-    expect(before).toMatch(/context\.country === 'NL' \|\| context\.country === 'DE'/);
+    expect(before).toMatch(/\['NL', 'DE', 'FR', 'ES', 'IT', 'UK'\]\.includes\(String\(context\.country\)\)/);
   });
 });
 

@@ -73,5 +73,6 @@ it('no service shares a printed PDF without naming it', () => {
   });
   // Internal documents (VAT prep for the accountant, budget) are allowed a
   // random name only by being listed here on purpose.
-  expect(offenders.sort()).toEqual(['budgetPdfService.ts', 'vatPrepExportService.ts'].filter((f) => offenders.includes(f)));
+  // A VAT report is not a document with a number: it is named by its period.
+  expect(offenders.sort()).toEqual(['budgetPdfService.ts', 'vatPrepExportService.ts', 'vatReportExport.ts'].filter((f) => offenders.includes(f)));
 });

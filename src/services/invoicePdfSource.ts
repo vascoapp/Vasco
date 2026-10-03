@@ -138,6 +138,7 @@ export function pdfInvoiceFromRecord(args: {
     status: invoice.status === 'cancelled' ? 'draft' : invoice.status,
     lineItems,
     subtotal: breakdown.net,
+    vatGroups: breakdown.groups,
     vatAmount: breakdown.vat,
     total: breakdown.gross,
     paidAmount: invoice.status === 'paid' ? breakdown.gross : 0,
