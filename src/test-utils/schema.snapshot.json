@@ -1,5 +1,5 @@
 {
- "takenAt": "2026-10-02",
+ "takenAt": "2026-10-03",
  "tables": {
   "account_deletion_requests": {
    "id": {
@@ -3837,9 +3837,9 @@
     "type": "numeric"
    },
    "vat_nature": {
-     "nullable": true,
-     "hasDefault": false,
-     "type": "text"
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
    }
   },
   "material_canonical_aliases": {
