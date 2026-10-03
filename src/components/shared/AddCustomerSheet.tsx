@@ -30,7 +30,7 @@ import { useAppState } from '../../state/AppState';
 import { useAuth } from '../../context/AuthContext';
 import { hapticSuccess } from '../../utils/haptics';
 import { useKeyboardInset } from '../../hooks/useKeyboardInset';
-import { isValidEmail, isValidPhone, isValidVATNumber, sanitizeInput } from '../../utils/validation';
+import { isValidEmail, isValidPhone, isValidCustomerVatId, sanitizeInput } from '../../utils/validation';
 import { findDuplicates } from '../../services/customerDedupService';
 import { logError } from '../../utils/errorHandler';
 import type { Customer } from '../../domain/customers';
@@ -150,7 +150,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     // without a word (walk, 2026-09-29). Same rule as the contractor's own
     // (businessProfileValidation), and only for what was typed.
     const cleanVat = sanitizeInput(vatId).toUpperCase();
-    if (cleanVat && changed(cleanVat, customer?.vatId) && !isValidVATNumber(cleanVat)) {
+    if (cleanVat && changed(cleanVat, customer?.vatId) && !isValidCustomerVatId(cleanVat, country)) {
       Alert.alert(
         t('common.error', 'Error'),
         t('profile.vatFormatInvalid', { example: ex.vat, defaultValue: 'VAT number format invalid (expected e.g. {{example}})' }),
@@ -262,7 +262,7 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
     }
     await commit();
   }, [name, email, phone, address, postcode, city, vatId, province, taxId, sdiCode, pec, dir3Oc, dir3Og, dir3Ut, showDir3, saving, customer,
-    needsProvince, isItaly, customers, addCustomer, updateCustomer, onAdded, onSaved, onClose, router, t, ex.vat]);
+    needsProvince, isItaly, customers, addCustomer, updateCustomer, onAdded, onSaved, onClose, router, t, ex.vat, country]);
 
   const disabled = !name.trim() || saving;
 

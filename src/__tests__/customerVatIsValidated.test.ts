@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { stripComments } from '../utils/stripComments';
-import { isValidVATNumber } from '../utils/validation';
+import { isValidVATNumber, isValidCustomerVatId } from '../utils/validation';
 
 it('the verdicts the sheet relies on', () => {
   expect(isValidVATNumber('NL12')).toBe(false);
@@ -12,9 +12,25 @@ it('the verdicts the sheet relies on', () => {
   expect(isValidVATNumber('DE123456789')).toBe(true);
 });
 
+it('a Spanish customer\'s NIF without "ES" passes for a Spanish contractor — on its control character', () => {
+  expect(isValidCustomerVatId('P2807900B', 'ES')).toBe(true);    // public body (FACe)
+  expect(isValidCustomerVatId('ESP2807900B', 'ES')).toBe(true);
+  expect(isValidCustomerVatId('B87654323', 'ES')).toBe(true);    // S.L.
+  expect(isValidCustomerVatId('12345678Z', 'ES')).toBe(true);    // DNI
+  expect(isValidCustomerVatId('P2807900X', 'ES')).toBe(false);   // wrong control
+  expect(isValidCustomerVatId('12345678A', 'ES')).toBe(false);
+  // Nothing loosened elsewhere: a bare NIF is not a VAT id in another market,
+  // and the other countries' rules are the same as before.
+  expect(isValidCustomerVatId('P2807900B', 'DE')).toBe(false);
+  expect(isValidCustomerVatId('P2807900B', undefined)).toBe(false);
+  expect(isValidCustomerVatId('NL12', 'NL')).toBe(false);
+  expect(isValidCustomerVatId('NL123456789B01', 'NL')).toBe(true);
+  expect(isValidCustomerVatId('DE12345678', 'DE')).toBe(false);
+});
+
 it('the sheet refuses a malformed VAT id before any write', () => {
   const src = stripComments(fs.readFileSync(path.resolve(__dirname, '../components/shared/AddCustomerSheet.tsx'), 'utf8'));
-  const check = src.indexOf('!isValidVATNumber(cleanVat)');
+  const check = src.indexOf('!isValidCustomerVatId(cleanVat, country)');
   expect(check).toBeGreaterThan(-1);
   expect(check).toBeLessThan(src.indexOf('await updateCustomer('));
   expect(check).toBeLessThan(src.indexOf('await addCustomer('));

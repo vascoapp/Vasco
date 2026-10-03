@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { parseDecimalInput } from './decimalInput';
+import { checkSpanishTaxId } from '../integrations/fiscalIds';
 
 export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -161,6 +162,20 @@ export function isValidVATNumber(vat: string): boolean {
   if (rule) return rule.test(cleaned);
   // Permissive fallback for unenumerated EU country codes.
   return /^[A-Z]{2}\w{2,12}$/.test(cleaned);
+}
+
+/**
+ * A CUSTOMER's tax id, as written in the contractor's market. Everything
+ * `isValidVATNumber` accepts, plus — for a Spanish contractor — a Spanish
+ * NIF/CIF/NIE without the ES prefix, which is how a Spanish buyer's id is
+ * written (and what Facturae carries). A public body's NIF ("P2807900B") was
+ * refused unless typed as "ESP2807900B" (agent batch B, 2026-10-03). The
+ * bare form must pass the real control character (`checkSpanishTaxId`, the
+ * same check the Facturae export gates on); every other country is unchanged.
+ */
+export function isValidCustomerVatId(vat: string, contractorCountry: string | null | undefined): boolean {
+  if (isValidVATNumber(vat)) return true;
+  return contractorCountry === 'ES' && checkSpanishTaxId(vat).valid;
 }
 
 // R66 round 3: country-specific IBAN length + mod-97 checksum. Was a shape-
