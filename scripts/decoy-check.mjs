@@ -73,9 +73,18 @@ if (mutated === original) {
 // "bit" without the test ever executing — the exact false positive this script
 // exists to prevent, arriving through the one door it did not check.
 const isScreenWalk = target.includes('__screenwalk__');
+// Inside an agent worktree (.claude/worktrees/<id>) both jest configs ignore
+// `/\.claude/` — so that the MAIN checkout does not run the worktrees' copies
+// (#386) — which here hides every test of the worktree itself: the baseline
+// below found "no tests" and no decoy could run. Only there, the ignore list
+// is narrowed back to node_modules for the one target being decoyed.
+// ⚠️ LAST on the line: it is an array option, and placed before the target it
+// swallows the path as a second ignore pattern — jest then runs EVERY suite.
+const inAgentWorktree = /[\\/]\.claude[\\/]worktrees[\\/]/.test(process.cwd());
+const ignoreOverride = inAgentWorktree ? ' --testPathIgnorePatterns=/node_modules/' : '';
 const jestCmd = isScreenWalk
-  ? `npx jest --config jest.screens.config.js --forceExit ${JSON.stringify(target)} --silent`
-  : `npx jest ${JSON.stringify(target)} --silent`;
+  ? `npx jest --config jest.screens.config.js --forceExit ${JSON.stringify(target)} --silent${ignoreOverride}`
+  : `npx jest ${JSON.stringify(target)} --silent${ignoreOverride}`;
 const jestEnv = isScreenWalk
   ? { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --experimental-vm-modules`.trim() }
   : process.env;
