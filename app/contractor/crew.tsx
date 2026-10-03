@@ -61,7 +61,7 @@ const ROLE_TONE: Record<WorkerRole, string> = {
   lead_tech: DK.colors.highlight,
   tech: DK.colors.series[3],
   apprentice: DK.colors.textMuted,
-  subcontractor: DK.colors.series[4],
+  subcontractor: DK.colors.series[2],
 };
 
 export default function CrewScreen() {

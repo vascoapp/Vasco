@@ -1,5 +1,5 @@
 -- =============================================================================
--- 20261003000001 — line_items.vat_nature: WHY a 0 % line carries no VAT (Italy)
+-- 20261003000003 — line_items.vat_nature: WHY a 0 % line carries no VAT (Italy)
 -- =============================================================================
 -- FatturaPA requires a Natura on every 0 % line (SDI 00400 / 00429). The app
 -- wrote N2.2 ("non soggette – altri casi") on all of them: right for a

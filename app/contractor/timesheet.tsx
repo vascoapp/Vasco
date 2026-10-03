@@ -262,11 +262,14 @@ export default function TimesheetScreen() {
       return;
     }
     const job = entryEdit.jobId ? jobs.find((j: any) => j.id === entryEdit.jobId) : undefined;
+    const before = entryEdit.mode === 'edit' ? entries.find((e) => e.id === entryEdit.id) : undefined;
+    // A job not (yet) loaded keeps its link: dropping it silently detached the
+    // hours from their job (review 2026-10-03).
     const entry: SoloTimeEntry = {
       id: entryEdit.id, date: entryEdit.date, clockIn: formatClockTime(a), clockOut: formatClockTime(b),
-      breakMinutes: entryEdit.breakMinutes, jobId: job?.id, jobTitle: job?.title, totalHours: hours,
+      breakMinutes: entryEdit.breakMinutes, jobId: job?.id ?? entryEdit.jobId,
+      jobTitle: job?.title ?? (entryEdit.jobId === before?.jobId ? before?.jobTitle : undefined), totalHours: hours,
     };
-    const before = entryEdit.mode === 'edit' ? entries.find((e) => e.id === entryEdit.id) : undefined;
     setEntries((prev) => entryEdit.mode === 'edit' ? prev.map((e) => (e.id === entry.id ? entry : e)) : [entry, ...prev]);
     applyJobPatches(before ? { id: before.id, jobId: before.jobId } : null,
       { id: entry.id, date: entry.date, hours, clockIn: entry.clockIn, clockOut: entry.clockOut, jobId: entry.jobId });
@@ -286,6 +289,10 @@ export default function TimesheetScreen() {
     ]);
   };
 
+  const shiftDay = (key: string, delta: number) => {
+    const [y, m, d] = key.split('-').map(Number);
+    return localDateKey(new Date(y, m - 1, d + delta));
+  };
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return formatDayMonthAuto(d);
@@ -472,7 +479,19 @@ export default function TimesheetScreen() {
           </View>
           <ScrollView contentContainerStyle={[styles.sheetBody, kbInset ? { paddingBottom: kbInset + 16 } : null]} keyboardShouldPersistTaps="handled">
             <Text style={styles.sheetLabel}>{t('timesheet.edit.date', 'Day')}</Text>
-            <Text style={styles.sheetValue}>{entryEdit ? formatDate(entryEdit.date) : ''}</Text>
+            {/* Yesterday's forgotten hours are the usual case; never a future day. */}
+            <View style={styles.dayStepper}>
+              <Pressable onPress={() => entryEdit && setEntryEdit({ ...entryEdit, date: shiftDay(entryEdit.date, -1) })} hitSlop={8}
+                accessibilityRole="button" accessibilityLabel={t('timesheet.edit.prevDay', 'Previous day')} testID="time-entry-prev-day">
+                <Ionicons name="chevron-back" size={20} color={SemanticColors.textPrimary} />
+              </Pressable>
+              <Text style={styles.sheetValue}>{entryEdit ? formatDate(entryEdit.date) : ''}</Text>
+              <Pressable onPress={() => entryEdit && entryEdit.date < todayStr && setEntryEdit({ ...entryEdit, date: shiftDay(entryEdit.date, 1) })} hitSlop={8}
+                disabled={!entryEdit || entryEdit.date >= todayStr}
+                accessibilityRole="button" accessibilityLabel={t('timesheet.edit.nextDay', 'Next day')} testID="time-entry-next-day">
+                <Ionicons name="chevron-forward" size={20} color={entryEdit && entryEdit.date < todayStr ? SemanticColors.textPrimary : SemanticColors.textTertiary} />
+              </Pressable>
+            </View>
             <Text style={styles.sheetLabel}>{t('timesheet.edit.start', 'Start')}</Text>
             <TextInput
               style={styles.sheetInput}
@@ -507,7 +526,9 @@ export default function TimesheetScreen() {
               renderAnchor={(open) => (
                 <Pressable onPress={open} style={styles.sheetInput} accessibilityRole="button" testID="time-entry-job">
                   <Text style={[styles.sheetValue, !entryEdit?.jobId && { color: SemanticColors.placeholder }]} numberOfLines={1}>
-                    {entryEdit?.jobId ? (jobs.find((j: any) => j.id === entryEdit.jobId)?.title ?? '') : t('timesheet.withoutJob', 'Without job')}
+                    {entryEdit?.jobId
+                      ? (jobs.find((j: any) => j.id === entryEdit.jobId)?.title ?? entries.find((e) => e.id === entryEdit.id)?.jobTitle ?? '')
+                      : t('timesheet.withoutJob', 'Without job')}
                   </Text>
                 </Pressable>
               )}
@@ -593,6 +614,7 @@ const styles = StyleSheet.create({
   sheetLabel: { fontSize: TYPE.labelSize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.textPrimary, marginTop: Spacing.sm },
   sheetValue: { fontSize: TYPE.bodySize, fontFamily: 'Inter_500Medium', color: SemanticColors.textPrimary },
   sheetInput: { backgroundColor: SemanticColors.surfaceSecondary, borderRadius: RADIUS.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, color: SemanticColors.textPrimary, fontSize: TYPE.bodySize },
+  dayStepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sheetDelete: { marginTop: Spacing.lg, alignItems: 'center', padding: Spacing.md },
   sheetDeleteText: { fontSize: TYPE.bodySize, fontFamily: 'Inter_600SemiBold', color: SemanticColors.feedbackError },
   entryContent: { flex: 1, padding: Spacing.sm, gap: 4 },

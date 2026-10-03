@@ -180,7 +180,10 @@ export function templatesForJob(
   trade: string | undefined,
 ): JobFormTemplate[] {
   const t = trade?.toLowerCase().trim();
-  if (!t) return templates;
+  // 'general' / 'other' say nothing about the work: every job is stamped with
+  // the CONTRACTOR's trade, which for an aannemer is 'general' — a form set to
+  // "plumbing" then matched no job at all (review 2026-10-03). Unknown → all.
+  if (!t || t === 'general' || t === 'other') return templates;
   return templates.filter((tpl) => !tpl.trade || tpl.trade.toLowerCase().trim() === t);
 }
 

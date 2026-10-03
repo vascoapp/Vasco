@@ -148,3 +148,17 @@ describe('answer snapshotting', () => {
     expect(blankAnswers(t).map((a) => a.fieldId)).toEqual(['a', 'z']);
   });
 });
+
+// Review 2026-10-03: an aannemer's jobs carry trade 'general' (the contractor's
+// own); a form set to a trade must still be offered on them.
+describe('templatesForJob on a general-trade job', () => {
+  const { templatesForJob } = require('../jobFormService');
+  const forms = [{ id: 'a', trade: 'plumbing' }, { id: 'b' }, { id: 'c', trade: 'electrical' }] as any[];
+  it("'general' and 'other' are unknown: every form is offered", () => {
+    expect(templatesForJob(forms, 'general').map((f: any) => f.id)).toEqual(['a', 'b', 'c']);
+    expect(templatesForJob(forms, 'other').map((f: any) => f.id)).toEqual(['a', 'b', 'c']);
+  });
+  it('a real trade still narrows', () => {
+    expect(templatesForJob(forms, 'plumbing').map((f: any) => f.id)).toEqual(['a', 'b']);
+  });
+});

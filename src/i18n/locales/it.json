@@ -1504,7 +1504,9 @@
       "deleteTitle": "Eliminare la registrazione?",
       "deleteBody": "Queste ore vengono tolte dal lavoro e dalle paghe.",
       "invalidTitle": "Controlla gli orari",
-      "invalidBody": "Inserisci un orario di inizio e di fine (es. 07:30 e 16:00); la fine deve essere dopo l’inizio."
+      "invalidBody": "Inserisci un orario di inizio e di fine (es. 07:30 e 16:00); la fine deve essere dopo l’inizio.",
+      "prevDay": "Giorno precedente",
+      "nextDay": "Giorno successivo"
     }
   },
   "sitelead": {

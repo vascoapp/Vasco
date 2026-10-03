@@ -155,3 +155,30 @@ describe('the value rules around a nature', () => {
     expect(f.find((x) => x.code === 'A-2.2.2.8')).toMatchObject({ severity: 'warning', where: 'vasco' });
   });
 });
+
+// Review 2026-10-03: refusing a 0 % line without a nature pushed the
+// contractor to state a FALSE one where the line cannot be edited (an issued
+// invoice) or has no fitting reason (a retention release). Those keep the old
+// N2.2, with the NATURA-REGIME warning; a new DRAFT still has to choose.
+describe('0 % lines without a nature: draft refused, issued / retention release keep N2.2', () => {
+  const zero: L[] = [{ description: 'Svincolo ritenuta', quantity: 1, unitPrice: 500, vatRate: 0 } as any];
+  const withInvoice = (over: Record<string, unknown>) => {
+    const base = inputs(zero);
+    return { ...base, invoice: { ...(base as any).invoice, ...over } } as InvoiceDocInputs;
+  };
+  it('a draft is refused, naming the line', () => {
+    const r = toFatturaPA(buildEInvoiceSource(withInvoice({ status: 'draft' })));
+    expect(r.ok).toBe(false);
+  });
+  it('an issued invoice exports N2.2 (and the warning says so)', () => {
+    const r = toFatturaPA(buildEInvoiceSource(withInvoice({ status: 'sent' })));
+    expect(r.ok).toBe(true);
+    const xml = generateFatturaPAXml((r as any).document);
+    expect(xml).toMatch(/<Natura>N2\.2<\/Natura>/);
+    expect(checkFatturaPA(xml, { today: TODAY }).some((f) => f.code === 'NATURA-REGIME' && f.severity === 'warning')).toBe(true);
+  });
+  it('a retention release draft exports N2.2 too', () => {
+    const r = toFatturaPA(buildEInvoiceSource(withInvoice({ status: 'draft', isRetentionRelease: true })));
+    expect(r.ok).toBe(true);
+  });
+});

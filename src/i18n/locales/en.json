@@ -1504,7 +1504,9 @@
       "deleteTitle": "Delete entry?",
       "deleteBody": "These hours are removed from the job and from payroll.",
       "invalidTitle": "Check the times",
-      "invalidBody": "Enter a start and end time (e.g. 07:30 and 16:00); the end must be after the start."
+      "invalidBody": "Enter a start and end time (e.g. 07:30 and 16:00); the end must be after the start.",
+      "prevDay": "Previous day",
+      "nextDay": "Next day"
     }
   },
   "sitelead": {

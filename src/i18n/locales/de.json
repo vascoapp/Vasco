@@ -1504,7 +1504,9 @@
       "deleteTitle": "Eintrag löschen?",
       "deleteBody": "Diese Stunden werden vom Auftrag und aus der Lohnabrechnung entfernt.",
       "invalidTitle": "Zeiten prüfen",
-      "invalidBody": "Geben Sie eine Beginn- und Endzeit ein (z. B. 07:30 und 16:00); das Ende muss nach dem Beginn liegen."
+      "invalidBody": "Geben Sie eine Beginn- und Endzeit ein (z. B. 07:30 und 16:00); das Ende muss nach dem Beginn liegen.",
+      "prevDay": "Vorheriger Tag",
+      "nextDay": "Nächster Tag"
     }
   },
   "sitelead": {

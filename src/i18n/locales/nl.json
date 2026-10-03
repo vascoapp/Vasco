@@ -1789,7 +1789,9 @@
       "deleteTitle": "Registratie verwijderen?",
       "deleteBody": "Deze uren verdwijnen van de klus en uit de verloning.",
       "invalidTitle": "Controleer de tijden",
-      "invalidBody": "Vul een begin- en eindtijd in (bijv. 07:30 en 16:00); de eindtijd moet na de begintijd liggen."
+      "invalidBody": "Vul een begin- en eindtijd in (bijv. 07:30 en 16:00); de eindtijd moet na de begintijd liggen.",
+      "prevDay": "Vorige dag",
+      "nextDay": "Volgende dag"
     }
   },
   "money": {

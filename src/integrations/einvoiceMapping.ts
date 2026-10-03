@@ -66,6 +66,12 @@ export interface EInvoiceSource {
     dir3UnidadTramitadora?: string;
   };
   invoiceNumber: string;
+  /** Italy: a 0 % line with no Natura may fall back to N2.2 (what every
+   *  FatturaPA said before per-line natures existed) — for an invoice that is
+   *  already ISSUED (its lines can no longer be edited) or a retention release
+   *  (a recovery of already-taxed money, no nature to pick). A new draft must
+   *  choose. The fallback is surfaced by the NATURA-REGIME warning. */
+  legacyZeroRateNature?: boolean;
   invoiceDate: string;
   dueDate: string;
   currency: string;
@@ -142,8 +148,13 @@ function naturaFor(
   index: number,
   regime: string | undefined,
   missing: MissingField[],
+  legacy = false,
 ): Pick<FatturaPALineItem, 'natura' | 'riferimentoNormativo'> | null {
   if (line.vatRate !== 0) return {};
+  // Review 2026-10-03: refusing these pushed the contractor to state a FALSE
+  // nature (a sent invoice cannot be edited; a retention release has none of
+  // the offered ones). The previous output, with a warning, instead.
+  if (legacy && !line.vatNature && !defaultVatNature(regime)) return { natura: 'N2.2' };
   const natura = line.vatNature ?? defaultVatNature(regime);
   // Only what this regime may state: a forfettario's N6.3 has a legal basis
   // in the abstract, but a forfettario does not apply reverse charge as the
@@ -216,7 +227,7 @@ export function toFatturaPA(src: EInvoiceSource): MappingResult<FatturaPA> {
   // contractor sees the whole list once (only when the regime is known —
   // the default depends on it, and the regime itself is already asked for).
   const naturas = src.seller.fiscalRegime
-    ? src.lines.map((l, i) => naturaFor(l, i, src.seller.fiscalRegime, missing))
+    ? src.lines.map((l, i) => naturaFor(l, i, src.seller.fiscalRegime, missing, !!src.legacyZeroRateNature))
     : [];
 
   if (missing.length > 0) return { ok: false, missing };

@@ -1504,7 +1504,9 @@
       "deleteTitle": "¿Eliminar registro?",
       "deleteBody": "Estas horas se quitan del trabajo y de la nómina.",
       "invalidTitle": "Revisa las horas",
-      "invalidBody": "Indica una hora de inicio y de fin (p. ej. 07:30 y 16:00); el fin debe ser posterior al inicio."
+      "invalidBody": "Indica una hora de inicio y de fin (p. ej. 07:30 y 16:00); el fin debe ser posterior al inicio.",
+      "prevDay": "Día anterior",
+      "nextDay": "Día siguiente"
     }
   },
   "sitelead": {

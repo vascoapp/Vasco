@@ -193,6 +193,9 @@ export function buildEInvoiceSource(inp: InvoiceDocInputs): EInvoiceSource {
       dir3OrganoGestor: customer?.dir3OrganoGestor,
       dir3UnidadTramitadora: customer?.dir3UnidadTramitadora,
     },
+    // Issued (not a draft) or a retention release: a 0 % line without a
+    // nature keeps the old N2.2 (+ warning) instead of being refused.
+    legacyZeroRateNature: (inp.invoice as any)?.status !== 'draft' || !!(inp.invoice as any)?.isRetentionRelease,
     invoiceNumber: invoiceNumberOf(inp.invoice),
     invoiceDate: issueDateOf(inp.invoice),
     dueDate: dueDateOf(inp.invoice),

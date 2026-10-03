@@ -1504,7 +1504,9 @@
       "deleteTitle": "Supprimer la saisie ?",
       "deleteBody": "Ces heures sont retirées du chantier et de la paie.",
       "invalidTitle": "Vérifiez les heures",
-      "invalidBody": "Saisissez une heure de début et de fin (ex. 07:30 et 16:00) ; la fin doit être après le début."
+      "invalidBody": "Saisissez une heure de début et de fin (ex. 07:30 et 16:00) ; la fin doit être après le début.",
+      "prevDay": "Jour précédent",
+      "nextDay": "Jour suivant"
     }
   },
   "sitelead": {

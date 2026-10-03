@@ -31,6 +31,8 @@ run('timesheet corrections', () => {
     }]));
     await AsyncStorage.setItem('@vasco_timesheet_entries', JSON.stringify([
       { id: 'te-1', date: TODAY, clockIn: '07:00', clockOut: '16:00', breakMinutes: 0, jobId: 'j1', jobTitle: 'CV-ketel onderhoud', totalHours: 9 },
+      // An entry whose job is not loaded (deleted / not synced yet).
+      { id: 'te-gone', date: TODAY, clockIn: '17:00', clockOut: '18:00', breakMinutes: 0, jobId: 'j-gone', jobTitle: 'Oude klus', totalHours: 1 },
     ]));
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     const r = await walkScreen(Screen(), { as: 'aannemer', settlePasses: 14 });
@@ -75,6 +77,24 @@ run('timesheet corrections', () => {
     await settle();
     expect((await storedJob()).timeEntries.map((e: any) => e.id)).not.toContain('te-1');
     expect((await storedJob()).actualHours).toBe(2);
+
+    // Yesterday's forgotten hours: the day stepper, and the job gets that date.
+    await press('time-entry-add');
+    await press('time-entry-prev-day');
+    await type('time-entry-start', '08:00');
+    await type('time-entry-end', '10:00');
+    const menu2 = root.findAll((n: any) => Array.isArray(n.props?.items) && n.props.accessibilityLabel === JOB_LABEL, { deep: true })[0];
+    await act(async () => { menu2.props.items.find((i: any) => i.key === 'j1').onPress(); });
+    await press('time-entry-save');
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    expect((await storedJob()).timeEntries.map((e: any) => e.date)).toContain(localDateKey(y));
+
+    // An entry whose job is not loaded keeps its job link when edited.
+    await press('time-entry-te-gone');
+    await type('time-entry-end', '18:30');
+    await press('time-entry-save');
+    const saved = JSON.parse((await AsyncStorage.getItem('@vasco_timesheet_entries')) ?? '[]').find((e: any) => e.id === 'te-gone');
+    expect(saved).toMatchObject({ jobId: 'j-gone', totalHours: 1.5 });
     alert.mockRestore();
     teardown(r);
   });

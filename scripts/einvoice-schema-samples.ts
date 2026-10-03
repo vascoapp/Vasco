@@ -131,11 +131,13 @@ const cases: Case[] = [
 const mapperRefusals: Array<{ name: string; fmt?: 'it' | 'es'; inp: ReturnType<typeof inputs>; missing: string[] }> = [
   // Ordinary regime, a 0 % line with no stated nature: reverse charge, exempt
   // or out of scope are different invoices in law — asked for, never guessed.
+  // A DRAFT must choose; an issued invoice keeps the old N2.2 + a warning
+  // (its lines can no longer be edited — review 2026-10-03).
   { name: 'it-ordinary-zero-line-without-nature', fmt: 'it', missing: ['invoices.vatNatureMissing'],
-    inp: inputs('IT', IT_SELLER, IT_BUYER, [
+    inp: (() => { const i = inputs('IT', IT_SELLER, IT_BUYER, [
       { description: 'Lavori', quantity: 1, unitPrice: 100, vatRate: 22 },
       { description: 'Subappalto', quantity: 1, unitPrice: 900, vatRate: 0 },
-    ], 0.22) },
+    ], 0.22); return { ...i, invoice: { ...(i as any).invoice, status: 'draft' } } as any; })() },
   // A forfettario does not apply reverse charge as the supplier.
   { name: 'it-forfettario-reverse-charge', fmt: 'it', missing: ['invoices.vatNatureNotForRegime'],
     inp: inputs('IT', { ...IT_SELLER, fiscalRegime: 'RF19' }, IT_BUYER, [
