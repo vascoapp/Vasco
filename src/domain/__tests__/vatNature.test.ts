@@ -13,7 +13,7 @@ import {
 } from '../vatNature';
 import { lineVatNature } from '../lineItems';
 
-const MIGRATION = path.resolve(__dirname, '../../../supabase/migrations/20261003000001_line_item_vat_nature.sql');
+const MIGRATION = path.resolve(__dirname, '../../../supabase/migrations/20261003000003_line_item_vat_nature.sql');
 
 describe('the codes', () => {
   it('are exactly the ones the migration CHECK allows — app and database agree', () => {

@@ -10,7 +10,7 @@
 // accepts the N2.2 and the invoice states the wrong legal basis.
 //
 // So the nature is a per-line FACT the contractor states (line_items.vat_nature,
-// migration 20261003000001), and this module is the one place that knows:
+// migration 20261003000003), and this module is the one place that knows:
 //   · the codes FatturaPA accepts (VAT_NATURES),
 //   · which of them the line menu offers, per regime (offeredVatNatures),
 //   · the legal reference each one carries (RiferimentoNormativo + the

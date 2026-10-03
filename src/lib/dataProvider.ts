@@ -752,7 +752,7 @@ export async function loadLineItems(): Promise<Record<string, QuoteLineItem[]> |
       // back, so a mixed-rate quote (9% labour + 21% materials) came back from
       // a cold start with no per-line rates and was re-taxed at the profile's.
       ...(row.vat_rate != null ? { vatRate: Number(row.vat_rate) } : {}),
-      // Italy: the Natura of a 0 % line (migration 20261003000001) — the
+      // Italy: the Natura of a 0 % line (migration 20261003000003) — the
       // second read mapper, beside lineItemRowToQuoteLineItem.
       ...(isVatNature(row.vat_nature) ? { vatNature: row.vat_nature } : {}),
     });

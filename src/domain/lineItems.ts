@@ -14,7 +14,7 @@ export type QuoteLineItem = {
   /**
    * Italy: WHY a 0 % line carries no IVA — the FatturaPA Natura (N6.3 reverse
    * charge subappalto edile, N4 esente …). Persisted on line_items.vat_nature
-   * (migration 20261003000001). Meaningful only with vatRate 0; every writer
+   * (migration 20261003000003). Meaningful only with vatRate 0; every writer
    * sends it through `lineVatNature`, which drops it otherwise.
    */
   vatNature?: VatNature;

@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 // Every writer of a `line_items` row carries the line's VAT NATURE beside its
-// rate, and both read mappers bring it back (Italy, migration 20261003000001).
+// rate, and both read mappers bring it back (Italy, migration 20261003000003).
 //
 // The class (#205, #319, R83): a field written by SOME of the paths a row
 // takes. A line's rate already went through this — "written at every create
