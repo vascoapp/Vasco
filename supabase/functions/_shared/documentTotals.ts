@@ -83,8 +83,11 @@ export function quoteTotals(args: {
     groups = ratePct === 0 ? [] : [{ ratePct, base: net, vat: round2(net * (ratePct / 100)) }];
   }
   const vat = round2(groups.reduce((s, g) => s + g.vat, 0));
+  // No groups = no VAT; when every line is 0 % that is the label, not the
+  // standard rate (as documentVatBreakdown — review 2026-09-30).
+  const everyLineZero = lines.length > 0 && lines.every((l) => rateOf(l) === 0);
   const ratePct = groups.length === 1
     ? groups[0].ratePct
-    : groups.length === 0 ? Number((args.standardRate * 100).toPrecision(12)) : null;
+    : groups.length === 0 ? (everyLineZero ? 0 : Number((args.standardRate * 100).toPrecision(12))) : null;
   return { net, vat, gross: round2(net + vat), ratePct };
 }

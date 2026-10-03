@@ -52,7 +52,9 @@ it('the portal and the app state the same quote the same way, 20000 quotes', () 
     // The label: one rate, or none when the document mixes them — the app's
     // `ratePct` answers the same question (null on a mixed document).
     const appLabel = standard === 0 ? 0 : app.ratePct;
-    const labelDiffers = app.groups.length > 0 && portal.ratePct !== appLabel;
+    // Compared on EVERY document, a VAT-free one included: only comparing
+    // when there were groups hid the zero-VAT label edge (agent batch B).
+    const labelDiffers = portal.ratePct !== appLabel;
     if (portal.net !== app.net || portal.vat !== app.vat || portal.gross !== app.gross || labelDiffers) {
       failures.push({ i, standard, mode, lines, netTotal, app: { net: app.net, vat: app.vat, gross: app.gross, ratePct: app.ratePct }, portal });
     }
@@ -62,4 +64,34 @@ it('the portal and the app state the same quote the same way, 20000 quotes', () 
 
 it('one rounding rule on both sides', () => {
   for (const n of [0.285, -0.285, 1.005, -1.005, 2.675, 124.605, 1.5 * 0.19]) expect(portalRound2(n)).toBe(round2(n));
+});
+
+describe('a document whose lines are all 0 % is labelled 0 %, not the standard rate', () => {
+  // Decisions 2026-09-30 "OPEN (from reviews, low)": lines at 0 % that do not
+  // add up to the stored amount (a discount, a hand-edited total) produced no
+  // VAT — correctly — under a label reading the standard rate: "BTW (21 %)
+  // € 0,00". Both sides.
+  const lines = [
+    { quantity: 2, unit_price: 100, vat_rate: 0 },
+    { quantity: 1, unit_price: 50, vat_rate: 0 },
+  ];
+  const appLines = lines.map((l) => ({ quantity: l.quantity, unitPrice: l.unit_price, vatRate: l.vat_rate }));
+
+  it.each([
+    ['the lines do not add up (a discount)', 225],
+    ['the lines add up', 250],
+  ])('%s', (_case, netTotal) => {
+    const app = documentVatBreakdown(netTotal, appLines, 21);
+    const portal = quoteTotals({ netTotal, lines, standardRate: 0.21 });
+    expect({ vat: app.vat, ratePct: app.ratePct }).toEqual({ vat: 0, ratePct: 0 });
+    expect({ vat: portal.vat, ratePct: portal.ratePct }).toEqual({ vat: 0, ratePct: 0 });
+  });
+
+  it('…but an unrated line is at the standard rate, so its label stays', () => {
+    const mixed = [{ quantity: 1, unit_price: 100, vat_rate: 0 }, { quantity: 1, unit_price: 0, vat_rate: null }];
+    const portal = quoteTotals({ netTotal: 90, lines: mixed, standardRate: 0.21 });
+    const app = documentVatBreakdown(90, [{ quantity: 1, unitPrice: 100, vatRate: 0 }, { quantity: 1, unitPrice: 0 }], 21);
+    expect(portal.ratePct).toBe(app.ratePct);
+    expect(app.ratePct).toBe(21);
+  });
 });

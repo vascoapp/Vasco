@@ -428,7 +428,15 @@ export function documentVatBreakdown(
   if (fallbackVatRatePercent === 0) return { net, vat, gross, ratePct: 0, groups };
   // null on a genuinely mixed-rate document: the label omits the percentage
   // rather than printing a blended average that appears on no tax return.
-  const ratePct = groups.length === 1 ? groups[0].ratePct : groups.length === 0 ? fallbackVatRatePercent : null;
+  // No groups = no VAT. When every line is 0 % that is the document's rate
+  // (an export, a reverse charge) — even if the lines do not add up to the
+  // amount; it was labelled with the standard rate above a VAT of 0 (review
+  // 2026-09-30). Same rule as quoteTotals in _shared/documentTotals.ts.
+  const everyLineZero = (lines ?? []).length > 0
+    && (lines ?? []).every((l) => typeof l.vatRate === 'number' && Number.isFinite(l.vatRate) && l.vatRate === 0);
+  const ratePct = groups.length === 1 ? groups[0].ratePct
+    : groups.length === 0 ? (everyLineZero ? 0 : fallbackVatRatePercent)
+    : null;
   return { net, vat, gross, ratePct, groups };
 }
 
