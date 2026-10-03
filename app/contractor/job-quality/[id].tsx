@@ -24,11 +24,17 @@ import { TYPE, GRID, RADIUS } from '../../../src/theme/tabStyles';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 import { DKLabel } from '../../../src/components/shared/DKLabel';
 import { upsertJobQualitySignal } from '../../../src/services/intelligenceCaptureService';
+import { useAppState } from '../../../src/state/AppState';
 import { hapticSuccess } from '../../../src/utils/haptics';
 
 export default function JobQualityScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  // The job's customer goes with the signal: get_customer_quality_weight looks
+  // the score up BY customer, and without it no score ever weighed a training
+  // pair (recursive-learning Loop 5).
+  const { jobs } = useAppState();
+  const customerId = jobs.find((j) => j.id === id)?.customerId ?? undefined;
   const [paidOnTime, setPaidOnTime] = useState<boolean | null>(null);
   const [reviewScore, setReviewScore] = useState<number | null>(null);
   const [reviewText, setReviewText] = useState('');
@@ -49,6 +55,7 @@ export default function JobQualityScreen() {
       // and the contractor closed the screen believing it was recorded (#339).
       const res = await upsertJobQualitySignal({
         jobId: id,
+        customerId,
         paidOnTime: paidOnTime ?? undefined,
         customerReviewScore: reviewScore ?? undefined,
         customerReviewText: reviewText.trim() || undefined,

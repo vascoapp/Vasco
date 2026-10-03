@@ -2109,6 +2109,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (job.quoteId) {
             recordPricingOutcome(getCurrentUserId(), job.quoteId, {
               wasAccepted: true,
+              // Loop 5: the customer the training pair is weighted by.
+              customerId: job.customerId ?? null,
               actualCost,
               actualHours,
               marginPercent: estimatedCost > 0 ? Math.round(((estimatedCost - actualCost) / estimatedCost) * 100) : 0,
@@ -4312,6 +4314,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         recordPricingOutcome(getCurrentUserId(), quoteId, {
           wasAccepted: true,
           acceptedPrice: quote.amount,
+          customerId: findDocumentCustomer(customers, quote)?.id ?? null,
           timeToDecisionHours: ttdHoursAcc,
         }).catch(() => {});
         // Close the quote-win calibration loop: feed the predictor with the
@@ -4536,6 +4539,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           recordPricingOutcome(getCurrentUserId(), id, {
             wasAccepted: true,
             acceptedPrice: quote.amount,
+            customerId: findDocumentCustomer(customers, quote)?.id ?? null,
             timeToDecisionHours: ttdHoursUp,
           }).catch(() => {});
           // Stage 2 bridge: if a lead was the upstream source of this quote
@@ -4615,6 +4619,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }).catch(() => {});
           recordPricingOutcome(getCurrentUserId(), id, {
             wasAccepted: false,
+            customerId: findDocumentCustomer(customers, quote)?.id ?? null,
             declineReason,
             counterOfferAmount: counterOffer,
             timeToDecisionHours,

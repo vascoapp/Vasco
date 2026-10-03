@@ -764,6 +764,10 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
   reminderCountBeforeDecision?: number;
   counterOfferAmount?: number;
   contractorSegment?: ContractorSegment;
+  /** The quote's customer (customers.id). pricing_intelligence has no
+   *  customer column, so the caller — which holds the quote — passes it; it
+   *  is what get_customer_quality_weight looks the job-quality signals up by. */
+  customerId?: string | null;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
   if (isPlaceholderUserId(userId)) return;
@@ -828,22 +832,30 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
         // R243: weight training pair by customer quality score so good
         // customers (paid on time + reviewed + referred + rebooked) train
         // the model harder than disputed/poor jobs.
+        //
+        // Loop 5: this read `piRow.customer_id` — pricing_intelligence has no
+        // such column, so the customer was always undefined and the weight was
+        // never asked for. The customer comes from the caller (the quote).
         let pairWeight = 1.0;
         try {
-          const customerId = (piRow as any).customer_id ?? null;
+          const customerId = data.customerId && !isTempIdFast(data.customerId) ? data.customerId : null;
           if (customerId) {
-            const { data: weightData } = await (supabase.rpc as any)(
+            const { data: weightData, error: weightErr } = await (supabase.rpc as any)(
               'get_customer_quality_weight',
               { p_customer_id: customerId },
             );
-            if (typeof weightData === 'number' && Number.isFinite(weightData)) {
-              pairWeight = Math.max(0.5, Math.min(1.5, weightData));
+            if (weightErr) throw weightErr;
+            const w = Number(weightData); // numeric may arrive as a string
+            if (weightData != null && Number.isFinite(w)) {
+              pairWeight = Math.max(0.5, Math.min(1.5, w));
             }
           }
         } catch {
           // Default weight 1.0 stands.
         }
-        await (supabase.rpc as any)('write_training_pair', {
+        // supabase-js RESOLVES with { error } — without this check a refused
+        // pair was as silent as the dead block before it.
+        const { error: pairErr } = await (supabase.rpc as any)('write_training_pair', {
           p_model_name: 'quote_win',
           p_user_id: userId,
           p_trade: piRow.trade ?? null,
@@ -863,6 +875,7 @@ export async function recordPricingOutcome(userId: string, quoteId: string, data
           p_source: 'auto',
           p_weight: pairWeight,
         });
+        if (pairErr) throw pairErr;
       }
     } catch (err) {
       await logIntelligenceWriteFailure('write_training_pair', userId, err);

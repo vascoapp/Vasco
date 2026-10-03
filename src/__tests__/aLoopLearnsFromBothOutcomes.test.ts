@@ -283,6 +283,17 @@ describe('the weekly retrain can actually save what it trained', () => {
   });
 });
 
+describe('Loop 5: every pricing outcome names its customer', () => {
+  it('each recordPricingOutcome call in AppState passes customerId', () => {
+    // pricing_intelligence has no customer column, so the customer a training
+    // pair is weighted by can only come from the caller (agent batch B). The
+    // behaviour of the weighting is in trainingPairIsWeightedByTheCustomer.
+    const calls = [...APPSTATE.matchAll(/recordPricingOutcome\(getCurrentUserId\(\), [\w.]+, \{([\s\S]*?)\}\)/g)];
+    expect(calls.length).toBe(4);
+    for (const c of calls) expect(c[1]).toMatch(/\bcustomerId: /);
+  });
+});
+
 describe('the acceptance rate cannot reach 1.0 from a mixed record', () => {
   // The arithmetic the static guards above exist to protect. `calibrateModels`
   // computes `personalAcceptanceRate` as the mean of `actual` over the last N
