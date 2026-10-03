@@ -177,6 +177,22 @@ npm run check:facturae-signature      # Spain B2G: signed Facturae (XAdES-EPES,
                                        # ~/.cache/vasco-xades); a tampered file
                                        # must fail. Crypto on device: verify with
                                        # a temporary logcat bundle (#389).
+npm run matrix                         # THE EVERYDAY MATRIX — the baseline. A new
+                                       # contractor per market (NL/DE/FR/ES/IT/UK)
+                                       # × B2B/B2C goes onboarding → settings →
+                                       # customer → quote → accept → invoice → PDF
+                                       # + every export, through the REAL screens
+                                       # (prod posture, empty account), and the
+                                       # OFFICIAL validators judge what came out
+                                       # (+ totals vs EN 16931, parties, legal
+                                       # mentions). Every check above runs on
+                                       # samples we BUILT; this one cannot be fooled
+                                       # by them. 0/12 green on 2026-10-03 —
+                                       # memory/everyday-matrix-2026-10-03.md. Fix a
+                                       # defect only with its cell going green;
+                                       # never edit a check to pass. Java 17 +
+                                       # the validator caches (check:kosit/pdfa3/
+                                       # einvoice-schemas run once).
 npm run check:push-owner               # LIVE: a push token belongs to ONE account
                                        # (the previous contractor's pushes stopped
                                        # reaching a shared phone, 2026-09-30).

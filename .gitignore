@@ -81,3 +81,6 @@ screenshots/
 *.aab
 *.ipa
 *.apk
+
+# Everyday matrix output (npm run matrix)
+.matrix/

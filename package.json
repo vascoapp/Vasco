@@ -61,7 +61,10 @@
     "check:einvoice-schemas": "node scripts/check-einvoice-schemas.mjs",
     "check:einvoice-rules": "node scripts/check-einvoice-rules.mjs",
     "check:pdfa3": "node scripts/check-pdfa3.mjs",
-    "check:facturae-signature": "node scripts/check-facturae-signature.mjs"
+    "check:facturae-signature": "node scripts/check-facturae-signature.mjs",
+    "matrix:run": "NODE_OPTIONS=--experimental-vm-modules jest -c jest.matrix.config.js --forceExit",
+    "matrix:validate": "node scripts/everyday-matrix-validate.mjs",
+    "matrix": "npm run -s matrix:run; npm run -s matrix:validate"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
