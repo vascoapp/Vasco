@@ -207,6 +207,12 @@ npm run check:catalog-import           # DATANORM price lists dedupe on the SERV
                                        # (`import_catalog_prices`): same list
                                        # skipped, a rise written, users isolated.
                                        # The app keeps no import state (#386).
+npm run check:price-reference          # a contractor reads their OWN price
+                                       # reference (`get_my_price_reference`),
+                                       # never another's; the owner-only view
+                                       # price_references stays unreadable.
+                                       # WRITES throwaway users — run after
+                                       # migration 20261003000001 is applied.
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
 
 # Store + ops gates.

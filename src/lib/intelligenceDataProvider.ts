@@ -409,14 +409,18 @@ export async function getPriceHistory(
   return data ?? [];
 }
 
+/**
+ * The caller's own price reference for one material. NOT the view
+ * `price_references`: that view is owner-only on purpose — it runs with its
+ * owner's rights and lists every contractor's prices — so reading it from the
+ * app failed (42501) on every call. `get_my_price_reference` (migration
+ * 20261003000001) returns the same columns for auth.uid()'s rows only.
+ */
 export async function getPriceReference(materialId: string): Promise<any | null> {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await from('price_references')
-    .select('*')
-    .eq('material_id', materialId)
-    .maybeSingle();
+  const { data, error } = await db.rpc('get_my_price_reference', { p_material_id: materialId });
   if (error) { logWarn('IntelDP', `getPriceRef: ${error.message}`); return null; }
-  return data;
+  return (Array.isArray(data) ? data[0] : data) ?? null;
 }
 
 // ── Material Catalog ─────────────────────────────────────────

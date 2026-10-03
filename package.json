@@ -56,6 +56,7 @@
     "check:portal-totals": "node scripts/check-portal-totals.mjs",
     "check:push-owner": "node scripts/check-push-owner.mjs",
     "check:catalog-import": "node scripts/check-catalog-import.mjs",
+    "check:price-reference": "node scripts/check-price-reference.mjs",
     "check:kosit": "node scripts/check-kosit.mjs",
     "check:einvoice-schemas": "node scripts/check-einvoice-schemas.mjs",
     "check:einvoice-rules": "node scripts/check-einvoice-rules.mjs",
