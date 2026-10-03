@@ -46,7 +46,7 @@ module.exports = {
   setupFilesAfterEnv: [...(base.setupFilesAfterEnv ?? []), './jest.afterEnv.ts'],
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/\\.claude/',
+    '<rootDir>/\\.claude/',
     '<rootDir>/__screenwalk__/crewBoard.test.tsx',
     '<rootDir>/__screenwalk__/payrollScreen.test.tsx',
     '<rootDir>/__screenwalk__/projectLabour.test.tsx',
