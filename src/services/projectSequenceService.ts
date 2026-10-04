@@ -18,7 +18,7 @@
 // Pure functions over data the caller already has — no singleton, no store.
 // =============================================================================
 
-import { startOfWeek, parseLocalDateKey } from '../utils/dateKey';
+import { startOfWeek, parseLocalDateKey, parseCalendarDay, localDateKey } from '../utils/dateKey';
 import type { Project, ProjectMilestone } from '../types/project';
 
 /** What sequencing says about one milestone. `weekNumber` is never mutated. */
@@ -53,8 +53,12 @@ export interface SequencedMilestone {
  */
 export function currentProjectWeek(project: Project, today: Date): number | null {
   if (!project.startDate) return null;
-  const start = startOfWeek(new Date(project.startDate));
-  if (Number.isNaN(start.getTime())) return null;
+  // A calendar DAY, read as local: `new Date('2026-10-05')` is UTC midnight,
+  // which west of UTC is the Sunday before — the whole plan a week early
+  // (review 2026-10-04; the start picker only ever writes Mondays).
+  const day = parseCalendarDay(project.startDate);
+  if (!day) return null;
+  const start = startOfWeek(day);
   const here = startOfWeek(today);
   if (Number.isNaN(here.getTime())) return null;
   const msPerWeek = 7 * 24 * 60 * 60 * 1000;
@@ -77,12 +81,33 @@ export function currentProjectWeek(project: Project, today: Date): number | null
  */
 export function projectWeekStart(project: Project, weekNumber: number): Date | null {
   if (!project.startDate) return null;
-  const start = startOfWeek(new Date(project.startDate));
-  if (Number.isNaN(start.getTime())) return null;
+  // A calendar DAY, read as local: `new Date('2026-10-05')` is UTC midnight,
+  // which west of UTC is the Sunday before — the whole plan a week early
+  // (review 2026-10-04; the start picker only ever writes Mondays).
+  const day = parseCalendarDay(project.startDate);
+  if (!day) return null;
+  const start = startOfWeek(day);
   const offset = Math.max(0, Math.max(1, weekNumber) - 1);
   const out = new Date(start);
   out.setDate(start.getDate() + offset * 7);
   return out;
+}
+
+/**
+ * The project's start moved by `weeks`, as the Monday it lands on (local
+ * `YYYY-MM-DD`). With no start yet, it counts from this week.
+ *
+ * The create form stamps today, and nothing could change it: a project
+ * planned six weeks ahead reported its week-1 trades late after one week.
+ * The plan is week-grained (`weekNumber` is an offset from the start's
+ * Monday), so the start is chosen by week too. Milestones move with it; a
+ * promised handover (`targetEndDate`) is a real date given to the customer
+ * and does not.
+ */
+export function shiftedProjectStart(startDate: string | undefined, weeks: number, today: Date): string {
+  const monday = startOfWeek(parseCalendarDay(startDate) ?? today);
+  monday.setDate(monday.getDate() + Math.round(weeks) * 7);
+  return localDateKey(monday);
 }
 
 /**

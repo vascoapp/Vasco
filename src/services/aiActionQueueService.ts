@@ -83,6 +83,14 @@ export interface QueueItem {
   sourceGeneratorId?: string; // Which AI generator created this
   snoozedUntil?: string;   // ISO date — item hidden until this time
   snoozeCount?: number;    // How many times snoozed
+  /**
+   * The approval was already reported to the learning layer. A card can be
+   * approved, reopened (the send did not happen — `reopenItem`) and approved
+   * again; without this it emitted `queue_item_approved` twice, and the
+   * platform-wide `generator_approval_rates_global` counts EVENTS, so that
+   * generator read as approved twice for one decision.
+   */
+  approvalReported?: boolean;
   /** Stable dedup key. Same key = same underlying entity (invoice id, etc.) */
   entityKey?: string;
   /**
@@ -632,6 +640,8 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
     if (item) {
       item.status = 'approved';
       item.resolvedAt = new Date().toISOString();
+      const firstApproval = !item.approvalReported;
+      item.approvalReported = true;
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
       notifyQueueChanged();
       // Durable record of the approval. This store prunes non-pending items
@@ -651,8 +661,11 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
       // Feedback loop: emit to learning layer so insightScorer approval-rate
       // cache picks up the signal on next refresh + force-refresh now so the
       // next generator tick within this session sees it (not stuck on TTL).
-      try {
-        const { emitBusinessEvent, emitPackApproved } = await import('../intelligence/dataCollector');
+      // Once per card: a re-approval after `reopenItem` is the same decision.
+      // require(), not await import(): the dynamic form throws under jest and
+      // this catch swallowed it, so no test had ever run this block (#389).
+      if (firstApproval) try {
+        const { emitBusinessEvent, emitPackApproved } = require('../intelligence/dataCollector') as typeof import('../intelligence/dataCollector');
         await emitBusinessEvent(getCurrentUserId(), {
           eventType: 'queue_item_approved',
           entityType: 'job' as any,
@@ -677,7 +690,7 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
             approvalLatencyMs: latency,
           }).catch(() => {});
         }
-        const { refreshApprovalRateCache } = await import('../intelligence/insightScorer');
+        const { refreshApprovalRateCache } = require('../intelligence/insightScorer') as typeof import('../intelligence/insightScorer');
         refreshApprovalRateCache().catch(() => {});
       } catch {}
       return item;

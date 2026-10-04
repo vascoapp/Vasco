@@ -17,6 +17,7 @@ import { logError } from '../../../src/utils/errorHandler';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 import { findDocumentCustomer } from '../../../src/domain/customers';
 import { ensureCanCreate } from '../../../src/services/tierGatePrompt';
+import { invoiceTermDays } from '../../../src/utils/invoiceDue';
 
 export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
@@ -87,7 +88,9 @@ export default function InvoiceFromQuoteScreen() {
           a half-filled invoice was the OS gesture. */}
       <DKScreenHeader
         title={t('quoteToInvoice.header', { ref: quote.id })}
-        subtitle={t('quoteToInvoice.autoNumberDue')}
+        // The term the invoice will carry (AppState's dueDateOnTerms: the
+        // contractor's default terms, else 14) — it said "14 days" always.
+        subtitle={t('quoteToInvoice.autoNumberDue', { count: invoiceTermDays(null, businessProfile?.defaultPaymentTerms) })}
       />
       <ScrollView contentContainerStyle={styles.container}>
 

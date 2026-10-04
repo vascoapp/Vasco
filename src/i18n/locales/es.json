@@ -1391,7 +1391,7 @@
       "eveTitle": "Vasco tiene algo para ti",
       "eveTapToReview": "Toca para ver",
       "paymentReminderTitle": "Recordatorio de pago",
-      "paymentReminderBody": "Factura para {{customer}} ({{amount}}) vencida hace {{days}} días",
+      "paymentReminderBody": "Factura para {{customer}} ({{amount}}) vence hoy",
       "quoteFollowupTitle": "Seguir presupuesto",
       "quoteFollowupBody": "Presupuesto para {{customer}} enviado hace {{days}} días — toca seguir",
       "outcomeFollowupTitle": "¿Respondió el cliente?",
@@ -2243,7 +2243,11 @@
     "setPromisedHandover": "Fijar fecha prometida",
     "clearPromisedHandover": "Eliminar fecha prometida",
     "weekOf": "semana del {{date}}",
-    "noJobsForCustomer": "No hay trabajos abiertos para este cliente. Crea primero un trabajo para este cliente."
+    "noJobsForCustomer": "No hay trabajos abiertos para este cliente. Crea primero un trabajo para este cliente.",
+    "projectStart": "Inicio de la obra",
+    "setProjectStart": "Fijar el inicio del proyecto",
+    "projectStartHint": "Los hitos se mueven con el inicio. Una fecha de entrega prometida se mantiene.",
+    "startNotSet": "Sin fijar"
   },
   "projectTemplate": {
     "pick": "Empezar con una secuencia de oficios",
@@ -4838,7 +4842,8 @@
   "quoteToInvoice": {
     "notFound": "Presupuesto {{id}} no encontrado",
     "header": "Factura desde {{ref}}",
-    "autoNumberDue": "Auto-numerado · Vence en 14 días",
+    "autoNumberDue_one": "Número auto · vence en {{count}} día",
+    "autoNumberDue_other": "Número auto · vence en {{count}} días",
     "quoteDetails": "Detalles del presupuesto",
     "customer": "Cliente",
     "job": "Trabajo",
@@ -5993,7 +5998,7 @@
   },
   "invoiceNew": {
     "title": "Crear factura",
-    "subtitle": "Elige un presupuesto para facturar",
+    "subtitle": "Elige el presupuesto a facturar",
     "sentQuotes": "Presupuestos enviados",
     "draftQuotes": "Presupuestos borrador",
     "sendFirst": "Envíalos primero, luego factura",
@@ -7585,7 +7590,7 @@
   },
   "vatReport": {
     "title": "Resumen de IVA",
-    "subtitle": "Para su gestor o la sede electrónica",
+    "subtitle": "Para su gestor",
     "period": "Periodo",
     "periodPrevQ": "Trimestre anterior",
     "periodCurQ": "Este trimestre",

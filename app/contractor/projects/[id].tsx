@@ -31,6 +31,7 @@ import {
   handoverOutlook,
   projectWeekStart,
   currentProjectWeek,
+  shiftedProjectStart,
 } from '../../../src/services/projectSequenceService';
 import { localDateKey, parseLocalDateKey } from '../../../src/utils/dateKey';
 import {
@@ -67,6 +68,8 @@ export default function ProjectDetailScreen() {
   >(null);
   /** Project-week being chosen as the promised handover; null = picker closed. */
   const [promiseWeek, setPromiseWeek] = useState<number | null>(null);
+  /** Weeks the project start is being moved by; null = picker closed. */
+  const [startShift, setStartShift] = useState<number | null>(null);
 
   const project = useMemo(() => projects.find(p => p.id === id), [projects, id]);
   const pnl = useMemo(() => project ? getProjectPnL(project.id) : null, [project]);
@@ -175,6 +178,19 @@ export default function ProjectDetailScreen() {
     hapticSuccess();
     updateProject(project.id, { targetEndDate: undefined });
     setPromiseWeek(null);
+  };
+
+  // The create form stamps today and nothing could change it, so a project
+  // planned weeks ahead reported its first trades late (learnings #139 gave
+  // the plan its anchor; this lets the aannemer move it). Chosen by week like
+  // the promise: the milestones are week offsets from this Monday.
+  const saveStart = () => {
+    if (!project || startShift === null) return;
+    // Unmoved: no write — re-saving would only snap a mid-week date to Monday.
+    if (startShift === 0 && project.startDate) { setStartShift(null); return; }
+    hapticSuccess();
+    updateProject(project.id, { startDate: shiftedProjectStart(project.startDate, startShift, new Date()) });
+    setStartShift(null);
   };
 
   const deleteMilestone = (milestoneId: string) => {
@@ -506,6 +522,28 @@ export default function ProjectDetailScreen() {
                 <Ionicons name="add" size={20} color={Palette.hermesOrange} />
               </Pressable>
             </View>
+            {/* The plan's anchor. Shown with or without milestones: it is
+                what every milestone week below counts from. */}
+            <Pressable
+              style={styles.handoverCard}
+              onPress={() => setStartShift(0)}
+              accessibilityRole="button"
+              accessibilityLabel={t('project.setProjectStart', 'Set project start')}
+              testID="project-start"
+            >
+              <View style={styles.handoverMain}>
+                <Text style={styles.handoverLabel}>{t('project.projectStart', 'Start of work')}</Text>
+                <Text style={[styles.handoverValue, !project.startDate && { color: SemanticColors.placeholder }]} testID="project-start-value">
+                  {project.startDate
+                    ? t('project.weekOf', {
+                        defaultValue: 'week of {{date}}',
+                        date: formatDateShort(parseLocalDateKey(shiftedProjectStart(project.startDate, 0, new Date())) as Date, country),
+                      })
+                    : t('project.startNotSet', 'Not set')}
+                </Text>
+              </View>
+              <Ionicons name="calendar-outline" size={20} color={Palette.hermesOrange} />
+            </Pressable>
             {/* Promised vs projected handover. Only rendered when the plan can
                 actually support the claim — `handoverOutlook` returns null with
                 no milestones, no start date, or everything already done. */}
@@ -648,6 +686,55 @@ export default function ProjectDetailScreen() {
         onSave={saveMilestone}
         onDelete={deleteMilestone}
       />
+
+      {/* Project start, by week. Milestones move with it (they are offsets);
+          a promised handover is a date the customer holds and stays put. */}
+      <Modal
+        visible={startShift !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setStartShift(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setStartShift(null)}>
+          <Pressable style={styles.modalCard} onPress={e => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>{t('project.setProjectStart', 'Set project start')}</Text>
+            <View style={styles.weekStepper}>
+              <Pressable
+                onPress={() => setStartShift(w => (w ?? 0) - 1)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('project.weekEarlier', 'One week earlier')}
+                testID="project-start-earlier"
+              >
+                <Ionicons name="remove-circle-outline" size={28} color={Palette.hermesOrange} />
+              </Pressable>
+              <View style={styles.weekStepperMain}>
+                <Text style={styles.weekStepperValue} testID="project-start-picked">
+                  {t('project.weekOf', {
+                    defaultValue: 'week of {{date}}',
+                    date: formatDateShort(parseLocalDateKey(shiftedProjectStart(project.startDate, startShift ?? 0, new Date())) as Date, country),
+                  })}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setStartShift(w => (w ?? 0) + 1)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('project.weekLater', 'One week later')}
+                testID="project-start-later"
+              >
+                <Ionicons name="add-circle-outline" size={28} color={Palette.hermesOrange} />
+              </Pressable>
+            </View>
+            <Text style={styles.weekStepperMeta}>
+              {t('project.projectStartHint', 'Milestones move with the start. A promised handover date stays as it is.')}
+            </Text>
+            <Pressable style={styles.createBtn} onPress={saveStart} testID="project-start-save">
+              <Text style={styles.createBtnText}>{t('common.save', 'Save')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Promised handover. Chosen by WEEK, not by day: the plan underneath is
           week-grained, and a day picker would promise the customer a precision

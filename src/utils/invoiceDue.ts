@@ -65,3 +65,26 @@ export function isPastDue(inv: DueLike | null | undefined, now: Date = new Date(
   const d = daysUntilDue(inv, now);
   return d !== null && d < 0;
 }
+
+/**
+ * The payment term the invoice itself states, in calendar days: its due date
+ * minus its invoice date (the date the customer's PDF carries — `createdAt`
+ * until it is sent). Falls back to the contractor's default terms, then 14.
+ *
+ * "14" was written into the customer's "Payment terms: 14 days" message, the
+ * reminder push and the quote→invoice screen while the invoice beside them
+ * was due on the contractor's own terms (30, 45…). A term is a claim the
+ * customer reads next to the PDF; it must be the PDF's.
+ */
+export function invoiceTermDays(
+  inv: { dueDate?: string | null; createdAt?: string | null } | null | undefined,
+  defaultTerms?: number | null,
+): number {
+  const due = parseCalendarDay(inv?.dueDate ?? null);
+  const issued = parseCalendarDay(inv?.createdAt ?? null);
+  if (due && issued) {
+    const d = calendarDaysBetween(issued, due);
+    if (d >= 0) return d;
+  }
+  return typeof defaultTerms === 'number' && defaultTerms > 0 ? defaultTerms : 14;
+}

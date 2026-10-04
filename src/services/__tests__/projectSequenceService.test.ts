@@ -21,6 +21,7 @@ import {
   removeMilestoneFromChain,
   projectWeekStart,
   handoverOutlook,
+  shiftedProjectStart,
 } from '../projectSequenceService';
 import type { ProjectMilestone } from '../../types/project';
 
@@ -440,5 +441,41 @@ describe('promised vs projected handover', () => {
   it('has nothing to project once every milestone is done', () => {
     const done = CHAIN().map(m => ({ ...m, completed: true }));
     expect(handoverOutlook({ project: project(done), today: dayInWeek(9) })).toBeNull();
+  });
+});
+
+describe('shiftedProjectStart', () => {
+  // Wed 2026-08-05, in week 1 of a project starting Mon 2026-08-03.
+  const WED = new Date('2026-08-05T12:00:00');
+
+  it('moves the start by whole weeks and always lands on the Monday', () => {
+    expect(shiftedProjectStart('2026-08-03', 6, WED)).toBe('2026-09-14');
+    expect(shiftedProjectStart('2026-08-03', -1, WED)).toBe('2026-07-27');
+    // A start stored mid-week (the create form stamps the day it was made)
+    // snaps to its own Monday — the plan's weeks already count from there.
+    expect(shiftedProjectStart('2026-08-05', 0, WED)).toBe('2026-08-03');
+  });
+
+  it('counts from this week when the project has no start yet', () => {
+    expect(shiftedProjectStart(undefined, 2, WED)).toBe('2026-08-17');
+  });
+
+  it('crosses a month and a DST change without drifting off Monday', () => {
+    // Clocks go back on Sun 25 Oct 2026 in the EU.
+    expect(shiftedProjectStart('2026-10-19', 1, WED)).toBe('2026-10-26');
+    expect(shiftedProjectStart('2026-10-26', -1, WED)).toBe('2026-10-19');
+  });
+
+  it('a project planned weeks ahead is not late before it starts', () => {
+    // The defect: created today = started today, so after one week the
+    // week-1 trade read as late on a project that begins in six.
+    const ahead = project(CHAIN(), { startDate: shiftedProjectStart('2026-08-03', 6, WED) });
+    const seq = sequenceByMilestoneId({ project: ahead, today: dayInWeek(2) });
+    expect(seq.get('sloop')?.slipWeeks).toBe(0);
+    expect(seq.get('tegels')?.slipWeeks).toBe(0);
+    // ...and the same plan anchored on the creation day DOES read late —
+    // so the start date is what decides it, not the sequencer.
+    const stamped = sequenceByMilestoneId({ project: project(CHAIN()), today: dayInWeek(2) });
+    expect(stamped.get('sloop')?.slipWeeks).toBeGreaterThan(0);
   });
 });

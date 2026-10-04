@@ -1391,7 +1391,7 @@
       "eveTitle": "Vasco hat etwas für Sie",
       "eveTapToReview": "Tippen zum Anzeigen",
       "paymentReminderTitle": "Zahlungserinnerung",
-      "paymentReminderBody": "Rechnung für {{customer}} ({{amount}}) ist seit {{days}} Tagen überfällig",
+      "paymentReminderBody": "Rechnung für {{customer}} ({{amount}}) ist heute fällig",
       "quoteFollowupTitle": "Angebot nachfassen",
       "quoteFollowupBody": "Angebot für {{customer}} wurde vor {{days}} Tagen gesendet — jetzt nachfassen",
       "outcomeFollowupTitle": "Hat der Kunde reagiert?",
@@ -2243,7 +2243,11 @@
     "setPromisedHandover": "Abnahmetermin festlegen",
     "clearPromisedHandover": "Abnahmetermin entfernen",
     "weekOf": "Woche vom {{date}}",
-    "noJobsForCustomer": "Für diesen Kunden gibt es keine offenen Aufträge. Legen Sie zuerst einen Auftrag für diesen Kunden an."
+    "noJobsForCustomer": "Für diesen Kunden gibt es keine offenen Aufträge. Legen Sie zuerst einen Auftrag für diesen Kunden an.",
+    "projectStart": "Baubeginn",
+    "setProjectStart": "Projektbeginn festlegen",
+    "projectStartHint": "Meilensteine verschieben sich mit dem Beginn. Ein zugesagter Übergabetermin bleibt bestehen.",
+    "startNotSet": "Nicht festgelegt"
   },
   "projectTemplate": {
     "pick": "Mit einer Gewerkefolge starten",
@@ -4838,7 +4842,8 @@
   "quoteToInvoice": {
     "notFound": "Angebot {{id}} nicht gefunden",
     "header": "Rechnung aus {{ref}}",
-    "autoNumberDue": "Auto-nummeriert · 14 Tage Zahlungsziel",
+    "autoNumberDue_one": "Auto-Nr. · Zahlungsziel {{count}} Tag",
+    "autoNumberDue_other": "Auto-Nr. · Zahlungsziel {{count}} Tage",
     "quoteDetails": "Angebotsdetails",
     "customer": "Kunde",
     "job": "Auftrag",
@@ -7585,7 +7590,7 @@
   },
   "vatReport": {
     "title": "USt-Übersicht",
-    "subtitle": "Für Ihre Steuerberatung oder das Steuerportal",
+    "subtitle": "Für Ihre Steuerberatung",
     "period": "Zeitraum",
     "periodPrevQ": "Letztes Quartal",
     "periodCurQ": "Dieses Quartal",

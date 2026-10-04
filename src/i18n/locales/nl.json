@@ -1676,7 +1676,7 @@
       "eveTitle": "Vasco heeft iets voor je",
       "eveTapToReview": "Tik om te bekijken",
       "paymentReminderTitle": "Betaalherinnering",
-      "paymentReminderBody": "Factuur voor {{customer}} ({{amount}}) is over {{days}} dagen verlopen",
+      "paymentReminderBody": "Factuur voor {{customer}} ({{amount}}) vervalt vandaag",
       "quoteFollowupTitle": "Offerte opvolgen",
       "quoteFollowupBody": "Offerte voor {{customer}} is {{days}} dagen geleden verstuurd — tijd om op te volgen",
       "outcomeFollowupTitle": "Reageerde de klant?",
@@ -2243,7 +2243,11 @@
     "setPromisedHandover": "Opleverdatum vastleggen",
     "clearPromisedHandover": "Opleverdatum verwijderen",
     "weekOf": "week van {{date}}",
-    "noJobsForCustomer": "Er zijn geen losse klussen voor deze klant. Maak eerst een klus aan voor deze klant."
+    "noJobsForCustomer": "Er zijn geen losse klussen voor deze klant. Maak eerst een klus aan voor deze klant.",
+    "projectStart": "Start van het werk",
+    "setProjectStart": "Projectstart instellen",
+    "projectStartHint": "Mijlpalen schuiven mee met de start. Een beloofde opleverdatum blijft staan.",
+    "startNotSet": "Niet ingesteld"
   },
   "projectTemplate": {
     "pick": "Begin met een werkvolgorde",
@@ -4895,7 +4899,8 @@
   "quoteToInvoice": {
     "notFound": "Offerte {{id}} niet gevonden",
     "header": "Factuur van {{ref}}",
-    "autoNumberDue": "Auto-genummerd · 14 dagen betaaltermijn",
+    "autoNumberDue_one": "Auto-nummer · {{count}} dag termijn",
+    "autoNumberDue_other": "Auto-nummer · {{count}} dagen termijn",
     "quoteDetails": "Offertegegevens",
     "customer": "Klant",
     "job": "Klus",
@@ -5993,7 +5998,7 @@
   },
   "invoiceNew": {
     "title": "Factuur aanmaken",
-    "subtitle": "Kies een offerte om te factureren",
+    "subtitle": "Kies de offerte voor de factuur",
     "sentQuotes": "Verstuurde offertes",
     "draftQuotes": "Concept-offertes",
     "sendFirst": "Verstuur deze eerst, factureer daarna",
@@ -7585,7 +7590,7 @@
   },
   "vatReport": {
     "title": "Btw-overzicht",
-    "subtitle": "Voor je boekhouder of de aangifte",
+    "subtitle": "Voor je boekhouder",
     "period": "Periode",
     "periodPrevQ": "Vorig kwartaal",
     "periodCurQ": "Dit kwartaal",

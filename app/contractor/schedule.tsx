@@ -45,6 +45,7 @@ import { useTranslation } from 'react-i18next';
 import { useFeatureFlag } from '../../src/services/featureFlagService';
 import { shareAllScheduledJobs } from '../../src/services/calendarExportService';
 import { getCalendarSyncSettings, syncJobToCalendar } from '../../src/services/calendarSyncService';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 import { detectConflicts, type ConflictIssue } from '../../src/services/scheduleConflictService';
 import type { Job } from '../../src/domain/jobs';
 import type { Worker } from '../../src/domain/worker';
@@ -67,6 +68,9 @@ async function maybePromptCalendarSync(
   router: ReturnType<typeof useRouter>,
   t: (k: string, d?: any) => string,
 ): Promise<void> {
+  // No calendar module in the build: offering "Enable" led to a screen that
+  // can never find a calendar (DORMANT_CONTROLS.deviceCalendar).
+  if (!DORMANT_CONTROLS.deviceCalendar) return;
   try {
     const settings = await getCalendarSyncSettings();
     if (settings.enabled) {

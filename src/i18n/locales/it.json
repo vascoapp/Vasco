@@ -1391,7 +1391,7 @@
       "eveTitle": "Vasco ha qualcosa per te",
       "eveTapToReview": "Tocca per vedere",
       "paymentReminderTitle": "Promemoria pagamento",
-      "paymentReminderBody": "Fattura per {{customer}} ({{amount}}) scaduta da {{days}} giorni",
+      "paymentReminderBody": "Fattura per {{customer}} ({{amount}}) in scadenza oggi",
       "quoteFollowupTitle": "Sollecita preventivo",
       "quoteFollowupBody": "Preventivo per {{customer}} inviato {{days}} giorni fa — tempo di sollecitare",
       "outcomeFollowupTitle": "Il cliente ha risposto?",
@@ -2243,7 +2243,11 @@
     "setPromisedHandover": "Imposta data promessa",
     "clearPromisedHandover": "Rimuovi data promessa",
     "weekOf": "settimana del {{date}}",
-    "noJobsForCustomer": "Non ci sono lavori aperti per questo cliente. Crea prima un lavoro per questo cliente."
+    "noJobsForCustomer": "Non ci sono lavori aperti per questo cliente. Crea prima un lavoro per questo cliente.",
+    "projectStart": "Inizio lavori",
+    "setProjectStart": "Imposta l'inizio del progetto",
+    "projectStartHint": "Le milestone si spostano con l'inizio. Una data di consegna promessa resta invariata.",
+    "startNotSet": "Non impostato"
   },
   "projectTemplate": {
     "pick": "Parti da una sequenza di lavorazioni",
@@ -4838,7 +4842,8 @@
   "quoteToInvoice": {
     "notFound": "Preventivo {{id}} non trovato",
     "header": "Fattura da {{ref}}",
-    "autoNumberDue": "Auto-numerata · Scadenza 14 giorni",
+    "autoNumberDue_one": "Numero auto · scadenza {{count}} giorno",
+    "autoNumberDue_other": "Numero auto · scadenza {{count}} giorni",
     "quoteDetails": "Dettagli preventivo",
     "customer": "Cliente",
     "job": "Lavoro",
@@ -5993,7 +5998,7 @@
   },
   "invoiceNew": {
     "title": "Crea fattura",
-    "subtitle": "Scegli un preventivo da fatturare",
+    "subtitle": "Preventivo da fatturare",
     "sentQuotes": "Preventivi inviati",
     "draftQuotes": "Preventivi in bozza",
     "sendFirst": "Inviali prima, poi fattura",
@@ -7585,7 +7590,7 @@
   },
   "vatReport": {
     "title": "Riepilogo IVA",
-    "subtitle": "Per il tuo commercialista o il portale fiscale",
+    "subtitle": "Per il tuo commercialista",
     "period": "Periodo",
     "periodPrevQ": "Trimestre scorso",
     "periodCurQ": "Questo trimestre",

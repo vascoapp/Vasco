@@ -1391,7 +1391,7 @@
       "eveTitle": "Vasco has something for you",
       "eveTapToReview": "Tap to review",
       "paymentReminderTitle": "Payment reminder",
-      "paymentReminderBody": "Invoice for {{customer}} ({{amount}}) is overdue by {{days}} days",
+      "paymentReminderBody": "Invoice for {{customer}} ({{amount}}) is due today",
       "quoteFollowupTitle": "Follow up on quote",
       "quoteFollowupBody": "Quote for {{customer}} was sent {{days}} days ago — time to follow up",
       "outcomeFollowupTitle": "Did the customer respond?",
@@ -2243,7 +2243,11 @@
     "setPromisedHandover": "Set promised handover",
     "clearPromisedHandover": "Remove promised date",
     "weekOf": "week of {{date}}",
-    "noJobsForCustomer": "There are no open jobs for this customer. Create the job for this customer first."
+    "noJobsForCustomer": "There are no open jobs for this customer. Create the job for this customer first.",
+    "projectStart": "Start of work",
+    "setProjectStart": "Set project start",
+    "projectStartHint": "Milestones move with the start. A promised handover date stays as it is.",
+    "startNotSet": "Not set"
   },
   "projectTemplate": {
     "pick": "Start from a trade sequence",
@@ -4838,7 +4842,8 @@
   "quoteToInvoice": {
     "notFound": "Quote {{id}} not found",
     "header": "Invoice from {{ref}}",
-    "autoNumberDue": "Auto-numbered · Due in 14 days",
+    "autoNumberDue_one": "Auto-numbered · due in {{count}} day",
+    "autoNumberDue_other": "Auto-numbered · due in {{count}} days",
     "quoteDetails": "Quote details",
     "customer": "Customer",
     "job": "Job",
@@ -7585,7 +7590,7 @@
   },
   "vatReport": {
     "title": "VAT report",
-    "subtitle": "For your accountant or the tax portal",
+    "subtitle": "For your accountant",
     "period": "Period",
     "periodPrevQ": "Last quarter",
     "periodCurQ": "This quarter",

@@ -1391,7 +1391,7 @@
       "eveTitle": "Vasco a quelque chose pour vous",
       "eveTapToReview": "Touchez pour voir",
       "paymentReminderTitle": "Rappel de paiement",
-      "paymentReminderBody": "Facture pour {{customer}} ({{amount}}) en retard de {{days}} jours",
+      "paymentReminderBody": "Facture pour {{customer}} ({{amount}}) à échéance aujourd’hui",
       "quoteFollowupTitle": "Relancer le devis",
       "quoteFollowupBody": "Devis pour {{customer}} envoyé il y a {{days}} jours — à relancer",
       "outcomeFollowupTitle": "Le client a-t-il répondu ?",
@@ -2243,7 +2243,11 @@
     "setPromisedHandover": "Définir la date promise",
     "clearPromisedHandover": "Supprimer la date promise",
     "weekOf": "semaine du {{date}}",
-    "noJobsForCustomer": "Aucun chantier en cours pour ce client. Créez d’abord un chantier pour ce client."
+    "noJobsForCustomer": "Aucun chantier en cours pour ce client. Créez d’abord un chantier pour ce client.",
+    "projectStart": "Début des travaux",
+    "setProjectStart": "Définir le début du chantier",
+    "projectStartHint": "Les jalons se déplacent avec le début. Une date de livraison promise reste inchangée.",
+    "startNotSet": "Non défini"
   },
   "projectTemplate": {
     "pick": "Partir d'une séquence de corps de métier",
@@ -4838,7 +4842,8 @@
   "quoteToInvoice": {
     "notFound": "Devis {{id}} introuvable",
     "header": "Facture depuis {{ref}}",
-    "autoNumberDue": "Auto-numéroté · Échéance 14 jours",
+    "autoNumberDue_one": "Numéro auto · échéance {{count}} jour",
+    "autoNumberDue_other": "Numéro auto · échéance {{count}} jours",
     "quoteDetails": "Détails du devis",
     "customer": "Client",
     "job": "Chantier",
@@ -7585,7 +7590,7 @@
   },
   "vatReport": {
     "title": "Récapitulatif TVA",
-    "subtitle": "Pour votre comptable ou le portail fiscal",
+    "subtitle": "Pour votre comptable",
     "period": "Période",
     "periodPrevQ": "Trimestre dernier",
     "periodCurQ": "Ce trimestre",

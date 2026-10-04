@@ -130,6 +130,9 @@ module.exports = {
     '<rootDir>/__screenwalk__/flowFatturaPaAsksLineVatNature.test.tsx',
     '<rootDir>/__screenwalk__/flowJobQualityCarriesTheCustomer.test.tsx',
     '<rootDir>/__screenwalk__/flowZugferdExportShowsItIsWorking.test.tsx',
+    // Seed a local invoice / quote with its own payment term (2026-10-04).
+    '<rootDir>/__screenwalk__/invoiceSentStatesItsOwnTerm.test.tsx',
+    '<rootDir>/__screenwalk__/quoteToInvoiceStatesTheTerm.test.tsx',
     ...DEMO_ACCOUNT_POSTURE_SUITES.map((f) => `<rootDir>/__screenwalk__/${f}`),
   ],
 };

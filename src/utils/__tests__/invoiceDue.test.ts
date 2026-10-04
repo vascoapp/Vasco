@@ -17,7 +17,7 @@
  * shape of the bug that shipped.
  */
 
-import { daysUntilDue, daysOverdue, isPastDue } from '../invoiceDue';
+import { invoiceTermDays, daysUntilDue, daysOverdue, isPastDue } from '../invoiceDue';
 
 const NOW = new Date('2026-08-07T11:00:00Z');
 
@@ -94,5 +94,22 @@ describe('the age of an invoice does not change during the day', () => {
   it('rolls over exactly once, at midnight', () => {
     expect(daysOverdue(inv, new Date('2026-08-07T23:59:59'))).toBe(14);
     expect(daysOverdue(inv, new Date('2026-08-08T00:00:01'))).toBe(15);
+  });
+});
+
+describe('invoiceTermDays — the term the invoice itself states', () => {
+  it('is due date minus invoice date, not a flat 14', () => {
+    expect(invoiceTermDays({ createdAt: '2026-09-01T10:00:00', dueDate: '2026-10-01T12:00:00' })).toBe(30);
+    expect(invoiceTermDays({ createdAt: '2026-09-01', dueDate: '2026-09-15' }, 30)).toBe(14);
+  });
+
+  it('falls back to the contractor\'s terms, then 14', () => {
+    expect(invoiceTermDays({ createdAt: '2026-09-01' }, 45)).toBe(45);
+    expect(invoiceTermDays(undefined, 0)).toBe(14);
+    expect(invoiceTermDays(null)).toBe(14);
+  });
+
+  it('never states a negative term', () => {
+    expect(invoiceTermDays({ createdAt: '2026-09-20', dueDate: '2026-09-01' }, 30)).toBe(30);
   });
 });

@@ -14,6 +14,7 @@ import { SemanticColors, Palette } from '../../theme/colors';
 import { TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 import type { DecisionSubmission } from '../../services/decisionSyncService';
 import { useAuth } from '../../context/AuthContext';
+import { useAppState } from '../../state/AppState';
 import { analyzePhotoUrls, stashHandoff } from '../../services/photoQuoteHandoffService';
 import { hapticSuccess } from '../../utils/haptics';
 
@@ -29,6 +30,9 @@ export function PhotoSubmissionsPanel({ submissions, trackerId, customerId, cust
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
+  // Profile first, account as fallback (#218): the photo is priced for the
+  // contractor's market and trade. Above the early return (no hook below it).
+  const { businessProfile } = useAppState();
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Only customer-submitted rows with at least one photo are interesting here.
@@ -44,8 +48,8 @@ export function PhotoSubmissionsPanel({ submissions, trackerId, customerId, cust
     setBusyId(id);
     try {
       const result = await analyzePhotoUrls(submission.photos, {
-        trade: (user as any)?.trade ?? 'general',
-        country: user?.country ?? 'NL',
+        trade: businessProfile?.trade ?? (user as any)?.trade ?? 'general',
+        country: businessProfile?.country ?? user?.country ?? 'NL',
       });
       await stashHandoff({
         trackerId,

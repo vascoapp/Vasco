@@ -242,6 +242,7 @@ interface WorkerModalProps {
 function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerModalProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { businessProfile } = useAppState();
   const [name, setName] = useState(original?.name ?? '');
   const [role, setRole] = useState<WorkerRole>(original?.role ?? 'tech');
   // Placeholders in the contractor's market (profile first, account second).
@@ -320,7 +321,7 @@ function WorkerModal({ visible, original, onClose, onSave, onDelete }: WorkerMod
           <Text style={styles.label}>{t('crew.trade', 'Trade specialty')}</Text>
           <TextInput value={trade} onChangeText={setTrade} placeholder={t('crew.tradePlaceholder', 'E.g. tiling, electrical')} placeholderTextColor={SemanticColors.placeholder} style={styles.input} />
 
-          <Text style={styles.label}>{t('crew.hourlyCostSym', 'Hourly cost to you ({{sym}})', { sym: currencySymbol(user?.country as never) })}</Text>
+          <Text style={styles.label}>{t('crew.hourlyCostSym', 'Hourly cost to you ({{sym}})', { sym: currencySymbol((businessProfile?.country ?? user?.country) as never) })}</Text>
           <DecimalInput value={hourlyCost} onChangeValue={setHourlyCost} money blankWhenZero placeholder="35" placeholderTextColor={SemanticColors.placeholder} style={styles.input} keyboardType="numeric" />
 
           <View style={styles.activeRow}>

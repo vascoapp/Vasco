@@ -21,6 +21,7 @@ import { Spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../i18n/formatting';
 import { DKMenu } from '../shared/DKMenu';
 import { useAuth } from '../../context/AuthContext';
+import { useAppState } from '../../state/AppState';
 import {
   usePricebook,
   searchEntries,
@@ -64,7 +65,9 @@ const FALLBACK_CATEGORY = CATEGORY_CONFIG.other;
 export function Pricebook({ onSelectItem, onClose, onEditItem, onCreateItem, mode = 'browse' }: PricebookProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = user?.country ?? 'NL';
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): prices in the profile's currency.
+  const country = businessProfile?.country ?? user?.country ?? 'NL';
   // This component is rendered BOTH as a routed screen and inside a full-screen
   // <Modal> (the picker in the quote flow). A Modal sits outside the navigator,
   // so it gets no safe-area inset of its own and the header rendered straight

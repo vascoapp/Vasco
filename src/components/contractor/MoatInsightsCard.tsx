@@ -29,6 +29,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency0, type Country } from '../../i18n/formatting';
 import { useTranslation } from 'react-i18next';
+import { useAppState } from '../../state/AppState';
 
 interface Props {
   trade?: string;
@@ -46,8 +47,11 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
-  const effectiveTrade = trade ?? user?.trade ?? 'plumbing';
-  const effectiveCountry = country ?? user?.country ?? 'NL';
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218): the cohort benchmarks are the
+  // contractor's market. Geld mounts this card with no props.
+  const effectiveTrade = trade ?? businessProfile?.trade ?? user?.trade ?? 'plumbing';
+  const effectiveCountry = country ?? businessProfile?.country ?? user?.country ?? 'NL';
 
   const [state, setState] = useState<State>({
     loading: true,

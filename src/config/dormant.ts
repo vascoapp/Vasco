@@ -27,6 +27,7 @@ export const DORMANT_ROUTES: Record<string, string> = {
   '(modals)/insights': 'Only linked from dormant screens.',
   '(modals)/moneybird-auth': 'Superseded by (modals)/moneybird.',
   '(modals)/xero-auth': 'Only linked from (tabs)/profile.',
+  'contractor/calendar-settings': 'Device calendar sync — expo-calendar is not in the native build, so no calendar can ever be found (DORMANT_CONTROLS.deviceCalendar).',
 };
 
 /** Is this route (expo-router `segments`) dormant? */
@@ -57,4 +58,11 @@ export const DORMANT_CONTROLS = {
    *  walk, 2026-09-29). Shown again when those screens are un-gated for the
    *  aannemer — a product decision, pending. */
   projectSiteOps: false,
+  /** Device calendar sync (Profile → Integrations row, the "Sync to your
+   *  calendar?" prompt after scheduling, calendar-settings). `expo-calendar`
+   *  was never a dependency, so every `import('expo-calendar')` throws and
+   *  the screen could only say "grant calendar rights in Settings" — which
+   *  cannot help (emulator walk W15, 2026-10-04). Needs the module in a
+   *  NATIVE build; guard deviceCalendarNeedsItsModule ties this flag to it. */
+  deviceCalendar: false,
 } as const;

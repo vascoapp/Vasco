@@ -29,6 +29,7 @@ import {
 } from '../../services/smartSchedulerService';
 import { predictDuration, type DurationPrediction } from '../../intelligence/predictions';
 import { useAuth } from '../../context/AuthContext';
+import { useAppState } from '../../state/AppState';
 import { useTranslation } from 'react-i18next';
 import { formatDayMonthAuto, formatTimeAuto } from '../../i18n/formatting';
 import { localDateKey, todayKey } from '../../utils/dateKey';
@@ -41,6 +42,7 @@ export function SmartScheduler() {
     t('common.durationH', { defaultValue: '{{h}}h', h: h.toFixed(1) });
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { businessProfile } = useAppState();
   const [viewType, setViewType] = useState<ViewType>('week');
   const [selectedDate, setSelectedDate] = useState(todayKey());
   const [showJobModal, setShowJobModal] = useState(false);
@@ -52,15 +54,16 @@ export function SmartScheduler() {
   React.useEffect(() => {
     if (selectedJob) {
       predictDuration({
-        trade: user?.trade ?? 'general',
-        country: user?.country ?? 'NL',
+        // Profile first, account as fallback (#218).
+        trade: businessProfile?.trade ?? user?.trade ?? 'general',
+        country: businessProfile?.country ?? user?.country ?? 'NL',
         jobType: selectedJob.type,
         estimatedHours: selectedJob.duration ? selectedJob.duration / 60 : undefined,
       }).then(setDurationPrediction).catch(() => setDurationPrediction(null));
     } else {
       setDurationPrediction(null);
     }
-  }, [selectedJob, user?.trade, user?.country]);
+  }, [selectedJob, businessProfile?.trade, businessProfile?.country, user?.trade, user?.country]);
 
   const { jobs, conflicts, optimizations, rescheduleJob, cancelJob, updateStatus } = useScheduler();
   const daySchedule = useDaySchedule(selectedDate);

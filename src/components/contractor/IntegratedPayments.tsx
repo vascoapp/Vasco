@@ -36,6 +36,15 @@ import { getPaymentDisplayForCountry, getPaymentProviderForCountry, paymentMetho
 import { formatCurrency, formatCurrency0, type Country, formatDateShortAuto } from '../../i18n/formatting';
 import { daysUntilDue as daysUntilDueOf, isPastDue } from '../../utils/invoiceDue';
 import { shareOutcome } from '../../utils/shareOutcome';
+
+/** The contractor's country — business profile first, account as fallback
+ *  (#218). It picks the currency and the provider (Mollie / Stripe) here; the
+ *  account alone showed € and Mollie to a UK profile still on its signup NL. */
+function useContractorCountry(): Country {
+  const { user } = useAuth();
+  const { businessProfile } = useAppState();
+  return (businessProfile?.country ?? user?.country ?? 'NL') as Country;
+}
 // Helper to create context for intelligence tracking
 const createTrackingContext = () => ({
   platform: 'ios' as const,
@@ -148,12 +157,11 @@ interface ConnectionStatusProps {
 
 const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ settings, paymentTermsDays }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
   // Same fault as the header subtitle 400 lines below, which was fixed first:
   // the provider was hardcoded. A UK or US contractor is on STRIPE, and this
   // card told them "Mollie Payments" over an "M" badge — the provider they are
   // not on, on the screen where they go to connect one.
-  const provider = getPaymentProviderForCountry(user?.country);
+  const provider = getPaymentProviderForCountry(useContractorCountry());
   return (
     <View style={styles.connectionCard}>
       <View style={styles.connectionHeader}>
@@ -240,9 +248,8 @@ const OutstandingInvoiceCard: React.FC<OutstandingInvoiceCardProps> = ({
   onOpenInvoice,
   onCopyLink,
 }) => {
-  const { user } = useAuth();
   const { t } = useTranslation();
-  const country = (user?.country ?? 'NL') as Country;
+  const country = useContractorCountry();
   // Calendar days from local midnight, not elapsed milliseconds: this said
   // "2 days overdue" in the afternoon for an invoice that had been late since
   // yesterday morning, and `new Date('2026-08-31')` is UTC midnight — the
@@ -337,8 +344,7 @@ interface PaidInvoiceCardProps {
 
 const PaidInvoiceCard: React.FC<PaidInvoiceCardProps> = ({ invoice, paymentLink }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const country = useContractorCountry();
   return (
     <View style={[styles.invoiceCard, styles.paidInvoiceCard]}>
       <View style={styles.invoiceHeader}>
@@ -399,8 +405,7 @@ interface IntegratedPaymentsProps {
 }
 
 export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose }) => {
-  const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const country = useContractorCountry();
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'outstanding' | 'paid' | 'settings'>('outstanding');

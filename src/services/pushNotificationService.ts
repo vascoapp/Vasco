@@ -236,10 +236,12 @@ export async function schedulePaymentReminder(data: {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
         title: i18n.t('notifications.push.paymentReminderTitle'),
+        // Fires ON the due day (trigger below), so it says "due today". It
+        // said "overdue by {{days}} days" with the days still to go — a
+        // 30-day invoice was "30 days overdue" the day it fell due.
         body: i18n.t('notifications.push.paymentReminderBody', {
           customer: data.customerName,
           amount: formatMoney(data.amount),
-          days: data.daysUntilDue,
         }),
         data: { type: 'payment_reminder', invoiceId: data.invoiceId },
       },

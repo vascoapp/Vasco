@@ -41,6 +41,9 @@ describe.each(['UK', 'US', 'NL', 'DE'])('Profile integrations (%s)', (country) =
       .map((n: any) => n.props.children);
     expect(texts).not.toContain('Xero');
     expect(texts).not.toContain('QuickBooks');
+    // Device calendar: no expo-calendar in the native build, so the row led to
+    // a screen that can never find a calendar (DORMANT_CONTROLS.deviceCalendar).
+    expect(texts.filter((x) => /agenda|calendar|kalender|calendrier|calendario/i.test(x))).toEqual([]);
 
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     // Press every row that names a known integration.

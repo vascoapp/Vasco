@@ -18,6 +18,7 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { useAppState } from '../../state/AppState';
 import { formatTimeAgo } from '../../utils/timeAgo';
 import type { Country } from '../../i18n/formatting';
 import { Palette, SemanticColors } from '../../theme/colors';
@@ -46,7 +47,9 @@ interface JobCommentsProps {
 export default function JobComments({ jobId }: JobCommentsProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const country = (user?.country ?? 'NL') as Country;
+  const { businessProfile } = useAppState();
+  // Profile first, account as fallback (#218).
+  const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   // Shared with the notifications inbox (src/utils/timeAgo.ts). The copy that
   // used to live at module scope in this file returned "Just now" / "5m ago"
   // in English and fell back to the DEVICE locale for older entries — on the

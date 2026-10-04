@@ -242,7 +242,9 @@ export default function ProfileScreen() {
         { id: 'stripe', name: 'Stripe', icon: 'card', connected: stripeConnected, route: '/(modals)/stripe' },
         { id: 'quickbooks', name: 'QuickBooks', icon: 'calculator', connected: false },
         { id: 'xero', name: 'Xero', icon: 'cloud', connected: false },
-        { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
+        ...(DORMANT_CONTROLS.deviceCalendar
+          ? [{ id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar' as const, connected: calendarConnected, route: '/contractor/calendar-settings' }]
+          : []),
       ]
     : [
         paysViaStripe
@@ -254,7 +256,9 @@ export default function ProfileScreen() {
         ...(accountingHere.has('xero')
           ? [{ id: 'xero', name: 'Xero', icon: 'cloud' as const, connected: false }]
           : []),
-        { id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar', connected: calendarConnected, route: '/contractor/calendar-settings' },
+        ...(DORMANT_CONTROLS.deviceCalendar
+          ? [{ id: 'calendar', name: t('profile.deviceCalendar', 'Device calendar'), icon: 'calendar' as const, connected: calendarConnected, route: '/contractor/calendar-settings' }]
+          : []),
       ];
 
   // R62: tone preset picker. Backed by `business_settings.quote_tone`

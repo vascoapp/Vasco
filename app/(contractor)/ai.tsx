@@ -84,11 +84,12 @@ export default function VascoScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { jobs, invoices, quotes, customers, isLoading, businessProfile } = useAppState();
   // US-only surfaces (Leads CRM pipeline) — see the gate at the Sales chip.
-  const isUSContractor = user?.country === 'US';
+  // Profile first, account as fallback (#218).
+  const isUSContractor = (businessProfile?.country ?? user?.country) === 'US';
   // Kantoorbot hidden for launch (2026-07-20). Remote kill switch.
   const officeBotEnabled = useFeatureFlag('office_bot', { country: user?.country as any });
-  const { jobs, invoices, quotes, customers, isLoading, businessProfile } = useAppState();
   // Recurring revenue read out of this contractor's own finished work.
   const repeatWork = useMaintenanceOpportunities();
   // Rejected or failed filings. An unissued invoice is the loudest thing this

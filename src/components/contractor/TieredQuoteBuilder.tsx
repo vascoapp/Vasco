@@ -222,8 +222,12 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     [t],
   );
   const { user } = useAuth();
-  const trade = user?.trade ?? 'general';
-  const country = user?.country ?? 'NL';
+  const { businessProfile: bp } = useAppState();
+  // The business profile outranks the account (#218): country picks the VAT
+  // rate on every line, and an account still on its signup country quoted a
+  // German contractor at 21 %.
+  const trade = bp?.trade ?? user?.trade ?? 'general';
+  const country = bp?.country ?? user?.country ?? 'NL';
   // R66r59: NL contractors qualify for 9% reduced VAT on renovation/
   // maintenance labor on residential homes >2 years old. Toggle is hidden
   // for non-NL contractors (other EU6 countries don't have a relevant
@@ -299,7 +303,6 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // (component unmounts on logout-driven AppState reset). Null = not
   // fetched yet, [] = fetched and below threshold.
   const toneExamplesRef = useRef<string[] | null>(null);
-  const { businessProfile: bp } = useAppState();
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
   const { templates, save: saveTemplate, update: updateTemplate, use: useTemplate } = useQuoteTemplates();
   const [priceSuggestion, setPriceSuggestion] = useState<PricePrediction | null>(null);

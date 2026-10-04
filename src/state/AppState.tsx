@@ -116,6 +116,7 @@ import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSI
 import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
+import { daysUntilDue, invoiceTermDays } from '../utils/invoiceDue';
 import { fkOrNull, queueFkRepairs, queueRowFkRepairs } from '../services/fkRepair';
 import { ensureCanCreate, ensureCanUsePaymentLink } from '../services/tierGatePrompt';
 import { round2 } from '../utils/round2';
@@ -2351,11 +2352,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // Two `new Date()` calls would drift, and the queued one would be the
         // one that survived.
         const sentAt = new Date().toISOString();
+        // The invoice's OWN due date — the PDF the customer holds — never a
+        // flat 14 (the notice said "Payment terms: 14 days" beside a 30-day
+        // invoice, and the reminder push fired on day 14). From the send on,
+        // the PDF is dated today (invoicePdfSource: sentAt ?? createdAt), so
+        // the term the customer can check is today → due date.
+        const termDays = invoiceTermDays(invoice as any, businessProfile?.defaultPaymentTerms);
+        const untilDue = daysUntilDue(invoice as any) ?? termDays;
         setInvoices((prev) =>
           prev.map((inv) =>
             // sentAt too: the timeline's "sent to customer" date was blank
             // until the next refresh (review, 2026-09-30).
-            inv.id === id ? { ...inv, status: 'sent', dueInDays: 14, sentAt } : inv
+            inv.id === id ? { ...inv, status: 'sent', dueInDays: untilDue, sentAt } : inv
           )
         );
         if (isSupabaseConfigured) {
@@ -2376,7 +2384,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           );
         }
         // Name, not 'Klant' (E3); what is owed now, not the gross (#354).
-        schedulePaymentReminder({ invoiceId: id, customerName: pushCustomerName(customers, invoice), amount: invoice ? amountPayableNow(invoice as any) : 0, daysUntilDue: 14 }).catch(() => {});
+        // On the real due date; one already past is the overdue engine's.
+        if (untilDue > 0) {
+          schedulePaymentReminder({ invoiceId: id, customerName: pushCustomerName(customers, invoice), amount: invoice ? amountPayableNow(invoice as any) : 0, daysUntilDue: untilDue }).catch(() => {});
+        }
         // R25: queue customer-facing invoice_sent notice (closes R3 deferral —
         // markInvoiceSent previously fired only the contractor-side push
         // reminder, no draft for the customer). Approve → opens Share sheet.
@@ -2390,7 +2401,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               customerId: invoice.customer,
               customerName: customerRow?.name,
               amount: invoice.amount ?? 0,
-              dueInDays: 14,
+              // A draft whose due date already passed has no honest term to
+              // state; that is an open decision (which date is the invoice
+              // date), so it keeps the invoice's own term.
+              dueInDays: untilDue > 0 ? untilDue : termDays,
             }),
           ).catch(() => {});
         }
@@ -2770,7 +2784,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           job: sourceQuote.job,
           amount: grossAmount,
           status: 'draft',
-          dueInDays: 14,
+          // The term the due date above was set on, not a flat 14.
+          dueInDays: invoiceTermDays({ createdAt: new Date().toISOString(), dueDate: dueDate.toISOString() }, businessProfile?.defaultPaymentTerms),
           // Stamped locally, not only by the backend mapper: the monthly tier
           // caps count documents by `createdAt`, so an unstamped optimistic row
           // was invisible to the gate and Free was effectively unlimited.
