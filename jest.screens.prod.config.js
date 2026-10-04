@@ -11,6 +11,41 @@
  * @type {import('jest').Config}
  */
 const base = require('./jest.screens.config.js');
+const { execFileSync } = require('node:child_process');
+
+/**
+ * Suites that walk a DEMO-ACCOUNT posture (`walkScreen(S, { as: 'aannemer' })`,
+ * 'handwerker', 'fontanero', …) cannot run here BY CONSTRUCTION: screenWalk
+ * throws for any posture but 'contractor' under WALK_REAL_AUTH, because this
+ * posture signs in one generic user. They prove their flow in `npm run walk`.
+ *
+ * Derived, not listed: twenty such suites were added in five days and none
+ * reached the hand-kept list below, so CI was red on every push from
+ * 2026-10-01 to 10-04 for a reason that said nothing about the product.
+ * Comments are stripped with the repo's shared stripper (an ES module, hence
+ * the child process — this config is `require`d by jest.matrix.config.js and
+ * must stay synchronous), so a comment that MENTIONS a posture does not
+ * exclude a suite.
+ */
+const DEMO_ACCOUNT_POSTURE_SUITES = JSON.parse(
+  execFileSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `
+      import { readdirSync, readFileSync } from 'node:fs';
+      import { stripComments } from './scripts/lib/strip-comments.mjs';
+      const dir = '__screenwalk__';
+      const hits = readdirSync(dir)
+        .filter((f) => f.endsWith('.test.tsx'))
+        .filter((f) => /\\bas:\\s*['"](?!contractor['"])[a-z]+['"]/.test(stripComments(readFileSync(dir + '/' + f, 'utf8'))));
+      process.stdout.write(JSON.stringify(hits));
+      `,
+    ],
+    { cwd: __dirname, encoding: 'utf8' },
+  ),
+);
 
 /**
  * Only the posture-AGNOSTIC suites run here, and the exclusions are not
@@ -88,5 +123,13 @@ module.exports = {
     // no country, where "set your country first" IS the correct rendering.
     '<rootDir>/__screenwalk__/certificatenShowsOnlyWhatWorks.test.tsx',
     '<rootDir>/__screenwalk__/vatPrepCountryFromAccount.test.tsx',
+    // Seed local invoices/jobs (an IT/ES/DE invoice, a job with a customer) —
+    // replaced by the empty server truth before the flow starts; proved in `walk`.
+    '<rootDir>/__screenwalk__/flowEInvoiceRefusedByValueRules.test.tsx',
+    '<rootDir>/__screenwalk__/flowFacturaeRefusalNamesTheRecipient.test.tsx',
+    '<rootDir>/__screenwalk__/flowFatturaPaAsksLineVatNature.test.tsx',
+    '<rootDir>/__screenwalk__/flowJobQualityCarriesTheCustomer.test.tsx',
+    '<rootDir>/__screenwalk__/flowZugferdExportShowsItIsWorking.test.tsx',
+    ...DEMO_ACCOUNT_POSTURE_SUITES.map((f) => `<rootDir>/__screenwalk__/${f}`),
   ],
 };

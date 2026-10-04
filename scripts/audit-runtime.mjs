@@ -54,6 +54,29 @@ const KNOWN_BUILD_ONLY = new Map([
   // covers <=2.0.2 and the 1.x line ends at 1.2.1, so the only npm-offered fix
   // is expo@57, a semver-major jump from 54.
   ['image-size', 'expo>@expo/metro>metro — bundler reads asset dimensions at build time; no patched 1.x exists'],
+  // Verified 2026-10-04: only `micromatch@4.0.8 > braces@3.0.3`, and micromatch
+  // is reached through metro-file-map (bundler file watcher) and the jest 29
+  // toolchain (jest-haste-map, @jest/transform, babel-jest). Glob matching at
+  // build/test time; the advisory has no patched release (`*`).
+  ['braces', 'micromatch under metro-file-map (bundler) and jest-haste-map/@jest/transform/babel-jest (tests) — glob matching at build and test time'],
+]);
+
+// A package that DOES ship, excused for named advisories (GHSA ids) because
+// the vulnerable function is not reachable the way we use it. Only the ids
+// listed are excused: a NEW advisory on the same package still fails the gate.
+const ACCEPTED_ADVISORIES = new Map([
+  // node-forge signs Spanish Facturae on the device (facturaeSignature.ts,
+  // signingCertificate.ts). The advisory is in RSA PKCS#1 v1.5 signature
+  // VERIFICATION (lenient DigestInfo parsing lets a forged signature pass).
+  // Our only `publicKey.verify` is the self-check in signFacturae, on a
+  // signature we just made with the contractor's own key — no third party's
+  // signature is ever verified, so there is nothing to forge. No patched
+  // release exists (range `*`). Re-check if anything starts verifying a
+  // signature it RECEIVED.
+  ['node-forge', {
+    ids: ['GHSA-86w9-cpqp-85rv'],
+    why: 'ships (Facturae signing); advisory is in signature VERIFICATION, used only to self-check our own fresh signature',
+  }],
 ]);
 
 // Packages that DO ship or touch production data, with the minimum patched
@@ -107,6 +130,18 @@ const severe = Object.entries(vulns).filter(([, v]) => v.severity === 'high' || 
 // Anything with a direct advisory still has to be pinned or excused by name.
 const ownAdvisories = (v) => (v.via ?? []).filter((x) => typeof x !== 'string');
 const viaNames = (v) => (v.via ?? []).filter((x) => typeof x === 'string');
+const isSevere = (x) => x.severity === 'high' || x.severity === 'critical';
+const ghsaOf = (advisory) => (advisory.url ?? '').split('/').pop();
+
+// Every high/critical advisory the package carries ITSELF is on its accepted
+// list (and it has at least one, so a package is never accepted by default).
+const acceptedByAdvisory = (name) => {
+  const accepted = ACCEPTED_ADVISORIES.get(name);
+  const v = vulns[name];
+  if (!accepted || !v) return false;
+  const own = ownAdvisories(v).filter(isSevere);
+  return own.length > 0 && own.every((a) => accepted.ids.includes(ghsaOf(a)));
+};
 
 const transitivelyExcused = (name, seen = new Set()) => {
   if (KNOWN_BUILD_ONLY.has(name)) return true;
@@ -124,7 +159,7 @@ const transitivelyExcused = (name, seen = new Set()) => {
   // letting it fail the chain would have failed the whole expo tree on a
   // severity the gate does not even fail on directly.
   const ownSevere = ownAdvisories(v).length > 0 && (v.severity === 'high' || v.severity === 'critical');
-  if (ownSevere) return false;
+  if (ownSevere && !acceptedByAdvisory(name)) return false;
   seen.add(name);
   // Empty `via` means a leaf whose only advisory is below the high/critical
   // bar (checked above) — nothing severe sits beneath it, so it does not block.
@@ -134,12 +169,22 @@ const transitivelyExcused = (name, seen = new Set()) => {
 };
 
 const excused = severe.filter(([n]) => KNOWN_BUILD_ONLY.has(n));
-const inherited = severe.filter(([n]) => !KNOWN_BUILD_ONLY.has(n) && transitivelyExcused(n));
+const accepted = severe.filter(([n]) => !KNOWN_BUILD_ONLY.has(n) && acceptedByAdvisory(n) && transitivelyExcused(n));
+const inherited = severe.filter(([n]) => !KNOWN_BUILD_ONLY.has(n) && !acceptedByAdvisory(n) && transitivelyExcused(n));
 const shipping = severe.filter(([n]) => !KNOWN_BUILD_ONLY.has(n) && !transitivelyExcused(n));
 
 if (excused.length) {
   console.log(`Build-tooling advisories — reported, not failing (${excused.length}):`);
   for (const [n, v] of excused) console.log(`  · ${v.severity.padEnd(8)} ${n} — ${KNOWN_BUILD_ONLY.get(n)}`);
+  console.log('');
+}
+
+if (accepted.length) {
+  console.log(`Shipping, advisory accepted by id — reported, not failing (${accepted.length}):`);
+  for (const [n, v] of accepted) {
+    const ids = ownAdvisories(v).filter(isSevere).map(ghsaOf).join(', ');
+    console.log(`  · ${v.severity.padEnd(8)} ${n} (${ids}) — ${ACCEPTED_ADVISORIES.get(n).why}`);
+  }
   console.log('');
 }
 
