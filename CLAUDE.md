@@ -114,6 +114,11 @@ npm run walk:ipad:landscape            # ...and landscape. app.json declares
 # data reach a real contractor?". It runs the posture-agnostic suites only —
 # crew/payroll/flow suites are fixture-dependent by design, and the EU market
 # postures need demo accounts. See memory/demo-data-removal.md.
+# A suite using a demo posture (`as: 'aannemer'`, 'fontanero', …) is skipped
+# there AUTOMATICALLY (derived in jest.screens.prod.config.js). A suite that
+# SEEDS local rows (AsyncStorage invoices/jobs) is not — add it to that file's
+# list by hand, or seed the fake backend instead. Forgetting this kept CI red
+# on every push 2026-10-01 → 10-04 (learnings #395).
 # A quantity identical in BOTH postures is not computed from the contractor's
 # data. Detectors in __screenwalk__/detectors.test.tsx fail on new instances of
 # known defect shapes; its KNOWN list is the outstanding-findings list.
@@ -230,6 +235,13 @@ npm run check:price-reference          # a contractor reads their OWN price
                                        # WRITES throwaway users — run after
                                        # migration 20261003000001 is applied.
 node scripts/ota-preflight.mjs         # i18n/mock/currency gates before `eas update`
+npm run audit:runtime                  # CI's npm audit: fails on high/critical in
+                                       # code that SHIPS. Build tooling → KNOWN_
+                                       # BUILD_ONLY with its verified chain; a
+                                       # shipping package whose bug we cannot reach
+                                       # → ACCEPTED_ADVISORIES by GHSA id only
+                                       # (node-forge: verification bug, we only
+                                       # self-check our own Facturae signature).
 
 # Store + ops gates.
 npm run check:listing                  # Play listing copy AND phone screenshots.
