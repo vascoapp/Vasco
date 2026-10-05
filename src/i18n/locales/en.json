@@ -1937,7 +1937,6 @@
     "calibrationLine": "Based on {{count}} prior jobs: hours {{adjustment}}",
     "onSchedule": "on schedule",
     "calibrationApplied": "Calibration applied",
-    "priceAdvice": "Recommended hourly rate: {{rate}} · Acceptance rate: {{rate2}}%",
     "winChance": "Win chance:",
     "recommended": "RECOMMENDED",
     "inclVat": "incl. VAT",

@@ -1937,7 +1937,6 @@
     "calibrationLine": "Op basis van {{count}} eerdere klussen: uren {{adjustment}}",
     "onSchedule": "op schema",
     "calibrationApplied": "Kalibratie toegepast",
-    "priceAdvice": "Aanbevolen uurprijs: {{rate}} · Acceptatiekans: {{rate2}}%",
     "winChance": "Win-kans:",
     "recommended": "AANBEVOLEN",
     "inclVat": "incl. btw",

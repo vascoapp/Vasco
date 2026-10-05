@@ -23,7 +23,7 @@ import i18n from '../i18n/i18n';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
-import { formatMoney } from '../i18n/formatting';
+import { formatMoney2 } from '../i18n/formatting';
 import {
   createAcceptanceLink as dbCreateAcceptanceLink,
   getAcceptanceLinkByToken,
@@ -336,7 +336,7 @@ export async function shareQuoteWithAcceptanceLink(quote: {
   amount: number;
   description?: string;
   job?: string;
-}, opts: { askIfUnknown?: boolean } = {}): Promise<{ url: string; shared: boolean }> {
+}, opts: { askIfUnknown?: boolean; senderName?: string | null } = {}): Promise<{ url: string; shared: boolean }> {
   const t = i18n.t.bind(i18n);
   const { url } = await createAcceptanceLink(quote);
 
@@ -348,13 +348,18 @@ export async function shareQuoteWithAcceptanceLink(quote: {
   const firstLineFallback = quote.description
     ? quote.description.split(/\n/)[0].slice(0, 80)
     : '';
-  const message = t('approval.shareMessage', {
+  const body = t('approval.shareMessage', {
     defaultValue: `Hi {{customer}},\n\nHere is your quote for {{job}} — {{amount}}.\n\nAccept online: {{url}}\n\nValid for 30 days.\n\nKind regards`,
     customer: quote.customerName || quote.customer || '',
     job: quote.job || firstLineFallback,
-    amount: formatMoney(quote.amount),
+    // To the cent: the customer compares it with the quote (€ 226 for a
+    // € 225,51 quote — device walk 2026-10-06).
+    amount: formatMoney2(quote.amount),
     url,
   });
+  // The sign-off named nobody ("Mit freundlichen Grüßen" and nothing under it).
+  const sender = opts.senderName?.trim();
+  const message = sender ? `${body}\n${sender}` : body;
 
   // Whether the customer actually got it. The caller marks the quote SENT off
   // this: backing out of the share sheet is not sending (#339).

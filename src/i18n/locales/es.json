@@ -1937,7 +1937,6 @@
     "calibrationLine": "Según {{count}} trabajos anteriores: horas {{adjustment}}",
     "onSchedule": "según lo previsto",
     "calibrationApplied": "Calibración aplicada",
-    "priceAdvice": "Tarifa por hora recomendada: {{rate}} · Tasa de aceptación: {{rate2}}%",
     "winChance": "Probabilidad de ganar:",
     "recommended": "RECOMENDADO",
     "inclVat": "IVA incl.",

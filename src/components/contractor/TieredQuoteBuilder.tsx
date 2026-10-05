@@ -29,7 +29,6 @@ import { DEMO_MODE } from '../../config/demo';
 import { SimilarJobsSuggest } from '../shared/SimilarJobsSuggest';
 import { intelligence } from '../../intelligence/intelligenceEngine';
 import { useQuoteCalibration } from '../../services/estimationFeedbackService';
-import { predictPrice, type PricePrediction } from '../../intelligence/predictions';
 import { predictQuoteWin, QUOTE_WIN_MIN_DISPLAY_CONFIDENCE, type QuoteWinPrediction } from '../../intelligence/mlModels';
 import { useAuth } from '../../context/AuthContext';
 import { searchCatalog, type CatalogItem } from '../../integrations/suppliers';
@@ -305,7 +304,6 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   const toneExamplesRef = useRef<string[] | null>(null);
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
   const { templates, save: saveTemplate, update: updateTemplate, use: useTemplate } = useQuoteTemplates();
-  const [priceSuggestion, setPriceSuggestion] = useState<PricePrediction | null>(null);
   const [winPrediction, setWinPrediction] = useState<QuoteWinPrediction | null>(null);
   const [handoffBanner, setHandoffBanner] = useState<string | null>(null);
   const { benchmarks: cohort } = useCohortBenchmarks(trade, country);
@@ -435,10 +433,11 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
     return () => { cancelled = true; };
   }, []);
 
-  // AI predictions
-  useEffect(() => {
-    predictPrice({ trade, country }).then(setPriceSuggestion).catch(() => {});
-  }, [trade, country]);
+  // No trade-wide "recommended hourly rate": predict-price returned the median
+  // UNIT price of any quote line (a boiler, a hose, an hour) from other
+  // contractors, shown as an hourly rate — from ONE contractor's single line
+  // for German plumbing (device walk, 2026-10-06). Per-line cohort repricing
+  // (quoteMoatRepricing) is the honest version of this advice.
 
   // R64 (audit fix #7+11): pre-load tone examples on mount so the
   // "Trained on your last N quotes" badge can render before the first
@@ -1695,7 +1694,6 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   const adviceSeason = acceptanceDeltaVsBest(seasonalBundle);
   const hasVascoAdvice =
     calibratableServices.length > 0
-    || (!!priceSuggestion && (priceSuggestion.suggestedPrice ?? 0) > 0)
     || (!!winPrediction && winPrediction.confidence >= QUOTE_WIN_MIN_DISPLAY_CONFIDENCE)
     || (!!adviceBenchmark && adviceBenchmark.sampleSize >= 1)
     || !!timeOfDayHint
@@ -1759,18 +1757,6 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             <View style={s.vascoRow}>
               <Ionicons name="checkmark-circle" size={14} color={SemanticColors.feedbackSuccess} />
               <Text style={[s.vascoText, { color: SemanticColors.feedbackSuccess }]}>{t('quotes.calibrationApplied', 'Calibration applied')}</Text>
-            </View>
-          )}
-
-          {/* Pricing advice */}
-          {priceSuggestion && (priceSuggestion.suggestedPrice ?? 0) > 0 && (
-            <View style={s.vascoRow}>
-              <Text style={s.vascoText}>
-                {t('quotes.priceAdvice', 'Recommended hourly rate: {{rate}} · Acceptance rate: {{rate2}}%', {
-                  rate: fmt(priceSuggestion.suggestedPrice ?? 0),
-                  rate2: Math.round((priceSuggestion.acceptanceRate ?? 0) * 100),
-                })}
-              </Text>
             </View>
           )}
 

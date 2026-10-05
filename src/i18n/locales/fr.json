@@ -1937,7 +1937,6 @@
     "calibrationLine": "D’après {{count}} chantiers précédents : heures {{adjustment}}",
     "onSchedule": "dans les temps",
     "calibrationApplied": "Calibrage appliqué",
-    "priceAdvice": "Taux horaire recommandé : {{rate}} · Taux d’acceptation : {{rate2}} %",
     "winChance": "Chances de succès :",
     "recommended": "RECOMMANDÉ",
     "inclVat": "TTC",

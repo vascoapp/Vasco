@@ -33,8 +33,9 @@ async function portalFor(tag, vatScheme) {
   const { error: bsErr } = await admin.from("business_settings").upsert({ user_id: uid, business_name: `Portal ${tag}`, country: "DE", vat_scheme: vatScheme }, { onConflict: "user_id" });
   if (bsErr) throw new Error(`business_settings: ${bsErr.message}`);
   const raw = LINES.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+  const docNumber = `AN-PORTAL-${tag}-${Date.now()}`;
   const { data: q, error: qErr } = await admin.from("documents")
-    .insert({ user_id: uid, doc_type: "quote", status: "sent", document_number: `AN-PORTAL-${tag}-${Date.now()}`, total_amount: Math.round(raw * 100) / 100 })
+    .insert({ user_id: uid, doc_type: "quote", status: "sent", document_number: docNumber, total_amount: Math.round(raw * 100) / 100 })
     .select("id").single();
   if (qErr) throw new Error(`documents: ${qErr.message}`);
   const { error: liErr } = await admin.from("line_items").insert(LINES.map((l, i) => ({
@@ -46,9 +47,13 @@ async function portalFor(tag, vatScheme) {
   if (sErr) throw sErr;
   const signed = await (await fetch(`${url}/functions/v1/sign-quote-token`, {
     method: "POST", headers: { Authorization: `Bearer ${s.session.access_token}`, apikey: anon, "Content-Type": "application/json" },
-    body: JSON.stringify({ quoteId: q.id }),
+    // Signed the way the APP asks: its quote id IS the document number. Signing
+    // by uuid only passed this check while every real quote got a 403 (#407).
+    body: JSON.stringify({ quoteId: docNumber }),
   })).json();
   if (!signed.ok) throw new Error(`sign-quote-token: ${JSON.stringify(signed)}`);
+  // The portal posts the uuid from the URL path, with the token.
+  if (!String(signed.url ?? "").includes(`/${q.id}?t=`)) throw new Error(`sign-quote-token url is not the uuid route: ${signed.url}`);
   // The CUSTOMER's request: no session, anon key only.
   const r = await fetch(`${url}/functions/v1/verify-quote-token`, {
     method: "POST", headers: { Authorization: `Bearer ${anon}`, apikey: anon, "Content-Type": "application/json" },

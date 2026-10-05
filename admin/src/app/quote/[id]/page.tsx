@@ -345,7 +345,7 @@ export default function PublicQuotePortal({ params }: PageProps) {
             <Problem title={copy[`${phase}Title`]} body={copy[`${phase}Body`]} footer={copy.footer} />
           )}
 
-          {phase === 'accepted' && <Problem title={copy.acceptedTitle} body={copy.acceptedBody} footer={copy.footer} />}
+          {phase === 'accepted' && <Problem tone="done" title={copy.acceptedTitle} body={copy.acceptedBody} footer={copy.footer} />}
           {phase === 'rejected' && <Problem title={copy.rejectedTitle} body={copy.rejectedBody} footer={copy.footer} />}
           {phase === 'alreadyDecided' && <Problem title={copy.alreadyTitle} body={copy.alreadyBody} footer={copy.footer} />}
 
@@ -541,7 +541,9 @@ export default function PublicQuotePortal({ params }: PageProps) {
   );
 }
 
-function Problem({ title, body, footer }: { title: string; body: string; footer: string }) {
+// `done`: the customer's decision went through — a tick, not the warning sign
+// every error state shows (an accepted quote read like a failure, 2026-10-06).
+function Problem({ title, body, footer, tone = 'problem' }: { title: string; body: string; footer: string; tone?: 'problem' | 'done' }) {
   return (
     <div className="vb-fade vb-fade-2" style={{ textAlign: 'center', padding: '48px 0' }}>
       <div
@@ -552,10 +554,17 @@ function Problem({ title, body, footer }: { title: string; body: string; footer:
         }}
         aria-hidden
       >
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
-          <path d="M12 8v5M12 16.5v.5" stroke="#F59E0B" strokeWidth="2.4" strokeLinecap="round" />
-          <circle cx="12" cy="12" r="9" stroke="#F59E0B" strokeWidth="1.8" />
-        </svg>
+        {tone === 'done' ? (
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <path d="M7.5 12.5l3 3 6-6.5" stroke="#22C55E" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="12" cy="12" r="9" stroke="#22C55E" strokeWidth="1.8" />
+          </svg>
+        ) : (
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <path d="M12 8v5M12 16.5v.5" stroke="#F59E0B" strokeWidth="2.4" strokeLinecap="round" />
+            <circle cx="12" cy="12" r="9" stroke="#F59E0B" strokeWidth="1.8" />
+          </svg>
+        )}
       </div>
       <h1 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 12px', fontFamily: 'var(--font-archivo), var(--font-inter), sans-serif', lineHeight: 1.25 }}>
         {title}

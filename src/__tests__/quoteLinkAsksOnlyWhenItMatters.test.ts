@@ -14,5 +14,5 @@ it('derives the gate from the same statuses markQuoteSent accepts', () => {
 
 it('asks and records only behind the gate, on both paths', () => {
   expect(src).toMatch(/if \(statusCanChange && await confirmShareSent\(res\)\) markQuoteSent\(quote\.id\)/);
-  expect(src).toMatch(/\{ askIfUnknown: statusCanChange \}\);\s*if \(statusCanChange && fallback\.shared\) markQuoteSent\(quote\.id\)/);
+  expect(src).toMatch(/\{ askIfUnknown: statusCanChange(?:, [^}]*)? \}\);\s*if \(statusCanChange && fallback\.shared\) markQuoteSent\(quote\.id\)/);
 });

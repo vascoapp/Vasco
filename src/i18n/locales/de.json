@@ -1937,7 +1937,6 @@
     "calibrationLine": "Basierend auf {{count}} früheren Aufträgen: Stunden {{adjustment}}",
     "onSchedule": "im Zeitplan",
     "calibrationApplied": "Kalibrierung angewendet",
-    "priceAdvice": "Empfohlener Stundensatz: {{rate}} · Annahmequote: {{rate2}}%",
     "winChance": "Gewinnchance:",
     "recommended": "EMPFOHLEN",
     "inclVat": "inkl. MwSt.",

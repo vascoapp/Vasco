@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     // 1. Get historical pricing data for this trade + job type
     let query = supabase
       .from('pricing_intelligence')
-      .select('quoted_unit_price, was_accepted, margin_percent, customer_type, region, season')
+      .select('user_id, quoted_unit_price, was_accepted, margin_percent, customer_type, region, season')
       .eq('trade', trade)
       .eq('country', country)
       .gte('quoted_at', new Date(Date.now() - 180 * 86400000).toISOString()) // last 6 months
@@ -50,7 +50,12 @@ Deno.serve(async (req) => {
 
     const { data: pricingData, error: pricingError } = await query.limit(500);
 
-    if (pricingError || !pricingData?.length) {
+    // k-anonymity, as every other cohort figure (get_quote_win_training_data,
+    // cohort benchmarks): fewer than 5 contractors or 20 rows is not a market,
+    // it is someone's price. With ONE contractor's single line on file, every
+    // German plumber was shown it as "recommended hourly rate" (2026-10-06).
+    const contractors = new Set((pricingData ?? []).map((d: { user_id: string | null }) => d.user_id).filter(Boolean)).size;
+    if (pricingError || !pricingData?.length || pricingData.length < 20 || contractors < 5) {
       // No data yet — return defaults
       return new Response(
         JSON.stringify({

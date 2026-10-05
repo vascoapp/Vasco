@@ -231,12 +231,17 @@ export default function QuoteDetailScreen() {
     // For any other status the "did it go out?" answer changes nothing, so
     // Android is not asked (review 2026-09-29).
     const statusCanChange = quote.status === 'draft' || quote.status === 'sent';
+    // Profile first, the account's company as fallback (#218).
+    const sender = (businessProfile.businessName || user?.company || '').trim();
     try {
       const signed = await signQuoteLink(quote.id);
       if (signed.ok && signed.url) {
         const greeting = customerDisplayName ? t('shareQuote.greeting', { name: customerDisplayName }) : '';
+        const body = t('shareQuote.message', { greeting, url: signed.url });
         const res = await Share.share({
-          message: t('shareQuote.message', { greeting, url: signed.url }),
+          // Signed by the business: the customer should not have to open the
+          // link to learn who sent it.
+          message: sender ? `${body}\n\n${sender}` : body,
           url: signed.url,
           title: t('shareQuote.shareTitle', 'Quote'),
         });
@@ -256,7 +261,7 @@ export default function QuoteDetailScreen() {
         // must name the total that will be invoiced.
         id: quote.id, customer: quote.customer, customerName: customerDisplayName,
         amount: total, job: quote.job,
-      }, { askIfUnknown: statusCanChange });
+      }, { askIfUnknown: statusCanChange, senderName: sender });
       if (statusCanChange && fallback.shared) markQuoteSent(quote.id);
       if (isDemoMode) {
         Alert.alert(

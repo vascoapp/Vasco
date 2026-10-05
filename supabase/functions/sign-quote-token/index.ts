@@ -8,6 +8,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { invoiceLookup } from '../_shared/invoiceRef.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -68,18 +69,28 @@ Deno.serve(async (req) => {
       });
     }
     const admin = createClient(supabaseUrl, serviceKey);
-    const { data: quote, error: qErr } = await admin
-      .from('documents')
-      .select('id, user_id, doc_type')
-      .eq('id', quoteId)
-      .maybeSingle();
+    // The app's quote id IS its document NUMBER ("Q0001"; AppState stamps
+    // id: docNumber). Looked up by uuid only, every real quote was "not found"
+    // and the customer silently got the reduced accept-only fallback (device
+    // walk 2026-10-06; same class as send-invoice #379). A number is unique per
+    // contractor, so it is matched with the CALLER's own id — never guessed.
+    const ref = invoiceLookup(quoteId, user.id);
+    if (!ref) {
+      return new Response(JSON.stringify({ ok: false, error: 'Quote not found or forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    let lookup = admin.from('documents').select('id, user_id, doc_type').eq(ref.column, ref.value);
+    if (ref.column === 'document_number') lookup = lookup.eq('user_id', ref.userId).eq('doc_type', 'quote');
+    const { data: quote, error: qErr } = await lookup.maybeSingle();
     if (qErr || !quote || quote.doc_type !== 'quote' || quote.user_id !== user.id) {
       return new Response(JSON.stringify({ ok: false, error: 'Quote not found or forbidden' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const payload = { quoteId, issuedAt: Date.now() };
+    // The portal and verify-quote-token read the uuid.
+    const payload = { quoteId: quote.id, issuedAt: Date.now() };
     const payloadStr = JSON.stringify(payload);
     const payloadB64 = b64urlEncode(new TextEncoder().encode(payloadStr));
     const key = await crypto.subtle.importKey(
@@ -92,7 +103,7 @@ Deno.serve(async (req) => {
     const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payloadB64));
     const sigB64 = b64urlEncode(new Uint8Array(sigBuf));
     const token = `${payloadB64}.${sigB64}`;
-    const url = `${portalBase}/${encodeURIComponent(quoteId)}?t=${token}`;
+    const url = `${portalBase}/${encodeURIComponent(quote.id)}?t=${token}`;
 
     return new Response(JSON.stringify({ ok: true, token, url }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
