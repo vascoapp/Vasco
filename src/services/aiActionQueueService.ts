@@ -180,6 +180,51 @@ function isLivePending(q: QueueItem, nowIso: string = new Date().toISOString()):
  */
 const REBUILT_ON_EVERY_RUN = /^(automation_|trade_|workflow_)/;
 
+const QUEUE_SOFT_CAP = 50;
+const QUEUE_HARD_CAP = 200;
+
+/**
+ * Keep the stored queue bounded WITHOUT losing work. addToQueue kept
+ * `slice(0, 50)` after putting the new card first, so the OLDEST card went —
+ * whatever it was: a pending one-off (a maintenance visit whose card is the
+ * only copy, #366) could be evicted while week-old approved history stayed
+ * (sweep A5). Eviction order: history resolved more than 3 days ago (by
+ * when it was resolved); then pending cards their producer rebuilds on every
+ * run (same allow-list as the language sweep); then recent history. A pending
+ * one-off is never evicted to meet the soft cap;
+ * only the hard cap (a runaway producer) trims, newest kept.
+ */
+export function capQueue(
+  items: QueueItem[],
+  cap: number = QUEUE_SOFT_CAP,
+  hardCap: number = QUEUE_HARD_CAP,
+  nowIso: string = new Date().toISOString(),
+): QueueItem[] {
+  if (items.length <= cap) return items;
+  // History resolved in the last 3 days is read by addToQueue's "just
+  // chased" guard (an approved collections card suppresses a new one) and by
+  // the approval-rate signals — it goes after the rebuilt cards (review).
+  const recentCutoff = new Date(Date.parse(nowIso) - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const doneAt = (q: QueueItem) => (q as { resolvedAt?: string }).resolvedAt ?? q.createdAt ?? '';
+  const rank = (q: QueueItem) => {
+    if (!isLivePending(q, nowIso)) return doneAt(q) > recentCutoff ? 2 : 0;
+    return REBUILT_ON_EVERY_RUN.test(q.sourceGeneratorId ?? '') ? 1 : 3;
+  };
+  const evictable = items
+    .map((q, i) => ({ q, i, r: rank(q) }))
+    .filter((x) => x.r < 3)
+    .sort((a, b) => a.r - b.r || doneAt(a.q).localeCompare(doneAt(b.q)));
+  const drop = new Set<number>();
+  let over = items.length - cap;
+  for (const x of evictable) {
+    if (over <= 0) break;
+    drop.add(x.i);
+    over -= 1;
+  }
+  const kept = items.filter((_, i) => !drop.has(i));
+  return kept.length > hardCap ? kept.slice(0, hardCap) : kept;
+}
+
 /**
  * Drop PENDING cards written in another language — or before cards recorded
  * one — so the producers write them again in the contractor's language. Only
@@ -581,7 +626,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
       )
     )) return '';
     existing.unshift({ ...full, count: 1 });
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(existing.slice(0, 50)));
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(capQueue(existing)));
     notifyQueueChanged();
   } catch {}
   return id;
