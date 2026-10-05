@@ -2,7 +2,7 @@ import { writeFileSync } from 'fs';
 import { generateXRechnungXML, generateCIIXML } from '../src/integrations/einvoice';
 import { documentVatBreakdown } from '../src/domain/business';
 // Sample invoices for the official KoSIT validator (npm run check:kosit),
-// produced by OUR generators: the four cases that matter for Germany.
+// produced by OUR generators: the cases that matter for Germany.
 const OUT = process.argv[2];
 const seller = {
   sellerName: 'Sanitär Bergmann GmbH', sellerAddress: 'Hauptstraße 14', sellerVatId: 'DE123456789',
@@ -31,6 +31,15 @@ const cases: Record<string, any> = {
   'kleinunternehmer': data([{ description: 'Wartung Heizung', quantity: 2.5, unitCode: 'uur', unitPrice: 48, vatRate: 0 }], { sellerVatExempt: true }, 0),
   'b2g-leitweg': data([{ description: 'Reparatur Sanitäranlage Rathaus', quantity: 3, unitCode: 'uur', unitPrice: 62.5, vatRate: 19 }],
     { sellerVatExempt: false, leitwegId: '04011000-1234512345-06', buyerReference: '04011000-1234512345-06' }),
+  // A sole trader WITHOUT a USt-IdNr invoices under the Steuernummer (BT-32;
+  // §14 Abs. 4 Nr. 2 UStG). The app blocked these invoices until 2026-10-06.
+  'steuernummer-only': data([{ description: 'Heizungswartung', quantity: 1, unitCode: 'stuk', unitPrice: 189.5, vatRate: 19 }],
+    { sellerVatExempt: false, sellerVatId: '', sellerTaxNumber: '217/5814/0815' }),
+  // Both ids — every German profile with both fields filled: VAT + FC.
+  'vat-and-steuernummer': data([{ description: 'Heizungswartung', quantity: 1, unitCode: 'stuk', unitPrice: 189.5, vatRate: 19 }],
+    { sellerVatExempt: false, sellerTaxNumber: '217/5814/0815' }),
+  'kleinunternehmer-steuernummer': data([{ description: 'Wartung Heizung', quantity: 2.5, unitCode: 'uur', unitPrice: 48, vatRate: 0 }],
+    { sellerVatExempt: true, sellerVatId: '', sellerTaxNumber: '217/5814/0815' }, 0),
 };
 for (const [name, d] of Object.entries(cases)) {
   writeFileSync(`${OUT}/ubl-${name}.xml`, generateXRechnungXML(d));

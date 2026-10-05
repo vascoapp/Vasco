@@ -2504,6 +2504,7 @@
     "businessName": "Bedrijfsnaam",
     "vatNumberBtw": "BTW-nummer",
     "registrationHrb": "HRB-nummer",
+    "vatOrSteuernummer": "USt-IdNr. of Steuernummer",
     "vatNumberUst": "USt-IdNr (btw-id)",
     "registrationSiret": "SIRET",
     "vatNumberTva": "Btw-nummer (TVA)",

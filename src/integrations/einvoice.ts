@@ -17,6 +17,7 @@ export interface EInvoiceData {
   sellerName: string;
   sellerAddress: string;
   sellerVatId: string; // DE123456789
+  /** BT-32, the seller's tax registration (German Steuernummer). */
   sellerTaxNumber?: string;
   /**
    * BT-30, the seller's legal registration id, with its ISO 6523 scheme
@@ -203,6 +204,18 @@ export function exemptionReasonFor(country?: string): string {
  */
 export const XRECHNUNG_3_CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0';
 
+/**
+ * BT-29 for a seller known ONLY by a Steuernummer. BR-CO-26 needs one of BT-29
+ * (seller identifier), BT-30 (legal registration) or BT-31 (VAT id) — BT-32
+ * alone is rejected by KoSIT. A sole trader has no BT-30 and may have no BT-31,
+ * so the Steuernummer also identifies the seller. Untouched when a VAT id or a
+ * legal registration is present.
+ */
+function sellerIdFromTaxNumber(data: { sellerVatId?: string; sellerLegalRegistrationId?: string; sellerTaxNumber?: string }): string | undefined {
+  if (data.sellerVatId || data.sellerLegalRegistrationId) return undefined;
+  return data.sellerTaxNumber || undefined;
+}
+
 /** BT-23, the business process — mandatory in XRechnung 3.0 (PEPPOL-EN16931-R001). */
 export const XRECHNUNG_PROFILE_ID = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0';
 
@@ -314,9 +327,12 @@ export function generateXRechnungXML(data: EInvoiceData): string {
   <cbc:BuyerReference>${escapeXml(buyerRef)}</cbc:BuyerReference>
   <cac:AccountingSupplierParty>
     <cac:Party>${data.sellerEmail ? `
-      <cbc:EndpointID schemeID="EM">${escapeXml(data.sellerEmail)}</cbc:EndpointID>` : ''}
+      <cbc:EndpointID schemeID="EM">${escapeXml(data.sellerEmail)}</cbc:EndpointID>` : ''}${sellerIdFromTaxNumber(data) ? `
+      <cac:PartyIdentification><cbc:ID>${escapeXml(sellerIdFromTaxNumber(data)!)}</cbc:ID></cac:PartyIdentification>` : ''}
       <cac:PartyName><cbc:Name>${escapeXml(data.sellerName)}</cbc:Name></cac:PartyName>${addr(data.sellerAddress, data.sellerCity, data.sellerPostalCode, sellerCountry)}
-      <cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(data.sellerVatId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>
+${data.sellerVatId ? `
+      <cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(data.sellerVatId)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>` : ''}${data.sellerTaxNumber ? `
+      <cac:PartyTaxScheme><cbc:CompanyID>${escapeXml(data.sellerTaxNumber)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>FC</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>` : ''}
       <cac:PartyLegalEntity><cbc:RegistrationName>${escapeXml(data.sellerName)}</cbc:RegistrationName></cac:PartyLegalEntity>
       <cac:Contact>
         <cbc:Name>${escapeXml(data.sellerContactName ?? data.sellerName)}</cbc:Name>${data.sellerPhone ? `
@@ -506,7 +522,9 @@ export function generateCIIXML(data: EInvoiceData): string {
     name: string, street: string, city: string | undefined, zip: string | undefined,
     country: string, vatId?: string, contactName?: string, phone?: string, email?: string,
     electronicAddress?: string, legalId?: { id: string; scheme?: string },
-  ) => `
+    taxNumber?: string, sellerId?: string,
+  ) => `${sellerId ? `
+        <ram:ID>${escapeXml(sellerId)}</ram:ID>` : ''}
         <ram:Name>${escapeXml(name)}</ram:Name>
         <ram:SpecifiedLegalOrganization>${legalId ? `
           <ram:ID${legalId.scheme ? ` schemeID="${escapeXml(legalId.scheme)}"` : ''}>${escapeXml(legalId.id)}</ram:ID>` : ''}
@@ -528,6 +546,9 @@ export function generateCIIXML(data: EInvoiceData): string {
         </ram:URIUniversalCommunication>` : ''}${vatId ? `
         <ram:SpecifiedTaxRegistration>
           <ram:ID schemeID="VA">${escapeXml(vatId)}</ram:ID>
+        </ram:SpecifiedTaxRegistration>` : ''}${taxNumber ? `
+        <ram:SpecifiedTaxRegistration>
+          <ram:ID schemeID="FC">${escapeXml(taxNumber)}</ram:ID>
         </ram:SpecifiedTaxRegistration>` : ''}`;
 
   const buyerRef = data.leitwegId ?? data.buyerReference ?? data.invoiceNumber;
@@ -559,7 +580,10 @@ export function generateCIIXML(data: EInvoiceData): string {
         data.sellerEmail,
         data.sellerLegalRegistrationId
           ? { id: data.sellerLegalRegistrationId, scheme: data.sellerLegalRegistrationScheme }
-          : undefined)}
+          : undefined,
+        // BT-32: a German sole trader's Steuernummer when there is no USt-IdNr
+        // (BR-S-02 accepts BT-31 or BT-32; §14 Abs. 4 Nr. 2 UStG either one).
+        data.sellerTaxNumber, sellerIdFromTaxNumber(data))}
       </ram:SellerTradeParty>
       <ram:BuyerTradeParty>${party(
         data.buyerName, data.buyerAddress, data.buyerCity, data.buyerPostalCode,

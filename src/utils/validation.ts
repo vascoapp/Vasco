@@ -266,3 +266,23 @@ export function isValidIBAN(iban: string): boolean {
     .replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55));
   return ibanMod97(rearranged) === 1;
 }
+
+/**
+ * The German Steuernummer in a profile, or undefined. The business-settings form
+ * writes it to `kvkNumber`; older onboarding ALSO copied the Handelsregister
+ * entry there, so a value that is the HRB (or looks like "HRA/HRB …") is not a
+ * Steuernummer. One rule for the PDF, the e-invoice (BT-32) and the send gate.
+ */
+export function germanSteuernummer(p: { kvkNumber?: string | null; registrationNumber?: string | null } | null | undefined): string | undefined {
+  const kvk = String(p?.kvkNumber ?? '').trim();
+  const reg = String(p?.registrationNumber ?? '').trim();
+  if (!kvk || kvk === reg) return undefined;
+  // The SHAPE of a Steuernummer: digits with slashes/spaces, 10–13 digits
+  // ("217/5814/0815", 13-digit ELSTER form). A name filter missed "HRB12345",
+  // "HR B 1234" and "Amtsgericht Köln HRB 1234" — each would have been printed
+  // as "Steuernummer:" and let the gate pass (review, 2026-10-06); a USt-IdNr
+  // typed into this field ("DE…") is not one either.
+  if (!/^[\d\s/]+$/.test(kvk)) return undefined;
+  const digits = kvk.replace(/\D/g, '').length;
+  return digits >= 10 && digits <= 13 ? kvk : undefined;
+}

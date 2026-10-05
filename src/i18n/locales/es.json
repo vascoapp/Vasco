@@ -2504,6 +2504,7 @@
     "businessName": "Nombre de la empresa",
     "vatNumberBtw": "Número de BTW",
     "registrationHrb": "Número HRB",
+    "vatOrSteuernummer": "USt-IdNr. o Steuernummer",
     "vatNumberUst": "USt-IdNr (NIF-IVA)",
     "registrationSiret": "SIRET",
     "vatNumberTva": "Número de IVA (TVA)",

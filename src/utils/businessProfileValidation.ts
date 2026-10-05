@@ -7,7 +7,7 @@
 // =============================================================================
 
 import type { BusinessProfile } from '../domain/business';
-import { isValidVATNumber, isValidKvKNumber, isValidIBAN, isValidSIRET, isValidPartitaIVA, isValidSpanishTaxId } from './validation';
+import { isValidVATNumber, isValidKvKNumber, isValidIBAN, isValidSIRET, isValidPartitaIVA, isValidSpanishTaxId, germanSteuernummer } from './validation';
 import i18n from '../i18n/i18n';
 
 // R74: US widened in. Country-specific validation rules (EIN format, no
@@ -59,10 +59,12 @@ export function getRequiredFields(country: Country | undefined): Array<{ key: st
       // system they cannot see, phrased as "BR-DE-6".
       return [
         ...base,
-        // `||`: clearing the HRB field writes '' — which `??` took as present,
-        // ignoring the Steuernummer beside it (review, 2026-10-03).
-        { key: 'profile.registrationHrb', label: 'HRB number',           get: (p) => p.registrationNumber || p.kvkNumber },
-        { key: 'profile.vatNumberUst',    label: 'USt-IdNr',             get: (p) => p.vatNumber },
+        // §14 Abs. 4 Nr. 2 UStG: the Steuernummer OR the USt-IdNr — not both,
+        // and no Handelsregister number (a sole trader has none). Demanding HRB
+        // + USt-IdNr blocked every invoice of a Steuernummer-only Handwerker
+        // (German walk, 2026-10-06). The e-invoice carries whichever is there
+        // (BT-31 / BT-32). In DE the Steuernummer field writes `kvkNumber`.
+        { key: 'profile.vatOrSteuernummer', label: 'USt-IdNr or Steuernummer', get: (p) => p.vatNumber || germanSteuernummer(p) },
         { key: 'profile.city',            label: 'City',                 get: (p) => p.city },
         { key: 'profile.postcode',        label: 'Post code',            get: (p) => p.postcode },
         { key: 'profile.phone',           label: 'Phone',                get: (p) => p.phone },

@@ -54,6 +54,9 @@ const cases: Array<[string, 'DE' | 'FR', HybridProfile, string, any]> = [
     { description: 'Fachbuch „Sanitärtechnik“', quantity: 1.125, unitCode: 'stuk', unitPrice: 9.99, vatRate: 7 }], { sellerVatExempt: false }, 19)],
   ['zugferd-kleinunternehmer', 'DE', 'zugferd', 'de', data('DE', [
     { description: 'Wartung Heizung', quantity: 2.5, unitCode: 'uur', unitPrice: 48, vatRate: 0 }], { sellerVatExempt: true }, 0)],
+  // A sole trader with only a Steuernummer (BT-32 + BT-29), 2026-10-06.
+  ['zugferd-steuernummer-only', 'DE', 'zugferd', 'de', data('DE', [
+    { description: 'Heizungswartung', quantity: 1, unitCode: 'stuk', unitPrice: 189.5, vatRate: 19 }], { sellerVatExempt: false, sellerVatId: '', sellerTaxNumber: '217/5814/0815' }, 19)],
   // Multi-page: the table breaks, the header row repeats, the totals block
   // moves to a page with room, every page carries the footer.
   ['zugferd-multipage', 'DE', 'zugferd', 'de', data('DE', Array.from({ length: 40 }, (_, i) => (

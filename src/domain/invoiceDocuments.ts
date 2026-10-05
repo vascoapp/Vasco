@@ -11,7 +11,7 @@
 // The screen, the email path and the records archive all build from here.
 // =============================================================================
 import { sirenFromSiret, type EInvoiceData } from '../integrations/einvoice';
-import { normalizeSellerVatId } from '../utils/validation';
+import { normalizeSellerVatId, germanSteuernummer } from '../utils/validation';
 import type { EInvoiceSource } from '../integrations/einvoiceMapping';
 import type { BusinessProfile } from './business';
 import { isSmallBusinessExempt, documentVatBreakdown } from './business';
@@ -108,6 +108,12 @@ export function buildEInvoiceData(inp: InvoiceDocInputs): EInvoiceData {
     // Canonical even for a profile saved before settings normalised it
     // ("de 136 695 976" went raw into BT-31 — review, 2026-10-03).
     sellerVatId: normalizeSellerVatId(bp.vatNumber ?? '', inp.country),
+    // BT-32. In Germany the profile's Steuernummer lives in `kvkNumber` (the
+    // business-settings form). A sole trader without a USt-IdNr invoices under
+    // it (§14 Abs. 4 Nr. 2 UStG); it was collected and printed nowhere.
+    ...(inp.country === 'DE' && germanSteuernummer(bp)
+      ? { sellerTaxNumber: germanSteuernummer(bp)! }
+      : {}),
     // BT-30. France requires the seller's SIREN (BR-FR-10) — the first nine
     // digits of the SIRET the profile gate already demands.
     ...(inp.country === 'FR' && sirenFromSiret(bp.registrationNumber ?? bp.kvkNumber)

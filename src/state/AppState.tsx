@@ -1,5 +1,6 @@
 // React
 import { formatMoney } from '../i18n/formatting';
+import { germanSteuernummer } from '../utils/validation';
 import appI18n from '../i18n/i18n';
 import { jobBillingBasis, invoiceFromJobBilling } from '../services/jobBillingBasis';
 import { buildJobFromQuote } from '../services/quoteToJob';
@@ -3091,7 +3092,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           })(),
           isComplete: (() => {
             const merged = { ...prev, ...updates };
-            return !!(merged.businessName && merged.kvkNumber && merged.vatNumber && merged.address && merged.email && merged.phone);
+            // Germany: the USt-IdNr OR the Steuernummer (§14 UStG), as the send
+            // gate — a Steuernummer-only sole trader stayed "incomplete" forever.
+            const taxIdOk = merged.country === 'DE'
+              ? !!(merged.vatNumber || germanSteuernummer(merged))
+              : !!(merged.kvkNumber && merged.vatNumber);
+            return !!(merged.businessName && taxIdOk && merged.address && merged.email && merged.phone);
           })(),
         }));
         // Intelligence loop: diff licenses to emit license_added /

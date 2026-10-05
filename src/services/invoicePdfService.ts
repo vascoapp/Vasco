@@ -22,6 +22,7 @@ import { FR_STATUTORY_NOTES } from '../integrations/einvoice';
 import { signatureHtmlBlock, getLegalText } from './signatureService';
 import { messageLocale } from './whatsappTemplateService';
 import { vatNatureMentions } from '../domain/vatNature';
+import { germanSteuernummer } from '../utils/validation';
 
 // ── Number formatting ────────────────────────────────────
 
@@ -336,7 +337,8 @@ export function registrationParts(p: { kvkNumber?: string; registrationNumber?: 
   const parts: string[] = [];
   if (reg) parts.push(/^HR[AB]\b/i.test(reg) ? reg : `Handelsregister: ${reg}`);
   // Onboarding used to copy the HRB entry into kvkNumber as well.
-  if (kvk && kvk !== reg && !/^HR[AB]\b/i.test(kvk)) parts.push(`Steuernummer: ${kvk}`);
+  const steuernummer = germanSteuernummer(p);
+  if (steuernummer) parts.push(`Steuernummer: ${steuernummer}`);
   return parts;
 }
 
