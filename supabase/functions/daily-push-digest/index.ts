@@ -22,6 +22,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isServiceRoleCall } from '../_shared/cronAuth.ts';
 import { selectAllPages } from '../_shared/paging.ts';
+import { euroLeading } from '../_shared/euroLeading.ts';
 import { pushOutcome } from '../_shared/pushOutcome.ts';
 
 const corsHeaders = {
@@ -124,10 +125,11 @@ const PUSH_CURRENCY: Record<string, { currency: string; locale: string }> = {
 
 function formatAmount(n: number, country: string | null | undefined): string {
   const cfg = PUSH_CURRENCY[(country ?? '').toUpperCase()] ?? PUSH_CURRENCY.NL;
-  return new Intl.NumberFormat(cfg.locale, {
+  // The app's rule: the euro sign BEFORE the amount in every market (#2026-08-26).
+  return euroLeading(new Intl.NumberFormat(cfg.locale, {
     style: 'currency', currency: cfg.currency,
     minimumFractionDigits: 0, maximumFractionDigits: 0,
-  }).format(Math.round(n));
+  }).format(Math.round(n)));
 }
 
 function fillTemplate(

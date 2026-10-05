@@ -52,3 +52,16 @@ it('money keeps its cents and the sign before the amount', () => {
   const { formatCurrency } = require('../i18n/formatting');
   for (const c of ['NL', 'DE', 'FR', 'ES', 'IT', 'UK']) expect(digestMoney(1234.5, c)).toBe(formatCurrency(1234.5, c));
 });
+
+it('every server-side money line uses the shared euro rule', () => {
+  const fs = require('fs') as typeof import('fs');
+  const path = require('path') as typeof import('path');
+  const root = path.resolve(__dirname, '../..');
+  for (const f of ['supabase/functions/daily-push-digest/index.ts', 'supabase/functions/_shared/paid-side-effects.ts', 'supabase/functions/_shared/weeklyDigestEmail.ts']) {
+    const src = fs.readFileSync(path.join(root, f), 'utf8');
+    // Every currency-style Intl format is wrapped in euroLeading(…).
+    const formats = src.match(/new Intl\.NumberFormat\([^)]*\{[^}]*style: 'currency'/g) ?? [];
+    const wrapped = src.match(/euroLeading\(new Intl\.NumberFormat\(/g) ?? [];
+    expect(`${f}: ${wrapped.length}/${formats.length}`).toBe(`${f}: ${formats.length}/${formats.length}`);
+  }
+});

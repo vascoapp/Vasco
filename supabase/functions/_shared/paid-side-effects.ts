@@ -9,6 +9,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { pushOutcome } from './pushOutcome.ts';
+import { euroLeading } from './euroLeading.ts';
 
 /** The contractor's "payment received" push, per language (was English only). */
 const PAID_COPY: Record<string, { title: string; body: (who: string | null, amount: string, ref: string) => string }> = {
@@ -113,7 +114,8 @@ export async function dispatchPaidSideEffects(
   const lang = ({ NL: 'nl', DE: 'de', FR: 'fr', ES: 'es', IT: 'it' } as Record<string, string>)[country] ?? 'en';
   const locale = ({ NL: 'nl-NL', DE: 'de-DE', FR: 'fr-FR', ES: 'es-ES', IT: 'it-IT', UK: 'en-GB', US: 'en-US' } as Record<string, string>)[country] ?? 'en-GB';
   const currency = country === 'UK' ? 'GBP' : country === 'US' ? 'USD' : 'EUR';
-  const amountStr = total != null ? new Intl.NumberFormat(locale, { style: 'currency', currency }).format(total) : '';
+  // Exactly the app's money: euro sign first in every market (euroLeading).
+  const amountStr = total != null ? euroLeading(new Intl.NumberFormat(locale, { style: 'currency', currency }).format(total)) : '';
 
   // 1. Customer receipt — DELIBERATELY NOT SENT (review 2026-09-24).
   // This called send-invoice with the service key: send-invoice resolves the
