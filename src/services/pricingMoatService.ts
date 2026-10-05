@@ -131,10 +131,14 @@ export async function applyCohortAdjustments(
 
   // Dedupe keys so we make one RPC call for repeated line types.
   const keys = Array.from(new Set(lines.map(l => tokenKey(l.description)))).filter(Boolean);
-  const [batch, calibration] = await Promise.all([
-    fetchBatch(trade, country, keys),
-    userId ? getContractorCalibration(userId, trade, country) : Promise.resolve(null),
-  ]);
+  // No market, no cohort: another country's medians are not this contractor's
+  // market (CLAUDE.md: skip, never default). Every line takes the no-data path.
+  const [batch, calibration] = country
+    ? await Promise.all([
+        fetchBatch(trade, country, keys),
+        userId ? getContractorCalibration(userId, trade, country) : Promise.resolve(null),
+      ])
+    : [new Map<string, never>(), null];
 
   // Calibration: if the contractor historically prices X% above cohort median,
   // we keep the cohort-tuned baseline but shift it back toward the contractor's

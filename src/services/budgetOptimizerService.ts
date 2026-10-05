@@ -594,11 +594,12 @@ export function useBudgetOptimizer(role: string = 'contractor') {
         // production -- so every line came back unenriched.
         let benchmarks: MaterialBenchmark[] = [];
         try {
-          const cohort = await getCohortBenchmarks(
-            getCurrentTrade() ?? 'general',
-            getCurrentCountry() ?? 'NL',
-          );
-          benchmarks = cohort.materialBenchmarks;
+          // Unknown market → "no market data", never another market's prices.
+          const benchCountry = getCurrentCountry();
+          if (benchCountry) {
+            const cohort = await getCohortBenchmarks(getCurrentTrade() ?? 'general', benchCountry);
+            benchmarks = cohort.materialBenchmarks;
+          }
         } catch {
           // Offline or cohort unavailable: lines enrich to "no market data"
           // rather than failing the extraction.

@@ -236,7 +236,9 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     }
 
     const trade = getCurrentTrade() || 'general';
-    const country = getCurrentCountry() || 'NL';
+    // '' = unknown market: the repricer and the cohort lookup skip it rather
+    // than price a German job from Dutch medians.
+    const country = getCurrentCountry() ?? '';
 
     // Success path: reprice detected lines against the pricing moat (cohort +
     // own scanned prices) BEFORE display, seed delta baselines for the learning
@@ -287,7 +289,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
       // R66 round 35: cohort benchmark lookup. Normalize the legacy FE `medium`
       // to the BE `simple|moderate|complex` vocabulary via the shared helper (#7).
       const beComplexity = normalizeComplexity(data.estimatedComplexity);
-      import('../../services/intelligenceCaptureService').then((m) =>
+      if (country) import('../../services/intelligenceCaptureService').then((m) =>
         m.getPhotoAnalysisCohort(trade, country, beComplexity).then((c) => {
           if (c && c.contractorCount >= 5) setPhotoCohort(c);
         }),

@@ -56,11 +56,11 @@ jobs:
       # exactly how the ack mechanism shipped disarmed on 2026-09-08 and the
       # nightly check stayed red. scripts/watchdog-gate.mjs now treats a missing
       # acks file as fatal, so this can never fail quietly again.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Read watchdog severity
         env:

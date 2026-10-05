@@ -273,7 +273,8 @@ class ExpenseService {
       entityId: newExp.id,
       payload: { amount: newExp.amount, category: newExp.category, supplier: newExp.supplier, jobId: newExp.jobId, vatRate: newExp.vatRate },
       trade: getCurrentTrade() || 'general',
-      country: getCurrentCountry() || 'NL',
+      // Unknown stays unknown: the event is not attributed to a market it isn't in.
+      country: getCurrentCountry() ?? undefined,
     }).catch(() => {});
     // Track total expenses for calibration
     const yearTotal = this.expenses.reduce((s, e) => s + e.amount, 0);

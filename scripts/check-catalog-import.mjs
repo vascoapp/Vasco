@@ -56,6 +56,11 @@ try {
   const seen = (await b.c.from("material_price_history").select("observed_by").eq("observed_by", a.id)).data ?? [];
   ok("…and they cannot read mine", seen.length === 0, `${seen.length} rows`);
 
+  const noCountry = await a.c.rpc("import_catalog_prices", {
+    p_supplier_id: "richter", p_supplier_name: "Richter", p_trade: "plumbing", p_country: "", p_currency: "EUR", p_items: [item("NC1", 9.99)],
+  });
+  ok("no country: refused, nothing filed under a guessed market", !!noCountry.error && !(await prices(a.id)).some((r) => r.canonical_name === "art:richter:nc1"), result(noCountry));
+
   const noSession = await call(createClient(url, anon, { auth: { persistSession: false } }), [item("X1", 1)]);
   ok("no session: refused", !!noSession.error, result(noSession));
   const tooBig = await call(a.c, Array.from({ length: 5001 }, (_, i) => item(`T${i}`, 1)));
