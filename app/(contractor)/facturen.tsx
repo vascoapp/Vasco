@@ -210,7 +210,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
       }
     }
     return createMolliePaymentLink({ ...request, method: methods });
-  }, [user?.country, businessProfile?.country, businessProfile?.enabledPaymentMethods]);
+  }, [t, user?.country, businessProfile?.country, businessProfile?.enabledPaymentMethods]);
   const getStatusConfig = (status: Invoice['status']) => {
     switch (status) {
       case 'paid':

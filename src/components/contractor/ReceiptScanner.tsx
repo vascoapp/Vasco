@@ -244,7 +244,7 @@ export function ReceiptScanner({ onComplete, onClose }: ReceiptScannerProps) {
     } finally {
       setIsProcessing(false);
     }
-  }, [rawText]);
+  }, [rawText, t]);
 
   const handleConfirm = useCallback(() => {
     if (extractionResult) {

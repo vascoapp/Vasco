@@ -114,7 +114,7 @@ export function HandoverPackBuilder({
     } finally {
       setIsLoading(false);
     }
-  }, [jobId, contractorId, customerId, evidencePackId]);
+  }, [jobId, contractorId, customerId, evidencePackId, t]);
 
   // Initialize on mount
   useState(() => {
