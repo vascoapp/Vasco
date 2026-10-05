@@ -17,6 +17,15 @@ let currentTrade: string | undefined;
 // R66r50: vatScheme accessor for non-hook consumers (photo-quote preview,
 // invoice/spreadsheet extractor, country-aware VAT helpers).
 let currentVatScheme: string | undefined;
+// The BUSINESS PROFILE's values, kept apart from the account's (#218: the
+// profile outranks the account). They shared one slot, and setCurrentUser
+// replaces every field — so each AuthContext re-run (account country/trade/
+// role arriving, a handover finishing) put the ACCOUNT country back over the
+// profile the contractor had entered and erased the vatScheme. Cleared when
+// the user changes; read first by the getters.
+let profileCountry: string | undefined;
+let profileTrade: string | undefined;
+let profileVatScheme: string | undefined;
 
 // R46: tiny pub/sub so non-hook consumers (notably AppStateProvider holding
 // in-memory contractor data arrays) can react to login/logout transitions
@@ -49,7 +58,24 @@ export function setCurrentUser(info: { id: string; country?: string; trade?: str
     currentTrade = info.trade;
     currentVatScheme = info.vatScheme;
   }
-  if (prev !== currentUserId) notifyUserChange();
+  if (prev !== currentUserId) {
+    profileCountry = undefined;
+    profileTrade = undefined;
+    profileVatScheme = undefined;
+    notifyUserChange();
+  }
+}
+
+/**
+ * The signed-in contractor's business profile (hydrate + profile edits).
+ * Only the fields given are changed; it never touches the user id, and an
+ * account re-publish (`setCurrentUser`, same id) cannot overwrite it.
+ */
+export function setProfileContext(info: { country?: string | null; trade?: string | null; vatScheme?: string | null }): void {
+  if (getAuthedUserId() === null) return;
+  if (info.country !== undefined) profileCountry = info.country ?? undefined;
+  if (info.trade !== undefined) profileTrade = info.trade ?? undefined;
+  if (info.vatScheme !== undefined) profileVatScheme = info.vatScheme ?? undefined;
 }
 
 export function getCurrentUserId(): string {
@@ -69,13 +95,13 @@ export function getAuthedUserId(): string | null {
 }
 
 export function getCurrentCountry(): string | undefined {
-  return currentCountry;
+  return profileCountry ?? currentCountry;
 }
 
 export function getCurrentTrade(): string | undefined {
-  return currentTrade;
+  return profileTrade ?? currentTrade;
 }
 
 export function getCurrentVatScheme(): string | undefined {
-  return currentVatScheme;
+  return profileVatScheme ?? currentVatScheme;
 }

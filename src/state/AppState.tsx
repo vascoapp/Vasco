@@ -61,7 +61,7 @@ import { buildPriceRiskSignals } from '../logic/priceRisk';
 import { ingestPdfStub } from '../ingestion/ingestionStub';
 import { rowToExtractedDocument } from '../ingestion/extractionBridge';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { getCurrentUserId, getAuthedUserId, getCurrentCountry, getCurrentTrade, setCurrentUser, subscribeUserChange } from '../lib/currentUser';
+import { getCurrentUserId, getAuthedUserId, getCurrentCountry, getCurrentTrade, setProfileContext, subscribeUserChange } from '../lib/currentUser';
 import { isTempIdFast, isUuid } from '../lib/idShape';
 import { jobUpdatesToRowPayload, customerUpdatesToRowPayload } from '../lib/mappers';
 import { USE_SEED_DATA } from '../config/demo';
@@ -671,20 +671,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       // vatScheme: without it getCurrentCountry() stayed unset for profiles
       // with no scheme, and cohort writers dropped their rows (sweep D6).
       if (bp) {
-        const userId = getCurrentUserId();
-        if (userId) {
-          setCurrentUser({
-            id: userId,
-            // PROFILE first (#218). This was `getCurrentCountry() ?? bp.country`
-            // — the account value winning over the profile the contractor had
-            // just edited — and this ref is what `formatCurrency` falls back to
-            // at ~189 argument-less call sites, so a UK contractor whose account
-            // metadata still said NL was shown € instead of £.
-            country: bp.country ?? getCurrentCountry(),
-            trade: bp.trade ?? getCurrentTrade(),
-            vatScheme: bp.vatScheme,
-          });
-        }
+        // PROFILE first (#218): this ref is what `formatCurrency` falls back to
+        // at ~189 argument-less call sites, so a UK contractor whose account
+        // metadata still said NL was shown € instead of £. Its own layer, so
+        // an AuthContext re-publish cannot put the account value back.
+        setProfileContext({
+          country: bp.country || null,
+          trade: bp.trade || null,
+          vatScheme: bp.vatScheme || null,
+        });
       }
       // R210: once businessProfile.country is known, prime the cohort DSO
       // so the DSO generator + collections insights see the real cohort
@@ -1158,7 +1153,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (bpRaw) {
             try {
               const bpParsed = JSON.parse(bpRaw);
-              if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) setProfileLoaded(true); }
+              if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) { setProfileLoaded(true); setProfileContext({ country: bpParsed.country || undefined, trade: bpParsed.trade || undefined, vatScheme: bpParsed.vatScheme || undefined }); } }
             } catch {}
           }
         }
@@ -1224,7 +1219,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             if (bpRaw) {
               try {
                 const bpParsed = JSON.parse(bpRaw);
-                if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) setProfileLoaded(true); }
+                if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) { setProfileLoaded(true); setProfileContext({ country: bpParsed.country || undefined, trade: bpParsed.trade || undefined, vatScheme: bpParsed.vatScheme || undefined }); } }
               } catch {}
             }
           }
@@ -3143,15 +3138,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // this, a contractor switching from NL → DE would keep tagging
         // every business event and material write to the old market.
         if (updates.country !== undefined || updates.trade !== undefined || updates.vatScheme !== undefined) {
-          const userId = getCurrentUserId();
-          if (userId) {
-            setCurrentUser({
-              id: userId,
-              country: updates.country ?? getCurrentCountry() ?? undefined,
-              trade: updates.trade ?? getCurrentTrade() ?? undefined,
-              vatScheme: updates.vatScheme ?? businessProfile.vatScheme,
-            });
-          }
+          setProfileContext({
+            country: updates.country === undefined ? undefined : updates.country || null,
+            trade: updates.trade === undefined ? undefined : updates.trade || null,
+            vatScheme: updates.vatScheme === undefined ? undefined : updates.vatScheme || null,
+          });
         }
         if (isSupabaseConfigured) {
           // R83: widened from `Record<string, string | number | null>` so the

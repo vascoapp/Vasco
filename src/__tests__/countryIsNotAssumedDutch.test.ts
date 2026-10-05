@@ -130,7 +130,9 @@ describe('every contractor screen resolves its country profile-first', () => {
 
   it('the module-level accessor is fed the profile country, not the account one', () => {
     const src = stripComments(fs.readFileSync(path.join(ROOT, 'src/state/AppState.tsx'), 'utf8'));
-    expect(src).toMatch(/country: bp\.country \?\? getCurrentCountry\(\)/);
+    // Its own layer since 2026-10-05 (profileOutranksAccountInTheRef): the
+    // profile's country, read before the account's by getCurrentCountry().
+    expect(src).toMatch(/setProfileContext\(\{\s*country: bp\.country \|\| null/);
     expect(src).not.toMatch(/country: getCurrentCountry\(\) \?\? bp\.country/);
   });
 });
