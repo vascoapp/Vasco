@@ -14,9 +14,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act } from 'react-test-renderer';
 
 const mockSchedule = jest.fn(async (_a: any) => {});
+const mockCancelReminder = jest.fn(async (_id: string) => {});
 jest.mock('../src/services/pushNotificationService', () => ({
   ...jest.requireActual('../src/services/pushNotificationService'),
   schedulePaymentReminder: (a: any) => mockSchedule(a),
+  cancelPaymentReminder: (id: string) => mockCancelReminder(id),
 }));
 
 import { walkScreen, teardown } from '../src/test-utils/screenWalk';
@@ -40,6 +42,9 @@ run('marking an invoice sent', () => {
     await AsyncStorage.setItem('@vasco_invoices', JSON.stringify([
       { id: 'RE-T-1', customerId: 'c-t', customer: 'Familie Termijn', job: 'Onderhoud', amount: 121, status: 'draft', dueInDays: 14,
         createdAt: day(-2).toISOString(), dueDate: localDateKey(day(28)) },
+      // A draft created 40 days ago on 30-day terms: past due before it leaves.
+      { id: 'RE-T-2', customerId: 'c-t', customer: 'Familie Termijn', job: 'Onderhoud', amount: 121, status: 'draft', dueInDays: 14,
+        createdAt: day(-40).toISOString(), dueDate: localDateKey(day(-10)) },
     ]));
 
     const r = await walkScreen(Probe, { settlePasses: 12 });
@@ -62,6 +67,22 @@ run('marking an invoice sent', () => {
     const stored = JSON.parse((await AsyncStorage.getItem('@vasco_invoices')) ?? '[]').find((i: any) => i.id === 'RE-T-1');
     expect(stored.status).toBe('sent');
     expect(stored.dueInDays).toBe(28);
+
+    // Already past due when it leaves: the notice names NO term (it would
+    // contradict the PDF), and no "due today" reminder is scheduled.
+    await act(async () => { app.markInvoiceSent('RE-T-2'); });
+    await settle();
+    const q2 = JSON.parse((await AsyncStorage.getItem('@vasco_ai_queue')) ?? '[]');
+    const stale = q2.find((q: any) => q.entityKey === 'invoice_sent:RE-T-2');
+    expect(stale).toBeDefined();
+    expect(JSON.stringify(stale.preparedData)).not.toMatch(/Betaaltermijn|Payment terms|\d+ (dagen|days)/i);
+    expect(mockSchedule).toHaveBeenCalledTimes(1);
+
+    // Paid before its due date: the "due today" reminder is cancelled.
+    expect(mockCancelReminder).not.toHaveBeenCalled();
+    await act(async () => { app.markInvoicePaid('RE-T-1'); });
+    await settle();
+    expect(mockCancelReminder).toHaveBeenCalledWith('RE-T-1');
     teardown(r);
   });
 });

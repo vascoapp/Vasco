@@ -226,6 +226,9 @@ export async function getPushToken(): Promise<string | null> {
 // Local notifications (no server needed)
 // ---------------------------------------------------------------------------
 
+/** One scheduled reminder per invoice: the same id is REPLACED, never stacked. */
+const paymentReminderId = (invoiceId: string) => `payment_reminder:${invoiceId}`;
+
 export async function schedulePaymentReminder(data: {
   invoiceId: string;
   customerName: string;
@@ -233,7 +236,11 @@ export async function schedulePaymentReminder(data: {
   daysUntilDue: number;
 }): Promise<string | null> {
   try {
+    // "Send invoice again" scheduled a second "due today" for the same invoice.
+    const identifier = paymentReminderId(data.invoiceId);
+    await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
     const id = await Notifications.scheduleNotificationAsync({
+      identifier,
       content: {
         title: i18n.t('notifications.push.paymentReminderTitle'),
         // Fires ON the due day (trigger below), so it says "due today". It
@@ -363,6 +370,40 @@ export async function sendInstantNotification(title: string, body: string, data?
 
 export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+/** The invoice's "due today" reminder, if one is scheduled. */
+export async function cancelPaymentReminder(invoiceId: string): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(paymentReminderId(invoiceId));
+  } catch { /* nothing scheduled */ }
+}
+
+/**
+ * Cancel the "due today" reminder of every invoice that is now PAID — however
+ * it got there (marked by hand, a Mollie webhook seen on refresh). An invoice
+ * paid before its due date still pinged "due today" (review 2026-10-04).
+ * Acts only on invoices it can SEE as paid: an absent invoice (list not
+ * hydrated yet) is never a reason to cancel. Reminders scheduled before the
+ * fixed id (no identifier) are matched by their data.invoiceId.
+ */
+export async function cancelRemindersForPaidInvoices(invoices: ReadonlyArray<{ id: string; status?: string }>): Promise<number> {
+  const paid = new Set(invoices.filter((i) => i.status === 'paid').map((i) => i.id));
+  if (!paid.size) return 0;
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    let n = 0;
+    for (const req of scheduled) {
+      const data = (req.content?.data ?? {}) as { type?: string; invoiceId?: string };
+      if (data.type === 'payment_reminder' && data.invoiceId && paid.has(data.invoiceId)) {
+        await Notifications.cancelScheduledNotificationAsync(req.identifier).catch(() => {});
+        n += 1;
+      }
+    }
+    return n;
+  } catch {
+    return 0;
+  }
 }
 
 export async function getScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {

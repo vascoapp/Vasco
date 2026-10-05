@@ -5490,7 +5490,9 @@
     "paidThanksTitle": "{{customer}} bedanken voor betaling",
     "paidThanksDesc": "Betaling ontvangen — een snel bedankje zorgt voor terugkerende klanten.",
     "paidThanksImpact": "Zorgt voor terugkerende klanten",
-    "invoiceSentBody": "Hoi {{customer}}, factuur {{invoice}} ({{amount}}) is onderweg. Betaaltermijn: {{days}} dagen. Bedankt!",
+    "invoiceSentBody_one": "Hoi {{customer}}, factuur {{invoice}} ({{amount}}) is onderweg. Betaaltermijn: {{count}} dag. Bedankt!",
+    "invoiceSentBody_other": "Hoi {{customer}}, factuur {{invoice}} ({{amount}}) is onderweg. Betaaltermijn: {{count}} dagen. Bedankt!",
+    "invoiceSentBodyNoTerm": "Hoi {{customer}}, factuur {{invoice}} ({{amount}}) is onderweg. Bedankt!",
     "invoiceSentTitle": "{{customer}} laten weten: factuur verstuurd",
     "invoiceSentDesc": "Even een seintje zodat de klant de factuur verwacht.",
     "invoiceSentImpact": "Snellere betaling"

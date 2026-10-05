@@ -5490,7 +5490,9 @@
     "paidThanksTitle": "{{customer}} für Zahlung danken",
     "paidThanksDesc": "Zahlung erhalten — ein kurzes Dankeschön fördert Folgeaufträge.",
     "paidThanksImpact": "Fördert Folgeaufträge",
-    "invoiceSentBody": "Hallo {{customer}}, die Rechnung {{invoice}} ({{amount}}) ist unterwegs. Zahlungsfrist: {{days}} Tage. Danke!",
+    "invoiceSentBody_one": "Hallo {{customer}}, die Rechnung {{invoice}} ({{amount}}) ist unterwegs. Zahlungsfrist: {{count}} Tag. Danke!",
+    "invoiceSentBody_other": "Hallo {{customer}}, die Rechnung {{invoice}} ({{amount}}) ist unterwegs. Zahlungsfrist: {{count}} Tage. Danke!",
+    "invoiceSentBodyNoTerm": "Hallo {{customer}}, die Rechnung {{invoice}} ({{amount}}) ist unterwegs. Danke!",
     "invoiceSentTitle": "{{customer}} benachrichtigen: Rechnung gesendet",
     "invoiceSentDesc": "Hinweis, damit der Kunde die Rechnung erwartet.",
     "invoiceSentImpact": "Schnellere Zahlung"

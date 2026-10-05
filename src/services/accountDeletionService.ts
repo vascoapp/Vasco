@@ -89,6 +89,14 @@ export async function clearAllLocalData(): Promise<{ cleared: number }> {
     }
   }
 
+  // 2a. Scheduled local reminders name this contractor's customers and
+  // invoices; after an erasure they must not fire.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { cancelAllNotifications } = require('./pushNotificationService') as typeof import('./pushNotificationService');
+    await cancelAllNotifications();
+  } catch { /* nothing scheduled, or no module (web) */ }
+
   // 2b. The Facturae SIGNING certificate (encrypted key file + its keychain
   // key). It is device-owned — kept across a same-user logout — so nothing
   // else removes it: after an erasure it stayed on the phone, the keychain

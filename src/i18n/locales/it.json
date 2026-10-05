@@ -5490,7 +5490,9 @@
     "paidThanksTitle": "Ringrazia {{customer}} per il pagamento",
     "paidThanksDesc": "Pagamento ricevuto — un breve ringraziamento fidelizza il cliente.",
     "paidThanksImpact": "Fidelizza i clienti",
-    "invoiceSentBody": "Ciao {{customer}}, la fattura {{invoice}} ({{amount}}) è in arrivo. Termini di pagamento: {{days}} giorni. Grazie!",
+    "invoiceSentBody_one": "Ciao {{customer}}, la fattura {{invoice}} ({{amount}}) è in arrivo. Termini di pagamento: {{count}} giorno. Grazie!",
+    "invoiceSentBody_other": "Ciao {{customer}}, la fattura {{invoice}} ({{amount}}) è in arrivo. Termini di pagamento: {{count}} giorni. Grazie!",
+    "invoiceSentBodyNoTerm": "Ciao {{customer}}, la fattura {{invoice}} ({{amount}}) è in arrivo. Grazie!",
     "invoiceSentTitle": "Avvisa {{customer}}: fattura inviata",
     "invoiceSentDesc": "Un avviso così il cliente attende la fattura.",
     "invoiceSentImpact": "Pagamento più rapido"

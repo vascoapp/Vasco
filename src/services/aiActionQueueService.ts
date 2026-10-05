@@ -2278,13 +2278,20 @@ export async function queueInvoiceSentNotice(args: {
 }): Promise<string> {
   const t = i18n.t.bind(i18n);
   const customerLabel = args.customerName?.trim() || args.customerId || '';
-  const template = t('messageTrigger.invoiceSentBody', {
-    defaultValue: 'Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Payment terms: {{days}} days. Thanks!',
-    customer: customerLabel,
-    invoice: args.invoiceId,
-    amount: formatMoney2(args.amount ?? 0),
-    days: args.dueInDays ?? 14,
-  });
+  // The term is stated only when it is known and still ahead: it fell back to
+  // a flat 14, and a draft sent after its due date has no honest term to
+  // state (the PDF carries the date). `count` for the singular ("1 dagen").
+  const vars = { customer: customerLabel, invoice: args.invoiceId, amount: formatMoney2(args.amount ?? 0) };
+  const template = typeof args.dueInDays === 'number' && args.dueInDays > 0
+    ? t('messageTrigger.invoiceSentBody', {
+        defaultValue: 'Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Payment terms: {{count}} days. Thanks!',
+        ...vars,
+        count: args.dueInDays,
+      })
+    : t('messageTrigger.invoiceSentBodyNoTerm', {
+        defaultValue: 'Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Thanks!',
+        ...vars,
+      });
   return addToQueue({
     type: 'draft_reminder',
     title: t('messageTrigger.invoiceSentTitle', {

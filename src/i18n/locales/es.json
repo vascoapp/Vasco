@@ -5490,7 +5490,9 @@
     "paidThanksTitle": "Agradecer el pago a {{customer}}",
     "paidThanksDesc": "Pago recibido — un agradecimiento rápido fideliza.",
     "paidThanksImpact": "Fideliza clientes",
-    "invoiceSentBody": "Hola {{customer}}, la factura {{invoice}} ({{amount}}) va en camino. Plazo de pago: {{days}} días. ¡Gracias!",
+    "invoiceSentBody_one": "Hola {{customer}}, la factura {{invoice}} ({{amount}}) va en camino. Plazo de pago: {{count}} día. ¡Gracias!",
+    "invoiceSentBody_other": "Hola {{customer}}, la factura {{invoice}} ({{amount}}) va en camino. Plazo de pago: {{count}} días. ¡Gracias!",
+    "invoiceSentBodyNoTerm": "Hola {{customer}}, la factura {{invoice}} ({{amount}}) va en camino. ¡Gracias!",
     "invoiceSentTitle": "Avisar a {{customer}}: factura enviada",
     "invoiceSentDesc": "Un aviso para que el cliente espere la factura.",
     "invoiceSentImpact": "Cobro más rápido"

@@ -5490,7 +5490,9 @@
     "paidThanksTitle": "Remercier {{customer}} pour le paiement",
     "paidThanksDesc": "Paiement reçu — un merci rapide fidélise les clients.",
     "paidThanksImpact": "Fidélise les clients",
-    "invoiceSentBody": "Bonjour {{customer}}, la facture {{invoice}} ({{amount}}) est en route. Délai de paiement : {{days}} jours. Merci !",
+    "invoiceSentBody_one": "Bonjour {{customer}}, la facture {{invoice}} ({{amount}}) est en route. Délai de paiement : {{count}} jour. Merci !",
+    "invoiceSentBody_other": "Bonjour {{customer}}, la facture {{invoice}} ({{amount}}) est en route. Délai de paiement : {{count}} jours. Merci !",
+    "invoiceSentBodyNoTerm": "Bonjour {{customer}}, la facture {{invoice}} ({{amount}}) est en route. Merci !",
     "invoiceSentTitle": "Prévenir {{customer}} : facture envoyée",
     "invoiceSentDesc": "Un message pour que le client s'attende à la facture.",
     "invoiceSentImpact": "Paiement plus rapide"

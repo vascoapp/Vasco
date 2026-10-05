@@ -123,6 +123,13 @@ export async function claimDeviceData(userId: string): Promise<boolean> {
         const { removeSigningCertificate } = require('./signingCertificateStore') as typeof import('./signingCertificateStore');
         await removeSigningCertificate();
       } catch {}
+      // Their scheduled local reminders ("Invoice for <their customer> is due
+      // today") would fire on the next contractor's phone (2026-10-04).
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { cancelAllNotifications } = require('./pushNotificationService') as typeof import('./pushNotificationService');
+        await cancelAllNotifications();
+      } catch {}
       await AsyncStorage.multiRemove([...DEVICE_OWNED_KEYS]);
     }
     await AsyncStorage.setItem(DEVICE_DATA_OWNER_KEY, userId);

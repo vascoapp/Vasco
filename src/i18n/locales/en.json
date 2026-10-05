@@ -5490,7 +5490,9 @@
     "paidThanksTitle": "Thank {{customer}} for payment",
     "paidThanksDesc": "Payment received — quick thanks builds repeat business.",
     "paidThanksImpact": "Builds repeat business",
-    "invoiceSentBody": "Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Payment terms: {{days}} days. Thanks!",
+    "invoiceSentBody_one": "Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Payment terms: {{count}} day. Thanks!",
+    "invoiceSentBody_other": "Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Payment terms: {{count}} days. Thanks!",
+    "invoiceSentBodyNoTerm": "Hi {{customer}}, invoice {{invoice}} ({{amount}}) is on its way. Thanks!",
     "invoiceSentTitle": "Notify {{customer}}: invoice sent",
     "invoiceSentDesc": "Heads-up so the customer expects the invoice.",
     "invoiceSentImpact": "Faster payment"

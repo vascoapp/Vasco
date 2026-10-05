@@ -53,7 +53,7 @@ import {
 } from '../intelligence/dataCollector';
 import { validateQuoteBeforeSend, validateInvoiceBeforeCreate, validateJobStatusChange } from '../services/workflowValidatorService';
 import { markTermsReadyForCompletedMilestones } from '../services/progressBillingService';
-import { schedulePaymentReminder, scheduleQuoteFollowUp } from '../services/pushNotificationService';
+import { schedulePaymentReminder, scheduleQuoteFollowUp, cancelPaymentReminder, cancelRemindersForPaidInvoices } from '../services/pushNotificationService';
 import { addBreadcrumb } from '../lib/errorReporting';
 import { exportInvoiceToMoneybird } from '../integrations/moneybird';
 import { createMolliePayment } from '../integrations/mollie';
@@ -2402,9 +2402,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               customerName: customerRow?.name,
               amount: invoice.amount ?? 0,
               // A draft whose due date already passed has no honest term to
-              // state; that is an open decision (which date is the invoice
-              // date), so it keeps the invoice's own term.
-              dueInDays: untilDue > 0 ? untilDue : termDays,
+              // state (which date is its invoice date is an open decision):
+              // the notice then names no term — the PDF carries the date.
+              dueInDays: untilDue > 0 ? untilDue : undefined,
             }),
           ).catch(() => {});
         }
@@ -2449,6 +2449,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       markInvoicePaid: (id) => {
         const paidInv = invoices.find((i) => i.id === id);
+        cancelPaymentReminder(id).catch(() => {});
         // See markInvoiceSent: one stamp shared by the online call and the
         // queued payload, taken when the contractor marked it paid.
         const paidAt = new Date().toISOString();
@@ -2913,6 +2914,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       removeInvoice: (id) => {
         setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
+        cancelPaymentReminder(id).catch(() => {});
         if (isSupabaseConfigured) {
           // R44: same offline-queue fix as removeQuote.
           // R66 round 8: docType='invoice' triggers soft-delete (Belastingdienst
@@ -5212,6 +5214,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // Kept current every render, so the gate in the executor binding counts the
   // invoices that exist now rather than the ones that existed at mount.
   invoicesRef.current = invoices;
+
+  // A paid invoice keeps no "due today" reminder — whichever path made it paid
+  // (by hand, a webhook seen on refresh). Acts only on invoices visibly paid,
+  // and runs when the SET of paid invoices changes, not on every edit.
+  const paidInvoiceKey = useMemo(
+    () => invoices.filter((i) => i.status === 'paid').map((i) => i.id).sort().join('|'),
+    [invoices],
+  );
+  useEffect(() => {
+    if (!paidInvoiceKey) return;
+    cancelRemindersForPaidInvoices(paidInvoiceKey.split('|').map((id) => ({ id, status: 'paid' }))).catch(() => {});
+  }, [paidInvoiceKey]);
 
   // Register real side-effect bindings so actionExecutor can actually execute
   // create_invoice / create_payment_link / etc instead of returning a route hint.
