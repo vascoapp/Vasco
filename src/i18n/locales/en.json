@@ -3770,7 +3770,10 @@
     "priceWatchButton": "Import price list",
     "marketPrices": "View market prices",
     "priceWatchNoRises": "Materials tracked: {{count}} · no rises above {{pct}}%",
-    "priceWatchRises": "Prices that went up"
+    "priceWatchRises": "Prices that went up",
+    "countryFirstTitle": "Set your country first",
+    "countryFirstBody": "Your price list is filed under your country. Set it in your business details, then import again.",
+    "openBusinessDetails": "Business details"
   },
   "customerView": {
     "pickTierTitle": "Pick a package",

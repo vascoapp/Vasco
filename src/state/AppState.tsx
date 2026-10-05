@@ -651,7 +651,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       setProfileLoaded(true);
       // R66r50: push vatScheme into currentUser ref so non-hook consumers
       // (photo-quote preview, spreadsheet extractor) compute KOR-correct VAT.
-      if (bp?.vatScheme) {
+      // …and the profile's COUNTRY for every account, not only those with a
+      // vatScheme: without it getCurrentCountry() stayed unset for profiles
+      // with no scheme, and cohort writers dropped their rows (sweep D6).
+      if (bp) {
         const userId = getCurrentUserId();
         if (userId) {
           setCurrentUser({
@@ -2079,7 +2082,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             // `predictJobDuration` fell back to a hardcoded 1.15 forever.
             recordJobDurationData(getCurrentUserId(), {
               trade: job.trade ?? businessProfile.trade ?? 'general',
-              country: businessProfile.country ?? 'NL',
+              country: businessProfile.country ?? '', // unknown → no cohort row (D6)
               jobType: job.title,
               estimatedHours: job.estimatedDuration as number,
               actualHours,
@@ -2697,7 +2700,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // R265: also pass the job-site postcode so the postcode-level cohort
         // RPC (R246, get_postcode_cohort_stats) actually has data to read.
         const profTrade = businessProfile.trade ?? 'general';
-        const profCountry = businessProfile.country ?? 'NL';
+        // Unknown market: no cohort pricing rows (sweep D6) — never 'NL'.
+        const profCountry = businessProfile.country;
         const jobPostcode = job
           ? (jobs.find((j) => j.id === job) as any)?.address?.postcode
             ?? (jobs.find((j) => j.id === job) as any)?.address_postcode
@@ -2708,7 +2712,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           lineItemCount: items.length,
           trade: profTrade,
         }).catch(() => {});
-        for (const item of items) {
+        if (profCountry) for (const item of items) {
           recordPricingData(getCurrentUserId(), {
             // The quote these lines belong to. Without it every outcome write
             // (accepted/rejected, sent-at hour, actual cost) matched no row and
@@ -3405,7 +3409,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // country) cohort slicing — a painter in DE and FR are different
         // markets entirely). Falls through to 'general'/'NL' only when unset.
         const trade = getCurrentTrade() || 'general';
-        const country = getCurrentCountry() || 'NL';
+        // Profile first; unknown = undefined → no cohort row (sweep D6).
+        const country = businessProfile?.country ?? getCurrentCountry();
         // R279: look up the actual material name + supplier name from the
         // catalog so the moat ingests human-readable text instead of opaque
         // IDs. Falls back to the ID if the catalog miss is somehow unresolved.

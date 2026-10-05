@@ -372,6 +372,10 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
     const priceDiff = Math.abs(newPrice - baseline.price);
     const priceMaterial = priceDiff >= 1 || priceDiff >= baseline.price * 0.05;
     if (!qtyMaterial && !priceMaterial) return;
+    // A correction with no market would land in the NL repricing cohort
+    // (sweep D6): no market, no row.
+    const deltaCountry = getCurrentCountry();
+    if (!deltaCountry) return;
 
     editedRef.current.add(item.id);
     recordDelta({
@@ -383,7 +387,7 @@ export function AIQuoteFromPhoto({ onCreateQuote, onClose }: AIQuoteFromPhotoPro
       newUnitPrice: newPrice,
       source: baseline.source,
       trade: getCurrentTrade() || 'general',
-      country: getCurrentCountry() || 'NL',
+      country: deltaCountry,
     }).catch(() => {});
   };
 

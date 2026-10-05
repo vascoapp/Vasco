@@ -3770,7 +3770,10 @@
     "priceWatchButton": "Importer le tarif",
     "marketPrices": "Voir les prix du marché",
     "priceWatchNoRises": "Matériaux suivis : {{count}} · aucune hausse de plus de {{pct}} %",
-    "priceWatchRises": "Prix en hausse"
+    "priceWatchRises": "Prix en hausse",
+    "countryFirstTitle": "Indiquez d'abord votre pays",
+    "countryFirstBody": "Votre liste de prix est classée par pays. Indiquez-le dans vos informations d’entreprise, puis importez à nouveau.",
+    "openBusinessDetails": "Informations entreprise"
   },
   "customerView": {
     "pickTierTitle": "Choisissez une formule",

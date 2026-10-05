@@ -181,7 +181,10 @@ export async function feedPricingMoat(
   // for OCR rows were 2x. Now feeds enrichment into the emitter and the
   // dataCollector writes one row.
   const userTrade = getCurrentTrade();
-  const userCountry = getCurrentCountry() || 'NL';
+  // Unknown market = no cohort rows: an 'NL' default put UK/DE prices in the
+  // Dutch benchmark (sweep D6). The scan itself is still saved in full.
+  const userCountry = getCurrentCountry();
+  if (!userCountry) return 0;
   // #6: country-aware currency — was hardcoded 'EUR', mis-tagging every GBP/USD
   // scanned line. The moat aggregates by currency, so a mis-tag silently mixed
   // £ and € into one average.

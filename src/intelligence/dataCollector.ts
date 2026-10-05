@@ -8,6 +8,7 @@
 import { supabase as _supabase, isSupabaseConfigured } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentTrade, getCurrentCountry, getAuthedUserId } from '../lib/currentUser';
+import { currencyForCountry, type Country } from '../i18n/formatting';
 import { subscribeIdRemap, type IdRemapEvent } from '../services/idRemapBus';
 // Dependency-free pure module — safe to import from the collector with no cycle.
 import { canonicalMaterialKey } from '../services/materialNormalization';
@@ -503,6 +504,12 @@ export async function emitMaterialPurchased(userId: string, data: {
   // R58: gate against the placeholder uid — material_price_history.observed_by
   // is a FK→auth.users(id), so writing 'current-user' would fail the FK
   // constraint and corrupt the local-queue retry chain.
+  // A price with no market poisons the shared benchmark: an unknown country
+  // was stamped NL (and its currency EUR), so a UK or German price landed in
+  // the Dutch cohort (sweep D6). Unknown market = no cohort row, and the
+  // caller is told nothing landed.
+  const priceCountry = data.country ?? getCurrentCountry();
+  if (!priceCountry) return false;
   if (isSupabaseConfigured && !isPlaceholderUserId(userId)) {
     // R275: column-level audit found the previous insert wrote columns that
     // don't exist on material_price_history (user_id, unit_price, quantity,
@@ -537,10 +544,10 @@ export async function emitMaterialPurchased(userId: string, data: {
         ean_code: data.eanCode ?? null,
         unit: data.unit,
         price_excl_vat: data.price,
-        currency: data.currency ?? 'EUR',
+        currency: data.currency ?? currencyForCountry(priceCountry as Country),
         vat_rate: data.vatRate ?? null,
         trade: data.trade,
-        country: data.country ?? getCurrentCountry() ?? 'NL',
+        country: priceCountry,
         lead_time_days: data.deliveryDays ?? null,
         postcode: data.postcode ?? null,
         source: data.source ?? 'manual',
@@ -674,6 +681,8 @@ export async function recordJobDurationData(userId: string, data: {
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
   if (isPlaceholderUserId(userId)) return;
+  // No market, no cohort row — never a default country (sweep D6).
+  if (!data.country) return;
   // The ratio is what the cohort RPC medians. Without both sides there is
   // nothing to learn from, so the row is not worth writing.
   if (!(data.estimatedHours > 0) || !(data.actualHours && data.actualHours > 0)) return;

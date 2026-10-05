@@ -20,6 +20,8 @@ jest.mock('../lib/currentUser', () => ({
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { importDatanormToMoat, CATALOG_BATCH } from '../integrations/datanorm';
+// The screen always passes the contractor's market (it asks first); no market = nothing imported (sweep D6).
+const MARKET = { country: 'DE' };
 
 const fake = (require('../lib/supabase') as any).__fake;
 
@@ -59,41 +61,41 @@ describe('DATANORM import, deduplicated on the server', () => {
   });
 
   it('keys each article by supplier + article number, as every other price row', async () => {
-    await importDatanormToMoat([{ ...article('AB-123'), extendedDescription: '15 mm' }], 'richter');
+    await importDatanormToMoat([{ ...article('AB-123'), extendedDescription: '15 mm' }], 'richter', MARKET);
     expect(batches()[0].payload.p_items[0]).toEqual({ a: 'AB-123', n: 'Kupferrohr AB-123 — 15 mm', u: 'm', p: 12.5, k: 'art:richter:ab-123' });
   });
 
   it("reports the server's verdict: the same list again is all skipped, next year's price is imported", async () => {
-    await importDatanormToMoat([article('E1'), article('E2')], 'richter');
-    expect(await importDatanormToMoat([article('E1'), article('E2')], 'richter')).toEqual({ imported: 0, skipped: 2, failed: 0 });
-    expect(await importDatanormToMoat([article('E1', 13.5), article('E2')], 'richter')).toEqual({ imported: 1, skipped: 1, failed: 0 });
+    await importDatanormToMoat([article('E1'), article('E2')], 'richter', MARKET);
+    expect(await importDatanormToMoat([article('E1'), article('E2')], 'richter', MARKET)).toEqual({ imported: 0, skipped: 2, failed: 0 });
+    expect(await importDatanormToMoat([article('E1', 13.5), article('E2')], 'richter', MARKET)).toEqual({ imported: 1, skipped: 1, failed: 0 });
   });
 
   it('counts a batch that did not land as failed — and only that batch', async () => {
     failBatch = 1;
     const list = Array.from({ length: CATALOG_BATCH + 10 }, (_, i) => article(`F-${i}`));
-    const r = await importDatanormToMoat(list, 'richter');
+    const r = await importDatanormToMoat(list, 'richter', MARKET);
     expect(r).toEqual({ imported: CATALOG_BATCH, skipped: 0, failed: 10 });
     // Importing again writes exactly what is still missing.
-    expect(await importDatanormToMoat(list, 'richter')).toEqual({ imported: 10, skipped: CATALOG_BATCH, failed: 0 });
+    expect(await importDatanormToMoat(list, 'richter', MARKET)).toEqual({ imported: 10, skipped: CATALOG_BATCH, failed: 0 });
   });
 
   it('stops calling after two failed batches in a row (expired session, no network)', async () => {
     fake.rpc('import_catalog_prices', () => ({ data: null, error: { code: '42501', message: 'permission denied' } }));
     const list = Array.from({ length: 10 * CATALOG_BATCH }, (_, i) => article(`G-${i}`));
-    const r = await importDatanormToMoat(list, 'richter');
+    const r = await importDatanormToMoat(list, 'richter', MARKET);
     expect(r).toEqual({ imported: 0, skipped: 0, failed: list.length });
     expect(batches()).toHaveLength(2);
   });
 
   it('skips rows without an article number or a price before sending them', async () => {
-    const r = await importDatanormToMoat([article(''), article('Z0', 0), article('Z1', NaN), article('OK1')], 'richter');
+    const r = await importDatanormToMoat([article(''), article('Z0', 0), article('Z1', NaN), article('OK1')], 'richter', MARKET);
     expect(r).toEqual({ imported: 1, skipped: 3, failed: 0 });
     expect(batches()[0].payload.p_items.map((i: any) => i.a)).toEqual(['OK1']);
   });
 
   it('sends prices to four decimals — never in exponent form, which the server rejects', async () => {
-    const r = await importDatanormToMoat([article('TINY', 0.00001234), article('PER100', 0.123456)], 'richter');
+    const r = await importDatanormToMoat([article('TINY', 0.00001234), article('PER100', 0.123456)], 'richter', MARKET);
     expect(r).toEqual({ imported: 1, skipped: 1, failed: 0 });
     expect(batches()[0].payload.p_items.map((i: any) => JSON.stringify(i.p))).toEqual(['0.1235']);
   });
@@ -102,7 +104,7 @@ describe('DATANORM import, deduplicated on the server', () => {
 describe('the phone keeps nothing', () => {
   it('a 100k-article list writes nothing to AsyncStorage', async () => {
     const many = Array.from({ length: 100_000 }, (_, i) => article(`ART-${String(i).padStart(8, '0')}`, 1234.56));
-    const r = await importDatanormToMoat(many, 'gc_gruppe_grosshandel');
+    const r = await importDatanormToMoat(many, 'gc_gruppe_grosshandel', MARKET);
     expect(r.imported).toBe(100_000);
     expect(await AsyncStorage.getAllKeys()).toEqual([]);
   }, 60_000);
@@ -115,7 +117,7 @@ describe('the phone keeps nothing', () => {
       [`@vasco_datanorm_imported:${U}:s:richter:0`, '{"A":1}'],
       ['@vasco_invoices', '[]'],
     ]);
-    await importDatanormToMoat([article('A')], 'richter');
+    await importDatanormToMoat([article('A')], 'richter', MARKET);
     expect(await AsyncStorage.getAllKeys()).toEqual(['@vasco_invoices']);
   });
 });

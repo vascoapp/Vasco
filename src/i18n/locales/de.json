@@ -3770,7 +3770,10 @@
     "priceWatchButton": "Preisliste importieren",
     "marketPrices": "Marktpreise ansehen",
     "priceWatchNoRises": "Verfolgte Materialien: {{count}} · kein Anstieg über {{pct}} %",
-    "priceWatchRises": "Gestiegene Preise"
+    "priceWatchRises": "Gestiegene Preise",
+    "countryFirstTitle": "Bitte zuerst Ihr Land festlegen",
+    "countryFirstBody": "Ihre Preisliste wird unter Ihrem Land gespeichert. Legen Sie es in Ihren Firmendaten fest und importieren Sie dann erneut.",
+    "openBusinessDetails": "Firmendaten"
   },
   "customerView": {
     "pickTierTitle": "Paket wählen",

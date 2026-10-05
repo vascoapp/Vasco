@@ -302,7 +302,10 @@ export async function importDatanormToMoat(
 ): Promise<{ imported: number; skipped: number; failed: number }> {
   const supplierName = options?.supplierName ?? supplierId;
   const trade = options?.trade ?? 'general';
-  const country = options?.country ?? 'NL';
+  // No market, no rows — it was filed under NL (sweep D6). The screen asks
+  // for the country before importing; this is the backstop.
+  const country = options?.country;
+  if (!country) return { imported: 0, skipped: 0, failed: articles.length };
 
   await dropLocalImportState();
 

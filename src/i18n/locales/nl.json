@@ -3770,7 +3770,10 @@
     "priceWatchButton": "Prijslijst importeren",
     "marketPrices": "Marktprijzen bekijken",
     "priceWatchNoRises": "Materialen gevolgd: {{count}} · geen stijging boven {{pct}}%",
-    "priceWatchRises": "Prijzen die zijn gestegen"
+    "priceWatchRises": "Prijzen die zijn gestegen",
+    "countryFirstTitle": "Stel eerst je land in",
+    "countryFirstBody": "Je prijslijst wordt onder je land opgeslagen. Stel het in bij je bedrijfsgegevens en importeer daarna opnieuw.",
+    "openBusinessDetails": "Bedrijfsgegevens"
   },
   "customerView": {
     "pickTierTitle": "Kies een pakket",

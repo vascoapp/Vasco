@@ -3770,7 +3770,10 @@
     "priceWatchButton": "Importa listino",
     "marketPrices": "Vedi i prezzi di mercato",
     "priceWatchNoRises": "Materiali seguiti: {{count}} · nessun aumento oltre il {{pct}}%",
-    "priceWatchRises": "Prezzi aumentati"
+    "priceWatchRises": "Prezzi aumentati",
+    "countryFirstTitle": "Imposta prima il tuo paese",
+    "countryFirstBody": "Il tuo listino viene archiviato per paese. Impostalo nei dati aziendali, poi importa di nuovo.",
+    "openBusinessDetails": "Dati aziendali"
   },
   "customerView": {
     "pickTierTitle": "Scegli un pacchetto",

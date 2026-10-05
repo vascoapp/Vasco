@@ -91,6 +91,20 @@ export default function InkoopScreen() {
   // DATANORM file import
   // -------------------------------------------------------
   const handleDatanormImport = useCallback(async () => {
+    // The price list is filed under the contractor's market; it was stamped
+    // NL when the country was unknown (sweep D6). Ask first (CLAUDE.md: ask
+    // for what the form requires BEFORE the form).
+    if (!businessProfile?.country) {
+      Alert.alert(
+        t('inkoop.countryFirstTitle', 'Set your country first'),
+        t('inkoop.countryFirstBody', 'Your price list is filed under your country. Set it in your business details, then import again.'),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          { text: t('inkoop.openBusinessDetails', 'Business details'), onPress: () => router.push('/(modals)/business-settings' as any) },
+        ],
+      );
+      return;
+    }
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['text/plain', 'application/octet-stream'],
@@ -134,7 +148,7 @@ export default function InkoopScreen() {
       const { imported, skipped, failed } = await importDatanormToMoat(articles, supplierId, {
         supplierName,
         trade: getCurrentTrade() || 'general',
-        country: getCurrentCountry() || 'NL',
+        country: businessProfile.country,
       });
 
       // Nothing landed: say so, instead of "0 materials imported" under a
@@ -164,7 +178,9 @@ export default function InkoopScreen() {
       setIsImporting(false);
       refreshPriceWatch();
     }
-  }, [t, refreshPriceWatch]);
+  // businessProfile + router: the country gate must see the country the
+  // contractor just set via its own "Business details" button (review).
+  }, [t, refreshPriceWatch, businessProfile, router]);
 
   /**
    * Read a supplier e-invoice (XRechnung / ZUGFeRD / Peppol UBL).

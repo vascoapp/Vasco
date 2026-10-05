@@ -17,9 +17,8 @@ import { formatMoney } from '../i18n/formatting';
 import { searchCatalog, comparePrices, getSuppliersForTrade, DUTCH_SUPPLIERS, type CatalogItem, type PriceCheck } from '../integrations/suppliers';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
-import { recordPricingData } from '../intelligence/dataCollector';
 import { recordMetricSnapshot, loadProfile } from '../intelligence/learningStorage';
-import { getCurrentUserId, getCurrentCountry } from '../lib/currentUser';
+import { getCurrentCountry } from '../lib/currentUser';
 import { getStandardVatRate, type BusinessProfile } from '../domain/business';
 
 // ---------------------------------------------------------------------------
@@ -157,18 +156,13 @@ export async function sourceMaterial(
     ? Math.round(((worst.totalCost - best.totalCost) / worst.totalCost) * 100)
     : 0;
 
-  // Feed price observations to AI data moat
-  for (const opt of options) {
-    const supplier = DUTCH_SUPPLIERS.find(s => s.id === opt.supplierId);
-    recordPricingData(getCurrentUserId(), {
-      trade,
-      country: getCurrentCountry() || 'NL',
-      lineDescription: need.name,
-      quotedUnitPrice: opt.price,
-      quotedQuantity: need.quantity,
-      vatRate: 21,
-    }).catch(() => {});
-  }
+  // No moat write here. This fed every option — mostly the STATIC country
+  // baselines comparePrices falls back to — into recordPricingData as the
+  // contractor's QUOTED unit prices (no quote id, country defaulted to NL,
+  // VAT 21), so the quote-pricing cohort learned its own reference table
+  // (sweep D6; the #207 class). Real supplier prices reach the moat through
+  // emitMaterialPurchased (receipts, e-invoices) and import_catalog_prices
+  // (DATANORM).
 
   // Track savings metric for intelligence engine
   if (best && best.savings > 0) {
