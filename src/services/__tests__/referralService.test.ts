@@ -16,6 +16,7 @@ jest.mock('../../lib/supabase', () => ({
 }));
 
 import {
+  attributeReferralOutcome,
   getOrCreateReferralCode,
   attributeReferral,
   getReferralSummary,
@@ -104,5 +105,20 @@ describe('referralService', () => {
       expect(__internal.buildShareUrl('ABC234')).toBe('https://admin.vascobuild.com/ref/ABC234');
       expect(__internal.buildShareUrl('A B/C')).toBe('https://admin.vascobuild.com/ref/A%20B%2FC');
     });
+  });
+});
+
+describe('attributeReferralOutcome — what the server SAID (sweep A6)', () => {
+  test('an id back → attributed', async () => {
+    mockRpcResponses.attribute_referral = { data: 'attr-1', error: null };
+    expect(await attributeReferralOutcome('ABC234', 'u-new')).toBe('attributed');
+  });
+  test('null back (unknown / self / duplicate) → rejected, final', async () => {
+    mockRpcResponses.attribute_referral = { data: null, error: null };
+    expect(await attributeReferralOutcome('ABC234', 'u-new')).toBe('rejected');
+  });
+  test('an RPC error → failed, worth retrying', async () => {
+    mockRpcResponses.attribute_referral = { data: null, error: { message: 'network' } };
+    expect(await attributeReferralOutcome('ABC234', 'u-new')).toBe('failed');
   });
 });

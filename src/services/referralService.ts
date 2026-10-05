@@ -65,6 +65,26 @@ export async function attributeReferralWithId(code: string, newUserId: string): 
   }
 }
 
+/**
+ * What the server SAID, not just whether it said yes: an unknown code, a
+ * self-referral or a duplicate is `rejected` (the RPC answers null — final);
+ * an RPC error or a throw is `failed` (it never landed — worth retrying).
+ */
+export async function attributeReferralOutcome(code: string, newUserId: string): Promise<'attributed' | 'rejected' | 'failed'> {
+  if (!isSupabaseConfigured) return 'failed';
+  if (!code || code.length < 4) return 'rejected';
+  try {
+    const { data, error } = await (supabase.rpc as any)('attribute_referral', {
+      p_code: code.toUpperCase().trim(),
+      p_new_user_id: newUserId,
+    });
+    if (error) return 'failed';
+    return data ? 'attributed' : 'rejected';
+  } catch {
+    return 'failed';
+  }
+}
+
 export async function getReferralSummary(userId: string): Promise<ReferralSummary | null> {
   if (!isSupabaseConfigured) return null;
   try {

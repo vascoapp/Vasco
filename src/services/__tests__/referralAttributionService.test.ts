@@ -9,10 +9,10 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(async (k: string) => { mockStorage.delete(k); }),
 }));
 
-let mockAttributeResult: boolean = false;
+let mockAttributeResult: 'attributed' | 'rejected' | 'failed' = 'rejected';
 let mockAttributeCalls: Array<{ code: string; userId: string }> = [];
 jest.mock('../referralService', () => ({
-  attributeReferral: jest.fn(async (code: string, userId: string) => {
+  attributeReferralOutcome: jest.fn(async (code: string, userId: string) => {
     mockAttributeCalls.push({ code, userId });
     return mockAttributeResult;
   }),
@@ -29,7 +29,7 @@ import {
 
 beforeEach(() => {
   mockStorage.clear();
-  mockAttributeResult = false;
+  mockAttributeResult = 'rejected';
   mockAttributeCalls = [];
 });
 
@@ -82,17 +82,40 @@ describe('applyPendingReferral', () => {
   });
 
   test('valid code + successful RPC → true + storage cleared', async () => {
-    mockAttributeResult = true;
+    mockAttributeResult = 'attributed';
     await stashPendingReferral('ABC234');
     expect(await applyPendingReferral('user-1')).toBe(true);
     expect(mockAttributeCalls).toEqual([{ code: 'ABC234', userId: 'user-1' }]);
     expect(await getPendingReferral()).toBeNull();
   });
 
-  test('RPC failure still clears storage (no retry loop)', async () => {
-    mockAttributeResult = false;
+  test('a code the server REJECTS (unknown / self / duplicate) is cleared — no retry', async () => {
+    mockAttributeResult = 'rejected';
     await stashPendingReferral('ABC234');
     expect(await applyPendingReferral('user-1')).toBe(false);
     expect(await getPendingReferral()).toBeNull();
+  });
+
+  test('a call that never LANDED keeps the code for the next sign-in, up to the cap (sweep A6)', async () => {
+    mockAttributeResult = 'failed';
+    await stashPendingReferral('ABC234');
+    for (let i = 1; i < __internal.MAX_ATTEMPTS; i++) {
+      expect(await applyPendingReferral('user-1')).toBe(false);
+      expect(await getPendingReferral()).toBe('ABC234');
+    }
+    // The last allowed attempt drops it, so a dead code cannot loop forever.
+    expect(await applyPendingReferral('user-1')).toBe(false);
+    expect(await getPendingReferral()).toBeNull();
+    expect(mockStorage.has(__internal.ATTEMPTS_KEY)).toBe(false);
+  });
+
+  test('a retry that then lands attributes and clears', async () => {
+    mockAttributeResult = 'failed';
+    await stashPendingReferral('ABC234');
+    await applyPendingReferral('user-1');
+    mockAttributeResult = 'attributed';
+    expect(await applyPendingReferral('user-1')).toBe(true);
+    expect(await getPendingReferral()).toBeNull();
+    expect(mockStorage.has(__internal.ATTEMPTS_KEY)).toBe(false);
   });
 });

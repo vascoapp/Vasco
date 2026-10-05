@@ -85,6 +85,18 @@ Deno.serve(async (req) => {
     });
   }
 
+  // OFF until the email is fit to send (2026-10-05). It had never run — every
+  // cron call got 403 — and the template is not ready: rows always English,
+  // German in du, a hard-coded € with no cents for every market, the business
+  // name unescaped in HTML. Fixing the caller check would have started
+  // sending exactly that. Set WEEKLY_DIGEST_ENABLED=true in the change that
+  // fixes the template (user's call).
+  if (Deno.env.get('WEEKLY_DIGEST_ENABLED') !== 'true') {
+    return new Response(JSON.stringify({ ok: true, sent: 0, disabled: 'WEEKLY_DIGEST_ENABLED is not set' }), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   const admin = createClient(supabaseUrl, serviceKey);
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 

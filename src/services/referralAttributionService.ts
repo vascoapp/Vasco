@@ -12,7 +12,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { attributeReferral } from './referralService';
+import { attributeReferralOutcome } from './referralService';
 
 const PENDING_KEY = '@vasco_pending_referral';
 const CODE_REGEX = /^[A-Z2-9]{4,8}$/; // matches the 6-char alphabet from R229 RPC + buffer
@@ -56,22 +56,34 @@ export async function clearPendingReferral(): Promise<void> {
   }
 }
 
+/** Sign-ins a failed attribution is retried on before the code is dropped. */
+const MAX_ATTEMPTS = 5;
+const ATTEMPTS_KEY = '@vasco_pending_referral_attempts';
+
 /**
- * Fire-and-forget: if a pending code exists, attribute it to this userId,
- * then clear the stash regardless of outcome (so retries don't loop).
+ * If a pending code exists, attribute it to this userId. The stash is cleared
+ * once the SERVER has answered (attributed, or rejected as unknown / self /
+ * duplicate); a call that never landed (offline, RPC error) keeps it for the
+ * next sign-in, up to MAX_ATTEMPTS — it used to be cleared on any outcome, so
+ * a signup on a bad connection lost the referrer's credit for good (sweep A6).
  * Returns true when the RPC accepted the attribution.
  */
 export async function applyPendingReferral(userId: string): Promise<boolean> {
   const code = await getPendingReferral();
   if (!code) return false;
-  let ok = false;
-  try {
-    ok = await attributeReferral(code, userId);
-  } catch {
-    ok = false;
+  const outcome = await attributeReferralOutcome(code, userId);
+  if (outcome === 'failed') {
+    let attempts = 0;
+    try { attempts = Number(await AsyncStorage.getItem(ATTEMPTS_KEY)) || 0; } catch {}
+    attempts += 1;
+    if (attempts < MAX_ATTEMPTS) {
+      try { await AsyncStorage.setItem(ATTEMPTS_KEY, String(attempts)); } catch {}
+      return false;
+    }
   }
   await clearPendingReferral();
-  return ok;
+  try { await AsyncStorage.removeItem(ATTEMPTS_KEY); } catch {}
+  return outcome === 'attributed';
 }
 
-export const __internal = { PENDING_KEY, CODE_REGEX };
+export const __internal = { PENDING_KEY, CODE_REGEX, ATTEMPTS_KEY, MAX_ATTEMPTS };

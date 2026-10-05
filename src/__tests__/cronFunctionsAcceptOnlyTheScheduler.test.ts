@@ -53,3 +53,13 @@ describe('every function the scheduler calls checks its caller', () => {
     expect(src).not.toMatch(/!==\s*`Bearer \$\{serviceKey\}`/);
   });
 });
+
+describe('weekly-digest stays off until its email is fit to send', () => {
+  it('returns before any query or email unless WEEKLY_DIGEST_ENABLED=true', () => {
+    const src = stripComments(fs.readFileSync(path.join(ROOT, 'supabase/functions/weekly-digest/index.ts'), 'utf8'));
+    const gate = src.indexOf("Deno.env.get('WEEKLY_DIGEST_ENABLED') !== 'true'");
+    expect(gate).toBeGreaterThan(-1);
+    expect(gate).toBeLessThan(src.indexOf("from('business_settings')"));
+    expect(gate).toBeLessThan(src.indexOf('api.resend.com'));
+  });
+});
