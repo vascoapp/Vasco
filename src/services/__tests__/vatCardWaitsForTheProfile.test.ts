@@ -68,7 +68,7 @@ describe('a cached placeholder is not a loaded profile', () => {
     const { stripComments } = require('../../utils/stripComments');
     const src = stripComments(readFileSync(join(__dirname, '../../state/AppState.tsx'), 'utf8'));
     expect(src).toMatch(/if \(persistReady && profileLoaded\) \{\s*AsyncStorage\.setItem\('@vasco_business_profile'/);
-    expect(src.match(/if \(isOwnProfile\(bpParsed\)\) setProfileLoaded\(true\)/g)).toHaveLength(2);
+    expect(src.match(/if \(isOwnProfile\(bpParsed\)\) \{?\s*setProfileLoaded\(true\)/g)).toHaveLength(2);
     expect(src).not.toMatch(/bpParsed \}\)\); setProfileLoaded\(true\)/);
   });
 });

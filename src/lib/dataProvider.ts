@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logWarn } from '../utils/errorHandler';
 import { isUuid } from './idShape';
+import { getAuthedUserId } from './currentUser';
 import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, ProjectRow, ExpenseRow, QuoteAcceptanceLinkRow, DecisionTrackerRow, DecisionItemRow, LeadRow, WorkerRow } from './database.types';
 import { quotes as mockQuotes, invoices as mockInvoices } from '../data/mockDocuments';
 import { quoteLineItems as mockLineItems } from '../data/mockLineItems';
@@ -763,7 +764,17 @@ export async function loadLineItems(): Promise<Record<string, QuoteLineItem[]> |
 export async function loadBusinessProfile(): Promise<BusinessProfile> {
   if (!isSupabaseConfigured) return mockBusinessProfile;
   const row = await getBusinessSettings();
-  return businessSettingsToProfile(row);
+  // An edit made offline is still in the queue: the server row does not have
+  // it yet, and laying the row down alone reverted the edit (on screen and in
+  // the cache) until the queue flushed. require(): the queue imports this file.
+  const { pendingUpsertFields } = require('../services/offlineWriteQueue') as typeof import('../services/offlineWriteQueue');
+  // Only this session's own queued edits. The local ref, not auth.getUser():
+  // a network round-trip per refresh that, when it failed, skipped the overlay.
+  let owner: string | null = null;
+  try { owner = getAuthedUserId(); } catch {}
+  const pending = await pendingUpsertFields('business_settings', owner).catch(() => ({}));
+  if (Object.keys(pending).length === 0) return businessSettingsToProfile(row);
+  return businessSettingsToProfile({ ...(row ?? {}), ...pending } as BusinessSettingsRow);
 }
 
 export async function loadCustomers(): Promise<Customer[]> {

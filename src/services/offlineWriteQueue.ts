@@ -48,6 +48,9 @@ export interface QueuedWrite {
   rowId?: string;     // primary key value (for update/delete/upsert)
   match?: Record<string, any>;  // alternative match criteria (e.g. {user_id, device_id})
   payload?: any;
+  /** upsert only: the unique column(s) it resolves on. Without it PostgREST
+   *  uses the primary key, and a payload without one becomes a plain INSERT. */
+  onConflict?: string;
   createdAt: number;
   attempts: number;
 }
@@ -343,7 +346,10 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>, pendin
       return { ok: true, docNumber: mintedDocNumber };
     }
     if (remapped.op === 'upsert') {
-      const { error } = await table.upsert(stripTempId(remapped.payload));
+      const { error } = await table.upsert(
+        stripTempId(remapped.payload),
+        remapped.onConflict ? { onConflict: remapped.onConflict } : undefined,
+      );
       return error ? failed(error) : { ok: true };
     }
     if (remapped.op === 'update') {
@@ -479,6 +485,66 @@ export async function pendingDocumentNumbers(): Promise<Set<string>> {
   return out;
 }
 
+/**
+ * The columns still queued for a single-row table (e.g. `business_settings`),
+ * merged oldest → newest. A refresh that lays the server row down WITHOUT
+ * them reverted an offline profile edit on screen and in the cache until the
+ * queue happened to flush (review 2026-10-05).
+ */
+export async function pendingUpsertFields(table: string, ownerId: string | null): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {};
+  // Only entries STAMPED with this user: the queue outlives a logout until the
+  // next sign-in's handover wipe finishes, and a refresh can run before that —
+  // another contractor's IBAN must never be laid onto this profile.
+  if (!ownerId) return out;
+  for (const w of await loadQueue()) {
+    if (w.table === table && (w.op === 'upsert' || w.op === 'update') && w.payload && typeof w.payload === 'object' && w.payload.user_id === ownerId) {
+      const { user_id: _owner, ...fields } = w.payload as Record<string, unknown>;
+      Object.assign(out, fields);
+    }
+  }
+  return out;
+}
+
+/**
+ * A direct write of these columns just LANDED: queued values for them are
+ * older and must not be replayed over it (nor overlaid by a refresh). Columns
+ * are removed from this owner's entries; an entry left with nothing but its
+ * owner is dropped. Without it, IBAN X queued offline then IBAN Y saved online
+ * ended as X on the next flush (re-review 2026-10-05).
+ */
+export function supersedeQueuedFields(table: string, ownerId: string | null, columns: string[]): Promise<void> {
+  if (!ownerId || columns.length === 0) return Promise.resolve();
+  return withStoreLock(async () => {
+    const queue = await loadQueue();
+    let changed = false;
+    const kept: QueuedWrite[] = [];
+    for (const w of queue) {
+      if (w.table === table && (w.op === 'upsert' || w.op === 'update') && w.payload && typeof w.payload === 'object' && w.payload.user_id === ownerId) {
+        const payload = { ...(w.payload as Record<string, unknown>) };
+        for (const c of columns) if (c !== 'user_id' && c in payload) { delete payload[c]; changed = true; }
+        if (Object.keys(payload).every((k) => k === 'user_id')) { changed = true; continue; }
+        kept.push({ ...w, payload });
+      } else {
+        kept.push(w);
+      }
+    }
+    if (changed) await saveQueue(kept);
+  });
+}
+
+/**
+ * The queued form of a business-profile edit. `business_settings` is one row
+ * per user (UNIQUE user_id): the replay must name the owner and resolve on
+ * user_id. Queued as a bare `upsert(payload)` it became an INSERT without
+ * user_id (NOT NULL + RLS) — rejected on every flush and dropped after five,
+ * so an edit made offline NEVER reached the server (review 2026-10-05).
+ */
+export function businessSettingsFallback(dbUpdates: Record<string, unknown>, userId: string | null): { payload?: unknown; onConflict?: string } {
+  if (!userId) return {};
+  return { payload: { ...dbUpdates, user_id: userId }, onConflict: 'user_id' };
+}
+
 /** Server rows, plus local rows the server does not have yet but the queue will send. */
 export function keepPendingDocuments<T extends { id: string }>(local: T[], server: T[], pending: Set<string>): T[] {
   const onServer = new Set(server.map((d) => d.id));
@@ -508,7 +574,7 @@ export async function persistOrQueue(
   table: string,
   op: WriteOp,
   fn: () => Promise<unknown>,
-  fallback: { rowId?: string; match?: Record<string, unknown>; payload?: unknown },
+  fallback: { rowId?: string; match?: Record<string, unknown>; payload?: unknown; onConflict?: string },
 ): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   // R56: temp-id fast path — queue without attempting BE first.
@@ -523,6 +589,9 @@ export async function persistOrQueue(
     return true;
   } catch (err) {
     logWarn('persistOrQueue', `${table}.${op} failed, queueing: ${err instanceof Error ? err.message : String(err)}`);
+    // An insert/upsert without a payload replays as `upsert(undefined)`: it can
+    // never land and only hides that the write was lost.
+    if ((op === 'insert' || op === 'upsert') && fallback.payload === undefined) return false;
     try {
       await queueWrite({ table, op, ...fallback });
     } catch {}

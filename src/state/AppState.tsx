@@ -3209,14 +3209,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // "never configured", [] means "all turned off", and the reader
           // treats those differently.
           if (updates.enabledPaymentMethods !== undefined) dbUpdates.enabled_payment_methods = updates.enabledPaymentMethods ?? null;
-          import('../services/offlineWriteQueue').then(({ persistOrQueue }) =>
+          import('../services/offlineWriteQueue').then(({ persistOrQueue, businessSettingsFallback, supersedeQueuedFields }) =>
             // R83: cast is to the BusinessSettingsRow Partial expected by
             // upsertBusinessSettings — the row type now includes the 4
             // new fields, so the licenses array doesn't need a structural
             // override anymore. `Record<string, string | number | null>` is
             // a soft compatibility shim from the original mapper; the cast
             // satisfies it without sacrificing the real type contract above.
-            persistOrQueue('business_settings', 'upsert', () => upsertBusinessSettings(dbUpdates as Parameters<typeof upsertBusinessSettings>[0]), { payload: dbUpdates as Record<string, string | number | null> }),
+            persistOrQueue('business_settings', 'upsert', () => upsertBusinessSettings(dbUpdates as Parameters<typeof upsertBusinessSettings>[0]), businessSettingsFallback(dbUpdates, getAuthedUserId()))
+              // Landed: an OLDER queued edit of these columns must not replay over it.
+              .then((landed) => (landed ? supersedeQueuedFields('business_settings', getAuthedUserId(), Object.keys(dbUpdates)) : undefined)),
           ).catch(() => {});
         }
       },
