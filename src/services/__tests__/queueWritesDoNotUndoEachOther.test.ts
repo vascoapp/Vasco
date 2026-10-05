@@ -37,3 +37,29 @@ it('reject + snooze of different cards at once: both land', async () => {
   expect(q.find((i: any) => i.id === 'a')?.status).toBe('rejected');
   expect(q.find((i: any) => i.id === 'b')?.snoozedUntil).toBeTruthy();
 });
+
+it('a queue write in flight cannot bring the old account\'s queue back after logout', async () => {
+  const { clearUserScopedStorage } = require('../sessionCleanup');
+  await AsyncStorage.setItem(KEY, JSON.stringify([card('old-1'), card('old-2')]));
+  // Hold the queue WRITE at a gate: the write has already read the old queue.
+  let open!: () => void;
+  const gate = new Promise<void>((r) => { open = r; });
+  // setItem is already a jest mock: keep ITS implementation, or the spy calls
+  // itself forever.
+  const mockSet = AsyncStorage.setItem as unknown as jest.Mock;
+  const realImpl = mockSet.getMockImplementation()!;
+  mockSet.mockImplementation(async (k: string, v: string) => {
+    if (k === KEY) await gate;
+    return realImpl(k, v);
+  });
+  const spy = { mockRestore: () => mockSet.mockImplementation(realImpl) };
+  const write = addToQueue(fresh('late-1'));
+  await new Promise((r) => setTimeout(r, 10)); // the write is now parked at the gate
+  const wipe = clearUserScopedStorage('user-a');
+  await new Promise((r) => setTimeout(r, 10)); // without the lock, the wipe completes here
+  open();
+  await Promise.all([write, wipe]);
+  spy.mockRestore();
+  const q = await stored();
+  expect(q.filter((i: any) => i.id === 'old-1' || i.id === 'old-2')).toEqual([]);
+});

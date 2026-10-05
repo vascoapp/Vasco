@@ -69,7 +69,11 @@ export async function clearUserScopedStorage(outgoingUserId?: string | null): Pr
     const allKeys = await AsyncStorage.getAllKeys();
     const toWipe = allKeys.filter((k) => k.startsWith('@vasco_') && !KEEP_AT_LOGOUT.has(k));
     if (toWipe.length > 0) {
-      await AsyncStorage.multiRemove(toWipe);
+      // After any AI-queue write in flight, so it cannot land after the wipe
+      // and restore the previous account's queue (require: no dynamic import).
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { afterQueueWrites } = require('./aiActionQueueService') as typeof import('./aiActionQueueService');
+      await afterQueueWrites(() => AsyncStorage.multiRemove(toWipe));
     }
   } catch (err) {
     logWarn('SessionCleanup', `clearUserScopedStorage failed: ${err}`);

@@ -48,6 +48,16 @@ function withQueueLock<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
+/**
+ * For bulk wipes outside this module (logout, account deletion): run AFTER
+ * any queue write already in flight. Otherwise a write that read the queue
+ * just before the wipe lands after it and brings the previous account's whole
+ * queue back (review 2026-10-05). Storage only, like every locked section.
+ */
+export function afterQueueWrites<T>(fn: () => Promise<T>): Promise<T> {
+  return withQueueLock(fn);
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

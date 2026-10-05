@@ -71,7 +71,10 @@ export async function clearAllLocalData(): Promise<{ cleared: number }> {
     );
 
     if (vascoKeys.length > 0) {
-      await AsyncStorage.multiRemove(vascoKeys);
+      // After any in-flight AI-queue write (see afterQueueWrites).
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { afterQueueWrites } = require('./aiActionQueueService') as typeof import('./aiActionQueueService');
+      await afterQueueWrites(() => AsyncStorage.multiRemove(vascoKeys));
       cleared += vascoKeys.length;
     }
   } catch (error) {
