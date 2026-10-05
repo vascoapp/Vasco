@@ -82,8 +82,12 @@ const isScreenWalk = target.includes('__screenwalk__');
 // swallows the path as a second ignore pattern — jest then runs EVERY suite.
 const inAgentWorktree = /[\\/]\.claude[\\/]worktrees[\\/]/.test(process.cwd());
 const ignoreOverride = inAgentWorktree ? ' --testPathIgnorePatterns=/node_modules/' : '';
+// A suite that only means something in PRODUCTION posture (it skips itself in
+// demo mode) is decoyed with DECOY_JEST_CONFIG=jest.screens.prod.config.js —
+// under the default demo config it is skipped, and a skipped suite "passes".
+const screensConfig = process.env.DECOY_JEST_CONFIG ?? 'jest.screens.config.js';
 const jestCmd = isScreenWalk
-  ? `npx jest --config jest.screens.config.js --forceExit ${JSON.stringify(target)} --silent${ignoreOverride}`
+  ? `npx jest --config ${screensConfig} --forceExit ${JSON.stringify(target)} --silent${ignoreOverride}`
   : `npx jest ${JSON.stringify(target)} --silent${ignoreOverride}`;
 const jestEnv = isScreenWalk
   ? { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --experimental-vm-modules`.trim() }

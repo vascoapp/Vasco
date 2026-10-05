@@ -588,6 +588,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // Bumped whenever the signed-in USER changes (subscribeUserChange fires
   // only on an id change). refreshData commits only if it is unchanged.
   const userGenerationRef = useRef(0);
+  /**
+   * The current user's CACHE hydrate, settled when it is done. On sign-in the
+   * cache hydrate and refreshData start together; when storage was the slower
+   * one the cache landed after the server and put stale rows back until the
+   * next refresh (reproduced in serverRowsBeatALateCache). refreshData now
+   * waits for it before applying server rows, so the cache always lands first
+   * and the refresh's own merge (temp-id rows, queued documents, healed line
+   * items) keeps offline work. NOT "skip the cache once the server answered":
+   * the cache is the only copy of offline line items (never queued), so that
+   * version lost them for good (review 2026-10-05).
+   */
+  const cacheHydrateRef = useRef<Promise<void> | null>(null);
   const refreshData = useCallback(async () => {
     // Nobody signed in (a logged-out cold start): every read below is refused
     // (anon has no table grants) — twelve doomed requests per app open, and
@@ -638,6 +650,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       // from the screen and from storage (2026-09-24).
       const { keepPendingDocuments } = await import('../services/offlineWriteQueue');
       const pendingDocs = await pendingDocsP;
+      // Cache first, then server (see cacheHydrateRef). Bounded: if storage
+      // hangs, behave as before (the next refresh corrects stale rows).
+      const hydrate = cacheHydrateRef.current;
+      if (hydrate) await Promise.race([hydrate, new Promise<void>((r) => setTimeout(r, 15000))]);
       if (!stillOwner()) return;
       setQuotes((prev) => keepPendingDocuments(prev, q, pendingDocs));
       setInvoices((prev) => keepPendingDocuments(prev, inv, pendingDocs));
@@ -1107,6 +1123,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       if (!alive || !userId || hydratedFor === userId) return;
       hydrated.current = true;
       hydratedFor = userId;
+      // Published so refreshData can let the cache land first.
+      let settle!: () => void;
+      cacheHydrateRef.current = new Promise<void>((r) => { settle = r; });
       try {
         const owner = await AsyncStorage.getItem(CACHE_OWNER_KEY);
         if (owner && owner !== userId) {
@@ -1145,6 +1164,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
         await AsyncStorage.setItem(CACHE_OWNER_KEY, userId);
       } catch {}
+      settle();
       if (alive) setPersistReady(true);
     };
     void hydrateFor(getAuthedUserId());
