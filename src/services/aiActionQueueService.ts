@@ -33,6 +33,21 @@ import { localDateKey, todayKey } from '../utils/dateKey';
 
 const QUEUE_KEY = '@vasco_ai_queue';
 
+/**
+ * One read→modify→write of the queue at a time (sweep A5). Every writer read
+ * the whole list, changed it and wrote it back; two at once (the scheduler
+ * adding a card while the contractor approves one) meant the later write
+ * silently undid the earlier — an approved card came back, a new card
+ * vanished. A locked section touches STORAGE only: no network, and no call to
+ * another queue function (the lock is not re-entrant).
+ */
+let queueLock: Promise<void> = Promise.resolve();
+function withQueueLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = queueLock.then(fn, fn);
+  queueLock = run.then(() => undefined, () => undefined);
+  return run;
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -238,16 +253,19 @@ export async function dropStaleLanguageCards(): Promise<number> {
   const lang = currentLocale();
   if (!lang) return 0;
   try {
-    const raw = await AsyncStorage.getItem(QUEUE_KEY);
-    const items: QueueItem[] = raw ? JSON.parse(raw) : [];
-    const keep = items.filter((q) =>
-      q.status !== 'pending'
-      || q.locale === lang
-      || !REBUILT_ON_EVERY_RUN.test(q.sourceGeneratorId ?? ''),
-    );
-    const dropped = items.length - keep.length;
+    const dropped = await withQueueLock(async () => {
+      const raw = await AsyncStorage.getItem(QUEUE_KEY);
+      const items: QueueItem[] = raw ? JSON.parse(raw) : [];
+      const keep = items.filter((q) =>
+        q.status !== 'pending'
+        || q.locale === lang
+        || !REBUILT_ON_EVERY_RUN.test(q.sourceGeneratorId ?? ''),
+      );
+      const n = items.length - keep.length;
+      if (n > 0) await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(keep));
+      return n;
+    });
     if (dropped === 0) return 0;
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(keep));
     await AsyncStorage.removeItem('@vasco_pack_daily_17_last_fired').catch(() => {});
     import('../intelligence/backgroundJobScheduler')
       .then((m) => m.requestQueueRebuild())
@@ -272,24 +290,27 @@ export function subscribeQueueChanges(listener: QueueListener): () => void {
 
 export async function getQueue(): Promise<QueueItem[]> {
   try {
-    const raw = await AsyncStorage.getItem(QUEUE_KEY);
-    const items: QueueItem[] = raw ? JSON.parse(raw) : [];
     const now = new Date().toISOString();
+    // Read + prune under the lock (the prune is a write); the remote merge
+    // below is network and stays outside it.
+    const items: QueueItem[] = await withQueueLock(async () => {
+      const raw = await AsyncStorage.getItem(QUEUE_KEY);
+      const all: QueueItem[] = raw ? JSON.parse(raw) : [];
+      // Prune history — acted-on AND expired cards — after 7 days. Expired
+      // pending cards used to be kept forever (A1).
+      const cutoff = new Date(Date.now() - 7 * MS_PER_DAY).toISOString();
+      const pruned = all.filter(i => isLivePending(i, now) || i.createdAt > cutoff);
+      if (pruned.length < all.length) {
+        await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(pruned)).catch(() => {});
+      }
+      return all;
+    });
     // Filter expired and snoozed, return only pending items
     const pending = items.filter(i =>
       i.status === 'pending' &&
       (!i.expiresAt || i.expiresAt > now) &&
       (!i.snoozedUntil || i.snoozedUntil <= now)
     );
-    // Prune history — acted-on AND expired cards — after 7 days. Expired
-    // pending cards used to be kept forever (A1).
-    const cutoff = new Date(Date.now() - 7 * MS_PER_DAY).toISOString();
-    const pruned = items.filter(i =>
-      isLivePending(i, now) || i.createdAt > cutoff
-    );
-    if (pruned.length < items.length) {
-      await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(pruned)).catch(() => {});
-    }
     // Merge in remote high-stakes customer questions (R170). Dedup by id.
     const remoteQuestions = await fetchPendingCustomerQuestions().catch(() => [] as QueueItem[]);
     const existingIds = new Set(pending.map((i) => i.id));
@@ -483,6 +504,7 @@ function collectionsRank(q: Pick<QueueItem, 'type' | 'sourceGeneratorId'>): numb
 }
 
 export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'createdAt'>): Promise<string> {
+  return withQueueLock(async () => {
   const t = i18n.t.bind(i18n);
   const id = `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const full: QueueItem = {
@@ -630,6 +652,7 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     notifyQueueChanged();
   } catch {}
   return id;
+  });
 }
 
 function stripCount(title: string): string {
@@ -678,16 +701,26 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
       createdAt: new Date().toISOString(),
     };
   }
+  // Storage under the lock; the ledger and learning emits (network) after it.
+  let locked: { item: QueueItem; firstApproval: boolean } | null = null;
   try {
-    const raw = await AsyncStorage.getItem(QUEUE_KEY);
-    const items: QueueItem[] = raw ? JSON.parse(raw) : [];
-    const item = items.find(i => i.id === itemId);
-    if (item) {
-      item.status = 'approved';
-      item.resolvedAt = new Date().toISOString();
-      const firstApproval = !item.approvalReported;
-      item.approvalReported = true;
+    locked = await withQueueLock(async () => {
+      const raw = await AsyncStorage.getItem(QUEUE_KEY);
+      const items: QueueItem[] = raw ? JSON.parse(raw) : [];
+      const found = items.find(i => i.id === itemId);
+      if (!found) return null;
+      found.status = 'approved';
+      found.resolvedAt = new Date().toISOString();
+      const first = !found.approvalReported;
+      found.approvalReported = true;
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      return { item: found, firstApproval: first };
+    });
+  } catch { /* storage failed: nothing approved */ }
+  const item = locked?.item;
+  const firstApproval = locked?.firstApproval ?? false;
+  try {
+    if (item) {
       notifyQueueChanged();
       // Durable record of the approval. This store prunes non-pending items
       // after 7 days (see getQueue), so without a separate ledger there is no
@@ -756,10 +789,12 @@ export async function approveItem(itemId: string, options?: { editedText?: strin
  * market.
  */
 export async function clearQueue(): Promise<void> {
+  return withQueueLock(async () => {
   try {
     await AsyncStorage.removeItem(QUEUE_KEY);
     notifyQueueChanged();
   } catch { /* the next populate will simply re-add on top */ }
+  });
 }
 
 /**
@@ -771,6 +806,7 @@ export async function clearQueue(): Promise<void> {
  * inflate "Vasco did N".
  */
 export async function reopenItem(itemId: string): Promise<void> {
+  return withQueueLock(async () => {
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
     const items: QueueItem[] = raw ? JSON.parse(raw) : [];
@@ -781,6 +817,7 @@ export async function reopenItem(itemId: string): Promise<void> {
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
     notifyQueueChanged();
   } catch { /* the card stays retired — no worse than before */ }
+  });
 }
 
 export async function rejectItem(itemId: string): Promise<void> {
@@ -789,11 +826,14 @@ export async function rejectItem(itemId: string): Promise<void> {
     if (questionId) await rejectCustomerQuestionReply(questionId);
     return;
   }
+  // Storage under the lock; the learning emits (network) after it.
+  let rejected: QueueItem | null = null;
   try {
-    const raw = await AsyncStorage.getItem(QUEUE_KEY);
-    const items: QueueItem[] = raw ? JSON.parse(raw) : [];
-    const item = items.find(i => i.id === itemId);
-    if (item) {
+    rejected = await withQueueLock(async () => {
+      const raw = await AsyncStorage.getItem(QUEUE_KEY);
+      const items: QueueItem[] = raw ? JSON.parse(raw) : [];
+      const item = items.find(i => i.id === itemId);
+      if (!item) return null;
       item.status = 'rejected';
       // Dormant for any future sibling of this entity: if the contractor has
       // rejected 3+ items with the same entityKey, silence that entity for
@@ -812,6 +852,12 @@ export async function rejectItem(itemId: string): Promise<void> {
         }
       }
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
+      return item;
+    });
+  } catch { /* storage failed: nothing rejected */ }
+  const item = rejected;
+  try {
+    if (item) {
       notifyQueueChanged();
       try {
         const { emitBusinessEvent, emitPackDismissed } = await import('../intelligence/dataCollector');
@@ -838,6 +884,7 @@ export async function rejectItem(itemId: string): Promise<void> {
 }
 
 export async function snoozeQueueItem(itemId: string, hours: number): Promise<void> {
+  return withQueueLock(async () => {
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
     const items: QueueItem[] = raw ? JSON.parse(raw) : [];
@@ -849,6 +896,7 @@ export async function snoozeQueueItem(itemId: string, hours: number): Promise<vo
       notifyQueueChanged();
     }
   } catch {}
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -2145,6 +2193,7 @@ export function queueTargetExists(item: Pick<QueueItem, 'preparedData'>, entitie
 // above, would vanish). Follow the rename like every other side-effect store.
 const TARGET_FIELDS = ['invoiceId', 'jobId', 'quoteId', 'entityId'] as const;
 export async function rekeyQueueTargets(oldId: string, newId: string): Promise<void> {
+  return withQueueLock(async () => {
   if (!oldId || !newId || oldId === newId) return;
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
@@ -2163,6 +2212,7 @@ export async function rekeyQueueTargets(oldId: string, newId: string): Promise<v
       notifyQueueChanged();
     }
   } catch { /* a failed rekey leaves the card hidden, never wrong */ }
+  });
 }
 subscribeIdRemap((e) => { void rekeyQueueTargets(e.tempId, e.realId); });
 subscribeDocNumberRemap((e) => { void rekeyQueueTargets(e.placeholderNumber, e.realNumber); });
