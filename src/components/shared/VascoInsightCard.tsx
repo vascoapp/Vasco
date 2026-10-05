@@ -195,13 +195,21 @@ export function VascoInsightCard({
     // Layer 5: Execute AI action if available
     const insightAction = (insight as any).action;
     if (insightAction && insightAction.type) {
-      import('../../intelligence/actionExecutor').then(({ executeActionWithConfirmation }) => {
+      // require(), not import(): the dynamic form throws under jest into the
+      // catch below, so no test had ever run this path (learnings #389).
+      Promise.resolve().then(() => {
+        const { executeActionWithConfirmation } = require('../../intelligence/actionExecutor') as typeof import('../../intelligence/actionExecutor');
         executeActionWithConfirmation(insightAction, insight.id, generatorId, (result) => {
           // Acted = it happened. A cancelled confirm, a dismissed share or an
           // Android "not yet" leaves the card actionable (review 2026-09-29).
           if (result.success) setActedOn(true);
-          if (result.success && result.data?.route) {
-            router.push(result.data.route as any);
+          // A route is where the contractor finishes it — opened either way;
+          // only a done effect retires the card (sweep B5).
+          // The action's own `route` ("navigate instead of executing inline")
+          // when the handler returned none — `custom` actions carry only that.
+          const route = result.data?.route ?? insightAction.route;
+          if (route) {
+            router.push(route as any);
           }
         });
       }).catch(() => {});

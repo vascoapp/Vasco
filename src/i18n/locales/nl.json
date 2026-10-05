@@ -3619,7 +3619,10 @@
     "priceIntelligence": "Prijsintelligentie",
     "invoicesScanned": "facturen gescand",
     "materialsTracked": "materialen getrackt",
-    "suppliersCompared": "leveranciers vergeleken"
+    "suppliersCompared": "leveranciers vergeleken",
+    "actionsHandled_one": "{{count}} tip afgehandeld",
+    "actionsHandled_other": "{{count}} tips afgehandeld",
+    "markHandled": "Afgehandeld"
   },
   "smartReply": {
     "suggested": "Voorgestelde antwoorden",

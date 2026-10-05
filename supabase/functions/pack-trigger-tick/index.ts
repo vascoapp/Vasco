@@ -33,6 +33,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { isServiceRoleCall } from '../_shared/cronAuth.ts';
 import { pushOutcome } from '../_shared/pushOutcome.ts';
 
 const corsHeaders = {
@@ -240,6 +241,13 @@ function classifyQuote(q: QuoteRow, nowMs: number): QuoteStep | null {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  // Scheduler only (_shared/cronAuth.ts): the anon key ships in the app, and
+  // this function fans out to / writes for every contractor.
+  if (!isServiceRoleCall(req.headers.get('authorization'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ ok: false, error: 'POST only' }), {
       status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

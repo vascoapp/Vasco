@@ -11,6 +11,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { isServiceRoleCall } from '../_shared/cronAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -74,9 +75,11 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Only accept the cron caller (service role) — no public unauthenticated digest trigger
-  const auth = req.headers.get('authorization') ?? '';
-  if (auth !== `Bearer ${serviceKey}`) {
+  // Only accept the cron caller (service role) — no public digest trigger.
+  // It compared the header to the SUPABASE_SERVICE_ROLE_KEY string and so
+  // returned 403 to the real cron job (a service-role JWT, not that string):
+  // no weekly digest went out (cron_http_calls, 2026-09-28). See cronAuth.ts.
+  if (!isServiceRoleCall(req.headers.get('authorization'), serviceKey)) {
     return new Response(JSON.stringify({ ok: false, error: 'Forbidden' }), {
       status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

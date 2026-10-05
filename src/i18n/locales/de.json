@@ -3619,7 +3619,10 @@
     "priceIntelligence": "Preisintelligenz",
     "invoicesScanned": "Rechnungen gescannt",
     "materialsTracked": "Materialien erfasst",
-    "suppliersCompared": "Lieferanten verglichen"
+    "suppliersCompared": "Lieferanten verglichen",
+    "actionsHandled_one": "{{count}} Tipp erledigt",
+    "actionsHandled_other": "{{count}} Tipps erledigt",
+    "markHandled": "Erledigt"
   },
   "smartReply": {
     "suggested": "Antwortvorschläge",

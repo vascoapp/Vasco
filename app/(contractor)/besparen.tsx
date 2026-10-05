@@ -15,7 +15,6 @@ import {
   Pressable,
   RefreshControl,
   Share,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -136,7 +135,7 @@ export default function BesparenScreen() {
       title: tip.title,
       reason: tip.description,
       saving: tip.potentialSaving,
-      actionLabel: tip.actionLabel || t('savings.activate', 'Activeer'),
+      actionLabel: t('savings.markHandled', 'Handled'),
       type: 'tip',
     });
   });
@@ -166,31 +165,18 @@ export default function BesparenScreen() {
 
   const handleAction = (action: SavingAction) => {
     hapticSuccess();
-
+    // Opening a screen is not an action taken: these used to join the
+    // "N acties ingepland" count with nothing scheduled anywhere (sweep B7).
     if (action.type === 'procurement' || action.type === 'price-alert') {
-      // Navigate to material search for ordering actions
       router.push('/contractor/material-search' as any);
-    } else if (action.type === 'margin') {
-      // Navigate to market prices for supplier comparison
-      router.push('/contractor/market-prices');
-    } else if (action.type === 'tip') {
-      // Confirm activation of the tip
-      Alert.alert(
-        t('savings.activateSaving', 'Besparing activeren'),
-        t('savings.activateConfirm', { defaultValue: 'Wil je "{{title}}" activeren? Verwachte besparing: {{amount}}.', title: action.title, amount: formatCurrency0(action.saving, country) }),
-        [
-          { text: t('common.cancel', 'Annuleren'), style: 'cancel' },
-          {
-            text: t('savings.activate', 'Activeer'),
-            onPress: () => {
-              setActioned(prev => new Set(prev).add(action.id));
-            },
-          },
-        ],
-      );
-      return; // Don't mark as actioned until confirmed
+      return;
     }
-
+    if (action.type === 'margin') {
+      router.push('/contractor/market-prices');
+      return;
+    }
+    // A tip is advice: the contractor marks it handled. It used to ask to
+    // "activate" it with an "expected saving" — nothing was ever activated.
     setActioned(prev => new Set(prev).add(action.id));
   };
 
@@ -304,7 +290,7 @@ export default function BesparenScreen() {
             <View style={s.doneCard}>
               <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
               <Text style={s.doneText}>
-                {t('savings.actionsScheduled', { defaultValue: '{{count}} acties ingepland', count: actioned.size })}
+                {t('savings.actionsHandled', { defaultValue: '{{count}} handled', count: actioned.size })}
               </Text>
             </View>
           </FadeIn>

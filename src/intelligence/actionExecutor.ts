@@ -25,6 +25,13 @@ const MAX_ACTION_LOG = 200;
 // ---------------------------------------------------------------------------
 
 export interface ActionResult {
+  /**
+   * The effect HAPPENED (an invoice exists, the share was confirmed, the write
+   * landed). Not "a screen was opened": a result that only routes the
+   * contractor to where they can do it is `success: false` with
+   * `data.route` — the card opens it but is not marked done, and the learning
+   * log does not count it as executed (sweep B5: every handler said success).
+   */
   success: boolean;
   message: string;
   data?: Record<string, any>;
@@ -112,7 +119,9 @@ const handlers: Record<InsightActionType, ActionHandler> = {
         return { success: false, message: t('action.invoiceFailed', { defaultValue: 'Could not create invoice: {{err}}', err: String(e) }) };
       }
     }
-    return { success: true, message: t('action.creatingInvoice', 'Creating invoice...'), data: { route: '/contractor/tiered-quote', jobId: params.jobId } };
+    // Nothing was created: open the job (invoicing lives there —
+    // jobBillingBasis), not the QUOTE builder this used to open.
+    return { success: false, message: t('action.creatingInvoice', 'Creating invoice...'), data: { route: params.jobId ? `/contractor/job/${params.jobId}` : '/(contractor)/facturen', jobId: params.jobId } };
   },
 
   order_materials: async (params) => {
@@ -125,7 +134,7 @@ const handlers: Record<InsightActionType, ActionHandler> = {
         }
       } catch {}
     }
-    return { success: true, message: t('action.orderCreated', { defaultValue: 'Purchase order created for {{material}}', material: params.materialName || t('action.materials', 'materials') }), data: { route: '/contractor/purchase-orders' } };
+    return { success: false, message: t('action.orderCreated', { defaultValue: 'Purchase order created for {{material}}', material: params.materialName || t('action.materials', 'materials') }), data: { route: '/contractor/purchase-orders' } };
   },
 
   schedule_job: async (params) => {
@@ -136,23 +145,27 @@ const handlers: Record<InsightActionType, ActionHandler> = {
         return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: `/contractor/job/${params.jobId}` } };
       } catch {}
     }
-    return { success: true, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: '/contractor/schedule' } };
+    return { success: false, message: t('action.jobScheduled', { defaultValue: 'Job scheduled: {{title}}', title: params.jobTitle || '' }), data: { route: '/contractor/schedule' } };
   },
 
   adjust_quote: async (params) => {
     const t = i18n.t.bind(i18n);
     const { quoteId, suggestedPrice } = params;
+    let written = false;
     if (bindings.updateQuoteAmount && quoteId && typeof suggestedPrice === 'number') {
       try {
         await bindings.updateQuoteAmount(String(quoteId), suggestedPrice);
+        written = true;
       } catch {}
     }
-    return { success: true, message: t('action.quoteAdjusted', { defaultValue: 'Quote {{id}} adjusted to {{price}}', id: quoteId, price: formatMoney2(suggestedPrice) }), data: { route: `/quotes/${quoteId}` } };
+    // Only a written price is "adjusted"; with no quote id this routed to
+    // /quotes/undefined.
+    return { success: written, message: t('action.quoteAdjusted', { defaultValue: 'Quote {{id}} adjusted to {{price}}', id: quoteId, price: formatMoney2(suggestedPrice) }), data: { route: quoteId ? `/quotes/${quoteId}` : '/(contractor)/facturen' } };
   },
 
   renew_cert: async (params) => {
     const t = i18n.t.bind(i18n);
-    return { success: true, message: t('action.renewalStarted', { defaultValue: 'Renewal started for {{cert}}', cert: params.certName || t('action.certificate', 'certificate') }), data: { route: '/(contractor)/certificaten' } };
+    return { success: false, message: t('action.renewalStarted', { defaultValue: 'Renewal started for {{cert}}', cert: params.certName || t('action.certificate', 'certificate') }), data: { route: '/(contractor)/certificaten' } };
   },
 
   send_followup: async (params) => {
@@ -176,33 +189,33 @@ const handlers: Record<InsightActionType, ActionHandler> = {
 
   escalate_issue: async (params) => {
     const t = i18n.t.bind(i18n);
-    return { success: true, message: t('action.escalated', { defaultValue: 'Escalation reported: {{issue}}', issue: params.issue || '' }), data: { route: '/sitelead/incident-report' } };
+    return { success: false, message: t('action.escalated', { defaultValue: 'Escalation reported: {{issue}}', issue: params.issue || '' }), data: { route: '/sitelead/incident-report' } };
   },
 
   log_expense: async (params) => {
     const t = i18n.t.bind(i18n);
-    return { success: true, message: t('action.expenseLogged', { defaultValue: 'Expense logged: {{amount}}', amount: formatMoney2(params.amount || 0) }), data: { route: '/contractor/expenses' } };
+    return { success: false, message: t('action.expenseLogged', { defaultValue: 'Expense logged: {{amount}}', amount: formatMoney2(params.amount || 0) }), data: { route: '/contractor/expenses' } };
   },
 
   switch_supplier: async (params) => {
     const t = i18n.t.bind(i18n);
     const { currentSupplier, newSupplier, savings } = params;
-    return { success: true, message: t('action.supplierSwitched', { defaultValue: 'Switch from {{from}} to {{to}} — save {{savings}}/order', from: currentSupplier, to: newSupplier, savings: formatMoney(savings || 0) }), data: { route: '/contractor/inkoop' } };
+    return { success: false, message: t('action.supplierSwitched', { defaultValue: 'Switch from {{from}} to {{to}} — save {{savings}}/order', from: currentSupplier, to: newSupplier, savings: formatMoney(savings || 0) }), data: { route: '/contractor/inkoop' } };
   },
 
   close_defect: async (params) => {
     const t = i18n.t.bind(i18n);
-    return { success: true, message: t('action.defectClosed', { defaultValue: 'Defect {{id}} closed', id: params.defectId || '' }), data: { route: '/sitelead/close-defect' } };
+    return { success: false, message: t('action.defectClosed', { defaultValue: 'Defect {{id}} closed', id: params.defectId || '' }), data: { route: '/sitelead/close-defect' } };
   },
 
   submit_report: async (params) => {
     const t = i18n.t.bind(i18n);
-    return { success: true, message: t('action.submittingReport', 'Submitting report...'), data: { route: '/sitelead/daily-report' } };
+    return { success: false, message: t('action.submittingReport', 'Submitting report...'), data: { route: '/sitelead/daily-report' } };
   },
 
   custom: async (params) => {
     const t = i18n.t.bind(i18n);
-    return { success: true, message: params.message || t('action.executed', 'Action executed') };
+    return { success: false, message: params.message || t('action.executed', 'Action executed') };
   },
 };
 
