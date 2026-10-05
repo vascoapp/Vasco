@@ -11,7 +11,9 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
-import { claimWebhookEvent, redeemCredits, restoreCredits } from '../_shared/credit-redemption.ts';
+import { claimWebhookEvent, redeemCredits, restoreCredits, releaseWebhookEvent } from '../_shared/credit-redemption.ts';
+import { invoiceLookup } from '../_shared/invoiceRef.ts';
+import { isPermanentDbError } from '../_shared/dbErrors.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,6 +79,32 @@ async function verifyStripeSignature(
     console.error('Stripe signature verification error:', String(err));
     return false;
   }
+}
+
+/**
+ * 503 = "deliver this again later". Used ONLY where nothing irreversible has
+ * happened yet (or it was compensated): the provider retries (Mollie ~10× over
+ * 26 h, Stripe up to 3 days) and the idempotent writes simply land then. Every
+ * such failure used to answer 200, so a payment the database could not record
+ * was never recorded at all (sweep A7). After an email/push went out a failure
+ * is REPORTED instead (#352).
+ */
+function retryLater(why: string): Response {
+  return new Response(JSON.stringify({ received: false, retry: true, error: why }), {
+    status: 503,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '300' },
+  });
+}
+
+/** Transient → 503 (retry); permanent → 200 + a loud log (see dbErrors.ts). */
+function failRecording(why: string, error: { code?: unknown; message?: string } | null): Response {
+  if (isPermanentDbError(error)) {
+    console.error(`PERMANENT, not retried — ${why}: ${error?.message ?? ''} (${String(error?.code ?? '')})`);
+    return new Response(JSON.stringify({ received: true, recorded: false, error: why }), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return retryLater(why);
 }
 
 Deno.serve(async (req) => {
@@ -258,11 +286,7 @@ Deno.serve(async (req) => {
       event.type === 'customer.subscription.updated' ||
       event.type === 'customer.subscription.deleted'
     ) {
-      if (!supabaseUrl0 || !supabaseServiceKey0) {
-        return new Response(JSON.stringify({ received: true, error: 'DB not configured' }), {
-          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+      if (!supabaseUrl0 || !supabaseServiceKey0) return retryLater('DB not configured');
       const sub = event.data.object;
       // Metadata carries user_id + tier from create-subscription-checkout
       const userId = sub?.metadata?.user_id ?? sub?.subscription_data?.metadata?.user_id ?? null;
@@ -334,10 +358,22 @@ Deno.serve(async (req) => {
           // never redeem again — without this, the customer pays, loses the
           // credits and gets nothing.
           console.error('subscriptions upsert failed:', subErr.message);
+          let restored = true;
           if (consumedCreditIds.length > 0) {
-            await restoreCredits(supabaseUrl0, supabaseServiceKey0, consumedCreditIds);
-            console.error(`restored ${consumedCreditIds.length} credit(s) for user=${userId}`);
+            restored = await restoreCredits(supabaseUrl0, supabaseServiceKey0, consumedCreditIds);
+            console.error(`restore ${consumedCreditIds.length} credit(s) for user=${userId}: ${restored}`);
           }
+          // The PURCHASE itself did not land: a paying customer would stay on
+          // Free, and the claim made Stripe's retry a replay (sweep A7). Give
+          // the claim back and ask Stripe to deliver again — the upsert is
+          // idempotent and the credits were handed back above.
+          // Release only a claim THIS delivery owns, and only after the
+          // credits are back: releasing a claim an earlier delivery made, or
+          // after a failed restore, would redeem a second batch (review).
+          if (isFirstSeeing === 'first' && restored) {
+            await releaseWebhookEvent(supabaseUrl0, supabaseServiceKey0, 'stripe', event.id);
+          }
+          return failRecording('subscription sync failed', subErr);
         } else {
           console.log(`Subscription synced: user=${userId} tier=${tier} status=${status}`);
         }
@@ -358,11 +394,7 @@ Deno.serve(async (req) => {
     // "card declined" banner during the retry window.
     // -------------------------------------------------------------------------
     if (event.type === 'invoice.payment_failed') {
-      if (!supabaseUrl0 || !supabaseServiceKey0) {
-        return new Response(JSON.stringify({ received: true, error: 'DB not configured' }), {
-          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+      if (!supabaseUrl0 || !supabaseServiceKey0) return retryLater('DB not configured');
       const invoice = event.data.object;
       const subId: string | null = invoice?.subscription ?? null;
       if (!subId) {
@@ -378,9 +410,7 @@ Deno.serve(async (req) => {
       });
       if (!subResp.ok) {
         console.error(`payment_failed: subscription fetch ${subResp.status}`);
-        return new Response(JSON.stringify({ received: true, status: 'sub_fetch_failed' }), {
-          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return retryLater('sub_fetch_failed');
       }
       const sub = await subResp.json();
       const userId: string | null = sub?.metadata?.user_id ?? null;
@@ -391,17 +421,24 @@ Deno.serve(async (req) => {
         });
       }
       const adminClient = createClient(supabaseUrl0, supabaseServiceKey0);
+      // UPDATE, not upsert: `subscriptions.tier` is NOT NULL without a default
+      // and this event has no tier, so the upsert failed (23502) on EVERY
+      // dunning event — logged and ignored before, a 3-day retry storm once
+      // failures asked for redelivery (review 2026-10-05).
       const { error: upErr } = await adminClient
         .from('subscriptions')
-        .upsert({
-          user_id: userId,
+        .update({
           status: 'past_due',
           external_id: subId,
           external_provider: 'stripe',
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
-      if (upErr) console.error('past_due upsert failed:', upErr.message);
-      else console.log(`Subscription past_due: user=${userId} sub=${subId} attempt=${invoice?.attempt_count ?? 0}`);
+        })
+        .eq('user_id', userId);
+      if (upErr) {
+        console.error('past_due update failed:', upErr.message);
+        return failRecording('past_due sync failed', upErr);
+      }
+      console.log(`Subscription past_due: user=${userId} sub=${subId} attempt=${invoice?.attempt_count ?? 0}`);
 
       return new Response(JSON.stringify({ received: true, status: 'past_due_synced' }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -438,18 +475,17 @@ Deno.serve(async (req) => {
     if (trackerAccessCode) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-      if (supabaseUrl && supabaseServiceKey) {
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
-        const { error: trackerErr } = await supabase
-          .from('decision_trackers')
-          .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
-          .eq('access_code', trackerAccessCode);
-        if (trackerErr) {
-          console.error('Failed to mark tracker paid:', trackerErr.message);
-        } else {
-          console.log(`Tracker ${trackerAccessCode} marked as paid via Stripe (${paymentId})`);
-        }
+      if (!supabaseUrl || !supabaseServiceKey) return retryLater('DB not configured');
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { error: trackerErr } = await supabase
+        .from('decision_trackers')
+        .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
+        .eq('access_code', trackerAccessCode);
+      if (trackerErr) {
+        console.error('Failed to mark tracker paid:', trackerErr.message);
+        return failRecording('Tracker update failed', trackerErr);
       }
+      console.log(`Tracker ${trackerAccessCode} marked as paid via Stripe (${paymentId})`);
       return new Response(
         JSON.stringify({ received: true, status: 'tracker_paid', trackerAccessCode }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -472,10 +508,7 @@ Deno.serve(async (req) => {
 
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Supabase env vars not configured');
-      return new Response(JSON.stringify({ received: true, error: 'DB not configured' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return retryLater('DB not configured');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -487,7 +520,17 @@ Deno.serve(async (req) => {
 
     // R305: same fix as mollie-webhook — was writing to non-existent
     // `invoices` table; switched to `documents` filtered on doc_type='invoice'.
-    const { error: updateError } = await supabase
+    // `invoiceId` is the app's document NUMBER, not the row uuid (see
+    // _shared/invoiceRef.ts) — matched with the contractor's user id.
+    const lookup = invoiceLookup(invoiceId, paymentIntent.metadata?.userId);
+    if (!lookup) {
+      // A bare number with no contractor: ambiguous, and no retry fixes it.
+      console.error(`stripe ${event.id}: unresolvable invoice reference "${invoiceId}" (no userId in metadata)`);
+      return new Response(JSON.stringify({ received: true, error: 'Unresolvable invoice reference' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    let update = supabase
       .from('documents')
       .update({
         status: 'paid',
@@ -497,18 +540,26 @@ Deno.serve(async (req) => {
         payment_provider: 'stripe',
         updated_at: new Date().toISOString(),
       })
-      .eq('id', invoiceId)
+      .eq(lookup.column, lookup.value)
       .eq('doc_type', 'invoice');
+    if (lookup.column === 'document_number') update = update.eq('user_id', lookup.userId);
+    const { data: updatedRows, error: updateError } = await update.select('id');
 
     if (updateError) {
+      // Nothing sent yet (side effects come after): retry, or this payment
+      // is never recorded.
       console.error('Failed to update invoice:', updateError.message);
-      return new Response(JSON.stringify({ received: true, error: 'DB update failed' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return failRecording('DB update failed', updateError);
     }
 
-    console.log(`Invoice ${invoiceId} marked as paid via Stripe (${paymentId})`);
+    const invoiceRowId: string | undefined = (updatedRows as Array<{ id: string }> | null)?.[0]?.id;
+    if (!invoiceRowId) {
+      // No row matched: an invoice created offline may not be on the server
+      // yet — retry (bounded by Stripe's schedule).
+      console.error(`stripe ${event.id}: no invoice matched ${lookup.column}=${lookup.value}`);
+      return retryLater('Invoice not found');
+    }
+    console.log(`Invoice ${invoiceId} (${invoiceRowId}) marked as paid via Stripe (${paymentId})`);
 
     // R66 round 41: idempotency gate. Stripe's signature check at line 103
     // already prevents arbitrary replay from outside, but Stripe itself
@@ -524,7 +575,7 @@ Deno.serve(async (req) => {
       if (isFirstSeeingPaid === 'unknown') {
         console.error(`stripe ${event.id}: idempotency claim failed — sending paid side effects anyway`);
       }
-      await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
+      await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceRowId, paidAt).catch((err) =>
         console.warn('paid side-effects failed:', String(err)),
       );
     } else {

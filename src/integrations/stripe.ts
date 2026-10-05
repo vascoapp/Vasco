@@ -309,6 +309,8 @@ export async function createPaymentLink(request: StripePaymentRequest): Promise<
   // link-level for dashboard visibility + payment_intent_data for the webhook.
   const linkMetadata: Record<string, string> = {
     invoiceId: request.invoiceId,
+    // The webhook matches the document NUMBER per contractor (invoiceRef.ts).
+    ...(getAuthedUserId() ? { userId: getAuthedUserId() as string } : {}),
     ...(request.customerEmail ? { customerEmail: request.customerEmail } : {}),
     ...(request.metadata ?? {}),
   };
@@ -362,6 +364,7 @@ export async function createPayment(req: StripePaymentRequest): Promise<StripePa
     currency,
     description: req.description,
     'metadata[invoiceId]': req.invoiceId,
+    ...(getAuthedUserId() ? { 'metadata[userId]': getAuthedUserId() } : {}),
     payment_method_types: req.paymentMethods ?? SUPPORTED_METHODS.UK,
   };
 

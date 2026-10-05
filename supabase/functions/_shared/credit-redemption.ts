@@ -104,6 +104,28 @@ export async function claimWebhookEvent(
 }
 
 /**
+ * Give a claim back after the work it guards FAILED, so the provider's retry
+ * is treated as the first delivery rather than a replay (sweep A7). Only call
+ * it when nothing irreversible happened under the claim (no email, no push)
+ * or after compensating (credits restored). Best-effort: if the delete fails,
+ * the retry is a replay — no worse than before.
+ */
+export async function releaseWebhookEvent(
+  supabaseUrl: string,
+  serviceKey: string,
+  provider: 'stripe' | 'mollie',
+  eventId: string,
+): Promise<void> {
+  const admin = createClient(supabaseUrl, serviceKey);
+  const { error } = await admin
+    .from('webhook_idempotency')
+    .delete()
+    .eq('provider', provider)
+    .eq('event_id', eventId);
+  if (error) console.error(`releaseWebhookEvent ${provider}/${eventId} failed:`, error.message);
+}
+
+/**
  * Un-consume credits previously redeemed. Call when a downstream step fails
  * after redeemCredits succeeded (e.g. Stripe coupon apply 500s). Best-effort —
  * logs and swallows on failure.
@@ -112,11 +134,18 @@ export async function restoreCredits(
   supabaseUrl: string,
   serviceKey: string,
   consumedIds: string[],
-): Promise<void> {
-  if (consumedIds.length === 0) return;
+): Promise<boolean> {
+  // true = the credits are back (or there were none). A caller that releases
+  // its claim for a retry must only do so on true: a retry after a FAILED
+  // restore redeems a second batch while the first stays consumed (review).
+  if (consumedIds.length === 0) return true;
   const admin = createClient(supabaseUrl, serviceKey);
   const { error } = await admin.rpc('restore_subscription_credits', {
     p_consumed_ids: consumedIds,
   });
-  if (error) console.warn('restore_subscription_credits failed:', error.message);
+  if (error) {
+    console.warn('restore_subscription_credits failed:', error.message);
+    return false;
+  }
+  return true;
 }

@@ -10,12 +10,40 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
-import { claimWebhookEvent, redeemCredits, restoreCredits } from '../_shared/credit-redemption.ts';
+import { invoiceLookup } from '../_shared/invoiceRef.ts';
+import { isPermanentDbError } from '../_shared/dbErrors.ts';
+import { claimWebhookEvent, redeemCredits, restoreCredits, releaseWebhookEvent } from '../_shared/credit-redemption.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+/**
+ * 503 = "deliver this again later". Used ONLY where nothing irreversible has
+ * happened yet (or it was compensated): the provider retries (Mollie ~10× over
+ * 26 h, Stripe up to 3 days) and the idempotent writes simply land then. Every
+ * such failure used to answer 200, so a payment the database could not record
+ * was never recorded at all (sweep A7). After an email/push went out a failure
+ * is REPORTED instead (#352).
+ */
+function retryLater(why: string): Response {
+  return new Response(JSON.stringify({ received: false, retry: true, error: why }), {
+    status: 503,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '300' },
+  });
+}
+
+/** Transient → 503 (retry); permanent → 200 + a loud log (see dbErrors.ts). */
+function failRecording(why: string, error: { code?: unknown; message?: string } | null): Response {
+  if (isPermanentDbError(error)) {
+    console.error(`PERMANENT, not retried — ${why}: ${error?.message ?? ''} (${String(error?.code ?? '')})`);
+    return new Response(JSON.stringify({ received: true, recorded: false, error: why }), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return retryLater(why);
+}
 
 // ---------------------------------------------------------------------------
 // Rate limiting — in-memory sliding window (100 calls per 60 seconds)
@@ -85,10 +113,7 @@ Deno.serve(async (req) => {
     const mollieApiKey = Deno.env.get('MOLLIE_API_KEY');
     if (!mollieApiKey) {
       console.error('MOLLIE_API_KEY not configured');
-      return new Response(JSON.stringify({ received: true, error: 'Server misconfigured' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return retryLater('Server misconfigured');
     }
 
     const mollieRes = await fetch(`https://api.mollie.com/v2/payments/${paymentId}`, {
@@ -100,10 +125,7 @@ Deno.serve(async (req) => {
     if (!mollieRes.ok) {
       const errorText = await mollieRes.text();
       console.error(`Mollie API error ${mollieRes.status}:`, errorText);
-      return new Response(JSON.stringify({ received: true, error: 'Failed to fetch payment' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return retryLater('Failed to fetch payment');
     }
 
     const payment = await mollieRes.json();
@@ -140,10 +162,7 @@ Deno.serve(async (req) => {
 
       if (!supabaseUrl || !supabaseServiceKey) {
         console.error('Supabase env vars not configured');
-        return new Response(JSON.stringify({ received: true, error: 'DB not configured' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return retryLater('DB not configured');
       }
 
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -153,7 +172,17 @@ Deno.serve(async (req) => {
       // R305: was writing to non-existent `invoices` table — every payment
       // silently failed to mark the doc paid. Now writes to `documents`
       // filtered on doc_type='invoice' (the actual schema since v1.0).
-      const { error: updateError } = await supabase
+      // `invoiceId` is the app's document NUMBER, not the row uuid (see
+      // _shared/invoiceRef.ts) — matched with the contractor's user id.
+      const lookup = invoiceLookup(invoiceId, payment.metadata?.userId);
+      if (!lookup) {
+        // A bare number with no contractor: ambiguous, and no retry fixes it.
+        console.error(`mollie ${paymentId}: unresolvable invoice reference "${invoiceId}" (no userId in metadata)`);
+        return new Response(JSON.stringify({ received: true, error: 'Unresolvable invoice reference' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      let update = supabase
         .from('documents')
         .update({
           status: 'paid',
@@ -163,18 +192,27 @@ Deno.serve(async (req) => {
           payment_provider: 'mollie',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', invoiceId)
+        .eq(lookup.column, lookup.value)
         .eq('doc_type', 'invoice');
+      if (lookup.column === 'document_number') update = update.eq('user_id', lookup.userId);
+      const { data: updatedRows, error: updateError } = await update.select('id');
 
       if (updateError) {
+        // Nothing sent yet (the side effects come after): retry, or this
+        // payment is never recorded.
         console.error('Failed to update invoice:', updateError.message);
-        return new Response(JSON.stringify({ received: true, error: 'DB update failed' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return failRecording('DB update failed', updateError);
       }
 
-      console.log(`Invoice ${invoiceId} marked as paid (${paymentId})`);
+      const invoiceRowId: string | undefined = (updatedRows as Array<{ id: string }> | null)?.[0]?.id;
+      if (!invoiceRowId) {
+        // No row matched: an invoice created offline may not have reached the
+        // server yet — retry (bounded by Mollie's schedule). It used to log
+        // "marked as paid" for a write that matched nothing.
+        console.error(`mollie ${paymentId}: no invoice matched ${lookup.column}=${lookup.value}`);
+        return retryLater('Invoice not found');
+      }
+      console.log(`Invoice ${invoiceId} (${invoiceRowId}) marked as paid (${paymentId})`);
 
       // R66 round 41: idempotency gate. Pre-R41 a replayed POST (Mollie's own
       // retry on non-2xx, network duplication, or a malicious replay since the
@@ -194,7 +232,7 @@ Deno.serve(async (req) => {
           console.error(`mollie ${paymentId}: idempotency claim failed — sending paid side effects anyway`);
         }
         // Fire-and-forget: receipt email + contractor push + invoice_outcomes seed
-        await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceId, paidAt).catch((err) =>
+        await dispatchPaidSideEffects(supabaseUrl, supabaseServiceKey, invoiceRowId, paidAt).catch((err) =>
           console.warn('paid side-effects failed:', String(err)),
         );
       } else {
@@ -212,18 +250,18 @@ Deno.serve(async (req) => {
     if (payment.status === 'paid' && trackerAccessCode) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-      if (supabaseUrl && supabaseServiceKey) {
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
-        const { error: trackerErr } = await supabase
-          .from('decision_trackers')
-          .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
-          .eq('access_code', trackerAccessCode);
-        if (trackerErr) {
-          console.error('Failed to mark tracker paid:', trackerErr.message);
-        } else {
-          console.log(`Tracker ${trackerAccessCode} marked as paid (${paymentId})`);
-        }
+      if (!supabaseUrl || !supabaseServiceKey) return retryLater('DB not configured');
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { error: trackerErr } = await supabase
+        .from('decision_trackers')
+        .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
+        .eq('access_code', trackerAccessCode);
+      if (trackerErr) {
+        // Idempotent UPDATE, nothing sent: retry until the deposit is recorded.
+        console.error('Failed to mark tracker paid:', trackerErr.message);
+        return failRecording('Tracker update failed', trackerErr);
       }
+      console.log(`Tracker ${trackerAccessCode} marked as paid (${paymentId})`);
     }
 
     // -------------------------------------------------------------------------
@@ -277,8 +315,15 @@ Deno.serve(async (req) => {
               if (extendErr) throw new Error(`period extension refused: ${extendErr.message}`);
               console.log(`Mollie: extended period for user=${userId} by ${monthsApplied}mo`);
             } catch (err) {
-              await restoreCredits(supabaseUrl2, supabaseServiceKey2, consumed.map((c) => c.consumedId));
-              console.error('Mollie period extension failed, credits restored:', String(err));
+              const restored = await restoreCredits(supabaseUrl2, supabaseServiceKey2, consumed.map((c) => c.consumedId));
+              console.error(`Mollie period extension failed, credits restored=${restored}:`, String(err));
+              // Compensated, so the retry may redeem afresh — give the claim
+              // back. Not when this payment also carried an invoice: that
+              // branch shares the claim and its receipt already went out.
+              if (!invoiceId && restored) {
+                await releaseWebhookEvent(supabaseUrl2, supabaseServiceKey2, 'mollie', paymentId);
+                return retryLater('Period extension failed');
+              }
             }
           }
         }

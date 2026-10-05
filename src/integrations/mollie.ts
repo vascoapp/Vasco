@@ -242,7 +242,9 @@ export async function createPayment(req: MolliePaymentRequest): Promise<MolliePa
       description: req.description,
       redirectUrl: req.redirectUrl,
       webhookUrl: req.webhookUrl,
-      metadata: { invoiceId: req.invoiceId },
+      // userId: the webhook matches the document NUMBER per contractor (a
+      // number is not unique across contractors) — _shared/invoiceRef.ts.
+      metadata: { invoiceId: req.invoiceId, ...(getAuthedUserId() ? { userId: getAuthedUserId() as string } : {}) },
       locale: req.locale ?? 'nl_NL',
       method: req.method,
     }),
@@ -312,7 +314,7 @@ export async function createPaymentLink(req: {
   const resolvedMethods = req.method
     ?? (req.customerCountry ? defaultPaymentMethodsForCountry(req.customerCountry) : undefined);
   // Always carry invoiceId in metadata; merge any caller-supplied keys on top.
-  const metadata = { invoiceId: req.invoiceId, ...(req.metadata ?? {}) };
+  const metadata = { invoiceId: req.invoiceId, ...(getAuthedUserId() ? { userId: getAuthedUserId() as string } : {}), ...(req.metadata ?? {}) };
   const result = await apiCall<{ id: string; _links: { paymentLink: { href: string } } }>('payment-links', {
     method: 'POST',
     body: JSON.stringify({
