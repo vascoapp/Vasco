@@ -13,55 +13,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isServiceRoleCall } from '../_shared/cronAuth.ts';
 import { selectAllPages } from '../_shared/paging.ts';
+import { renderWeeklyDigest } from '../_shared/weeklyDigestEmail.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface UserDigest {
-  userId: string;
-  email: string;
-  businessName: string;
-  language: string;
-  newJobs: number;
-  paidInvoices: number;
-  paidAmount: number;
-  openInvoices: number;
-  openAmount: number;
-  quotesSent: number;
-  quotesAccepted: number;
-}
-
-const SUBJECT: Record<string, string> = {
-  en: 'Your Vasco week',
-  nl: 'Jouw Vasco-week',
-  de: 'Deine Vasco-Woche',
-  fr: 'Votre semaine Vasco',
-  es: 'Tu semana Vasco',
-  it: 'La tua settimana Vasco',
-};
-
-function body(d: UserDigest, locale: string): string {
-  const paid = `€${d.paidAmount.toFixed(0)}`;
-  const open = `€${d.openAmount.toFixed(0)}`;
-  const heading = locale === 'nl' ? `Week van ${d.businessName}`
-    : locale === 'de' ? `Woche von ${d.businessName}`
-    : locale === 'fr' ? `Semaine de ${d.businessName}`
-    : locale === 'es' ? `Semana de ${d.businessName}`
-    : locale === 'it' ? `Settimana di ${d.businessName}`
-    : `This week for ${d.businessName}`;
-  return `
-    <h2 style="font-family:sans-serif;color:#0D1B2A">${heading}</h2>
-    <table style="font-family:sans-serif;border-collapse:collapse" cellpadding="8">
-      <tr><td>🛠️</td><td>${d.newJobs} new jobs</td></tr>
-      <tr><td>💶</td><td>${d.paidInvoices} invoices paid — <strong>${paid}</strong></td></tr>
-      <tr><td>⏳</td><td>${d.openInvoices} invoices still open — ${open}</td></tr>
-      <tr><td>📝</td><td>${d.quotesSent} quotes sent · ${d.quotesAccepted} accepted</td></tr>
-    </table>
-    <p style="color:#9CA3AF;font-size:12px;font-family:sans-serif">Vasco — digest sent every Monday. Open the app to see the details.</p>
-  `;
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -139,11 +96,9 @@ Deno.serve(async (req) => {
       const paidAmount = (paidInvQ.data as any[] | null)?.reduce((s, r) => s + (r.total_amount ?? 0), 0) ?? 0;
       const openAmount = (openInvQ.data as any[] | null)?.reduce((s, r) => s + (r.total_amount ?? 0), 0) ?? 0;
 
-      const digest: UserDigest = {
-        userId,
-        email: p.email,
-        businessName: p.business_name ?? 'Vasco',
-        language: (p.country === 'DE' ? 'de' : p.country === 'FR' ? 'fr' : p.country === 'ES' ? 'es' : p.country === 'IT' ? 'it' : p.country === 'UK' ? 'en' : 'nl'),
+      const figures = {
+        businessName: p.business_name,
+        country: p.country,
         newJobs: newJobsQ.count ?? 0,
         paidInvoices: paidInvQ.count ?? 0,
         paidAmount,
@@ -154,7 +109,13 @@ Deno.serve(async (req) => {
       };
 
       // Skip dead-air weeks — no point emailing an empty digest
-      if (digest.newJobs === 0 && digest.paidInvoices === 0 && digest.quotesSent === 0 && digest.openInvoices === 0) {
+      if (figures.newJobs === 0 && figures.paidInvoices === 0 && figures.quotesSent === 0 && figures.openInvoices === 0) {
+        skipped += 1;
+        continue;
+      }
+      // In the contractor's language and currency; unknown market → no email.
+      const email = renderWeeklyDigest(figures);
+      if (!email) {
         skipped += 1;
         continue;
       }
@@ -167,9 +128,9 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           from: `Vasco <${fromAddress}>`,
-          to: [digest.email],
-          subject: SUBJECT[digest.language] ?? SUBJECT.en,
-          html: body(digest, digest.language),
+          to: [p.email],
+          subject: email.subject,
+          html: email.html,
         }),
       });
       if (resp.ok) sent += 1;
