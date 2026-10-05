@@ -12,6 +12,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isServiceRoleCall } from '../_shared/cronAuth.ts';
+import { selectAllPages } from '../_shared/paging.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,10 +102,18 @@ Deno.serve(async (req) => {
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // Pull every business profile with an email — each row = one digest candidate
-  const { data: profiles } = await admin
-    .from('business_settings')
-    .select('user_id, business_name, email, country')
-    .not('email', 'is', null);
+  // Every page (sweep C7): one read stops at 1000 rows.
+  let profiles: Array<{ user_id: string; business_name: string | null; email: string; country: string | null }> = [];
+  try {
+    profiles = (await selectAllPages<typeof profiles[number]>(() => admin
+      .from('business_settings')
+      .select('id, user_id, business_name, email, country')
+      .not('email', 'is', null))).rows;
+  } catch (err) {
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   if (!profiles || profiles.length === 0) {
     return new Response(JSON.stringify({ ok: true, sent: 0 }), {

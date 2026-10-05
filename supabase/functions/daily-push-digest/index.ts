@@ -21,6 +21,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isServiceRoleCall } from '../_shared/cronAuth.ts';
+import { selectAllPages } from '../_shared/paging.ts';
 import { pushOutcome } from '../_shared/pushOutcome.ts';
 
 const corsHeaders = {
@@ -229,10 +230,18 @@ Deno.serve(async (req) => {
   });
 
   // 1. Users with at least one push token registered.
-  const { data: tokenRows } = await admin
-    .from('push_tokens')
-    .select('user_id')
-    .not('user_id', 'is', null);
+  // Every page: one read is capped at 1000 rows, unordered — past 1000
+  // registered devices the rest got no digest (sweep C7). A failed read is an
+  // error now, not "nobody to notify".
+  let tokenRows: Array<{ user_id: string | null }> = [];
+  try {
+    tokenRows = (await selectAllPages<{ user_id: string | null }>(() => admin
+      .from('push_tokens')
+      .select('id, user_id')
+      .not('user_id', 'is', null))).rows;
+  } catch (err) {
+    return json({ error: `push_tokens read failed: ${String(err)}` }, 500);
+  }
 
   const userIds = Array.from(new Set((tokenRows ?? []).map((t: any) => t.user_id))).filter(Boolean);
   if (userIds.length === 0) return json({ processed: 0, sent: 0 });

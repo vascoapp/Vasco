@@ -34,6 +34,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isServiceRoleCall } from '../_shared/cronAuth.ts';
+import { selectAllPages } from '../_shared/paging.ts';
 import { pushOutcome } from '../_shared/pushOutcome.ts';
 
 const corsHeaders = {
@@ -268,16 +269,18 @@ Deno.serve(async (req) => {
   // Pull all paid-tier contractors with at least one push token. This is the
   // gating set: free contractors don't have automation packs (R66r49 #5),
   // and contractors without push tokens can't be reached via this path.
-  const { data: tokens, error: tokenErr } = await admin
-    .from('push_tokens')
-    .select('user_id')
-    .order('user_id');
-  if (tokenErr) {
-    return new Response(JSON.stringify({ ok: false, error: tokenErr.message }), {
+  // Every page (sweep C7): one read stops at 1000 rows.
+  let tokens: Array<{ user_id: string | null }> = [];
+  try {
+    tokens = (await selectAllPages<{ user_id: string | null }>(() => admin
+      .from('push_tokens')
+      .select('id, user_id'))).rows;
+  } catch (err) {
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-  const userIds = Array.from(new Set((tokens ?? []).map((t) => t.user_id))).filter(Boolean);
+  const userIds = Array.from(new Set(tokens.map((t) => t.user_id))).filter((u): u is string => !!u);
 
   let pushed = 0;
   let skipped = 0;
