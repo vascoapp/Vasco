@@ -407,6 +407,53 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
       teardown(r);
     }
 
+    // 4b. SEND the quote to the customer — the signed portal link (2026-10-06).
+    // The fake answered every edge function "not modelled", so the app always
+    // took its accept-only FALLBACK here, and a server that refused the app's
+    // own quote id (the document number) went unnoticed for weeks. This step
+    // asserts what the app SENDS (check:portal-totals proves, live, that the
+    // server signs exactly that) and that the PRIMARY message reaches the
+    // customer: the portal link, signed by the business.
+    {
+      const r = await walk(require('../app/quotes/[id]').default, { as: 'contractor', language: c.language, settlePasses: 14, params: { id: quoteId! } });
+      if (!step('quote screen mounts (send)', !r.error, r.error?.message)) return;
+      const root = (r.tree as any).root;
+      const sb = require('../src/lib/supabase').supabase;
+      const realInvoke = sb.functions.invoke;
+      const calls: Array<{ name: string; body: any }> = [];
+      const PORTAL = 'https://admin.vascobuild.com/quote/00000000-0000-4000-8000-0000000000aa?t=matrix';
+      sb.functions.invoke = async (name: string, opts: any) => {
+        calls.push({ name, body: opts?.body });
+        if (name === 'sign-quote-token') return { data: { ok: true, token: 'matrix', url: PORTAL }, error: null };
+        return realInvoke(name, opts);
+      };
+      const { Share } = require('react-native');
+      const messages: string[] = [];
+      const shareSpy = jest.spyOn(Share, 'share').mockImplementation(async (content: any) => { messages.push(String(content?.message ?? '')); return { action: 'sharedAction' }; });
+      rules = [{ title: /./, press: new RegExp(`^(${E('common.yes', { defaultValue: 'Yes' })}|${E('quotes.yesSent', { defaultValue: 'Yes, sent' })})`, 'i') }];
+      try {
+        // A draft offers it as the "recommended next step" banner (what a
+        // contractor taps — the device walk did); later statuses as a button.
+        if (!(await pressText(root, T('quotes.recommendedNextStep'))) && !(await pressText(root, T('quotes.sendToCustomer')))) {
+          step('quote: Send to customer', false, 'no send action');
+        }
+        else {
+          await settle(20);
+          const sign = calls.find((x) => x.name === 'sign-quote-token');
+          step('quote link: the app asks sign-quote-token with its quote id (the document number)',
+            sign?.body?.quoteId === quoteId, `sent ${JSON.stringify(sign?.body)} for ${quoteId}`);
+          const msg = messages[messages.length - 1] ?? '';
+          step('quote link: the customer gets the PORTAL link', msg.includes(PORTAL), msg.slice(0, 160));
+          step('quote link: the message is signed by the business', msg.includes(c.seller.name), msg.slice(-80));
+        }
+      } finally {
+        sb.functions.invoke = realInvoke;
+        shareSpy.mockRestore();
+        rules = [];
+      }
+      teardown(r);
+    }
+
     // 5. ACCEPT the quote (the customer said yes on the phone).
     {
       const r = await walk(require('../app/quotes/[id]').default, { as: 'contractor', language: c.language, settlePasses: 14, params: { id: quoteId! } });
