@@ -94,6 +94,10 @@ for (const cell of cells) {
       if (c.market === "DE" && c.seller.taxId) add("pdf", "Steuernummer or USt-IdNr (§14 Abs.4 Nr.2 UStG)", contains(c.seller.taxId.native) || contains(c.seller.vatId?.native ?? "¤"));
       if (c.seller.regNo) add("pdf", c.market === "FR" ? "SIRET/SIREN" : c.market === "NL" ? "KvK number" : "registration number", contains(c.seller.regNo.native) || contains(c.seller.regNo.native.replace(/\s/g, "").slice(0, 9)));
       if (c.market === "DE") add("pdf", "no HRB printed for a sole trader", !/HRB\s*:?\s*[A-Z0-9/]/i.test(text), "this seller has no Handelsregister entry; anything printed as HRB is a false statement");
+      // An exempt scheme must SAY why no VAT is charged — each market's own words.
+      if (c.scheme === "kor") add("pdf", "KOR mention (no BTW)", /kleineondernemersregeling/i.test(text));
+      if (c.scheme === "kleinunternehmer") add("pdf", "§ 19 UStG mention (no USt)", /§\s*19\s*UStG/.test(text));
+      if (c.scheme === "forfettario") add("pdf", "forfettario mention (L. 190/2014)", /190\/2014/.test(text));
       add("pdf", "buyer name", contains(c.buyer.name));
       add("pdf", "buyer street", contains(c.buyer.street));
       add("pdf", "buyer postcode + city", contains(c.buyer.postcode) && contains(c.buyer.city));
@@ -159,6 +163,12 @@ for (const cell of cells) {
       try { findings = JSON.parse(rules.out.trim().split("\n").pop()); } catch { add(fmt, "value rules ran", false, rules.err.slice(0, 200)); }
       const errors = findings.filter((x) => x.severity === "error");
       add(fmt, fmt === "fatturapa" ? "SDI value rules" : "FACe/B2B value rules", errors.length === 0, errors.map((x) => `${x.code} ${x.message}`).join(" | "));
+      if (fmt === "fatturapa" && c.scheme === "forfettario") {
+        add(fmt, "RegimeFiscale RF19", /<RegimeFiscale>RF19<\/RegimeFiscale>/.test(xml));
+        add(fmt, "every line at 0 % with Natura N2.2", /<Natura>N2\.2<\/Natura>/.test(xml) && !/<AliquotaIVA>(?!0\.00)/.test(xml));
+        // DPR 642/1972: a VAT-free invoice above € 77,47 carries the € 2 stamp duty.
+        if (exp.gross > 77.47) add(fmt, "marca da bollo (virtual, € 2.00) above € 77,47", /<BolloVirtuale>SI<\/BolloVirtuale>/.test(xml) && /<ImportoBollo>2\.00<\/ImportoBollo>/.test(xml));
+      }
     }
     // Content: the file states the case's figures and parties.
     if (xml) {

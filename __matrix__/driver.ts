@@ -296,8 +296,9 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
         step('settings: person type = individual', !!got && !got.startsWith('NO ITEM'), got ?? 'menu not found');
       }
       if (market === 'IT') {
-        const got = await pickMenuAfterLabel(root, T('profile.fiscalRegime'), /^RF01/);
-        step('settings: tax regime = RF01 (ordinario)', !!got && !got.startsWith('NO ITEM'), got ?? 'menu not found');
+        const forfettario = c.scheme === 'forfettario';
+        const got = await pickMenuAfterLabel(root, T('profile.fiscalRegime'), forfettario ? /^RF19/ : /^RF01/);
+        step(forfettario ? 'settings: tax regime = RF19 (forfettario)' : 'settings: tax regime = RF01 (ordinario)', !!got && !got.startsWith('NO ITEM'), got ?? 'menu not found');
       }
       const saveBtn = () => byA11y(root, T('common.save')).slice(-1)[0];
       const trySave = async () => { const b = saveBtn(); if (!b) return false; await press(b); await settle(10); return true; };
@@ -311,6 +312,20 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
         if (refusals.length) { steps.push({ name: 'settings saves at all', ok: false, alerts: refusals }); save(); }
       } else step('settings saves identifiers written the local way', true);
       result.profileAfterSettings = await read<any>('@vasco_business_profile', {});
+      teardown(r);
+    }
+
+    // 2b. The exempt scheme, on the real "VAT & audit" screen (NL KOR / DE §19).
+    if (c.scheme === 'kor' || c.scheme === 'kleinunternehmer') {
+      const r = await walk(require('../app/contractor/vat-and-audit').default, { as: 'contractor', language: c.language, settlePasses: 12 });
+      if (!step('VAT scheme screen mounts', !r.error, r.error?.message)) return;
+      const root = (r.tree as any).root;
+      const label = T(c.scheme === 'kor' ? 'vatScheme.korNl' : 'vatScheme.kleinunternehmer');
+      if (!(await pressText(root, label))) step(`VAT scheme: ${label}`, false, 'option not found');
+      await settle(10);
+      const prof = await read<any>('@vasco_business_profile', {});
+      const want = c.scheme === 'kor' ? 'small_business_NL_KOR' : 'small_business_DE_kleinunternehmer';
+      step(`VAT scheme saved (${want})`, prof?.vatScheme === want, `vatScheme=${prof?.vatScheme}`);
       teardown(r);
     }
 

@@ -26,7 +26,14 @@ export type Market = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
 // everyday seller — in Germany a sole trader with a Steuernummer and NO
 // USt-IdNr (§14 UStG: either is enough). Every cell used to be a seller WITH a
 // VAT id, which hid that the send gate refused this contractor (2026-10-06).
-export type Kind = 'b2b' | 'b2c' | 'solo';
+// 'small': the market's VAT-exempt small-business scheme the app supports —
+// NL KOR, DE Kleinunternehmer (§19 UStG, Steuernummer only), IT regime
+// forfettario (RF19). Private buyer, no VAT charged. FR franchise en base and
+// UK below-threshold traders are HANDED OFF to the accountant (user,
+// 2026-10-03) and have no cell.
+export type Kind = 'b2b' | 'b2c' | 'solo' | 'small';
+export type SmallScheme = 'kor' | 'kleinunternehmer' | 'forfettario';
+export const SMALL_SCHEME: Partial<Record<Market, SmallScheme>> = { NL: 'kor', DE: 'kleinunternehmer', IT: 'forfettario' };
 
 export interface Ident { native: string; alt?: string }
 
@@ -57,6 +64,8 @@ export interface EverydayCase {
   seller: Party;
   buyer: Party;
   lines: Line[];
+  /** Set for kind 'small': the exempt scheme, picked through the real screens. */
+  scheme?: SmallScheme;
   /** Which files the app should produce for this market. */
   formats: Array<'pdf' | 'xrechnung' | 'zugferd' | 'facturx' | 'facturae' | 'fatturapa'>;
 }
@@ -147,9 +156,12 @@ export function everydayCase(market: Market, kind: Kind): EverydayCase {
   const m = META[market];
   return {
     id: `${market}-${kind}`, market, kind,
-    language: m.language, posture: m.posture, standardRate: m.standardRate, formats: m.formats,
-    seller: kind === 'solo' ? { ...SELLERS[market], vatId: undefined } : SELLERS[market],
-    buyer: BUYERS[market][kind === 'solo' ? 'b2c' : kind], lines: m.lines,
+    language: m.language, posture: m.posture, formats: m.formats,
+    // No VAT is charged under an exempt scheme.
+    standardRate: kind === 'small' ? 0 : m.standardRate,
+    ...(kind === 'small' ? { scheme: SMALL_SCHEME[market] } : {}),
+    seller: kind === 'solo' || (kind === 'small' && market === 'DE') ? { ...SELLERS[market], vatId: undefined } : SELLERS[market],
+    buyer: BUYERS[market][kind === 'solo' || kind === 'small' ? 'b2c' : kind], lines: m.lines,
   };
 }
 
