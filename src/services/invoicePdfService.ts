@@ -7,6 +7,7 @@
  * strong typographic hierarchy, Hermes Orange accent.
  */
 
+import { A4_PAGE } from '../utils/pdfPage';
 import { formatQuantity } from '../i18n/formatting';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -471,7 +472,7 @@ function buildInvoiceHtml(
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-  @page { margin: 0; }
+  @page { size: A4; margin: 0; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -935,6 +936,6 @@ export async function renderInvoicePdfFile(
   if (options?.customerSignature) {
     html = html.replace('</body>', `${await signOffBlock(options.customerSignature, language)}</body>`);
   }
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  const { uri } = await Print.printToFileAsync({ html, base64: false, ...A4_PAGE });
   return uri;
 }

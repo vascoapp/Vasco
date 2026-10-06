@@ -1084,7 +1084,8 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // ─── EXISTING: Draft reminders for overdue invoices ───
   for (const inv of (context.overdueInvoices ?? []).slice(0, 3)) {
     if (!inv || !inv.id) continue;
-    const amountStr = `${formatMoney((inv.amount ?? 0))}`;
+    // A document's own amount, to the cent (the card read € 1489 for 1 488,60).
+    const amountStr = `${formatMoney2((inv.amount ?? 0))}`;
     const custId = (inv as any).customerId || inv.customer || '';
     const custIntel = custId ? getCustomerIntelligence(custId, context.allJobs ?? [], context.allInvoices ?? context.overdueInvoices) : null;
     const id = await addToQueue({
@@ -1118,7 +1119,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'draft_followup',
       title: t('aiQueue.quoteFollowUp', { ref: queueEntityLabel(quote, context.customers) }).trim(),
-      description: `${quote.customer || ''} · ${formatMoney((quote.amount ?? 0))}`,
+      description: `${quote.customer || ''} · ${formatMoney2((quote.amount ?? 0))}`,
       preparedData: {
         quoteId: quote.id, customer: quote.customer, amount: quote.amount,
         ...(followupIntel?.contextLine ? { customerContext: followupIntel.contextLine } : {}),
@@ -1245,7 +1246,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'quote_expiry',
       title: t('automation.quoteExpiring', { defaultValue: 'Quote expiring: {{customer}}', customer: cust?.name || q.customer || '' }),
-      description: `${formatMoney((q.amount ?? 0))} · ${expiryDate}`,
+      description: `${formatMoney2((q.amount ?? 0))} · ${expiryDate}`,
       preparedData: {
         quoteId: q.id, customerId: q.customerId, template: message,
         reasoning: t('aiQueue.why.quoteExpiry', { date: expiryDate }),
@@ -1760,7 +1761,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       const id = await addToQueue({
         type: 'einvoice_submit',
         title: `${einvoiceFormat}: ${queueEntityLabel(inv, context.customers)}`,
-        description: `${formatMoney((inv.amount ?? 0))} · ${t('automation.einvoiceFormat', { defaultValue: '{{format}} format', format: einvoiceFormat })}`,
+        description: `${formatMoney2((inv.amount ?? 0))} · ${t('automation.einvoiceFormat', { defaultValue: '{{format}} format', format: einvoiceFormat })}`,
         preparedData: { invoiceId: inv.id, format: einvoiceFormat, country: einvoiceCountry },
         actionLabel: t('automation.submit', 'Submit'),
         estimatedImpact: t('automation.legalCompliance', 'Legal compliance'),

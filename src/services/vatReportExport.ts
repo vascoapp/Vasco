@@ -11,6 +11,7 @@
 // The `language` argument is that style: 'en' = UK, anything else = EU.
 // =============================================================================
 
+import { A4_PAGE } from '../utils/pdfPage';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
@@ -105,7 +106,7 @@ ${notIncluded}
 const fileTitle = (report: VatReport) => `vat-${report.periodStart}_${report.periodEnd}`;
 
 export async function shareVatReportPdf(report: VatReport, t: T, money: (n: number) => string, businessName: string): Promise<void> {
-  const { uri } = await Print.printToFileAsync({ html: vatReportHtml(report, t, money, businessName), base64: false });
+  const { uri } = await Print.printToFileAsync({ html: vatReportHtml(report, t, money, businessName), base64: false, ...A4_PAGE });
   // Named by the period, so the accountant's inbox does not fill with "print-1.pdf".
   let shareUri = uri;
   try {

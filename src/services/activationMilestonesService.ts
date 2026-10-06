@@ -84,6 +84,16 @@ export function evaluateMilestones(input: ActivationInput): Milestone[] {
   ];
 }
 
+/**
+ * The checklist is for getting started. Once the contractor has made an
+ * invoice they are past that — the remaining steps ("plan your first job",
+ * "receive your first payment") are their business now, not onboarding (user,
+ * FR walk 2026-10-06: the card stayed on Today after the invoice was sent).
+ */
+export function graduatedFromChecklist(input: Pick<ActivationInput, 'invoices'>): boolean {
+  return (input.invoices?.length ?? 0) > 0;
+}
+
 export function completedCount(milestones: Milestone[]): number {
   return milestones.filter((m) => m.done).length;
 }
@@ -177,7 +187,7 @@ export function useActivationMilestones(input: ActivationInput) {
   // still inside the onboarding window (first MAX_LOGINS_VISIBLE logins).
   // Auto-hides on completion without needing an explicit dismiss.
   const retired = loginCount > MAX_LOGINS_VISIBLE;
-  const visible = !dismissed && !all && !retired;
+  const visible = !dismissed && !all && !retired && !graduatedFromChecklist(input);
 
   return {
     milestones,

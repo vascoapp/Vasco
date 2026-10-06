@@ -9,6 +9,7 @@
  * context into a Node-side PDF generator.
  */
 
+import { A4_PAGE } from '../utils/pdfPage';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { LineOptimization, ScenarioResult, CategoryOptimization } from './budgetOptimizerService';
@@ -301,7 +302,7 @@ export async function exportBudgetPdf(
   const html = buildHtml(projectName, scenario, approvedOptimizations, lang);
   const L = LABELS[lang] ?? LABELS.en;
 
-  const { uri } = await Print.printToFileAsync({ html });
+  const { uri } = await Print.printToFileAsync({ html, ...A4_PAGE });
 
   await Sharing.shareAsync(uri, {
     mimeType: 'application/pdf',

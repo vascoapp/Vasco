@@ -164,3 +164,19 @@ describe('login-count retire window', () => {
     expect(await getLoginCount()).toBe(0);
   });
 });
+
+describe('the checklist falls away once an invoice exists (user, 2026-10-06)', () => {
+  const { graduatedFromChecklist } = require('../activationMilestonesService');
+  it('no invoice: still onboarding', () => {
+    expect(graduatedFromChecklist({ invoices: [] })).toBe(false);
+  });
+  it('one invoice, even a draft and even unpaid: graduated', () => {
+    expect(graduatedFromChecklist({ invoices: [{ id: 'INV0001', status: 'draft' }] })).toBe(true);
+    expect(graduatedFromChecklist({ invoices: [{ id: 'INV0001', status: 'sent' }] })).toBe(true);
+  });
+  it('the visibility rule uses it', () => {
+    const fs = require('fs'); const path = require('path');
+    const src = fs.readFileSync(path.join(__dirname, '../activationMilestonesService.ts'), 'utf8');
+    expect(src).toMatch(/const visible = !dismissed && !all && !retired && !graduatedFromChecklist\(input\);/);
+  });
+});

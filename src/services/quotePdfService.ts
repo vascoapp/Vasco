@@ -4,6 +4,7 @@
  * Design matches invoicePdfService — Stripe/Linear-inspired minimal.
  */
 
+import { A4_PAGE } from '../utils/pdfPage';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { nameThePdf } from '../utils/namedPdf';
@@ -493,7 +494,7 @@ export async function generateQuotePdf(
     options?.language, options?.country, options?.phone, options?.email,
     options?.showPoweredBy, options?.vatScheme,
   );
-  const { uri: printed } = await Print.printToFileAsync({ html, width: 595, height: 842 });
+  const { uri: printed } = await Print.printToFileAsync({ html, ...A4_PAGE });
   const uri = nameThePdf(printed, quote.quoteNumber);
 
   if (await Sharing.isAvailableAsync()) {

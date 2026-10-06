@@ -6,6 +6,7 @@
 // loop. Uses expo-print (already installed) to render HTML to PDF.
 // =============================================================================
 
+import { A4_PAGE } from '../utils/pdfPage';
 import * as Print from 'expo-print';
 // expo-sharing, not react-native's Share: the latter ignores `url` on Android,
 // so the receipt PDF was never attached there — and the call still resolved,
@@ -88,7 +89,7 @@ function html(args: ReceiptArgs): string {
 
 export async function shareReceipt(args: ReceiptArgs): Promise<{ ok: boolean; uri?: string; error?: string }> {
   try {
-    const { uri: printed } = await Print.printToFileAsync({ html: html(args) });
+    const { uri: printed } = await Print.printToFileAsync({ html: html(args), ...A4_PAGE });
     const uri = nameThePdf(printed, `${HEADINGS[args.locale ?? 'nl'] ?? 'Receipt'} ${args.invoice.id}`);
     if (!(await Sharing.isAvailableAsync())) {
       return { ok: false, uri, error: 'Sharing is not available on this device' };

@@ -11,6 +11,7 @@
 // Strict prepare-only: this service NEVER files. It only produces artifacts.
 // =============================================================================
 
+import { A4_PAGE } from '../utils/pdfPage';
 import { Share, Linking } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -173,7 +174,7 @@ export async function shareSummary(draft: VatReturnDraft, businessName: string):
  * emails the PDF to their boekhouder. */
 export async function sharePdf(draft: VatReturnDraft, businessName: string): Promise<void> {
   const html = renderHtml(draft, businessName);
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  const { uri } = await Print.printToFileAsync({ html, base64: false, ...A4_PAGE });
   if (await Sharing.isAvailableAsync()) {
     const country = draft.country ?? 'NL';
     const title = country === 'DE' ? 'UStVA' : 'BTW';
