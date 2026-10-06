@@ -59,6 +59,9 @@ const KNOWN_BUILD_ONLY = new Map([
   // toolchain (jest-haste-map, @jest/transform, babel-jest). Glob matching at
   // build/test time; the advisory has no patched release (`*`).
   ['braces', 'micromatch under metro-file-map (bundler) and jest-haste-map/@jest/transform/babel-jest (tests) — glob matching at build and test time'],
+  // Verified 2026-10-06 (npm ls --omit=dev --all): the ONLY chains.
+  ['compression', 'expo>@expo/cli>compression@1.8.1 — gzip middleware of the local dev server (expo start); never in the app bundle'],
+  ['source-map-js', 'expo>@expo/metro-config>postcss>source-map-js@1.2.1 — CSS processing at bundle time; never in the app bundle'],
 ]);
 
 // A package that DOES ship, excused for named advisories (GHSA ids) because
