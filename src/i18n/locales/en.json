@@ -965,7 +965,8 @@
     "serviceDateNext": "Next day",
     "serviceDateToday": "Today",
     "serviceDateAskTitle": "Date of the work",
-    "serviceDateAskBody": "A German invoice must state when the work was done. Set the date under \"Date of work\" on this invoice, or choose Today."
+    "serviceDateAskBody": "A German invoice must state when the work was done. Set the date under \"Date of work\" on this invoice, or choose Today.",
+    "autoSendTag": "Auto"
   },
   "expenses": {
     "title": "Expenses",
@@ -3005,7 +3006,8 @@
       "guideFollowup_one": "Follow up on {{count}} open quote",
       "guideFollowup_other": "Follow up on {{count}} open quotes",
       "guideAannemerProjects_one": "{{count}} project running today",
-      "guideAannemerProjects_other": "{{count}} projects running today"
+      "guideAannemerProjects_other": "{{count}} projects running today",
+      "guideNext": "Make your next quote"
     },
     "pill": {
       "jobsCount_one": "{{count}} job",
@@ -4855,8 +4857,8 @@
   "quoteToInvoice": {
     "notFound": "Quote {{id}} not found",
     "header": "Invoice from {{ref}}",
-    "autoNumberDue_one": "Auto-numbered · due in {{count}} day",
-    "autoNumberDue_other": "Auto-numbered · due in {{count}} days",
+    "autoNumberDue_one": "Due in {{count}} day",
+    "autoNumberDue_other": "Due in {{count}} days",
     "quoteDetails": "Quote details",
     "customer": "Customer",
     "job": "Job",
@@ -6033,7 +6035,9 @@
     "cohortMargin": "Cohort margin {{trade}}/{{country}}",
     "bucketUnder": "Under {{amount}}",
     "bucketRange": "{{low}} – {{high}}",
-    "bucketOver": "Over {{amount}}"
+    "bucketOver": "Over {{amount}}",
+    "title": "Market & performance",
+    "created": "Quotes made"
   },
   "payroll": {
     "totalHours": "Total hours",
@@ -7650,5 +7654,9 @@
     "purchasesSource": "From the expenses you recorded. Supplier invoices you only scanned are not included.",
     "retentionTitle": "Not counted again: retention released",
     "retentionBody": "Withheld amounts paid out now. Their turnover and VAT were declared on the original invoices."
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "copyDetails": "Copy error details"
   }
 }

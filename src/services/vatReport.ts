@@ -22,7 +22,7 @@
 import { round2 } from '../utils/round2';
 import { localDateKey, parseCalendarDay } from '../utils/dateKey';
 import { isSmallBusinessExempt, type VatScheme } from '../domain/business';
-import { findDocumentCustomer } from '../domain/customers';
+import { documentCustomerName } from '../domain/customers';
 import { documentNumber, type Invoice } from '../domain/documents';
 import { pdfInvoiceFromRecord, type PdfSourceLine } from './invoicePdfSource';
 
@@ -153,7 +153,7 @@ export function buildVatReport(input: VatReportInput): VatReport {
         ];
     addRows(salesRows, rows);
     // The ONE resolver (#214): FK → id-in-the-name-slot → name.
-    const customer = findDocumentCustomer((input.customers ?? []) as any, inv as any)?.name ?? (inv as any).customerName ?? inv.customer ?? '';
+    const customer = documentCustomerName((input.customers ?? []) as any, inv as any);
     invoices.push({ id: inv.id, number, date: day!, customer, net: doc.subtotal, vat: doc.vatAmount, gross: doc.total, rows });
   }
 

@@ -14,7 +14,7 @@ import { MS_PER_DAY } from '../utils/timeConstants';
 
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { findDocumentCustomer } from '../domain/customers';
+import { findDocumentCustomer, documentCustomerName } from '../domain/customers';
 
 const LAST_RUN_KEY = '@vasco_automation_last_run';
 const RUN_INTERVAL_MS = 4 * 60 * 60 * 1000; // every 4 hours
@@ -115,7 +115,7 @@ export function checkAutoReminder(ctx: AutomationContext, config: AutomationConf
     return {
       id: `auto_reminder_${inv.id}`,
       type: 'auto_reminder' as AutomationType,
-      title: `Herinnering: ${customer?.name ?? inv.customer}`,
+      title: `Herinnering: ${customer?.name ?? documentCustomerName([], inv)}`,
       description: `Factuur ${formatMoney(inv.amount)} is ${daysOverdue} dagen verlopen — automatische herinnering versturen`,
       actionTaken: false,
       timestamp: new Date().toISOString(),
@@ -137,7 +137,7 @@ export function checkAutoFollowup(ctx: AutomationContext, config: AutomationConf
     return {
       id: `auto_followup_${q.id}`,
       type: 'auto_followup' as AutomationType,
-      title: `Opvolgen: ${customer?.name ?? q.customer}`,
+      title: `Opvolgen: ${customer?.name ?? documentCustomerName([], q)}`,
       description: `Offerte ${formatMoney(q.amount)} is ${days} dagen geleden verstuurd — opvolgen verhoogt acceptatiekans`,
       actionTaken: false,
       timestamp: new Date().toISOString(),

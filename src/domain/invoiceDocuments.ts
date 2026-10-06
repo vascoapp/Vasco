@@ -18,7 +18,7 @@ import { isSmallBusinessExempt, documentVatBreakdown } from './business';
 import type { Invoice } from './documents';
 import { documentNumber } from './documents';
 import type { Customer } from './customers';
-import { findDocumentCustomer } from './customers';
+import { findDocumentCustomer, documentCustomerName } from './customers';
 import { customerSignOffFor, type CustomerSignOff } from './signOff';
 import { lineVatNature } from './lineItems';
 import type { VatNature } from './vatNature';
@@ -77,7 +77,7 @@ export function invoiceLinesFor(
 
 /** The name a HUMAN (or a tax authority) should read for this invoice's buyer. */
 export function invoiceBuyerName(invoice: Invoice, customers: ReadonlyArray<Customer>): string {
-  return findDocumentCustomer(customers, invoice)?.name ?? invoice.customer ?? '';
+  return documentCustomerName(customers, invoice);
 }
 
 function totals(inp: InvoiceDocInputs) {

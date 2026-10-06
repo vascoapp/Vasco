@@ -12,7 +12,7 @@ import { Radius } from '../../src/theme/radius';
 import { Spacing } from '../../src/theme/spacing';
 import { Typography } from '../../src/theme/typography';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
-import { findDocumentCustomer } from '../../src/domain/customers';
+import { documentCustomerName } from '../../src/domain/customers';
 
 export default function InvoiceFromQuoteSelect() {
   const { t } = useTranslation();
@@ -61,7 +61,7 @@ export default function InvoiceFromQuoteSelect() {
               <Link key={quote.id} href={`/quotes/${quote.id}/invoice`} asChild>
                 <Pressable style={styles.row}>
                   <View>
-                    <Text style={Typography.body}>{findDocumentCustomer(customers as { id: string; name: string }[], quote)?.name ?? quote.customer}</Text>
+                    <Text style={Typography.body}>{documentCustomerName(customers as { id: string; name: string }[], quote)}</Text>
                     <Text style={Typography.muted}>{quote.job}</Text>
                   </View>
                   <Text style={Typography.body}>{formatCurrency(quote.amount, country)}</Text>
@@ -81,7 +81,7 @@ export default function InvoiceFromQuoteSelect() {
               <Link key={quote.id} href={`/quotes/${quote.id}`} asChild>
                 <Pressable style={[styles.row, { opacity: 0.6 }]}>
                   <View>
-                    <Text style={Typography.body}>{findDocumentCustomer(customers as { id: string; name: string }[], quote)?.name ?? quote.customer}</Text>
+                    <Text style={Typography.body}>{documentCustomerName(customers as { id: string; name: string }[], quote)}</Text>
                     <Text style={Typography.muted}>{quote.job}</Text>
                   </View>
                   <Text style={[Typography.muted, { fontSize: 12 }]}>{t('quotes.status.draft', 'Draft')}</Text>

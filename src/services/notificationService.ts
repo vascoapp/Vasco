@@ -19,6 +19,7 @@ import { registerSingletonReset } from './singletonReset';
 // every stored copy ownerless and dropped on the next launch (#300's trap).
 import { getAuthedUserId } from '../lib/currentUser';
 import { todayKey } from '../utils/dateKey';
+import { documentCustomerName } from '../domain/customers';
 
 const PERSIST_KEY = '@vasco_notifications_v2';
 // Which notification types the contractor wants. Separate key: the inbox is
@@ -361,7 +362,9 @@ export function useNotificationPreferences() {
 // persisted user-fired list at the screen level.
 
 export interface DerivableState {
-  invoices: Array<{ id: string; status: string; dueInDays?: number; amount?: number; customer?: string }>;
+  invoices: Array<{ id: string; status: string; dueInDays?: number; amount?: number; customer?: string; customerId?: string | null; customerName?: string }>;
+  /** To NAME the customer — `invoice.customer` is an id on converted quotes. */
+  customers?: Array<{ id: string; name: string }>;
   jobs: Array<{ id: string; title?: string; status?: string; scheduledDate?: string }>;
   certifications?: Array<{ id: string; name?: string; expiresAt?: string }>;
 }
@@ -391,7 +394,7 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
         title: i18n.t('notifications.invoiceOverdueTitle', { defaultValue: 'Invoice overdue' }),
         body: i18n.t('notifications.invoiceOverdueBody', {
           defaultValue: '{{customer}}invoice {{ref}} is {{days}} days overdue{{amount}}.',
-          customer: inv.customer ? `${inv.customer} — ` : '',
+          customer: (() => { const n = documentCustomerName(state.customers ?? [], inv); return n ? `${n} — ` : ''; })(),
           // `invoiceNumber` is not a field on Invoice and `reference` has no
           // writer, so this rendered "invoice  is 10 days overdue" — the
           // document number the contractor is chasing was missing from the
@@ -457,7 +460,7 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
 export function useCombinedNotifications(state: DerivableState) {
   const { notifications: persisted, markRead, markAllRead } = useNotifications();
   const derived = useMemo(() => deriveLiveNotifications(state), [
-    state.invoices, state.jobs, state.certifications,
+    state.invoices, state.jobs, state.certifications, state.customers,
   ]);
   const merged = useMemo(() => {
     // Persisted first (newest user-actions), derived after

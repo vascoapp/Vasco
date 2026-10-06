@@ -965,7 +965,8 @@
     "serviceDateNext": "Giorno successivo",
     "serviceDateToday": "Oggi",
     "serviceDateAskTitle": "Data dei lavori",
-    "serviceDateAskBody": "Una fattura tedesca deve indicare quando sono stati eseguiti i lavori. Imposta la data in «Data dei lavori» su questa fattura, oppure scegli Oggi."
+    "serviceDateAskBody": "Una fattura tedesca deve indicare quando sono stati eseguiti i lavori. Imposta la data in «Data dei lavori» su questa fattura, oppure scegli Oggi.",
+    "autoSendTag": "Automatico"
   },
   "expenses": {
     "title": "Spese",
@@ -3002,10 +3003,11 @@
       "guideAannemerProjectsDesc": "Apri un progetto per coordinare i mestieri, seguire i sub-preventivi e mantenere la pianificazione.",
       "guideAannemerStart": "Avvia il tuo primo progetto multi-mestiere",
       "guideAannemerStartDesc": "Aggiunga i mestieri che coordina — Vasco li tiene insieme nel progetto.",
-      "guideFollowup_one": "Ricontatta per {{count}} preventivo aperto",
-      "guideFollowup_other": "Ricontatta per {{count}} preventivi aperti",
+      "guideFollowup_one": "Segua {{count}} preventivo aperto",
+      "guideFollowup_other": "Segua {{count}} preventivi aperti",
       "guideAannemerProjects_one": "{{count}} progetto in corso oggi",
-      "guideAannemerProjects_other": "{{count}} progetti in corso oggi"
+      "guideAannemerProjects_other": "{{count}} progetti in corso oggi",
+      "guideNext": "Prepari il prossimo preventivo"
     },
     "pill": {
       "jobsCount_one": "{{count}} lavoro",
@@ -4855,8 +4857,8 @@
   "quoteToInvoice": {
     "notFound": "Preventivo {{id}} non trovato",
     "header": "Fattura da {{ref}}",
-    "autoNumberDue_one": "Numero auto · scadenza {{count}} giorno",
-    "autoNumberDue_other": "Numero auto · scadenza {{count}} giorni",
+    "autoNumberDue_one": "Scadenza {{count}} giorno",
+    "autoNumberDue_other": "Scadenza {{count}} giorni",
     "quoteDetails": "Dettagli preventivo",
     "customer": "Cliente",
     "job": "Lavoro",
@@ -6033,7 +6035,9 @@
     "cohortMargin": "Margine di coorte {{trade}}/{{country}}",
     "bucketUnder": "Sotto {{amount}}",
     "bucketRange": "{{low}} – {{high}}",
-    "bucketOver": "Oltre {{amount}}"
+    "bucketOver": "Oltre {{amount}}",
+    "title": "Mercato e risultati",
+    "created": "Preventivi creati"
   },
   "payroll": {
     "totalHours": "Ore totali",
@@ -7650,5 +7654,9 @@
     "purchasesSource": "Dalle spese che hai registrato. Le fatture fornitore solo scansionate non sono incluse.",
     "retentionTitle": "Non conteggiato di nuovo: ritenuta svincolata",
     "retentionBody": "Importi trattenuti pagati ora. Imponibile e IVA sono stati dichiarati con le fatture originali."
+  },
+  "errorBoundary": {
+    "title": "Qualcosa è andato storto",
+    "copyDetails": "Copia i dettagli dell’errore"
   }
 }

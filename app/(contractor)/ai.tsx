@@ -20,6 +20,7 @@ import { hapticSuccess } from '../../src/utils/haptics';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
 import { useAppState } from '../../src/state/AppState';
+import { documentCustomerName } from '../../src/domain/customers';
 import { useAIQueue } from '../../src/services/aiActionQueueService';
 import { executeApprovedQueueItem } from '../../src/services/queueItemExecutor';
 import { useVascoGuidance } from '../../src/services/vascoGuidanceService';
@@ -136,7 +137,7 @@ export default function VascoScreen() {
   const automationCtx = useMemo<AutomationContext>(() => ({
     jobs: jobs.map(j => ({ id: j.id, title: j.title, status: j.status, customerId: j.customerId ?? '', agreedAmount: j.agreedAmount, completedAt: j.completedAt })),
     invoices: invoices.map(i => ({ id: i.id, customer: i.customer ?? '', amount: i.amount ?? 0, status: i.status, dueInDays: daysUntilDue(i) ?? i.dueInDays ?? 0 })),
-    quotes: quotes.map(q => ({ id: q.id, customer: q.customer ?? '', amount: q.amount ?? 0, status: q.status, lastUpdated: q.lastUpdated })),
+    quotes: quotes.map(q => ({ id: q.id, customer: documentCustomerName(customers, q), amount: q.amount ?? 0, status: q.status, lastUpdated: q.lastUpdated })),
     customers: customers.map(c => ({ id: c.id, name: c.name })),
   }), [jobs, invoices, quotes, customers]);
   const { results: automationResults } = useAutomations(automationCtx);
@@ -192,7 +193,7 @@ export default function VascoScreen() {
     const actions: ProactiveAction[] = [];
 
     invoices.filter((i: any) => i.status === 'overdue').forEach((inv: any) => {
-      const customerName = inv.customer || inv.customerName || t('ai.customer');
+      const customerName = documentCustomerName(customers, inv) || t('ai.customer');
       const invAmount = formatMoney2(inv.total || inv.amount || 0);
       // NEVER fall back to inv.id: `reference` feeds both this card's text and
       // `shareText`, which is the message actually sent to the CUSTOMER — a
@@ -232,7 +233,7 @@ export default function VascoScreen() {
     });
 
     quotes.filter((q: any) => q.status === 'sent').forEach((q: any) => {
-      const customerName = q.customer || t('ai.customer');
+      const customerName = documentCustomerName(customers, q) || t('ai.customer');
       const qAmount = formatMoney2(q.amount || 0);
       const jobName = q.job || 'project';
       actions.push({

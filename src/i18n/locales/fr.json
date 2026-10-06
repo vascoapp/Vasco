@@ -965,7 +965,8 @@
     "serviceDateNext": "Jour suivant",
     "serviceDateToday": "Aujourd'hui",
     "serviceDateAskTitle": "Date des travaux",
-    "serviceDateAskBody": "Une facture allemande doit indiquer la date des travaux. Indiquez-la sous « Date des travaux » sur cette facture, ou choisissez Aujourd'hui."
+    "serviceDateAskBody": "Une facture allemande doit indiquer la date des travaux. Indiquez-la sous « Date des travaux » sur cette facture, ou choisissez Aujourd'hui.",
+    "autoSendTag": "Automatique"
   },
   "expenses": {
     "title": "Dépenses",
@@ -3002,10 +3003,11 @@
       "guideAannemerProjectsDesc": "Ouvrez un projet pour coordonner les corps de métier, suivre les sous-devis et tenir le planning.",
       "guideAannemerStart": "Démarrez votre premier projet multi-corps d'état",
       "guideAannemerStartDesc": "Ajoutez les corps d'état que vous coordonnez — Vasco les réunit dans le chantier.",
-      "guideFollowup_one": "Relancer {{count}} devis en attente",
-      "guideFollowup_other": "Relancer {{count}} devis en attente",
+      "guideFollowup_one": "Relancez {{count}} devis en attente",
+      "guideFollowup_other": "Relancez {{count}} devis en attente",
       "guideAannemerProjects_one": "{{count}} projet en cours aujourd’hui",
-      "guideAannemerProjects_other": "{{count}} projets en cours aujourd’hui"
+      "guideAannemerProjects_other": "{{count}} projets en cours aujourd’hui",
+      "guideNext": "Préparez votre prochain devis"
     },
     "pill": {
       "jobsCount_one": "{{count}} mission",
@@ -4855,8 +4857,8 @@
   "quoteToInvoice": {
     "notFound": "Devis {{id}} introuvable",
     "header": "Facture depuis {{ref}}",
-    "autoNumberDue_one": "Numéro auto · échéance {{count}} jour",
-    "autoNumberDue_other": "Numéro auto · échéance {{count}} jours",
+    "autoNumberDue_one": "Échéance {{count}} jour",
+    "autoNumberDue_other": "Échéance {{count}} jours",
     "quoteDetails": "Détails du devis",
     "customer": "Client",
     "job": "Chantier",
@@ -6033,7 +6035,9 @@
     "cohortMargin": "Marge de cohorte {{trade}}/{{country}}",
     "bucketUnder": "Moins de {{amount}}",
     "bucketRange": "{{low}} – {{high}}",
-    "bucketOver": "Plus de {{amount}}"
+    "bucketOver": "Plus de {{amount}}",
+    "title": "Marché & performance",
+    "created": "Devis créés"
   },
   "payroll": {
     "totalHours": "Total des heures",
@@ -7650,5 +7654,9 @@
     "purchasesSource": "À partir des dépenses que vous avez saisies. Les factures fournisseurs seulement scannées ne sont pas incluses.",
     "retentionTitle": "Non compté à nouveau : retenue libérée",
     "retentionBody": "Montants retenus versés maintenant. Leur chiffre d’affaires et leur TVA ont été déclarés avec les factures d’origine."
+  },
+  "errorBoundary": {
+    "title": "Un problème est survenu",
+    "copyDetails": "Copier les détails de l’erreur"
   }
 }

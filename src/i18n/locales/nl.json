@@ -965,7 +965,8 @@
     "serviceDateNext": "Volgende dag",
     "serviceDateToday": "Vandaag",
     "serviceDateAskTitle": "Datum van het werk",
-    "serviceDateAskBody": "Een Duitse factuur moet vermelden wanneer het werk is gedaan. Stel de datum in bij \"Datum werkzaamheden\" op deze factuur, of kies Vandaag."
+    "serviceDateAskBody": "Een Duitse factuur moet vermelden wanneer het werk is gedaan. Stel de datum in bij \"Datum werkzaamheden\" op deze factuur, of kies Vandaag.",
+    "autoSendTag": "Automatisch"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -3002,10 +3003,11 @@
       "guideAannemerProjectsDesc": "Open een project om vakmensen te coördineren, sub-offertes te volgen en de planning op koers te houden.",
       "guideAannemerStart": "Start je eerste multi-vak project",
       "guideAannemerStartDesc": "Voeg de vakgebieden toe die je coördineert — Vasco houdt ze samen in het project.",
-      "guideFollowup_one": "Volg {{count}} open offerte op",
-      "guideFollowup_other": "Volg {{count}} open offertes op",
+      "guideFollowup_one": "Volg {{count}} openstaande offerte op",
+      "guideFollowup_other": "Volg {{count}} openstaande offertes op",
       "guideAannemerProjects_one": "{{count}} project loopt vandaag",
-      "guideAannemerProjects_other": "{{count}} projecten lopen vandaag"
+      "guideAannemerProjects_other": "{{count}} projecten lopen vandaag",
+      "guideNext": "Maak je volgende offerte"
     },
     "pill": {
       "jobsCount_one": "{{count}} klus",
@@ -4912,8 +4914,8 @@
   "quoteToInvoice": {
     "notFound": "Offerte {{id}} niet gevonden",
     "header": "Factuur van {{ref}}",
-    "autoNumberDue_one": "Auto-nummer · {{count}} dag termijn",
-    "autoNumberDue_other": "Auto-nummer · {{count}} dagen termijn",
+    "autoNumberDue_one": "Termijn {{count}} dag",
+    "autoNumberDue_other": "Termijn {{count}} dagen",
     "quoteDetails": "Offertegegevens",
     "customer": "Klant",
     "job": "Klus",
@@ -6033,7 +6035,9 @@
     "cohortMargin": "Cohort-marge {{trade}}/{{country}}",
     "bucketUnder": "Onder {{amount}}",
     "bucketRange": "{{low}} – {{high}}",
-    "bucketOver": "Boven {{amount}}"
+    "bucketOver": "Boven {{amount}}",
+    "title": "Markt & prestatie",
+    "created": "Offertes gemaakt"
   },
   "payroll": {
     "totalHours": "Totaal uren",
@@ -7650,5 +7654,9 @@
     "purchasesSource": "Uit de uitgaven die je hebt vastgelegd. Inkoopfacturen die je alleen hebt gescand, tellen niet mee.",
     "retentionTitle": "Niet opnieuw geteld: vrijgegeven inhouding",
     "retentionBody": "Ingehouden bedragen die nu worden uitbetaald. Omzet en btw zijn op de oorspronkelijke facturen al aangegeven."
+  },
+  "errorBoundary": {
+    "title": "Er ging iets mis",
+    "copyDetails": "Foutdetails kopiëren"
   }
 }

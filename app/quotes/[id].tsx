@@ -33,7 +33,7 @@ import { isDemoMode } from '../../src/context/AuthContext';
 import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { documentVatBreakdown, getEffectiveVatRate } from '../../src/domain/business';
 import { formatCurrency as fmtCurrency, formatDate as fmtDate, formatQuantity } from '../../src/i18n/formatting';
-import { findDocumentCustomer } from '../../src/domain/customers';
+import { findDocumentCustomer, documentCustomerName } from '../../src/domain/customers';
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   draft: { bg: SemanticColors.surfaceSecondary, fg: SemanticColors.textSecondary },
@@ -87,7 +87,7 @@ export default function QuoteDetailScreen() {
   // rendered directly into the customer card and share-link payload, so the
   // contractor saw "cust-001" instead of "Bakery Jansen". Resolve once.
   const customerRecord = findDocumentCustomer(customers as { id: string; name: string }[], quote);
-  const customerDisplayName = customerRecord?.name ?? quote.customer;
+  const customerDisplayName = customerRecord?.name ?? documentCustomerName(customers as { id: string; name: string }[], quote);
 
   // A quote with no STORED lines still has an amount, and the screen used to
   // total only the lines — so a €6.800 quote rendered "GESAMT € 0,00" with a

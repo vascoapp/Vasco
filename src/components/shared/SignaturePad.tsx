@@ -80,7 +80,7 @@ export function SignaturePad({ onSave, onClear, label }: Props) {
       </GestureHandlerRootView>
       <View style={styles.row}>
         <Pressable onPress={clear} style={styles.clearBtn} accessibilityRole="button" accessibilityLabel={t('a11y.clearSignature', 'Clear signature')}>
-          <Text style={styles.clearText}>Clear</Text>
+          <Text style={styles.clearText}>{t('a11y.clearSignature', 'Clear signature')}</Text>
         </Pressable>
         <Pressable
           onPress={save}
@@ -89,7 +89,7 @@ export function SignaturePad({ onSave, onClear, label }: Props) {
           accessibilityRole="button"
           accessibilityLabel={t('a11y.saveSignature', 'Save signature')}
         >
-          <Text style={styles.saveText}>Save signature</Text>
+          <Text style={styles.saveText}>{t('a11y.saveSignature', 'Save signature')}</Text>
         </Pressable>
       </View>
     </View>

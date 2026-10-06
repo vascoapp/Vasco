@@ -965,7 +965,8 @@
     "serviceDateNext": "Día siguiente",
     "serviceDateToday": "Hoy",
     "serviceDateAskTitle": "Fecha del trabajo",
-    "serviceDateAskBody": "Una factura alemana debe indicar cuándo se realizó el trabajo. Indique la fecha en «Fecha del trabajo» en esta factura o elija Hoy."
+    "serviceDateAskBody": "Una factura alemana debe indicar cuándo se realizó el trabajo. Indique la fecha en «Fecha del trabajo» en esta factura o elija Hoy.",
+    "autoSendTag": "Automático"
   },
   "expenses": {
     "title": "Gastos",
@@ -3002,10 +3003,11 @@
       "guideAannemerProjectsDesc": "Abre un proyecto para coordinar oficios, seguir sub-presupuestos y mantener el calendario.",
       "guideAannemerStart": "Comienza tu primer proyecto multi-oficio",
       "guideAannemerStartDesc": "Añada los oficios que coordina — Vasco los reúne en el proyecto.",
-      "guideFollowup_one": "Da seguimiento a {{count}} presupuesto abierto",
-      "guideFollowup_other": "Da seguimiento a {{count}} presupuestos abiertos",
+      "guideFollowup_one": "Haga seguimiento de {{count}} presupuesto abierto",
+      "guideFollowup_other": "Haga seguimiento de {{count}} presupuestos abiertos",
       "guideAannemerProjects_one": "{{count}} proyecto en curso hoy",
-      "guideAannemerProjects_other": "{{count}} proyectos en curso hoy"
+      "guideAannemerProjects_other": "{{count}} proyectos en curso hoy",
+      "guideNext": "Prepare su próximo presupuesto"
     },
     "pill": {
       "jobsCount_one": "{{count}} trabajo",
@@ -4855,8 +4857,8 @@
   "quoteToInvoice": {
     "notFound": "Presupuesto {{id}} no encontrado",
     "header": "Factura desde {{ref}}",
-    "autoNumberDue_one": "Número auto · vence en {{count}} día",
-    "autoNumberDue_other": "Número auto · vence en {{count}} días",
+    "autoNumberDue_one": "Vence en {{count}} día",
+    "autoNumberDue_other": "Vence en {{count}} días",
     "quoteDetails": "Detalles del presupuesto",
     "customer": "Cliente",
     "job": "Trabajo",
@@ -6033,7 +6035,9 @@
     "cohortMargin": "Margen de cohorte {{trade}}/{{country}}",
     "bucketUnder": "Menos de {{amount}}",
     "bucketRange": "{{low}} – {{high}}",
-    "bucketOver": "Más de {{amount}}"
+    "bucketOver": "Más de {{amount}}",
+    "title": "Mercado y rendimiento",
+    "created": "Presupuestos creados"
   },
   "payroll": {
     "totalHours": "Horas totales",
@@ -7650,5 +7654,9 @@
     "purchasesSource": "A partir de los gastos que ha registrado. Las facturas de proveedor solo escaneadas no se incluyen.",
     "retentionTitle": "No contado de nuevo: retención liberada",
     "retentionBody": "Importes retenidos que se pagan ahora. Su base e IVA se declararon con las facturas originales."
+  },
+  "errorBoundary": {
+    "title": "Algo ha salido mal",
+    "copyDetails": "Copiar detalles del error"
   }
 }

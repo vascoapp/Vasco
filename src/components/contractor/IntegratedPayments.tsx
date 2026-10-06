@@ -4,6 +4,7 @@
 import { friendlyError } from '../../utils/friendlyError';
 import React, { useState, useMemo } from 'react';
 import { documentNumber } from '../../domain/documents';
+import { documentCustomerName } from '../../domain/customers';
 import { DEMO_MODE } from '../../config/demo';
 import { useAppState } from '../../state/AppState';
 import {
@@ -409,7 +410,7 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'outstanding' | 'paid' | 'settings'>('outstanding');
-  const { invoices: appInvoices, mollieConnected, businessProfile, createPaymentLink } = useAppState();
+  const { invoices: appInvoices, customers, mollieConnected, businessProfile, createPaymentLink } = useAppState();
 
   // Was MOCK_CONTRACTOR_INVOICES — an ungated fixture, so this screen showed
   // every contractor a fabricated "INV-2024-0022 · € 1.051 · 918d overdue" as
@@ -430,12 +431,12 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
         // them, which left every real invoice card numberless.
         invoiceNumber: documentNumber(inv),
         customerId: inv.customerId ?? '',
-        customerName: inv.customerName ?? inv.customer ?? '',
+        customerName: documentCustomerName(customers, inv),
         dueDate: inv.dueDate ?? '',
         status: inv.status,
         total: inv.total ?? inv.amount ?? 0,
       })),
-    [appInvoices],
+    [appInvoices, customers],
   );
 
   // The Mollie panel used to read a fixture that hardcoded isConnected:true and

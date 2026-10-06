@@ -965,7 +965,8 @@
     "serviceDateNext": "Nächster Tag",
     "serviceDateToday": "Heute",
     "serviceDateAskTitle": "Leistungsdatum",
-    "serviceDateAskBody": "Eine Rechnung muss angeben, wann die Leistung erbracht wurde (§ 14 UStG). Bitte stellen Sie das Leistungsdatum auf dieser Rechnung ein oder wählen Sie Heute."
+    "serviceDateAskBody": "Eine Rechnung muss angeben, wann die Leistung erbracht wurde (§ 14 UStG). Bitte stellen Sie das Leistungsdatum auf dieser Rechnung ein oder wählen Sie Heute.",
+    "autoSendTag": "Automatisch"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -3005,7 +3006,8 @@
       "guideFollowup_one": "{{count}} offenes Angebot nachfassen",
       "guideFollowup_other": "{{count}} offene Angebote nachfassen",
       "guideAannemerProjects_one": "{{count}} Projekt läuft heute",
-      "guideAannemerProjects_other": "{{count}} Projekte laufen heute"
+      "guideAannemerProjects_other": "{{count}} Projekte laufen heute",
+      "guideNext": "Ihr nächstes Angebot erstellen"
     },
     "pill": {
       "jobsCount_one": "{{count}} Auftrag",
@@ -4855,8 +4857,8 @@
   "quoteToInvoice": {
     "notFound": "Angebot {{id}} nicht gefunden",
     "header": "Rechnung aus {{ref}}",
-    "autoNumberDue_one": "Auto-Nr. · Zahlungsziel {{count}} Tag",
-    "autoNumberDue_other": "Auto-Nr. · Zahlungsziel {{count}} Tage",
+    "autoNumberDue_one": "Zahlungsziel {{count}} Tag",
+    "autoNumberDue_other": "Zahlungsziel {{count}} Tage",
     "quoteDetails": "Angebotsdetails",
     "customer": "Kunde",
     "job": "Auftrag",
@@ -6033,7 +6035,9 @@
     "cohortMargin": "Kohorten-Marge {{trade}}/{{country}}",
     "bucketUnder": "Unter {{amount}}",
     "bucketRange": "{{low}} – {{high}}",
-    "bucketOver": "Über {{amount}}"
+    "bucketOver": "Über {{amount}}",
+    "title": "Markt & Leistung",
+    "created": "Angebote erstellt"
   },
   "payroll": {
     "totalHours": "Gesamtstunden",
@@ -7650,5 +7654,9 @@
     "purchasesSource": "Aus den Ausgaben, die Sie erfasst haben. Nur gescannte Lieferantenrechnungen sind nicht enthalten.",
     "retentionTitle": "Nicht erneut gezählt: freigegebener Einbehalt",
     "retentionBody": "Einbehaltene Beträge, die jetzt ausgezahlt werden. Umsatz und Umsatzsteuer wurden mit den ursprünglichen Rechnungen erklärt."
+  },
+  "errorBoundary": {
+    "title": "Etwas ist schiefgelaufen",
+    "copyDetails": "Fehlerdetails kopieren"
   }
 }

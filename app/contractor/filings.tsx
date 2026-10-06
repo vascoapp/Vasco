@@ -20,6 +20,7 @@
 import { friendlyError } from '../../src/utils/friendlyError';
 import { useCallback } from 'react';
 import { documentNumber } from '../../src/domain/documents';
+import { documentCustomerName } from '../../src/domain/customers';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -42,7 +43,7 @@ const CHANNEL_LABEL: Record<string, string> = {
 export default function FilingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { invoices } = useAppState();
+  const { invoices, customers } = useAppState();
   const { submissions, attention, awaiting, refresh } = useSubmissions();
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
@@ -75,7 +76,7 @@ export default function FilingsScreen() {
     // the XRechnung/FatturaPA the authority holds. `reference` has no writer,
     // so this used to render the customer's name for every filing in the list.
     const num = documentNumber(inv);
-    const cust = (inv.customerName ?? inv.customer ?? '').trim();
+    const cust = documentCustomerName(customers, inv);
     if (num && cust) return `${num} — ${cust}`;
     return num || cust || t('filings.unknownSubject', 'Invoice no longer in your list');
   };

@@ -50,8 +50,11 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
   const { businessProfile } = useAppState();
   // Profile first, account as fallback (#218): the cohort benchmarks are the
   // contractor's market. Geld mounts this card with no props.
-  const effectiveTrade = trade ?? businessProfile?.trade ?? user?.trade ?? 'plumbing';
-  const effectiveCountry = country ?? businessProfile?.country ?? user?.country ?? 'NL';
+  // Unknown market = no market comparison. A 'plumbing'/'NL' default showed a
+  // contractor someone else's cohort as theirs (CLAUDE.md: skip, never default).
+  const effectiveTrade = trade ?? businessProfile?.trade ?? user?.trade ?? null;
+  const effectiveCountry = country ?? businessProfile?.country ?? user?.country ?? null;
+  const tradeName = effectiveTrade ? t(`onboarding.trades.${effectiveTrade}`, effectiveTrade) : '';
 
   const [state, setState] = useState<State>({
     loading: true,
@@ -63,8 +66,8 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      queryMarginTrend(effectiveTrade, effectiveCountry, 6),
-      queryWinrateDistribution(effectiveTrade, effectiveCountry),
+      effectiveTrade && effectiveCountry ? queryMarginTrend(effectiveTrade, effectiveCountry, 6) : Promise.resolve([]),
+      effectiveTrade && effectiveCountry ? queryWinrateDistribution(effectiveTrade, effectiveCountry) : Promise.resolve([]),
       getDailyMetrics(30),
     ]).then(([trend, winRates, dailyMetrics]) => {
       if (cancelled) return;
@@ -115,16 +118,16 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
       style={styles.card}
       onPress={() => router.push('/contractor/market-insights' as any)}
       accessibilityRole="link"
-      accessibilityLabel={t('a11y.marketInsights', { trade: effectiveTrade, country: effectiveCountry })}
+      accessibilityLabel={t('a11y.marketInsights', { trade: tradeName, country: effectiveCountry ?? '' })}
     >
       <View style={styles.headerRow}>
-        <DKLabel style={styles.title}>MARKT &amp; PRESTATIE</DKLabel>
+        <DKLabel style={styles.title}>{t('moat.title', 'Market & performance')}</DKLabel>
         <Ionicons name="chevron-forward" size={14} color={DK.colors.textMuted} />
       </View>
 
       {recentMonth && (
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>{t('moat.cohortMargin', { trade: effectiveTrade, country: effectiveCountry })}</Text>
+          <Text style={styles.rowLabel}>{t('moat.cohortMargin', { trade: tradeName, country: effectiveCountry ?? '' })}</Text>
           <Text style={styles.rowValue}>
             {recentMonth.avgMargin.toFixed(1)}% <Text style={styles.rowMeta}>· {t('moat.quoteCount', { count: recentMonth.quotes })}</Text>
           </Text>
@@ -149,7 +152,8 @@ function MoatInsightsCardImpl({ trade, country }: Props) {
         <>
           <Text style={styles.subtitle}>{t('moat.last30Days', 'Last 30 days')}</Text>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('moat.sent', 'Sent')}</Text>
+            {/* Counts `quote_created` events — a draft is counted too, so "sent" was a claim. */}
+            <Text style={styles.rowLabel}>{t('moat.created', 'Quotes made')}</Text>
             <Text style={styles.rowValue}>{totals30d.quotes}</Text>
           </View>
           <View style={styles.row}>

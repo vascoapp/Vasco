@@ -11,7 +11,7 @@ import { useAppState } from '../state/AppState';
 import type { Invoice, Quote } from '../domain/documents';
 import { useExpenses, type Expense } from './expenseService';
 import { MS_PER_DAY } from '../utils/timeConstants';
-import { findDocumentCustomer } from '../domain/customers';
+import { documentCustomerName } from '../domain/customers';
 import { daysOverdue as invoiceDaysOverdue } from '../utils/invoiceDue';
 import { getEffectiveVatRate, netFromGross } from '../domain/business';
 
@@ -191,10 +191,7 @@ export function analyzeFinancials(
   const toNet = (grossAmount: number): number =>
     netFromGross(grossAmount, vatRatePercent ?? 0);
   const customerLabel = (doc: { customerId?: string | null; customer?: string | null; customerName?: string | null }): string =>
-    (doc.customerName as string | undefined)
-    ?? (customers ? findDocumentCustomer(customers, doc)?.name : undefined)
-    ?? doc.customer
-    ?? '';
+    documentCustomerName(customers ?? [], doc);
   // ---- Revenue from paid invoices ----
   const paidInvoices = invoices.filter(i => i.status === 'paid');
   const totalRevenue = Math.round(

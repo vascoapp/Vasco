@@ -6,6 +6,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet, Share, Platform } from 'react-native';
 import { SemanticColors, Palette } from '../../theme/colors';
 import { logWarn } from '../../utils/errorHandler';
+import i18n from '../../i18n/i18n';
 import { captureException } from '../../lib/errorReporting';
 import { PAGE_BG, TYPE, RADIUS, GRID } from '../../theme/tabStyles';
 interface ErrorBoundaryProps {
@@ -53,7 +54,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 
       return (
         <View style={styles.container}>
-          <Text style={styles.title}>Something went wrong</Text>
+          <Text style={styles.title}>{i18n.t('errorBoundary.title', 'Something went wrong')}</Text>
           <Text style={styles.message}>
             {errorDetails}
           </Text>
@@ -61,13 +62,13 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
             style={({ pressed }) => [styles.button, pressed && { opacity: 0.8 }]}
             onPress={() => this.setState({ hasError: false, error: null })}
           >
-            <Text style={styles.buttonText}>Try again</Text>
+            <Text style={styles.buttonText}>{i18n.t('common.retry', 'Try again')}</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.copyButton, pressed && { opacity: 0.8 }]}
             onPress={handleCopyError}
           >
-            <Text style={styles.copyButtonText}>Copy error details</Text>
+            <Text style={styles.copyButtonText}>{i18n.t('errorBoundary.copyDetails', 'Copy error details')}</Text>
           </Pressable>
         </View>
       );

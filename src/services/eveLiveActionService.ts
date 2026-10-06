@@ -21,6 +21,7 @@ import { documentNumber } from '../domain/documents';
 import type { EveAction } from './eveAgentService';
 import { formatMoney2, formatMoney } from '../i18n/formatting';
 import { daysOverdue } from '../utils/invoiceDue';
+import { documentCustomerName } from '../domain/customers';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -123,7 +124,7 @@ export function buildLiveActions(input: Input): EveAction[] {
    * as the last resort for a row that has neither.
    */
   const invoiceLabel = (inv: any): string =>
-    documentNumber(inv) || customerName(inv?.customerId, inv?.customerName ?? inv?.customer);
+    documentNumber(inv) || customerName(inv?.customerId, documentCustomerName(input.customers ?? [], inv));
   /** Quote label: the job title reads far better than a quote id. */
   const quoteLabel = (q: any): string =>
     q?.job?.trim() || customerName(q?.customerId, q?.customer) ;
@@ -404,7 +405,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       agentType: 'agent',
       type: 'satisfaction_survey',  // closest queue type — shareable thanks
       title: t('eve.live.paymentThanks.title', 'Thank {{customer}} for payment', {
-        customer: customerName(inv.customerId, inv.customerName ?? inv.customer),
+        customer: customerName(inv.customerId, documentCustomerName(input.customers ?? [], inv)),
       }),
       description: t('eve.live.paymentThanks.description', 'Invoice {{invoice}} paid — quick thanks goes a long way.', {
         invoice: invoiceLabel(inv),
@@ -414,12 +415,12 @@ export function buildLiveActions(input: Input): EveAction[] {
       status: 'pending',
       preparedData: {
         invoiceId: inv.id,
-        customerPhone: customerPhone(inv.customerId, inv.customerName ?? inv.customer),
+        customerPhone: customerPhone(inv.customerId, documentCustomerName(input.customers ?? [], inv)),
         template: t(
           'eve.live.paymentThanks.template',
           'Thanks {{customer}} — payment received for invoice {{invoice}}. Receipt on its way.',
           {
-            customer: salutation(inv.customerId, inv.customerName ?? inv.customer),
+            customer: salutation(inv.customerId, documentCustomerName(input.customers ?? [], inv)),
             invoice: invoiceLabel(inv),
           },
         ),
@@ -486,12 +487,12 @@ export function buildLiveActions(input: Input): EveAction[] {
       status: 'pending',
       preparedData: {
         invoiceId: inv.id,
-        customerPhone: customerPhone(inv.customerId, inv.customerName ?? inv.customer),
+        customerPhone: customerPhone(inv.customerId, documentCustomerName(input.customers ?? [], inv)),
         template: t(
           'eve.live.invoiceSent.template',
           'Hi {{customer}}, invoice {{invoice}} is ready. Pay online or contact me if questions.',
           {
-            customer: salutation(inv.customerId, inv.customerName ?? inv.customer),
+            customer: salutation(inv.customerId, documentCustomerName(input.customers ?? [], inv)),
             invoice: invoiceLabel(inv),
           },
         ),

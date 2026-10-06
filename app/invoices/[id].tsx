@@ -48,7 +48,7 @@ import { getEffectiveVatRate, documentVatBreakdown } from '../../src/domain/busi
 import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
-import { findDocumentCustomer } from '../../src/domain/customers';
+import { findDocumentCustomer, documentCustomerName } from '../../src/domain/customers';
 import { amountPayableNow } from '../../src/domain/documents';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { LineVatMenu, lineVatLabel } from '../../src/components/contractor/LineVatMenu';
@@ -143,7 +143,7 @@ export default function InvoiceDetailScreen() {
   // R2026-08-22, but an id on invoices converted from R13.2-era quotes — and
   // both the header title and the customer card rendered it raw, so this
   // screen was headed "RECHNUNG C-1787349342347".
-  const invoiceCustomerName = invoiceCustomer?.name ?? invoice?.customer ?? '';
+  const invoiceCustomerName = invoiceCustomer?.name ?? documentCustomerName([], invoice);
   // Profile first, account as fallback (#218).
   const country = businessProfile?.country ?? user?.country ?? 'NL';
   // Country/scheme-aware VAT rate (honors DE 19%, FR 20%, KOR/Kleinunternehmer

@@ -10,6 +10,7 @@ import i18n from '../i18n/i18n';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { daysOverdue } from '../utils/invoiceDue';
+import { documentCustomerName } from '../domain/customers';
 
 // The "low cash flow" alert used to hardcode "€5.000" into its sentence while
 // the branch tested a bare `5000`, so the two could drift and the euro sign was
@@ -685,7 +686,7 @@ export function useCashFlow() {
     appInvoices.map((inv) => ({
       id: inv.id,
       customerId: inv.customerId ?? inv.customer ?? '',
-      customerName: inv.customerName ?? inv.customer ?? '',
+      customerName: documentCustomerName([], inv),
       projectId: inv.jobId ?? inv.job ?? '',
       projectName: inv.job ?? '',
       amount: inv.amount ?? 0,

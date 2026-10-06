@@ -20,6 +20,7 @@ import { parseCalendarDay } from '../utils/dateKey';
 import type { AutoInvoice, InvoiceLineItem } from './invoiceAutomationService';
 import { lineVatNature } from '../domain/lineItems';
 import type { VatNature } from '../domain/vatNature';
+import { documentCustomerName } from '../domain/customers';
 
 export interface PdfSourceLine {
   description: string;
@@ -126,7 +127,7 @@ export function pdfInvoiceFromRecord(args: {
     invoiceNumber: documentNumber(invoice),
     jobId: invoice.jobId ?? '',
     customerId: customer?.id ?? invoice.customerId ?? '',
-    customerName: customer?.name ?? invoice.customerName ?? invoice.customer ?? '',
+    customerName: customer?.name ?? documentCustomerName([], invoice),
     customerEmail: customer?.email || undefined,
     customerAddress,
     ...(customer?.vatId ? { customerVatId: customer.vatId } : {}),

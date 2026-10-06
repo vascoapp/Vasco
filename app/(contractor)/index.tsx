@@ -111,11 +111,14 @@ export default function VandaagDK() {
       .reduce((s, i) => s + (i.total || i.amount || 0), 0);
   }, [invoices]);
   const activeQuotes = quotes.filter((q) => q.status === 'sent').length;
+  // "Your FIRST quote" only while there is none: after an accepted quote the
+  // card used to greet the contractor as if they had never made one (IT walk).
+  const hasQuotes = quotes.length > 0;
 
   const pendingQueue = aiQueue.items.filter((i) => i.status === 'pending' && !i.snoozedUntil);
   // Bell opens the notifications inbox, so badge it with THAT count — it used to
   // show the AI-queue length (e.g. bell "12" but the inbox held 2 items).
-  const { notifications: inboxNotifications } = useCombinedNotifications({ invoices: invoices as any, jobs: jobs as any });
+  const { notifications: inboxNotifications } = useCombinedNotifications({ invoices: invoices as any, jobs: jobs as any, customers });
   const heroAction = pendingQueue[0];
   const inlineQueue = pendingQueue.slice(1, 4);
 
@@ -304,7 +307,9 @@ export default function VandaagDK() {
                         ? t('dk.hero.guideFollowup', 'Follow up on {{count}} open quotes', { count: activeQuotes })
                         : isAannemer
                           ? t('dk.hero.guideAannemerStart', 'Start your first multi-trade project')
-                          : t('dk.hero.guideStart', 'Start with your first quote')}
+                          : hasQuotes
+                            ? t('dk.hero.guideNext', 'Make your next quote')
+                            : t('dk.hero.guideStart', 'Start with your first quote')}
                 </Text>
                 <Text style={styles.heroBody}>
                   {isAannemer && activeProjectCount > 0

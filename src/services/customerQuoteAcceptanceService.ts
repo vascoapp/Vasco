@@ -24,6 +24,7 @@ import { MS_PER_DAY } from '../utils/timeConstants';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
 import { formatMoney2 } from '../i18n/formatting';
+import { documentCustomerName } from '../domain/customers';
 import {
   createAcceptanceLink as dbCreateAcceptanceLink,
   getAcceptanceLinkByToken,
@@ -350,7 +351,7 @@ export async function shareQuoteWithAcceptanceLink(quote: {
     : '';
   const body = t('approval.shareMessage', {
     defaultValue: `Hi {{customer}},\n\nHere is your quote for {{job}} — {{amount}}.\n\nAccept online: {{url}}\n\nValid for 30 days.\n\nKind regards`,
-    customer: quote.customerName || quote.customer || '',
+    customer: documentCustomerName([], quote),
     job: quote.job || firstLineFallback,
     // To the cent: the customer compares it with the quote (€ 226 for a
     // € 225,51 quote — device walk 2026-10-06).

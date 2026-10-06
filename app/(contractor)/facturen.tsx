@@ -45,7 +45,7 @@ import { getMollieMethodsForCountry } from '../../src/config/paymentMethods';
 import { formatCurrency, formatMoney, formatDayMonthAuto } from '../../src/i18n/formatting';
 import { documentNumber, amountPayableNow } from '../../src/domain/documents';
 import { shareOutcome, confirmShareSent } from '../../src/utils/shareOutcome';
-import { findDocumentCustomer } from '../../src/domain/customers';
+import { findDocumentCustomer, documentCustomerName } from '../../src/domain/customers';
 import { invoicePdfExtras } from '../../src/domain/invoiceDocuments';
 import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 import { getEffectiveVatRate, grossFromDocumentLines } from '../../src/domain/business';
@@ -553,7 +553,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
 function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { businessProfile, lineItems } = useAppState();
+  const { businessProfile, lineItems, customers } = useAppState();
   const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
   // Every status is named: 'draft' and 'expired' fell through to "Verstuurd",
   // so a concept never sent read as sent in the list while its own screen
@@ -583,7 +583,7 @@ function QuoteItem({ quote, onPress }: { quote: Quote; onPress: () => void }) {
       <View style={[styles.quoteCardAccent, { backgroundColor: status.color }]} />
       <Ionicons name={status.icon} size={20} color={status.color} style={{ marginLeft: Spacing.sm }} />
       <View style={styles.quoteInfo}>
-        <Text style={styles.quoteCustomer} numberOfLines={1}>{quote.customer}</Text>
+        <Text style={styles.quoteCustomer} numberOfLines={1}>{documentCustomerName(customers, quote)}</Text>
         <Text style={styles.quoteTitle} numberOfLines={1}>{quote.title}</Text>
       </View>
       <View style={styles.quoteRight}>
@@ -711,7 +711,7 @@ export default function FacturenScreen() {
       .map((q: any): Quote => ({
         id: q.id,
         reference: documentNumber(q),
-        customer: findDocumentCustomer(customers, q)?.name ?? q.customer ?? '',
+        customer: documentCustomerName(customers, q),
         title: q.job ?? '',
         status: q.status,
         sentDate: q.sentAt ? formatDayMonthAuto(new Date(q.sentAt)) : undefined,
@@ -1100,8 +1100,7 @@ export default function FacturenScreen() {
                                     business: businessProfile.businessName ?? '',
                                   }
                                 : {
-                                    customer: findDocumentCustomer(customers as any, inv as any)?.name
-                                      ?? (inv as any).customer ?? '',
+                                    customer: documentCustomerName(customers as any, inv as any),
                                     ref: documentNumber(inv as any),
                                     // What is owed today, not the gross total —
                                     // same as the branch above (#354; B3).
@@ -1200,7 +1199,7 @@ export default function FacturenScreen() {
                       {seq.autoSendEnabled && (
                         <View style={styles.dunningAutoTag}>
                           <Ionicons name="flash" size={10} color={SemanticColors.feedbackSuccess} />
-                          <Text style={styles.dunningAutoText}>Auto</Text>
+                          <Text style={styles.dunningAutoText}>{t('invoices.autoSendTag', 'Auto')}</Text>
                         </View>
                       )}
                     </View>

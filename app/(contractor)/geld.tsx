@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
 import { collectionRate as computeCollectionRate, issuedInvoices } from '../../src/utils/collectionRate';
 import { useAppState } from '../../src/state/AppState';
+import { documentCustomerName } from '../../src/domain/customers';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
 import { MoatInsightsCard } from '../../src/components/contractor/MoatInsightsCard';
 import { ReconciliationCard } from '../../src/components/contractor/ReconciliationCard';
@@ -80,7 +81,7 @@ export default function GeldScreen() {
   const [quoteSort, setQuoteSort] = useState<SortMode>('date-desc');
   const [showInvoiceFilterModal, setShowInvoiceFilterModal] = useState(false);
   const [showQuoteFilterModal, setShowQuoteFilterModal] = useState(false);
-  const { invoices, quotes, jobs, projects, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
+  const { invoices, quotes, jobs, customers, projects, removeInvoice, removeQuote, isLoading, businessProfile } = useAppState();
   const { user } = useAuth();
   const fin = useFinancialAnalysis();
   const aiQueue = useAIQueue({ jobs, invoices, quotes });
@@ -145,26 +146,26 @@ export default function GeldScreen() {
         // Blank beats leaking an internal identifier; this matches the same
         // conclusion drawn for addInvoiceFromJob in AppState (see the
         // "cust-003" comment there).
-        name: inv.customer || inv.customerName || '',
+        name: documentCustomerName(customers, inv),
         description: inv.job || t('invoices.invoice', 'Factuur'),
         amount: inv.total || inv.amount || 0,
         status: inv.status,
       }))
       .sort((a, b) => invoiceSort === 'value-desc' ? b.amount - a.amount : 0);
-  }, [invoices, invoiceStatusFilter, invoiceSort, t]);
+  }, [invoices, customers, invoiceStatusFilter, invoiceSort, t]);
 
   const quoteDocs = useMemo(() => {
     return quotes
       .filter((q: any) => quoteStatusFilter === 'all' || q.status === quoteStatusFilter)
       .map((q: any) => ({
         id: q.id,
-        name: q.customer || q.job || '',
+        name: documentCustomerName(customers, q) || q.job || '',
         description: q.job || q.description || t('quotes.quote', 'Offerte'),
         amount: q.amount || 0,
         status: q.status,
       }))
       .sort((a, b) => quoteSort === 'value-desc' ? b.amount - a.amount : 0);
-  }, [quotes, quoteStatusFilter, quoteSort, t]);
+  }, [quotes, customers, quoteStatusFilter, quoteSort, t]);
 
   const sparkData = fin.monthlyInflows;
   const sparkMonthLabels = useMemo(() => getLastNMonthLabels(sparkData.length || 6, i18n.language), [sparkData.length, i18n.language]);

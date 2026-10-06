@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
 import { useAppState } from '../../src/state/AppState';
 import { getEffectiveVatRate, netFromGross } from '../../src/domain/business';
+import { findDocumentCustomer, documentCustomerName } from '../../src/domain/customers';
 import { useAuth } from '../../src/context/AuthContext';
 import { useContractorDecisionInbox } from '../../src/services/decisionSyncService';
 import { hapticSuccess } from '../../src/utils/haptics';
@@ -189,8 +190,8 @@ export default function BedrijfScreen() {
     const map: Record<string, number> = {};
     invoices.forEach((inv: any) => {
       if (inv.status !== 'paid') return;
-      const key = inv.customerId
-        ?? byName[String(inv.customer ?? inv.customerName ?? '').trim().toLowerCase()];
+      const key = findDocumentCustomer(customers, inv)?.id
+        ?? byName[documentCustomerName([], inv).trim().toLowerCase()];
       if (!key) return; // unattributable — better than inventing a bucket
       map[key] = (map[key] || 0) + netFromGross(inv.amount || 0, vatRatePercent);
     });

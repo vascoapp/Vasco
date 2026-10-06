@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Domain types
 import { BusinessProfile, isSmallBusinessExempt, getEffectiveVatRate, storedLineVatRate, grossFromNet, grossFromDocumentLines } from '../domain/business';
-import { Customer, findDocumentCustomer } from '../domain/customers';
+import { Customer, findDocumentCustomer, documentCustomerName } from '../domain/customers';
 import type { Lead, LeadStatus } from '../domain/lead';
 import type { Worker, WorkerRole } from '../domain/worker';
 import { Invoice, Quote, documentNumber, invoiceAlreadyBillingDecisionItems, amountPayableNow } from '../domain/documents';
@@ -3519,7 +3519,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const payload = inv
           ? {
               customerEmail: cust?.email,
-              customerName: cust?.name ?? inv.customer,
+              customerName: cust?.name ?? documentCustomerName([], inv),
               reference: documentNumber(inv),
               dueDate: (inv as any).dueDate,
               lineItems: invLineItems.map((li) => ({

@@ -63,3 +63,26 @@ export function findDocumentCustomer<T extends { id: string; name: string }>(
   return customers.find((c) => c.id === doc.customer)
     ?? customers.find((c) => c.name === doc.customer);
 }
+
+/** A customer id where a name should be: a uuid, or a local/seed id. */
+const CUSTOMER_ID_SHAPE = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|c-\d+|cust-[\w-]+)$/i;
+
+/**
+ * The name to SHOW for a document's customer. Never an id: `doc.customer`
+ * holds the customer's id on every quote the builder made, and printing it
+ * raw put "d4c3e5c1-42fa-…" at the top of the quote list (IT walk,
+ * 2026-10-06). Resolved customer → the document's own customerName → the
+ * name slot when it holds a name → ''.
+ */
+export function documentCustomerName<T extends { id: string; name: string }>(
+  customers: readonly T[],
+  doc: { customerId?: string | null; customer?: string | null; customerName?: string | null } | null | undefined,
+): string {
+  if (!doc) return '';
+  const found = findDocumentCustomer(customers, doc);
+  if (found?.name) return found.name;
+  const named = (doc.customerName ?? '').trim();
+  if (named) return named;
+  const raw = (doc.customer ?? '').trim();
+  return CUSTOMER_ID_SHAPE.test(raw) ? '' : raw;
+}

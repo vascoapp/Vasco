@@ -15,7 +15,7 @@ import { useAuth } from '../../../src/context/AuthContext';
 import { formatCurrency, type Country, formatQuantity } from '../../../src/i18n/formatting';
 import { logError } from '../../../src/utils/errorHandler';
 import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
-import { findDocumentCustomer } from '../../../src/domain/customers';
+import { documentCustomerName } from '../../../src/domain/customers';
 import { ensureCanCreate } from '../../../src/services/tierGatePrompt';
 import { invoiceTermDays } from '../../../src/utils/invoiceDue';
 
@@ -36,10 +36,7 @@ export default function InvoiceFromQuoteScreen() {
   // R2026-08-22, and a raw customer id for the ones created between R13.2 and
   // it — this screen rendered whichever it got, so it read "c-1787349342347"
   // where the customer's name belongs. Resolve both shapes.
-  const quoteCustomerName =
-    findDocumentCustomer(customers as { id: string; name: string }[], quote)?.name
-    ?? quote?.customer
-    ?? '';
+  const quoteCustomerName = documentCustomerName(customers as { id: string; name: string }[], quote);
   const quoteItems = id ? lineItems[id] ?? [] : [];
 
   // AI guidance — context switches based on customer data
@@ -108,11 +105,11 @@ export default function InvoiceFromQuoteScreen() {
           <Text style={Typography.subtitle}>{t('quoteToInvoice.quoteDetails')}</Text>
           <View style={styles.row}>
             <Text style={Typography.muted}>{t('quoteToInvoice.customer')}</Text>
-            <Text style={Typography.body}>{quoteCustomerName}</Text>
+            <Text style={[Typography.body, styles.rowValue]}>{quoteCustomerName}</Text>
           </View>
           <View style={styles.row}>
             <Text style={Typography.muted}>{t('quoteToInvoice.job')}</Text>
-            <Text style={Typography.body}>{quote.job}</Text>
+            <Text style={[Typography.body, styles.rowValue]}>{quote.job}</Text>
           </View>
           <View style={styles.row}>
             <Text style={Typography.muted}>{t('quoteToInvoice.amount')}</Text>
@@ -216,6 +213,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SemanticColors.borderDefault,
   },
+  // A value longer than its half ran past the card's edge ("Sostituzione
+  // miscelatore bagno +1", IT walk 2026-10-06): it may shrink and wrap.
+  rowValue: { flexShrink: 1, textAlign: 'right' },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -23,6 +23,7 @@ import { loadOnboardingPreferences } from '../services/onboardingPreferencesServ
 import { loadSubscription, getTierLimits } from '../services/subscriptionService';
 import i18n from '../i18n/i18n';
 import { todayKey } from '../utils/dateKey';
+import { documentCustomerName } from '../domain/customers';
 
 const SCHEDULER_KEY = '@vasco_scheduler_state';
 const BRIEFING_KEY = '@vasco_morning_briefing';
@@ -142,7 +143,7 @@ function auditQuotes(quotes: any[]): AuditFinding[] {
           type: 'quote_anomaly',
           severity: 'warning',
           title: `Offerte ${queueEntityLabel(q) || 'zonder referentie'} al ${daysSinceSent} dagen zonder reactie`,
-          description: `${formatMoney((q.amount ?? 0))} · ${q.customer || 'Onbekende klant'}`,
+          description: `${formatMoney((q.amount ?? 0))} · ${documentCustomerName([], q) || i18n.t('common.customer', 'Customer')}`,
           entityId: q.id,
           entityType: 'quote',
           suggestedAction: 'Opvolging sturen of archiveren',
@@ -620,7 +621,7 @@ export async function generateMorningBriefing(context: {
     if (!validUntil) continue;
     const daysLeft = Math.ceil((validUntil - now2.getTime()) / MS_PER_DAY);
     if (daysLeft > 0 && daysLeft <= 7) {
-      proactiveAlerts.push(`Quote for ${q.customer || q.id} (${formatMoney((q.amount ?? 0))}) expires in ${daysLeft} days`);
+      proactiveAlerts.push(`Quote for ${documentCustomerName([], q) || queueEntityLabel(q)} (${formatMoney((q.amount ?? 0))}) expires in ${daysLeft} days`);
     }
   }
 

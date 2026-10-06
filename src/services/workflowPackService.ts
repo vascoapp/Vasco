@@ -22,6 +22,7 @@ import { localDateKey } from '../utils/dateKey';
 import { truncateAtWord } from '../utils/truncate';
 import { documentNumber } from '../domain/documents';
 import { isWorkOnDay } from '../domain/jobs';
+import { documentCustomerName } from '../domain/customers';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 const MUTES_KEY = '@vasco_pack_mutes';
@@ -1204,10 +1205,10 @@ function matchTrigger(
         if (age >= targetAge && age < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === inv.customerId);
           results.push({
-            label: cust?.name || inv.customer || inv.reference || '',
+            label: cust?.name || documentCustomerName([], inv) || inv.reference || '',
             customerId: inv.customerId,
             entityId: inv.id,
-            customer: cust?.name || inv.customer || '',
+            customer: cust?.name || documentCustomerName([], inv),
             amount: inv.amount || inv.total || 0,
             // CUSTOMER-FACING: this fills {{invoice}} in a WhatsApp/email body.
             // `reference` has no writer and `invoiceNumber` is not a field on
@@ -1232,10 +1233,10 @@ function matchTrigger(
         if (overdueDays >= targetAge && overdueDays < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === inv.customerId);
           results.push({
-            label: cust?.name || inv.customer || inv.reference || '',
+            label: cust?.name || documentCustomerName([], inv) || inv.reference || '',
             customerId: inv.customerId,
             entityId: inv.id,
-            customer: cust?.name || inv.customer || '',
+            customer: cust?.name || documentCustomerName([], inv),
             amount: inv.amount || inv.total || 0,
             // CUSTOMER-FACING: this fills {{invoice}} in a WhatsApp/email body.
             // `reference` has no writer and `invoiceNumber` is not a field on
@@ -1260,10 +1261,10 @@ function matchTrigger(
         if (age >= targetAge && age < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === q.customerId);
           results.push({
-            label: cust?.name || q.customer || q.job || '',
+            label: cust?.name || documentCustomerName([], q) || q.job || '',
             customerId: q.customerId,
             entityId: q.id,
-            customer: cust?.name || q.customer || '',
+            customer: cust?.name || documentCustomerName([], q),
             amount: q.amount ?? 0,
             job: q.description || q.job || '',
           });
@@ -1348,10 +1349,10 @@ function matchTrigger(
         if (age >= targetAge && age < targetAge + windowMs) {
           const cust = (ctx.customers ?? []).find((c: any) => c.id === q.customerId);
           results.push({
-            label: cust?.name || q.customer || q.job || '',
+            label: cust?.name || documentCustomerName([], q) || q.job || '',
             customerId: q.customerId,
             entityId: q.id,
-            customer: cust?.name || q.customer || '',
+            customer: cust?.name || documentCustomerName([], q),
             amount: q.amount || 0,
             job: q.job || q.description || '',
           });

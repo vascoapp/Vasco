@@ -23,10 +23,11 @@ import {
   type ReconciliationReason,
 } from '../../integrations/banking';
 import { useAppState } from '../../state/AppState';
+import { documentCustomerName } from '../../domain/customers';
 
 function ReconciliationCardImpl() {
   const { t } = useTranslation();
-  const { invoices, markInvoicePaid } = useAppState() as any;
+  const { invoices, customers, markInvoicePaid } = useAppState() as any;
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<ReconciliationMatch[]>([]);
@@ -46,7 +47,7 @@ function ReconciliationCardImpl() {
       const candidates = openInvoices.map((inv: any) => ({
         id: inv.id,
         amount: Number(inv.amount) || 0,
-        customerName: inv.customer ?? inv.customerName,
+        customerName: documentCustomerName(customers ?? [], inv) || undefined,
         customerIban: inv.customerIban,
         sentAt: inv.sentAt ?? inv.createdAt,
       }));
@@ -58,7 +59,7 @@ function ReconciliationCardImpl() {
       }
     })();
     return () => { cancelled = true; };
-  }, [invoices]);
+  }, [invoices, customers]);
 
   if (!connected || (loading && matches.length === 0)) return null;
   if (loading) {

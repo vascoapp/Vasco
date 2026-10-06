@@ -20,6 +20,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
+import { findDocumentCustomer } from '../../src/domain/customers';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { FadeIn } from '../../src/components/shared/FadeIn';
 import { CustomerTagBadge } from '../../src/components/contractor/CustomerTagBadge';
@@ -159,7 +160,7 @@ export default function CustomerPhonebookScreen() {
                     ].filter(Boolean).join(' · ')}
                   </Text>
                   {(() => {
-                    const custInvoices = invoices.filter((inv: any) => inv.customer === contact.id);
+                    const custInvoices = invoices.filter((inv: any) => findDocumentCustomer(customers, inv)?.id === contact.id);
                     const totalInvoiced = custInvoices.reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
                     const outstanding = custInvoices.filter((inv: any) => inv.status !== 'paid').reduce((sum: number, inv: any) => sum + (inv.total || inv.amount || 0), 0);
                     if (totalInvoiced === 0 && contact.jobCount === 0) return null;

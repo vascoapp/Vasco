@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { DEMO_MODE } from '../config/demo';
+import { documentCustomerName } from '../domain/customers';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -410,7 +411,7 @@ function deriveDunningSequences(invoices: any[]): DunningSequence[] {
       return {
         id: `dun-${inv.id}`,
         invoiceId: inv.id,
-        customerName: inv.customerName ?? inv.customer ?? '',
+        customerName: documentCustomerName([], inv),
         invoiceAmount: inv.amount ?? 0,
         daysOverdue,
         currentStep,
@@ -443,7 +444,7 @@ function deriveCashGapAlerts(invoices: any[]): CashGapAlert[] {
   if (longest.days >= 30 && longest.inv) {
     out.push({
       id: `cga-longest-${longest.inv.id}`,
-      title: `${longest.days}d overdue: ${longest.inv.customerName ?? longest.inv.customer ?? ''}`,
+      title: `${longest.days}d overdue: ${documentCustomerName([], longest.inv)}`,
       description: `Invoice ${longest.inv.id} (${formatMoney(Math.round(longest.inv.amount ?? 0))}). Collections risk rising.`,
       severity: 'kritiek',
       gapAmount: longest.inv.amount ?? 0,

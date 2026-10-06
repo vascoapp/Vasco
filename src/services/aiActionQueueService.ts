@@ -25,7 +25,7 @@ import {
   questionIdFromQueueItemId,
 } from './customerQuestionQueueBridge';
 import { computeLateFee, formatLateFeeRate, lateFeeCountry, lateFeeCustomerType } from './lateFeeService';
-import { findDocumentCustomer } from '../domain/customers';
+import { findDocumentCustomer, documentCustomerName } from '../domain/customers';
 import { amountPayableNow } from '../domain/documents';
 import { isWorkOnDay } from '../domain/jobs';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
@@ -1119,7 +1119,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const id = await addToQueue({
       type: 'draft_followup',
       title: t('aiQueue.quoteFollowUp', { ref: queueEntityLabel(quote, context.customers) }).trim(),
-      description: `${quote.customer || ''} · ${formatMoney2((quote.amount ?? 0))}`,
+      description: `${documentCustomerName([], quote)} · ${formatMoney2((quote.amount ?? 0))}`,
       preparedData: {
         quoteId: quote.id, customer: quote.customer, amount: quote.amount,
         ...(followupIntel?.contextLine ? { customerContext: followupIntel.contextLine } : {}),
@@ -1238,14 +1238,14 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const cust = (context.customers ?? []).find((c: any) => c.id === q.customerId);
     const message = t('automation.quoteExpiryMsg', {
       defaultValue: 'Hi {{customer}}, your quote for {{job}} ({{amount}}) expires on {{date}}. Would you like to proceed?',
-      customer: cust?.name || q.customer || '',
+      customer: cust?.name || documentCustomerName([], q),
       job: q.description || q.job || '',
       amount: formatMoney2(q.amount ?? 0),
       date: expiryDate,
     });
     const id = await addToQueue({
       type: 'quote_expiry',
-      title: t('automation.quoteExpiring', { defaultValue: 'Quote expiring: {{customer}}', customer: cust?.name || q.customer || '' }),
+      title: t('automation.quoteExpiring', { defaultValue: 'Quote expiring: {{customer}}', customer: cust?.name || documentCustomerName([], q) }),
       description: `${formatMoney2((q.amount ?? 0))} · ${expiryDate}`,
       preparedData: {
         quoteId: q.id, customerId: q.customerId, template: message,
@@ -1448,11 +1448,11 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     const satIntel = inv.customerId ? getCustomerIntelligence(inv.customerId, context.allJobs ?? [], context.allInvoices ?? []) : null;
     const message = t('automation.satisfactionMsg', {
       defaultValue: 'Hi {{customer}}, we hope you\'re happy with the work. Would you recommend us? Your feedback helps us improve!',
-      customer: cust?.name || inv.customer || '',
+      customer: cust?.name || documentCustomerName([], inv),
     });
     const id = await addToQueue({
       type: 'satisfaction_survey',
-      title: t('automation.feedbackRequest', { defaultValue: 'Feedback: {{customer}}', customer: cust?.name || inv.customer || '' }),
+      title: t('automation.feedbackRequest', { defaultValue: 'Feedback: {{customer}}', customer: cust?.name || documentCustomerName([], inv) }),
       description: t('automation.sevenDaysAfterPayment', '7 days after payment'),
       preparedData: {
         invoiceId: inv.id, customerId: inv.customerId, template: message,
