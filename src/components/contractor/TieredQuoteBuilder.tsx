@@ -592,6 +592,11 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
 
   const tiers = calculateTiers();
   const sendTier = tiers.find(ti => ti.tier === sendTierKey) ?? tiers[1];
+  // Every package costs the same until the contractor prices one per service
+  // (TIER_MULTIPLIER is 1). Three identical cards — Premium promising "premium
+  // materials" at the Standard price — then become ONE card with no claims
+  // (user's call, FR walk 2026-10-06).
+  const packagesDiffer = new Set(tiers.map((tier) => tier.total)).size > 1;
 
   const addService = (item: PricebookItem) => {
     const existing = selectedServices.find(s => s.item.id === item.id);
@@ -1969,6 +1974,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
         )}
 
         {/* Package picker. Tapping a card chooses what gets sent. */}
+        {packagesDiffer ? (<>
         <View style={s.packageHeaderRow}>
           <View style={{ flex: 1 }}>
             <Text style={s.sectionTitle}>{t('quotes.pickPackageTitle', 'Which package do you send?')}</Text>
@@ -2008,7 +2014,10 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                   <Ionicons name={isSending ? 'radio-button-on' : cfg.icon} size={20} color={isSending ? Palette.hermesOrange : cfg.color} />
                 </View>
                 <Text style={[s.tierName, { color: cfg.color }]}>{tier.name}</Text>
-                <Text style={s.tierPrice}>{fmt(tier.total)}</Text>
+                {/* One line, shrinking to fit: three cards side by side wrapped a
+                    four-digit French amount mid-number — "€ 1 488,6" / "0" (FR walk,
+                    2026-10-06). An amount that breaks reads as a different amount. */}
+                <Text style={s.tierPrice} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{fmt(tier.total)}</Text>
                 <Text style={s.tierVat}>{t('quotes.inclVat', 'incl. VAT')}</Text>
                 {tier.features.map((f, i) => (
                   <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, width: '100%' }}>
@@ -2026,16 +2035,25 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
             contractor sets a per-package price, and saying so beats leaving
             them to wonder why. The CUSTOMER only ever receives the selected
             package, so this note is for the contractor alone. */}
-        {new Set(tiers.map((tier) => tier.total)).size === 1 && (
-          <Text style={s.tiersSamePriceHint}>
-            {t('quotes.tiersSamePriceHint', 'Every package quotes your own prices. Give a package its own price per service in your pricebook.')}
-          </Text>
+        </>) : (
+          <View style={s.singlePackage}>
+            <Text style={s.tierPrice} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{fmt(sendTier.total)}</Text>
+            <Text style={s.tierVat}>{t('quotes.inclVat', 'incl. VAT')}</Text>
+            <Text style={s.tiersSamePriceHint}>
+              {t('quotes.tiersSamePriceHint', 'Every package quotes your own prices. Give a package its own price per service in your pricebook.')}
+            </Text>
+            <Pressable accessibilityRole="link" onPress={() => router.push('/contractor/pricebook' as any)}>
+              <Text style={s.editPackagesText}>{t('quotes.setPackagePrices', 'Offer packages at different prices')}</Text>
+            </Pressable>
+          </View>
         )}
 
         {/* Line items summary */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>
-            {t('quotes.linesForPackage', 'Lines ({{name}})', { name: tierPresets[sendTierKey].name })}
+            {packagesDiffer
+              ? t('quotes.linesForPackage', 'Lines ({{name}})', { name: tierPresets[sendTierKey].name })
+              : t('quotes.linesPlain', 'Lines')}
           </Text>
           <View style={s.serviceList}>
             {selectedServices.map(sv => {
@@ -2320,7 +2338,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                 shape, where the label makes a claim the write does not. */}
             <Ionicons name="document-text" size={18} color={Palette.white} />
             <Text style={s.sendBtnText}>
-              {t('quotes.createPackage', 'Create {{name}} quote', { name: tierPresets[sendTierKey].name })}
+              {packagesDiffer
+                ? t('quotes.createPackage', 'Create {{name}} quote', { name: tierPresets[sendTierKey].name })
+                : t('quotes.createQuotePlain', 'Create quote')}
             </Text>
           </LinearGradient>
         </Pressable>
@@ -2658,6 +2678,7 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: SemanticColors.borderMuted,
     borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 6,
   },
+  singlePackage: { alignItems: 'center', gap: GRID.xs, paddingVertical: GRID.md, marginBottom: GRID.md, backgroundColor: SemanticColors.surfacePrimary, borderRadius: RADIUS.md, borderWidth: 1, borderColor: SemanticColors.borderDefault },
   editPackagesText: { fontSize: TYPE.tinySize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange },
   tierCardSelected: { borderColor: Palette.hermesOrange, borderWidth: 2, backgroundColor: Palette.hermesOrange + '0D' },
   tierEditorRow: { gap: 6 },

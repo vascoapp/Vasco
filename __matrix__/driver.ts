@@ -410,7 +410,13 @@ export async function runEverydayCell(market: Market, kind: Kind): Promise<void>
       rules = [{ title: /./, press: new RegExp(`^(${E('tieredQuote.viewQuote')}|${E('common.continue', { defaultValue: 'Continue' })}|${E('quotes.sendAnyway', { defaultValue: 'Send anyway' })})$`, 'i') }];
       const before = new Set((await read<any[]>('@vasco_quotes', [])).map((q) => q.id));
       // The package name varies: escape the text around it, then let it match anything.
-      const create = pressables(root, new RegExp(`^${E('quotes.createPackage', { name: '\u0000' }).replace('\u0000', '.*')}$`, 'i'));
+      // One card ("Create quote") when the packages cost the same — the everyday
+      // case with hand-typed services (user, 2026-10-06); "Create {{name}} quote"
+      // when the contractor priced packages apart.
+      const create = [
+        ...pressables(root, new RegExp(`^${E('quotes.createPackage', { name: '\u0000' }).replace('\u0000', '.*')}$`, 'i')),
+        ...pressables(root, T('quotes.createQuotePlain')),
+      ];
       if (!create.length) return void step('quote: Create', false, 'no create button');
       await press(create[create.length - 1]); await settle(20);
       rules = [];
