@@ -85,3 +85,15 @@ it('the profile counts as complete with the Steuernummer in Germany (same rule a
   const src: string = stripComments(fs.readFileSync(path.join(__dirname, '../state/AppState.tsx'), 'utf8'));
   expect(src).toMatch(/merged\.country === 'DE'\s*\?\s*!!\(merged\.vatNumber \|\| germanSteuernummer\(merged\)\)/);
 });
+
+describe('Spain: a bare NIF passes the send gate (ES walk, 2026-10-06)', () => {
+  const es = { country: 'ES', businessName: 'Fontanería García', address: 'Calle Mayor 12', postcode: '28013', city: 'Madrid', email: 'a@b.es', phone: '+34 600 000 000', iban: 'ES9121000418450200051332' } as any;
+  it('bare DNI-NIF with a correct control letter: ready', () => {
+    const r = checkInvoiceReadiness({ ...es, vatNumber: '12345678Z' });
+    expect([...r.missing, ...r.invalid]).toEqual([]);
+  });
+  it('ES-prefixed is still fine; a wrong control letter is still refused', () => {
+    expect(checkInvoiceReadiness({ ...es, vatNumber: 'ES12345678Z' }).invalid).toEqual([]);
+    expect(checkInvoiceReadiness({ ...es, vatNumber: '12345678A' }).invalid.length).toBeGreaterThan(0);
+  });
+});

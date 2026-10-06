@@ -121,7 +121,11 @@ export function checkInvoiceReadiness(profile: BusinessProfile): ProfileReadines
   // Country-specific format rules live in src/utils/validation.ts (R66r3
   // mod-97 IBAN + per-country VAT regex).
   const btw = profile.vatNumber?.trim();
-  if (btw && !isValidVATNumber(btw)) {
+  // Spain: a NIF is valid bare ("12345678Z" — an autónomo's DNI, as Facturae
+  // carries it) or ES-prefixed; the control-character check below judges it.
+  // The generic EU shape alone refused the bare form (ES walk, 2026-10-06).
+  const spanishBare = profile.country === 'ES' && !!btw && isValidSpanishTaxId(btw);
+  if (btw && !isValidVATNumber(btw) && !spanishBare) {
     invalid.push('profile.vatFormatInvalid');
     invalidLabels.push(i18n.t('profile.vatFormatInvalid', {
       defaultValue: 'VAT number format invalid (expected e.g. {{example}})',
