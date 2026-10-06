@@ -1665,16 +1665,27 @@ export default function InvoiceDetailScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons
-              name={mollieConnected ? 'shield-checkmark' : 'shield-outline'}
+              name={mollieConnected ? 'shield-checkmark' : 'cash-outline'}
               size={18}
               color={mollieConnected ? SemanticColors.feedbackSuccess : SemanticColors.textTertiary}
             />
             <Text style={styles.cardTitle}>
               {mollieConnected
                 ? t('invoices.offeredPaymentMethods', 'Payment methods')
-                : t('invoices.paymentMethodsAvailable', 'Payment methods you could offer')}
+                : t('invoices.paymentTitle', 'Payment')}
             </Text>
           </View>
+          {/* Not connected: say how THIS invoice gets paid — the bank transfer
+              the PDF asks for — not a list of methods nobody can use yet
+              ("what's the point if it's just informational?", user 2026-10-06). */}
+          {!mollieConnected && (
+            <Text style={{ fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary }}>
+              {businessProfile.iban
+                ? t('invoices.paidByTransferTo', { defaultValue: 'By bank transfer to {{iban}}', iban: businessProfile.iban })
+                : t('invoices.noIbanForTransfer', 'Add your IBAN so your customer knows where to pay')}
+            </Text>
+          )}
+          {mollieConnected && (
           <View style={styles.paymentMethodList}>
             {paymentMethods.map((pm) => {
               const brandColor = getPaymentBrandColor(pm.name);
@@ -1711,6 +1722,7 @@ export default function InvoiceDetailScreen() {
               );
             })}
           </View>
+          )}
           {customerPreference && (
             <View style={styles.preferenceNote}>
               <Ionicons name="heart" size={14} color={Palette.hermesOrange} />
@@ -1727,13 +1739,19 @@ export default function InvoiceDetailScreen() {
               </Text>
             </View>
           ) : (
-            <ActionRow
-              icon="card-outline"
-              label={t('invoices.connectMollie', 'Connect Mollie')}
+            // A small link, not the accent button: it is one-time SETUP, and
+            // as a full orange gradient it outweighed the invoice's own
+            // actions on every unpaid invoice (user, 2026-10-06).
+            <Pressable
+              accessibilityRole="link"
               onPress={() => router.push('/(modals)/mollie' as any)}
-              accent
-              border
-            />
+              style={{ flexDirection: 'row', alignItems: 'center', gap: GRID.xs, paddingTop: GRID.sm }}
+            >
+              <Text style={{ fontSize: TYPE.captionSize, fontFamily: TYPE.labelFamily, color: Palette.hermesOrange }}>
+                {t('invoices.offerOnlinePaymentMollie', 'Offer online payment via Mollie')}
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color={Palette.hermesOrange} />
+            </Pressable>
           )}
         </View>
 
