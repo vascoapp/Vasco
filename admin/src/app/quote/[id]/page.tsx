@@ -103,6 +103,7 @@ const LANG_LOCALE: Record<Lang, string> = {
 const COPY: Record<Lang, Record<string, string>> = {
   en: {
     accept: 'Accept quote', confirm: 'Yes — accept', cancel: 'Cancel', decline: 'Decline', declineTitle: 'Decline this quote', reasonLabel: 'Reason (optional)', reasonPlaceholder: 'Lets your contractor know why.', declineConfirm: 'Send decline', sending: 'Sending…', acceptedTitle: 'Accepted', acceptedBody: 'Your contractor has been notified and will be in touch to plan the work.', rejectedTitle: 'Declined', rejectedBody: 'Your contractor has been notified. You can still reach them directly if anything changes.', alreadyTitle: 'Already answered', alreadyBody: 'This quote has already been answered. Contact your contractor if that was not you.', failedTitle: 'That did not go through', failedBody: 'Nothing was sent. Please try again, or contact your contractor directly.', openAppSecondary: 'Open in the Vasco app',
+    withdrawalTitle: 'Your 14-day right to withdraw', withdrawalBody: 'This quote is signed away from business premises, so you may cancel within 14 days of acceptance without giving a reason (French Consumer Code, art. L221-18 et seq.).', withdrawalCheck: 'I have read and understood my right to withdraw', withdrawalRequired: 'Please confirm you have read the withdrawal notice.',
     eyebrow: 'Your quote', quoteRef: 'Quote', total: 'Total', subtotal: 'Subtotal', vat: 'VAT',
     lines: 'What is included', qty: 'Qty', openApp: 'Open in Vasco to accept',
     noApp: 'New to Vasco?', loading: 'Loading your quote…',
@@ -114,6 +115,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   nl: {
     accept: 'Offerte accepteren', confirm: 'Ja — accepteren', cancel: 'Annuleren', decline: 'Afwijzen', declineTitle: 'Deze offerte afwijzen', reasonLabel: 'Reden (optioneel)', reasonPlaceholder: 'Zo weet je vakman waarom.', declineConfirm: 'Afwijzing versturen', sending: 'Versturen…', acceptedTitle: 'Geaccepteerd', acceptedBody: 'Je vakman heeft bericht gekregen en neemt contact op om het werk in te plannen.', rejectedTitle: 'Afgewezen', rejectedBody: 'Je vakman heeft bericht gekregen. Je kunt hem altijd rechtstreeks bereiken als er iets verandert.', alreadyTitle: 'Al beantwoord', alreadyBody: 'Deze offerte is al beantwoord. Neem contact op met je vakman als jij dat niet was.', failedTitle: 'Dat is niet gelukt', failedBody: 'Er is niets verstuurd. Probeer het opnieuw of neem rechtstreeks contact op met je vakman.', openAppSecondary: 'Openen in de Vasco-app',
+    withdrawalTitle: 'Uw herroepingsrecht van 14 dagen', withdrawalBody: 'Deze offerte wordt buiten de verkoopruimte gesloten. U kunt de overeenkomst binnen 14 dagen na acceptatie zonder opgaaf van reden herroepen (Franse consumentenwet, art. L221-18 e.v.).', withdrawalCheck: 'Ik heb mijn herroepingsrecht gelezen en begrepen', withdrawalRequired: 'Bevestig dat u de herroepingsinformatie hebt gelezen.',
     eyebrow: 'Je offerte', quoteRef: 'Offerte', total: 'Totaal', subtotal: 'Subtotaal', vat: 'Btw',
     lines: 'Wat is inbegrepen', qty: 'Aantal', openApp: 'Open in Vasco om te accepteren',
     noApp: 'Nieuw bij Vasco?', loading: 'Je offerte wordt geladen…',
@@ -125,6 +127,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   de: {
     accept: 'Angebot annehmen', confirm: 'Ja — annehmen', cancel: 'Abbrechen', decline: 'Ablehnen', declineTitle: 'Dieses Angebot ablehnen', reasonLabel: 'Begründung (optional)', reasonPlaceholder: 'So weiß Ihr Handwerksbetrieb, woran es lag.', declineConfirm: 'Ablehnung senden', sending: 'Wird gesendet…', acceptedTitle: 'Angenommen', acceptedBody: 'Ihr Handwerksbetrieb wurde benachrichtigt und meldet sich zur Terminplanung.', rejectedTitle: 'Abgelehnt', rejectedBody: 'Ihr Handwerksbetrieb wurde benachrichtigt. Sie können ihn jederzeit direkt erreichen.', alreadyTitle: 'Bereits beantwortet', alreadyBody: 'Dieses Angebot wurde bereits beantwortet. Melden Sie sich bei Ihrem Handwerksbetrieb, falls Sie das nicht waren.', failedTitle: 'Das hat nicht geklappt', failedBody: 'Es wurde nichts gesendet. Bitte versuchen Sie es erneut oder wenden Sie sich direkt an Ihren Handwerksbetrieb.', openAppSecondary: 'In der Vasco-App öffnen',
+    withdrawalTitle: 'Ihr 14-tägiges Widerrufsrecht', withdrawalBody: 'Dieses Angebot wird außerhalb von Geschäftsräumen geschlossen. Sie können den Vertrag innerhalb von 14 Tagen nach Annahme ohne Angabe von Gründen widerrufen (französisches Verbrauchergesetzbuch, Art. L221-18 ff.).', withdrawalCheck: 'Ich habe mein Widerrufsrecht gelesen und verstanden', withdrawalRequired: 'Bitte bestätigen Sie, dass Sie die Widerrufsbelehrung gelesen haben.',
     eyebrow: 'Ihr Angebot', quoteRef: 'Angebot', total: 'Gesamt', subtotal: 'Zwischensumme', vat: 'USt.',
     lines: 'Enthaltene Leistungen', qty: 'Menge', openApp: 'In Vasco öffnen und annehmen',
     noApp: 'Neu bei Vasco?', loading: 'Ihr Angebot wird geladen…',
@@ -136,6 +139,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   fr: {
     accept: 'Accepter le devis', confirm: 'Oui — accepter', cancel: 'Annuler', decline: 'Refuser', declineTitle: 'Refuser ce devis', reasonLabel: 'Motif (facultatif)', reasonPlaceholder: 'Votre artisan saura pourquoi.', declineConfirm: 'Envoyer le refus', sending: 'Envoi…', acceptedTitle: 'Accepté', acceptedBody: 'Votre artisan a été prévenu et vous contactera pour planifier les travaux.', rejectedTitle: 'Refusé', rejectedBody: 'Votre artisan a été prévenu. Vous pouvez le joindre directement si les choses changent.', alreadyTitle: 'Déjà répondu', alreadyBody: "Ce devis a déjà reçu une réponse. Contactez votre artisan si ce n'était pas vous.", failedTitle: "Cela n'a pas fonctionné", failedBody: "Rien n'a été envoyé. Réessayez ou contactez directement votre artisan.", openAppSecondary: "Ouvrir dans l'app Vasco",
+    withdrawalTitle: 'Votre droit de rétractation de 14 jours', withdrawalBody: 'Ce devis est conclu hors établissement. Vous disposez de 14 jours à compter de l’acceptation pour vous rétracter sans avoir à motiver votre décision (Code de la consommation, art. L221-18 et suivants).', withdrawalCheck: 'J’ai lu et compris mon droit de rétractation', withdrawalRequired: 'Veuillez confirmer avoir lu les informations sur la rétractation.',
     eyebrow: 'Votre devis', quoteRef: 'Devis', total: 'Total', subtotal: 'Sous-total', vat: 'TVA',
     lines: 'Prestations incluses', qty: 'Qté', openApp: 'Ouvrir dans Vasco pour accepter',
     noApp: 'Nouveau sur Vasco ?', loading: 'Chargement de votre devis…',
@@ -147,6 +151,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   es: {
     accept: 'Aceptar presupuesto', confirm: 'Sí — aceptar', cancel: 'Cancelar', decline: 'Rechazar', declineTitle: 'Rechazar este presupuesto', reasonLabel: 'Motivo (opcional)', reasonPlaceholder: 'Así tu profesional sabrá por qué.', declineConfirm: 'Enviar rechazo', sending: 'Enviando…', acceptedTitle: 'Aceptado', acceptedBody: 'Tu profesional ha sido avisado y se pondrá en contacto para planificar el trabajo.', rejectedTitle: 'Rechazado', rejectedBody: 'Tu profesional ha sido avisado. Puedes contactarle directamente si algo cambia.', alreadyTitle: 'Ya respondido', alreadyBody: 'Este presupuesto ya tiene respuesta. Contacta con tu profesional si no fuiste tú.', failedTitle: 'No se ha podido enviar', failedBody: 'No se envió nada. Inténtalo de nuevo o contacta directamente con tu profesional.', openAppSecondary: 'Abrir en la app Vasco',
+    withdrawalTitle: 'Su derecho de desistimiento de 14 días', withdrawalBody: 'Este presupuesto se celebra fuera del establecimiento. Puede desistir en un plazo de 14 días desde la aceptación sin necesidad de justificación (Código de Consumo francés, art. L221-18 y ss.).', withdrawalCheck: 'He leído y entendido mi derecho de desistimiento', withdrawalRequired: 'Confirme que ha leído la información sobre el desistimiento.',
     eyebrow: 'Tu presupuesto', quoteRef: 'Presupuesto', total: 'Total', subtotal: 'Base imponible', vat: 'IVA',
     lines: 'Qué incluye', qty: 'Cant.', openApp: 'Abrir en Vasco para aceptar',
     noApp: '¿Nuevo en Vasco?', loading: 'Cargando tu presupuesto…',
@@ -158,6 +163,7 @@ const COPY: Record<Lang, Record<string, string>> = {
   },
   it: {
     accept: 'Accetta il preventivo', confirm: 'Sì — accetta', cancel: 'Annulla', decline: 'Rifiuta', declineTitle: 'Rifiuta questo preventivo', reasonLabel: 'Motivo (facoltativo)', reasonPlaceholder: 'Così il tuo tecnico sa perché.', declineConfirm: 'Invia il rifiuto', sending: 'Invio…', acceptedTitle: 'Accettato', acceptedBody: 'Il tuo tecnico è stato avvisato e ti contatterà per pianificare i lavori.', rejectedTitle: 'Rifiutato', rejectedBody: 'Il tuo tecnico è stato avvisato. Puoi contattarlo direttamente se qualcosa cambia.', alreadyTitle: 'Già risposto', alreadyBody: 'A questo preventivo è già stata data una risposta. Contatta il tuo tecnico se non sei stato tu.', failedTitle: 'Non è andata a buon fine', failedBody: 'Non è stato inviato nulla. Riprova o contatta direttamente il tuo tecnico.', openAppSecondary: "Apri nell'app Vasco",
+    withdrawalTitle: 'Il suo diritto di recesso di 14 giorni', withdrawalBody: 'Questo preventivo è concluso fuori dei locali commerciali. Può recedere entro 14 giorni dall’accettazione senza doverne indicare il motivo (Codice del consumo francese, art. L221-18 e segg.).', withdrawalCheck: 'Ho letto e compreso il mio diritto di recesso', withdrawalRequired: 'Confermi di aver letto le informazioni sul recesso.',
     eyebrow: 'Il tuo preventivo', quoteRef: 'Preventivo', total: 'Totale', subtotal: 'Imponibile', vat: 'IVA',
     lines: 'Che cosa include', qty: 'Qtà', openApp: 'Apri in Vasco per accettare',
     noApp: 'Nuovo su Vasco?', loading: 'Caricamento del preventivo…',
@@ -181,6 +187,12 @@ export default function PublicQuotePortal({ params }: PageProps) {
   const [acceptance, setAcceptance] = useState<{ token: string; status: string } | null>(null);
   const [reason, setReason] = useState('');
   const [sendFailed, setSendFailed] = useState(false);
+  // FR: the customer must acknowledge the 14-day withdrawal right before
+  // accepting (L221-5/L221-9; decide_acceptance_link ENFORCES it — migration
+  // 20260831000001). The accept-only page had it; this portal did not, so once
+  // the portal link worked (2026-10-06) every French acceptance was refused
+  // with withdrawal_ack_required (FR walk).
+  const [withdrawalAck, setWithdrawalAck] = useState(false);
   const [quote, setQuote] = useState<QuotePayload | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [lang, setLang] = useState<Lang>('en');
@@ -253,6 +265,7 @@ export default function PublicQuotePortal({ params }: PageProps) {
   }, [quoteId, token]);
 
   const currency = COUNTRY_CURRENCY[(quote?.business?.country ?? '').toUpperCase()] ?? 'EUR';
+  const needsWithdrawalNotice = (quote?.business?.country ?? '').toUpperCase() === 'FR';
   const money = useMemo(
     () => moneyFormatter(LANG_LOCALE[lang], { style: 'currency', currency }),
     [lang, currency],
@@ -275,6 +288,7 @@ export default function PublicQuotePortal({ params }: PageProps) {
         p_token: acceptance.token,
         p_decision: decision,
         p_reason: decision === 'rejected' ? (reason.trim() || null) : null,
+        p_withdrawal_ack: decision === 'accepted' ? withdrawalAck : false,
       });
       if (error) { setSendFailed(true); setPhase('ready'); return; }
       // NULL means the server refused — answered in the meantime, or expired
@@ -286,7 +300,7 @@ export default function PublicQuotePortal({ params }: PageProps) {
       setSendFailed(true);
       setPhase('ready');
     }
-  }, [acceptance, reason]);
+  }, [acceptance, reason, withdrawalAck]);
 
   const lines = useMemo(
     () => [...(quote?.lines ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
@@ -476,7 +490,23 @@ export default function PublicQuotePortal({ params }: PageProps) {
 
                   {phase === 'confirming' && (
                     <div style={{ display: 'grid', gap: 10 }}>
-                      <button className="vb-cta" style={ctaStyle} onClick={() => decide('accepted')}>
+                      {needsWithdrawalNotice && (
+                        <div style={{ border: '1px solid #2A3038', borderRadius: 10, padding: 14, display: 'grid', gap: 8, textAlign: 'left' }}>
+                          <strong style={{ fontSize: 15 }}>{copy.withdrawalTitle}</strong>
+                          <span style={{ fontSize: 13, lineHeight: 1.5, opacity: 0.85 }}>{copy.withdrawalBody}</span>
+                          <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={withdrawalAck} onChange={(e) => setWithdrawalAck(e.target.checked)} style={{ marginTop: 3 }} />
+                            <span>{copy.withdrawalCheck}</span>
+                          </label>
+                        </div>
+                      )}
+                      <button
+                        className="vb-cta"
+                        style={{ ...ctaStyle, ...(needsWithdrawalNotice && !withdrawalAck ? { opacity: 0.5, cursor: 'not-allowed' } : null) }}
+                        disabled={needsWithdrawalNotice && !withdrawalAck}
+                        title={needsWithdrawalNotice && !withdrawalAck ? copy.withdrawalRequired : undefined}
+                        onClick={() => decide('accepted')}
+                      >
                         {quote.total != null ? `${copy.confirm} · ${money.format(quote.total)}` : copy.confirm}
                       </button>
                       <button className="vb-ghost" style={ghostStyle} onClick={() => setPhase('ready')}>{copy.cancel}</button>
