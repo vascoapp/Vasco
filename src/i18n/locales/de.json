@@ -1442,7 +1442,9 @@
       "viewCerts": "Zertifikate ansehen",
       "viewInvoice": "Rechnung ansehen",
       "viewCustomer": "Kunden ansehen"
-    }
+    },
+    "quoteAcceptedBody": "{{customer}} hat das Angebot {{ref}} angenommen.",
+    "quoteRejectedBody": "{{customer}} hat das Angebot {{ref}} abgelehnt."
   },
   "insurance": {
     "claimRecorded": "Schaden erfasst",

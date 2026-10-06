@@ -167,7 +167,8 @@ function RootLayoutNav() {
           router.push(`/invoices/${data.invoiceId}` as any);
           return;
         }
-        if (type === 'quote_followup' && data.quoteId) {
+        // A customer decided in the portal (W119, quote-decided edge fn).
+        if ((type === 'quote_followup' || type === 'quote_decision') && data.quoteId) {
           router.push(`/quotes/${data.quoteId}` as any);
           return;
         }

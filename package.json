@@ -54,6 +54,7 @@
     "audit:reach": "node scripts/reachability.mjs",
     "check:send-invoice": "node scripts/check-send-invoice.mjs",
     "check:portal-totals": "node scripts/check-portal-totals.mjs",
+    "check:quote-decision": "node scripts/check-quote-decision.mjs",
     "check:push-owner": "node scripts/check-push-owner.mjs",
     "check:catalog-import": "node scripts/check-catalog-import.mjs",
     "check:price-reference": "node scripts/check-price-reference.mjs",

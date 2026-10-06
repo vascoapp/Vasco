@@ -27,6 +27,7 @@ import Image from 'next/image';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { moneyFormatter } from '@/lib/money';
+import { notifyContractor } from '@/lib/notifyContractor';
 
 // R191 TODO: shared placeholder with /accept/[token] and /auth/callback.
 // Replace once the App Store Connect listing exists.
@@ -295,6 +296,7 @@ export default function PublicQuotePortal({ params }: PageProps) {
       // between load and tap. A different outcome, not an error, and the
       // customer is owed the real one.
       if (!data) { setPhase('alreadyDecided'); return; }
+      notifyContractor(supabase, acceptance.token);
       setPhase(decision === 'accepted' ? 'accepted' : 'rejected');
     } catch {
       setSendFailed(true);

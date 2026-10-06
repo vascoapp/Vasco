@@ -334,7 +334,20 @@ async function applyWrite(entry: QueuedWrite, idMap: Map<string, string>, pendin
       if (typeof tempId === 'string' && isTempId(tempId)) {
         // R49: capture BE-generated id so child rows can rewrite their FKs.
         const { data, error } = await table.insert(stripped).select('id').single();
-        if (error) return failed(error);
+        if (error) {
+          // A job for this quote already exists on the server — the customer
+          // accepted in the portal and decide_acceptance_link made it (jobs
+          // (user_id, quote_id) is UNIQUE, W119). Adopt that row: map the temp
+          // id onto it so children queued against the temp id still land.
+          const quoteId = (stripped as { quote_id?: unknown }).quote_id;
+          if (remapped.table === 'jobs' && String((error as any)?.code) === '23505' && typeof quoteId === 'string') {
+            const { data: existing } = await (supabase.from('jobs') as any)
+              .select('id').eq('quote_id', quoteId).limit(1).maybeSingle();
+            const adoptedId = (existing as { id?: string } | null)?.id;
+            if (adoptedId) return { ok: true, mapping: { temp: tempId, real: adoptedId }, docNumber: mintedDocNumber };
+          }
+          return failed(error);
+        }
         const realId = (data as any)?.id;
         if (typeof realId === 'string' && realId.length > 0) {
           return { ok: true, mapping: { temp: tempId, real: realId }, docNumber: mintedDocNumber };

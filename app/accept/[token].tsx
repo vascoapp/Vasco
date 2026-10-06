@@ -44,7 +44,7 @@ export default function AcceptQuoteScreen() {
   const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const router = useRouter();
-  const { updateQuote, convertQuoteToJob } = useAppState();
+  const { convertQuoteToJob, refreshData } = useAppState();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState(t('accept.processing', 'Processing your approval...'));
 
@@ -87,7 +87,10 @@ export default function AcceptQuoteScreen() {
           // auto-create the job on customer acceptance via the link.
           // convertQuoteToJob fires the full R52/R55 housekeeping path
           // (markStepComplete, ontology, semanticIndex, calendar, emit).
-          await convertQuoteToJob(result.link.quoteId);
+          // customerDecided: decide_acceptance_link already wrote the outcome
+          // event and the job server-side (W119) — this only mirrors it here,
+          // adopting that job rather than inserting a second one.
+          await convertQuoteToJob(result.link.quoteId, { customerDecided: true });
           setStatus('success');
           setMessage(t('accept.quoteAccepted', 'Quote accepted! Your contractor will start scheduling the work.'));
           // Navigate to home after delay
@@ -97,7 +100,10 @@ export default function AcceptQuoteScreen() {
           // the quote as accepted, even if the auto-job-creation failed
           // (e.g. quote not in local AppState because customer device
           // hadn't synced — accept-token is a customer-side surface).
-          try { updateQuote(result.link.quoteId, { status: 'accepted' }); } catch {}
+          // The server already holds the accepted quote AND its job (W119); a
+          // refresh shows both. updateQuote('accepted') here made a SECOND job
+          // and a second outcome event.
+          refreshData().catch(() => {});
           setStatus('error');
           setMessage(t('accept.acceptedButFailed', 'Quote accepted but job creation failed. Your contractor has been notified.'));
         }

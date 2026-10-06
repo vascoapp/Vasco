@@ -121,3 +121,43 @@ describe('deriveLiveNotifications (R272)', () => {
     );
   });
 });
+
+// W119 (IT walk 2026-10-06): a customer accepted in the portal and the
+// contractor's inbox stayed silent while the portal said "notified".
+describe('a customer decision reaches the inbox (W119)', () => {
+  const CUSTOMER = 'd4c3e5c1-42fa-48d7-a082-673898576058';
+  const customers = [{ id: CUSTOMER, name: 'Edilizia Bianchi S.r.l.' }];
+  const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
+
+  test('accepted quote → named, routed to the quote', () => {
+    const out = deriveLiveNotifications({
+      invoices: [], jobs: [], customers,
+      quotes: [{ id: 'Q0001', status: 'accepted', sentAt: daysAgo(1), customer: CUSTOMER }],
+    });
+    const n = out.find((x) => x.id === 'live-quote-accepted-Q0001');
+    expect(n).toBeDefined();
+    expect(n!.actionRoute).toBe('/quotes/Q0001');
+    expect(n!.body).toContain('Edilizia Bianchi S.r.l.');
+    expect(n!.body).not.toContain(CUSTOMER);
+  });
+
+  test('declined quote surfaces too; an old decision and an open quote do not', () => {
+    const out = deriveLiveNotifications({
+      invoices: [], jobs: [], customers,
+      quotes: [
+        { id: 'Q2', status: 'rejected', sentAt: daysAgo(2), customer: CUSTOMER },
+        { id: 'Q3', status: 'accepted', sentAt: daysAgo(30), customer: CUSTOMER },
+        { id: 'Q4', status: 'sent', sentAt: daysAgo(1), customer: CUSTOMER },
+      ],
+    });
+    expect(out.map((n) => n.id)).toEqual(['live-quote-rejected-Q2']);
+  });
+});
+
+test('the app closing an unanswered quote is not "the customer declined" (W119 review)', () => {
+  const out = deriveLiveNotifications({
+    invoices: [], jobs: [],
+    quotes: [{ id: 'Q9', status: 'rejected', sentAt: new Date(Date.now() - 86_400_000).toISOString(), declineReason: 'no_response' }],
+  });
+  expect(out.filter((n) => n.id.startsWith('live-quote-'))).toEqual([]);
+});

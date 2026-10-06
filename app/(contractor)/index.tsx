@@ -118,7 +118,9 @@ export default function VandaagDK() {
   const pendingQueue = aiQueue.items.filter((i) => i.status === 'pending' && !i.snoozedUntil);
   // Bell opens the notifications inbox, so badge it with THAT count — it used to
   // show the AI-queue length (e.g. bell "12" but the inbox held 2 items).
-  const { notifications: inboxNotifications } = useCombinedNotifications({ invoices: invoices as any, jobs: jobs as any, customers });
+  const { notifications: inboxNotifications } = useCombinedNotifications({ invoices: invoices as any, jobs: jobs as any, customers, quotes: quotes as any });
+  // UNREAD, not every entry: a read notification kept the badge up for good.
+  const unreadInbox = inboxNotifications.filter((n) => !n.read).length;
   const heroAction = pendingQueue[0];
   const inlineQueue = pendingQueue.slice(1, 4);
 
@@ -193,9 +195,9 @@ export default function VandaagDK() {
             accessibilityLabel={t('notifications.title', 'Notifications')}
           >
             <Ionicons name="notifications-outline" size={20} color={DK.colors.text} />
-            {inboxNotifications.length > 0 ? (
+            {unreadInbox > 0 ? (
               <View style={styles.bellBadge}>
-                <Text style={styles.bellBadgeText}>{inboxNotifications.length}</Text>
+                <Text style={styles.bellBadgeText}>{unreadInbox}</Text>
               </View>
             ) : null}
           </Pressable>

@@ -182,6 +182,18 @@ are read by the contractor's **customer**, who does not have the app installed.
   in a table nobody opened. `decide_acceptance_link` now mirrors it onto
   `documents.status`, which every contractor surface already reads. Adding a
   read path would have been the second mistake.
+  ⚠️ **A status flip is not "notified".** Until W119 (IT walk 2026-10-06) the
+  page said "your tradesperson has been notified" while nothing told them:
+  no push, no outcome event, no job. Now the RPC itself writes the
+  `quote_accepted`/`quote_rejected` event and the job (migration
+  20261006000001), and every page that decides calls `notifyContractor()`
+  (`admin/src/lib/notifyContractor.ts` → `quote-decided` → push, once per
+  decision). Guard `portalDecisionNotifiesTheContractor`; live
+  `npm run check:quote-decision`. **Copy that claims a side effect needs a
+  check that the side effect happens.**
+  ⚠️ A `useCallback` that SENDS state must list it: `/accept/[token]` read
+  `withdrawalAck` with deps `[token, reason]`, so a ticked box still sent
+  `false` and every French acceptance there was refused.
 - **Never render a control that isn't wired.** A dead "Accept" button is worse
   than an honest "open in the app to accept" handoff.
   ⚠️ **But that rule expires the day the endpoint lands.** `/accept/[token]`

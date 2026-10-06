@@ -150,6 +150,12 @@ npm run check:send-invoice             # LIVE: sending an invoice works — by d
 npm run check:portal-totals            # LIVE: the customer's quote page states the
                                        # APP's net/VAT/total (hard-coded, not
                                        # recomputed), incl. Kleinunternehmer = no VAT.
+npm run check:quote-decision           # LIVE: a customer's portal decision reaches
+                                       # the CONTRACTOR — one job + quote_accepted
+                                       # event from the RPC, quote-decided claims the
+                                       # push once, a decline = quote_rejected, no
+                                       # job. Until W119 (2026-10-06) the portal said
+                                       # "notified" and nothing was (no push/job/event).
 npm run check:kosit                    # THE OFFICIAL XRechnung validator (KoSIT +
                                        # XRechnung 3.0 rules) over our generators'
                                        # output; needs JAVA_HOME=/usr/local/opt/

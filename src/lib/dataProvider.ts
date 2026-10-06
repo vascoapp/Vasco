@@ -508,6 +508,19 @@ export async function createJob(
   return data as JobRow;
 }
 
+/**
+ * The job that already carries this quote, if any. jobs (user_id, quote_id) is
+ * UNIQUE (migration 20261006000001): a customer's portal acceptance creates
+ * the job server-side, so the app's own insert for the same quote is refused
+ * with 23505 and adopts this row instead of making a second job (W119).
+ */
+export async function findJobIdForQuote(quoteId: string): Promise<string | null> {
+  const { data, error } = await (supabase.from('jobs') as any)
+    .select('id').eq('quote_id', quoteId).limit(1).maybeSingle();
+  if (error) throw error;
+  return (data as { id?: string } | null)?.id ?? null;
+}
+
 export async function updateJob(
   id: string,
   updates: Record<string, unknown>,

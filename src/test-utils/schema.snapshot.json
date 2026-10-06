@@ -1,5 +1,5 @@
 {
- "takenAt": "2026-10-03",
+ "takenAt": "2026-10-06",
  "tables": {
   "account_deletion_requests": {
    "id": {
@@ -5250,6 +5250,11 @@
     "nullable": true,
     "hasDefault": false,
     "type": "timestamp with time zone"
+   },
+   "notified_at": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
    }
   },
   "quote_line_deltas": {
@@ -6402,6 +6407,18 @@
     ]
    }
   ],
+  "leads_touch_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "workers_touch_updated_at": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
   "import_catalog_prices": [
    {
     "args": [
@@ -6420,18 +6437,6 @@
      "p_currency",
      "p_items"
     ]
-   }
-  ],
-  "leads_touch_updated_at": [
-   {
-    "args": [],
-    "required": []
-   }
-  ],
-  "workers_touch_updated_at": [
-   {
-    "args": [],
-    "required": []
    }
   ],
   "get_expiring_licenses": [

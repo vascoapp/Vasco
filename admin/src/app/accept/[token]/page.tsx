@@ -30,6 +30,7 @@ import Image from 'next/image';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { moneyFormatter } from '@/lib/money';
+import { notifyContractor } from '@/lib/notifyContractor';
 
 // R191 TODO: shared placeholder with /quote/[id] and /auth/callback. Replace
 // once the App Store Connect listing exists.
@@ -375,13 +376,14 @@ export default function QuoteAcceptance({ params }: PageProps) {
       // expired between load and tap. Not an error — a different outcome, and
       // the customer is owed the real one rather than a false confirmation.
       if (!data) { setPhase('alreadyDecided'); return; }
+      notifyContractor(supabase, token);
       setLink(data as AcceptanceLink);
       setPhase(decision === 'accepted' ? 'accepted' : 'rejected');
     } catch {
       setSendFailed(true);
       setPhase('ready');
     }
-  }, [token, reason]);
+  }, [token, reason, withdrawalAck]);
 
   const amount = link?.quote_amount == null ? null : Number(link.quote_amount);
 

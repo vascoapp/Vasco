@@ -42,6 +42,15 @@ const FUNCTIONS = ((schema as any).functions ?? {}) as Record<string, FnSig[]>;
 const GRANTS = ((schema as any).grants ?? {}) as Record<string, string[]>;
 /** An upsert without `onConflict` targets the primary key, as PostgREST does. */
 const PRIMARY_KEYS = ((schema as any).primaryKeys ?? {}) as Record<string, string[]>;
+/**
+ * Unique indexes beyond the primary key, as the live database has them. The
+ * schema snapshot does not record indexes, so each is named here with the
+ * migration that created it.
+ */
+const UNIQUE_INDEXES: Record<string, Array<{ name: string; cols: string[]; where: (r: Row) => boolean }>> = {
+  // 20261006000001 — one job per quote (W119).
+  jobs: [{ name: 'jobs_one_per_quote', cols: ['user_id', 'quote_id'], where: (r) => r.quote_id != null }],
+};
 
 /** Does a live overload accept exactly these argument names? (PostgREST rule) */
 function rpcMatches(name: string, args: Record<string, unknown>): boolean {
@@ -323,6 +332,12 @@ export function createFakeSupabase(opts: { userId?: string | null; rls?: boolean
             if (c.error) return done({ data: null, error: c.error });
             if (st.op === 'insert' && 'id' in TABLES[t] && rowsOf(t).some((x) => x.id === c.row!.id)) {
               return done({ data: null, error: err('23505', `duplicate key value violates unique constraint "${t}_pkey"`) });
+            }
+            for (const ix of UNIQUE_INDEXES[t] ?? []) {
+              const nr = c.row!;
+              if (ix.where(nr) && rowsOf(t).some((x) => ix.where(x) && ix.cols.every((col) => String(x[col]) === String(nr[col])))) {
+                return done({ data: null, error: err('23505', `duplicate key value violates unique constraint "${ix.name}"`) });
+              }
             }
             staged.push({ kind: 'new', row: c.row! });
           }

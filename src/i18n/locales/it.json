@@ -1442,7 +1442,9 @@
       "viewCerts": "Vedi certificati",
       "viewInvoice": "Vedi fattura",
       "viewCustomer": "Vedi cliente"
-    }
+    },
+    "quoteAcceptedBody": "{{customer}} ha accettato il preventivo {{ref}}.",
+    "quoteRejectedBody": "{{customer}} ha rifiutato il preventivo {{ref}}."
   },
   "insurance": {
     "claimRecorded": "Sinistro registrato",

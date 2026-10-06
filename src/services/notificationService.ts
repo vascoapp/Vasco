@@ -365,6 +365,8 @@ export interface DerivableState {
   invoices: Array<{ id: string; status: string; dueInDays?: number; amount?: number; customer?: string; customerId?: string | null; customerName?: string }>;
   /** To NAME the customer — `invoice.customer` is an id on converted quotes. */
   customers?: Array<{ id: string; name: string }>;
+  /** A customer's decision on a quote (W119) — portal or in-app. */
+  quotes?: Array<{ id: string; status: string; sentAt?: string; customer?: string; customerId?: string | null; customerName?: string; declineReason?: string }>;
   jobs: Array<{ id: string; title?: string; status?: string; scheduledDate?: string }>;
   certifications?: Array<{ id: string; name?: string; expiresAt?: string }>;
 }
@@ -417,7 +419,7 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
   );
   if (todayJobs.length > 0) {
     out.push({
-      id: 'live-today-schedule',
+      id: `live-today-schedule-${todayStr}`, // per day: read yesterday ≠ read today
       type: 'schedule_change',
       priority: 'medium',
       title: i18n.t('notifications.jobsTodayTitle', { count: todayJobs.length, defaultValue: '{{count}} jobs today' }),
@@ -450,6 +452,37 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
     }
   }
 
+  // A customer decided on a quote (W119, IT walk 2026-10-06): the portal
+  // told the customer "your tradesperson has been notified" while nothing
+  // in the app said so. Shown for quotes SENT in the last 14 days — a quote
+  // carries no decision time, and an old decision is not news.
+  for (const q of state.quotes ?? []) {
+    if (q.status !== 'accepted' && q.status !== 'rejected') continue;
+    // The app's own 30-day auto-close (declineReason 'no_response') is not a
+    // customer declining — never word it as one.
+    if (q.status === 'rejected' && q.declineReason === 'no_response') continue;
+    const sent = q.sentAt ? new Date(q.sentAt).getTime() : NaN;
+    if (!Number.isFinite(sent) || Date.now() - sent > 14 * 24 * MS_PER_HOUR) continue;
+    const accepted = q.status === 'accepted';
+    const who = documentCustomerName(state.customers ?? [], q) || i18n.t('common.customer', { defaultValue: 'Customer' });
+    out.push({
+      id: `live-quote-${q.status}-${q.id}`,
+      type: 'customer_interaction',
+      priority: accepted ? 'high' : 'medium',
+      title: i18n.t(accepted ? 'notifications.push.quoteAcceptedTitle' : 'notifications.push.quoteRejectedTitle', {
+        defaultValue: accepted ? 'Quote accepted' : 'Quote declined',
+      }),
+      body: i18n.t(accepted ? 'notifications.quoteAcceptedBody' : 'notifications.quoteRejectedBody', {
+        defaultValue: accepted ? '{{customer}} accepted quote {{ref}}.' : '{{customer}} declined quote {{ref}}.',
+        customer: who,
+        ref: q.id,
+      }),
+      read: false,
+      actionRoute: `/quotes/${q.id}`,
+      createdAt: new Date(sent),
+    });
+  }
+
   return out;
 }
 
@@ -457,11 +490,74 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
  * Combine derived (real-data) + persisted (user-fired) into a single feed.
  * Pass the AppState's invoices/jobs/certifications arrays.
  */
+/**
+ * Read state for DERIVED notifications. They are rebuilt from AppState on
+ * every render, so `read` was always false: a decided quote kept the bell
+ * badge up for 14 days and could not be dismissed (W119 review). `@vasco_`
+ * prefix — wiped at logout like every other per-account key.
+ */
+const DERIVED_READ_KEY = '@vasco_derived_notifications_read';
+
+/**
+ * ONE store for every screen: Oggi's bell and the notifications screen are
+ * separate hook instances, and per-instance state left the badge up after the
+ * entry was read on the other screen (W119 review). Loaded once and MERGED —
+ * a mark made before the load resolves is never overwritten by it. Cleared on
+ * account change with the rest of the inbox.
+ */
+const derivedReadStore = (() => {
+  let ids = new Set<string>();
+  let loaded = false;
+  const listeners = new Set<() => void>();
+  const notify = () => listeners.forEach((l) => l());
+  const persist = () => AsyncStorage.setItem(DERIVED_READ_KEY, JSON.stringify([...ids].slice(-500))).catch(() => {});
+  registerSingletonReset(() => { ids = new Set(); loaded = false; notify(); });
+  return {
+    ensureLoaded() {
+      if (loaded) return;
+      loaded = true;
+      AsyncStorage.getItem(DERIVED_READ_KEY)
+        .then((raw) => {
+          if (!raw) return;
+          ids = new Set([...(JSON.parse(raw) as string[]), ...ids]);
+          notify();
+        })
+        .catch(() => {});
+    },
+    has: (id: string) => ids.has(id),
+    snapshot: () => ids,
+    add(newIds: string[]) {
+      if (newIds.every((i) => ids.has(i))) return;
+      ids = new Set([...ids, ...newIds]);
+      persist();
+      notify();
+    },
+    subscribe(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; },
+  };
+})();
+
 export function useCombinedNotifications(state: DerivableState) {
-  const { notifications: persisted, markRead, markAllRead } = useNotifications();
-  const derived = useMemo(() => deriveLiveNotifications(state), [
-    state.invoices, state.jobs, state.certifications, state.customers,
-  ]);
+  const { notifications: persisted, markRead: markPersistedRead, markAllRead: markAllPersistedRead } = useNotifications();
+  const [derivedRead, setDerivedRead] = useState<Set<string>>(derivedReadStore.snapshot());
+  useEffect(() => {
+    derivedReadStore.ensureLoaded();
+    setDerivedRead(derivedReadStore.snapshot());
+    return derivedReadStore.subscribe(() => setDerivedRead(derivedReadStore.snapshot()));
+  }, []);
+  const rememberRead = useCallback((ids: string[]) => derivedReadStore.add(ids), []);
+  const derived = useMemo(
+    () => deriveLiveNotifications(state).map((n) => (derivedRead.has(n.id) ? { ...n, read: true } : n)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.invoices, state.jobs, state.certifications, state.customers, state.quotes, derivedRead],
+  );
+  const markRead = useCallback((id: string) => {
+    if (id.startsWith('live-')) rememberRead([id]);
+    markPersistedRead(id);
+  }, [markPersistedRead, rememberRead]);
+  const markAllRead = useCallback(() => {
+    rememberRead(derived.map((n) => n.id));
+    markAllPersistedRead();
+  }, [derived, markAllPersistedRead, rememberRead]);
   const merged = useMemo(() => {
     // Persisted first (newest user-actions), derived after
     const all = [...persisted, ...derived];

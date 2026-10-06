@@ -1727,7 +1727,9 @@
       "viewCerts": "Certificaten bekijken",
       "viewInvoice": "Factuur bekijken",
       "viewCustomer": "Klant bekijken"
-    }
+    },
+    "quoteAcceptedBody": "{{customer}} heeft offerte {{ref}} geaccepteerd.",
+    "quoteRejectedBody": "{{customer}} heeft offerte {{ref}} afgewezen."
   },
   "insurance": {
     "claimRecorded": "Claim vastgelegd",

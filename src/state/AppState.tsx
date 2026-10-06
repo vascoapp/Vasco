@@ -85,6 +85,7 @@ import {
   updateCustomer as dbUpdateCustomer,
   deleteCustomer as dbDeleteCustomer,
   createJob as dbCreateJob,
+  findJobIdForQuote,
   updateJob as dbUpdateJob,
   deleteJob as dbDeleteJob,
   loadMaterials,
@@ -258,7 +259,10 @@ type AppState = {
   addChangeOrderInvoice: (projectId: string, changeOrderId: string) => Promise<string>;
   /** Release the retentie held on a project as a single invoice. */
   addRetentionReleaseInvoice: (projectId: string) => Promise<string>;
-  convertQuoteToJob: (quoteId: string) => Promise<string>;
+  /** `customerDecided`: the customer accepted through the acceptance link —
+   *  decide_acceptance_link already wrote the outcome event (and, server-side,
+   *  the job), so neither is written twice (W119). */
+  convertQuoteToJob: (quoteId: string, opts?: { customerDecided?: boolean }) => Promise<string>;
   updateQuote: (id: string, updates: Partial<Quote>) => void;
   // Project mode (aannemer)
   projects: Project[];
@@ -4314,7 +4318,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         return docNumber;
       },
 
-      convertQuoteToJob: async (quoteId: string) => {
+      convertQuoteToJob: async (quoteId: string, opts?: { customerDecided?: boolean }) => {
         const quote = quotes.find((q) => q.id === quoteId);
         if (!quote) throw new Error(`Quote ${quoteId} not found`);
 
@@ -4372,12 +4376,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const ttdHoursAcc = sentAtMsAcc
           ? Math.max(0, Math.round((Date.now() - sentAtMsAcc) / (1000 * 60 * 60)))
           : undefined;
-        emitQuoteAccepted(getCurrentUserId(), quoteId, {
+        // The outcome event is written ONCE per acceptance: deferred until we
+        // know the server has not already recorded it — a customer decision
+        // through the link (opts.customerDecided), or a job for this quote that
+        // the server already holds (23505 below: the portal accepted it while
+        // this device still showed 'sent'). W119.
+        const emitAccepted = () => emitQuoteAccepted(getCurrentUserId(), quoteId, {
           customerId: quote.customer ?? '',
           quotedAmount: quote.amount,
           acceptedAmount: quote.amount,
           daysToAccept: ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : 0,
         }).catch(() => {});
+        let serverHadIt = !!opts?.customerDecided;
         // Activation-funnel analytics counterpart (signup→quote_sent→quote_accepted
         // →invoice_sent→payment_received). Was declared-but-unfired; wire it here
         // alongside the intelligence emit so the funnel's middle rung populates.
@@ -4450,7 +4460,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             scheduled_date: scheduledDate ?? null,
           };
           try {
-            const row = await dbCreateJob(jobPayload);
+            let row: { id: string };
+            try {
+              row = await dbCreateJob(jobPayload);
+            } catch (createErr) {
+              // jobs (user_id, quote_id) is UNIQUE: the server already made this
+              // quote's job (a customer's portal acceptance). Adopt it.
+              if ((createErr as { code?: string })?.code !== '23505') throw createErr;
+              const existing = await findJobIdForQuote(quoteId);
+              if (!existing) throw createErr;
+              row = { id: existing };
+              serverHadIt = true;
+            }
             setJobs((prev) =>
               prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)),
             );
@@ -4486,6 +4507,8 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // flush rewrites the latter from the same map before applying.
           await queueRowFkRepairs('jobs', finalJobId, [['customer_id', convCustomerFk]]);
         }
+
+        if (!serverHadIt) emitAccepted();
 
         // Post-create housekeeping — uniform across BE-success / offline /
         // unconfigured. Mirrors addJob's R52 block.
@@ -4599,12 +4622,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           const ttdHoursUp = sentAtMsUp
             ? Math.max(0, Math.round((Date.now() - sentAtMsUp) / (1000 * 60 * 60)))
             : undefined;
-          emitQuoteAccepted(getCurrentUserId(), id, {
+          // Deferred like convertQuoteToJob's: not when the server already holds
+          // this quote's job (23505 → it recorded the acceptance itself, W119).
+          const emitAcceptedUp = () => emitQuoteAccepted(getCurrentUserId(), id, {
             customerId: quote.customer ?? '',
             quotedAmount: quote.amount,
             acceptedAmount: quote.amount,
             daysToAccept: ttdHoursUp !== undefined ? Math.round(ttdHoursUp / 24) : 0,
           }).catch(() => {});
+          if (!isSupabaseConfigured) emitAcceptedUp();
           // Activation-funnel analytics counterpart (mirrors convertQuoteToJob).
           trackEvent('quote_accepted', { quoteId: id, amount: quote.amount }).catch(() => {});
           recordPricingOutcome(getCurrentUserId(), id, {
@@ -4664,13 +4690,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               customer_id: acceptCustomerFk.value,
               quoted_amount: quote.amount,
               agreed_amount: quote.amount,
+              // The chain link — and what makes jobs (user_id, quote_id) UNIQUE
+              // able to refuse a second job for this quote (W119).
+              quote_id: id,
+            } as Parameters<typeof dbCreateJob>[0]).catch(async (createErr) => {
+              // The server already holds this quote's job (portal acceptance): adopt it.
+              if ((createErr as { code?: string })?.code !== '23505') throw createErr;
+              const existing = await findJobIdForQuote(id);
+              if (!existing) throw createErr;
+              return { id: existing, adopted: true } as Awaited<ReturnType<typeof dbCreateJob>> & { adopted?: boolean };
             }).then(async (row) => {
+              if (!(row as { adopted?: boolean }).adopted) emitAcceptedUp();
               setJobs((prev) => prev.map((j) => (j.id === tempId ? { ...j, id: row.id } : j)));
               void import('../services/offlineWriteQueue')
                 .then(({ rememberIdRemap }) => rememberIdRemap(tempId, row.id))
                 .catch(() => {});
               await queueRowFkRepairs('jobs', row.id, [['customer_id', acceptCustomerFk]]);
-            }).catch((err) => logWarn('AppState', `auto-create job from updateQuote failed: ${err}`));
+            }).catch((err) => {
+              // Not recorded by the server either — the acceptance still counts.
+              emitAcceptedUp();
+              logWarn('AppState', `auto-create job from updateQuote failed: ${err}`);
+            });
             })();
           }
         }

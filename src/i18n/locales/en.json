@@ -1442,7 +1442,9 @@
       "viewCerts": "View certificates",
       "viewInvoice": "View invoice",
       "viewCustomer": "View customer"
-    }
+    },
+    "quoteAcceptedBody": "{{customer}} accepted quote {{ref}}.",
+    "quoteRejectedBody": "{{customer}} declined quote {{ref}}."
   },
   "insurance": {
     "claimRecorded": "Claim recorded",

@@ -419,6 +419,11 @@ export type QuoteAcceptanceLinkRow = {
    * fabricated audit trail.
    */
   withdrawal_ack_at: string | null;
+  /**
+   * When the contractor was pushed about the decision (`quote-decided` edge
+   * function, W119). Its once-only claim: set by the first call, never twice.
+   */
+  notified_at: string | null;
 };
 
 // R66 round 15: gobd_audit_log table — append-only hash-chained audit

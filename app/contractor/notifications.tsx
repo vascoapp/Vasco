@@ -75,7 +75,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
   // R272: combined feed = persisted user-fired + live-derived from AppState
-  const { invoices, jobs, customers, businessProfile } = useAppState();
+  const { invoices, jobs, customers, quotes, businessProfile } = useAppState();
   // Profile first, account as fallback (#218): a contractor who set UK in
   // their profile was formatted in euros while the account still said NL.
   const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;
@@ -83,6 +83,7 @@ export default function NotificationsScreen() {
     invoices: invoices as any,
     jobs: jobs as any,
     customers,
+    quotes: quotes as any,
     // certifications: not yet on AppState — wire when the field lands
   });
   const stats = useUnreadCount();

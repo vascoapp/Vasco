@@ -8,6 +8,12 @@
 //
 // Re-run after applying a migration; check:drift covers types-vs-live.
 import { execFileSync } from 'node:child_process';
+// The installed CLI first: `npx supabase` now resolves a release with no
+// darwin-x64 binary and fails on Intel Macs (2026-10-06). npx stays the fallback.
+const SUPA = (() => {
+  try { execFileSync('supabase', ['--version'], { stdio: 'ignore' }); return ['supabase']; } catch { return ['npx', 'supabase']; }
+})();
+const supa = (args) => execFileSync(SUPA[0], [...SUPA.slice(1), ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 import { writeFileSync } from 'node:fs';
 
 const sql = `select table_name as t, column_name as c, is_nullable as n, column_default as d, data_type as ty
@@ -17,7 +23,7 @@ const sql = `select table_name as t, column_name as c, is_nullable as n, column_
     -- tables, and leaving them out made every read of them look unknown.
     and table_name in (select table_name from information_schema.tables where table_schema = 'public' and table_type in ('BASE TABLE', 'VIEW'))
   order by table_name, ordinal_position`;
-const out = execFileSync('npx', ['supabase', 'db', 'query', '--linked', sql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const out = supa(['db', 'query', '--linked', sql]);
 const rows = JSON.parse(out.slice(out.indexOf('{'))).rows;
 
 const tables = {};
@@ -29,7 +35,7 @@ for (const r of rows) {
 const fnSql = `select p.proname as name, coalesce(array_to_json(p.proargnames), '[]'::json) as args, p.pronargs as n, p.pronargdefaults as d, p.proargmodes::text as modes
   from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
   where ns.nspname = 'public' and p.prokind = 'f'`;
-const fnOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', fnSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const fnOut = supa(['db', 'query', '--linked', fnSql]);
 const functions = {};
 for (const f of JSON.parse(fnOut.slice(fnOut.indexOf('{'))).rows) {
   const names = (Array.isArray(f.args) ? f.args : []).slice(0, f.n); // IN args come first
@@ -42,7 +48,7 @@ for (const f of JSON.parse(fnOut.slice(fnOut.indexOf('{'))).rows) {
 const grSql = `select table_name as t, string_agg(privilege_type, ',') as p
   from information_schema.role_table_grants
   where table_schema = 'public' and grantee = 'authenticated' group by table_name`;
-const grOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', grSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const grOut = supa(['db', 'query', '--linked', grSql]);
 const grants = {};
 for (const g of JSON.parse(grOut.slice(grOut.indexOf('{'))).rows) grants[g.t] = g.p.split(',').sort();
 // What happens to a public row when its auth user is deleted. SET NULL keeps
@@ -52,7 +58,7 @@ const fkSql = `select c.conrelid::regclass::text as t, c.confdeltype as a
   from pg_constraint c
   where c.contype = 'f' and c.confrelid = 'auth.users'::regclass
     and c.connamespace = 'public'::regnamespace`;
-const fkOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', fkSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const fkOut = supa(['db', 'query', '--linked', fkSql]);
 const ACTION = { a: 'NO ACTION', r: 'RESTRICT', c: 'CASCADE', n: 'SET NULL', d: 'SET DEFAULT' };
 const authUserFks = {};
 for (const f of JSON.parse(fkOut.slice(fkOut.indexOf('{'))).rows) {
@@ -64,7 +70,7 @@ for (const f of JSON.parse(fkOut.slice(fkOut.indexOf('{'))).rows) {
 const pkSql = `select c.conrelid::regclass::text as t, array_to_json(array(
     select a.attname from unnest(c.conkey) k join pg_attribute a on a.attrelid = c.conrelid and a.attnum = k)) as cols
   from pg_constraint c where c.contype = 'p' and c.connamespace = 'public'::regnamespace`;
-const pkOut = execFileSync('npx', ['supabase', 'db', 'query', '--linked', pkSql], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const pkOut = supa(['db', 'query', '--linked', pkSql]);
 const primaryKeys = {};
 for (const r of JSON.parse(pkOut.slice(pkOut.indexOf('{'))).rows) primaryKeys[r.t.replace(/^public\./, '')] = r.cols;
 const file = new URL('../src/test-utils/schema.snapshot.json', import.meta.url);
