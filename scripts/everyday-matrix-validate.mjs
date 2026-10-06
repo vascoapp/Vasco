@@ -171,6 +171,9 @@ for (const cell of cells) {
       add(fmt, "buyer street in the file", flatXml.includes(squash(c.buyer.street)));
       const sv = c.seller.vatId ? squash(c.seller.vatId.native).replace(/^(DE|FR|NL|GB|ES|IT)/, "") : null;
       if (sv) add(fmt, "seller VAT id in the file", flatXml.includes(sv), c.seller.vatId.native);
+      // A seller known only by the Steuernummer: BT-32 must carry it (BR-S-02 /
+      // BR-CO-26 are judged by KoSIT/Mustang; this asserts it is the RIGHT number).
+      if (!sv && c.market === "DE" && c.seller.taxId) add(fmt, "seller Steuernummer in the file (no USt-IdNr)", flatXml.includes(c.seller.taxId.native), c.seller.taxId.native);
       // DE: BT-72, the date of service, in the XML — the same day the PDF prints.
       if (c.market === "DE" && fmt === "xrechnung") {
         const bt72 = /<cbc:ActualDeliveryDate>([\d-]+)</.exec(xml)?.[1];

@@ -22,7 +22,11 @@
  */
 
 export type Market = 'NL' | 'DE' | 'FR' | 'ES' | 'IT' | 'UK';
-export type Kind = 'b2b' | 'b2c';
+// 'solo': the market's most COMMON legal form where it differs from the
+// everyday seller — in Germany a sole trader with a Steuernummer and NO
+// USt-IdNr (§14 UStG: either is enough). Every cell used to be a seller WITH a
+// VAT id, which hid that the send gate refused this contractor (2026-10-06).
+export type Kind = 'b2b' | 'b2c' | 'solo';
 
 export interface Ident { native: string; alt?: string }
 
@@ -99,7 +103,7 @@ const SELLERS: Record<Market, Party> = {
   },
 };
 
-const BUYERS: Record<Market, Record<Kind, Party>> = {
+const BUYERS: Record<Market, Record<'b2b' | 'b2c', Party>> = {
   NL: {
     b2b: { name: 'Bouwbedrijf Jansen B.V.', street: 'Damrak 1', postcode: '1012 LG', city: 'Amsterdam', email: 'inkoop@jansenbouw.nl', vatId: { native: 'NL859843920B01' } },
     b2c: { name: 'Sanne Bakker', street: 'Prinsengracht 263', postcode: '1016 GV', city: 'Amsterdam', email: 'sanne.bakker@example.nl' },
@@ -144,7 +148,8 @@ export function everydayCase(market: Market, kind: Kind): EverydayCase {
   return {
     id: `${market}-${kind}`, market, kind,
     language: m.language, posture: m.posture, standardRate: m.standardRate, formats: m.formats,
-    seller: SELLERS[market], buyer: BUYERS[market][kind], lines: m.lines,
+    seller: kind === 'solo' ? { ...SELLERS[market], vatId: undefined } : SELLERS[market],
+    buyer: BUYERS[market][kind === 'solo' ? 'b2c' : kind], lines: m.lines,
   };
 }
 
