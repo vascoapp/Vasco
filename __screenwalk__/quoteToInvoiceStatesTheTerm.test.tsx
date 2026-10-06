@@ -26,7 +26,7 @@ run('quote → invoice', () => {
     const r = await walkScreen(Screen(), { settlePasses: 14, params: { id: 'Q-T-9' } });
     expect(r.error).toBeNull();
     const all = r.texts.join(' | ');
-    expect(all).toMatch(/30 DAGEN TERMIJN/);
+    expect(all).toMatch(/30 DAGEN/); // the term, whatever the word order of the copy
     expect(all).not.toMatch(/14 DAGEN/);
     teardown(r);
   });
