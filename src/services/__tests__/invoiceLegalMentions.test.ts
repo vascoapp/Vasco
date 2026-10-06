@@ -71,6 +71,6 @@ describe('the footer actually renders them', () => {
     } catch { /* leave empty; the assertion below reports it */ }
     expect(src).not.toBe('');
     const footer = src.slice(src.indexOf('<!-- Footer -->'));
-    expect(footer).toMatch(/legalMentions\(country\)/);
+    expect(footer).toMatch(/legalMentions\(country(, \{[^}]*\})?\)/);
   });
 });

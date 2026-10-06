@@ -998,7 +998,7 @@ export default function InvoiceDetailScreen() {
           // The same statutory text the printed PDF carries (§ 14b UStG; FR
           // L441-10/D441-5 + the 2026 reform mentions).
           mentions: [
-            ...legalMentions(country),
+            ...legalMentions(country, { buyerIsBusiness: !!data.buyerVatId }),
             ...(country === 'FR' ? frenchInvoiceMentions2026(extras.frMentions) : []),
           ],
         });

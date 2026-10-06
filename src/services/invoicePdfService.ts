@@ -265,13 +265,17 @@ export function frenchInvoiceMentions2026(input: {
   return out;
 }
 
-export function legalMentions(country?: Country): string[] {
+export function legalMentions(country?: Country, opts: { buyerIsBusiness?: boolean } = {}): string[] {
   switch (country) {
     case 'FR':
       // The same three texts the Factur-X XML carries as coded BG-1 notes
       // (PMD / PMT / AAB) — one source, so paper and XML cannot drift.
       return FR_STATUTORY_NOTES.map((n) => n.text);
     case 'DE':
+      // §14 Abs. 4 Satz 1 Nr. 9 UStG: the notice is owed to a PRIVATE buyer.
+      // It was printed on every German invoice — to a GmbH with a USt-IdNr it
+      // read "Als Privatperson sind Sie verpflichtet…" (German walk, 2026-10-06).
+      if (opts.buyerIsBusiness) return [];
       return [
         'Als Privatperson sind Sie verpflichtet, diese Rechnung zwei Jahre aufzubewahren (§ 14b Abs. 1 Satz 5 UStG).',
       ];
@@ -687,7 +691,7 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
       // (art. 17 c. 5 requires the annotation and the norm). The same text as
       // the FatturaPA's RiferimentoNormativo.
       ...(country === 'IT' ? vatNatureMentions(invoice.lineItems, fiscalRegime).map(escapeHtml) : []),
-      ...legalMentions(country),
+      ...legalMentions(country, { buyerIsBusiness: !!invoice.customerVatId }),
     ];
     return mentions.length
       ? `<div style="margin-top:10px;font-size:9px;color:#6B7280;line-height:1.5;text-align:left">${mentions.map((m) => `<div>${m}</div>`).join('')}</div>`
