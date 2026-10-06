@@ -198,8 +198,9 @@ npm run matrix                         # THE EVERYDAY MATRIX — the baseline. A
                                        # never edit a check to pass. Java 17 +
                                        # the validator caches (check:kosit/pdfa3/
                                        # einvoice-schemas run once).
-                                       # Since 2026-10-06: 13 cells (+ DE-solo, a
-                                       # Steuernummer-only sole trader) and every
+                                       # Since 2026-10-06: 16 cells (+ DE-solo, a
+                                       # Steuernummer-only sole trader; + NL KOR,
+                                       # DE §19, IT forfettario) and every
                                        # cell SENDS the quote (sign-quote-token
                                        # asked with the document number, portal
                                        # link signed by the business). A cell's
