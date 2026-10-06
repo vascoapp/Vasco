@@ -134,6 +134,8 @@ module.exports = {
     '<rootDir>/__screenwalk__/invoiceSentStatesItsOwnTerm.test.tsx',
     '<rootDir>/__screenwalk__/quoteToInvoiceStatesTheTerm.test.tsx',
     '<rootDir>/__screenwalk__/paidInvoiceLosesItsReminder.test.tsx',
+    // Seeds the local cache and gates its reads (2026-10-06).
+    '<rootDir>/__screenwalk__/invoiceLinesArriveAfterTheScreen.test.tsx',
     ...DEMO_ACCOUNT_POSTURE_SUITES.map((f) => `<rootDir>/__screenwalk__/${f}`),
   ],
 };

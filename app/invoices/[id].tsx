@@ -124,6 +124,7 @@ export default function InvoiceDetailScreen() {
     lastMolliePayment,
     businessProfile,
     lineItems: appLineItems,
+    profileLoaded,
     replaceInvoiceLines,
     jobs,
     customers,
@@ -206,31 +207,41 @@ export default function InvoiceDetailScreen() {
       // delivery address would look empty when they reopened the screen.
       setDeliveryAddress((invoice as any).deliveryAddress ?? '');
       getCustomerPaymentPreference(invoice.id).then(setCustomerPreference);
-      // Build line items from appLineItems or synthesize from amount
-      const existing = appLineItems[invoice.id];
-      if (existing && existing.length > 0) {
-        setLocalItems(existing.map((li, idx) => ({
-          id: li.id || `item-${idx}`,
-          description: li.description,
-          quantity: li.quantity,
-          unitPrice: li.unitPrice,
-          vatRate: li.vatRate,
-          ...(li.vatNature ? { vatNature: li.vatNature } : {}),
-        })));
-      } else {
-        // Synthesize a single line item from total. Same NL-constant bug as
-        // handleSaveItems: an invoice whose amount is gross at 19% was split
-        // back out at 21%, so the one line on a German invoice read low and
-        // the totals below it no longer matched the amount.
-        setLocalItems([{
-          id: 'item-1',
-          description: invoice.job || t('invoices.services', 'Services rendered'),
-          quantity: 1,
-          unitPrice: invoice.amount / (1 + effectiveRate),
-        }]);
-      }
     }
   }, [invoice?.id]);
+
+  // The lines FOLLOW the stored lines and the current rate until the contractor
+  // edits them. They were built once, at mount: opened on a cold start (push,
+  // deep link) before the cache and the profile had loaded, the screen made one
+  // line from the GROSS at rate 0, then added 19 % on top — "Gesamt € 268,36"
+  // for a € 225,51 invoice — and never took the real lines when they arrived;
+  // send / PDF / XRechnung read these lines (German walk, 2026-10-06).
+  const linesFollowStoreRef = useRef(true);
+  const storedLines = invoice ? appLineItems[invoice.id] : undefined;
+  useEffect(() => { linesFollowStoreRef.current = true; }, [invoice?.id]);
+  useEffect(() => {
+    if (!invoice || !linesFollowStoreRef.current) return;
+    if (storedLines && storedLines.length > 0) {
+      setLocalItems(storedLines.map((li, idx) => ({
+        id: li.id || `item-${idx}`,
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        vatRate: li.vatRate,
+        ...(li.vatNature ? { vatNature: li.vatNature } : {}),
+      })));
+    } else {
+      // One line from the total, split at the CURRENT rate (a German invoice
+      // split at 21 % read low; split at 0 % before the profile loaded, it
+      // was re-taxed on top).
+      setLocalItems([{
+        id: 'item-1',
+        description: invoice.job || t('invoices.services', 'Services rendered'),
+        quantity: 1,
+        unitPrice: invoice.amount / (1 + effectiveRate),
+      }]);
+    }
+  }, [invoice?.id, invoice?.amount, storedLines, effectiveRate]);
 
   // Lines are editable on a draft only (see the pencil below). If the invoice
   // is sent while the editor is open, its save button disappears with the
@@ -388,12 +399,14 @@ export default function InvoiceDetailScreen() {
   // and ran parseFloat on every keystroke into a `String(number)` field, so
   // "85," and "85." both snapped back to "85" — no line could carry cents.
   const handleUpdateItem = <K extends 'description' | 'quantity' | 'unitPrice'>(itemId: string, field: K, value: EditableLineItem[K]) => {
+    linesFollowStoreRef.current = false;
     setLocalItems(prev => prev.map(item => (item.id === itemId ? { ...item, [field]: value } : item)));
   };
 
   // Italy: a line's IVA is a rate OR a 0 % reason (LineVatMenu). Picking a
   // rate clears the reason — a Natura on a rated line is SDI 00401.
   const handleSetLineVat = (itemId: string, next: { vatRate: number; vatNature?: VatNature }) => {
+    linesFollowStoreRef.current = false;
     setLocalItems(prev => prev.map(item => (item.id === itemId
       ? { ...item, vatRate: next.vatRate, vatNature: next.vatRate === 0 ? next.vatNature : undefined }
       : item)));
@@ -401,11 +414,13 @@ export default function InvoiceDetailScreen() {
 
   const handleAddItem = () => {
     const newId = `item-${Date.now()}`;
+    linesFollowStoreRef.current = false;
     setLocalItems(prev => [...prev, { id: newId, description: '', quantity: 1, unitPrice: 0 }]);
   };
 
   const handleRemoveItem = (itemId: string) => {
     if (localItems.length <= 1) return;
+    linesFollowStoreRef.current = false;
     setLocalItems(prev => prev.filter(i => i.id !== itemId));
   };
 
@@ -445,6 +460,9 @@ export default function InvoiceDetailScreen() {
       newTotal, localItems, Math.round(effectiveRate * 100),
     ).gross;
     updateInvoice(invoice.id, { amount: round2(finalTotal) });
+    // Saved: the store now holds these lines — follow it again, so a later
+    // refresh or line heal reaches the screen (review, 2026-10-06).
+    linesFollowStoreRef.current = true;
     setEditingItems(false);
     hapticSuccess();
   };
@@ -1040,7 +1058,7 @@ export default function InvoiceDetailScreen() {
             ? [{ text: t('invoices.einvoiceFixProfile', 'Open business profile'), onPress: () => router.push('/(modals)/business-settings' as any) }]
             : []),
           ...(invoice.status === 'draft'
-            ? [{ text: t('invoices.einvoiceFixLines', 'Edit lines'), onPress: () => setEditingItems(true) }]
+            ? [{ text: t('invoices.einvoiceFixLines', 'Edit lines'), onPress: () => { if (profileLoaded) setEditingItems(true); } }]
             : []),
         ],
       );
@@ -1477,7 +1495,9 @@ export default function InvoiceDetailScreen() {
                 else setEditingItems(true);
               }}
               style={styles.editBtn}
-              disabled={savingItems}
+              // Not before the lines have loaded: an edit made on the placeholder
+              // line would SAVE it over the real lines (review, 2026-10-06).
+              disabled={savingItems || !profileLoaded}
               accessibilityRole="button"
               accessibilityState={{ busy: savingItems }}
               accessibilityLabel={editingItems ? t('common.save', 'Save') : t('common.edit', 'Edit')}
