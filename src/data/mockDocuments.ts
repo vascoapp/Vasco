@@ -210,3 +210,21 @@ export const deInvoices: Invoice[] = [
   { id: 'inv-de-3', reference: 'RE-2026-0086', customer: 'Anja Hoffmann', customerId: 'cust-de-003', job: 'Abschlagsrechnung Badsanierung — Hoffmann', amount: 3200, status: 'paid', dueInDays: 0, dueDate: localDateKey(new Date(Date.now() - 3 * 86400000)), paidAt: new Date(Date.now() - 2 * 86400000).toISOString(), sentAt: new Date(Date.now() - 20 * 86400000).toISOString(), createdAt: new Date(Date.now() - 20 * 86400000).toISOString() },
   { id: 'inv-de-4', reference: 'RE-2026-0089', customer: 'Familie Krüger', customerId: 'cust-de-001', job: 'Notdienst Heizung — Krüger', amount: 290, status: 'draft', dueInDays: 14, dueDate: localDateKey(new Date(Date.now() + 14 * 86400000)), createdAt: new Date(Date.now() - 1 * 86400000).toISOString() },
 ];
+
+// UK demo (plumber@vasco.uk.dev, London, £, 20% VAT) — the English store
+// screenshots show the market Vasco sells to, not the US HVAC demo (user,
+// 2026-10-07). Same status spread as the other EU seeds.
+export const ukQuotes: Quote[] = [
+  { id: 'QT-2026-0041', customer: 'The Hughes Family', customerId: 'cust-uk-001', job: 'Combi boiler replacement — Hughes', amount: 3450, status: 'sent', trade: 'plumbing', lastUpdated: '1 day ago' },
+  { id: 'QT-2026-0042', customer: 'James Patel', customerId: 'cust-uk-002', job: 'Bathroom refit — Patel', amount: 4200, status: 'sent', trade: 'plumbing', lastUpdated: '4 days ago' },
+  { id: 'QT-2026-0043', customer: 'Emma Clarke', customerId: 'cust-uk-003', job: 'Full bathroom renovation — Clarke', amount: 9400, status: 'accepted', trade: 'plumbing', lastUpdated: '8 days ago' },
+  { id: 'QT-2026-0044', customer: 'Riverside Lettings Ltd', customerId: 'cust-uk-004', job: 'Riser replacement, Block C — Riverside Lettings', amount: 18500, status: 'sent', trade: 'plumbing', lastUpdated: '2 days ago' },
+  { id: 'QT-2026-0045', customer: 'Bakehouse & Co Ltd', customerId: 'cust-uk-005', job: 'Grease trap service — Bakehouse & Co', amount: 890, status: 'draft', trade: 'plumbing', lastUpdated: '5 days ago' },
+];
+
+export const ukInvoices: Invoice[] = [
+  { id: 'inv-uk-1', reference: 'INV-2026-0087', customer: 'Bakehouse & Co Ltd', customerId: 'cust-uk-005', job: 'Mains water pipe renewal — Bakehouse & Co', jobId: 'j-uk-5', amount: 5200, status: 'overdue', dueInDays: -14, dueDate: localDateKey(new Date(Date.now() - 14 * 86400000)), sentAt: new Date(Date.now() - 44 * 86400000).toISOString(), createdAt: new Date(Date.now() - 44 * 86400000).toISOString() },
+  { id: 'inv-uk-2', reference: 'INV-2026-0088', customer: 'James Patel', customerId: 'cust-uk-002', job: 'Annual boiler service — Patel', amount: 180, status: 'overdue', dueInDays: -11, dueDate: localDateKey(new Date(Date.now() - 11 * 86400000)), sentAt: new Date(Date.now() - 41 * 86400000).toISOString(), createdAt: new Date(Date.now() - 41 * 86400000).toISOString() },
+  { id: 'inv-uk-3', reference: 'INV-2026-0086', customer: 'Emma Clarke', customerId: 'cust-uk-003', job: 'Deposit, bathroom renovation — Clarke', amount: 3200, status: 'paid', dueInDays: 0, dueDate: localDateKey(new Date(Date.now() - 3 * 86400000)), paidAt: new Date(Date.now() - 2 * 86400000).toISOString(), sentAt: new Date(Date.now() - 20 * 86400000).toISOString(), createdAt: new Date(Date.now() - 20 * 86400000).toISOString() },
+  { id: 'inv-uk-4', reference: 'INV-2026-0089', customer: 'The Hughes Family', customerId: 'cust-uk-001', job: 'Emergency boiler call-out — Hughes', amount: 290, status: 'draft', dueInDays: 14, dueDate: localDateKey(new Date(Date.now() + 14 * 86400000)), createdAt: new Date(Date.now() - 1 * 86400000).toISOString() },
+];

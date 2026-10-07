@@ -69,6 +69,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = DEMO_MODE
       { email: 'plombier@vasco.fr.dev', role: 'contractor', name: 'Julien Moreau (FR)', icon: 'flag-outline' },
       { email: 'fontanero@vasco.es.dev', role: 'contractor', name: 'Carlos Serrano (ES)', icon: 'flag-outline' },
       { email: 'idraulico@vasco.it.dev', role: 'contractor', name: 'Marco Ferrari (IT)', icon: 'flag-outline' },
+      { email: 'plumber@vasco.uk.dev', role: 'contractor', name: 'Daniel Thompson (UK)', icon: 'flag-outline' },
     ]
   : [];
 

@@ -236,7 +236,16 @@
         }
       ],
       "@sentry/react-native",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0E11"
+        }
+      ]
     ],
     "extra": {
       "eas": {

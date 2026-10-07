@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Linking,
   Platform,
+  Settings,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,7 +23,7 @@ import { legalUrl } from '../src/utils/legalLinks';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth, ROLE_CONFIGS, type UserRole } from '../src/context/AuthContext';
-import { DEMO_MODE, DEMO_ACCOUNTS } from '../src/config/demo';
+import { DEMO_MODE, DEMO_ACCOUNTS, SCREENSHOT_MODE } from '../src/config/demo';
 import { SemanticColors, Palette } from '../src/theme/colors';
 import { SafeArea, Spacing } from '../src/theme/spacing';
 import { DK } from '../src/theme/draftkings';
@@ -185,6 +186,7 @@ export default function LoginScreen() {
     const result = await login(demoEmail, 'demo');
     if (result.ok) {
       router.replace(getRouteForEmail(demoEmail));
+      if (shotRoute && demoEmail === shotAccount) setTimeout(() => router.push(shotRoute as never), 1500);
     } else if (result.reason === 'demo_disabled') {
       setError(t('auth.demoDisabled', 'Demo accounts are disabled in production.'));
     } else if (result.reason === 'network') {
@@ -204,7 +206,14 @@ export default function LoginScreen() {
   // itself returns `demo_disabled` in production. The email must also match a
   // DEMO_ACCOUNTS entry, so this cannot be pointed at a real address.
   const autoLoginFired = useRef(false);
-  const demoParam = Array.isArray(searchParams.demo) ? searchParams.demo[0] : searchParams.demo;
+  // Store screenshots (iOS, SCREENSHOT_MODE builds only): iOS 26 asks "Open in
+  // Vasco?" for every `simctl openurl`, and nothing on the host can tap it. The
+  // capture script writes the account + target screen as app preferences
+  // (`simctl spawn … defaults write com.vascobuild.app vascoShotAccount …`)
+  // and relaunches — no URL, no prompt. Same guards as `?demo=`.
+  const shotAccount = SCREENSHOT_MODE && Platform.OS === 'ios' ? (Settings.get('vascoShotAccount') as string | undefined) : undefined;
+  const shotRoute = SCREENSHOT_MODE && Platform.OS === 'ios' ? (Settings.get('vascoShotRoute') as string | undefined) : undefined;
+  const demoParam = (Array.isArray(searchParams.demo) ? searchParams.demo[0] : searchParams.demo) ?? shotAccount;
   useEffect(() => {
     if (!DEMO_MODE || autoLoginFired.current) return;
     if (typeof demoParam !== 'string' || !demoParam) return;

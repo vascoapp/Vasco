@@ -31,22 +31,19 @@ OUT_W=1512;  OUT_H=2688
 BG="0B0E11"   # DK PAGE_BG — matches the app, so the side bars do not read as bars
 
 declare -a LOCALES=("de:de-DE" "en:en-US" "es:es-ES" "fr:fr-FR" "it:it-IT" "nl:nl-NL")
-# Only two of the four captures are fit to ship. Play's minimum is 2.
+# Six captures from scripts/shoot-ios.sh (2026-10-07): every one is a working,
+# filled screen in that market's own data — a quote and an invoice with real
+# line items whose totals add up, the money overview, customers, jobs, today.
 #
 # EXCLUDED — do not re-add without fixing the underlying capture:
 #
-#   4_photo_to_quote — 🔴 POLICY, not taste. The screen is titled "KI-Angebot"
-#     and pitches photo→AI quote generation. The Play listing DELIBERATELY
-#     claims no AI features, because ANTHROPIC_API_KEY / MOONSHOT_API_KEY are
-#     unset in production and that flow throws. Advertising it in a screenshot
-#     is "does not function as described" — the exact risk the listing copy was
-#     written to avoid. It ships only once a provider key is funded.
-#
-#   2_quote_builder — an empty-state capture: ~60% of the frame is blank
-#     because a new quote starts with no line items. It reads as an unfinished
-#     app. Re-shoot with items added and it is a good screenshot.
-declare -a SHOTS=("1_vandaag" "3_geld_outstanding")
-declare -a EXCLUDED=("2_quote_builder" "4_photo_to_quote")
+#   4_photo_to_quote — 🔴 POLICY, not taste. It pitched photo→AI quote
+#     generation ("KI-Angebot"); the LLM keys are unset in production and that
+#     flow throws. Advertising it is "does not function as described". It ships
+#     only once a provider key is funded. (The old capture also showed an empty
+#     quote builder; the new 2_quote is a finished quote.)
+declare -a SHOTS=("1_today" "2_quote" "3_money" "4_invoice" "5_customers" "6_work")
+declare -a EXCLUDED=("4_photo_to_quote")
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
@@ -69,7 +66,7 @@ for pair in "${LOCALES[@]}"; do
     [ "$keep" -eq 0 ] && rm -f "$existing"
   done
   for shot in "${SHOTS[@]}"; do
-    in="screenshots/${SRC_DPI}/${short}/${SRC_DPI}_${short}_${shot}.png"
+    in="screenshots/${SRC_DPI}/${short}/${shot}.png"
     out="${outdir}/${shot}.png"
     if [ ! -f "$in" ]; then
       echo "  ✕ missing source: $in"; failed=$((failed+1)); continue

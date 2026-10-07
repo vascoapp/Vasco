@@ -114,8 +114,8 @@ import { trackEvent } from '../services/eventTrackingService';
 import { fireNotification } from '../services/notificationService';
 import { markStepComplete } from '../services/onboardingTrackerService';
 import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/docNumberRemapBus';
-import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE, DEMO_CUSTOMER_VAT_IDS, DEMO_CUSTOMER_EINVOICE_DETAILS } from '../data/mockBusiness';
-import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes } from '../data/mockDocuments';
+import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE, UK_BUSINESS_PROFILE, DEMO_CUSTOMER_VAT_IDS, DEMO_CUSTOMER_EINVOICE_DETAILS } from '../data/mockBusiness';
+import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes, ukInvoices, ukQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
 import { localDateKey, todayKey } from '../utils/dateKey';
 import { daysUntilDue, invoiceTermDays } from '../utils/invoiceDue';
@@ -491,6 +491,23 @@ const IT_SEED_CUSTOMERS: Customer[] = [
   { id: 'cust-it-003', name: 'Giulia Greco', email: 'g.greco@alice.it', phone: '+39 02 5550147' },
   { id: 'cust-it-004', name: 'Amministrazione Navigli S.r.l.', email: 'tecnico@ammnavigli.it', phone: '+39 02 5550390', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-004'], ...DEMO_CUSTOMER_EINVOICE_DETAILS['cust-it-004'] },
   { id: 'cust-it-005', name: 'Panificio Bruno S.r.l.', email: 'contabilita@panificiobruno.it', phone: '+39 02 5550412', vatId: DEMO_CUSTOMER_VAT_IDS['cust-it-005'], ...DEMO_CUSTOMER_EINVOICE_DETAILS['cust-it-005'] },
+];
+
+// UK demo (plumber@vasco.uk.dev) — same status spread as the IT seed.
+const UK_SEED_JOBS: Job[] = [
+  { id: 'j-uk-1', customerId: 'cust-uk-001', title: 'Boiler not firing — Hughes', description: null, status: 'lead', trade: 'plumbing', priority: 'high', quotedAmount: 180, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 1).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-uk-2', customerId: 'cust-uk-002', title: 'Annual boiler service — Patel', description: null, status: 'scheduled', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '08:30', scheduledEndTime: '10:30', estimatedDuration: 2, quotedAmount: 150, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 4).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-uk-3', customerId: 'cust-uk-003', title: 'Full bathroom renovation — Clarke', description: null, status: 'in-progress', trade: 'plumbing', priority: 'normal', scheduledDate: todayKey(), scheduledStartTime: '11:00', scheduledEndTime: '16:30', estimatedDuration: 40, quotedAmount: 9400, agreedAmount: 9400, photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 8).toISOString(), updatedAt: new Date().toISOString() },
+  { id: 'j-uk-4', customerId: 'cust-uk-004', title: 'TRV replacement, Block C — Riverside Lettings', description: null, status: 'completed', trade: 'plumbing', priority: 'normal', estimatedDuration: 3, quotedAmount: 460, agreedAmount: 460, actualHours: 2.5, actualCost: 145, completedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 9).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 6).toISOString() },
+  { id: 'j-uk-5', customerId: 'cust-uk-005', title: 'Mains water pipe renewal — Bakehouse & Co', description: null, status: 'invoiced', trade: 'plumbing', priority: 'normal', estimatedDuration: 14, quotedAmount: 4333.33, agreedAmount: 4333.33, invoiceId: 'inv-uk-1', completedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString(), photos: [], notes: [], timeEntries: [], materials: [], createdAt: new Date(Date.now() - MS_PER_DAY * 20).toISOString(), updatedAt: new Date(Date.now() - MS_PER_DAY * 16).toISOString() },
+];
+
+const UK_SEED_CUSTOMERS: Customer[] = [
+  { id: 'cust-uk-001', name: 'The Hughes Family', email: 'r.hughes@btinternet.com', phone: '+44 20 7946 0188' },
+  { id: 'cust-uk-002', name: 'James Patel', email: 'j.patel@outlook.com', phone: '+44 20 7946 0231' },
+  { id: 'cust-uk-003', name: 'Emma Clarke', email: 'emma.clarke@gmail.com', phone: '+44 20 7946 0147' },
+  { id: 'cust-uk-004', name: 'Riverside Lettings Ltd', email: 'maintenance@riversidelettings.co.uk', phone: '+44 20 7946 0390', vatId: 'GB987654321' },
+  { id: 'cust-uk-005', name: 'Bakehouse & Co Ltd', email: 'accounts@bakehouseandco.co.uk', phone: '+44 20 7946 0412', vatId: 'GB246813579' },
 ];
 
 export function AppStateProvider({ children }: PropsWithChildren) {
@@ -979,6 +996,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           FR: { profile: FR_BUSINESS_PROFILE, customers: FR_SEED_CUSTOMERS, jobs: FR_SEED_JOBS, invoices: frInvoices, quotes: frQuotes },
           ES: { profile: ES_BUSINESS_PROFILE, customers: ES_SEED_CUSTOMERS, jobs: ES_SEED_JOBS, invoices: esInvoices, quotes: esQuotes },
           IT: { profile: IT_BUSINESS_PROFILE, customers: IT_SEED_CUSTOMERS, jobs: IT_SEED_JOBS, invoices: itInvoices, quotes: itQuotes },
+          UK: { profile: UK_BUSINESS_PROFILE, customers: UK_SEED_CUSTOMERS, jobs: UK_SEED_JOBS, invoices: ukInvoices, quotes: ukQuotes },
         };
         const seededCountry = getCurrentCountry() ?? '';
         const walkSeed = walkSeeds[seededCountry];

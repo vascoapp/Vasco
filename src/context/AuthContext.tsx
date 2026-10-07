@@ -238,6 +238,18 @@ const MOCK_USERS: Record<string, User> = {
     trade: 'plumbing',
     onboardingComplete: true,
   },
+  'plumber@vasco.uk.dev': {
+    id: 'user-contractor-uk-001',
+    email: 'plumber@vasco.uk.dev',
+    name: 'Daniel Thompson',
+    role: 'contractor',
+    company: 'Thompson Plumbing & Heating',
+    projects: [],
+    country: 'UK',
+    language: 'en',
+    trade: 'plumbing',
+    onboardingComplete: true,
+  },
   'idraulico@vasco.it.dev': {
     id: 'user-contractor-it-001',
     email: 'idraulico@vasco.it.dev',

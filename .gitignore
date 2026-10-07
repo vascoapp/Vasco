@@ -84,3 +84,6 @@ screenshots/
 
 # Everyday matrix output (npm run matrix)
 .matrix/
+
+# Store screenshot hand-off folder (generated, large) — see scripts/shoot-ios.sh
+/store-screenshots/

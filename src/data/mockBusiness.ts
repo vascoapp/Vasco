@@ -10,6 +10,9 @@ export const businessProfile: BusinessProfile = {
   isComplete: false,
   completenessPercent: 60,
   country: 'NL',
+  // Store screenshots show the invoice's payment card; without an IBAN it reads
+  // "add your IBAN" instead of how the customer pays (2026-10-07).
+  iban: 'NL91ABNA0417164300',
 };
 
 // R78 US foundation: seed business profile for contractor@vasco.us.dev so
@@ -90,6 +93,7 @@ export const DE_BUSINESS_PROFILE: BusinessProfile = {
     "Eintrag Handwerksrolle Anlage A",
     "Fachbetrieb nach §19l WHG",
   ],
+  iban: 'DE89370400440532013000',
 };
 
 // ─── FR / ES / IT demo profiles ──────────────────────────────────────────────
@@ -138,6 +142,7 @@ export const FR_BUSINESS_PROFILE: BusinessProfile = {
     "Qualibat 5312",
     "Assurance décennale",
   ],
+  iban: 'FR7630006000011234567890189',
 };
 
 export const ES_BUSINESS_PROFILE: BusinessProfile = {
@@ -170,6 +175,7 @@ export const ES_BUSINESS_PROFILE: BusinessProfile = {
     "Licencia de Actividad",
     "Seguro de Responsabilidad Civil",
   ],
+  iban: 'ES9121000418450200051332',
 };
 
 export const IT_BUSINESS_PROFILE: BusinessProfile = {
@@ -204,6 +210,38 @@ export const IT_BUSINESS_PROFILE: BusinessProfile = {
     "Iscrizione Camera di Commercio",
     "Assicurazione RC Professionale",
   ],
+  iban: 'IT60X0542811101000000123456',
+};
+
+// UK demo (plumber@vasco.uk.dev). English store screenshots show the market
+// Vasco sells to — London, £, 20 % VAT — not the US HVAC demo (2026-10-07).
+export const UK_BUSINESS_PROFILE: BusinessProfile = {
+  isComplete: true,
+  completenessPercent: 100,
+  businessName: "Thompson Plumbing & Heating Ltd",
+  email: "office@thompsonplumbing.co.uk",
+  phone: "+44 20 7946 0142",
+  address: "14 Camden Road, London NW1 9DP",
+  city: "London",
+  postcode: "NW1 9DP",
+  website: "https://thompsonplumbing.co.uk",
+  country: 'UK',
+  trade: "plumbing",
+  businessType: "ltd",
+  teamSize: 'small',
+  vatScheme: 'standard',
+  registrationNumber: "01234567", // Companies House
+  vatNumber: "GB123456782",
+  invoicePrefix: "INV",
+  quotePrefix: "QT",
+  defaultPaymentTerms: 30,
+  serviceAreaRadius: 25,
+  certifications: [
+    "Gas Safe Registered",
+    "WaterSafe Approved Installer",
+    "Public Liability Insurance",
+  ],
+  iban: 'GB29NWBK60161331926819',
 };
 
 // ─── Demo CUSTOMER VAT ids ───────────────────────────────────────────────────
