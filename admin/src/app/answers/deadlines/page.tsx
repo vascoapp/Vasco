@@ -52,14 +52,18 @@ interface Deadline {
 const DEADLINES: Deadline[] = [
   { country: "de", label: "Must be able to RECEIVE structured e-invoices", date: "2025-01-01", note: "No turnover exemption. This one is already in force." },
   { country: "de", label: "Must ISSUE — businesses over €800,000 turnover", date: "2027-01-01" },
-  { country: "de", label: "Must ISSUE — all remaining businesses", date: "2028-01-01" },
+  { country: "de", label: "Must ISSUE — all remaining businesses", date: "2028-01-01", note: "Kleinunternehmer under §19 UStG and invoices of €250 or less are exempt from issuing (§34a UStDV)." },
   { country: "it", label: "Fatturazione elettronica via SDI", date: "2019-01-01", note: "Long since mandatory for essentially all invoices." },
-  { country: "fr", label: "Must be able to RECEIVE", date: "2026-09-01", note: "Reform rolls out from 2026." },
-  { country: "fr", label: "Must ISSUE — phased by company size", date: null, note: "Between 2026 and 2028, smallest businesses last. Confirm your wave with your expert-comptable or the DGFiP." },
+  { country: "fr", label: "Must be able to RECEIVE — all businesses", date: "2026-09-01", note: "Includes micro-entrepreneurs." },
+  { country: "fr", label: "Must ISSUE — large companies and mid-caps (ETI)", date: "2026-09-01" },
+  { country: "fr", label: "Must ISSUE — SMEs, micro-businesses, micro-entrepreneurs", date: "2027-09-01", note: "Via a certified platform (plateforme agréée)." },
   { country: "es", label: "Facturae to public bodies (FACe)", date: "2015-01-15", note: "Already required for public-sector invoicing." },
-  { country: "es", label: "General B2B obligation (Crea y Crece)", date: null, note: "Awaits the implementing regulation; the timetable has moved more than once." },
+  { country: "es", label: "Verifactu invoicing software — companies", date: "2027-01-01", note: "Royal Decree-law 15/2025." },
+  { country: "es", label: "Verifactu invoicing software — autónomos", date: "2027-07-01" },
+  { country: "es", label: "General B2B e-invoicing (Crea y Crece)", date: null, note: "Awaits the implementing regulation; the timetable has moved more than once." },
   { country: "nl", label: "E-invoicing to government (B2G)", date: "2017-01-01", note: "Already required." },
-  { country: "nl", label: "Domestic B2B obligation", date: null, note: "No mandate yet. Draft law expected; direction currently points to around 2030." },
+  { country: "nl", label: "Domestic B2B e-invoicing (planned)", date: "2030-07-01", note: "Government plan announced September 2026, aligned with EU ViDA; the bill has not yet passed parliament." },
+  { country: "uk", label: "B2B and B2G e-invoicing", date: "2029-04-01", note: "Confirmed at the Autumn Budget 2025; Peppol; roadmap due at Budget 2026." },
 ];
 
 function daysUntil(iso: string): number {

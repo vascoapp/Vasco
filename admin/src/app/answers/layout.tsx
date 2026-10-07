@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Vasco — Contractor Answers",
+    template: "%s | Vasco",
     default: "Vasco — Answers for Construction Contractors",
   },
   description:
@@ -83,15 +83,16 @@ export default function AnswersLayout({
         }}
       >
         <p>
-          <strong style={{ color: "#1a1a1a" }}>Vasco</strong> is an AI-native
-          business app for construction contractors. It connects quotes, jobs,
+          <strong style={{ color: "#1a1a1a" }}>Vasco</strong> is a business
+          app for construction tradespeople. It connects quotes, jobs,
           invoices, and payments in one workflow — built for plumbers,
           electricians, painters, carpenters, roofers, tilers, and gas/HVAC
           engineers across the Netherlands, Germany, France, Spain, Italy, and
           the United Kingdom.
         </p>
         <p style={{ marginTop: 12 }}>
-          Available on iOS and Android. Free to start.
+          In beta, coming to iOS and Android. Free plan available; no
+          commission on payments.
         </p>
       </footer>
     </div>

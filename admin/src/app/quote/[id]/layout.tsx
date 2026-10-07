@@ -4,7 +4,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Your quote · Vasco',
+  title: { absolute: 'Your quote · Vasco' },
   description: 'The quote your contractor sent you, with everything that is included.',
   // The `?t=` token is a bearer credential; keep this out of every index.
   robots: { index: false, follow: false },

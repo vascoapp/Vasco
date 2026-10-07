@@ -51,7 +51,8 @@ export type MarketingContent = {
     eyebrow: string;
     titleLead: string;
     titleAccent: string;
-    perInvoice: string;
+    /** One line stating that Vasco takes no cut of payments. */
+    noCommission: string;
     badge: string;
     closer: string;
     closerAccent: string;
@@ -59,7 +60,8 @@ export type MarketingContent = {
       name: string;
       price: string;
       period: string;
-      commission: string;
+      /** Price per month when billed annually, e.g. "€29/mo billed annually". */
+      annual?: string;
       tagline: string;
       features: string[];
       cta: string;
@@ -129,50 +131,76 @@ const MARKETS_US = [
 export const MARKETS = MARKETS_EN;
 export { MARKETS_EN, MARKETS_US };
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// HONESTY RULES for this copy (2026-10-08):
+//  - Not in the App Store or Google Play yet: TestFlight beta only. Say
+//    "coming to iOS and Android" / "join the beta", never "available on".
+//  - No AI claims. LLM features are off in production.
+//  - No commission. Payments go to the contractor's OWN Mollie/Stripe
+//    account; the cancelled per-invoice take rate must never reappear.
+//  - Prices are the app's own: src/services/subscriptionService.ts (TIERS).
+//  - No unsourced statistics, no automation that does not exist.
+// ─────────────────────────────────────────────────────────────────────────
+
+const LEGAL_LINKS_EN = [
+  { href: "/legal/privacy-policy", label: "Privacy" },
+  { href: "/legal/terms-of-service", label: "Terms" },
+  { href: "/legal/eula", label: "EULA" },
+  { href: "/legal/cookie-policy", label: "Cookies" },
+  { href: "/legal/data-processing-agreement", label: "DPA" },
+  { href: "/legal/acceptable-use-policy", label: "Acceptable use" },
+];
+
+const CONTACT_LINKS = [
+  { href: "mailto:hello@vascobuild.com", label: "hello@vascobuild.com" },
+  { href: "mailto:support@vascobuild.com", label: "support@vascobuild.com" },
+  { href: "mailto:privacy@vascobuild.com", label: "privacy@vascobuild.com" },
+];
+
 export const content: Record<Locale, MarketingContent> = {
   en: {
     meta: {
-      title: "Vasco — Your guide to running a trade business",
+      title: "Vasco — Quotes, invoices and e-invoicing for the trades",
       description:
-        "Vasco knows the way. The AI back-office for plumbers, electricians, painters, carpenters, and aannemers. Free forever — 3.5% per paid invoice. Pro from €39/mo.",
+        "Quotes, jobs, invoices and e-invoicing for plumbers, electricians, painters, carpenters and aannemers in NL, DE, FR, ES, IT and the UK. Free plan; Pro from €29/month billed annually. No commission on payments.",
       ogDescription:
-        "Free forever — 3.5% per paid invoice. Pro from €39/mo. Built for the trades across NL, DE, FR, ES, IT, UK.",
+        "Quotes, invoices and e-invoicing for the trades. Free plan, Pro from €29/month billed annually, no commission on payments. Coming to iOS and Android.",
     },
     nav: {
       how: "How it works",
       pricing: "Pricing",
       faq: "FAQ",
       support: "Support",
-      cta: "Get early access",
+      cta: "Join the beta",
     },
     hero: {
-      badge: "Coming 2026 — Join the waitlist",
+      badge: "In beta — coming to iOS and Android",
       title: "Vasco knows",
       titleAccent: "the way.",
       sub:
-        "Your guide to running a trade business. From quote to cash, EU compliance to chasing late payers — Vasco walks you through the parts of the job nobody trained you for.",
-      ctaPrimary: "Get early access",
+        "Quotes, jobs, invoices and the e-invoicing rules of the country you work in — in one app on your phone, so the paperwork takes less of your evening.",
+      ctaPrimary: "Join the beta",
       ctaSecondary: "See how it works",
       marketsPrefix: "Working in",
     },
     stats: [
-      { value: "8h", label: "Saved per week" },
-      { value: "5", label: "Taps quote → invoice" },
       { value: "6", label: "Countries" },
       { value: "15", label: "Trades" },
+      { value: "6", label: "E-invoice formats" },
+      { value: "0%", label: "Commission on payments" },
     ],
     appStorePreview: {
-      eyebrow: "App Store preview",
-      titleLead: "Five screens.",
-      titleAccent: "One app that runs your business.",
+      eyebrow: "Inside the app",
+      titleLead: "Four screens.",
+      titleAccent: "One app for the paperwork.",
       footnote:
-        "Rendered at 1320×2868 (6.9\" iPhone). These are the assets queued for App Store Connect upload.",
+        "Screens from the beta build. Vasco is not in the App Store or Google Play yet.",
       screens: [
         { src: "/screenshots/1-vandaag-en.png", label: "Today's plan" },
         { src: "/screenshots/2-quote-en.png", label: "Good / Better / Best" },
         { src: "/screenshots/3-geld-en.png", label: "Get paid" },
-        { src: "/screenshots/4-photo-en.png", label: "Photo → quote" },
-        { src: "/screenshots/5-vat-en.png", label: "VAT prep" },
+        { src: "/screenshots/5-vat-en.png", label: "VAT report" },
       ],
     },
     guideThrough: {
@@ -185,87 +213,87 @@ export const content: Record<Locale, MarketingContent> = {
           label: "The admin pile",
           title: "Off the laptop.\nBack on the tools.",
           body:
-            "Quotes, jobs, invoices, chasers — Vasco runs the paperwork while you run the job. No more weeknights at the kitchen table catching up on admin.",
+            "Quotes, jobs and invoices in one place on your phone. A finished job becomes an invoice in one tap — no retyping.",
         },
         {
           no: "02",
           label: "EU compliance",
-          title: "Belastingdienst.\nKvK. BTW. Done.",
+          title: "VAT. E-invoices.\nThe local rules.",
           body:
-            "XRechnung. Peppol. FatturaPA. KOR. Kleinunternehmer. Vasco knows the rules of every market you work in — and follows them for you.",
+            "XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA and Peppol. Small-business schemes such as the KOR and Kleinunternehmer. Vasco builds your invoices to the rules of the country you work in.",
         },
         {
           no: "03",
           label: "Slow payers",
-          title: "Get paid.\nOn time.",
+          title: "Get paid.\nWithout the awkward call.",
           body:
-            "Payment link on every invoice. Auto-chase at 14 and 30 days. Late-payment fees calculated to EU 2011/7/EU. Vasco doesn't forget.",
+            "A payment link on the invoice through your own Mollie or Stripe account. When an invoice is overdue, Vasco drafts a reminder for you to check and send.",
         },
       ],
     },
     how: {
       eyebrow: "How it works",
       titleLead: "Three steps.",
-      titleAccent: "One day's work.",
+      titleAccent: "Quote to paid.",
       steps: [
         {
           n: "1",
-          title: "Photo the job.",
+          title: "Build the quote.",
           body:
-            "Snap the wall, the boiler, the leak. Vasco reads the photo, drafts the quote with materials and hours.",
+            "Line items from your own price list, with Good / Better / Best options if you want them.",
         },
         {
           n: "2",
           title: "Send the quote.",
           body:
-            "Customer signs on their phone. Job created. Calendar blocked. No back-and-forth.",
+            "Your customer opens it on their phone and accepts it online. No account needed on their side.",
         },
         {
           n: "3",
           title: "Get paid.",
           body:
-            "Work the job, tap done. Invoice goes out with a payment link. iDEAL, card, Bancontact — your customer's choice.",
+            "Finish the job and turn it into an invoice in one tap. Add a payment link through your own Mollie or Stripe account.",
         },
       ],
     },
     pricing: {
       eyebrow: "Pricing",
-      titleLead: "You only pay",
-      titleAccent: "when you get paid.",
-      perInvoice: "per paid invoice",
+      titleLead: "Simple plans.",
+      titleAccent: "No commission.",
+      noCommission:
+        "Vasco takes no commission on payments. Your customer pays into your own Mollie or Stripe account.",
       badge: "MOST POPULAR",
-      closer: "Cancel anytime. No setup fees. No termination fees.",
-      closerAccent: "You only pay when you get paid.",
+      closer: "Cancel anytime. No setup fees.",
+      closerAccent: "No commission on your payments.",
       plans: [
         {
           name: "Free",
           price: "€0",
           period: "/mo",
-          commission: "3.5%",
           tagline: "Get started. No commitment.",
           features: [
             "5 active jobs",
-            "10 quotes/month",
-            "Basic compliance",
+            "10 quotes and 10 invoices a month",
+            "25 customers",
             "1 country",
           ],
-          cta: "Start free",
+          cta: "Join the beta",
           highlight: false,
         },
         {
           name: "Pro",
           price: "€39",
           period: "/mo",
-          commission: "2%",
-          tagline: "Full AI. Pays for itself.",
+          annual: "or €29/mo billed annually",
+          tagline: "Unlimited quotes and invoices, plus e-invoicing.",
           features: [
-            "Unlimited jobs, quotes, invoices",
-            "Full EVE AI (Agent + Auditor + Analyst)",
-            "ML predictions + benchmarking",
-            "Purchasing agent",
-            "All 6 EU countries",
+            "Unlimited jobs, quotes, invoices and customers",
+            "E-invoicing in all 6 countries",
+            "Payment links via your own Mollie or Stripe",
+            "Online quote acceptance for your customers",
+            "Up to 3 team members",
           ],
-          cta: "Go Pro",
+          cta: "Join the beta",
           highlight: true,
           badge: "MOST POPULAR",
         },
@@ -273,13 +301,11 @@ export const content: Record<Locale, MarketingContent> = {
           name: "Contractor",
           price: "€69",
           period: "/mo",
-          commission: "1%",
-          tagline: "Team. API. White-label.",
+          annual: "or €49/mo billed annually",
+          tagline: "For teams.",
           features: [
             "Everything in Pro",
-            "15 team seats",
-            "API + white-label",
-            "Subcontractor portal",
+            "Up to 15 team members",
             "Dedicated support",
           ],
           cta: "Talk to us",
@@ -292,7 +318,7 @@ export const content: Record<Locale, MarketingContent> = {
       titleLead: "15 trades.",
       titleAccent: "One toolbox.",
       body:
-        "From solo plumbers to multi-trade aannemers — Vasco speaks your trade, knows your suppliers, and writes your customer messages in your customer's language.",
+        "From solo plumbers to multi-trade aannemers. Vasco speaks your trade and your customer's language — in six languages.",
       list: [
         "Plumbing",
         "Electrical",
@@ -312,12 +338,12 @@ export const content: Record<Locale, MarketingContent> = {
       ],
     },
     manifesto: {
-      eyebrow: "Built by tradesmen, for tradesmen",
+      eyebrow: "Built for tradespeople",
       line1: "You didn't become a plumber to learn",
       line1Accent: "VAT codes.",
       line2: "You became a plumber to",
       line2Accent: "fix things.",
-      closer: "Vasco handles the rest.",
+      closer: "Vasco helps with the rest.",
     },
     faq: {
       eyebrow: "FAQ",
@@ -325,36 +351,36 @@ export const content: Record<Locale, MarketingContent> = {
       titleAccent: "Straight answers.",
       items: [
         {
-          q: "When does Vasco launch?",
-          a: "iOS rolls out market-by-market starting in the Netherlands in 2026. Join the waitlist to get early access in your country.",
+          q: "Can I download Vasco yet?",
+          a: "Not from the stores yet. Vasco is in a closed beta on iPhone (TestFlight) and is coming to iOS and Android. Join the beta and we will email you when there is a place for you.",
         },
         {
-          q: "Do I need a subscription?",
-          a: "Free tier is forever free — 3.5% commission on every paid invoice, no monthly fee. Pro (€39/mo) drops it to 2% and unlocks unlimited jobs, full AI, ML predictions, and the purchasing agent. Contractor (€69/mo) drops it to 1% and adds team seats, API access, and white-label. Most active contractors break even on Pro within their first invoice.",
+          q: "What does it cost?",
+          a: "Free is €0 with limits (5 active jobs, 10 quotes and 10 invoices a month). Pro is €39 a month, or €29 a month billed annually. Contractor is €69 a month, or €49 a month billed annually, and adds team seats. Vasco charges no commission on payments — your customers pay into your own Mollie or Stripe account.",
         },
         {
-          q: "What about my existing accounting software?",
-          a: "Vasco connects to Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero, QuickBooks, and 10 more. Your invoices sync automatically — no double entry.",
+          q: "What about my accountant?",
+          a: "Vasco gives you a VAT report per period — sales and VAT per rate, purchases, and the documents behind them — as PDF or CSV for your accountant. Vasco does not file tax returns for you.",
         },
         {
           q: "Is it compliant with EU e-invoicing rules?",
-          a: "Yes. XRechnung (DE), Peppol (NL/EU), Factur-X (FR), Facturae (ES), FatturaPA (IT) — Vasco generates structured e-invoices in the format each market requires.",
+          a: "Vasco generates structured e-invoices in the format each market uses: XRechnung and ZUGFeRD (DE), Factur-X (FR), Facturae (ES), FatturaPA (IT) and Peppol (NL/EU). We check our German output against the official KoSIT validator.",
         },
         {
           q: "Who is Vasco for?",
-          a: "Solo contractors (plumbers, electricians, painters, carpenters), multi-trade aannemers running renovation projects, and site leads managing field crews. If you work with your hands and send invoices, Vasco is for you.",
+          a: "Self-employed tradespeople (plumbers, electricians, painters, carpenters and more) and aannemers running renovation projects. If you work with your hands and send quotes and invoices, Vasco is for you.",
         },
       ],
     },
     finalCta: {
-      titleLead: "Ship one quote today.",
-      titleAccent: "Get paid tomorrow.",
+      titleLead: "Send your next quote",
+      titleAccent: "from your phone.",
       body:
-        "Get early access. We'll email you when Vasco launches in your market.",
-      cta: "Get early access",
+        "Join the beta. We'll email you when Vasco opens in your country.",
+      cta: "Join the beta",
     },
     footer: {
-      tagline: "Your guide to running a trade business.",
+      tagline: "Quotes, invoices and e-invoicing for the trades.",
       address: "Amsterdam, The Netherlands",
       product: {
         title: "Product",
@@ -365,72 +391,54 @@ export const content: Record<Locale, MarketingContent> = {
           { href: "/support", label: "Support" },
         ],
       },
-      legal: {
-        title: "Legal",
-        links: [
-          { href: "/legal/privacy-policy", label: "Privacy" },
-          { href: "/legal/terms-of-service", label: "Terms" },
-          { href: "/legal/eula", label: "EULA" },
-          { href: "/legal/cookie-policy", label: "Cookies" },
-          { href: "/legal/data-processing-agreement", label: "DPA" },
-          { href: "/legal/acceptable-use-policy", label: "Acceptable use" },
-        ],
-      },
-      contact: {
-        title: "Contact",
-        links: [
-          { href: "mailto:hello@vascobuild.com", label: "hello@vascobuild.com" },
-          { href: "mailto:support@vascobuild.com", label: "support@vascobuild.com" },
-          { href: "mailto:privacy@vascobuild.com", label: "privacy@vascobuild.com" },
-        ],
-      },
-      bottomCompliance: "EU datacenters · GDPR compliant · KvK 12345678",
+      legal: { title: "Legal", links: LEGAL_LINKS_EN },
+      contact: { title: "Contact", links: CONTACT_LINKS },
+      bottomCompliance: "EU datacenters · GDPR",
     },
   },
 
   nl: {
     meta: {
-      title: "Vasco — Minder admin. Meer vakwerk.",
+      title: "Vasco — Offertes, facturen en e-facturen voor vakmensen",
       description:
-        "Vasco kent de weg. De AI-administratie voor loodgieters, elektriciens, schilders, timmerlieden en aannemers. Voor altijd gratis — 3,5% per betaalde factuur. Pro vanaf €39/mnd.",
+        "Offertes, klussen, facturen en e-facturen voor loodgieters, elektriciens, schilders, timmerlieden en aannemers. Gratis pakket; Pro vanaf €29 per maand bij jaarbetaling. Geen commissie op betalingen.",
       ogDescription:
-        "Voor altijd gratis — 3,5% per betaalde factuur. Pro vanaf €39/mnd. Voor vakmensen in NL, DE, FR, ES, IT, UK.",
+        "Offertes, facturen en e-facturen voor vakmensen. Gratis pakket, Pro vanaf €29/mnd bij jaarbetaling, geen commissie op betalingen. Binnenkort voor iOS en Android.",
     },
     nav: {
       how: "Hoe het werkt",
       pricing: "Prijzen",
       faq: "Veelgestelde vragen",
       support: "Support",
-      cta: "Op de wachtlijst",
+      cta: "Doe mee met de bèta",
     },
     hero: {
-      badge: "Live in 2026 · Schrijf je in",
+      badge: "In bèta — binnenkort voor iOS en Android",
       title: "Vasco kent",
       titleAccent: "de weg.",
       sub:
-        "Van offerte tot factuur. Van BTW tot late betalers. Vasco doet het administratiewerk waar geen opleiding voor bestaat — zodat jij meer tijd hebt voor je vak.",
-      ctaPrimary: "Op de wachtlijst",
+        "Offertes, klussen, facturen en de e-factuurregels van het land waar je werkt — in één app op je telefoon. Minder avonden aan de keukentafel.",
+      ctaPrimary: "Doe mee met de bèta",
       ctaSecondary: "Zo werkt het",
       marketsPrefix: "Actief in",
     },
     stats: [
-      { value: "8u", label: "Bespaard per week" },
-      { value: "5", label: "Tikken offerte → factuur" },
       { value: "6", label: "Landen" },
       { value: "15", label: "Vakgebieden" },
+      { value: "6", label: "E-factuurformaten" },
+      { value: "0%", label: "Commissie op betalingen" },
     ],
     appStorePreview: {
-      eyebrow: "App Store-preview",
-      titleLead: "Vijf schermen.",
-      titleAccent: "Eén app die je bedrijf runt.",
+      eyebrow: "In de app",
+      titleLead: "Vier schermen.",
+      titleAccent: "Eén app voor het papierwerk.",
       footnote:
-        "Gerenderd op 1320×2868 (6,9\" iPhone). Dit zijn de bestanden die klaarstaan voor App Store Connect.",
+        "Schermen uit de bètaversie. Vasco staat nog niet in de App Store of Google Play.",
       screens: [
         { src: "/screenshots/1-vandaag-nl.png", label: "Vandaag" },
         { src: "/screenshots/2-quote-nl.png", label: "Goed / Beter / Best" },
         { src: "/screenshots/3-geld-nl.png", label: "Word betaald" },
-        { src: "/screenshots/4-photo-nl.png", label: "Foto → offerte" },
-        { src: "/screenshots/5-vat-nl.png", label: "BTW-aangifte" },
+        { src: "/screenshots/5-vat-nl.png", label: "Btw-overzicht" },
       ],
     },
     guideThrough: {
@@ -443,87 +451,87 @@ export const content: Record<Locale, MarketingContent> = {
           label: "De administratie",
           title: "Laptop dicht.\nGereedschap pakken.",
           body:
-            "Offertes, klussen, facturen, herinneringen — Vasco regelt het papierwerk, jij doet het werk. Geen avonden meer aan de keukentafel om de boel bij te werken.",
+            "Offertes, klussen en facturen op één plek op je telefoon. Een afgeronde klus wordt met één tik een factuur — niks overtypen.",
         },
         {
           no: "02",
           label: "EU-regels",
-          title: "Belastingdienst.\nKvK. BTW. Klaar.",
+          title: "Btw. E-facturen.\nDe regels per land.",
           body:
-            "XRechnung. Peppol. FatturaPA. KOR. Kleinunternehmer. Vasco kent de regels van elk land waar je werkt — en past ze automatisch toe.",
+            "XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA en Peppol. Regelingen als de KOR en Kleinunternehmer. Vasco maakt je facturen volgens de regels van het land waar je werkt.",
         },
         {
           no: "03",
           label: "Late betalers",
-          title: "Krijg betaald.\nOp tijd.",
+          title: "Krijg betaald.\nZonder vervelend telefoontje.",
           body:
-            "Betaallink op elke factuur. Automatische herinneringen na 14 en 30 dagen. Wettelijke handelsrente volgens EU 2011/7/EU. Vasco vergeet het niet.",
+            "Een betaallink op de factuur via je eigen Mollie- of Stripe-account. Is een factuur te laat, dan zet Vasco een herinnering klaar die jij controleert en verstuurt.",
         },
       ],
     },
     how: {
       eyebrow: "Hoe het werkt",
       titleLead: "Drie stappen.",
-      titleAccent: "Een halve dag werk.",
+      titleAccent: "Van offerte tot betaald.",
       steps: [
         {
           n: "1",
-          title: "Foto van de klus.",
+          title: "Maak de offerte.",
           body:
-            "Maak een foto van de muur, de ketel, de lekkage. Vasco leest de foto en maakt een offerte mét materiaal en uren.",
+            "Regels uit je eigen prijslijst, met Goed / Beter / Best-opties als je dat wilt.",
         },
         {
           n: "2",
           title: "Verstuur de offerte.",
           body:
-            "Klant tekent op zijn telefoon. Klus aangemaakt. Agenda geblokt. Geen heen-en-weer.",
+            "Je klant opent hem op zijn telefoon en gaat online akkoord. Hij heeft geen account nodig.",
         },
         {
           n: "3",
           title: "Krijg betaald.",
           body:
-            "Klus af, tik op afronden. Factuur gaat de deur uit met een betaallink. iDEAL, creditcard, Bancontact — de klant kiest.",
+            "Klus af? Met één tik maak je er een factuur van. Voeg een betaallink toe via je eigen Mollie- of Stripe-account.",
         },
       ],
     },
     pricing: {
       eyebrow: "Prijzen",
-      titleLead: "Je betaalt alleen",
-      titleAccent: "als jij betaald wordt.",
-      perInvoice: "per betaalde factuur",
+      titleLead: "Eenvoudige pakketten.",
+      titleAccent: "Geen commissie.",
+      noCommission:
+        "Vasco rekent geen commissie op betalingen. Je klant betaalt op je eigen Mollie- of Stripe-account.",
       badge: "MEEST GEKOZEN",
-      closer: "Maandelijks opzegbaar. Geen instapkosten. Geen opzegkosten.",
-      closerAccent: "Je betaalt alleen als jij betaald wordt.",
+      closer: "Maandelijks opzegbaar. Geen instapkosten.",
+      closerAccent: "Geen commissie op je betalingen.",
       plans: [
         {
           name: "Gratis",
           price: "€0",
           period: "/mnd",
-          commission: "3,5%",
           tagline: "Begin meteen. Zonder verplichting.",
           features: [
             "5 actieve klussen",
-            "10 offertes per maand",
-            "Basis BTW + factuurregels",
+            "10 offertes en 10 facturen per maand",
+            "25 klanten",
             "1 land",
           ],
-          cta: "Start gratis",
+          cta: "Doe mee met de bèta",
           highlight: false,
         },
         {
           name: "Pro",
           price: "€39",
           period: "/mnd",
-          commission: "2%",
-          tagline: "Volledige AI. Verdient zich terug.",
+          annual: "of €29/mnd bij jaarbetaling",
+          tagline: "Onbeperkt offertes en facturen, plus e-facturen.",
           features: [
-            "Onbeperkt klussen, offertes, facturen",
-            "Volledige EVE AI (Agent + Auditor + Analist)",
-            "ML-voorspellingen + benchmarks",
-            "Inkoop-assistent",
-            "Alle 6 EU-landen",
+            "Onbeperkt klussen, offertes, facturen en klanten",
+            "E-facturen in alle 6 landen",
+            "Betaallinks via je eigen Mollie of Stripe",
+            "Online akkoord op offertes voor je klanten",
+            "Tot 3 teamleden",
           ],
-          cta: "Kies Pro",
+          cta: "Doe mee met de bèta",
           highlight: true,
           badge: "MEEST GEKOZEN",
         },
@@ -531,13 +539,11 @@ export const content: Record<Locale, MarketingContent> = {
           name: "Aannemer",
           price: "€69",
           period: "/mnd",
-          commission: "1%",
-          tagline: "Team. API. White-label.",
+          annual: "of €49/mnd bij jaarbetaling",
+          tagline: "Voor teams.",
           features: [
             "Alles uit Pro",
-            "15 teamleden",
-            "API + white-label",
-            "Onderaannemer-portaal",
+            "Tot 15 teamleden",
             "Persoonlijke support",
           ],
           cta: "Neem contact op",
@@ -550,7 +556,7 @@ export const content: Record<Locale, MarketingContent> = {
       titleLead: "15 vakgebieden.",
       titleAccent: "Eén gereedschapskist.",
       body:
-        "Van zzp-loodgieter tot aannemer met meerdere ploegen — Vasco kent je vak, je leveranciers, en schrijft klantberichten in de taal van je klant.",
+        "Van zzp-loodgieter tot aannemer met meerdere ploegen. Vasco spreekt je vak en de taal van je klant — in zes talen.",
       list: [
         "Loodgieter",
         "Elektricien",
@@ -570,12 +576,12 @@ export const content: Record<Locale, MarketingContent> = {
       ],
     },
     manifesto: {
-      eyebrow: "Door vakmensen, voor vakmensen",
+      eyebrow: "Voor vakmensen",
       line1: "Je bent geen loodgieter geworden om",
       line1Accent: "btw-codes te leren.",
       line2: "Je bent loodgieter geworden om",
       line2Accent: "dingen te maken.",
-      closer: "Vasco regelt de rest.",
+      closer: "Vasco helpt met de rest.",
     },
     faq: {
       eyebrow: "Veelgestelde vragen",
@@ -583,36 +589,36 @@ export const content: Record<Locale, MarketingContent> = {
       titleAccent: "Eerlijke antwoorden.",
       items: [
         {
-          q: "Wanneer is Vasco beschikbaar?",
-          a: "iOS rolt land voor land uit, eerst in Nederland in 2026. Schrijf je in op de wachtlijst zodat je in jouw land als eerste aan de beurt bent.",
+          q: "Kan ik Vasco al downloaden?",
+          a: "Nog niet uit de stores. Vasco is in een besloten bèta op iPhone (TestFlight) en komt naar iOS en Android. Doe mee met de bèta, dan mailen we je zodra er plek is.",
         },
         {
-          q: "Heb ik een abonnement nodig?",
-          a: "Het Gratis-pakket is voor altijd gratis — 3,5% commissie op elke betaalde factuur, verder geen vaste lasten. Pro (€39/mnd) verlaagt dat naar 2% en geeft je onbeperkt klussen, volledige AI, ML-voorspellingen en de inkoop-assistent. Aannemer (€69/mnd) verlaagt het naar 1% en voegt teamleden, API en white-label toe. De meeste vakmensen verdienen Pro al terug op hun eerste factuur.",
+          q: "Wat kost het?",
+          a: "Gratis kost €0, met limieten (5 actieve klussen, 10 offertes en 10 facturen per maand). Pro kost €39 per maand, of €29 per maand bij jaarbetaling. Aannemer kost €69 per maand, of €49 per maand bij jaarbetaling, en voegt teamleden toe. Vasco rekent geen commissie op betalingen — je klanten betalen op je eigen Mollie- of Stripe-account.",
         },
         {
-          q: "En mijn huidige boekhoudsoftware?",
-          a: "Vasco koppelt met Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero, QuickBooks en nog 10 andere. Je facturen lopen automatisch door — niks dubbel invoeren.",
+          q: "En mijn boekhouder?",
+          a: "Vasco maakt per periode een btw-overzicht — omzet en btw per tarief, inkopen en de documenten erachter — als PDF of CSV voor je boekhouder. Vasco doet geen aangifte voor je.",
         },
         {
-          q: "Voldoet het aan de EU e-factuur-regels?",
-          a: "Ja. XRechnung (DE), Peppol (NL/EU), Factur-X (FR), Facturae (ES), FatturaPA (IT) — Vasco genereert gestructureerde e-facturen in het formaat dat elk land voorschrijft.",
+          q: "Voldoet het aan de EU e-factuurregels?",
+          a: "Vasco maakt gestructureerde e-facturen in het formaat dat elk land gebruikt: XRechnung en ZUGFeRD (DE), Factur-X (FR), Facturae (ES), FatturaPA (IT) en Peppol (NL/EU). Onze Duitse e-facturen controleren we met de officiële KoSIT-validator.",
         },
         {
           q: "Voor wie is Vasco?",
-          a: "Zzp-vakmensen (loodgieters, elektriciens, schilders, timmerlieden), aannemers die verbouwingen draaien, en uitvoerders die ploegen aansturen. Werk je met je handen en stuur je facturen, dan is Vasco voor jou.",
+          a: "Zzp-vakmensen (loodgieters, elektriciens, schilders, timmerlieden en meer) en aannemers die verbouwingen draaien. Werk je met je handen en stuur je offertes en facturen, dan is Vasco voor jou.",
         },
       ],
     },
     finalCta: {
-      titleLead: "Stuur vandaag één offerte.",
-      titleAccent: "Krijg morgen betaald.",
+      titleLead: "Stuur je volgende offerte",
+      titleAccent: "vanaf je telefoon.",
       body:
-        "Schrijf je in op de wachtlijst. We mailen je zodra Vasco in jouw land live gaat.",
-      cta: "Op de wachtlijst",
+        "Doe mee met de bèta. We mailen je zodra Vasco in jouw land opengaat.",
+      cta: "Doe mee met de bèta",
     },
     footer: {
-      tagline: "Je gids voor het runnen van een vakmansbedrijf.",
+      tagline: "Offertes, facturen en e-facturen voor vakmensen.",
       address: "Amsterdam, Nederland",
       product: {
         title: "Product",
@@ -634,67 +640,57 @@ export const content: Record<Locale, MarketingContent> = {
           { href: "/legal/acceptable-use-policy", label: "Gebruiksregels" },
         ],
       },
-      contact: {
-        title: "Contact",
-        links: [
-          { href: "mailto:hello@vascobuild.com", label: "hello@vascobuild.com" },
-          { href: "mailto:support@vascobuild.com", label: "support@vascobuild.com" },
-          { href: "mailto:privacy@vascobuild.com", label: "privacy@vascobuild.com" },
-        ],
-      },
-      bottomCompliance: "EU-datacenters · AVG-compliant · KvK 12345678",
+      contact: { title: "Contact", links: CONTACT_LINKS },
+      bottomCompliance: "EU-datacenters · AVG",
     },
   },
 
   // ─────────────────────────────────────────────────────────────────────
-  // en-US (R77 US Phase 3)
-  // Voice: growth + revenue ("close more jobs"), not admin/compliance.
-  // Per us-market-research.md Section A: US contractors think like small
-  // business owners chasing leads; lead with money, not paperwork.
+  // en-US. Prices are the app's own, which are set in EUR — no separate US
+  // price list exists, so none is invented here.
   // ─────────────────────────────────────────────────────────────────────
   "en-US": {
     meta: {
-      title: "Vasco — Close more jobs. Get paid faster.",
+      title: "Vasco — Estimates and invoices for the trades",
       description:
-        "The AI back-office for HVAC, electrical, plumbing, roofing, and remodeling pros. Estimates, invoices, scheduling, payments — done. Free forever, 3.5% per paid invoice. Pro from $79/mo.",
+        "Estimates, jobs and invoices for HVAC, electrical, plumbing, roofing and remodeling pros, from your phone. Free plan; Pro from €29/month billed annually. No commission on payments.",
       ogDescription:
-        "Free forever — 3.5% per paid invoice. Pro from $79/mo. Built for US contractors across all 50 states.",
+        "Estimates, jobs and invoices from your phone. Free plan, no commission on payments. Coming to iOS and Android.",
     },
     nav: {
       how: "How it works",
       pricing: "Pricing",
       faq: "FAQ",
       support: "Support",
-      cta: "Join waitlist",
+      cta: "Join the beta",
     },
     hero: {
-      badge: "Coming 2026 — Join the waitlist",
-      title: "Stop losing profit",
-      titleAccent: "on every job.",
+      badge: "In beta — coming to iOS and Android",
+      title: "Less paperwork",
+      titleAccent: "after every job.",
       sub:
-        "Vasco runs your back-office so you can run the job. Estimates, scheduling, invoices, payments — automated. No more late-night paperwork. No more chasing checks.",
-      ctaPrimary: "Join waitlist",
+        "Estimates, jobs and invoices in one app on your phone. Your customer accepts the estimate online; a finished job becomes an invoice in one tap.",
+      ctaPrimary: "Join the beta",
       ctaSecondary: "See how it works",
-      marketsPrefix: "Launching in",
+      marketsPrefix: "Planned for",
     },
     stats: [
-      { value: "8h", label: "Saved per week" },
-      { value: "5", label: "Taps estimate → paid" },
-      { value: "50", label: "States" },
       { value: "15", label: "Trades" },
+      { value: "3", label: "Plans" },
+      { value: "1", label: "Tap job → invoice" },
+      { value: "0%", label: "Commission on payments" },
     ],
     appStorePreview: {
-      eyebrow: "App Store preview",
-      titleLead: "Five screens.",
-      titleAccent: "One app that runs your business.",
+      eyebrow: "Inside the app",
+      titleLead: "Four screens.",
+      titleAccent: "One app for the paperwork.",
       footnote:
-        "Rendered at 1320×2868 (6.9\" iPhone). The screenshots queued for App Store Connect submission.",
+        "Screens from the beta build. Vasco is not in the App Store or Google Play yet.",
       screens: [
         { src: "/screenshots/1-vandaag-us.png", label: "Today's plan" },
         { src: "/screenshots/2-quote-us.png", label: "Good / Better / Best" },
         { src: "/screenshots/3-geld-us.png", label: "Get paid" },
-        { src: "/screenshots/4-photo-us.png", label: "Photo → estimate" },
-        { src: "/screenshots/5-vat-us.png", label: "Sales tax prep" },
+        { src: "/screenshots/5-vat-us.png", label: "Tax report" },
       ],
     },
     guideThrough: {
@@ -707,104 +703,100 @@ export const content: Record<Locale, MarketingContent> = {
           label: "The admin pile",
           title: "Off the laptop.\nBack on the tools.",
           body:
-            "Estimates, jobs, invoices, payment chasers — Vasco runs the paperwork while you run the job. No more weeknights at the kitchen table catching up on books.",
+            "Estimates, jobs and invoices in one place on your phone. A finished job becomes an invoice in one tap — no retyping.",
         },
         {
           no: "02",
-          label: "State licensing + tax",
-          title: "Sales tax.\nState license.\n1099s. Handled.",
+          label: "Estimates",
+          title: "Good. Better. Best.\nAccepted online.",
           body:
-            "Sales tax computed per state and city. State contractor license expiry tracked and warned 30 days out. Year-end 1099-NEC generation when you pay subs over $600.",
+            "Offer options side by side. Your customer opens the estimate on their phone and accepts it — no account needed.",
         },
         {
           no: "03",
           label: "Slow payers",
-          title: "Get paid.\nSame day.",
+          title: "Get paid.\nWithout the awkward call.",
           body:
-            "Tap-to-pay credit card at the job, ACH on the invoice, Buy-Now-Pay-Later for big tickets. Auto-reminders at 7 and 14 days. Vasco doesn't forget — your customers shouldn't either.",
+            "A payment link on the invoice through your own Stripe account. When an invoice is overdue, Vasco drafts a reminder for you to check and send.",
         },
       ],
     },
     how: {
       eyebrow: "How it works",
       titleLead: "Three steps.",
-      titleAccent: "One day's work.",
+      titleAccent: "Estimate to paid.",
       steps: [
         {
           n: "1",
-          title: "Photo the job.",
+          title: "Build the estimate.",
           body:
-            "Snap the AC unit, the leak, the wall. Vasco reads the photo, drafts the estimate with materials and labor hours priced for your market.",
+            "Line items from your own price list, with Good / Better / Best options if you want them.",
         },
         {
           n: "2",
           title: "Send the estimate.",
           body:
-            "Customer signs on their phone. Job auto-scheduled. Crew assigned. Materials ordered. Calendar blocked. No back-and-forth.",
+            "Your customer opens it on their phone and accepts it online. No account needed on their side.",
         },
         {
           n: "3",
           title: "Get paid.",
           body:
-            "Finish the job, tap done. Invoice goes out with a card/ACH/Apple Pay link. Money hits your bank — most contractors get paid before they pack up.",
+            "Finish the job and turn it into an invoice in one tap. Add a payment link through your own Stripe account.",
         },
       ],
     },
     pricing: {
       eyebrow: "Pricing",
-      titleLead: "You only pay",
-      titleAccent: "when you get paid.",
-      perInvoice: "per paid invoice",
+      titleLead: "Simple plans.",
+      titleAccent: "No commission.",
+      noCommission:
+        "Vasco takes no commission on payments. Your customer pays into your own payment account. Prices in EUR.",
       badge: "MOST POPULAR",
-      closer: "Cancel anytime. No setup fees. No contracts.",
-      closerAccent: "You only pay when you get paid.",
+      closer: "Cancel anytime. No setup fees.",
+      closerAccent: "No commission on your payments.",
       plans: [
         {
           name: "Free",
-          price: "$0",
+          price: "€0",
           period: "/mo",
-          commission: "3.5%",
-          tagline: "Start free. Stay free.",
+          tagline: "Start free.",
           features: [
             "5 active jobs",
-            "10 estimates/month",
-            "Card + ACH payments",
-            "1 state",
+            "10 estimates and 10 invoices a month",
+            "25 customers",
           ],
-          cta: "Start free",
+          cta: "Join the beta",
           highlight: false,
         },
         {
           name: "Pro",
-          price: "$79",
+          price: "€39",
           period: "/mo",
-          commission: "2%",
-          tagline: "Full AI. Pays for itself in one job.",
+          annual: "or €29/mo billed annually",
+          tagline: "Unlimited estimates and invoices.",
           features: [
-            "Unlimited jobs, estimates, invoices",
-            "Full EVE AI (Photo-to-Estimate, auto-bids)",
-            "Cohort pricing intelligence",
-            "Buying agent (best supplier price)",
-            "All 50 states",
+            "Unlimited jobs, estimates, invoices and customers",
+            "Payment links via your own Stripe account",
+            "Online estimate acceptance for your customers",
+            "Up to 3 team members",
           ],
-          cta: "Go Pro",
+          cta: "Join the beta",
           highlight: true,
           badge: "MOST POPULAR",
         },
         {
           name: "Contractor",
-          price: "$149",
+          price: "€69",
           period: "/mo",
-          commission: "1%",
-          tagline: "Crew. API. White-label.",
+          annual: "or €49/mo billed annually",
+          tagline: "For crews.",
           features: [
             "Everything in Pro",
-            "15 crew seats",
-            "Dispatch + GPS tracking",
-            "API + white-label",
-            "Dedicated success manager",
+            "Up to 15 team members",
+            "Dedicated support",
           ],
-          cta: "Talk to sales",
+          cta: "Talk to us",
           highlight: false,
         },
       ],
@@ -814,7 +806,7 @@ export const content: Record<Locale, MarketingContent> = {
       titleLead: "15 trades.",
       titleAccent: "One toolbox.",
       body:
-        "From solo electricians to multi-crew remodeling contractors — Vasco speaks your trade, knows your suppliers, and writes customer messages in plain English (or Spanish, if your customer prefers).",
+        "From solo electricians to multi-crew remodeling contractors. Vasco speaks your trade.",
       list: [
         "HVAC",
         "Electrical",
@@ -834,12 +826,12 @@ export const content: Record<Locale, MarketingContent> = {
       ],
     },
     manifesto: {
-      eyebrow: "Built by pros, for pros",
+      eyebrow: "Built for pros",
       line1: "You didn't go into the trades to learn",
-      line1Accent: "QuickBooks.",
+      line1Accent: "bookkeeping.",
       line2: "You went into the trades to",
       line2Accent: "build things.",
-      closer: "Vasco handles the rest.",
+      closer: "Vasco helps with the rest.",
     },
     faq: {
       eyebrow: "FAQ",
@@ -847,41 +839,33 @@ export const content: Record<Locale, MarketingContent> = {
       titleAccent: "Straight answers.",
       items: [
         {
-          q: "When does Vasco launch in the US?",
-          a: "iOS rolls out state-by-state starting with Texas in 2026, then California, Florida, New York, and Illinois. Join the waitlist to lock in early access in your state.",
+          q: "Can I download Vasco yet?",
+          a: "Not from the stores yet. Vasco is in a closed beta on iPhone (TestFlight) and is coming to iOS and Android. Join the beta and we will email you when there is a place for you.",
         },
         {
-          q: "Do I need to pay a subscription?",
-          a: "Free is forever free — 3.5% commission on every paid invoice, no monthly fee. Pro ($79/mo) drops it to 2% and unlocks unlimited jobs, full AI, cohort pricing intelligence, and the buying agent. Contractor ($149/mo) drops it to 1% and adds crew seats, dispatch, API, and white-label. Most active pros break even on Pro within their first invoice.",
+          q: "What does it cost?",
+          a: "Free is €0 with limits (5 active jobs, 10 estimates and 10 invoices a month). Pro is €39 a month, or €29 a month billed annually. Contractor is €69 a month, or €49 a month billed annually, and adds team seats. Prices are in EUR. Vasco charges no commission on payments.",
         },
         {
-          q: "Does it work with QuickBooks?",
-          a: "Yes. Vasco syncs estimates, invoices, customers, and payments to QuickBooks Online. Xero, FreshBooks, and Wave coming Q3. Your accountant gets the books they expect — you stop double-entering everything.",
-        },
-        {
-          q: "How does the sales tax work?",
-          a: "Vasco computes sales tax per state and city based on the customer's address. State contractor license expiry is tracked and you get a warning 30 days out. We don't file your taxes — that's still you (or your CPA) — but we hand them a clean, audit-ready export.",
-        },
-        {
-          q: "Can I offer financing?",
-          a: "Yes — Affirm and Sunbit Buy-Now-Pay-Later integrations let your customers split big jobs (kitchen remodels, full HVAC swaps) into monthly payments. You get paid up-front; the lender carries the risk.",
+          q: "Do you file my taxes?",
+          a: "No. Vasco gives you a report of sales and tax per period as PDF or CSV for you or your accountant. Filing stays with you.",
         },
         {
           q: "Who is Vasco for?",
-          a: "Solo pros (electricians, plumbers, HVAC techs, painters), small crews (2–5 person remodeling outfits, roofing teams), and growing service businesses ready to step off the legal pad. If you work with your hands and send invoices, Vasco is for you.",
+          a: "Solo pros (electricians, plumbers, HVAC techs, painters) and small crews. If you work with your hands and send estimates and invoices, Vasco is for you.",
         },
       ],
     },
     finalCta: {
-      titleLead: "Send one estimate today.",
-      titleAccent: "Get paid tomorrow.",
+      titleLead: "Send your next estimate",
+      titleAccent: "from your phone.",
       body:
-        "Join the waitlist. We'll email when Vasco goes live in your state.",
-      cta: "Join waitlist",
+        "Join the beta. We'll email you when there is a place for you.",
+      cta: "Join the beta",
     },
     footer: {
-      tagline: "Your back-office on autopilot.",
-      address: "Amsterdam, NL · Texas HQ coming 2026",
+      tagline: "Estimates and invoices for the trades.",
+      address: "Amsterdam, The Netherlands",
       product: {
         title: "Product",
         links: [
@@ -891,26 +875,9 @@ export const content: Record<Locale, MarketingContent> = {
           { href: "/support", label: "Support" },
         ],
       },
-      legal: {
-        title: "Legal",
-        links: [
-          { href: "/legal/privacy-policy", label: "Privacy" },
-          { href: "/legal/terms-of-service", label: "Terms" },
-          { href: "/legal/eula", label: "EULA" },
-          { href: "/legal/cookie-policy", label: "Cookies" },
-          { href: "/legal/data-processing-agreement", label: "DPA" },
-          { href: "/legal/acceptable-use-policy", label: "Acceptable use" },
-        ],
-      },
-      contact: {
-        title: "Contact",
-        links: [
-          { href: "mailto:hello@vascobuild.com", label: "hello@vascobuild.com" },
-          { href: "mailto:support@vascobuild.com", label: "support@vascobuild.com" },
-          { href: "mailto:privacy@vascobuild.com", label: "privacy@vascobuild.com" },
-        ],
-      },
-      bottomCompliance: "US-East datacenter · CCPA-compliant · SOC 2 Type II coming 2026",
+      legal: { title: "Legal", links: LEGAL_LINKS_EN },
+      contact: { title: "Contact", links: CONTACT_LINKS },
+      bottomCompliance: "EU datacenters · GDPR",
     },
   },
 };

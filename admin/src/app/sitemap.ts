@@ -1,52 +1,85 @@
 import type { MetadataRoute } from "next";
 import { ALL_PAGES } from "@/lib/aeo";
+import { CONTENT_UPDATED_ON, isScaledTemplatePage, mandateVerifiedIso } from "@/lib/aeo/schema";
 
 const BASE_URL = "https://vascobuild.com";
 
+// Fixed dates, never `new Date()`: a lastModified that is "today" on every
+// build tells crawlers every page changed on every deploy, which they learn to
+// ignore. Mandate pages carry the date their legal facts were verified.
+const CONTENT_DATE = CONTENT_UPDATED_ON;
+const MANDATE_DATE = mandateVerifiedIso();
+
+// Legal pages that exist (src/app/legal/[slug]). /privacy and /terms are
+// redirects to the first two and are deliberately NOT listed: a sitemap lists
+// canonical URLs, and a redirect in it is reported as an error.
+const LEGAL_SLUGS = [
+  "privacy-policy",
+  "terms-of-service",
+  "cookie-policy",
+  "acceptable-use-policy",
+  "data-processing-agreement",
+  "eula",
+  "gdpr-data-subject-request-process",
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const answerPages: MetadataRoute.Sitemap = ALL_PAGES.map((page) => {
-    // Mandate pages outrank the rest deliberately. They answer a question with
-    // a legal deadline attached, which is the highest-intent search a
-    // contractor makes — and the one where being absent costs the most. They
-    // also change more often than evergreen advice, because legislation does.
-    const isMandate = page.topic === "einvoicing-mandate";
-    return {
-      url: `${BASE_URL}/answers/${page.slug}`,
-      lastModified: new Date(),
-      changeFrequency: isMandate ? ("weekly" as const) : ("monthly" as const),
-      priority: isMandate ? 0.9 : page.trade && page.country ? 0.8 : 0.9,
-    };
-  });
+  // The templated trade × country × topic pages are `noindex` and left out
+  // here (see isScaledTemplatePage); listing a noindexed URL sends crawlers a
+  // contradictory signal.
+  const answerPages: MetadataRoute.Sitemap = ALL_PAGES.filter((p) => !isScaledTemplatePage(p)).map(
+    (page) => {
+      // Mandate pages outrank the rest deliberately: a legal deadline is the
+      // highest-intent search a contractor makes.
+      const isMandate = page.topic === "einvoicing-mandate";
+      return {
+        url: `${BASE_URL}/answers/${page.slug}`,
+        lastModified: isMandate ? MANDATE_DATE : CONTENT_DATE,
+        changeFrequency: isMandate ? ("weekly" as const) : ("monthly" as const),
+        priority: isMandate ? 0.9 : 0.7,
+      };
+    },
+  );
+
+  const marketing: MetadataRoute.Sitemap = [
+    { url: BASE_URL, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 1.0 },
+    { url: `${BASE_URL}/nl`, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE_URL}/us`, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/support`, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 0.5 },
+    ...LEGAL_SLUGS.map((slug) => ({
+      url: `${BASE_URL}/legal/${slug}`,
+      lastModified: CONTENT_DATE,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    })),
+  ];
 
   return [
+    ...marketing,
     {
-      // The countdown. Highest priority on the site: it is the most linkable
-      // page and the one whose content genuinely changes every day.
+      // The countdown: built from the mandate facts.
       url: `${BASE_URL}/answers/deadlines`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
+      lastModified: MANDATE_DATE,
+      changeFrequency: "weekly",
       priority: 1.0,
     },
     {
-      // Free tool. The link-bait: high-intent query, and the page people send
-      // each other.
       url: `${BASE_URL}/tools/e-invoice-validator`,
-      lastModified: new Date(),
+      lastModified: CONTENT_DATE,
       changeFrequency: "monthly",
-      priority: 1.0,
+      priority: 0.9,
     },
     {
-      // Aimed at advisers, who answer for many clients at once.
       url: `${BASE_URL}/answers/for-accountants`,
-      lastModified: new Date(),
+      lastModified: MANDATE_DATE,
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/answers`,
-      lastModified: new Date(),
+      lastModified: CONTENT_DATE,
       changeFrequency: "weekly",
-      priority: 1.0,
+      priority: 0.9,
     },
     ...answerPages,
   ];

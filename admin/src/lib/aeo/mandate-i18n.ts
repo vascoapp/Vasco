@@ -63,11 +63,11 @@ export const MANDATE_I18N: Record<MandateLang, LocalisedMandate> = {
     titleTemplate: "E-Rechnungspflicht für {trade}: {status}",
     descriptionTemplate:
       "Was die E-Rechnungspflicht für einen selbstständigen {trade} bedeutet — ab wann Sie E-Rechnungen empfangen und stellen müssen, welches Format gilt (XRechnung, ZUGFeRD) und was Sie jetzt tun sollten. Stand: {verifiedOn}.",
-    status: "Pflicht für alle Betriebe ab 1. Januar 2028",
+    status: "Empfang seit 2025 Pflicht, Ausstellen ab 2027 bzw. 2028",
     receive:
       "Seit dem 1. Januar 2025 muss jedes deutsche Unternehmen strukturierte E-Rechnungen EMPFANGEN können — auch ein Ein-Mann-Handwerksbetrieb. Für den Empfang gibt es keine Umsatzgrenze und keine Übergangsfrist mehr.",
     issue:
-      "Betriebe mit mehr als 800.000 € Umsatz müssen ab dem 1. Januar 2027 E-Rechnungen STELLEN. Alle übrigen Betriebe folgen ab dem 1. Januar 2028.",
+      "Betriebe mit mehr als 800.000 € Vorjahresumsatz müssen ab dem 1. Januar 2027 E-Rechnungen STELLEN. Alle übrigen Betriebe folgen ab dem 1. Januar 2028. Ausgenommen vom Ausstellen sind Kleinunternehmer nach §19 UStG (§34a UStDV) und Kleinbetragsrechnungen bis 250 €.",
     format: "XRechnung (XML) oder ZUGFeRD (PDF/A-3 mit eingebettetem XML)",
     channel:
       "Für B2B ist kein bestimmtes Netzwerk vorgeschrieben. E-Mail ist ein zulässiger Übertragungsweg — verpflichtend ist das strukturierte Format, nicht der Versandkanal.",
@@ -86,7 +86,7 @@ export const MANDATE_I18N: Record<MandateLang, LocalisedMandate> = {
       },
       {
         q: "Gilt die E-Rechnungspflicht auch für Kleinunternehmer nach §19 UStG?",
-        a: "Für den EMPFANG ja: die Empfangspflicht seit dem 1. Januar 2025 kennt keine Kleinunternehmer-Ausnahme. Beim Ausstellen richtet sich der Zeitpunkt nach dem Umsatz Ihres Betriebs — {issue} Wenn Sie unsicher sind, in welche Stufe Sie fallen, klären Sie das mit Ihrem Steuerberater, bevor die Frist läuft.",
+        a: "Für den EMPFANG ja: die Empfangspflicht seit dem 1. Januar 2025 kennt keine Kleinunternehmer-Ausnahme. Vom AUSSTELLEN sind Kleinunternehmer nach §19 UStG dagegen dauerhaft befreit (§34a UStDV) — Papier- und PDF-Rechnungen bleiben für sie zulässig, E-Rechnungen dürfen sie freiwillig stellen. Wer aus der Kleinunternehmerregelung herausfällt, folgt den normalen Stufen: {issue}",
       },
       {
         q: "Brauche ich dafür eine teure Buchhaltungssoftware?",
@@ -101,17 +101,17 @@ export const MANDATE_I18N: Record<MandateLang, LocalisedMandate> = {
     topicLabel: "Facturation électronique",
     titleTemplate: "Facturation électronique obligatoire pour un {trade} : {status}",
     descriptionTemplate:
-      "Ce que la réforme de la facturation électronique change pour un {trade} indépendant — à partir de quand recevoir et émettre, quel format (Factur-X), quelle plateforme (PDP), et par quoi commencer. Vérifié le {verifiedOn}.",
-    status: "déploiement par étapes entre 2026 et 2028",
+      "Ce que la réforme de la facturation électronique change pour un {trade} indépendant — à partir de quand recevoir et émettre, quel format (Factur-X), quelle plateforme agréée, et par quoi commencer. Vérifié le {verifiedOn}.",
+    status: "réception dès le 1er septembre 2026, émission en 2026 ou 2027",
     receive:
-      "Toutes les entreprises françaises doivent être en mesure de RECEVOIR des factures électroniques dans le cadre du déploiement de la réforme à partir de 2026.",
+      "À partir du 1er septembre 2026, toutes les entreprises assujetties à la TVA doivent être en mesure de RECEVOIR des factures électroniques — y compris les micro-entreprises.",
     issue:
-      "L'obligation d'ÉMETTRE est échelonnée selon la taille de l'entreprise entre 2026 et 2028, les plus petites structures en dernier. Confirmez votre échéance auprès de votre expert-comptable ou de la DGFiP : elle dépend de votre catégorie.",
+      "L'obligation d'ÉMETTRE (et l'e-reporting) s'applique au 1er septembre 2026 pour les grandes entreprises et les ETI, et au 1er septembre 2027 pour les PME, TPE et micro-entreprises — donc pour la plupart des artisans.",
     format: "Factur-X (PDF/XML hybride), UBL ou CII",
     channel:
-      "Les factures transitent par une Plateforme de Dématérialisation Partenaire (PDP), et non directement vers l'administration fiscale.",
+      "Les factures transitent par une plateforme agréée (PA, anciennement « PDP ») immatriculée par la DGFiP, et non directement vers l'administration fiscale.",
     action:
-      "Déterminez dans quelle vague se situe votre entreprise, puis choisissez une PDP avant l'échéance plutôt que pendant.",
+      "Soyez prêt à recevoir dès septembre 2026, puis choisissez votre plateforme agréée bien avant votre échéance d'émission de septembre 2027.",
     verifiedLine:
       "Vérifié le {verifiedOn}. Le calendrier de la réforme a déjà été modifié : vérifiez la date auprès de la DGFiP avant toute décision.",
     questions: [
@@ -124,8 +124,8 @@ export const MANDATE_I18N: Record<MandateLang, LocalisedMandate> = {
         a: "Non. Un PDF classique n'est pas une facture électronique au sens de la réforme : c'est une image de facture, alors que le texte exige des données structurées que le système du destinataire peut traiter sans ressaisie. Le format attendu est {format}. Vasco génère ce fichier à partir de la facture que vous avez déjà établie, sans ressaisie dans un second outil.",
       },
       {
-        q: "Qu'est-ce qu'une PDP et dois-je en choisir une ?",
-        a: "Une Plateforme de Dématérialisation Partenaire transmet vos factures et récupère les statuts. {channel} Choisir sa plateforme fait partie de la mise en conformité : mieux vaut le faire avant votre échéance que dans l'urgence, et un {trade} indépendant n'a pas besoin d'un système lourd pour cela.",
+        q: "Qu'est-ce qu'une plateforme agréée (ex-PDP) et dois-je en choisir une ?",
+        a: "Une plateforme agréée (anciennement Plateforme de Dématérialisation Partenaire) transmet vos factures et récupère les statuts. {channel} Choisir sa plateforme fait partie de la mise en conformité : mieux vaut le faire avant votre échéance que dans l'urgence, et un {trade} indépendant n'a pas besoin d'un système lourd pour cela.",
       },
       {
         q: "Faut-il un logiciel comptable coûteux pour être en conformité ?",
@@ -178,12 +178,12 @@ export const MANDATE_I18N: Record<MandateLang, LocalisedMandate> = {
     topicLabel: "Factura electrónica",
     titleTemplate: "Factura electrónica para un {trade}: {status}",
     descriptionTemplate:
-      "Qué exige la factura electrónica a un {trade} autónomo — formato Facturae, envío a FACe para el sector público, y qué cambia con Crea y Crece. Verificado el {verifiedOn}.",
-    status: "obligatoria con la Administración; B2B pendiente de desarrollo",
+      "Qué exige la factura electrónica a un {trade} autónomo — formato Facturae, envío a FACe para el sector público, Verifactu desde 2027 y qué cambia con Crea y Crece. Verificado el {verifiedOn}.",
+    status: "obligatoria con la Administración; Verifactu desde 2027",
     receive:
       "Las facturas a organismos públicos ya deben ser electrónicas; las obligaciones B2B llegan con el desarrollo reglamentario de Crea y Crece.",
     issue:
-      "Facturae es obligatoria hoy para facturar a las Administraciones Públicas. La obligación general entre empresas y autónomos llegará cuando entre en vigor el reglamento: el calendario se ha movido más de una vez, así que confirma la fecha antes de darla por buena.",
+      "Facturae es obligatoria hoy para facturar a las Administraciones Públicas. Además, Verifactu — software de facturación que genera registros inalterables con código QR — será obligatorio desde el 1 de enero de 2027 para sociedades y desde el 1 de julio de 2027 para autónomos (Real Decreto-ley 15/2025). La factura electrónica obligatoria entre empresas (Crea y Crece) sigue pendiente de su reglamento: confirma la fecha antes de darla por buena.",
     format: "Facturae (XML), firmada",
     channel: "FACe para las facturas al sector público.",
     action:
@@ -220,17 +220,17 @@ export const MANDATE_I18N: Record<MandateLang, LocalisedMandate> = {
     titleTemplate: "E-facturatie voor een {trade}: {status}",
     descriptionTemplate:
       "Moet een zelfstandige {trade} al e-facturen sturen? Wat geldt vandaag voor overheidsopdrachten, wat er met Peppol en SI-UBL bij komt kijken, en wanneer een B2B-verplichting verwacht wordt. Gecontroleerd op {verifiedOn}.",
-    status: "verplicht richting de overheid, B2B nog vrijwillig",
+    status: "verplicht richting de overheid, B2B gepland vanaf 1 juli 2030",
     receive:
       "Er is geen B2B-verplichting om e-facturen te kunnen ontvangen. Peppol wordt in Nederland wel breed vrijwillig ondersteund.",
     issue:
-      "E-factureren is verplicht voor facturen aan Nederlandse overheidsinstanties (B2G) en dat is al zo sinds 2017. Een binnenlandse B2B-verplichting bestaat nog niet; een wetsvoorstel wordt verwacht en de richting wijst op ongeveer 2030.",
+      "E-factureren is verplicht voor facturen aan Nederlandse overheidsinstanties (B2G) en dat is al zo sinds 2017. Een binnenlandse B2B-verplichting bestaat nog niet. Het kabinet wil e-facturatie voor alle binnenlandse B2B-facturen verplichten vanaf 1 juli 2030, tegelijk met de Europese ViDA-regels en zonder gefaseerde invoering naar omvang; het wetsvoorstel moet nog naar de Tweede Kamer.",
     format: "Peppol BIS 3.0 of SI-UBL 2.0",
     channel: "Het Peppol-netwerk.",
     action:
       "Factureer je aan gemeentes of woningcorporaties, dan heb je dit nu al nodig. Anders is het vandaag optioneel — maar vroeg beginnen kost weinig, omdat de meeste Nederlandse boekhoudpakketten SI-UBL al ondersteunen.",
     verifiedLine:
-      "Gecontroleerd op {verifiedOn}. Er wordt een wetsvoorstel verwacht — controleer de actuele stand voordat je hier iets op baseert.",
+      "Gecontroleerd op {verifiedOn}. De B2B-verplichting is nog een kabinetsplan, geen wet — controleer de actuele stand voordat je hier iets op baseert.",
     questions: [
       {
         q: "Moet een zelfstandige {trade} al e-facturen sturen?",
@@ -285,7 +285,7 @@ export const MANDATE_QUESTION_PAGES: Record<MandateLang, MandateQuestionPage[]> 
       slug: "muss-ich-als-kleinunternehmer-e-rechnungen-stellen",
       question: "Muss ich als Kleinunternehmer E-Rechnungen stellen?",
       answer:
-        "Für den EMPFANG gilt die Pflicht bereits: seit dem 1. Januar 2025 muss jedes deutsche Unternehmen strukturierte E-Rechnungen empfangen können, und dabei gibt es keine Kleinunternehmer-Ausnahme und keine Umsatzgrenze. Für das AUSSTELLEN hängt der Zeitpunkt vom Umsatz ab: Betriebe über 800.000 € ab dem 1. Januar 2027, alle übrigen — und damit die meisten Kleinunternehmer nach §19 UStG — ab dem 1. Januar 2028. Wer heute für 2028 plant, kann die Empfangspflicht also bereits verletzen.",
+        "Nein — Kleinunternehmer nach §19 UStG sind von der Pflicht, E-Rechnungen AUSZUSTELLEN, ausgenommen (§34a UStDV, eingeführt mit dem Jahressteuergesetz 2024). Papier- und PDF-Rechnungen bleiben für Sie zulässig; E-Rechnungen dürfen Sie freiwillig stellen. Für den EMPFANG gilt die Pflicht dagegen schon heute: seit dem 1. Januar 2025 muss jedes deutsche Unternehmen strukturierte E-Rechnungen empfangen und lesen können — ohne Kleinunternehmer-Ausnahme. Wer die Kleinunternehmergrenze überschreitet, fällt unter die normalen Stufen: Ausstellen ab dem 1. Januar 2027 (über 800.000 € Vorjahresumsatz) bzw. ab dem 1. Januar 2028.",
       supporting: [
         {
           q: "Gilt das auch, wenn ich nur an Privatkunden fakturiere?",
@@ -317,7 +317,7 @@ export const MANDATE_QUESTION_PAGES: Record<MandateLang, MandateQuestionPage[]> 
       slug: "ab-wann-gilt-die-e-rechnungspflicht-fuer-handwerker",
       question: "Ab wann gilt die E-Rechnungspflicht für Handwerker?",
       answer:
-        "Für Handwerksbetriebe gelten dieselben Stufen wie für alle anderen Unternehmen: Empfangen seit dem 1. Januar 2025 ohne Ausnahme, Ausstellen ab dem 1. Januar 2027 bei mehr als 800.000 € Umsatz und ab dem 1. Januar 2028 für alle übrigen. Eine eigene Handwerksregelung gibt es nicht. Praktisch bedeutet das für die meisten Ein-Mann- und Kleinbetriebe: 2028 für das Ausstellen — aber die Empfangspflicht besteht bereits heute.",
+        "Für Handwerksbetriebe gelten dieselben Stufen wie für alle anderen Unternehmen: Empfangen seit dem 1. Januar 2025 ohne Ausnahme, Ausstellen ab dem 1. Januar 2027 bei mehr als 800.000 € Vorjahresumsatz und ab dem 1. Januar 2028 für alle übrigen. Eine eigene Handwerksregelung gibt es nicht. Ausgenommen vom Ausstellen sind Kleinunternehmer nach §19 UStG und Kleinbetragsrechnungen bis 250 €. Für die meisten Ein-Mann- und Kleinbetriebe heißt das: 2028 für das Ausstellen, als Kleinunternehmer gar nicht — die Empfangspflicht besteht aber bereits heute.",
       supporting: [
         {
           q: "Zählt der Umsatz des Vorjahres?",
@@ -369,13 +369,13 @@ export const MANDATE_QUESTION_PAGES: Record<MandateLang, MandateQuestionPage[]> 
   fr: [
     {
       slug: "qu-est-ce-qu-une-pdp-facturation-electronique",
-      question: "Qu'est-ce qu'une PDP et dois-je en choisir une ?",
+      question: "Qu'est-ce qu'une plateforme agréée (ex-PDP) et dois-je en choisir une ?",
       answer:
-        "Une Plateforme de Dématérialisation Partenaire est l'intermédiaire immatriculé par lequel vos factures électroniques transitent : elle les transmet, récupère les statuts et assure la traçabilité. Dans la réforme française les factures ne partent pas directement vers l'administration fiscale — elles passent par une PDP. Choisir la vôtre fait partie de la mise en conformité, et il vaut mieux le faire avant votre échéance que pendant.",
+        "Une plateforme agréée (PA, anciennement « Plateforme de Dématérialisation Partenaire » ou PDP) est l'intermédiaire immatriculé par la DGFiP par lequel vos factures électroniques transitent : elle les transmet, récupère les statuts, assure la traçabilité et transmet les données fiscales à l'administration. Dans la réforme française les factures ne partent pas directement vers l'administration fiscale — elles passent par une plateforme agréée. Choisir la vôtre fait partie de la mise en conformité, et il vaut mieux le faire avant votre échéance que pendant.",
       supporting: [
         {
           q: "Quelle est ma date d'échéance exactement ?",
-          a: "L'obligation d'émettre est échelonnée par taille d'entreprise entre 2026 et 2028, les plus petites structures en dernier. La réception, elle, concerne tout le monde dès le début du déploiement. Confirmez votre vague auprès de votre expert-comptable ou de la DGFiP : elle dépend de votre catégorie, et le calendrier a déjà été modifié une fois.",
+          a: "Recevoir : 1er septembre 2026, pour toutes les entreprises. Émettre : 1er septembre 2026 pour les grandes entreprises et les ETI, 1er septembre 2027 pour les PME, TPE et micro-entreprises — la catégorie de la plupart des artisans. Le calendrier a déjà été modifié une fois : vérifiez-le auprès de la DGFiP avant de vous engager.",
         },
         {
           q: "Un artisan seul a-t-il besoin d'un logiciel lourd ?",
@@ -410,7 +410,7 @@ export const MANDATE_QUESTION_PAGES: Record<MandateLang, MandateQuestionPage[]> 
       supporting: [
         {
           q: "¿Y si solo facturo a empresas privadas?",
-          a: "La obligación general B2B llegará con el desarrollo reglamentario de Crea y Crece. El calendario se ha movido más de una vez, así que conviene confirmar la fecha vigente antes de planificar. Mientras tanto, si tienes cualquier cliente público, ya estás dentro del ámbito obligatorio.",
+          a: "Para facturas entre empresas, lo próximo es Verifactu: desde el 1 de julio de 2027 los autónomos deberán facturar con un software que cumpla Verifactu (1 de enero de 2027 para sociedades). La factura electrónica obligatoria B2B de Crea y Crece sigue pendiente de reglamento — confirma la fecha vigente antes de planificar. Si tienes cualquier cliente público, ya estás dentro del ámbito obligatorio de Facturae.",
         },
         {
           q: "¿Necesito firma electrónica?",
@@ -425,7 +425,7 @@ export const MANDATE_QUESTION_PAGES: Record<MandateLang, MandateQuestionPage[]> 
       slug: "moet-ik-al-e-factureren-als-zzper",
       question: "Moet ik als zzp'er al e-factureren?",
       answer:
-        "Voor gewone zakelijke klanten nog niet: Nederland kent op dit moment geen verplichting om onderling elektronisch te factureren. Wel geldt die verplichting al sinds 2017 voor facturen aan de overheid — factureer je aan een gemeente, een waterschap of een woningcorporatie, dan heb je dit vandaag al nodig. Een binnenlandse B2B-verplichting wordt verwacht, met de blik momenteel op ongeveer 2030.",
+        "Voor gewone zakelijke klanten nog niet: Nederland kent op dit moment geen verplichting om onderling elektronisch te factureren. Wel geldt die verplichting al sinds 2017 voor facturen aan de overheid — factureer je aan een gemeente of een waterschap, dan heb je dit vandaag al nodig. Het kabinet wil binnenlandse B2B-e-facturatie verplichten vanaf 1 juli 2030, voor alle bedrijven tegelijk; het wetsvoorstel moet nog door de Tweede Kamer.",
       supporting: [
         {
           q: "Ik factureer aan een Duitse klant — geldt daar iets anders?",

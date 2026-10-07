@@ -10,9 +10,10 @@ export const metadata: Metadata = {
   title: "Delete your account",
   description:
     "Permanently delete your Vasco account and all associated data, as required by GDPR Article 17.",
-  // Must stay indexable: Play requires the deletion route to be readily
-  // discoverable outside the app.
-  robots: { index: true, follow: true },
+  // Not indexed (2026-10-08): Play needs this URL to be REACHABLE (it is
+  // entered in the Data safety form), not to rank
+  // in search. A deletion form in search results invites strangers to it.
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {

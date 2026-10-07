@@ -10,7 +10,7 @@ import {
   type CountryId,
   type TopicId,
 } from "@/lib/aeo";
-import { pageSchemas } from "@/lib/aeo/schema";
+import { pageSchemas, isScaledTemplatePage } from "@/lib/aeo/schema";
 
 // ─── STATIC GENERATION ────────────────────────────────────────────────────
 
@@ -47,6 +47,8 @@ export async function generateMetadata({
   return {
     title: page.title,
     description: page.description,
+    // Templated non-mandate pages: reachable, not indexed (scaled content).
+    ...(isScaledTemplatePage(page) ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: `https://vascobuild.com/answers/${page.slug}`,
       ...(languages

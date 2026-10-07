@@ -10,7 +10,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Your quote · Vasco',
+  title: { absolute: 'Your quote · Vasco' },
   description: 'Review and accept the quote your contractor sent you. No account needed.',
   // A capability URL must never reach a search index: the token in the path is
   // the credential.

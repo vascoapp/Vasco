@@ -528,17 +528,10 @@ export default function MarketingHome({ locale }: Props) {
                       {plan.period}
                     </span>
                   </div>
-                  <div className="mb-7 flex items-center gap-2 font-[family-name:var(--font-inter)] text-sm">
-                    <span
-                      className="rounded-md px-2 py-0.5 font-bold"
-                      style={{
-                        background: "rgba(249,115,22,0.15)",
-                        color: "#F97316",
-                      }}
-                    >
-                      + {plan.commission}
-                    </span>
-                    <span className="text-zinc-500">{t.pricing.perInvoice}</span>
+                  {/* The annual price, not a commission: Vasco takes no cut of
+                      payments (the per-invoice take rate was cancelled). */}
+                  <div className="mb-7 min-h-[1.25rem] font-[family-name:var(--font-inter)] text-sm text-zinc-500">
+                    {plan.annual ?? ""}
                   </div>
                   <ul className="mb-8 space-y-3">
                     {plan.features.map((f) => (
@@ -584,7 +577,10 @@ export default function MarketingHome({ locale }: Props) {
             ))}
           </div>
 
-          <p className="mt-12 text-center font-[family-name:var(--font-inter)] text-sm text-zinc-500">
+          <p className="mt-12 text-center font-[family-name:var(--font-inter)] text-sm text-zinc-400">
+            {t.pricing.noCommission}
+          </p>
+          <p className="mt-3 text-center font-[family-name:var(--font-inter)] text-sm text-zinc-500">
             {t.pricing.closer}{" "}
             <span className="text-zinc-400">{t.pricing.closerAccent}</span>
           </p>

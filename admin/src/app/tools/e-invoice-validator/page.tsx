@@ -19,13 +19,13 @@ import { MANDATE_VERIFIED_ON } from "@/lib/aeo/data";
 const BASE_URL = "https://vascobuild.com";
 
 export const metadata: Metadata = {
-  title: "Free e-invoice validator — check XRechnung, Peppol BIS and UBL invoices online",
+  title: "Free e-invoice checker — basic checks for XRechnung, Peppol BIS and UBL",
   description:
-    "Paste or upload an e-invoice XML and check it against EN 16931 rules: mandatory fields and the total calculations that silently fail. Free, no sign-up, and your invoice never leaves your browser.",
+    "Paste or upload an e-invoice XML for basic structural checks: EN 16931 mandatory fields and the totals that silently fail. Not the official KoSIT validation. Free, no sign-up, and your invoice never leaves your browser.",
   alternates: { canonical: `${BASE_URL}/tools/e-invoice-validator` },
   openGraph: {
-    title: "Free e-invoice validator (XRechnung, Peppol BIS, UBL)",
-    description: "Check mandatory fields and totals against EN 16931. Runs in your browser — nothing is uploaded.",
+    title: "Free e-invoice checker (XRechnung, Peppol BIS, UBL)",
+    description: "Basic structural checks: mandatory fields and totals against EN 16931. Not the official KoSIT validation. Runs in your browser.",
     url: `${BASE_URL}/tools/e-invoice-validator`,
     type: "website",
   },
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "Is this an official XRechnung validation?",
-    a: "No. This is a fast first-pass check of the EN 16931 rules that invoices most often fail: mandatory fields, and the total calculations (BR-CO-10, BR-CO-15, BR-CO-16) that fail silently because the file still looks correct. The official validator for XRechnung is KoSIT's, which runs the complete Schematron rule set. Use this to catch the common problems quickly, and the official validator when you need a formal conformance statement.",
+    a: "No. This tool runs basic structural checks only: whether the XML parses, whether the EN 16931 mandatory fields are present, and whether the totals add up (BR-CO-10, BR-CO-15, BR-CO-16). It does not run the official KoSIT validation — the full XRechnung Schematron and CIUS rule set — so an invoice that passes here can still be rejected. For a formal result use the official validator: the KoSIT validator (github.com/itplr-kosit/validator) or the Baden-Württemberg online service (erechnungsvalidator.service-bw.de).",
   },
   {
     q: "Is my invoice uploaded anywhere?",
@@ -62,7 +62,7 @@ export default function ValidatorPage() {
         url: `${BASE_URL}/tools/e-invoice-validator`,
         offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
         description:
-          "Free browser-based checker for EN 16931 e-invoices (XRechnung, Peppol BIS, UBL). Checks mandatory fields and total calculations. No upload, no sign-up.",
+          "Free browser-based basic checker for EN 16931 e-invoices (XRechnung, Peppol BIS, UBL): mandatory fields and total calculations. Not the official KoSIT validation. No upload, no sign-up.",
       },
       {
         "@type": "FAQPage",
@@ -85,7 +85,7 @@ export default function ValidatorPage() {
       </nav>
 
       <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 12 }}>
-        Free e-invoice validator
+        Free e-invoice checker
       </h1>
       <p style={{ color: "#9CA3AF", fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>
         Check an XRechnung, Peppol BIS or other UBL invoice against EN 16931:
@@ -93,8 +93,17 @@ export default function ValidatorPage() {
         because the file still looks right.
       </p>
       <p style={{ color: "#9CA3AF", fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-        Free, no sign-up. This is a first-pass check and not a certified
-        conformance statement — for that, use the official KoSIT validator.
+        Free, no sign-up. These are basic structural checks, not the official
+        KoSIT validation, and an invoice that passes here can still be
+        rejected. For a formal result use the official validator:{" "}
+        <a href="https://erechnungsvalidator.service-bw.de" rel="noopener" style={{ color: "#F97316" }}>
+          erechnungsvalidator.service-bw.de
+        </a>{" "}
+        or the{" "}
+        <a href="https://github.com/itplr-kosit/validator" rel="noopener" style={{ color: "#F97316" }}>
+          KoSIT validator
+        </a>
+        .
       </p>
 
       <ValidatorClient />

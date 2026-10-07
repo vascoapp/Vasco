@@ -31,12 +31,20 @@ const inter = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "Vasco — Run your trade business from your phone",
+    default: "Vasco — Quotes, invoices and e-invoicing for the trades",
     template: "%s — Vasco",
   },
   description:
-    "AI-native platform for contractors, aannemers, and site leads across the EU. Quotes, invoices, and incasso — built for the trade.",
+    "Quotes, jobs, invoices and e-invoicing for tradespeople and aannemers across NL, DE, FR, ES, IT and the UK. Free plan; no commission on payments.",
   metadataBase: new URL("https://vascobuild.com"),
+  openGraph: {
+    siteName: "Vasco",
+    type: "website",
+  },
+  // The image itself comes from app/opengraph-image.tsx (file convention).
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

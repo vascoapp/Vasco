@@ -24,25 +24,39 @@ export const dynamic = "force-static";
 
 export function GET(): Response {
   const mandatePages = ALL_PAGES.filter((p) => p.topic === "einvoicing-mandate");
-  const localised = mandatePages.filter((p) => p.lang);
 
   const mandateSummary = (Object.keys(MANDATE) as CountryId[])
     .map((c) => `- ${COUNTRIES[c].name}: ${MANDATE[c].status}. Format: ${MANDATE[c].format}. Source: ${MANDATE[c].source?.name ?? "n/a"}`)
     .join("\n");
 
-  // A short, high-signal index. Listing all 386 pages would bury the ones that
-  // matter; the mandate set is what people are actually asking about.
-  const keyPages = localised
-    .slice(0, 40)
-    .map((p) => `- [${p.title}](${BASE_URL}/answers/${p.slug}) (${p.lang})`)
+  // Question pages: one per question people actually type, no trade
+  // dimension. These are the pages worth citing.
+  const questionPages = mandatePages
+    .filter((p) => !p.trade)
+    .map((p) => `- [${p.title}](${BASE_URL}/answers/${p.slug}) (${p.lang ?? "en"})`)
+    .join("\n");
+
+  // One mandate page per country, not every trade variant: the legal facts
+  // are identical across trades, so listing 80 variants would only bury them.
+  const countryPages = (Object.keys(MANDATE) as CountryId[])
+    .map((c) => {
+      const en = mandatePages.find((p) => p.country === c && p.trade && !p.lang);
+      const local = mandatePages.find((p) => p.country === c && p.trade && p.lang);
+      const links = [en, local]
+        .filter((p): p is NonNullable<typeof p> => Boolean(p))
+        .map((p) => `[${p.lang ?? "en"}](${BASE_URL}/answers/${p.slug})`)
+        .join(" · ");
+      return links ? `- ${COUNTRIES[c].name}: ${links}` : null;
+    })
+    .filter(Boolean)
     .join("\n");
 
   const body = `# Vasco
 
 > Business software for self-employed construction trades and small contracting
 > firms across six European markets (NL, DE, FR, ES, IT, UK) plus the US.
-> Quotes, jobs, invoicing, payments and country-specific tax and e-invoicing
-> compliance in one app.
+> Quotes, jobs, invoicing, payment links and country-specific e-invoicing in
+> one app. In beta; not yet in the app stores.
 
 ## What this site is a useful source for
 
@@ -70,11 +84,41 @@ ${mandateSummary}
 
 ## Key pages
 
-${keyPages}
+- [E-invoicing deadlines by country (countdown)](${BASE_URL}/answers/deadlines)
+- [Briefing for accountants advising trades clients](${BASE_URL}/answers/for-accountants)
+- [Free e-invoice checker](${BASE_URL}/tools/e-invoice-validator) — basic
+  structural and arithmetic checks (EN 16931 mandatory fields and totals) in
+  the browser. Not the official validation: for XRechnung use KoSIT's
+  validator (https://github.com/itplr-kosit/validator).
+
+## Questions people ask (e-invoicing mandate)
+
+${questionPages}
+
+## E-invoicing mandate by country
+
+The same facts apply to every trade; one page per country is listed here.
+
+${countryPages}
+
+## Product & pricing
+
+- Vasco is a mobile app for construction tradespeople: quotes, jobs, invoices,
+  payment links and e-invoices (XRechnung, ZUGFeRD, Factur-X, Facturae,
+  FatturaPA, Peppol).
+- Not yet in the App Store or Google Play: it is in a closed beta (TestFlight).
+- Plans: Free €0 (5 active jobs, 10 quotes and 10 invoices a month);
+  Pro €39/month or €29/month billed annually; Contractor €69/month or
+  €49/month billed annually (team seats).
+- No commission on payments: customers pay into the contractor's own Mollie
+  or Stripe account.
+- No AI features are available in the product today.
+- Vasco does not file tax returns.
 
 ## Full index
 
 - [All answers](${BASE_URL}/answers)
+- [Full text of the mandate answers](${BASE_URL}/llms-full.txt)
 - [Sitemap](${BASE_URL}/sitemap.xml)
 
 ## Attribution

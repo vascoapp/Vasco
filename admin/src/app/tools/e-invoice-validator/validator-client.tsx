@@ -100,9 +100,17 @@ export function ValidatorClient() {
               ? "No problems found in the checks below"
               : `${errors.length} problem${errors.length === 1 ? "" : "s"} found`}
           </h2>
-          <p style={{ color: "#9CA3AF", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+          <p style={{ color: "#9CA3AF", fontSize: 14, lineHeight: 1.7, marginBottom: 8 }}>
             Detected: {result.format}
             {result.profile ? ` · ${result.profile}` : ""}
+          </p>
+          <p style={{ color: "#9CA3AF", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
+            Basic structural checks only — not the official KoSIT validation.
+            Confirm with{" "}
+            <a href="https://erechnungsvalidator.service-bw.de" rel="noopener" style={{ color: "#F97316" }}>
+              the official validator
+            </a>
+            .
           </p>
 
           {[...errors, ...warnings].map((f, i) => (

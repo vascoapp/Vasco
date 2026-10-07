@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Support",
   description:
-    "Get help with Vasco — the AI-native admin app for construction trades.",
+    "Get help with Vasco — the quotes and invoicing app for construction trades.",
   robots: { index: true, follow: true },
 };
 

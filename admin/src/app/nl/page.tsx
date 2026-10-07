@@ -3,7 +3,7 @@ import MarketingHome from "@/components/MarketingHome";
 import { content } from "@/lib/marketing-content";
 
 export const metadata: Metadata = {
-  title: content.nl.meta.title,
+  title: { absolute: content.nl.meta.title },
   description: content.nl.meta.description,
   openGraph: {
     title: content.nl.meta.title,

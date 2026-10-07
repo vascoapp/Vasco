@@ -1,17 +1,53 @@
 import type { MetadataRoute } from "next";
 
+const BASE_URL = "https://vascobuild.com";
+
+// Marketing and answer pages are open. Everything that is for ONE person —
+// capability links carrying a token (/quote/, /accept/, /customer/,
+// /accountant/, /ref/), transactional landings (/payment/, /auth/, /billing/),
+// the in-app helper (/widget), the admin and the API — is closed. Those
+// routes also send `noindex` themselves; robots.txt only stops the fetch.
+const DISALLOW = [
+  "/quote/",
+  "/accept/",
+  "/customer/",
+  "/accountant/",
+  "/ref/",
+  "/payment/",
+  "/auth/",
+  "/billing/",
+  "/widget",
+  "/admin",
+  "/api",
+  "/delete-account",
+];
+
+const ALLOW = [
+  "/",
+  "/nl",
+  "/us",
+  "/answers/",
+  "/tools/",
+  "/legal/",
+  "/support",
+  "/privacy",
+  "/terms",
+  "/llms.txt",
+  "/llms-full.txt",
+];
+
+// AI crawlers are welcome on the marketing and answer pages — being quoted
+// accurately by an assistant is the point of /answers — under the same
+// exclusions as everyone else.
+const AI_CRAWLERS = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "CCBot"];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      {
-        userAgent: "*",
-        // llms.txt is explicitly allowed: it is the file that tells an AI
-        // crawler what this site is authoritative about and, as importantly,
-        // what it is not.
-        allow: ["/", "/legal/", "/answers/", "/support", "/privacy", "/terms", "/eula", "/llms.txt", "/tools/"],
-        disallow: ["/admin", "/admin/", "/billing/", "/api/"],
-      },
+      { userAgent: "*", allow: ALLOW, disallow: DISALLOW },
+      { userAgent: AI_CRAWLERS, allow: ALLOW, disallow: DISALLOW },
     ],
-    sitemap: "https://vascobuild.com/sitemap.xml",
+    sitemap: `${BASE_URL}/sitemap.xml`,
+    host: BASE_URL,
   };
 }
