@@ -101,14 +101,14 @@ describe('upgradeTotal — the number the CUSTOMER is shown', () => {
 
 describe('billableUpgrades — the 7:755 gate', () => {
   it('bills what the CUSTOMER chose: the price was printed next to the option', () => {
-    const { billable, blocked, total } = billableUpgrades(tracker([customerChose]));
+    const { billable, blocked, total } = billableUpgrades(tracker([customerChose]), 'NL');
     expect(billable).toHaveLength(1);
     expect(blocked).toHaveLength(0);
     expect(total).toBe(200);
   });
 
   it('holds back an upgrade the CONTRACTOR recorded, with no warning on file', () => {
-    const { billable, blocked } = billableUpgrades(tracker([contractorChose]));
+    const { billable, blocked } = billableUpgrades(tracker([contractorChose]), 'NL');
     expect(billable).toHaveLength(0);
     expect(blocked[0].reason).toBe('needs_warning');
   });
@@ -116,21 +116,21 @@ describe('billableUpgrades — the 7:755 gate', () => {
   it('releases it once the warning is recorded', () => {
     const warned = recordPriceWarning(tracker([contractorChose]), 'dec_9');
     expect(hasPriceConsent(warned, 'dec_9')).toBe(true);
-    expect(billableUpgrades(warned).billable).toHaveLength(1);
+    expect(billableUpgrades(warned, 'NL').billable).toHaveLength(1);
   });
 
   it('never blocks a credit — minderwerk is in the customer\'s favour', () => {
     const credit = item({ id: 'dec_7', status: 'decided', value: 'basic', decidedBy: 'contractor' });
-    const { billable, blocked } = billableUpgrades(tracker([credit]));
+    const { billable, blocked } = billableUpgrades(tracker([credit]), 'NL');
     expect(blocked).toHaveLength(0);
     expect(billable[0].amount).toBe(-50);
   });
 
   it('cannot bill the same choice twice', () => {
     const t = tracker([customerChose]);
-    const billed = markUpgradesBilled(t, billableUpgrades(t).billable.map(e => e.itemId), 'INV-2026-1');
-    expect(billableUpgrades(billed).billable).toHaveLength(0);
-    expect(billableUpgrades(billed).total).toBe(0);
+    const billed = markUpgradesBilled(t, billableUpgrades(t, 'NL').billable.map(e => e.itemId), 'INV-2026-1');
+    expect(billableUpgrades(billed, 'NL').billable).toHaveLength(0);
+    expect(billableUpgrades(billed, 'NL').total).toBe(0);
   });
 
   it('stamps which invoice took it', () => {
@@ -159,7 +159,7 @@ describe('applySubmissionsToTracker — the customer\'s answers reaching the con
     expect(it0.status).toBe('decided');
     expect(it0.value).toBe('black');
     expect(it0.decidedBy).toBe('customer');
-    expect(billableUpgrades(merged).total).toBe(200);
+    expect(billableUpgrades(merged, 'NL').total).toBe(200);
   });
 
   it('matches on the template item key too', () => {
@@ -192,5 +192,13 @@ describe('applySubmissionsToTracker — the customer\'s answers reaching the con
     expect(merged.decidedCount).toBe(1);
     expect(merged.pendingCount).toBe(1);
     expect(merged.categories[0].completedCount).toBe(1);
+  });
+});
+
+describe('the warning gate follows the market (UK walk, 2026-10-08)', () => {
+  it('the UK has no extra-work statute: a contractor-recorded upgrade is billable', () => {
+    const t = tracker([contractorChose]);
+    expect(billableUpgrades(t, 'UK').blocked).toHaveLength(0);
+    expect(billableUpgrades(t, 'NL').blocked).toHaveLength(1);
   });
 });

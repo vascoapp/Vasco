@@ -15,7 +15,8 @@ import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 import { SafeArea } from '../../src/theme/spacing';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
-import { formatCurrency0, type Country } from '../../src/i18n/formatting';
+import { formatCurrency0, formatCurrency, type Country } from '../../src/i18n/formatting';
+import { isPnlReportable } from '../../src/utils/projectPnl';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { localDateKey } from '../../src/utils/dateKey';
 import { parseRetentionPercent } from '../../src/services/progressBillingService';
@@ -191,7 +192,10 @@ export default function ProjectsScreen() {
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
-              <Text style={styles.metricValue}>{formatCurrency0(pnl.revenue || project.totalBudget, country)}</Text>
+              {/* The BUDGET, always: this showed revenue under the "Budget" label once
+                  anything was invoiced — £6,660 for an £18,500.50 project
+                  (UK walk, 2026-10-08). Full pence, as on the detail screen. */}
+              <Text style={styles.metricValue}>{formatCurrency(project.totalBudget, country)}</Text>
               <Text style={styles.metricLabel}>{t('contractor.projects.budget', 'Budget')}</Text>
             </View>
             <View style={styles.metricDivider} />
@@ -203,11 +207,11 @@ export default function ProjectsScreen() {
                   rather than "nothing invoiced yet". Show a dash instead, and
                   reserve green for an actual positive margin. */}
               <Text style={[styles.metricValue, {
-                color: pnl.revenue <= 0
+                color: !isPnlReportable(pnl)
                   ? SemanticColors.textSecondary
                   : pnl.grossMargin > 0 ? SemanticColors.feedbackSuccess : SemanticColors.feedbackError,
               }]}>
-                {pnl.revenue > 0 ? `${pnl.grossMargin}%` : '—'}
+                {isPnlReportable(pnl) ? `${pnl.grossMargin}%` : '—'}
               </Text>
               <Text style={styles.metricLabel}>{t('contractor.projects.margin', 'Margin')}</Text>
             </View>

@@ -23,9 +23,9 @@ type IconName = keyof typeof Ionicons.glyphMap;
 export default function QuoteTemplatesScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { templates, remove } = useQuoteTemplates();
   const { user } = useAuth();
   const { businessProfile } = useAppState();
+  const { templates, remove } = useQuoteTemplates(undefined, businessProfile?.country ?? user?.country);
   // Profile first, account as fallback (#218): a contractor who set UK in
   // their profile was formatted in euros while the account still said NL.
   const country = (businessProfile?.country ?? user?.country ?? 'NL') as Country;

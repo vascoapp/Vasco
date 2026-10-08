@@ -14,6 +14,7 @@
 // with the totals from the one VAT rule the invoice screen also uses.
 // =============================================================================
 
+import { retentionDeductedOnInvoice } from '../domain/documents';
 import { documentNumber } from '../domain/documents';
 import { documentVatBreakdown, round2 } from '../domain/business';
 import { parseCalendarDay } from '../utils/dateKey';
@@ -57,6 +58,8 @@ export interface PdfSourceInvoice {
    * and the PDF charges the VAT a second time (#354).
    */
   isRetentionRelease?: boolean;
+  /** Gross retention recorded on this instalment (progress billing). */
+  retentionAmount?: number | null;
 }
 
 export interface PdfSourceCustomer {
@@ -80,6 +83,8 @@ export function pdfInvoiceFromRecord(args: {
   fallbackVatRatePercent: number;
   /** Used only for an invoice with no stored lines. */
   fallbackDescription: string;
+  /** The contractor's market — where the retention sits (domain/documents). */
+  country?: string | null;
   now?: Date;
 }): AutoInvoice {
   const { invoice, customer, fallbackDescription } = args;
@@ -143,6 +148,12 @@ export function pdfInvoiceFromRecord(args: {
     vatAmount: breakdown.vat,
     total: breakdown.gross,
     paidAmount: invoice.status === 'paid' ? breakdown.gross : 0,
+    // EU instalment: the customer holds this back from the payment — printed
+    // under the total with what is due now. A UK invoice carries the deduction
+    // as a line, a release withholds nothing (UK walk, 2026-10-08).
+    ...(!invoice.isRetentionRelease && !retentionDeductedOnInvoice(args.country) && Number(invoice.retentionAmount ?? 0) > 0
+      ? { retentionWithheld: round2(Number(invoice.retentionAmount)) }
+      : {}),
     payments: [],
     reminders: [],
     notes: invoice.notes,

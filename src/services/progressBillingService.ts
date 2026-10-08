@@ -35,6 +35,8 @@
 import type { Project, ProjectBillingTerm, ProjectChangeOrder } from '../types/project';
 import type { Invoice } from '../domain/documents';
 import { round2 } from '../domain/business';
+import { extraWorkStatute } from '../domain/extraWorkLaw';
+import { retentionDeductedOnInvoice } from '../domain/documents';
 
 /** Currency rounding. Money is compared and summed in cents to avoid the
  *  0.1 + 0.2 problem accumulating across a ten-term schedule. */
@@ -254,6 +256,63 @@ export function payableNow(
   return round2(termAmount(project, term) - retentionForTerm(project, term));
 }
 
+// ---------------------------------------------------------------------------
+// Where the retention sits: on the PAYMENT (EU) or on the INVOICE (UK)
+// ---------------------------------------------------------------------------
+// NL, DE, FR, ES and IT: the instalment is invoiced in full, VAT on the full
+// amount, and the customer withholds the retention from the payment (the rule
+// at the top of this file).
+//
+// UK: the instalment invoice states the valuation, deducts the retention, and
+// charges VAT only on what is due now. The retained part has its own tax point:
+// the earlier of its payment or a VAT invoice for it (VAT Regulations 1995
+// reg. 89; HMRC VATTOS5170), so the retention's VAT is charged on the RELEASE
+// invoice. (Not for supplies under the domestic reverse charge — a
+// subcontractor billing a contractor; an aannemer bills the end client.) A UK invoice that charged
+// VAT on the full valuation would ask the customer for VAT on money they are
+// entitled to hold back (UK walk, 2026-10-08).
+//
+// Either way `invoice.retentionAmount` records the GROSS cash value withheld —
+// the release invoice's `amount` — so `retentionHeld` keeps one unit.
+
+export { retentionDeductedOnInvoice } from '../domain/documents';
+
+/** One line of an instalment / change-order / release invoice (net, ex-VAT). */
+export interface ProjectInvoiceLine {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+/**
+ * The lines a progress invoice carries. Without them the invoice screen and the
+ * PDF synthesised one "Services rendered" line from the total (UK walk,
+ * 2026-10-08) — the customer could not see what the instalment was for.
+ * `labels` are already localized by the caller.
+ */
+export function progressInvoiceLines(args: {
+  workNet: number;
+  retentionNet: number;
+  country: string | undefined | null;
+  labels: { work: string; lessRetention: string };
+}): ProjectInvoiceLine[] {
+  const lines: ProjectInvoiceLine[] = [{ description: args.labels.work, quantity: 1, unitPrice: round2(args.workNet) }];
+  if (retentionDeductedOnInvoice(args.country) && args.retentionNet > 0) {
+    lines.push({ description: args.labels.lessRetention, quantity: 1, unitPrice: -round2(args.retentionNet) });
+  }
+  return lines;
+}
+
+/** Retention on any net amount at the project's rate (change orders, UK). */
+export function retentionOnAmount(
+  project: Pick<Project, 'retentionPercent'>,
+  net: number,
+): number {
+  const pct = Number(project.retentionPercent ?? 0);
+  if (pct <= 0 || net <= 0) return 0;
+  return round2((net * pct) / 100);
+}
+
 /**
  * Total retentie held across a project.
  *
@@ -281,7 +340,10 @@ export function retentionHeld(projectId: string, invoices: Invoice[]): number {
     }
     held += Number(inv.retentionAmount ?? 0);
   }
-  return round2(Math.max(0, held));
+  // A UK release is re-grossed from its own net line and can differ from the
+  // gross sum by a penny per instalment; what is left below 5p is rounding,
+  // not money still held (it would offer a second, 1p release).
+  return held < 0.05 ? 0 : round2(held);
 }
 
 /**
@@ -372,7 +434,20 @@ export interface ChangeOrderGate {
  * Minderwerk is exempt: a reduction is in the customer's favour and needs no
  * warning.
  */
-export function canInvoiceChangeOrder(order: ProjectChangeOrder): ChangeOrderGate {
+/**
+ * Whether billing extra work needs a recorded price warning first.
+ *
+ * Where a market has a statute for it (src/domain/extraWorkLaw.ts: NL 7:755 BW,
+ * DE §650b BGB, FR 1793 C. civ., ES 1593 CC, IT 1659 c.c.). The UK has none — a
+ * variation is a matter of the contract — yet the gate ran there too, and a UK
+ * aannemer was told an approved variation "may only be charged when the
+ * customer was warned" (UK walk, 2026-10-08). An unknown market is not gated.
+ */
+export function changeOrderNeedsPriceWarning(country: string | undefined | null): boolean {
+  return extraWorkStatute(country) !== null;
+}
+
+export function canInvoiceChangeOrder(order: ProjectChangeOrder, country?: string | null): ChangeOrderGate {
   if (order.status === 'invoiced') {
     return { allowed: false, reason: `"${order.title}" has already been billed`, i18nKey: 'co.alreadyBilled', params: { title: order.title } };
   }
@@ -385,7 +460,7 @@ export function canInvoiceChangeOrder(order: ProjectChangeOrder): ChangeOrderGat
   if (Number(order.amount ?? 0) === 0) {
     return { allowed: false, reason: `"${order.title}" has no amount`, i18nKey: 'co.noAmount', params: { title: order.title } };
   }
-  if (Number(order.amount) > 0 && !order.warnedAt) {
+  if (Number(order.amount) > 0 && !order.warnedAt && changeOrderNeedsPriceWarning(country)) {
     return {
       allowed: false,
       needsWarning: true,
@@ -408,6 +483,7 @@ export interface ChangeOrderError {
 
 export function validateChangeOrders(
   project: Pick<Project, 'totalQuoted' | 'totalBudget' | 'changeOrders'>,
+  country?: string | null,
 ): ChangeOrderError[] {
   const errors: ChangeOrderError[] = [];
   const orders = project.changeOrders ?? [];
@@ -420,7 +496,7 @@ export function validateChangeOrders(
     // Surfaced as a warning-level problem at approval time rather than only at
     // billing time, so the contractor can still send the notice while the work
     // is fresh rather than discovering it when they try to invoice.
-    if (order.status === 'approved' && Number(order.amount ?? 0) > 0 && !order.warnedAt) {
+    if (order.status === 'approved' && Number(order.amount ?? 0) > 0 && !order.warnedAt && changeOrderNeedsPriceWarning(country)) {
       errors.push({
         code: 'approved_without_warning',
         message: `"${order.title}" is approved but has no record of the price warning (art. 7:755 BW)`,

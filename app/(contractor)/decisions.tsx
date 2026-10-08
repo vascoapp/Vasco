@@ -370,7 +370,7 @@ export default function KeuzeScreen() {
    */
   const handleBillUpgrades = async () => {
     if (!selectedTracker) return;
-    const { billable, blocked, total } = billableUpgrades(selectedTracker);
+    const { billable, blocked, total } = billableUpgrades(selectedTracker, country);
     if (billable.length === 0) {
       Alert.alert(
         t('decisions.nothingToBillTitle', 'Nothing to bill yet'),
@@ -397,7 +397,7 @@ export default function KeuzeScreen() {
             // billable.
             const current = trackerRef.current;
             if (!current) return;
-            const fresh = billableUpgrades(current).billable;
+            const fresh = billableUpgrades(current, country).billable;
             if (fresh.length === 0) {
               // Say so rather than closing the dialog on nothing — the whole
               // point of this session's work is that a tap must not look like
@@ -524,7 +524,7 @@ export default function KeuzeScreen() {
                   amounts and no total, and had no way to charge any of it. */}
               {(() => {
                 const chosenTotal = upgradeTotal(selectedTracker);
-                const { billable, blocked, total: billableTotal } = billableUpgrades(selectedTracker);
+                const { billable, blocked, total: billableTotal } = billableUpgrades(selectedTracker, country);
                 if (chosenTotal === 0 && blocked.length === 0) return null;
                 return (
                   <View style={styles.upgradeCard}>

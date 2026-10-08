@@ -336,7 +336,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                   const feeCountry = lateFeeCountry(country);
                   if (!feeCountry) return null;
                   const fee = computeLateFee({
-                    invoiceAmount: amountPayableNow(invoice),
+                    invoiceAmount: amountPayableNow(invoice, country),
                     daysOverdue: lateDays,
                     country: feeCountry,
                     customerType: lateFeeCustomerType(findDocumentCustomer(customers, invoice), feeCountry),
@@ -382,7 +382,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         // so asking for the full total through the payment link
                         // asks for money the contract says they may hold —
                         // the same basis the late-fee interest already uses.
-                        amount: amountPayableNow(invoice),
+                        amount: amountPayableNow(invoice, country),
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
                       if (!link?.url) {
@@ -400,7 +400,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         ref: autoInv.invoiceNumber,
                         // Matches the link minted above — the message must not
                         // ask for a figure the checkout will not charge (#354).
-                        amount: formatCurrency(amountPayableNow(invoice), country),
+                        amount: formatCurrency(amountPayableNow(invoice, country), country),
                         link: link.url,
                         business: businessProfile.businessName ?? '',
                       }, tag);
@@ -423,7 +423,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         number: documentNumber(invoice),
                         // What is actually owed today: retention withheld from
                         // an instalment is not overdue (#354).
-                        amount: formatCurrency(amountPayableNow(invoice), country),
+                        amount: formatCurrency(amountPayableNow(invoice, country), country),
                         days: daysOverdue(invoice) ?? 0,
                         // Profile first, account as fallback (#218).
                         business: businessProfile?.businessName || user?.company || '',
@@ -467,6 +467,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       customer: findDocumentCustomer(customers, invoice) ?? undefined,
                       fallbackVatRatePercent: getEffectiveVatRate(businessProfile),
                       fallbackDescription: t('invoices.services', 'Services rendered'),
+                      country,
                     });
                     {
                       hapticSuccess();
@@ -477,7 +478,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                         // so asking for the full total through the payment link
                         // asks for money the contract says they may hold —
                         // the same basis the late-fee interest already uses.
-                        amount: amountPayableNow(invoice),
+                        amount: amountPayableNow(invoice, country),
                         description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: autoInv.invoiceNumber }),
                       });
                       // Delivery date, the customer's sign-off and the FR 2026
@@ -507,7 +508,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       invoiceId: invoice.id,
                       // Payable now, not the full total: retention is held back
                       // until the release invoice.
-                      amount: amountPayableNow(invoice),
+                      amount: amountPayableNow(invoice, country),
                       description: t('invoices.invoicePrefix', 'Invoice {{number}}', { number: invoice.id }),
                     });
                     if (link?.url) {
@@ -520,7 +521,7 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
                       // `invoice.amount` told the customer € 30.250,00 beside a
                       // checkout for € 28.737,50 — the retention is held back
                       // (#354).
-                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: ${formatCurrency(amountPayableNow(invoice), country)}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
+                      await Share.share({ message: `${t('invoices.paymentLink', 'Betaallink')}: ${formatCurrency(amountPayableNow(invoice, country), country)}\n${link.url}`, title: t('invoices.paymentLink', 'Betaallink') });
                     } else {
                       Alert.alert(t('invoices.error', 'Fout'), t('invoices.paymentLinkFailed', 'Betaallink kon niet worden aangemaakt.'));
                     }
@@ -1095,7 +1096,7 @@ export default function FacturenScreen() {
                                     ref: autoInv.invoiceNumber,
                                     // Payable-now, like every other reminder
                                     // on this screen (#354).
-                                    amount: formatCurrency(amountPayableNow(inv as any), country),
+                                    amount: formatCurrency(amountPayableNow(inv as any, country), country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
                                   }
@@ -1104,7 +1105,7 @@ export default function FacturenScreen() {
                                     ref: documentNumber(inv as any),
                                     // What is owed today, not the gross total —
                                     // same as the branch above (#354; B3).
-                                    amount: formatCurrency(amountPayableNow(inv as any), country),
+                                    amount: formatCurrency(amountPayableNow(inv as any, country), country),
                                     link: '',
                                     business: businessProfile.businessName ?? '',
                                   }, tag);
@@ -1244,7 +1245,7 @@ export default function FacturenScreen() {
                           customer: (inv ? findDocumentCustomer(customers, inv)?.name : undefined) ?? seq.customerName,
                           number: inv ? documentNumber(inv) : seq.invoiceId,
                           // Payable now, like the per-row reminder (#354; B3).
-                          amount: formatCurrency(inv ? amountPayableNow(inv as any) : seq.invoiceAmount, country),
+                          amount: formatCurrency(inv ? amountPayableNow(inv as any, country) : seq.invoiceAmount, country),
                           days: (inv ? daysOverdue(inv) : seq.daysOverdue) ?? seq.daysOverdue ?? 0,
                           business: businessProfile?.businessName || user?.company || '',
                         });

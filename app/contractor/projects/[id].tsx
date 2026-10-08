@@ -316,7 +316,7 @@ export default function ProjectDetailScreen() {
               <Text style={styles.sectionTitle}>{t('project.financialOverview')}</Text>
               <View style={styles.pnlRow}>
                 <View style={styles.pnlItem}>
-                  <Text style={styles.pnlValue}>{formatCurrency0(project.totalBudget, country)}</Text>
+                  <Text style={styles.pnlValue}>{formatCurrency(project.totalBudget, country)}</Text>
                   <Text style={styles.pnlLabel}>{t('project.budget')}</Text>
                 </View>
                 <View style={styles.pnlDivider} />

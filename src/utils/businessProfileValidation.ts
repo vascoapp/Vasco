@@ -34,7 +34,15 @@ function has(value: string | undefined | null): boolean {
  * Fields required by law for invoicing in each EU6 country.
  * Source: national tax authority invoicing rules.
  */
-export function getRequiredFields(country: Country | undefined): Array<{ key: string; label: string; get: (p: BusinessProfile) => string | undefined }> {
+/** A UK company (Ltd / LLP) — the only UK forms with a Companies House number. */
+export function isUkCompany(businessType: string | undefined | null): boolean {
+  return businessType === 'limited' || businessType === 'llp';
+}
+
+export function getRequiredFields(
+  country: Country | undefined,
+  businessType?: string | null,
+): Array<{ key: string; label: string; get: (p: BusinessProfile) => string | undefined }> {
   const base: Array<{ key: string; label: string; get: (p: BusinessProfile) => string | undefined }> = [
     { key: 'profile.businessName',        label: 'Business name',        get: (p) => p.businessName },
     { key: 'profile.address',             label: 'Business address',     get: (p) => p.address },
@@ -87,9 +95,17 @@ export function getRequiredFields(country: Country | undefined): Array<{ key: st
         { key: 'profile.vatNumberPiva',   label: 'Partita IVA',          get: (p) => p.vatNumber },
       ];
     case 'UK':
+      // The company number belongs on a COMPANY's invoices only (Companies Act
+      // 2006 s.82, Company, LLP and Business Names (Trading Disclosures) Regs
+      // 2015). A sole trader or a partnership has none — demanding it blocked
+      // every invoice of the most common UK business form (UK walk,
+      // 2026-10-08). An unknown form is not presumed to be a company; the
+      // number still prints when it is there.
       return [
         ...base,
-        { key: 'profile.registrationCoNo', label: 'Company number',      get: (p) => p.registrationNumber ?? p.kvkNumber },
+        ...(isUkCompany(businessType)
+          ? [{ key: 'profile.registrationCoNo', label: 'Company number', get: (p: BusinessProfile) => p.registrationNumber ?? p.kvkNumber }]
+          : []),
         { key: 'profile.vatNumber',       label: 'VAT number',           get: (p) => p.vatNumber },
       ];
     default:
@@ -99,7 +115,7 @@ export function getRequiredFields(country: Country | undefined): Array<{ key: st
 
 /** Evaluate whether the profile can legally invoice in its country. */
 export function checkInvoiceReadiness(profile: BusinessProfile): ProfileReadiness {
-  const fields = getRequiredFields(profile.country);
+  const fields = getRequiredFields(profile.country, profile.businessType);
   const missing: string[] = [];
   const missingLabels: string[] = [];
   const invalid: string[] = [];

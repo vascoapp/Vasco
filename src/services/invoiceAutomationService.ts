@@ -43,6 +43,8 @@ export interface AutoInvoice {
    *  the VAT report reads these, never recomputes them. */
   vatGroups?: Array<{ ratePct: number; net: number; vat: number }>;
   paidAmount: number;
+  /** EU progress instalment: gross retention the customer withholds from this payment. */
+  retentionWithheld?: number;
   paymentMethod?: 'bank_transfer' | 'ideal' | 'card' | 'cash';
   paidDate?: Date;
   payments: PaymentRecord[];

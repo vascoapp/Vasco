@@ -34,12 +34,12 @@ describe('updateTemplate — user templates', () => {
     const svc = restart();
     await svc.hydrate();
     const created = svc.saveTemplate('Badkamer', 'badkamer', [line('Tegelen', 100)]);
-    const before = svc.getTemplates().length;
+    const before = svc.getTemplates(undefined, 'NL').length;
 
     const updated = svc.updateTemplate(created.id, { items: [line('Tegelen', 120), line('Voegen', 40)] });
 
     expect(updated.id).toBe(created.id);
-    expect(svc.getTemplates().length).toBe(before);
+    expect(svc.getTemplates(undefined, 'NL').length).toBe(before);
     expect(updated.items).toHaveLength(2);
   });
 
@@ -98,14 +98,14 @@ describe('updateTemplate — user templates', () => {
   test('an unknown id changes nothing and returns undefined', async () => {
     const svc = restart();
     await svc.hydrate();
-    const before = svc.getTemplates().length;
+    const before = svc.getTemplates(undefined, 'NL').length;
     expect(svc.updateTemplate('qt-nope', { name: 'X' })).toBeUndefined();
-    expect(svc.getTemplates().length).toBe(before);
+    expect(svc.getTemplates(undefined, 'NL').length).toBe(before);
   });
 });
 
 describe('updateTemplate — built-in override', () => {
-  const firstBuiltin = (svc: any) => svc.getTemplates().find((t: any) => t.i18nId);
+  const firstBuiltin = (svc: any) => svc.getTemplates(undefined, 'NL').find((t: any) => t.i18nId);
 
   test('a built-in exists to override', async () => {
     const svc = restart();
@@ -119,14 +119,14 @@ describe('updateTemplate — built-in override', () => {
     const svc = restart();
     await svc.hydrate();
     const builtin = firstBuiltin(svc);
-    const before = svc.getTemplates().length;
+    const before = svc.getTemplates(undefined, 'NL').length;
 
     const override = svc.updateTemplate(builtin.id, { name: 'Mijn versie', items: [line('Eigen regel', 55)] });
 
     expect(override.id).not.toBe(builtin.id);
     expect(svc.getTemplate(builtin.id)).toBeUndefined();
-    expect(svc.getTemplates().length).toBe(before);
-    expect(svc.getTemplates().filter((t: any) => t.name === 'Mijn versie')).toHaveLength(1);
+    expect(svc.getTemplates(undefined, 'NL').length).toBe(before);
+    expect(svc.getTemplates(undefined, 'NL').filter((t: any) => t.name === 'Mijn versie')).toHaveLength(1);
   });
 
   test('drops i18nId so the edit is what renders', async () => {
@@ -155,7 +155,7 @@ describe('updateTemplate — built-in override', () => {
     // Without deletedBuiltinIds persisting, hydrate re-adds the shipped
     // template and the contractor sees both.
     expect(b.getTemplate(builtin.id)).toBeUndefined();
-    expect(b.getTemplates().some((t: any) => t.name === 'Mijn versie')).toBe(true);
+    expect(b.getTemplates(undefined, 'NL').some((t: any) => t.name === 'Mijn versie')).toBe(true);
   });
 
   test('the override is a copy — mutating it cannot reach the shipped constant', async () => {

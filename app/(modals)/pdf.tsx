@@ -58,6 +58,7 @@ export default function PdfModal() {
             customer: findDocumentCustomer(customers, record) ?? undefined,
             fallbackVatRatePercent: getEffectiveVatRate(businessProfile),
             fallbackDescription: t('invoices.services', 'Services rendered'),
+            country: businessProfile?.country,
           })
         : undefined;
       if (!invoice) {

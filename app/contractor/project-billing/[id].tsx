@@ -78,7 +78,7 @@ export default function ProjectBillingScreen() {
   const {
     projects, invoices, updateProject,
     addTermInvoice, addChangeOrderInvoice, addRetentionReleaseInvoice,
-    businessProfile,
+    businessProfile, customers,
   } = useAppState();
   const { user } = useAuth();
   // Profile first, account as fallback (#218) — and NO 'NL' default: the
@@ -109,8 +109,8 @@ export default function ProjectBillingScreen() {
     [project],
   );
   const changeOrderErrors = useMemo(
-    () => (project ? validateChangeOrders(project) : []),
-    [project],
+    () => (project ? validateChangeOrders(project, country) : []),
+    [project, country],
   );
   // Which instalment is up next, so the row can say so rather than making the
   // contractor work it out from the status column.
@@ -276,6 +276,33 @@ export default function ProjectBillingScreen() {
       Alert.alert(t('projectBilling.scheduleInvalid', 'Instalment schedule is invalid'), blocking[0].message);
       return;
     }
+    // One tap minted a customer-facing document (UK walk, 2026-10-08): confirm
+    // what, how much and to whom first. Without a customer, say so instead.
+    const customerName = customers.find((c) => c.id === project.customerId)?.name;
+    if (!customerName) {
+      Alert.alert(
+        t('projectBilling.needsCustomerTitle', 'No customer yet'),
+        t('projectBilling.needsCustomer', 'Add the customer to this project before invoicing it.'),
+      );
+      return;
+    }
+    const confirmed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        t('projectBilling.invoiceConfirmTitle', 'Create this invoice?'),
+        t('projectBilling.invoiceConfirmBody', {
+          defaultValue: '{{title}} — {{amount}} excl. VAT, to {{customer}}.',
+          title: term.title,
+          amount: money(termAmount(project, term)),
+          customer: customerName,
+        }),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel', onPress: () => resolve(false) },
+          { text: t('projectBilling.invoiceConfirmYes', 'Create invoice'), onPress: () => resolve(true) },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) },
+      );
+    });
+    if (!confirmed) return;
     try {
       await addTermInvoice(project.id, term.id);
       hapticSuccess();
@@ -285,13 +312,20 @@ export default function ProjectBillingScreen() {
   };
 
   const invoiceChangeOrder = async (order: ProjectChangeOrder) => {
-    const gate = canInvoiceChangeOrder(order);
+    const gate = canInvoiceChangeOrder(order, country);
     if (!gate.allowed) {
       Alert.alert(
         gate.needsWarning
           ? t('projectBilling.warningMissing', 'Customer not warned about the price increase')
           : t('common.error', 'Error'),
         billingProblemText(gate),
+      );
+      return;
+    }
+    if (!customers.some((c) => c.id === project.customerId)) {
+      Alert.alert(
+        t('projectBilling.needsCustomerTitle', 'No customer yet'),
+        t('projectBilling.needsCustomer', 'Add the customer to this project before invoicing it.'),
       );
       return;
     }
@@ -413,9 +447,15 @@ export default function ProjectBillingScreen() {
                   {withheld > 0 && (
                     // The invoice is issued for `full`; this is what the
                     // customer actually transfers now.
+                    // Contract money is ex-VAT; say so. "of which £X
+                    // retention" read as included when it is held back
+                    // (UK walk, 2026-10-08).
                     <Text style={styles.rowRetention}>
-                      {t('projectBilling.payableNow', 'Payable now')} {money(now)} —{' '}
-                      {t('projectBilling.withheld', { amount: money(withheld) })}
+                      {t('projectBilling.payableNowLine', {
+                        defaultValue: 'Payable now {{now}} excl. VAT · {{retention}} retention held back',
+                        now: money(now),
+                        retention: money(withheld),
+                      })}
                     </Text>
                   )}
                   {!termLocked(term) && (
@@ -485,7 +525,7 @@ export default function ProjectBillingScreen() {
           </View>
         ) : (
           changeOrders.map((order) => {
-            const gate = canInvoiceChangeOrder(order);
+            const gate = canInvoiceChangeOrder(order, country);
             const isReduction = order.amount < 0;
             return (
               <View key={order.id} style={styles.row}>
@@ -495,7 +535,7 @@ export default function ProjectBillingScreen() {
                     {t(CO_STATUS_KEY[order.status], order.status)}
                     {isReduction ? ` · ${t('projectBilling.reduction', 'Reduction')}` : ''}
                     {order.warnedAt
-                      ? ` · ${t('projectBilling.warnedOn', { date: formatDateShortAuto(new Date(order.warnedAt)) })}`
+                      ? ` · ${t('projectBilling.warningRecordedOn', { date: formatDateShortAuto(new Date(order.warnedAt)), defaultValue: 'Warning recorded {{date}}' })}`
                       : ''}
                   </Text>
 
@@ -511,8 +551,26 @@ export default function ProjectBillingScreen() {
                       </Text>
                       <Pressable
                         style={styles.warnBtn}
+                        // The warning is the CONTRACTOR's statement of a fact
+                        // that happened before the work; one tap stamped it
+                        // without asking (UK walk, 2026-10-08). Ask, then
+                        // record when it was recorded — not a guessed date.
                         onPress={() =>
-                          patchOrder(order.id, { warnedAt: new Date().toISOString(), warnedVia: 'app' })
+                          Alert.alert(
+                            t('projectBilling.warnConfirmTitle', 'Customer warned?'),
+                            t('projectBilling.warnConfirmBody', {
+                              defaultValue: 'Only record this if you told the customer, before doing the work, that “{{title}}” costs {{amount}} extra.',
+                              title: order.title,
+                              amount: money(Number(order.amount)),
+                            }),
+                            [
+                              { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                              {
+                                text: t('projectBilling.warnConfirmYes', 'Yes, I told them'),
+                                onPress: () => patchOrder(order.id, { warnedAt: new Date().toISOString(), warnedVia: 'app' }),
+                              },
+                            ],
+                          )
                         }
                       >
                         <Text style={styles.warnBtnText}>

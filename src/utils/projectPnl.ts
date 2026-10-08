@@ -17,6 +17,13 @@
  * alongside, and they are facts. It is the DERIVED figures that need revenue
  * before they say anything.
  */
-export function isPnlReportable(pnl: { revenue: number } | null | undefined): boolean {
-  return !!pnl && pnl.revenue > 0;
+export function isPnlReportable(
+  pnl: { revenue: number; materialCosts?: number; laborCosts?: number } | null | undefined,
+): boolean {
+  // And the other side: with NO cost recorded, profit is the whole revenue and
+  // the margin a flat 100 % — an aannemer who billed a deposit read "Profit
+  // £6,660 · Margin 100 %" (UK walk, 2026-10-08). That is missing data, not a
+  // result; derived figures wait for both sides.
+  const costs = Number(pnl?.materialCosts ?? 0) + Number(pnl?.laborCosts ?? 0);
+  return !!pnl && pnl.revenue > 0 && costs > 0;
 }

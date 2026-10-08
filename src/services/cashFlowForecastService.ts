@@ -59,6 +59,8 @@ interface ForecastInput {
   horizonDays?: number;
   /** Injectable for tests; defaults to now. */
   today?: Date;
+  /** The contractor's market — a UK invoice already has its retention deducted. */
+  country?: string | null;
 }
 
 /** Calendar arithmetic, not milliseconds — a DST change must not skip a day. */
@@ -115,7 +117,7 @@ export async function buildForecast(input: ForecastInput): Promise<ForecastSumma
   // path and the payment link already use this helper (#354).
   for (const inv of input.invoices) {
     if (inv.status !== 'sent' && inv.status !== 'overdue') continue;
-    const amt = amountPayableNow(inv);
+    const amt = amountPayableNow(inv, input.country);
     if (amt <= 0) continue;
     const offset = await expectedInvoiceOffset(inv, today);
     if (offset === null || offset >= horizon) continue;

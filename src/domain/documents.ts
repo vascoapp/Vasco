@@ -183,9 +183,28 @@ export function invoiceAlreadyBillingDecisionItems<T extends { decisionItemIds?:
   return invoices.find((inv) => (inv.decisionItemIds ?? []).some((id) => wanted.has(id)));
 }
 
+/**
+ * Where a market puts the retention: on the PAYMENT (NL/DE/FR/ES/IT — the
+ * instalment is invoiced in full, VAT on all of it, the customer holds the
+ * retention back) or ON THE INVOICE (UK — deducted before VAT; its VAT is
+ * charged at release, VAT Regs 1995 reg. 89). See progressBillingService.
+ */
+export function retentionDeductedOnInvoice(country: string | undefined | null): boolean {
+  return country === 'UK';
+}
+
+/**
+ * What the customer is asked to pay on this invoice now.
+ *
+ * `country` is required: a UK invoice already has its retention deducted, so
+ * subtracting `retentionAmount` again would under-ask by the retention (UK
+ * walk, 2026-10-08). Elsewhere the retention is withheld from the payment.
+ */
 export function amountPayableNow(
   invoice: { amount: number; retentionAmount?: number | null },
+  country: string | undefined | null,
 ): number {
+  if (retentionDeductedOnInvoice(country)) return round2(Math.max(0, invoice.amount));
   const held = invoice.retentionAmount ?? 0;
   return round2(Math.max(0, invoice.amount - held));
 }

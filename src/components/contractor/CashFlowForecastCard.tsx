@@ -40,7 +40,7 @@ export function CashFlowForecastCard({ invoices, startingBalance, country = 'NL'
 
   useEffect(() => {
     let cancelled = false;
-    buildForecast({ invoices, startingBalance }).then((f) => {
+    buildForecast({ invoices, startingBalance, country }).then((f) => {
       if (!cancelled) setForecast(f);
     }).catch(() => {});
     return () => { cancelled = true; };

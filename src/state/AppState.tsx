@@ -2322,7 +2322,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             persistOrQueue(
               'documents',
               'update',
-              () => updateDocument(id, { status: 'sent', sent_at: now.toISOString() }),
+              async () => {
+                const row = await updateDocument(id, { status: 'sent', sent_at: now.toISOString() });
+                // The customer may have decided in the portal before this
+                // device heard of it: the database keeps accepted/rejected
+                // (trigger documents_keep_decided_status) and returns it. Adopt
+                // the server's answer instead of showing "sent" and offering
+                // Accept again (UK walk, 2026-10-08).
+                const serverStatus = (row as { status?: string } | null)?.status;
+                if (serverStatus === 'accepted' || serverStatus === 'rejected') {
+                  setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status: serverStatus } : q)));
+                }
+                return row;
+              },
               { rowId: id, payload: { status: 'sent', sent_at: now.toISOString() } },
             ),
           ).catch((err) =>
@@ -2427,7 +2439,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // Name, not 'Klant' (E3); what is owed now, not the gross (#354).
         // On the real due date; one already past is the overdue engine's.
         if (untilDue > 0) {
-          schedulePaymentReminder({ invoiceId: id, customerName: pushCustomerName(customers, invoice), amount: invoice ? amountPayableNow(invoice as any) : 0, daysUntilDue: untilDue }).catch(() => {});
+          schedulePaymentReminder({ invoiceId: id, customerName: pushCustomerName(customers, invoice), amount: invoice ? amountPayableNow(invoice as any, businessProfile?.country ?? getCurrentCountry()) : 0, daysUntilDue: untilDue }).catch(() => {});
         }
         // R25: queue customer-facing invoice_sent notice (closes R3 deferral —
         // markInvoiceSent previously fired only the contractor-side push
@@ -3962,11 +3974,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (term.status === 'invoiced' || term.status === 'paid') {
           throw new Error(`Term "${term.title}" has already been invoiced`);
         }
+        // An invoice names its customer (VAT invoice requirement in every
+        // market). A project without one billed an invoice with an empty
+        // "Bill to" that could not be given a customer afterwards (UK walk,
+        // 2026-10-08) — ask first, never mint the document.
+        if (!project.customerId) {
+          throw new Error(appI18n.t('projectBilling.needsCustomer', 'Add the customer to this project before invoicing it.'));
+        }
 
         const {
           validateBillingSchedule,
           termAmount,
           retentionForTerm,
+          retentionDeductedOnInvoice,
+          progressInvoiceLines,
         } = await import('../services/progressBillingService');
 
         // Refuse to bill against a schedule that does not add up. Billing past
@@ -4000,13 +4021,33 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           throw new Error(`Term "${term.title}" bills nothing`);
         }
         const projectVatRate = getEffectiveVatRate(businessProfile);
-        const amount = grossFromNet(netAmount, projectVatRate);
-        // Grossed too, and deliberately: `amount - retentionAmount` is what the
-        // customer pays now, and `retentionHeld` sums these into the release
-        // invoice's own `amount`. Leaving it net would mix units inside one
-        // subtraction and put a net figure back into a gross field one document
-        // later.
-        const retention = grossFromNet(retentionForTerm(project, term), projectVatRate);
+        const billingCountry = businessProfile?.country ?? getCurrentCountry();
+        const retentionNet = retentionForTerm(project, term);
+        // EU: the full instalment is invoiced and VAT charged on all of it; the
+        // customer withholds the retention from the payment. UK: the retention
+        // is deducted ON the invoice and its VAT waits for the release (reg. 89
+        // VAT Regs 1995) — see progressBillingService.retentionDeductedOnInvoice.
+        const deducted = retentionDeductedOnInvoice(billingCountry);
+        const billedNet = deducted ? round2(netAmount - retentionNet) : netAmount;
+        const amount = grossFromNet(billedNet, projectVatRate);
+        // Grossed too, and deliberately: it is the cash value withheld, and
+        // `retentionHeld` sums these into the release invoice's own `amount`
+        // (gross in both models: EU VAT already charged, UK VAT charged at
+        // release). Leaving it net would put a net figure into a gross field.
+        const retention = grossFromNet(retentionNet, projectVatRate);
+        const pctLabel = term.basis === 'percent' && term.percent ? ` (${term.percent}%)` : '';
+        const termLines = progressInvoiceLines({
+          workNet: netAmount,
+          retentionNet,
+          country: billingCountry,
+          labels: {
+            work: `${term.title}${pctLabel} — ${project.title}`,
+            lessRetention: appI18n.t('projectBilling.lessRetention', {
+              defaultValue: 'Less retention ({{percent}}%)',
+              percent: Number(project.retentionPercent ?? 0),
+            }),
+          },
+        });
 
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = dueDateOnTerms();
@@ -4029,6 +4070,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           retentionAmount: retention,
         };
         setInvoices((prev) => [newInvoice, ...prev]);
+        setLineItems((prev) => ({
+          ...prev,
+          [docNumber]: termLines.map((li, idx) => ({
+            id: `li-${docNumber}-${idx}`, description: li.description, quantity: li.quantity,
+            unitPrice: li.unitPrice, vatRate: projectVatRate,
+          })) as typeof lineItems[string],
+        }));
 
         // Mark the term invoiced optimistically, so the UI cannot offer the
         // same instalment twice while the write is in flight.
@@ -4071,7 +4119,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             is_retention_release: false,
           };
           try {
-            await withTimeout(createDocument(invPayload), 3000, 'addTermInvoice');
+            const row = await withTimeout(createDocument(invPayload), 3000, 'addTermInvoice');
+            await withTimeout(
+              upsertLineItems(
+                row.id,
+                termLines.map((li, idx) => ({
+                  description: li.description,
+                  quantity: li.quantity,
+                  unit_price: li.unitPrice,
+                  total_price: round2(li.unitPrice * li.quantity),
+                  position: idx,
+                  vat_rate: projectVatRate,
+                  vat_nature: lineVatNature({ vatRate: projectVatRate }),
+                })),
+              ),
+              3000,
+              'addTermInvoice.lineItems',
+            );
           } catch (err) {
             logWarn('AppState', `addTermInvoice persist failed, queueing: ${err}`);
             try {
@@ -4127,8 +4191,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const order = (project.changeOrders ?? []).find((c) => c.id === changeOrderId);
         if (!order) throw new Error(`Change order ${changeOrderId} not found on project ${projectId}`);
 
-        const { canInvoiceChangeOrder } = await import('../services/progressBillingService');
-        const gate = canInvoiceChangeOrder(order);
+        if (!project.customerId) {
+          throw new Error(appI18n.t('projectBilling.needsCustomer', 'Add the customer to this project before invoicing it.'));
+        }
+        const { canInvoiceChangeOrder, retentionDeductedOnInvoice, retentionOnAmount, progressInvoiceLines } =
+          await import('../services/progressBillingService');
+        const billingCountry = businessProfile?.country ?? getCurrentCountry();
+        const gate = canInvoiceChangeOrder(order, billingCountry);
         if (!gate.allowed) {
           // Includes the art. 7:755 warning check: billing meerwerk the
           // customer was never warned about is how a contractor ends up unable
@@ -4139,7 +4208,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // `ProjectChangeOrder.amount` is signed and, per its own doc comment,
         // "Excluding VAT, like every other amount here". `Invoice.amount` is
         // gross. See the note in addProjectTermInvoice above.
-        const amount = grossFromNet(Number(order.amount), getEffectiveVatRate(businessProfile));
+        const vatRate = getEffectiveVatRate(businessProfile);
+        const orderNet = Number(order.amount);
+        // UK: a variation is valued like the contract work, so the project's
+        // retention is held on it too, deducted on the invoice (UK walk,
+        // 2026-10-08, user's call). EU markets keep the change order whole, as
+        // before: their retention follows the contract sum.
+        const retentionNet = retentionDeductedOnInvoice(billingCountry) ? retentionOnAmount(project, orderNet) : 0;
+        const amount = grossFromNet(round2(orderNet - retentionNet), vatRate);
+        const retention = grossFromNet(retentionNet, vatRate);
+        const orderLines = progressInvoiceLines({
+          workNet: orderNet,
+          retentionNet,
+          country: billingCountry,
+          labels: {
+            work: `${order.title} — ${project.title}`,
+            lessRetention: appI18n.t('projectBilling.lessRetention', {
+              defaultValue: 'Less retention ({{percent}}%)',
+              percent: Number(project.retentionPercent ?? 0),
+            }),
+          },
+        });
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = dueDateOnTerms();
 
@@ -4159,8 +4248,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           createdAt: new Date().toISOString(),
           projectId,
           changeOrderId,
+          retentionAmount: retention,
         };
         setInvoices((prev) => [newInvoice, ...prev]);
+        setLineItems((prev) => ({
+          ...prev,
+          [docNumber]: orderLines.map((li, idx) => ({
+            id: `li-${docNumber}-${idx}`, description: li.description, quantity: li.quantity,
+            unitPrice: li.unitPrice, vatRate,
+          })) as typeof lineItems[string],
+        }));
 
         setProjects((prev) =>
           prev.map((p) =>
@@ -4194,11 +4291,27 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             due_date: dueDate.toISOString(),
             project_id: invProjectFk.value,
             change_order_id: changeOrderId,
-            retention_amount: 0,
+            retention_amount: retention,
             is_retention_release: false,
           };
           try {
-            await withTimeout(createDocument(invPayload), 3000, 'addChangeOrderInvoice');
+            const row = await withTimeout(createDocument(invPayload), 3000, 'addChangeOrderInvoice');
+            await withTimeout(
+              upsertLineItems(
+                row.id,
+                orderLines.map((li, idx) => ({
+                  description: li.description,
+                  quantity: li.quantity,
+                  unit_price: li.unitPrice,
+                  total_price: round2(li.unitPrice * li.quantity),
+                  position: idx,
+                  vat_rate: vatRate,
+                  vat_nature: lineVatNature({ vatRate }),
+                })),
+              ),
+              3000,
+              'addChangeOrderInvoice.lineItems',
+            );
           } catch (err) {
             logWarn('AppState', `addChangeOrderInvoice persist failed, queueing: ${err}`);
             try {
@@ -4258,6 +4371,29 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const held = retentionHeld(projectId, invoices);
         const gate = canReleaseRetention(project, held);
         if (!gate.allowed) throw new Error(require('../services/billingProblemText').billingProblemText(gate) || 'Retention cannot be released yet');
+        if (!project.customerId) {
+          throw new Error(appI18n.t('projectBilling.needsCustomer', 'Add the customer to this project before invoicing it.'));
+        }
+        const { retentionDeductedOnInvoice } = await import('../services/progressBillingService');
+        const billingCountry = businessProfile?.country ?? getCurrentCountry();
+        // UK: the retention was deducted on the instalments and its VAT never
+        // charged; the release IS its VAT invoice (VAT Regs 1995 reg. 89), so it
+        // carries a real line at the rate. `held` is the gross cash value, so
+        // the line is its net. EU markets: see the note on `amount` below.
+        const releaseVatRate = getEffectiveVatRate(businessProfile);
+        const releaseLines = retentionDeductedOnInvoice(billingCountry)
+          ? [{
+              description: `${i18nMod.default.t('projectBilling.retentionRelease', 'Retention release')} — ${project.title}`,
+              quantity: 1,
+              unitPrice: round2(held / (1 + releaseVatRate / 100)),
+            }]
+          : [];
+        // UK: the document must add up from its own line (EN 16931), so the
+        // total is re-grossed from the net — it can differ from `held` by a
+        // penny of rounding, which retentionHeld absorbs.
+        const releaseAmount = releaseLines.length
+          ? grossFromNet(releaseLines[0].unitPrice, releaseVatRate)
+          : held;
 
         const docNumber = await nextDocumentNumber('invoice');
         const dueDate = dueDateOnTerms();
@@ -4277,7 +4413,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // unit and must NOT be grossed again. The customer is paying the
           // balance of documents already issued — including the VAT that was
           // charged on them and withheld from payment — so no new VAT arises.
-          amount: held,
+          amount: releaseAmount,
           status: 'draft',
           dueInDays: 14,
           createdAt: new Date().toISOString(),
@@ -4288,6 +4424,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           isRetentionRelease: true,
         };
         setInvoices((prev) => [newInvoice, ...prev]);
+        if (releaseLines.length) {
+          setLineItems((prev) => ({
+            ...prev,
+            [docNumber]: releaseLines.map((li, idx) => ({
+              id: `li-${docNumber}-${idx}`, description: li.description, quantity: li.quantity,
+              unitPrice: li.unitPrice, vatRate: releaseVatRate,
+            })) as typeof lineItems[string],
+          }));
+        }
 
         if (isSupabaseConfigured) {
           // A temp `project_id`/`customer_id` used to be nulled outright, which
@@ -4302,14 +4447,32 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             document_number: docNumber,
             customer_id: invCustomerFk.value,
             job_id: null,
-            total_amount: held,
+            total_amount: releaseAmount,
             due_date: dueDate.toISOString(),
             project_id: invProjectFk.value,
             retention_amount: 0,
             is_retention_release: true,
           };
           try {
-            await withTimeout(createDocument(invPayload), 3000, 'addRetentionReleaseInvoice');
+            const row = await withTimeout(createDocument(invPayload), 3000, 'addRetentionReleaseInvoice');
+            if (releaseLines.length) {
+              await withTimeout(
+                upsertLineItems(
+                  row.id,
+                  releaseLines.map((li, idx) => ({
+                    description: li.description,
+                    quantity: li.quantity,
+                    unit_price: li.unitPrice,
+                    total_price: li.unitPrice,
+                    position: idx,
+                    vat_rate: releaseVatRate,
+                    vat_nature: lineVatNature({ vatRate: releaseVatRate }),
+                  })),
+                ),
+                3000,
+                'addRetentionReleaseInvoice.lineItems',
+              );
+            }
           } catch (err) {
             logWarn('AppState', `addRetentionReleaseInvoice persist failed, queueing: ${err}`);
             try {
@@ -4324,12 +4487,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           m.appendAudit({
             type: 'invoice_created',
             ref: docNumber,
-            payload: { amount: held, customer: project.customerId ?? null, projectId, retentionRelease: true },
+            payload: { amount: releaseAmount, customer: project.customerId ?? null, projectId, retentionRelease: true },
           }),
         ).catch(() => {});
         emitInvoiceSent(getCurrentUserId(), docNumber, {
           customerId: project.customerId ?? '',
-          amount: held,
+          amount: releaseAmount,
           dueDate: dueDate.toISOString(),
         }).catch(() => {});
         trackEvent('invoice_created', { invoiceId: docNumber, projectId, retentionRelease: true }).catch(() => {});

@@ -227,6 +227,9 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // German contractor at 21 %.
   const trade = bp?.trade ?? user?.trade ?? 'general';
   const country = bp?.country ?? user?.country ?? 'NL';
+  // The built-in templates are Dutch content; an unknown market is not
+  // presumed Dutch (CLAUDE.md: a country-dependent nudge skips when unknown).
+  const templateMarket = bp?.country ?? user?.country;
   // R66r59: NL contractors qualify for 9% reduced VAT on renovation/
   // maintenance labor on residential homes >2 years old. Toggle is hidden
   // for non-NL contractors (other EU6 countries don't have a relevant
@@ -303,7 +306,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
   // fetched yet, [] = fetched and below threshold.
   const toneExamplesRef = useRef<string[] | null>(null);
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
-  const { templates, save: saveTemplate, update: updateTemplate, use: useTemplate } = useQuoteTemplates();
+  const { templates, save: saveTemplate, update: updateTemplate, use: useTemplate } = useQuoteTemplates(undefined, templateMarket);
   const [winPrediction, setWinPrediction] = useState<QuoteWinPrediction | null>(null);
   const [handoffBanner, setHandoffBanner] = useState<string | null>(null);
   const { benchmarks: cohort } = useCohortBenchmarks(trade, country);
@@ -1471,7 +1474,7 @@ export function TieredQuoteBuilder({ customer, initialTemplateId, onSend, onClos
                       <Text style={s.serviceName}>{sv.item.name}</Text>
                       {/* Editable unit price — tap to adjust for this quote */}
                       <View style={s.priceEditRow}>
-                        <Text style={s.servicePrice}>€</Text>
+                        <Text style={s.servicePrice}>{currencySymbol(country)}</Text>
                         {/* DecimalInput, not String(price) re-parsed per key:
                             "85," snapped back to "85", so no price with cents
                             could be typed here. */}

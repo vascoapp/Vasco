@@ -16,16 +16,22 @@ import { stripComments } from '../../utils/stripComments';
 describe('amountPayableNow', () => {
   it('subtracts the retention withheld from this invoice', () => {
     // €28.560 instalment with €1.428 held: interest base is €27.132.
-    expect(amountPayableNow({ amount: 28560, retentionAmount: 1428 })).toBe(27132);
+    expect(amountPayableNow({ amount: 28560, retentionAmount: 1428 }, 'NL')).toBe(27132);
   });
 
   it('is the whole amount when nothing is withheld', () => {
-    expect(amountPayableNow({ amount: 5200 })).toBe(5200);
-    expect(amountPayableNow({ amount: 5200, retentionAmount: 0 })).toBe(5200);
+    expect(amountPayableNow({ amount: 5200 }, 'NL')).toBe(5200);
+    expect(amountPayableNow({ amount: 5200, retentionAmount: 0 }, 'NL')).toBe(5200);
+  });
+
+  it('UK: the retention is already deducted on the invoice — never subtracted twice (UK walk, 2026-10-08)', () => {
+    // £5,550.15 instalment, 5 % = £277.51 deducted before VAT: the document
+    // total is £6,327.17 and that is what the customer pays now.
+    expect(amountPayableNow({ amount: 6327.17, retentionAmount: 333.01 }, 'UK')).toBe(6327.17);
   });
 
   it('never goes negative', () => {
-    expect(amountPayableNow({ amount: 100, retentionAmount: 250 })).toBe(0);
+    expect(amountPayableNow({ amount: 100, retentionAmount: 250 }, 'NL')).toBe(0);
   });
 });
 

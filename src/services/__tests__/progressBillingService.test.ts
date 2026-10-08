@@ -390,11 +390,13 @@ describe('approved meerwerk does NOT re-base the billing terms', () => {
 // the client in time that it carried a price increase.
 describe('billing a change order', () => {
   it('refuses meerwerk with no record of the price warning', () => {
-    const gate = canInvoiceChangeOrder(order({ warnedAt: undefined }));
+    const gate = canInvoiceChangeOrder(order({ warnedAt: undefined }), 'NL');
     expect(gate.allowed).toBe(false);
     // The caller needs to know it is the warning that is missing, so it can
     // offer to send one rather than fail opaquely.
     expect(gate.needsWarning).toBe(true);
+    expect(canInvoiceChangeOrder(order({ warnedAt: undefined }), 'UK').allowed).toBe(true);
+    expect(canInvoiceChangeOrder(order({ warnedAt: undefined }), undefined).allowed).toBe(true);
   });
 
   it('allows meerwerk that was warned about', () => {
@@ -424,7 +426,9 @@ describe('billing a change order', () => {
 describe('change order validation', () => {
   it('flags an approved order with no warning while the work is still fresh', () => {
     const p = project({ changeOrders: [order({ warnedAt: undefined })] });
-    expect(validateChangeOrders(p).map((e) => e.code)).toContain('approved_without_warning');
+    expect(validateChangeOrders(p, 'NL').map((e) => e.code)).toContain('approved_without_warning');
+    // The UK has no extra-work statute (extraWorkLaw.ts) — no banner (UK walk, 2026-10-08).
+    expect(validateChangeOrders(p, 'UK').map((e) => e.code)).not.toContain('approved_without_warning');
   });
 
   it('flags reductions that exceed the contract', () => {

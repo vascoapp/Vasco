@@ -172,6 +172,7 @@ export async function buildRecordsArchive(
         customer: findDocumentCustomer(input.customers, invoice) ?? undefined,
         fallbackVatRatePercent: Math.round(effectiveRate * 100),
         fallbackDescription: t('invoices.services', 'Services rendered'),
+        country: input.country,
       });
       const extras = invoicePdfExtras({ invoice, customers: input.customers, jobs: input.jobs, businessProfile: input.businessProfile });
       const uri = await withTimeout(renderInvoicePdfFile(

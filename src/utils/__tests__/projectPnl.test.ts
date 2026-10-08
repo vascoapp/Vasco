@@ -15,9 +15,14 @@ describe('isPnlReportable', () => {
     expect(isPnlReportable({ revenue: 0 })).toBe(false);
   });
 
-  it('is true once there is revenue to measure against', () => {
-    expect(isPnlReportable({ revenue: 0.01 })).toBe(true);
-    expect(isPnlReportable({ revenue: 12500 })).toBe(true);
+  it('is true once there is revenue AND a recorded cost to measure against', () => {
+    expect(isPnlReportable({ revenue: 0.01, materialCosts: 1 })).toBe(true);
+    expect(isPnlReportable({ revenue: 12500, laborCosts: 4000 })).toBe(true);
+  });
+
+  it('is false with revenue but no cost recorded — "Margin 100 %" is missing data (UK walk, 2026-10-08)', () => {
+    expect(isPnlReportable({ revenue: 6660.18 })).toBe(false);
+    expect(isPnlReportable({ revenue: 6660.18, materialCosts: 0, laborCosts: 0 })).toBe(false);
   });
 
   it('is false for a credited-away or negative revenue', () => {

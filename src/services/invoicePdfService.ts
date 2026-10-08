@@ -7,6 +7,7 @@
  * strong typographic hierarchy, Hermes Orange accent.
  */
 
+import { round2 } from '../utils/round2';
 import { A4_PAGE } from '../utils/pdfPage';
 import { formatQuantity } from '../i18n/formatting';
 import * as Print from 'expo-print';
@@ -116,6 +117,8 @@ interface DocLabels {
   poweredBy: string;
   status: Record<string, string>;
   bankDetails: string;
+  retentionWithheld: string;
+  payableNow: string;
 }
 
 const LABELS: Record<string, DocLabels> = {
@@ -128,6 +131,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Reference', payOnline: 'Pay Online', poweredBy: 'Powered by Vasco',
     status: { draft: 'DRAFT', sent: 'SENT', paid: 'PAID', overdue: 'OVERDUE' },
     bankDetails: 'Bank Details',
+    retentionWithheld: 'Retention withheld until handover', payableNow: 'Payable now',
   },
   nl: {
     title: 'Factuur', invoiceNumber: 'Factuurnr.', from: 'Van', to: 'Aan',
@@ -138,6 +142,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Referentie', payOnline: 'Betaal online', poweredBy: 'Mogelijk gemaakt door Vasco',
     status: { draft: 'CONCEPT', sent: 'VERZONDEN', paid: 'BETAALD', overdue: 'VERLOPEN' },
     bankDetails: 'Bankgegevens',
+    retentionWithheld: 'Retentie ingehouden tot oplevering', payableNow: 'Nu te betalen',
   },
   de: {
     title: 'Rechnung', invoiceNumber: 'Rechnungsnr.', from: 'Von', to: 'An',
@@ -148,6 +153,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Referenz', payOnline: 'Online bezahlen', poweredBy: 'Betrieben von Vasco',
     status: { draft: 'ENTWURF', sent: 'GESENDET', paid: 'BEZAHLT', overdue: 'ÜBERFÄLLIG' },
     bankDetails: 'Bankverbindung',
+    retentionWithheld: 'Sicherheitseinbehalt bis zur Abnahme', payableNow: 'Jetzt zu zahlen',
   },
   fr: {
     title: 'Facture', invoiceNumber: 'Facture n°', from: 'De', to: 'À',
@@ -158,6 +164,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Référence', payOnline: 'Payer en ligne', poweredBy: 'Propulsé par Vasco',
     status: { draft: 'BROUILLON', sent: 'ENVOYÉE', paid: 'PAYÉE', overdue: 'EN RETARD' },
     bankDetails: 'Coordonnées bancaires',
+    retentionWithheld: 'Retenue de garantie jusqu’à la réception', payableNow: 'À payer maintenant',
   },
   es: {
     title: 'Factura', invoiceNumber: 'Factura n°', from: 'De', to: 'Para',
@@ -168,6 +175,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Referencia', payOnline: 'Pagar en línea', poweredBy: 'Desarrollado por Vasco',
     status: { draft: 'BORRADOR', sent: 'ENVIADA', paid: 'PAGADA', overdue: 'VENCIDA' },
     bankDetails: 'Datos bancarios',
+    retentionWithheld: 'Retención de garantía hasta la recepción', payableNow: 'A pagar ahora',
   },
   it: {
     title: 'Fattura', invoiceNumber: 'Fattura n°', from: 'Da', to: 'A',
@@ -178,6 +186,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Riferimento', payOnline: 'Paga Online', poweredBy: 'Offerto da Vasco',
     status: { draft: 'BOZZA', sent: 'INVIATA', paid: 'PAGATA', overdue: 'SCADUTA' },
     bankDetails: 'Coordinate bancarie',
+    retentionWithheld: 'Ritenuta a garanzia fino al collaudo', payableNow: 'Da pagare ora',
   },
 };
 
@@ -650,6 +659,8 @@ function buildInvoiceHtml(
     <div class="summary-row"><span>${L.subtotal}</span><span>${curr}${fmt(invoice.subtotal, locale)}</span></div>
     ${vatRows}
     <div class="summary-total"><span>${L.total}</span><span>${curr}${fmt(invoice.total, locale)}</span></div>
+    ${invoice.retentionWithheld ? `<div class="summary-row"><span>${L.retentionWithheld}</span><span>−${curr}${fmt(invoice.retentionWithheld, locale)}</span></div>
+    <div class="summary-total"><span>${L.payableNow}</span><span>${curr}${fmt(round2(invoice.total - invoice.retentionWithheld), locale)}</span></div>` : ''}
   </div>
 </div>
 
@@ -662,7 +673,7 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
 <div class="payment-box">
   <div class="payment-title">${L.paymentInfo}</div>
   <div class="payment-detail">${L.paymentInstruction}</div>
-  <div class="payment-detail"><strong>${L.total}: ${curr}${fmt(invoice.total, locale)}</strong></div>
+  <div class="payment-detail"><strong>${invoice.retentionWithheld ? L.payableNow : L.total}: ${curr}${fmt(invoice.retentionWithheld ? round2(invoice.total - invoice.retentionWithheld) : invoice.total, locale)}</strong></div>
   <div class="payment-detail">${L.paymentReference}: <strong>${invoice.invoiceNumber}</strong></div>
   ${country === 'US'
     ? (routingNumber || bankAccountNumber

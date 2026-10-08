@@ -1188,7 +1188,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     // contractor can strip the line"); now it needs evidence, and a card whose
     // whole point is the fee is not offered when there is no fee to claim.
     const feeBreakdown = computeLateFee({
-      invoiceAmount: amountPayableNow({ amount: inv.amount || 0, retentionAmount: (inv as { retentionAmount?: number }).retentionAmount }),
+      invoiceAmount: amountPayableNow({ amount: inv.amount || 0, retentionAmount: (inv as { retentionAmount?: number }).retentionAmount }, context.country),
       daysOverdue,
       country: feeCountry!,
       customerType: lateFeeCustomerType(findDocumentCustomer(feeCustomers, inv), feeCountry!),

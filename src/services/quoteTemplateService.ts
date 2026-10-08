@@ -666,6 +666,9 @@ const BUILTIN_TEMPLATES: QuoteTemplate[] = [
   },
 ];
 
+/** The market the built-in templates were priced and VAT-rated for. */
+export const BUILTIN_TEMPLATES_MARKET = 'NL';
+
 // =============================================================================
 // SERVICE
 // =============================================================================
@@ -764,8 +767,18 @@ class QuoteTemplateService {
 
   private notify(): void { this.listeners.forEach(l => l()); }
 
-  getTemplates(category?: TemplateCategory): QuoteTemplate[] {
-    const list = category ? this.templates.filter(t => t.category === category) : this.templates;
+  /**
+   * The built-ins are DUTCH content: NL prices and NL VAT rates (9 % labour on
+   * maintenance, 21 % materials). Shown to every market, a UK quote built from
+   * "Annual boiler maintenance" carried 9 % + 21 % VAT and euro-derived prices
+   * (UK walk, 2026-10-08). They are offered to a Dutch contractor only; other
+   * markets — and an unknown market — see their own templates. A contractor's
+   * own templates are always theirs.
+   */
+  getTemplates(category?: TemplateCategory, country?: string): QuoteTemplate[] {
+    const builtinIds = new Set(BUILTIN_TEMPLATES.map((b) => b.id));
+    const forMarket = this.templates.filter((t) => !builtinIds.has(t.id) || country === BUILTIN_TEMPLATES_MARKET);
+    const list = category ? forMarket.filter(t => t.category === category) : forMarket;
     return list.sort((a, b) => b.usageCount - a.usageCount);
   }
 
@@ -950,19 +963,19 @@ export function localizeCategory(catId: TemplateCategory, fallbackLabel: string,
 // HOOKS
 // =============================================================================
 
-export function useQuoteTemplates(category?: TemplateCategory) {
+export function useQuoteTemplates(category?: TemplateCategory, country?: string) {
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    const sync = () => { if (!cancelled) setTemplates(quoteTemplateService.getTemplates(category)); };
+    const sync = () => { if (!cancelled) setTemplates(quoteTemplateService.getTemplates(category, country)); };
     const unsub = quoteTemplateService.subscribe(sync);
     // Hydrate before the first paint so saved templates are not missing for a
     // frame; notify() inside hydrate re-runs sync.
     quoteTemplateService.hydrate().finally(() => { sync(); if (!cancelled) setLoading(false); });
     return () => { cancelled = true; unsub(); };
-  }, [category]);
+  }, [category, country]);
 
   const save = useCallback(
     (name: string, cat: TemplateCategory, items: QuoteTemplateItem[], opts?: { description?: string; paymentTerms?: string; estimatedDuration?: string }) =>

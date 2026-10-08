@@ -1,4 +1,5 @@
 import type { CustomerDecisionTracker, CustomerDecisionItem, DecisionOption } from '../types/decisions';
+import { extraWorkStatute } from '../domain/extraWorkLaw';
 import { round2 } from '../domain/business';
 
 /**
@@ -101,12 +102,16 @@ export function unbilledUpgrades(tracker: CustomerDecisionTracker): UpgradeEntry
  */
 export function billableUpgrades(
   tracker: CustomerDecisionTracker,
+  country?: string | null,
 ): { billable: UpgradeEntry[]; blocked: BlockedUpgrade[]; total: number } {
+  // Only where a market has an extra-work statute (extraWorkLaw.ts) — the UK
+  // has none (UK walk, 2026-10-08); an unknown market is not gated.
+  const gated = extraWorkStatute(country) !== null;
   const billable: UpgradeEntry[] = [];
   const blocked: BlockedUpgrade[] = [];
 
   for (const entry of unbilledUpgrades(tracker)) {
-    if (entry.amount > 0 && !hasPriceConsent(tracker, entry.itemId)) {
+    if (gated && entry.amount > 0 && !hasPriceConsent(tracker, entry.itemId)) {
       blocked.push({ entry, reason: 'needs_warning' });
       continue;
     }

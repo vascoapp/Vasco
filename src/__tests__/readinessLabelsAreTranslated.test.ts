@@ -16,7 +16,7 @@ const ROOT = path.resolve(__dirname, '../..');
 const countries = ['NL', 'DE', 'FR', 'ES', 'IT', 'UK', undefined] as const;
 
 it('every required-field key has a label in all six languages', () => {
-  const keys = new Set(countries.flatMap((c) => getRequiredFields(c as any).map((f) => f.key)));
+  const keys = new Set(countries.flatMap((c) => getRequiredFields(c as any, 'limited').map((f) => f.key)));
   expect(keys.size).toBeGreaterThan(8);
   for (const lang of ['en', 'nl', 'de', 'fr', 'es', 'it']) {
     const cat = JSON.parse(fs.readFileSync(path.join(ROOT, `src/i18n/locales/${lang}.json`), 'utf8'));

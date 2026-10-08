@@ -49,7 +49,7 @@ import { useCohortDso } from '../../src/services/paymentTimingMoatService';
 import { predictPaymentTiming, PREDICTION_MIN_DISPLAY_CONFIDENCE } from '../../src/intelligence/mlModels';
 import { useTimeOfDayPaymentHint, dayPart as paymentDayPart, classifyPaymentNow } from '../../src/services/timeOfDayPaymentService';
 import { findDocumentCustomer, documentCustomerName } from '../../src/domain/customers';
-import { amountPayableNow } from '../../src/domain/documents';
+import { retentionDeductedOnInvoice, amountPayableNow } from '../../src/domain/documents';
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { LineVatMenu, lineVatLabel } from '../../src/components/contractor/LineVatMenu';
 import type { VatNature } from '../../src/domain/vatNature';
@@ -158,6 +158,11 @@ export default function InvoiceDetailScreen() {
   // already been declared: output VAT over-declared and the customer reclaims
   // it twice (#354).
   const effectiveRate = invoice?.isRetentionRelease ? 0 : profileRate;
+  // Withheld from the PAYMENT of this invoice (EU instalments). A UK invoice
+  // deducts its retention as a line, so nothing is withheld on top of it.
+  const retentionWithheld = invoice && !retentionDeductedOnInvoice(country)
+    ? Number(invoice.retentionAmount ?? 0)
+    : 0;
   const paymentMethods = getPaymentDisplayForCountry(country);
   // R214: cohort-backed payment timing for the invoice detail caption.
   // Hook unconditionally; consumer below is null-safe.
@@ -351,6 +356,7 @@ export default function InvoiceDetailScreen() {
     customer: invoiceCustomer ?? undefined,
     fallbackVatRatePercent: Math.round(effectiveRate * 100),
     fallbackDescription: t('invoices.services', 'Services rendered'),
+    country,
   });
 
   // ── Service date (Leistungsdatum) ────────────────────────────────────────
@@ -483,7 +489,7 @@ export default function InvoiceDetailScreen() {
       if (!(await ensureCanUsePaymentLink())) return;
       // Retention withheld from this instalment is not payable yet (the same
       // basis `computeLateFee` uses two screens over).
-      await createPaymentLink(invoice.id, amountPayableNow(invoice));
+      await createPaymentLink(invoice.id, amountPayableNow(invoice, country));
       hapticSuccess();
     } catch (err) {
       // R66 round 8: was silent (just a vibration). Now surfaces the reason
@@ -578,6 +584,16 @@ export default function InvoiceDetailScreen() {
       );
       return;
     }
+    // An invoice names its buyer (a VAT invoice needs the customer's name and
+    // address in every market). With none, this offered to share a PDF whose
+    // "Bill to" was empty (UK walk, 2026-10-08).
+    if (!invoiceCustomerName.trim()) {
+      Alert.alert(
+        t('invoices.noCustomerTitle', 'No customer on this invoice'),
+        t('invoices.noCustomerBody', 'An invoice must name the customer. Add the customer to the project or job it came from first.'),
+      );
+      return;
+    }
 
     // `Invoice` has no `customerEmail` field — not in src/domain/documents.ts,
     // and nothing anywhere writes one — so this read was ALWAYS undefined and
@@ -662,7 +678,7 @@ export default function InvoiceDetailScreen() {
           ? computeLateFee({
               // Not `invoice.amount`: retention withheld from this instalment
               // is not due yet, so no interest accrues on it.
-              invoiceAmount: amountPayableNow(invoice),
+              invoiceAmount: amountPayableNow(invoice, country),
               daysOverdue,
               country: feeCountry,
               customerType: lateFeeCustomerType(invoiceCustomer, feeCountry),
@@ -682,7 +698,7 @@ export default function InvoiceDetailScreen() {
           // The same basis as `disclosure` below, which already uses
           // `amountPayableNow`: the email asked for the full total while the
           // interest beside it was computed on what is actually due (#354).
-          amount: formatCurrency(amountPayableNow(invoice), country),
+          amount: formatCurrency(amountPayableNow(invoice, country), country),
           days: daysOverdue,
           link: paymentUrl ?? '',
           business: (businessProfile as any)?.businessName ?? 'Vasco',
@@ -1355,7 +1371,7 @@ export default function InvoiceDetailScreen() {
                 ? t('invoices.heroLabelOverdue', 'Overdue').toUpperCase()
                 : t('invoices.heroLabelOutstanding', 'Outstanding').toUpperCase()}
           </Text>
-          <Text style={styles.heroAmount}>{formatCurrency(total, country)}</Text>
+          <Text style={styles.heroAmount}>{formatCurrency(retentionWithheld > 0 && invoice.status !== 'paid' ? amountPayableNow(invoice, country) : total, country)}</Text>
           <Text style={styles.heroDue}>
             {invoice.status === 'paid'
               ? t('invoices.paymentReceived', 'Payment received')
@@ -1634,6 +1650,23 @@ export default function InvoiceDetailScreen() {
             <Text style={styles.totalFinalLabel}>{t('invoices.totalAmount', 'Total')}</Text>
             <Text style={styles.totalFinalValue}>{formatCurrency(total, country)}</Text>
           </View>
+          {/* EU instalment: the invoice is the full valuation and the customer
+              holds the retention back — say so, and what is due now. The
+              screen asked for the full amount with no mention of it (UK
+              walk, 2026-10-08). A UK invoice already carries the deduction
+              as a line. */}
+          {retentionWithheld > 0 && (
+            <>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>{t('invoices.retentionWithheld', 'Retention withheld until handover')}</Text>
+                <Text style={styles.totalValue}>−{formatCurrency(retentionWithheld, country)}</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalFinalLabel}>{t('invoices.payableNow', 'Payable now')}</Text>
+                <Text style={styles.totalFinalValue}>{formatCurrency(amountPayableNow(invoice, country), country)}</Text>
+              </View>
+            </>
+          )}
           {lastExport ? (
             <View style={styles.statusNote}>
               <Ionicons name="checkmark-circle" size={14} color={SemanticColors.feedbackSuccess} />
@@ -1937,7 +1970,7 @@ export default function InvoiceDetailScreen() {
                 // this instalment is not due, so it accrues no interest. This
                 // site kept `invoice.amount`, so the overdue timeline on screen
                 // claimed more interest than the reminder the customer reads.
-                invoiceAmount: amountPayableNow(invoice),
+                invoiceAmount: amountPayableNow(invoice, country),
                 // The statutory interest is charged PER DAY, so a frozen
                 // count is a wrong amount of money, not a wrong label.
                 daysOverdue: Math.abs(Math.min(0, dueIn ?? 0)),
