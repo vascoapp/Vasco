@@ -605,7 +605,8 @@ export default function ProjectBillingScreen() {
                       }
                     >
                       <Text style={styles.linkBtnText}>
-                        {t('projectBilling.markApproved', 'Customer approved')}
+                        {/* An ACTION, worded as one: "Customer approved" under "Draft" read as a status (UK aannemer walk, 2026-10-08). */}
+                        {t('projectBilling.recordApproval', 'Record customer’s approval')}
                       </Text>
                     </Pressable>
                   )}

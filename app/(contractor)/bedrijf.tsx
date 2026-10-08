@@ -253,7 +253,8 @@ export default function BedrijfScreen() {
         <View style={s.topBar}>
           <View style={{ flex: 1 }}>
             <DKLabel style={s.title}>{t('tabs.customers', 'Klanten')}</DKLabel>
-            <Text style={s.subtitle}>{customers.length} {t('dk.tabs.contacts', 'Contacts').toUpperCase()} · {formatAmount(totalRevenue)}</Text>
+            {/* "1 CONTACTS" (UK walk, 2026-10-08) — a counted noun needs its _one. */}
+            <Text style={s.subtitle}>{t('dk.contactsCount', { count: customers.length, defaultValue: '{{count}} contacts' }).toUpperCase()} · {formatAmount(totalRevenue)}</Text>
           </View>
           <Pressable
             style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.9 }]}
@@ -312,7 +313,27 @@ export default function BedrijfScreen() {
         </View>
 
         {/* ─── TAB CONTENT ─── */}
-        {tab === 'overview' && (
+        {/* Day one: three tiles reading 0 and nothing to do is not a screen
+            (CLAUDE.md: a card whose number is zero is not a card — UK walk,
+            2026-10-08). The first step is a customer. */}
+        {tab === 'overview' && customers.length === 0 && (
+          <View style={s.emptyPanel}>
+            <View style={s.emptyIcon}><Ionicons name="people-outline" size={28} color={DK.colors.accent} /></View>
+            <DKLabel style={s.emptyTitle}>{t('dk.empty.noCustomers', 'No customers yet')}</DKLabel>
+            <Text style={s.emptyDesc}>
+              {t('dk.empty.noCustomersDesc', 'Customers fill in automatically when you add a quote — or add one manually now to track jobs and revenue per customer.')}
+            </Text>
+            <Pressable
+              style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]}
+              onPress={() => setShowAddModal(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t('customers.addNew', 'Add new customer')}
+            >
+              <DKLabel style={s.emptyCtaText}>{t('dk.actions.newCustomer', 'New customer')}</DKLabel>
+            </Pressable>
+          </View>
+        )}
+        {tab === 'overview' && customers.length > 0 && (
           <>
             {/* 3-KPI stadium */}
             <View style={s.kpiRow}>

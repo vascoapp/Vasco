@@ -62,7 +62,10 @@ export default function VandaagDK() {
   const { invoices, quotes, jobs, customers, businessProfile, updateQuote, projects } = useAppState();
   const { user } = useAuth();
   const isAannemer = !!user?.isAannemer;
-  const activeProjectCount = projects?.filter((p) => p.status === 'active').length ?? 0;
+  // OPEN projects, not only 'active': a new project starts in 'planning', and
+  // Today kept saying "Start your first multi-trade project" beside one (UK
+  // aannemer walk, 2026-10-08) — and that card is the way into Projects.
+  const activeProjectCount = projects?.filter((p) => p.status !== 'completed' && p.status !== 'cancelled').length ?? 0;
   const today = todayKey();
 
   const daySchedule = useDaySchedule(today);
@@ -302,7 +305,7 @@ export default function VandaagDK() {
               <>
                 <Text style={styles.heroTitle}>
                   {isAannemer && activeProjectCount > 0
-                    ? t('dk.hero.guideAannemerProjects', '{{count}} projects running today', { count: activeProjectCount })
+                    ? t('dk.hero.guideAannemerOpenProjects', { count: activeProjectCount, defaultValue: '{{count}} open projects' })
                     : todayJobs.length > 0
                       ? t('dk.hero.guideToday', "Today's focus: {{job}}", { job: (todayJobs[0] as any).title || (todayJobs[0] as any).projectName || t('dk.empty.firstJob', 'first job') })
                       : activeQuotes > 0

@@ -26,7 +26,7 @@ const PAYWALL_KEYS = [
   'onboarding.planFree', 'onboarding.planPro', 'onboarding.planContractor',
   'onboarding.planFreeDesc', 'onboarding.planProDesc', 'onboarding.planContractorDesc',
   'onboarding.featAannemerProjects', 'onboarding.featAannemerSubs', 'onboarding.featAannemerQuote',
-  'common.automatedFollowUps', 'common.purchasingAgent', 'common.eInvoicing', 'common.teamFeatures',
+  'common.automatedFollowUps', 'common.purchasingAgent', 'common.eInvoicing', 'common.eInvoicingFormats', 'common.teamFeatures',
 ];
 
 const LOCALES = ['en', 'nl', 'de', 'fr', 'es', 'it'];

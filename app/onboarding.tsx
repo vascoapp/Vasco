@@ -111,6 +111,14 @@ type RegFieldValidator = (value: string) => boolean;
 // inputs stop showing the placeholder "..." which testers couldn't parse.
 type RegFieldDef = { key: string; i18nKey: string; validate?: RegFieldValidator; errorKey?: string; placeholder?: string };
 
+/** E-invoice formats Vasco exports, per market (plan copy; proper nouns). */
+const EINVOICE_FORMATS: Record<string, string> = {
+  DE: 'XRechnung, ZUGFeRD',
+  FR: 'Factur-X',
+  IT: 'FatturaPA',
+  ES: 'Facturae',
+};
+
 const REG_FIELDS: Record<Country, RegFieldDef[]> = {
   NL: [
     { key: 'kvk', i18nKey: 'onboarding.fields.kvk', validate: (v) => isValidKvKNumber(v.trim()), errorKey: 'profile.kvkFormatInvalid', placeholder: '12345678' },
@@ -1158,9 +1166,10 @@ export default function OnboardingScreen() {
             </View>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
-                {/* R117: country-aware distance unit. US contractors think
-                    in miles; everyone else in km. */}
-                {t('onboarding.radius')}: {radius} {country === 'US' ? t('common.miles', 'mi') : t('common.km', 'km')}
+                {/* R117: country-aware distance unit. US and UK contractors
+                    think in miles (UK road distances are miles — UK walk,
+                    2026-10-08); everyone else in km. */}
+                {t('onboarding.radius')}: {radius} {(country === 'US' || country === 'UK') ? t('common.miles', 'mi') : t('common.km', 'km')}
               </Text>
               <View style={styles.radiusRow}>
                 {[10, 25, 50, 75, 100].map((r) => (
@@ -1173,7 +1182,7 @@ export default function OnboardingScreen() {
                     <Text
                       style={[styles.radiusChipText, radius === r && styles.radiusChipTextSelected]}
                     >
-                      {r} {country === 'US' ? t('common.miles', 'mi') : t('common.km', 'km')}
+                      {r} {(country === 'US' || country === 'UK') ? t('common.miles', 'mi') : t('common.km', 'km')}
                     </Text>
                   </Pressable>
                 ))}
@@ -1281,7 +1290,11 @@ export default function OnboardingScreen() {
               // plan must not be sold on them. These automations run today.
               { text: t('common.automatedFollowUps', 'Automated reminders & follow-ups'), highlight: true },
               { text: t('common.purchasingAgent', 'Purchasing agent'), highlight: true },
-              { text: t('common.eInvoicing', 'E-invoicing'), highlight: true },
+              // Only where Vasco exports one: a UK contractor was sold
+              // "E-invoicing (XRechnung, Peppol)" (UK walk, 2026-10-08) — the
+              // UK has no export (and no mandate before 2029). The formats are
+              // proper nouns: the market's own, never another's.
+              ...(EINVOICE_FORMATS[country ?? ''] ? [{ text: t('common.eInvoicingFormats', { defaultValue: 'E-invoicing ({{formats}})', formats: EINVOICE_FORMATS[country ?? ''] }), highlight: true }] : []),
             ],
           },
           {
@@ -1403,7 +1416,7 @@ export default function OnboardingScreen() {
           { label: t('onboarding.businessType', 'Business type'), value: businessType ? t(`onboarding.businessTypes.${businessType}`) : '-' },
           { label: t('onboarding.teamSize', 'Team size'), value: teamSize ? t(`onboarding.teamSizes.${teamSize}`) : '-' },
           // R117: country-aware unit + currency in the review summary.
-          { label: t('onboarding.serviceArea', 'Service area'), value: postcode ? `${postcode} (${radius} ${country === 'US' ? t('common.miles', 'mi') : t('common.km', 'km')})` : '-' },
+          { label: t('onboarding.serviceArea', 'Service area'), value: postcode ? `${postcode} (${radius} ${(country === 'US' || country === 'UK') ? t('common.miles', 'mi') : t('common.km', 'km')})` : '-' },
           { label: t('onboarding.certifications', 'Certifications'), value: selectedCerts.length > 0 ? selectedCerts.join(', ') : '-' },
           { label: t('onboarding.language', 'Language'), value: langLabel ? `${langLabel.flag} ${langLabel.label}` : '-' },
           // The tier name has to be LOCALIZED here. `TIERS[].name` is the

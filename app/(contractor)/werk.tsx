@@ -369,7 +369,10 @@ export default function WerkScreen() {
   </Modal>
   );
 
-  if (jobs.length === 0) {
+  // An aannemer with open projects but no loose jobs still needs the tabs —
+  // this full-screen "No jobs yet" hid the Projects tab, the aannemer's main
+  // list (UK aannemer walk, 2026-10-08).
+  if (jobs.length === 0 && !(user?.isAannemer && activeProjects.length > 0)) {
     return (
       <View style={styles.root}>
         <SafeAreaView edges={['top']} style={{ backgroundColor: DK.colors.bg }}>

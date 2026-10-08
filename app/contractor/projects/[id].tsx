@@ -395,9 +395,13 @@ export default function ProjectDetailScreen() {
                       // Still an Alert when there is nothing to pick: that is a
                       // message, not a choice.
                       if (unassignedJobs.length === 0) {
-                        Alert.alert(t('project.noJobs'), project?.customerId
-                          ? t('project.noJobsForCustomer', 'There are no open jobs for this customer. Create the job for this customer first.')
-                          : t('project.allJobsAssigned'));
+                        // "All jobs are already assigned" was said to an
+                        // account with NO jobs (UK aannemer walk, 2026-10-08).
+                        Alert.alert(t('project.noJobs'), jobs.length === 0
+                          ? t('project.noJobsYetCreate', 'You have no jobs yet. Create one under Jobs, then add it to this project.')
+                          : project?.customerId
+                            ? t('project.noJobsForCustomer', 'There are no open jobs for this customer. Create the job for this customer first.')
+                            : t('project.allJobsAssigned'));
                         return;
                       }
                       open();
@@ -416,7 +420,9 @@ export default function ProjectDetailScreen() {
                 <Pressable
                   key={job.id}
                   style={styles.jobCard}
-                  onPress={() => router.push(`/quotes/${job.id}` as any)}
+                  // A JOB opens the job screen — this pushed /quotes/<jobId>,
+                  // the quote screen with a job's id (UK aannemer walk W185).
+                  onPress={() => router.push(`/contractor/job/${job.id}` as any)}
                 >
                   <View style={[styles.jobAccent, { backgroundColor: Palette.hermesOrange }]} />
                   <View style={{ flex: 1, padding: 12 }}>

@@ -147,12 +147,20 @@ const PROVIDER_COUNTRIES: Partial<Record<AccountingProvider, readonly string[]>>
  */
 export function getProvidersForCountry(country: string | undefined | null): ProviderInfo[] {
   if (!country) return PROVIDERS;
-  return PROVIDERS.filter((p) => {
+  const inMarket = PROVIDERS.filter((p) => {
     if (p.id === 'none') return true;
     const supported = PROVIDER_COUNTRIES[p.id];
     if (!supported) return true; // unknown geo data → show by default
     return supported.includes(country);
   });
+  // The market's OWN tools first: a UK contractor saw Twinfield (an NL-first
+  // product, listed for NL and UK) above Xero and FreeAgent (UK walk,
+  // 2026-10-08). Stable: ties keep the catalogue order.
+  const home = (p: ProviderInfo) => (PROVIDER_COUNTRIES[p.id]?.[0] === country ? 0 : 1);
+  return inMarket
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => home(a.p) - home(b.p) || a.i - b.i)
+    .map(({ p }) => p);
 }
 
 export const PROVIDERS: ProviderInfo[] = [
@@ -204,7 +212,8 @@ export const PROVIDERS: ProviderInfo[] = [
   {
     id: 'twinfield',
     name: 'Twinfield',
-    description: 'Onderdeel van Wolters Kluwer',
+    // Listed for NL and UK: the brand, not Dutch copy (UK walk).
+    description: 'Wolters Kluwer',
     icon: 'business-outline',
     popular: false,
     apiDocs: 'https://accounting.twinfield.com/webservices/documentation/',

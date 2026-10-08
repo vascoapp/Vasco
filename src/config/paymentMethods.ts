@@ -14,16 +14,17 @@ import type { Country } from '../context/AuthContext';
 
 export const PAYMENT_BRAND_COLORS: Record<string, string> = {
   'iDEAL': '#CC0066',
-  'PayPal': '#003087',
+  'PayPal': '#009CDE', // lighter tint of #003087 — readable on the dark panel
   'Klarna': '#FFB3C7',
-  'giropay': '#003A7D',
-  'Carte Bancaire': '#1A1F71',
-  'Apple Pay': '#000000',
-  'SEPA': '#004990',
+  'giropay': '#5C9DED', // lighter tint of #003A7D — readable on the dark panel
+  'Carte Bancaire': '#6F8BE0', // lighter tint of #1A1F71 — readable on the dark panel
+  'Apple Pay': '#F5F5F7', // Apple's own mark is white on dark surfaces
+  'SEPA': '#4A97E0', // lighter tint of #004990 — readable on the dark panel
   'Bacs Direct Debit': '#00BFFF',
-  'MyBank': '#1A3263',
-  'Credit Card': '#1A1A1A',
-  'Card': '#1A1A1A',
+  'MyBank': '#7E9AD6', // lighter tint of #1A3263 — readable on the dark panel
+  'Credit Card': '#D1D5DB',
+  // Near-black on the dark panel was invisible (UK walk, 2026-10-08).
+  'Card': '#D1D5DB',
   'Sofort/Klarna': '#FFB3C7',
 };
 

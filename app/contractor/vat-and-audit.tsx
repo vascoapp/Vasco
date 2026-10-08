@@ -192,7 +192,11 @@ export default function VatAndAuditScreen() {
         <View style={styles.card}>
           {([
             { value: 'soll' as const, label: t('vatBasis.soll', 'On the invoice date'), subtitle: t('vatBasis.sollHint', 'Standard. VAT is due in the period you issue the invoice, even if the customer has not paid.') },
-            { value: 'ist' as const, label: t('vatBasis.ist', 'When the customer pays'), subtitle: t('vatBasis.istHint', 'Cash accounting. Only available if your tax office has approved it.') },
+            { value: 'ist' as const, label: t('vatBasis.ist', 'When the customer pays'), subtitle: country === 'UK'
+              // HMRC's Cash Accounting Scheme needs no approval — eligibility is
+              // a turnover limit (UK walk, 2026-10-08).
+              ? t('vatBasis.istHintUK', 'Cash Accounting Scheme. Available if your VAT-taxable turnover is £1.35 million or less — no application needed.')
+              : t('vatBasis.istHint', 'Cash accounting. Only available if your tax office has approved it.') },
           ]).map((opt, idx) => (
             <Pressable
               key={opt.value}

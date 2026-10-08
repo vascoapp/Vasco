@@ -70,6 +70,8 @@ export default function PricebookEditorScreen() {
   // Profile first, account as fallback (#218): a contractor who set UK in
   // their profile was formatted in euros while the account still said NL.
   const country = (businessProfile?.country ?? user?.country ?? 'NL');
+  // The market's decimal separator — "0,00" on a UK form (UK walk, 2026-10-08).
+  const moneyPlaceholder = (country === 'UK' || country === 'US') ? '0.00' : '0,00';
   const { entries, loading, upsert, remove } = usePricebook();
 
   const isNew = id === 'new';
@@ -241,7 +243,7 @@ export default function PricebookEditorScreen() {
               style={[styles.input, errorFor('basePrice') && styles.inputError]}
               value={priceText}
               onChangeText={setPriceText}
-              placeholder="0,00"
+              placeholder={moneyPlaceholder}
               placeholderTextColor={SemanticColors.placeholder}
               keyboardType="decimal-pad"
             />
@@ -293,7 +295,7 @@ export default function PricebookEditorScreen() {
               style={styles.input}
               value={labourRateText}
               onChangeText={setLabourRateText}
-              placeholder="0,00"
+              placeholder={moneyPlaceholder}
               placeholderTextColor={SemanticColors.placeholder}
               keyboardType="decimal-pad"
             />
@@ -306,7 +308,7 @@ export default function PricebookEditorScreen() {
             style={styles.input}
             value={materialsText}
             onChangeText={setMaterialsText}
-            placeholder="0,00"
+            placeholder={moneyPlaceholder}
             placeholderTextColor={SemanticColors.placeholder}
             keyboardType="decimal-pad"
           />
