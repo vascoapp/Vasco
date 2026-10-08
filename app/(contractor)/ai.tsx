@@ -34,6 +34,7 @@ import { useSubmissions } from '../../src/services/submissionStore';
 import { formatMoney2, formatDecimal1, type Country } from '../../src/i18n/formatting';
 import { daysUntilDue } from '../../src/utils/invoiceDue';
 import { confirmShareSent } from '../../src/utils/shareOutcome';
+import { signCustomerMessage } from '../../src/utils/signCustomerMessage';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type TabKey = 'queue' | 'insights' | 'more';
@@ -205,7 +206,7 @@ export default function VascoScreen() {
         title: t('ai.paymentReminder', { customer: customerName }),
         reason: tidyCopy(t('ai.invoiceOverdue', { reference: invRef, days: Math.abs(inv.dueInDays || 7), amount: invAmount }), i18n.language),
         actionLabel: t('ai.sendReminder'), actionType: 'share',
-        shareText: tidyCopy(t('ai.reminderMessage', { customer: customerName, reference: invRef, amount: invAmount }), i18n.language),
+        shareText: signCustomerMessage(tidyCopy(t('ai.reminderMessage', { customer: customerName, reference: invRef, amount: invAmount }), i18n.language), businessProfile?.businessName),
         priority: 'high',
       });
     });
@@ -241,7 +242,7 @@ export default function VascoScreen() {
         title: t('ai.followUpQuote', { customer: customerName }),
         reason: t('ai.quoteSentNotAnswered', { job: jobName, amount: qAmount }),
         actionLabel: t('ai.sendFollowUp'), actionType: 'share',
-        shareText: t('ai.followUpMessage', { customer: customerName, job: jobName }),
+        shareText: signCustomerMessage(t('ai.followUpMessage', { customer: customerName, job: jobName }), businessProfile?.businessName),
         priority: 'medium',
       });
     });
@@ -255,7 +256,7 @@ export default function VascoScreen() {
           title: t('ai.jobInDays', { title: job.title, count: daysUntil }),
           reason: customer ? `${customer.name} · ${t('ai.confirmAppointment')}` : t('ai.confirmAppointment'),
           actionLabel: t('ai.sendConfirmation'), actionType: 'share',
-          shareText: customer ? t('ai.confirmMessage', { customer: customer.name, title: job.title, date: job.scheduledDate }) : undefined,
+          shareText: customer ? signCustomerMessage(t('ai.confirmMessage', { customer: customer.name, title: job.title, date: job.scheduledDate }), businessProfile?.businessName) : undefined,
           priority: 'medium',
         });
       }

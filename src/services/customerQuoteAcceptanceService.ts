@@ -25,6 +25,7 @@ import { isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
 import { formatMoney2 } from '../i18n/formatting';
 import { documentCustomerName } from '../domain/customers';
+import { signCustomerMessage } from '../utils/signCustomerMessage';
 import {
   createAcceptanceLink as dbCreateAcceptanceLink,
   getAcceptanceLinkByToken,
@@ -359,8 +360,7 @@ export async function shareQuoteWithAcceptanceLink(quote: {
     url,
   });
   // The sign-off named nobody ("Mit freundlichen Grüßen" and nothing under it).
-  const sender = opts.senderName?.trim();
-  const message = sender ? `${body}\n${sender}` : body;
+  const message = signCustomerMessage(body, opts.senderName);
 
   // Whether the customer actually got it. The caller marks the quote SENT off
   // this: backing out of the share sheet is not sending (#339).

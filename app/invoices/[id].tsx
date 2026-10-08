@@ -64,6 +64,7 @@ import { pdfInvoiceFromRecord } from '../../src/services/invoicePdfSource';
 import { daysUntilDue } from '../../src/utils/invoiceDue';
 import { ensureCanUsePaymentLink } from '../../src/services/tierGatePrompt';
 import { round2 } from '../../src/utils/round2';
+import { bankTransferLine } from '../../src/utils/bankDetails';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -160,6 +161,12 @@ export default function InvoiceDetailScreen() {
   const effectiveRate = invoice?.isRetentionRelease ? 0 : profileRate;
   // Withheld from the PAYMENT of this invoice (EU instalments). A UK invoice
   // deducts its retention as a line, so nothing is withheld on top of it.
+  // UK: sort code + account; US: routing + account; else the IBAN (bankDetails).
+  const transferLine = bankTransferLine({ ...businessProfile, country }, {
+    sortCode: t('settings.sortCode', 'Sort code'),
+    account: t('settings.accountShort', 'Account'),
+    routing: t('settings.routingShort', 'Routing #'),
+  });
   const retentionWithheld = invoice && !retentionDeductedOnInvoice(country)
     ? Number(invoice.retentionAmount ?? 0)
     : 0;
@@ -1713,8 +1720,8 @@ export default function InvoiceDetailScreen() {
               ("what's the point if it's just informational?", user 2026-10-06). */}
           {!mollieConnected && (
             <Text style={{ fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary }}>
-              {businessProfile.iban
-                ? t('invoices.paidByTransferTo', { defaultValue: 'By bank transfer to {{iban}}', iban: businessProfile.iban })
+              {transferLine
+                ? t('invoices.paidByTransferTo', { defaultValue: 'By bank transfer to {{iban}}', iban: transferLine })
                 : t('invoices.noIbanForTransfer', 'Add your IBAN so your customer knows where to pay')}
             </Text>
           )}

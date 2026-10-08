@@ -122,6 +122,7 @@ import { daysUntilDue, invoiceTermDays } from '../utils/invoiceDue';
 import { fkOrNull, queueFkRepairs, queueRowFkRepairs } from '../services/fkRepair';
 import { ensureCanCreate, ensureCanUsePaymentLink } from '../services/tierGatePrompt';
 import { round2 } from '../utils/round2';
+import { AppState as RNAppStateForRefresh } from 'react-native';
 
 export type ContractorMetrics = {
   revenueThisMonth: number;
@@ -701,6 +702,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           country: bp.country || null,
           trade: bp.trade || null,
           vatScheme: bp.vatScheme || null,
+          businessName: bp.businessName || null,
         });
       }
       // R210: once businessProfile.country is known, prime the cohort DSO
@@ -891,6 +893,24 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // Load from Supabase on mount
   useEffect(() => {
     refreshData();
+  }, [refreshData]);
+
+  // …and again when the app returns to the foreground. Things change on the
+  // server while the contractor is elsewhere — the customer accepts in the
+  // portal, which writes the quote status and creates the job server-side.
+  // Without this the job appeared only after a cold start and the inbox never
+  // said "accepted" (UK walk, 2026-10-08). Throttled: a share sheet or a
+  // permission prompt also backgrounds the app for a moment.
+  const lastForegroundRefreshRef = useRef(0);
+  useEffect(() => {
+    const sub = RNAppStateForRefresh.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const now = Date.now();
+      if (now - lastForegroundRefreshRef.current < 30_000) return;
+      lastForegroundRefreshRef.current = now;
+      refreshData();
+    });
+    return () => sub.remove();
   }, [refreshData]);
 
   // R46: reset in-memory contractor state on logout so the next user signing

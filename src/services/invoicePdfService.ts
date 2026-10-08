@@ -25,6 +25,7 @@ import { signatureHtmlBlock, getLegalText } from './signatureService';
 import { messageLocale } from './whatsappTemplateService';
 import { vatNatureMentions } from '../domain/vatNature';
 import { germanSteuernummer } from '../utils/validation';
+import { bankTransferLine } from '../utils/bankDetails';
 
 // ── Number formatting ────────────────────────────────────
 
@@ -401,7 +402,9 @@ function buildInvoiceHtml(
   // R75: US contractors get en-US date locale (MM/DD/YYYY); others stay on
   // the contractor's language locale. Hardcoded fallback to 'en' was UK-
   // flavoured (DD/MM/YYYY) — wrong for US.
-  const locale = country === 'US' ? 'en-US' : (language || 'en');
+  // Plain 'en' resolves to en-US in Intl ("October 8, 2026"), which a UK
+  // invoice printed (UK walk, 2026-10-08). English outside the US is en-GB.
+  const locale = country === 'US' ? 'en-US' : (!language || language === 'en' ? 'en-GB' : language);
 
   const issueDate = invoice.issueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
   const dueDate = invoice.dueDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -675,12 +678,14 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
   <div class="payment-detail">${L.paymentInstruction}</div>
   <div class="payment-detail"><strong>${invoice.retentionWithheld ? L.payableNow : L.total}: ${curr}${fmt(invoice.retentionWithheld ? round2(invoice.total - invoice.retentionWithheld) : invoice.total, locale)}</strong></div>
   <div class="payment-detail">${L.paymentReference}: <strong>${invoice.invoiceNumber}</strong></div>
-  ${country === 'US'
-    ? (routingNumber || bankAccountNumber
-        ? `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${routingNumber ? `Routing # ${routingNumber}` : ''}${routingNumber && bankAccountNumber ? ' · ' : ''}${bankAccountNumber ? `Account # ${bankAccountNumber}` : ''}</div>`
-        : '')
-    : (iban ? `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${iban}</div>` : '')
-  }
+  ${(() => {
+    // UK: sort code + account (UK walk, 2026-10-08), IBAN beneath for payers
+    // abroad; US: routing + account; else the IBAN (src/utils/bankDetails).
+    const line = bankTransferLine({ country, routingNumber, bankAccountNumber, iban }, { sortCode: 'Sort code', account: country === 'US' ? 'Account #' : 'Account', routing: 'Routing #' });
+    if (!line) return '';
+    const ibanBelow = country === 'UK' && iban && line !== iban ? ` · IBAN ${iban}` : '';
+    return `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${escapeHtml(line + ibanBelow)}</div>`;
+  })()}
   ${paymentUrl ? `<div style="text-align:center;margin-top:16px"><a href="${paymentUrl}" class="pay-btn">${L.payOnline}</a></div>` : ''}
 </div>
 
@@ -739,7 +744,7 @@ export function buildInvoiceShareText(
 ): string {
   const curr = getCurrencySymbol(country);
   const taxLabel = vatLabel(country);
-  const dateLocale = country === 'US' ? 'en-US' : undefined;
+  const dateLocale = country === 'US' ? 'en-US' : 'en-GB';
 
   const lines = invoice.lineItems.map(li =>
     `• ${li.description}: ${formatQuantity(li.quantity)}x ${curr}${fmt(li.unitPrice)} = ${curr}${fmt(li.quantity * li.unitPrice)}`,

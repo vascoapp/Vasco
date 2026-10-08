@@ -1112,7 +1112,18 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   }
 
   // ─── EXISTING: Follow-ups for unanswered quotes ───
-  for (const quote of (context.sentQuotes ?? []).slice(0, 2)) {
+  // A quote the customer already said yes to is not "unanswered": its status
+  // can lag on this device (the portal decides server-side), but the job it
+  // became cannot. Chasing a customer who accepted — and paid — with an
+  // unsigned "any news?" is the worst message this queue can prepare (UK
+  // walk, 2026-10-08).
+  const wonQuoteRefs = new Set(
+    (context.allJobs ?? []).map((j: any) => j?.quoteId).filter((r: unknown): r is string => typeof r === 'string' && r.length > 0),
+  );
+  const unanswered = (context.sentQuotes ?? []).filter((q: any) =>
+    q && q.id && q.status !== 'accepted' && !wonQuoteRefs.has(q.id) && !wonQuoteRefs.has(q.documentNumber ?? q.number ?? ''),
+  );
+  for (const quote of unanswered.slice(0, 2)) {
     if (!quote || !quote.id) continue;
     const followupCustId = (quote as any).customerId || quote.customer || '';
     const followupIntel = followupCustId ? getCustomerIntelligence(followupCustId, context.allJobs ?? [], context.allInvoices ?? []) : null;
@@ -1128,6 +1139,8 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       actionLabel: t('aiQueue.sendFollowUp'),
       estimatedImpact: t('aiQueue.increasesAcceptance'),
       expiresAt: new Date(now + 5 * dayMs).toISOString(),
+      // One card per quote — it appeared twice on Today (UK walk).
+      entityKey: `followup-for-quote:${quote.id}`,
       sourceGeneratorId: 'automation_draft_followup',
     });
     if (id) added++;
@@ -1727,8 +1740,16 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     if (added > 25) break;
   }
 
-  // ─── NEW: Accounting export for unexported paid invoices ───
-  const unexportedPaid = (context.allInvoices ?? []).filter((i: any) => i.status === 'paid' && !i.exportedAt);
+  // ─── Accounting export for unexported paid invoices — OFF ───
+  // Its action (queueItemExecutor 'accounting_export') only opens the VAT &
+  // audit settings: nothing is exported, yet approving it removed the card and
+  // AI Savings counted it as work done (UK walk, 2026-10-08). A card with
+  // nothing behind it is not offered (CLAUDE.md). Turn back on together with
+  // an executor that actually exports.
+  const ACCOUNTING_EXPORT_CARD_ENABLED = false;
+  const unexportedPaid = ACCOUNTING_EXPORT_CARD_ENABLED
+    ? (context.allInvoices ?? []).filter((i: any) => i.status === 'paid' && !i.exportedAt)
+    : [];
   if (unexportedPaid.length > 0) {
     const totalAmount = unexportedPaid.reduce((s: number, i: any) => s + (i.amount ?? 0), 0);
     const id = await addToQueue({
@@ -2175,9 +2196,33 @@ export function getRequiredPermits(trade: string, country: string): { name: stri
 // contractor does not have.
 
 export interface QueueEntities {
-  jobs?: ReadonlyArray<{ id: string }>;
-  invoices?: ReadonlyArray<{ id: string }>;
-  quotes?: ReadonlyArray<{ id: string }>;
+  jobs?: ReadonlyArray<{ id: string; quoteId?: string | null }>;
+  invoices?: ReadonlyArray<{ id: string; status?: string }>;
+  quotes?: ReadonlyArray<{ id: string; status?: string }>;
+}
+
+/**
+ * False when the card's job is already done by the world: a follow-up for a
+ * quote the customer decided (or that became a job), a reminder for an invoice
+ * that is paid. Cards outlive these facts — Today offered "Send follow-up" to a
+ * customer who had accepted AND paid (UK walk, 2026-10-08) — so, like
+ * queueTargetExists, it is checked where cards are SHOWN, which also clears
+ * cards prepared before the fact.
+ */
+export function queueTargetStillOpen(item: Pick<QueueItem, 'type' | 'preparedData'>, entities: QueueEntities): boolean {
+  const d = (item.preparedData ?? {}) as Record<string, unknown>;
+  if (item.type === 'draft_followup' && typeof d.quoteId === 'string') {
+    const q = entities.quotes?.find((x) => x.id === d.quoteId);
+    if (q && (q.status === 'accepted' || q.status === 'rejected')) return false;
+    if (entities.jobs?.some((j) => j.quoteId === d.quoteId)) return false;
+  }
+  // Stored before the producer was switched off; its action exports nothing.
+  if (item.type === 'accounting_export') return false;
+  if (item.type === 'draft_reminder' && typeof d.invoiceId === 'string') {
+    const inv = entities.invoices?.find((x) => x.id === d.invoiceId);
+    if (inv && inv.status === 'paid') return false;
+  }
+  return true;
 }
 
 /** False when the card names a job/invoice/quote that is not in `entities`. */
@@ -2236,7 +2281,7 @@ subscribeDocNumberRemap((e) => { void rekeyQueueTargets(e.placeholderNumber, e.r
 export function useAIQueue(entities?: QueueEntities) {
   const [allItems, setItems] = useState<QueueItem[]>([]);
   const items = useMemo(
-    () => (entities ? allItems.filter((i) => queueTargetExists(i, entities)) : allItems),
+    () => (entities ? allItems.filter((i) => queueTargetExists(i, entities) && queueTargetStillOpen(i, entities)) : allItems),
     [allItems, entities?.jobs, entities?.invoices, entities?.quotes],
   );
   const [loading, setLoading] = useState(true);

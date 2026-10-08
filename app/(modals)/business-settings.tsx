@@ -35,6 +35,7 @@ import { STRIPE_METHODS_UK, STRIPE_METHODS_US } from '../../src/config/paymentMe
 import { DKMenu } from '../../src/components/shared/DKMenu';
 import { REGIMI_FISCALI } from '../../src/data/fiscalRegimes';
 import { isValidCodiceFiscale } from '../../src/integrations/fiscalIds';
+import { formatSortCode } from '../../src/utils/bankDetails';
 
 type FieldDef = {
   label: string;
@@ -272,7 +273,16 @@ function BusinessSettingsForm() {
       country === 'ES' ? 'ES91 2100 0418 4502 0005 1332' :
       country === 'IT' ? 'IT60 X054 2811 1010 0000 0123 456' :
       'NL91 ABNA 0417 1643 00';
-    const paymentFields: FieldDef[] = country === 'US'
+    const paymentFields: FieldDef[] = country === 'UK'
+      // UK customers pay by sort code + account number (UK walk, 2026-10-08);
+      // the IBAN stays for payers abroad. Sort code is stored as the domestic
+      // bank code (src/utils/bankDetails.ts).
+      ? [
+          { label: t('settings.sortCode', 'Sort code'), value: routingNumber, onChange: setRoutingNumber, placeholder: '20-00-00', keyboardType: 'number-pad' as const },
+          { label: t('settings.bankAccountNumber', 'Account number'), value: bankAccountNumber, onChange: setBankAccountNumber, placeholder: '12345678', keyboardType: 'number-pad' as const },
+          { label: t('settings.ibanInternational', 'IBAN (payments from abroad)'), value: iban, onChange: setIban, placeholder: ibanPlaceholder },
+        ]
+      : country === 'US'
       ? [
           { label: t('settings.routingNumber', 'Routing number'), value: routingNumber, onChange: setRoutingNumber, placeholder: '123456789' },
           { label: t('settings.bankAccountNumber', 'Account number'), value: bankAccountNumber, onChange: setBankAccountNumber, placeholder: '000123456789' },
@@ -439,8 +449,9 @@ function BusinessSettingsForm() {
         // R119: routing_number / bank_account_number for US (ACH).
         iban: country === 'US' ? '' : cleanIban,
         bic: country === 'US' ? '' : cleanBic,
-        routingNumber: country === 'US' ? sanitizeInput(routingNumber).replace(/\s/g, '').trim() : undefined,
-        bankAccountNumber: country === 'US' ? sanitizeInput(bankAccountNumber).replace(/\s/g, '').trim() : undefined,
+        routingNumber: country === 'US' ? sanitizeInput(routingNumber).replace(/\s/g, '').trim()
+          : country === 'UK' ? formatSortCode(sanitizeInput(routingNumber)) : undefined,
+        bankAccountNumber: country === 'US' || country === 'UK' ? sanitizeInput(bankAccountNumber).replace(/\s/g, '').trim() : undefined,
         country,
         // A typed term of 0 or junk falls back to the 14-day default rather
         // than writing a due date of "today".

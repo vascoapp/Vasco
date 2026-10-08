@@ -26,6 +26,7 @@ let currentVatScheme: string | undefined;
 let profileCountry: string | undefined;
 let profileTrade: string | undefined;
 let profileVatScheme: string | undefined;
+let profileBusinessName: string | undefined;
 
 // R46: tiny pub/sub so non-hook consumers (notably AppStateProvider holding
 // in-memory contractor data arrays) can react to login/logout transitions
@@ -62,6 +63,7 @@ export function setCurrentUser(info: { id: string; country?: string; trade?: str
     profileCountry = undefined;
     profileTrade = undefined;
     profileVatScheme = undefined;
+    profileBusinessName = undefined;
     notifyUserChange();
   }
 }
@@ -71,8 +73,9 @@ export function setCurrentUser(info: { id: string; country?: string; trade?: str
  * Only the fields given are changed; it never touches the user id, and an
  * account re-publish (`setCurrentUser`, same id) cannot overwrite it.
  */
-export function setProfileContext(info: { country?: string | null; trade?: string | null; vatScheme?: string | null }): void {
+export function setProfileContext(info: { country?: string | null; trade?: string | null; vatScheme?: string | null; businessName?: string | null }): void {
   if (getAuthedUserId() === null) return;
+  if (info.businessName !== undefined) profileBusinessName = info.businessName?.trim() || undefined;
   if (info.country !== undefined) profileCountry = info.country ?? undefined;
   if (info.trade !== undefined) profileTrade = info.trade ?? undefined;
   if (info.vatScheme !== undefined) profileVatScheme = info.vatScheme ?? undefined;
@@ -100,6 +103,11 @@ export function getCurrentCountry(): string | undefined {
 
 export function getCurrentTrade(): string | undefined {
   return profileTrade ?? currentTrade;
+}
+
+/** The business name customer messages are signed with (profile). */
+export function getCurrentBusinessName(): string | undefined {
+  return profileBusinessName;
 }
 
 export function getCurrentVatScheme(): string | undefined {

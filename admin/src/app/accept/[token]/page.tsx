@@ -31,6 +31,7 @@ import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { moneyFormatter } from '@/lib/money';
 import { notifyContractor } from '@/lib/notifyContractor';
+import { cancellationRightApplies, ukCancellationNotice } from '@/lib/cancellationNotice';
 
 // R191 TODO: shared placeholder with /quote/[id] and /auth/callback. Replace
 // once the App Store Connect listing exists.
@@ -349,7 +350,10 @@ export default function QuoteAcceptance({ params }: PageProps) {
   // The right attaches to the CONTRACTOR's establishment, not the reader's
   // browser — a Belgian customer of a French artisan still gets 14 days. Same
   // rule as the currency directly above.
-  const needsWithdrawalNotice = (link?.contractor_country ?? '').toUpperCase() === 'FR';
+  // FR (L221) and UK (Consumer Contracts Regulations 2013) — the same list the
+  // database enforces (lib/cancellationNotice). UK copy is its own law.
+  const needsWithdrawalNotice = cancellationRightApplies(link?.contractor_country);
+  const ukNotice = ukCancellationNotice(link?.contractor_country, lang);
   const money = useMemo(
     () => moneyFormatter(LANG_LOCALE[lang], { style: 'currency', currency }),
     [lang, currency],
@@ -531,8 +535,8 @@ export default function QuoteAcceptance({ params }: PageProps) {
                 <div className="vb-fade" style={{ display: 'grid', gap: 10 }}>
                   {needsWithdrawalNotice && (
                     <div style={{ border: '1px solid #2A3038', borderRadius: 10, padding: 14, display: 'grid', gap: 8, textAlign: 'left' }}>
-                      <strong style={{ fontSize: 15 }}>{copy.withdrawalTitle}</strong>
-                      <span style={{ fontSize: 13, lineHeight: 1.5, opacity: 0.85 }}>{copy.withdrawalBody}</span>
+                      <strong style={{ fontSize: 15 }}>{ukNotice?.title ?? copy.withdrawalTitle}</strong>
+                      <span style={{ fontSize: 13, lineHeight: 1.5, opacity: 0.85 }}>{ukNotice?.body ?? copy.withdrawalBody}</span>
                       <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, cursor: 'pointer' }}>
                         <input
                           type="checkbox"

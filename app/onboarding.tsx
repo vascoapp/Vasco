@@ -47,6 +47,7 @@ import { GRID, RADIUS, TYPE } from '../src/theme/tabStyles';
 import { TIERS, type SubscriptionTier } from '../src/services/subscriptionService';
 import { emitOnboardingCompleted } from '../src/intelligence/dataCollector';
 import { BUSINESS_TYPES } from '../src/data/businessTypes';
+import { DORMANT_CONTROLS } from '../src/config/dormant';
 
 
 const TOTAL_STEPS = 14;
@@ -215,7 +216,9 @@ function getDemoInsights(trade: string, goals: string[], t: any): { icon: string
   if (goals.includes('less_admin')) {
     insights.push({ icon: 'sparkles', title: t('onboarding.aiInsight.automation', 'Auto-invoicing'), subtitle: t('onboarding.aiInsight.automationDesc', 'Generate invoices from completed jobs in one tap') });
   }
-  if (goals.includes('stay_compliant')) {
+  // "Alerts before your certifications expire" — no certificate can be added
+  // yet, so nothing can alert (DORMANT_CONTROLS.complianceItemEditing).
+  if (goals.includes('stay_compliant') && DORMANT_CONTROLS.complianceItemEditing) {
     insights.push({ icon: 'shield-checkmark', title: t('onboarding.aiInsight.compliance', 'Certificate tracking'), subtitle: t('onboarding.aiInsight.complianceDesc', 'Alerts before your certifications expire') });
   }
   if (goals.includes('more_jobs')) {
@@ -1111,6 +1114,10 @@ export default function OnboardingScreen() {
             ) : (
               <Text style={styles.emptyText}>{t('common.noData')}</Text>
             )}
+            {/* Hidden while adding an expiry is (DORMANT_CONTROLS.complianceItemEditing):
+                the copy sends the contractor to a control that does not exist
+                (UK walk, 2026-10-08). */}
+            {DORMANT_CONTROLS.complianceItemEditing && (
             <View style={styles.complianceInfoCard}>
               <Ionicons name="shield-checkmark-outline" size={18} color={Palette.hermesOrange} style={{ marginTop: 1 }} />
               <Text style={styles.complianceInfoText}>
@@ -1124,6 +1131,7 @@ export default function OnboardingScreen() {
                 {t('onboarding.complianceInfo', 'Noted. Add the expiry date under Compliance and Vasco will warn you before it runs out.')}
               </Text>
             </View>
+            )}
           </View>
         );
       }
