@@ -91,7 +91,8 @@
     "share": "Delen",
     "options": "Opties",
     "automatedFollowUps": "Voorbereide herinneringen en opvolging",
-    "didNotWork": "Dat lukte niet. Probeer het zo nog eens."
+    "didNotWork": "Dat lukte niet. Probeer het zo nog eens.",
+    "eInvoicingFormats": "E-facturen ({{formats}})"
   },
   "tabs": {
     "today": "Vandaag",
@@ -558,7 +559,10 @@
     "signOffFirst": "Eerst laten aftekenen",
     "lifecycleStageLabel": "Fase",
     "stageOf": "{{step}} van {{total}}",
-    "markOrdered": "Markeer als besteld"
+    "markOrdered": "Markeer als besteld",
+    "documents": "Documenten",
+    "docQuote": "Offerte {{ref}}",
+    "docInvoice": "Factuur {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Beheer verzekeringen & claims",
@@ -966,7 +970,11 @@
     "serviceDateToday": "Vandaag",
     "serviceDateAskTitle": "Datum van het werk",
     "serviceDateAskBody": "Een Duitse factuur moet vermelden wanneer het werk is gedaan. Stel de datum in bij \"Datum werkzaamheden\" op deze factuur, of kies Vandaag.",
-    "autoSendTag": "Automatisch"
+    "autoSendTag": "Automatisch",
+    "noCustomerTitle": "Geen klant op deze factuur",
+    "noCustomerBody": "Een factuur moet de klant noemen. Voeg eerst de klant toe aan het project of de klus waar hij vandaan komt.",
+    "retentionWithheld": "Retentie ingehouden tot oplevering",
+    "payableNow": "Nu te betalen"
   },
   "expenses": {
     "title": "Uitgaven",
@@ -1148,7 +1156,11 @@
     "counterNeedsNumber": "Welk nummer?",
     "personNatural": "Natuurlijk persoon (eenmanszaak)",
     "personLegal": "Rechtspersoon (bv of vergelijkbaar)",
-    "paymentTerms": "Betaaltermijn (dagen)"
+    "paymentTerms": "Betaaltermijn (dagen)",
+    "sortCode": "Sort code",
+    "ibanInternational": "IBAN (betalingen uit het buitenland)",
+    "accountShort": "Rekening",
+    "routingShort": "Routing #"
   },
   "financials": {
     "revenue": "Omzet",
@@ -2256,7 +2268,8 @@
     "projectStart": "Start van het werk",
     "setProjectStart": "Projectstart instellen",
     "projectStartHint": "Mijlpalen schuiven mee met de start. Een beloofde opleverdatum blijft staan.",
-    "startNotSet": "Niet ingesteld"
+    "startNotSet": "Niet ingesteld",
+    "noJobsYetCreate": "Je hebt nog geen klussen. Maak er een aan onder Werk en voeg die daarna toe aan dit project."
   },
   "projectTemplate": {
     "pick": "Begin met een werkvolgorde",
@@ -2520,7 +2533,8 @@
     "vatNumberTva": "Btw-nummer (TVA)",
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Bedrijfsnummer (Companies House)",
-    "nameWithSurname": "Volledige naam met achternaam (bijv. Lucía Navarro Gómez)"
+    "nameWithSurname": "Volledige naam met achternaam (bijv. Lucía Navarro Gómez)",
+    "yourBusiness": "Je bedrijf"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -3009,7 +3023,9 @@
       "guideFollowup_other": "Volg {{count}} openstaande offertes op",
       "guideAannemerProjects_one": "{{count}} project loopt vandaag",
       "guideAannemerProjects_other": "{{count}} projecten lopen vandaag",
-      "guideNext": "Maak je volgende offerte"
+      "guideNext": "Maak je volgende offerte",
+      "guideAannemerOpenProjects_one": "{{count}} lopend project",
+      "guideAannemerOpenProjects_other": "{{count}} lopende projecten"
     },
     "pill": {
       "jobsCount_one": "{{count}} klus",
@@ -3173,7 +3189,9 @@
       "goodMorning": "Goeiemorgen",
       "goodAfternoon": "Goedemiddag",
       "goodEvening": "Goedenavond"
-    }
+    },
+    "contactsCount_one": "{{count}} contact",
+    "contactsCount_other": "{{count}} contacten"
   },
   "decisionPortal": {
     "yourChoices": "Uw Keuzes",
@@ -6161,7 +6179,19 @@
     "retentionRate": "Retentie",
     "editRetention": "Retentie % aanpassen",
     "change": "Wijzigen",
-    "retentionAppliesForward": "Geldt voor termijnen die nog niet gefactureerd zijn. Wat al is ingehouden verandert niet."
+    "retentionAppliesForward": "Geldt voor termijnen die nog niet gefactureerd zijn. Wat al is ingehouden verandert niet.",
+    "needsCustomer": "Voeg eerst de klant toe aan dit project voordat je factureert.",
+    "lessRetention": "Af: retentie ({{percent}}%)",
+    "warnConfirmTitle": "Klant gewaarschuwd?",
+    "warnConfirmBody": "Leg dit alleen vast als je de klant vóór het werk hebt verteld dat “{{title}}” {{amount}} extra kost.",
+    "warnConfirmYes": "Ja, verteld",
+    "warningRecordedOn": "Waarschuwing vastgelegd {{date}}",
+    "payableNowLine": "Nu te betalen {{now}} excl. btw · {{retention}} retentie ingehouden",
+    "needsCustomerTitle": "Nog geen klant",
+    "invoiceConfirmTitle": "Deze factuur maken?",
+    "invoiceConfirmBody": "{{title}} — {{amount}} excl. btw, aan {{customer}}.",
+    "invoiceConfirmYes": "Factuur maken",
+    "recordApproval": "Akkoord van klant vastleggen"
   },
   "jobForms": {
     "title": "Werkformulieren",
@@ -7456,7 +7486,8 @@
     "yearly": "Jaarlijks",
     "frDebitsSection": "TVA sur les débits (FR)",
     "frDebitsLabel": "Ik heb gekozen voor btw op basis van facturatie (débits)",
-    "frDebitsHint": "De bijbehorende vermelding komt op je facturen te staan."
+    "frDebitsHint": "De bijbehorende vermelding komt op je facturen te staan.",
+    "istHintUK": "Cash Accounting Scheme. Mogelijk als je btw-belaste omzet £1,35 miljoen of minder is — aanvragen is niet nodig."
   },
   "complianceAgent": {
     "expiredTitle": "{{name}} is verlopen",

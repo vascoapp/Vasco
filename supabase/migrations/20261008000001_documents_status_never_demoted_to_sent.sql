@@ -22,6 +22,11 @@ begin
   if old.status in ('accepted', 'rejected', 'paid')
      and new.status in ('sent', 'draft') then
     new.status := old.status;
+    -- A late or replayed "sent" on a PAID invoice must not move sent_at past
+    -- paid_at either: DSO and ageing count from it (review 2026-10-08).
+    if old.status = 'paid' then
+      new.sent_at := old.sent_at;
+    end if;
   end if;
   return new;
 end;
@@ -29,6 +34,6 @@ $$;
 
 drop trigger if exists documents_keep_decided_status on public.documents;
 create trigger documents_keep_decided_status
-  before update of status on public.documents
+  before update of status, sent_at on public.documents
   for each row
   execute function public.documents_keep_decided_status();

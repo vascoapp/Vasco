@@ -901,13 +901,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   // Without this the job appeared only after a cold start and the inbox never
   // said "accepted" (UK walk, 2026-10-08). Throttled: a share sheet or a
   // permission prompt also backgrounds the app for a moment.
-  const lastForegroundRefreshRef = useRef(0);
+  // Only after a real absence (≥ 60 s): a share sheet or permission prompt
+  // also backgrounds the app, and a refresh started on that return could commit
+  // a server read taken BEFORE the optimistic write the contractor just made
+  // ("sent" flipping back to draft — review 2026-10-08).
+  const backgroundedAtRef = useRef<number | null>(null);
   useEffect(() => {
     const sub = RNAppStateForRefresh.addEventListener('change', (state) => {
+      if (state === 'background') { backgroundedAtRef.current = Date.now(); return; }
       if (state !== 'active') return;
-      const now = Date.now();
-      if (now - lastForegroundRefreshRef.current < 30_000) return;
-      lastForegroundRefreshRef.current = now;
+      const away = backgroundedAtRef.current ? Date.now() - backgroundedAtRef.current : 0;
+      backgroundedAtRef.current = null;
+      if (away < 60_000) return;
       refreshData();
     });
     return () => sub.remove();
@@ -1196,7 +1201,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           if (bpRaw) {
             try {
               const bpParsed = JSON.parse(bpRaw);
-              if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) { setProfileLoaded(true); setProfileContext({ country: bpParsed.country || undefined, trade: bpParsed.trade || undefined, vatScheme: bpParsed.vatScheme || undefined }); } }
+              if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) { setProfileLoaded(true); setProfileContext({ country: bpParsed.country || undefined, trade: bpParsed.trade || undefined, vatScheme: bpParsed.vatScheme || undefined, businessName: bpParsed.businessName || undefined }); } }
             } catch {}
           }
         }
@@ -1262,7 +1267,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             if (bpRaw) {
               try {
                 const bpParsed = JSON.parse(bpRaw);
-                if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) { setProfileLoaded(true); setProfileContext({ country: bpParsed.country || undefined, trade: bpParsed.trade || undefined, vatScheme: bpParsed.vatScheme || undefined }); } }
+                if (bpParsed && typeof bpParsed === 'object') { setBusinessProfile(prev => ({ ...prev, ...bpParsed })); if (isOwnProfile(bpParsed)) { setProfileLoaded(true); setProfileContext({ country: bpParsed.country || undefined, trade: bpParsed.trade || undefined, vatScheme: bpParsed.vatScheme || undefined, businessName: bpParsed.businessName || undefined }); } }
               } catch {}
             }
           }
@@ -2334,6 +2339,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           )
         );
         const now = new Date();
+        // The customer may have decided in the portal before this device heard
+        // of it: the database keeps accepted/rejected (trigger
+        // documents_keep_decided_status) and returns it. Adopt the server's
+        // answer instead of showing "sent" and offering Accept again (UK walk,
+        // 2026-10-08).
+        const generationAtSend = userGenerationRef.current;
+        const adoptDecidedStatus = <R,>(row: R): R => {
+          // Not after an account switch: B may have a quote with A's number.
+          if (userGenerationRef.current !== generationAtSend) return row;
+          const serverStatus = (row as { status?: string } | null)?.status;
+          if (serverStatus === 'accepted' || serverStatus === 'rejected') {
+            setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status: serverStatus } : q)));
+          }
+          return row;
+        };
         if (isSupabaseConfigured) {
           // R52: was fire-and-forget log — offline contractors marking a
           // quote as sent saw it stuck in `draft` on BE forever. Now wraps
@@ -2342,19 +2362,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             persistOrQueue(
               'documents',
               'update',
-              async () => {
-                const row = await updateDocument(id, { status: 'sent', sent_at: now.toISOString() });
-                // The customer may have decided in the portal before this
-                // device heard of it: the database keeps accepted/rejected
-                // (trigger documents_keep_decided_status) and returns it. Adopt
-                // the server's answer instead of showing "sent" and offering
-                // Accept again (UK walk, 2026-10-08).
-                const serverStatus = (row as { status?: string } | null)?.status;
-                if (serverStatus === 'accepted' || serverStatus === 'rejected') {
-                  setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status: serverStatus } : q)));
-                }
-                return row;
-              },
+              () => updateDocument(id, { status: 'sent', sent_at: now.toISOString() }).then(adoptDecidedStatus),
               { rowId: id, payload: { status: 'sent', sent_at: now.toISOString() } },
             ),
           ).catch((err) =>
@@ -2488,7 +2496,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // The FK, never the display slot — `customer` holds the NAME on most
           // rows, so the event's customerId read "Sarah Jones" (UK walk W138)
           // and every per-customer payment-timing join missed it.
-          customerId: invoice?.customerId ?? '',
+          customerId: (invoice && findDocumentCustomer(customers, invoice)?.id) ?? invoice?.customerId ?? '',
           amount: invoice?.amount ?? 0,
           dueDate: sentDue.toISOString(),
         }).catch(() => {});
@@ -2568,7 +2576,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         ).catch(() => {});
         // AI data collector
         emitPaymentReceived(getCurrentUserId(), id, {
-          customerId: paidInv?.customerId ?? '',
+          customerId: (paidInv && findDocumentCustomer(customers, paidInv)?.id) ?? paidInv?.customerId ?? '',
           amount: paidInv?.amount ?? 0,
           daysToPayment: 0,
           paymentMethod: 'unknown',
@@ -3201,11 +3209,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // new specialty/market without waiting for a re-login. Without
         // this, a contractor switching from NL → DE would keep tagging
         // every business event and material write to the old market.
-        if (updates.country !== undefined || updates.trade !== undefined || updates.vatScheme !== undefined) {
+        if (updates.country !== undefined || updates.trade !== undefined || updates.vatScheme !== undefined || updates.businessName !== undefined) {
           setProfileContext({
             country: updates.country === undefined ? undefined : updates.country || null,
             trade: updates.trade === undefined ? undefined : updates.trade || null,
             vatScheme: updates.vatScheme === undefined ? undefined : updates.vatScheme || null,
+            // The name customer messages are signed with (signCustomerMessage).
+            businessName: updates.businessName === undefined ? undefined : updates.businessName || null,
           });
         }
         if (isSupabaseConfigured) {
@@ -3678,16 +3688,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 ),
           );
         }
-        const docNumber = await nextDocumentNumber('invoice');
         // Lines + GROSS amount — see `invoiceFromJobBilling` for why this is
         // not simply `billing.agreedAmount` (that was the quote's NET, stored
         // as a gross total: the VAT was never billed, #339).
-        const { lines: jobInvSourceItems, amount } = invoiceFromJobBilling({
+        const { lines: jobInvDraftItems, amount } = invoiceFromJobBilling({
           billing,
           quoteLines: job.quoteId ? (lineItems[job.quoteId] ?? []) : [],
           fallbackVatRatePercent: jobVatRate,
           makeLine: (li, idx) => ({
-            id: `li-${docNumber}-${idx}`,
+            id: `li-pending-${idx}`,
             description: li.description,
             quantity: li.quantity,
             unitPrice: li.unitPrice,
@@ -3709,6 +3718,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (invValidation.warnings.length > 0) {
           logWarn('Validator', 'Invoice warnings: ' + invValidation.warnings.map(w => w.message).join(', '));
         }
+        // Minted only AFTER the duplicate check — a refused second invoice for
+        // the same job burnt a number and left a gap in the series (review,
+        // 2026-10-08; same fix as addInvoice).
+        const docNumber = await nextDocumentNumber('invoice');
+        const jobInvSourceItems = jobInvDraftItems.map((li, idx) => ({ ...li, id: `li-${docNumber}-${idx}` }));
 
         // Resolve the customer so the invoice carries a human-readable name
         // rather than the raw id. Without this, job-sourced invoices never
@@ -4138,8 +4152,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             retention_amount: retention,
             is_retention_release: false,
           };
+          let createdRow: { id: string } | null = null;
           try {
-            const row = await withTimeout(createDocument(invPayload), 3000, 'addTermInvoice');
+            createdRow = await withTimeout(createDocument(invPayload), 3000, 'addTermInvoice');
+          } catch (err) {
+            logWarn('AppState', `addTermInvoice persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
+            } catch {}
+          }
+          // The lines in their OWN try: inside the create's, a slow line write
+          // queued a SECOND insert of a document that already existed (review
+          // 2026-10-08). Lines missing on the server are healed on load.
+          if (createdRow) {
+            const row = createdRow;
+            try {
             await withTimeout(
               upsertLineItems(
                 row.id,
@@ -4156,12 +4184,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               3000,
               'addTermInvoice.lineItems',
             );
-          } catch (err) {
-            logWarn('AppState', `addTermInvoice persist failed, queueing: ${err}`);
-            try {
-              const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
-            } catch {}
+            } catch (err) {
+              logWarn('AppState', `addTermInvoice line write failed: ${err}`);
+            }
           }
           await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['project_id', invProjectFk]]);
           // Persist the term-status change through the same project patch path
@@ -4312,8 +4337,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             retention_amount: retention,
             is_retention_release: false,
           };
+          let createdRow: { id: string } | null = null;
           try {
-            const row = await withTimeout(createDocument(invPayload), 3000, 'addChangeOrderInvoice');
+            createdRow = await withTimeout(createDocument(invPayload), 3000, 'addChangeOrderInvoice');
+          } catch (err) {
+            logWarn('AppState', `addChangeOrderInvoice persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
+            } catch {}
+          }
+          // The lines in their OWN try: inside the create's, a slow line write
+          // queued a SECOND insert of a document that already existed (review
+          // 2026-10-08). Lines missing on the server are healed on load.
+          if (createdRow) {
+            const row = createdRow;
+            try {
             await withTimeout(
               upsertLineItems(
                 row.id,
@@ -4330,12 +4369,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               3000,
               'addChangeOrderInvoice.lineItems',
             );
-          } catch (err) {
-            logWarn('AppState', `addChangeOrderInvoice persist failed, queueing: ${err}`);
-            try {
-              const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
-            } catch {}
+            } catch (err) {
+              logWarn('AppState', `addChangeOrderInvoice line write failed: ${err}`);
+            }
           }
           await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['project_id', invProjectFk]]);
           try {
@@ -4469,8 +4505,22 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             retention_amount: 0,
             is_retention_release: true,
           };
+          let createdRow: { id: string } | null = null;
           try {
-            const row = await withTimeout(createDocument(invPayload), 3000, 'addRetentionReleaseInvoice');
+            createdRow = await withTimeout(createDocument(invPayload), 3000, 'addRetentionReleaseInvoice');
+          } catch (err) {
+            logWarn('AppState', `addRetentionReleaseInvoice persist failed, queueing: ${err}`);
+            try {
+              const { queueWrite } = await import('../services/offlineWriteQueue');
+              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
+            } catch {}
+          }
+          // The lines in their OWN try: inside the create's, a slow line write
+          // queued a SECOND insert of a document that already existed (review
+          // 2026-10-08). Lines missing on the server are healed on load.
+          if (createdRow) {
+            const row = createdRow;
+            try {
             if (releaseLines.length) {
               await withTimeout(
                 upsertLineItems(
@@ -4489,12 +4539,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 'addRetentionReleaseInvoice.lineItems',
               );
             }
-          } catch (err) {
-            logWarn('AppState', `addRetentionReleaseInvoice persist failed, queueing: ${err}`);
-            try {
-              const { queueWrite } = await import('../services/offlineWriteQueue');
-              await queueWrite({ table: 'documents', op: 'insert', payload: { ...invPayload, user_id: getCurrentUserId() } });
-            } catch {}
+            } catch (err) {
+              logWarn('AppState', `addRetentionReleaseInvoice line write failed: ${err}`);
+            }
           }
           await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['project_id', invProjectFk]]);
         }
@@ -4577,7 +4624,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // the server already holds (23505 below: the portal accepted it while
         // this device still showed 'sent'). W119.
         const emitAccepted = () => emitQuoteAccepted(getCurrentUserId(), quoteId, {
-          customerId: quote.customerId ?? '',
+          customerId: findDocumentCustomer(customers, quote)?.id ?? quote.customerId ?? '',
           quotedAmount: quote.amount,
           acceptedAmount: quote.amount,
           daysToAccept: ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : 0,
@@ -4820,7 +4867,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // Deferred like convertQuoteToJob's: not when the server already holds
           // this quote's job (23505 → it recorded the acceptance itself, W119).
           const emitAcceptedUp = () => emitQuoteAccepted(getCurrentUserId(), id, {
-            customerId: quote.customerId ?? '',
+            customerId: findDocumentCustomer(customers, quote)?.id ?? quote.customerId ?? '',
             quotedAmount: quote.amount,
             acceptedAmount: quote.amount,
             daysToAccept: ttdHoursUp !== undefined ? Math.round(ttdHoursUp / 24) : 0,
@@ -4919,7 +4966,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             ? Math.max(0, Math.round((Date.now() - sentAtMs) / (1000 * 60 * 60)))
             : undefined;
           emitQuoteRejected(getCurrentUserId(), id, {
-            customerId: quote.customerId ?? '',
+            customerId: findDocumentCustomer(customers, quote)?.id ?? quote.customerId ?? '',
             quotedAmount: quote.amount,
             reason: declineReason,
           }).catch(() => {});

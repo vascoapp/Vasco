@@ -158,7 +158,8 @@ export default function InvoiceDetailScreen() {
   // rate printed "Subtotaal € 1.250,00 / BTW € 262,50" on € 1.512,50 that had
   // already been declared: output VAT over-declared and the customer reclaims
   // it twice (#354).
-  const effectiveRate = invoice?.isRetentionRelease ? 0 : profileRate;
+  // UK releases carry the retention's VAT (reg. 89) — see invoicePdfSource.
+  const effectiveRate = invoice?.isRetentionRelease && !retentionDeductedOnInvoice(country) ? 0 : profileRate;
   // Withheld from the PAYMENT of this invoice (EU instalments). A UK invoice
   // deducts its retention as a line, so nothing is withheld on top of it.
   // UK: sort code + account; US: routing + account; else the IBAN (bankDetails).

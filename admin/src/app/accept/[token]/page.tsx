@@ -544,7 +544,7 @@ export default function QuoteAcceptance({ params }: PageProps) {
                           onChange={(e) => setWithdrawalAck(e.target.checked)}
                           style={{ marginTop: 3 }}
                         />
-                        <span>{copy.withdrawalCheck}</span>
+                        <span>{ukNotice?.check ?? copy.withdrawalCheck}</span>
                       </label>
                     </div>
                   )}

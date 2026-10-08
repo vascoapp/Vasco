@@ -91,7 +91,8 @@
     "share": "Compartir",
     "options": "Opciones",
     "automatedFollowUps": "Recordatorios y seguimientos preparados",
-    "didNotWork": "No ha funcionado. Inténtalo de nuevo en un momento."
+    "didNotWork": "No ha funcionado. Inténtalo de nuevo en un momento.",
+    "eInvoicingFormats": "Factura electrónica ({{formats}})"
   },
   "tabs": {
     "today": "Hoy",
@@ -558,7 +559,10 @@
     "signOffFirst": "Obtener la firma primero",
     "lifecycleStageLabel": "Fase",
     "stageOf": "{{step}} de {{total}}",
-    "markOrdered": "Marcar como pedido"
+    "markOrdered": "Marcar como pedido",
+    "documents": "Documentos",
+    "docQuote": "Presupuesto {{ref}}",
+    "docInvoice": "Factura {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Gestionar seguros y siniestros",
@@ -966,7 +970,11 @@
     "serviceDateToday": "Hoy",
     "serviceDateAskTitle": "Fecha del trabajo",
     "serviceDateAskBody": "Una factura alemana debe indicar cuándo se realizó el trabajo. Indique la fecha en «Fecha del trabajo» en esta factura o elija Hoy.",
-    "autoSendTag": "Automático"
+    "autoSendTag": "Automático",
+    "noCustomerTitle": "Esta factura no tiene cliente",
+    "noCustomerBody": "Una factura debe indicar el cliente. Añade primero el cliente al proyecto o trabajo del que procede.",
+    "retentionWithheld": "Retención de garantía hasta la recepción",
+    "payableNow": "A pagar ahora"
   },
   "expenses": {
     "title": "Gastos",
@@ -1148,7 +1156,11 @@
     "counterNeedsNumber": "¿Qué número?",
     "personNatural": "Persona física (autónomo)",
     "personLegal": "Persona jurídica (sociedad)",
-    "paymentTerms": "Plazo de pago (días)"
+    "paymentTerms": "Plazo de pago (días)",
+    "sortCode": "Sort code",
+    "ibanInternational": "IBAN (pagos desde el extranjero)",
+    "accountShort": "Cuenta",
+    "routingShort": "Routing #"
   },
   "financials": {
     "revenue": "Facturación",
@@ -2256,7 +2268,8 @@
     "projectStart": "Inicio de la obra",
     "setProjectStart": "Fijar el inicio del proyecto",
     "projectStartHint": "Los hitos se mueven con el inicio. Una fecha de entrega prometida se mantiene.",
-    "startNotSet": "Sin fijar"
+    "startNotSet": "Sin fijar",
+    "noJobsYetCreate": "Aún no tienes trabajos. Crea uno en Obras y luego añádelo a este proyecto."
   },
   "projectTemplate": {
     "pick": "Empezar con una secuencia de oficios",
@@ -2520,7 +2533,8 @@
     "vatNumberTva": "Número de IVA (TVA)",
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Company number (Companies House)",
-    "nameWithSurname": "Nombre completo con apellidos (p. ej. Lucía Navarro Gómez)"
+    "nameWithSurname": "Nombre completo con apellidos (p. ej. Lucía Navarro Gómez)",
+    "yourBusiness": "Tu empresa"
   },
   "search": {
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",
@@ -3009,7 +3023,9 @@
       "guideFollowup_other": "Haga seguimiento de {{count}} presupuestos abiertos",
       "guideAannemerProjects_one": "{{count}} proyecto en curso hoy",
       "guideAannemerProjects_other": "{{count}} proyectos en curso hoy",
-      "guideNext": "Prepare su próximo presupuesto"
+      "guideNext": "Prepare su próximo presupuesto",
+      "guideAannemerOpenProjects_one": "{{count}} proyecto abierto",
+      "guideAannemerOpenProjects_other": "{{count}} proyectos abiertos"
     },
     "pill": {
       "jobsCount_one": "{{count}} trabajo",
@@ -3173,7 +3189,9 @@
       "goodMorning": "Buenos días",
       "goodAfternoon": "Buenas tardes",
       "goodEvening": "Buenas noches"
-    }
+    },
+    "contactsCount_one": "{{count}} contacto",
+    "contactsCount_other": "{{count}} contactos"
   },
   "decisionPortal": {
     "yourChoices": "Tus elecciones",
@@ -6161,7 +6179,19 @@
     "retentionRate": "Retención",
     "editRetention": "Editar retención %",
     "change": "Cambiar",
-    "retentionAppliesForward": "Se aplica a las certificaciones aún no facturadas. Lo ya retenido no cambia."
+    "retentionAppliesForward": "Se aplica a las certificaciones aún no facturadas. Lo ya retenido no cambia.",
+    "needsCustomer": "Añade primero el cliente a este proyecto antes de facturarlo.",
+    "lessRetention": "Menos retención de garantía ({{percent}} %)",
+    "warnConfirmTitle": "¿Cliente avisado?",
+    "warnConfirmBody": "Regístralo solo si avisaste al cliente, antes de hacer el trabajo, de que «{{title}}» cuesta {{amount}} más.",
+    "warnConfirmYes": "Sí, avisado",
+    "warningRecordedOn": "Aviso registrado el {{date}}",
+    "payableNowLine": "A pagar ahora {{now}} sin IVA · se retienen {{retention}} de garantía",
+    "needsCustomerTitle": "Aún no hay cliente",
+    "invoiceConfirmTitle": "¿Crear esta factura?",
+    "invoiceConfirmBody": "{{title}} — {{amount}} sin IVA, para {{customer}}.",
+    "invoiceConfirmYes": "Crear factura",
+    "recordApproval": "Registrar la aprobación del cliente"
   },
   "jobForms": {
     "title": "Formularios de trabajo",
@@ -7456,7 +7486,8 @@
     "yearly": "Anual",
     "frDebitsSection": "IVA sobre débitos (FR)",
     "frDebitsLabel": "He optado por el IVA según los débitos",
-    "frDebitsHint": "La mención correspondiente se imprimirá en sus facturas."
+    "frDebitsHint": "La mención correspondiente se imprimirá en sus facturas.",
+    "istHintUK": "Cash Accounting Scheme. Disponible si tu facturación sujeta a IVA es de 1,35 millones £ o menos; no hace falta solicitarlo."
   },
   "complianceAgent": {
     "expiredTitle": "{{name}} ha caducado",

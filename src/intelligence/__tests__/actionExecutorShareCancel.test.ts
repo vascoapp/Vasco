@@ -47,6 +47,8 @@ jest.mock('../../lib/currentUser', () => ({
   // formatMoney2 reaches for this via the i18n formatting module.
   getCurrentCountry: () => 'NL',
   getCurrentTrade: () => 'plumbing',
+  // signCustomerMessage signs with the profile's business name.
+  getCurrentBusinessName: () => 'Hughes Plumbing',
 }));
 
 import { executeAction } from '../actionExecutor';

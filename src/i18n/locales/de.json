@@ -91,7 +91,8 @@
     "share": "Teilen",
     "options": "Optionen",
     "automatedFollowUps": "Vorbereitete Erinnerungen und Nachfassen",
-    "didNotWork": "Das hat nicht geklappt. Bitte versuchen Sie es gleich noch einmal."
+    "didNotWork": "Das hat nicht geklappt. Bitte versuchen Sie es gleich noch einmal.",
+    "eInvoicingFormats": "E-Rechnungen ({{formats}})"
   },
   "tabs": {
     "today": "Heute",
@@ -558,7 +559,10 @@
     "signOffFirst": "Erst abzeichnen lassen",
     "lifecycleStageLabel": "Phase",
     "stageOf": "{{step}} von {{total}}",
-    "markOrdered": "Als bestellt markieren"
+    "markOrdered": "Als bestellt markieren",
+    "documents": "Dokumente",
+    "docQuote": "Angebot {{ref}}",
+    "docInvoice": "Rechnung {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Versicherungen & Schäden verwalten",
@@ -966,7 +970,11 @@
     "serviceDateToday": "Heute",
     "serviceDateAskTitle": "Leistungsdatum",
     "serviceDateAskBody": "Eine Rechnung muss angeben, wann die Leistung erbracht wurde (§ 14 UStG). Bitte stellen Sie das Leistungsdatum auf dieser Rechnung ein oder wählen Sie Heute.",
-    "autoSendTag": "Automatisch"
+    "autoSendTag": "Automatisch",
+    "noCustomerTitle": "Kein Kunde auf dieser Rechnung",
+    "noCustomerBody": "Eine Rechnung muss den Kunden nennen. Ordnen Sie zuerst dem Projekt oder Auftrag, aus dem sie stammt, den Kunden zu.",
+    "retentionWithheld": "Sicherheitseinbehalt bis zur Abnahme",
+    "payableNow": "Jetzt zu zahlen"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -1148,7 +1156,11 @@
     "counterNeedsNumber": "Welche Nummer?",
     "personNatural": "Natürliche Person (Einzelunternehmen)",
     "personLegal": "Juristische Person (GmbH o. ä.)",
-    "paymentTerms": "Zahlungsziel (Tage)"
+    "paymentTerms": "Zahlungsziel (Tage)",
+    "sortCode": "Sort Code",
+    "ibanInternational": "IBAN (Zahlungen aus dem Ausland)",
+    "accountShort": "Konto",
+    "routingShort": "Routing #"
   },
   "financials": {
     "revenue": "Umsatz",
@@ -2256,7 +2268,8 @@
     "projectStart": "Baubeginn",
     "setProjectStart": "Projektbeginn festlegen",
     "projectStartHint": "Meilensteine verschieben sich mit dem Beginn. Ein zugesagter Übergabetermin bleibt bestehen.",
-    "startNotSet": "Nicht festgelegt"
+    "startNotSet": "Nicht festgelegt",
+    "noJobsYetCreate": "Sie haben noch keine Aufträge. Legen Sie unter Aufträge einen an und fügen Sie ihn dann diesem Projekt hinzu."
   },
   "projectTemplate": {
     "pick": "Mit einer Gewerkefolge starten",
@@ -2520,7 +2533,8 @@
     "vatNumberTva": "USt-IdNr. (TVA)",
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Company Number (Companies House)",
-    "nameWithSurname": "Vollständiger Name mit Nachname (z. B. Lucía Navarro Gómez)"
+    "nameWithSurname": "Vollständiger Name mit Nachname (z. B. Lucía Navarro Gómez)",
+    "yourBusiness": "Ihr Betrieb"
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
@@ -3009,7 +3023,9 @@
       "guideFollowup_other": "{{count}} offene Angebote nachfassen",
       "guideAannemerProjects_one": "{{count}} Projekt läuft heute",
       "guideAannemerProjects_other": "{{count}} Projekte laufen heute",
-      "guideNext": "Ihr nächstes Angebot erstellen"
+      "guideNext": "Ihr nächstes Angebot erstellen",
+      "guideAannemerOpenProjects_one": "{{count}} offenes Projekt",
+      "guideAannemerOpenProjects_other": "{{count}} offene Projekte"
     },
     "pill": {
       "jobsCount_one": "{{count}} Auftrag",
@@ -3173,7 +3189,9 @@
       "goodMorning": "Guten Morgen",
       "goodAfternoon": "Guten Tag",
       "goodEvening": "Guten Abend"
-    }
+    },
+    "contactsCount_one": "{{count}} Kontakt",
+    "contactsCount_other": "{{count}} Kontakte"
   },
   "decisionPortal": {
     "yourChoices": "Ihre Auswahl",
@@ -6161,7 +6179,19 @@
     "retentionRate": "Sicherheitseinbehalt",
     "editRetention": "Sicherheitseinbehalt % ändern",
     "change": "Ändern",
-    "retentionAppliesForward": "Gilt für noch nicht abgerechnete Raten. Bereits Einbehaltenes ändert sich nicht."
+    "retentionAppliesForward": "Gilt für noch nicht abgerechnete Raten. Bereits Einbehaltenes ändert sich nicht.",
+    "needsCustomer": "Bitte ordnen Sie dem Projekt zuerst den Kunden zu, bevor Sie es abrechnen.",
+    "lessRetention": "Abzüglich Sicherheitseinbehalt ({{percent}} %)",
+    "warnConfirmTitle": "Kunde informiert?",
+    "warnConfirmBody": "Halten Sie dies nur fest, wenn Sie den Kunden vor der Ausführung darauf hingewiesen haben, dass „{{title}}“ {{amount}} mehr kostet.",
+    "warnConfirmYes": "Ja, informiert",
+    "warningRecordedOn": "Hinweis festgehalten am {{date}}",
+    "payableNowLine": "Jetzt fällig {{now}} netto · {{retention}} Sicherheitseinbehalt",
+    "needsCustomerTitle": "Noch kein Kunde",
+    "invoiceConfirmTitle": "Diese Rechnung erstellen?",
+    "invoiceConfirmBody": "{{title}} — {{amount}} netto, an {{customer}}.",
+    "invoiceConfirmYes": "Rechnung erstellen",
+    "recordApproval": "Zustimmung des Kunden festhalten"
   },
   "jobForms": {
     "title": "Arbeitsformulare",
@@ -7456,7 +7486,8 @@
     "yearly": "Jährlich",
     "frDebitsSection": "TVA sur les débits (FR)",
     "frDebitsLabel": "Ich habe zur Besteuerung nach vereinbarten Entgelten (débits) optiert",
-    "frDebitsHint": "Der entsprechende Hinweis wird auf Ihren Rechnungen gedruckt."
+    "frDebitsHint": "Der entsprechende Hinweis wird auf Ihren Rechnungen gedruckt.",
+    "istHintUK": "Cash Accounting Scheme. Möglich, wenn Ihr umsatzsteuerpflichtiger Umsatz höchstens 1,35 Mio. £ beträgt — kein Antrag nötig."
   },
   "complianceAgent": {
     "expiredTitle": "{{name}} ist abgelaufen",

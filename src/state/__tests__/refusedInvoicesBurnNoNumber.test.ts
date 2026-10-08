@@ -15,6 +15,7 @@ const body = (name: string) => {
 
 it.each([
   ['addInvoice', /validateInvoiceBeforeCreate\(/],
+  ['addInvoiceFromJob', /validateInvoiceBeforeCreate\(/],
   ['addTermInvoice', /validateBillingSchedule\(project\)/],
   ['addChangeOrderInvoice', /canInvoiceChangeOrder\(/],
   ['addRetentionReleaseInvoice', /canReleaseRetention\(/],

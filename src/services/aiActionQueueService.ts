@@ -1139,8 +1139,8 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
       actionLabel: t('aiQueue.sendFollowUp'),
       estimatedImpact: t('aiQueue.increasesAcceptance'),
       expiresAt: new Date(now + 5 * dayMs).toISOString(),
-      // One card per quote — it appeared twice on Today (UK walk).
-      entityKey: `followup-for-quote:${quote.id}`,
+      // No entityKey: with one, addToQueue's sibling merge folds every OTHER
+      // quote's follow-up into this card as "+1 more" (review 2026-10-08).
       sourceGeneratorId: 'automation_draft_followup',
     });
     if (id) added++;

@@ -41,6 +41,7 @@ import { safeZipName, utf8, StoredZipWriter } from '../utils/storedZip';
 import { logWarn } from '../utils/errorHandler';
 import { localDateKey } from '../utils/dateKey';
 import { withTimeout } from '../utils/withTimeout';
+import { retentionDeductedOnInvoice } from '../domain/documents';
 
 type Translate = (key: string, fallback: string, opts?: Record<string, unknown>) => string;
 
@@ -158,7 +159,8 @@ export async function buildRecordsArchive(
     bases.add(base);
 
     // A retention release carries no new VAT (#354) — same rule as the screen.
-    const effectiveRate = (invoice as any).isRetentionRelease ? 0 : profileRate;
+    // UK releases carry the retention's VAT (reg. 89) — see invoicePdfSource.
+    const effectiveRate = (invoice as any).isRetentionRelease && !retentionDeductedOnInvoice(input.country) ? 0 : profileRate;
     const lines = invoiceLinesFor(invoice, input.lineItems[invoice.id], effectiveRate, t('invoices.services', 'Services rendered'));
     const inp: InvoiceDocInputs = {
       invoice, lines, customers: input.customers, businessProfile: input.businessProfile,

@@ -962,7 +962,9 @@ function initEventQueueRemapListener(): void {
   if (_eventQueueRemapInit) return;
   _eventQueueRemapInit = true;
   subscribeIdRemap((e: IdRemapEvent) => {
-    void rewriteQueuedEventIds(e.tempId, e.realId);
+    // Under the queue lock like every other read-modify-write of it (review
+    // 2026-10-08: this one could overwrite an event enqueued meanwhile).
+    void withEventQueueLock(() => rewriteQueuedEventIds(e.tempId, e.realId));
   });
 }
 
@@ -997,8 +999,21 @@ function withEventQueueLock<T>(fn: () => Promise<T>): Promise<T> {
   eventQueueChain = next.catch(() => {});
   return next;
 }
+// Flushes are SINGLE-FLIGHT, and the lock is NOT held across the network
+// insert (review 2026-10-08): supabase-js has no timeout, and a stalled insert
+// under the lock blocked every enqueue — events not even written to storage,
+// onboarding (which awaits its event) stuck on submit. A call made while a
+// flush runs sets `flushAgain` and awaits the same run, which loops once more
+// so its event goes out in the same cycle.
+let flushRunning: Promise<void> | null = null;
+let flushAgain = false;
+const FLUSH_INSERT_TIMEOUT_MS = 15_000;
 function flushToCloud(userId: string): Promise<void> {
-  return withEventQueueLock(() => flushToCloudOnce(userId));
+  if (flushRunning) { flushAgain = true; return flushRunning; }
+  flushRunning = (async () => {
+    do { flushAgain = false; await flushToCloudOnce(userId); } while (flushAgain);
+  })().finally(() => { flushRunning = null; });
+  return flushRunning;
 }
 
 async function flushToCloudOnce(userId: string): Promise<void> {
@@ -1010,25 +1025,8 @@ async function flushToCloudOnce(userId: string): Promise<void> {
   if (getAuthedUserId() !== userId) return;
 
   try {
-    const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
-    if (!raw) return;
-
-    const queue: QueuedEvent[] = JSON.parse(raw);
-    if (queue.length === 0) return;
-
-    // R58: drop placeholder-uid events sitting in the queue from before
-    // the gate was added — business_events.user_id is a NOT NULL FK to
-    // auth.users(id), so 'current-user' would fail the constraint and
-    // block the entire batch from advancing. Filter them out so real
-    // events behind them aren't permanently blocked.
-    const filtered = queue.filter((e) => !isPlaceholderUserId(e.userId));
-    if (filtered.length !== queue.length) {
-      await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(filtered));
-    }
-    if (filtered.length === 0) return;
-
-    // Take a batch
-    const batch = filtered.slice(0, BATCH_SIZE);
+    const batch = await withEventQueueLock(() => takeBatch());
+    if (!batch || batch.length === 0) return;
     const rows = batch.map(e => ({
       user_id: e.userId,
       event_type: e.eventType,
@@ -1040,23 +1038,45 @@ async function flushToCloudOnce(userId: string): Promise<void> {
       screen_context: e.screenContext,
       created_at: e.timestamp,
     }));
-
-    const { error } = await supabase.from('business_events').insert(rows);
-    if (!error) {
-      // R58: was `queue.slice(BATCH_SIZE)` — but we already rewrote the
-      // queue to `filtered` above (placeholder uids dropped). Slicing
-      // the original `queue` would re-introduce dropped placeholders.
-      // Slice from `filtered` instead.
-      // Remove exactly what was sent, from the queue as it is NOW: events
-      // enqueued while the insert was in flight used to be overwritten by the
-      // stale `filtered.slice(BATCH_SIZE)` and lost.
-      const sentIds = new Set(batch.map((e) => e.id));
+    const { error } = await Promise.race([
+      supabase.from('business_events').insert(rows),
+      new Promise<{ error: Error }>((resolve) => setTimeout(() => resolve({ error: new Error('insert timeout') }), FLUSH_INSERT_TIMEOUT_MS)),
+    ]) as { error: unknown };
+    if (error) return;
+    // Remove exactly what was sent, from the queue as it is NOW: events
+    // enqueued while the insert was in flight used to be overwritten by a
+    // stale slice and lost.
+    const sentIds = new Set(batch.map((e) => e.id));
+    await withEventQueueLock(async () => {
       const nowRaw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
       const now: QueuedEvent[] = nowRaw ? JSON.parse(nowRaw) : [];
       await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(now.filter((e) => !sentIds.has(e.id))));
-    }
+    });
   } catch {
     // Will retry on next flush
+  }
+}
+
+/** Under the lock: drop placeholder-uid rows and return the next batch. */
+async function takeBatch(): Promise<QueuedEvent[] | null> {
+  {
+    const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
+    if (!raw) return null;
+
+    const queue: QueuedEvent[] = JSON.parse(raw);
+    if (queue.length === 0) return null;
+
+    // R58: drop placeholder-uid events sitting in the queue from before
+    // the gate was added — business_events.user_id is a NOT NULL FK to
+    // auth.users(id), so 'current-user' would fail the constraint and
+    // block the entire batch from advancing. Filter them out so real
+    // events behind them aren't permanently blocked.
+    const filtered = queue.filter((e) => !isPlaceholderUserId(e.userId));
+    if (filtered.length !== queue.length) {
+      await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(filtered));
+    }
+    if (filtered.length === 0) return null;
+    return filtered.slice(0, BATCH_SIZE);
   }
 }
 

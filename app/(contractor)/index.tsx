@@ -65,7 +65,9 @@ export default function VandaagDK() {
   // OPEN projects, not only 'active': a new project starts in 'planning', and
   // Today kept saying "Start your first multi-trade project" beside one (UK
   // aannemer walk, 2026-10-08) — and that card is the way into Projects.
-  const activeProjectCount = projects?.filter((p) => p.status !== 'completed' && p.status !== 'cancelled').length ?? 0;
+  // Same set as the Jobs tab's Projects list (active + planning) — on_hold
+  // counted here but not there sent the aannemer to an empty screen (review).
+  const activeProjectCount = projects?.filter((p) => p.status === 'active' || p.status === 'planning').length ?? 0;
   const today = todayKey();
 
   const daySchedule = useDaySchedule(today);

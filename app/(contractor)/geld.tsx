@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
-import { collectionRate as computeCollectionRate, issuedInvoices } from '../../src/utils/collectionRate';
+import { collectionRate as computeCollectionRate, issuedInvoices, dueInvoices } from '../../src/utils/collectionRate';
 import { useAppState } from '../../src/state/AppState';
 import { documentCustomerName } from '../../src/domain/customers';
 import { useFinancialAnalysis } from '../../src/services/financialAnalysisService';
@@ -316,7 +316,9 @@ export default function GeldScreen() {
         {/* Gated on ISSUED, not on `invoices.length`: a contractor whose only
             invoices are drafts has billed nothing, and showing them a red 0%
             would score an empty set as a bad outcome. */}
-        {issued.length > 0 && (
+        {/* Only once something has FALLEN DUE (dueInvoices) — a fresh invoice
+            is not an uncollected one (UK walk, 2026-10-08). */}
+        {dueInvoices(invoices as any).length > 0 && (
           <View style={s.collectionBadge}>
             <Ionicons name="checkmark-circle" size={14} color={collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger} />
             <Text style={s.collectionText}>{t('dk.pill.collectionRate', 'Collection rate').toUpperCase()} · <Text style={{ color: collectionRate >= 80 ? DK.colors.success : collectionRate >= 50 ? DK.colors.highlight : DK.colors.danger }}>{collectionRate}%</Text></Text>

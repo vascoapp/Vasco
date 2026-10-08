@@ -58,6 +58,7 @@ import { formatCurrency, formatCurrency0, formatTime } from '../../../src/i18n/f
 import type { Country } from '../../../src/i18n/formatting';
 import { shareOutcome } from '../../../src/utils/shareOutcome';
 import { ensureCanCreate } from '../../../src/services/tierGatePrompt';
+import { documentNumber } from '../../../src/domain/documents';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -356,6 +357,12 @@ export default function JobDetailPage() {
   }
 
   const appJob = jobs.find((j: any) => j.id === id);
+  // quoteId holds the quote's id or its document number (server jobs, W119).
+  const linkedQuote = appJob?.quoteId
+    ? quotes.find((q: any) => q.id === appJob.quoteId || documentNumber(q) === appJob.quoteId)
+    : undefined;
+  const linkedInvoice = invoices.find((inv: any) =>
+    inv.jobId === id || (appJob?.invoiceId && inv.id === appJob.invoiceId));
   const cust = customers.find((c: any) => c.id === (appJob?.customerId || job.customerId));
   const contact = cust
     ? { name: cust.name, phone: cust.phone || '', email: cust.email || '' }
@@ -924,6 +931,30 @@ export default function JobDetailPage() {
             <Ionicons name="arrow-forward-circle" size={18} color="#fff" />
             <Text style={styles.nextStepText}>{lifecycleNextAction(job.lifecycleStatus as JobLifecycleStatus, t)}</Text>
           </Pressable>
+        )}
+
+        {/* The job's own documents: it came from a quote and became an
+            invoice, and the screen linked to neither (UK walk, 2026-10-08). */}
+        {(linkedQuote || linkedInvoice) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>{t('jobs.documents', 'Documents')}</Text>
+            <View style={styles.card}>
+              {linkedQuote && (
+                <Pressable style={styles.docLinkRow} onPress={() => router.push(`/quotes/${linkedQuote.id}` as any)} accessibilityRole="link">
+                  <Ionicons name="document-text-outline" size={18} color={Palette.hermesOrange} />
+                  <Text style={styles.docLinkText}>{t('jobs.docQuote', { defaultValue: 'Quote {{ref}}', ref: documentNumber(linkedQuote) })}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textSecondary} />
+                </Pressable>
+              )}
+              {linkedInvoice && (
+                <Pressable style={styles.docLinkRow} onPress={() => router.push(`/invoices/${linkedInvoice.id}` as any)} accessibilityRole="link">
+                  <Ionicons name="receipt-outline" size={18} color={Palette.hermesOrange} />
+                  <Text style={styles.docLinkText}>{t('jobs.docInvoice', { defaultValue: 'Invoice {{ref}}', ref: documentNumber(linkedInvoice) })}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={SemanticColors.textSecondary} />
+                </Pressable>
+              )}
+            </View>
+          </View>
         )}
 
         {/* ============================================ */}
@@ -1719,6 +1750,8 @@ export default function JobDetailPage() {
 // ============================================
 
 const styles = StyleSheet.create({
+  docLinkRow: { flexDirection: 'row', alignItems: 'center', gap: GRID.sm, paddingVertical: GRID.sm },
+  docLinkText: { flex: 1, fontSize: TYPE.bodySize, fontFamily: TYPE.bodyFamily, color: SemanticColors.textPrimary },
   directionsBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm,

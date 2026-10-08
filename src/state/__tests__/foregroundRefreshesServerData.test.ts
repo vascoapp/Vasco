@@ -6,10 +6,10 @@ import fs from 'fs';
 import path from 'path';
 import { stripComments } from '../../utils/stripComments';
 
-it('AppState refreshes data on an "active" transition, throttled', () => {
+it('AppState refreshes data on returning after a real absence (≥ 60 s), not after a share sheet', () => {
   const src = stripComments(fs.readFileSync(path.join(__dirname, '../AppState.tsx'), 'utf8'));
-  const block = src.match(/RNAppStateForRefresh\.addEventListener\('change',[\s\S]{0,400}?refreshData\(\)/);
+  const block = src.match(/RNAppStateForRefresh\.addEventListener\('change',[\s\S]{0,600}?refreshData\(\)/);
   expect(block).not.toBeNull();
-  expect(block![0]).toMatch(/state !== 'active'/);
-  expect(block![0]).toMatch(/30_000/);
+  expect(block![0]).toMatch(/state === 'background'/);
+  expect(block![0]).toMatch(/away < 60_000/);
 });

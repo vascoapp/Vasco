@@ -25,6 +25,7 @@ import { isSmallBusinessExempt, type VatScheme } from '../domain/business';
 import { documentCustomerName } from '../domain/customers';
 import { documentNumber, type Invoice } from '../domain/documents';
 import { pdfInvoiceFromRecord, type PdfSourceLine } from './invoicePdfSource';
+import { retentionDeductedOnInvoice } from '../domain/documents';
 
 export interface VatReportRow { ratePct: number; nature?: string; net: number; vat: number }
 
@@ -79,6 +80,8 @@ export interface VatReportInput {
   /** `lineItems` from AppState, keyed by document number (or id). */
   lineItems: Record<string, PdfSourceLine[] | undefined>;
   customers?: Array<{ id: string; name: string }>;
+  /** The contractor's market — a UK retention release IS a VAT invoice. */
+  country?: string | null;
   expenses: Array<{ id: string; description: string; supplier?: string; amount: number; vatAmount: number; vatRate: number; date: Date | string }>;
 }
 
@@ -118,7 +121,7 @@ export function buildVatReport(input: VatReportInput): VatReport {
     const number = documentNumber(inv);
     const issued = dayOf(inv.sentAt ?? inv.createdAt);
     const lines = input.lineItems[number] ?? input.lineItems[inv.id];
-    const doc = pdfInvoiceFromRecord({ invoice: inv as any, lines, fallbackVatRatePercent: fallbackRate, fallbackDescription: inv.job ?? '' });
+    const doc = pdfInvoiceFromRecord({ invoice: inv as any, lines, fallbackVatRatePercent: fallbackRate, fallbackDescription: inv.job ?? '', country: input.country });
 
     if (inv.status === 'draft') {
       // Not issued yet as far as Vasco knows — but it may have been shared.
@@ -135,7 +138,11 @@ export function buildVatReport(input: VatReportInput): VatReport {
     // A retention release pays out money withheld from a term invoice whose
     // turnover and VAT were declared in full then. Counting it again here read
     // as new 0 % supplies (review, 2026-10-04): listed, not counted.
-    if ((inv as any).isRetentionRelease) {
+    // UK: the retention was deducted on the instalment and its VAT is charged
+    // on the RELEASE (VAT Regs 1995 reg. 89) — so the release is counted like
+    // any VAT invoice; listing it as "not included" under-declared exactly the
+    // retention's VAT (review 2026-10-08).
+    if ((inv as any).isRetentionRelease && !retentionDeductedOnInvoice(input.country)) {
       retentionReleases.push({ id: inv.id, number, gross: doc.total });
       continue;
     }

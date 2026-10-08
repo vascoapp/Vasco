@@ -35,9 +35,12 @@ it('every decide_acceptance_link call passes p_withdrawal_ack', () => {
   expect(new Set(callers).size).toBeGreaterThanOrEqual(3);
 });
 
-it.each(['admin/src/app/quote/[id]/page.tsx', 'admin/src/app/accept/[token]/page.tsx'])('%s shows the notice and holds the accept button for a French contractor', (f) => {
+it.each(['admin/src/app/quote/[id]/page.tsx', 'admin/src/app/accept/[token]/page.tsx'])('%s shows the notice and holds the accept button for a French (and, since 2026-10-08, UK) contractor', (f) => {
   const src = stripComments(fs.readFileSync(path.join(ROOT, f), 'utf8'));
-  expect(src).toMatch(/const needsWithdrawalNotice = \([^)]*country[^)]*\)\.toUpperCase\(\) === 'FR'/);
+  // The country list lives in lib/cancellationNotice (equal to the RPC's —
+  // cancellationRightListsAgree.test.ts).
+  expect(src).toMatch(/const needsWithdrawalNotice = cancellationRightApplies\([^)]*country[^)]*\)/);
+  expect(src).toMatch(/ukNotice\?\.body \?\? copy\.withdrawalBody/);
   expect(src).toMatch(/disabled=\{needsWithdrawalNotice && !withdrawalAck\}/);
   expect(src).toMatch(/copy\.withdrawalBody/);
 });

@@ -21,9 +21,19 @@ describe('quote builder with no LLM', () => {
 
   it('shows no photo scan and no generate button, and keeps a scope field', async () => {
     expect(LLM_GENERATION_ENABLED).toBe(false);
-    // A built-in template gives the builder lines, so the review step — where
-    // the scope section lives — can be reached.
-    const r = await walkScreen(TieredQuote(), { settlePasses: 10, params: { templateId: 'qt-1' } });
+    // A template gives the builder lines, so the review step — where the scope
+    // section lives — can be reached. The contractor's OWN template: the
+    // built-ins are Dutch content offered to NL only (2026-10-08), and this
+    // posture has no market.
+    await AsyncStorage.setItem('@vasco_quote_templates', JSON.stringify({
+      userTemplates: [{
+        id: 'tpl-own', name: 'Boiler service', category: 'cv-onderhoud', description: '',
+        items: [{ description: 'Boiler service', quantity: 1, unit: 'pcs', unitPrice: 95.5, vatRate: 21, type: 'labour' }],
+        defaultVatRate: 21, defaultPaymentTerms: '', estimatedDuration: '', subtotal: 95.5, usageCount: 0, createdAt: '2026-10-01T00:00:00Z',
+      }],
+      deletedBuiltinIds: [], usage: {},
+    }));
+    const r = await walkScreen(TieredQuote(), { settlePasses: 10, params: { templateId: 'tpl-own' } });
     expect(r.error).toBeNull();
     const root = (r.tree as any).root;
 

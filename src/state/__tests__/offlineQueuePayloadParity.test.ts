@@ -79,7 +79,10 @@ describe('offline queue payload parity', () => {
     // A regex that matches nothing reports a clean sweep. Pin the count so a
     // refactor that reformats these calls fails here rather than turning the
     // whole check into a no-op.
-    const seen = [...SRC.matchAll(INLINE)].length + [...SRC.matchAll(MULTILINE)].length;
-    expect(seen).toBeGreaterThanOrEqual(6);
+    // DISTINCT call sites: until 2026-10-08 markQuoteSent matched BOTH
+    // patterns and was counted twice, so "6" was really 5 sites (found when
+    // its online fn gained a `.then`, which only MULTILINE accepts).
+    const sites = new Set([...SRC.matchAll(INLINE), ...SRC.matchAll(MULTILINE)].map((m) => m.index));
+    expect(sites.size).toBeGreaterThanOrEqual(5);
   });
 });

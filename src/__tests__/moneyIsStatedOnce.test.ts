@@ -25,12 +25,13 @@ describe('a retention release does not charge the VAT twice', () => {
   it('the PDF source zeroes the rate for a release', () => {
     const SRC = read('src/services/invoicePdfSource.ts');
     expect(SRC).toMatch(/isRetentionRelease\?: boolean;/);
-    expect(SRC).toMatch(/const fallbackVatRatePercent = invoice\.isRetentionRelease \? 0 : args\.fallbackVatRatePercent;/);
+    // EU releases zero the rate; a UK release is the retention's VAT invoice (reg. 89, 2026-10-08).
+    expect(SRC).toMatch(/const fallbackVatRatePercent = invoice\.isRetentionRelease && !retentionDeductedOnInvoice\(args\.country\)\s*\? 0 : args\.fallbackVatRatePercent;/);
   });
 
   it('the invoice screen does too', () => {
     const SRC = read('app/invoices/[id].tsx');
-    expect(SRC).toMatch(/const effectiveRate = invoice\?\.isRetentionRelease \? 0 : profileRate;/);
+    expect(SRC).toMatch(/const effectiveRate = invoice\?\.isRetentionRelease && !retentionDeductedOnInvoice\(country\) \? 0 : profileRate;/);
     // …and nothing else re-derives a rate behind its back.
     expect(SRC).not.toMatch(/const effectiveRate = businessProfile \?/);
   });
@@ -71,7 +72,7 @@ describe('what the message asks for is what the link charges', () => {
 
   it('the dunning email uses the same basis as its own interest line', () => {
     const INV = read('app/invoices/[id].tsx');
-    expect(INV).toMatch(/amount: formatCurrency\(amountPayableNow\(invoice\), country\)/);
+    expect(INV).toMatch(/amount: formatCurrency\(amountPayableNow\(invoice, country\), country\)/);
   });
 });
 

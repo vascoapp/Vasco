@@ -75,6 +75,7 @@ export default function VatReportScreen() {
     invoices: invoices as any,
     lineItems: lineItems as any,
     customers: customers as any,
+    country,
     expenses: expenses.map((e) => ({ id: e.id, description: e.description, supplier: e.supplier, amount: e.amount, vatAmount: e.vatAmount, vatRate: e.vatRate, date: e.date })),
   }), [bounds.start, bounds.end, businessProfile?.vatBasis, businessProfile?.vatScheme, country, invoices, lineItems, customers, expenses]);
 

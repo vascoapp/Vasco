@@ -91,7 +91,8 @@
     "share": "Share",
     "options": "Options",
     "automatedFollowUps": "Prepared reminders and follow-ups",
-    "didNotWork": "That didn't work. Please try again in a moment."
+    "didNotWork": "That didn't work. Please try again in a moment.",
+    "eInvoicingFormats": "E-invoicing ({{formats}})"
   },
   "tabs": {
     "today": "Today",
@@ -558,7 +559,10 @@
     "signOffFirst": "Get sign-off first",
     "lifecycleStageLabel": "Stage",
     "stageOf": "{{step}} of {{total}}",
-    "markOrdered": "Mark as ordered"
+    "markOrdered": "Mark as ordered",
+    "documents": "Documents",
+    "docQuote": "Quote {{ref}}",
+    "docInvoice": "Invoice {{ref}}"
   },
   "compliance": {
     "manageInsurance": "Manage insurance & claims",
@@ -966,7 +970,11 @@
     "serviceDateToday": "Today",
     "serviceDateAskTitle": "Date of the work",
     "serviceDateAskBody": "A German invoice must state when the work was done. Set the date under \"Date of work\" on this invoice, or choose Today.",
-    "autoSendTag": "Auto"
+    "autoSendTag": "Auto",
+    "noCustomerTitle": "No customer on this invoice",
+    "noCustomerBody": "An invoice must name the customer. Add the customer to the project or job it came from first.",
+    "retentionWithheld": "Retention withheld until handover",
+    "payableNow": "Payable now"
   },
   "expenses": {
     "title": "Expenses",
@@ -1148,7 +1156,11 @@
     "counterNeedsNumber": "Which number?",
     "personNatural": "Individual (sole trader)",
     "personLegal": "Company (legal entity)",
-    "paymentTerms": "Payment term (days)"
+    "paymentTerms": "Payment term (days)",
+    "sortCode": "Sort code",
+    "ibanInternational": "IBAN (payments from abroad)",
+    "accountShort": "Account",
+    "routingShort": "Routing #"
   },
   "financials": {
     "revenue": "Revenue",
@@ -2256,7 +2268,8 @@
     "projectStart": "Start of work",
     "setProjectStart": "Set project start",
     "projectStartHint": "Milestones move with the start. A promised handover date stays as it is.",
-    "startNotSet": "Not set"
+    "startNotSet": "Not set",
+    "noJobsYetCreate": "You have no jobs yet. Create one under Jobs, then add it to this project."
   },
   "projectTemplate": {
     "pick": "Start from a trade sequence",
@@ -2520,7 +2533,8 @@
     "vatNumberTva": "VAT number (TVA)",
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Company number",
-    "nameWithSurname": "Full name with surname (e.g. Lucía Navarro Gómez)"
+    "nameWithSurname": "Full name with surname (e.g. Lucía Navarro Gómez)",
+    "yourBusiness": "Your business"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -3009,7 +3023,9 @@
       "guideFollowup_other": "Follow up on {{count}} open quotes",
       "guideAannemerProjects_one": "{{count}} project running today",
       "guideAannemerProjects_other": "{{count}} projects running today",
-      "guideNext": "Make your next quote"
+      "guideNext": "Make your next quote",
+      "guideAannemerOpenProjects_one": "{{count}} open project",
+      "guideAannemerOpenProjects_other": "{{count}} open projects"
     },
     "pill": {
       "jobsCount_one": "{{count}} job",
@@ -3173,7 +3189,9 @@
       "goodMorning": "Good morning",
       "goodAfternoon": "Good afternoon",
       "goodEvening": "Good evening"
-    }
+    },
+    "contactsCount_one": "{{count}} contact",
+    "contactsCount_other": "{{count}} contacts"
   },
   "decisionPortal": {
     "yourChoices": "Your choices",
@@ -6161,7 +6179,19 @@
     "retentionRate": "Retention",
     "editRetention": "Edit retention %",
     "change": "Change",
-    "retentionAppliesForward": "Applies to instalments not yet invoiced. What was already withheld does not change."
+    "retentionAppliesForward": "Applies to instalments not yet invoiced. What was already withheld does not change.",
+    "needsCustomer": "Add the customer to this project before invoicing it.",
+    "lessRetention": "Less retention ({{percent}}%)",
+    "warnConfirmTitle": "Customer warned?",
+    "warnConfirmBody": "Only record this if you told the customer, before doing the work, that “{{title}}” costs {{amount}} extra.",
+    "warnConfirmYes": "Yes, I told them",
+    "warningRecordedOn": "Warning recorded {{date}}",
+    "payableNowLine": "Payable now {{now}} excl. VAT · {{retention}} retention held back",
+    "needsCustomerTitle": "No customer yet",
+    "invoiceConfirmTitle": "Create this invoice?",
+    "invoiceConfirmBody": "{{title}} — {{amount}} excl. VAT, to {{customer}}.",
+    "invoiceConfirmYes": "Create invoice",
+    "recordApproval": "Record customer’s approval"
   },
   "jobForms": {
     "title": "Job forms",
@@ -7456,7 +7486,8 @@
     "yearly": "Yearly",
     "frDebitsSection": "VAT on debits (FR)",
     "frDebitsLabel": "I have opted to account for VAT on debits",
-    "frDebitsHint": "The corresponding mention will be printed on your invoices."
+    "frDebitsHint": "The corresponding mention will be printed on your invoices.",
+    "istHintUK": "Cash Accounting Scheme. Available if your VAT-taxable turnover is £1.35 million or less — no application needed."
   },
   "complianceAgent": {
     "expiredTitle": "{{name}} has expired",

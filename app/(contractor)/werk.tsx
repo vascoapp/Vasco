@@ -646,7 +646,11 @@ export default function WerkScreen() {
 function HeroJobCard({ heroJob, onPress, country }: { heroJob: { type: 'live' | 'next' | 'active'; job: any }; onPress: () => void; country: Country }) {
   const { t } = useTranslation();
   const { type, job } = heroJob;
-  const label = (type === 'live' ? t('dk.hero.liveBezig', 'Live · in progress') : type === 'next' ? t('dk.hero.next', 'Up next') : t('dk.hero.activeNow', 'Active now')).toUpperCase();
+  // A job with no date is not "active now" and has no "09:00" (UK walk,
+  // 2026-10-08: an accepted, unscheduled job read "ACTIVE NOW · 09:00" above
+  // "No jobs today").
+  const unscheduled = type === 'active' && !job.scheduledDate && !job.startTime;
+  const label = (type === 'live' ? t('dk.hero.liveBezig', 'Live · in progress') : type === 'next' ? t('dk.hero.next', 'Up next') : unscheduled ? t('jobs.notScheduled', 'Not scheduled') : t('dk.hero.activeNow', 'Active now')).toUpperCase();
   const tone = type === 'live' ? DK.colors.danger : DK.colors.highlight;
   // formatTime, not toLocaleTimeString(undefined): the latter follows the
   // DEVICE, so a Dutch contractor on an English phone read "01:30 PM" above a
@@ -655,7 +659,7 @@ function HeroJobCard({ heroJob, onPress, country }: { heroJob: { type: 'live' | 
     ? formatTime(new Date(job.startTime), country)
     : (() => {
         const parsed = parseTime(job.scheduledStartTime);
-        return parsed ? formatTime(parsed, country) : '09:00';
+        return parsed ? formatTime(parsed, country) : '';
       })();
   // Matches how permits.tsx / handover render a JobAddress. Tolerates a plain
   // string too, since some call sites still pass one.
@@ -677,10 +681,12 @@ function HeroJobCard({ heroJob, onPress, country }: { heroJob: { type: 'live' | 
         <Text style={heroStyles.title} numberOfLines={2}>{job.projectName || job.title}</Text>
         <Text style={heroStyles.customer} numberOfLines={1}>{job.customerName || job.customer || ''}</Text>
         <View style={heroStyles.metaRow}>
+          {startStr ? (
           <View style={heroStyles.metaChip}>
             <DKLabel style={heroStyles.metaLabel}>{t('dk.pill.time', 'Time')}</DKLabel>
             <Text style={heroStyles.metaValue}>{startStr}</Text>
           </View>
+          ) : null}
           {/* job.address is a JobAddress OBJECT, not a string. Rendering it
               directly would throw "Objects are not valid as a React child" for
               any job that actually has an address — seed jobs have none, which

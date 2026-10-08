@@ -76,3 +76,17 @@ describe('collectionRate', () => {
     expect(isIssued({ status: 'draft' })).toBe(false);
   });
 });
+
+describe('dueInvoices — gates the badge (UK walk, 2026-10-08)', () => {
+  const { dueInvoices } = require('../collectionRate');
+  const now = new Date('2026-10-08T12:00:00Z');
+  it('a fresh sent invoice is not due: no badge yet', () => {
+    expect(dueInvoices([{ status: 'sent', amount: 222.6, dueDate: '2026-10-22' }], now)).toHaveLength(0);
+  });
+  it('paid, overdue, or past its due date counts', () => {
+    expect(dueInvoices([
+      { status: 'paid', amount: 1 }, { status: 'overdue', amount: 1 },
+      { status: 'sent', amount: 1, dueDate: '2026-10-01' }, { status: 'draft', amount: 1, dueDate: '2026-01-01' },
+    ], now)).toHaveLength(3);
+  });
+});

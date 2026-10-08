@@ -92,7 +92,11 @@ export function pdfInvoiceFromRecord(args: {
   // A retention release carries no new VAT: the tax on this money was charged
   // and declared when the term invoice went out. Anything else would
   // over-declare output VAT and let the customer reclaim it twice.
-  const fallbackVatRatePercent = invoice.isRetentionRelease ? 0 : args.fallbackVatRatePercent;
+  // UK: the release IS the retention's VAT invoice (reg. 89) and is taxed at
+  // the rate on its line — a 0 fallback means "exempt" to vatRateGroups and
+  // printed £500 with no VAT on a £600 document (review, 2026-10-08).
+  const fallbackVatRatePercent = invoice.isRetentionRelease && !retentionDeductedOnInvoice(args.country)
+    ? 0 : args.fallbackVatRatePercent;
 
   // An invoice with no stored lines gets one, split out of its GROSS amount —
   // the same thing the detail screen shows for it.

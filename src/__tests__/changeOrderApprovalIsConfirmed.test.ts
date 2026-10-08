@@ -10,7 +10,7 @@ import { stripComments } from '../utils/stripComments';
 const src = stripComments(fs.readFileSync(path.resolve(__dirname, '../../app/contractor/project-billing/[id].tsx'), 'utf8'));
 
 it('approval goes through a confirm that names the amount', () => {
-  const at = src.indexOf("t('projectBilling.markApproved'");
+  const at = src.indexOf("t('projectBilling.recordApproval'");
   expect(at).toBeGreaterThan(-1);
   const before = src.slice(Math.max(0, at - 1600), at);
   expect(before).toMatch(/Alert\.alert\(\s*t\('projectBilling\.confirmApprovedTitle'/);

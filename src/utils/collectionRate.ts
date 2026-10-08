@@ -46,3 +46,19 @@ export function collectionRate(
     .reduce((sum, i) => sum + (i.amount || 0), 0);
   return Math.round((collected / billed) * 100);
 }
+
+/**
+ * Issued invoices that have FALLEN DUE — paid, overdue, or sent and past their
+ * due date. Gates the BADGE (the rate keeps counting every issued invoice, as
+ * decided above): before anything is due there is no outcome to score, and one
+ * fresh invoice read "Collection rate 0 %" in red (UK walk, 2026-10-08).
+ */
+export function dueInvoices<T extends Pick<Invoice, 'status'> & { dueDate?: string | null }>(
+  invoices: readonly T[],
+  now: Date = new Date(),
+): T[] {
+  return issuedInvoices(invoices).filter((i) => {
+    if (i.status === 'paid' || i.status === 'overdue') return true;
+    return !!i.dueDate && new Date(i.dueDate).getTime() < now.getTime();
+  });
+}

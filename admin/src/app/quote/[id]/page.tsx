@@ -502,7 +502,7 @@ export default function PublicQuotePortal({ params }: PageProps) {
                           <span style={{ fontSize: 13, lineHeight: 1.5, opacity: 0.85 }}>{ukNotice?.body ?? copy.withdrawalBody}</span>
                           <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, cursor: 'pointer' }}>
                             <input type="checkbox" checked={withdrawalAck} onChange={(e) => setWithdrawalAck(e.target.checked)} style={{ marginTop: 3 }} />
-                            <span>{copy.withdrawalCheck}</span>
+                            <span>{ukNotice?.check ?? copy.withdrawalCheck}</span>
                           </label>
                         </div>
                       )}
