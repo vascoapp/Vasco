@@ -154,7 +154,7 @@
     "android": {
       "package": "com.vascobuild.app",
       "scheme": "vasco",
-      "versionCode": 6,
+      "versionCode": 7,
       "intentFilters": [
         {
           "action": "VIEW",
