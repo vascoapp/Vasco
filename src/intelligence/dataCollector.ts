@@ -968,7 +968,11 @@ function initEventQueueRemapListener(): void {
 
 initEventQueueRemapListener();
 
-async function enqueueLocally(event: QueuedEvent): Promise<void> {
+function enqueueLocally(event: QueuedEvent): Promise<void> {
+  return withEventQueueLock(() => enqueueLocallyUnlocked(event));
+}
+
+async function enqueueLocallyUnlocked(event: QueuedEvent): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
     const queue: QueuedEvent[] = raw ? JSON.parse(raw) : [];
@@ -982,7 +986,22 @@ async function enqueueLocally(event: QueuedEvent): Promise<void> {
   }
 }
 
-async function flushToCloud(userId: string): Promise<void> {
+// ONE lock for every read-modify-write of the local event queue (UK walk,
+// 2026-10-08). Two overlapping flushes each read the same queue and inserted
+// the same rows — two identical invoice_sent events at one millisecond — and
+// two overlapping enqueues each read the queue, pushed one event and wrote it
+// back, so the first event was lost. Enqueue and flush now take turns.
+let eventQueueChain: Promise<unknown> = Promise.resolve();
+function withEventQueueLock<T>(fn: () => Promise<T>): Promise<T> {
+  const next = eventQueueChain.then(fn, fn);
+  eventQueueChain = next.catch(() => {});
+  return next;
+}
+function flushToCloud(userId: string): Promise<void> {
+  return withEventQueueLock(() => flushToCloudOnce(userId));
+}
+
+async function flushToCloudOnce(userId: string): Promise<void> {
   if (!isSupabaseConfigured) return;
   // Only the signed-in owner of these events can write them (RLS + the
   // authenticated grant). Signed out, or signed in as someone else, every
@@ -1028,8 +1047,13 @@ async function flushToCloud(userId: string): Promise<void> {
       // queue to `filtered` above (placeholder uids dropped). Slicing
       // the original `queue` would re-introduce dropped placeholders.
       // Slice from `filtered` instead.
-      const remaining = filtered.slice(BATCH_SIZE);
-      await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(remaining));
+      // Remove exactly what was sent, from the queue as it is NOW: events
+      // enqueued while the insert was in flight used to be overwritten by the
+      // stale `filtered.slice(BATCH_SIZE)` and lost.
+      const sentIds = new Set(batch.map((e) => e.id));
+      const nowRaw = await AsyncStorage.getItem(LOCAL_QUEUE_KEY);
+      const now: QueuedEvent[] = nowRaw ? JSON.parse(nowRaw) : [];
+      await AsyncStorage.setItem(LOCAL_QUEUE_KEY, JSON.stringify(now.filter((e) => !sentIds.has(e.id))));
     }
   } catch {
     // Will retry on next flush

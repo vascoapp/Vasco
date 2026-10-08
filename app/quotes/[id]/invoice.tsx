@@ -18,6 +18,7 @@ import { DKScreenHeader } from '../../../src/components/shared/DKScreenHeader';
 import { documentCustomerName } from '../../../src/domain/customers';
 import { ensureCanCreate } from '../../../src/services/tierGatePrompt';
 import { invoiceTermDays } from '../../../src/utils/invoiceDue';
+import { friendlyError } from '../../../src/utils/friendlyError';
 
 export default function InvoiceFromQuoteScreen() {
   const { t } = useTranslation();
@@ -52,7 +53,9 @@ export default function InvoiceFromQuoteScreen() {
       setInvoiceId(newId);
     } catch (err) {
       logError('InvoiceFromQuote', err);
-      Alert.alert(t('common.error'), t('quoteToInvoice.createFailed'));
+      // Our own reason (e.g. the duplicate guard: "already invoiced") stays;
+      // machine text becomes the generic line (friendlyError).
+      Alert.alert(t('common.error'), friendlyError(err, t('quoteToInvoice.createFailed')));
     } finally {
       setCreating(false);
     }

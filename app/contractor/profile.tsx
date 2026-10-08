@@ -41,6 +41,7 @@ import { retentionPeriodsFor } from '../../src/data/retentionPeriods';
 import { getProvidersForCountry } from '../../src/integrations/accounting';
 import { getPaymentProviderForCountry } from '../../src/config/paymentMethods';
 import { DORMANT_CONTROLS } from '../../src/config/dormant';
+import { isUkCompany } from '../../src/utils/businessProfileValidation';
 
 const LANG_OPTIONS = [
   { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
@@ -192,8 +193,10 @@ export default function ProfileScreen() {
   // denominator (German device walk, 2026-09-14).
   const contractorScore = useMemo(() => computeContractorScore(jobs as any), [jobs]);
 
-  const userName = user?.name || 'User';
-  const userInitials = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  // The business the customer knows, then a real name — never the login email
+  // or the literal "User" (UK walk, 2026-10-08: "User" / "U" beside a company
+  // name that was set). Declared after companyName below.
+  const realUserName = user?.name && !user.name.includes('@') ? user.name : '';
   // The BUSINESS PROFILE is what the contractor last told us about their
   // business; the account is only where they started. This screen mixed both
   // sources in one card — "Firmenname" from `user.company` sitting directly
@@ -205,6 +208,8 @@ export default function ProfileScreen() {
   const effectiveTrade = businessProfile?.trade || user?.trade;
   const userTrade = effectiveTrade ? t(`onboarding.trades.${effectiveTrade}`, effectiveTrade) : t('profile.contractor', 'Contractor');
   const companyName = businessProfile?.businessName || user?.company || '';
+  const userName = companyName || realUserName || t('profile.yourBusiness', 'Your business');
+  const userInitials = userName.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const country = businessProfile?.country || user?.country || 'NL';
   // The plan prices are hardcoded numbers, so only the SYMBOL varies — but a
   // UK contractor was quoted "£49/mo" at signup (onboarding gets this right)
@@ -583,12 +588,16 @@ export default function ProfileScreen() {
         <View style={styles.sectionWrap}>
           <DKLabel style={styles.sectionLabel}>{t('profile.business', 'BUSINESS')}</DKLabel>
           <View style={styles.card}>
+            {/* A UK sole trader / partnership has no Companies House number
+                — the row read "Companies House · Not set" (UK walk, 2026-10-08). */}
+            {(country !== 'UK' || isUkCompany(businessProfile.businessType)) && (
             <SettingsRow
               icon="document-text"
               label={getRegistrationLabel(country)}
               value={businessProfile.kvkNumber || businessProfile.registrationNumber || t('profile.notSet', 'Not set')}
               onPress={() => router.push('/(modals)/business-settings' as any)}
             />
+            )}
             <SettingsRow
               icon="receipt"
               label={t('profile.vatNumber', 'VAT number')}

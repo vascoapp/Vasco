@@ -48,6 +48,7 @@ import { TIERS, type SubscriptionTier } from '../src/services/subscriptionServic
 import { emitOnboardingCompleted } from '../src/intelligence/dataCollector';
 import { BUSINESS_TYPES } from '../src/data/businessTypes';
 import { DORMANT_CONTROLS } from '../src/config/dormant';
+import { isUkCompany } from '../src/utils/businessProfileValidation';
 
 
 const TOTAL_STEPS = 14;
@@ -1047,7 +1048,9 @@ export default function OnboardingScreen() {
                 </View>
               </View>
             ) : null}
-            {(REG_FIELDS[country!] || []).map((field) => {
+            {/* A UK sole trader / partnership has no Companies House number
+                (UK walk, 2026-10-08) — the field is for a Ltd only. */}
+            {(REG_FIELDS[country!] || []).filter((f) => f.key !== 'companiesHouse' || isUkCompany(businessType)).map((field) => {
               // R66 round 47: input-time validation per R43 staged foundation.
               // Only show error after onBlur so we don't nag mid-typing. Format
               // hint surfaces the country-specific example (NL123456789B01,

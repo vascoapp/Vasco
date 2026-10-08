@@ -36,6 +36,7 @@ import { DKMenu } from '../../src/components/shared/DKMenu';
 import { REGIMI_FISCALI } from '../../src/data/fiscalRegimes';
 import { isValidCodiceFiscale } from '../../src/integrations/fiscalIds';
 import { formatSortCode } from '../../src/utils/bankDetails';
+import { isUkCompany } from '../../src/utils/businessProfileValidation';
 
 type FieldDef = {
   label: string;
@@ -66,6 +67,17 @@ function cleanPrefix(raw: string): string {
  * mounted until the profile is the contractor's own, and Save sends only the
  * fields that differ from what the form was opened with.
  */
+/** A believable example name per market — the placeholder, never a value. */
+const COMPANY_NAME_EXAMPLE: Partial<Record<string, string>> = {
+  NL: 'Schilder & Zonen B.V.',
+  DE: 'Sanitär Weber GmbH',
+  FR: 'Plomberie Martin SARL',
+  ES: 'Fontanería García S.L.',
+  IT: 'Idraulica Rossi S.r.l.',
+  UK: 'Hughes Plumbing Ltd',
+  US: 'Reynolds Plumbing LLC',
+};
+
 export default function BusinessSettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -180,7 +192,9 @@ function BusinessSettingsForm() {
   // Country-specific fields
   const fields = useMemo((): FieldDef[] => {
     const common: FieldDef[] = [
-      { label: t('settings.business', 'Bedrijfsnaam'), value: businessName, onChange: setBusinessName, placeholder: 'Schilder & Zonen B.V.' },
+      // The label read "Business details" (the SCREEN's key) and every market
+      // was shown a Dutch BV as the example (UK walk, 2026-10-08).
+      { label: t('profile.companyName', 'Company name'), value: businessName, onChange: setBusinessName, placeholder: COMPANY_NAME_EXAMPLE[country] ?? '' },
     ];
 
     const countryFields: FieldDef[] = (() => {
@@ -192,7 +206,9 @@ function BusinessSettingsForm() {
           ];
         case 'UK':
           return [
-            { label: t('onboarding.fields.companiesHouse', 'Companies House No.'), value: registrationNumber, onChange: setRegistrationNumber, placeholder: '12345678' },
+            // Only a company (Ltd/LLP) has a Companies House number — a sole
+            // trader was asked for one here (UK walk, 2026-10-08).
+            ...(isUkCompany(businessProfile.businessType) ? [{ label: t('onboarding.fields.companiesHouse', 'Companies House No.'), value: registrationNumber, onChange: setRegistrationNumber, placeholder: '12345678' }] : []),
             { label: t('onboarding.fields.vatNumber', 'VAT Number'), value: vatNumber, onChange: setVatNumber, placeholder: 'GB123456789' },
           ];
         case 'DE':
@@ -301,7 +317,7 @@ function BusinessSettingsForm() {
     }];
 
     return [...common, ...countryFields, ...contactFields, ...paymentFields, ...termsField];
-  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, taxCode, address, postcode, city, province, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, t]);
+  }, [country, businessName, kvkNumber, vatNumber, registrationNumber, taxCode, address, postcode, city, province, needsProvince, email, phone, iban, bic, routingNumber, bankAccountNumber, paymentTerms, businessProfile.businessType, t]);
 
   // Show where the series actually stands. Uses the read-only peek RPC: a
   // settings screen must not consume an invoice number just by being opened.
@@ -628,7 +644,10 @@ function BusinessSettingsForm() {
               {nextInvoiceNo ? (
                 <Text style={Typography.muted}>
                   {t('settings.numberingPreview', 'Next: {{example}}', {
-                    example: `${invoicePrefix || 'I'}${String(nextInvoiceNo).padStart(4, '0')}`,
+                    // The server mints with the STORED prefix, and the column defaults
+                    // to 'INV' — the preview said "I0001" while the first
+                    // invoice came out INV0001 (UK walk, 2026-10-08).
+                    example: `${invoicePrefix || businessProfile.invoicePrefix || 'INV'}${String(nextInvoiceNo).padStart(4, '0')}`,
                   })}
                 </Text>
               ) : null}

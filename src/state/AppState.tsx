@@ -2471,7 +2471,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           import('../services/aiActionQueueService').then(({ queueInvoiceSentNotice }) =>
             queueInvoiceSentNotice({
               invoiceId: id,
-              customerId: invoice.customer,
+              customerId: customerRow?.id ?? invoice.customerId ?? '',
               customerName: customerRow?.name,
               amount: invoice.amount ?? 0,
               // A draft whose due date already passed has no honest term to
@@ -2485,7 +2485,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // actually carries — the contractor's own terms, not a flat 14.
         const sentDue = (invoice as any)?.dueDate ? new Date((invoice as any).dueDate) : dueDateOnTerms();
         emitInvoiceSent(getCurrentUserId(), id, {
-          customerId: invoice?.customer ?? '',
+          // The FK, never the display slot — `customer` holds the NAME on most
+          // rows, so the event's customerId read "Sarah Jones" (UK walk W138)
+          // and every per-customer payment-timing join missed it.
+          customerId: invoice?.customerId ?? '',
           amount: invoice?.amount ?? 0,
           dueDate: sentDue.toISOString(),
         }).catch(() => {});
@@ -2565,7 +2568,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         ).catch(() => {});
         // AI data collector
         emitPaymentReceived(getCurrentUserId(), id, {
-          customerId: paidInv?.customer ?? '',
+          customerId: paidInv?.customerId ?? '',
           amount: paidInv?.amount ?? 0,
           daysToPayment: 0,
           paymentMethod: 'unknown',
@@ -2635,7 +2638,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           import('../services/aiActionQueueService').then(({ queuePaymentReceivedThanks }) =>
             queuePaymentReceivedThanks({
               invoiceId: id,
-              customerId: paidInv.customer,
+              customerId: customerRow?.id ?? paidInv.customerId ?? '',
               customerName: customerRow?.name,
               amount: paidInv.amount ?? 0,
             }),
@@ -2809,7 +2812,6 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const sourceQuote = quotes.find((q) => q.id === sourceQuoteId);
         if (!sourceQuote) throw new Error(`Quote ${sourceQuoteId} not found`);
 
-        const docNumber = await nextDocumentNumber('invoice');
         const dueDate = dueDateOnTerms();
 
         // `Quote.amount` is the NET sum of its line items; `Invoice.amount` is
@@ -2849,6 +2851,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         if (invValidation.warnings.length > 0) {
           logWarn('Validator', 'Invoice warnings: ' + invValidation.warnings.map(w => w.message).join(', '));
         }
+        // Minted only AFTER the duplicate check: refusing a second invoice for
+        // the same quote used to burn a number first, leaving a gap in the
+        // series — which FR/ES/IT treat as a numbering defect (UK walk,
+        // 2026-10-08, "Create invoice" on an already-invoiced quote).
+        const docNumber = await nextDocumentNumber('invoice');
 
         const newInvoice: Invoice = {
           id: docNumber,
@@ -2961,12 +2968,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           await queueFkRepairs(docNumber, [['customer_id', invCustomerFk], ['job_id', invJobFk]]);
         }
 
-        // AI data collector
-        emitInvoiceSent(getCurrentUserId(), docNumber, {
-          customerId: sourceQuote.customer,
-          amount: sourceQuote.amount,
-          dueDate: dueDate.toISOString(),
-        }).catch(() => {});
+        // No emitInvoiceSent here: CREATING is not sending. The event fired at
+        // creation (with whatever amount the path had) and again on the real
+        // send (UK walk, 2026-10-08) — markInvoiceSent records it, once.
 
         trackEvent('invoice_created', { invoiceId: docNumber }).catch(() => {});
         return docNumber;
@@ -3827,11 +3831,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             payload: { amount, customer: job.customerId ?? null, sourceJobId: jobId },
           }),
         ).catch(() => {});
-        emitInvoiceSent(getCurrentUserId(), docNumber, {
-          customerId: job.customerId ?? '',
-          amount,
-          dueDate: dueDate.toISOString(),
-        }).catch(() => {});
+        // No emitInvoiceSent here: CREATING is not sending. The event fired at
+        // creation (with whatever amount the path had) and again on the real
+        // send (UK walk, 2026-10-08) — markInvoiceSent records it, once.
         trackEvent('invoice_created', { invoiceId: docNumber }).catch(() => {});
         // Link the invoice back to the job and move the job on.
         //
@@ -3968,11 +3970,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             payload: { amount, customer: customerId ?? null, source: 'decision_upgrades', lines: lines.length },
           }),
         ).catch(() => {});
-        emitInvoiceSent(getCurrentUserId(), docNumber, {
-          customerId: customerId ?? '',
-          amount,
-          dueDate: dueDate.toISOString(),
-        }).catch(() => {});
+        // No emitInvoiceSent here: CREATING is not sending. The event fired at
+        // creation (with whatever amount the path had) and again on the real
+        // send (UK walk, 2026-10-08) — markInvoiceSent records it, once.
         trackEvent('invoice_created', { invoiceId: docNumber, source: 'decision_upgrades' }).catch(() => {});
         return docNumber;
       },
@@ -4191,11 +4191,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             payload: { amount, customer: project.customerId ?? null, projectId, billingTermId: termId, retention },
           }),
         ).catch(() => {});
-        emitInvoiceSent(getCurrentUserId(), docNumber, {
-          customerId: project.customerId ?? '',
-          amount,
-          dueDate: dueDate.toISOString(),
-        }).catch(() => {});
+        // No emitInvoiceSent here: CREATING is not sending. The event fired at
+        // creation (with whatever amount the path had) and again on the real
+        // send (UK walk, 2026-10-08) — markInvoiceSent records it, once.
         trackEvent('invoice_created', { invoiceId: docNumber, projectId, billingTermId: termId }).catch(() => {});
         return docNumber;
       },
@@ -4362,11 +4360,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             payload: { amount, customer: project.customerId ?? null, projectId, changeOrderId, warnedAt: order.warnedAt ?? null },
           }),
         ).catch(() => {});
-        emitInvoiceSent(getCurrentUserId(), docNumber, {
-          customerId: project.customerId ?? '',
-          amount,
-          dueDate: dueDate.toISOString(),
-        }).catch(() => {});
+        // No emitInvoiceSent here: CREATING is not sending. The event fired at
+        // creation (with whatever amount the path had) and again on the real
+        // send (UK walk, 2026-10-08) — markInvoiceSent records it, once.
         trackEvent('invoice_created', { invoiceId: docNumber, projectId, changeOrderId }).catch(() => {});
         return docNumber;
       },
@@ -4510,11 +4506,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             payload: { amount: releaseAmount, customer: project.customerId ?? null, projectId, retentionRelease: true },
           }),
         ).catch(() => {});
-        emitInvoiceSent(getCurrentUserId(), docNumber, {
-          customerId: project.customerId ?? '',
-          amount: releaseAmount,
-          dueDate: dueDate.toISOString(),
-        }).catch(() => {});
+        // No emitInvoiceSent here: CREATING is not sending. The event fired at
+        // creation (with whatever amount the path had) and again on the real
+        // send (UK walk, 2026-10-08) — markInvoiceSent records it, once.
         trackEvent('invoice_created', { invoiceId: docNumber, projectId, retentionRelease: true }).catch(() => {});
         return docNumber;
       },
@@ -4583,7 +4577,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // the server already holds (23505 below: the portal accepted it while
         // this device still showed 'sent'). W119.
         const emitAccepted = () => emitQuoteAccepted(getCurrentUserId(), quoteId, {
-          customerId: quote.customer ?? '',
+          customerId: quote.customerId ?? '',
           quotedAmount: quote.amount,
           acceptedAmount: quote.amount,
           daysToAccept: ttdHoursAcc !== undefined ? Math.round(ttdHoursAcc / 24) : 0,
@@ -4826,7 +4820,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           // Deferred like convertQuoteToJob's: not when the server already holds
           // this quote's job (23505 → it recorded the acceptance itself, W119).
           const emitAcceptedUp = () => emitQuoteAccepted(getCurrentUserId(), id, {
-            customerId: quote.customer ?? '',
+            customerId: quote.customerId ?? '',
             quotedAmount: quote.amount,
             acceptedAmount: quote.amount,
             daysToAccept: ttdHoursUp !== undefined ? Math.round(ttdHoursUp / 24) : 0,
@@ -4925,7 +4919,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             ? Math.max(0, Math.round((Date.now() - sentAtMs) / (1000 * 60 * 60)))
             : undefined;
           emitQuoteRejected(getCurrentUserId(), id, {
-            customerId: quote.customer ?? '',
+            customerId: quote.customerId ?? '',
             quotedAmount: quote.amount,
             reason: declineReason,
           }).catch(() => {});
