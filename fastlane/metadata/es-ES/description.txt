@@ -12,7 +12,7 @@ Hecho para la facturación europea
 Facturae para España, XRechnung y ZUGFeRD para Alemania, Factur-X para Francia, FatturaPA para Italia y archivos Peppol BIS. IVA correcto en seis países, con tipos reducidos e inversión del sujeto pasivo.
 
 El resto del papeleo
-Control de horas, gastos, materiales, fichas de clientes y un dossier de entrega al terminar. Sus cifras se exportan en PDF y hoja de cálculo para su gestor.
+Control de horas, gastos, materiales, fichas de clientes y un dossier de entrega al terminar. Tus cifras se exportan en PDF y hoja de cálculo para tu gestor.
 
 Funciona donde trabajas
 En sótanos y buhardillas no hay cobertura. Vasco sigue funcionando sin conexión y sincroniza cuando vuelves a tener señal.

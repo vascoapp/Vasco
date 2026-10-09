@@ -12,7 +12,7 @@ Costruito per la fatturazione europea
 FatturaPA per l'Italia, XRechnung e ZUGFeRD per la Germania, Factur-X per la Francia, Facturae per la Spagna e file Peppol BIS. IVA corretta in sei paesi, aliquote ridotte e reverse charge compresi.
 
 Il resto delle scartoffie
-Ore, spese, materiali, anagrafica clienti e un pacchetto di consegna a fine lavoro. I Suoi dati si esportano in PDF e foglio di calcolo per il Suo commercialista.
+Ore, spese, materiali, anagrafica clienti e un pacchetto di consegna a fine lavoro. I tuoi dati si esportano in PDF e foglio di calcolo per il tuo commercialista.
 
 Funziona dove lavori tu
 In cantina e in soffitta non c'è campo. Vasco continua a funzionare offline e si sincronizza appena torni in linea.

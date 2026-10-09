@@ -149,7 +149,7 @@ Los recordatorios salen según el calendario que tú marcas y suben de tono poco
 Facturae para España, XRechnung y ZUGFeRD para Alemania, Factur-X para Francia, FatturaPA para Italia y archivos Peppol BIS. IVA correcto en seis países, con tipos reducidos e inversión del sujeto pasivo.
 
 **El resto del papeleo**
-Control de horas, gastos, materiales, fichas de clientes y un dossier de entrega al terminar. Sus cifras se exportan en PDF y hoja de cálculo para su gestor.
+Control de horas, gastos, materiales, fichas de clientes y un dossier de entrega al terminar. Tus cifras se exportan en PDF y hoja de cálculo para tu gestor.
 
 **Funciona donde trabajas**
 En sótanos y buhardillas no hay cobertura. Vasco sigue funcionando sin conexión y sincroniza cuando vuelves a tener señal.
@@ -172,7 +172,7 @@ I solleciti partono secondo il calendario che imposti tu e diventano via via pi�
 FatturaPA per l'Italia, XRechnung e ZUGFeRD per la Germania, Factur-X per la Francia, Facturae per la Spagna e file Peppol BIS. IVA corretta in sei paesi, aliquote ridotte e reverse charge compresi.
 
 **Il resto delle scartoffie**
-Ore, spese, materiali, anagrafica clienti e un pacchetto di consegna a fine lavoro. I Suoi dati si esportano in PDF e foglio di calcolo per il Suo commercialista.
+Ore, spese, materiali, anagrafica clienti e un pacchetto di consegna a fine lavoro. I tuoi dati si esportano in PDF e foglio di calcolo per il tuo commercialista.
 
 **Funziona dove lavori tu**
 In cantina e in soffitta non c'è campo. Vasco continua a funzionare offline e si sincronizza appena torni in linea.
