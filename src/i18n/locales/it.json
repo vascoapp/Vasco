@@ -333,7 +333,11 @@
       "scheduleDesc": "Appuntamenti, orari e sovrapposizioni a colpo d'occhio",
       "insights": "Analisi aziendali",
       "insightsDesc": "Report settimanali su fatturato, lavori e tendenze"
-    }
+    },
+    "trialTitle": "I Suoi primi 14 giorni: Pro, gratis",
+    "trialDesc": "Tutto Pro è attivo per Lei. Nessuna carta, niente da disdire.",
+    "trialAfter": "Dopo 14 giorni il Suo account prosegue con il piano gratuito.",
+    "trialSummary": "Pro — 14 giorni gratis, poi Gratuito"
   },
   "dashboard": {
     "goodMorning": "Buongiorno",
@@ -655,7 +659,7 @@
     "enterNumber": "Inserisci"
   },
   "billing": {
-    "upgradeRequired": "Aggiornamento richiesto",
+    "upgradeRequired": "Serve un piano a pagamento",
     "viewPlans": "Vedi piani",
     "formatNeedsUpgrade": "Questo formato richiede un piano a pagamento."
   },
@@ -4830,7 +4834,7 @@
     "viewDetails": "Vedi dettagli per maggiori informazioni"
   },
   "tierGate": {
-    "jobLimitReached": "Limite lavori raggiunto ({{count}}). Esegui upgrade per altro.",
+    "jobLimitReached": "Limite lavori raggiunto ({{count}}).",
     "quoteLimitReached": "Limite preventivi raggiunto ({{count}}/mese).",
     "invoiceLimitReached": "Limite fatture raggiunto ({{count}}/mese).",
     "aiInsightLimitReached": "Limite insight AI raggiunto ({{count}}/mese).",

@@ -20,6 +20,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { stripeSecretKey } from '../_shared/stripeKey.ts';
 import { signConnectState } from '../_shared/stripeConnectState.ts';
 
 const corsHeaders = {
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { /* empty body = status */ }
   const action = typeof body.action === 'string' ? body.action : 'status';
 
-  const platformKey = present('STRIPE_API_KEY');
+  const platformKey = stripeSecretKey();
   const clientId = present('STRIPE_CONNECT_CLIENT_ID');
   const configured = !!(platformKey && clientId && serviceKey);
   const admin = createClient(supabaseUrl, serviceKey);

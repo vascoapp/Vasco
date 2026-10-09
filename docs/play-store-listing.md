@@ -54,10 +54,10 @@ Build a quote from your own pricebook, send it, and let the customer accept it o
 Payment reminders go out on a schedule you set, escalating politely. You approve each one with a tap; Vasco never emails your customer behind your back.
 
 **Built for European invoicing rules**
-XRechnung and ZUGFeRD for Germany, Factur-X for France, Facturae for Spain, FatturaPA for Italy, Peppol across the EU. Correct VAT for six countries, including reduced rates and the reverse-charge cases that catch people out.
+XRechnung and ZUGFeRD for Germany, Factur-X for France, Facturae for Spain, FatturaPA for Italy, and Peppol BIS files. Correct VAT for six countries, including reduced rates and the reverse-charge cases that catch people out.
 
 **The rest of the paperwork**
-Time tracking, expenses, materials, customer records, and a handover pack at the end of the job. Connects to Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero and QuickBooks.
+Time tracking, expenses, materials, customer records, and a handover pack at the end of the job. Your figures export as PDF and spreadsheet for your accountant, and Dutch and German businesses can connect Moneybird.
 
 **Works where you work**
 Basements and lofts do not have signal. Vasco keeps working offline and syncs when you surface.
@@ -77,10 +77,10 @@ Stel een offerte samen uit je eigen prijzenboek, verstuur hem, en laat de klant 
 Herinneringen gaan op jouw schema de deur uit en worden stap voor stap steviger. Jij keurt elke mail met één tik goed; Vasco mailt nooit buiten je om naar je klant.
 
 **Gebouwd voor Europese factuurregels**
-XRechnung en ZUGFeRD voor Duitsland, Factur-X voor Frankrijk, Facturae voor Spanje, FatturaPA voor Italië, Peppol in de hele EU. Kloppende btw voor zes landen, inclusief verlaagde tarieven en de verleggingsregeling.
+XRechnung en ZUGFeRD voor Duitsland, Factur-X voor Frankrijk, Facturae voor Spanje, FatturaPA voor Italië, en Peppol BIS-bestanden. Kloppende btw voor zes landen, inclusief verlaagde tarieven en de verleggingsregeling.
 
 **De rest van het papierwerk**
-Urenregistratie, uitgaven, materialen, klantgegevens en een opleverpakket aan het eind van de klus. Koppelt met Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero en QuickBooks.
+Urenregistratie, uitgaven, materialen, klantgegevens en een opleverpakket aan het eind van de klus. Je cijfers exporteer je als pdf en spreadsheet voor je boekhouder, en je kunt Moneybird koppelen.
 
 **Werkt waar jij werkt**
 In kruipruimtes en op zolders is geen bereik. Vasco werkt gewoon door zonder verbinding en synchroniseert zodra je weer boven bent.
@@ -103,7 +103,7 @@ Stellen Sie ein Angebot aus Ihrem eigenen Preisbuch zusammen, senden Sie es, und
 Zahlungserinnerungen gehen nach Ihrem Zeitplan raus und werden schrittweise deutlicher. Sie geben jede mit einem Tipp frei — Vasco schreibt Ihren Kunden nie hinter Ihrem Rücken an.
 
 **Der Rest des Papierkrams**
-Zeiterfassung, Ausgaben, Material, Kundendaten und ein Übergabepaket zum Auftragsende. Anbindung an DATEV, Lexoffice, SevDesk, Moneybird, Pennylane und weitere.
+Zeiterfassung, Ausgaben, Material, Kundendaten und ein Übergabepaket zum Auftragsende. Ihre Zahlen exportieren Sie als PDF und Tabelle für Ihre Steuerberatung, und Sie können Moneybird anbinden.
 
 **Funktioniert dort, wo Sie arbeiten**
 Im Keller und unter dem Dach gibt es kein Netz. Vasco arbeitet offline weiter und synchronisiert, sobald Sie wieder Empfang haben.
@@ -123,10 +123,10 @@ Composez un devis à partir de votre propre bibliothèque de prix, envoyez-le, e
 Les relances partent selon le calendrier que vous fixez, en montant progressivement en fermeté. Vous validez chacune d'un geste ; Vasco n'écrit jamais à votre client à votre insu.
 
 **Conçu pour la facturation européenne**
-Factur-X pour la France, XRechnung et ZUGFeRD pour l'Allemagne, Facturae pour l'Espagne, FatturaPA pour l'Italie, Peppol dans toute l'UE. TVA correcte pour six pays, taux réduits et autoliquidation compris.
+Factur-X pour la France, XRechnung et ZUGFeRD pour l'Allemagne, Facturae pour l'Espagne, FatturaPA pour l'Italie, et fichiers Peppol BIS. TVA correcte pour six pays, taux réduits et autoliquidation compris.
 
 **Le reste de la paperasse**
-Suivi des heures, dépenses, fournitures, fiches clients et dossier de remise en fin de chantier. Se connecte à Pennylane, Moneybird, DATEV, Lexoffice, Xero et QuickBooks.
+Suivi des heures, dépenses, fournitures, fiches clients et dossier de remise en fin de chantier. Vos chiffres s'exportent en PDF et en tableur pour votre comptable.
 
 **Fonctionne là où vous travaillez**
 Les caves et les combles ne captent pas. Vasco continue hors ligne et se synchronise dès que vous remontez.
@@ -146,10 +146,10 @@ Monta un presupuesto con tu propio libro de precios, envíalo y deja que el clie
 Los recordatorios salen según el calendario que tú marcas y suben de tono poco a poco. Tú apruebas cada uno con un toque; Vasco nunca escribe a tu cliente a tus espaldas.
 
 **Hecho para la facturación europea**
-Facturae para España, XRechnung y ZUGFeRD para Alemania, Factur-X para Francia, FatturaPA para Italia y Peppol en toda la UE. IVA correcto en seis países, con tipos reducidos e inversión del sujeto pasivo.
+Facturae para España, XRechnung y ZUGFeRD para Alemania, Factur-X para Francia, FatturaPA para Italia y archivos Peppol BIS. IVA correcto en seis países, con tipos reducidos e inversión del sujeto pasivo.
 
 **El resto del papeleo**
-Control de horas, gastos, materiales, fichas de clientes y un dossier de entrega al terminar. Se conecta con Holded, Moneybird, DATEV, Lexoffice, Xero y QuickBooks.
+Control de horas, gastos, materiales, fichas de clientes y un dossier de entrega al terminar. Sus cifras se exportan en PDF y hoja de cálculo para su gestor.
 
 **Funciona donde trabajas**
 En sótanos y buhardillas no hay cobertura. Vasco sigue funcionando sin conexión y sincroniza cuando vuelves a tener señal.
@@ -169,10 +169,10 @@ Componi un preventivo dal tuo listino, invialo e lascia che il cliente lo accett
 I solleciti partono secondo il calendario che imposti tu e diventano via via più fermi. Approvi ognuno con un tocco: Vasco non scrive mai al tuo cliente alle tue spalle.
 
 **Costruito per la fatturazione europea**
-FatturaPA per l'Italia, XRechnung e ZUGFeRD per la Germania, Factur-X per la Francia, Facturae per la Spagna e Peppol in tutta l'UE. IVA corretta in sei paesi, aliquote ridotte e reverse charge compresi.
+FatturaPA per l'Italia, XRechnung e ZUGFeRD per la Germania, Factur-X per la Francia, Facturae per la Spagna e file Peppol BIS. IVA corretta in sei paesi, aliquote ridotte e reverse charge compresi.
 
 **Il resto delle scartoffie**
-Ore, spese, materiali, anagrafica clienti e un pacchetto di consegna a fine lavoro. Si collega a Fatture in Cloud, Moneybird, DATEV, Lexoffice, Xero e QuickBooks.
+Ore, spese, materiali, anagrafica clienti e un pacchetto di consegna a fine lavoro. I Suoi dati si esportano in PDF e foglio di calcolo per il Suo commercialista.
 
 **Funziona dove lavori tu**
 In cantina e in soffitta non c'è campo. Vasco continua a funzionare offline e si sincronizza appena torni in linea.

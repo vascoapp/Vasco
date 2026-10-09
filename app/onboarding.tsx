@@ -1323,6 +1323,32 @@ export default function OnboardingScreen() {
           },
         ];
 
+        // In-app plan sales are OFF (DORMANT_CONTROLS.inAppPlanSales): plans are
+        // sold on the website, and a price list in the app is a store rejection
+        // (Apple 3.1.1 / Play billing). Every new account already has 14 days of
+        // Pro from sign-up (AuthContext.signUp); `selectedPlan` stays 'free',
+        // which keeps that trial (keepTrialTier below). Say so — no prices.
+        if (!DORMANT_CONTROLS.inAppPlanSales) {
+          const plan = plans.find((p) => p.id === 'pro')!;
+          return (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>{t('onboarding.trialTitle', 'Your first 14 days: Pro, free')}</Text>
+              <Text style={styles.stepSubtitle}>{t('onboarding.trialDesc', 'Everything in Pro is switched on for you. No card, nothing to cancel.')}</Text>
+              <View style={[styles.planCard, styles.planCardPro]}>
+                <View style={styles.planHeader}>
+                  <Text style={styles.planName}>{plan.name}</Text>
+                </View>
+                <View style={styles.planFeatures}>
+                  {plan.features.map((f, i) => (
+                    <PlanFeature key={i} text={f.text} highlight={f.highlight} />
+                  ))}
+                </View>
+              </View>
+              <Text style={styles.stepSubtitle}>{t('onboarding.trialAfter', 'After 14 days your account continues on the Free plan.')}</Text>
+            </View>
+          );
+        }
+
         return (
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>{t('onboarding.choosePlan')}</Text>
@@ -1427,7 +1453,9 @@ export default function OnboardingScreen() {
           // "Kostenlos". Same defect as profile's upgrade CTA.
           {
             label: t('onboarding.choosePlan', 'Plan'),
-            value: selectedPlan === 'free'
+            value: !DORMANT_CONTROLS.inAppPlanSales
+              ? t('onboarding.trialSummary', 'Pro — 14 days free, then Free')
+              : selectedPlan === 'free'
               ? t('onboarding.planFree', 'Free')
               : `${t(PLAN_NAME_KEY[selectedPlan] ?? '', TIERS[selectedPlan].name)} (${country === 'US' ? '$' : country === 'UK' ? '£' : '€'}${billingCycle === 'annual' ? TIERS[selectedPlan].annualMonthlyPrice : TIERS[selectedPlan].monthlyPrice}${t('onboarding.perMonth', '/mo')})`,
           },

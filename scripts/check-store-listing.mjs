@@ -95,6 +95,33 @@ claims.length === 0
   ? ok('no AI / photo-scanning claims — matches the unset LLM keys')
   : bad(`copy advertises features that throw in production:\n      ${claims.join('\n      ')}`);
 
+// Accounting tools with no connect flow in the app (only Moneybird has one —
+// app/(modals)/moneybird*.tsx). "Connects to DATEV, Lexoffice, … QuickBooks"
+// sat in every locale while none of them could be connected (2026-10-09).
+// And "Peppol across the EU" read as network delivery; we generate the files.
+const NO_FLOW = /\b(DATEV|Lexoffice|SevDesk|Pennylane|Holded|Fatture in Cloud|Xero|QuickBooks)\b|Peppol (across|in de hele|dans toute|en toda|in tutta)|end-to-end|Ende-zu-Ende|chiffrement de bout/i;
+const overclaims = [];
+for (const loc of LOCALES) {
+  for (const line of (fulls.get(loc) ?? '').split(/\n+/)) {
+    if (NO_FLOW.test(line)) overclaims.push(`${loc}: ${line.slice(0, 90)}`);
+  }
+}
+overclaims.length === 0
+  ? ok('no integration without a connect flow, no network/encryption overclaim')
+  : bad(`copy claims what the app does not do:\n      ${overclaims.join('\n      ')}`);
+
+// The files fastlane UPLOADS must be this checked copy (scripts/sync-store-copy.mjs).
+// Both store descriptions had drifted to an old, dishonest text (2026-10-09).
+{
+  const { targets } = await import('./sync-store-copy.mjs');
+  const drift = targets().filter(([rel, text]) => {
+    try { return readFileSync(join(ROOT, rel), 'utf8') !== text; } catch { return true; }
+  }).map(([rel]) => rel);
+  drift.length === 0
+    ? ok('fastlane store files (App Store + Play) carry exactly this copy')
+    : bad(`store files differ from docs/play-store-listing.md — run node scripts/sync-store-copy.mjs:\n      ${drift.join('\n      ')}`);
+}
+
 // ---------------------------------------------------------------------------
 // PHONE SCREENSHOTS
 // ---------------------------------------------------------------------------

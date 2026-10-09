@@ -34,6 +34,7 @@ import { todayKey } from '../../src/utils/dateKey';
 import type { Country } from '../../src/i18n/formatting';
 import { contractValue } from '../../src/services/progressBillingService';
 import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -121,8 +122,8 @@ export default function WerkScreen() {
           t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason,
           [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+            ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) }] : []),
           ],
         );
         creatingJobRef.current = false;

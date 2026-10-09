@@ -1,31 +1,26 @@
-Reviewer: please use demo mode (no real Mollie / Moneybird / Supabase
-connection required). The build was uploaded with EXPO_PUBLIC_DEMO_MODE=true,
-which seeds realistic data and gates the entire payment stack behind
-deterministic mock responses.
+Vasco is a business app for tradespeople (plumbers, electricians, painters,
+carpenters) in the Netherlands, Germany, France, Spain, Italy and the UK:
+quotes, invoices, jobs and customers in one place.
 
-DEMO ACCOUNTS (any non-empty password works in demo mode):
-  Email: contractor@vasco.dev
-  Password: review
+SIGN-IN: use the review account in the Sign-In Information above. It is a
+real account on our live backend with a completed business profile (a Dutch
+plumbing company, app language English) and one sample customer, so you land
+directly in the app without onboarding.
 
-Alternative personas:
-  aannemer@vasco.dev — multi-trade renovation GC view
-  site@vasco.dev — site lead enterprise view
-  new@vasco.dev — fresh user, exercises onboarding
+SUGGESTED 3-MINUTE WALKTHROUGH:
+  1. Sign in → the "Today" tab opens.
+  2. "Customers" tab → the sample customer "Jan de Vries".
+  3. "Money" tab → create a quote for that customer, add a line, save it.
+  4. Open the quote → create the invoice → open the PDF (on euro invoices a
+     bank-transfer QR code is printed beside the bank details).
+  5. Profile → Legal → Export my data / Delete my account (GDPR, in-app).
 
-3-MINUTE WALKTHROUGH:
-  1. Launch → tap "contractor@vasco.dev" → any password → Sign in
-  2. Vandaag (home) — scroll to see EVE AI card and today's jobs
-  3. Geld tab → Offertes → tap "Nieuwe offerte" → tiered quote builder loads
-  4. Any invoice row → View & share PDF → confirm PDF renders
-  5. Long-press invoice → Mark as paid → toast confirms
+Payment-provider connections (Mollie / Stripe) and accounting connections
+are optional and use the contractor's OWN provider account; nothing is
+charged by Vasco. You do not need to connect them to review the app.
 
-Everything labeled "Connect Mollie", "Export to Moneybird", etc. opens an
-OAuth-style connection screen — reviewers can skip these; all payment
-flows simulate success in demo mode.
+PRIVACY: no ads, no third-party tracking, no App Tracking Transparency
+prompt. Data is stored in the EU (Supabase, Frankfurt). Account deletion can
+be started in the app and at https://admin.vascobuild.com/delete-account.
 
-PRIVACY: Vasco does not use third-party ad networks. No tracking
-frameworks (AppTrackingTransparency prompt not shown). Data lives in EU
-datacenters (Supabase Frankfurt). Full GDPR rights in-app: Profile →
-Legal → Export my data / Delete my account.
-
-CONTACT: support@vascobuild.com for review-specific questions.
+CONTACT: support@vascobuild.com

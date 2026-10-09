@@ -14,6 +14,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { stripeSecretKey, BILLING_SITE } from '../_shared/stripeKey.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,8 +38,8 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY');
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    const returnUrl = Deno.env.get('STRIPE_PORTAL_RETURN_URL') ?? 'https://vascobuild.com/billing';
+    const stripeKey = stripeSecretKey();
+    const returnUrl = Deno.env.get('STRIPE_PORTAL_RETURN_URL') ?? `${BILLING_SITE}/billing`;
 
     if (!supabaseUrl || !supabaseAnon || !stripeKey) {
       return new Response(JSON.stringify({ ok: false, error: 'Server misconfigured' }), {

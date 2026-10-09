@@ -53,8 +53,9 @@ const ASC_REQUIRED = Object.keys(ASC_LIMITS).concat([
 ]);
 const PLAY_REQUIRED = Object.keys(PLAY_LIMITS);
 
-const ASC_LOCALES = ['en-US', 'nl-NL', 'de-DE', 'fr-FR', 'es-ES', 'it-IT'];
-const PLAY_LOCALES = ASC_LOCALES;
+const ASC_LOCALES = ['en-US', 'nl-NL', 'de-DE', 'fr-FR', 'es-ES', 'it'];
+// Play keeps "it-IT"; Apple's code for Italian is plain "it".
+const PLAY_LOCALES = ['en-US', 'nl-NL', 'de-DE', 'fr-FR', 'es-ES', 'it-IT'];
 
 let errors = 0;
 let warnings = 0;
@@ -166,7 +167,7 @@ for (const f of ['copyright.txt', 'primary_category.txt']) {
 
 console.log('\n— review_information —');
 for (const f of ['first_name.txt', 'last_name.txt', 'phone_number.txt', 'email_address.txt',
-                  'demo_user.txt', 'demo_password.txt', 'notes.txt']) {
+                  'demo_user.txt', 'notes.txt']) {
   const path = join(repoRoot, 'fastlane/metadata/review_information', f);
   checkFile(path, null);
   const content = existsSync(path) ? trimTrailingNewline(readFileSync(path, 'utf8')) : '';
@@ -174,6 +175,33 @@ for (const f of ['first_name.txt', 'last_name.txt', 'phone_number.txt', 'email_a
   if (f === 'first_name.txt' && content === 'Merle') warn(`review_information/first_name.txt is placeholder "Merle"`);
   if (f === 'last_name.txt' && content === 'Slendebroek') warn(`review_information/last_name.txt is placeholder "Slendebroek"`);
   if (f === 'phone_number.txt' && content === '+31000000000') warn(`review_information/phone_number.txt is placeholder +31000000000`);
+}
+
+// ── honesty + reviewer login (2026-10-09) ───────────────────────────────────
+// The App Store fields fastlane uploads advertised AI, an "EVE" agent, photo
+// scanning and a demo screen the shipping build does not have, and named
+// accounting tools nothing in the app connects to. Same rules as the Play
+// copy (scripts/check-store-listing.mjs): scan every uploaded text field.
+{
+  const { readFileSync: rf, existsSync: ex } = await import('node:fs');
+  const DARK = /\b(AI|K\.?I\.?|EVE|kunstmatige intelligentie|intelligence artificielle|intelligenza artificiale|inteligencia artificial|foto[- ]?scan|photo[- ]?to|Beleg-Scanner|demo|DATEV|Lexoffice|SevDesk|Pennylane|Holded|Fatture in Cloud|Xero|QuickBooks|TicketBAI|Verifactu|Chorus|end-to-end|Ende-zu-Ende)\b/i;
+  const FIELDS = ['name.txt', 'subtitle.txt', 'promotional_text.txt', 'description.txt', 'keywords.txt', 'release_notes.txt'];
+  console.log('\n— no claims the live build cannot keep —');
+  for (const loc of ['en-US', 'nl-NL', 'de-DE', 'fr-FR', 'es-ES', 'it']) {
+    for (const f of FIELDS) {
+      const path = join(repoRoot, 'fastlane/metadata', loc, f);
+      if (!ex(path)) continue;
+      const hit = rf(path, 'utf8').match(DARK);
+      if (hit) error(`${loc}/${f} claims "${hit[0]}" — dark in production or not connectable`);
+    }
+  }
+  // German store copy is Sie (CLAUDE.md): no du/dein/deine.
+  const de = FIELDS.map((f) => { try { return rf(join(repoRoot, 'fastlane/metadata/de-DE', f), 'utf8'); } catch { return ''; } }).join('\n');
+  const du = de.match(/\b(du|dich|dir|dein|deine|deinen|deiner|tippe|bestätigst)\b/i);
+  if (du) error(`de-DE uses "${du[0]}" — German store copy is Sie`);
+  // The reviewer's password is NOT committed: the upload reads it from secrets/.
+  if (!ex(join(repoRoot, 'secrets/reviewer-account.txt'))) error('secrets/reviewer-account.txt missing — App Review needs the sign-in password');
+  else ok('reviewer password present in secrets/ (not in fastlane/metadata)');
 }
 
 console.log();

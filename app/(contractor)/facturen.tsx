@@ -68,6 +68,7 @@ import { getCustomerPaymentPreference } from '../../src/services/customerPayment
 // The payment-link gate a few hundred lines above was the only tier check in
 // this file; the create-invoice sheet below it had none.
 import { ensureCanCreate } from '../../src/services/tierGatePrompt';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -169,8 +170,8 @@ function InvoiceList({ invoices, expandedId, onToggleExpand }: { invoices: Invoi
           t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('payments.upgradeRequiredDesc', 'Online payment links require a paid plan.'),
           [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+            ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) }] : []),
           ],
         );
         return null;

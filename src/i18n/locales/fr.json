@@ -333,7 +333,11 @@
       "scheduleDesc": "Rendez-vous, horaires et chevauchements en un coup d'œil",
       "insights": "Analyses d'activité",
       "insightsDesc": "Rapports hebdo sur le chiffre d'affaires, les chantiers et les tendances"
-    }
+    },
+    "trialTitle": "Vos 14 premiers jours : Pro, gratuit",
+    "trialDesc": "Tout Pro est activé pour vous. Sans carte, rien à résilier.",
+    "trialAfter": "Après 14 jours, votre compte continue avec la formule gratuite.",
+    "trialSummary": "Pro — 14 jours gratuits, puis Gratuit"
   },
   "dashboard": {
     "goodMorning": "Bonjour",
@@ -655,7 +659,7 @@
     "enterNumber": "Renseigner"
   },
   "billing": {
-    "upgradeRequired": "Mise à niveau requise",
+    "upgradeRequired": "Formule payante requise",
     "viewPlans": "Voir les plans",
     "formatNeedsUpgrade": "Ce format nécessite une formule payante."
   },
@@ -4830,7 +4834,7 @@
     "viewDetails": "Voir les détails pour plus d'informations"
   },
   "tierGate": {
-    "jobLimitReached": "Limite de chantiers atteinte ({{count}}). Upgrader pour plus.",
+    "jobLimitReached": "Limite de chantiers atteinte ({{count}}).",
     "quoteLimitReached": "Limite de devis atteinte ({{count}}/mois).",
     "invoiceLimitReached": "Limite de factures atteinte ({{count}}/mois).",
     "aiInsightLimitReached": "Limite d'insights IA atteinte ({{count}}/mois).",

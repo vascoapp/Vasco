@@ -13,6 +13,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { stripeSecretKey } from '../_shared/stripeKey.ts';
 import { verifyConnectState } from '../_shared/stripeConnectState.ts';
 
 const APP_RETURN = 'vasco://stripe-connected';
@@ -25,7 +26,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'GET') return new Response('Method not allowed', { status: 405 });
   const url = new URL(req.url);
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-  const platformKey = (Deno.env.get('STRIPE_API_KEY') ?? '').trim();
+  const platformKey = stripeSecretKey() ?? '';
   const secret = Deno.env.get('STRIPE_CONNECT_STATE_SECRET') ?? serviceKey;
 
   const verified = await verifyConnectState(url.searchParams.get('state'), secret);

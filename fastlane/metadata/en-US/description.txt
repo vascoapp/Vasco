@@ -1,23 +1,20 @@
-Vasco is the admin co-pilot for self-employed trades and small contractors. Quote, schedule, invoice and get paid from one app — no spreadsheets, no late-night paperwork.
+Vasco is the admin side of a trade business, built for the phone in your pocket rather than the laptop you never open.
 
-WHAT VASCO DOES FOR YOU
-• Tiered quotes that customers can accept from their phone
-• Photo-to-invoice scanning with automatic line items
-• Payment links via Mollie (EU) and Stripe (UK) — iDEAL, Bancontact, SEPA, Bacs, cards
-• Automatic payment reminders and quote follow-ups
-• Job scheduling with customer "On my way" ETA
-• Built-in compliance for NL, DE, FR, ES, IT, UK
-• E-invoicing: XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA, Peppol
-• Sync with Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero, QuickBooks
+Write a quote on site, turn it into a job, log your hours and materials as you go, and send the invoice before you have left the driveway. When it goes unpaid, Vasco chases it for you.
 
-AI THAT DOES WORK, NOT JUST ADVICE
-Vasco's AI prepares customer messages, chases late invoices, prices materials, and flags compliance gaps. You approve — it acts. Never sends anything to customers without your OK.
+Quotes that become invoices
+Build a quote from your own pricebook, send it, and let the customer accept it on their phone — no app, no account. An accepted quote becomes a job with the agreed scope already attached, so nothing is retyped and nothing drifts.
 
-MADE FOR YOUR TRADE
-Plumbing, electrical, gas, HVAC, carpentry, painting, roofing, tiling, plastering, flooring, insulation, solar, glazing, landscaping. Templates, certificates, and material libraries tuned per trade × country.
+Getting paid, without the awkward phone call
+Payment reminders go out on a schedule you set, escalating politely. You approve each one with a tap; Vasco never emails your customer behind your back.
 
-PRIVACY FIRST
-Your data lives in EU datacenters. End-to-end encryption. Full GDPR rights in-app: export, delete, correct. We never sell your data.
+Built for European invoicing rules
+XRechnung and ZUGFeRD for Germany, Factur-X for France, Facturae for Spain, FatturaPA for Italy, and Peppol BIS files. Correct VAT for six countries, including reduced rates and the reverse-charge cases that catch people out.
 
-PRICING
-Free to start. Paid tiers from €14/month. Cancel anytime. No card required to try.
+The rest of the paperwork
+Time tracking, expenses, materials, customer records, and a handover pack at the end of the job. Your figures export as PDF and spreadsheet for your accountant, and Dutch and German businesses can connect Moneybird.
+
+Works where you work
+Basements and lofts do not have signal. Vasco keeps working offline and syncs when you surface.
+
+For plumbers, electricians, gas engineers, painters and carpenters — solo or running a crew. Available in English, Dutch, German, French, Spanish and Italian.

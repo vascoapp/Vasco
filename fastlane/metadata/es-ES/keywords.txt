@@ -1,1 +1,1 @@
-fontanero,electricista,reformas,presupuesto,factura,autonomo,iva,holded,ticketbai,verifactu,obra
+fontanero,electricista,reformas,presupuesto,factura,autonomo,iva,obra,facturae,cobro

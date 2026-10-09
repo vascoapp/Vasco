@@ -48,6 +48,13 @@ export const DORMANT_CONTROLS = {
    *  BUILT 2026-10-09 (decision 3a): ComplianceItemSheet → saveTrackedItem,
    *  stored on the device and in the account, watched by complianceAgentService. */
   complianceItemEditing: true,
+  /** Buying or changing a PLAN inside the apps (upgrade buttons, prices,
+   *  "View plans", "upgrade at vascobuild.com"). OFF: plans are sold on the
+   *  website (Stripe, user 2026-10-09). Apple (3.1.1) and Google Play only allow
+   *  in-app plan sales through their own billing — a buy button, a price or a
+   *  "pay on our website" pointer in the app is a rejection. Turn ON only with
+   *  store billing (e.g. RevenueCat) behind it. */
+  inAppPlanSales: false,
   /** KvK "Controleer": no KvK API is connected; the check could only say so. */
   kvkVerification: false,
   /** Profile → Integrations rows with no connect flow (Xero UK/US, QuickBooks

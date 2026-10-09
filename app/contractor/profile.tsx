@@ -431,7 +431,7 @@ export default function ProfileScreen() {
                 )}
               </View>
 
-              {subscription.tier !== 'free' && Platform.OS !== 'ios' && (
+              {DORMANT_CONTROLS.inAppPlanSales && subscription.tier !== 'free' && Platform.OS !== 'ios' && (
                 <Pressable
                   style={styles.manageSubRow}
                   onPress={handleManageSubscription}
@@ -459,7 +459,9 @@ export default function ProfileScreen() {
               {/* iOS: no in-app purchase or external-checkout link-out (App Store
                   guideline 3.1.1). Subscriptions are sold on the web; show a
                   non-interactive note instead of a tappable purchase link. */}
-                {Platform.OS === 'ios' && (
+                {/* Off with in-app plan sales: "upgrade at vascobuild.com" is
+                    steering (3.1.1) — DORMANT_CONTROLS.inAppPlanSales. */}
+                {DORMANT_CONTROLS.inAppPlanSales && Platform.OS === 'ios' && (
                 <View style={styles.iosBillingNote}>
                   <Ionicons name="globe-outline" size={16} color={SemanticColors.textTertiary} />
                   <Text style={styles.iosBillingNoteText}>
@@ -470,7 +472,7 @@ export default function ProfileScreen() {
                 </View>
               )}
 
-              {subscription.tier !== 'contractor' && Platform.OS !== 'ios' && (
+              {DORMANT_CONTROLS.inAppPlanSales && subscription.tier !== 'contractor' && Platform.OS !== 'ios' && (
                 <View style={styles.planUpgradeBlock}>
                   {/* R18.1: credits banner — visible when the contractor has
                       earned R8.3 referral credits. The actual offset happens

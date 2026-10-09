@@ -333,7 +333,11 @@
       "complianceDesc": "Melding voordat je certificeringen verlopen",
       "insights": "Zakelijke inzichten",
       "insightsDesc": "Wekelijkse rapporten over omzet, klussen en trends"
-    }
+    },
+    "trialTitle": "Je eerste 14 dagen: Pro, gratis",
+    "trialDesc": "Alles van Pro staat voor je aan. Geen kaart, niets op te zeggen.",
+    "trialAfter": "Na 14 dagen gaat je account verder op het gratis abonnement.",
+    "trialSummary": "Pro — 14 dagen gratis, daarna Gratis"
   },
   "dashboard": {
     "goodMorning": "Goedemorgen",
@@ -655,7 +659,7 @@
     "enterNumber": "Invullen"
   },
   "billing": {
-    "upgradeRequired": "Upgrade nodig",
+    "upgradeRequired": "Betaald abonnement nodig",
     "viewPlans": "Bekijk abonnementen",
     "formatNeedsUpgrade": "Dit formaat vereist een betaald abonnement."
   },
@@ -4887,7 +4891,7 @@
     "viewDetails": "Bekijk de details voor meer informatie"
   },
   "tierGate": {
-    "jobLimitReached": "Klus-limiet bereikt ({{count}}). Upgrade voor meer.",
+    "jobLimitReached": "Klus-limiet bereikt ({{count}}).",
     "quoteLimitReached": "Offerte-limiet bereikt ({{count}}/maand).",
     "invoiceLimitReached": "Factuur-limiet bereikt ({{count}}/maand).",
     "aiInsightLimitReached": "AI-inzicht-limiet bereikt ({{count}}/maand).",

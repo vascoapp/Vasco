@@ -47,6 +47,7 @@ import { SupplierLeadtimePredictionCard } from '../../src/components/contractor/
 import { useAppState } from '../../src/state/AppState';
 import { useAiCapabilities } from '../../src/services/aiCapabilities';
 import { useMyPriceWatch, PRICE_RISE_THRESHOLD_PCT } from '../../src/services/personalPriceWatch';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 
 export default function InkoopScreen() {
   const router = useRouter();
@@ -74,8 +75,8 @@ export default function InkoopScreen() {
           t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('inkoop.scannerUpgradeRequired', 'Receipt scanning is part of the paid plan.'),
           [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+            ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) }] : []),
           ],
         );
         return;

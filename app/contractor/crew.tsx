@@ -38,6 +38,7 @@ import { PAGE_BG, TYPE, RADIUS, GRID } from '../../src/theme/tabStyles';
 import { DK } from '../../src/theme/draftkings';
 import { currencySymbol } from '../../src/i18n/formatting';
 import { useAuth } from '../../src/context/AuthContext';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 
 // Was a module-scope Record of English strings, evaluated at import time before
 // any language existed, so a Dutch contractor with a team read "Lead Tech"
@@ -92,8 +93,8 @@ export default function CrewScreen() {
             t('billing.upgradeRequired', 'Upgrade required'),
             gate.reason,
             [
-              { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-              { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+              { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+              ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) }] : []),
             ],
           );
           return;

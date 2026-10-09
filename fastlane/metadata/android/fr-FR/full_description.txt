@@ -1,23 +1,20 @@
-Vasco est le copilote administratif des artisans et petites entreprises du BTP. Devis, planning, factures, encaissement — le tout dans une app. Fini les tableurs et les soirées de paperasse.
+Vasco, c'est l'administratif de votre entreprise, conçu pour le téléphone dans votre poche plutôt que pour l'ordinateur que vous n'ouvrez jamais.
 
-CE QUE VASCO FAIT POUR VOUS
-• Devis à 3 niveaux (Standard/Recommandé/Premium) acceptés depuis le téléphone du client
-• Scan de factures par IA : lignes extraites automatiquement
-• Liens de paiement via Stripe/Mollie — SEPA, carte, PayPal, Klarna
-• Relances automatiques de paiement et suivis de devis
-• Planning avec notification "J'arrive" pour le client
-• Conformité intégrée : SIRET, TVA, facturation électronique obligatoire B2B 2026
-• E-facturation : Factur-X, Peppol, Chorus Pro
-• Synchronisation avec Pennylane, Axonaut, Sage, Cegid
+Rédigez un devis sur le chantier, transformez-le en intervention, saisissez vos heures et vos fournitures au fil de l'eau, et envoyez la facture avant d'avoir quitté les lieux. Si elle reste impayée, Vasco relance pour vous.
 
-L'IA QUI TRAVAILLE POUR VOUS
-Vasco prépare les messages client, relance les impayés, calcule les marges matériaux et signale les manques de conformité. Vous validez — Vasco exécute. Rien n'est envoyé au client sans votre accord.
+Des devis qui deviennent des factures
+Composez un devis à partir de votre propre bibliothèque de prix, envoyez-le, et laissez le client l'accepter depuis son téléphone — sans application ni compte. Un devis accepté devient une intervention avec le périmètre convenu déjà rattaché : rien n'est ressaisi, rien ne dérive.
 
-POUR VOTRE MÉTIER
-Plomberie, électricité, gaz/chauffage, menuiserie, peinture, couverture, carrelage, plâtrerie, revêtements, isolation, solaire, vitrerie, paysagisme. Adapté par métier × pays.
+Être payé sans le coup de fil gênant
+Les relances partent selon le calendrier que vous fixez, en montant progressivement en fermeté. Vous validez chacune d'un geste ; Vasco n'écrit jamais à votre client à votre insu.
 
-VIE PRIVÉE D'ABORD
-Données hébergées en UE. Chiffrement de bout en bout. Droits RGPD complets dans l'app : export, suppression, correction. Nous ne vendons jamais vos données.
+Conçu pour la facturation européenne
+Factur-X pour la France, XRechnung et ZUGFeRD pour l'Allemagne, Facturae pour l'Espagne, FatturaPA pour l'Italie, et fichiers Peppol BIS. TVA correcte pour six pays, taux réduits et autoliquidation compris.
 
-TARIFS
-Gratuit pour commencer. Forfaits payants dès 14 €/mois. Résiliable chaque mois. Pas de CB pour tester.
+Le reste de la paperasse
+Suivi des heures, dépenses, fournitures, fiches clients et dossier de remise en fin de chantier. Vos chiffres s'exportent en PDF et en tableur pour votre comptable.
+
+Fonctionne là où vous travaillez
+Les caves et les combles ne captent pas. Vasco continue hors ligne et se synchronise dès que vous remontez.
+
+Pour plombiers, électriciens, gaziers, peintres et menuisiers — seul ou avec une équipe. Disponible en français, anglais, néerlandais, allemand, espagnol et italien.

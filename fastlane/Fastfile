@@ -21,6 +21,15 @@
 
 default_platform(:ios)
 
+# The reviewer account's password lives in secrets/reviewer-account.txt
+# (gitignored) — never in fastlane/metadata, which is committed.
+def reviewer_info
+  f = File.expand_path('../secrets/reviewer-account.txt', __dir__)
+  return {} unless File.exist?(f)
+  pw = File.read(f)[/^password: (.+)$/, 1]
+  pw ? { demo_password: pw } : {}
+end
+
 platform :ios do
   desc "Upload metadata to App Store Connect (no build)"
   lane :metadata do
@@ -30,6 +39,7 @@ platform :ios do
       force: true,                  # don't ask for confirmation
       precheck_include_in_app_purchases: false,
       run_precheck_before_submit: false,
+      app_review_information: reviewer_info,
     )
   end
 
@@ -46,10 +56,17 @@ platform :ios do
   desc "Upload metadata + screenshots, prepare for submission"
   lane :release do
     deliver(
+      app_identifier: 'com.vascobuild.app',
+      # secrets/asc-api-key.json (gitignored): App Store Connect API key.
+      api_key_path: File.expand_path('../secrets/asc-api-key.json', __dir__),
+      # The builds are 1.0.0; Apple attaches a build only to the SAME version.
+      app_version: '1.0.0',
+      overwrite_screenshots: true,
       skip_binary_upload: true,     # EAS handles the binary
       force: true,
       run_precheck_before_submit: false,
       submit_for_review: false,     # leave operator to click 'Submit' in ASC
+      app_review_information: reviewer_info,
     )
   end
 end

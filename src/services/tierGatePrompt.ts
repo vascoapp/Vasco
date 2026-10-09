@@ -28,6 +28,7 @@ import {
   loadSubscription, canCreateQuote, canCreateInvoice, canUseFeature,
   type GateResult,
 } from './subscriptionService';
+import { DORMANT_CONTROLS } from '../config/dormant';
 
 /** Anything with a creation timestamp — quotes and invoices both qualify. */
 export interface CreatedLike { createdAt?: string | null }
@@ -51,8 +52,8 @@ function promptUpgrade(gate: GateResult): void {
     i18n.t('billing.upgradeRequired', 'Upgrade required'),
     gate.reason,
     [
-      { text: i18n.t('common.cancel', 'Cancel'), style: 'cancel' },
-      { text: i18n.t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as never) },
+      { text: DORMANT_CONTROLS.inAppPlanSales ? i18n.t('common.cancel', 'Cancel') : i18n.t('common.ok', 'OK'), style: 'cancel' },
+      ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: i18n.t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as never) }] : []),
     ],
   );
 }

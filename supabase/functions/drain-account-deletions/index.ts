@@ -27,6 +27,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { stripeSecretKey } from '../_shared/stripeKey.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -223,7 +224,7 @@ Deno.serve(async (req) => {
     // Revoke it first. A Stripe outage retries the erasure next run.
     try {
       const { data: conn } = await admin.from('stripe_connections').select('stripe_account_id').eq('user_id', row.user_id).maybeSingle();
-      const platformKey = (Deno.env.get('STRIPE_API_KEY') ?? '').trim();
+      const platformKey = stripeSecretKey() ?? '';
       const clientId = (Deno.env.get('STRIPE_CONNECT_CLIENT_ID') ?? '').trim();
       if (conn?.stripe_account_id && platformKey && clientId) {
         const res = await fetch('https://connect.stripe.com/oauth/deauthorize', {

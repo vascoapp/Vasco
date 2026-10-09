@@ -1,1 +1,0 @@
-idraulico,elettricista,edile,preventivo,fattura,partita iva,sdi,fatturapa,fatture in cloud,cantiere

@@ -1,23 +1,20 @@
-Vasco is je administratie-copiloot. Offreren, plannen, factureren en betaald krijgen — allemaal in één app. Geen Excel meer, geen avonden vol papierwerk.
+Vasco is de administratie van je bedrijf, gemaakt voor de telefoon in je zak in plaats van de laptop die je nooit openklapt.
 
-WAT VASCO VOOR JE DOET
-• Slimme offertes in 3 niveaus (Goed/Beter/Best) die klanten op hun telefoon accepteren
-• Bon-scannen met AI: regel voor regel ingelezen
-• Betaallinks via Mollie — iDEAL, Bancontact, SEPA, kaart
-• Automatische betaalherinneringen en opvolging van offertes
-• Planning met "Ik ben onderweg" melding voor de klant
-• KvK/BTW/UBO-compliant, klaar voor Belastingdienst-audit
-• E-facturering: Peppol, UBL 2.1, FAKRA voor B2B
-• Synchroniseert met Moneybird, Exact, Snelstart, Yuki, Visma
+Schrijf een offerte op locatie, maak er een klus van, schrijf je uren en materialen weg terwijl je bezig bent, en stuur de factuur voordat je de oprit af bent. Blijft die openstaan, dan rappelleert Vasco voor je.
 
-AI DIE HET WERK DOET
-Vasco bereidt berichten voor, jaagt op late facturen, berekent materiaalmarge en signaleert compliance-gaten. Jij keurt goed — Vasco doet de rest. Niets gaat naar de klant zonder jouw OK.
+Offertes die facturen worden
+Stel een offerte samen uit je eigen prijzenboek, verstuur hem, en laat de klant op zijn eigen telefoon akkoord geven — geen app, geen account. Een geaccepteerde offerte wordt een klus mét de afgesproken omvang eraan vast, dus niets wordt overgetypt en niets schuift op.
 
-VOOR JOUW VAK
-Loodgieter, elektricien, CV-installateur, timmerman, schilder, dakdekker, tegelzetter, stukadoor, vloerenlegger, isolatie, zonnepanelen, glaszetter, hovenier. Aangepast per vak × land.
+Betaald worden zonder het ongemakkelijke telefoontje
+Herinneringen gaan op jouw schema de deur uit en worden stap voor stap steviger. Jij keurt elke mail met één tik goed; Vasco mailt nooit buiten je om naar je klant.
 
-PRIVACY VOOROP
-Je data staat in EU-datacenters. End-to-end versleuteld. Volledige GDPR-rechten in de app: exporteren, verwijderen, corrigeren. Wij verkopen je gegevens nooit.
+Gebouwd voor Europese factuurregels
+XRechnung en ZUGFeRD voor Duitsland, Factur-X voor Frankrijk, Facturae voor Spanje, FatturaPA voor Italië, en Peppol BIS-bestanden. Kloppende btw voor zes landen, inclusief verlaagde tarieven en de verleggingsregeling.
 
-PRIJS
-Gratis te starten. Betaalde pakketten vanaf €14/maand. Maandelijks opzegbaar. Geen creditcard nodig om te proberen.
+De rest van het papierwerk
+Urenregistratie, uitgaven, materialen, klantgegevens en een opleverpakket aan het eind van de klus. Je cijfers exporteer je als pdf en spreadsheet voor je boekhouder, en je kunt Moneybird koppelen.
+
+Werkt waar jij werkt
+In kruipruimtes en op zolders is geen bereik. Vasco werkt gewoon door zonder verbinding en synchroniseert zodra je weer boven bent.
+
+Voor loodgieters, elektriciens, gasmonteurs, schilders en timmerlieden — alleen of met een ploeg. Beschikbaar in het Nederlands, Engels, Duits, Frans, Spaans en Italiaans.

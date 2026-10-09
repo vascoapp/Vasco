@@ -65,6 +65,7 @@ import { daysUntilDue } from '../../src/utils/invoiceDue';
 import { ensureCanUsePaymentLink } from '../../src/services/tierGatePrompt';
 import { round2 } from '../../src/utils/round2';
 import { bankTransferLine } from '../../src/utils/bankDetails';
+import { DORMANT_CONTROLS } from '../../src/config/dormant';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -964,8 +965,8 @@ export default function InvoiceDetailScreen() {
           t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('billing.formatNeedsUpgrade', 'This format requires a paid plan.'),
           [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+            ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) }] : []),
           ],
         );
         return;
@@ -1180,8 +1181,8 @@ export default function InvoiceDetailScreen() {
           t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('billing.formatNeedsUpgrade', 'This format requires a paid plan.'),
           [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+            ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) }] : []),
           ],
         );
         return;
@@ -1266,8 +1267,8 @@ export default function InvoiceDetailScreen() {
           t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('billing.formatNeedsUpgrade', 'This format requires a paid plan.'),
           [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) },
+            { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+            ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => router.push('/contractor/profile' as any) }] : []),
           ],
         );
         return;

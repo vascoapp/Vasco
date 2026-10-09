@@ -333,7 +333,11 @@
       "scheduleDesc": "Termine, Zeiten und Überschneidungen auf einen Blick",
       "insights": "Geschäftseinblicke",
       "insightsDesc": "Wöchentliche Berichte zu Umsatz, Aufträgen und Trends"
-    }
+    },
+    "trialTitle": "Ihre ersten 14 Tage: Pro, kostenlos",
+    "trialDesc": "Alles aus Pro ist für Sie freigeschaltet. Keine Karte, nichts zu kündigen.",
+    "trialAfter": "Nach 14 Tagen läuft Ihr Konto im kostenlosen Tarif weiter.",
+    "trialSummary": "Pro — 14 Tage kostenlos, danach Kostenlos"
   },
   "dashboard": {
     "goodMorning": "Guten Morgen",
@@ -655,7 +659,7 @@
     "enterNumber": "Eintragen"
   },
   "billing": {
-    "upgradeRequired": "Upgrade erforderlich",
+    "upgradeRequired": "Bezahltarif erforderlich",
     "viewPlans": "Abos ansehen",
     "formatNeedsUpgrade": "Dieses Format erfordert einen kostenpflichtigen Tarif."
   },
@@ -4830,7 +4834,7 @@
     "viewDetails": "Details für weitere Informationen anzeigen"
   },
   "tierGate": {
-    "jobLimitReached": "Auftrag-Limit erreicht ({{count}}). Für mehr upgraden.",
+    "jobLimitReached": "Auftrags-Limit erreicht ({{count}}).",
     "quoteLimitReached": "Angebot-Limit erreicht ({{count}}/Monat).",
     "invoiceLimitReached": "Rechnung-Limit erreicht ({{count}}/Monat).",
     "aiInsightLimitReached": "KI-Insight-Limit erreicht ({{count}}/Monat).",

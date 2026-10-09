@@ -333,7 +333,11 @@
       "scheduleDesc": "Citas, horarios y solapamientos de un vistazo",
       "insights": "Información del negocio",
       "insightsDesc": "Informes semanales de ingresos, obras y tendencias"
-    }
+    },
+    "trialTitle": "Sus primeros 14 días: Pro, gratis",
+    "trialDesc": "Todo Pro está activado para usted. Sin tarjeta, nada que cancelar.",
+    "trialAfter": "Después de 14 días, su cuenta continúa con el plan gratuito.",
+    "trialSummary": "Pro — 14 días gratis, después Gratis"
   },
   "dashboard": {
     "goodMorning": "Buenos días",
@@ -655,7 +659,7 @@
     "enterNumber": "Indicar"
   },
   "billing": {
-    "upgradeRequired": "Actualización necesaria",
+    "upgradeRequired": "Se necesita un plan de pago",
     "viewPlans": "Ver planes",
     "formatNeedsUpgrade": "Este formato requiere un plan de pago."
   },
@@ -4830,7 +4834,7 @@
     "viewDetails": "Ver detalles para más información"
   },
   "tierGate": {
-    "jobLimitReached": "Límite de trabajos alcanzado ({{count}}). Mejora para más.",
+    "jobLimitReached": "Límite de trabajos alcanzado ({{count}}).",
     "quoteLimitReached": "Límite de presupuestos alcanzado ({{count}}/mes).",
     "invoiceLimitReached": "Límite de facturas alcanzado ({{count}}/mes).",
     "aiInsightLimitReached": "Límite de insights IA alcanzado ({{count}}/mes).",

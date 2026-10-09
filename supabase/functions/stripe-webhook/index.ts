@@ -10,6 +10,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { stripeSecretKey } from '../_shared/stripeKey.ts';
 import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
 import { claimWebhookEvent, redeemCredits, restoreCredits, releaseWebhookEvent } from '../_shared/credit-redemption.ts';
 import { invoiceLookup } from '../_shared/invoiceRef.ts';
@@ -207,7 +208,7 @@ Deno.serve(async (req) => {
     // invoice.payment_failed (dunning) branch both need it. Previously declared
     // only inside the invoice.upcoming block, so payment_failed threw
     // ReferenceError → subscriptions never marked past_due (dunning banner dead).
-    const stripeApiKey = Deno.env.get('STRIPE_API_KEY');
+    const stripeApiKey = stripeSecretKey();
 
     // -------------------------------------------------------------------------
     // 2.0 invoice.upcoming → Option A: apply referral credits as a Stripe Coupon

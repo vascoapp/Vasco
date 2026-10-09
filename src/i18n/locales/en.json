@@ -333,7 +333,11 @@
       "scheduleDesc": "Appointments, times and clashes at a glance",
       "insights": "Business insights",
       "insightsDesc": "Weekly reports on revenue, jobs, and trends"
-    }
+    },
+    "trialTitle": "Your first 14 days: Pro, free",
+    "trialDesc": "Everything in Pro is switched on for you. No card, nothing to cancel.",
+    "trialAfter": "After 14 days your account continues on the Free plan.",
+    "trialSummary": "Pro — 14 days free, then Free"
   },
   "dashboard": {
     "goodMorning": "Good morning",
@@ -655,7 +659,7 @@
     "enterNumber": "Enter"
   },
   "billing": {
-    "upgradeRequired": "Upgrade required",
+    "upgradeRequired": "Paid plan needed",
     "viewPlans": "View plans",
     "formatNeedsUpgrade": "This format requires a paid plan."
   },
@@ -4830,7 +4834,7 @@
     "viewDetails": "See details for more information"
   },
   "tierGate": {
-    "jobLimitReached": "Job limit reached ({{count}}). Upgrade for more.",
+    "jobLimitReached": "Job limit reached ({{count}}).",
     "quoteLimitReached": "Quote limit reached ({{count}}/month).",
     "invoiceLimitReached": "Invoice limit reached ({{count}}/month).",
     "aiInsightLimitReached": "AI insight limit reached ({{count}}/month).",

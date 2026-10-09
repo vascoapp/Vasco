@@ -36,6 +36,7 @@ import { logError } from '../../utils/errorHandler';
 import type { Customer } from '../../domain/customers';
 import { isSpanishPublicBodyNif, isValidDir3Code, normalizeDir3 } from '../../integrations/fiscalIds';
 import { DKLabel } from './DKLabel';
+import { DORMANT_CONTROLS } from '../../config/dormant';
 
 interface Props {
   visible: boolean;
@@ -228,8 +229,8 @@ export function AddCustomerSheet({ visible, onClose, onAdded, customer, onSaved 
           t('billing.upgradeRequired', 'Upgrade required'),
           gate.reason ?? t('contractor.customers.limitReached', 'You have reached your client limit on this plan.'),
           [
-            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-            { text: t('billing.viewPlans', 'View plans'), onPress: () => { onClose(); router.push('/contractor/profile' as any); } },
+            { text: DORMANT_CONTROLS.inAppPlanSales ? t('common.cancel', 'Cancel') : t('common.ok', 'OK'), style: 'cancel' },
+            ...(DORMANT_CONTROLS.inAppPlanSales ? [{ text: t('billing.viewPlans', 'View plans'), onPress: () => { onClose(); router.push('/contractor/profile' as any); } }] : []),
           ],
         );
         return;
