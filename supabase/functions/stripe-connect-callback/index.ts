@@ -28,12 +28,28 @@ Deno.serve(async (req) => {
   const platformKey = (Deno.env.get('STRIPE_API_KEY') ?? '').trim();
   const secret = Deno.env.get('STRIPE_CONNECT_STATE_SECRET') ?? serviceKey;
 
-  const userId = await verifyConnectState(url.searchParams.get('state'), secret);
-  if (!userId) return back('failed');
+  const verified = await verifyConnectState(url.searchParams.get('state'), secret);
+  if (!verified) return back('failed');
+  const userId = verified.userId;
+  if (!serviceKey) return back('failed');
+  const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceKey);
+  // SINGLE USE: consume the nonce stripe-connect stored for THIS user. A
+  // second use of the same link, or a state for another user, finds nothing.
+  const { data: consumed, error: nonceErr } = await admin
+    .from('stripe_connect_states')
+    .delete()
+    .eq('nonce', verified.nonce)
+    .eq('user_id', userId)
+    .gt('expires_at', new Date().toISOString())
+    .select('nonce');
+  // Old, unused states go too (best effort). `.then` — a query builder that is
+  // never awaited or then'd is never SENT.
+  admin.from('stripe_connect_states').delete().lt('expires_at', new Date().toISOString()).then(() => {}, () => {});
+  if (nonceErr || !consumed || consumed.length !== 1) return back('failed');
   // The contractor pressed "back" / declined on Stripe's page.
   if (url.searchParams.get('error')) return back('cancelled');
   const code = url.searchParams.get('code');
-  if (!code || !platformKey || !serviceKey) return back('failed');
+  if (!code || !platformKey) return back('failed');
 
   const res = await fetch('https://connect.stripe.com/oauth/token', {
     method: 'POST',
@@ -47,7 +63,6 @@ Deno.serve(async (req) => {
     return back('failed');
   }
 
-  const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceKey);
   const { error } = await admin.from('stripe_connections').upsert({
     user_id: userId,
     stripe_account_id: accountId,

@@ -14,8 +14,8 @@
 
 const enc = new TextEncoder();
 
-/** How long the contractor has on Stripe's page. */
-export const STATE_TTL_MS = 30 * 60 * 1000;
+/** How long the contractor has on Stripe's page (was 30 min; review 2026-10-09). */
+export const STATE_TTL_MS = 10 * 60 * 1000;
 
 function b64url(bytes: Uint8Array): string {
   let s = '';
@@ -44,24 +44,35 @@ function same(a: Uint8Array, b: Uint8Array): boolean {
   return diff === 0;
 }
 
-export async function signConnectState(userId: string, secret: string, now: number = Date.now()): Promise<string> {
+/**
+ * A signed state, plus its nonce and expiry — the caller STORES the nonce
+ * (stripe_connect_states) so the callback can consume it once: a signature
+ * alone made the link reusable until it expired (review 2026-10-09).
+ */
+export async function signConnectState(userId: string, secret: string, now: number = Date.now()): Promise<{ state: string; nonce: string; expiresAt: number }> {
   if (!secret || secret.length < 16) throw new Error('state secret missing');
-  const nonce = b64url(crypto.getRandomValues(new Uint8Array(12)));
-  const payload = b64url(enc.encode(JSON.stringify({ u: userId, e: now + STATE_TTL_MS, n: nonce })));
+  const nonce = b64url(crypto.getRandomValues(new Uint8Array(16)));
+  const expiresAt = now + STATE_TTL_MS;
+  const payload = b64url(enc.encode(JSON.stringify({ u: userId, e: expiresAt, n: nonce })));
   const sig = b64url(await hmac(secret, payload));
-  return `${payload}.${sig}`;
+  return { state: `${payload}.${sig}`, nonce, expiresAt };
 }
 
-/** The Vasco user id the state was issued to, or null (forged, altered, expired). */
-export async function verifyConnectState(state: unknown, secret: string, now: number = Date.now()): Promise<string | null> {
+/**
+ * Who the state was issued to and its nonce, or null (forged, altered,
+ * expired). The caller must still CONSUME the nonce — that is what makes it
+ * single-use.
+ */
+export async function verifyConnectState(state: unknown, secret: string, now: number = Date.now()): Promise<{ userId: string; nonce: string } | null> {
   if (typeof state !== 'string' || !secret) return null;
   const [payload, sig, extra] = state.split('.');
   if (!payload || !sig || extra !== undefined) return null;
   try {
     if (!same(await hmac(secret, payload), fromB64url(sig))) return null;
-    const p = JSON.parse(new TextDecoder().decode(fromB64url(payload))) as { u?: unknown; e?: unknown };
+    const p = JSON.parse(new TextDecoder().decode(fromB64url(payload))) as { u?: unknown; e?: unknown; n?: unknown };
     if (typeof p.u !== 'string' || !p.u || typeof p.e !== 'number' || p.e < now) return null;
-    return p.u;
+    if (typeof p.n !== 'string' || p.n.length < 16) return null;
+    return { userId: p.u, nonce: p.n };
   } catch {
     return null;
   }

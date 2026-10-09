@@ -82,7 +82,15 @@ describe('the server side', () => {
     const verifyAt = callback.indexOf('verifyConnectState(');
     expect(verifyAt).toBeGreaterThan(-1);
     expect(callback.indexOf("from('stripe_connections')")).toBeGreaterThan(verifyAt);
-    expect(callback).toMatch(/if \(!userId\) return back\('failed'\)/);
+    expect(callback).toMatch(/if \(!verified\) return back\('failed'\)/);
+    // Single use: the stored nonce is CONSUMED for this user before anything
+    // is written, and a miss connects nothing (review 2026-10-09).
+    const consume = callback.indexOf(".from('stripe_connect_states')\n    .delete()");
+    expect(consume).toBeGreaterThan(-1);
+    expect(consume).toBeLessThan(callback.indexOf("from('stripe_connections')"));
+    expect(callback).toMatch(/\.eq\('nonce', verified\.nonce\)\s*\.eq\('user_id', userId\)/);
+    expect(callback).toMatch(/if \(nonceErr \|\| !consumed \|\| consumed\.length !== 1\) return back\('failed'\)/);
+    expect(connect).toMatch(/from\('stripe_connect_states'\)\.insert\(/);
     expect(callback).toMatch(/'23505'\) return back\('taken'\)/);
   });
 

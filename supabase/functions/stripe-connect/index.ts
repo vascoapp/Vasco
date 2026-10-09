@@ -79,7 +79,12 @@ Deno.serve(async (req) => {
 
   if (action === 'start') {
     const secret = Deno.env.get('STRIPE_CONNECT_STATE_SECRET') ?? serviceKey;
-    const state = await signConnectState(user.id, secret);
+    const { state, nonce, expiresAt } = await signConnectState(user.id, secret);
+    // Stored so the callback can use it ONCE (stripe_connect_states).
+    const { error: nonceErr } = await admin.from('stripe_connect_states').insert({
+      nonce, user_id: user.id, expires_at: new Date(expiresAt).toISOString(),
+    });
+    if (nonceErr) return json({ error: 'Could not start' }, 500);
     const redirect = `${supabaseUrl}/functions/v1/stripe-connect-callback`;
     const url = 'https://connect.stripe.com/oauth/authorize?' + new URLSearchParams({
       response_type: 'code',

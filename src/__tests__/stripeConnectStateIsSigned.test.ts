@@ -10,17 +10,18 @@ import { signConnectState, verifyConnectState, STATE_TTL_MS } from '../../supaba
 const SECRET = 'a-long-enough-test-secret-0123456789';
 const USER = '11111111-2222-3333-4444-555555555555';
 
-it('a state signed for a user verifies to that user', async () => {
-  const s = await signConnectState(USER, SECRET);
-  expect(await verifyConnectState(s, SECRET)).toBe(USER);
+it('a state signed for a user verifies to that user, with the nonce the server stored', async () => {
+  const { state, nonce, expiresAt } = await signConnectState(USER, SECRET);
+  expect(await verifyConnectState(state, SECRET)).toEqual({ userId: USER, nonce });
+  expect(expiresAt - Date.now()).toBeLessThanOrEqual(10 * 60 * 1000);
 });
 
 it('two states for the same user differ (nonce)', async () => {
-  expect(await signConnectState(USER, SECRET)).not.toBe(await signConnectState(USER, SECRET));
+  expect((await signConnectState(USER, SECRET)).nonce).not.toBe((await signConnectState(USER, SECRET)).nonce);
 });
 
 it('an altered payload — another user id — is refused', async () => {
-  const s = await signConnectState(USER, SECRET);
+  const { state: s } = await signConnectState(USER, SECRET);
   const [payload, sig] = s.split('.');
   const json = JSON.parse(Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
   json.u = '99999999-2222-3333-4444-555555555555';
@@ -29,19 +30,19 @@ it('an altered payload — another user id — is refused', async () => {
 });
 
 it('a state signed with another secret is refused', async () => {
-  const s = await signConnectState(USER, 'some-other-secret-that-is-long-enough');
+  const { state: s } = await signConnectState(USER, 'some-other-secret-that-is-long-enough');
   expect(await verifyConnectState(s, SECRET)).toBeNull();
 });
 
 it('an expired state is refused', async () => {
   const issued = Date.now() - STATE_TTL_MS - 1000;
-  const s = await signConnectState(USER, SECRET, issued);
+  const { state: s } = await signConnectState(USER, SECRET, issued);
   expect(await verifyConnectState(s, SECRET)).toBeNull();
-  expect(await verifyConnectState(s, SECRET, issued + 1000)).toBe(USER);
+  expect((await verifyConnectState(s, SECRET, issued + 1000))?.userId).toBe(USER);
 });
 
 it('garbage, a bare user id, or extra segments are refused', async () => {
-  const s = await signConnectState(USER, SECRET);
+  const { state: s } = await signConnectState(USER, SECRET);
   for (const bad of [null, undefined, '', USER, 'a.b', `${s}.x`, s.split('.')[0], 42]) {
     expect(await verifyConnectState(bad, SECRET)).toBeNull();
   }
@@ -49,5 +50,5 @@ it('garbage, a bare user id, or extra segments are refused', async () => {
 
 it('no secret, no state', async () => {
   await expect(signConnectState(USER, '')).rejects.toThrow();
-  expect(await verifyConnectState(await signConnectState(USER, SECRET), '')).toBeNull();
+  expect(await verifyConnectState((await signConnectState(USER, SECRET)).state, '')).toBeNull();
 });

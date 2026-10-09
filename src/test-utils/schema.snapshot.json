@@ -5733,6 +5733,29 @@
     "default": "now()"
    }
   },
+  "stripe_connect_states": {
+   "nonce": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "expires_at": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "timestamp with time zone"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
   "stripe_connections": {
    "id": {
     "nullable": false,
@@ -8086,6 +8109,22 @@
     "required": []
    }
   ],
+  "user_library_edit_time": [
+   {
+    "args": [
+     "d"
+    ],
+    "required": [
+     "d"
+    ]
+   }
+  ],
+  "user_library_keep_newer": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
   "get_my_price_reference": [
    {
     "args": [
@@ -8890,6 +8929,9 @@
   ],
   "stripe_connections": [
    "CASCADE"
+  ],
+  "stripe_connect_states": [
+   "CASCADE"
   ]
  },
  "primaryKeys": {
@@ -9185,6 +9227,9 @@
   ],
   "cron_http_calls": [
    "id"
+  ],
+  "stripe_connect_states": [
+   "nonce"
   ]
  }
 }
