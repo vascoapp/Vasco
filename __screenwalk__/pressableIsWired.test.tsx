@@ -53,6 +53,12 @@ function installProbes() {
   // export is the same jest.fn, but read the one the app actually calls.
   const shareMod = require('react-native/Libraries/Share/Share').default;
   const storage = require('@react-native-async-storage/async-storage').default;
+  // A PDF rendered (expo-print) or handed to expo-sharing IS the action. The
+  // harness watched RN's Share only, so the quote's PDF button — print, then
+  // expo-sharing, which reports "unavailable" here — read as dead (2026-10-09).
+  const printMod = require('expo-print');
+  const sharingMod = require('expo-sharing');
+  const pdfCalls = () => (printMod.printToFileAsync?.mock?.calls?.length ?? 0) + (sharingMod.shareAsync?.mock?.calls?.length ?? 0);
   // walk:prod runs on the live-schema fake, whose `from` is not a jest.fn —
   // its own call log is the record of backend traffic there.
   const fake = require('../src/lib/supabase').__fake;
@@ -70,6 +76,7 @@ function installProbes() {
     nav: Object.values(nav).reduce((n: number, f: any) => n + (f?.mock?.calls?.length ?? 0), 0),
     alert: 0,
     share: shareMod.share?.mock?.calls?.length ?? 0,
+    pdf: pdfCalls(),
     from: supabase?.from?.mock?.calls?.length ?? 0,
     rpc: supabase?.rpc?.mock?.calls?.length ?? 0,
     invoke: supabase?.functions?.invoke?.mock?.calls?.length ?? 0,
@@ -88,6 +95,7 @@ function installProbes() {
       if (alertSpy.mock.calls.length > 0) out.push({ kind: 'alert', detail: String(alertSpy.mock.calls[0]?.[0] ?? '') });
       if (linkSpy.mock.calls.length > 0) out.push({ kind: 'openURL', detail: String(linkSpy.mock.calls[0]?.[0] ?? '') });
       if ((shareMod.share?.mock?.calls?.length ?? 0) > before.share) out.push({ kind: 'share', detail: '' });
+      if (pdfCalls() > before.pdf) out.push({ kind: 'share', detail: 'pdf' });
       if ((supabase?.from?.mock?.calls?.length ?? 0) > before.from) out.push({ kind: 'supabase.from', detail: '' });
       if ((supabase?.rpc?.mock?.calls?.length ?? 0) > before.rpc) out.push({ kind: 'supabase.rpc', detail: '' });
       if ((fake?.calls?.length ?? 0) > before.fake) out.push({ kind: 'backend', detail: String(fake.calls[fake.calls.length - 1]?.table ?? '') });
@@ -294,6 +302,10 @@ const KNOWN_INERT = new Set<string>([
   // individually: each sets the value the screen already holds (e.g.
   // `viewMode` defaults to `'list'`, `severity` to `'Laag'`, `period` to
   // `'week'`). No signature can tell this from a dead control.
+  // A DKMenu ANCHOR labelled "Exporteren": pressing it opens the PDF / CSV
+  // balloon (vat-prep.tsx:236); the menu ITEMS call doExport → share. The
+  // anchor reaching no service is the menu working, read in the code 2026-10-09.
+  'contractor/vat-prep :: Exporteren#1',
   '(contractor)/ai :: WACHTRIJ#1',        // queue tab, the default
   '(contractor)/bedrijf :: OVERZICHT#1',  // overview tab, the default
   '(contractor)/certificaten :: Overzicht#1',

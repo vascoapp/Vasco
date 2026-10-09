@@ -76,8 +76,10 @@ export function ComplianceItemSheet({ visible, onClose, item, initialType = 'cer
     setIssuer(item?.issuer ?? '');
     setNumber(item?.number ?? '');
     setExpiry(item ? formatTypedDay(item.expiryDate) : '');
+    // The requested type/name too: "add licence" while the sheet is open must
+    // not stay on "certificate".
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, item?.id]);
+  }, [visible, item?.id, initialType, initialName]);
 
   const typeLabel = (k: TrackedItemType) =>
     k === 'insurance' ? t('complianceSheet.typeInsurance', 'Insurance policy')

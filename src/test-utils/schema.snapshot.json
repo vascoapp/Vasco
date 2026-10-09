@@ -1,5 +1,5 @@
 {
- "takenAt": "2026-10-06",
+ "takenAt": "2026-10-09",
  "tables": {
   "account_deletion_requests": {
    "id": {
@@ -5733,6 +5733,47 @@
     "default": "now()"
    }
   },
+  "stripe_connections": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "stripe_account_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "livemode": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "boolean",
+    "default": "false"
+   },
+   "scope": {
+    "nullable": true,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "connected_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   }
+  },
   "subscription_audit": {
    "id": {
     "nullable": false,
@@ -6136,6 +6177,46 @@
     "hasDefault": true,
     "type": "numeric",
     "default": "0"
+   }
+  },
+  "user_library": {
+   "id": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "uuid",
+    "default": "gen_random_uuid()"
+   },
+   "user_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "uuid"
+   },
+   "kind": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "item_id": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "text"
+   },
+   "data": {
+    "nullable": false,
+    "hasDefault": false,
+    "type": "jsonb"
+   },
+   "updated_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
+   },
+   "created_at": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "timestamp with time zone",
+    "default": "now()"
    }
   },
   "watchdog_runs": {
@@ -7999,6 +8080,12 @@
     "required": []
    }
   ],
+  "documents_keep_decided_status": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
   "get_my_price_reference": [
    {
     "args": [
@@ -8512,6 +8599,9 @@
    "SELECT",
    "UPDATE"
   ],
+  "stripe_connections": [
+   "SELECT"
+  ],
   "subscription_audit": [
    "DELETE",
    "INSERT",
@@ -8549,6 +8639,12 @@
    "UPDATE"
   ],
   "ts_daily_business_metrics": [
+   "DELETE",
+   "INSERT",
+   "SELECT",
+   "UPDATE"
+  ],
+  "user_library": [
    "DELETE",
    "INSERT",
    "SELECT",
@@ -8787,6 +8883,12 @@
    "CASCADE"
   ],
   "regulated_submissions": [
+   "CASCADE"
+  ],
+  "user_library": [
+   "CASCADE"
+  ],
+  "stripe_connections": [
    "CASCADE"
   ]
  },
@@ -9074,6 +9176,12 @@
   ],
   "material_canonical_aliases": [
    "variant_key"
+  ],
+  "user_library": [
+   "id"
+  ],
+  "stripe_connections": [
+   "user_id"
   ],
   "cron_http_calls": [
    "id"

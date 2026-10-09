@@ -764,7 +764,9 @@ export default function CertificatenScreen() {
               </View>
             )}
 
-            {DORMANT_CONTROLS.complianceItemEditing && (
+            {/* An empty list already offers "Add" in its empty state — one
+                control, not two that do the same. */}
+            {DORMANT_CONTROLS.complianceItemEditing && filteredItems.length > 0 && (
             <Pressable style={styles.addButton} onPress={() => openAdd()}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
               <Text style={styles.addButtonText} numberOfLines={1}>
