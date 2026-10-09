@@ -44,9 +44,10 @@ export function isDormantRoute(segments: readonly string[]): boolean {
  * the change that builds what it needs.
  */
 export const DORMANT_CONTROLS = {
-  /** Add / renew / share certificates, insurance and permits on Certificaten:
-   *  no writer exists — every one showed a "Coming soon" alert. */
-  complianceItemEditing: false,
+  /** Add / renew certificates, insurance and licences on Certificaten.
+   *  BUILT 2026-10-09 (decision 3a): ComplianceItemSheet → saveTrackedItem,
+   *  stored on the device and in the account, watched by complianceAgentService. */
+  complianceItemEditing: true,
   /** KvK "Controleer": no KvK API is connected; the check could only say so. */
   kvkVerification: false,
   /** Profile → Integrations rows with no connect flow (Xero UK/US, QuickBooks

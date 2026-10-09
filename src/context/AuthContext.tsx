@@ -1089,6 +1089,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }).catch(() => {});
     trackEvent('logout').catch(() => {});
     await flushEvents().catch(() => {});
+    // A job form typed in the last seconds is still waiting to be pushed; the
+    // wipe below would leave it nowhere. While the session still exists.
+    try {
+      const { flushPendingResponsePushes } = await import('../services/jobFormService');
+      await flushPendingResponsePushes();
+    } catch {}
     // Remove push token for this device before signing out (auth.uid() required)
     try {
       const mod = await import('../services/pushNotificationService');

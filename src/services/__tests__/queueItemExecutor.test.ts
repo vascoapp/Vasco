@@ -95,10 +95,19 @@ describe('navigate paths', () => {
     expect(router.push).toHaveBeenCalledWith('/contractor/payments');
   });
 
-  it('cert_renewal opens permits', async () => {
+  it('cert_renewal without an item (older producers) opens permits', async () => {
     const router = makeRouter();
     await executeApprovedQueueItem(makeItem({ type: 'cert_renewal' }), { router });
     expect(router.push).toHaveBeenCalledWith('/contractor/permits');
+  });
+
+  // Decision 3a: the compliance agent's card names ONE certificate/policy —
+  // it opens that item, where renewing = typing the new date. Permits holds
+  // neither certificates nor insurance.
+  it('cert_renewal for a tracked item opens that item in Compliance', async () => {
+    const router = makeRouter();
+    await executeApprovedQueueItem(makeItem({ type: 'cert_renewal', preparedData: { itemId: 'cert-1', itemType: 'certification' } }), { router });
+    expect(router.push).toHaveBeenCalledWith({ pathname: '/(contractor)/certificaten', params: { itemId: 'cert-1' } });
   });
 
   it('schedule_suggestion opens the schedule board', async () => {

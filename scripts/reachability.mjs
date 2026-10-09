@@ -121,7 +121,7 @@ const entryScreens = ROUTES.filter((r) => !r.redirected && (
   || ['login', 'onboarding', 'register', 'forgot-password', 'reset-password'].includes(r.segs[0])
   // Opened from OUTSIDE the app — email links, referral links, the customer's
   // quote link, the OAuth callback — so no in-app navigation leads to them.
-  || ['auth', 'accept', 'ref', 'quote'].includes(r.segs[0])
+  || ['auth', 'accept', 'ref', 'quote', 'stripe-connected'].includes(r.segs[0])
   || /\/\+not-found\./.test(r.file)
   || r.segs.length === 0 // app/index
 )).map((r) => r.file);

@@ -615,7 +615,10 @@ export async function addToQueue(item: Omit<QueueItem, 'id' | 'status' | 'create
     // Collections cards are never folded across invoices: each one names ONE
     // invoice and its amount, and the one-card-per-invoice rule above needs to
     // be able to replace it without dropping someone else's reminder.
-    const siblingIdx = collectionsInvoice ? -1 : existing.findIndex(q =>
+    // Renewal cards are not folded either: each names ONE certificate/policy,
+    // and renewing it withdraws its card (withdrawComplianceCards) — a folded
+    // card would take the other items' reminders with it.
+    const siblingIdx = collectionsInvoice || item.type === 'cert_renewal' ? -1 : existing.findIndex(q =>
       isLivePending(q)
       && q.type === item.type
       && !!q.entityKey
@@ -828,6 +831,57 @@ export async function reopenItem(itemId: string): Promise<void> {
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
     notifyQueueChanged();
   } catch { /* the card stays retired — no worse than before */ }
+  });
+}
+
+/**
+ * Withdraw the pending renewal cards of one certificate / policy / licence —
+ * called when it is renewed (new expiry) or deleted. A card that keeps saying
+ * "VCA expires in 7 days" after the contractor entered the new certificate is
+ * a false alarm; the next scan queues a fresh one if the NEW date needs it.
+ * A card that folded this item into its count badge only loses the item.
+ */
+/** True when a card with this entityKey was already approved or dismissed. */
+export async function cardWasHandled(entityKey: string): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const items: QueueItem[] = raw ? JSON.parse(raw) : [];
+    return items.some((q) => q.entityKey === entityKey && q.status !== 'pending');
+  } catch {
+    return false;
+  }
+}
+
+export async function withdrawComplianceCards(itemId: string, keepEntityKey?: string): Promise<void> {
+  return withQueueLock(async () => {
+  try {
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    if (!raw) return;
+    const items: QueueItem[] = JSON.parse(raw);
+    const prefix = (k: string) => k.startsWith('compliance:') && k.split(':')[2] === itemId;
+    let changed = false;
+    const kept = items.filter((q) => {
+      if (q.type !== 'cert_renewal' || q.status !== 'pending') return true;
+      // The card for the SAME expiry + stage stays — with its snooze/mute.
+      // Replacing it on every restart (alerts are in memory) un-snoozed it.
+      if (keepEntityKey && q.entityKey === keepEntityKey) return true;
+      const own = (q.preparedData as Record<string, unknown> | undefined)?.itemId === itemId;
+      if (own) {
+        changed = true;
+        return false;
+      }
+      if (q.mergedKeys?.some(prefix)) {
+        q.mergedKeys = q.mergedKeys.filter((k) => !prefix(k));
+        q.count = Math.max(1, (q.count ?? 1) - 1);
+        changed = true;
+      }
+      return true;
+    });
+    if (changed) {
+      await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(kept));
+      notifyQueueChanged();
+    }
+  } catch { /* a stale card is shown; the scan's next run is no worse */ }
   });
 }
 

@@ -204,6 +204,11 @@ interface BackendDataset {
   decision_items: unknown[];
   decision_submissions: unknown[];
   decision_activities: unknown[];
+  // The contractor's own library: pricebook, quote templates, job forms and
+  // filled-in forms (W190 — account-stored since 2026-10-09).
+  user_library: unknown[];
+  // Which Stripe account is connected (Stripe Connect) — the id, no secret.
+  stripe_connections: unknown[];
   fetched_at: string;
   /**
    * Tables that could not be read in full. An Art. 15/20 export that is
@@ -250,6 +255,8 @@ async function collectFromBackend(): Promise<BackendDataset | null> {
       document_counters: () => (supabase.from('document_counters' as any) as any).select('*').eq('user_id', user.id),
       workers: () => (supabase.from('workers' as any) as any).select('*').eq('user_id', user.id),
       extracted_documents: () => (supabase.from('extracted_documents' as any) as any).select('*').eq('user_id', user.id),
+      user_library: () => (supabase.from('user_library' as any) as any).select('*').eq('user_id', user.id),
+      stripe_connections: () => (supabase.from('stripe_connections' as any) as any).select('*').eq('user_id', user.id),
     };
 
     const result: BackendDataset = {
@@ -279,6 +286,8 @@ async function collectFromBackend(): Promise<BackendDataset | null> {
       decision_items: [],
       decision_submissions: [],
       decision_activities: [],
+      user_library: [],
+      stripe_connections: [],
       fetched_at: new Date().toISOString(),
       incomplete_tables: [],
     };

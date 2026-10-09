@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import * as WebBrowser from 'expo-web-browser';
 import { StyleSheet, Text, TextInput, View, Pressable, Alert, Linking, ScrollView } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Screen } from '../../src/components/Screen';
@@ -12,6 +13,11 @@ import { getPaymentDisplayForCountry, getPaymentBrandColor, paymentMethodLabel }
 import { consentService } from '../../src/services/consentService';
 import { useTranslation } from 'react-i18next';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
+import { getConnectStatus, startConnect, type ConnectStatus } from '../../src/integrations/stripeConnect';
+import { clearStripeConfig } from '../../src/integrations/stripe';
+
+/** Where stripe-connect-callback sends the browser back (closes the in-app browser). */
+const CONNECT_RETURN = 'vasco://stripe-connected';
 
 // Where Stripe shows the key to copy (after logging in).
 const STRIPE_KEYS_URL = 'https://dashboard.stripe.com/apikeys';
@@ -23,6 +29,17 @@ export default function StripeConnectModal() {
   const [apiKey, setApiKey] = useState('');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  // Stripe Connect (decision 2a): when the server has it set up, the contractor
+  // signs in at Stripe instead of pasting a secret key. Until then the key form
+  // below stays — a UK contractor's only payment provider is Stripe.
+  const [connect, setConnect] = useState<ConnectStatus | null>(null);
+  const [connectBusy, setConnectBusy] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getConnectStatus({ force: true }).then((st) => { if (alive) setConnect(st); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   // Country-specific payment methods. Defaults to UK for this modal but
   // respects the user's actual country (Stripe is multi-country).
@@ -103,6 +120,116 @@ export default function StripeConnectModal() {
       setTesting(false);
     }
   };
+
+  const handleConnectWithStripe = async () => {
+    // Same consent as the key form: asked, never assumed.
+    if (!(await consentService.getConsent('stripe'))) {
+      Alert.alert(
+        t('stripe.consentTitle', 'Consent required'),
+        t('stripe.consentDesc', 'Vasco processes payment data via Stripe. By connecting you agree to share invoice data with Stripe for payment processing.'),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          { text: t('stripe.consentAccept', 'Agree & connect'), onPress: async () => {
+            await consentService.setConsent('stripe', true);
+            await consentService.setConsent('dataProcessing', true);
+            void runConnect();
+          } },
+        ],
+      );
+      return;
+    }
+    void runConnect();
+  };
+
+  const runConnect = async () => {
+    setConnectBusy(true);
+    setConnectError(null);
+    try {
+      const url = await startConnect();
+      if (!url) { setConnectError(t('stripe.connectUnavailable', 'Stripe could not be reached. Try again in a moment.')); return; }
+      const result = await WebBrowser.openAuthSessionAsync(url, CONNECT_RETURN);
+      // A fixed word from stripe-connect-callback. Regex, not URL(): RN's URL
+      // polyfill does not implement searchParams on every version.
+      const status = result.type === 'success' ? (/[?&]status=([a-z]+)/.exec(result.url)?.[1] ?? 'failed') : 'cancelled';
+      // The server is the judge, not the redirect: ask it.
+      const st = await getConnectStatus({ force: true });
+      setConnect(st);
+      if (st.connected) {
+        // A key pasted earlier is no longer needed — remove it from the phone.
+        await clearStripeConfig().catch(() => {});
+        connectStripe();
+        hapticSuccess();
+      } else if (status === 'taken') {
+        setConnectError(t('stripe.connectTaken', 'This Stripe account is already connected to another Vasco account.'));
+      } else if (status !== 'cancelled') {
+        setConnectError(t('stripe.connectFailed', 'Connecting did not work. Please try again.'));
+      }
+    } finally {
+      setConnectBusy(false);
+    }
+  };
+
+  const handleConnectDisconnect = () => {
+    Alert.alert(
+      t('stripe.disconnectConfirmTitle', 'Disconnect Stripe?'),
+      t('stripe.connectDisconnectDesc', 'Vasco can no longer make payment links on your Stripe account. Links already sent keep working.'),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        { text: t('stripe.disconnect', 'Disconnect'), style: 'destructive', onPress: async () => {
+          await disconnectStripe();
+          const st = await getConnectStatus({ force: true });
+          setConnect(st);
+          if (st.connected) setConnectError(t('stripe.disconnectFailed', 'Disconnecting did not work. Please try again.'));
+        } },
+      ],
+    );
+  };
+
+  // Connect is set up on the server: no key form at all.
+  if (connect?.configured) {
+    return (
+      <Screen backgroundColor={SemanticColors.surfacePrimary}>
+        <DKScreenHeader title={t('stripe.title', 'Stripe Payments')} />
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.subtitle}>
+            {t('stripe.subtitle', 'Receive payments via card, Apple Pay, Google Pay and more')}
+          </Text>
+          {connect.connected ? (
+            <>
+              <View style={[styles.connectBtn, styles.connectedBtn]} testID="stripe-connect-connected">
+                <Ionicons name="checkmark-circle" size={18} color={SemanticColors.feedbackSuccess} />
+                <Text style={[styles.connectBtnText, { color: SemanticColors.feedbackSuccess }]}>{t('stripe.connected', 'Connected')}</Text>
+              </View>
+              <Pressable style={styles.disconnectBtn} onPress={handleConnectDisconnect}>
+                <Ionicons name="log-out-outline" size={16} color={SemanticColors.feedbackError} />
+                <Text style={styles.disconnectBtnText}>{t('stripe.disconnect', 'Disconnect')}</Text>
+              </Pressable>
+            </>
+          ) : (
+            <View style={styles.steps} testID="stripe-connect-steps">
+              <Text style={styles.stepsTitle}>{t('stripe.connectStepsTitle', 'Connect Stripe')}</Text>
+              {[
+                t('stripe.connectStep1', 'Tap the button — Stripe opens. No account yet? You can create one there for free.'),
+                t('stripe.connectStep2', 'Log in at Stripe and allow Vasco to create payment links for you.'),
+                t('stripe.connectStep3', 'You come back here automatically. Vasco never sees your Stripe password or keys.'),
+              ].map((text, i) => (
+                <View key={i} style={styles.stepRow}>
+                  <View style={styles.stepNum}><Text style={styles.stepNumText}>{i + 1}</Text></View>
+                  <Text style={styles.stepText}>{text}</Text>
+                </View>
+              ))}
+              <Pressable style={styles.connectBtn} onPress={handleConnectWithStripe} disabled={connectBusy} accessibilityRole="button" testID="stripe-connect-start">
+                <Text style={styles.connectBtnText}>
+                  {connectBusy ? t('stripe.connecting', 'Connecting…') : t('stripe.connectWithStripe', 'Connect with Stripe')}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+          {connectError && <Text style={styles.errorText}>{connectError}</Text>}
+        </ScrollView>
+      </Screen>
+    );
+  }
 
   return (
     <Screen backgroundColor={SemanticColors.surfacePrimary}>

@@ -20,8 +20,9 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { complianceService, type License, type Certification, type InsurancePolicy, type ComplianceAlert } from './complianceService';
-import { addToQueue } from './aiActionQueueService';
+import { addToQueue, withdrawComplianceCards, cardWasHandled } from './aiActionQueueService';
 import { MS_PER_DAY } from '../utils/timeConstants';
+import { localDateKey } from '../utils/dateKey';
 import { formatDateShortAuto } from '../i18n/formatting';
 import i18n from '../i18n/i18n';
 import { applySavedLanguage, applySavedCountry } from '../i18n/savedLanguage';
@@ -88,8 +89,11 @@ function impactFor(stage: ExpiryStage): string {
 }
 
 // ─── Idempotency: compose an alert id from (itemType, itemId, stage) ────────
-function alertIdFor(itemType: string, itemId: string, stage: ExpiryStage): string {
-  return `agent:${itemType}:${itemId}:${stage}`;
+// The expiry date is part of it: resolved alerts stay in the id set, so after a
+// renewal the new cycle's "D-7" collided with the old one and was skipped —
+// card and all.
+function alertIdFor(itemType: string, itemId: string, stage: ExpiryStage, expiryDate: Date): string {
+  return `agent:${itemType}:${itemId}:${localDateKey(expiryDate)}:${stage}`;
 }
 
 // ─── Scan core ──────────────────────────────────────────────────────────────
@@ -124,6 +128,10 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
   await applySavedLanguage();
   await applySavedCountry();
 
+  // The store reads the device + account copy first: on a cold start the
+  // scheduler runs before any screen has mounted, and it scanned nothing.
+  await complianceService.load().catch(() => {});
+
   const licenses = complianceService.getLicenses();
   const certs = complianceService.getCertifications();
   const policies = complianceService.getInsurancePolicies();
@@ -154,7 +162,7 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
     if (stage === 'expired') result.itemsExpired += 1;
     else result.itemsAtRisk += 1;
 
-    const id = alertIdFor(itemType, itemId, stage);
+    const id = alertIdFor(itemType, itemId, stage, expiryDate);
     if (existingAlerts.has(id)) {
       result.alertsSkipped += 1;
       return;
@@ -183,7 +191,14 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
     // doesn't double-queue within a session.
     if (stage !== 'D-30') {
       // D-30 is informational — don't pester the queue until D-14.
+      const entityKey = `compliance:${itemType}:${itemId}:${localDateKey(expiryDate)}:${stage}`;
       try {
+        // Alerts live in memory, so after a restart every stage looks new —
+        // a card the contractor already dismissed must not come back.
+        if (await cardWasHandled(entityKey)) return;
+        // A NEW stage replaces the item's pending card: "expires in 14 days"
+        // must not still be the card a week later.
+        await withdrawComplianceCards(itemId, entityKey);
         await addToQueue({
           type: 'cert_renewal',
           title,
@@ -199,7 +214,9 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
           actionLabel: i18n.t('complianceAgent.renew'),
           estimatedImpact: impactFor(stage),
           expiresAt: new Date(expiryDate.getTime() + 7 * MS_PER_DAY).toISOString(),
-          entityKey: `compliance:${itemType}:${itemId}`,
+          // The expiry is part of the key: a renewed certificate starts a new
+          // cycle — keyed on the item alone, its next expiry was never queued.
+          entityKey,
           sourceGeneratorId: 'compliance-agent',
         });
         result.queueItemsAdded += 1;
@@ -215,7 +232,8 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
   }
   for (const p of policies) {
     // The policy type is an enum ('workers_comp'); it printed raw.
-    await emit('insurance', p.id, i18n.t(`complianceAgent.insurance.${p.type}`, { defaultValue: String(p.type) }), new Date(p.endDate));
+    // The name the contractor gave it first; the type label only for an unnamed one.
+    await emit('insurance', p.id, p.name?.trim() || i18n.t(`complianceAgent.insurance.${p.type}`, { defaultValue: String(p.type) }), new Date(p.endDate));
   }
 
   // Persist run metadata

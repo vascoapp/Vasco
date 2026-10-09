@@ -4729,7 +4729,17 @@
     "openStripe": "Stripe öffnen",
     "codeLabel": "Ihr Stripe-Schlüssel",
     "codePlaceholder": "Schlüssel hier einfügen",
-    "connect": "Verbinden"
+    "connect": "Verbinden",
+    "connectWithStripe": "Mit Stripe verbinden",
+    "connectStepsTitle": "Stripe verbinden",
+    "connectStep1": "Tippen Sie auf die Schaltfläche — Stripe öffnet sich. Noch kein Konto? Das legen Sie dort kostenlos an.",
+    "connectStep2": "Melden Sie sich bei Stripe an und erlauben Sie Vasco, Zahlungslinks für Sie zu erstellen.",
+    "connectStep3": "Sie kommen automatisch hierher zurück. Vasco sieht nie Ihr Stripe-Passwort oder Ihre Schlüssel.",
+    "connectUnavailable": "Stripe ist nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.",
+    "connectFailed": "Die Verbindung hat nicht geklappt. Bitte versuchen Sie es erneut.",
+    "connectTaken": "Dieses Stripe-Konto ist bereits mit einem anderen Vasco-Konto verbunden.",
+    "connectDisconnectDesc": "Vasco kann dann keine Zahlungslinks mehr auf Ihrem Stripe-Konto erstellen. Bereits versendete Links funktionieren weiter.",
+    "disconnectFailed": "Die Trennung hat nicht geklappt. Bitte versuchen Sie es erneut."
   },
   "quoteNew": {
     "customerAndJob": "Kunde & Auftrag",
@@ -7698,5 +7708,29 @@
   "errorBoundary": {
     "title": "Etwas ist schiefgelaufen",
     "copyDetails": "Fehlerdetails kopieren"
+  },
+  "complianceSheet": {
+    "typeCertificate": "Zertifikat",
+    "typeInsurance": "Versicherung",
+    "typeLicense": "Genehmigung oder Lizenz",
+    "addTitle": "Hinzufügen",
+    "editTitle": "Bearbeiten",
+    "type": "Art",
+    "name": "Bezeichnung *",
+    "namePlaceholder": "z. B. Betriebshaftpflicht",
+    "expiry": "Gültig bis *",
+    "datePlaceholder": "TT.MM.JJJJ",
+    "dateExample": "31.12.2027",
+    "issuer": "Ausgestellt von",
+    "insurer": "Versicherer",
+    "number": "Nummer",
+    "policyNumber": "Versicherungsscheinnummer",
+    "reminderHint": "Vasco erinnert Sie in den zwei Wochen vor Ablauf. Verlängert? Ändern Sie hier das Datum.",
+    "badDateTitle": "Ablaufdatum",
+    "badDateBody": "Geben Sie das Datum mit dem Tag zuerst ein, zum Beispiel {{example}}.",
+    "deleteTitle": "Löschen?",
+    "deleteBody": "{{name}} und die Erinnerungen werden gelöscht.",
+    "fromSignupTitle": "Tragen Sie ein, wann diese ablaufen",
+    "fromSignupBody": "Diese haben Sie bei der Anmeldung angekreuzt. Mit dem Ablaufdatum erinnert Vasco Sie rechtzeitig."
   }
 }

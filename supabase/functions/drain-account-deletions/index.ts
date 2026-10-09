@@ -218,6 +218,26 @@ Deno.serve(async (req) => {
       errors.push(`storage(customer-uploads): ${(e as Error).message}`);
     }
 
+    // Step 3b — Stripe Connect (decision 2a): the cascade removes the row, but
+    // Stripe would keep granting Vasco access to the contractor's account.
+    // Revoke it first. A Stripe outage retries the erasure next run.
+    try {
+      const { data: conn } = await admin.from('stripe_connections').select('stripe_account_id').eq('user_id', row.user_id).maybeSingle();
+      const platformKey = (Deno.env.get('STRIPE_API_KEY') ?? '').trim();
+      const clientId = (Deno.env.get('STRIPE_CONNECT_CLIENT_ID') ?? '').trim();
+      if (conn?.stripe_account_id && platformKey && clientId) {
+        const res = await fetch('https://connect.stripe.com/oauth/deauthorize', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${platformKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ client_id: clientId, stripe_user_id: conn.stripe_account_id }).toString(),
+        });
+        // 400/401 from Stripe = already revoked by the contractor: done.
+        if (!res.ok && res.status >= 500) errors.push(`stripe_connections: deauthorize ${res.status}`);
+      }
+    } catch (e) {
+      errors.push(`stripe_connections: ${(e as Error).message}`);
+    }
+
     // Step 4 — delete the auth user last. ON DELETE CASCADE handles
     // remaining tables that reference auth.users(id).
     // ONLY when every step above landed: a partial erasure is rolled back to

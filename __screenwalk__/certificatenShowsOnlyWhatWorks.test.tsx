@@ -30,8 +30,9 @@ describe('Certificaten', () => {
       .map((n: any) => n.props.children);
     const c = (nl as any).compliance;
 
-    // No control that can only say "Coming soon".
-    for (const dead of [c.addCertificate, c.add, c.checkKvK, c.share, c.renew, c.renewAction]) {
+    // No control that can only say "Coming soon" (share and the KvK check stay
+    // hidden; add/renew are built since 2026-10-09 — decision 3a).
+    for (const dead of [c.checkKvK, c.share]) {
       expect(texts).not.toContain(dead);
     }
     const alertsComingSoon = root.findAll((n: any) => typeof n.props?.onPress === 'function', { deep: true })
@@ -54,6 +55,26 @@ describe('Certificaten', () => {
     expect(texts).toContain(c.enterNumber);
     expect(texts).not.toContain(c.inactive);
     expect(texts).not.toContain(c.unverified);
+
+    // "Add certificate" WORKS: it opens the sheet, and a saved certificate is listed.
+    const { act } = require('react-test-renderer');
+    const sheetNl = (nl as any).complianceSheet;
+    const addBtn = root.findAll((n: any) => typeof n.props?.onPress === 'function'
+      && n.findAll((m: any) => m.props?.children === c.addCertificate, { deep: true }).length > 0, { deep: true })[0];
+    expect(addBtn).toBeDefined();
+    await act(async () => { addBtn.props.onPress(); });
+    const inputs = () => root.findAll((n: any) => typeof n.props?.onChangeText === 'function' && n.props?.placeholder !== undefined, { deep: true });
+    const byPlaceholder = (ph: string) => inputs().find((n: any) => n.props.placeholder === ph);
+    await act(async () => { byPlaceholder(sheetNl.namePlaceholder).props.onChangeText('VCA Basis'); });
+    await act(async () => { byPlaceholder(sheetNl.datePlaceholder).props.onChangeText('31-12-2030'); });
+    const save = root.findAll((n: any) => n.props?.accessibilityRole === 'button' && typeof n.props?.onPress === 'function'
+      && n.findAll((m: any) => m.props?.children === (nl as any).common.save, { deep: true }).length > 0, { deep: true })[0];
+    await act(async () => { save.props.onPress(); });
+    const certTab = root.findAll((n: any) => n.props?.accessibilityRole === 'tab' && n.props?.accessibilityLabel === c.tabCertificates && typeof n.props?.onPress === 'function', { deep: true })[0];
+    await act(async () => { certTab.props.onPress(); });
+    const after: string[] = root.findAll((n: any) => typeof n.type === 'string' && typeof n.props?.children === 'string', { deep: true })
+      .map((n: any) => n.props.children);
+    expect(after).toContain('VCA Basis');
     teardown(r);
   });
 });

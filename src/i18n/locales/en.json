@@ -4729,7 +4729,17 @@
     "openStripe": "Open Stripe",
     "codeLabel": "Your Stripe key",
     "codePlaceholder": "Paste your key here",
-    "connect": "Connect"
+    "connect": "Connect",
+    "connectWithStripe": "Connect with Stripe",
+    "connectStepsTitle": "Connect Stripe",
+    "connectStep1": "Tap the button — Stripe opens. No account yet? You can create one there for free.",
+    "connectStep2": "Log in at Stripe and allow Vasco to create payment links for you.",
+    "connectStep3": "You come back here automatically. Vasco never sees your Stripe password or keys.",
+    "connectUnavailable": "Stripe could not be reached. Try again in a moment.",
+    "connectFailed": "Connecting did not work. Please try again.",
+    "connectTaken": "This Stripe account is already connected to another Vasco account.",
+    "connectDisconnectDesc": "Vasco can no longer make payment links on your Stripe account. Links already sent keep working.",
+    "disconnectFailed": "Disconnecting did not work. Please try again."
   },
   "quoteNew": {
     "customerAndJob": "Customer & job",
@@ -7698,5 +7708,29 @@
   "errorBoundary": {
     "title": "Something went wrong",
     "copyDetails": "Copy error details"
+  },
+  "complianceSheet": {
+    "typeCertificate": "Certificate",
+    "typeInsurance": "Insurance policy",
+    "typeLicense": "Licence or permit",
+    "addTitle": "Add",
+    "editTitle": "Edit",
+    "type": "Type",
+    "name": "Name *",
+    "namePlaceholder": "e.g. liability insurance",
+    "expiry": "Valid until *",
+    "datePlaceholder": "DD-MM-YYYY",
+    "dateExample": "31-12-2027",
+    "issuer": "Issued by",
+    "insurer": "Insurer",
+    "number": "Number",
+    "policyNumber": "Policy number",
+    "reminderHint": "Vasco reminds you in the two weeks before it runs out. To renew, change the date here.",
+    "badDateTitle": "Expiry date",
+    "badDateBody": "Type the date day first, for example {{example}}.",
+    "deleteTitle": "Delete?",
+    "deleteBody": "{{name}} and its reminders are removed.",
+    "fromSignupTitle": "Add when these run out",
+    "fromSignupBody": "You ticked these when you signed up. With the expiry date, Vasco reminds you before they run out."
   }
 }

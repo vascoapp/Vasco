@@ -38,6 +38,7 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { pushLibraryItem, deleteLibraryItem, syncLibraryList } from './userLibrarySync';
 import { useCallback, useEffect, useState } from 'react';
 
 const PRICEBOOK_KEY = '@vasco_pricebook';
@@ -268,7 +269,21 @@ export async function savePricebook(entries: PricebookEntry[]): Promise<void> {
 export async function recordUsage(id: string): Promise<void> {
   const all = await loadPricebook();
   const now = new Date().toISOString();
-  await savePricebook(all.map((e) => (e.id === id ? { ...e, usageCount: e.usageCount + 1, lastUsed: now } : e)));
+  const next = all.map((e) => (e.id === id ? { ...e, usageCount: e.usageCount + 1, lastUsed: now, updatedAt: now } : e));
+  await savePricebook(next);
+  const used = next.find((e) => e.id === id);
+  if (used) void pushLibraryItem('pricebook_item', id, used);
+}
+
+/**
+ * Merge the account's pricebook into the device cache (and upload what the
+ * account has not seen). The device copy is the offline cache; the account is
+ * where the price list lives (W190, user decision 2026-10-09).
+ */
+export async function syncPricebook(): Promise<PricebookEntry[] | null> {
+  const merged = await syncLibraryList('pricebook_item', loadPricebook);
+  if (merged) await savePricebook(merged);
+  return merged;
 }
 
 // ---------------------------------------------------------------------------
@@ -280,9 +295,14 @@ export function usePricebook() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     loadPricebook()
-      .then(setEntries)
-      .finally(() => setLoading(false));
+      .then((local) => { if (!cancelled) setEntries(local); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    // Then the account's copy — on a new phone or after a logout the device
+    // cache is empty and the price list comes back from here.
+    syncPricebook().then((merged) => { if (merged && !cancelled) setEntries(merged); }).catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   const refresh = useCallback(async () => {
@@ -306,6 +326,8 @@ export function usePricebook() {
         ? all.map((e) => (e.id === entry.id ? { ...entry, usageCount: e.usageCount, lastUsed: e.lastUsed, createdAt: e.createdAt, updatedAt: now } : e))
         : [...all, { ...entry, createdAt: now, updatedAt: now }];
       await persist(next);
+      const saved = next.find((e) => e.id === entry.id);
+      if (saved) void pushLibraryItem('pricebook_item', saved.id, saved);
     },
     [persist],
   );
@@ -314,6 +336,7 @@ export function usePricebook() {
     async (id: string) => {
       const all = await loadPricebook();
       await persist(all.filter((e) => e.id !== id));
+      void deleteLibraryItem('pricebook_item', id);
     },
     [persist],
   );

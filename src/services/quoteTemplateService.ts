@@ -9,6 +9,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { TFunction } from 'i18next';
 import { MS_PER_DAY } from '../utils/timeConstants';
 import { registerSingletonReset } from './singletonReset';
+import { pushLibraryItem, deleteLibraryItem, syncLibraryList } from './userLibrarySync';
+import { getAuthedUserId } from '../lib/currentUser';
 
 // =============================================================================
 // TYPES
@@ -50,6 +52,8 @@ export interface QuoteTemplate {
   usageCount: number;
   lastUsed?: Date;
   createdAt: Date;
+  /** Last change (ISO) — the account sync keeps the newer copy (W190). */
+  updatedAt?: string;
 }
 
 export type TemplateCategory =
@@ -688,6 +692,22 @@ interface PersistedTemplates {
   deletedBuiltinIds: string[];
   /** usageCount / lastUsed per template id, including built-ins. */
   usage: Record<string, { usageCount: number; lastUsed?: string }>;
+  /** When deletedBuiltinIds/usage last changed — the account sync's clock. */
+  metaUpdatedAt?: string;
+}
+
+/** The account copy of deletedBuiltinIds + usage: ONE library item. */
+const META_ITEM_ID = 'meta';
+interface TemplateMeta {
+  id: typeof META_ITEM_ID;
+  deletedBuiltinIds: string[];
+  usage: PersistedTemplates['usage'];
+  updatedAt?: string;
+}
+
+/** What goes to the account: dates as ISO strings, as JSON gives them back. */
+function serializeTemplate(t: QuoteTemplate): Record<string, unknown> & { id: string } {
+  return { ...t, createdAt: t.createdAt.toISOString(), lastUsed: t.lastUsed?.toISOString() };
 }
 
 /** JSON.parse gives strings back for Date fields — revive them. */
@@ -705,6 +725,9 @@ class QuoteTemplateService {
   private templates: QuoteTemplate[] = [...BUILTIN_TEMPLATES];
   private deletedBuiltinIds: Set<string> = new Set();
   private hydrated = false;
+  private metaUpdatedAt: string | undefined;
+  /** The account whose library has been merged into this device's copy. */
+  private syncedFor: string | null = null;
 
   static getInstance(): QuoteTemplateService {
     if (!QuoteTemplateService.instance) {
@@ -714,6 +737,8 @@ class QuoteTemplateService {
         inst.templates = [...BUILTIN_TEMPLATES];
         inst.deletedBuiltinIds = new Set();
         inst.hydrated = false;
+        inst.metaUpdatedAt = undefined;
+        inst.syncedFor = null;
         inst.listeners.forEach((l) => l());
       });
     }
@@ -732,15 +757,8 @@ class QuoteTemplateService {
       const raw = await AsyncStorage.getItem(TEMPLATES_STORAGE_KEY);
       if (!raw) return;
       const p = JSON.parse(raw) as PersistedTemplates;
-      this.deletedBuiltinIds = new Set(p.deletedBuiltinIds ?? []);
-      const userTemplates = (p.userTemplates ?? []).map(reviveTemplate);
-      const builtins = BUILTIN_TEMPLATES.filter((b) => !this.deletedBuiltinIds.has(b.id));
-      this.templates = [...userTemplates, ...builtins].map((t) => {
-        const u = p.usage?.[t.id];
-        return u
-          ? { ...t, usageCount: u.usageCount, lastUsed: u.lastUsed ? new Date(u.lastUsed) : t.lastUsed }
-          : t;
-      });
+      this.metaUpdatedAt = p.metaUpdatedAt;
+      this.apply((p.userTemplates ?? []).map(reviveTemplate), p.deletedBuiltinIds ?? [], p.usage ?? {});
     } catch {
       // Corrupt cache must not wipe the built-ins the screen depends on.
     } finally {
@@ -748,14 +766,74 @@ class QuoteTemplateService {
     }
   }
 
-  private persist(): void {
+  private apply(userTemplates: QuoteTemplate[], deletedBuiltinIds: string[], usage: PersistedTemplates['usage']): void {
+    this.deletedBuiltinIds = new Set(deletedBuiltinIds);
+    const builtins = BUILTIN_TEMPLATES.filter((b) => !this.deletedBuiltinIds.has(b.id));
+    this.templates = [...userTemplates, ...builtins].map((t) => {
+      const u = usage[t.id];
+      return u
+        ? { ...t, usageCount: u.usageCount, lastUsed: u.lastUsed ? new Date(u.lastUsed) : t.lastUsed }
+        : t;
+    });
+  }
+
+  private userTemplates(): QuoteTemplate[] {
     const builtinIds = new Set(BUILTIN_TEMPLATES.map((b) => b.id));
+    return this.templates.filter((t) => !builtinIds.has(t.id));
+  }
+
+  private usage(): PersistedTemplates['usage'] {
+    return Object.fromEntries(
+      this.templates.map((t) => [t.id, { usageCount: t.usageCount, lastUsed: t.lastUsed?.toISOString() }]),
+    );
+  }
+
+  private meta(): TemplateMeta {
+    return { id: META_ITEM_ID, deletedBuiltinIds: [...this.deletedBuiltinIds], usage: this.usage(), updatedAt: this.metaUpdatedAt };
+  }
+
+  /**
+   * Merge the account's templates into this device's copy, once per signed-in
+   * account (W190 — they used to live only on the phone, and logout wipes it).
+   */
+  async syncFromAccount(): Promise<void> {
+    await this.hydrate();
+    const uid = getAuthedUserId();
+    if (!uid || this.syncedFor === uid) return;
+    // Read the device copy AFTER the pull (functions, not snapshots): a template
+    // saved while the request was out vanished when apply() replaced the list.
+    const localUser = async () => this.userTemplates().map(serializeTemplate);
+    const localMeta = async () =>
+      this.metaUpdatedAt !== undefined || this.userTemplates().length > 0 || this.deletedBuiltinIds.size > 0 ? [this.meta()] : [];
+    const [user, meta] = await Promise.all([
+      syncLibraryList('quote_template', localUser),
+      syncLibraryList('quote_template_meta', localMeta),
+    ]);
+    // Account switched, or no answer: keep the device copy as it is.
+    if (!user || !meta || getAuthedUserId() !== uid) return;
+    this.syncedFor = uid;
+    const m = (meta.find((x) => x.id === META_ITEM_ID) as TemplateMeta | undefined) ?? this.meta();
+    this.metaUpdatedAt = m.updatedAt;
+    this.apply(user.map(reviveTemplate), m.deletedBuiltinIds ?? [], m.usage ?? {});
+    this.persist();
+    this.notify();
+  }
+
+  private pushTemplate(t: QuoteTemplate): void {
+    void pushLibraryItem('quote_template', t.id, serializeTemplate(t));
+  }
+
+  private touchMeta(): void {
+    this.metaUpdatedAt = new Date().toISOString();
+    void pushLibraryItem('quote_template_meta', META_ITEM_ID, this.meta());
+  }
+
+  private persist(): void {
     const payload: PersistedTemplates = {
-      userTemplates: this.templates.filter((t) => !builtinIds.has(t.id)),
+      userTemplates: this.userTemplates(),
       deletedBuiltinIds: [...this.deletedBuiltinIds],
-      usage: Object.fromEntries(
-        this.templates.map((t) => [t.id, { usageCount: t.usageCount, lastUsed: t.lastUsed?.toISOString() }]),
-      ),
+      usage: this.usage(),
+      metaUpdatedAt: this.metaUpdatedAt,
     };
     AsyncStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(payload)).catch(() => {});
   }
@@ -805,9 +883,11 @@ class QuoteTemplateService {
       subtotal,
       usageCount: 0,
       createdAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
     this.templates.unshift(template);
     this.persist();
+    this.pushTemplate(template);
     this.notify();
     return template;
   }
@@ -849,6 +929,7 @@ class QuoteTemplateService {
       // Always recomputed. A stored total beside the lines it is derived from
       // is the drift that pricebook.md's design rule 1 exists to prevent.
       subtotal: items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0),
+      updatedAt: new Date().toISOString(),
     };
 
     if (isBuiltin) {
@@ -873,12 +954,16 @@ class QuoteTemplateService {
       this.templates.splice(idx, 1);
       this.templates.unshift(override);
       this.persist();
+      this.pushTemplate(override);
+      this.touchMeta();
+      this.persist();
       this.notify();
       return override;
     }
 
     this.templates[idx] = merged;
     this.persist();
+    this.pushTemplate(merged);
     this.notify();
     return merged;
   }
@@ -888,6 +973,7 @@ class QuoteTemplateService {
     if (t) {
       t.usageCount++;
       t.lastUsed = new Date();
+      this.touchMeta();
       this.persist();
       this.notify();
     }
@@ -895,8 +981,11 @@ class QuoteTemplateService {
   }
 
   deleteTemplate(id: string): void {
-    if (BUILTIN_TEMPLATES.some((b) => b.id === id)) this.deletedBuiltinIds.add(id);
+    const isBuiltin = BUILTIN_TEMPLATES.some((b) => b.id === id);
+    if (isBuiltin) this.deletedBuiltinIds.add(id);
     this.templates = this.templates.filter(t => t.id !== id);
+    if (isBuiltin) this.touchMeta();
+    else void deleteLibraryItem('quote_template', id);
     this.persist();
     this.notify();
   }
@@ -974,6 +1063,8 @@ export function useQuoteTemplates(category?: TemplateCategory, country?: string)
     // Hydrate before the first paint so saved templates are not missing for a
     // frame; notify() inside hydrate re-runs sync.
     quoteTemplateService.hydrate().finally(() => { sync(); if (!cancelled) setLoading(false); });
+    // The account's templates (W190); notify() re-runs sync when they land.
+    quoteTemplateService.syncFromAccount().catch(() => {});
     return () => { cancelled = true; unsub(); };
   }, [category, country]);
 

@@ -25,6 +25,8 @@ const TAB_GROUPS = ['(contractor)', '(tabs)'];
 const STANDALONE = [
   'accept', 'auth', 'customer', 'quote', 'ref', 'worker/error.tsx',
   'reset-password.tsx', 'reset-onboarding.tsx',
+  // Stripe Connect's return link: renders nothing and steps back by itself.
+  'stripe-connected.tsx',
 ];
 // Portfolio/director surface — enterprise_portfolio is false, so it ships to
 // nobody. See memory/feedback_contractor_aannemer_only.md.

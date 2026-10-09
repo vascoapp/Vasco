@@ -4786,7 +4786,17 @@
     "openStripe": "Open Stripe",
     "codeLabel": "Je Stripe-sleutel",
     "codePlaceholder": "Plak hier je sleutel",
-    "connect": "Koppelen"
+    "connect": "Koppelen",
+    "connectWithStripe": "Verbinden met Stripe",
+    "connectStepsTitle": "Stripe koppelen",
+    "connectStep1": "Tik op de knop — Stripe opent. Nog geen account? Dat maakt u daar gratis aan.",
+    "connectStep2": "Log in bij Stripe en geef Vasco toestemming om betaallinks voor u te maken.",
+    "connectStep3": "U komt vanzelf hier terug. Vasco ziet nooit uw Stripe-wachtwoord of sleutels.",
+    "connectUnavailable": "Stripe is niet bereikbaar. Probeer het zo opnieuw.",
+    "connectFailed": "Koppelen is niet gelukt. Probeer het opnieuw.",
+    "connectTaken": "Dit Stripe-account is al gekoppeld aan een ander Vasco-account.",
+    "connectDisconnectDesc": "Vasco kan dan geen betaallinks meer maken op uw Stripe-account. Verstuurde links blijven werken.",
+    "disconnectFailed": "Ontkoppelen is niet gelukt. Probeer het opnieuw."
   },
   "quoteNew": {
     "customerAndJob": "Klant & klus",
@@ -7698,5 +7708,29 @@
   "errorBoundary": {
     "title": "Er ging iets mis",
     "copyDetails": "Foutdetails kopiëren"
+  },
+  "complianceSheet": {
+    "typeCertificate": "Certificaat",
+    "typeInsurance": "Verzekering",
+    "typeLicense": "Vergunning",
+    "addTitle": "Toevoegen",
+    "editTitle": "Bewerken",
+    "type": "Soort",
+    "name": "Naam *",
+    "namePlaceholder": "bijv. aansprakelijkheidsverzekering",
+    "expiry": "Geldig tot *",
+    "datePlaceholder": "DD-MM-JJJJ",
+    "dateExample": "31-12-2027",
+    "issuer": "Uitgegeven door",
+    "insurer": "Verzekeraar",
+    "number": "Nummer",
+    "policyNumber": "Polisnummer",
+    "reminderHint": "Vasco herinnert u in de twee weken voordat het verloopt. Verlengd? Pas hier de datum aan.",
+    "badDateTitle": "Vervaldatum",
+    "badDateBody": "Typ de datum met de dag eerst, bijvoorbeeld {{example}}.",
+    "deleteTitle": "Verwijderen?",
+    "deleteBody": "{{name}} en de herinneringen worden verwijderd.",
+    "fromSignupTitle": "Vul in wanneer deze verlopen",
+    "fromSignupBody": "Deze heeft u bij het aanmelden aangevinkt. Met de vervaldatum herinnert Vasco u voordat ze verlopen."
   }
 }

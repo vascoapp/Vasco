@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { ModalSafeArea } from '../../src/components/shared/ModalSafeArea';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Alert,
   View,
@@ -18,7 +18,8 @@ import {
   Modal,
   Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
@@ -46,6 +47,9 @@ import { governmentPortalsFor } from '../../src/config/governmentPortals';
 import { useTranslation } from 'react-i18next';
 import { DKScreenHeader } from '../../src/components/shared/DKScreenHeader';
 import { DORMANT_CONTROLS } from '../../src/config/dormant';
+import { DK } from '../../src/theme/draftkings';
+import { ComplianceItemSheet, type ComplianceSheetItem } from '../../src/components/contractor/ComplianceItemSheet';
+import type { TrackedItemType } from '../../src/services/complianceService';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -63,6 +67,7 @@ interface ComplianceItem {
   expiryDate: Date;
   status: ItemStatus;
   type: 'certification' | 'insurance' | 'license';
+  number?: string;
   category?: string;
   documentUrl?: string;
   renewalCost?: number;
@@ -242,7 +247,7 @@ function TabButton({ id, label, icon, isActive, onPress }: {
   );
 }
 
-function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => void }) {
+function ItemCard({ item, onPress, onRenew }: { item: ComplianceItem; onPress?: () => void; onRenew?: () => void }) {
   const { t } = useTranslation();
   const status = getStatusConfig(item.status, t);
   const daysUntil = getDaysUntilExpiry(item.expiryDate);
@@ -285,9 +290,9 @@ function ItemCard({ item, onPress }: { item: ComplianceItem; onPress?: () => voi
           </Text>
         </View>
 
-        {/* Hidden until built — it only said "Coming soon" (DORMANT_CONTROLS). */}
-        {DORMANT_CONTROLS.complianceItemEditing && (item.status === 'expired' || item.status === 'expiring_soon' || item.status === 'cancelled') && (
-          <Pressable style={styles.renewButton} onPress={() => Alert.alert(t('compliance.renew', 'Renew'), t('common.comingSoon', 'Coming soon'))} accessibilityRole="button" accessibilityLabel={`${t('compliance.renew', 'Renew')} ${item.name}`}>
+        {/* Renewing = typing the new expiry (decision 3a). */}
+        {DORMANT_CONTROLS.complianceItemEditing && onRenew && (item.status === 'expired' || item.status === 'expiring_soon' || item.status === 'cancelled') && (
+          <Pressable style={styles.renewButton} onPress={onRenew} accessibilityRole="button" accessibilityLabel={`${t('compliance.renew', 'Renew')} ${item.name}`}>
             <Ionicons name="refresh" size={14} color={Palette.hermesOrange} />
             <Text style={styles.renewButtonText}>{t('compliance.renew', 'Vernieuw')}</Text>
           </Pressable>
@@ -364,6 +369,20 @@ export default function CertificatenScreen() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ComplianceItem | null>(null);
+  // The add/edit sheet (decision 3a): an item = edit/renew, none = add.
+  const [sheet, setSheet] = useState<{ item?: ComplianceSheetItem; type?: TrackedItemType; name?: string } | null>(null);
+  const { itemId: openItemId } = useLocalSearchParams<{ itemId?: string }>();
+  // Certificates ticked during sign-up are only NAMES — no expiry, so nothing
+  // can warn about them yet. Offered here so adding the date is one tap.
+  const [signupCerts, setSignupCerts] = useState<string[]>([]);
+  useEffect(() => {
+    AsyncStorage.getItem('@vasco_onboarding')
+      .then((raw) => {
+        const certs = raw ? (JSON.parse(raw) as { certifications?: unknown }).certifications : [];
+        setSignupCerts(Array.isArray(certs) ? certs.filter((c): c is string => typeof c === 'string' && c.trim() !== '') : []);
+      })
+      .catch(() => {});
+  }, []);
 
   // Data from services
   const { licenses, loading: licensesLoading } = useLicenses();
@@ -386,6 +405,7 @@ export default function CertificatenScreen() {
       id: l.id,
       name: l.name,
       issuer: l.issuingAuthority,
+      number: l.licenseNumber,
       expiryDate: l.expiryDate,
       status: l.status,
       type: 'license',
@@ -398,6 +418,7 @@ export default function CertificatenScreen() {
       id: c.id,
       name: c.name,
       issuer: c.issuingBody,
+      number: c.certificationNumber,
       expiryDate: c.expiryDate,
       status: c.status,
       type: 'certification',
@@ -409,6 +430,7 @@ export default function CertificatenScreen() {
       id: p.id,
       name: p.name,
       issuer: p.provider,
+      number: p.policyNumber,
       expiryDate: p.endDate,
       status: p.status,
       type: 'insurance',
@@ -417,6 +439,32 @@ export default function CertificatenScreen() {
 
     return items;
   }, [licenses, certifications, policies]);
+
+  const toSheetItem = (i: ComplianceItem): ComplianceSheetItem => ({
+    id: i.id, type: i.type, name: i.name, issuer: i.issuer, number: i.number, expiryDate: i.expiryDate,
+  });
+  const openEdit = (i: ComplianceItem) => { setSelectedItem(null); setSheet({ item: toSheetItem(i) }); };
+  const tabType: TrackedItemType = activeTab === 'insurance' ? 'insurance' : activeTab === 'licenses' ? 'license' : 'certification';
+  const openAdd = (type: TrackedItemType = tabType, name?: string) => setSheet({ type, name });
+
+  // A renewal card opens its item (queueItemExecutor → ?itemId=) ONCE: the
+  // param stays on the route, and re-opening on every list change (or not at
+  // all on a second tap) was the review's finding. Cleared after use.
+  const handledItemId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!openItemId || handledItemId.current === openItemId) return;
+    const hit = allItems.find((i) => i.id === openItemId);
+    if (!hit) return; // the store may still be loading — try again when it lands
+    handledItemId.current = openItemId;
+    setSheet({ item: toSheetItem(hit) });
+    (router as { setParams?: (p: Record<string, string | undefined>) => void }).setParams?.({ itemId: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openItemId, allItems]);
+  useEffect(() => { if (!openItemId) handledItemId.current = null; }, [openItemId]);
+
+  const untrackedSignupCerts = signupCerts.filter(
+    (n) => !allItems.some((i) => i.name.trim().toLowerCase() === n.trim().toLowerCase()),
+  );
 
   // Filter items by tab
   const filteredItems = useMemo(() => {
@@ -634,9 +682,21 @@ export default function CertificatenScreen() {
             </View>
             )}
 
-            {/* Quick Add — hidden until built (it only said "Coming soon"). */}
+            {DORMANT_CONTROLS.complianceItemEditing && untrackedSignupCerts.length > 0 && (
+              <View style={styles.signupCard}>
+                <Text style={styles.signupTitle}>{t('complianceSheet.fromSignupTitle', 'Add when these run out')}</Text>
+                <Text style={styles.signupBody}>{t('complianceSheet.fromSignupBody', 'You ticked these when you signed up. With the expiry date, Vasco reminds you before they run out.')}</Text>
+                {untrackedSignupCerts.map((n) => (
+                  <Pressable key={n} style={styles.signupRow} onPress={() => openAdd('certification', n)} accessibilityRole="button" accessibilityLabel={`${t('compliance.add', 'Add')} ${n}`}>
+                    <Text style={styles.signupRowText} numberOfLines={1}>{n}</Text>
+                    <Ionicons name="add-circle" size={20} color={Palette.hermesOrange} />
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
             {DORMANT_CONTROLS.complianceItemEditing && (
-            <Pressable style={styles.addButton} onPress={() => Alert.alert(t('compliance.addCertificate', 'Add certificate'), t('common.comingSoon', 'Coming soon'))}>
+            <Pressable style={styles.addButton} onPress={() => openAdd('certification')}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
               <Text style={styles.addButtonText} numberOfLines={1}>{t('compliance.addCertificate', 'Certificaat toevoegen')}</Text>
             </Pressable>
@@ -687,6 +747,7 @@ export default function CertificatenScreen() {
                   key={item.id}
                   item={item}
                   onPress={() => setSelectedItem(item)}
+                  onRenew={() => openEdit(item)}
                 />
               ))
             }
@@ -696,21 +757,15 @@ export default function CertificatenScreen() {
                 <Ionicons name="document-outline" size={48} color={SemanticColors.textTertiary} />
                 <Text style={styles.emptyStateText}>{t('compliance.noItemsFound', 'Geen items gevonden')}</Text>
                 {DORMANT_CONTROLS.complianceItemEditing && (
-                <Pressable style={styles.emptyStateButton} onPress={() => Alert.alert(t('compliance.add', 'Add'), t('common.comingSoon', 'Coming soon'))}>
+                <Pressable style={styles.emptyStateButton} onPress={() => openAdd()}>
                   <Text style={styles.emptyStateButtonText} numberOfLines={1}>{t('compliance.add', 'Voeg toe')}</Text>
                 </Pressable>
                 )}
               </View>
             )}
 
-            {/* Add Button — hidden until built (it only said "Coming soon"). */}
             {DORMANT_CONTROLS.complianceItemEditing && (
-            <Pressable style={styles.addButton} onPress={() => Alert.alert(
-              activeTab === 'certificates' ? t('compliance.addCertificate', 'Add certificate')
-                : activeTab === 'insurance' ? t('compliance.addInsurance', 'Add insurance')
-                : t('compliance.addLicense', 'Add license'),
-              t('common.comingSoon', 'Coming soon'),
-            )}>
+            <Pressable style={styles.addButton} onPress={() => openAdd()}>
               <Ionicons name="add-circle" size={22} color={Palette.hermesOrange} />
               <Text style={styles.addButtonText} numberOfLines={1}>
                 {activeTab === 'certificates' && t('compliance.addCertificate', 'Certificaat toevoegen')}
@@ -774,10 +829,18 @@ export default function CertificatenScreen() {
             </View>
 
             <ScrollView style={styles.modalContent}>
+              {!!selectedItem.issuer && (
               <View style={styles.modalSection}>
                 <Text style={styles.modalLabel}>{t('compliance.issuer', 'Uitgever')}</Text>
                 <Text style={styles.modalValue}>{selectedItem.issuer}</Text>
               </View>
+              )}
+              {!!selectedItem.number && (
+              <View style={styles.modalSection}>
+                <Text style={styles.modalLabel}>{selectedItem.type === 'insurance' ? t('complianceSheet.policyNumber', 'Policy number') : t('complianceSheet.number', 'Number')}</Text>
+                <Text style={styles.modalValue}>{selectedItem.number}</Text>
+              </View>
+              )}
 
               <View style={styles.modalSection}>
                 <Text style={styles.modalLabel}>{t('compliance.status', 'Status')}</Text>
@@ -826,16 +889,15 @@ export default function CertificatenScreen() {
                     <Text style={styles.modalButtonText}>{t('compliance.viewDocument', 'Document bekijken')}</Text>
                   </Pressable>
                 )}
-                {DORMANT_CONTROLS.complianceItemEditing && (
-                <Pressable style={styles.modalButton} onPress={() => Alert.alert(t('compliance.share', 'Share'), t('common.comingSoon', 'Coming soon'))}>
-                  <Ionicons name="share-outline" size={20} color={Palette.hermesOrange} />
-                  <Text style={styles.modalButtonText}>{t('compliance.share', 'Delen')}</Text>
-                </Pressable>
-                )}
-                {DORMANT_CONTROLS.complianceItemEditing && (selectedItem.status === 'expired' || selectedItem.status === 'expiring_soon' || selectedItem.status === 'cancelled') && (
-                  <Pressable style={[styles.modalButton, styles.modalButtonPrimary]} onPress={() => Alert.alert(t('compliance.renewAction', 'Renew'), t('common.comingSoon', 'Coming soon'))}>
-                    <Ionicons name="refresh" size={20} color="#fff" />
-                    <Text style={[styles.modalButtonText, { color: '#fff' }]}>{t('compliance.renewAction', 'Vernieuwen')}</Text>
+                {DORMANT_CONTROLS.complianceItemEditing && (selectedItem.status === 'expired' || selectedItem.status === 'expiring_soon' || selectedItem.status === 'cancelled') ? (
+                  <Pressable style={[styles.modalButton, styles.modalButtonPrimary]} onPress={() => openEdit(selectedItem)}>
+                    <Ionicons name="refresh" size={20} color={DK.colors.text} />
+                    <Text style={[styles.modalButtonText, { color: DK.colors.text }]}>{t('compliance.renewAction', 'Vernieuwen')}</Text>
+                  </Pressable>
+                ) : DORMANT_CONTROLS.complianceItemEditing && (
+                  <Pressable style={styles.modalButton} onPress={() => openEdit(selectedItem)}>
+                    <Ionicons name="create-outline" size={20} color={Palette.hermesOrange} />
+                    <Text style={styles.modalButtonText}>{t('complianceSheet.editTitle', 'Edit')}</Text>
                   </Pressable>
                 )}
               </View>
@@ -844,6 +906,14 @@ export default function CertificatenScreen() {
         )}
         </ModalSafeArea>
       </Modal>
+
+      <ComplianceItemSheet
+        visible={sheet !== null}
+        onClose={() => setSheet(null)}
+        item={sheet?.item ?? null}
+        initialType={sheet?.type}
+        initialName={sheet?.name}
+      />
     </View>
   );
 }
@@ -1283,6 +1353,29 @@ const styles = StyleSheet.create({
     fontFamily: TYPE.labelFamily,
     color: '#fff',
   },
+
+  // Certificates ticked at sign-up, not tracked yet
+  signupCard: {
+    backgroundColor: DK.colors.panel,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: DK.colors.border,
+    padding: GRID.md,
+    marginBottom: GRID.md,
+    gap: GRID.sm,
+  },
+  signupTitle: { fontFamily: DK.type.display700, fontSize: TYPE.titleSize, color: DK.colors.text },
+  signupBody: { fontFamily: DK.type.body400, fontSize: TYPE.captionSize, color: DK.colors.textMuted },
+  signupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: GRID.sm,
+    borderTopWidth: 1,
+    borderTopColor: DK.colors.border,
+    gap: GRID.sm,
+  },
+  signupRowText: { flex: 1, fontFamily: DK.type.body500, fontSize: TYPE.bodySize, color: DK.colors.text },
 
   // Modal
   modalContainer: {

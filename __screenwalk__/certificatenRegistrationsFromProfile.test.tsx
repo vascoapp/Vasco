@@ -12,7 +12,7 @@ import nl from '../src/i18n/locales/nl.json';
 let mockState: any;
 jest.mock('../src/state/AppState', () => ({ useAppState: () => mockState }));
 jest.mock('../src/context/AuthContext', () => ({ useAuth: () => ({ user: { country: 'NL' } }) }));
-jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), push: jest.fn() }) }));
+jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), push: jest.fn() }), useLocalSearchParams: () => ({}) }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: ({ children }: any) => children }));
 
 const Screen = () => require('../app/(contractor)/certificaten').default;

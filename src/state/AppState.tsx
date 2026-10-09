@@ -1114,7 +1114,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       try {
         const [mollie, stripe, moneybird] = await Promise.all([
           import('../integrations/mollie').then((m) => m.isConnected()).catch(() => false),
-          import('../integrations/stripe').then((m) => m.isConnected()).catch(() => false),
+          // A key on this phone (old) OR a Stripe Connect account on the server (2a).
+          Promise.all([
+            import('../integrations/stripe').then((m) => m.isConnected()).catch(() => false),
+            import('../integrations/stripeConnect').then((m) => m.getConnectStatus()).then((c) => c.connected).catch(() => false),
+          ]).then(([key, connect]) => key || connect),
           import('../integrations/moneybird').then((m) => m.isConnected()).catch(() => false),
         ]);
         if (!alive) return;
@@ -5413,6 +5417,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       disconnectStripe: async () => {
         const { clearStripeConfig } = await import('../integrations/stripe');
         await clearStripeConfig().catch(() => {});
+        // And the Stripe Connect link on the server (2a), when there is one.
+        const { getConnectStatus, disconnectConnect } = await import('../integrations/stripeConnect');
+        // A Connect link that could not be removed is still connected — never
+        // show "disconnected" over it (review 2026-10-09).
+        const linked = (await getConnectStatus({ force: true }).catch(() => null))?.connected;
+        if (linked && !(await disconnectConnect().catch(() => false))) return;
         setStripeConnected(false);
         setLastStripePayment({});
       },

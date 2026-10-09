@@ -253,6 +253,14 @@ async function runExecution(
       return { executed: true, via: 'navigate', detail: 'tiered-quote' };
     }
     case 'cert_renewal':
+      // The compliance agent's card names ONE tracked item: open it in the
+      // Compliance screen, where renewing = typing the new expiry. It went to
+      // the permits list, which does not hold certificates or policies.
+      if (typeof data.itemId === 'string' && data.itemType) {
+        router.push({ pathname: '/(contractor)/certificaten', params: { itemId: data.itemId } } as any);
+        return { executed: true, via: 'navigate', detail: `certificaten?itemId=${data.itemId}` };
+      }
+    // falls through — a card without an item (older producers) keeps its route
     case 'permit_check':
     case 'permit_renewal': {
       // R20: pass jobId through so permits screen can scope to the job

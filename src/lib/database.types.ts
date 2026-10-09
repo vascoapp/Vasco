@@ -557,11 +557,57 @@ export type SubscriptionRow = {
   updated_at: string;
 };
 
+// Migration 20261009000001 — the contractor's own library (pricebook, own
+// quote templates, job forms and filled forms), kept in the account.
+export type UserLibraryKind =
+  | 'pricebook_item'
+  | 'quote_template'
+  | 'quote_template_meta'
+  | 'job_form_template'
+  | 'job_form_response'
+  | 'compliance_item';
+
+/** Stripe Connect (decision 2a): written by the server only; the owner may read. */
+export type StripeConnectionRow = {
+  id: string;
+  user_id: string;
+  stripe_account_id: string;
+  livemode: boolean;
+  scope: string | null;
+  connected_at: string;
+  updated_at: string;
+};
+
+export type UserLibraryRow = {
+  id: string;
+  user_id: string;
+  kind: UserLibraryKind;
+  item_id: string;
+  data: Record<string, unknown>;
+  updated_at: string;
+  created_at: string;
+};
+
 // ── Database interface (for Supabase client generic) ─────────
 
 export interface Database {
   public: {
     Tables: {
+      user_library: {
+        Row: UserLibraryRow;
+        Insert: Partial<UserLibraryRow> & {
+          user_id: string;
+          kind: UserLibraryKind;
+          item_id: string;
+          data: Record<string, unknown>;
+        };
+        Update: Partial<Omit<UserLibraryRow, 'id' | 'user_id' | 'created_at'>>;
+      };
+      stripe_connections: {
+        Row: StripeConnectionRow;
+        Insert: never;
+        Update: never;
+      };
       subscriptions: {
         Row: SubscriptionRow;
         Insert: Partial<SubscriptionRow> & {

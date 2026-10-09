@@ -23,11 +23,16 @@ jest.mock('@react-native-async-storage/async-storage', () => {
   };
 });
 const mockAddToQueue = jest.fn((..._a: any[]) => Promise.resolve('q1'));
-jest.mock('../aiActionQueueService', () => ({ addToQueue: (...a: any[]) => mockAddToQueue(...a) }));
+jest.mock('../aiActionQueueService', () => ({
+  addToQueue: (...a: any[]) => mockAddToQueue(...a),
+  withdrawComplianceCards: async () => {},
+  cardWasHandled: async () => false,
+}));
 const mockAlerts: any[] = [];
 const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString();
 jest.mock('../complianceService', () => ({
   complianceService: {
+    load: async () => {},
     getLicenses: () => [{ id: 'l1', name: 'Meisterbrief', expiryDate: inDays(5) }],
     getCertifications: () => [],
     getInsurancePolicies: () => [{ id: 'p1', type: 'workers_comp', endDate: inDays(5) }],

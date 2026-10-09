@@ -22,6 +22,8 @@
 // =============================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { pushLibraryItem, deleteLibraryItem, syncLibraryList } from './userLibrarySync';
+import { getAuthedUserId } from '../lib/currentUser';
 import { useCallback, useEffect, useState } from 'react';
 
 const TEMPLATES_KEY = '@vasco_job_form_templates';
@@ -231,9 +233,60 @@ export async function saveResponse(response: JobFormResponse): Promise<void> {
   // 500 is years of work for a solo contractor and keeps the write cheap.
   const next = [response, ...all.filter((r) => r.id !== response.id)].slice(0, MAX_RESPONSES);
   await AsyncStorage.setItem(RESPONSES_KEY, JSON.stringify(next)).catch(() => {});
+  // The record of work done lives in the account, not only on this phone (W190).
+  scheduleResponsePush(response);
+}
+
+// The form screen saves on every pause in typing (400 ms). Pushing each of
+// those filled the offline queue — on site, offline is the normal case — and
+// the queue keeps only its newest entries, so a few long forms could push out
+// another table's queued write (review 2026-10-09). One push once typing has
+// settled, at once when the form is completed; anything missed (app killed)
+// is uploaded by the next session's merge, which pushes what the account lacks.
+export const RESPONSE_PUSH_DELAY_MS = 8000;
+const pendingResponsePush = new Map<string, { timer: ReturnType<typeof setTimeout>; response: JobFormResponse; owner: string | null }>();
+
+/**
+ * Send every waiting form push NOW — called at logout BEFORE the sign-out:
+ * logout wipes the device copy, so a form typed in the last seconds would
+ * otherwise exist nowhere (review 2026-10-09). Offline it lands in the write
+ * queue, which survives logout for the same account.
+ */
+export async function flushPendingResponsePushes(): Promise<void> {
+  const waiting = [...pendingResponsePush.values()];
+  pendingResponsePush.clear();
+  for (const w of waiting) clearTimeout(w.timer);
+  await Promise.all(waiting.map((w) => pushLibraryItem('job_form_response', w.response.id, w.response, w.owner)));
+}
+
+function scheduleResponsePush(response: JobFormResponse): void {
+  const prev = pendingResponsePush.get(response.id);
+  if (prev) clearTimeout(prev.timer);
+  const owner = getAuthedUserId();
+  const push = () => {
+    pendingResponsePush.delete(response.id);
+    void pushLibraryItem('job_form_response', response.id, response, owner);
+  };
+  if (response.completedAt) { push(); return; }
+  pendingResponsePush.set(response.id, { timer: setTimeout(push, RESPONSE_PUSH_DELAY_MS), response, owner });
+}
+
+// Filled forms come back from the account once per signed-in session (a new
+// phone, a reinstall, a logout all start with an empty device cache).
+let responsesSyncedFor: string | null = null;
+async function syncResponsesOnce(): Promise<void> {
+  const uid = getAuthedUserId();
+  if (!uid || responsesSyncedFor === uid) return;
+  const merged = await syncLibraryList('job_form_response', loadResponses);
+  if (merged) {
+    responsesSyncedFor = uid;
+    const sorted = [...merged].sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '')).slice(0, MAX_RESPONSES);
+    await AsyncStorage.setItem(RESPONSES_KEY, JSON.stringify(sorted)).catch(() => {});
+  }
 }
 
 export async function responsesForJob(jobId: string): Promise<JobFormResponse[]> {
+  await syncResponsesOnce().catch(() => {});
   return (await loadResponses()).filter((r) => r.jobId === jobId);
 }
 
@@ -246,7 +299,14 @@ export function useJobFormTemplates() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadTemplates().then(setTemplates).finally(() => setLoading(false));
+    let cancelled = false;
+    loadTemplates().then((local) => { if (!cancelled) setTemplates(local); }).finally(() => { if (!cancelled) setLoading(false); });
+    // The account's forms (W190): back after a logout or on a new phone.
+    (async () => {
+      const merged = await syncLibraryList('job_form_template', loadTemplates);
+      if (merged && !cancelled) { await saveTemplates(merged); setTemplates(merged); }
+    })().catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   const persist = useCallback(async (next: JobFormTemplate[]) => {
@@ -262,6 +322,8 @@ export function useJobFormTemplates() {
         ? templates.map((t) => (t.id === template.id ? { ...template, updatedAt: now } : t))
         : [...templates, { ...template, createdAt: now, updatedAt: now }];
       await persist(next);
+      const saved = next.find((t) => t.id === template.id);
+      if (saved) void pushLibraryItem('job_form_template', saved.id, saved);
     },
     [templates, persist],
   );
@@ -272,6 +334,7 @@ export function useJobFormTemplates() {
       // record of work done, and they carry their own snapshotted labels, so
       // they stay readable without it.
       await persist(templates.filter((t) => t.id !== id));
+      void deleteLibraryItem('job_form_template', id);
     },
     [templates, persist],
   );

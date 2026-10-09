@@ -11,6 +11,7 @@
 
 import { getSecureItem, setSecureItem, deleteSecureItem, migrateToSecure } from '../lib/secureStorage';
 import { fetchWithRetry } from '../utils/retry';
+import { getConnectStatus, createConnectPaymentLink } from './stripeConnect';
 
 const STORAGE_KEY = 'vasco_stripe';
 const LEGACY_KEY = '@vasco_stripe'; // Old AsyncStorage key for migration
@@ -278,6 +279,21 @@ async function apiCall<T>(path: string, options?: RequestInit & { formData?: Rec
 // ---------------------------------------------------------------------------
 
 export async function createPaymentLink(request: StripePaymentRequest): Promise<{ url: string; id: string } | null> {
+  // Connected through Stripe Connect (decision 2a): the SERVER makes the link
+  // on the contractor's account — no key on this phone.
+  const connect = await getConnectStatus();
+  if (connect.connected) {
+    return createConnectPaymentLink({
+      invoiceId: request.invoiceId,
+      description: request.description,
+      amount: request.amount,
+      currency: request.currency ?? 'GBP',
+      paymentMethods: request.paymentMethods ?? SUPPORTED_METHODS.UK,
+      // A customer-decision DEPOSIT is recognised by this in the webhook —
+      // without it a paid deposit never marked the tracker paid (review).
+      ...(typeof request.metadata?.trackerAccessCode === 'string' ? { trackerAccessCode: request.metadata.trackerAccessCode } : {}),
+    });
+  }
   const connected = await isConnected();
   if (!connected) {
     if (__DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true') {

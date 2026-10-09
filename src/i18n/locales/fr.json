@@ -4729,7 +4729,17 @@
     "openStripe": "Ouvrir Stripe",
     "codeLabel": "Votre clé Stripe",
     "codePlaceholder": "Collez votre clé ici",
-    "connect": "Connecter"
+    "connect": "Connecter",
+    "connectWithStripe": "Connecter avec Stripe",
+    "connectStepsTitle": "Connecter Stripe",
+    "connectStep1": "Touchez le bouton — Stripe s’ouvre. Pas encore de compte ? Vous pouvez en créer un gratuitement.",
+    "connectStep2": "Connectez-vous à Stripe et autorisez Vasco à créer des liens de paiement pour vous.",
+    "connectStep3": "Vous revenez ici automatiquement. Vasco ne voit jamais votre mot de passe ni vos clés Stripe.",
+    "connectUnavailable": "Stripe est injoignable. Réessayez dans un instant.",
+    "connectFailed": "La connexion n’a pas abouti. Veuillez réessayer.",
+    "connectTaken": "Ce compte Stripe est déjà connecté à un autre compte Vasco.",
+    "connectDisconnectDesc": "Vasco ne pourra plus créer de liens de paiement sur votre compte Stripe. Les liens déjà envoyés restent valables.",
+    "disconnectFailed": "La déconnexion n’a pas abouti. Veuillez réessayer."
   },
   "quoteNew": {
     "customerAndJob": "Client & chantier",
@@ -7698,5 +7708,29 @@
   "errorBoundary": {
     "title": "Un problème est survenu",
     "copyDetails": "Copier les détails de l’erreur"
+  },
+  "complianceSheet": {
+    "typeCertificate": "Certificat",
+    "typeInsurance": "Assurance",
+    "typeLicense": "Licence ou autorisation",
+    "addTitle": "Ajouter",
+    "editTitle": "Modifier",
+    "type": "Type",
+    "name": "Nom *",
+    "namePlaceholder": "p. ex. responsabilité civile pro",
+    "expiry": "Valable jusqu’au *",
+    "datePlaceholder": "JJ/MM/AAAA",
+    "dateExample": "31/12/2027",
+    "issuer": "Délivré par",
+    "insurer": "Assureur",
+    "number": "Numéro",
+    "policyNumber": "Numéro de police",
+    "reminderHint": "Vasco vous le rappelle dans les deux semaines avant l’échéance. Renouvelé ? Modifiez la date ici.",
+    "badDateTitle": "Date d’échéance",
+    "badDateBody": "Saisissez la date en commençant par le jour, par exemple {{example}}.",
+    "deleteTitle": "Supprimer ?",
+    "deleteBody": "{{name}} et ses rappels seront supprimés.",
+    "fromSignupTitle": "Indiquez quand ils expirent",
+    "fromSignupBody": "Vous les avez cochés à l’inscription. Avec la date d’échéance, Vasco vous prévient avant qu’ils expirent."
   }
 }

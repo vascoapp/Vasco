@@ -44,7 +44,9 @@ describe.each(['mollie-webhook', 'stripe-webhook'])('%s', (fn) => {
   });
 
   it('the invoice is found by number + contractor, and a zero-row match is not success', () => {
-    expect(SRC).toMatch(/const lookup = invoiceLookup\(invoiceId, \w+\.metadata\?\.userId\)/);
+    // Platform payments: number + the contractor in the metadata. Connected-
+    // account payments (Stripe Connect): number + the account's OWNER.
+    expect(SRC).toMatch(/const lookup = (?:connectedOwner\s*\? invoiceLookup\(invoiceId, connectedOwner\)\s*: )?invoiceLookup\(invoiceId, \w+\.metadata\?\.userId\)/);
     expect(SRC).not.toMatch(/\.eq\('id', invoiceId\)/);
     expect(after(SRC, 'if (!invoiceRowId) {')).toMatch(/return retryLater\('Invoice not found'\)/);
     expect(SRC).toMatch(/dispatchPaidSideEffects\(supabaseUrl, supabaseServiceKey, invoiceRowId, paidAt\)/);

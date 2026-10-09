@@ -137,7 +137,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const isValid = await verifyStripeSignature(rawBody, signatureHeader, stripeWebhookSecret);
+    // Connected-account events (Stripe Connect, decision 2a) arrive on a
+    // separate Connect endpoint with its OWN signing secret.
+    const connectWebhookSecret = Deno.env.get('STRIPE_CONNECT_WEBHOOK_SECRET');
+    const isValid = await verifyStripeSignature(rawBody, signatureHeader, stripeWebhookSecret)
+      || (!!connectWebhookSecret && await verifyStripeSignature(rawBody, signatureHeader, connectWebhookSecret));
     if (!isValid) {
       console.error('Invalid Stripe webhook signature');
       return new Response(JSON.stringify({ received: false, error: 'Invalid signature' }), {
@@ -156,7 +160,46 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`Stripe event: type=${event.type}, id=${event.id}`);
+    console.log(`Stripe event: type=${event.type}, id=${event.id}${event.account ? `, account=${event.account}` : ''}`);
+
+    // A CONNECTED account's event (Stripe Connect): only invoice payments count,
+    // and only for the contractor who owns that account. The metadata is
+    // written by our server, but a contractor can also make a link in their own
+    // Stripe dashboard with any metadata — `userId` of another contractor would
+    // then mark THEIR invoice paid. The owner comes from stripe_connections.
+    let connectedOwner: string | null = null;
+    if (typeof event.account === 'string' && event.account) {
+      // The contractor revoked Vasco in their Stripe dashboard: forget the link,
+      // or the app keeps saying "Connected" while every payment link fails.
+      if (event.type === 'account.application.deauthorized') {
+        const u = Deno.env.get('SUPABASE_URL');
+        const k = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        if (!u || !k) return retryLater('DB not configured');
+        const { error: delErr } = await createClient(u, k).from('stripe_connections').delete().eq('stripe_account_id', event.account);
+        if (delErr) return retryLater('Could not forget the connection');
+        return new Response(JSON.stringify({ received: true, status: 'deauthorized' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (event.type !== 'payment_intent.succeeded') {
+        return new Response(JSON.stringify({ received: true, status: 'ignored', type: event.type }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const u = Deno.env.get('SUPABASE_URL');
+      const k = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (!u || !k) return retryLater('DB not configured');
+      const { data: owner, error: ownerErr } = await createClient(u, k)
+        .from('stripe_connections').select('user_id').eq('stripe_account_id', event.account).maybeSingle();
+      if (ownerErr) return retryLater('Owner lookup failed');
+      if (!owner?.user_id) {
+        console.error(`stripe ${event.id}: account ${event.account} is not connected to any contractor`);
+        return new Response(JSON.stringify({ received: true, status: 'unknown account' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      connectedOwner = owner.user_id as string;
+    }
 
     const supabaseUrl0 = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey0 = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -477,10 +520,13 @@ Deno.serve(async (req) => {
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
       if (!supabaseUrl || !supabaseServiceKey) return retryLater('DB not configured');
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      const { error: trackerErr } = await supabase
+      let trackerUpdate = supabase
         .from('decision_trackers')
         .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
         .eq('access_code', trackerAccessCode);
+      // Connected account: only the account owner's own tracker.
+      if (connectedOwner) trackerUpdate = trackerUpdate.eq('user_id', connectedOwner);
+      const { error: trackerErr } = await trackerUpdate;
       if (trackerErr) {
         console.error('Failed to mark tracker paid:', trackerErr.message);
         return failRecording('Tracker update failed', trackerErr);
@@ -522,7 +568,18 @@ Deno.serve(async (req) => {
     // `invoices` table; switched to `documents` filtered on doc_type='invoice'.
     // `invoiceId` is the app's document NUMBER, not the row uuid (see
     // _shared/invoiceRef.ts) — matched with the contractor's user id.
-    const lookup = invoiceLookup(invoiceId, paymentIntent.metadata?.userId);
+    // A connected account's payment: the OWNER of the account, never the
+    // metadata, decides whose invoice it is — and only by document number.
+    const lookup = connectedOwner
+      ? invoiceLookup(invoiceId, connectedOwner)
+      : invoiceLookup(invoiceId, paymentIntent.metadata?.userId);
+    if (connectedOwner && lookup && lookup.column === 'id') {
+      // A uuid reference is not scoped to a contractor: refuse it here.
+      console.error(`stripe ${event.id}: connected-account payment with a uuid invoice reference`);
+      return new Response(JSON.stringify({ received: true, error: 'Unscoped invoice reference' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     if (!lookup) {
       // A bare number with no contractor: ambiguous, and no retry fixes it.
       console.error(`stripe ${event.id}: unresolvable invoice reference "${invoiceId}" (no userId in metadata)`);
