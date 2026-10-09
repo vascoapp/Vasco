@@ -7,6 +7,7 @@
  * strong typographic hierarchy, Hermes Orange accent.
  */
 
+import { epcPayload, epcQrSvg, epcQrApplies } from '../utils/epcQr';
 import { round2 } from '../utils/round2';
 import { A4_PAGE } from '../utils/pdfPage';
 import { formatQuantity } from '../i18n/formatting';
@@ -122,6 +123,8 @@ interface DocLabels {
   poweredBy: string;
   status: Record<string, string>;
   bankDetails: string;
+  /** Under the bank-transfer QR (EPC/GiroCode, EUR invoices). */
+  scanToPay: string;
   retentionWithheld: string;
   payableNow: string;
 }
@@ -136,6 +139,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Reference', payOnline: 'Pay Online', poweredBy: 'Powered by Vasco',
     status: { draft: 'DRAFT', sent: 'SENT', paid: 'PAID', overdue: 'OVERDUE' },
     bankDetails: 'Bank Details',
+    scanToPay: 'Scan with your banking app to pay by bank transfer',
     retentionWithheld: 'Retention withheld until handover', payableNow: 'Payable now',
   },
   nl: {
@@ -147,6 +151,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Referentie', payOnline: 'Betaal online', poweredBy: 'Mogelijk gemaakt door Vasco',
     status: { draft: 'CONCEPT', sent: 'VERZONDEN', paid: 'BETAALD', overdue: 'VERLOPEN' },
     bankDetails: 'Bankgegevens',
+    scanToPay: 'Scan met uw bankapp om per overschrijving te betalen',
     retentionWithheld: 'Retentie ingehouden tot oplevering', payableNow: 'Nu te betalen',
   },
   de: {
@@ -158,6 +163,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Referenz', payOnline: 'Online bezahlen', poweredBy: 'Betrieben von Vasco',
     status: { draft: 'ENTWURF', sent: 'GESENDET', paid: 'BEZAHLT', overdue: 'ÜBERFÄLLIG' },
     bankDetails: 'Bankverbindung',
+    scanToPay: 'Mit Ihrer Banking-App scannen und per Überweisung bezahlen',
     retentionWithheld: 'Sicherheitseinbehalt bis zur Abnahme', payableNow: 'Jetzt zu zahlen',
   },
   fr: {
@@ -169,6 +175,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Référence', payOnline: 'Payer en ligne', poweredBy: 'Propulsé par Vasco',
     status: { draft: 'BROUILLON', sent: 'ENVOYÉE', paid: 'PAYÉE', overdue: 'EN RETARD' },
     bankDetails: 'Coordonnées bancaires',
+    scanToPay: 'Scannez avec votre application bancaire pour payer par virement',
     retentionWithheld: 'Retenue de garantie jusqu’à la réception', payableNow: 'À payer maintenant',
   },
   es: {
@@ -180,6 +187,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Referencia', payOnline: 'Pagar en línea', poweredBy: 'Desarrollado por Vasco',
     status: { draft: 'BORRADOR', sent: 'ENVIADA', paid: 'PAGADA', overdue: 'VENCIDA' },
     bankDetails: 'Datos bancarios',
+    scanToPay: 'Escanee con su app bancaria para pagar por transferencia',
     retentionWithheld: 'Retención de garantía hasta la recepción', payableNow: 'A pagar ahora',
   },
   it: {
@@ -191,6 +199,7 @@ const LABELS: Record<string, DocLabels> = {
     paymentReference: 'Riferimento', payOnline: 'Paga Online', poweredBy: 'Offerto da Vasco',
     status: { draft: 'BOZZA', sent: 'INVIATA', paid: 'PAGATA', overdue: 'SCADUTA' },
     bankDetails: 'Coordinate bancarie',
+    scanToPay: 'Scansioni con la Sua app bancaria per pagare con bonifico',
     retentionWithheld: 'Ritenuta a garanzia fino al collaudo', payableNow: 'Da pagare ora',
   },
 };
@@ -686,6 +695,16 @@ ${exemptionNote ? `<!-- Small-business VAT exemption legal note (R251) -->
     if (!line) return '';
     const ibanBelow = country === 'UK' && iban && line !== iban ? ` · IBAN ${iban}` : '';
     return `<div class="payment-detail" style="margin-top:8px"><span style="color:#9CA3AF">${L.bankDetails}:</span> ${escapeHtml(line + ibanBelow)}</div>`;
+  })()}
+  ${(() => {
+    // The SEPA transfer QR (src/utils/epcQr.ts): EUR markets, a valid IBAN,
+    // something still to pay. The amount is what is payable NOW (retention
+    // withheld), the reference the invoice number.
+    if (!epcQrApplies(country) || invoice.status === 'paid' || !iban) return '';
+    const payable = invoice.retentionWithheld ? round2(invoice.total - invoice.retentionWithheld) : invoice.total;
+    const payload = epcPayload({ name: businessName, iban, amount: payable, reference: invoice.invoiceNumber });
+    if (!payload) return '';
+    return `<div class="epc-qr" style="display:flex;align-items:center;gap:12px;margin-top:12px">${epcQrSvg(payload, 110)}<div style="font-size:11px;color:#374151">${escapeHtml(L.scanToPay)}</div></div>`;
   })()}
   ${paymentUrl ? `<div style="text-align:center;margin-top:16px"><a href="${paymentUrl}" class="pay-btn">${L.payOnline}</a></div>` : ''}
 </div>

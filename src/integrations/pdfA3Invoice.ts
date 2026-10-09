@@ -29,6 +29,7 @@
  * hybrid whose paper and XML disagree is two invoices under one number; this
  * refuses rather than produce one.
  */
+import { epcPayload, epcQrMatrix } from '../utils/epcQr';
 import {
   PDFArray,
   PDFDocument,
@@ -449,12 +450,30 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
     data.paymentReference ? `${L.reference}: ${data.paymentReference}` : '',
   ].filter(Boolean);
   const mentionLines = r.mentions.flatMap((m) => wrap(m, regular, 7.5, width));
-  const needed = 30 + payment.length * 12 + mentionLines.length * 10;
+  // The SEPA transfer QR (src/utils/epcQr.ts) beside the payment lines: EUR
+  // only, a valid IBAN, the total, the invoice number. Drawn as vector squares
+  // — PDF/A-3 safe (veraPDF checks every hybrid, `npm run check:pdfa3`).
+  const epc = data.currency === 'EUR' && data.iban
+    ? epcPayload({ name: data.sellerName, iban: data.iban, bic: data.bic, amount: totals.gross, reference: data.paymentReference || data.invoiceNumber })
+    : null;
+  const QR_SIZE = 78;
+  const needed = Math.max(30 + payment.length * 12, epc ? 30 + QR_SIZE : 0) + mentionLines.length * 10;
   if (y - needed < MARGIN + 20) newPage();
   y -= 14;
   text(L.payment.toUpperCase(), MARGIN, y, 8, bold, MUTED);
+  const blockTop = y;
   y -= 13;
   for (const p of payment) { text(p, MARGIN, y, 9.5); y -= 12.5; }
+  if (epc) {
+    const m = epcQrMatrix(epc);
+    const cell = QR_SIZE / (m.length + 8); // 4-module quiet zone each side
+    const x0 = A4[0] - MARGIN - QR_SIZE + 4 * cell;
+    const y0 = blockTop + 4 - 4 * cell; // top edge of the dark area
+    m.forEach((rowCells, r) => rowCells.forEach((dark, c) => {
+      if (dark) page.drawRectangle({ x: x0 + c * cell, y: y0 - (r + 1) * cell, width: cell, height: cell, color: rgb(0, 0, 0) });
+    }));
+    y = Math.min(y, blockTop - QR_SIZE);
+  }
   if (mentionLines.length) {
     y -= 8;
     for (const m of mentionLines) { text(m, MARGIN, y, 7.5, regular, MUTED); y -= 10; }
