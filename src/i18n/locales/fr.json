@@ -1157,10 +1157,10 @@
     "personNatural": "Personne physique (entreprise individuelle)",
     "personLegal": "Personne morale (société)",
     "paymentTerms": "Délai de paiement (jours)",
-    "sortCode": "Sort code",
+    "sortCode": "Code de tri (sort code)",
     "ibanInternational": "IBAN (paiements depuis l’étranger)",
     "accountShort": "Compte",
-    "routingShort": "Routing #"
+    "routingShort": "N° de routage"
   },
   "financials": {
     "revenue": "Chiffre d'affaires",

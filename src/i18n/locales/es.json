@@ -1157,10 +1157,10 @@
     "personNatural": "Persona física (autónomo)",
     "personLegal": "Persona jurídica (sociedad)",
     "paymentTerms": "Plazo de pago (días)",
-    "sortCode": "Sort code",
+    "sortCode": "Código de sucursal (sort code)",
     "ibanInternational": "IBAN (pagos desde el extranjero)",
     "accountShort": "Cuenta",
-    "routingShort": "Routing #"
+    "routingShort": "N.º de ruta"
   },
   "financials": {
     "revenue": "Facturación",

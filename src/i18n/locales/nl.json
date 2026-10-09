@@ -1157,10 +1157,10 @@
     "personNatural": "Natuurlijk persoon (eenmanszaak)",
     "personLegal": "Rechtspersoon (bv of vergelijkbaar)",
     "paymentTerms": "Betaaltermijn (dagen)",
-    "sortCode": "Sort code",
+    "sortCode": "Sortcode (VK)",
     "ibanInternational": "IBAN (betalingen uit het buitenland)",
     "accountShort": "Rekening",
-    "routingShort": "Routing #"
+    "routingShort": "Routingnr."
   },
   "financials": {
     "revenue": "Omzet",

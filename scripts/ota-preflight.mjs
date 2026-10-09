@@ -634,6 +634,8 @@ const SAME_WORD_OK = new Set([
   // The same word in French and Dutch ("Contact"), French ("date"), and the
   // Dutch imperative "Open" before a brand on the connect screens.
   'Contact', 'date', 'Open Mollie', 'Open Stripe', 'Open Moneybird',
+  // …and its count forms: "1 contact / 3 contacts" is correct Dutch and French.
+  '{{count}} contact', '{{count}} contacts',
   // Genuinely the same word in French as in English.
   'Province',
   'SIRET', 'Partita IVA', 'Codice Fiscale', 'IBAN', 'BIC / SWIFT', 'RAMS',

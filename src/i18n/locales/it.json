@@ -1157,10 +1157,10 @@
     "personNatural": "Persona fisica (ditta individuale)",
     "personLegal": "Persona giuridica (società)",
     "paymentTerms": "Termine di pagamento (giorni)",
-    "sortCode": "Sort code",
+    "sortCode": "Codice sportello (sort code)",
     "ibanInternational": "IBAN (pagamenti dall’estero)",
     "accountShort": "Conto",
-    "routingShort": "Routing #"
+    "routingShort": "N. di routing"
   },
   "financials": {
     "revenue": "Fatturato",

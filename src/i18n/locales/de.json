@@ -1157,10 +1157,10 @@
     "personNatural": "Natürliche Person (Einzelunternehmen)",
     "personLegal": "Juristische Person (GmbH o. ä.)",
     "paymentTerms": "Zahlungsziel (Tage)",
-    "sortCode": "Sort Code",
+    "sortCode": "Bankleitzahl (Sort Code)",
     "ibanInternational": "IBAN (Zahlungen aus dem Ausland)",
     "accountShort": "Konto",
-    "routingShort": "Routing #"
+    "routingShort": "Routing-Nr."
   },
   "financials": {
     "revenue": "Umsatz",
