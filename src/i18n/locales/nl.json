@@ -2534,7 +2534,8 @@
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Bedrijfsnummer (Companies House)",
     "nameWithSurname": "Volledige naam met achternaam (bijv. Lucía Navarro Gómez)",
-    "yourBusiness": "Je bedrijf"
+    "yourBusiness": "Je bedrijf",
+    "vatNumberOrUnregistered": "Btw-nummer — of kies ‘Niet btw-geregistreerd’ onder Btw & audit"
   },
   "search": {
     "placeholder": "Zoek in klussen, offertes, facturen en klanten",
@@ -3428,7 +3429,10 @@
       "standardCountry": "Standaard BTW — geen kleineondernemers­regeling beschikbaar voor jouw land/rechtsvorm.",
       "korNl": "Solo eenmanszaak — KOR past als je omzet onder €20.000 blijft (vorig én lopend jaar) én je je bij de Belastingdienst hebt aangemeld.",
       "kleinDe": "Solo Einzelunternehmen — Kleinunternehmerregeling past bij vorig­jaaromzet ≤ €25.000 en lopend jaar ≤ €100.000."
-    }
+    },
+    "ukUnregistered": "Niet btw-geregistreerd",
+    "ukUnregisteredSub": "VK · Geen btw · belaste omzet onder £90.000",
+    "ukUnregisteredNotice": "Facturen rekenen geen btw en vermelden dat je niet btw-geregistreerd bent. Registreer je bij HMRC zodra je belaste omzet boven £90.000 komt."
   },
   "audit": {
     "totalEntries": "Audit-entries",

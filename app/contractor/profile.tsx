@@ -629,6 +629,7 @@ export default function ProfileScreen() {
               value={
                 businessProfile.vatScheme === 'small_business_NL_KOR' ? 'KOR'
                 : businessProfile.vatScheme === 'small_business_DE_kleinunternehmer' ? 'Kleinunternehmer'
+                : businessProfile.vatScheme === 'small_business_UK_unregistered' ? t('vatScheme.ukUnregistered', 'Not registered for VAT')
                 : t('profile.vatStandard', 'Standard')
               }
               border

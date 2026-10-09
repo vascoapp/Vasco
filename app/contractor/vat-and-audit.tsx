@@ -113,6 +113,14 @@ export default function VatAndAuditScreen() {
       subtitle: 'DE · Keine USt · Vorjahr ≤ €25.000 · laufendes ≤ €100.000',
       visible: country === 'DE',
     },
+    {
+      // Below the UK VAT threshold (£90,000 taxable turnover): no VAT, no VAT
+      // number, invoices say so (user decision 2026-10-09).
+      value: 'small_business_UK_unregistered',
+      label: t('vatScheme.ukUnregistered', 'Not registered for VAT'),
+      subtitle: t('vatScheme.ukUnregisteredSub', 'UK · No VAT charged · taxable turnover under £90,000'),
+      visible: country === 'UK',
+    },
   ];
 
   return (
@@ -271,7 +279,9 @@ export default function VatAndAuditScreen() {
             <Text style={styles.noticeText}>
               {scheme === 'small_business_NL_KOR'
                 ? 'Iedere factuur toont 0% BTW + verplichte KOR-vermelding.'
-                : 'Jede Rechnung zeigt 0% USt + §19-Hinweis.'}
+                : scheme === 'small_business_UK_unregistered'
+                  ? t('vatScheme.ukUnregisteredNotice', 'Invoices charge no VAT and say you are not registered for VAT. Register with HMRC once your taxable turnover passes £90,000.')
+                  : 'Jede Rechnung zeigt 0% USt + §19-Hinweis.'}
             </Text>
           </View>
         )}

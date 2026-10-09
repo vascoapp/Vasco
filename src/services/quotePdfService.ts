@@ -10,7 +10,7 @@ import * as Sharing from 'expo-sharing';
 import { nameThePdf } from '../utils/namedPdf';
 import { DEMO_MODE } from '../config/demo';
 import type { Country } from '../context/AuthContext';
-import { vatRateGroups, documentFallbackRate } from '../domain/business';
+import { vatRateGroups, documentFallbackRate, isSmallBusinessExempt as schemeIsExempt, getVatExemptionNote, type VatScheme } from '../domain/business';
 
 const fmt = (n: number, locale?: string) =>
   n.toLocaleString(locale || 'en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -193,7 +193,7 @@ function buildQuoteHtml(
   // R66 NL launch: KOR / Kleinunternehmer exemption. Mirrors the
   // invoicePdfService.buildInvoiceHtml signature so the contractor's
   // quote and invoice show the same VAT treatment.
-  vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer',
+  vatScheme?: VatScheme,
 ): string {
   const L = getLabels(language);
   const curr = getCurrencySymbol(country);
@@ -203,13 +203,10 @@ function buildQuoteHtml(
   // note. Same logic as invoicePdfService:179-186 — copying instead of
   // factoring shared helper to keep PDF generators independent (they
   // diverge in layout already).
-  const isSmallBusinessExempt = vatScheme === 'small_business_NL_KOR'
-    || vatScheme === 'small_business_DE_kleinunternehmer';
-  const exemptionNote = vatScheme === 'small_business_NL_KOR'
-    ? 'BTW niet van toepassing — kleineondernemersregeling (KOR).'
-    : vatScheme === 'small_business_DE_kleinunternehmer'
-      ? 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmer).'
-      : null;
+  // ONE rule (domain/business): a private copy here missed every new scheme
+  // (the UK not-VAT-registered one, 2026-10-09).
+  const isSmallBusinessExempt = schemeIsExempt({ vatScheme });
+  const exemptionNote = getVatExemptionNote(undefined, vatScheme);
 
   const lineItemRows = quote.lineItems.map(item => `
     <tr>
@@ -486,7 +483,7 @@ export async function generateQuotePdf(
     // R66 NL launch: KOR / Kleinunternehmer exemption. invoicePdfService
     // already handles this; quotePdfService didn't. Customer received a
     // quote with 21% VAT and an invoice with 0% — confusing inconsistency.
-    vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer';
+    vatScheme?: VatScheme;
   },
 ): Promise<void> {
   const html = buildQuoteHtml(

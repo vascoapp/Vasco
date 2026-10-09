@@ -2534,7 +2534,8 @@
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Company number (Companies House)",
     "nameWithSurname": "Nombre completo con apellidos (p. ej. Lucía Navarro Gómez)",
-    "yourBusiness": "Tu empresa"
+    "yourBusiness": "Tu empresa",
+    "vatNumberOrUnregistered": "Número de IVA — o elige «No registrado» en IVA y auditoría"
   },
   "search": {
     "placeholder": "Buscar en trabajos, presupuestos, facturas y clientes",
@@ -3573,7 +3574,10 @@
       "standardCountry": "IVA estándar — no hay régimen de pequeñas empresas disponible para tu país/forma jurídica.",
       "korNl": "Eenmanszaak en solo — KOR encaja si la facturación se mantiene bajo €20.000 (año anterior y en curso) Y te has registrado en el Belastingdienst.",
       "kleinDe": "Einzelunternehmen en solo — Kleinunternehmer encaja con facturación año anterior ≤ €25.000 y año en curso ≤ €100.000."
-    }
+    },
+    "ukUnregistered": "No registrado a efectos de IVA",
+    "ukUnregisteredSub": "R. U. · Sin IVA · facturación sujeta por debajo de 90.000 £",
+    "ukUnregisteredNotice": "Las facturas no llevan IVA e indican que no estás registrado. Regístrate en HMRC cuando tu facturación sujeta supere 90.000 £."
   },
   "audit": {
     "totalEntries": "Entradas de auditoría",

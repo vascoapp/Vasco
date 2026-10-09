@@ -5,10 +5,16 @@
 // 2025 limits under the Jahressteuergesetz 2024).
 // When small_business is set, every invoice must show 0% VAT and a legal
 // note ("BTW niet van toepassing — KOR" / "Kein Ausweis der USt gem. §19 UStG").
+// 'small_business_UK_unregistered' = a UK business NOT registered for VAT
+// (taxable turnover below the £90,000 threshold). It charges no VAT, has no VAT
+// number and must not issue VAT invoices; the invoice says so (user decision
+// 2026-10-09 — most small UK sole traders, who could not invoice at all while a
+// VAT number was required).
 export type VatScheme =
   | 'standard'
   | 'small_business_NL_KOR'
-  | 'small_business_DE_kleinunternehmer';
+  | 'small_business_DE_kleinunternehmer'
+  | 'small_business_UK_unregistered';
 
 // R79 US Phase 2: per-state contractor license. Each entry stored as a row
 // in `BusinessProfile.licenses[]` and persisted to
@@ -117,11 +123,13 @@ export type BusinessProfile = {
 };
 
 export function isSmallBusinessExempt(profile: { vatScheme?: VatScheme }): boolean {
-  return profile.vatScheme === 'small_business_NL_KOR'
-      || profile.vatScheme === 'small_business_DE_kleinunternehmer';
+  // The list lives in supabase/functions/_shared/vatSchemes.ts so the
+  // customer portal cannot drift from it.
+  return isExemptVatScheme(profile.vatScheme);
 }
 
 import { round2 } from '../utils/round2';
+import { isExemptVatScheme } from '../../supabase/functions/_shared/vatSchemes';
 export { round2 };
 
 // R66r50: country-aware standard VAT rates for EU6. Pre-R66r50 the codebase
@@ -259,6 +267,9 @@ export function getVatExemptionNote(country: string | undefined, vatScheme: VatS
   }
   if (vatScheme === 'small_business_DE_kleinunternehmer') {
     return 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmer).';
+  }
+  if (vatScheme === 'small_business_UK_unregistered') {
+    return 'Not registered for VAT — no VAT is charged on this invoice.';
   }
   return null;
 }

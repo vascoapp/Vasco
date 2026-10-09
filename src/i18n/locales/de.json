@@ -2534,7 +2534,8 @@
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Company Number (Companies House)",
     "nameWithSurname": "Vollständiger Name mit Nachname (z. B. Lucía Navarro Gómez)",
-    "yourBusiness": "Ihr Betrieb"
+    "yourBusiness": "Ihr Betrieb",
+    "vatNumberOrUnregistered": "USt-Nummer — oder wählen Sie ‚Nicht registriert‘ unter USt & Prüfung"
   },
   "search": {
     "placeholder": "Aufträge, Angebote, Rechnungen und Kunden suchen",
@@ -3428,7 +3429,10 @@
       "standardCountry": "Standard-USt — keine Kleinunternehmerregelung für Ihr Land/Ihre Rechtsform.",
       "korNl": "Solo eenmanszaak — KOR passt bei Jahresumsatz unter €20.000 (Vorjahr und laufendes Jahr) UND nach Anmeldung bei der Belastingdienst.",
       "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer passt bei Vorjahresumsatz ≤ €25.000 und laufendem Jahr ≤ €100.000."
-    }
+    },
+    "ukUnregistered": "Nicht für die USt registriert",
+    "ukUnregisteredSub": "UK · Keine USt · steuerbarer Umsatz unter 90.000 £",
+    "ukUnregisteredNotice": "Rechnungen enthalten keine USt und weisen darauf hin, dass Sie nicht registriert sind. Registrieren Sie sich bei HMRC, sobald Ihr steuerbarer Umsatz 90.000 £ übersteigt."
   },
   "audit": {
     "totalEntries": "Audit-Einträge",

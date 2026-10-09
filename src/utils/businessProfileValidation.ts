@@ -42,6 +42,7 @@ export function isUkCompany(businessType: string | undefined | null): boolean {
 export function getRequiredFields(
   country: Country | undefined,
   businessType?: string | null,
+  vatScheme?: string | null,
 ): Array<{ key: string; label: string; get: (p: BusinessProfile) => string | undefined }> {
   const base: Array<{ key: string; label: string; get: (p: BusinessProfile) => string | undefined }> = [
     { key: 'profile.businessName',        label: 'Business name',        get: (p) => p.businessName },
@@ -106,7 +107,11 @@ export function getRequiredFields(
         ...(isUkCompany(businessType)
           ? [{ key: 'profile.registrationCoNo', label: 'Company number', get: (p: BusinessProfile) => p.registrationNumber ?? p.kvkNumber }]
           : []),
-        { key: 'profile.vatNumber',       label: 'VAT number',           get: (p) => p.vatNumber },
+        // A business NOT registered for VAT has no VAT number and must not
+        // invent one (user decision 2026-10-09: most small UK sole traders).
+        ...(vatScheme === 'small_business_UK_unregistered'
+          ? []
+          : [{ key: 'profile.vatNumberOrUnregistered', label: 'VAT number — or, if you are not VAT-registered, choose that under VAT & audit', get: (p: BusinessProfile) => p.vatNumber }]),
       ];
     default:
       return base;
@@ -115,7 +120,7 @@ export function getRequiredFields(
 
 /** Evaluate whether the profile can legally invoice in its country. */
 export function checkInvoiceReadiness(profile: BusinessProfile): ProfileReadiness {
-  const fields = getRequiredFields(profile.country, profile.businessType);
+  const fields = getRequiredFields(profile.country, profile.businessType, profile.vatScheme);
   const missing: string[] = [];
   const missingLabels: string[] = [];
   const invalid: string[] = [];

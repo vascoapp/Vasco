@@ -2534,7 +2534,8 @@
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Company number",
     "nameWithSurname": "Full name with surname (e.g. Lucía Navarro Gómez)",
-    "yourBusiness": "Your business"
+    "yourBusiness": "Your business",
+    "vatNumberOrUnregistered": "VAT number — or, if you are not VAT-registered, choose that under VAT & audit"
   },
   "search": {
     "placeholder": "Search jobs, quotes, invoices and customers",
@@ -3428,7 +3429,10 @@
       "standardCountry": "Standard VAT — no small-business exemption available for your country/business type.",
       "korNl": "Solo eenmanszaak — KOR fits if turnover stays under €20.000 (previous and current year) AND you have registered for it with the Belastingdienst.",
       "kleinDe": "Solo Einzelunternehmen — Kleinunternehmer fits if previous-year turnover ≤ €25.000 and current-year ≤ €100.000."
-    }
+    },
+    "ukUnregistered": "Not registered for VAT",
+    "ukUnregisteredSub": "UK · No VAT charged · taxable turnover under £90,000",
+    "ukUnregisteredNotice": "Invoices charge no VAT and say you are not registered for VAT. Register with HMRC once your taxable turnover passes £90,000."
   },
   "audit": {
     "totalEntries": "Audit entries",

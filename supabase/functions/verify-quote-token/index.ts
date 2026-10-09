@@ -13,6 +13,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { quoteTotals } from '../_shared/documentTotals.ts';
+import { isExemptVatScheme } from '../_shared/vatSchemes.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -186,8 +187,7 @@ Deno.serve(async (req) => {
     // (#339). Mirrors `getVATRate` in src/constants/taxRates.ts.
     // A Kleinunternehmer (§19 UStG) or KOR seller charges no VAT: rate 0, as
     // the app's getEffectiveVatRate / isSmallBusinessExempt.
-    const exempt = profile?.vat_scheme === 'small_business_NL_KOR'
-      || profile?.vat_scheme === 'small_business_DE_kleinunternehmer';
+    const exempt = isExemptVatScheme(profile?.vat_scheme);
     const standardRate = exempt ? 0 : (VAT_RATES[profile?.country ?? ''] ?? 0);
     const netTotal = Number(quote.total_amount) || 0;
 

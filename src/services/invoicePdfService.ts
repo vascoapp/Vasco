@@ -16,7 +16,7 @@ import { File } from 'expo-file-system';
 import { isOfflineMintedDocNumber } from '../lib/dataProvider';
 import type { AutoInvoice } from './invoiceAutomationService';
 import { DEMO_MODE } from '../config/demo';
-import { vatRateGroups, documentFallbackRate } from '../domain/business';
+import { vatRateGroups, documentFallbackRate, isSmallBusinessExempt as schemeIsExempt, getVatExemptionNote, type VatScheme } from '../domain/business';
 import type { Country } from '../context/AuthContext';
 import { logWarn } from '../utils/errorHandler';
 import { nameThePdf } from '../utils/namedPdf';
@@ -386,7 +386,7 @@ function buildInvoiceHtml(
   showPoweredBy?: boolean,
   insuranceRef?: string,
   // R251: small-business VAT exemption (NL KOR / DE Kleinunternehmer §19)
-  vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer',
+  vatScheme?: VatScheme,
   // R75 US foundation: ACH bank details — used in lieu of IBAN when
   // country === 'US'. Routing # is 9 digits, account # is 4-17 digits.
   routingNumber?: string,
@@ -428,13 +428,10 @@ function buildInvoiceHtml(
     : null;
 
   // R251: small-business scheme zeroes VAT and adds a legal note row.
-  const isSmallBusinessExempt = vatScheme === 'small_business_NL_KOR'
-    || vatScheme === 'small_business_DE_kleinunternehmer';
-  const exemptionNote = vatScheme === 'small_business_NL_KOR'
-    ? 'BTW niet van toepassing — kleineondernemersregeling (KOR).'
-    : vatScheme === 'small_business_DE_kleinunternehmer'
-      ? 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmer).'
-      : null;
+  // ONE rule (domain/business): a private copy here missed every new scheme
+  // (the UK not-VAT-registered one, 2026-10-09).
+  const isSmallBusinessExempt = schemeIsExempt({ vatScheme });
+  const exemptionNote = getVatExemptionNote(undefined, vatScheme);
 
   const lineItemRows = invoice.lineItems.map(item => `
     <tr>
@@ -801,7 +798,7 @@ export async function generateInvoicePdf(
     country?: Country;
     language?: string;
     // R251: small-business scheme controls VAT rendering
-    vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer';
+    vatScheme?: VatScheme;
     // IT: RegimeFiscale — the legal basis printed for a 0 % line.
     fiscalRegime?: string;
   },
@@ -887,7 +884,7 @@ export async function buildInvoicePdfBase64(
     insuranceRef?: string;
     country?: Country;
     language?: string;
-    vatScheme?: 'standard' | 'small_business_NL_KOR' | 'small_business_DE_kleinunternehmer';
+    vatScheme?: VatScheme;
   },
   paymentUrl?: string,
   options?: {

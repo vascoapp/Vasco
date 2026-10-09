@@ -2534,7 +2534,8 @@
     "vatNumberPiva": "Partita IVA",
     "registrationCoNo": "Company number (Companies House)",
     "nameWithSurname": "Nom complet avec nom de famille (ex. Lucía Navarro Gómez)",
-    "yourBusiness": "Votre entreprise"
+    "yourBusiness": "Votre entreprise",
+    "vatNumberOrUnregistered": "Numéro de TVA — ou choisissez « Non immatriculé » dans TVA & audit"
   },
   "search": {
     "placeholder": "Rechercher dans chantiers, devis, factures et clients",
@@ -3573,7 +3574,10 @@
       "standardCountry": "TVA standard — aucun régime simplifié disponible pour votre pays/forme juridique.",
       "korNl": "Eenmanszaak en solo — la KOR convient si le CA reste sous €20 000 (année précédente et en cours) ET après inscription auprès du Belastingdienst.",
       "kleinDe": "Einzelunternehmen en solo — Kleinunternehmer convient si CA année précédente ≤ €25 000 et année en cours ≤ €100 000."
-    }
+    },
+    "ukUnregistered": "Non immatriculé à la TVA",
+    "ukUnregisteredSub": "R.-U. · Pas de TVA · CA taxable inférieur à 90 000 £",
+    "ukUnregisteredNotice": "Les factures ne comportent pas de TVA et indiquent que vous n’êtes pas immatriculé. Immatriculez-vous auprès du HMRC dès que votre CA taxable dépasse 90 000 £."
   },
   "audit": {
     "totalEntries": "Entrées d'audit",
