@@ -472,7 +472,10 @@ export function buildLiveActions(input: Input): EveAction[] {
   for (const inv of (input.invoices ?? []).filter((x) =>
     x.status === 'sent'
       && (x as any).sentAt
-      && new Date((x as any).sentAt).getTime() >= fourHoursAgo,
+      && new Date((x as any).sentAt).getTime() >= fourHoursAgo
+      // No customer, no message: it drafted "Hi , invoice … is ready" (UK
+      // re-walk W187, 2026-10-09).
+      && !!documentCustomerName(input.customers ?? [], x).trim(),
   ).slice(0, 3)) {
     out.push({
       id: mkId('eve-inv-sent'),
@@ -481,7 +484,7 @@ export function buildLiveActions(input: Input): EveAction[] {
       title: t('eve.live.invoiceSent.title', 'Confirm invoice {{invoice}} arrived', {
         invoice: invoiceLabel(inv),
       }),
-      description: t('eve.live.invoiceSent.description', 'Customer-facing "your invoice is ready" with payment link.'),
+      description: t('eve.live.invoiceSent.descriptionNoLink', 'A short "your invoice is on its way" message to the customer.'),
       impact: t('eve.live.invoiceSent.impact', 'Faster payment'),
       priority: 'medium',
       status: 'pending',
@@ -489,8 +492,9 @@ export function buildLiveActions(input: Input): EveAction[] {
         invoiceId: inv.id,
         customerPhone: customerPhone(inv.customerId, documentCustomerName(input.customers ?? [], inv)),
         template: t(
-          'eve.live.invoiceSent.template',
-          'Hi {{customer}}, invoice {{invoice}} is ready. Pay online or contact me if questions.',
+          // No "Pay online": nothing here knows a payment link exists (W187).
+          'eve.live.invoiceSent.templatePlain',
+          'Hi {{customer}}, I have sent you invoice {{invoice}}. Let me know if you have any questions.',
           {
             customer: salutation(inv.customerId, documentCustomerName(input.customers ?? [], inv)),
             invoice: invoiceLabel(inv),

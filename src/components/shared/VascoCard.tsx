@@ -21,6 +21,7 @@ import { snoozeQueueItem, recordOutcome } from '../../services/aiActionQueueServ
 import type { ScoredInsight } from '../../intelligence/generators/types';
 import { formatAmount } from '../../utils/formatAmount';
 import { DKMenu, type DKMenuItem } from './DKMenu';
+import { signCustomerMessage } from '../../utils/signCustomerMessage';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -519,7 +520,7 @@ function EmbeddedApproval({ item, onApprove, onReject, onSnooze }: {
             accessibilityLabel={t('a11y.sendViaWhatsApp', 'Send via WhatsApp')}
             onPress={async () => {
               const { sendWhatsApp } = await import('../../services/whatsappService');
-              await sendWhatsApp(item.preparedData!.customerPhone as string, editText || (item.preparedData?.template as string) || item.description, getCurrentCountry() ?? undefined);
+              await sendWhatsApp(item.preparedData!.customerPhone as string, editText || (item.preparedData?.template ? signCustomerMessage(item.preparedData.template as string) : item.description), getCurrentCountry() ?? undefined);
               hapticSuccess();
               onApprove();
             }}

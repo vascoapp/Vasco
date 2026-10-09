@@ -29,6 +29,7 @@ import { Share, Linking } from 'react-native';
 import type { Router } from 'expo-router';
 import type { QueueItem, QueueItemType } from './aiActionQueueService';
 import { confirmShareSent, askWasSent } from '../utils/shareOutcome';
+import { signCustomerMessage } from '../utils/signCustomerMessage';
 
 export interface ExecutorDeps {
   router: Router;
@@ -183,13 +184,13 @@ async function runExecution(
       if (opened) {
         // Opening WhatsApp is not sending: neither platform reports whether the
         // message went, so the contractor is asked (review 2026-09-29).
-        if (!(await askWasSent())) return { executed: false, via: 'link', detail: 'not confirmed' };
+        if (!(await askWasSent(item.title))) return { executed: false, via: 'link', detail: 'not confirmed' };
         return sent({ executed: true, via: 'link', detail: 'wa.me' });
       }
     }
-    const message = (data.template as string)
-      || (data.draftReply as string)
-      || item.description;
+    // A drafted customer message is signed by the business (W148/W187).
+    const draft = (data.template as string) || (data.draftReply as string) || '';
+    const message = draft ? signCustomerMessage(draft) : item.description;
     if (!message) {
       return { executed: false, via: 'noop', detail: 'no shareable text' };
     }
@@ -199,7 +200,7 @@ async function runExecution(
       // there. A result of executed:false re-opens the card (see
       // executeApprovedQueueItem) — the approval alone must not retire it.
       const res = await Share.share({ message, title: item.title });
-      if (!(await confirmShareSent(res))) {
+      if (!(await confirmShareSent(res, item.title))) {
         return { executed: false, via: 'share', detail: 'dismissed' };
       }
       return sent({ executed: true, via: 'share' });

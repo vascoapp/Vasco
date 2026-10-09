@@ -5119,7 +5119,8 @@
     "sentBody": "Vasco cannot see whether it was sent. It is only recorded once you confirm it.",
     "sentYes": "Yes, sent",
     "sentNo": "Not yet",
-    "depositNotSaved": "The payment link was created but could not be added to the portal. Try again."
+    "depositNotSaved": "The payment link was created but could not be added to the portal. Try again.",
+    "sentBodyNamed": "Did “{{subject}}” go out? Vasco cannot see it — it is only recorded once you confirm."
   },
   "photos": {
     "cameraAccess": "Camera access required",
@@ -5681,7 +5682,9 @@
         "description": "Customer-facing \"your invoice is ready\" with payment link.",
         "impact": "Faster payment",
         "template": "Hi {{customer}}, invoice {{invoice}} is ready. Pay online or contact me if questions.",
-        "action": "Send confirmation"
+        "action": "Send confirmation",
+        "templatePlain": "Hi {{customer}}, I have sent you invoice {{invoice}}. Let me know if you have any questions.",
+        "descriptionNoLink": "A short \"your invoice is on its way\" message to the customer."
       }
     },
     "agents": {

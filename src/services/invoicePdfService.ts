@@ -43,6 +43,10 @@ function escapeHtml(s: string | null | undefined): string {
 const qty = (n: number, locale?: string) =>
   n.toLocaleString(locale || 'en', { maximumFractionDigits: 3 });
 
+/** "−£370.01", never "£-370.01" (a UK "Less retention" line — re-walk W188). */
+const signedMoney = (curr: string, n: number, locale?: string) =>
+  n < 0 ? `−${curr}${fmt(-n, locale)}` : `${curr}${fmt(n, locale)}`;
+
 const fmt = (n: number, locale?: string) =>
   n.toLocaleString(locale || 'en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -436,9 +440,9 @@ function buildInvoiceHtml(
     <tr>
       <td class="item-desc">${escapeHtml(item.description)}</td>
       <td class="item-num">${qty(item.quantity, locale)}</td>
-      <td class="item-num">${curr}${fmt(item.unitPrice, locale)}</td>
+      <td class="item-num">${signedMoney(curr, item.unitPrice, locale)}</td>
       <td class="item-num">${isSmallBusinessExempt ? '0%' : qty(item.vatRate, locale) + '%'}${country === 'IT' && item.vatRate === 0 && item.vatNature ? ` ${item.vatNature}` : ''}</td>
-      <td class="item-num item-total">${curr}${fmt(item.quantity * item.unitPrice, locale)}</td>
+      <td class="item-num item-total">${signedMoney(curr, item.quantity * item.unitPrice, locale)}</td>
     </tr>`).join('\n');
 
   // The PDF of a draft is what the contractor SENDS: it is the invoice, not a

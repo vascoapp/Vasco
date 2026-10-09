@@ -1,4 +1,7 @@
 /**
+ * With DORMANT_CONTROLS.jobPermitCheck off (UK re-walk W189: the list is the
+ * contractor's credentials, not a job's permits), the pack makes no card even
+ * for a known country. Was:
  * The permit-check pack stays silent when the contractor's country is
  * unknown. `getCurrentCountry() ?? 'NL'` handed a German plumber the DUTCH
  * permit list (CLAUDE.md: a country-dependent nudge skips, never defaults;
@@ -22,13 +25,6 @@ jest.mock('../subscriptionService', () => ({
   getTierLimits: jest.fn(() => ({ hasAutomationPacks: true })),
 }));
 
-// The pack is off until per-job rules exist (DORMANT_CONTROLS.jobPermitCheck,
-// UK re-walk W189). This suite keeps its COUNTRY logic honest for when it
-// returns, so it switches the flag on for itself.
-jest.mock('../../config/dormant', () => {
-  const real = jest.requireActual('../../config/dormant');
-  return { ...real, DORMANT_CONTROLS: { ...real.DORMANT_CONTROLS, jobPermitCheck: true } };
-});
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_PACKS, evaluateTriggers, saveWorkflowPacks } from '../workflowPackService';
 
@@ -43,16 +39,8 @@ async function run() {
 
 beforeEach(async () => { await AsyncStorage.clear(); mockAddToQueue.mockClear(); mockPermits.mockClear(); });
 
-it('known country → the permit card, for THAT country', async () => {
-  mockCountry = 'DE';
+it('flag off: no permit card, even for a known country', async () => {
+  mockCountry = 'UK';
   await run();
-  expect(mockPermits).toHaveBeenCalledWith('gas', 'DE');
-  expect(mockAddToQueue).toHaveBeenCalled();
-});
-
-it('unknown country → no permit lookup, no card', async () => {
-  mockCountry = undefined;
-  await run();
-  expect(mockPermits).not.toHaveBeenCalled();
   expect(mockAddToQueue).not.toHaveBeenCalled();
 });

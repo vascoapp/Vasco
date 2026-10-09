@@ -23,6 +23,7 @@ import { truncateAtWord } from '../utils/truncate';
 import { documentNumber } from '../domain/documents';
 import { isWorkOnDay } from '../domain/jobs';
 import { documentCustomerName } from '../domain/customers';
+import { DORMANT_CONTROLS } from '../config/dormant';
 
 const PACKS_KEY = '@vasco_workflow_packs';
 const MUTES_KEY = '@vasco_pack_mutes';
@@ -1387,6 +1388,8 @@ function matchTrigger(
       // Dutch permit list (CLAUDE.md: skip, never default; D3).
       const permitCountry = getCurrentCountry();
       if (!permitCountry) break;
+      // The list is the contractor's credentials, not the job's permits (W189).
+      if (!DORMANT_CONTROLS.jobPermitCheck) break;
       for (const job of ctx.jobs) {
         if (!job) continue;
         const createdAt = new Date((job as any).createdAt || job.lastUpdated || '').getTime();

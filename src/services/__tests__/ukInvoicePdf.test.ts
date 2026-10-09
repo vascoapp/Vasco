@@ -41,3 +41,12 @@ it('an EU instalment states the retention and what is payable now', async () => 
   expect(html).toContain('Retention withheld until handover');
   expect(html).toMatch(/Payable now[^<]*<\/span><span>€?\s?6,327\.17/);
 });
+
+it('a negative line prints the sign before the symbol (re-walk W188)', async () => {
+  const html = await render(
+    { id: 'INV0003', amount: 8436.23, status: 'sent', customerName: 'Mr & Mrs Patel', createdAt: '2026-10-09' },
+    [{ description: 'First fix (40%)', quantity: 1, unitPrice: 7400.2, vatRate: 20 },
+     { description: 'Less retention (5%)', quantity: 1, unitPrice: -370.01, vatRate: 20 }], uk, 'UK');
+  expect(html).toContain('−£370.01');
+  expect(html).not.toContain('£-370.01');
+});

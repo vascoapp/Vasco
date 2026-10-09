@@ -5119,7 +5119,8 @@
     "sentBody": "Vasco kann nicht sehen, ob es gesendet wurde. Es wird erst vermerkt, wenn Sie es bestätigen.",
     "sentYes": "Ja, gesendet",
     "sentNo": "Noch nicht",
-    "depositNotSaved": "Der Zahlungslink wurde erstellt, konnte aber nicht zum Portal hinzugefügt werden. Bitte versuchen Sie es erneut."
+    "depositNotSaved": "Der Zahlungslink wurde erstellt, konnte aber nicht zum Portal hinzugefügt werden. Bitte versuchen Sie es erneut.",
+    "sentBodyNamed": "Ist „{{subject}}“ rausgegangen? Vasco kann das nicht sehen — es wird erst festgehalten, wenn Sie es bestätigen."
   },
   "photos": {
     "cameraAccess": "Kamerazugriff erforderlich",
@@ -5681,7 +5682,9 @@
         "description": "Kundennachricht: \"Ihre Rechnung ist bereit\" mit Zahlungslink.",
         "impact": "Schnellere Zahlung",
         "template": "Hallo {{customer}}, Rechnung {{invoice}} ist bereit. Online bezahlen oder bei Fragen melden.",
-        "action": "Bestätigung senden"
+        "action": "Bestätigung senden",
+        "templatePlain": "Hallo {{customer}}, ich habe Ihnen die Rechnung {{invoice}} gesendet. Melden Sie sich gern bei Fragen.",
+        "descriptionNoLink": "Eine kurze Nachricht an den Kunden, dass die Rechnung unterwegs ist."
       }
     },
     "agents": {

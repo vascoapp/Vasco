@@ -31,3 +31,7 @@ it('hides a reminder for a paid invoice', () => {
 it('an accounting-export card is never shown — its action exports nothing (UK walk W149)', () => {
   expect(queueTargetStillOpen({ type: 'accounting_export', preparedData: {} } as any, {})).toBe(false);
 });
+
+it('no per-job permit card while its list is the contractor\'s credentials (re-walk W189)', () => {
+  expect(queueTargetStillOpen({ type: 'permit_check', preparedData: { jobId: 'j1' } } as any, {})).toBe(false);
+});

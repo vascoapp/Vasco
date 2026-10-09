@@ -30,6 +30,7 @@ import { amountPayableNow } from '../domain/documents';
 import { isWorkOnDay } from '../domain/jobs';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
 import { localDateKey, todayKey } from '../utils/dateKey';
+import { DORMANT_CONTROLS } from '../config/dormant';
 
 const QUEUE_KEY = '@vasco_ai_queue';
 
@@ -1492,7 +1493,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // a cold start, before the saved profile merges into the user; skipping for
   // one tick is right, inventing a jurisdiction is not.
   const country = context.country;
-  for (const job of country ? newJobs.slice(0, 2) : []) {
+  for (const job of country && DORMANT_CONTROLS.jobPermitCheck ? newJobs.slice(0, 2) : []) {
     const permits = getRequiredPermits(job.trade || 'general', country as string);
     if (permits.length === 0) continue;
     const id = await addToQueue({
@@ -2218,6 +2219,8 @@ export function queueTargetStillOpen(item: Pick<QueueItem, 'type' | 'preparedDat
   }
   // Stored before the producer was switched off; its action exports nothing.
   if (item.type === 'accounting_export') return false;
+  // Credentials presented as a job's permits (W189) — see DORMANT_CONTROLS.jobPermitCheck.
+  if (item.type === 'permit_check' && !DORMANT_CONTROLS.jobPermitCheck) return false;
   if (item.type === 'draft_reminder' && typeof d.invoiceId === 'string') {
     const inv = entities.invoices?.find((x) => x.id === d.invoiceId);
     if (inv && inv.status === 'paid') return false;

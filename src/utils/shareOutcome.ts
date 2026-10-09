@@ -52,24 +52,28 @@ export function shareOutcome(result: unknown): ShareOutcome {
  * question is "not yet". Awaiting it also serialises a loop of shares, which
  * on Android otherwise opens every chooser at once.
  */
-export function confirmShareSent(result: unknown): Promise<boolean> {
+export function confirmShareSent(result: unknown, subject?: string): Promise<boolean> {
   const outcome = shareOutcome(result);
   if (outcome !== 'unknown') return Promise.resolve(outcome === 'shared');
-  return askWasSent();
+  return askWasSent(subject);
 }
 
 /**
  * Ask the contractor whether it went out. For hand-offs no platform reports
  * on — a share on Android, or opening WhatsApp / mail on either platform.
  */
-export async function askWasSent(): Promise<boolean> {
+export async function askWasSent(subject?: string): Promise<boolean> {
   await whenInForeground();
   return new Promise((resolve) => {
     let settled = false;
     const settle = (sent: boolean) => { if (!settled) { settled = true; resolve(sent); } };
     Alert.alert(
       appI18n.t('share.sentTitle', 'Did it go out?'),
-      appI18n.t('share.sentBody', 'Vasco cannot see whether it was sent. It is only recorded once you confirm it.'),
+      // Name WHAT, when the caller knows: the question arrives after a hand-off
+      // to another app and "it" was ambiguous (UK re-walk W186, 2026-10-09).
+      subject
+        ? appI18n.t('share.sentBodyNamed', { defaultValue: 'Did “{{subject}}” go out? Vasco cannot see it — it is only recorded once you confirm.', subject })
+        : appI18n.t('share.sentBody', 'Vasco cannot see whether it was sent. It is only recorded once you confirm it.'),
       [
         { text: appI18n.t('share.sentNo', 'Not yet'), style: 'cancel', onPress: () => settle(false) },
         { text: appI18n.t('share.sentYes', 'Yes, sent'), onPress: () => settle(true) },

@@ -5119,7 +5119,8 @@
     "sentBody": "Vasco no puede ver si se ha enviado. Solo se registra cuando usted lo confirma.",
     "sentYes": "Sí, enviado",
     "sentNo": "Todavía no",
-    "depositNotSaved": "El enlace de pago se creó, pero no se pudo añadir al portal. Inténtelo de nuevo."
+    "depositNotSaved": "El enlace de pago se creó, pero no se pudo añadir al portal. Inténtelo de nuevo.",
+    "sentBodyNamed": "¿Se envió «{{subject}}»? Vasco no puede verlo: solo se registra cuando lo confirmas."
   },
   "photos": {
     "cameraAccess": "Se necesita acceso a la cámara",
@@ -5681,7 +5682,9 @@
         "description": "Mensaje al cliente: «tu factura está lista» con enlace de pago.",
         "impact": "Cobro más rápido",
         "template": "Hola {{customer}}, la factura {{invoice}} está lista. Paga online o contáctame si tienes dudas.",
-        "action": "Enviar confirmación"
+        "action": "Enviar confirmación",
+        "templatePlain": "Hola {{customer}}, te he enviado la factura {{invoice}}. Dime si tienes dudas.",
+        "descriptionNoLink": "Un mensaje breve al cliente de que la factura va en camino."
       }
     },
     "agents": {

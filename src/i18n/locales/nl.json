@@ -5119,7 +5119,8 @@
     "sentBody": "Vasco kan niet zien of het is verstuurd. Het wordt pas bijgehouden als jij het bevestigt.",
     "sentYes": "Ja, verstuurd",
     "sentNo": "Nog niet",
-    "depositNotSaved": "De betaallink is aangemaakt maar kon niet aan het portaal worden toegevoegd. Probeer het opnieuw."
+    "depositNotSaved": "De betaallink is aangemaakt maar kon niet aan het portaal worden toegevoegd. Probeer het opnieuw.",
+    "sentBodyNamed": "Is “{{subject}}” verstuurd? Vasco kan dat niet zien — het wordt pas vastgelegd als je het bevestigt."
   },
   "photos": {
     "cameraAccess": "Cameratoegang vereist",
@@ -5681,7 +5682,9 @@
         "description": "Bericht voor de klant: \"je factuur staat klaar\" met betaallink.",
         "impact": "Sneller betaald",
         "template": "Hallo {{customer}}, factuur {{invoice}} staat klaar. Betaal online of neem contact op bij vragen.",
-        "action": "Bevestiging sturen"
+        "action": "Bevestiging sturen",
+        "templatePlain": "Hallo {{customer}}, ik heb je factuur {{invoice}} gestuurd. Laat het weten als je vragen hebt.",
+        "descriptionNoLink": "Een kort berichtje aan de klant dat de factuur onderweg is."
       }
     },
     "agents": {

@@ -65,4 +65,11 @@ export const DORMANT_CONTROLS = {
    *  cannot help (emulator walk W15, 2026-10-04). Needs the module in a
    *  NATIVE build; guard deviceCalendarNeedsItsModule ties this flag to it. */
   deviceCalendar: false,
+  /** Per-JOB "permit check" cards (aiActionQueue automation_permit_check and
+   *  the Permit-check pack). Their list is the contractor's CREDENTIALS —
+   *  registration, liability insurance, trade qualifications — not what a job
+   *  needs: a UK kitchen-tap swap read "4 permits required" (UK re-walk W189,
+   *  2026-10-09). Shown again with real per-job rules (e.g. UK notifiable
+   *  building work). */
+  jobPermitCheck: false,
 } as const;

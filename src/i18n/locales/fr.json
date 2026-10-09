@@ -5119,7 +5119,8 @@
     "sentBody": "Vasco ne peut pas voir si c'est parti. Ce n'est enregistré qu'après votre confirmation.",
     "sentYes": "Oui, envoyé",
     "sentNo": "Pas encore",
-    "depositNotSaved": "Le lien de paiement a été créé mais n'a pas pu être ajouté au portail. Réessayez."
+    "depositNotSaved": "Le lien de paiement a été créé mais n'a pas pu être ajouté au portail. Réessayez.",
+    "sentBodyNamed": "« {{subject}} » est-il parti ? Vasco ne peut pas le voir — ce n’est enregistré qu’après votre confirmation."
   },
   "photos": {
     "cameraAccess": "Accès caméra requis",
@@ -5681,7 +5682,9 @@
         "description": "Message client : « votre facture est prête » avec lien de paiement.",
         "impact": "Paiement plus rapide",
         "template": "Bonjour {{customer}}, la facture {{invoice}} est prête. Payez en ligne ou contactez-moi en cas de question.",
-        "action": "Envoyer la confirmation"
+        "action": "Envoyer la confirmation",
+        "templatePlain": "Bonjour {{customer}}, je vous ai envoyé la facture {{invoice}}. Dites-moi si vous avez des questions.",
+        "descriptionNoLink": "Un court message au client pour dire que la facture est envoyée."
       }
     },
     "agents": {
