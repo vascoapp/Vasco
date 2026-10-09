@@ -15,6 +15,7 @@ import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
 import { claimWebhookEvent, redeemCredits, restoreCredits, releaseWebhookEvent } from '../_shared/credit-redemption.ts';
 import { invoiceLookup } from '../_shared/invoiceRef.ts';
 import { isPermanentDbError } from '../_shared/dbErrors.ts';
+import { invoiceSubscriptionId, invoiceSubscriptionMetadata, subscriptionPeriodEnd } from '../_shared/stripeShapes.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -225,7 +226,7 @@ Deno.serve(async (req) => {
       }
       const upcoming = event.data.object;
       const userId =
-        upcoming?.subscription_details?.metadata?.user_id ??
+        invoiceSubscriptionMetadata(upcoming)?.user_id ??
         upcoming?.metadata?.user_id ??
         null;
       const customerId = upcoming?.customer ?? null;
@@ -291,7 +292,7 @@ Deno.serve(async (req) => {
 
         // Apply as default subscription coupon → next finalized invoice picks it up.
         // (We can't update an `upcoming` invoice's id directly — it's a simulation.)
-        const subId = upcoming?.subscription ?? null;
+        const subId = invoiceSubscriptionId(upcoming);
         if (!subId) throw new Error('no subscription on upcoming invoice');
         const subBody = new URLSearchParams({ coupon: coupon.id });
         const subResp = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
@@ -345,7 +346,8 @@ Deno.serve(async (req) => {
         unpaid: 'past_due',
       };
       const externalId = typeof sub?.id === 'string' ? sub.id : null;
-      const currentPeriodEnd = sub?.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
+      const periodEnd = subscriptionPeriodEnd(sub);
+      const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
       const status = event.type === 'customer.subscription.deleted'
         ? 'canceled'
         : statusMap[sub?.status ?? 'active'] ?? 'active';
@@ -440,7 +442,7 @@ Deno.serve(async (req) => {
     if (event.type === 'invoice.payment_failed') {
       if (!supabaseUrl0 || !supabaseServiceKey0) return retryLater('DB not configured');
       const invoice = event.data.object;
-      const subId: string | null = invoice?.subscription ?? null;
+      const subId: string | null = invoiceSubscriptionId(invoice);
       if (!subId) {
         return new Response(JSON.stringify({ received: true, status: 'no_subscription' }), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
