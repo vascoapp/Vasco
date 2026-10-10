@@ -132,7 +132,7 @@ for (const f of ['icon.png', 'adaptive-icon.png', 'splash-icon.png', 'favicon.pn
 
 // ─── 5. Fastlane metadata completeness ─────────────────────────────────────
 section('Fastlane metadata');
-const fastLocales = ['en-US', 'nl-NL', 'de-DE', 'fr-FR', 'es-ES', 'it-IT'];
+const fastLocales = ['en-US', 'nl-NL', 'de-DE', 'fr-FR', 'es-ES', 'it']; // App Store's Italian locale is 'it'
 const required = [
   'name.txt', 'subtitle.txt', 'description.txt', 'keywords.txt',
   'promotional_text.txt', 'release_notes.txt',

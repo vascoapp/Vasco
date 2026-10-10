@@ -200,7 +200,8 @@ for (const f of ['first_name.txt', 'last_name.txt', 'phone_number.txt', 'email_a
   const du = de.match(/\b(du|dich|dir|dein|deine|deinen|deiner|tippe|bestätigst)\b/i);
   if (du) error(`de-DE uses "${du[0]}" — German store copy is Sie`);
   // The reviewer's password is NOT committed: the upload reads it from secrets/.
-  if (!ex(join(repoRoot, 'secrets/reviewer-account.txt'))) error('secrets/reviewer-account.txt missing — App Review needs the sign-in password');
+  // secrets/ is gitignored, so CI never has it — the upload runs on the Mac.
+  if (!ex(join(repoRoot, 'secrets/reviewer-account.txt'))) (process.env.CI ? warn : error)('secrets/reviewer-account.txt missing — App Review needs the sign-in password');
   else ok('reviewer password present in secrets/ (not in fastlane/metadata)');
 }
 
