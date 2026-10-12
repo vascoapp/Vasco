@@ -2,16 +2,18 @@ import { content, MARKETS_EN, MARKETS_US, type Locale } from "@/lib/marketing-co
 
 type Props = { locale: Locale };
 
-// R77 US Phase 3: locale-aware route map. 3-way switcher EN / NL / US.
+// Locale-aware route map for the switcher (EN / US / NL / DE).
 const LOCALE_ROUTES: Record<Locale, string> = {
   en: "/",
   nl: "/nl",
+  de: "/de",
   "en-US": "/us",
 };
 
 const LOCALE_LABELS: Record<Locale, string> = {
   en: "EN",
   nl: "NL",
+  de: "DE",
   "en-US": "US",
 };
 
@@ -21,7 +23,7 @@ export default function MarketingHome({ locale }: Props) {
   // R77: US locale shows US states in the "Working in" strip; others EU6.
   const markets = locale === "en-US" ? MARKETS_US : MARKETS_EN;
   // 3-way switcher: ordered list of locales other than current, for nav.
-  const otherLocales: Locale[] = (["en", "en-US", "nl"] as Locale[]).filter(
+  const otherLocales: Locale[] = (["en", "en-US", "nl", "de"] as Locale[]).filter(
     (l) => l !== locale,
   );
 
@@ -101,7 +103,7 @@ export default function MarketingHome({ locale }: Props) {
               {t.nav.support}
             </a>
 
-            {/* Locale switcher (3-way EN / US / NL) */}
+            {/* Locale switcher (EN / US / NL / DE) */}
             <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.02] p-0.5 text-xs font-bold uppercase tracking-[0.18em]">
               <a
                 href={homeHref}

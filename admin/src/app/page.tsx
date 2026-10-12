@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import MarketingHome from "@/components/MarketingHome";
 import { content } from "@/lib/marketing-content";
+import { HOME_LANGUAGES } from "@/lib/homeAlternates";
 import { organizationSchema, softwareApplicationSchema } from "@/lib/aeo/schema";
 
 export const metadata: Metadata = {
@@ -12,15 +13,11 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://vascobuild.com",
     locale: "en_GB",
-    alternateLocale: ["nl_NL", "en_US"],
+    alternateLocale: ["nl_NL", "de_DE", "en_US"],
   },
   alternates: {
     canonical: "https://vascobuild.com",
-    languages: {
-      en: "https://vascobuild.com",
-      "en-US": "https://vascobuild.com/us",
-      nl: "https://vascobuild.com/nl",
-    },
+    languages: HOME_LANGUAGES,
   },
 };
 

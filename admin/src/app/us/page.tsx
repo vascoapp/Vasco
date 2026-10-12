@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import MarketingHome from "@/components/MarketingHome";
 import { content } from "@/lib/marketing-content";
+import { HOME_LANGUAGES } from "@/lib/homeAlternates";
 
 export const metadata: Metadata = {
   title: { absolute: content["en-US"].meta.title },
@@ -11,15 +12,11 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://vascobuild.com/us",
     locale: "en_US",
-    alternateLocale: ["en_GB", "nl_NL"],
+    alternateLocale: ["en_GB", "nl_NL", "de_DE"],
   },
   alternates: {
     canonical: "https://vascobuild.com/us",
-    languages: {
-      en: "https://vascobuild.com",
-      "en-US": "https://vascobuild.com/us",
-      nl: "https://vascobuild.com/nl",
-    },
+    languages: HOME_LANGUAGES,
   },
 };
 

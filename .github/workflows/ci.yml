@@ -69,6 +69,12 @@ jobs:
       - name: Legal pages per language
         run: npm run test:legal
 
+      # Homepages: every screenshot exists, prices = the app's TIERS, no fee /
+      # AI / automation claim, German is Sie. The site shipped July mock-ups
+      # claiming "autopilot" for months because nothing read the copy.
+      - name: Marketing pages tell the truth
+        run: npm run test:marketing
+
       - name: Build admin
         run: npm run build
         env:

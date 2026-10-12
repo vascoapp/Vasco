@@ -70,6 +70,8 @@ video/.remotion-cache/
 # Supabase CLI local state (linked project ref, CLI version) — machine-specific
 supabase/.temp/
 screenshots/
+# ...but the website serves its own (admin/public/screenshots, used by the homepages)
+!admin/public/screenshots/
 # stray maestro capture output when the script is interrupted mid-run
 *_1_vandaag.png
 *_2_quote_builder.png

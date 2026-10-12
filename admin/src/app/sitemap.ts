@@ -44,6 +44,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const marketing: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 1.0 },
     { url: `${BASE_URL}/nl`, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE_URL}/de`, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE_URL}/us`, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/support`, lastModified: CONTENT_DATE, changeFrequency: "monthly", priority: 0.5 },
     ...LEGAL_SLUGS.map((slug) => ({

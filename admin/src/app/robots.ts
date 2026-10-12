@@ -25,6 +25,7 @@ const DISALLOW = [
 const ALLOW = [
   "/",
   "/nl",
+  "/de",
   "/us",
   "/answers/",
   "/tools/",
