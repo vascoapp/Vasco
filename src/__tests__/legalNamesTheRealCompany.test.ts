@@ -42,9 +42,13 @@ it('no surface names "Vasco B.V."', () => {
   }
 });
 
+it('the legal form is stated: eenmanszaak (user, 2026-10-12)', () => {
+  for (const f of legalFiles) expect({ f, ok: read(f).includes('eenmanszaak') }).toEqual({ f, ok: true });
+});
+
 it('the in-app contact block names the company in every language', () => {
   for (const l of ['en', 'nl', 'de', 'fr', 'es', 'it']) {
     const t = JSON.parse(read(`src/i18n/locales/${l}.json`)).legal.contactDetailsContent as string;
-    expect({ l, ok: t.includes('3511') && t.includes('99596326') && t.includes('Ertskade 74') }).toEqual({ l, ok: true });
+    expect({ l, ok: t.includes('3511') && t.includes('eenmanszaak') && t.includes('99596326') && t.includes('Ertskade 74') }).toEqual({ l, ok: true });
   }
 });

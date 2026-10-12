@@ -276,7 +276,7 @@ We kunnen dit Privacybeleid van tijd tot tijd bijwerken. Over wezenlijke wijzigi
 Voor vragen over privacy, verzoeken om inzage in gegevens of klachten:
 
 **E-mail:** privacy@vascobuild.com
-**Adres:** 3511, handelend onder de naam Vasco Build — Ertskade 74, 1019 BB Amsterdam, Nederland · KvK 99596326
+**Adres:** 3511, eenmanszaak, handelend onder de naam Vasco Build — Ertskade 74, 1019 BB Amsterdam, Nederland · KvK 99596326
 **Functionaris voor gegevensbescherming:** niet aangesteld (niet verplicht voor de verwerking door Vasco); neem contact op via privacy@vascobuild.com
 
 Voor algemene ondersteuning: support@vascobuild.com

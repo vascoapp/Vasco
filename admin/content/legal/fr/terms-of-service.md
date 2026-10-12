@@ -230,5 +230,5 @@ Nous pouvons céder nos droits au titre des présentes Conditions. Vous ne pouve
 Pour toute question concernant les présentes Conditions :
 
 **E-mail :** support@vascobuild.com
-**Adresse :** 3511, exerçant sous le nom commercial Vasco Build — Ertskade 74, 1019 BB Amsterdam, Pays-Bas · Chambre de commerce (KvK) 99596326
+**Adresse :** 3511, entreprise individuelle (eenmanszaak) exerçant sous le nom commercial Vasco Build — Ertskade 74, 1019 BB Amsterdam, Pays-Bas · Chambre de commerce (KvK) 99596326
 **Site web :** https://vascobuild.com

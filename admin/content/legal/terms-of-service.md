@@ -230,5 +230,5 @@ We may assign our rights under these Terms. You may not assign your rights witho
 For questions about these Terms:
 
 **Email:** support@vascobuild.com
-**Address:** 3511, trading as Vasco Build — Ertskade 74, 1019 BB Amsterdam, the Netherlands · Chamber of Commerce (KvK) 99596326
+**Address:** 3511, a sole proprietorship (eenmanszaak) trading as Vasco Build — Ertskade 74, 1019 BB Amsterdam, the Netherlands · Chamber of Commerce (KvK) 99596326
 **Website:** https://vascobuild.com

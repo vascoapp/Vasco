@@ -276,7 +276,7 @@ Nous pouvons mettre à jour la présente Politique de confidentialité de temps 
 Pour toute question relative à la confidentialité, demande d’accès aux données ou réclamation :
 
 **E-mail :** privacy@vascobuild.com
-**Adresse :** 3511, exerçant sous le nom commercial Vasco Build — Ertskade 74, 1019 BB Amsterdam, Pays-Bas · Chambre de commerce (KvK) 99596326
+**Adresse :** 3511, entreprise individuelle (eenmanszaak) exerçant sous le nom commercial Vasco Build — Ertskade 74, 1019 BB Amsterdam, Pays-Bas · Chambre de commerce (KvK) 99596326
 **Délégué à la protection des données :** non désigné (non obligatoire pour les traitements de Vasco) ; contact : privacy@vascobuild.com
 
 Pour toute demande d’assistance générale : support@vascobuild.com

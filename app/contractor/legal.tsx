@@ -310,7 +310,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
           'For questions about these policies, your data, or to exercise your GDPR rights:\n\n' +
           // The entity as registered (user, 2026-10-12). It said "Vasco B.V."
           // — a company that does not exist — and once a placeholder KvK.
-          'Email: privacy@vascobuild.com\nSupport: support@vascobuild.com\n\n3511, trading as Vasco Build\nErtskade 74, 1019 BB Amsterdam, the Netherlands\nChamber of Commerce (KvK): 99596326\nData Protection Officer: not appointed (not required); privacy questions go to privacy@vascobuild.com',
+          'Email: privacy@vascobuild.com\nSupport: support@vascobuild.com\n\n3511, a sole proprietorship (eenmanszaak) trading as Vasco Build\nErtskade 74, 1019 BB Amsterdam, the Netherlands\nChamber of Commerce (KvK): 99596326\nData Protection Officer: not appointed (not required); privacy questions go to privacy@vascobuild.com',
       },
     ],
   },
