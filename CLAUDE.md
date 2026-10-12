@@ -89,6 +89,10 @@ cd admin && ADMIN_EMAILS=you@x.com ADMIN_SESSION_SECRET=$(openssl rand -hex 32) 
                                   # sign-in code prints to the dev log without RESEND_API_KEY.
 cd admin && npm run test:auth     # admin sign-in tests (node --test)
 cd admin && npm run test:legal    # privacy/terms served per language (?lang=, Accept-Language)
+cd admin && npm run test:marketing # homepages: screenshots exist, prices = app TIERS, no fee/AI/
+                                  # automation claim, German Sie (July mock-ups said "autopilot")
+cd admin && npx vercel --prod --yes  # vascobuild.com + www + admin (merles team since 2026-10-12);
+                                  # then curl the DOMAIN — the repo being right proved nothing (#420)
 cd admin && npx tsc --noEmit     # Check admin TS errors
 
 # Audits — run these BEFORE building on a field or mounting a component
