@@ -15,7 +15,7 @@ import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
 import { claimWebhookEvent, redeemCredits, restoreCredits, releaseWebhookEvent } from '../_shared/credit-redemption.ts';
 import { invoiceLookup } from '../_shared/invoiceRef.ts';
 import { isPermanentDbError } from '../_shared/dbErrors.ts';
-import { invoiceSubscriptionId, invoiceSubscriptionMetadata, subscriptionPeriodEnd } from '../_shared/stripeShapes.ts';
+import { entitledTier, invoiceSubscriptionId, invoiceSubscriptionMetadata, subscriptionPeriodEnd } from '../_shared/stripeShapes.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -390,7 +390,7 @@ Deno.serve(async (req) => {
           .from('subscriptions')
           .upsert({
             user_id: userId,
-            tier,
+            tier: entitledTier(status, tier),
             status,
             external_id: externalId,
             external_provider: 'stripe',
@@ -421,7 +421,7 @@ Deno.serve(async (req) => {
           }
           return failRecording('subscription sync failed', subErr);
         } else {
-          console.log(`Subscription synced: user=${userId} tier=${tier} status=${status}`);
+          console.log(`Subscription synced: user=${userId} tier=${entitledTier(status, tier)} status=${status}`);
         }
       } else {
         console.warn(`Subscription event missing metadata — user_id=${userId} tier=${tier}`);

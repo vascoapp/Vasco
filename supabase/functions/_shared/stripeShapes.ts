@@ -28,3 +28,17 @@ export function subscriptionPeriodEnd(sub: Obj): number | null {
     .filter((n: unknown): n is number => typeof n === 'number');
   return ends.length ? Math.max(...ends) : null;
 }
+
+/**
+ * The tier a subscription row grants. A subscription that has ENDED grants
+ * nothing: Stripe sends `customer.subscription.deleted` (status canceled) only
+ * when it is really over — at the end of the paid period for a normal
+ * cancellation, at once for an immediate one — and `incomplete_expired` means
+ * the first payment never happened. The row used to keep `tier: 'pro'` beside
+ * `status: 'canceled'`, and the app reads the tier, so a cancelled customer
+ * kept Pro for ever (found in the first end-to-end test, 2026-10-12).
+ * past_due keeps the tier: that is Stripe's retry window, not the end.
+ */
+export function entitledTier(status: string, tier: string): string {
+  return status === 'canceled' || status === 'expired' ? 'free' : tier;
+}

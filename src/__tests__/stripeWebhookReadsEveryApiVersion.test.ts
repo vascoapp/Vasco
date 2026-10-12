@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import {
+  entitledTier,
   invoiceSubscriptionId,
   invoiceSubscriptionMetadata,
   subscriptionPeriodEnd,
@@ -47,4 +48,18 @@ it('the webhook reads these fields only through the helpers', () => {
   expect(src).toMatch(/invoiceSubscriptionId\(invoice\)/);
   expect(src).toMatch(/invoiceSubscriptionId\(upcoming\)/);
   expect(src).toMatch(/subscriptionPeriodEnd\(sub\)/);
+});
+
+it('an ended subscription grants Free, a live or retrying one keeps its tier', () => {
+  expect(entitledTier('canceled', 'pro')).toBe('free');
+  expect(entitledTier('expired', 'contractor')).toBe('free');
+  expect(entitledTier('trialing', 'pro')).toBe('pro');
+  expect(entitledTier('active', 'contractor')).toBe('contractor');
+  expect(entitledTier('past_due', 'pro')).toBe('pro');
+});
+
+it('the webhook writes the entitled tier, never the checkout tier as-is', () => {
+  const src = fs.readFileSync(path.resolve(__dirname, '../../supabase/functions/stripe-webhook/index.ts'), 'utf8');
+  const upsert = src.slice(src.indexOf(".from('subscriptions')\n          .upsert("));
+  expect(upsert).toMatch(/^[\s\S]{0,200}tier: entitledTier\(status, tier\)/);
 });
