@@ -276,8 +276,8 @@ Possiamo aggiornare di tanto in tanto la presente Informativa sulla privacy. La 
 Per domande relative alla privacy, richieste di accesso ai dati o reclami:
 
 **Email:** privacy@vascobuild.com
-**Indirizzo:** [Indirizzo della sede legale]
-**Responsabile della protezione dei dati:** [Nome, se designato]
+**Indirizzo:** 3511, con il nome commerciale Vasco Build — Ertskade 74, 1019 BB Amsterdam, Paesi Bassi · Camera di commercio (KvK) 99596326
+**Responsabile della protezione dei dati:** non designato (non obbligatorio per i trattamenti di Vasco); contatto: privacy@vascobuild.com
 
 Per l'assistenza generale: support@vascobuild.com
 **Sito web:** https://vascobuild.com

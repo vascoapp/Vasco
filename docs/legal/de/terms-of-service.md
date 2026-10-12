@@ -230,5 +230,5 @@ Wir können unsere Rechte aus diesen Bedingungen abtreten. Sie dürfen Ihre Rech
 Bei Fragen zu diesen Bedingungen:
 
 **E-Mail:** support@vascobuild.com
-**Anschrift:** [Ihre eingetragene Geschäftsanschrift]
+**Anschrift:** 3511, handelnd unter dem Namen Vasco Build — Ertskade 74, 1019 BB Amsterdam, Niederlande · Handelskammer (KvK) 99596326
 **Website:** https://vascobuild.com

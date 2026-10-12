@@ -230,5 +230,5 @@ Possiamo cedere i nostri diritti ai sensi dei presenti Termini. Lei non può ced
 Per domande sui presenti Termini:
 
 **Email:** support@vascobuild.com
-**Indirizzo:** [Indirizzo della sede legale]
+**Indirizzo:** 3511, con il nome commerciale Vasco Build — Ertskade 74, 1019 BB Amsterdam, Paesi Bassi · Camera di commercio (KvK) 99596326
 **Sito web:** https://vascobuild.com

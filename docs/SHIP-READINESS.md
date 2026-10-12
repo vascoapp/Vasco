@@ -146,7 +146,7 @@ App Store puts the first 3 in search results, so order matters:
 | Group | Files per locale | Locales | Status |
 |---|---|---|---|
 | `name.txt`, `subtitle.txt`, `description.txt`, `keywords.txt`, `promotional_text.txt`, `release_notes.txt`, `marketing_url.txt`, `support_url.txt`, `privacy_url.txt` | 9 | en-US, nl-NL, de-DE, fr-FR, es-ES, it-IT | ✅ all 54 files present |
-| `copyright.txt`, `primary_category.txt`, `secondary_category.txt` | shared | — | ✅ "© 2026 Vasco B.V." / BUSINESS / PRODUCTIVITY |
+| `copyright.txt`, `primary_category.txt`, `secondary_category.txt` | shared | — | ✅ "© 2026 3511 (Vasco Build)" / BUSINESS / PRODUCTIVITY |
 | `review_information/{demo_user,demo_password,first_name,last_name,email_address,notes}.txt` | shared | — | ✅ real values (Merle Slendebroek, support@vascobuild.com, contractor@vasco.dev / "review") |
 
 Reviewer notes (`fastlane/metadata/review_information/notes.txt`) include

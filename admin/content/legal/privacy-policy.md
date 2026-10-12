@@ -276,8 +276,8 @@ We may update this Privacy Policy from time to time. We will notify you of mater
 For privacy-related questions, data access requests, or complaints:
 
 **Email:** privacy@vascobuild.com
-**Address:** [Your registered business address]
-**Data Protection Officer:** [Name, if appointed]
+**Address:** 3511, trading as Vasco Build — Ertskade 74, 1019 BB Amsterdam, the Netherlands · Chamber of Commerce (KvK) 99596326
+**Data Protection Officer:** not appointed (not required for Vasco's processing); contact privacy@vascobuild.com
 
 For general support: support@vascobuild.com
 **Website:** https://vascobuild.com

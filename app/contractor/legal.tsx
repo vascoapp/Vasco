@@ -308,13 +308,9 @@ const LEGAL_SECTIONS: LegalSection[] = [
         contentKey: 'legal.contactDetailsContent',
         contentDefault:
           'For questions about these policies, your data, or to exercise your GDPR rights:\n\n' +
-          // The KvK line read 'KvK: 12345678' — a placeholder, rendered inside the
-        // binding legal/contact block of a company registered in the
-        // Netherlands. A fabricated company registration number in a legal
-        // notice is a false statement about the entity, and it is worse than
-        // an absent one: a reader can act on it. Removed rather than guessed.
-        // TODO(legal): restore with the real KvK number for Vasco B.V.
-          'Email: privacy@vascobuild.com\nSupport: support@vascobuild.com\n\nVasco B.V.\nAmsterdam, The Netherlands\nData Protection Officer: privacy@vascobuild.com',
+          // The entity as registered (user, 2026-10-12). It said "Vasco B.V."
+          // — a company that does not exist — and once a placeholder KvK.
+          'Email: privacy@vascobuild.com\nSupport: support@vascobuild.com\n\n3511, trading as Vasco Build\nErtskade 74, 1019 BB Amsterdam, the Netherlands\nChamber of Commerce (KvK): 99596326\nData Protection Officer: not appointed (not required); privacy questions go to privacy@vascobuild.com',
       },
     ],
   },

@@ -276,8 +276,8 @@ Wir können diese Datenschutzerklärung von Zeit zu Zeit aktualisieren. Über we
 Bei Fragen zum Datenschutz, Auskunftsersuchen oder Beschwerden:
 
 **E-Mail:** privacy@vascobuild.com
-**Anschrift:** [Ihre eingetragene Geschäftsanschrift]
-**Datenschutzbeauftragter:** [Name, falls benannt]
+**Anschrift:** 3511, handelnd unter dem Namen Vasco Build — Ertskade 74, 1019 BB Amsterdam, Niederlande · Handelskammer (KvK) 99596326
+**Datenschutzbeauftragter:** nicht benannt (für die Verarbeitung durch Vasco nicht vorgeschrieben); Kontakt: privacy@vascobuild.com
 
 Für allgemeinen Support: support@vascobuild.com
 **Website:** https://vascobuild.com

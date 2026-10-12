@@ -89,7 +89,7 @@ export default async function LegalPage({
         dangerouslySetInnerHTML={{ __html: html }}
       />
       <footer className="mt-16 border-t border-zinc-200 pt-6 text-xs text-zinc-500">
-        © {new Date().getFullYear()} Vasco B.V. — Amsterdam, The Netherlands —{" "}
+        © {new Date().getFullYear()} 3511 (Vasco Build) — Ertskade 74, 1019 BB Amsterdam — KvK 99596326 —{" "}
         <a href="mailto:privacy@vascobuild.com" className="underline">
           privacy@vascobuild.com
         </a>

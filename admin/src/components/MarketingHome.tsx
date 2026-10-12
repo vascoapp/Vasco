@@ -725,7 +725,7 @@ export default function MarketingHome({ locale }: Props) {
                 {t.footer.tagline}
               </p>
               <p className="mt-6 font-[family-name:var(--font-inter)] text-xs text-zinc-600">
-                © {new Date().getFullYear()} Vasco B.V.
+                © {new Date().getFullYear()} 3511 (Vasco Build) · KvK 99596326
                 <br />
                 {t.footer.address}
               </p>

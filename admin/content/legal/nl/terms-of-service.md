@@ -230,5 +230,5 @@ We mogen onze rechten onder deze Voorwaarden overdragen. Je mag je rechten niet 
 Voor vragen over deze Voorwaarden:
 
 **E-mail:** support@vascobuild.com
-**Adres:** [Je geregistreerde bedrijfsadres]
+**Adres:** 3511, handelend onder de naam Vasco Build — Ertskade 74, 1019 BB Amsterdam, Nederland · KvK 99596326
 **Website:** https://vascobuild.com

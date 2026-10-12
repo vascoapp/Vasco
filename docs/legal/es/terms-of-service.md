@@ -230,5 +230,5 @@ Podemos ceder nuestros derechos derivados de estas Condiciones. Usted no puede c
 Para preguntas sobre estas Condiciones:
 
 **Correo electrónico:** support@vascobuild.com
-**Dirección:** [Domicilio social registrado]
+**Dirección:** 3511, con el nombre comercial Vasco Build — Ertskade 74, 1019 BB Ámsterdam, Países Bajos · Cámara de Comercio (KvK) 99596326
 **Sitio web:** https://vascobuild.com
