@@ -231,7 +231,7 @@ export const content: Record<Locale, MarketingContent> = {
             "E-invoicing in all 6 countries",
             "Payment links via your own Mollie or Stripe",
             "Online quote acceptance for your customers",
-            "3 team members included, up to 3 more at €10/mo each",
+            "3 team members included, up to 2 more at €10/mo each",
           ],
           cta: "Join the beta",
           highlight: true,
@@ -296,7 +296,7 @@ export const content: Record<Locale, MarketingContent> = {
         },
         {
           q: "What does it cost?",
-          a: "Prices are excluding VAT. Free is €0 with limits (5 active jobs, 5 quotes and 3 invoices a month, no e-invoicing). Pro is €39 a month, or €32 a month billed annually, with 3 team members included and up to 3 more at €10 a month each. Contractor is €69 a month, or €56 a month billed annually, for teams of up to 15. New accounts get their first month of Pro free. Vasco charges no commission on payments — your customers pay into your own Mollie or Stripe account.",
+          a: "Prices are excluding VAT. Free is €0 with limits (5 active jobs, 5 quotes and 3 invoices a month, no e-invoicing). Pro is €39 a month, or €32 a month billed annually, with 3 team members included and up to 2 more at €10 a month each. Contractor is €69 a month, or €56 a month billed annually, for teams of up to 15. New accounts get their first month of Pro free. Vasco charges no commission on payments — your customers pay into your own Mollie or Stripe account.",
         },
         {
           q: "What about my accountant?",
@@ -415,7 +415,7 @@ export const content: Record<Locale, MarketingContent> = {
             "E-facturen in alle 6 landen",
             "Betaallinks via je eigen Mollie of Stripe",
             "Online akkoord op offertes voor je klanten",
-            "3 teamleden inbegrepen, tot 3 extra voor €10/mnd per persoon",
+            "3 teamleden inbegrepen, tot 2 extra voor €10/mnd per persoon",
           ],
           cta: "Doe mee met de bèta",
           highlight: true,
@@ -480,7 +480,7 @@ export const content: Record<Locale, MarketingContent> = {
         },
         {
           q: "Wat kost het?",
-          a: "Alle prijzen zijn exclusief btw. Gratis kost €0, met limieten (5 actieve klussen, 5 offertes en 3 facturen per maand, geen e-facturen). Pro kost €39 per maand, of €32 per maand bij jaarbetaling, met 3 teamleden inbegrepen en tot 3 extra voor €10 per maand per persoon. Aannemer kost €69 per maand, of €56 per maand bij jaarbetaling, voor teams tot 15 personen. Nieuwe accounts krijgen de eerste maand Pro gratis. Vasco rekent geen commissie op betalingen — je klanten betalen op je eigen Mollie- of Stripe-account.",
+          a: "Alle prijzen zijn exclusief btw. Gratis kost €0, met limieten (5 actieve klussen, 5 offertes en 3 facturen per maand, geen e-facturen). Pro kost €39 per maand, of €32 per maand bij jaarbetaling, met 3 teamleden inbegrepen en tot 2 extra voor €10 per maand per persoon. Aannemer kost €69 per maand, of €56 per maand bij jaarbetaling, voor teams tot 15 personen. Nieuwe accounts krijgen de eerste maand Pro gratis. Vasco rekent geen commissie op betalingen — je klanten betalen op je eigen Mollie- of Stripe-account.",
         },
         {
           q: "En mijn boekhouder?",
@@ -614,7 +614,7 @@ export const content: Record<Locale, MarketingContent> = {
             "E-Rechnung in allen 6 Ländern",
             "Zahlungslinks über Ihr eigenes Mollie oder Stripe",
             "Online-Annahme von Angeboten für Ihre Kunden",
-            "3 Teammitglieder inklusive, bis zu 3 weitere für je 10 €/Monat",
+            "3 Teammitglieder inklusive, bis zu 2 weitere für je 10 €/Monat",
           ],
           cta: "Zur Beta anmelden",
           highlight: true,
@@ -679,7 +679,7 @@ export const content: Record<Locale, MarketingContent> = {
         },
         {
           q: "Was kostet Vasco?",
-          a: "Alle Preise verstehen sich zzgl. MwSt. Gratis kostet 0 €, mit Grenzen (5 aktive Aufträge, 5 Angebote und 3 Rechnungen pro Monat, keine E-Rechnung). Pro kostet 39 € pro Monat oder 32 € pro Monat bei jährlicher Zahlung, mit 3 Teammitgliedern inklusive und bis zu 3 weiteren für je 10 € pro Monat. Betrieb kostet 69 € pro Monat oder 56 € pro Monat bei jährlicher Zahlung, für Teams bis 15 Personen. Neue Konten erhalten den ersten Monat Pro kostenlos. Vasco nimmt keine Provision auf Zahlungen — Ihre Kunden zahlen auf Ihr eigenes Mollie- oder Stripe-Konto.",
+          a: "Alle Preise verstehen sich zzgl. MwSt. Gratis kostet 0 €, mit Grenzen (5 aktive Aufträge, 5 Angebote und 3 Rechnungen pro Monat, keine E-Rechnung). Pro kostet 39 € pro Monat oder 32 € pro Monat bei jährlicher Zahlung, mit 3 Teammitgliedern inklusive und bis zu 2 weiteren für je 10 € pro Monat. Betrieb kostet 69 € pro Monat oder 56 € pro Monat bei jährlicher Zahlung, für Teams bis 15 Personen. Neue Konten erhalten den ersten Monat Pro kostenlos. Vasco nimmt keine Provision auf Zahlungen — Ihre Kunden zahlen auf Ihr eigenes Mollie- oder Stripe-Konto.",
         },
         {
           q: "Und mein Steuerberater?",
@@ -810,7 +810,7 @@ export const content: Record<Locale, MarketingContent> = {
             "Unlimited jobs, estimates, invoices and customers",
             "Payment links via your own Stripe account",
             "Online estimate acceptance for your customers",
-            "3 team members included, up to 3 more at €10/mo each",
+            "3 team members included, up to 2 more at €10/mo each",
           ],
           cta: "Join the beta",
           highlight: true,
@@ -875,7 +875,7 @@ export const content: Record<Locale, MarketingContent> = {
         },
         {
           q: "What does it cost?",
-          a: "Free is €0 with limits (5 active jobs, 5 estimates and 3 invoices a month). Pro is €39 a month, or €32 a month billed annually, with 3 team members included and up to 3 more at €10 a month each. Contractor is €69 a month, or €56 a month billed annually, for crews of up to 15. New accounts get their first month of Pro free. Prices are in EUR, excluding tax. Vasco charges no commission on payments.",
+          a: "Free is €0 with limits (5 active jobs, 5 estimates and 3 invoices a month). Pro is €39 a month, or €32 a month billed annually, with 3 team members included and up to 2 more at €10 a month each. Contractor is €69 a month, or €56 a month billed annually, for crews of up to 15. New accounts get their first month of Pro free. Prices are in EUR, excluding tax. Vasco charges no commission on payments.",
         },
         {
           q: "Do you file my taxes?",

@@ -156,7 +156,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     monthlyPrice: 39,
     annualMonthlyPrice: 32,
     annualPrice: 384,
-    extraSeatPrice: 10, // per extra team member, Pro only (max 3)
+    extraSeatPrice: 10, // per extra team member, Pro only (max 2 — Pro+3 = Contractor's price)
     badge: 'BEST VALUE',
     limits: {
       maxActiveJobs: Infinity,

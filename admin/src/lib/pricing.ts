@@ -9,8 +9,9 @@ export const PRICING = {
   trialDays: 30,
   pro: { monthly: 39, yearlyPerMonth: 32, seatsIncluded: 3 },
   contractor: { monthly: 69, yearlyPerMonth: 56, seatsIncluded: 15 },
-  /** Extra team members on Pro only; past that, Contractor is cheaper. */
-  extraSeat: { monthly: 10, yearlyPerMonth: 8, maxExtra: 3 },
+  /** Extra team members on Pro only, at most 2: Pro + 3 would cost exactly
+   *  Contractor (€69 / €672) for 6 people instead of 15 (user, 2026-10-13). */
+  extraSeat: { monthly: 10, yearlyPerMonth: 8, maxExtra: 2 },
   free: { activeJobs: 5, quotesPerMonth: 5, invoicesPerMonth: 3, customers: 25 },
 } as const;
 

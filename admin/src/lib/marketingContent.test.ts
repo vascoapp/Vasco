@@ -165,3 +165,17 @@ test("the paid plan cards carry the VAT note next to the price", () => {
   const page = fs.readFileSync(path.join(ADMIN, "src/app/billing/upgrade/page.tsx"), "utf8");
   assert.doesNotMatch(page, />\/mo<\/span>/, "a checkout price without the VAT note");
 });
+
+test("Pro with the most extra seats stays cheaper than Contractor (monthly and yearly)", () => {
+  // Pro + 3 seats cost exactly Contractor (€69 / €672) for 6 people instead of
+  // 15 — found by the 2026-10-13 double-test, fixed by capping extra seats at 2.
+  const maxPro = (m: number, seat: number) => m + PRICING.extraSeat.maxExtra * seat;
+  assert.ok(maxPro(PRICING.pro.monthly, PRICING.extraSeat.monthly) < PRICING.contractor.monthly, "monthly");
+  assert.ok(maxPro(PRICING.pro.yearlyPerMonth, PRICING.extraSeat.yearlyPerMonth) < PRICING.contractor.yearlyPerMonth, "yearly");
+  for (const l of locales) {
+    const text = JSON.stringify(content[l]);
+    const n = PRICING.extraSeat.maxExtra;
+    assert.match(text, new RegExp(`(up to|tot|bis zu) ${n} (more|extra|weitere)`), `${l}: the copy's seat maximum is not ${n}`);
+    assert.doesNotMatch(text, new RegExp(`(up to|tot|bis zu) ${n + 1} (more|extra|weitere)`), `${l}: an old seat maximum`);
+  }
+});

@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
     const { tier, billingCycle, extraSeats: rawSeats } = (await req.json()) as {
       tier: Tier; billingCycle: Cycle; extraSeats?: number;
     };
-    // Extra team members: Pro only, 0–3 (past that Contractor is cheaper).
-    const extraSeats = tier === 'pro' ? Math.min(3, Math.max(0, Math.floor(Number(rawSeats) || 0))) : 0;
+    // Extra team members: Pro only, 0–2 — Pro + 3 would cost exactly Contractor.
+    const extraSeats = tier === 'pro' ? Math.min(2, Math.max(0, Math.floor(Number(rawSeats) || 0))) : 0;
     if (!['pro', 'contractor'].includes(tier) || !['monthly', 'yearly'].includes(billingCycle)) {
       return new Response(JSON.stringify({ ok: false, error: 'Invalid tier or billingCycle' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

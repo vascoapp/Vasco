@@ -84,9 +84,9 @@ it('the webhook writes extra_seats from the seat prices, zero when ended', () =>
   expect(src).toMatch(/extraSeatsFrom\(sub, \[\s*Deno\.env\.get\('STRIPE_PRICE_SEAT_MONTHLY'\),\s*Deno\.env\.get\('STRIPE_PRICE_SEAT_YEARLY'\)/);
 });
 
-it('checkout sells at most 3 extra seats, and only on Pro', () => {
+it('checkout sells at most 2 extra seats, and only on Pro', () => {
   const src = fs.readFileSync(path.resolve(__dirname, '../../supabase/functions/create-subscription-checkout/index.ts'), 'utf8');
-  expect(src).toMatch(/tier === 'pro' \? Math\.min\(3, Math\.max\(0,/);
+  expect(src).toMatch(/tier === 'pro' \? Math\.min\(2, Math\.max\(0,/);
 });
 
 it('the extra-seats pin runs as the caller (SECURITY INVOKER), never as its owner', () => {
