@@ -3321,6 +3321,7 @@
     "viewPhoto": "Ver foto",
     "viewPhotoOf": "Ver foto de {{label}}",
     "dueOverdue": "{{count}} días de retraso",
+    "dueOverdue_one": "{{count}} día de retraso",
     "dueToday": "Para hoy",
     "dueTomorrow": "Para mañana",
     "dueInDays": "Para dentro de {{count}} días",

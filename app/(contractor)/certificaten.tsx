@@ -5,6 +5,7 @@
 // Integrates: complianceService, auditorService, AI-powered insights
 // =============================================================================
 
+import { daysUntil } from '../../src/utils/dateKey';
 import { ModalSafeArea } from '../../src/components/shared/ModalSafeArea';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
@@ -24,7 +25,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SemanticColors, Palette } from '../../src/theme/colors';
 import { Spacing, SafeArea } from '../../src/theme/spacing';
 import { PAGE_BG, TYPE, GRID, RADIUS, TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
-import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { useAppState } from '../../src/state/AppState';
 import { useAuth } from '../../src/context/AuthContext';
 import { formatCurrency0, formatDateShortAuto, formatDayMonthAuto, type Country } from '../../src/i18n/formatting';
@@ -127,8 +127,10 @@ function getStatusConfig(status: ItemStatus, t?: (key: string, fallback: string)
   }
 }
 
+// Calendar days (dateKey.daysUntil) — ceil(ms/day) said "expires in 31 days"
+// for a certificate 30 days out across the end of summer time (#423).
 function getDaysUntilExpiry(date: Date): number {
-  return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  return daysUntil(date) ?? 0;
 }
 
 // Shared formatter, not toLocaleDateString(undefined) — the latter follows
@@ -193,7 +195,7 @@ function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
         {alert.dueDate && (
           <Text style={[styles.alertDays, { color: config.color }]}>
             {(() => {
-              const days = Math.ceil((new Date(alert.dueDate).getTime() - Date.now()) / MS_PER_DAY);
+              const days = daysUntil(alert.dueDate) ?? 0;
               return days < 0 ? `${Math.abs(days)} ${t('compliance.daysAgo', 'dagen geleden')}` : `${t('compliance.daysRemaining', 'Nog')} ${days} ${t('compliance.days', 'dagen')}`;
             })()}
           </Text>
@@ -250,7 +252,7 @@ function TabButton({ id, label, icon, isActive, onPress }: {
 function ItemCard({ item, onPress, onRenew }: { item: ComplianceItem; onPress?: () => void; onRenew?: () => void }) {
   const { t } = useTranslation();
   const status = getStatusConfig(item.status, t);
-  const daysUntil = getDaysUntilExpiry(item.expiryDate);
+  const daysLeft = getDaysUntilExpiry(item.expiryDate);
 
   const getTypeIcon = (): IconName => {
     switch (item.type) {
@@ -286,7 +288,7 @@ function ItemCard({ item, onPress, onRenew }: { item: ComplianceItem; onPress?: 
             {item.status === 'expired' || item.status === 'cancelled'
               ? `${item.status === 'cancelled' ? t('compliance.statusCancelled', 'Geannuleerd') : t('compliance.statusExpired', 'Verlopen')} ${formatDate(item.expiryDate)}`
               : `${t('compliance.expires', 'Verloopt')} ${formatDate(item.expiryDate)}`}
-            {item.status === 'expiring_soon' && ` (${daysUntil}d)`}
+            {item.status === 'expiring_soon' && ` (${daysLeft}d)`}
           </Text>
         </View>
 

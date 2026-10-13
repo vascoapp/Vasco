@@ -22,7 +22,7 @@ import {
 import { loadOnboardingPreferences } from '../services/onboardingPreferencesService';
 import { loadSubscription, getTierLimits } from '../services/subscriptionService';
 import i18n from '../i18n/i18n';
-import { todayKey } from '../utils/dateKey';
+import { calendarDaysBetween, daysUntil, todayKey } from '../utils/dateKey';
 import { documentCustomerName } from '../domain/customers';
 
 const SCHEDULER_KEY = '@vasco_scheduler_state';
@@ -135,8 +135,9 @@ function auditQuotes(quotes: any[]): AuditFinding[] {
   // Stale quotes (sent > 14 days, no response)
   for (const q of quotes) {
     if (q.status === 'sent') {
-      const sentDate = new Date(q.lastUpdated || q.createdAt || '');
-      const daysSinceSent = Math.ceil((now.getTime() - sentDate.getTime()) / MS_PER_DAY);
+      // Calendar days (dateKey.daysUntil), not ceil(ms/day) — #423.
+      const since = daysUntil(q.lastUpdated || q.createdAt, now);
+      const daysSinceSent = since === null ? NaN : -since;
       if (daysSinceSent > 14) {
         findings.push({
           id: `audit-quote-${q.id}`,
@@ -230,13 +231,11 @@ function toMinutes(time: string): number {
 function auditCerts(certs: any[]): AuditFinding[] {
   const findings: AuditFinding[] = [];
   const now = new Date();
-  const dayMs = MS_PER_DAY;
 
   for (const cert of certs) {
     if (!cert || !cert.expiryDate) continue;
-    const expiry = new Date(cert.expiryDate).getTime();
-    if (isNaN(expiry)) continue;
-    const daysLeft = Math.ceil((expiry - now.getTime()) / dayMs);
+    const daysLeft = daysUntil(cert.expiryDate, now); // calendar days, #423
+    if (daysLeft === null) continue;
 
     if (daysLeft < 0) {
       findings.push({
@@ -495,7 +494,7 @@ function getTradeContextTip(trade: string, country: string): string | undefined 
   const tips = TRADE_TIPS[tradeLower]?.[country] ?? TRADE_TIPS[tradeLower]?.['NL'];
   if (!tips || tips.length === 0) return undefined;
   // Rotate daily based on day-of-year
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / MS_PER_DAY);
+  const dayOfYear = calendarDaysBetween(new Date(new Date().getFullYear(), 0, 0), new Date());
   return tips[dayOfYear % tips.length];
 }
 
@@ -593,7 +592,7 @@ export async function generateMorningBriefing(context: {
     if (job.status !== 'scheduled' && job.status !== 'ingepland') continue;
     const startDate = new Date(job.scheduledDate || job.startDate || '');
     if (isNaN(startDate.getTime())) continue;
-    const daysUntilStart = Math.ceil((startDate.getTime() - now2.getTime()) / MS_PER_DAY);
+    const daysUntilStart = daysUntil(job.scheduledDate || job.startDate, now2) ?? NaN;
     if (daysUntilStart > 0 && daysUntilStart <= 2) {
       const hasMaterials = (job.materials ?? []).length > 0;
       const materialsOrdered = job.materialsOrdered ?? false;
@@ -606,9 +605,8 @@ export async function generateMorningBriefing(context: {
   // Certs expiring within 14 days
   for (const cert of (context.certs ?? [])) {
     if (!cert?.expiryDate) continue;
-    const expiry = new Date(cert.expiryDate).getTime();
-    if (isNaN(expiry)) continue;
-    const daysLeft = Math.ceil((expiry - now2.getTime()) / MS_PER_DAY);
+    const daysLeft = daysUntil(cert.expiryDate, now2);
+    if (daysLeft === null) continue;
     if (daysLeft > 0 && daysLeft <= 14) {
       proactiveAlerts.push(`${cert.name || 'Certificate'} expires in ${daysLeft} days`);
     }
@@ -617,9 +615,8 @@ export async function generateMorningBriefing(context: {
   // Quotes expiring within 7 days
   for (const q of context.quotes) {
     if (q.status !== 'sent') continue;
-    const validUntil = q.validUntil ? new Date(q.validUntil).getTime() : 0;
-    if (!validUntil) continue;
-    const daysLeft = Math.ceil((validUntil - now2.getTime()) / MS_PER_DAY);
+    const daysLeft = daysUntil(q.validUntil, now2);
+    if (daysLeft === null) continue;
     if (daysLeft > 0 && daysLeft <= 7) {
       proactiveAlerts.push(`Quote for ${documentCustomerName([], q) || queueEntityLabel(q)} (${formatMoney((q.amount ?? 0))}) expires in ${daysLeft} days`);
     }

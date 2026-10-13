@@ -3321,6 +3321,7 @@
     "viewPhoto": "Foto bekijken",
     "viewPhotoOf": "Foto van {{label}} bekijken",
     "dueOverdue": "{{count}} dagen te laat",
+    "dueOverdue_one": "{{count}} dag te laat",
     "dueToday": "Vandaag gewenst",
     "dueTomorrow": "Morgen gewenst",
     "dueInDays": "Over {{count}} dagen",

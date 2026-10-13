@@ -7,7 +7,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MS_PER_DAY } from '../utils/timeConstants';
-import { localDateKey, todayKey } from '../utils/dateKey';
+import { calendarDaysBetween, localDateKey, parseCalendarDay, todayKey } from '../utils/dateKey';
 
 // =============================================================================
 // TYPES
@@ -545,9 +545,10 @@ export async function recordInvoiceOutcome(outcome: InvoiceOutcome): Promise<voi
 
   // Calculate DSO if paid
   if (outcome.paidDate) {
-    const issued = new Date(outcome.issuedDate).getTime();
-    const paid = new Date(outcome.paidDate).getTime();
-    const daysToPayment = Math.max(0, Math.round((paid - issued) / MS_PER_DAY));
+    // Calendar days (dateKey), not elapsed ms — #423.
+    const issuedDay = parseCalendarDay(outcome.issuedDate);
+    const paidDay = parseCalendarDay(outcome.paidDate);
+    const daysToPayment = issuedDay && paidDay ? Math.max(0, calendarDaysBetween(issuedDay, paidDay)) : 0;
 
     // Running average DSO
     const prevTotal = profile.invoicePatterns.avgDSO * (profile.invoicePatterns.totalInvoices - 1);
@@ -555,8 +556,10 @@ export async function recordInvoiceOutcome(outcome: InvoiceOutcome): Promise<voi
       (prevTotal + daysToPayment) / profile.invoicePatterns.totalInvoices
     );
 
-    const due = new Date(outcome.dueDate).getTime();
-    const onTime = paid <= due;
+    // On time = paid on or before the due DAY. `paid <= new Date(dueKey)` read the
+    // due date as UTC midnight, so paying on the due date counted as late.
+    const dueDay = parseCalendarDay(outcome.dueDate);
+    const onTime = !!(paidDay && dueDay && calendarDaysBetween(paidDay, dueDay) >= 0);
     const prevOnTimeCount = Math.round(
       profile.invoicePatterns.onTimeRate * (profile.invoicePatterns.totalInvoices - 1)
     );
@@ -565,9 +568,9 @@ export async function recordInvoiceOutcome(outcome: InvoiceOutcome): Promise<voi
 
   // Resolve calibration predictions for invoice-related generators
   if (outcome.paidDate) {
-    const issued = new Date(outcome.issuedDate).getTime();
-    const paid = new Date(outcome.paidDate).getTime();
-    const actualDSO = Math.max(0, Math.round((paid - issued) / MS_PER_DAY));
+    const issuedDay = parseCalendarDay(outcome.issuedDate);
+    const paidDay = parseCalendarDay(outcome.paidDate);
+    const actualDSO = issuedDay && paidDay ? Math.max(0, calendarDaysBetween(issuedDay, paidDay)) : 0;
 
     import('./calibration').then(({ resolveCalibrationPredictions }) => {
       resolveCalibrationPredictions([

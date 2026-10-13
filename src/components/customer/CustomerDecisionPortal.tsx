@@ -21,6 +21,7 @@ import {
   View,
 } from 'react-native';
 import { SignaturePad } from '../shared/SignaturePad';
+import { daysUntil } from '../../utils/dateKey';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -167,8 +168,12 @@ function PhotoLightbox({ uri, onClose }: { uri: string | null; onClose: () => vo
 // "X days overdue" with color so non-experts can prioritize what's time-sensitive.
 function DeadlinePill({ dueDate, overdue, accentColor }: { dueDate: string; overdue?: boolean; accentColor: string }) {
   const { t } = useTranslation();
-  const MS_DAY = 86_400_000;
-  const days = Math.ceil((new Date(dueDate).getTime() - Date.now()) / MS_DAY);
+  // Calendar days (dateKey.daysUntil): `new Date(dueDate)` read a key as UTC
+  // midnight and ceil(ms/day) gained a day across DST — the customer's
+  // countdown said "due in 2 days" for tomorrow by the afternoon.
+  const until = daysUntil(dueDate);
+  if (until === null) return null;
+  const days = until;
   const isOverdue = overdue || days < 0;
   const soon = !isOverdue && days <= 3;
   const color = isOverdue ? DK.colors.danger : soon ? DK.colors.highlight : DK.colors.textMuted;

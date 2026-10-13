@@ -5,6 +5,7 @@
 // Every customer choice becomes training data for recommendations
 // =============================================================================
 
+import { daysUntil, parseCalendarDay } from '../utils/dateKey';
 import { pricingApi, PriceObservation } from '../api/pricingApi';
 import { trackUserAction } from './intelligenceEngine';
 import { logWarn, logInfo } from '../utils/errorHandler';
@@ -589,9 +590,10 @@ class DecisionIntelligenceService {
   }
 
   private calculateDaysBeforeDeadline(dueDate: string, submittedAt: string): number {
-    const due = new Date(dueDate).getTime();
-    const submitted = new Date(submittedAt).getTime();
-    return Math.floor((due - submitted) / (1000 * 60 * 60 * 24));
+    // Calendar days submitted → due (dateKey), not floor(ms/day) over a key
+    // read as UTC midnight (#423). 0 when either date is unreadable.
+    const submitted = parseCalendarDay(submittedAt);
+    return (submitted ? daysUntil(dueDate, submitted) : null) ?? 0;
   }
 
   // -----------------------------------------

@@ -3321,6 +3321,7 @@
     "viewPhoto": "Foto ansehen",
     "viewPhotoOf": "Foto von {{label}} ansehen",
     "dueOverdue": "{{count}} Tage überfällig",
+    "dueOverdue_one": "{{count}} Tag überfällig",
     "dueToday": "Heute fällig",
     "dueTomorrow": "Morgen fällig",
     "dueInDays": "In {{count}} Tagen fällig",

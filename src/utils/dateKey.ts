@@ -117,3 +117,23 @@ export function weekKeys(d: Date): string[] {
     return localDateKey(day);
   });
 }
+
+/**
+ * Whole calendar days from today (or `now`) until `value` — negative when it
+ * has passed, 0 on the day itself, null when `value` is not a date. Accepts a
+ * `YYYY-MM-DD` key, an ISO instant or a Date; all are read as LOCAL calendar
+ * days (parseCalendarDay), so neither the hour nor a DST change moves it.
+ *
+ * The one answer to "how many days until / since X" — the six
+ * `Math.ceil((new Date(x) - Date.now()) / 86_400_000)` copies it replaced read
+ * a key as UTC midnight (a day early west of UTC, a day late after lunch) and
+ * gained a day across the end of summer time (learnings #423).
+ */
+export function daysUntil(value: string | Date | null | undefined, now: Date = new Date()): number | null {
+  if (value == null || value === '') return null;
+  const day =
+    value instanceof Date
+      ? Number.isNaN(value.getTime()) ? null : new Date(value.getFullYear(), value.getMonth(), value.getDate())
+      : parseCalendarDay(value);
+  return day ? calendarDaysBetween(now, day) : null;
+}

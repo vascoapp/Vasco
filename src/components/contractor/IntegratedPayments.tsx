@@ -1,6 +1,7 @@
 // IntegratedPayments.tsx - iDEAL/Mollie Integration for Dutch Contractors
 // Quick payment links, reminders, and payment tracking
 
+import { calendarDaysBetween, parseCalendarDay } from '../../utils/dateKey';
 import { friendlyError } from '../../utils/friendlyError';
 import React, { useState, useMemo } from 'react';
 import { documentNumber } from '../../domain/documents';
@@ -470,7 +471,11 @@ export const IntegratedPayments: React.FC<IntegratedPaymentsProps> = ({ onClose 
       .map((inv) => {
         const sent = inv.sentAt ?? inv.createdAt;
         if (!sent || !inv.paidAt) return null;
-        const days = (new Date(inv.paidAt).getTime() - new Date(sent).getTime()) / 86_400_000;
+        // Calendar days sent → paid (dateKey), not elapsed hours / 24: sent at
+        // 18:00 and paid next morning is one day, the same count Finanzen shows.
+        const from = parseCalendarDay(sent);
+        const to = parseCalendarDay(inv.paidAt);
+        const days = from && to ? calendarDaysBetween(from, to) : NaN;
         return Number.isFinite(days) && days >= 0 ? days : null;
       })
       .filter((d): d is number => d !== null);
