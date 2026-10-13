@@ -35,9 +35,9 @@ export function BillingHeader() {
 export function TrustRow() {
   const items = [
     { icon: "🔒", label: "Secured by Stripe" },
-    { icon: "✦", label: "14-day free trial" },
+    { icon: "✦", label: "First month free" },
     { icon: "↺", label: "Cancel anytime" },
-    { icon: "€", label: "VAT included" },
+    { icon: "€", label: "Prices excl. VAT" },
   ];
   return (
     <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-6 gap-y-2">

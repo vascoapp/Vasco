@@ -1,0 +1,1 @@
+Erste Version von Vasco Build: Angebote, Aufträge und Rechnungen für Handwerker, mit E-Rechnung für NL, DE, FR, ES, IT und UK.

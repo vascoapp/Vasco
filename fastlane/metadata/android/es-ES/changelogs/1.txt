@@ -1,9 +1,0 @@
-Bienvenido a Vasco — el copiloto administrativo con IA para gremios.
-
-Esta primera versión contiene:
-• Presupuestos a 3 niveles aceptados desde el móvil del cliente
-• Escaneo de facturas con IA
-• Enlaces de pago Mollie + Stripe para 6 países UE
-• EVE — 3 agentes IA preparan tu trabajo, tú apruebas con un toque
-• Sin conexión, sincroniza al reconectar
-• RGPD: exportación y borrado en la app

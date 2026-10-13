@@ -147,3 +147,10 @@ test("the checkout page (/billing/upgrade) sells only what ships, at the price l
   assert.match(page, /extraSeats: tier === "pro" \? extraSeats : 0/, "extra seats sent to checkout, Pro only");
   assert.match(page, /excl\./, "prices stated excl. VAT");
 });
+
+test("the billing trust row matches the offer (1 month free, excl. VAT)", () => {
+  const chrome = stripComments(fs.readFileSync(path.join(ADMIN, "src/components/BillingChrome.tsx"), "utf8"));
+  assert.doesNotMatch(chrome, /14-day|VAT included|incl\. VAT/, "the trust row repeats the old offer");
+  assert.match(chrome, /First month free/);
+  assert.match(chrome, /excl\. VAT/);
+});

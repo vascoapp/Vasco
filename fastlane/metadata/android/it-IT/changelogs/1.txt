@@ -1,9 +1,0 @@
-Benvenuto in Vasco — il copilota amministrativo con IA per artigiani.
-
-Questa prima versione contiene:
-• Preventivi a 3 livelli accettati dallo smartphone del cliente
-• Scansione fatture con IA
-• Link di pagamento Mollie + Stripe per 6 paesi UE
-• EVE — 3 agenti IA preparano il tuo lavoro, approvi con un tap
-• Offline-first, sincronizza al riconnetti
-• GDPR: export e cancellazione in-app

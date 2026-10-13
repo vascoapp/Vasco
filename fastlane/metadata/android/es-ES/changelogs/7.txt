@@ -1,0 +1,1 @@
+Primera versión de Vasco Build: presupuestos, trabajos y facturas para profesionales, con factura electrónica para NL, DE, FR, ES, IT y Reino Unido.

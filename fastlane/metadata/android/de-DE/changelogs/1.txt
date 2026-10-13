@@ -1,9 +1,0 @@
-Willkommen bei Vasco — dem KI-Bürocopiloten fürs Handwerk.
-
-Diese erste Version enthält:
-• Gestaffelte Angebote (Gut/Besser/Premium) auf dem Kunden-Smartphone
-• Beleg-Scanner mit KI
-• Mollie + Stripe Zahlungslinks für 6 EU-Länder
-• EVE — 3 KI-Agenten bereiten deine Arbeit vor, du bestätigst per Tap
-• Offline-first, syncht beim Reconnect
-• DSGVO Export und Löschung in-app

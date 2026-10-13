@@ -1,9 +1,0 @@
-Welcome to Vasco — the AI admin co-pilot for trades.
-
-This first release ships:
-• Tiered quotes customers accept from their phone
-• Photo-to-invoice scanning with AI
-• Mollie + Stripe payment links across 6 EU countries
-• EVE — 3 AI agents that prepare work for one-tap approval
-• Offline-first, syncs on reconnect
-• GDPR export + delete in-app
