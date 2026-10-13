@@ -28,24 +28,18 @@ export type MarketingContent = {
     marketsPrefix: string;
   };
   stats: Array<{ value: string; label: string }>;
-  appStorePreview: {
-    eyebrow: string;
+  /** "How it works": one row per app screen, alternating sides. */
+  features: {
     titleLead: string;
     titleAccent: string;
     footnote: string;
-    screens: Array<{ src: string; label: string }>;
-  };
-  guideThrough: {
-    eyebrow: string;
-    titleLead: string;
-    titleAccent: string;
-    items: Array<{ no: string; label: string; title: string; body: string }>;
-  };
-  how: {
-    eyebrow: string;
-    titleLead: string;
-    titleAccent: string;
-    steps: Array<{ n: string; title: string; body: string }>;
+    items: Array<{
+      label: string;
+      /** Store-capture key: /screenshots/app-<locale>-<screen>.webp */
+      screen: "quote" | "invoice" | "money" | "customers" | "work";
+      title: string;
+      body: string;
+    }>;
   };
   pricing: {
     eyebrow: string;
@@ -176,8 +170,8 @@ export const content: Record<Locale, MarketingContent> = {
     },
     hero: {
       badge: "In beta — coming to iOS and Android",
-      title: "Vasco knows",
-      titleAccent: "the way.",
+      title: "Quotes and invoices,",
+      titleAccent: "from your phone.",
       sub:
         "Quotes, jobs, invoices and the e-invoicing rules of the country you work in — in one app on your phone, so the paperwork takes less of your evening.",
       ctaPrimary: "Join the beta",
@@ -190,70 +184,16 @@ export const content: Record<Locale, MarketingContent> = {
       { value: "6", label: "E-invoice formats" },
       { value: "0%", label: "Commission on payments" },
     ],
-    appStorePreview: {
-      eyebrow: "Inside the app",
-      titleLead: "Four screens.",
-      titleAccent: "One app for the paperwork.",
-      footnote:
-        "Screens from the app, with example data. Vasco is not in the App Store or Google Play yet.",
-      screens: [
-        { src: "/screenshots/app-en-1.png", label: "Today" },
-        { src: "/screenshots/app-en-2.png", label: "Quote" },
-        { src: "/screenshots/app-en-3.png", label: "Money" },
-        { src: "/screenshots/app-en-4.png", label: "Invoice" },
-      ],
-    },
-    guideThrough: {
-      eyebrow: "What Vasco does",
-      titleLead: "Your guide through the stuff",
-      titleAccent: "nobody trained you for.",
+    features: {
+      titleLead: "What you do in Vasco.",
+      titleAccent: "Five screens, start to paid.",
+      footnote: "Screens from the app, with example data. Vasco is not in the App Store or Google Play yet.",
       items: [
-        {
-          no: "01",
-          label: "The admin pile",
-          title: "Off the laptop.\nBack on the tools.",
-          body:
-            "Quotes, jobs and invoices in one place on your phone. A finished job becomes an invoice in one tap — no retyping.",
-        },
-        {
-          no: "02",
-          label: "EU compliance",
-          title: "VAT. E-invoices.\nThe local rules.",
-          body:
-            "XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA and Peppol. Small-business schemes such as the KOR and Kleinunternehmer. Vasco builds your invoices to the rules of the country you work in.",
-        },
-        {
-          no: "03",
-          label: "Slow payers",
-          title: "Get paid.\nWithout the awkward call.",
-          body:
-            "A payment link on the invoice through your own Mollie or Stripe account. When an invoice is overdue, Vasco drafts a reminder for you to check and send.",
-        },
-      ],
-    },
-    how: {
-      eyebrow: "How it works",
-      titleLead: "Three steps.",
-      titleAccent: "Quote to paid.",
-      steps: [
-        {
-          n: "1",
-          title: "Build the quote.",
-          body:
-            "Line items from your own price list, with Good / Better / Best options if you want them.",
-        },
-        {
-          n: "2",
-          title: "Send the quote.",
-          body:
-            "Your customer opens it on their phone and accepts it online. No account needed on their side.",
-        },
-        {
-          n: "3",
-          title: "Get paid.",
-          body:
-            "Finish the job and turn it into an invoice in one tap. Add a payment link through your own Mollie or Stripe account.",
-        },
+        { label: "Quote", screen: "quote", title: "Price it on site.", body: "Line items from your own price list, with Good / Better / Best options when you want them. Your customer opens the quote on their phone and accepts it online — no account needed." },
+        { label: "Invoice", screen: "invoice", title: "An invoice in one tap.", body: "A finished job becomes an invoice without retyping. Vasco builds it to the rules of the country you work in — XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA or Peppol — with a bank-transfer QR code on euro invoices." },
+        { label: "Money", screen: "money", title: "See what is still open.", body: "What is due, what is late, and what came in. A payment link through your own Mollie or Stripe account; for a late invoice Vasco drafts a reminder for you to check and send." },
+        { label: "Customers", screen: "customers", title: "Customers, complete.", body: "Name, address, VAT ID and e-invoice details in one place, so the invoice is right the first time." },
+        { label: "Jobs", screen: "work", title: "Jobs that bill themselves.", body: "Plan the work, log hours and materials. When the job is done, Vasco invoices the agreed price — or, without one, the hours you logged and the materials you used." },
       ],
     },
     pricing: {
@@ -414,8 +354,8 @@ export const content: Record<Locale, MarketingContent> = {
     },
     hero: {
       badge: "In bèta — binnenkort voor iOS en Android",
-      title: "Vasco kent",
-      titleAccent: "de weg.",
+      title: "Offertes en facturen,",
+      titleAccent: "vanaf je telefoon.",
       sub:
         "Offertes, klussen, facturen en de e-factuurregels van het land waar je werkt — in één app op je telefoon. Minder avonden aan de keukentafel.",
       ctaPrimary: "Doe mee met de bèta",
@@ -428,70 +368,16 @@ export const content: Record<Locale, MarketingContent> = {
       { value: "6", label: "E-factuurformaten" },
       { value: "0%", label: "Commissie op betalingen" },
     ],
-    appStorePreview: {
-      eyebrow: "In de app",
-      titleLead: "Vier schermen.",
-      titleAccent: "Eén app voor het papierwerk.",
-      footnote:
-        "Schermen uit de app, met voorbeeldgegevens. Vasco staat nog niet in de App Store of Google Play.",
-      screens: [
-        { src: "/screenshots/app-nl-1.png", label: "Vandaag" },
-        { src: "/screenshots/app-nl-2.png", label: "Offerte" },
-        { src: "/screenshots/app-nl-3.png", label: "Geld" },
-        { src: "/screenshots/app-nl-4.png", label: "Factuur" },
-      ],
-    },
-    guideThrough: {
-      eyebrow: "Wat Vasco doet",
-      titleLead: "Je gids door alles",
-      titleAccent: "waar geen opleiding voor bestaat.",
+    features: {
+      titleLead: "Wat je in Vasco doet.",
+      titleAccent: "Vijf schermen, van offerte tot betaald.",
+      footnote: "Schermen uit de app, met voorbeeldgegevens. Vasco staat nog niet in de App Store of Google Play.",
       items: [
-        {
-          no: "01",
-          label: "De administratie",
-          title: "Laptop dicht.\nGereedschap pakken.",
-          body:
-            "Offertes, klussen en facturen op één plek op je telefoon. Een afgeronde klus wordt met één tik een factuur — niks overtypen.",
-        },
-        {
-          no: "02",
-          label: "EU-regels",
-          title: "Btw. E-facturen.\nDe regels per land.",
-          body:
-            "XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA en Peppol. Regelingen als de KOR en Kleinunternehmer. Vasco maakt je facturen volgens de regels van het land waar je werkt.",
-        },
-        {
-          no: "03",
-          label: "Late betalers",
-          title: "Krijg betaald.\nZonder vervelend telefoontje.",
-          body:
-            "Een betaallink op de factuur via je eigen Mollie- of Stripe-account. Is een factuur te laat, dan zet Vasco een herinnering klaar die jij controleert en verstuurt.",
-        },
-      ],
-    },
-    how: {
-      eyebrow: "Hoe het werkt",
-      titleLead: "Drie stappen.",
-      titleAccent: "Van offerte tot betaald.",
-      steps: [
-        {
-          n: "1",
-          title: "Maak de offerte.",
-          body:
-            "Regels uit je eigen prijslijst, met Goed / Beter / Best-opties als je dat wilt.",
-        },
-        {
-          n: "2",
-          title: "Verstuur de offerte.",
-          body:
-            "Je klant opent hem op zijn telefoon en gaat online akkoord. Hij heeft geen account nodig.",
-        },
-        {
-          n: "3",
-          title: "Krijg betaald.",
-          body:
-            "Klus af? Met één tik maak je er een factuur van. Voeg een betaallink toe via je eigen Mollie- of Stripe-account.",
-        },
+        { label: "Offerte", screen: "quote", title: "Prijs het op de klus.", body: "Regels uit je eigen prijslijst, met Goed / Beter / Best-opties als je dat wilt. Je klant opent de offerte op zijn telefoon en gaat online akkoord — zonder account." },
+        { label: "Factuur", screen: "invoice", title: "Met één tik een factuur.", body: "Een afgeronde klus wordt een factuur zonder overtypen. Vasco maakt hem volgens de regels van het land waar je werkt — XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA of Peppol — met een QR-code voor de overboeking op facturen in euro." },
+        { label: "Geld", screen: "money", title: "Zie wat nog openstaat.", body: "Wat moet nog binnenkomen, wat is te laat en wat is betaald. Een betaallink via je eigen Mollie- of Stripe-account; bij een late factuur zet Vasco een herinnering klaar die jij controleert en verstuurt." },
+        { label: "Klanten", screen: "customers", title: "Klanten, compleet.", body: "Naam, adres, btw-nummer en e-factuurgegevens op één plek, zodat de factuur in één keer klopt." },
+        { label: "Klussen", screen: "work", title: "Klussen die zichzelf factureren.", body: "Plan het werk, schrijf uren en materiaal. Is de klus af, dan factureert Vasco de afgesproken prijs — of, zonder afspraak, de geschreven uren en het gebruikte materiaal." },
       ],
     },
     pricing: {
@@ -667,8 +553,8 @@ export const content: Record<Locale, MarketingContent> = {
     },
     hero: {
       badge: "In der Beta — bald für iOS und Android",
-      title: "Vasco kennt",
-      titleAccent: "den Weg.",
+      title: "Angebote und Rechnungen,",
+      titleAccent: "direkt vom Handy.",
       sub:
         "Angebote, Aufträge, Rechnungen und die E-Rechnungsregeln des Landes, in dem Sie arbeiten — in einer App auf Ihrem Handy. Weniger Büroarbeit am Feierabend.",
       ctaPrimary: "Zur Beta anmelden",
@@ -681,70 +567,16 @@ export const content: Record<Locale, MarketingContent> = {
       { value: "6", label: "E-Rechnungsformate" },
       { value: "0 %", label: "Provision auf Zahlungen" },
     ],
-    appStorePreview: {
-      eyebrow: "In der App",
-      titleLead: "Vier Bildschirme.",
-      titleAccent: "Eine App für den Papierkram.",
-      footnote:
-        "Bildschirme aus der App, mit Beispieldaten. Vasco ist noch nicht im App Store oder bei Google Play.",
-      screens: [
-        { src: "/screenshots/app-de-1.png", label: "Heute" },
-        { src: "/screenshots/app-de-2.png", label: "Angebot" },
-        { src: "/screenshots/app-de-3.png", label: "Finanzen" },
-        { src: "/screenshots/app-de-4.png", label: "Rechnung" },
-      ],
-    },
-    guideThrough: {
-      eyebrow: "Was Vasco macht",
-      titleLead: "Ihr Wegweiser durch alles,",
-      titleAccent: "was in keiner Ausbildung vorkommt.",
+    features: {
+      titleLead: "Was Sie in Vasco erledigen.",
+      titleAccent: "Fünf Bildschirme, vom Angebot bis zum Geld.",
+      footnote: "Bildschirme aus der App, mit Beispieldaten. Vasco ist noch nicht im App Store oder bei Google Play.",
       items: [
-        {
-          no: "01",
-          label: "Die Büroarbeit",
-          title: "Laptop zu.\nWerkzeug in die Hand.",
-          body:
-            "Angebote, Aufträge und Rechnungen an einem Ort auf Ihrem Handy. Aus einem erledigten Auftrag wird mit einem Tippen eine Rechnung — ohne Abtippen.",
-        },
-        {
-          no: "02",
-          label: "EU-Regeln",
-          title: "Umsatzsteuer. E-Rechnung.\nDie Regeln vor Ort.",
-          body:
-            "XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA und Peppol. Sonderregeln wie die Kleinunternehmerregelung nach § 19 UStG. Vasco erstellt Ihre Rechnungen nach den Regeln des Landes, in dem Sie arbeiten.",
-        },
-        {
-          no: "03",
-          label: "Säumige Zahler",
-          title: "Bezahlt werden.\nOhne unangenehmen Anruf.",
-          body:
-            "Ein Zahlungslink auf der Rechnung über Ihr eigenes Mollie- oder Stripe-Konto. Ist eine Rechnung überfällig, bereitet Vasco eine Zahlungserinnerung vor, die Sie prüfen und versenden.",
-        },
-      ],
-    },
-    how: {
-      eyebrow: "So funktioniert's",
-      titleLead: "Drei Schritte.",
-      titleAccent: "Vom Angebot zum Geld.",
-      steps: [
-        {
-          n: "1",
-          title: "Angebot erstellen.",
-          body:
-            "Positionen aus Ihrer eigenen Preisliste, auf Wunsch mit den Optionen Gut / Besser / Optimal.",
-        },
-        {
-          n: "2",
-          title: "Angebot versenden.",
-          body:
-            "Ihr Kunde öffnet es auf dem Handy und nimmt es online an. Er braucht dafür kein Konto.",
-        },
-        {
-          n: "3",
-          title: "Bezahlt werden.",
-          body:
-            "Auftrag erledigt? Mit einem Tippen wird daraus eine Rechnung. Fügen Sie einen Zahlungslink über Ihr eigenes Mollie- oder Stripe-Konto hinzu.",
-        },
+        { label: "Angebot", screen: "quote", title: "Preis direkt vor Ort.", body: "Positionen aus Ihrer eigenen Preisliste, auf Wunsch mit den Optionen Gut / Besser / Optimal. Ihr Kunde öffnet das Angebot auf dem Handy und nimmt es online an — ohne Konto." },
+        { label: "Rechnung", screen: "invoice", title: "Rechnung mit einem Tippen.", body: "Aus einem erledigten Auftrag wird ohne Abtippen eine Rechnung. Vasco erstellt sie nach den Regeln des Landes, in dem Sie arbeiten — XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA oder Peppol — mit QR-Code für die Überweisung auf Euro-Rechnungen." },
+        { label: "Finanzen", screen: "money", title: "Sehen, was noch offen ist.", body: "Was fällig ist, was überfällig ist und was eingegangen ist. Ein Zahlungslink über Ihr eigenes Mollie- oder Stripe-Konto; bei einer überfälligen Rechnung bereitet Vasco eine Erinnerung vor, die Sie prüfen und versenden." },
+        { label: "Kunden", screen: "customers", title: "Kunden, vollständig.", body: "Name, Anschrift, USt-IdNr. und E-Rechnungsdaten an einem Ort, damit die Rechnung beim ersten Mal stimmt." },
+        { label: "Aufträge", screen: "work", title: "Aufträge, die sich selbst abrechnen.", body: "Arbeit planen, Stunden und Material erfassen. Ist der Auftrag erledigt, stellt Vasco den vereinbarten Preis in Rechnung — oder, ohne Vereinbarung, die erfassten Stunden und das verbrauchte Material." },
       ],
     },
     pricing: {
@@ -919,8 +751,8 @@ export const content: Record<Locale, MarketingContent> = {
     },
     hero: {
       badge: "In beta — coming to iOS and Android",
-      title: "Less paperwork",
-      titleAccent: "after every job.",
+      title: "Estimates and invoices,",
+      titleAccent: "from your phone.",
       sub:
         "Estimates, jobs and invoices in one app on your phone. Your customer accepts the estimate online; a finished job becomes an invoice in one tap.",
       ctaPrimary: "Join the beta",
@@ -933,70 +765,16 @@ export const content: Record<Locale, MarketingContent> = {
       { value: "1", label: "Tap job → invoice" },
       { value: "0%", label: "Commission on payments" },
     ],
-    appStorePreview: {
-      eyebrow: "Inside the app",
-      titleLead: "Four screens.",
-      titleAccent: "One app for the paperwork.",
-      footnote:
-        "Screens from the app, with example data. Vasco is not in the App Store or Google Play yet.",
-      screens: [
-        { src: "/screenshots/app-us-1.png", label: "Today" },
-        { src: "/screenshots/app-us-2.png", label: "Estimate" },
-        { src: "/screenshots/app-us-3.png", label: "Money" },
-        { src: "/screenshots/app-us-4.png", label: "Invoice" },
-      ],
-    },
-    guideThrough: {
-      eyebrow: "What Vasco does",
-      titleLead: "The stuff trade school",
-      titleAccent: "didn't teach you.",
+    features: {
+      titleLead: "What you do in Vasco.",
+      titleAccent: "Five screens, estimate to paid.",
+      footnote: "Screens from the app, with example data. Vasco is not in the App Store or Google Play yet.",
       items: [
-        {
-          no: "01",
-          label: "The admin pile",
-          title: "Off the laptop.\nBack on the tools.",
-          body:
-            "Estimates, jobs and invoices in one place on your phone. A finished job becomes an invoice in one tap — no retyping.",
-        },
-        {
-          no: "02",
-          label: "Estimates",
-          title: "Good. Better. Best.\nAccepted online.",
-          body:
-            "Offer options side by side. Your customer opens the estimate on their phone and accepts it — no account needed.",
-        },
-        {
-          no: "03",
-          label: "Slow payers",
-          title: "Get paid.\nWithout the awkward call.",
-          body:
-            "A payment link on the invoice through your own Stripe account. When an invoice is overdue, Vasco drafts a reminder for you to check and send.",
-        },
-      ],
-    },
-    how: {
-      eyebrow: "How it works",
-      titleLead: "Three steps.",
-      titleAccent: "Estimate to paid.",
-      steps: [
-        {
-          n: "1",
-          title: "Build the estimate.",
-          body:
-            "Line items from your own price list, with Good / Better / Best options if you want them.",
-        },
-        {
-          n: "2",
-          title: "Send the estimate.",
-          body:
-            "Your customer opens it on their phone and accepts it online. No account needed on their side.",
-        },
-        {
-          n: "3",
-          title: "Get paid.",
-          body:
-            "Finish the job and turn it into an invoice in one tap. Add a payment link through your own Stripe account.",
-        },
+        { label: "Estimate", screen: "quote", title: "Price it on site.", body: "Line items from your own price list, with Good / Better / Best options when you want them. Your customer opens the estimate on their phone and accepts it online — no account needed." },
+        { label: "Invoice", screen: "invoice", title: "An invoice in one tap.", body: "A finished job becomes an invoice without retyping, with a payment link through your own Stripe account." },
+        { label: "Money", screen: "money", title: "See what is still open.", body: "What is due, what is late, and what came in. For a late invoice Vasco drafts a reminder for you to check and send." },
+        { label: "Customers", screen: "customers", title: "Customers, complete.", body: "Name, address and contact details in one place, so the invoice is right the first time." },
+        { label: "Jobs", screen: "work", title: "Jobs that bill themselves.", body: "Plan the work, log hours and materials. When the job is done, Vasco invoices the agreed price — or, without one, the hours you logged and the materials you used." },
       ],
     },
     pricing: {

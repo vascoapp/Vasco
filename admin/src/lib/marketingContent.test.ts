@@ -33,11 +33,17 @@ test("every homepage exists, is in the sitemap and names the others", () => {
 });
 
 test("every screenshot on the page is a file that exists", () => {
+  const code: Record<Locale, string> = { en: "en", nl: "nl", de: "de", "en-US": "us" };
   for (const l of locales) {
-    for (const s of content[l].appStorePreview.screens) {
-      assert.ok(fs.existsSync(path.join(ADMIN, "public", s.src)), `${l}: ${s.src} does not exist`);
+    const keys = ["today", "ipad-today", ...content[l].features.items.map((f) => f.screen)];
+    for (const k of keys) {
+      const f = `screenshots/app-${code[l]}-${k}.webp`;
+      assert.ok(fs.existsSync(path.join(ADMIN, "public", f)), `${l}: ${f} does not exist`);
     }
   }
+  // The component builds the same paths.
+  const home = fs.readFileSync(path.join(ADMIN, "src/components/MarketingHome.tsx"), "utf8");
+  assert.match(home, /\/screenshots\/app-\$\{SHOT_CODE\[locale\]\}-\$\{key\}\.webp/);
 });
 
 test("prices are the app's own (src/services/subscriptionService.ts)", () => {
