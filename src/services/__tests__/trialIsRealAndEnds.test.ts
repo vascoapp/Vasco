@@ -166,8 +166,12 @@ describe('the promise is wired to something', () => {
   });
 
   it('the signup copy still says the number TRIAL_DAYS grants, in every locale', () => {
-    // Copy and constant have to move together: the subtitle names "14" in six
-    // languages, and nothing else ties them to TRIAL_DAYS.
+    // Copy and constant have to move together. Since 2026-10-13 the trial is
+    // 30 days and the copy says "a month" — so 30 must read as the locale's
+    // word for month (any other length must still name its number).
+    const MONTH: Record<string, RegExp> = {
+      en: /month/i, nl: /maand/i, de: /Monat/i, fr: /mois/i, es: /\bmes\b/i, it: /mese/i,
+    };
     const repo = path.join(__dirname, '..', '..', '..');
     for (const loc of ['en', 'nl', 'de', 'fr', 'es', 'it']) {
       const json = JSON.parse(
@@ -175,7 +179,8 @@ describe('the promise is wired to something', () => {
       );
       const subtitle: string = json?.signup?.subtitle ?? '';
       expect(subtitle).not.toBe('');
-      expect(subtitle).toContain(String(TRIAL_DAYS));
+      if (TRIAL_DAYS === 30) expect(`${loc}: ${subtitle}`).toMatch(MONTH[loc]);
+      else expect(subtitle).toContain(String(TRIAL_DAYS));
     }
   });
 });

@@ -1,5 +1,5 @@
 {
- "takenAt": "2026-10-09",
+ "takenAt": "2026-10-13",
  "tables": {
   "account_deletion_requests": {
    "id": {
@@ -5941,6 +5941,12 @@
     "hasDefault": true,
     "type": "timestamp with time zone",
     "default": "now()"
+   },
+   "extra_seats": {
+    "nullable": false,
+    "hasDefault": true,
+    "type": "integer",
+    "default": "0"
    }
   },
   "supplier_connections": {
@@ -6559,6 +6565,12 @@
     "required": [
      "p_doc_type"
     ]
+   }
+  ],
+  "subscriptions_pin_extra_seats": [
+   {
+    "args": [],
+    "required": []
    }
   ],
   "query_margin_trend": [
@@ -8104,6 +8116,12 @@
    }
   ],
   "documents_keep_decided_status": [
+   {
+    "args": [],
+    "required": []
+   }
+  ],
+  "subscriptions_pin_entitlement": [
    {
     "args": [],
     "required": []

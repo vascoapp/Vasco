@@ -7,6 +7,7 @@
 // Contractor: €69/mo + 1% commission — team features, API, white-label, support
 // =============================================================================
 
+import { calendarDaysBetween } from '../utils/dateKey';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Country } from '../context/AuthContext';
 import i18n from '../i18n/i18n';
@@ -730,6 +731,9 @@ export function isTrialExpired(state: SubscriptionState): boolean {
 
 export function daysLeftInTrial(state: SubscriptionState): number {
   if (!state.trialEndsAt) return 0;
-  const diff = new Date(state.trialEndsAt).getTime() - Date.now();
-  return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)));
+  if (!isTrialActive(state)) return 0;
+  // Calendar days in local time (dateKey's helper, learnings #230/#298): the
+  // old ceil(ms / 24h) said "31 days left" on a 30-day trial that crossed the
+  // switch to winter time, and changed its answer during the day.
+  return Math.max(0, calendarDaysBetween(new Date(), new Date(state.trialEndsAt)));
 }

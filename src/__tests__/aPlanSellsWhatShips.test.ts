@@ -70,17 +70,20 @@ describe('the checkout page sells only what ships', () => {
 
 describe('the two pages agree on what a plan costs', () => {
   it('the web prices match the tier table', () => {
+    // The checkout page reads its numbers from admin/src/lib/pricing.ts (one
+    // list for the whole website, 2026-10-13); that list must equal TIERS and
+    // the page must actually use it.
     const web = read('admin/src/app/billing/upgrade/page.tsx');
+    const pricing = read('admin/src/lib/pricing.ts');
     const tiers = read('src/services/subscriptionService.ts');
     for (const tier of ['pro', 'contractor'] as const) {
       const block = tiers.slice(tiers.indexOf(`  ${tier}: {`), tiers.indexOf('limits:', tiers.indexOf(`  ${tier}: {`)));
       const monthly = block.match(/monthlyPrice: (\d+)/)?.[1];
       const annualMonthly = block.match(/annualMonthlyPrice: (\d+)/)?.[1];
-      const webBlock = web.slice(web.indexOf(`  ${tier}: {`), web.indexOf('},', web.indexOf(`  ${tier}: {`)));
-      expect({ tier, monthly: webBlock.includes(`monthly: ${monthly}`) })
-        .toEqual({ tier, monthly: true });
-      expect({ tier, yearly: webBlock.includes(`yearly: ${annualMonthly}`) })
-        .toEqual({ tier, yearly: true });
+      const line = pricing.match(new RegExp(`${tier}: \\{ monthly: (\\d+), yearlyPerMonth: (\\d+)`));
+      expect({ tier, monthly: line?.[1], yearly: line?.[2] }).toEqual({ tier, monthly, yearly: annualMonthly });
+      expect(web).toContain(`monthly: PRICING.${tier}.monthly`);
+      expect(web).toContain(`yearly: PRICING.${tier}.yearlyPerMonth`);
     }
   });
 });
