@@ -1,4 +1,6 @@
 import { content, MARKETS_EN, MARKETS_US, type Locale } from "@/lib/marketing-content";
+import StoreButtons from "@/components/StoreButtons";
+import { primaryCtaHref } from "@/lib/stores";
 
 type Props = { locale: Locale };
 
@@ -82,7 +84,7 @@ export default function MarketingHome({ locale }: Props) {
               ))}
             </div>
             <a
-              href="mailto:hello@vascobuild.com?subject=Vasco%20waitlist"
+              href={primaryCtaHref()}
               className="rounded-lg bg-white px-3 py-1.5 font-[family-name:var(--font-inter)] text-xs font-semibold text-[#0B0E11]"
             >
               {t.nav.cta}
@@ -128,7 +130,7 @@ export default function MarketingHome({ locale }: Props) {
             </div>
 
             <a
-              href="mailto:hello@vascobuild.com?subject=Vasco%20waitlist"
+              href={primaryCtaHref()}
               className="rounded-xl bg-white px-4 py-2 font-[family-name:var(--font-inter)] text-sm font-semibold text-[#0B0E11] transition hover:bg-zinc-200"
             >
               {t.nav.cta}
@@ -185,18 +187,9 @@ export default function MarketingHome({ locale }: Props) {
               </p>
 
               <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href="mailto:hello@vascobuild.com?subject=Vasco%20waitlist&body=I'm%20a%20%5Bplumber%2Felectrician%2Faannemer%5D%20in%20%5BNL%2FDE%2FFR%2F...%5D.%20Add%20me%20to%20the%20Vasco%20waitlist."
-                  className="inline-flex items-center gap-2 rounded-2xl px-7 py-4 font-[family-name:var(--font-archivo)] text-sm font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #9A3412 0%, #C2410C 50%, #F97316 100%)",
-                    boxShadow: "0 0 36px rgba(249,115,22,0.4)",
-                  }}
-                >
-                  {t.hero.ctaPrimary}
-                  <span aria-hidden>→</span>
-                </a>
+                <div id="download">
+                  <StoreButtons locale={locale} fallbackLabel={t.hero.ctaPrimary} />
+                </div>
                 <a
                   href="#how"
                   className="inline-flex items-center gap-2 rounded-2xl border border-zinc-700 px-7 py-4 font-[family-name:var(--font-inter)] text-sm font-semibold text-zinc-200 transition hover:border-zinc-500 hover:bg-zinc-900/50"
@@ -488,7 +481,7 @@ export default function MarketingHome({ locale }: Props) {
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {t.pricing.plans.map((plan) => (
+            {t.pricing.plans.map((plan, planIndex) => (
               <div
                 key={plan.name}
                 className={
@@ -555,7 +548,7 @@ export default function MarketingHome({ locale }: Props) {
                     ))}
                   </ul>
                   <a
-                    href="mailto:hello@vascobuild.com?subject=Vasco%20waitlist"
+                    href={planIndex === 2 ? "mailto:hello@vascobuild.com?subject=Vasco%20Contractor" : primaryCtaHref()}
                     className={
                       "block w-full rounded-xl px-5 py-3 text-center font-[family-name:var(--font-archivo)] text-sm font-bold uppercase tracking-[0.14em] transition " +
                       (plan.highlight
@@ -690,18 +683,9 @@ export default function MarketingHome({ locale }: Props) {
           <p className="mb-12 font-[family-name:var(--font-inter)] text-lg text-zinc-400 sm:text-xl">
             {t.finalCta.body}
           </p>
-          <a
-            href="mailto:hello@vascobuild.com?subject=Vasco%20waitlist"
-            className="inline-flex items-center gap-2 rounded-2xl px-9 py-4 font-[family-name:var(--font-archivo)] text-sm font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110"
-            style={{
-              background:
-                "linear-gradient(135deg, #9A3412 0%, #C2410C 50%, #F97316 100%)",
-              boxShadow: "0 0 40px rgba(249,115,22,0.5)",
-            }}
-          >
-            {t.finalCta.cta}
-            <span aria-hidden>→</span>
-          </a>
+          <div className="flex justify-center">
+            <StoreButtons locale={locale} fallbackLabel={t.finalCta.cta} />
+          </div>
         </div>
       </section>
 

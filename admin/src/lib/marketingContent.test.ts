@@ -78,3 +78,23 @@ test("no claim the product cannot back", () => {
 test("German speaks to the reader as Sie", () => {
   assert.doesNotMatch(JSON.stringify(content.de), /\b(du|dein|deine|deinen|deinem|dich|dir)\b/i);
 });
+
+// @ts-expect-error node --experimental-strip-types needs the extension
+import { STORES, anyStoreLive } from "./stores.ts";
+
+test("every install button goes through the store switch (lib/stores.ts)", () => {
+  const home = stripComments(fs.readFileSync(path.join(ADMIN, "src/components/MarketingHome.tsx"), "utf8"));
+  assert.doesNotMatch(home, /mailto:hello@vascobuild\.com\?subject=Vasco%20waitlist/, "a raw waitlist link bypasses the switch");
+  assert.ok((home.match(/<StoreButtons /g) ?? []).length >= 2, "hero + final CTA render StoreButtons");
+  assert.match(STORES.ios.url, /^https:\/\/apps\.apple\.com\/app\/id\d+$/);
+  assert.match(STORES.android.url, /^https:\/\/play\.google\.com\/store\/apps\/details\?id=com\.vascobuild\.app$/);
+});
+
+test("the store copy says what the switch says", () => {
+  const notYet = /not in the App Store|nog niet in de App Store|noch nicht im App Store|Not from the stores yet|Nog niet uit de stores|Noch nicht aus den Stores/;
+  for (const l of locales) {
+    const text = JSON.stringify(content[l]);
+    if (anyStoreLive()) assert.doesNotMatch(text, notYet, `${l}: says "not in the stores" while a store is live`);
+    else assert.doesNotMatch(text, /available on the App Store|im App Store erhältlich|beschikbaar in de App Store/i, `${l}: claims a store that is not live`);
+  }
+});
