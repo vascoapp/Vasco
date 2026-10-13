@@ -553,6 +553,9 @@ export type SubscriptionRow = {
   current_period_ends_at: string | null;
   external_id: string | null;
   external_provider: 'mollie' | 'stripe' | null;
+  /** Migration 20261013000001 — extra team members bought on top of the plan.
+   *  Server-written only (trigger pins it for user sessions). */
+  extra_seats: number;
   created_at: string;
   updated_at: string;
 };

@@ -15,7 +15,7 @@ import { dispatchPaidSideEffects } from '../_shared/paid-side-effects.ts';
 import { claimWebhookEvent, redeemCredits, restoreCredits, releaseWebhookEvent } from '../_shared/credit-redemption.ts';
 import { invoiceLookup } from '../_shared/invoiceRef.ts';
 import { isPermanentDbError } from '../_shared/dbErrors.ts';
-import { entitledTier, invoiceSubscriptionId, invoiceSubscriptionMetadata, subscriptionPeriodEnd } from '../_shared/stripeShapes.ts';
+import { billingCycleFrom, entitledTier, extraSeatsFrom, invoiceSubscriptionId, invoiceSubscriptionMetadata, subscriptionPeriodEnd } from '../_shared/stripeShapes.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -392,6 +392,19 @@ Deno.serve(async (req) => {
             user_id: userId,
             tier: entitledTier(status, tier),
             status,
+            // The row said "monthly" for a yearly plan: nothing wrote the cycle.
+            ...(billingCycleFrom(sub) ? { billing_cycle: billingCycleFrom(sub) } : {}),
+            // Seats only when this object has items (a subscription, not a
+            // checkout session); an ended subscription keeps none.
+            ...(status === 'canceled' || status === 'expired'
+              ? { extra_seats: 0 }
+              : (() => {
+                  const seats = extraSeatsFrom(sub, [
+                    Deno.env.get('STRIPE_PRICE_SEAT_MONTHLY'),
+                    Deno.env.get('STRIPE_PRICE_SEAT_YEARLY'),
+                  ]);
+                  return seats === null ? {} : { extra_seats: seats };
+                })()),
             external_id: externalId,
             external_provider: 'stripe',
             current_period_ends_at: extendedPeriodEnd,

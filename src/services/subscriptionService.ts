@@ -105,8 +105,9 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     extraSeatPrice: 0,
     limits: {
       maxActiveJobs: 5,
-      maxQuotesPerMonth: 10,
-      maxInvoicesPerMonth: 10,
+      // To try Vasco, not to run a business on (user, 2026-10-13; was 10/10).
+      maxQuotesPerMonth: 5,
+      maxInvoicesPerMonth: 3,
       maxAiInsightsPerMonth: 5,
       maxClients: 25,
       maxPhotoStorageMB: 500,
@@ -152,9 +153,9 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     // nothing measures. What Pro actually unlocks over Free, stated plainly.
     tagline: 'Unlimited quotes & invoices, e-invoicing and automations',
     monthlyPrice: 39,
-    annualMonthlyPrice: 29,
-    annualPrice: 348,
-    extraSeatPrice: 9,
+    annualMonthlyPrice: 32,
+    annualPrice: 384,
+    extraSeatPrice: 10, // per extra team member, Pro only (max 3)
     badge: 'BEST VALUE',
     limits: {
       maxActiveJobs: Infinity,
@@ -202,9 +203,9 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     name: 'Contractor',
     tagline: 'Team features + dedicated support',
     monthlyPrice: 69,
-    annualMonthlyPrice: 49,
-    annualPrice: 588,
-    extraSeatPrice: 19,
+    annualMonthlyPrice: 56,
+    annualPrice: 672,
+    extraSeatPrice: 0, // not sold: Contractor already includes 15
     limits: {
       maxActiveJobs: Infinity,
       maxQuotesPerMonth: Infinity,
@@ -259,12 +260,13 @@ export interface SubscriptionState {
   aiInsightsUsedThisMonth: number;
   activeJobCount: number;
   clientCount: number;
-  trialEndsAt: string | null;        // 14-day trial of Pro
+  trialEndsAt: string | null;        // 30-day ("1 month") trial of Pro
 }
 
-/** Length of the Pro trial. The signup subtitle says "14" in all six
- *  locales, so this constant and that copy have to move together. */
-export const TRIAL_DAYS = 14;
+/** Length of the Pro trial. The signup + onboarding copy says "1 month" in
+ *  all six locales and the website checkout grants the same 30 days, so the
+ *  three move together — guard `trialLengthAgrees`. */
+export const TRIAL_DAYS = 30; // "1 month free" (user, 2026-10-13); was 14
 
 const STORAGE_KEY = '@vasco_subscription';
 const USAGE_KEY = '@vasco_usage_month';
@@ -569,7 +571,7 @@ export async function upgradeTo(
 }
 
 /**
- * Start the 14-day Pro trial the signup screen promises.
+ * Start the 30-day Pro trial the signup screen promises.
  *
  * Until 2026-09-12 this function had **zero call sites**, and `trialEndsAt`,
  * `isTrialActive` and `daysLeftInTrial` had zero readers — while the signup
@@ -587,7 +589,7 @@ export async function upgradeTo(
 /** Exactly the columns this service reads back. */
 type SubscriptionServerRow = Pick<
   SubscriptionRow,
-  'tier' | 'billing_cycle' | 'status' | 'trial_ends_at'
+  'tier' | 'billing_cycle' | 'status' | 'trial_ends_at' | 'extra_seats'
 >;
 
 /** Exactly the columns this service writes. */
@@ -649,7 +651,7 @@ export async function pushSubscription(state: SubscriptionState): Promise<boolea
 /**
  * Pull the account's entitlement and let it win over the device.
  *
- * This is what stops the 14-day trial being device-local. Before it, state
+ * This is what stops the trial being device-local. Before it, state
  * lived only in AsyncStorage, so **a reinstall granted a fresh trial** and the
  * trial did not follow the contractor to a second device.
  *
@@ -670,7 +672,7 @@ export async function syncSubscriptionFromServer(): Promise<SubscriptionState | 
     if (!userId) return null;
 
     const { data, error } = (await (supabase.from('subscriptions') as any)
-      .select('tier, billing_cycle, status, trial_ends_at')
+      .select('tier, billing_cycle, status, trial_ends_at, extra_seats')
       .eq('user_id', userId)
       .maybeSingle()) as { data: SubscriptionServerRow | null; error: unknown };
     if (error) return null;
@@ -687,6 +689,9 @@ export async function syncSubscriptionFromServer(): Promise<SubscriptionState | 
       tier: tierFromServer(data.tier),
       billingCycle: data.billing_cycle === 'yearly' ? 'annual' : 'monthly',
       trialEndsAt: data.trial_ends_at,
+      // Extra team members bought on the website (webhook-written, server-only).
+      // Only a paid tier keeps them: a lapsed plan's seats are not an entitlement.
+      seatsPurchased: data.tier === 'free' ? 0 : Math.max(0, Number(data.extra_seats) || 0),
     });
     await saveSubscription(merged);
     // If the pull expired the trial, tell the server too, so the next device

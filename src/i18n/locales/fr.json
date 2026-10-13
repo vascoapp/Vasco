@@ -278,7 +278,7 @@
     "teamSizes.largeDesc": "Entreprise etablie",
     "aiDemo": "Voici ce que Vasco peut faire pour vous",
     "aiDemoDesc": "Selon votre metier et vos objectifs, ces informations vous attendent :",
-    "aiDemoNote": "Formule gratuite : 5 chantiers ouverts à la fois et 10 devis par mois",
+    "aiDemoNote": "Formule gratuite : {{jobs}} chantiers ouverts à la fois, {{quotes}} devis et {{invoices}} factures par mois",
     "choosePlan": "Choisissez votre plan",
     "choosePlanDesc": "Commencez gratuitement, passez a un plan superieur quand vous voulez",
     "recommendedForYou": "RECOMMANDÉ POUR VOUS",
@@ -334,10 +334,10 @@
       "insights": "Analyses d'activité",
       "insightsDesc": "Rapports hebdo sur le chiffre d'affaires, les chantiers et les tendances"
     },
-    "trialTitle": "Vos 14 premiers jours : Pro, gratuit",
+    "trialTitle": "Votre premier mois : Pro, gratuit",
     "trialDesc": "Tout Pro est activé pour vous. Sans carte, rien à résilier.",
-    "trialAfter": "Après 14 jours, votre compte continue avec la formule gratuite.",
-    "trialSummary": "Pro — 14 jours gratuits, puis Gratuit"
+    "trialAfter": "Après un mois, votre compte continue avec la formule gratuite.",
+    "trialSummary": "Pro — 1 mois gratuit, puis Gratuit"
   },
   "dashboard": {
     "goodMorning": "Bonjour",
@@ -2626,7 +2626,7 @@
   },
   "signup": {
     "title": "Créez votre compte",
-    "subtitle": "Commencez votre essai de 14 jours — sans carte bancaire.",
+    "subtitle": "Commencez votre mois d’essai — sans carte bancaire.",
     "referredBy": "Parrainé · code {{code}}",
     "passwordPlaceholder": "Mot de passe (8 caractères min.)",
     "confirmPasswordPlaceholder": "Confirmez le mot de passe",

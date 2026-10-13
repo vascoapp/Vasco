@@ -63,7 +63,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { tier, billingCycle } = (await req.json()) as { tier: Tier; billingCycle: Cycle };
+    const { tier, billingCycle, extraSeats: rawSeats } = (await req.json()) as {
+      tier: Tier; billingCycle: Cycle; extraSeats?: number;
+    };
+    // Extra team members: Pro only, 0–3 (past that Contractor is cheaper).
+    const extraSeats = tier === 'pro' ? Math.min(3, Math.max(0, Math.floor(Number(rawSeats) || 0))) : 0;
     if (!['pro', 'contractor'].includes(tier) || !['monthly', 'yearly'].includes(billingCycle)) {
       return new Response(JSON.stringify({ ok: false, error: 'Invalid tier or billingCycle' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -85,6 +89,16 @@ Deno.serve(async (req) => {
     form.set('cancel_url', cancelUrl);
     form.set('line_items[0][price]', price);
     form.set('line_items[0][quantity]', '1');
+    if (extraSeats > 0) {
+      const seatPrice = Deno.env.get(billingCycle === 'yearly' ? 'STRIPE_PRICE_SEAT_YEARLY' : 'STRIPE_PRICE_SEAT_MONTHLY');
+      if (!seatPrice) {
+        return new Response(JSON.stringify({ ok: false, error: 'Seat price missing' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      form.set('line_items[1][price]', seatPrice);
+      form.set('line_items[1][quantity]', String(extraSeats));
+    }
     form.set('metadata[user_id]', user.id);
     form.set('metadata[tier]', tier);
     form.set('metadata[billing_cycle]', billingCycle);
@@ -103,8 +117,8 @@ Deno.serve(async (req) => {
     // returned a 400 and NO ONE could subscribe. billing_address_collection +
     // automatic_tax already capture the address for the new customer.
     form.set('tax_id_collection[enabled]', 'true');
-    // 14-day trial mirrors the in-app `startTrial` (subscriptionService).
-    form.set('subscription_data[trial_period_days]', '14');
+    // 30-day trial mirrors the in-app TRIAL_DAYS (subscriptionService) — "1 month free".
+    form.set('subscription_data[trial_period_days]', '30');
     // Allow promotion codes (referral credits, launch promos).
     form.set('allow_promotion_codes', 'true');
 

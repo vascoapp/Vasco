@@ -42,3 +42,30 @@ export function subscriptionPeriodEnd(sub: Obj): number | null {
 export function entitledTier(status: string, tier: string): string {
   return status === 'canceled' || status === 'expired' ? 'free' : tier;
 }
+
+/**
+ * Extra team members on a subscription: the summed quantity of its items whose
+ * price is one of the seat prices. Null when the object carries no items (a
+ * checkout session) — the caller then leaves the stored value alone; the
+ * customer.subscription.* event that follows has the items.
+ */
+export function extraSeatsFrom(sub: Obj, seatPriceIds: Array<string | null | undefined>): number | null {
+  const ids = new Set(seatPriceIds.filter((x): x is string => typeof x === 'string' && x.length > 0));
+  const items = sub?.items?.data;
+  if (sub?.object !== 'subscription' || !Array.isArray(items)) return null;
+  let n = 0;
+  for (const it of items) {
+    const priceId = idOf(it?.price);
+    if (priceId && ids.has(priceId)) n += typeof it?.quantity === 'number' ? it.quantity : 1;
+  }
+  return n;
+}
+
+/** 'yearly' | 'monthly' from the subscription's own price interval; null when
+ *  the object has no items (a checkout session) — the stored value is kept. */
+export function billingCycleFrom(sub: Obj): 'monthly' | 'yearly' | null {
+  const items = sub?.items?.data;
+  if (sub?.object !== 'subscription' || !Array.isArray(items) || items.length === 0) return null;
+  const interval = items[0]?.price?.recurring?.interval ?? items[0]?.plan?.interval;
+  return interval === 'year' ? 'yearly' : interval === 'month' ? 'monthly' : null;
+}

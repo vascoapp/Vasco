@@ -1220,7 +1220,11 @@ export default function OnboardingScreen() {
             <View style={styles.aiDemoNote}>
               <Ionicons name="information-circle-outline" size={16} color={SemanticColors.textTertiary} />
               <Text style={styles.aiDemoNoteText}>
-                {t('onboarding.aiDemoNote')}
+                {t('onboarding.aiDemoNote', {
+                  jobs: TIERS.free.limits.maxActiveJobs,
+                  quotes: TIERS.free.limits.maxQuotesPerMonth,
+                  invoices: TIERS.free.limits.maxInvoicesPerMonth,
+                })}
               </Text>
             </View>
           </View>

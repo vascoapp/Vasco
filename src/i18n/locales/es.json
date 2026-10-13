@@ -278,7 +278,7 @@
     "teamSizes.largeDesc": "Empresa establecida",
     "aiDemo": "Esto es lo que Vasco puede hacer por ti",
     "aiDemoDesc": "Segun tu oficio y objetivos, estos datos te esperan:",
-    "aiDemoNote": "Plan gratuito: 5 trabajos abiertos a la vez y 10 presupuestos al mes",
+    "aiDemoNote": "Plan gratuito: {{jobs}} trabajos abiertos a la vez, {{quotes}} presupuestos y {{invoices}} facturas al mes",
     "choosePlan": "Elige tu plan",
     "choosePlanDesc": "Empieza gratis, mejora cuando quieras",
     "recommendedForYou": "RECOMENDADO PARA TI",
@@ -334,10 +334,10 @@
       "insights": "Información del negocio",
       "insightsDesc": "Informes semanales de ingresos, obras y tendencias"
     },
-    "trialTitle": "Sus primeros 14 días: Pro, gratis",
+    "trialTitle": "Su primer mes: Pro, gratis",
     "trialDesc": "Todo Pro está activado para usted. Sin tarjeta, nada que cancelar.",
-    "trialAfter": "Después de 14 días, su cuenta continúa con el plan gratuito.",
-    "trialSummary": "Pro — 14 días gratis, después Gratis"
+    "trialAfter": "Después de un mes, su cuenta continúa con el plan gratuito.",
+    "trialSummary": "Pro — 1 mes gratis, después Gratis"
   },
   "dashboard": {
     "goodMorning": "Buenos días",
@@ -2626,7 +2626,7 @@
   },
   "signup": {
     "title": "Crea tu cuenta",
-    "subtitle": "Inicia tu prueba de 14 días — sin tarjeta.",
+    "subtitle": "Empieza tu mes de prueba — sin tarjeta.",
     "referredBy": "Referido · código {{code}}",
     "passwordPlaceholder": "Contraseña (mín. 8 caracteres)",
     "confirmPasswordPlaceholder": "Confirma la contraseña",

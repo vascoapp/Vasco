@@ -16,59 +16,44 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getSupabase, isSupabaseConfigured } from "../../../lib/supabase";
 import { BillingHeader, BillingFooter, TrustRow, BRAND } from "../../../components/BillingChrome";
+import { PRICING } from "../../../lib/pricing";
 
 type Tier = "pro" | "contractor";
 type Cycle = "monthly" | "yearly";
 
-// Indicative display prices (EUR). The actual charge comes from the Stripe
-// Price IDs configured on the edge function — these are for the picker only.
+// Display prices come from lib/pricing.ts (excl. VAT) — the same list the
+// homepage and the app's TIERS use; the charge itself is the Stripe Price IDs
+// on the edge function. Features: only what ships (the same as the homepage) —
+// this page once sold "autopilot", automated reminders, a purchasing agent and
+// van stock, none of which exist.
 const PLANS: Record<
   Tier,
-  {
-    name: string;
-    tagline: string;
-    monthly: number;
-    yearly: number;
-    popular?: boolean;
-    features: string[];
-  }
+  { name: string; tagline: string; monthly: number; yearly: number; popular?: boolean; features: string[] }
 > = {
   pro: {
     name: "Pro",
-    tagline: "For solo contractors running on autopilot",
-    monthly: 39,
-    yearly: 29,
+    tagline: "Unlimited quotes and invoices, plus e-invoicing",
+    monthly: PRICING.pro.monthly,
+    yearly: PRICING.pro.yearlyPerMonth,
     popular: true,
-    // The app's own plan screen was corrected months ago and this page — the
-    // one a contractor actually pays from — kept the old promises. "Full EVE
-    // AI" is sold on an LLM layer with no provider key in production, so
-    // photo→quote and generated scope text throw; the same claim is blocked in
-    // the Play listing by `npm run check:listing`. These four ship today.
     features: [
-      "Unlimited jobs, quotes & invoices",
-      "Automated reminders & follow-ups",
-      "E-invoicing: XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA",
-      "Purchasing agent & accounting exports",
+      "Unlimited jobs, quotes, invoices and customers",
+      "E-invoicing: XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA, Peppol",
+      "Payment links via your own Mollie or Stripe",
+      "Online quote acceptance for your customers",
+      `${PRICING.pro.seatsIncluded} team members included`,
     ],
   },
   contractor: {
     name: "Contractor",
-    tagline: "For teams that need seats & integrations",
-    monthly: 69,
-    yearly: 49,
-    // "API access & white-label portal" was removed from the app's plan screen
-    // for a reason worth repeating here: there is no public API surface and no
-    // white-label theming anywhere in the product, and `hasApiAccess` /
-    // `hasWhiteLabel` have zero consumers outside the tier table. Selling them
-    // at EUR 69 is a promise the product cannot keep.
-    features: [
-      "Everything in Pro",
-      "Up to 15 team seats",
-      "Team features: worker scorecards, van stock, change orders",
-      "Dedicated support + onboarding",
-    ],
+    tagline: "For teams",
+    monthly: PRICING.contractor.monthly,
+    yearly: PRICING.contractor.yearlyPerMonth,
+    features: ["Everything in Pro", `Up to ${PRICING.contractor.seatsIncluded} team members`, "Dedicated support"],
   },
 };
+
+const YEARLY_SAVING = Math.round((1 - PRICING.pro.yearlyPerMonth / PRICING.pro.monthly) * 100);
 
 function isTier(v: string | null): v is Tier {
   return v === "pro" || v === "contractor";
@@ -83,6 +68,7 @@ function UpgradeInner() {
 
   const [tier, setTier] = useState<Tier>(isTier(params.get("tier")) ? (params.get("tier") as Tier) : "pro");
   const [cycle, setCycle] = useState<Cycle>(isCycle(params.get("cycle")) ? (params.get("cycle") as Cycle) : "monthly");
+  const [extraSeats, setExtraSeats] = useState(0);
 
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -144,7 +130,7 @@ function UpgradeInner() {
     setRedirecting(true);
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("create-subscription-checkout", {
-        body: { tier, billingCycle: cycle },
+        body: { tier, billingCycle: cycle, extraSeats: tier === "pro" ? extraSeats : 0 },
       });
       if (fnErr) {
         setError("Could not start checkout. Please try again.");
@@ -164,8 +150,10 @@ function UpgradeInner() {
   }
 
   const plan = PLANS[tier];
-  const price = cycle === "yearly" ? plan.yearly : plan.monthly;
-  const annualTotal = useMemo(() => plan.yearly * 12, [plan.yearly]);
+  const seats = tier === "pro" ? extraSeats : 0;
+  const seatPrice = cycle === "yearly" ? PRICING.extraSeat.yearlyPerMonth : PRICING.extraSeat.monthly;
+  const price = (cycle === "yearly" ? plan.yearly : plan.monthly) + seats * seatPrice;
+  const annualTotal = useMemo(() => price * 12, [price]);
 
   if (!configured) {
     return (
@@ -200,7 +188,7 @@ function UpgradeInner() {
           Choose your plan
         </h1>
         <p className="mx-auto mt-2 max-w-md text-zinc-500">
-          Start with a 14-day free trial. No charge today, cancel anytime.
+          Your first month is free. No charge today, cancel anytime. Prices excl. VAT.
         </p>
       </div>
 
@@ -231,7 +219,7 @@ function UpgradeInner() {
                         : { background: `${BRAND}14`, color: BRAND }
                     }
                   >
-                    −25%
+                    −{YEARLY_SAVING}%
                   </span>
                 )}
               </button>
@@ -309,6 +297,25 @@ function UpgradeInner() {
         })}
       </div>
 
+      {/* Extra team members — Pro only; past three, Contractor is cheaper. */}
+      {tier === "pro" && (
+        <div className="mt-4 flex items-center justify-between rounded-3xl border border-zinc-200 bg-white px-6 py-4 shadow-sm">
+          <div>
+            <p className="font-semibold text-zinc-900">Extra team members</p>
+            <p className="text-sm text-zinc-500">
+              {PRICING.pro.seatsIncluded} included · €{seatPrice}/mo each, up to {PRICING.extraSeat.maxExtra} more
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button type="button" aria-label="One fewer" onClick={() => setExtraSeats((n) => Math.max(0, n - 1))}
+              className="h-9 w-9 rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 disabled:opacity-40" disabled={extraSeats === 0}>−</button>
+            <span className="w-6 text-center text-lg font-bold text-zinc-900" aria-live="polite">{extraSeats}</span>
+            <button type="button" aria-label="One more" onClick={() => setExtraSeats((n) => Math.min(PRICING.extraSeat.maxExtra, n + 1))}
+              className="h-9 w-9 rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 disabled:opacity-40" disabled={extraSeats === PRICING.extraSeat.maxExtra}>+</button>
+          </div>
+        </div>
+      )}
+
       {/* Checkout / auth panel */}
       <div className="mt-6 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between border-b border-zinc-100 pb-4">
@@ -344,7 +351,7 @@ function UpgradeInner() {
               {redirecting ? "Redirecting to secure checkout…" : "Start free trial →"}
             </button>
             <p className="mt-3 text-center text-xs text-zinc-400">
-              Free for 14 days, then €{price}/mo. Cancel anytime before then and pay nothing.
+              Free for the first month, then €{price}/mo excl. VAT. Cancel before then and pay nothing.
             </p>
             {error && <p className="mt-3 text-center text-sm text-red-600">{error}</p>}
           </>
@@ -398,7 +405,7 @@ function UpgradeInner() {
       <TrustRow />
 
       <p className="mt-6 text-center text-xs text-zinc-400">
-        {country === "us" ? "Sales tax" : "VAT"} is calculated at checkout based on your billing address.
+        Prices excl. {country === "us" ? "sales tax" : "VAT"}; it is added at checkout based on your billing address.
       </p>
     </Shell>
   );

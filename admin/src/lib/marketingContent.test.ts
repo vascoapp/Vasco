@@ -104,3 +104,46 @@ test("the store copy says what the switch says", () => {
     else assert.doesNotMatch(text, /available on the App Store|im App Store erhältlich|beschikbaar in de App Store/i, `${l}: claims a store that is not live`);
   }
 });
+
+// @ts-expect-error node --experimental-strip-types needs the extension
+import { PRICING } from "./pricing.ts";
+
+test("the website price list is the app's (TIERS, TRIAL_DAYS)", () => {
+  const svc = fs.readFileSync(path.join(ADMIN, "../src/services/subscriptionService.ts"), "utf8");
+  const block = (name: string) => svc.slice(svc.indexOf(`  ${name}: {\n    id: '${name}'`));
+  const num = (b: string, key: string) => Number(b.match(new RegExp(`${key}: (\\d+)`))![1]);
+  assert.equal(PRICING.pro.monthly, num(block("pro"), "monthlyPrice"));
+  assert.equal(PRICING.pro.yearlyPerMonth, num(block("pro"), "annualMonthlyPrice"));
+  assert.equal(PRICING.pro.seatsIncluded, num(block("pro"), "maxTeamSeats"));
+  assert.equal(PRICING.extraSeat.monthly, num(block("pro"), "extraSeatPrice"));
+  assert.equal(PRICING.contractor.monthly, num(block("contractor"), "monthlyPrice"));
+  assert.equal(PRICING.contractor.yearlyPerMonth, num(block("contractor"), "annualMonthlyPrice"));
+  assert.equal(PRICING.free.quotesPerMonth, num(block("free"), "maxQuotesPerMonth"));
+  assert.equal(PRICING.free.invoicesPerMonth, num(block("free"), "maxInvoicesPerMonth"));
+  assert.equal(PRICING.free.activeJobs, num(block("free"), "maxActiveJobs"));
+  assert.equal(PRICING.trialDays, Number(svc.match(/export const TRIAL_DAYS = (\d+)/)![1]));
+});
+
+test("every homepage says prices are excl. VAT and states the free limits", () => {
+  const vat: Record<Locale, RegExp> = { en: /excl\. VAT/, "en-US": /excluding tax/, nl: /excl\. btw|exclusief btw/, de: /zzgl\. MwSt/ };
+  for (const l of locales) {
+    const text = JSON.stringify(content[l]);
+    assert.match(text, vat[l], `${l}: no excl.-VAT statement`);
+    // ...and in the pricing block itself, where the prices are read.
+    const priceBlock = JSON.stringify(content[l].pricing.closer) + JSON.stringify(content[l].pricing.noCommission);
+    assert.match(priceBlock, l === "en-US" ? /excl\.|excluding|tax/ : vat[l], `${l}: the price block does not say excl. VAT`);
+    assert.match(text, new RegExp(`${PRICING.free.quotesPerMonth} (quotes|estimates|offertes|Angebote)`), `${l}: free quote limit`);
+    assert.match(text, new RegExp(`${PRICING.free.invoicesPerMonth} (invoices|facturen|Rechnungen)`), `${l}: free invoice limit`);
+    assert.doesNotMatch(text, /"1 (country|land|Land)"/, `${l}: the meaningless 1-country limit is back`);
+  }
+});
+
+test("the checkout page (/billing/upgrade) sells only what ships, at the price list's prices", () => {
+  const page = stripComments(fs.readFileSync(path.join(ADMIN, "src/app/billing/upgrade/page.tsx"), "utf8"));
+  assert.doesNotMatch(page, /autopilot|automat|purchasing agent|van stock|scorecard|\bAI\b/i, "a feature that does not ship");
+  assert.doesNotMatch(page, /14-day|14 days|Free for 14/, "the old trial length");
+  assert.match(page, /monthly: PRICING\.pro\.monthly/, "Pro price from lib/pricing.ts");
+  assert.match(page, /monthly: PRICING\.contractor\.monthly/, "Contractor price from lib/pricing.ts");
+  assert.match(page, /extraSeats: tier === "pro" \? extraSeats : 0/, "extra seats sent to checkout, Pro only");
+  assert.match(page, /excl\./, "prices stated excl. VAT");
+});

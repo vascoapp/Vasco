@@ -8,7 +8,9 @@
 import fs from 'fs';
 import path from 'path';
 import {
+  billingCycleFrom,
   entitledTier,
+  extraSeatsFrom,
   invoiceSubscriptionId,
   invoiceSubscriptionMetadata,
   subscriptionPeriodEnd,
@@ -62,4 +64,47 @@ it('the webhook writes the entitled tier, never the checkout tier as-is', () => 
   const src = fs.readFileSync(path.resolve(__dirname, '../../supabase/functions/stripe-webhook/index.ts'), 'utf8');
   const upsert = src.slice(src.indexOf(".from('subscriptions')\n          .upsert("));
   expect(upsert).toMatch(/^[\s\S]{0,200}tier: entitledTier\(status, tier\)/);
+});
+
+it('counts extra seats from the seat line items only', () => {
+  const SEATS = ['price_seat_m', 'price_seat_y'];
+  const sub = (items: any[]) => ({ object: 'subscription', items: { data: items } });
+  expect(extraSeatsFrom(sub([{ price: { id: 'price_pro' }, quantity: 1 }]), SEATS)).toBe(0);
+  expect(extraSeatsFrom(sub([{ price: 'price_pro', quantity: 1 }, { price: { id: 'price_seat_m' }, quantity: 2 }]), SEATS)).toBe(2);
+  expect(extraSeatsFrom(sub([{ price: { id: 'price_seat_y' } }]), SEATS)).toBe(1);
+  // A checkout session has no items: "unknown", so the stored value is kept.
+  expect(extraSeatsFrom({ object: 'checkout.session' }, SEATS)).toBeNull();
+  // No seat prices configured: nothing counts as a seat.
+  expect(extraSeatsFrom(sub([{ price: { id: 'price_seat_m' }, quantity: 2 }]), [undefined, ''])).toBe(0);
+});
+
+it('the webhook writes extra_seats from the seat prices, zero when ended', () => {
+  const src = fs.readFileSync(path.resolve(__dirname, '../../supabase/functions/stripe-webhook/index.ts'), 'utf8');
+  expect(src).toMatch(/status === 'canceled' \|\| status === 'expired'\s*\?\s*\{ extra_seats: 0 \}/);
+  expect(src).toMatch(/extraSeatsFrom\(sub, \[\s*Deno\.env\.get\('STRIPE_PRICE_SEAT_MONTHLY'\),\s*Deno\.env\.get\('STRIPE_PRICE_SEAT_YEARLY'\)/);
+});
+
+it('checkout sells at most 3 extra seats, and only on Pro', () => {
+  const src = fs.readFileSync(path.resolve(__dirname, '../../supabase/functions/create-subscription-checkout/index.ts'), 'utf8');
+  expect(src).toMatch(/tier === 'pro' \? Math\.min\(3, Math\.max\(0,/);
+});
+
+it('the extra-seats pin runs as the caller (SECURITY INVOKER), never as its owner', () => {
+  // As SECURITY DEFINER, current_user was postgres for every caller and a user
+  // session could write its own seats (live probe, 2026-10-13).
+  const dir = path.resolve(__dirname, '../../supabase/migrations');
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
+  const defs = files.map((f) => fs.readFileSync(path.join(dir, f), 'utf8').replace(/--[^\n]*/g, '')).filter((sql) => /function public\.subscriptions_pin_extra_seats\(\)/.test(sql));
+  const latest = defs[defs.length - 1];
+  expect(latest).toMatch(/security invoker/i);
+  expect(latest).not.toMatch(/security definer/i);
+});
+
+it('reads the billing cycle from the subscription price, not a default', () => {
+  const sub = (interval: string) => ({ object: 'subscription', items: { data: [{ price: { recurring: { interval } } }] } });
+  expect(billingCycleFrom(sub('year'))).toBe('yearly');
+  expect(billingCycleFrom(sub('month'))).toBe('monthly');
+  expect(billingCycleFrom({ object: 'checkout.session' })).toBeNull();
+  const src = fs.readFileSync(path.resolve(__dirname, '../../supabase/functions/stripe-webhook/index.ts'), 'utf8');
+  expect(src).toMatch(/billing_cycle: billingCycleFrom\(sub\)/);
 });

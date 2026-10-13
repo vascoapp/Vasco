@@ -278,7 +278,7 @@
     "teamSizes.largeDesc": "Established company",
     "aiDemo": "Here's what Vasco can do for you",
     "aiDemoDesc": "Based on your trade and goals, these insights are waiting:",
-    "aiDemoNote": "On the free plan: 5 jobs open at a time and 10 quotes a month",
+    "aiDemoNote": "On the free plan: {{jobs}} jobs open at a time, {{quotes}} quotes and {{invoices}} invoices a month",
     "choosePlan": "Choose your plan",
     "choosePlanDesc": "Start free, upgrade anytime",
     "recommendedForYou": "RECOMMENDED FOR YOU",
@@ -334,10 +334,10 @@
       "insights": "Business insights",
       "insightsDesc": "Weekly reports on revenue, jobs, and trends"
     },
-    "trialTitle": "Your first 14 days: Pro, free",
+    "trialTitle": "Your first month: Pro, free",
     "trialDesc": "Everything in Pro is switched on for you. No card, nothing to cancel.",
-    "trialAfter": "After 14 days your account continues on the Free plan.",
-    "trialSummary": "Pro — 14 days free, then Free"
+    "trialAfter": "After one month your account continues on the Free plan.",
+    "trialSummary": "Pro — 1 month free, then Free"
   },
   "dashboard": {
     "goodMorning": "Good morning",
@@ -2626,7 +2626,7 @@
   },
   "signup": {
     "title": "Create your account",
-    "subtitle": "Start your 14-day trial — no card required.",
+    "subtitle": "Start your free month — no card required.",
     "referredBy": "Referred · code {{code}}",
     "passwordPlaceholder": "Password (min 8 characters)",
     "confirmPasswordPlaceholder": "Confirm password",

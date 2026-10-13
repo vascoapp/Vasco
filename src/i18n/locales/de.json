@@ -278,7 +278,7 @@
     "teamSizes.largeDesc": "Etabliertes Unternehmen",
     "aiDemo": "Das kann Vasco für Sie tun",
     "aiDemoDesc": "Basierend auf Ihrem Gewerk und Ihren Zielen warten diese Erkenntnisse:",
-    "aiDemoNote": "Im Gratis-Plan: 5 gleichzeitig offene Aufträge und 10 Angebote pro Monat",
+    "aiDemoNote": "Im Gratis-Plan: {{jobs}} gleichzeitig offene Aufträge, {{quotes}} Angebote und {{invoices}} Rechnungen pro Monat",
     "choosePlan": "Wählen Sie Ihren Plan",
     "choosePlanDesc": "Starte kostenlos, upgrade jederzeit",
     "recommendedForYou": "FÜR SIE EMPFOHLEN",
@@ -295,7 +295,7 @@
     "planAdvancedDesc": "Mehr Kapazität, intelligentere Tools",
     "planPro": "Pro",
     "planProDesc": "Unbegrenzt Angebote und Rechnungen, E-Rechnung und Automatisierungen",
-    "planContractor": "Handwerker",
+    "planContractor": "Betrieb",
     "planContractorDesc": "Teamfunktionen + persönlicher Support",
     "popular": "BELIEBTESTE",
     "tryDemo": "Mit Demodaten testen",
@@ -334,10 +334,10 @@
       "insights": "Geschäftseinblicke",
       "insightsDesc": "Wöchentliche Berichte zu Umsatz, Aufträgen und Trends"
     },
-    "trialTitle": "Ihre ersten 14 Tage: Pro, kostenlos",
+    "trialTitle": "Ihr erster Monat: Pro, kostenlos",
     "trialDesc": "Alles aus Pro ist für Sie freigeschaltet. Keine Karte, nichts zu kündigen.",
-    "trialAfter": "Nach 14 Tagen läuft Ihr Konto im kostenlosen Tarif weiter.",
-    "trialSummary": "Pro — 14 Tage kostenlos, danach Kostenlos"
+    "trialAfter": "Nach einem Monat läuft Ihr Konto im kostenlosen Tarif weiter.",
+    "trialSummary": "Pro — 1 Monat kostenlos, danach Kostenlos"
   },
   "dashboard": {
     "goodMorning": "Guten Morgen",
@@ -2626,7 +2626,7 @@
   },
   "signup": {
     "title": "Konto erstellen",
-    "subtitle": "Starten Sie Ihre 14-tägige Testphase — ohne Kreditkarte.",
+    "subtitle": "Starten Sie Ihren kostenlosen Monat — ohne Kreditkarte.",
     "referredBy": "Eingeladen · Code {{code}}",
     "passwordPlaceholder": "Passwort (min. 8 Zeichen)",
     "confirmPasswordPlaceholder": "Passwort bestätigen",

@@ -638,7 +638,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .catch(() => {});
           // Entitlement belongs to the ACCOUNT, not the device. Without this
           // pull, subscription state lived only in AsyncStorage: reinstalling
-          // handed out a fresh 14-day trial, and the trial did not follow the
+          // handed out a fresh trial, and the trial did not follow the
           // contractor to a second device. Best-effort — a failure leaves the
           // local copy in charge rather than locking anyone out.
           import('../services/subscriptionService')
@@ -648,7 +648,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // ...and on every cold start with a restored session. The pull used to
         // run on SIGNED_IN only, which fires when someone signs in — not when
         // the app reopens with a session already stored. So the device kept
-        // whatever local copy it had: a contractor in a 14-day trial saw
+        // whatever local copy it had: a contractor in a trial saw
         // "Kostenlos" on their profile, and a plan bought on another device
         // never arrived (#339).
         if (event === 'INITIAL_SESSION') {
@@ -1048,7 +1048,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Activation funnel — top of funnel. `confirmed` = signed in immediately
     // (email-confirmation OFF) vs pending email verification.
     trackEvent('signup', { confirmed: !!data.session }).catch(() => {});
-    // Start the 14-day Pro trial the signup screen promises in all six
+    // Start the 30-day Pro trial the signup screen promises in all six
     // languages. `startTrial` existed with ZERO call sites, so every contractor
     // who ever signed up landed on Free — no automation packs, no EVE AI and,
     // in the beachhead market, no e-invoicing: the one thing the German pitch

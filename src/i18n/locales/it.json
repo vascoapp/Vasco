@@ -278,7 +278,7 @@
     "teamSizes.largeDesc": "Impresa consolidata",
     "aiDemo": "Ecco cosa Vasco può fare per te",
     "aiDemoDesc": "In base al tuo mestiere e obiettivi, queste informazioni ti aspettano:",
-    "aiDemoNote": "Piano gratuito: 5 lavori aperti contemporaneamente e 10 preventivi al mese",
+    "aiDemoNote": "Piano gratuito: {{jobs}} lavori aperti contemporaneamente, {{quotes}} preventivi e {{invoices}} fatture al mese",
     "choosePlan": "Scegli il tuo piano",
     "choosePlanDesc": "Inizia gratis, fai l'upgrade quando vuoi",
     "recommendedForYou": "CONSIGLIATO PER TE",
@@ -334,10 +334,10 @@
       "insights": "Analisi aziendali",
       "insightsDesc": "Report settimanali su fatturato, lavori e tendenze"
     },
-    "trialTitle": "I Suoi primi 14 giorni: Pro, gratis",
+    "trialTitle": "Il Suo primo mese: Pro, gratis",
     "trialDesc": "Tutto Pro è attivo per Lei. Nessuna carta, niente da disdire.",
-    "trialAfter": "Dopo 14 giorni il Suo account prosegue con il piano gratuito.",
-    "trialSummary": "Pro — 14 giorni gratis, poi Gratuito"
+    "trialAfter": "Dopo un mese il Suo account prosegue con il piano gratuito.",
+    "trialSummary": "Pro — 1 mese gratis, poi Gratuito"
   },
   "dashboard": {
     "goodMorning": "Buongiorno",
@@ -2626,7 +2626,7 @@
   },
   "signup": {
     "title": "Crea il tuo account",
-    "subtitle": "Inizia la tua prova di 14 giorni — senza carta.",
+    "subtitle": "Inizia il tuo mese di prova — senza carta.",
     "referredBy": "Invitato · codice {{code}}",
     "passwordPlaceholder": "Password (min. 8 caratteri)",
     "confirmPasswordPlaceholder": "Conferma password",
