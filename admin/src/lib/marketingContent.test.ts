@@ -154,3 +154,14 @@ test("the billing trust row matches the offer (1 month free, excl. VAT)", () => 
   assert.match(chrome, /First month free/);
   assert.match(chrome, /excl\. VAT/);
 });
+
+test("the paid plan cards carry the VAT note next to the price", () => {
+  const note: Record<Locale, RegExp> = { en: /excl\. VAT/, "en-US": /tax/, nl: /excl\. btw/, de: /zzgl\. MwSt/ };
+  for (const l of locales) {
+    for (const plan of content[l].pricing.plans.filter((p) => !/^(€0|0 €)$/.test(p.price))) {
+      assert.match(plan.period, note[l], `${l} ${plan.name}: price without the VAT note`);
+    }
+  }
+  const page = fs.readFileSync(path.join(ADMIN, "src/app/billing/upgrade/page.tsx"), "utf8");
+  assert.doesNotMatch(page, />\/mo<\/span>/, "a checkout price without the VAT note");
+});

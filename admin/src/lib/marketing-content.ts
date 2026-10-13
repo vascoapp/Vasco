@@ -223,7 +223,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Pro",
           price: "€39",
-          period: "/mo",
+          period: "/mo excl. VAT",
           annual: "or €32/mo billed annually",
           tagline: "Unlimited quotes and invoices, plus e-invoicing.",
           features: [
@@ -240,7 +240,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Contractor",
           price: "€69",
-          period: "/mo",
+          period: "/mo excl. VAT",
           annual: "or €56/mo billed annually",
           tagline: "For teams.",
           features: [
@@ -407,7 +407,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Pro",
           price: "€39",
-          period: "/mnd",
+          period: "/mnd excl. btw",
           annual: "of €32/mnd bij jaarbetaling",
           tagline: "Onbeperkt offertes en facturen, plus e-facturen.",
           features: [
@@ -424,7 +424,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Aannemer",
           price: "€69",
-          period: "/mnd",
+          period: "/mnd excl. btw",
           annual: "of €56/mnd bij jaarbetaling",
           tagline: "Voor teams.",
           features: [
@@ -606,7 +606,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Pro",
           price: "39 €",
-          period: "/Monat",
+          period: "/Monat zzgl. MwSt.",
           annual: "oder 32 €/Monat bei jährlicher Zahlung",
           tagline: "Unbegrenzt Angebote und Rechnungen, plus E-Rechnung.",
           features: [
@@ -623,7 +623,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Betrieb",
           price: "69 €",
-          period: "/Monat",
+          period: "/Monat zzgl. MwSt.",
           annual: "oder 56 €/Monat bei jährlicher Zahlung",
           tagline: "Für Teams.",
           features: [
@@ -803,7 +803,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Pro",
           price: "€39",
-          period: "/mo",
+          period: "/mo + tax",
           annual: "or €32/mo billed annually",
           tagline: "Unlimited estimates and invoices.",
           features: [
@@ -819,7 +819,7 @@ export const content: Record<Locale, MarketingContent> = {
         {
           name: "Contractor",
           price: "€69",
-          period: "/mo",
+          period: "/mo + tax",
           annual: "or €56/mo billed annually",
           tagline: "For crews.",
           features: [

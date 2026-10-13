@@ -9,6 +9,9 @@ Mobile-first app for construction trades (plumbing, electrical, gas, painting, c
 - **State:** React Context API (AuthContext, AppState) + AsyncStorage persistence
 - **Backend:** Supabase (database + auth + edge functions)
 - **Payments:** Mollie (6 countries)
+- **Vasco's own subscriptions:** Stripe, sold on the website only (no in-app purchases). Prices EXCL. VAT,
+  1 month free — ONE list per side: `admin/src/lib/pricing.ts` ↔ app TIERS (`test:marketing` ties them).
+  See memory `pricing-2026-10-13`.
 - **Accounting:** 19 providers (Moneybird, DATEV, Lexoffice, SevDesk, Pennylane, Holded, Fatture in Cloud, Xero, QuickBooks, etc.)
 - **E-Invoicing:** XRechnung, ZUGFeRD, Factur-X, Facturae, FatturaPA, Peppol
 - **AI:** Claude Haiku Vision (photo analysis — stays on Claude), 45 intelligence generators, ML prediction models. Text-only LLM stages route via a provider abstraction (`supabase/functions/_shared/llm.ts`) that speaks Claude **or** Kimi/Moonshot with automatic Claude fallback, chosen per task by env (defaults to Claude). Customer PII is tokenized/scrubbed before any third-party (Kimi) call — see `_shared/pii.ts`.

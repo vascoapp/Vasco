@@ -276,7 +276,7 @@ function UpgradeInner() {
                 <span className="font-[family-name:var(--font-archivo)] text-4xl font-black text-zinc-900">
                   €{tierPrice}
                 </span>
-                <span className="text-sm font-medium text-zinc-500">/mo</span>
+                <span className="text-sm font-medium text-zinc-500">/mo excl. VAT</span>
               </div>
               {cycle === "yearly" && (
                 <p className="mt-0.5 text-xs text-zinc-400">billed €{p.yearly * 12}/yr</p>
@@ -328,7 +328,7 @@ function UpgradeInner() {
           <div className="text-right">
             <p className="font-[family-name:var(--font-archivo)] text-2xl font-black text-zinc-900">
               €{price}
-              <span className="text-sm font-medium text-zinc-500">/mo</span>
+              <span className="text-sm font-medium text-zinc-500">/mo excl. VAT</span>
             </p>
             {cycle === "yearly" && <p className="text-xs text-zinc-400">€{annualTotal} billed yearly</p>}
           </div>
