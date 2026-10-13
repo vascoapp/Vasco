@@ -15,12 +15,18 @@ SUGGESTED 3-MINUTE WALKTHROUGH:
      bank-transfer QR code is printed beside the bank details).
   5. Profile → Legal → Export my data / Delete my account (GDPR, in-app).
 
+SUBSCRIPTIONS: the app sells nothing. It has no in-app purchases and shows
+no prices, buy buttons or links to buy. The app works on the free plan
+(with usage limits); a business that pays for Vasco Pro or Contractor does so
+on our website with its own account, and signs in here. The review account
+already has Pro, so you can see every feature.
+
 Payment-provider connections (Mollie / Stripe) and accounting connections
 are optional and use the contractor's OWN provider account; nothing is
 charged by Vasco. You do not need to connect them to review the app.
 
 PRIVACY: no ads, no third-party tracking, no App Tracking Transparency
 prompt. Data is stored in the EU (Supabase, Frankfurt). Account deletion can
-be started in the app and at https://admin.vascobuild.com/delete-account.
+be started in the app and at https://vascobuild.com/delete-account.
 
 CONTACT: support@vascobuild.com

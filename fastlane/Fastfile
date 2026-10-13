@@ -34,6 +34,7 @@ platform :ios do
   desc "Upload metadata to App Store Connect (no build)"
   lane :metadata do
     deliver(
+      api_key_path: File.expand_path('../secrets/asc-api-key.json', __dir__),
       skip_binary_upload: true,
       skip_screenshots: true,
       force: true,                  # don't ask for confirmation
