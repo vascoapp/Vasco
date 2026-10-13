@@ -5,12 +5,12 @@
 // staggered renewal opportunities, and compliance gaps.
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../../utils/dateKey';
 import { useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScoredInsight, GeneratorContext } from './types';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
-import { MS_PER_DAY } from '../../utils/timeConstants';
 
 interface WorkerCert {
   name: string;
@@ -98,7 +98,7 @@ export function useCertRenewalPlannerInsight(ctx: GeneratorContext): ScoredInsig
       suggestion = 'Spreid vernieuwingen — begin nu met de eerste om piekbelasting te voorkomen';
     } else {
       const soonestCert = expiring.sort((a, b) => a.expiryDate.localeCompare(b.expiryDate))[0];
-      const daysUntil = Math.ceil((new Date(soonestCert.expiryDate).getTime() - now.getTime()) / MS_PER_DAY);
+      const daysUntil = calendarDaysUntil(soonestCert.expiryDate, now) ?? NaN; // #424
       title = `${expiring.length} certificaat${expiring.length > 1 ? 'en' : ''} bijna verlopen`;
       message = `${soonestCert.workerName}: ${soonestCert.name} verloopt over ${daysUntil} dagen. Plan de vernieuwing tijdig in.`;
       observation = `${expiring.length} certificaten verlopen binnenkort, eerste over ${daysUntil} dagen`;

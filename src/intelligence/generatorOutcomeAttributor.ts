@@ -17,6 +17,7 @@
 //      passed in — no stale closures.
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import type { Lead } from '../domain/lead';
 import type { Worker } from '../domain/worker';
 import type { ContractorLicense } from '../domain/business';
@@ -130,7 +131,7 @@ export function countExpiringLicenses(licenses: ContractorLicense[] | undefined,
   if (!licenses) return 0;
   let count = 0;
   for (const l of licenses) {
-    const daysUntil = Math.floor((new Date(l.expiryDate).getTime() - nowMs) / MS_PER_DAY);
+    const daysUntil = calendarDaysUntil(l.expiryDate, new Date(nowMs)) ?? NaN; // #424
     if (daysUntil <= LICENSE_EXPIRES_SOON_DAYS) count++;
   }
   return count;

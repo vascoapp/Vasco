@@ -1,4 +1,5 @@
 import type { DocumentRow, LineItemRow, BusinessSettingsRow, CustomerRow, JobRow, MaterialCatalogRow, SupplierRow, JobMaterialRow, PriceObservationRow, LeadRow } from './database.types';
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import type { Quote, Invoice } from '../domain/documents';
 import type { QuoteLineItem } from '../domain/lineItems';
 import { isVatNature } from '../domain/vatNature';
@@ -37,7 +38,7 @@ export function documentRowToQuote(row: DocumentRow): Quote {
 
 export function documentRowToInvoice(row: DocumentRow): Invoice {
   const dueDays = row.due_date
-    ? Math.ceil((new Date(row.due_date).getTime() - Date.now()) / 86_400_000)
+    ? (calendarDaysUntil(row.due_date) ?? 0) // calendar days, #424
     : 0;
   return {
     id: row.document_number ?? row.id,

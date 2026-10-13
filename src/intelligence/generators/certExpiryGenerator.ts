@@ -2,6 +2,7 @@
 // CERT EXPIRY GENERATOR
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../../utils/dateKey';
 import type { InsightGenerator, ScoredInsight, GeneratorContext } from './types';
 import { useExpiryCalendar } from '../../services/complianceService';
 import { logPrediction } from '../calibration';
@@ -10,7 +11,6 @@ import { logPrediction } from '../calibration';
 // byte-identical. Whole-file rather than per-key on purpose — learnings
 // #466: partial adoption inside one generator is the bug, not the fix.
 import { gtv } from '../phrasing/phrasingStore';
-import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export const certExpiryGenerator: InsightGenerator = {
   id: 'cert-expiry',
@@ -31,7 +31,7 @@ export function useCertExpiryInsight(ctx: GeneratorContext): ScoredInsight | nul
   if (expiringItems.length === 0) return null;
 
   const soonest = expiringItems[0];
-  const daysUntil = Math.ceil((new Date(soonest.date).getTime() - ctx.now.getTime()) / MS_PER_DAY);
+  const daysUntil = calendarDaysUntil(soonest.date, ctx.now) ?? NaN; // #424
 
   // Log prediction for calibration
   logPrediction({

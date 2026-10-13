@@ -7,28 +7,16 @@
 // and the daily push digest.
 //
 // All time math is calendar-day based — license expiry is a date, not a
-// timestamp, so hour/minute precision is irrelevant. ISO `YYYY-MM-DD`
-// parses to UTC-noon to dodge timezone-edge bugs (compare with the same
-// noon-anchored today).
+// timestamp. Days are LOCAL calendar days via dateKey.daysUntil (the earlier
+// UTC-noon anchors used the UTC date as "today", #424).
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import type { BusinessProfile, ContractorLicense } from '../domain/business';
 
 export interface ExpiringLicense extends ContractorLicense {
   daysUntilExpiry: number;
   severity: 'expired' | 'urgent' | 'soon';
-}
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-function parseIsoDate(iso: string): Date {
-  // Anchor at UTC-noon to avoid local-tz day flips.
-  return new Date(`${iso}T12:00:00.000Z`);
-}
-
-function todayUtcNoon(): Date {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0, 0));
 }
 
 /**
@@ -47,15 +35,13 @@ export function getExpiringLicenses(
 ): ExpiringLicense[] {
   if (!profile.licenses || profile.licenses.length === 0) return [];
 
-  const today = todayUtcNoon();
-  const cutoffMs = today.getTime() + daysAhead * MS_PER_DAY;
-
   return profile.licenses
     .map((l): ExpiringLicense | null => {
       if (!l.expiryDate) return null;
-      const expiry = parseIsoDate(l.expiryDate);
-      const daysUntilExpiry = Math.round((expiry.getTime() - today.getTime()) / MS_PER_DAY);
-      if (expiry.getTime() > cutoffMs) return null; // outside window
+      // LOCAL calendar days (dateKey). The UTC-noon anchors read "today" as
+      // the UTC date, which is still yesterday until 01:00/02:00 in NL (#424).
+      const daysUntilExpiry = calendarDaysUntil(l.expiryDate);
+      if (daysUntilExpiry === null || daysUntilExpiry > daysAhead) return null; // outside window
 
       let severity: ExpiringLicense['severity'];
       if (daysUntilExpiry < 0) severity = 'expired';

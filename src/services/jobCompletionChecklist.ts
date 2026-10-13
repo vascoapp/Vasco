@@ -6,6 +6,7 @@
 // and customers happy (handover notes).
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import type { Job } from '../types/contractor';
 import type { JobPhotoRecord, PhotoKind } from './jobPhotoService';
 import { complianceService, type Certification } from './complianceService';
@@ -93,7 +94,7 @@ function certHint(
   fallbackKey: string,
 ): { hint: string; hintKey: string; hintParams?: Record<string, string | number> } {
   if (!cert) return { hint: fallback, hintKey: fallbackKey };
-  const days = Math.floor((new Date(cert.expiryDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  const days = calendarDaysUntil(cert.expiryDate) ?? NaN; // #424
   if (days < 0) {
     const date = formatDateShortAuto(new Date(cert.expiryDate));
     return {

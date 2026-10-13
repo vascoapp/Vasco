@@ -2,6 +2,7 @@
 // VERZEKERING - Insurance Policies Overview
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../../src/utils/dateKey';
 import { goBack } from '../../src/utils/goBack';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,7 +22,6 @@ import type { Country } from '../../src/i18n/formatting';
 import { Toast } from '../../src/components/shared/Toast';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { showPhotoPicker } from '../../src/utils/photoPicker';
-import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { useKeyboardInset } from '../../src/hooks/useKeyboardInset';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -208,7 +208,7 @@ export default function InsuranceScreen() {
         {policies.map((policy) => {
           const status = getInsuranceStatusConfig(policy.status, t);
           const endDate = new Date(policy.endDate);
-          const daysLeft = Math.ceil((endDate.getTime() - Date.now()) / MS_PER_DAY);
+          const daysLeft = calendarDaysUntil(policy.endDate) ?? 0; // calendar days, #424
 
           return (
             <Pressable

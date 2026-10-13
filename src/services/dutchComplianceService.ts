@@ -5,6 +5,7 @@
 // a16z Sphere pattern: "Compliance as executable workflow logic"
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { round2 } from '../domain/business';
 import {
@@ -584,7 +585,7 @@ class DutchComplianceService {
     let btwStatus: 'up-to-date' | 'filing-due' | 'overdue' = 'up-to-date';
     if (btwPeriod) {
       const deadline = new Date(btwPeriod.filingDeadline);
-      const daysUntilDeadline = Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const daysUntilDeadline = calendarDaysUntil(btwPeriod.filingDeadline) ?? NaN; // #424
 
       if (daysUntilDeadline < 0) {
         btwStatus = 'overdue';

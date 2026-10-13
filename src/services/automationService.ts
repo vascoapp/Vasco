@@ -1,6 +1,7 @@
 // =============================================================================
 // AUTOMATION SERVICE — time-saving automations for contractors + site leads
 // =============================================================================
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import { formatMoney } from '../i18n/formatting';
 import { MS_PER_DAY } from '../utils/timeConstants';
 // PDF research: contractors spend 40-50% on admin. Key automations:
@@ -133,7 +134,7 @@ export function checkAutoFollowup(ctx: AutomationContext, config: AutomationConf
 
   return staleQuotes.map(q => {
     const customer = findDocumentCustomer(ctx.customers, q);
-    const days = Math.floor((now - new Date(q.lastUpdated).getTime()) / MS_PER_DAY);
+    const days = -(calendarDaysUntil(q.lastUpdated, new Date(now)) ?? NaN); // #424
     return {
       id: `auto_followup_${q.id}`,
       type: 'auto_followup' as AutomationType,

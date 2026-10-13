@@ -25,6 +25,32 @@ if (!ZONE) {
       if (r.status !== 0) throw new Error(`child run (${tz}) failed:\n${r.stderr || r.stdout}`);
     }, 180_000);
 
+    it('no live file counts calendar days in milliseconds (repo-wide)', () => {
+      // The shape #298/#423/#424 fixed 32 times. Elapsed-time uses that really
+      // mean "hours / 24" are allowed by name, with the reason.
+      const ALLOWED: Record<string, string> = {
+        'src/services/mlHealthCheck.ts': 'staleDays = elapsed age of a computation',
+        'src/services/capacityPlanningService.ts': 'both sides set to local midnight, rounded',
+        'src/intelligence/learningStorage.ts': 'ISO-week formula',
+        'src/utils/dateKey.ts': 'the comment describing the old shape',
+      };
+      const dormant = new Set<string>(JSON.parse(fs.readFileSync(path.join(ROOT, 'src/config/dormant.files.json'), 'utf8')).files);
+      const SHAPE = /Math\.(ceil|floor|round)\(.*(getTime\(\)|Date\.now\(\)).*\/ ?\(?(MS_PER_DAY|MS_DAY|dayMs|DAY_MS|86_?400_?000|864e5|1000 ?\* ?60 ?\* ?60 ?\* ?24|24 ?\* ?60 ?\* ?60 ?\* ?1000|1000 ?\* ?3600 ?\* ?24)/;
+      const offenders: string[] = [];
+      const walk = (dir: string) => {
+        for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+          const rel = path.join(dir, e.name);
+          if (e.isDirectory()) { if (!/node_modules|__tests__|__screenwalk__/.test(e.name)) walk(rel); continue; }
+          if (!/\.(ts|tsx)$/.test(e.name) || dormant.has(rel) || ALLOWED[rel]) continue;
+          fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n').forEach((line, i) => {
+            if (SHAPE.test(line)) offenders.push(`${rel}:${i + 1}`);
+          });
+        }
+      };
+      walk('app'); walk('src');
+      expect(offenders).toEqual([]);
+    });
+
     it('the six call sites use dateKey, not millisecond day arithmetic', () => {
       const read = (f: string) => fs.readFileSync(path.join(ROOT, f), 'utf8');
       const portal = read('src/components/customer/CustomerDecisionPortal.tsx');
@@ -75,6 +101,26 @@ if (!ZONE) {
     expect(daysUntil(null, new Date())).toBeNull();
     expect(daysUntil('not a date', new Date())).toBeNull();
     expect(daysUntil(new Date('x'), new Date())).toBeNull();
+  });
+
+  it('an invoice row due tomorrow reads dueInDays 1 at any hour (mappers)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { documentRowToInvoice } = require('../../lib/mappers');
+    for (const [h, m] of [[0, 1], [12, 0], [23, 59]]) {
+      jest.useFakeTimers().setSystemTime(new Date(2026, 9, 19, h, m));
+      expect(documentRowToInvoice({ id: 'x', doc_type: 'invoice', status: 'sent', due_date: '2026-10-20', user_id: 'u' } as any).dueInDays).toBe(1);
+    }
+    jest.useRealTimers();
+  });
+
+  it('a license expiring today is 0 days out just after midnight (licenseExpiry)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getExpiringLicenses } = require('../../services/licenseExpiryService');
+    jest.useFakeTimers().setSystemTime(new Date(2026, 9, 20, 0, 30));
+    const [l] = getExpiringLicenses({ licenses: [{ id: 'l', expiryDate: '2026-10-20' }] } as any);
+    jest.useRealTimers();
+    expect(l.daysUntilExpiry).toBe(0);
+    expect(l.severity).toBe('urgent');
   });
 
   it('paying on the due date is on time (the learningStorage rule)', () => {

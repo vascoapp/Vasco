@@ -12,13 +12,13 @@ import { daysOverdue } from '../utils/invoiceDue';
 import i18n from '../i18n/i18n';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MS_PER_DAY, MS_PER_HOUR } from '../utils/timeConstants';
+import { MS_PER_HOUR } from '../utils/timeConstants';
 import { registerSingletonReset } from './singletonReset';
 // STATIC, not `await import(...)`: a dynamic import throws under jest without
 // --experimental-vm-modules and the try/catch below would swallow it, leaving
 // every stored copy ownerless and dropped on the next launch (#300's trap).
 import { getAuthedUserId } from '../lib/currentUser';
-import { todayKey } from '../utils/dateKey';
+import { todayKey, daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import { documentCustomerName } from '../domain/customers';
 
 const PERSIST_KEY = '@vasco_notifications_v2';
@@ -433,7 +433,7 @@ export function deriveLiveNotifications(state: DerivableState): AppNotification[
   // Expiring certifications (≤30 days)
   for (const cert of state.certifications ?? []) {
     if (!cert.expiresAt) continue;
-    const daysUntil = Math.floor((new Date(cert.expiresAt).getTime() - Date.now()) / MS_PER_DAY);
+    const daysUntil = calendarDaysUntil(cert.expiresAt) ?? NaN; // #424
     if (daysUntil >= 0 && daysUntil <= 30) {
       out.push({
         id: `live-cert-${cert.id}`,

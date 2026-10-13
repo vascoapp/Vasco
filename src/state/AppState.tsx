@@ -117,7 +117,7 @@ import { subscribeDocNumberRemap, type DocNumberRemapEvent } from '../services/d
 import { businessProfile as initialBusinessProfile, US_BUSINESS_PROFILE, DE_BUSINESS_PROFILE, FR_BUSINESS_PROFILE, ES_BUSINESS_PROFILE, IT_BUSINESS_PROFILE, UK_BUSINESS_PROFILE, DEMO_CUSTOMER_VAT_IDS, DEMO_CUSTOMER_EINVOICE_DETAILS } from '../data/mockBusiness';
 import { invoices as initialInvoices, quotes as initialQuotes, deInvoices, deQuotes, frInvoices, frQuotes, esInvoices, esQuotes, itInvoices, itQuotes, ukInvoices, ukQuotes } from '../data/mockDocuments';
 import { quoteLineItems as initialLineItems } from '../data/mockLineItems';
-import { localDateKey, todayKey } from '../utils/dateKey';
+import { localDateKey, todayKey, daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import { daysUntilDue, invoiceTermDays } from '../utils/invoiceDue';
 import { fkOrNull, queueFkRepairs, queueRowFkRepairs } from '../services/fkRepair';
 import { ensureCanCreate, ensureCanUsePaymentLink } from '../services/tierGatePrompt';
@@ -2604,7 +2604,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         const issuedAtIso = paidInv?.sentAt ?? paidInv?.createdAt;
         const issuedAtMs = issuedAtIso ? new Date(issuedAtIso).getTime() : NaN;
         if (Number.isFinite(issuedAtMs)) {
-          const actualDays = Math.max(0, Math.round((Date.now() - issuedAtMs) / 86_400_000));
+          const actualDays = Math.max(0, -(calendarDaysUntil(issuedAtIso) ?? 0)); // calendar days, #424
           import('../intelligence/mlModels').then(async (ml) => {
             // What the model would say for this invoice, so the accuracy
             // telemetry compares a real prediction against a real outcome.

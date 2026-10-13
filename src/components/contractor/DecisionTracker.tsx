@@ -1,5 +1,6 @@
 // Decision Tracker - Help contractors guide customers through project decisions
 // Reduces delays, improves customer experience, builds repeat business
+import { daysUntil as calendarDaysUntil } from '../../utils/dateKey';
 import { getCurrentCountry } from '../../lib/currentUser';
 import { sendWhatsApp } from '../../services/whatsappService';
 import { useState, useEffect, useMemo } from 'react';
@@ -843,7 +844,7 @@ function DecisionItemCard({
   const dueDate = new Date(item.dueDate);
   const now = new Date();
   const daysOverdue = isOverdue
-    ? Math.floor((Date.now() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.max(0, -(calendarDaysUntil(item.dueDate) ?? 0)) // calendar days, #424
     : 0;
   const isDueSoon = !isOverdue && dueDate.getTime() - now.getTime() < 3 * 24 * 60 * 60 * 1000 && dueDate > now;
 

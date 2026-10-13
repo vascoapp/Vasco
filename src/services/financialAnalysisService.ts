@@ -5,12 +5,12 @@
 // Consumes AppState invoices + quotes, produces FinancialSummary.
 // =============================================================================
 
+import { calendarDaysBetween } from '../utils/dateKey';
 import { useMemo } from 'react';
 import i18n from '../i18n/i18n';
 import { useAppState } from '../state/AppState';
 import type { Invoice, Quote } from '../domain/documents';
 import { useExpenses, type Expense } from './expenseService';
-import { MS_PER_DAY } from '../utils/timeConstants';
 import { documentCustomerName } from '../domain/customers';
 import { daysOverdue as invoiceDaysOverdue } from '../utils/invoiceDue';
 import { getEffectiveVatRate, netFromGross } from '../domain/business';
@@ -135,7 +135,7 @@ function parseDate(dateStr?: string): Date | null {
 }
 
 function daysBetween(a: Date, b: Date): number {
-  return Math.round((b.getTime() - a.getTime()) / MS_PER_DAY);
+  return calendarDaysBetween(a, b); // local calendar days, #424
 }
 
 /** Build an array of the last N month keys ending at `now` */

@@ -6,6 +6,7 @@
 // content · gradient CTAs. Functions preserved from legacy screen.
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../../src/utils/dateKey';
 import { TAB_BAR_CLEARANCE } from '../../src/theme/tabStyles';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Share, Platform, TextInput, Linking, Alert } from 'react-native';
@@ -15,7 +16,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DK } from '../../src/theme/draftkings';
-import { MS_PER_DAY } from '../../src/utils/timeConstants';
 import { hapticSuccess } from '../../src/utils/haptics';
 import { SkeletonList } from '../../src/components/shared/SkeletonList';
 import { useAuth } from '../../src/context/AuthContext';
@@ -249,7 +249,7 @@ export default function VascoScreen() {
 
     jobs.filter((j: any) => j.status === 'scheduled' && j.scheduledDate).forEach((job: any) => {
       const customer = customers.find((c: any) => c.id === job.customerId);
-      const daysUntil = Math.ceil((new Date(job.scheduledDate).getTime() - Date.now()) / MS_PER_DAY);
+      const daysUntil = calendarDaysUntil(job.scheduledDate) ?? NaN; // calendar days, #424
       if (daysUntil > 0 && daysUntil <= 7) {
         actions.push({
           id: `prep-${job.id}`, icon: 'calendar-outline', iconColor: DK.colors.accent,

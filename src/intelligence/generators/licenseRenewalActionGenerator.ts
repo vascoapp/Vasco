@@ -15,12 +15,12 @@
 // out — no noise for compliant contractors.
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../../utils/dateKey';
 import { useMemo } from 'react';
 import type { ScoredInsight, GeneratorContext } from './types';
 import { useAppState } from '../../state/AppState';
 import { gt } from '../generatorTranslations';
 import { logPrediction } from '../calibration';
-import { MS_PER_DAY } from '../../utils/timeConstants';
 
 const EXPIRES_SOON_DAYS = 30;
 const EXPIRES_URGENT_DAYS = 14;
@@ -36,7 +36,7 @@ export function useLicenseRenewalActionInsight(ctx: GeneratorContext): ScoredIns
     type Scored = { license: typeof licenses[number]; daysUntil: number };
     const scored: Scored[] = licenses.map((l) => ({
       license: l,
-      daysUntil: Math.floor((new Date(l.expiryDate).getTime() - nowMs) / MS_PER_DAY),
+      daysUntil: calendarDaysUntil(l.expiryDate, new Date(nowMs)) ?? NaN, // #424
     }));
 
     // Only relevant: expired OR within 30d.

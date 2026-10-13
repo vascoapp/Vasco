@@ -22,7 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { complianceService, type License, type Certification, type InsurancePolicy, type ComplianceAlert } from './complianceService';
 import { addToQueue, withdrawComplianceCards, cardWasHandled } from './aiActionQueueService';
 import { MS_PER_DAY } from '../utils/timeConstants';
-import { localDateKey } from '../utils/dateKey';
+import { localDateKey, daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import { formatDateShortAuto } from '../i18n/formatting';
 import i18n from '../i18n/i18n';
 import { applySavedLanguage, applySavedCountry } from '../i18n/savedLanguage';
@@ -46,7 +46,7 @@ export interface ComplianceScanResult {
 
 /** Returns a stage bucket, or null if the item isn't within scanning horizon. */
 function stageForExpiry(expiryDate: Date, now: Date = new Date()): ExpiryStage | null {
-  const daysOut = Math.floor((expiryDate.getTime() - now.getTime()) / MS_PER_DAY);
+  const daysOut = calendarDaysUntil(expiryDate, now) ?? NaN; // calendar days, #424
   if (daysOut < 0) return 'expired';
   if (daysOut < 1) return 'D-1';
   if (daysOut < 7) return 'D-7';

@@ -76,7 +76,9 @@ describe('days-to-pay is measured, not assumed', () => {
 
   it('the interval runs from issue to payment', () => {
     expect(APPSTATE).toMatch(/const issuedAtIso = paidInv\?\.sentAt \?\? paidInv\?\.createdAt;/);
-    expect(APPSTATE).toMatch(/const actualDays = Math\.max\(0, Math\.round\(\(Date\.now\(\) - issuedAtMs\) \/ 86_400_000\)\);/);
+    // Issue → today in CALENDAR days (dateKey, #424) — still from issuedAtIso,
+    // never from the term (dueInDays).
+    expect(APPSTATE).toMatch(/const actualDays = Math\.max\(0, -\(calendarDaysUntil\(issuedAtIso\) \?\? 0\)\);/);
   });
 
   it('an invoice with no issue date records nothing rather than a guess', () => {

@@ -5,6 +5,7 @@ import type { VatNature } from '../domain/vatNature';
 // Automated invoicing, payment tracking, and collection workflows
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import { trackUserAction } from '../intelligence/intelligenceEngine';
 import { registerSingletonReset } from './singletonReset';
 import { round2 } from '../utils/round2';
@@ -282,9 +283,9 @@ class InvoiceAutomationService {
   getOverdueReminders(): PaymentReminder[] {
     const now = new Date();
     return this.invoices
-      .filter(i => i.status !== 'paid' && i.dueDate < now)
+      .filter(i => i.status !== 'paid' && (calendarDaysUntil(i.dueDate, now) ?? 0) < 0) // due TODAY is not overdue, #424
       .map(i => {
-        const daysOverdue = Math.floor((now.getTime() - i.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysOverdue = Math.max(0, -(calendarDaysUntil(i.dueDate, now) ?? 0));
         const lastReminder = i.reminders[i.reminders.length - 1];
         let nextType: PaymentReminder['nextReminderType'] = 'friendly';
         if (lastReminder) {
@@ -304,7 +305,7 @@ class InvoiceAutomationService {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const paid = this.invoices.filter(i => i.status === 'paid');
-    const overdue = this.invoices.filter(i => i.status !== 'paid' && i.dueDate < now);
+    const overdue = this.invoices.filter(i => i.status !== 'paid' && (calendarDaysUntil(i.dueDate, now) ?? 0) < 0);
 
     return {
       totalInvoiced: this.invoices.reduce((sum, i) => sum + i.total, 0),

@@ -5,6 +5,7 @@
 // Pattern: AI does the thinking → queues result → human approves → action executes
 // =============================================================================
 
+import { daysOverdue as invoiceDaysOverdue } from '../utils/invoiceDue';
 import { formatMoney, formatMoney2, formatDateShortAuto } from '../i18n/formatting';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -29,7 +30,7 @@ import { findDocumentCustomer, documentCustomerName } from '../domain/customers'
 import { amountPayableNow } from '../domain/documents';
 import { isWorkOnDay } from '../domain/jobs';
 import { emitBusinessEvent } from '../intelligence/dataCollector';
-import { localDateKey, todayKey } from '../utils/dateKey';
+import { localDateKey, todayKey, daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import { DORMANT_CONTROLS } from '../config/dormant';
 
 const QUEUE_KEY = '@vasco_ai_queue';
@@ -1250,7 +1251,8 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
   // be evidenced as a business, so this produces nothing — by design.
   const feeCustomers = (context.customers ?? []).map((c) => ({ ...c, name: c.name ?? '' }));
   for (const inv of feeCountry ? severelyOverdue.slice(0, 2) : []) {
-    const daysOverdue = Math.ceil((now - new Date(inv.dueDate || '').getTime()) / dayMs);
+    // Calendar days (invoiceDue) — this count sets the statutory interest (#424).
+    const daysOverdue = invoiceDaysOverdue(inv, new Date(now)) ?? 0;
     // EU Directive 2011/7/EU: statutory interest + €40 (or UK tiered) recovery
     // fee — B2B only. This assumed every customer was a business ("the
     // contractor can strip the line"); now it needs evidence, and a card whose
@@ -1418,7 +1420,7 @@ export async function populateQueue(context: PopulateQueueContext): Promise<numb
     return exp && (exp - now) > 0 && (exp - now) < 30 * dayMs;
   });
   for (const cert of expiringCerts.slice(0, 2)) {
-    const daysLeft = Math.ceil((new Date(cert.expiryDate || '').getTime() - now) / dayMs);
+    const daysLeft = calendarDaysUntil(cert.expiryDate, new Date(now)) ?? 0; // #424
     const id = await addToQueue({
       type: 'cert_renewal',
       title: t('automation.certExpiring', { defaultValue: '{{name}} expires in {{days}} days', name: cert.name || cert.type || '', days: daysLeft }),

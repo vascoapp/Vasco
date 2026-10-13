@@ -9,6 +9,7 @@
 // manage their recurring schedule explicitly.
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../utils/dateKey';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = '@vasco_recurring_jobs';
@@ -89,7 +90,7 @@ export async function getRecurringInstances(opts: { withinDays?: number; include
     .filter((t) => opts.includePaused || !t.paused)
     .map((template): RecurringJobInstance => {
       const next = nextDueDate(template);
-      const daysUntilDue = Math.round((new Date(next).getTime() - now) / 86400000);
+      const daysUntilDue = calendarDaysUntil(next, new Date(now)) ?? NaN; // #424
       return {
         template,
         nextDueDate: next,

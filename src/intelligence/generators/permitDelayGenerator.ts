@@ -5,11 +5,11 @@
 // target decision date. Monitors permit pipeline across the portfolio.
 // =============================================================================
 
+import { daysUntil as calendarDaysUntil } from '../../utils/dateKey';
 import type { ScoredInsight, GeneratorContext } from './types';
 import { mockProjects } from '../../data/mockProjects';
 import { logPrediction } from '../calibration';
 import { gt } from '../generatorTranslations';
-import { MS_PER_DAY } from '../../utils/timeConstants';
 
 export function usePermitDelayInsight(ctx: GeneratorContext): ScoredInsight | null {
   if (ctx.role !== 'coo' && ctx.role !== 'director') return null;
@@ -34,7 +34,7 @@ export function usePermitDelayInsight(ctx: GeneratorContext): ScoredInsight | nu
   const hasOverdue = overduePermits.length > 0;
   const worstOverdue = overduePermits[0];
   const daysOverdue = worstOverdue
-    ? Math.round((now.getTime() - new Date(worstOverdue.targetDecisionDate!).getTime()) / MS_PER_DAY)
+    ? -(calendarDaysUntil(worstOverdue.targetDecisionDate, now) ?? NaN) // #424
     : 0;
 
   logPrediction({
