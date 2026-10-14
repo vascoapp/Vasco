@@ -1071,7 +1071,7 @@ class ComplianceService {
       if (c.expiryDate >= now && c.expiryDate <= endDate) {
         const dateKey = localDateKey(c.expiryDate);
         const items = calendar.get(dateKey) || [];
-        items.push({ type: 'certification', name: `${c.name} (${c.holderName})`, id: c.id });
+        items.push({ type: 'certification', name: c.holderName?.trim() ? `${c.name} (${c.holderName})` : c.name, id: c.id });
         calendar.set(dateKey, items);
       }
     });

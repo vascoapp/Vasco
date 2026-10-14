@@ -1,4 +1,5 @@
 import { BusinessProfile } from '../domain/business';
+import { SCREENSHOT_MODE } from '../config/demo';
 
 // Default seed for the Dutch demo accounts (DEMO_MODE only — AppState seeds
 // `{ isComplete: false }` in production). Deliberately incomplete, so Vandaag
@@ -11,8 +12,11 @@ export const businessProfile: BusinessProfile = {
   completenessPercent: 60,
   country: 'NL',
   // Store screenshots show the invoice's payment card; without an IBAN it reads
-  // "add your IBAN" instead of how the customer pays (2026-10-07).
-  iban: 'NL91ABNA0417164300',
+  // "add your IBAN" instead of how the customer pays (2026-10-07). SCREENSHOT
+  // builds only: this seed is also every dev build's INITIAL profile, and the
+  // hydrate merges a real account's saved profile over it — one with no IBAN
+  // yet would keep this one and print it on its invoices.
+  ...(SCREENSHOT_MODE ? { iban: 'NL91ABNA0417164300' } : {}),
 };
 
 // R78 US foundation: seed business profile for contractor@vasco.us.dev so

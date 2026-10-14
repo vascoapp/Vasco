@@ -187,21 +187,25 @@ function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
 
   const config = severityConfig[alert.severity as keyof typeof severityConfig] || severityConfig.low;
 
+  const days = alert.dueDate ? daysUntil(alert.dueDate) ?? 0 : null;
+  const daysText = days === null ? null
+    : days < 0 ? `${Math.abs(days)} ${t('compliance.daysAgo', 'dagen geleden')}` : `${t('compliance.daysRemaining', 'Nog')} ${days} ${t('compliance.days', 'dagen')}`;
+
   return (
-    <Pressable style={[styles.alertCard, { backgroundColor: config.bg }]} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${alert.severity} alert: ${alert.title}`}>
+    <Pressable
+      style={[styles.alertCard, { backgroundColor: config.bg }]}
+      onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={daysText ? `${alert.title}, ${daysText}` : alert.title}
+    >
       <Ionicons name={config.icon} size={20} color={config.color} />
       <View style={styles.alertContent}>
         <Text style={[styles.alertTitle, { color: config.color }]} numberOfLines={1}>{alert.title}</Text>
-        {alert.dueDate && (
-          <Text style={[styles.alertDays, { color: config.color }]}>
-            {(() => {
-              const days = daysUntil(alert.dueDate) ?? 0;
-              return days < 0 ? `${Math.abs(days)} ${t('compliance.daysAgo', 'dagen geleden')}` : `${t('compliance.daysRemaining', 'Nog')} ${days} ${t('compliance.days', 'dagen')}`;
-            })()}
-          </Text>
+        {daysText && (
+          <Text style={[styles.alertDays, { color: config.color }]}>{daysText}</Text>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={18} color={config.color} />
+      {onPress && <Ionicons name="chevron-forward" size={18} color={config.color} />}
     </Pressable>
   );
 }
@@ -288,7 +292,7 @@ function ItemCard({ item, onPress, onRenew }: { item: ComplianceItem; onPress?: 
             {item.status === 'expired' || item.status === 'cancelled'
               ? `${item.status === 'cancelled' ? t('compliance.statusCancelled', 'Geannuleerd') : t('compliance.statusExpired', 'Verlopen')} ${formatDate(item.expiryDate)}`
               : `${t('compliance.expires', 'Verloopt')} ${formatDate(item.expiryDate)}`}
-            {item.status === 'expiring_soon' && ` (${daysLeft}d)`}
+            {item.status === 'expiring_soon' && ` (${t('common.daysCompact', { count: daysLeft })})`}
           </Text>
         </View>
 
@@ -321,7 +325,7 @@ function ExpiryTimeline({ items }: { items: { name: string; date: Date; type: st
             <View style={styles.timelineContent}>
               <Text style={styles.timelineItemName} numberOfLines={1}>{item.name}</Text>
               <Text style={[styles.timelineItemDate, isUrgent && { color: SemanticColors.feedbackWarning }]}>
-                {formatDate(item.date)} ({days}d)
+                {formatDate(item.date)} ({t('common.daysCompact', { count: days })})
               </Text>
             </View>
           </View>
@@ -613,9 +617,12 @@ export default function CertificatenScreen() {
             {criticalAlerts.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t('compliance.actionsRequired', 'Acties vereist')}</Text>
-                {criticalAlerts.slice(0, 3).map(alert => (
-                  <AlertCard key={alert.id} alert={alert} />
-                ))}
+                {criticalAlerts.slice(0, 3).map(alert => {
+                  // The card opens what it is about; an alert with no item
+                  // behind it is a card without a chevron, not a dead tap.
+                  const related = allItems.find((i) => i.id === alert.relatedItemId);
+                  return <AlertCard key={alert.id} alert={alert} onPress={related ? () => setSelectedItem(related) : undefined} />;
+                })}
               </View>
             )}
 

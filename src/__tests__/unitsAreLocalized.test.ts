@@ -23,8 +23,11 @@ function walk(dir: string): string[] {
   });
 }
 
-// `{x}d</Text>`, `` `${x}d` ``, `` `${x}h` `` — an interpolation glued to a unit letter.
-const SUFFIX = /\}[dh](?=<|`)/;
+// `{x}d</Text>`, `` `${x}d` ``, `` `${x}h` ``, `({x}d)` — an interpolation glued to a
+// unit letter. `)` was missed until 2026-10-14: the certificate screen read
+// "20 okt 2026 (6d)" in every language (device pass).
+// `{{x}}h)` is an i18n placeholder: each locale file carries its own unit.
+const SUFFIX = /(?<!\})\}[dh](?=<|`|\))/;
 // app/hub is the portfolio surface: out of scope (contractor + aannemer only).
 const files = ['app', 'src/components'].flatMap((d) => walk(path.join(ROOT, d)))
   .map((f) => path.relative(ROOT, f))
