@@ -55,6 +55,10 @@ run('quote PDF share', () => {
     await act(async () => { buttons.find((b) => b.text === q.pdfSentYes)!.onPress!(); });
     await settle();
     expect(await stored()).toBe('sent');
+    // …stamped with WHEN, on the device too: "valid until" counts from it, and
+    // it was only on the server until the next refresh (2026-10-14).
+    const sentAt = JSON.parse((await AsyncStorage.getItem('@vasco_quotes')) ?? '[]')[0].sentAt;
+    expect(Math.abs(Date.now() - new Date(sentAt).getTime())).toBeLessThan(60_000);
     alert.mockRestore();
     teardown(r);
   });

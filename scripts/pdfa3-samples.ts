@@ -45,7 +45,7 @@ function data(country: 'DE' | 'FR', lines: L[], extra: Record<string, unknown>, 
     lineItems: lines.map((l) => ({ ...l, vatAmount: 0, lineTotal: l.quantity * l.unitPrice })),
     totalNet: b.net, totalVat: b.vat, totalGross: b.gross } as any;
 }
-const cases: Array<[string, 'DE' | 'FR', HybridProfile, string, any]> = [
+const cases: Array<[string, 'DE' | 'FR', HybridProfile, string, any, Record<string, unknown>?]> = [
   ['zugferd-single-19', 'DE', 'zugferd', 'de', data('DE', [
     { description: 'Trinkwasserleitung erneuern', quantity: 1, unitCode: 'stuk', unitPrice: 4369.75, vatRate: 19 }], { sellerVatExempt: false }, 19)],
   ['zugferd-mixed-subcent', 'DE', 'zugferd', 'de', data('DE', [
@@ -61,6 +61,11 @@ const cases: Array<[string, 'DE' | 'FR', HybridProfile, string, any]> = [
   // moves to a page with room, every page carries the footer.
   ['zugferd-multipage', 'DE', 'zugferd', 'de', data('DE', Array.from({ length: 40 }, (_, i) => (
     { description: `Position ${i + 1}: Montage Heizkörperventil inkl. Material`, quantity: 1 + (i % 3) * 0.5, unitCode: 'stuk', unitPrice: 17.49 + i, vatRate: i % 5 === 0 ? 7 : 19 })), { sellerVatExempt: false }, 19)],
+  // Progress invoice with retention withheld from the payment: the total stays
+  // whole (VAT on it), "Sicherheitseinbehalt / Jetzt zu zahlen" rows under it,
+  // and the transfer QR asks the payable amount (2026-10-14).
+  ['zugferd-retention-qr', 'DE', 'zugferd', 'de', data('DE', [
+    { description: 'Abschlag 1: Badsanierung', quantity: 1, unitCode: 'stuk', unitPrice: 8403.36, vatRate: 19 }], { sellerVatExempt: false, iban: 'DE89370400440532013000' }, 19), { retentionWithheld: 500 }],
   ['facturx-single-20', 'FR', 'facturx', 'fr', data('FR', [
     { description: 'Remplacement chauffe-eau', quantity: 1, unitCode: 'stuk', unitPrice: 1890, vatRate: 20 }], { sellerVatExempt: false }, 20)],
   ['facturx-mixed-subcent', 'FR', 'facturx', 'fr', data('FR', [
@@ -71,9 +76,9 @@ const cases: Array<[string, 'DE' | 'FR', HybridProfile, string, any]> = [
     { description: 'Entretien chaudière', quantity: 2.5, unitCode: 'uur', unitPrice: 48, vatRate: 0 }], { sellerVatExempt: true }, 0)],
 ];
 (async () => {
-  for (const [name, country, profile, language, d] of cases) {
+  for (const [name, country, profile, language, d, extra] of cases) {
     const { bytes } = await buildPdfA3Invoice(d, {
-      profile, language, fonts, mentions: MENTIONS[country], now: new Date('2026-09-30T10:00:00Z'),
+      profile, language, fonts, mentions: MENTIONS[country], now: new Date('2026-09-30T10:00:00Z'), ...(extra ?? {}),
     });
     writeFileSync(`${OUT}/${name}.pdf`, bytes);
   }

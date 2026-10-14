@@ -119,6 +119,8 @@ module.exports = {
     '<rootDir>/__screenwalk__/geldSendOpensTheInvoice.test.tsx',
     '<rootDir>/__screenwalk__/scheduleTapOpensJob.test.tsx',
     '<rootDir>/__screenwalk__/flowQuotePdfAsksBeforeSent.test.tsx',
+    // Seeds a sent quote in AsyncStorage (the lapsed re-issue, 2026-10-14).
+    '<rootDir>/__screenwalk__/quotePdfLapsedIsReissued.test.tsx',
     // ...and two that assert the Dutch demo ACCOUNT. The generic prod user has
     // no country, where "set your country first" IS the correct rendering.
     '<rootDir>/__screenwalk__/certificatenShowsOnlyWhatWorks.test.tsx',

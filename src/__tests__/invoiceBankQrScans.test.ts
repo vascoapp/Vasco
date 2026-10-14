@@ -101,6 +101,7 @@ describe('on the invoice PDF', () => {
 // (veraPDF + Mustang still accept it) and by decoding the rendered page.
 it('the e-invoice hybrid carries the same code, for euro invoices only', () => {
   const src = require('fs').readFileSync(require('path').resolve(__dirname, '../integrations/pdfA3Invoice.ts'), 'utf8');
-  expect(src).toMatch(/data\.currency === 'EUR' && data\.iban\s*\? epcPayload\(/);
+  // …and not on a paid one (behaviour: integrations/__tests__/hybridQrAsksWhatIsOwed).
+  expect(src).toMatch(/data\.currency === 'EUR' && data\.iban && !r\.paid\s*\? epcPayload\(/);
   expect(src).toMatch(/epcQrMatrix\(epc\)/);
 });

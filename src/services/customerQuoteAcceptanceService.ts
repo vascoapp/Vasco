@@ -25,6 +25,7 @@ import { isSupabaseConfigured } from '../lib/supabase';
 import { logWarn } from '../utils/errorHandler';
 import { formatMoney2 } from '../i18n/formatting';
 import { documentCustomerName } from '../domain/customers';
+import { QUOTE_VALID_DAYS } from '../domain/documents';
 import { signCustomerMessage } from '../utils/signCustomerMessage';
 import {
   createAcceptanceLink as dbCreateAcceptanceLink,
@@ -105,7 +106,7 @@ export async function createAcceptanceLink(quote: {
   validDays?: number;
 }): Promise<{ token: string; url: string; link: AcceptanceLink }> {
   const token = generateToken();
-  const validDays = quote.validDays ?? 30;
+  const validDays = quote.validDays ?? QUOTE_VALID_DAYS;
   const expiresAt = new Date(Date.now() + validDays * MS_PER_DAY).toISOString();
   const createdAt = new Date().toISOString();
 

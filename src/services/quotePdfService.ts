@@ -4,6 +4,7 @@
  * Design matches invoicePdfService — Stripe/Linear-inspired minimal.
  */
 
+import { messageLocale } from './whatsappTemplateService';
 import { A4_PAGE } from '../utils/pdfPage';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -111,45 +112,45 @@ const LABELS: Record<string, QuoteLabels> = {
     scopeOfWork: 'Werkomschrijving',
   },
   de: {
-    title: 'Angebot', quoteNumber: 'Angebotsnr.', from: 'Von', to: 'Erstellt fur',
-    issueDate: 'Datum', validUntil: 'Gultig bis', jobRef: 'Projekt',
+    title: 'Angebot', quoteNumber: 'Angebotsnr.', from: 'Von', to: 'Erstellt für',
+    issueDate: 'Datum', validUntil: 'Gültig bis', jobRef: 'Projekt',
     description: 'Beschreibung', quantity: 'Menge', unitPrice: 'Preis', vat: 'USt', amount: 'Betrag',
     subtotal: 'Zwischensumme', vatAmount: 'USt', total: 'Gesamtbetrag',
-    notes: 'Anmerkungen', terms: 'Allgemeine Geschaftsbedingungen',
-    validityMsg: 'Dieses Angebot ist gultig bis',
+    notes: 'Anmerkungen', terms: 'Allgemeine Geschäftsbedingungen',
+    validityMsg: 'Dieses Angebot ist gültig bis',
     acceptMsg: 'Um dieses Angebot anzunehmen, antworten Sie bitte oder kontaktieren Sie uns direkt.',
     optionLabel: 'Option', poweredBy: 'Betrieben von Vasco',
     scopeOfWork: 'Leistungsbeschreibung',
   },
   fr: {
-    title: 'Devis', quoteNumber: 'Devis n°', from: 'De', to: 'Etabli pour',
+    title: 'Devis', quoteNumber: 'Devis n°', from: 'De', to: 'Établi pour',
     issueDate: 'Date', validUntil: 'Valable jusqu\'au', jobRef: 'Chantier',
     description: 'Description', quantity: 'Qté', unitPrice: 'Prix', vat: 'TVA', amount: 'Montant',
     subtotal: 'Sous-total', vatAmount: 'TVA', total: 'Total TTC',
-    notes: 'Remarques', terms: 'Conditions generales',
+    notes: 'Remarques', terms: 'Conditions générales',
     validityMsg: 'Ce devis est valable jusqu\'au',
-    acceptMsg: 'Pour accepter ce devis, veuillez repondre ou nous contacter directement.',
-    optionLabel: 'Option', poweredBy: 'Propulse par Vasco',
+    acceptMsg: 'Pour accepter ce devis, veuillez répondre ou nous contacter directement.',
+    optionLabel: 'Option', poweredBy: 'Propulsé par Vasco',
     scopeOfWork: 'Descriptif des travaux',
   },
   es: {
     title: 'Presupuesto', quoteNumber: 'Presupuesto n°', from: 'De', to: 'Preparado para',
-    issueDate: 'Fecha', validUntil: 'Valido hasta', jobRef: 'Proyecto',
+    issueDate: 'Fecha', validUntil: 'Válido hasta', jobRef: 'Proyecto',
     description: 'Descripción', quantity: 'Cant.', unitPrice: 'Precio', vat: 'IVA', amount: 'Importe',
     subtotal: 'Subtotal', vatAmount: 'IVA', total: 'Total',
-    notes: 'Notas', terms: 'Terminos y Condiciones',
-    validityMsg: 'Este presupuesto es valido hasta',
-    acceptMsg: 'Para aceptar este presupuesto, responda o contactenos directamente.',
-    optionLabel: 'Opcion', poweredBy: 'Desarrollado por Vasco',
+    notes: 'Notas', terms: 'Términos y Condiciones',
+    validityMsg: 'Este presupuesto es válido hasta',
+    acceptMsg: 'Para aceptar este presupuesto, responda o contáctenos directamente.',
+    optionLabel: 'Opción', poweredBy: 'Desarrollado por Vasco',
     scopeOfWork: 'Alcance del trabajo',
   },
   it: {
     title: 'Preventivo', quoteNumber: 'Preventivo n°', from: 'Da', to: 'Preparato per',
     issueDate: 'Data', validUntil: 'Valido fino al', jobRef: 'Progetto',
-    description: 'Descrizione', quantity: 'Qta', unitPrice: 'Prezzo', vat: 'IVA', amount: 'Importo',
+    description: 'Descrizione', quantity: 'Q.tà', unitPrice: 'Prezzo', vat: 'IVA', amount: 'Importo',
     subtotal: 'Subtotale', vatAmount: 'IVA', total: 'Totale',
     notes: 'Note', terms: 'Termini e Condizioni',
-    validityMsg: 'Questo preventivo e valido fino al',
+    validityMsg: 'Questo preventivo è valido fino al',
     acceptMsg: 'Per accettare questo preventivo, rispondete o contattateci direttamente.',
     optionLabel: 'Opzione', poweredBy: 'Offerto da Vasco',
     scopeOfWork: 'Descrizione dei lavori',
@@ -486,9 +487,13 @@ export async function generateQuotePdf(
     vatScheme?: VatScheme;
   },
 ): Promise<void> {
+  // The contractor's message language when the caller names none — as the
+  // invoice PDF does (#389). The quote screen never passed one, so every quote
+  // a German or French customer received read "Quote / Valid Until / Prepared
+  // For". An explicit one still wins.
   const html = buildQuoteHtml(
     quote, businessName, businessAddress, kvkNumber, vatNumber,
-    options?.language, options?.country, options?.phone, options?.email,
+    options?.language ?? messageLocale(), options?.country, options?.phone, options?.email,
     options?.showPoweredBy, options?.vatScheme,
   );
   const { uri: printed } = await Print.printToFileAsync({ html, ...A4_PAGE });

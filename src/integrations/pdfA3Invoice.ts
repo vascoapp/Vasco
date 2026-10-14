@@ -71,6 +71,17 @@ export interface PdfA3InvoiceOptions {
   mentions?: string[];
   /** Fixed clock for reproducible output (tests, samples). */
   now?: Date;
+  /**
+   * Retention withheld from this payment (progress billing: the invoice is for
+   * the full amount, VAT on the full amount, the customer pays less now —
+   * memory/progress-billing.md). Printed as "retention withheld / payable now"
+   * under the total, as the printed PDF does, and the transfer QR asks for the
+   * payable amount. No QR at all once paid: the hybrid used the gross on every
+   * status, so a paid invoice exported later carried a scannable "pay € X"
+   * (review 2026-10-14).
+   */
+  retentionWithheld?: number;
+  paid?: boolean;
 }
 
 export interface PdfA3InvoiceResult {
@@ -157,7 +168,7 @@ export async function buildPdfA3Invoice(
   doc.setCreationDate(now);
   doc.setModificationDate(now);
 
-  renderInvoice(doc, data, totals, { L, lang, regular, bold, mentions: opts.mentions ?? [], profile: opts.profile });
+  renderInvoice(doc, data, totals, { L, lang, regular, bold, mentions: opts.mentions ?? [], profile: opts.profile, retentionWithheld: opts.retentionWithheld, paid: opts.paid });
 
   const xmlBytes = utf8(xml);
   const ctx = doc.context;
@@ -302,6 +313,9 @@ interface RenderCtx {
   bold: PDFFont;
   mentions: string[];
   profile: HybridProfile;
+  /** Retention withheld and whether paid (see PdfA3InvoiceOptions). */
+  retentionWithheld?: number;
+  paid?: boolean;
 }
 
 const A4: [number, number] = [595.28, 841.89];
@@ -421,7 +435,11 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
   const sellerVatExempt = data.sellerVatExempt ?? true;
   const exempt = totals.groups.some((g) => taxCategoryFor(g.ratePct, sellerVatExempt) === 'E');
   const exemptionReason = data.taxExemptionReason ?? exemptionReasonFor(data.sellerCountry);
-  const rows = 2 + totals.groups.length + (exempt ? 2 : 0);
+  // What the customer pays now: the total less any retention (computed from
+  // the page's OWN total, so the rows and the QR cannot disagree by a cent).
+  const retention = round2(Math.max(0, Math.min(r.retentionWithheld ?? 0, totals.gross)));
+  const payable = round2(totals.gross - retention);
+  const rows = 2 + totals.groups.length + (exempt ? 2 : 0) + (retention > 0 ? 2 : 0);
   if (y - rows * 15 - 20 < MARGIN + 40) newPage();
   y -= 6;
   const labelX = MARGIN + width * 0.5;
@@ -437,6 +455,10 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
   page.drawLine({ start: { x: labelX, y: y + 10 }, end: { x: A4[0] - MARGIN, y: y + 10 }, thickness: 1, color: INK });
   y -= 2;
   row(L.total, money(totals.gross), bold, 12);
+  if (retention > 0) {
+    row(L.retentionWithheld, `−${money(retention)}`);
+    row(L.payableNow, money(payable), bold, 12);
+  }
   if (exempt) {
     y -= 4;
     for (const w of wrap(exemptionReason, regular, 8.5, width)) { text(w, MARGIN, y, 8.5, regular, MUTED); y -= 11; }
@@ -451,10 +473,10 @@ function renderInvoice(doc: PDFDocument, data: EInvoiceData, totals: PdfA3Invoic
   ].filter(Boolean);
   const mentionLines = r.mentions.flatMap((m) => wrap(m, regular, 7.5, width));
   // The SEPA transfer QR (src/utils/epcQr.ts) beside the payment lines: EUR
-  // only, a valid IBAN, the total, the invoice number. Drawn as vector squares
+  // only, a valid IBAN, not paid, what is payable now, the invoice number. Drawn as vector squares
   // — PDF/A-3 safe (veraPDF checks every hybrid, `npm run check:pdfa3`).
-  const epc = data.currency === 'EUR' && data.iban
-    ? epcPayload({ name: data.sellerName, iban: data.iban, bic: data.bic, amount: totals.gross, reference: data.paymentReference || data.invoiceNumber })
+  const epc = data.currency === 'EUR' && data.iban && !r.paid
+    ? epcPayload({ name: data.sellerName, iban: data.iban, bic: data.bic, amount: payable, reference: data.paymentReference || data.invoiceNumber })
     : null;
   const QR_SIZE = 78;
   const needed = Math.max(30 + payment.length * 12, epc ? 30 + QR_SIZE : 0) + mentionLines.length * 10;
@@ -495,6 +517,7 @@ interface Labels {
   title: string; seller: string; buyer: string; number: string; issueDate: string; dueDate: string;
   deliveryDate: string; buyerReference: string; description: string; quantity: string; unitPrice: string;
   vatRate: string; amount: string; net: string; vat: string; on: string; total: string; payment: string;
+  retentionWithheld: string; payableNow: string;
   payBy: string; reference: string; vatId: string; taxNumber: string;
   hybridNoteZugferd: string; hybridNoteFacturX: string;
 }
@@ -504,7 +527,7 @@ export const LABELS: Record<HybridLanguage, Labels> = {
     title: 'Invoice', seller: 'From', buyer: 'Bill to', number: 'Invoice no.', issueDate: 'Invoice date',
     dueDate: 'Due date', deliveryDate: 'Service date', buyerReference: 'Your reference', description: 'Description',
     quantity: 'Qty', unitPrice: 'Unit price', vatRate: 'VAT', amount: 'Amount', net: 'Total excl. VAT',
-    vat: 'VAT', on: 'on', total: 'Total due', payment: 'Payment', payBy: 'Please pay by', reference: 'Reference',
+    vat: 'VAT', on: 'on', total: 'Total due', retentionWithheld: 'Retention withheld until handover', payableNow: 'Payable now', payment: 'Payment', payBy: 'Please pay by', reference: 'Reference',
     vatId: 'VAT no.', taxNumber: 'Tax no.',
     hybridNoteZugferd: 'ZUGFeRD e-invoice (EN 16931) — the structured invoice data is embedded in this PDF as factur-x.xml.',
     hybridNoteFacturX: 'Factur-X e-invoice (EN 16931) — the structured invoice data is embedded in this PDF as factur-x.xml.',
@@ -513,7 +536,7 @@ export const LABELS: Record<HybridLanguage, Labels> = {
     title: 'Factuur', seller: 'Van', buyer: 'Aan', number: 'Factuurnummer', issueDate: 'Factuurdatum',
     dueDate: 'Vervaldatum', deliveryDate: 'Leveringsdatum', buyerReference: 'Uw referentie', description: 'Omschrijving',
     quantity: 'Aantal', unitPrice: 'Prijs per stuk', vatRate: 'Btw', amount: 'Bedrag', net: 'Totaal excl. btw',
-    vat: 'Btw', on: 'over', total: 'Te betalen', payment: 'Betaling', payBy: 'Graag betalen vóór', reference: 'Kenmerk',
+    vat: 'Btw', on: 'over', total: 'Te betalen', retentionWithheld: 'Retentie ingehouden tot oplevering', payableNow: 'Nu te betalen', payment: 'Betaling', payBy: 'Graag betalen vóór', reference: 'Kenmerk',
     vatId: 'Btw-id', taxNumber: 'Fiscaal nummer',
     hybridNoteZugferd: 'ZUGFeRD e-factuur (EN 16931) — de gestructureerde factuurgegevens zitten in deze pdf als factur-x.xml.',
     hybridNoteFacturX: 'Factur-X e-factuur (EN 16931) — de gestructureerde factuurgegevens zitten in deze pdf als factur-x.xml.',
@@ -522,7 +545,7 @@ export const LABELS: Record<HybridLanguage, Labels> = {
     title: 'Rechnung', seller: 'Rechnungssteller', buyer: 'Rechnungsempfänger', number: 'Rechnungsnummer',
     issueDate: 'Rechnungsdatum', dueDate: 'Fällig am', deliveryDate: 'Leistungsdatum', buyerReference: 'Ihre Referenz',
     description: 'Beschreibung', quantity: 'Menge', unitPrice: 'Einzelpreis', vatRate: 'USt.', amount: 'Betrag',
-    net: 'Summe netto', vat: 'USt.', on: 'auf', total: 'Rechnungsbetrag', payment: 'Zahlung',
+    net: 'Summe netto', vat: 'USt.', on: 'auf', total: 'Rechnungsbetrag', retentionWithheld: 'Sicherheitseinbehalt bis zur Abnahme', payableNow: 'Jetzt zu zahlen', payment: 'Zahlung',
     payBy: 'Bitte zahlen Sie bis zum', reference: 'Verwendungszweck', vatId: 'USt-IdNr.', taxNumber: 'Steuernummer',
     hybridNoteZugferd: 'ZUGFeRD-E-Rechnung (EN 16931) — die strukturierten Rechnungsdaten sind in diesem PDF als factur-x.xml eingebettet.',
     hybridNoteFacturX: 'Factur-X-E-Rechnung (EN 16931) — die strukturierten Rechnungsdaten sind in diesem PDF als factur-x.xml eingebettet.',
@@ -531,7 +554,7 @@ export const LABELS: Record<HybridLanguage, Labels> = {
     title: 'Facture', seller: 'Émetteur', buyer: 'Client', number: 'Facture n°', issueDate: 'Date de facture',
     dueDate: 'Échéance', deliveryDate: 'Date de prestation', buyerReference: 'Votre référence', description: 'Désignation',
     quantity: 'Qté', unitPrice: 'Prix unitaire HT', vatRate: 'TVA', amount: 'Montant HT', net: 'Total HT',
-    vat: 'TVA', on: 'sur', total: 'Total TTC', payment: 'Règlement', payBy: 'À régler avant le', reference: 'Référence',
+    vat: 'TVA', on: 'sur', total: 'Total TTC', retentionWithheld: 'Retenue de garantie jusqu’à la réception', payableNow: 'À payer maintenant', payment: 'Règlement', payBy: 'À régler avant le', reference: 'Référence',
     vatId: 'N° TVA', taxNumber: 'SIRET',
     hybridNoteZugferd: 'Facture électronique ZUGFeRD (EN 16931) — les données structurées sont intégrées à ce PDF (factur-x.xml).',
     hybridNoteFacturX: 'Facture électronique Factur-X (EN 16931) — les données structurées sont intégrées à ce PDF (factur-x.xml).',
@@ -540,7 +563,7 @@ export const LABELS: Record<HybridLanguage, Labels> = {
     title: 'Factura', seller: 'Emisor', buyer: 'Cliente', number: 'Factura n.º', issueDate: 'Fecha de factura',
     dueDate: 'Vencimiento', deliveryDate: 'Fecha de prestación', buyerReference: 'Su referencia', description: 'Descripción',
     quantity: 'Cant.', unitPrice: 'Precio unitario', vatRate: 'IVA', amount: 'Importe', net: 'Base imponible',
-    vat: 'IVA', on: 'sobre', total: 'Total a pagar', payment: 'Pago', payBy: 'Pagar antes del', reference: 'Referencia',
+    vat: 'IVA', on: 'sobre', total: 'Total a pagar', retentionWithheld: 'Retención de garantía hasta la recepción', payableNow: 'A pagar ahora', payment: 'Pago', payBy: 'Pagar antes del', reference: 'Referencia',
     vatId: 'NIF-IVA', taxNumber: 'NIF',
     hybridNoteZugferd: 'Factura electrónica ZUGFeRD (EN 16931): los datos estructurados van incluidos en este PDF como factur-x.xml.',
     hybridNoteFacturX: 'Factura electrónica Factur-X (EN 16931): los datos estructurados van incluidos en este PDF como factur-x.xml.',
@@ -549,7 +572,7 @@ export const LABELS: Record<HybridLanguage, Labels> = {
     title: 'Fattura', seller: 'Cedente', buyer: 'Cliente', number: 'Fattura n.', issueDate: 'Data fattura',
     dueDate: 'Scadenza', deliveryDate: 'Data della prestazione', buyerReference: 'Vostro riferimento', description: 'Descrizione',
     quantity: 'Q.tà', unitPrice: 'Prezzo unitario', vatRate: 'IVA', amount: 'Importo', net: 'Imponibile',
-    vat: 'IVA', on: 'su', total: 'Totale da pagare', payment: 'Pagamento', payBy: 'Pagare entro il', reference: 'Causale',
+    vat: 'IVA', on: 'su', total: 'Totale da pagare', retentionWithheld: 'Ritenuta a garanzia fino al collaudo', payableNow: 'Da pagare ora', payment: 'Pagamento', payBy: 'Pagare entro il', reference: 'Causale',
     vatId: 'P.IVA', taxNumber: 'C.F.',
     hybridNoteZugferd: 'Fattura elettronica ZUGFeRD (EN 16931): i dati strutturati sono incorporati in questo PDF come factur-x.xml.',
     hybridNoteFacturX: 'Fattura elettronica Factur-X (EN 16931): i dati strutturati sono incorporati in questo PDF come factur-x.xml.',

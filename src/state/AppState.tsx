@@ -2333,16 +2333,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         // refreshes the timestamp.
         const current = quotes.find((q) => q.id === id);
         if (current && current.status !== 'draft' && current.status !== 'sent') return;
+        const now = new Date();
         setQuotes((prev) =>
           prev.map((quote) =>
             // ISO, not 'Just now'. `lastUpdated` is read as a TIMESTAMP by
             // the workflow-pack triggers and by ai-chat's 7/90-day windows —
             // `new Date('Just now')` is Invalid, and every one of those
             // consumers silently skips the row. No screen renders it as text.
-            quote.id === id ? { ...quote, status: 'sent', lastUpdated: new Date().toISOString() } : quote
+            // sentAt too, the value the server gets: the quote's "valid until"
+            // counts from it, and it stayed blank here until the next refresh.
+            quote.id === id ? { ...quote, status: 'sent', lastUpdated: now.toISOString(), sentAt: now.toISOString() } : quote
           )
         );
-        const now = new Date();
         // The customer may have decided in the portal before this device heard
         // of it: the database keeps accepted/rejected (trigger
         // documents_keep_decided_status) and returns it. Adopt the server's

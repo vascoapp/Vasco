@@ -1026,6 +1026,11 @@ export default function InvoiceDetailScreen() {
             ...legalMentions(country, { buyerIsBusiness: !!data.buyerVatId }),
             ...(country === 'FR' ? frenchInvoiceMentions2026(extras.frMentions) : []),
           ],
+          // Retention held back from this payment (not deducted from the
+          // invoice outside the UK) → "payable now" rows + the QR amount, and
+          // no QR once paid — as the printed PDF and the screen say.
+          retentionWithheld: retentionDeductedOnInvoice(country) ? 0 : (invoice.retentionAmount ?? 0),
+          paid: invoice.status === 'paid',
         });
       } catch (err) {
         logWarn('einvoiceHybrid', `build failed: ${err instanceof Error ? err.message : String(err)}`);

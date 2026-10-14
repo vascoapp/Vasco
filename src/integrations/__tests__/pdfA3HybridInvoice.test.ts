@@ -304,4 +304,15 @@ describe('PDF/A-3b hybrid — the page states the XML\'s money', () => {
     expect(text).toContain('Rohr ??');
     expect(text).not.toContain('�');
   });
+
+  it('prints retention withheld and what is payable now — the amount its QR asks (review 2026-10-14)', async () => {
+    const data = invoice('DE', [{ description: 'Abschlag 1', quantity: 1, unitPrice: 8403.36, vatRate: 19 }]);
+    const res = await buildPdfA3Invoice(data, { profile: 'zugferd', language: 'de', fonts, now: NOW, retentionWithheld: 500 });
+    const text = pageText(await PDFDocument.load(res.bytes, { updateMetadata: false }));
+    expect(res.totals.gross).toBe(10000);
+    expect(text).toContain('Sicherheitseinbehalt bis zur Abnahme');
+    expect(text).toContain('Jetzt zu zahlen');
+    expect(text).toContain(formatMoney(9500, '€', 'de'));
+    expect(text).not.toContain('�');
+  });
 });

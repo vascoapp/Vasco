@@ -188,8 +188,12 @@ function AlertCard({ alert, onPress }: { alert: any; onPress?: () => void }) {
   const config = severityConfig[alert.severity as keyof typeof severityConfig] || severityConfig.low;
 
   const days = alert.dueDate ? daysUntil(alert.dueDate) ?? 0 : null;
+  // One pluralised sentence per case: the glued "Nog" + n + "dagen" read
+  // "Nog 1 dagen", and "3 il y a quelques jours" / "3 scaduto giorni fa".
   const daysText = days === null ? null
-    : days < 0 ? `${Math.abs(days)} ${t('compliance.daysAgo', 'dagen geleden')}` : `${t('compliance.daysRemaining', 'Nog')} ${days} ${t('compliance.days', 'dagen')}`;
+    : days < 0 ? t('compliance.daysAgoCount', { count: Math.abs(days) })
+    : days === 0 ? t('compliance.dueToday')
+    : t('compliance.daysLeftCount', { count: days });
 
   return (
     <Pressable
@@ -878,9 +882,15 @@ export default function CertificatenScreen() {
                 <Text style={styles.modalLabel}>{t('compliance.expiryDate', 'Vervaldatum')}</Text>
                 <Text style={styles.modalValue}>{formatDate(selectedItem.expiryDate)}</Text>
                 <Text style={styles.modalSubvalue}>
-                  {getDaysUntilExpiry(selectedItem.expiryDate) > 0
-                    ? `${t('compliance.daysRemaining', 'Nog')} ${getDaysUntilExpiry(selectedItem.expiryDate)} ${t('compliance.days', 'dagen')}`
-                    : `${Math.abs(getDaysUntilExpiry(selectedItem.expiryDate))} ${t('compliance.daysExpiredAgo', 'dagen geleden verlopen')}`}
+                  {(() => {
+                    // The expiry day is its last VALID day (stored end-of-day):
+                    // it read "0 dagen geleden verlopen" while the list said
+                    // it was still due today.
+                    const d = getDaysUntilExpiry(selectedItem.expiryDate);
+                    return d > 0 ? t('compliance.daysLeftCount', { count: d })
+                      : d === 0 ? t('compliance.expiresToday')
+                      : t('compliance.expiredDaysAgo', { count: Math.abs(d) });
+                  })()}
                 </Text>
               </View>
 

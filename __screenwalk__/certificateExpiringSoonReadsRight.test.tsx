@@ -67,7 +67,7 @@ describe('Certificaten — a certificate expiring soon', () => {
     expect(card).toBeDefined();
     expect(card.props.accessibilityLabel).not.toMatch(/alert:/i);
     // …and says how long is left, like the card does (`Noch 6 Tage`).
-    expect(card.props.accessibilityLabel).toContain(`${c.daysRemaining} 6 ${c.days}`);
+    expect(card.props.accessibilityLabel).toContain(c.daysLeftCount_other.replace('{{count}}', '6'));
     const openModals = () => root.findAll((n: any) => n.props?.visible === true && n.props?.animationType !== undefined, { deep: true }).length;
     const before = openModals();
     await act(async () => { card.props.onPress(); });

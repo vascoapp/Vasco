@@ -30,7 +30,8 @@ import { confirmShareSent } from '../../src/utils/shareOutcome';
 import { signQuoteLink } from '../../src/services/publicQuotePortalService';
 import { getQuoteEngagement, type QuoteEngagement } from '../../src/services/intelligenceCaptureService';
 import { isDemoMode } from '../../src/context/AuthContext';
-import { MS_PER_DAY } from '../../src/utils/timeConstants';
+import { quoteValidity } from '../../src/domain/documents';
+import { daysUntil } from '../../src/utils/dateKey';
 import { documentVatBreakdown, getEffectiveVatRate } from '../../src/domain/business';
 import { formatCurrency as fmtCurrency, formatDate as fmtDate, formatQuantity } from '../../src/i18n/formatting';
 import { findDocumentCustomer, documentCustomerName } from '../../src/domain/customers';
@@ -134,7 +135,9 @@ export default function QuoteDetailScreen() {
   const canApplySuggestion =
     Boolean(priceRisk?.lineItem) && suggestedUnitPrice > 0 && currentUnitPrice > suggestedUnitPrice;
 
-  const validUntilDate = new Date(Date.now() + 30 * MS_PER_DAY);
+  // From the day it was SENT, not from today: the hero, the PDF and the portal
+  // link must state the date the customer was promised.
+  const { issued: quoteIssued, validUntil: validUntilDate } = quoteValidity(quote);
   const validUntilLabel = fmtDate(validUntilDate, country);
 
   // ── Actions ────────────────────────────────────────────────────────────
@@ -151,6 +154,12 @@ export default function QuoteDetailScreen() {
     // receives, while the screen beside it read € 8.228,00 — and `markQuoteSent`
     // then recorded it as sent (#354).
     const items = displayLineItems;
+    // A sent quote still valid reprints the customer's copy (its own dates).
+    // One whose validity has PASSED is re-issued from today — never a PDF that
+    // says "valid until" a day already gone — and asks below whether it went
+    // out, so a yes re-dates it as re-sending the link does (review 2026-10-14).
+    const lapsed = quote.status === 'sent' && (daysUntil(validUntilDate) ?? 0) < 0;
+    const pdfDates = lapsed ? quoteValidity({}) : { issued: quoteIssued, validUntil: validUntilDate };
     // The subtotal the lines print (each in cents) — the same net the VAT
     // rows and the Total are built on, and the XRechnung states (#360).
     const sub = vatBreakdown.net;
@@ -161,8 +170,8 @@ export default function QuoteDetailScreen() {
       quoteNumber: quote.id,
       customerName: customerDisplayName ?? t('jobs.client', 'Client'),
       jobTitle: quote.job ?? t('jobs.typeJob', 'Job'),
-      issueDate: fmtDate(new Date(), country),
-      validUntil: validUntilLabel,
+      issueDate: fmtDate(pdfDates.issued, country),
+      validUntil: fmtDate(pdfDates.validUntil, country),
       // Each line keeps ITS rate; only a line with none falls back.
       lineItems: items.map((i) => ({
         description: i.description, quantity: i.quantity, unitPrice: i.unitPrice,
@@ -187,7 +196,10 @@ export default function QuoteDetailScreen() {
         sellerAddressLine(businessProfile),
         registrationParts(businessProfile).join(' · '),
         businessProfile.vatNumber,
-        { vatScheme: businessProfile.vatScheme },
+        // The screen's own country (profile first, account second): the PDF
+        // states the currency the screen shows — £ for a UK trader. The
+        // language follows the contractor's (generateQuotePdf → messageLocale).
+        { vatScheme: businessProfile.vatScheme, country },
       );
       // The share sheet closing says nothing: expo-sharing resolves the same
       // whether the PDF went out or the contractor backed out. The link path
@@ -195,7 +207,7 @@ export default function QuoteDetailScreen() {
       // "sent" — a quote the customer never had, with a follow-up clock
       // running (emulator walk 2026-09-28). Status follows the artefact, never
       // the button (#197/#339), so ask — once, and only for a draft.
-      if (quote.status === 'draft') {
+      if (quote.status === 'draft' || lapsed) {
         Alert.alert(
           t('quotes.pdfSentTitle', 'Did the quote go out?'),
           t('quotes.pdfSentBody', 'Vasco cannot see whether you shared the PDF. Mark it sent once your customer has it.'),

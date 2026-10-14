@@ -30,6 +30,24 @@ export type Quote = {
   counterOfferAmount?: number;
 };
 
+/** How long a quote holds — the PDF's "valid until" and the portal link's expiry. */
+export const QUOTE_VALID_DAYS = 30;
+
+/**
+ * A quote's dates as the customer holds them: issued the day it was SENT, valid
+ * {@link QUOTE_VALID_DAYS} calendar days from then. A draft has not gone out
+ * yet, so it reads from today. The screen used to compute "today + 30" on every
+ * render, so a quote sent three weeks ago showed — and re-shared as a PDF — a
+ * date the customer's copy and portal link had never promised.
+ */
+export function quoteValidity(quote: Pick<Quote, 'sentAt'>, now: Date = new Date()): { issued: Date; validUntil: Date } {
+  const sent = quote.sentAt ? new Date(quote.sentAt) : null;
+  const issued = sent && !Number.isNaN(sent.getTime()) ? sent : now;
+  const validUntil = new Date(issued);
+  validUntil.setDate(validUntil.getDate() + QUOTE_VALID_DAYS);
+  return { issued, validUntil };
+}
+
 export type Invoice = {
   id: string;
   customer: string;
