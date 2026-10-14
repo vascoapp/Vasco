@@ -105,12 +105,20 @@ export interface ScanOptions {
   minIntervalMs?: number;
 }
 
+// Alerts live in memory only (complianceService.addAlert), so the first scan of
+// every app process must run: a throttled cold start used to return the cached
+// RESULT and rebuild nothing, and the certificate screen lost its "Acties
+// vereist" card for up to six hours while its score still read "Kritiek"
+// (device pass 2026-10-14). Re-running is safe — alert ids and the renewal
+// card's entityKey are idempotent, and a handled card is never re-queued.
+let scannedThisProcess = false;
+
 export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult> {
   const minInterval = opts.minIntervalMs ?? 6 * 60 * 60 * 1000;
   const now = new Date();
 
   // Throttle non-forced scans so the scheduler's daily block doesn't double-fire.
-  if (!opts.force) {
+  if (!opts.force && scannedThisProcess) {
     try {
       const raw = await AsyncStorage.getItem(LAST_RUN_KEY);
       if (raw) {
@@ -235,6 +243,10 @@ export async function scan(opts: ScanOptions = {}): Promise<ComplianceScanResult
     // The name the contractor gave it first; the type label only for an unnamed one.
     await emit('insurance', p.id, p.name?.trim() || i18n.t(`complianceAgent.insurance.${p.type}`, { defaultValue: String(p.type) }), new Date(p.endDate));
   }
+
+  // Only a scan that SAW items counts: on a new phone the account copy can land
+  // after the first scan, and an empty first scan must not throttle the next.
+  scannedThisProcess = licenses.length + certs.length + policies.length > 0;
 
   // Persist run metadata
   try {

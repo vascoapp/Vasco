@@ -171,6 +171,36 @@ describe('the reminders', () => {
     expect(await pendingRenewals(queue)).toHaveLength(1);
   });
 
+  it('an item at risk is still flagged on the screen after a restart inside the scan throttle', async () => {
+    // Alerts live in memory. Device pass 2026-10-14: a cold start within six
+    // hours of the last scan returned the cached result, rebuilt no alert, and
+    // the certificate screen lost its "Acties vereist" card.
+    const a = freshApp();
+    await a.store.load();
+    const { id } = a.store.saveTrackedItem({ type: 'certification', name: 'VCA Basis', expiryDate: inDays(6) });
+    await a.agent.scan();
+    expect(a.store.getAlerts().some((x: any) => x.relatedItemId === id)).toBe(true);
+
+    const b = freshApp();
+    await b.agent.scan(); // NOT forced — the last run was moments ago
+    expect(b.store.getAlerts().some((x: any) => x.relatedItemId === id)).toBe(true);
+    // …and the throttle still holds within one process.
+    const ranAt = (await b.agent.getLastResult())?.ranAt;
+    await b.agent.scan();
+    expect((await b.agent.getLastResult())?.ranAt).toBe(ranAt);
+  });
+
+  it('an empty first scan (account copy not there yet) does not throttle the next one', async () => {
+    const a = freshApp();
+    await a.store.load();
+    await a.agent.scan({ force: true }); // a recent run is on record
+    const b = freshApp();
+    await b.agent.scan(); // runs (first in this process) but sees nothing yet
+    b.store.saveTrackedItem({ type: 'certification', name: 'F-gassen', expiryDate: inDays(4) });
+    await b.agent.scan(); // must run again, not return the empty cached result
+    expect(b.store.getAlerts().some((x: any) => x.title.includes('F-gassen'))).toBe(true);
+  });
+
   it('a dismissed card does not come back after a restart', async () => {
     const a = freshApp();
     await a.store.load();

@@ -395,6 +395,13 @@ export default function CertificatenScreen() {
   const { certifications, loading: certsLoading } = useCertifications();
   const { policies, loading: insuranceLoading } = useInsurancePolicies();
   const { alerts } = useComplianceAlerts();
+  // Alerts live in memory and the scheduler scans once per 12-hour block, so
+  // after a restart nothing rebuilt them and "Acties vereist" vanished (device
+  // pass 2026-10-14). The screen that shows them asks for a scan; the agent
+  // runs the first one per app process, throttles the rest, and dedups cards.
+  useEffect(() => {
+    import('../../src/services/complianceAgentService').then(({ scan }) => scan()).catch(() => {});
+  }, []);
   const stats = useComplianceStats();
   const calendar = useExpiryCalendar(6);
   const { findings: auditFindings } = useAuditFindings('contractor');

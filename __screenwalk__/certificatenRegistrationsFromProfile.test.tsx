@@ -14,6 +14,10 @@ jest.mock('../src/state/AppState', () => ({ useAppState: () => mockState }));
 jest.mock('../src/context/AuthContext', () => ({ useAuth: () => ({ user: { country: 'NL' } }) }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), push: jest.fn() }), useLocalSearchParams: () => ({}) }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: ({ children }: any) => children }));
+// The screen asks the expiry agent for a scan on mount; that settles the SAVED
+// language first, which this bare mocked state does not have — so it switched
+// i18n away from Dutch. Alerts are not this test's subject.
+jest.mock('../src/services/complianceAgentService', () => ({ scan: async () => ({}) }));
 
 const Screen = () => require('../app/(contractor)/certificaten').default;
 
