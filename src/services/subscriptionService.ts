@@ -590,7 +590,7 @@ export async function upgradeTo(
 /** Exactly the columns this service reads back. */
 type SubscriptionServerRow = Pick<
   SubscriptionRow,
-  'tier' | 'billing_cycle' | 'status' | 'trial_ends_at' | 'extra_seats'
+  'tier' | 'billing_cycle' | 'status' | 'trial_ends_at' | 'extra_seats' | 'external_id'
 >;
 
 /** Exactly the columns this service writes. */
@@ -673,7 +673,7 @@ export async function syncSubscriptionFromServer(): Promise<SubscriptionState | 
     if (!userId) return null;
 
     const { data, error } = (await (supabase.from('subscriptions') as any)
-      .select('tier, billing_cycle, status, trial_ends_at, extra_seats')
+      .select('tier, billing_cycle, status, trial_ends_at, extra_seats, external_id')
       .eq('user_id', userId)
       .maybeSingle()) as { data: SubscriptionServerRow | null; error: unknown };
     if (error) return null;
@@ -685,11 +685,16 @@ export async function syncSubscriptionFromServer(): Promise<SubscriptionState | 
       return local;
     }
 
+    // A plan bought on the website is the PROVIDER's to end (the webhook
+    // writes canceled → free). The in-app trial date the account started with
+    // stayed on that row, so a contractor who paid on day 10 dropped to Free on
+    // day 30 — on every launch, since the row is no longer the user's to fix.
+    const providerManaged = Boolean(data.external_id);
     const merged = applyTrialExpiry({
       ...local,
       tier: tierFromServer(data.tier),
       billingCycle: data.billing_cycle === 'yearly' ? 'annual' : 'monthly',
-      trialEndsAt: data.trial_ends_at,
+      trialEndsAt: providerManaged ? null : data.trial_ends_at,
       // Extra team members bought on the website (webhook-written, server-only).
       // Only a paid tier keeps them: a lapsed plan's seats are not an entitlement.
       seatsPurchased: data.tier === 'free' ? 0 : Math.max(0, Number(data.extra_seats) || 0),
@@ -697,7 +702,8 @@ export async function syncSubscriptionFromServer(): Promise<SubscriptionState | 
     await saveSubscription(merged);
     // If the pull expired the trial, tell the server too, so the next device
     // does not read a lapsed trial as live.
-    if (merged.trialEndsAt !== data.trial_ends_at) await pushSubscription(merged);
+    // Never for a provider row: those are service-role only (entitlement pin).
+    if (!providerManaged && merged.trialEndsAt !== data.trial_ends_at) await pushSubscription(merged);
     return merged;
   } catch {
     return null;

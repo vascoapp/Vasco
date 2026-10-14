@@ -11,6 +11,7 @@
 // =============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkoutTrial } from '../_shared/checkoutTrial.ts';
 import { stripeSecretKey, BILLING_SITE } from '../_shared/stripeKey.ts';
 
 const corsHeaders = {
@@ -63,9 +64,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { tier, billingCycle, extraSeats: rawSeats } = (await req.json()) as {
-      tier: Tier; billingCycle: Cycle; extraSeats?: number;
+    // "1 month free" is one month per ACCOUNT: a fresh account gets 30 days, a
+    // running in-app trial continues to its own end, a used trial or an earlier
+    // subscription gets none (_shared/checkoutTrial.ts). Read under the user's
+    // own RLS; an unreadable row is a retry, never a free month.
+    const { data: subRow, error: subErr } = await authClient
+      .from('subscriptions')
+      .select('tier, status, trial_ends_at, external_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (subErr) {
+      return new Response(JSON.stringify({ ok: false, error: 'Could not read the account, try again' }), {
+        status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const trial = checkoutTrial(subRow);
+
+    const { tier, billingCycle, extraSeats: rawSeats, preview } = (await req.json()) as {
+      tier: Tier; billingCycle: Cycle; extraSeats?: number; preview?: boolean;
     };
+    // The billing page asks first, so it promises the trial THIS account gets —
+    // not "your first month is free" to someone whose month is used.
+    if (preview) {
+      return new Response(JSON.stringify({ ok: true, trial }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     // Extra team members: Pro only, 0–2 — Pro + 3 would cost exactly Contractor.
     const extraSeats = tier === 'pro' ? Math.min(2, Math.max(0, Math.floor(Number(rawSeats) || 0))) : 0;
     if (!['pro', 'contractor'].includes(tier) || !['monthly', 'yearly'].includes(billingCycle)) {
@@ -117,8 +141,8 @@ Deno.serve(async (req) => {
     // returned a 400 and NO ONE could subscribe. billing_address_collection +
     // automatic_tax already capture the address for the new customer.
     form.set('tax_id_collection[enabled]', 'true');
-    // 30-day trial mirrors the in-app TRIAL_DAYS (subscriptionService) — "1 month free".
-    form.set('subscription_data[trial_period_days]', '30');
+    if (trial && 'days' in trial) form.set('subscription_data[trial_period_days]', String(trial.days));
+    else if (trial) form.set('subscription_data[trial_end]', String(trial.endsAt));
     // Allow promotion codes (referral credits, launch promos).
     form.set('allow_promotion_codes', 'true');
 

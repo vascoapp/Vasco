@@ -79,7 +79,35 @@ function UpgradeInner() {
   const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // The trial THIS account gets at checkout (create-subscription-checkout's
+  // preview → _shared/checkoutTrial.ts): a fresh account a month, a running
+  // in-app trial to its own end, a used one none. The page promised "your first
+  // month is free" to everyone while the checkout gave it only once (2026-10-14).
+  type Trial = { days: number } | { endsAt: number } | null;
+  const [trial, setTrial] = useState<Trial | "unknown">("unknown");
+
   const configured = isSupabaseConfigured();
+
+  useEffect(() => {
+    // Reset first: switching accounts must not show the previous one's trial.
+    setTrial("unknown");
+    if (!sessionEmail) return;
+    let active = true;
+    const supabase = getSupabase();
+    if (!supabase) return;
+    supabase.functions
+      .invoke("create-subscription-checkout", { body: { preview: true } })
+      .then(({ data, error: fnErr }) => {
+        if (!active) return;
+        setTrial(!fnErr && data?.ok ? ((data.trial ?? null) as Trial) : "unknown");
+      })
+      .catch(() => { if (active) setTrial("unknown"); });
+    return () => { active = false; };
+  }, [sessionEmail]);
+
+  const trialEnd = trial && trial !== "unknown" && "endsAt" in trial
+    ? new Date(trial.endsAt * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+    : null;
 
   useEffect(() => {
     let active = true;
@@ -188,7 +216,13 @@ function UpgradeInner() {
           Choose your plan
         </h1>
         <p className="mx-auto mt-2 max-w-md text-zinc-500">
-          Your first month is free. No charge today, cancel anytime. Prices excl. VAT.
+          {trial === null
+            ? "Your free month has been used, so billing starts today. Cancel anytime. Prices excl. VAT."
+            : trialEnd
+              ? `Your trial continues until ${trialEnd}. No charge today, cancel anytime. Prices excl. VAT.`
+              : trial !== "unknown"
+                ? "Your first month is free. No charge today, cancel anytime. Prices excl. VAT."
+                : "New accounts get their first month free. Cancel anytime. Prices excl. VAT."}
         </p>
       </div>
 
@@ -348,10 +382,16 @@ function UpgradeInner() {
               className="w-full rounded-2xl px-6 py-3.5 font-bold text-white shadow-sm transition hover:brightness-105 disabled:opacity-60"
               style={{ background: BRAND, boxShadow: `0 8px 24px -10px ${BRAND}99` }}
             >
-              {redirecting ? "Redirecting to secure checkout…" : "Start free trial →"}
+              {redirecting ? "Redirecting to secure checkout…" : trial && trial !== "unknown" ? "Start free trial →" : "Continue to checkout →"}
             </button>
             <p className="mt-3 text-center text-xs text-zinc-400">
-              Free for the first month, then €{price}/mo excl. VAT. Cancel before then and pay nothing.
+              {trial === null
+                ? `€${price}/mo excl. VAT, billed from today. Cancel anytime.`
+                : trialEnd
+                  ? `Free until ${trialEnd}, then €${price}/mo excl. VAT. Cancel before then and pay nothing.`
+                  : trial !== "unknown"
+                    ? `Free for the first month, then €${price}/mo excl. VAT. Cancel before then and pay nothing.`
+                    : `€${price}/mo excl. VAT. Checkout shows any free time your account still has.`}
             </p>
             {error && <p className="mt-3 text-center text-sm text-red-600">{error}</p>}
           </>

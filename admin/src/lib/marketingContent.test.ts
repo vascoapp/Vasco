@@ -179,3 +179,18 @@ test("Pro with the most extra seats stays cheaper than Contractor (monthly and y
     assert.doesNotMatch(text, new RegExp(`(up to|tot|bis zu) ${n + 1} (more|extra|weitere)`), `${l}: an old seat maximum`);
   }
 });
+
+test("the checkout page promises only the trial THIS account gets (2026-10-14)", () => {
+  // The checkout grants one month per account (supabase/functions/_shared/
+  // checkoutTrial.ts); the page told everyone "Your first month is free. No
+  // charge today" and a used trial was billed at once.
+  const page = stripComments(fs.readFileSync(path.join(ADMIN, "src/app/billing/upgrade/page.tsx"), "utf8"));
+  assert.match(page, /body: \{ preview: true \}/, "asks the checkout which trial applies");
+  assert.doesNotMatch(page, />\s*Your first month is free/, "an unconditional free-month promise in the markup");
+  assert.doesNotMatch(page, />\s*Free for the first month/, "an unconditional free-month footnote");
+  assert.match(page, /trial && trial !== "unknown" \? "Start free trial →" : "Continue to checkout →"/, "the button promises a trial only when there is one");
+  const chrome = stripComments(fs.readFileSync(path.join(ADMIN, "src/components/BillingChrome.tsx"), "utf8"));
+  assert.match(chrome, /First month free for new accounts/);
+  const cancel = stripComments(fs.readFileSync(path.join(ADMIN, "src/app/billing/cancel/page.tsx"), "utf8"));
+  assert.doesNotMatch(cancel, /free trial is\s+still waiting/, "the cancel page promises a trial");
+});

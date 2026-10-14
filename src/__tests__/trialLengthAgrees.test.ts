@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { TRIAL_DAYS } from '../services/subscriptionService';
+import { TRIAL_DAYS as CHECKOUT_TRIAL_DAYS } from '../../supabase/functions/_shared/checkoutTrial';
 
 const ROOT = path.resolve(__dirname, '../..');
 
@@ -15,9 +16,11 @@ it('the app trial is 30 days', () => {
 });
 
 it('the website checkout grants the same trial', () => {
+  // The checkout's length now comes from the shared rule (one trial per
+  // ACCOUNT, review 2026-10-14) — and the function must still use it.
+  expect(CHECKOUT_TRIAL_DAYS).toBe(TRIAL_DAYS);
   const src = fs.readFileSync(path.join(ROOT, 'supabase/functions/create-subscription-checkout/index.ts'), 'utf8');
-  const m = src.match(/trial_period_days\]',\s*'(\d+)'/);
-  expect(Number(m?.[1])).toBe(TRIAL_DAYS);
+  expect(src).toMatch(/checkoutTrial\(subRow\)/);
 });
 
 it.each(['en', 'nl', 'de', 'fr', 'es', 'it'])('%s copy says one month, not 14 days', (l) => {

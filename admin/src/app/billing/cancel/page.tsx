@@ -22,8 +22,7 @@ export default function BillingCancelPage() {
           </div>
           <div className="px-8 pb-8 pt-4">
             <p className="mb-7 text-sm text-zinc-600">
-              No charge was made. You can pick a plan whenever you&apos;re ready — your free trial is
-              still waiting.
+              No charge was made. You can pick a plan whenever you&apos;re ready.
             </p>
             <a
               href="/billing/upgrade"

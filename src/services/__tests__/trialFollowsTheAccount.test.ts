@@ -169,3 +169,37 @@ describe('granting the trial publishes it to the account', () => {
     expect(mockUpserts[0].trial_ends_at).toEqual(expect.any(String));
   });
 });
+
+describe('a plan bought during the trial outlives the trial date', () => {
+  // Review 2026-10-14: the webhook wrote the paid tier but left the in-app
+  // trial_ends_at on the row, and the sync expired the tier from it — every
+  // contractor who paid during the trial dropped to Free on day 30, for good
+  // (the entitlement pin keeps a provider row out of the user's reach).
+  it('keeps a paying (provider-managed) account on its tier past the old trial end', async () => {
+    await saveSubscription(baseState({ tier: 'pro', trialEndsAt: daysFromNow(-1) }));
+    mockServerRow = { tier: 'pro', billing_cycle: 'monthly', status: 'active', trial_ends_at: daysFromNow(-1), extra_seats: 0, external_id: 'sub_123' };
+    const synced = await syncSubscriptionFromServer();
+    expect(synced?.tier).toBe('pro');
+    expect(synced?.trialEndsAt).toBeNull();
+    // …and the next local load (the choke point) does not expire it either.
+    expect((await loadSubscription()).tier).toBe('pro');
+    // A provider row is service-role only: the app never writes it back.
+    expect(mockUpserts).toHaveLength(0);
+  });
+
+  it('still expires an in-app trial that nobody paid for', async () => {
+    await saveSubscription(baseState({ tier: 'pro', trialEndsAt: daysFromNow(2) }));
+    mockServerRow = { tier: 'pro', billing_cycle: 'monthly', status: 'trialing', trial_ends_at: daysFromNow(-1), extra_seats: 0, external_id: null };
+    const synced = await syncSubscriptionFromServer();
+    expect(synced?.tier).toBe('free');
+  });
+
+  it('the webhook clears the in-app trial date when Stripe takes over', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const src: string = fs.readFileSync(path.join(__dirname, '../../../supabase/functions/stripe-webhook/index.ts'), 'utf8');
+    const upsert = src.slice(src.indexOf(".from('subscriptions')\n          .upsert({"));
+    const block = upsert.slice(0, upsert.indexOf("}, { onConflict: 'user_id' })"));
+    expect(block).toMatch(/\btrial_ends_at:\s*null\b/);
+  });
+});

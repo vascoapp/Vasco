@@ -407,6 +407,10 @@ Deno.serve(async (req) => {
                 })()),
             external_id: externalId,
             external_provider: 'stripe',
+            // Stripe runs its own trial from here on (status trialing → active /
+            // canceled). The in-app trial date left on the row expired a PAYING
+            // customer to Free in the app on that date.
+            trial_ends_at: null,
             current_period_ends_at: extendedPeriodEnd,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id' });

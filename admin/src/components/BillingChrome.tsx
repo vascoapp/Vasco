@@ -35,7 +35,7 @@ export function BillingHeader() {
 export function TrustRow() {
   const items = [
     { icon: "🔒", label: "Secured by Stripe" },
-    { icon: "✦", label: "First month free" },
+    { icon: "✦", label: "First month free for new accounts" },
     { icon: "↺", label: "Cancel anytime" },
     { icon: "€", label: "Prices excl. VAT" },
   ];
