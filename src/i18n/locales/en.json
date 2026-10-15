@@ -7741,5 +7741,15 @@
     "deleteBody": "{{name}} and its reminders are removed.",
     "fromSignupTitle": "Add when these run out",
     "fromSignupBody": "You ticked these when you signed up. With the expiry date, Vasco reminds you before they run out."
+  },
+  "photoPicker": {
+    "title": "Add photo",
+    "chooseSource": "Choose a source",
+    "camera": "Camera",
+    "gallery": "Photo library",
+    "cameraDeniedTitle": "Camera access",
+    "cameraDeniedBody": "Give Vasco access to your camera in Settings.",
+    "tooLargeTitle": "File too large",
+    "tooLargeBody": "The photo must be under {{mb}} MB. Please choose a smaller image."
   }
 }

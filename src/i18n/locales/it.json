@@ -7741,5 +7741,15 @@
     "deleteBody": "{{name}} e i relativi promemoria verranno eliminati.",
     "fromSignupTitle": "Indichi quando scadono",
     "fromSignupBody": "Li ha selezionati all’iscrizione. Con la data di scadenza, Vasco la avvisa prima che scadano."
+  },
+  "photoPicker": {
+    "title": "Aggiungi foto",
+    "chooseSource": "Scegli una fonte",
+    "camera": "Fotocamera",
+    "gallery": "Galleria",
+    "cameraDeniedTitle": "Accesso alla fotocamera",
+    "cameraDeniedBody": "Consenti a Vasco di accedere alla fotocamera nelle Impostazioni.",
+    "tooLargeTitle": "File troppo grande",
+    "tooLargeBody": "La foto deve essere inferiore a {{mb}} MB. Scegli un’immagine più piccola."
   }
 }

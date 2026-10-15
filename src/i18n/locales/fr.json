@@ -7741,5 +7741,15 @@
     "deleteBody": "{{name}} et ses rappels seront supprimés.",
     "fromSignupTitle": "Indiquez quand ils expirent",
     "fromSignupBody": "Vous les avez cochés à l’inscription. Avec la date d’échéance, Vasco vous prévient avant qu’ils expirent."
+  },
+  "photoPicker": {
+    "title": "Ajouter une photo",
+    "chooseSource": "Choisissez une source",
+    "camera": "Appareil photo",
+    "gallery": "Photothèque",
+    "cameraDeniedTitle": "Accès à l’appareil photo",
+    "cameraDeniedBody": "Autorisez Vasco à accéder à votre appareil photo dans les Réglages.",
+    "tooLargeTitle": "Fichier trop volumineux",
+    "tooLargeBody": "La photo doit faire moins de {{mb}} Mo. Choisissez une image plus petite."
   }
 }

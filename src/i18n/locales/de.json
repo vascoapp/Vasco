@@ -7741,5 +7741,15 @@
     "deleteBody": "{{name}} und die Erinnerungen werden gelöscht.",
     "fromSignupTitle": "Tragen Sie ein, wann diese ablaufen",
     "fromSignupBody": "Diese haben Sie bei der Anmeldung angekreuzt. Mit dem Ablaufdatum erinnert Vasco Sie rechtzeitig."
+  },
+  "photoPicker": {
+    "title": "Foto hinzufügen",
+    "chooseSource": "Quelle wählen",
+    "camera": "Kamera",
+    "gallery": "Fotomediathek",
+    "cameraDeniedTitle": "Kamerazugriff",
+    "cameraDeniedBody": "Erlauben Sie Vasco in den Einstellungen den Zugriff auf Ihre Kamera.",
+    "tooLargeTitle": "Datei zu groß",
+    "tooLargeBody": "Das Foto muss kleiner als {{mb}} MB sein. Bitte wählen Sie ein kleineres Bild."
   }
 }

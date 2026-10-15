@@ -7741,5 +7741,15 @@
     "deleteBody": "Se eliminarán {{name}} y sus recordatorios.",
     "fromSignupTitle": "Indique cuándo vencen",
     "fromSignupBody": "Los marcó al registrarse. Con la fecha de vencimiento, Vasco le avisa antes de que caduquen."
+  },
+  "photoPicker": {
+    "title": "Añadir foto",
+    "chooseSource": "Elige una fuente",
+    "camera": "Cámara",
+    "gallery": "Fototeca",
+    "cameraDeniedTitle": "Acceso a la cámara",
+    "cameraDeniedBody": "Da a Vasco acceso a tu cámara en Ajustes.",
+    "tooLargeTitle": "Archivo demasiado grande",
+    "tooLargeBody": "La foto debe ocupar menos de {{mb}} MB. Elige una imagen más pequeña."
   }
 }

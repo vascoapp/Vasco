@@ -1,5 +1,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Platform } from 'react-native';
+import appI18n from '../i18n/i18n';
+
+const t = (key: string, opts?: Record<string, unknown>) => appI18n.t(key, opts) as string;
 
 const MAX_DIMENSION = 1920;
 const UPLOAD_QUALITY = 0.7;
@@ -11,33 +14,30 @@ export interface PhotoResult {
   height: number;
 }
 
-async function requestPermission(type: 'camera' | 'library'): Promise<boolean> {
-  if (type === 'camera') {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Camera toegang', 'Geef Vasco toegang tot je camera in Instellingen.');
-      return false;
-    }
-  } else {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Galerij toegang', 'Geef Vasco toegang tot je foto\'s in Instellingen.');
-      return false;
-    }
+// Only the CAMERA needs a permission. The photo library opens the system
+// picker (Android photo picker / iOS PHPicker), which hands back only what the
+// contractor chose and needs no access to the gallery. Asking for it put
+// READ_MEDIA_IMAGES in the manifest, and Google Play refuses that permission to
+// an app whose core purpose is not the photo library (2026-10-15).
+async function requestCameraPermission(): Promise<boolean> {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert(t('photoPicker.cameraDeniedTitle'), t('photoPicker.cameraDeniedBody'));
+    return false;
   }
   return true;
 }
 
 function validateAsset(asset: ImagePicker.ImagePickerAsset): PhotoResult | null {
   if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE_MB * 1024 * 1024) {
-    Alert.alert('File too large', `Photo must be under ${MAX_FILE_SIZE_MB}MB. Please choose a smaller image.`);
+    Alert.alert(t('photoPicker.tooLargeTitle'), t('photoPicker.tooLargeBody', { mb: MAX_FILE_SIZE_MB }));
     return null;
   }
   return { uri: asset.uri, width: asset.width, height: asset.height };
 }
 
 export async function takePhoto(): Promise<PhotoResult | null> {
-  const ok = await requestPermission('camera');
+  const ok = await requestCameraPermission();
   if (!ok) return null;
 
   const result = await ImagePicker.launchCameraAsync({
@@ -52,9 +52,6 @@ export async function takePhoto(): Promise<PhotoResult | null> {
 }
 
 export async function pickFromGallery(): Promise<PhotoResult | null> {
-  const ok = await requestPermission('library');
-  if (!ok) return null;
-
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     quality: UPLOAD_QUALITY,
@@ -67,21 +64,21 @@ export async function pickFromGallery(): Promise<PhotoResult | null> {
 }
 
 export function showPhotoPicker(onPhoto: (photo: PhotoResult) => void) {
-  Alert.alert('Foto toevoegen', 'Kies een bron', [
+  Alert.alert(t('photoPicker.title'), t('photoPicker.chooseSource'), [
     {
-      text: 'Camera',
+      text: t('photoPicker.camera'),
       onPress: async () => {
         const photo = await takePhoto();
         if (photo) onPhoto(photo);
       },
     },
     {
-      text: 'Galerij',
+      text: t('photoPicker.gallery'),
       onPress: async () => {
         const photo = await pickFromGallery();
         if (photo) onPhoto(photo);
       },
     },
-    { text: 'Annuleren', style: 'cancel' },
+    { text: t('common.cancel'), style: 'cancel' },
   ]);
 }

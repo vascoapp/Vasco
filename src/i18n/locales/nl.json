@@ -7741,5 +7741,15 @@
     "deleteBody": "{{name}} en de herinneringen worden verwijderd.",
     "fromSignupTitle": "Vul in wanneer deze verlopen",
     "fromSignupBody": "Deze heeft u bij het aanmelden aangevinkt. Met de vervaldatum herinnert Vasco u voordat ze verlopen."
+  },
+  "photoPicker": {
+    "title": "Foto toevoegen",
+    "chooseSource": "Kies een bron",
+    "camera": "Camera",
+    "gallery": "Galerij",
+    "cameraDeniedTitle": "Camera-toegang",
+    "cameraDeniedBody": "Geef Vasco toegang tot je camera in Instellingen.",
+    "tooLargeTitle": "Bestand te groot",
+    "tooLargeBody": "De foto moet kleiner zijn dan {{mb}} MB. Kies een kleinere afbeelding."
   }
 }
